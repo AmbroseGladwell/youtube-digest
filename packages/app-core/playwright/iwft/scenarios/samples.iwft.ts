@@ -1,11 +1,7 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
-import {
-  makeArticleOverview,
-  makeOverview,
-  makeRecipeOverview,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeAnalyticsConsent } from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { homePageTestIds } from "../../../src/features/home/HomePage/HomePageTestIds.js";
@@ -25,7 +21,6 @@ const RECIPE = makeRecipeOverview();
 const VIDEO_NAME = "Why Sleep Debt Is Real, Video, 12:34";
 const ARTICLE_NAME = "The town that pays its bridge bill twice, Article, 14 min read";
 const RECIPE_NAME = "Charred leek and white bean stew, Recipe, 1 hr 5 min";
-const titled = (title: string) => makeOverview({ source: { ...makeOverview().source, title } });
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 const signedOut = { sync: true, analyticsConsent: makeAnalyticsConsent({ answer: "share" }) };
@@ -385,9 +380,7 @@ test.describe("in the panel", () => {
 
   // 205g-4: the gate's Create an account opens home, which is Start, with no way back to
   // itself. The lone back chevron 205d-5 drew is retired with it.
-  test("once the device has had an account, Create account opens Start, and a sample leads to an account", async ({
-    launcher,
-  }) => {
+  test("once the device has had an account, Create account opens Start, and a sample leads to an account", async ({ launcher }) => {
     await launcher.launchPanel({ ...signedOutPanel, accountSeen: true });
     await launcher.signedOutGate.verifyIsShown();
 

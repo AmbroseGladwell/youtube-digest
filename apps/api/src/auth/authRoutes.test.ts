@@ -29,17 +29,14 @@ const cookiePair = (response: LightMyRequestResponse): string => setCookie(respo
 const askForLink = (testApp: TestApp, surface: "web" | "extension", email = EMAIL) =>
   testApp.app.inject({ method: "POST", url: "/api/auth/magic-link", payload: { email, surface } });
 
-const signIn = (testApp: TestApp, token: string) =>
-  testApp.app.inject({ method: "POST", url: "/api/auth/sign-in", payload: { token } });
+const signIn = (testApp: TestApp, token: string) => testApp.app.inject({ method: "POST", url: "/api/auth/sign-in", payload: { token } });
 
 const enterCode = (testApp: TestApp, code: string, email = EMAIL) =>
   testApp.app.inject({ method: "POST", url: "/api/auth/email-code", payload: { email, code } });
 
-const exchange = (testApp: TestApp, code: string) =>
-  testApp.app.inject({ method: "POST", url: "/api/auth/link-code", payload: { code } });
+const exchange = (testApp: TestApp, code: string) => testApp.app.inject({ method: "POST", url: "/api/auth/link-code", payload: { code } });
 
-const whoAmI = (testApp: TestApp, headers: Record<string, string>) =>
-  testApp.app.inject({ method: "GET", url: "/api/session", headers });
+const whoAmI = (testApp: TestApp, headers: Record<string, string>) => testApp.app.inject({ method: "GET", url: "/api/session", headers });
 
 const signInOnTheWeb = async (testApp: TestApp): Promise<string> => {
   await askForLink(testApp, "web");
@@ -529,9 +526,7 @@ test("signing in with an address that has no account mails it a way to create on
   assert.equal(response.statusCode, 202);
   assert.deepEqual(response.json(), { accepted: true });
   assert.deepEqual(testApp.mailer.sent, []);
-  assert.deepEqual(testApp.mailer.accountMails, [
-    { kind: "noAccount", to: EMAIL, createAccountLink: `${TEST_APP_URL}/create-account` },
-  ]);
+  assert.deepEqual(testApp.mailer.accountMails, [{ kind: "noAccount", to: EMAIL, createAccountLink: `${TEST_APP_URL}/create-account` }]);
   assert.deepEqual(await testApp.sql.query("select id from accounts"), []);
   await testApp.close();
 });
@@ -581,7 +576,10 @@ test("a sign-in for an address with no account is logged without the address", a
   await askForLink(testApp, "web");
 
   assert.equal(lines.find((logged) => logged.msg === "no account mailed")?.surface, "web");
-  assert.equal(lines.find((logged) => logged.msg === "magic link sent"), undefined);
+  assert.equal(
+    lines.find((logged) => logged.msg === "magic link sent"),
+    undefined,
+  );
   assert.doesNotMatch(JSON.stringify(lines), new RegExp(EMAIL));
   await testApp.close();
 });

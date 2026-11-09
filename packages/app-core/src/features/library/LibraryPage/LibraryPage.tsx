@@ -8,11 +8,7 @@ import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js"
 import { ClearFieldButton } from "../../../components/shared/ClearFieldButton/ClearFieldButton.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
-import {
-  libraryEntryId,
-  readableEntries,
-  type LibraryEntry,
-} from "../../overviews/types/LibraryEntry.js";
+import { libraryEntryId, readableEntries, type LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
@@ -22,12 +18,7 @@ import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOv
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
-import {
-  applyLibraryFilterPatch,
-  applyLibrarySort,
-  applyLibraryView,
-  isSameLibraryView,
-} from "../util/libraryFilterParams.js";
+import { applyLibraryFilterPatch, applyLibrarySort, applyLibraryView, isSameLibraryView } from "../util/libraryFilterParams.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { meaningEntries } from "../util/meaningEntries.js";
 import { useMeaningMatchesQuery } from "../queries/meaningMatchesQuery.js";
@@ -57,7 +48,6 @@ import { useFirstOverviewMilestone } from "../../timeSaved/useFirstOverviewMiles
 import { FirstOverviewMilestone } from "../../timeSaved/components/FirstOverviewMilestone/FirstOverviewMilestone.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
 import { LearnedNotice } from "../../settings/components/LearnedNotice/LearnedNotice.js";
-import { useIsPhone } from "../../../util/useIsPhone.js";
 import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
@@ -94,8 +84,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   // Design 3a: Listen plays in place and docks the mini-player; the row that is playing
   // says so, and pressing it again pauses (docs/features/audio-player.md).
   const isPlaying = (overviewId: OverviewId) =>
-    playerSnapshot.track?.overviewId === overviewId &&
-    ["playing", "buffering", "preparing"].includes(playerSnapshot.status);
+    playerSnapshot.track?.overviewId === overviewId && ["playing", "buffering", "preparing"].includes(playerSnapshot.status);
   const listen = (overview: Overview) => {
     analytics.library.overviewCard.listenPressed({ overviewId: overview.id, listening: !isPlaying(overview.id) });
     if (playerSnapshot.track?.overviewId === overview.id) {
@@ -154,7 +143,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
 
   if (topicsQuery.isError) {
     return (
-      <ErrorState screen="topicsLoad"
+      <ErrorState
+        screen="topicsLoad"
         title="Couldn't load your topics"
         error={topicsQuery.error}
         action={{ label: "Try again", onSelect: () => void topicsQuery.refetch() }}
@@ -343,18 +333,11 @@ export function LibraryPage({ entries }: LibraryPageProps) {
             >
               Clear all
             </button>
-            <button
-              type="button"
-              className={styles.showResults}
-              onClick={closeFilters}
-              data-testid={libraryPageTestIds.showResultsButton}
-            >
+            <button type="button" className={styles.showResults} onClick={closeFilters} data-testid={libraryPageTestIds.showResultsButton}>
               Show {visible.length} {visible.length === 1 ? "overview" : "overviews"}
             </button>
           </div>
-          {counts.unreadable > 0 && (
-            <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>
-          )}
+          {counts.unreadable > 0 && <p className={styles.sheetNote}>{counts.unreadable} couldn't be read, so no filter can match them.</p>}
         </aside>
 
         <main className={styles.main} ref={main}>
@@ -442,12 +425,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               {libraryViewSummary(applied, sort)}
             </p>
             {!isSameLibraryView(view, DEFAULT_LIBRARY_VIEW) && (
-              <button
-                type="button"
-                className={styles.viewAction}
-                onClick={resetView}
-                data-testid={libraryPageTestIds.resetViewButton}
-              >
+              <button type="button" className={styles.viewAction} onClick={resetView} data-testid={libraryPageTestIds.resetViewButton}>
                 Reset
               </button>
             )}
@@ -530,11 +508,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         }}
       />
 
-      <ManageTagsDialog
-        open={manageTagsOpen}
-        entries={readableEntries(entries)}
-        onClose={() => setManageTagsOpen(false)}
-      />
+      <ManageTagsDialog open={manageTagsOpen} entries={readableEntries(entries)} onClose={() => setManageTagsOpen(false)} />
 
       <NewTopicDialog
         open={newTopicOpen}

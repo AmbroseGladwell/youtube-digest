@@ -21,12 +21,7 @@ export interface GenerationStatusStripProps {
 // the bar — a mark, the label, then step, clock and title receding to the muted ink —
 // with a brand-orange bar at its foot while it runs. Ready, it moves to the stone tint
 // and offers the one action that makes something (docs/features/stone-theme.md).
-export function GenerationStatusStrip({
-  run,
-  onDetails,
-  onDismiss,
-  onReadOverview,
-}: GenerationStatusStripProps) {
+export function GenerationStatusStrip({ run, onDetails, onDismiss, onReadOverview }: GenerationStatusStripProps) {
   const status = generationRunStatus(run);
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
 
@@ -42,20 +37,10 @@ export function GenerationStatusStrip({
   const state = status.isRunning ? "running" : status.isReady ? "ready" : "failed";
 
   return (
-    <div
-      className={styles.root}
-      role="status"
-      aria-live="polite"
-      data-state={state}
-      data-testid={generationStatusStripTestIds.root}
-    >
+    <div className={styles.root} role="status" aria-live="polite" data-state={state} data-testid={generationStatusStripTestIds.root}>
       <span className={styles.text}>
         <span className={`${styles.mark} ${status.isFailed ? styles.markFailed : ""}`} aria-hidden="true">
-          {status.isRunning ? (
-            <span className={styles.dot} />
-          ) : (
-            <StrokeIcon name={status.isReady ? "check" : "close"} size={16} />
-          )}
+          {status.isRunning ? <span className={styles.dot} /> : <StrokeIcon name={status.isReady ? "check" : "close"} size={16} />}
         </span>
         <span className={styles.label} data-testid={generationStatusStripTestIds.label}>
           {status.label}
@@ -126,10 +111,7 @@ export function GenerationStatusStrip({
 
       {!status.isReady && (
         <span className={styles.barTrack} aria-hidden="true">
-          <span
-            className={styles.barFill}
-            style={{ width: `${Math.round(status.progressFraction * 100)}%` }}
-          />
+          <span className={styles.barFill} style={{ width: `${Math.round(status.progressFraction * 100)}%` }} />
         </span>
       )}
     </div>

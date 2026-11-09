@@ -102,7 +102,10 @@ test("the compare prompt names the topic it was given and asks for citations", a
     messages: Array<{ role: string; content: { text: string } }>;
   };
 
-  assert.deepEqual(listed.prompts.map((listedPrompt) => listedPrompt.name), ["compare_topic"]);
+  assert.deepEqual(
+    listed.prompts.map((listedPrompt) => listedPrompt.name),
+    ["compare_topic"],
+  );
   assert.equal(prompt.messages[0]!.role, "user");
   assert.match(prompt.messages[0]!.content.text, /get_overviews tool \(topic: "fitness"\)/);
   await testApp.close();

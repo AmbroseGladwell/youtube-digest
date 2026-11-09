@@ -18,7 +18,7 @@ interface Span {
 }
 
 const ABBREVIATIONS = new Set(["approx", "e.g", "i.e", "vs", "ca"]);
-const SENTENCE_END = /[.!?]["'”’)\]]*(\s+)(?=["'“‘(\[]?[\p{Lu}\d])/gu;
+const SENTENCE_END = /[.!?]["'”’)\]]*(\s+)(?=["'“‘([]?[\p{Lu}\d])/gu;
 const LABEL = /^((?:[\p{L}'’&]+\s){0,3}[\p{L}'’&]+)(?:\s[-–—]\s(?=\p{Lu})|:\s)/u;
 const THEN = /,\s+(then)\s+([\p{Ll}][\p{L}'’-]*)/gu;
 const NOT_AN_ACTION = new Set(["the", "a", "an", "another", "some", "more", "any", "all", "its", "their", "your", "his", "her"]);

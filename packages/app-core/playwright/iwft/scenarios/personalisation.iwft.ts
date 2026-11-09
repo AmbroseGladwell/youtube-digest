@@ -10,10 +10,7 @@ const SIGNED_IN_WITHOUT_A_KEY = {
 };
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
-test("the reader context and sections in Settings are what the next overview is made from", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the reader context and sections in Settings are what the next overview is made from", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   const sectionsEnabled = { ...DEFAULT_SECTIONS_ENABLED, selling: false };
   await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, aboutYou: { who: ["nurse"], time: [], focus: ["new recipes"] }, sectionsEnabled });
@@ -89,7 +86,9 @@ test("a pick in Settings is kept when the card's Done is pressed with the sheet 
   await settings.personalisation.openAboutYou();
   await settings.personalisation.sentence.openSection("who");
   await settings.personalisation.sentence.pick("parent");
-  await settings.personalisation.sentence.verifySentenceReads("I'm a parent, I spend my time on all sorts, and right now I'm focusing on getting better at something.");
+  await settings.personalisation.sentence.verifySentenceReads(
+    "I'm a parent, I spend my time on all sorts, and right now I'm focusing on getting better at something.",
+  );
   await settings.personalisation.closeAboutYou();
 
   await settings.personalisation.verifyAboutYouReads("I'm a parent.");

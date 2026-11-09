@@ -98,7 +98,9 @@ function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
       <h2 id={headingId} className={styles.title}>
         Now try your own.
       </h2>
-      <p className={styles.body}>Paste a link to a video or a page you've been meaning to get to. We'll write it for you, from what you told us.</p>
+      <p className={styles.body}>
+        Paste a link to a video or a page you've been meaning to get to. We'll write it for you, from what you told us.
+      </p>
       <form
         className={styles.ownForm}
         onSubmit={(event) => {

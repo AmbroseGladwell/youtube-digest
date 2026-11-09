@@ -44,12 +44,11 @@ test.describe("Settings › Connections", () => {
     await settings.verifySectionHeadingIsFocused("connections");
   });
 
-  test("each row says whether it can read what we know about you, and why not when it can't", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("each row says whether it can read what we know about you, and why not when it can't", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seed(connection());
-    backendSimulator.connections.seed(connection({ id: "older", clientName: "ChatGPT", createdAt: "2026-09-03T12:00:00.000Z", readsProfile: false }));
+    backendSimulator.connections.seed(
+      connection({ id: "older", clientName: "ChatGPT", createdAt: "2026-09-03T12:00:00.000Z", readsProfile: false }),
+    );
     await launcher.launch(PLUS);
     const settings = await (await launcher.appShell.openSettings()).openSection("connections");
 
@@ -57,10 +56,7 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyProfileLineReads(1, "Can’t read what we know about you until it’s reconnected");
   });
 
-  test("with sharing off in Personalisation, no row says it can read what we know about you", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("with sharing off in Personalisation, no row says it can read what we know about you", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seed(connection());
     await launcher.launch({ ...PLUS, shareProfileWithAssistants: false });
     const settings = await (await launcher.appShell.openSettings()).openSection("connections");
@@ -68,10 +64,7 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyProfileLineReads(0, "Can’t read what we know about you: it’s off in Personalisation");
   });
 
-  test("revoking asks once, and keeping it puts the row back with focus on its Revoke", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("revoking asks once, and keeping it puts the row back with focus on its Revoke", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seed(connection());
     await launcher.launch(PLUS);
     const settings = await (await launcher.appShell.openSettings()).openSection("connections");
@@ -97,8 +90,8 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyConnectedLabelIsFocused();
     await settings.verifyRowReads("connections", "1 connected");
     test.expect(backendSimulator.connections.revoked()).toEqual(["claude"]);
-    await test
-      .expect.poll(() => backendSimulator.analytics.eventNames().filter((name) => name.startsWith("mcp.")))
+    await test.expect
+      .poll(() => backendSimulator.analytics.eventNames().filter((name) => name.startsWith("mcp.")))
       .toEqual(["mcp.settingsConnections.revokeAsked", "mcp.settingsConnections.revoked"]);
   });
 

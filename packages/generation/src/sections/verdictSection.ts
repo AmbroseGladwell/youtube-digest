@@ -105,7 +105,12 @@ List the indices (if any) whose claim this video repeats, as similarToIndices.`;
           basis: DubiousClaim.shape.basis,
           reason: DubiousClaim.shape.reason,
           segmentIndex:
-            input.transcript.length === 0 ? z.null() : z.int().min(0).max(input.transcript.length - 1),
+            input.transcript.length === 0
+              ? z.null()
+              : z
+                  .int()
+                  .min(0)
+                  .max(input.transcript.length - 1),
         }),
       )
       .max(MAX_DUBIOUS_CLAIMS),
@@ -113,6 +118,11 @@ List the indices (if any) whose claim this video repeats, as similarToIndices.`;
     similarToIndices:
       input.pastClaims.length === 0
         ? z.array(z.int()).max(0)
-        : z.array(z.int().min(0).max(input.pastClaims.length - 1)),
+        : z.array(
+            z
+              .int()
+              .min(0)
+              .max(input.pastClaims.length - 1),
+          ),
   }),
 };

@@ -17,12 +17,7 @@ const LOGGED_DETAILS = new Set([
   "retryAfterSeconds",
 ]);
 
-export function logRefused(
-  request: FastifyRequest,
-  code: string,
-  status: number,
-  details?: Record<string, unknown>,
-): void {
+export function logRefused(request: FastifyRequest, code: string, status: number, details?: Record<string, unknown>): void {
   const logged = Object.fromEntries(Object.entries(details ?? {}).filter(([key]) => LOGGED_DETAILS.has(key)));
   request.log.warn(apiLogLines.http.requestRefused({ code, status, ...logged }));
 }

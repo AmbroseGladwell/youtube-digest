@@ -43,11 +43,7 @@ const rateLabelFor = (rate: number) => `${rate}×`;
 
 // Design Player.dc.html section 1, one state per branch: what the bar says, which button
 // sits in the middle, and what the track is doing. The label line is the live region.
-export function playerBarView(
-  snapshot: PlayerSnapshot,
-  time: number,
-  { read }: PlayerBarContext,
-): PlayerBarView {
+export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView {
   const { track, status, source, pacerReason, availability, preparing, timings, rate, voice, narratedVoice } = snapshot;
   const lines = track?.lines ?? [];
   const inOpening = time < (timings.lineStarts[0] ?? 0);
@@ -70,8 +66,7 @@ export function playerBarView(
     rateLabel: rateLabelFor(rate),
     reRecord: null,
   };
-  const reRecord =
-    narratedVoice !== null && narratedVoice !== voice ? `Re-record in ${narrationVoiceName(voice)}` : null;
+  const reRecord = narratedVoice !== null && narratedVoice !== voice ? `Re-record in ${narrationVoiceName(voice)}` : null;
 
   if (source === "pacer") {
     const started = status !== "ready";
@@ -81,8 +76,8 @@ export function playerBarView(
         : pacerReason === "dailyCap"
           ? "you’ve started today’s new narration, more tomorrow"
           : status === "ended"
-          ? "finished"
-          : section;
+            ? "finished"
+            : section;
     return {
       ...base,
       label: { lead: "Read-along · no audio", rest, tone: "ink", pacerTag: true },
@@ -205,8 +200,7 @@ export function playerBarView(
       };
 
     default: {
-      const lead =
-        status === "playing" ? `Now playing · ${section}` : status === "paused" ? "Paused" : "Buffering";
+      const lead = status === "playing" ? `Now playing · ${section}` : status === "paused" ? "Paused" : "Buffering";
       return {
         ...base,
         label: { lead, rest: status === "playing" ? null : section, tone: "ink", pacerTag: false },

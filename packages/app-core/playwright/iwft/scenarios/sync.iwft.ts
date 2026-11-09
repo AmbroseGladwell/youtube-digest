@@ -48,10 +48,7 @@ test("what the account holds arrives in the library without a reload", async ({ 
   test.expect(await backendSimulator.sync.cursor()).toBe(1);
 });
 
-test("a session the server no longer knows is said in settings rather than failing quietly", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a session the server no longer knows is said in settings rather than failing quietly", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.SYNC_HANDSHAKE);
   await launcher.launch({ sync: true, syncConnection: CONNECTED });
 
@@ -95,10 +92,7 @@ test("the extension's wall points at where Chrome updates it, since it cannot re
 
 // The soft prompt fires on encounter, not on the handshake: only when records are actually
 // being held back (docs/features/record-migrations.md).
-test("records from a newer version raise a banner with the count, and a reload on the web", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("records from a newer version raise a banner with the count, and a reload on the web", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedUnreadable(heldBackRecord("7c9e6f3a-1b2d-4e5f-8a9b-0c1d2e3f4a5b"));
   backendSimulator.overviews.seedUnreadable(heldBackRecord("8d0f7a4b-2c3e-4f6a-9b0c-1d2e3f4a5b6c"));
   await launcher.launch();
@@ -131,10 +125,7 @@ test("the banner stays dismissed across navigation within the session", async ({
   await launcher.appShell.staleClientBanner.verifyIsAbsent();
 });
 
-test("in the extension the banner is information unless the shell can act on it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("in the extension the banner is information unless the shell can act on it", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedUnreadable(heldBackRecord("7c9e6f3a-1b2d-4e5f-8a9b-0c1d2e3f4a5b"));
   await launcher.launch({ surface: "extension" });
 

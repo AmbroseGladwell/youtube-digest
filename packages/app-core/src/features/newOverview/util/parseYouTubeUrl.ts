@@ -102,5 +102,4 @@ export function youTubeLink(input: string): YouTubeLink | null {
   return videoUrl === null ? { kind: "playlist", playlistId } : { kind: "videoInPlaylist", videoUrl, playlistId };
 }
 
-export const playlistUrl = (playlistId: PlaylistId): string =>
-  `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
+export const playlistUrl = (playlistId: PlaylistId): string => `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;

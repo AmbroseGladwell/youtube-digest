@@ -13,11 +13,7 @@ import { writeSignedOutTrial } from "../src/features/signedOutTrial/signedOutTri
 import { NO_TRIAL } from "../src/features/signedOutTrial/types/SignedOutTrial.js";
 import { writeAnalyticsConsent } from "../src/features/analyticsConsent/analyticsConsentStorage.js";
 import { markAccountSeen } from "../src/features/accountLibraries/accountSeenStorage.js";
-import {
-  DEFAULT_SYNC_CONNECTION,
-  libraryAccountIdOf,
-  SyncConnection,
-} from "../src/features/sync/types/SyncConnection.js";
+import { DEFAULT_SYNC_CONNECTION, libraryAccountIdOf, SyncConnection } from "../src/features/sync/types/SyncConnection.js";
 import type { IwftHooksConfig } from "./network/IwftHooksConfig.testHelper.js";
 import { IwftActiveVideoSource } from "./network/IwftActiveVideoSource.testHelper.js";
 import { IwftArticlePages } from "./network/IwftArticlePages.testHelper.js";
@@ -38,9 +34,7 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const transcriptStore = new InMemoryTranscriptStore();
   const followedPlaylistStore = new InMemoryFollowedPlaylistStore();
   const captureQueueStore = new InMemoryCaptureQueueStore();
-  const syncStorage = syncAvailable
-    ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore)
-    : null;
+  const syncStorage = syncAvailable ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore) : null;
   return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, syncStorage };
 };
 
@@ -55,8 +49,7 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   for (const state of hooksConfig?.seedStates ?? []) overviewStore.seedState(state);
   for (const topic of hooksConfig?.seedTopics ?? []) overviewStore.seedTopic(topic);
   for (const record of hooksConfig?.seedUnreadable ?? []) overviewStore.seedUnreadable(record);
-  for (const transcript of hooksConfig?.seedTranscripts ?? [])
-    transcriptStore.seedTranscript(transcript);
+  for (const transcript of hooksConfig?.seedTranscripts ?? []) transcriptStore.seedTranscript(transcript);
   if (hooksConfig?.seedSettings) settingsStore.seedSettings(hooksConfig.seedSettings);
   for (const playlist of hooksConfig?.seedFollowedPlaylists ?? []) followedPlaylistStore.seedFollowed(playlist);
   for (const check of hooksConfig?.seedPlaylistChecks ?? []) followedPlaylistStore.seedCheck(check);
@@ -114,13 +107,9 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftDefaultApiUrl__ = hooksConfig?.defaultApiUrl ?? null;
   window.__iwftServerSwitchable__ = hooksConfig?.serverSwitchable ?? true;
   window.__iwftBuild__ = hooksConfig?.build ?? null;
-  window.__iwftActiveVideo__ =
-    hooksConfig?.activeVideoUrl === undefined
-      ? null
-      : new IwftActiveVideoSource(hooksConfig.activeVideoUrl);
+  window.__iwftActiveVideo__ = hooksConfig?.activeVideoUrl === undefined ? null : new IwftActiveVideoSource(hooksConfig.activeVideoUrl);
   window.__iwftArticlePages__ = hooksConfig?.articlePages === undefined ? null : new IwftArticlePages(hooksConfig.articlePages);
-  window.__iwftPlayback__ =
-    hooksConfig?.playback === undefined ? null : new IwftPlaybackSource(hooksConfig.playback);
+  window.__iwftPlayback__ = hooksConfig?.playback === undefined ? null : new IwftPlaybackSource(hooksConfig.playback);
   window.__iwftRunBridge__ = hooksConfig?.runBridge === true ? new IwftRunBridge() : null;
   window.__iwftYouTubeFetch__ = hooksConfig?.youTubeFetch === true ? iwftYouTubeFetch : null;
   window.__iwftErrorDestinations__ = hooksConfig?.errorDestinationMirror === true ? [] : null;

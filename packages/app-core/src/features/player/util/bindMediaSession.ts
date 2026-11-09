@@ -61,10 +61,13 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
     ["stop", () => engine.stop()],
     ["seekbackward", (details) => engine.skip(-(details.seekOffset ?? SKIP_SECONDS))],
     ["seekforward", (details) => engine.skip(details.seekOffset ?? SKIP_SECONDS)],
-    ["seekto", (details) => {
-      if (details.seekTime !== undefined) engine.seek(details.seekTime);
-      reportPosition();
-    }],
+    [
+      "seekto",
+      (details) => {
+        if (details.seekTime !== undefined) engine.seek(details.seekTime);
+        reportPosition();
+      },
+    ],
     ["previoustrack", null],
     ["nexttrack", null],
   ];

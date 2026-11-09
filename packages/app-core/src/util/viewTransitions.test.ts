@@ -4,13 +4,7 @@ import { navigationDirection, shouldAnimateNavigation } from "./viewTransitions.
 
 const OVERVIEW = Routes.overview("abc");
 
-function stubEnvironment({
-  supported,
-  reducedMotion,
-}: {
-  supported: boolean;
-  reducedMotion: boolean;
-}) {
+function stubEnvironment({ supported, reducedMotion }: { supported: boolean; reducedMotion: boolean }) {
   if (supported) {
     vi.stubGlobal("document", { ...globalThis.document, startViewTransition: () => undefined });
   } else {

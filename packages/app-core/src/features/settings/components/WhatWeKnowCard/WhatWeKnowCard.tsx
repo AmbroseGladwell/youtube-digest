@@ -100,7 +100,9 @@ export function WhatWeKnowCard() {
 
   const removed = (items: readonly LearnedItem[]): LearnedItems => {
     const at = new Date().toISOString();
-    return Object.fromEntries(items.map((item) => [learnedItemKey(item.text), { ...item, noticedAt: item.noticedAt ?? at, removedAt: at }]));
+    return Object.fromEntries(
+      items.map((item) => [learnedItemKey(item.text), { ...item, noticedAt: item.noticedAt ?? at, removedAt: at }]),
+    );
   };
 
   const save = (next: AboutYou) => {
@@ -159,7 +161,11 @@ export function WhatWeKnowCard() {
               {canLearn && (
                 <SwitchRow
                   title="Keep learning"
-                  hint={keepLearning ? "Every few overviews we add what we've noticed, and tell you." : "Off. What's here stays until you remove it."}
+                  hint={
+                    keepLearning
+                      ? "Every few overviews we add what we've noticed, and tell you."
+                      : "Off. What's here stays until you remove it."
+                  }
                   on={keepLearning}
                   onSwitch={() => {
                     analytics.settings.personalisation.learningSwitched({ on: !keepLearning });

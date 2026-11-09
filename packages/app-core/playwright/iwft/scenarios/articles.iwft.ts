@@ -1,9 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
-import {
-  makeArticleOverview,
-  makeOverview,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const ONE_CHAPTER = makeArticleOverview({
   keyPoints: [
@@ -18,7 +15,11 @@ const ONE_CHAPTER = makeArticleOverview({
   },
 });
 
-test("an article reads as the same note: named as an article, with chapters, and no transcript", async ({ page, launcher, backendSimulator }) => {
+test("an article reads as the same note: named as an article, with chapters, and no transcript", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeArticleOverview());
   const library = await launcher.launchExpectingLibrary();
   await expect(page.getByText(/14 min article/)).toBeVisible();
@@ -35,7 +36,11 @@ test("an article reads as the same note: named as an article, with chapters, and
   );
 });
 
-test("read it anyway sits in the note, says what it leaves out, and links the part and the whole", async ({ page, launcher, backendSimulator }) => {
+test("read it anyway sits in the note, says what it leaves out, and links the part and the whole", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeArticleOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -49,7 +54,11 @@ test("read it anyway sits in the note, says what it leaves out, and links the pa
   );
 });
 
-test("the chapters tab gives each chapter's read time, and says once that a jump can fail", async ({ page, launcher, backendSimulator }) => {
+test("the chapters tab gives each chapter's read time, and says once that a jump can fail", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeArticleOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -75,13 +84,23 @@ test("a one-chapter article has no tabs and no chapter links", async ({ page, la
   await expect(page.getByRole("link", { name: /opens the article/ })).toHaveCount(0);
 });
 
-test("an article with no share image shows the site's name, and one that fails to load does too", async ({ page, launcher, backendSimulator }) => {
+test("an article with no share image shows the site's name, and one that fails to load does too", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   const broken = makeArticleOverview({ id: makeOverview().id });
   backendSimulator.overviews.seed(makeArticleOverview());
   await page.route("https://cdn.example/**", (route) => route.abort());
   backendSimulator.overviews.seed({
     ...broken,
-    source: { ...broken.source, id: "aa" as never, url: "https://coast.example/tides", siteName: "Coast & Country", imageUrl: "https://cdn.example/tides.jpg" } as never,
+    source: {
+      ...broken.source,
+      id: "aa" as never,
+      url: "https://coast.example/tides",
+      siteName: "Coast & Country",
+      imageUrl: "https://cdn.example/tides.jpg",
+    } as never,
   });
   await launcher.launchExpectingLibrary();
 

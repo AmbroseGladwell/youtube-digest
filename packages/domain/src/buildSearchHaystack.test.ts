@@ -15,7 +15,7 @@ describe("buildSearchHaystack", () => {
         channel: "SOLOMA",
         description: null,
         durationMs: null,
-    publishedAt: null,
+        publishedAt: null,
         thumbnailUrl: null,
       },
       keyPoints: [{ text: "Jaw strain warning", range: null }],
@@ -32,7 +32,14 @@ describe("buildSearchHaystack", () => {
 
   it("includes verdict reasoning and selling detail when present", () => {
     const overview = makeOverview({
-      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "Contradicts settled anatomy.", similarTo: [] },
+      verdict: {
+        novelty: "common_knowledge",
+        standsOut: null,
+        dubious: true,
+        dubiousClaims: null,
+        reasoning: "Contradicts settled anatomy.",
+        similarTo: [],
+      },
       selling: { type: "own_paid_product", detail: "Pitches a Patreon course.", compromisesContent: true },
     });
 

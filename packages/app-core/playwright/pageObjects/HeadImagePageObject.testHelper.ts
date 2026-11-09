@@ -18,8 +18,7 @@ export class HeadImagePageObject extends PageObject {
 
   private button = () => this.get(headImageTestIds.button);
 
-  verifyShown = (shown: boolean) =>
-    this.step(`verifyShown ${shown}`, () => expect(this.button()).toHaveCount(shown ? 1 : 0));
+  verifyShown = (shown: boolean) => this.step(`verifyShown ${shown}`, () => expect(this.button()).toHaveCount(shown ? 1 : 0));
 
   // Measured once the grow has settled: mid-way, the transform is part of the box.
   verifySize = (width: number, height: number) =>

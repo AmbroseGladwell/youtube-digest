@@ -21,9 +21,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
     );
 
   verifyTitle = (title: string) =>
-    this.step(`verifyTitle ${title}`, () =>
-      expect(this.get(libraryOverviewCardTestIds.titleLink)).toContainText(title),
-    );
+    this.step(`verifyTitle ${title}`, () => expect(this.get(libraryOverviewCardTestIds.titleLink)).toContainText(title));
 
   openReader = (): Promise<ReaderPageObject> =>
     this.step("openReader", async () => {
@@ -34,9 +32,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
   clickListen = () => this.step("clickListen", () => this.click(libraryOverviewCardTestIds.listenButton));
 
   verifyListenReads = (label: string) =>
-    this.step(`verifyListenReads ${label}`, () =>
-      expect(this.get(libraryOverviewCardTestIds.listenButton)).toHaveText(label),
-    );
+    this.step(`verifyListenReads ${label}`, () => expect(this.get(libraryOverviewCardTestIds.listenButton)).toHaveText(label));
 
   openReaderFromTitle = (): Promise<ReaderPageObject> =>
     this.step("openReaderFromTitle", async () => {
@@ -59,18 +55,13 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   // What the reader sees, which the spoken line above would otherwise cover for.
   verifySavedChipFigureReads = (text: string) =>
-    this.step(`verifySavedChipFigureReads ${text}`, () =>
-      expect(this.get(savedChipTestIds.figure)).toHaveText(text),
-    );
+    this.step(`verifySavedChipFigureReads ${text}`, () => expect(this.get(savedChipTestIds.figure)).toHaveText(text));
 
   verifyNoSavedChip = () => this.step("verifyNoSavedChip", () => this.expectNotToBeVisible(savedChipTestIds.root));
 
   verifyIsFavourited = (isFavourited: boolean) =>
     this.step(`verifyIsFavourited ${isFavourited}`, () =>
-      expect(this.get(libraryOverviewCardTestIds.favouriteButton)).toHaveAttribute(
-        "aria-pressed",
-        String(isFavourited),
-      ),
+      expect(this.get(libraryOverviewCardTestIds.favouriteButton)).toHaveAttribute("aria-pressed", String(isFavourited)),
     );
 
   verifyIsRead = (isRead: boolean) =>
@@ -151,16 +142,11 @@ export class LibraryOverviewCardPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
-  hoverTitle = () =>
-    this.step("hoverTitle", () => this.get(libraryOverviewCardTestIds.titleLink).hover());
+  hoverTitle = () => this.step("hoverTitle", () => this.get(libraryOverviewCardTestIds.titleLink).hover());
 
-  focusFirstControl = () =>
-    this.step("focusFirstControl", () =>
-      this.get(libraryOverviewCardTestIds.favouriteButton).focus(),
-    );
+  focusFirstControl = () => this.step("focusFirstControl", () => this.get(libraryOverviewCardTestIds.favouriteButton).focus());
 
-  titleLeftEdge = async () =>
-    Math.round((await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!.x);
+  titleLeftEdge = async () => Math.round((await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!.x);
 
   // Against the row rather than a hardcoded width: what matters is that the title has the
   // whole of it, which is the thing a stray thumbnail column would take away. A pixel count
@@ -168,13 +154,10 @@ export class LibraryOverviewCardPageObject extends PageObject {
   verifyKindChipReads = (kind: string) =>
     this.step(`verifyKindChipReads ${kind}`, () => expect(this.get(kindChipTestIds.root)).toHaveText(kind));
 
-  verifyHasNoKindChip = () =>
-    this.step("verifyHasNoKindChip", () => expect(this.get(kindChipTestIds.root)).toHaveCount(0));
+  verifyHasNoKindChip = () => this.step("verifyHasNoKindChip", () => expect(this.get(kindChipTestIds.root)).toHaveCount(0));
 
   verifyMetaReads = (meta: string) =>
-    this.step(`verifyMetaReads ${meta}`, () =>
-      expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta),
-    );
+    this.step(`verifyMetaReads ${meta}`, () => expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta));
 
   // The circle and the pill beside it are one row of controls, so they have to agree on a
   // height and an edge. They got there separately — one sized to the reader's player bar,
@@ -188,8 +171,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
       const [readBox, favouriteBox] = [await read.boundingBox(), await favourite.boundingBox()];
       expect(Math.round(favouriteBox!.height)).toBe(Math.round(readBox!.height));
 
-      const edge = (locator: typeof read) =>
-        locator.evaluate((el) => getComputedStyle(el).borderTopColor);
+      const edge = (locator: typeof read) => locator.evaluate((el) => getComputedStyle(el).borderTopColor);
       expect(await edge(favourite)).toBe(await edge(read));
     });
 

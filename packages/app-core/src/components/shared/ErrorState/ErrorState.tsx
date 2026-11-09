@@ -13,9 +13,7 @@ import { PageLink } from "../PageLink/PageLink.js";
 // A recovery action does something here; a departure leaves the app entirely. Both take
 // the pill, because the distinction the screen is built on is between an action and
 // navigation, and leaving for the video is an action (docs/features/record-migrations.md).
-export type ErrorStateAction =
-  | { label: string; onSelect: () => void }
-  | { label: string; href: string };
+export type ErrorStateAction = { label: string; onSelect: () => void } | { label: string; href: string };
 
 export interface ErrorStateProps {
   // Which dead end this is, for counting what readers do on it; the title is copy.

@@ -17,8 +17,7 @@ const from = (fromPlaylist: typeof PSYCHOLOGY, count: number, start: number, ove
     }),
   );
 
-const paces = (byPlaylist: Record<string, PlaylistPace>) => (capture: QueuedCapture) =>
-  byPlaylist[capture.fromPlaylist.id] ?? "asTheyCome";
+const paces = (byPlaylist: Record<string, PlaylistPace>) => (capture: QueuedCapture) => byPlaylist[capture.fromPlaylist.id] ?? "asTheyCome";
 const made = (byPlaylist: Record<string, number>) => (capture: QueuedCapture) => byPlaylist[capture.fromPlaylist.id] ?? 0;
 const ids = (captures: QueuedCapture[]) => captures.map((capture) => capture.videoId);
 

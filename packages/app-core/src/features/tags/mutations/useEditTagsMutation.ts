@@ -42,9 +42,7 @@ export function useEditTagsMutation() {
           current ? applyTagEditPlan(current, plan) : current,
         );
       }
-      queryClient.setQueryData<Settings>(settingsKeys.all, (current) =>
-        current ? { ...current, tagAliases: plan.aliases } : current,
-      );
+      queryClient.setQueryData<Settings>(settingsKeys.all, (current) => (current ? { ...current, tagAliases: plan.aliases } : current));
 
       return { previousList, previousSettings };
     },

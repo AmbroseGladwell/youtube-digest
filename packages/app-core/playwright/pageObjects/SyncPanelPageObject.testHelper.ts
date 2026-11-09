@@ -44,9 +44,7 @@ export class SyncPanelPageObject extends PageObject {
     });
 
   verifyStatusReads = (pattern: RegExp) =>
-    this.step(`verifyStatusReads ${pattern.source}`, () =>
-      expect(this.get(syncPanelTestIds.statusLine)).toHaveText(pattern),
-    );
+    this.step(`verifyStatusReads ${pattern.source}`, () => expect(this.get(syncPanelTestIds.statusLine)).toHaveText(pattern));
 
   clickSyncNow = () => this.step("clickSyncNow", () => this.click(syncPanelTestIds.syncNowButton));
 

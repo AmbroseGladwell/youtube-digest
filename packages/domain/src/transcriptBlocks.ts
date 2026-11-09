@@ -69,22 +69,16 @@ export function transcriptBlocks(segments: TranscriptSegment[]): TranscriptBlock
 }
 
 function startsNewBlock(open: TranscriptBlock, piece: CaptionPiece): boolean {
-  return (
-    piece.speakerChange ||
-    piece.startMs - open.endMs >= LIMITS.silenceMs ||
-    piece.startMs - open.startMs >= LIMITS.runOnMs
-  );
+  return piece.speakerChange || piece.startMs - open.endMs >= LIMITS.silenceMs || piece.startMs - open.startMs >= LIMITS.runOnMs;
 }
 
 function endsBlock(open: TranscriptBlock, piece: CaptionPiece): boolean {
   const elapsedMs = piece.startMs - open.startMs;
   const atNaturalBoundary =
-    piece.sentenceEnd ||
-    (piece.clauseEnd && (open.text.length >= LIMITS.idealChars || elapsedMs >= LIMITS.clauseMs));
+    piece.sentenceEnd || (piece.clauseEnd && (open.text.length >= LIMITS.idealChars || elapsedMs >= LIMITS.clauseMs));
 
   return (
-    (atNaturalBoundary && (open.text.length >= LIMITS.minChars || elapsedMs >= LIMITS.impatientMs)) ||
-    open.text.length >= LIMITS.runOnChars
+    (atNaturalBoundary && (open.text.length >= LIMITS.minChars || elapsedMs >= LIMITS.impatientMs)) || open.text.length >= LIMITS.runOnChars
   );
 }
 

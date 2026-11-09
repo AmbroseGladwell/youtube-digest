@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER } from "@overview/domain";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
-import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeConnectingAssistant } from "./ConnectingAssistant.testHelper.js";
 import { AUTHORIZATION_TTL_MS, REFRESH_TOKEN_TTL_MS } from "./connectionTimings.js";
 import { resolveAccessToken } from "./resolveAccessToken.js";

@@ -92,6 +92,9 @@ test("a reader's earlier actions sit beside this run's, from the same calls, and
     lines.filter((line) => line.startsWith("| parent")),
     ["| parent | 0% | 50% | 0% | 50% | 2 of 2 | 1 of 2 |"],
   );
-  assert.equal(lines.some((line) => line.startsWith("| founder")), false);
+  assert.equal(
+    lines.some((line) => line.startsWith("| founder")),
+    false,
+  );
   assert.deepEqual(beforeAndAfterLines(summariseActionJudgments(["founder"], records)), []);
 });

@@ -65,9 +65,7 @@ export function overviewTimeSaved(overview: SharedNote): OverviewTimeSaved {
   };
 }
 
-export function timeSavedSummary(
-  entries: ReadonlyArray<{ overview: SharedNote; state: { read: boolean } }>,
-): TimeSavedSummary {
+export function timeSavedSummary(entries: ReadonlyArray<{ overview: SharedNote; state: { read: boolean } }>): TimeSavedSummary {
   const summary: TimeSavedSummary = { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0, recipe: 0 };
   for (const { overview, state } of entries) {
     if (!state.read) {

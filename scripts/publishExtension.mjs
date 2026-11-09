@@ -34,7 +34,9 @@ export function serviceAccountFrom(raw) {
     throw new Error("CHROME_SERVICE_ACCOUNT_KEY carries no client_email and private_key, so it is not a service account key");
   }
   if (!clientEmail.endsWith(".iam.gserviceaccount.com")) {
-    throw new Error(`${clientEmail} is not a service account address: the dashboard's Service account field takes the one Google Cloud generates`);
+    throw new Error(
+      `${clientEmail} is not a service account address: the dashboard's Service account field takes the one Google Cloud generates`,
+    );
   }
   return { clientEmail, privateKey };
 }
@@ -124,9 +126,7 @@ export function uploadProblem(upload, version) {
 const SUBMITTED_STATES = new Set(["PENDING_REVIEW", "STAGED", "PUBLISHED", "PUBLISHED_TO_TESTERS"]);
 
 export function publishProblem(published) {
-  return SUBMITTED_STATES.has(published.state)
-    ? null
-    : `the store put the submission in ${published.state ?? "(no state)"}`;
+  return SUBMITTED_STATES.has(published.state) ? null : `the store put the submission in ${published.state ?? "(no state)"}`;
 }
 
 // Read back rather than believed: a publish call that answered is not a submission the store
@@ -141,9 +141,7 @@ export function acceptedProblem(status, version) {
   if (!versionsOf(submitted).includes(version)) {
     return `the store's submitted revision is ${spell(versionsOf(submitted))}, not ${version}`;
   }
-  return SUBMITTED_STATES.has(stateOf(submitted))
-    ? null
-    : `the store holds ${version} in ${stateOf(submitted) ?? "(no state)"}`;
+  return SUBMITTED_STATES.has(stateOf(submitted)) ? null : `the store holds ${version} in ${stateOf(submitted) ?? "(no state)"}`;
 }
 
 export function warningLines(published) {
@@ -266,7 +264,9 @@ export async function publishExtension({ api, zip, version, log = console.log, w
 function reportCredentials(env) {
   const missing = missingCredentials(env);
   if (missing.length > 0) {
-    console.log(`::warning::${missing.join(", ")} ${missing.length === 1 ? "isn't" : "aren't"} set, so the extension wasn't submitted to the Chrome Web Store`);
+    console.log(
+      `::warning::${missing.join(", ")} ${missing.length === 1 ? "isn't" : "aren't"} set, so the extension wasn't submitted to the Chrome Web Store`,
+    );
   }
   if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `ready=${missing.length === 0}\n`);
   return missing.length === 0;

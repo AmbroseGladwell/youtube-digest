@@ -54,9 +54,7 @@ test("a dubious claim or reason over its target fails", () => {
   const output = makeGeneratedOutput({
     verdict: {
       ...makeGeneratedOutput().verdict!,
-      dubiousClaims: [
-        { claim: Array(26).fill("word").join(" "), basis: "contradictsSettled", reason: "Wrong.", segmentIndex: 2 },
-      ],
+      dubiousClaims: [{ claim: Array(26).fill("word").join(" "), basis: "contradictsSettled", reason: "Wrong.", segmentIndex: 2 }],
     },
   });
 

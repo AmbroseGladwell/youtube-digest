@@ -6,7 +6,6 @@ const NOW = new Date("2026-10-06T15:00:00");
 const EARLIER = new Date("2026-10-04T09:00:00").toISOString();
 const TODAY = new Date("2026-10-06T08:00:00").toISOString();
 
-
 describe("sinceDay", () => {
   it("says today for today, and the full date otherwise", () => {
     expect(sinceDay(TODAY, NOW)).toBe("today");
@@ -15,8 +14,11 @@ describe("sinceDay", () => {
 });
 
 describe("a reader without an account", () => {
-  const state = (consent: Parameters<typeof makeAnalyticsConsent>[0] | null, outdated = false): ShareUsageState =>
-    ({ signedIn: false, consent: consent === null ? null : makeAnalyticsConsent(consent), outdated });
+  const state = (consent: Parameters<typeof makeAnalyticsConsent>[0] | null, outdated = false): ShareUsageState => ({
+    signedIn: false,
+    consent: consent === null ? null : makeAnalyticsConsent(consent),
+    outdated,
+  });
 
   it("has not chosen: off, and says nothing is counted", () => {
     expect(shareUsageOn(state(null))).toBe(false);
@@ -59,9 +61,7 @@ describe("a signed-in reader", () => {
     expect(shareUsageStatus({ signedIn: true, optedOut: true, changedAt: EARLIER }, NOW)).toBe(
       "Off across your devices since 4 October 2026",
     );
-    expect(shareUsageStatus({ signedIn: true, optedOut: false, changedAt: TODAY }, NOW)).toBe(
-      "On across your devices since today",
-    );
+    expect(shareUsageStatus({ signedIn: true, optedOut: false, changedAt: TODAY }, NOW)).toBe("On across your devices since today");
     expect(shareUsageRowValue({ signedIn: true, optedOut: true, changedAt: EARLIER })).toBe("Off");
   });
 });

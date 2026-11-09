@@ -10,11 +10,7 @@ export interface PendingAuthorization {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function findPendingAuthorization(
-  sql: SqlClient,
-  id: string,
-  now: Date,
-): Promise<PendingAuthorization | null> {
+export async function findPendingAuthorization(sql: SqlClient, id: string, now: Date): Promise<PendingAuthorization | null> {
   if (!UUID.test(id)) {
     return null;
   }
@@ -26,5 +22,11 @@ export async function findPendingAuthorization(
   );
   return row === undefined
     ? null
-    : { id: row.id, clientName: row.client_name, redirectUri: row.redirect_uri, scope: row.scope, expiresAt: new Date(row.expires_at).toISOString() };
+    : {
+        id: row.id,
+        clientName: row.client_name,
+        redirectUri: row.redirect_uri,
+        scope: row.scope,
+        expiresAt: new Date(row.expires_at).toISOString(),
+      };
 }

@@ -21,12 +21,9 @@ describe("onboardingSources", () => {
     expect(recognised?.source.keyFromLink(link)).toBe(key);
   });
 
-  it.each(["", "not a link", "ftp://files.example/report", "https://www.youtube.com/playlist?list=WL"])(
-    "refuses %j",
-    (link) => {
-      expect(onboardingSourceOf(link)).toBeNull();
-    },
-  );
+  it.each(["", "not a link", "ftp://files.example/report", "https://www.youtube.com/playlist?list=WL"])("refuses %j", (link) => {
+    expect(onboardingSourceOf(link)).toBeNull();
+  });
 
   it("makes a video from its key, and an article from the link itself", () => {
     const link = "https://theharbourpost.example/2026/11/bridge-bill-twice";
@@ -72,7 +69,13 @@ describe("onboardingSources", () => {
       { name: "Ingredients", fromPage: true },
       { name: "Method", fromPage: true },
     ]);
-    expect(onboardingSources.web.sections(null).map(({ name }) => name)).toEqual(["Premise", "Key points", "How to apply", "Verdict", "Chapters"]);
+    expect(onboardingSources.web.sections(null).map(({ name }) => name)).toEqual([
+      "Premise",
+      "Key points",
+      "How to apply",
+      "Verdict",
+      "Chapters",
+    ]);
   });
 
   it("says what's in hand by kind once the source is read", () => {

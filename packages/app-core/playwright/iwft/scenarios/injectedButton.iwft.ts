@@ -11,10 +11,7 @@ const API_KEYS = ANTHROPIC_KEY;
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: WATCHED_URL, runBridge: true, youTubeFetch: true };
 
-test("pressing the button on the page starts the run, rather than only opening the panel", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("pressing the button on the page starts the run, rather than only opening the panel", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const capture = await launcher.launchPanel(panel);
 
@@ -24,22 +21,16 @@ test("pressing the button on the page starts the run, rather than only opening t
   await capture.verifyWorkingTitleReads("The Simulated Video");
 });
 
-test("a run started from the page is reported back to it, from running through to ready", async ({
-  launcher,
-}) => {
+test("a run started from the page is reported back to it, from running through to ready", async ({ launcher }) => {
   const capture = await launcher.launchPanel(panel);
 
   await launcher.pressInjectedButton(WATCHED_URL);
   await capture.waitForReader();
 
-  await expect
-    .poll(async () => (await launcher.readRunReports()).map((report) => report?.status ?? null))
-    .toContain("ready");
+  await expect.poll(async () => (await launcher.readRunReports()).map((report) => report?.status ?? null)).toContain("ready");
 
   const reports = await launcher.readRunReports();
-  expect(reports.filter((report) => report !== null).map((report) => report.videoUrl)).toContain(
-    WATCHED_URL,
-  );
+  expect(reports.filter((report) => report !== null).map((report) => report.videoUrl)).toContain(WATCHED_URL);
   // The run is dismissed as the panel opens the note, and the page is told so: a button
   // still saying "Creating" after the run is gone would be reporting a run nobody has.
   expect(reports.at(-1)).toBeNull();
@@ -48,10 +39,7 @@ test("a run started from the page is reported back to it, from running through t
 // The press opens the panel, so it arrives before the queries behind readiness have
 // answered. Deciding then sent a reader with an allowance to Settings for a key they do not
 // need, and the 5 minute staleTime hid it whenever the panel was already open.
-test("a press that arrives before our key has answered waits, rather than asking for a key", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a press that arrives before our key has answered waits, rather than asking for a key", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_STATUS);
   const capture = await launcher.launchPanel({
@@ -72,10 +60,7 @@ test("a press that arrives before our key has answered waits, rather than asking
 
 // Design 17d: the press cannot spend anything without the keys that would pay for it,
 // so it lands on the page that fixes that instead of failing.
-test("without keys the press goes to Settings rather than starting a run that cannot work", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("without keys the press goes to Settings rather than starting a run that cannot work", async ({ launcher, backendSimulator }) => {
   await launcher.launchPanel({ activeVideoUrl: WATCHED_URL, runBridge: true });
 
   await launcher.pressInjectedButton(WATCHED_URL);
@@ -91,10 +76,7 @@ test("without keys the press goes to Settings rather than starting a run that ca
 
 // Signed out where there are accounts, nothing is made on either key, so the press goes to
 // creating one (docs/architecture/tiers.md, "Signed out").
-test("signed out, the press goes to the panel's Start, whatever keys the device holds", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("signed out, the press goes to the panel's Start, whatever keys the device holds", async ({ launcher, backendSimulator }) => {
   await launcher.launchPanel({ ...panel, sync: true });
 
   await launcher.pressInjectedButton(WATCHED_URL);
@@ -107,10 +89,7 @@ test("signed out, the press goes to the panel's Start, whatever keys the device 
 // The button reads "Overview ready" on a video already written up, and pressing it has
 // to open that note. Starting a second run would make the page's own control the one
 // place in the app that pays for the same video twice.
-test("pressing it on a video already in the library opens that note and buys nothing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("pressing it on a video already in the library opens that note and buys nothing", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
@@ -136,18 +115,13 @@ test("pressing it on a video already in the library opens that note and buys not
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 });
 
-test("the web app, which has no page to be pressed from, reports nothing to anyone", async ({
-  launcher,
-}) => {
+test("the web app, which has no page to be pressed from, reports nothing to anyone", async ({ launcher }) => {
   await launcher.launch({ apiKeys: API_KEYS, surface: "web" });
 
   expect(await launcher.readRunReports()).toEqual([]);
 });
 
-test("a press on the page and the panel it opens are counted, with what the press did", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a press on the page and the panel it opens are counted, with what the press did", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const capture = await launcher.launchPanel({
     ...panel,

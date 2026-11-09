@@ -56,10 +56,12 @@ test.describe("deleting the account", () => {
     expect(backendSimulator.auth.verificationPurposes()).toEqual(["deleteAccount"]);
     expect(await launcher.libraryIsKept(SIMULATED_ACCOUNT_ID)).toBe(false);
     expect(await launcher.libraryIsKept(null)).toBe(true);
-    await expect.poll(() => deletionEvents(backendSimulator)).toEqual([
-      { name: "settings.sync.deleteAccountStarted", props: {} },
-      { name: "settings.sync.deleteAccountConfirmed", props: {} },
-    ]);
+    await expect
+      .poll(() => deletionEvents(backendSimulator))
+      .toEqual([
+        { name: "settings.sync.deleteAccountStarted", props: {} },
+        { name: "settings.sync.deleteAccountConfirmed", props: {} },
+      ]);
 
     await launcher.signOutNotice.dismiss();
     await launcher.signOutNotice.verifyIsAbsent();
@@ -115,10 +117,12 @@ test.describe("deleting the account", () => {
 
     await dialog.verifyRefusedReads(/^You’ve asked for 5 codes in the last hour\. Try again after \d\d:\d\d\.$/);
     await dialog.verifyContinueIsOffered(false);
-    await expect.poll(() => deletionEvents(backendSimulator)).toEqual([
-      { name: "settings.sync.deleteAccountStarted", props: {} },
-      { name: "settings.sync.deleteAccountRefused", props: { reason: "limited" } },
-    ]);
+    await expect
+      .poll(() => deletionEvents(backendSimulator))
+      .toEqual([
+        { name: "settings.sync.deleteAccountStarted", props: {} },
+        { name: "settings.sync.deleteAccountRefused", props: { reason: "limited" } },
+      ]);
   });
 
   test("a failure before the commit says nothing was deleted, keeps this device signed in, and Try again goes through", async ({
@@ -140,12 +144,14 @@ test.describe("deleting the account", () => {
 
     await launcher.homePage.verifyShowsStart();
     expect(backendSimulator.auth.accountDeletions()).toBe(1);
-    await expect.poll(() => deletionEvents(backendSimulator)).toEqual([
-      { name: "settings.sync.deleteAccountStarted", props: {} },
-      { name: "settings.sync.deleteAccountConfirmed", props: {} },
-      { name: "settings.sync.deleteAccountRefused", props: { reason: "failed" } },
-      { name: "settings.sync.deleteAccountConfirmed", props: {} },
-    ]);
+    await expect
+      .poll(() => deletionEvents(backendSimulator))
+      .toEqual([
+        { name: "settings.sync.deleteAccountStarted", props: {} },
+        { name: "settings.sync.deleteAccountConfirmed", props: {} },
+        { name: "settings.sync.deleteAccountRefused", props: { reason: "failed" } },
+        { name: "settings.sync.deleteAccountConfirmed", props: {} },
+      ]);
   });
 
   test("a verification that lapsed before the delete sends the dialog back to the code", async ({ launcher, backendSimulator }) => {

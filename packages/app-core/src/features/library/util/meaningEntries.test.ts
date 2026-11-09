@@ -4,7 +4,10 @@ import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { MEANING_RESULTS, meaningEntries } from "./meaningEntries.js";
 
 const searching = { ...NO_LIBRARY_FILTERS, query: "leaders who overstay" };
-const matchesFor = (...ids: string[]) => ({ available: true as const, matches: ids.map((overviewId, index) => ({ overviewId, similarity: 0.9 - index / 100 })) });
+const matchesFor = (...ids: string[]) => ({
+  available: true as const,
+  matches: ids.map((overviewId, index) => ({ overviewId, similarity: 0.9 - index / 100 })),
+});
 
 describe("meaningEntries", () => {
   it("lists the closest matches first, as the server ordered them", () => {
@@ -17,14 +20,24 @@ describe("meaningEntries", () => {
   it("leaves out an overview a word already matched", () => {
     const byWord = makeOverviewWithState();
     const byMeaning = makeOverviewWithState();
-    const result = meaningEntries([byWord, byMeaning], searching, matchesFor(byWord.overview.id, byMeaning.overview.id), new Set([byWord.overview.id]));
+    const result = meaningEntries(
+      [byWord, byMeaning],
+      searching,
+      matchesFor(byWord.overview.id, byMeaning.overview.id),
+      new Set([byWord.overview.id]),
+    );
     expect(result.map((entry) => entry.overview.id)).toEqual([byMeaning.overview.id]);
   });
 
   it("keeps the other filters: a match outside them is not shown", () => {
     const unread = makeOverviewWithState();
     const read = makeOverviewWithState({}, { read: true });
-    const result = meaningEntries([unread, read], { ...searching, status: "unread" }, matchesFor(read.overview.id, unread.overview.id), new Set());
+    const result = meaningEntries(
+      [unread, read],
+      { ...searching, status: "unread" },
+      matchesFor(read.overview.id, unread.overview.id),
+      new Set(),
+    );
     expect(result.map((entry) => entry.overview.id)).toEqual([unread.overview.id]);
   });
 

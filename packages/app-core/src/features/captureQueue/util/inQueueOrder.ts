@@ -6,10 +6,7 @@ import { inPlaylistOrder } from "../../playlists/util/inPlaylistOrder.js";
 // changes. So a playlist whose order the reader has just changed turns round on its own, and
 // every other playlist stays where it was (docs/features/playlists.md, "An order for each
 // playlist").
-export function inQueueOrder(
-  waiting: readonly QueuedCapture[],
-  orderOf: (playlistId: PlaylistId) => PlaylistOrder,
-): QueuedCapture[] {
+export function inQueueOrder(waiting: readonly QueuedCapture[], orderOf: (playlistId: PlaylistId) => PlaylistOrder): QueuedCapture[] {
   const places = new Map<PlaylistId, number[]>();
   waiting.forEach((capture, place) => {
     const taken = places.get(capture.fromPlaylist.id);

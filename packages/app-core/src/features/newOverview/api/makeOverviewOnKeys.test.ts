@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { API_ERROR_CODES, DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId, type ApiErrorCode } from "@overview/domain";
 import {
-  generateOverview,
   generateOverviewOf,
   ModelRefusedError,
   ProviderKeyRefusedError,
@@ -41,7 +40,11 @@ const answer = (inOneLine: string) => ({
   inOneLine,
   coreClaim: "The core claim.",
   thin: false,
-  keyPoints: [{ text: "one", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 }],
+  keyPoints: [
+    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
+  ],
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],
   suggestedTopic: null,
@@ -50,10 +53,12 @@ const answer = (inOneLine: string) => ({
   howToApply: { items: [] },
 });
 
-const ownClient = (outcome: "made" | Error): GenerationClient => async () => {
-  if (outcome instanceof Error) throw outcome;
-  return answer("Made on the reader's key.");
-};
+const ownClient =
+  (outcome: "made" | Error): GenerationClient =>
+  async () => {
+    if (outcome instanceof Error) throw outcome;
+    return answer("Made on the reader's key.");
+  };
 
 const refusal = (code: ApiErrorCode, details?: Record<string, unknown>) =>
   new SyncRequestError(code, API_ERROR_CODES[code], `simulated ${code}`, details);
@@ -93,7 +98,11 @@ describe("makeOverviewOnKeys", () => {
   it("makes it on the reader's key when that comes first, reserving the slot before, and says no key was passed over", async () => {
     const { api, calls } = fakeServer();
 
-    const overview = await makeOverviewOnKeys({ order: ["own", "ours"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api }, input, meta);
+    const overview = await makeOverviewOnKeys(
+      { order: ["own", "ours"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api },
+      input,
+      meta,
+    );
 
     expect(overview.inOneLine).toBe("Made on the reader's key.");
     expect(overview.madeOn).toEqual({ key: "own", fallback: null });
@@ -104,7 +113,11 @@ describe("makeOverviewOnKeys", () => {
     const { api, calls } = fakeServer();
 
     const overview = await makeOverviewOnKeys(
-      { order: ["own", "ours"], own: { provider: "anthropic", model: "a-model", client: ownClient(new ProviderOutOfCreditError(400, "credit")) }, api },
+      {
+        order: ["own", "ours"],
+        own: { provider: "anthropic", model: "a-model", client: ownClient(new ProviderOutOfCreditError(400, "credit")) },
+        api,
+      },
       input,
       meta,
     );
@@ -117,7 +130,11 @@ describe("makeOverviewOnKeys", () => {
   it("moves to our key when the own-key month is spent, without generating on the reader's key", async () => {
     const { api, calls } = fakeServer({ reserve: refusal("too_many_requests", { quota: "own", resetsOn: "2026-11-01" }) });
 
-    const overview = await makeOverviewOnKeys({ order: ["own", "ours"], own: { provider: "openai", model: "a-model", client: ownClient(new Error("must not be asked")) }, api }, input, meta);
+    const overview = await makeOverviewOnKeys(
+      { order: ["own", "ours"], own: { provider: "openai", model: "a-model", client: ownClient(new Error("must not be asked")) }, api },
+      input,
+      meta,
+    );
 
     expect(overview.madeOn?.fallback).toEqual({ from: "own", provider: "openai", cause: "quota-spent" });
     expect(calls).toEqual(["reserve", "generate"]);
@@ -127,7 +144,15 @@ describe("makeOverviewOnKeys", () => {
     const { api, calls } = fakeServer();
 
     await expect(
-      makeOverviewOnKeys({ order: ["own", "ours"], own: { provider: "anthropic", model: "a-model", client: ownClient(new ProviderKeyRefusedError("refused")) }, api }, input, meta),
+      makeOverviewOnKeys(
+        {
+          order: ["own", "ours"],
+          own: { provider: "anthropic", model: "a-model", client: ownClient(new ProviderKeyRefusedError("refused")) },
+          api,
+        },
+        input,
+        meta,
+      ),
     ).rejects.toBeInstanceOf(ProviderKeyRefusedError);
     expect(calls).toEqual(["reserve", "release"]);
   });
@@ -164,7 +189,11 @@ describe("makeOverviewOnKeys", () => {
   it("tries our key first on Plus and moves to the reader's when our month is spent", async () => {
     const { api } = fakeServer({ generate: refusal("too_many_requests", { quota: "ours", resetsOn: "2026-11-01" }) });
 
-    const overview = await makeOverviewOnKeys({ order: ["ours", "own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api }, input, meta);
+    const overview = await makeOverviewOnKeys(
+      { order: ["ours", "own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api },
+      input,
+      meta,
+    );
 
     expect(overview.madeOn).toEqual({ key: "own", fallback: { from: "ours", provider: "anthropic", cause: "quota-spent" } });
   });
@@ -175,27 +204,45 @@ describe("makeOverviewOnKeys", () => {
     const own = { provider: "anthropic" as const, model: "a-model", client: ownClient("made") };
 
     expect((await makeOverviewOnKeys({ order: ["ours", "own"], own, api: busy.api }, input, meta)).madeOn?.fallback?.cause).toBe("busy");
-    expect((await makeOverviewOnKeys({ order: ["ours", "own"], own, api: broken.api }, input, meta)).madeOn?.fallback?.cause).toBe("schema-failure");
+    expect((await makeOverviewOnKeys({ order: ["ours", "own"], own, api: broken.api }, input, meta)).madeOn?.fallback?.cause).toBe(
+      "schema-failure",
+    );
   });
 
   it("fails with the last key's own reason when no key is left to move to", async () => {
     const { api } = fakeServer({ generate: refusal("too_many_requests", { quota: "ours", resetsOn: "2026-11-01" }) });
 
     await expect(
-      makeOverviewOnKeys({ order: ["own", "ours"], own: { provider: "anthropic", model: "a-model", client: ownClient(new ProviderOutOfCreditError(400, "credit")) }, api }, input, meta),
+      makeOverviewOnKeys(
+        {
+          order: ["own", "ours"],
+          own: { provider: "anthropic", model: "a-model", client: ownClient(new ProviderOutOfCreditError(400, "credit")) },
+          api,
+        },
+        input,
+        meta,
+      ),
     ).rejects.toMatchObject({ code: "too_many_requests" });
   });
 
   it("still makes it on the reader's key when the server can't be reached to reserve, leaving the push to reserve", async () => {
     const { api } = fakeServer({ reserve: new TypeError("Failed to fetch") });
 
-    const overview = await makeOverviewOnKeys({ order: ["own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api }, input, meta);
+    const overview = await makeOverviewOnKeys(
+      { order: ["own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api },
+      input,
+      meta,
+    );
 
     expect(overview.madeOn).toEqual({ key: "own", fallback: null });
   });
 
   it("signed out, nothing is reserved or counted by the server", async () => {
-    const overview = await makeOverviewOnKeys({ order: ["own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api: null }, input, meta);
+    const overview = await makeOverviewOnKeys(
+      { order: ["own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api: null },
+      input,
+      meta,
+    );
 
     expect(overview.madeOn).toEqual({ key: "own", fallback: null });
   });

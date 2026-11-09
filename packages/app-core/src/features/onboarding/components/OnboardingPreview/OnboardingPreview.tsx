@@ -128,7 +128,12 @@ function Head({ role, children }: { role: "status" | "alert"; children: ReactNod
   return (
     <div className={styles.head}>
       <span className={styles.kicker}>Your overview</span>
-      <p className={styles.status} role={role} aria-live={role === "status" ? "polite" : undefined} data-testid={onboardingPreviewTestIds.status}>
+      <p
+        className={styles.status}
+        role={role}
+        aria-live={role === "status" ? "polite" : undefined}
+        data-testid={onboardingPreviewTestIds.status}
+      >
         {children}
       </p>
     </div>

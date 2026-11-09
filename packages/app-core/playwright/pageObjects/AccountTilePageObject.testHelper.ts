@@ -59,9 +59,7 @@ export class AccountTilePageObject extends PageObject {
   clickCancelName = () => this.step("clickCancelName", () => this.click(nameEditorTestIds.cancelButton));
 
   verifyNameStatusReads = (pattern: RegExp) =>
-    this.step(`verifyNameStatusReads ${pattern.source}`, () =>
-      expect(this.get(accountTileTestIds.nameStatus)).toHaveText(pattern),
-    );
+    this.step(`verifyNameStatusReads ${pattern.source}`, () => expect(this.get(accountTileTestIds.nameStatus)).toHaveText(pattern));
 
   // The email.
 
@@ -142,9 +140,7 @@ export class AccountTilePageObject extends PageObject {
     this.step(`verifyTakenReads ${text}`, () => expect(this.get(emailChangeFlowTestIds.taken)).toHaveText(text));
 
   verifyEmailStatusReads = (pattern: RegExp) =>
-    this.step(`verifyEmailStatusReads ${pattern.source}`, () =>
-      expect(this.get(accountTileTestIds.emailStatus)).toHaveText(pattern),
-    );
+    this.step(`verifyEmailStatusReads ${pattern.source}`, () => expect(this.get(accountTileTestIds.emailStatus)).toHaveText(pattern));
 
   verifyFlowIsClosed = () => this.step("verifyFlowIsClosed", () => this.expectToHaveCount(emailChangeFlowTestIds.root, 0));
 }

@@ -10,8 +10,5 @@ export function useConnectionsApi(): ConnectionsApi | null {
   const baseUrl = connection.apiUrl ?? knownApiUrl;
   const { token } = connection;
   const surface = useClientSurface();
-  return useMemo(
-    () => (baseUrl === null ? null : createFetchConnectionsApi({ baseUrl, token, surface })),
-    [baseUrl, token, surface],
-  );
+  return useMemo(() => (baseUrl === null ? null : createFetchConnectionsApi({ baseUrl, token, surface })), [baseUrl, token, surface]);
 }

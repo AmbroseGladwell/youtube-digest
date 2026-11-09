@@ -13,7 +13,7 @@ function builtExtension(manifest) {
   const distDir = path.join(root, "dist");
   mkdirSync(path.join(distDir, "chunks"), { recursive: true });
   writeFileSync(path.join(distDir, "manifest.json"), JSON.stringify(manifest));
-  writeFileSync(path.join(distDir, "sidepanel.html"), "<div id=\"root\"></div>");
+  writeFileSync(path.join(distDir, "sidepanel.html"), '<div id="root"></div>');
   writeFileSync(path.join(distDir, "chunks", "app-abc123.js"), "export {};");
   writeFileSync(path.join(distDir, ".DS_Store"), "");
   return { root, distDir, releaseDir: path.join(root, "release") };
@@ -58,7 +58,10 @@ test("a build whose manifest has no key yet packs the store's zip alone", () => 
   try {
     const { zips } = packExtension(built);
 
-    assert.deepEqual(zips.map((zip) => zip.keyed), [false]);
+    assert.deepEqual(
+      zips.map((zip) => zip.keyed),
+      [false],
+    );
     assert.ok(!existsSync(path.join(built.releaseDir, "the-overview-0.1.0-unpacked.zip")));
   } finally {
     rmSync(built.root, { recursive: true, force: true });

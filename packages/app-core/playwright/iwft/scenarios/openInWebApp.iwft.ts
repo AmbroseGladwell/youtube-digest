@@ -34,10 +34,7 @@ const alreadyOnTheServer = (backendSimulator: BackendSimulator, overview: Overvi
     body: overview,
   });
 
-test("a note the server holds opens in the web app, at its own address there", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note the server holds opens in the web app, at its own address there", async ({ launcher, backendSimulator }) => {
   const note = seedNote(backendSimulator);
   alreadyOnTheServer(backendSimulator, note);
   const capture = await launcher.launchPanel(signedIn);
@@ -46,10 +43,7 @@ test("a note the server holds opens in the web app, at its own address there", a
   await reader.verifyOpensInWebAppAt(`${SERVER}/overviews/${note.id}`);
 });
 
-test("a note that has not synced yet says so rather than opening a page that isn't there", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note that has not synced yet says so rather than opening a page that isn't there", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(signedIn);
   const reader = await capture.openStoredOverview();

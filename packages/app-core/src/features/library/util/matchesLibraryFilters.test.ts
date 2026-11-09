@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TopicId } from "@overview/domain";
-import {
-  makeOverviewWithState,
-  makeUnreadableEntry,
-} from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { matchesLibraryFilters } from "./matchesLibraryFilters.js";
 
@@ -24,7 +21,14 @@ describe("matchesLibraryFilters", () => {
 
   it("filters by novelty, and thin overviews with no verdict never match a specific novelty", () => {
     const withVerdict = makeOverviewWithState({
-      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
+      verdict: {
+        novelty: "original",
+        standsOut: { text: "A new idea.", range: null },
+        dubious: false,
+        dubiousClaims: [],
+        reasoning: "x",
+        similarTo: [],
+      },
     });
     const thin = makeOverviewWithState({ thin: true, verdict: null });
 
@@ -65,9 +69,7 @@ describe("matchesLibraryFilters", () => {
 
   it("combines filters with AND, not OR", () => {
     const entry = makeOverviewWithState({ topicIds: [FITNESS_TOPIC] }, { read: false });
-    expect(
-      matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC, status: "read" }),
-    ).toBe(false);
+    expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC, status: "read" })).toBe(false);
   });
 
   // Read and favourite live in their own store, so they are answerable for a record whose

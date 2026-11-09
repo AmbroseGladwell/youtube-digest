@@ -51,10 +51,10 @@ export class ServiceUsageRepository {
   }
 
   async releaseFetch(now: Date, caller: string): Promise<void> {
-    await this.#sql.query(
-      "update service_transcript_usage set fetches = greatest(fetches - 1, 0) where day = $1::date and caller = $2",
-      [usageDay(now), caller],
-    );
+    await this.#sql.query("update service_transcript_usage set fetches = greatest(fetches - 1, 0) where day = $1::date and caller = $2", [
+      usageDay(now),
+      caller,
+    ]);
   }
 
   async fetchesOn(day: string, caller: string): Promise<number> {
@@ -78,10 +78,10 @@ export class ServiceUsageRepository {
   }
 
   async releaseProxy(now: Date): Promise<void> {
-    await this.#sql.query(
-      "update service_transcript_usage set proxied = greatest(proxied - 1, 0) where day = $1::date and caller = $2",
-      [usageDay(now), GLOBAL_CALLER],
-    );
+    await this.#sql.query("update service_transcript_usage set proxied = greatest(proxied - 1, 0) where day = $1::date and caller = $2", [
+      usageDay(now),
+      GLOBAL_CALLER,
+    ]);
   }
 
   async addProxyBytes(now: Date, bytes: number): Promise<ProxySpend> {

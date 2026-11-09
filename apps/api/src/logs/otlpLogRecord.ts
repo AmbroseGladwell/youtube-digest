@@ -1,8 +1,4 @@
-export type OtlpAnyValue =
-  | { stringValue: string }
-  | { boolValue: boolean }
-  | { intValue: string }
-  | { doubleValue: number };
+export type OtlpAnyValue = { stringValue: string } | { boolValue: boolean } | { intValue: string } | { doubleValue: number };
 
 export interface OtlpKeyValue {
   key: string;

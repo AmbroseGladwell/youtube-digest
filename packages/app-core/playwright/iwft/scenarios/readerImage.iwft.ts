@@ -1,10 +1,6 @@
 import type { Overview } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import {
-  makeArticleOverview,
-  makeOverview,
-  makeRecipeOverview,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 
@@ -20,10 +16,7 @@ const BROKEN_IMAGE = "https://cdn.example/missing.jpg";
 const withImage = (overview: Overview, url: string | null): Overview =>
   ({
     ...overview,
-    source:
-      overview.source.kind === "web"
-        ? { ...overview.source, imageUrl: url }
-        : { ...overview.source, thumbnailUrl: url },
+    source: overview.source.kind === "web" ? { ...overview.source, imageUrl: url } : { ...overview.source, thumbnailUrl: url },
   }) as Overview;
 
 test("a video's image leads the head at the library row's size, with the channel beside it and the title below", async ({
@@ -53,11 +46,7 @@ test("the head's image is not dimmed once the note is read", async ({ launcher, 
   await reader.verifyHeadImageOffers("full");
 });
 
-test("on a phone the image is the phone row's size, still beside the channel", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("on a phone the image is the phone row's size, still beside the channel", async ({ launcher, backendSimulator, page }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   backendSimulator.overviews.seed(withImage(makeOverview(), IMAGE));
   const library = await launcher.launchExpectingLibrary();
@@ -68,10 +57,7 @@ test("on a phone the image is the phone row's size, still beside the channel", a
   await reader.verifyPageDoesNotScrollSideways();
 });
 
-test("a recipe puts its image beside the site's name", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a recipe puts its image beside the site's name", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(withImage(makeRecipeOverview(), IMAGE));
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -80,10 +66,7 @@ test("a recipe puts its image beside the site's name", async ({
   await reader.verifyHeadImageLeadsWith("sourceLine");
 });
 
-test("an article with no image keeps the head as it was, with no name tile in its place", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an article with no image keeps the head as it was, with no name tile in its place", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(withImage(makeArticleOverview(), null));
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -92,11 +75,7 @@ test("an article with no image keeps the head as it was, with no name tile in it
   await reader.verifyAboveTitle("sourceLine");
 });
 
-test("an image that fails to load leaves the head as it is with none", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("an image that fails to load leaves the head as it is with none", async ({ launcher, backendSimulator, page }) => {
   await page.route("https://cdn.example/**", (route) => route.abort());
   backendSimulator.overviews.seed(withImage(makeOverview(), BROKEN_IMAGE));
   const library = await launcher.launchExpectingLibrary();
@@ -173,10 +152,7 @@ test("under the pointer the image shows what a click will do, and nothing once t
   await reader.verifyHeadImageIconShown(false);
 });
 
-test("the size chosen is the account's, so the next note opens at it, and it is counted", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the size chosen is the account's, so the next note opens at it, and it is counted", async ({ launcher, backendSimulator }) => {
   const first = withImage(makeOverview({ savedAt: "2026-09-12T00:00:00.000Z" }), IMAGE);
   const second = withImage(makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" }), IMAGE);
   backendSimulator.overviews.seed(first);
@@ -221,11 +197,7 @@ test("with full width chosen, a note without an image keeps today's head and has
   await reader.verifyAboveTitle("sourceLine");
 });
 
-test("full width asks YouTube for its sharper picture and shows it once it has arrived", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("full width asks YouTube for its sharper picture and shows it once it has arrived", async ({ launcher, backendSimulator, page }) => {
   await page.route("https://i.ytimg.com/vi/pricing/hqdefault.jpg", (route) =>
     route.fulfill({ contentType: "image/svg+xml", body: svg(480, 360) }),
   );
@@ -273,11 +245,7 @@ test("Settings › Appearance names the same choice clicking the image makes, an
     .toEqual([{ name: "settings.appearance.headImageChosen", props: { size: "full" } }]);
 });
 
-test("the image grows into place, and with reduced motion the head swaps without moving", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("the image grows into place, and with reduced motion the head swaps without moving", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.overviews.seed(withImage(makeOverview(), IMAGE));
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();

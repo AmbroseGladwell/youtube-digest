@@ -8,9 +8,7 @@ export interface SignInVariables {
   token: string;
 }
 
-export const useSignInMutation = (
-  createApi?: (baseUrl: string) => AuthApi,
-) => {
+export const useSignInMutation = (createApi?: (baseUrl: string) => AuthApi) => {
   const surface = useClientSurface();
   const api = createApi ?? ((baseUrl: string) => createFetchAuthApi({ baseUrl, surface }));
   return useMutation<SignedIn, Error, SignInVariables>({

@@ -18,8 +18,15 @@ const HEADERS = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
 const videoIdNumbered = (n: number) => `vid${String(n).padStart(8, "0")}`;
 const PLAYLIST_OF_NINETEEN = 19;
 
-async function serviceApp(youTube: FakeYouTube, proxyDailyFetches = 1000, logger?: ReturnType<typeof recordingLogger>["logger"]): Promise<TestApp> {
-  return createTestApp({}, { transcriptService: { fetches: youTube.fetches, proxyDailyFetches }, ...(logger === undefined ? {} : { logger }) });
+async function serviceApp(
+  youTube: FakeYouTube,
+  proxyDailyFetches = 1000,
+  logger?: ReturnType<typeof recordingLogger>["logger"],
+): Promise<TestApp> {
+  return createTestApp(
+    {},
+    { transcriptService: { fetches: youTube.fetches, proxyDailyFetches }, ...(logger === undefined ? {} : { logger }) },
+  );
 }
 
 const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
@@ -289,11 +296,30 @@ test("reaching the cap is one warn line saying who, which plan, the limit, today
   const [fetched] = saying(lines, "service transcript fetched");
 
   assert.deepEqual(
-    { level: spent!.level, caller: spent!.caller, plan: spent!.plan, accountId: spent!.accountId, limit: spent!.limit, used: spent!.used, retryAfterSeconds: spent!.retryAfterSeconds },
-    { level: LOG_LEVELS.warn, caller: "account", plan: "free", accountId: account.accountId, limit: 50, used: 50, retryAfterSeconds: 15 * 60 * 60 },
+    {
+      level: spent!.level,
+      caller: spent!.caller,
+      plan: spent!.plan,
+      accountId: spent!.accountId,
+      limit: spent!.limit,
+      used: spent!.used,
+      retryAfterSeconds: spent!.retryAfterSeconds,
+    },
+    {
+      level: LOG_LEVELS.warn,
+      caller: "account",
+      plan: "free",
+      accountId: account.accountId,
+      limit: 50,
+      used: 50,
+      retryAfterSeconds: 15 * 60 * 60,
+    },
   );
   assert.equal(refused.length, 1);
-  assert.deepEqual({ daily: refused[0]!.daily, retryAfterSeconds: refused[0]!.retryAfterSeconds }, { daily: true, retryAfterSeconds: 15 * 60 * 60 });
+  assert.deepEqual(
+    { daily: refused[0]!.daily, retryAfterSeconds: refused[0]!.retryAfterSeconds },
+    { daily: true, retryAfterSeconds: 15 * 60 * 60 },
+  );
   assert.deepEqual({ used: fetched!.used, limit: fetched!.limit }, { used: 1, limit: 50 });
   await testApp.close();
 });
@@ -307,7 +333,10 @@ test("a signed-out caller's cap line names the address counter, never the addres
 
   const [spent] = saying(lines, "service transcript quota spent");
 
-  assert.deepEqual({ caller: spent!.caller, plan: spent!.plan, limit: spent!.limit, used: spent!.used }, { caller: "address", plan: null, limit: 5, used: 5 });
+  assert.deepEqual(
+    { caller: spent!.caller, plan: spent!.plan, limit: spent!.limit, used: spent!.used },
+    { caller: "address", plan: null, limit: 5, used: 5 },
+  );
   assert.doesNotMatch(JSON.stringify(spent), /203\.0\.113\.77/);
   await testApp.close();
 });
@@ -321,7 +350,10 @@ test("readers asking for one video at the same moment share one fetch", async ()
     askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.4"),
   ]);
 
-  assert.deepEqual(answers.map((answer) => answer.statusCode), [200, 200]);
+  assert.deepEqual(
+    answers.map((answer) => answer.statusCode),
+    [200, 200],
+  );
   assert.equal(youTube.requests.filter((request) => request.url.includes("timedtext")).length, 1);
   await testApp.close();
 });

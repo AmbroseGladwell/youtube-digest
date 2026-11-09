@@ -10,15 +10,10 @@ export class LibraryUnreadableCardPageObject extends PageObject {
     });
 
   verifyTitleReads = (title: string): Promise<void> =>
-    this.step(`verifyTitleReads ${title}`, () =>
-      expect(this.get(libraryUnreadableCardTestIds.titleLink)).toHaveText(title),
-    );
+    this.step(`verifyTitleReads ${title}`, () => expect(this.get(libraryUnreadableCardTestIds.titleLink)).toHaveText(title));
 
   verifyKickerReads = (kicker: string): Promise<void> =>
-    this.step(`verifyKickerReads ${kicker}`, () =>
-      expect(this.get(libraryUnreadableCardTestIds.kicker)).toHaveText(kicker),
-    );
+    this.step(`verifyKickerReads ${kicker}`, () => expect(this.get(libraryUnreadableCardTestIds.kicker)).toHaveText(kicker));
 
-  open = (): Promise<void> =>
-    this.step("open", () => this.click(libraryUnreadableCardTestIds.titleLink));
+  open = (): Promise<void> => this.step("open", () => this.click(libraryUnreadableCardTestIds.titleLink));
 }

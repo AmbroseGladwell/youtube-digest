@@ -68,9 +68,7 @@ test("one address's flood leaves another address alone", async () => {
 test("a flood of unknown tokens is refused by its address, with no account to count against", async () => {
   const testApp = await createTestApp();
   const bogus = { authorization: "Bearer not-a-session" };
-  await spend(rateLimits.perAddress, () =>
-    testApp.app.inject({ method: "GET", url: "/api/session", remoteAddress: HOME, headers: bogus }),
-  );
+  await spend(rateLimits.perAddress, () => testApp.app.inject({ method: "GET", url: "/api/session", remoteAddress: HOME, headers: bogus }));
 
   const refused = await testApp.app.inject({ method: "GET", url: "/api/session", remoteAddress: HOME, headers: bogus });
 

@@ -113,8 +113,7 @@ const videoFacts = (source: Source): string =>
     ? [source.channel, source.durationMs === null ? null : formatClock(source.durationMs / 1000)].filter(Boolean).join(" · ")
     : sourceName(source);
 
-const readMinutes = (source: Source): string | null =>
-  source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null;
+const readMinutes = (source: Source): string | null => (source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null);
 
 // Everything onboarding does differently for each kind of source, so a kind joining `Source`
 // can't ship until it has an entry here (docs/features/source-identity.md, "Adding a kind").

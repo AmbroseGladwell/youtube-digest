@@ -12,8 +12,7 @@ import { appearanceSectionTestIds } from "../../src/features/appearance/componen
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class AppearanceSectionPageObject extends PageObject {
-  chooseTheme = (theme: ThemeMode) =>
-    this.step(`chooseTheme ${theme}`, () => this.get(appearanceSectionTestIds.theme(theme)).check());
+  chooseTheme = (theme: ThemeMode) => this.step(`chooseTheme ${theme}`, () => this.get(appearanceSectionTestIds.theme(theme)).check());
 
   chooseAccent = (accentColour: AccentColour) =>
     this.step(`chooseAccent ${accentColour}`, () => this.get(appearanceSectionTestIds.accent(accentColour)).check());
@@ -22,9 +21,7 @@ export class AppearanceSectionPageObject extends PageObject {
     this.step(`chooseHeadImageSize ${size}`, () => this.get(appearanceSectionTestIds.headImageSize(size)).check());
 
   verifyHeadImageSizeIs = (size: HeadImageSize) =>
-    this.step(`verifyHeadImageSizeIs ${size}`, () =>
-      expect(this.get(appearanceSectionTestIds.headImageSize(size))).toBeChecked(),
-    );
+    this.step(`verifyHeadImageSizeIs ${size}`, () => expect(this.get(appearanceSectionTestIds.headImageSize(size))).toBeChecked());
 
   verifyThemeIs = (theme: ThemeMode) =>
     this.step(`verifyThemeIs ${theme}`, () => expect(this.get(appearanceSectionTestIds.theme(theme))).toBeChecked());
@@ -36,9 +33,7 @@ export class AppearanceSectionPageObject extends PageObject {
     });
 
   verifyThemeLineReads = (text: string) =>
-    this.step(`verifyThemeLineReads ${text}`, () =>
-      expect(this.get(appearanceSectionTestIds.themeLine)).toHaveText(text),
-    );
+    this.step(`verifyThemeLineReads ${text}`, () => expect(this.get(appearanceSectionTestIds.themeLine)).toHaveText(text));
 
   verifyStatusReads = (text: string) =>
     this.step(`verifyStatusReads ${text}`, () => expect(this.get(appearanceSectionTestIds.status)).toHaveText(text));
@@ -84,18 +79,13 @@ export class AppearanceSectionPageObject extends PageObject {
     this.step(`verifyTokenIs ${token} ${value}`, () =>
       expect
         .poll(() =>
-          this.page.evaluate(
-            (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim().toLowerCase(),
-            token,
-          ),
+          this.page.evaluate((name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim().toLowerCase(), token),
         )
         .toBe(value),
     );
 
   verifyDeviceCopyIs = (appearance: { theme: ThemeMode; accentColour: AccentColour }) =>
     this.step("verifyDeviceCopyIs", () =>
-      expect
-        .poll(() => this.page.evaluate(() => JSON.parse(localStorage.getItem("overview.appearance.v1") ?? "null")))
-        .toEqual(appearance),
+      expect.poll(() => this.page.evaluate(() => JSON.parse(localStorage.getItem("overview.appearance.v1") ?? "null"))).toEqual(appearance),
     );
 }

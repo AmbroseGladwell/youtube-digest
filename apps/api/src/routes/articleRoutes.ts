@@ -17,11 +17,7 @@ const Body = z.object({ url: z.url() });
 // (docs/features/pasted-article-links.md).
 export function articleRoutes(
   app: FastifyInstance,
-  {
-    fetchPage,
-    trials,
-    clock,
-  }: { fetchPage: (url: string) => Promise<FetchedPage>; trials: TrialsRepository; clock: () => Date },
+  { fetchPage, trials, clock }: { fetchPage: (url: string) => Promise<FetchedPage>; trials: TrialsRepository; clock: () => Date },
 ): void {
   app.post(
     "/articles/read",
@@ -47,9 +43,7 @@ export function articleRoutes(
             throw new ApiError("too_many_requests", "You've read the links you can without an account", { quota: "trial-reads" });
           }
           const retryAfterSeconds = secondsToNextUsageDay(now);
-          request.log.warn(
-            apiLogLines.articles.trialReadAddressSpent({ used: reservation.used, limit: TRIAL_READS_PER_ADDRESS_DAILY }),
-          );
+          request.log.warn(apiLogLines.articles.trialReadAddressSpent({ used: reservation.used, limit: TRIAL_READS_PER_ADDRESS_DAILY }));
           reply.header("retry-after", String(retryAfterSeconds));
           throw new ApiError("too_many_requests", "Links read without an account are used up for today", {
             quota: "trial-reads-address",

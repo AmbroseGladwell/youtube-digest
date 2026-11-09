@@ -3,11 +3,7 @@ import { TranscriptFetchError } from "../TranscriptFetchError.js";
 import { TranscriptFetchFailure, isWorthAnotherSource } from "../TranscriptFetchFailure.js";
 import type { YouTubeFetch } from "../YouTubeFetch.js";
 import { fetchCaptionTrack } from "./fetchCaptionTrack.js";
-import {
-  DEFAULT_CAPTION_CLIENTS,
-  DEFAULT_METADATA_CLIENT,
-  type InnerTubeClientConfig,
-} from "./InnerTubeClientConfig.js";
+import { DEFAULT_CAPTION_CLIENTS, DEFAULT_METADATA_CLIENT, type InnerTubeClientConfig } from "./InnerTubeClientConfig.js";
 import { asInnerTubeError, innerTubeError, playabilityFailure } from "./innerTubeFailure.js";
 import { mapPlayerResponseToVideoSource } from "./mapPlayerResponseToVideoSource.js";
 import { captionTracksOf, type PlayerResponse } from "./PlayerResponse.js";
@@ -21,18 +17,11 @@ export interface InnerTubeOptions {
   metadataClient?: InnerTubeClientConfig | null;
 }
 
-async function playableResponse(
-  youTubeFetch: YouTubeFetch,
-  videoId: string,
-  client: InnerTubeClientConfig,
-): Promise<PlayerResponse> {
+async function playableResponse(youTubeFetch: YouTubeFetch, videoId: string, client: InnerTubeClientConfig): Promise<PlayerResponse> {
   const response = await requestPlayerResponse(youTubeFetch, videoId, client);
   const failure = playabilityFailure(response.playabilityStatus?.status);
   if (failure !== null) {
-    throw innerTubeError(
-      response.playabilityStatus?.reason ?? `the video is not playable (${client.clientName})`,
-      failure,
-    );
+    throw innerTubeError(response.playabilityStatus?.reason ?? `the video is not playable (${client.clientName})`, failure);
   }
   return response;
 }
@@ -105,9 +94,5 @@ export async function fetchInnerTubeTranscript(
 
   // A caption failure is the one that actually stopped us, and says more than a later
   // client being turned away at the player.
-  throw (
-    captionError ??
-    playerError ??
-    innerTubeError("no InnerTube client was configured", TranscriptFetchFailure.SOURCE_UNSUPPORTED)
-  );
+  throw captionError ?? playerError ?? innerTubeError("no InnerTube client was configured", TranscriptFetchFailure.SOURCE_UNSUPPORTED);
 }

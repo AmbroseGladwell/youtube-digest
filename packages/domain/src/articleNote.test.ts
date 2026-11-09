@@ -63,7 +63,10 @@ test("a partial answer names its chapters aloud", () => {
 
 test("a key point carries its chapter, and says once that the link leaves the app", () => {
   const points = overviewNoteLines(article()).filter((line) => line.section === "Key points" && !line.heading);
-  assert.deepEqual(points.map((line) => line.chapterIndex), [0, 1, undefined]);
+  assert.deepEqual(
+    points.map((line) => line.chapterIndex),
+    [0, 1, undefined],
+  );
   assert.match(overviewNoteCaptions(article())["Key points"]!, /Chapter links open the article on Example News/);
 });
 

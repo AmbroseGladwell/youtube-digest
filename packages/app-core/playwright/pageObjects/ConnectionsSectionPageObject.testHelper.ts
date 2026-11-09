@@ -14,9 +14,7 @@ export class ConnectionsSectionPageObject extends PageObject {
     );
 
   verifyUseLineReads = (index: number, text: string) =>
-    this.step(`verifyUseLineReads ${index} ${text}`, () =>
-      expect(this.get(connectionRowTestIds.useLine).nth(index)).toHaveText(text),
-    );
+    this.step(`verifyUseLineReads ${index} ${text}`, () => expect(this.get(connectionRowTestIds.useLine).nth(index)).toHaveText(text));
 
   verifyProfileLineReads = (index: number, text: string) =>
     this.step(`verifyProfileLineReads ${index} ${text}`, () =>
@@ -38,14 +36,10 @@ export class ConnectionsSectionPageObject extends PageObject {
   keep = () => this.step("keep", () => this.click(connectionRowTestIds.keepButton));
 
   verifyRevokeIsFocused = (name: string) =>
-    this.step(`verifyRevokeIsFocused ${name}`, () =>
-      expect(this.page.getByRole("button", { name: `Revoke ${name}` })).toBeFocused(),
-    );
+    this.step(`verifyRevokeIsFocused ${name}`, () => expect(this.page.getByRole("button", { name: `Revoke ${name}` })).toBeFocused());
 
   verifyConnectedLabelIsFocused = () =>
-    this.step("verifyConnectedLabelIsFocused", () =>
-      expect(this.get(connectionsSectionTestIds.connectedLabel)).toBeFocused(),
-    );
+    this.step("verifyConnectedLabelIsFocused", () => expect(this.get(connectionsSectionTestIds.connectedLabel)).toBeFocused());
 
   verifyShowsSetup = (address: string) =>
     this.step(`verifyShowsSetup ${address}`, async () => {
@@ -74,5 +68,4 @@ export class ConnectionsSectionPageObject extends PageObject {
 
   tryAgain = () =>
     this.step("tryAgain", () => this.get(connectionsSectionTestIds.error).getByRole("button", { name: "Try again" }).click());
-
 }

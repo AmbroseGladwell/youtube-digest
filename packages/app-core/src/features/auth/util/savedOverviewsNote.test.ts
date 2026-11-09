@@ -9,9 +9,7 @@ describe("savedOverviewsNote", () => {
   });
 
   it("says the overviews come along when creating an account", () => {
-    expect(savedOverviewsNote(12, "createAccount", "extension")).toBe(
-      "The 12 overviews saved in the extension come with you.",
-    );
+    expect(savedOverviewsNote(12, "createAccount", "extension")).toBe("The 12 overviews saved in the extension come with you.");
   });
 
   it("speaks of one overview as one", () => {

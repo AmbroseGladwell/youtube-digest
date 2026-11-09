@@ -13,7 +13,13 @@ const isArticleNode = (node: JsonObject): boolean => typesOf(node).some((type) =
 
 const nameOf = (value: unknown): string | null => {
   if (typeof value === "string") return value.trim() || null;
-  if (Array.isArray(value)) return value.map(nameOf).filter((name) => name !== null).join(", ") || null;
+  if (Array.isArray(value))
+    return (
+      value
+        .map(nameOf)
+        .filter((name) => name !== null)
+        .join(", ") || null
+    );
   return isObject(value) ? nameOf(value.name) : null;
 };
 

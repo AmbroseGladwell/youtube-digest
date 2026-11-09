@@ -36,8 +36,7 @@ export function recipeFigures(recipe: Pick<Recipe, "prepMinutes" | "cookMinutes"
   return figures;
 }
 
-export const recipeFiguresLine = (figures: RecipeFigure[]): string =>
-  figures.map(({ label, value }) => `${label} ${value}`).join(" · ");
+export const recipeFiguresLine = (figures: RecipeFigure[]): string => figures.map(({ label, value }) => `${label} ${value}`).join(" · ");
 
 export interface RecipeStepGroup {
   name: string | null;

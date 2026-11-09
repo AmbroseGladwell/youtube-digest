@@ -8,11 +8,6 @@ import type { TranscriptBlock } from "./TranscriptBlock.js";
 // carries the time its first words were said (docs/features/transcript-storage.md).
 export function transcriptPlainText(video: VideoSource, blocks: TranscriptBlock[]): string {
   const head = [video.title, video.channel, video.url].join("\n");
-  const body = blocks
-    .map(
-      (block) =>
-        `${formatTimestamp(block.startMs)}\t${block.speakerChange ? "— " : ""}${block.text}`,
-    )
-    .join("\n\n");
+  const body = blocks.map((block) => `${formatTimestamp(block.startMs)}\t${block.speakerChange ? "— " : ""}${block.text}`).join("\n\n");
   return `${head}\n\n${body}\n`;
 }

@@ -13,5 +13,4 @@ export class UnreadableRecordError extends Error {
   }
 }
 
-export const isUnreadableRecordError = (error: unknown): error is UnreadableRecordError =>
-  error instanceof UnreadableRecordError;
+export const isUnreadableRecordError = (error: unknown): error is UnreadableRecordError => error instanceof UnreadableRecordError;

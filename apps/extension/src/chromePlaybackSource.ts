@@ -28,9 +28,7 @@ function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number
   // YouTube's own class for the main player. A watch page can hold several <video>
   // elements — an ad, a hovered preview — and the first one is not reliably the one
   // being watched. The fallback is for the day that class is renamed.
-  const mainVideo = () =>
-    document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
-    document.querySelector("video");
+  const mainVideo = () => document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector("video");
 
   let lastSentAt = 0;
   let unacknowledged = 0;
@@ -97,9 +95,7 @@ function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number
 // to the page. It sets one property on the player and reads nothing
 // (docs/features/following-playback.md).
 function seekPlayback(positionMs: number): void {
-  const video =
-    document.querySelector<HTMLVideoElement>("video.html5-main-video") ??
-    document.querySelector("video");
+  const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector("video");
   if (video) {
     video.currentTime = positionMs / 1000;
   }
@@ -150,11 +146,7 @@ async function injectIntoActiveTab(): Promise<void> {
   }
 }
 
-const onMessage = (
-  message: unknown,
-  _sender: chrome.runtime.MessageSender,
-  respond: (ack: boolean) => void,
-) => {
+const onMessage = (message: unknown, _sender: chrome.runtime.MessageSender, respond: (ack: boolean) => void) => {
   if (!isPlaybackReport(message)) {
     return;
   }

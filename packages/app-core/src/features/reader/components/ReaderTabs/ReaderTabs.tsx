@@ -26,14 +26,7 @@ export function ReaderTabs({ active, panelId, tabId, onChange, tabs = READER_TAB
   };
 
   return (
-    <div
-      className={styles.root}
-      ref={ref}
-      role="tablist"
-      aria-label="Note views"
-      data-sticky-fade=""
-      data-testid={readerTabsTestIds.root}
-    >
+    <div className={styles.root} ref={ref} role="tablist" aria-label="Note views" data-sticky-fade="" data-testid={readerTabsTestIds.root}>
       <div className={styles.column}>
         <div className={styles.track}>
           {tabs.map((tab) => (

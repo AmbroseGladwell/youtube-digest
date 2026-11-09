@@ -96,7 +96,11 @@ export function QueueRow({
         </span>
       )}
       <span className={`${styles.thumb} ${making ? "" : styles.thumbFaded}`} aria-hidden="true">
-        {capture.thumbnailUrl === null ? <StrokeIcon name="play" size={dense ? 13 : 16} /> : <img src={capture.thumbnailUrl} alt="" loading="lazy" />}
+        {capture.thumbnailUrl === null ? (
+          <StrokeIcon name="play" size={dense ? 13 : 16} />
+        ) : (
+          <img src={capture.thumbnailUrl} alt="" loading="lazy" />
+        )}
       </span>
       <span className={styles.text}>
         <span className={styles.title} data-testid={queueRowTestIds.title}>

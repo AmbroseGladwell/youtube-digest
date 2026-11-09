@@ -4,18 +4,13 @@ import { milestoneStackTestIds } from "../../src/features/timeSaved/components/M
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class MilestoneStackPageObject extends PageObject {
-  verifyShowsNothing = () =>
-    this.step("verifyShowsNothing", () => this.expectToHaveCount(milestoneCardTestIds.root, 0));
+  verifyShowsNothing = () => this.step("verifyShowsNothing", () => this.expectToHaveCount(milestoneCardTestIds.root, 0));
 
   verifyFrontCardIs = (label: string) =>
-    this.step(`verifyFrontCardIs ${label}`, () =>
-      expect(this.get(milestoneCardTestIds.pill)).toHaveText(`${label} saved`),
-    );
+    this.step(`verifyFrontCardIs ${label}`, () => expect(this.get(milestoneCardTestIds.pill)).toHaveText(`${label} saved`));
 
   verifyFigureSays = (spoken: string) =>
-    this.step(`verifyFigureSays ${spoken}`, () =>
-      expect(this.get(milestoneCardTestIds.figure)).toHaveAttribute("aria-label", spoken),
-    );
+    this.step(`verifyFigureSays ${spoken}`, () => expect(this.get(milestoneCardTestIds.figure)).toHaveAttribute("aria-label", spoken));
 
   verifyCountReads = (count: string) =>
     this.step(`verifyCountReads ${count}`, () => expect(this.get(milestoneStackTestIds.count)).toHaveText(count));
@@ -23,9 +18,7 @@ export class MilestoneStackPageObject extends PageObject {
   verifyNoCount = () => this.step("verifyNoCount", () => this.expectNotToBeVisible(milestoneStackTestIds.count));
 
   verifyDismissIsLabelled = (label: string) =>
-    this.step(`verifyDismissIsLabelled ${label}`, () =>
-      expect(this.get(milestoneCardTestIds.dismissButton)).toHaveAccessibleName(label),
-    );
+    this.step(`verifyDismissIsLabelled ${label}`, () => expect(this.get(milestoneCardTestIds.dismissButton)).toHaveAccessibleName(label));
 
   verifyLineReads = (line: string) =>
     this.step(`verifyLineReads ${line}`, () => expect(this.get(milestoneCardTestIds.line)).toHaveText(line));

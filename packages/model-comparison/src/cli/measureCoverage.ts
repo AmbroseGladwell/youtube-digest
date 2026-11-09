@@ -45,7 +45,11 @@ const youTubeFetch: YouTubeFetch = async (request) => {
   const response = await fetch(request.url, { method: request.method, headers: request.headers, body: request.body ?? null });
   return { status: response.status, body: await response.text() };
 };
-const exists = (path: string) => access(path).then(() => true, () => false);
+const exists = (path: string) =>
+  access(path).then(
+    () => true,
+    () => false,
+  );
 const videoIdOf = (url: string) => new URL(url).searchParams.get("v")!;
 const articleFileOf = (url: string) => `${createHash("sha256").update(url).digest("hex").slice(0, 16)}.json`;
 
@@ -87,7 +91,8 @@ async function fetchArticle(url: string): Promise<ExtractedArticle> {
   }
 }
 
-const sourceIdOf = (loaded: LoadedSource) => (loaded.kind === "video" ? loaded.fetched.video.id ?? loaded.fetched.video.url : loaded.article.url);
+const sourceIdOf = (loaded: LoadedSource) =>
+  loaded.kind === "video" ? (loaded.fetched.video.id ?? loaded.fetched.video.url) : loaded.article.url;
 
 const loaded = (await Promise.all(COVERAGE_SET.map(loadSource))).filter((source): source is LoadedSource => source !== null);
 const store = runDirectoryStore(comparisonPaths.run(values.run));
@@ -101,8 +106,11 @@ if (!values["measure-only"]) {
   const settled = new Set((await store.all()).filter((record) => record.outcome !== "errored").map((record) => record.videoId));
   const tasks = loaded
     .filter((source) => !settled.has(sourceIdOf(source)))
-    .map((source) => () =>
-      source.kind === "video" ? runOne({ model, apiKey, fetched: source.fetched }) : runOneArticle({ model, apiKey, article: source.article }),
+    .map(
+      (source) => () =>
+        source.kind === "video"
+          ? runOne({ model, apiKey, fetched: source.fetched })
+          : runOneArticle({ model, apiKey, article: source.article }),
     );
   const outcome = await spendWithinBudget({
     lanes: Array.from({ length: LANES }, (_, lane) => tasks.filter((_, index) => index % LANES === lane)),
@@ -120,13 +128,15 @@ if (!values["measure-only"]) {
 const records = new Map(
   (await store.all()).filter((record) => record.model === model.model).map((record) => [record.videoId, record] as const),
 );
-const passed = (record: RunRecord | undefined) => record !== undefined && (record.outcome === "passed-first" || record.outcome === "passed-after-retry");
+const passed = (record: RunRecord | undefined) =>
+  record !== undefined && (record.outcome === "passed-first" || record.outcome === "passed-after-retry");
 
 function videoRow(fetched: FetchedTranscript, record: RunRecord | undefined): CoverageRow {
   const words = fetched.transcript.reduce((total, { text }) => total + wordCount(text), 0);
   const length = `${formatTimestamp(fetched.video.durationMs ?? fetched.transcript.at(-1)?.endMs ?? 0)}, ${words.toLocaleString("en-GB")} words`;
   const coverage = passed(record) ? measureCoverage(videoCoverageInput(fetched, record!.attempts.at(-1) as GeneratedOutput)) : null;
-  const place = (gap: Stretch) => `${formatTimestamp(fetched.transcript[gap.start]!.startMs)}–${formatTimestamp(fetched.transcript[gap.end]!.endMs)}`;
+  const place = (gap: Stretch) =>
+    `${formatTimestamp(fetched.transcript[gap.start]!.startMs)}–${formatTimestamp(fetched.transcript[gap.end]!.endMs)}`;
   return {
     title: fetched.video.title,
     kind: "video",
@@ -138,7 +148,9 @@ function videoRow(fetched: FetchedTranscript, record: RunRecord | undefined): Co
 }
 
 function articleRow(article: ExtractedArticle, record: RunRecord | undefined): CoverageRow {
-  const coverage = passed(record) ? measureCoverage(articleCoverageInput(article, record!.attempts.at(-1) as GeneratedArticleOutput)) : null;
+  const coverage = passed(record)
+    ? measureCoverage(articleCoverageInput(article, record!.attempts.at(-1) as GeneratedArticleOutput))
+    : null;
   const paragraphs = articleParagraphs(article).length;
   return {
     title: article.title,
@@ -151,7 +163,9 @@ function articleRow(article: ExtractedArticle, record: RunRecord | undefined): C
 }
 
 const rows = loaded.map((source) =>
-  source.kind === "video" ? videoRow(source.fetched, records.get(sourceIdOf(source))) : articleRow(source.article, records.get(sourceIdOf(source))),
+  source.kind === "video"
+    ? videoRow(source.fetched, records.get(sourceIdOf(source)))
+    : articleRow(source.article, records.get(sourceIdOf(source))),
 );
 const markdown = coverageMarkdown(rows, values.run, values.model);
 const reportPath = join(comparisonPaths.run(values.run), "coverage.md");

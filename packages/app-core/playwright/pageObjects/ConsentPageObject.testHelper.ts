@@ -19,32 +19,25 @@ export class ConsentPageObject extends PageObject {
     this.step(`verifyHeadingReads ${text}`, () => expect(this.get(consentPageTestIds.heading)).toHaveText(text));
 
   verifyHeadingIsNamed = (name: string) =>
-    this.step(`verifyHeadingIsNamed ${name}`, () =>
-      expect(this.get(consentPageTestIds.heading)).toHaveAccessibleName(name),
-    );
+    this.step(`verifyHeadingIsNamed ${name}`, () => expect(this.get(consentPageTestIds.heading)).toHaveAccessibleName(name));
 
   verifySubReads = (pattern: RegExp) =>
     this.step(`verifySubReads ${pattern.source}`, () => expect(this.get(consentPageTestIds.sub)).toHaveText(pattern));
 
-  verifyHeadingHasFocus = () =>
-    this.step("verifyHeadingHasFocus", () => expect(this.get(consentPageTestIds.heading)).toBeFocused());
+  verifyHeadingHasFocus = () => this.step("verifyHeadingHasFocus", () => expect(this.get(consentPageTestIds.heading)).toBeFocused());
 
   verifySendsBackTo = (host: string) =>
     this.step(`verifySendsBackTo ${host}`, () => expect(this.get(consentAddressCardTestIds.host)).toHaveText(host));
 
   verifySignedInAs = (email: string) =>
-    this.step(`verifySignedInAs ${email}`, () =>
-      expect(this.get(consentPageTestIds.signedInAs)).toContainText(email),
-    );
+    this.step(`verifySignedInAs ${email}`, () => expect(this.get(consentPageTestIds.signedInAs)).toContainText(email));
 
   verifyListsPermissions = (texts: string[]) =>
     this.step("verifyListsPermissions", () => expect(this.get(consentAnswerTestIds.permission)).toHaveText(texts));
 
   verifyOffersApprove = (offered: boolean) =>
     this.step(`verifyOffersApprove ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(consentAnswerTestIds.approveButton)
-        : this.expectToHaveCount(consentAnswerTestIds.approveButton, 0),
+      offered ? this.expectToBeVisible(consentAnswerTestIds.approveButton) : this.expectToHaveCount(consentAnswerTestIds.approveButton, 0),
     );
 
   approve = () => this.step("approve", () => this.click(consentAnswerTestIds.approveButton));
@@ -58,14 +51,11 @@ export class ConsentPageObject extends PageObject {
       await expect(this.get(consentAnswerTestIds.declineButton)).toBeDisabled();
     });
 
-  verifyDecisionErrorShown = () =>
-    this.step("verifyDecisionErrorShown", () => this.expectToBeVisible(consentPageTestIds.decisionError));
+  verifyDecisionErrorShown = () => this.step("verifyDecisionErrorShown", () => this.expectToBeVisible(consentPageTestIds.decisionError));
 
-  verifySessionErrorShown = () =>
-    this.step("verifySessionErrorShown", () => this.expectToBeVisible(consentPageTestIds.sessionError));
+  verifySessionErrorShown = () => this.step("verifySessionErrorShown", () => this.expectToBeVisible(consentPageTestIds.sessionError));
 
-  retrySession = () =>
-    this.step("retrySession", () => this.get(consentPageTestIds.sessionError).getByRole("button").click());
+  retrySession = () => this.step("retrySession", () => this.get(consentPageTestIds.sessionError).getByRole("button").click());
 
   notYou = () => this.step("notYou", () => this.click(consentPageTestIds.notYouButton));
 
@@ -91,8 +81,6 @@ export class ConsentPageObject extends PageObject {
 
   verifyNoteReads = (title: string | null) =>
     this.step(`verifyNoteReads ${title}`, () =>
-      title === null
-        ? this.expectToHaveCount(consentNoteTestIds.root, 0)
-        : expect(this.get(consentNoteTestIds.title)).toHaveText(title),
+      title === null ? this.expectToHaveCount(consentNoteTestIds.root, 0) : expect(this.get(consentNoteTestIds.title)).toHaveText(title),
     );
 }

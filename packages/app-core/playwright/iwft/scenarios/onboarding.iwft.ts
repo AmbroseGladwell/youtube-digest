@@ -61,7 +61,9 @@ test("a new reader answers the questions while the overview is made, creates an 
   await onboarding.verifyPreviewStepReads("you", "Fill in as much as you like. Personalises your overviews.");
   await onboarding.verifyHasNoProgressBar();
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
-  await onboarding.sentence.verifySentenceReads("I'm a few things at once, I spend my time on all sorts, and right now I'm focusing on getting better at something.");
+  await onboarding.sentence.verifySentenceReads(
+    "I'm a few things at once, I spend my time on all sorts, and right now I'm focusing on getting better at something.",
+  );
   await onboarding.sentence.verifySectionName("who", "Who you are: empty. Fill in.");
   await onboarding.sentence.openSection("who");
   await onboarding.sentence.verifySheetHasFocus("Who you are");
@@ -75,7 +77,9 @@ test("a new reader answers the questions while the overview is made, creates an 
   await onboarding.sentence.addOwn("Life", "a half marathon");
   await onboarding.sentence.verifyInSection("new recipes", "a half marathon");
   await onboarding.sentence.done();
-  await onboarding.sentence.verifySentenceReads("I'm a dad and a husband, I spend my time on all sorts, and right now I'm focusing on new recipes and a half marathon.");
+  await onboarding.sentence.verifySentenceReads(
+    "I'm a dad and a husband, I spend my time on all sorts, and right now I'm focusing on new recipes and a half marathon.",
+  );
   await onboarding.continueFromAboutYou();
 
   await onboarding.verifyOnScreen("stepsForYou", "Steps that fit around you");
@@ -172,10 +176,7 @@ test("the library slide shows the first five of the reader's own topics and says
   });
 });
 
-test("See your overview leaves the questions for the account as soon as the overview is ready", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("See your overview leaves the questions for the account as soon as the overview is ready", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   const home = await launcher.launch(signedOutAnswered);
   await home.submitHeroUrl(VIDEO_URL);
@@ -204,13 +205,7 @@ test("what happens before the analytics answer is sent once the reader allows it
 
   await expect
     .poll(() => backendSimulator.analytics.eventNames())
-    .toEqual(
-      expect.arrayContaining([
-        "onboarding.start.linkSubmitted",
-        "onboarding.step.shown",
-        "analyticsConsent.prompt.accepted",
-      ]),
-    );
+    .toEqual(expect.arrayContaining(["onboarding.start.linkSubmitted", "onboarding.step.shown", "analyticsConsent.prompt.accepted"]));
   expect(backendSimulator.analytics.events().find(({ name }) => name === "analyticsConsent.prompt.accepted")?.props).toEqual({
     asked: "onboarding",
   });
@@ -352,9 +347,7 @@ test("the library marks the first overview with a milestone, which × hides", as
   await launcher.firstOverviewMilestone.dismiss();
 
   await launcher.firstOverviewMilestone.verifyIsAbsent();
-  await expect
-    .poll(() => backendSimulator.analytics.eventNames())
-    .toEqual(expect.arrayContaining(["timeSaved.firstOverview.dismissed"]));
+  await expect.poll(() => backendSimulator.analytics.eventNames()).toEqual(expect.arrayContaining(["timeSaved.firstOverview.dismissed"]));
 });
 
 test("the next steps show only under the overview onboarding ended on", async ({ launcher, backendSimulator }) => {
@@ -417,7 +410,10 @@ test("a section stops taking text at its limit and says why, and Escape folds th
   await onboarding.sentence.verifySectionHasFocus("focus");
 });
 
-test("the sentence fills in as entries are picked, and Continue keeps a pick that Done never closed", async ({ launcher, backendSimulator }) => {
+test("the sentence fills in as entries are picked, and Continue keeps a pick that Done never closed", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   const home = await launcher.launch(signedOutAnswered);
   await home.submitHeroUrl(VIDEO_URL);
@@ -514,7 +510,9 @@ test("topics suggested from a page's title and text come first, and picking one 
     article: {
       ...ARTICLE,
       title: "Why your workout matters less than your sleep",
-      sections: [{ heading: null, anchor: null, text: "Muscle is built in recovery, not in the gym. Training hard on poor sleep undoes it." }],
+      sections: [
+        { heading: null, anchor: null, text: "Muscle is built in recovery, not in the gym. Training hard on poor sleep undoes it." },
+      ],
     },
   });
   const home = await launcher.launch(signedOut);
@@ -610,7 +608,10 @@ test("a recipe page is confirmed as a recipe, with the page's own times", async 
   const onboarding = await launcher.onboardingPage.verifyIsShown();
 
   await onboarding.verifyOnScreen("video", "Is this the right recipe?");
-  await onboarding.verifyFound({ kicker: "Example Kitchen · Recipe", facts: /Prep\s*15 min.*Cook\s*50 min.*Total\s*1 hr 5 min.*Makes\s*4/ });
+  await onboarding.verifyFound({
+    kicker: "Example Kitchen · Recipe",
+    facts: /Prep\s*15 min.*Cook\s*50 min.*Total\s*1 hr 5 min.*Makes\s*4/,
+  });
 });
 
 test("a paywalled page says so where the read lands, keeps the link, and takes another in its place", async ({

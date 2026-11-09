@@ -83,7 +83,9 @@ const readAmount = (amount: string): Fraction => {
   if (mixed === null) return { whole: null, parts: null, plain: amount };
   const parts: [number, number] = mixed[2] ? UNICODE_FRACTION[mixed[2]]! : [Number(mixed[3]), Number(mixed[4])];
   const named = parts[0] < parts[1] && (parts[1] === 2 || PART_NAME[parts[1]] !== undefined);
-  return named ? { whole: mixed[1] === undefined ? null : Number(mixed[1]), parts, plain: amount } : { whole: null, parts: null, plain: amount };
+  return named
+    ? { whole: mixed[1] === undefined ? null : Number(mixed[1]), parts, plain: amount }
+    : { whole: null, parts: null, plain: amount };
 };
 
 const partWords = ([count, of]: [number, number]) =>
@@ -100,7 +102,10 @@ const isOne = ({ whole, parts, plain }: Fraction) => (parts === null ? plain ===
 // "2-3 tbsp" is "2 to 3 tablespoons", "400g tin" is "400 gram tin". The screen keeps the
 // page's own text (docs/features/recipe-notes.md, "Reading aloud").
 const measure = (_: string, from: string, to: string | undefined, unit: string, next: string | undefined) => {
-  const key = unit.toLowerCase().replace(/\s+/g, " ").replace(/^fl ?\.? ?oz$/, "fl oz");
+  const key = unit
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/^fl ?\.? ?oz$/, "fl oz");
   const [one, many] = UNIT_NAME[key]!;
   const first = readAmount(from);
   const nextWord = next?.trim() ?? "";

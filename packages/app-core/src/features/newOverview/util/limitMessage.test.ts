@@ -6,9 +6,7 @@ const spent = (...quotas: SpentQuota[]) => ({ kind: "spent", spent: quotas, rese
 
 describe("limitMessageOf", () => {
   it("is nothing while a quota is left", () => {
-    expect(
-      limitMessageOf({ kind: "quota", key: "own", left: 1, limit: 10, resetsOn: "2026-11-01", passedOver: null }, "free"),
-    ).toBeNull();
+    expect(limitMessageOf({ kind: "quota", key: "own", left: 1, limit: 10, resetsOn: "2026-11-01", passedOver: null }, "free")).toBeNull();
     expect(limitMessageOf({ kind: "checking" }, "free")).toBeNull();
     expect(limitMessageOf(null, "free")).toBeNull();
   });

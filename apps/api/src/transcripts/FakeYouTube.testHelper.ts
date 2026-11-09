@@ -45,8 +45,7 @@ export function makeFakeYouTube(answers: FakeYouTube["answers"] = { direct: "cap
   const route =
     (name: FakeYouTubeRequest["route"], session: string | null): YouTubeFetch =>
     (request: YouTubeFetchRequest) => {
-      const videoId =
-        request.body === undefined ? null : ((JSON.parse(request.body) as { videoId?: string }).videoId ?? null);
+      const videoId = request.body === undefined ? null : ((JSON.parse(request.body) as { videoId?: string }).videoId ?? null);
       fake.requests.push({ route: name, session, url: request.url, videoId });
       if (request.url.includes("timedtext")) return Promise.resolve(ok(JSON3_WRITTEN));
       if (request.headers["X-YouTube-Client-Name"] === "WEB") return Promise.resolve(ok(makeMetadataResponse()));

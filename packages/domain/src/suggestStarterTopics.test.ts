@@ -23,10 +23,7 @@ test("one passing word in the text isn't enough to suggest a topic", () => {
 });
 
 test("offers at most three, and nothing when nothing fits", () => {
-  assert.equal(
-    suggestStarterTopics("AI, money, sleep, chess and football", "").length,
-    3,
-  );
+  assert.equal(suggestStarterTopics("AI, money, sleep, chess and football", "").length, 3);
   assert.deepEqual(suggestStarterTopics("Untitled", "Lorem ipsum dolor sit amet."), []);
 });
 

@@ -25,9 +25,7 @@ export function registerApiErrorHandler(app: FastifyInstance, reporting: Request
     }
     if (isFastifyError(error) && error.statusCode !== undefined && error.statusCode < 500) {
       logRefused(request, "invalid_request", 400);
-      return reply
-        .status(400)
-        .send(envelope(new ApiError("invalid_request", error.message)));
+      return reply.status(400).send(envelope(new ApiError("invalid_request", error.message)));
     }
     request.log.error(apiLogLines.http.unhandledError({ err: error, requestId: request.id }));
     reportRequestError(reporting, request, error);
@@ -35,8 +33,6 @@ export function registerApiErrorHandler(app: FastifyInstance, reporting: Request
   });
 
   app.setNotFoundHandler((request, reply) =>
-    reply
-      .status(404)
-      .send(envelope(new ApiError("not_found", `No route for ${request.method} ${request.url}`))),
+    reply.status(404).send(envelope(new ApiError("not_found", `No route for ${request.method} ${request.url}`))),
   );
 }

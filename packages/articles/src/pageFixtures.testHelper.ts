@@ -41,7 +41,11 @@ export const NO_ARTICLE_PAGE = `<!doctype html><html><head><title>Example Shop</
 <form><input name="q"><button>Search</button></form></body></html>`;
 
 const lines = (count: number) =>
-  Array.from({ length: count }, (_, index) => `Thought ${index + 1} on why the work that matters tends to look like a toy at first, and only later like the obvious thing to have done.<br><br>`).join("\n");
+  Array.from(
+    { length: count },
+    (_, index) =>
+      `Thought ${index + 1} on why the work that matters tends to look like a toy at first, and only later like the obvious thing to have done.<br><br>`,
+  ).join("\n");
 
 export const LINE_BROKEN_ESSAY = `<!doctype html><html><head><title>How to do great work</title></head><body>
 <table><tr><td><font size="2" face="verdana">${lines(40)}</font></td></tr></table></body></html>`;
@@ -59,8 +63,22 @@ const RECIPE_JSON = {
   recipeYield: ["4", "4 servings"],
   recipeIngredient: ["250g red lentils", "1 tsp cumin seeds &amp; a pinch of salt", "  2 <b>large</b> onions "],
   recipeInstructions: [
-    { "@type": "HowToSection", name: "For the dal", itemListElement: [{ "@type": "HowToStep", text: "Rinse the lentils.", name: "Rinse" }, { "@type": "HowToStep", text: "Simmer until soft." }] },
-    { "@type": "HowToSection", name: "For the tarka", itemListElement: [{ "@type": "HowToStep", text: "Fry the cumin in butter." }, { "@type": "HowToTip", text: "Use ghee if you have it." }] },
+    {
+      "@type": "HowToSection",
+      name: "For the dal",
+      itemListElement: [
+        { "@type": "HowToStep", text: "Rinse the lentils.", name: "Rinse" },
+        { "@type": "HowToStep", text: "Simmer until soft." },
+      ],
+    },
+    {
+      "@type": "HowToSection",
+      name: "For the tarka",
+      itemListElement: [
+        { "@type": "HowToStep", text: "Fry the cumin in butter." },
+        { "@type": "HowToTip", text: "Use ghee if you have it." },
+      ],
+    },
   ],
 };
 
@@ -69,7 +87,9 @@ export const recipePage = (declared: unknown, body = paragraphs(6, "My grandmoth
 <script type="application/ld+json">${JSON.stringify(declared)}</script>
 </head><body><article><h1>Weeknight dal</h1>${body}</article></body></html>`;
 
-export const RECIPE_PAGE = recipePage({ "@graph": [{ "@type": "WebSite", name: "Example Kitchen" }, { "@type": "BlogPosting", headline: "Weeknight dal" }, RECIPE_JSON] });
+export const RECIPE_PAGE = recipePage({
+  "@graph": [{ "@type": "WebSite", name: "Example Kitchen" }, { "@type": "BlogPosting", headline: "Weeknight dal" }, RECIPE_JSON],
+});
 
 export const recipeWith = (fields: Record<string, unknown>) => ({ ...RECIPE_JSON, ...fields });
 

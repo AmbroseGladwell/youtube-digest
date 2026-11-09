@@ -24,9 +24,7 @@ function checkedOutCommit(cwd) {
 function releaseVersion(rootDir) {
   const { version } = JSON.parse(readFileSync(path.join(rootDir, "package.json"), "utf8"));
   if (typeof version !== "string" || version === UNRELEASED_VERSION) {
-    throw new Error(
-      `the root package.json is at version ${version ?? "(none)"}, which is not a release: bump it with task version:bump`,
-    );
+    throw new Error(`the root package.json is at version ${version ?? "(none)"}, which is not a release: bump it with task version:bump`);
   }
   return version;
 }
@@ -38,8 +36,6 @@ function releaseVersion(rootDir) {
 export function buildStamp({ env = process.env, cwd = process.cwd(), rootDir = REPO_ROOT } = {}) {
   const version = releaseVersion(rootDir);
   const fromEnv = env.BUILD_COMMIT?.trim();
-  const { commit, dirty } = fromEnv
-    ? { commit: fromEnv.slice(0, SHORT_SHA_LENGTH), dirty: false }
-    : checkedOutCommit(cwd);
+  const { commit, dirty } = fromEnv ? { commit: fromEnv.slice(0, SHORT_SHA_LENGTH), dirty: false } : checkedOutCommit(cwd);
   return { version, commit, dirty };
 }

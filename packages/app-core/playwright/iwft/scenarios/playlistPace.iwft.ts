@@ -81,7 +81,14 @@ test("a paced playlist makes its number for the day, the rest of the queue carri
 }) => {
   await page.clock.install({ time: LATE_EVENING });
   followingAt(backendSimulator, "oneADay");
-  const lecture = { ...queued(0), videoId: VideoId.parse("otherVideo1"), url: "https://www.youtube.com/watch?v=otherVideo1", title: "A Short History of Maps", fromPlaylist: LECTURES, queuedAt: "2026-10-05T09:00:00.009Z" };
+  const lecture = {
+    ...queued(0),
+    videoId: VideoId.parse("otherVideo1"),
+    url: "https://www.youtube.com/watch?v=otherVideo1",
+    title: "A Short History of Maps",
+    fromPlaylist: LECTURES,
+    queuedAt: "2026-10-05T09:00:00.009Z",
+  };
   seedQueuedWithTranscripts(backendSimulator, [queued(0), queued(1), queued(2), lecture]);
 
   await launcher.launch({ apiKeys: API_KEYS });
@@ -97,7 +104,12 @@ test("a paced playlist makes its number for the day, the rest of the queue carri
   await queuePage.verifyPacedGroupMeta(["Up to 1 a day · 1 made today · 2 waiting"]);
   await queuePage.verifyTryAgainIsOffered(false);
   await expect
-    .poll(() => backendSimulator.errors.batches().flatMap(({ warnings }) => warnings ?? []).filter(({ name }) => name === "captureQueuePaced"))
+    .poll(() =>
+      backendSimulator.errors
+        .batches()
+        .flatMap(({ warnings }) => warnings ?? [])
+        .filter(({ name }) => name === "captureQueuePaced"),
+    )
     .toEqual([expect.objectContaining({ name: "captureQueuePaced", pace: "oneADay", madeToday: 1, waiting: 2 })]);
 
   await page.clock.fastForward(61 * 60 * 1000);
@@ -106,7 +118,11 @@ test("a paced playlist makes its number for the day, the rest of the queue carri
   await queuePage.verifyPacedGroupMeta(["Up to 1 a day · 1 made today · 1 waiting"]);
 });
 
-test("Make now makes a paced video next without counting toward its pace, which stays as it was", async ({ page, launcher, backendSimulator }) => {
+test("Make now makes a paced video next without counting toward its pace, which stays as it was", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   await page.clock.install({ time: AFTERNOON });
   followingAt(backendSimulator, "oneADay");
   backendSimulator.overviews.seed(
@@ -151,7 +167,10 @@ test("a playlist made only when chosen waits for the reader, who can choose seve
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   await strip.openQueue();
   const queuePage = await launcher.appShell.queuePage.verifyIsShown();
-  await queuePage.verifyWaitingForYou("Waiting for you · 3", VIDEOS.map((video) => video.title));
+  await queuePage.verifyWaitingForYou(
+    "Waiting for you · 3",
+    VIDEOS.map((video) => video.title),
+  );
 
   await queuePage.startChoosing();
   await queuePage.choose(VIDEOS[0].title);
@@ -178,7 +197,10 @@ test("a playlist made only when chosen waits for the reader, who can choose seve
     ]);
 });
 
-test("Settings shows each playlist's pace and changes it, saying what the change did to what waits", async ({ launcher, backendSimulator }) => {
+test("Settings shows each playlist's pace and changes it, saying what the change did to what waits", async ({
+  launcher,
+  backendSimulator,
+}) => {
   followingAt(backendSimulator, "asTheyCome");
   seedQueuedWithTranscripts(backendSimulator, [queued(0), queued(1), queued(2)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);

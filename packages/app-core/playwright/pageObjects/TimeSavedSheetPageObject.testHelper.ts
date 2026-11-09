@@ -12,9 +12,7 @@ export class TimeSavedSheetPageObject extends PageObject {
   verifyIsClosed = () => this.step("verifyIsClosed", () => this.expectNotToBeVisible(timeSavedSheetTestIds.root));
 
   verifyFigureSays = (spoken: string) =>
-    this.step(`verifyFigureSays ${spoken}`, () =>
-      expect(this.get(timeSavedSheetTestIds.figure)).toHaveAttribute("aria-label", spoken),
-    );
+    this.step(`verifyFigureSays ${spoken}`, () => expect(this.get(timeSavedSheetTestIds.figure)).toHaveAttribute("aria-label", spoken));
 
   verifyHowReads = (text: string) =>
     this.step(`verifyHowReads ${text}`, () => expect(this.get(timeSavedSheetTestIds.how)).toHaveText(text));
@@ -34,8 +32,7 @@ export class TimeSavedSheetPageObject extends PageObject {
       }
     });
 
-  verifyNothingLeftOut = () =>
-    this.step("verifyNothingLeftOut", () => this.expectNotToBeVisible(timeSavedSheetTestIds.notCounted));
+  verifyNothingLeftOut = () => this.step("verifyNothingLeftOut", () => this.expectNotToBeVisible(timeSavedSheetTestIds.notCounted));
 
   close = () =>
     this.step("close", async () => {

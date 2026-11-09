@@ -54,7 +54,13 @@ export function CookingStepVideoSheet({ open, videoId, step, range, onClose }: C
         <span className={styles.handle} aria-hidden="true" />
         <div className={styles.head}>
           <h2 className={styles.title}>Step {step} in the video</h2>
-          <button type="button" className={styles.close} aria-label="Close" onClick={onClose} data-testid={cookingStepVideoSheetTestIds.close}>
+          <button
+            type="button"
+            className={styles.close}
+            aria-label="Close"
+            onClick={onClose}
+            data-testid={cookingStepVideoSheetTestIds.close}
+          >
             <StrokeIcon name="close" size={16} />
           </button>
         </div>
@@ -70,8 +76,8 @@ export function CookingStepVideoSheet({ open, videoId, step, range, onClose }: C
           />
         )}
         <p className={styles.caption}>
-          Plays step {step}’s part, {formatTimestamp(range.startMs)} to {formatTimestamp(range.endMs)}, then stops. The voice waits until you
-          close it.
+          Plays step {step}’s part, {formatTimestamp(range.startMs)} to {formatTimestamp(range.endMs)}, then stops. The voice waits until
+          you close it.
         </p>
       </div>
     </dialog>

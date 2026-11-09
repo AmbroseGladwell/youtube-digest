@@ -9,8 +9,7 @@ import { AboutYouSheet } from "../AboutYouSheet/AboutYouSheet.js";
 import styles from "./AboutYouEditor.module.scss";
 import { aboutYouEditorTestIds } from "./AboutYouEditorTestIds.js";
 
-const sameEntries = (a: readonly string[], b: readonly string[]) =>
-  a.length === b.length && a.every((entry, index) => entry === b[index]);
+const sameEntries = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((entry, index) => entry === b[index]);
 
 export interface AboutYouEditorProps {
   aboutYou: AboutYou;
@@ -196,7 +195,13 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange, onSheetOp
           data-testid={aboutYouEditorTestIds.sheet}
         >
           {isPanel ? (
-            <button type="button" className={styles.panelBack} aria-label="Back to your sentence" onClick={() => finish()} data-testid={aboutYouEditorTestIds.panelBack}>
+            <button
+              type="button"
+              className={styles.panelBack}
+              aria-label="Back to your sentence"
+              onClick={() => finish()}
+              data-testid={aboutYouEditorTestIds.panelBack}
+            >
               <StrokeIcon name="arrowLeft" size={18} />
               <span>Your sentence</span>
             </button>

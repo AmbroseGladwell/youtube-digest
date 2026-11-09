@@ -51,7 +51,10 @@ describe("queueHoldOf", () => {
 
   it("waits as long as the server said", () => {
     const cap = new TranscriptFetchError("spent", { failure: "daily-cap", sourceId: "service", retryAfterSeconds: 3600 });
-    expect(queueHoldOf(ladderEnding(cap), "serverCap", now)).toEqual({ reason: "serverCap", resumesAt: Date.parse("2026-10-06T22:30:00.000Z") });
+    expect(queueHoldOf(ladderEnding(cap), "serverCap", now)).toEqual({
+      reason: "serverCap",
+      resumesAt: Date.parse("2026-10-06T22:30:00.000Z"),
+    });
   });
 
   it("waits until UTC midnight when the server did not say", () => {

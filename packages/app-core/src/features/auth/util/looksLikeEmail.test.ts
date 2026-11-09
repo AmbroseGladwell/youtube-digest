@@ -6,10 +6,7 @@ describe("looksLikeEmail", () => {
     expect(looksLikeEmail(value)).toBe(true);
   });
 
-  it.each(["", "reader", "reader@example", "reader@.com", "reader@example.", "two words@example.com"])(
-    "refuses %j",
-    (value) => {
-      expect(looksLikeEmail(value)).toBe(false);
-    },
-  );
+  it.each(["", "reader", "reader@example", "reader@.com", "reader@example.", "two words@example.com"])("refuses %j", (value) => {
+    expect(looksLikeEmail(value)).toBe(false);
+  });
 });

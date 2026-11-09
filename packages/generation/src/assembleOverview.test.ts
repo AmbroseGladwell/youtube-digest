@@ -35,16 +35,18 @@ const baseInput: GenerationInput = {
   ],
   existingTags: [],
   tagAliases: {},
-  pastClaims: [
-    { overviewId: OverviewId.parse(randomUUID()), title: "An older video", claim: "Do the thing." },
-  ],
+  pastClaims: [{ overviewId: OverviewId.parse(randomUUID()), title: "An older video", claim: "Do the thing." }],
 };
 
 const baseOutput: GeneratedOutput = {
   inOneLine: "A short description.",
   coreClaim: "The core claim of the video.",
   thin: false,
-  keyPoints: [{ text: "one", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 }],
+  keyPoints: [
+    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
+  ],
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
@@ -55,11 +57,7 @@ const baseOutput: GeneratedOutput = {
 const meta = { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOString() };
 
 test("matched topic names map to the corresponding topic ids, unmatched names are ignored", () => {
-  const overview = assembleOverview(
-    baseInput,
-    { ...baseOutput, matchedTopicNames: ["fitness", "some-made-up-name"] },
-    meta,
-  );
+  const overview = assembleOverview(baseInput, { ...baseOutput, matchedTopicNames: ["fitness", "some-made-up-name"] }, meta);
   assert.deepEqual(overview.topicIds, [fitnessId]);
 });
 
@@ -74,7 +72,13 @@ test("a thin overview never carries a verdict, even if the model produced one", 
     {
       ...baseOutput,
       thin: true,
-      verdict: { novelty: "original", standsOut: { text: "A new idea.", startSegmentIndex: -1, endSegmentIndex: -1 }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      verdict: {
+        novelty: "original",
+        standsOut: { text: "A new idea.", startSegmentIndex: -1, endSegmentIndex: -1 },
+        dubiousClaims: [],
+        reasoning: "x",
+        similarToIndices: [],
+      },
     },
     meta,
   );
@@ -99,7 +103,13 @@ test("common knowledge never names what stands out, even if the model did", () =
     baseInput,
     {
       ...baseOutput,
-      verdict: { novelty: "common_knowledge", standsOut: { text: "Nothing much.", startSegmentIndex: -1, endSegmentIndex: -1 }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      verdict: {
+        novelty: "common_knowledge",
+        standsOut: { text: "Nothing much.", startSegmentIndex: -1, endSegmentIndex: -1 },
+        dubiousClaims: [],
+        reasoning: "x",
+        similarToIndices: [],
+      },
     },
     meta,
   );
@@ -112,7 +122,13 @@ test("a fresh angle keeps what stands out, and a blank one reads as missing", ()
       baseInput,
       {
         ...baseOutput,
-        verdict: { novelty: "fresh_angle", standsOut: { text, startSegmentIndex: -1, endSegmentIndex: -1 }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+        verdict: {
+          novelty: "fresh_angle",
+          standsOut: { text, startSegmentIndex: -1, endSegmentIndex: -1 },
+          dubiousClaims: [],
+          reasoning: "x",
+          similarToIndices: [],
+        },
       },
       meta,
     ).verdict;
@@ -126,7 +142,13 @@ test("what stands out is timed from the transcript, and a range that does not fi
       baseInput,
       {
         ...baseOutput,
-        verdict: { novelty: "original", standsOut: { text: "A trial.", ...range }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+        verdict: {
+          novelty: "original",
+          standsOut: { text: "A trial.", ...range },
+          dubiousClaims: [],
+          reasoning: "x",
+          similarToIndices: [],
+        },
       },
       meta,
     ).verdict?.standsOut;
@@ -146,7 +168,10 @@ const DUBIOUS_CLAIM = {
 test("a verdict naming a dubious claim is dubious, and the claim's segment resolves to the transcript's real timestamp", () => {
   const overview = assembleOverview(
     baseInput,
-    { ...baseOutput, verdict: { novelty: "original", standsOut: null, dubiousClaims: [DUBIOUS_CLAIM], reasoning: "x", similarToIndices: [] } },
+    {
+      ...baseOutput,
+      verdict: { novelty: "original", standsOut: null, dubiousClaims: [DUBIOUS_CLAIM], reasoning: "x", similarToIndices: [] },
+    },
     meta,
   );
   assert.equal(overview.verdict?.dubious, true);
@@ -171,7 +196,13 @@ test("a dubious claim made without a transcript has no moment", () => {
     {
       ...baseOutput,
       chapters: [],
-      verdict: { novelty: "original", standsOut: null, dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: null }], reasoning: "x", similarToIndices: [] },
+      verdict: {
+        novelty: "original",
+        standsOut: null,
+        dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: null }],
+        reasoning: "x",
+        similarToIndices: [],
+      },
     },
     meta,
   );
@@ -185,7 +216,13 @@ test("a dubious claim pointing past the transcript is a generation error, not a 
         baseInput,
         {
           ...baseOutput,
-          verdict: { novelty: "original", standsOut: null, dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: 99 }], reasoning: "x", similarToIndices: [] },
+          verdict: {
+            novelty: "original",
+            standsOut: null,
+            dubiousClaims: [{ ...DUBIOUS_CLAIM, segmentIndex: 99 }],
+            reasoning: "x",
+            similarToIndices: [],
+          },
         },
         meta,
       ),
@@ -221,7 +258,8 @@ test("a partial watch-it-anyway resolves segment indices to the transcript's rea
       watchAnyway: {
         answer: "partial",
         reason: "just the technique",
-        startSegmentIndex: 1, endSegmentIndex: 1,
+        startSegmentIndex: 1,
+        endSegmentIndex: 1,
       },
     },
     meta,
@@ -239,7 +277,8 @@ test("a watch-it-anyway range pointing past the transcript is a generation error
           watchAnyway: {
             answer: "partial",
             reason: "just the technique",
-            startSegmentIndex: 1, endSegmentIndex: 99,
+            startSegmentIndex: 1,
+            endSegmentIndex: 99,
           },
         },
         meta,
@@ -293,12 +332,7 @@ test("an empty transcript yields an empty chapter list rather than a chapter wit
 
 test("a chapter pointing past the transcript is a generation error, not a silent clamp", () => {
   assert.throws(
-    () =>
-      assembleOverview(
-        baseInput,
-        { ...baseOutput, chapters: [{ title: "x", summary: "y", startSegmentIndex: 99 }] },
-        meta,
-      ),
+    () => assembleOverview(baseInput, { ...baseOutput, chapters: [{ title: "x", summary: "y", startSegmentIndex: 99 }] }, meta),
     GenerationError,
   );
 });
@@ -358,7 +392,11 @@ const recipeOutput: GeneratedOutput = {
 test("a recipe video's note is its recipe, with its chapters and nothing argument-shaped", () => {
   const overview = assembleOverview(
     recipeInput,
-    { ...recipeOutput, verdict: { novelty: "original", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [] }, howToApply: { items: ["a"] } },
+    {
+      ...recipeOutput,
+      verdict: { novelty: "original", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      howToApply: { items: ["a"] },
+    },
     meta,
   );
   assert.equal(overview.recipe?.summary, recipeOutput.recipe?.summary);

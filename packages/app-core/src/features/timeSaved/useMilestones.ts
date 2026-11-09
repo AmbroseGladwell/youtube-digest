@@ -46,9 +46,7 @@ export function useMilestones(minutes: number, libraryLoaded: boolean): Mileston
     if (!settled) {
       return;
     }
-    const crossed = newlyCrossedMilestones(marks, minutes).filter(
-      (milestone) => !requested.current.has(milestone.id),
-    );
+    const crossed = newlyCrossedMilestones(marks, minutes).filter((milestone) => !requested.current.has(milestone.id));
     if (crossed.length === 0) {
       return;
     }

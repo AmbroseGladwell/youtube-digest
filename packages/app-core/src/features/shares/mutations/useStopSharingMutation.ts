@@ -29,9 +29,7 @@ export function useStopSharingMutation() {
     onMutate: async ({ token }) => {
       await queryClient.cancelQueries({ queryKey: shareKeys.all });
       const previous = queryClient.getQueryData<Share[]>(shareKeys.list);
-      queryClient.setQueryData<Share[]>(shareKeys.list, (shares) =>
-        (shares ?? []).filter((share) => share.token !== token),
-      );
+      queryClient.setQueryData<Share[]>(shareKeys.list, (shares) => (shares ?? []).filter((share) => share.token !== token));
       return { previous };
     },
 

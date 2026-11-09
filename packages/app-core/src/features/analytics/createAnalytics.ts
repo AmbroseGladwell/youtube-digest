@@ -1,15 +1,9 @@
-import {
-  analyticsEvents,
-  type AnalyticsCatalogue,
-  type AnalyticsEventName,
-  type AnalyticsEventPropsOf,
-} from "@overview/domain";
+import { analyticsEvents, type AnalyticsCatalogue, type AnalyticsEventName, type AnalyticsEventPropsOf } from "@overview/domain";
 import type { AnalyticsQueue, SendOptions } from "./AnalyticsQueue.js";
 
-export type EventMethod<Definition> =
-  keyof AnalyticsEventPropsOf<Definition> extends never
-    ? () => void
-    : (props: AnalyticsEventPropsOf<Definition>) => void;
+export type EventMethod<Definition> = keyof AnalyticsEventPropsOf<Definition> extends never
+  ? () => void
+  : (props: AnalyticsEventPropsOf<Definition>) => void;
 
 type Feature = keyof AnalyticsCatalogue;
 

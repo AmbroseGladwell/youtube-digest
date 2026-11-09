@@ -20,10 +20,7 @@ test("the note says when the video went up, year and all", async ({ launcher, ba
   await reader.verifyPublishedReads("· published 12 Mar 2023");
 });
 
-test("a note saved before the date was kept says nothing rather than guessing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note saved before the date was kept says nothing rather than guessing", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(overviewPublished(null));
 
   const library = await launcher.launchExpectingLibrary();
@@ -34,10 +31,7 @@ test("a note saved before the date was kept says nothing rather than guessing", 
 
 // The real shape of an older note: the key is absent, not null. IndexedDB reads are not
 // re-validated against the schema, so this is what actually comes back.
-test("a note saved before the field existed at all still opens", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note saved before the field existed at all still opens", async ({ launcher, backendSimulator }) => {
   const overview = overviewPublished(null);
   const video = { ...overview.source, durationMs: 842000 };
   delete (video as { publishedAt?: unknown }).publishedAt;

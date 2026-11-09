@@ -25,8 +25,7 @@ export function inPlaylistOrder<Place extends PlaylistPlace>(places: readonly Pl
   const byIndex = (left: (typeof placed)[number], right: (typeof placed)[number]) => left.index - right.index;
   if (order === "playlistOrder") return placed.sort(byIndex).map(({ place }) => place);
   const oldestFirst = placed.sort((left, right) => {
-    const byAdded =
-      left.place.addedAt === null || right.place.addedAt === null ? 0 : left.place.addedAt.localeCompare(right.place.addedAt);
+    const byAdded = left.place.addedAt === null || right.place.addedAt === null ? 0 : left.place.addedAt.localeCompare(right.place.addedAt);
     return byAdded === 0 ? byIndex(left, right) : byAdded;
   });
   return (order === "newestFirst" ? oldestFirst.reverse() : oldestFirst).map(({ place }) => place);

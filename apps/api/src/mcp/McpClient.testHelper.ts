@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import type { LightMyRequestResponse } from "fastify";
 import { makeConnectingAssistant, type TokenSet } from "../oauth/ConnectingAssistant.testHelper.js";
 import type { TestApp } from "../testing/createTestApp.testHelper.js";
-import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { type TestAccount } from "../testing/TestAccount.testHelper.js";
 import type { SampleLibrary } from "../testing/sampleLibrary.testHelper.js";
 
 export interface ToolResult {

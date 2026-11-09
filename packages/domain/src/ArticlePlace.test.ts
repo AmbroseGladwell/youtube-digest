@@ -13,5 +13,8 @@ test("a place with no id becomes a text fragment", () => {
 });
 
 test("a hyphen, comma or ampersand in the quote cannot be read as fragment syntax", () => {
-  assert.equal(articlePlaceUrl(URL, { anchor: null, quote: "well-read, this & that" }), `${URL}#:~:text=well%2Dread%2C%20this%20%26%20that`);
+  assert.equal(
+    articlePlaceUrl(URL, { anchor: null, quote: "well-read, this & that" }),
+    `${URL}#:~:text=well%2Dread%2C%20this%20%26%20that`,
+  );
 });

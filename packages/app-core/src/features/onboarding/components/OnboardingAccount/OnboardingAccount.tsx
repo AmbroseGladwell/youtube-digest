@@ -45,8 +45,7 @@ export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTr
       <div className={styles.intro}>
         <OnboardingHeading>Create your free account</OnboardingHeading>
         <p className={styles.lead}>
-          Keep every overview in your library on any device, sort them into topics and ask your AI about anything you've
-          kept.
+          Keep every overview in your library on any device, sort them into topics and ask your AI about anything you've kept.
         </p>
       </div>
 
@@ -61,12 +60,7 @@ export function OnboardingAccount({ overview, teaserBeside, sample, failed, onTr
           Continue with email
         </button>
       </div>
-      <button
-        type="button"
-        className={styles.quiet}
-        onClick={() => onChoose("signIn")}
-        data-testid={onboardingAccountTestIds.signIn}
-      >
+      <button type="button" className={styles.quiet} onClick={() => onChoose("signIn")} data-testid={onboardingAccountTestIds.signIn}>
         Already have an account? Sign in
       </button>
     </div>

@@ -87,7 +87,10 @@ test("no line leaves the sentence empty", () => {
 
 test("a line written by an older client onto an empty sentence is taken, and a filled sentence is left alone", () => {
   const fromV2 = (aboutYou: unknown) =>
-    migrateRecord({ ...DEFAULT_SETTINGS, schemaVersion: 2, aboutYou, readerContext: "A teacher." }, SETTINGS_MIGRATIONS) as Record<string, unknown>;
+    migrateRecord({ ...DEFAULT_SETTINGS, schemaVersion: 2, aboutYou, readerContext: "A teacher." }, SETTINGS_MIGRATIONS) as Record<
+      string,
+      unknown
+    >;
 
   assert.deepEqual(fromV2({ who: [], time: [], focus: [] }).aboutYou, { who: [], time: ["A teacher"], focus: [] });
   assert.deepEqual(fromV2({ who: ["dad"], time: [], focus: [] }).aboutYou, { who: ["dad"], time: [], focus: [] });

@@ -190,7 +190,12 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     again: () => go(at),
     goToStep: (step) => {
       setFinished(false);
-      move(Math.max(0, actions.findIndex((candidate) => candidate.step === step)));
+      move(
+        Math.max(
+          0,
+          actions.findIndex((candidate) => candidate.step === step),
+        ),
+      );
     },
     finish,
     startAgain: () => {

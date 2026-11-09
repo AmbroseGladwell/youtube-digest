@@ -58,8 +58,20 @@ const fetchAsProduction = createArticlePageFetcher();
 
 test("private and reserved addresses are closed, including one written as mapped IPv6", () => {
   for (const address of [
-    "127.0.0.1", "10.1.2.3", "172.16.0.1", "192.168.1.1", "169.254.169.254", "100.64.0.1", "0.0.0.0",
-    "::1", "::", "fe80::1", "fdaa::1", "::ffff:127.0.0.1", "::ffff:169.254.169.254", "not an address",
+    "127.0.0.1",
+    "10.1.2.3",
+    "172.16.0.1",
+    "192.168.1.1",
+    "169.254.169.254",
+    "100.64.0.1",
+    "0.0.0.0",
+    "::1",
+    "::",
+    "fe80::1",
+    "fdaa::1",
+    "::ffff:127.0.0.1",
+    "::ffff:169.254.169.254",
+    "not an address",
   ]) {
     assert.equal(isPublicAddress(address), false, address);
   }
@@ -102,7 +114,9 @@ test("a redirect is checked as if it had been pasted, so it can't lead inside", 
 });
 
 test("what a site answers becomes a reason the reader can be told", async () => {
-  const reasons = await Promise.all(["/blocked", "/gone", "/broken", "/pdf", "/huge", "/loop", "/silent"].map((path) => fetchHere(at(path))));
+  const reasons = await Promise.all(
+    ["/blocked", "/gone", "/broken", "/pdf", "/huge", "/loop", "/silent"].map((path) => fetchHere(at(path))),
+  );
   assert.deepEqual(
     reasons.map((read) => (read.status === "failed" ? read.reason : read.status)),
     ["blocked", "not-found", "no-answer", "nothing-readable", "nothing-readable", "no-answer", "no-answer"],

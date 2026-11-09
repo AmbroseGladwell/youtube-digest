@@ -44,8 +44,7 @@ export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDa
     if (request.headers["x-goog-api-key"] !== FAKE_API_KEY || url.searchParams.has("key")) {
       return json(400, { error: { code: 400, message: "API key not valid." } });
     }
-    const visible = (id: string | null) =>
-      playlists.find((candidate) => candidate.id === id && candidate.privacyStatus !== "private");
+    const visible = (id: string | null) => playlists.find((candidate) => candidate.id === id && candidate.privacyStatus !== "private");
 
     if (url.pathname === "/youtube/v3/playlists") {
       const playlist = visible(url.searchParams.get("id"));
@@ -85,7 +84,10 @@ export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDa
             ...(item.privacyStatus === "private" || item.title === "Deleted video"
               ? {}
               : {
-                  thumbnails: { default: { url: `https://i.ytimg.com/vi/${item.videoId}/default.jpg` }, medium: { url: `https://i.ytimg.com/vi/${item.videoId}/mqdefault.jpg` } },
+                  thumbnails: {
+                    default: { url: `https://i.ytimg.com/vi/${item.videoId}/default.jpg` },
+                    medium: { url: `https://i.ytimg.com/vi/${item.videoId}/mqdefault.jpg` },
+                  },
                   videoOwnerChannelTitle: item.channel ?? playlist.channelTitle,
                 }),
             resourceId: { kind: "youtube#video", videoId: item.videoId },

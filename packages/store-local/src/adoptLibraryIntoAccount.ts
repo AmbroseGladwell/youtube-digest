@@ -32,10 +32,7 @@ export async function adoptLibraryIntoAccount({ accountId, indexedDB }: AdoptLib
     const contents: StoreContents[] = await Promise.all(
       names.map(async (name) => {
         const store = reading.objectStore(name);
-        const [keys, values] = await Promise.all([
-          promisifyRequest(store.getAllKeys()),
-          promisifyRequest(store.getAll()),
-        ]);
+        const [keys, values] = await Promise.all([promisifyRequest(store.getAllKeys()), promisifyRequest(store.getAll())]);
         return { name, keys, values };
       }),
     );

@@ -7,17 +7,25 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
-  keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
+  keyPoints: [
+    { text: "Growth beat expectations.", range: null },
+    { text: "Productivity is moving.", range: null },
+    { text: "Hiring intent has turned.", range: null },
+  ],
   howToApply: { items: ["Re-run the hiring forecast.", "Ask what the growth figure excludes."] },
-  verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard synthesis.", similarTo: [] },
+  verdict: {
+    novelty: "common_knowledge",
+    standsOut: null,
+    dubious: false,
+    dubiousClaims: [],
+    reasoning: "Standard synthesis.",
+    similarTo: [],
+  },
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
 // Nobody is signed in here, so the bar is the pacer and says so (design 1k).
-test("the reader opens on the note's first line, with the pacer naming that section", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the reader opens on the note's first line, with the pacer naming that section", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -27,10 +35,7 @@ test("the reader opens on the note's first line, with the pacer naming that sect
   await reader.verifyIsThePacer(true);
 });
 
-test("tapping a line moves the reading mark to it and renames what is being read", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("tapping a line moves the reading mark to it and renames what is being read", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -41,10 +46,7 @@ test("tapping a line moves the reading mark to it and renames what is being read
   await reader.verifyBarSays("Read-along · no audio · Key points");
 });
 
-test("the note's two lists carry bullets, and the prose sections do not", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the note's two lists carry bullets, and the prose sections do not", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -63,10 +65,7 @@ test("a shell with no way to sign in is not offered sign-in for audio", async ({
   await reader.verifyOffersSignInForAudio(false);
 });
 
-test("the speed control cycles the design's four rates and comes back round", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the speed control cycles the design's four rates and comes back round", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -81,10 +80,7 @@ test("the speed control cycles the design's four rates and comes back round", as
   await reader.verifyRateReads("1×");
 });
 
-test("favouriting from the player bar is reflected immediately and written to the store", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("favouriting from the player bar is reflected immediately and written to the store", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -99,10 +95,7 @@ test("favouriting from the player bar is reflected immediately and written to th
   }).toPass();
 });
 
-test("marking read from the masthead is written to the store and survives going back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("marking read from the masthead is written to the store and survives going back", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
   await library.showAll();
@@ -115,10 +108,7 @@ test("marking read from the masthead is written to the store and survives going 
   await back.nthCard(0).verifyIsRead(true);
 });
 
-test("Previous and Next walk the library in saved order, and the position says where you are", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Previous and Next walk the library in saved order, and the position says where you are", async ({ launcher, backendSimulator }) => {
   const newest = makeOverview({ savedAt: "2026-09-16T00:00:00.000Z" });
   const middle = makeOverview({ savedAt: "2026-09-15T00:00:00.000Z" });
   const oldest = makeOverview({ savedAt: "2026-09-14T00:00:00.000Z" });
@@ -134,10 +124,7 @@ test("Previous and Next walk the library in saved order, and the position says w
   await reader.verifyPosition("2 of 3");
 });
 
-test("the chapters tab opens, and the overview tab comes back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the chapters tab opens, and the overview tab comes back", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -149,10 +136,7 @@ test("the chapters tab opens, and the overview tab comes back", async ({
   await reader.verifyShowsOverviewPanel();
 });
 
-test("one indicator travels to the tab you chose, rather than three switching on", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("one indicator travels to the tab you chose, rather than three switching on", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -166,10 +150,7 @@ test("one indicator travels to the tab you chose, rather than three switching on
   await reader.verifyTabIndicatorSitsUnder("Transcript");
 });
 
-test("the meta line names the video's length only when the source recorded one", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the meta line names the video's length only when the source recorded one", async ({ launcher, backendSimulator }) => {
   const timed = makeOverview({ source: { ...NOTE.source, durationMs: 698_000 } });
   backendSimulator.overviews.seed(timed);
 
@@ -179,10 +160,7 @@ test("the meta line names the video's length only when the source recorded one",
   await reader.verifyMetaReads("1 min read · 1 min listen · 11:38 video");
 });
 
-test("the tabs come to rest on the masthead's lower edge, and follow it when it grows", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the tabs come to rest on the masthead's lower edge, and follow it when it grows", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const library = await launcher.launchExpectingLibrary({
@@ -206,11 +184,7 @@ test("the tabs come to rest on the masthead's lower edge, and follow it when it 
 const WIDE_THUMBNAIL =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720'%3E%3Crect width='1280' height='720' fill='%23cccccc'/%3E%3C/svg%3E";
 
-test("a full-width thumbnail on a phone stays in its column instead of widening the page", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("a full-width thumbnail on a phone stays in its column instead of widening the page", async ({ launcher, backendSimulator, page }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,

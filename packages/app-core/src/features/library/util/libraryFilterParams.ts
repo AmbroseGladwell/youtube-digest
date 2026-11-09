@@ -14,8 +14,7 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
 
   const topicId = topicParam && TopicId.safeParse(topicParam).success ? (topicParam as TopicId) : "all";
   const novelty = noveltyParam && Novelty.safeParse(noveltyParam).success ? (noveltyParam as Novelty) : "all";
-  const status =
-    statusParam && STATUS_VALUES.has(statusParam) ? (statusParam as LibraryFilters["status"]) : "all";
+  const status = statusParam && STATUS_VALUES.has(statusParam) ? (statusParam as LibraryFilters["status"]) : "all";
 
   return {
     source: LIBRARY_SOURCES.find((source) => source === searchParams.get("source")) ?? "all",
@@ -29,10 +28,7 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
   };
 }
 
-export function applyLibraryFilterPatch(
-  current: URLSearchParams,
-  patch: Partial<LibraryFilters>,
-): URLSearchParams {
+export function applyLibraryFilterPatch(current: URLSearchParams, patch: Partial<LibraryFilters>): URLSearchParams {
   const next = new URLSearchParams(current);
 
   if ("source" in patch) setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);

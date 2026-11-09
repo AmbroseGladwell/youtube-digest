@@ -40,7 +40,9 @@ const keyPointsCoverThePiece = (input: ArticleGenerationInput) => (output: Recor
   const starts = chapters.map(({ startParagraphIndex }) => startParagraphIndex);
   for (const index of chaptersTooBigToSkip(paragraphWords, starts)) {
     const end = starts[index + 1] ?? paragraphWords.length;
-    const covered = keyPoints.some(({ paragraphIndex }) => paragraphIndex !== null && paragraphIndex >= starts[index]! && paragraphIndex < end);
+    const covered = keyPoints.some(
+      ({ paragraphIndex }) => paragraphIndex !== null && paragraphIndex >= starts[index]! && paragraphIndex < end,
+    );
     if (!covered) {
       ctx.addIssue({
         code: "custom",

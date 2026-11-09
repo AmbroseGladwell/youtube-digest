@@ -65,10 +65,7 @@ const seedNote = (
   }
 };
 
-test("the chapters tab lists each stretch of the video with its range, title and summary", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the chapters tab lists each stretch of the video with its range, title and summary", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -82,10 +79,7 @@ test("the chapters tab lists each stretch of the video with its range, title and
 
 // The wide reader has no player to move, so a chapter links out to YouTube at its start,
 // the way the rail's jump link already does.
-test("on the wide reader a chapter's range links out to YouTube at its start", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("on the wide reader a chapter's range links out to YouTube at its start", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -96,10 +90,7 @@ test("on the wide reader a chapter's range links out to YouTube at its start", a
   await reader.verifyChapterRangesSeek(false);
 });
 
-test("in the panel a chapter's range sends the video to its start", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("in the panel a chapter's range sends the video to its start", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
@@ -112,10 +103,7 @@ test("in the panel a chapter's range sends the video to its start", async ({
   await expect.poll(() => launcher.readPlaybackSeeks()).toEqual([65_000]);
 });
 
-test("the chapter the video is inside is marked, and the mark moves with it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the chapter the video is inside is marked, and the mark moves with it", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
@@ -129,10 +117,7 @@ test("the chapter the video is inside is marked, and the mark moves with it", as
   await reader.verifyCurrentChapterReads("The argument");
 });
 
-test("a panel whose tab has moved to another video prints the ranges as plain text", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a panel whose tab has moved to another video prints the ranges as plain text", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel({
     ...panelWatching,
@@ -147,10 +132,7 @@ test("a panel whose tab has moved to another video prints the ranges as plain te
   await reader.verifyNoChapterIsCurrent();
 });
 
-test("Transcript opens the transcript at the chapter's start, marked and in view", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Transcript opens the transcript at the chapter's start, marked and in view", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -168,10 +150,7 @@ test("Transcript opens the transcript at the chapter's start, marked and in view
 
 // A chapter is a stretch, not a point: marking only the block it starts in says where it
 // begins and never where it ends (docs/features/chapters.md, "Opened from a chapter").
-test("Transcript marks every block of the chapter, named once at the top of the run", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Transcript marks every block of the chapter, named once at the top of the run", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, {
     chapters: [
       { title: "The whole case", summary: "Opening and argument together.", startMs: 0, endMs: 3_661_000 },
@@ -189,10 +168,7 @@ test("Transcript marks every block of the chapter, named once at the top of the 
   await reader.verifyTargetBlockNamesChapter("Chapter 01 · The whole case");
 });
 
-test("choosing the Transcript tab yourself opens it at the top, with nothing marked", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("choosing the Transcript tab yourself opens it at the top, with nothing marked", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -209,10 +185,7 @@ test("choosing the Transcript tab yourself opens it at the top, with nothing mar
 
 // Opening the transcript somewhere is scrolling away from the video, the same as
 // searching is, so the following stands down and offers itself back.
-test("opening the transcript from a chapter stands the following down", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening the transcript from a chapter stands the following down", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
@@ -225,10 +198,7 @@ test("opening the transcript from a chapter stands the following down", async ({
   await reader.verifyOffersToFollowPlayback(true);
 });
 
-test("a note with no transcript stored shows the way into one disabled, and says why", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note with no transcript stored shows the way into one disabled, and says why", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, { transcript: false });
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -262,10 +232,7 @@ test("signed in, the way into the transcript waits disabled while the account is
   await reader.verifyActiveTabIs("Transcript");
 });
 
-test("a note saved before transcripts were stored does not claim to be looking for one", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note saved before transcripts were stored does not claim to be looking for one", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, { transcript: false, videoId: null });
   const library = await launcher.launchExpectingLibrary({ sync: true, syncConnection: SIGNED_IN });
   const reader = await library.nthCard(0).openReader();
@@ -275,10 +242,7 @@ test("a note saved before transcripts were stored does not claim to be looking f
   await reader.verifyChapterTranscriptReasonIs("No transcript was kept for this note");
 });
 
-test("signed in, a transcript the account could not be asked for is not called missing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("signed in, a transcript the account could not be asked for is not called missing", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, { transcript: false });
   backendSimulator.simulateEndpointError(EndpointKey.SYNC_TRANSCRIPT);
   const library = await launcher.launchExpectingLibrary({ sync: true, syncConnection: SIGNED_IN });
@@ -289,10 +253,7 @@ test("signed in, a transcript the account could not be asked for is not called m
   await reader.verifyChapterTranscriptReasonIs("Couldn't load this note's transcript");
 });
 
-test("a note made before chapters existed says so, rather than showing an empty list", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note made before chapters existed says so, rather than showing an empty list", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, { chapters: null });
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -301,10 +262,7 @@ test("a note made before chapters existed says so, rather than showing an empty 
   await reader.verifyChaptersNoteReads(/weren't made for this note/);
 });
 
-test("a note whose transcript had nothing to split says that instead", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note whose transcript had nothing to split says that instead", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, { chapters: [] });
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();

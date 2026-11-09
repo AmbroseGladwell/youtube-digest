@@ -13,15 +13,9 @@ import { storeLibrary, theDataNote, theSellingNote } from "./storeLibrary.testHe
 // that read that viewport, so a 420px-wide element inside a 1280px window lays itself out as
 // the desktop app and not as the panel anyone installs
 // (docs/architecture/store-listing.md, "The screenshots").
-const SOURCES = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../../../apps/extension/store/sources",
-);
+const SOURCES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../apps/extension/store/sources");
 
-const SHOTS = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../../../apps/extension/store/screenshots",
-);
+const SHOTS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../apps/extension/store/screenshots");
 
 // Every shot is the side panel, because the side panel is the extension. Its other surface,
 // app.html, is an options_ui page nothing in the product links to, so the one shot that is
@@ -68,9 +62,7 @@ const dressed = async (page: Page): Promise<void> => {
   await page.addStyleTag({ url: FONTS });
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: "* { caret-color: transparent !important; }" });
-  await expect
-    .poll(() => page.evaluate(() => [...document.images].every((image) => image.complete)))
-    .toBe(true);
+  await expect.poll(() => page.evaluate(() => [...document.images].every((image) => image.complete))).toBe(true);
 };
 
 // What fills the window to the left of the panel. "wide" is the one shot that is not the
@@ -314,7 +306,23 @@ const composed = (
         frame.append(root);
       }
     },
-    [captureWidth, CAPTURE_HEIGHT, GROUND, GRID, INK, MUTED, ACCENT, CHROME, MARK, lead, accent, sub, surface, breakAtSplit, cites] as const,
+    [
+      captureWidth,
+      CAPTURE_HEIGHT,
+      GROUND,
+      GRID,
+      INK,
+      MUTED,
+      ACCENT,
+      CHROME,
+      MARK,
+      lead,
+      accent,
+      sub,
+      surface,
+      breakAtSplit,
+      cites,
+    ] as const,
   );
 
 // A capture taken by hand catches a line or two of the dimmed browser behind the panel on

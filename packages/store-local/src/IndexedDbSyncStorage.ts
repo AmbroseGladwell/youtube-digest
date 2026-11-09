@@ -262,7 +262,12 @@ export class IndexedDbSyncStorage implements SyncStorage {
     if (Object.keys(filingChanges).length > 0) {
       overviews.put(stampStoredRecord({ ...winner, ...folded }, CURRENT_SCHEMA_VERSIONS.overview, now));
       if (filingChanges.topicIds) {
-        await appendPendingWrite(transaction, { kind: "overview", id: into, updatedAt, change: { op: "topics", topicIds: filingChanges.topicIds } });
+        await appendPendingWrite(transaction, {
+          kind: "overview",
+          id: into,
+          updatedAt,
+          change: { op: "topics", topicIds: filingChanges.topicIds },
+        });
       }
       if (filingChanges.tags) {
         await appendPendingWrite(transaction, { kind: "overview", id: into, updatedAt, change: { op: "tags", tags: filingChanges.tags } });
@@ -320,9 +325,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
   // (docs/features/sync-client.md).
   async applyChanges(changes: RecordChange[], next: number): Promise<void> {
     const transaction = this.#db.transaction([...EVERY_STORE, ...FOLLOWING_STORES], "readwrite");
-    const pending = groupPending(
-      await promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()),
-    );
+    const pending = groupPending(await promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()));
     const revisions = transaction.objectStore(SYNC_REVISIONS_STORE);
 
     for (const change of changes) {
@@ -337,11 +340,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
         continue;
       }
 
-      const pulled = withKey(
-        { ...change.body, schemaVersion: change.schemaVersion, updatedAt: change.updatedAt },
-        change.kind,
-        change.id,
-      );
+      const pulled = withKey({ ...change.body, schemaVersion: change.schemaVersion, updatedAt: change.updatedAt }, change.kind, change.id);
       const rebased = rebasePendingChanges(pulled, pending.get(pendingKey(change.kind, change.id)) ?? []);
       if (rebased === null) {
         store.delete(key);
@@ -376,8 +375,7 @@ function withKey(record: Record<string, unknown>, kind: SyncedRecordKind, id: st
   return keyPath === null ? record : { ...record, [keyPath]: id };
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
 const readable = (kind: SyncedRecordKind, raw: unknown): Record<string, unknown> | null => {
   const migrated = migrateStoredRecord(raw, MIGRATIONS[kind]);
@@ -395,12 +393,7 @@ function writtenAt(raw: Record<string, unknown>, creationKey: string | null, now
   return Number.isNaN(parsed.getTime()) ? now : parsed;
 }
 
-function wholeRecordWrite(
-  kind: "overview" | "topic" | "followedPlaylist",
-  raw: unknown,
-  creationKey: string,
-  now: Date,
-): PendingWrite[] {
+function wholeRecordWrite(kind: "overview" | "topic" | "followedPlaylist", raw: unknown, creationKey: string, now: Date): PendingWrite[] {
   const migrated = readable(kind, raw);
   if (migrated === null || typeof migrated.id !== "string") return [];
   const at = writtenAt(migrated, creationKey, now);

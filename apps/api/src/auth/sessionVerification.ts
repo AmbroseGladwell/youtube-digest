@@ -29,11 +29,7 @@ export interface IssuedVerification {
 }
 
 // Null inside the cooldown: the last code is still live and nothing new goes out.
-export async function issueSessionVerification(
-  sql: SqlClient,
-  sessionId: string,
-  now: Date,
-): Promise<IssuedVerification | null> {
+export async function issueSessionVerification(sql: SqlClient, sessionId: string, now: Date): Promise<IssuedVerification | null> {
   const recent = await sql.query<{ id: string }>(
     "select id from session_verifications where session_id = $1 and created_at > $2::timestamptz limit 1",
     [sessionId, new Date(now.getTime() - COOLDOWN_MS).toISOString()],
@@ -51,12 +47,7 @@ export async function issueSessionVerification(
 }
 
 // One statement spends the code, and only a code made for this very session counts.
-export async function confirmSessionVerification(
-  sql: SqlClient,
-  sessionId: string,
-  code: string,
-  now: Date,
-): Promise<boolean> {
+export async function confirmSessionVerification(sql: SqlClient, sessionId: string, code: string, now: Date): Promise<boolean> {
   const rows = await sql.query<{ id: string }>(
     `update session_verifications set consumed_at = $3::timestamptz
       where session_id = $1 and code_hash = $2 and consumed_at is null and expires_at > $3::timestamptz

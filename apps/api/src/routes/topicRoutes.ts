@@ -16,8 +16,7 @@ export function topicRoutes(app: FastifyInstance, records: RecordsRepository): v
       {
         kind: "topic",
         id,
-        decide: (current) =>
-          decideReplace("topic", current, { body, schemaVersion, updatedAt, ifMatch: null }, request.client!),
+        decide: (current) => decideReplace("topic", current, { body, schemaVersion, updatedAt, ifMatch: null }, request.client!),
       },
     ]);
     return sendWritten(reply, written!, 201);

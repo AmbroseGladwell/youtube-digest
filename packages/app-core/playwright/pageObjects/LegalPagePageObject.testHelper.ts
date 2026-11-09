@@ -13,12 +13,10 @@ export class LegalPagePageObject extends PageObject {
       return this;
     });
 
-  verifyHeadingHasFocus = () =>
-    this.step("verifyHeadingHasFocus", () => expect(this.get(legalPageTestIds.title)).toBeFocused());
+  verifyHeadingHasFocus = () => this.step("verifyHeadingHasFocus", () => expect(this.get(legalPageTestIds.title)).toBeFocused());
 
   verifyLastUpdated = (date: string) =>
-    this.step(`verifyLastUpdated ${date}`, () =>
-      expect(this.get(legalPageTestIds.updated)).toHaveText(`Last updated ${date}`));
+    this.step(`verifyLastUpdated ${date}`, () => expect(this.get(legalPageTestIds.updated)).toHaveText(`Last updated ${date}`));
 
   verifyContentsListEverySection = () =>
     this.step("verifyContentsListEverySection", async () => {
@@ -36,9 +34,7 @@ export class LegalPagePageObject extends PageObject {
 
   verifyNoHorizontalScroll = () =>
     this.step("verifyNoHorizontalScroll", async () => {
-      const overflow = await this.page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
+      const overflow = await this.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(0);
     });
 

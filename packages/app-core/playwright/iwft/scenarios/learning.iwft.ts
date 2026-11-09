@@ -54,7 +54,10 @@ test("the third overview runs the pass, what it found waits on the library, and 
     .toEqual(expect.arrayContaining(["settings.personalisation.profilePassRan", "settings.personalisation.learnedItemUndone"]));
 });
 
-test("the notice shows several at once, each with its own Undo, and See opens What we know about you", async ({ launcher, backendSimulator }) => {
+test("the notice shows several at once, each with its own Undo, and See opens What we know about you", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(seededOverview("seeded00001"));
   await launcher.launch({
     ...SIGNED_IN_WITHOUT_A_KEY,
@@ -75,7 +78,10 @@ test("the notice shows several at once, each with its own Undo, and See opens Wh
 
 test("dismissing the notice keeps the item and doesn't show it again", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(seededOverview("seeded00001"));
-  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, learned: { "building a consumer app": learnedItem("building a consumer app", { noticedAt: null }) } });
+  await launcher.launch({
+    ...SIGNED_IN_WITHOUT_A_KEY,
+    learned: { "building a consumer app": learnedItem("building a consumer app", { noticedAt: null }) },
+  });
 
   await launcher.learnedNotice.verifyOffers("building a consumer app");
   await launcher.learnedNotice.dismiss();
@@ -86,9 +92,15 @@ test("dismissing the notice keeps the item and doesn't show it again", async ({ 
   await settings.personalisation.verifyLearned("building a consumer app");
 });
 
-test("an item seen in What we know about you counts as shown, so the library doesn't offer it again", async ({ launcher, backendSimulator }) => {
+test("an item seen in What we know about you counts as shown, so the library doesn't offer it again", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(seededOverview("seeded00001"));
-  await launcher.launch({ ...SIGNED_IN_WITHOUT_A_KEY, learned: { "building a consumer app": learnedItem("building a consumer app", { noticedAt: null }) } });
+  await launcher.launch({
+    ...SIGNED_IN_WITHOUT_A_KEY,
+    learned: { "building a consumer app": learnedItem("building a consumer app", { noticedAt: null }) },
+  });
   await launcher.learnedNotice.verifyOffers("building a consumer app");
 
   const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
@@ -102,12 +114,18 @@ test("an item seen in What we know about you counts as shown, so the library doe
   await launcher.learnedNotice.verifyIsGone();
 });
 
-test("Settings shows what was learned and where from, a removed item goes, and Keep learning switches off", async ({ launcher, backendSimulator }) => {
+test("Settings shows what was learned and where from, a removed item goes, and Keep learning switches off", async ({
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launch({
     ...SIGNED_IN_WITHOUT_A_KEY,
     aboutYou: { who: ["dad"], time: [], focus: [] },
-    learned: { "building a consumer app": learnedItem("building a consumer app"), "training for strength": learnedItem("training for strength") },
+    learned: {
+      "building a consumer app": learnedItem("building a consumer app"),
+      "training for strength": learnedItem("training for strength"),
+    },
   });
   const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
   await settings.verifyRowReads("personalisation", "A dad · 2 learned · Every section");

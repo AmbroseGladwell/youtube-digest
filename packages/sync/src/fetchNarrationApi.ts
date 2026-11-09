@@ -23,22 +23,13 @@ export function createFetchNarrationApi(options: FetchNarrationApiOptions): Narr
   return {
     peek: async (lines, voice) => {
       const voiceByKey = new Map(
-        await Promise.all(
-          NarrationVoice.options.map(async (offered) => [await narrationKey(lines, offered), offered] as const),
-        ),
+        await Promise.all(NarrationVoice.options.map(async (offered) => [await narrationKey(lines, offered), offered] as const)),
       );
-      const { renders } = await answered(
-        request("POST", "/audio/lookup", FoundRenders, { body: { keys: [...voiceByKey.keys()] } }),
-      );
+      const { renders } = await answered(request("POST", "/audio/lookup", FoundRenders, { body: { keys: [...voiceByKey.keys()] } }));
       const found = renders.map((render) => ({ voice: voiceByKey.get(render.key)!, render }));
-      return (
-        found.find((narration) => narration.voice === voice) ??
-        found.find((narration) => narration.render.status === "ready") ??
-        null
-      );
+      return found.find((narration) => narration.voice === voice) ?? found.find((narration) => narration.render.status === "ready") ?? null;
     },
-    request: (lines, voice, priority) =>
-      answered(request("POST", "/audio", NarrationRender, { body: { lines, voice, priority } })),
+    request: (lines, voice, priority) => answered(request("POST", "/audio", NarrationRender, { body: { lines, voice, priority } })),
     status,
     discard: async (key) => {
       await request("DELETE", `/audio/${key}`, z.unknown()).catch(ignoringNotFound);

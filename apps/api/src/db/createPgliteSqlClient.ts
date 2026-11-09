@@ -15,7 +15,6 @@ export function createPgliteSqlClient(db: PGlite): SqlClient {
     transaction,
     close: async () => {},
   });
-  const transaction: SqlClient["transaction"] = (run) =>
-    db.transaction((tx) => run(over(tx, (nested) => nested(over(tx, transaction)))));
+  const transaction: SqlClient["transaction"] = (run) => db.transaction((tx) => run(over(tx, (nested) => nested(over(tx, transaction)))));
   return { ...over(db, transaction), close: () => db.close() };
 }

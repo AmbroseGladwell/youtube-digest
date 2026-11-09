@@ -52,23 +52,13 @@ export function KeyPromptNote({ readiness, detail, from, testIds, onFollowed }: 
       </p>
 
       {prompt.kind === "no-key" ? (
-        <PageLink
-          className={styles.link}
-          to={Routes.settingsSection("keys")}
-          onClick={followSettings}
-          data-testid={testIds.settingsLink}
-        >
+        <PageLink className={styles.link} to={Routes.settingsSection("keys")} onClick={followSettings} data-testid={testIds.settingsLink}>
           {ADD_A_KEY_IN_SETTINGS} <StrokeIcon name="arrowRight" size={15} />
         </PageLink>
       ) : (
         <>
           <div className={styles.ways}>
-            <PageLink
-              className={styles.addKey}
-              to={Routes.settingsSection("keys")}
-              onClick={followSettings}
-              data-testid={testIds.addKey}
-            >
+            <PageLink className={styles.addKey} to={Routes.settingsSection("keys")} onClick={followSettings} data-testid={testIds.addKey}>
               {addKeyLabel(prompt.provider)}
             </PageLink>
             <button

@@ -1,13 +1,5 @@
 import { z } from "zod";
-import {
-  EmailChangeAsked,
-  EmailChangeReverted,
-  LinkCode,
-  LinkedSession,
-  SessionInfo,
-  SignedIn,
-  VerificationAsked,
-} from "@overview/domain";
+import { EmailChangeAsked, EmailChangeReverted, LinkCode, LinkedSession, SessionInfo, SignedIn, VerificationAsked } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 import type { AuthApi } from "./AuthApi.js";
 
@@ -23,8 +15,7 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
       await answered(request("POST", "/auth/magic-link", Accepted, { body }));
     },
     signIn: (token) => answered(request("POST", "/auth/sign-in", SignedIn, { body: { token } })),
-    signInWithEmailCode: (email, code) =>
-      answered(request("POST", "/auth/email-code", SignedIn, { body: { email, code } })),
+    signInWithEmailCode: (email, code) => answered(request("POST", "/auth/email-code", SignedIn, { body: { email, code } })),
     exchangeLinkCode: (code) => answered(request("POST", "/auth/link-code", LinkedSession, { body: { code } })),
     session: () => answered(request("GET", "/session", SessionInfo)),
     issueLinkCode: () => answered(request("POST", "/session/link-code", LinkCode)),
@@ -37,12 +28,9 @@ export function createFetchAuthApi(options: FetchAuthApiOptions): AuthApi {
     confirmVerification: async (code) => {
       await request("POST", "/session/verification/confirm", z.never(), { body: { code } });
     },
-    requestEmailChange: (email) =>
-      answered(request("POST", "/session/email-change", EmailChangeAsked, { body: { email } })),
-    confirmEmailChange: (code) =>
-      answered(request("POST", "/session/email-change/confirm", SessionInfo, { body: { code } })),
-    revertEmailChange: (token) =>
-      answered(request("POST", "/auth/email-change/revert", EmailChangeReverted, { body: { token } })),
+    requestEmailChange: (email) => answered(request("POST", "/session/email-change", EmailChangeAsked, { body: { email } })),
+    confirmEmailChange: (code) => answered(request("POST", "/session/email-change/confirm", SessionInfo, { body: { code } })),
+    revertEmailChange: (token) => answered(request("POST", "/auth/email-change/revert", EmailChangeReverted, { body: { token } })),
     deleteAccount: async () => {
       await request("DELETE", "/session/account", z.never());
     },

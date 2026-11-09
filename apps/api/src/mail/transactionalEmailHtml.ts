@@ -14,8 +14,7 @@ export interface TransactionalEmailSlots {
   siteUrl: string;
 }
 
-export const escapeHtml = (value: string): string =>
-  value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
+export const escapeHtml = (value: string): string => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
 const light = {
   ground: "#F6F4F0",

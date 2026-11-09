@@ -26,7 +26,10 @@ export function parseServerStack(stack: string | undefined, root: string): Serve
     const [, fn = "", location = "", lineNumber = "0", column = "0"] = match;
     const file = relativeFile(location, root);
     frames.push({
-      function: fn.replace(/^async /, "").replace(/[^\w$.<>[\] -]/g, "").slice(0, 128),
+      function: fn
+        .replace(/^async /, "")
+        .replace(/[^\w$.<>[\] -]/g, "")
+        .slice(0, 128),
       file,
       line: Number(lineNumber),
       column: Number(column),

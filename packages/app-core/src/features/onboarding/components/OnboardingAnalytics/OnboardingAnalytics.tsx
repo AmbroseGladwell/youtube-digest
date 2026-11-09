@@ -29,18 +29,13 @@ export function OnboardingAnalytics({ onAllow, onNoThanks }: OnboardingAnalytics
       <div className={styles.shared} data-testid={onboardingAnalyticsTestIds.shared}>
         <span className={styles.sharedTitle}>What's shared</span>
         <span>
-          Which features you use, never what you read, watch or type. Errors are reported either way, so nothing breaks
-          unnoticed if you say no.
+          Which features you use, never what you read, watch or type. Errors are reported either way, so nothing breaks unnoticed if you say
+          no.
         </span>
         <span className={styles.change}>
           Change it any time in Settings › Privacy.{" "}
           {apiUrl !== null && (
-            <a
-              href={policyPageUrl(apiUrl, "privacy")}
-              target="_blank"
-              rel="noreferrer"
-              data-testid={onboardingAnalyticsTestIds.policyLink}
-            >
+            <a href={policyPageUrl(apiUrl, "privacy")} target="_blank" rel="noreferrer" data-testid={onboardingAnalyticsTestIds.policyLink}>
               Privacy policy
             </a>
           )}
@@ -51,12 +46,7 @@ export function OnboardingAnalytics({ onAllow, onNoThanks }: OnboardingAnalytics
           <button type="button" className={styles.answer} onClick={onAllow} data-testid={onboardingAnalyticsTestIds.allow}>
             Allow
           </button>
-          <button
-            type="button"
-            className={styles.answer}
-            onClick={onNoThanks}
-            data-testid={onboardingAnalyticsTestIds.noThanks}
-          >
+          <button type="button" className={styles.answer} onClick={onNoThanks} data-testid={onboardingAnalyticsTestIds.noThanks}>
             No thanks
           </button>
         </div>

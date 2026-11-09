@@ -10,7 +10,10 @@ export const CaptureQueuePreferences = z.object({
   hold: QueueHold.nullable().catch(null),
   // The videos the reader chose to make now that were made today, so they stay off their
   // playlist's pace (docs/features/capture-queue.md, "Waiting on a pace").
-  chosenToday: z.object({ day: z.string(), videoIds: z.array(z.string()) }).nullable().catch(null),
+  chosenToday: z
+    .object({ day: z.string(), videoIds: z.array(z.string()) })
+    .nullable()
+    .catch(null),
 });
 export type CaptureQueuePreferences = z.infer<typeof CaptureQueuePreferences>;
 

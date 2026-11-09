@@ -46,7 +46,13 @@ export function CookingIngredientsSheet({ open, onClose, children }: CookingIngr
       <div className={styles.panel}>
         <span className={styles.handle} aria-hidden="true" />
         <div className={styles.head}>
-          <button type="button" className={styles.close} aria-label="Close" onClick={onClose} data-testid={cookingIngredientsSheetTestIds.close}>
+          <button
+            type="button"
+            className={styles.close}
+            aria-label="Close"
+            onClick={onClose}
+            data-testid={cookingIngredientsSheetTestIds.close}
+          >
             <StrokeIcon name="close" size={16} />
           </button>
         </div>

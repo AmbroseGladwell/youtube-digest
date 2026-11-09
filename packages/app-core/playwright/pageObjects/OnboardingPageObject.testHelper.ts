@@ -57,18 +57,14 @@ export class OnboardingPageObject extends PageObject {
     });
 
   verifyProgressReads = (phase: string) =>
-    this.step(`verifyProgressReads ${phase}`, () =>
-      expect(this.#progress(onboardingProgressBarTestIds.phase)).toHaveText(` · ${phase}`),
-    );
+    this.step(`verifyProgressReads ${phase}`, () => expect(this.#progress(onboardingProgressBarTestIds.phase)).toHaveText(` · ${phase}`));
 
   // On a wide screen the preview says it in a sentence; narrower, the line above the screen does.
   verifyPreviewSays = (status: string) =>
     this.step(`verifyPreviewSays ${status}`, () => expect(this.get(onboardingPreviewTestIds.status)).toHaveText(status));
 
   verifyReadyLineReads = (line: string) =>
-    this.step(`verifyReadyLineReads ${line}`, () =>
-      expect(this.#progress(onboardingProgressBarTestIds.status)).toHaveText(line),
-    );
+    this.step(`verifyReadyLineReads ${line}`, () => expect(this.#progress(onboardingProgressBarTestIds.status)).toHaveText(line));
 
   verifyHasNoProgressBar = () =>
     this.step("verifyHasNoProgressBar", () => expect(this.get(onboardingProgressBarTestIds.root)).toHaveCount(0));
@@ -167,9 +163,7 @@ export class OnboardingPageObject extends PageObject {
     );
 
   verifyTellsOfExtension = (told: boolean) =>
-    this.step(`verifyTellsOfExtension ${told}`, () =>
-      expect(this.get(onboardingReadFailureTestIds.extension)).toHaveCount(told ? 1 : 0),
-    );
+    this.step(`verifyTellsOfExtension ${told}`, () => expect(this.get(onboardingReadFailureTestIds.extension)).toHaveCount(told ? 1 : 0));
 
   verifyAnotherLinkAsks = (placeholder: string) =>
     this.step(`verifyAnotherLinkAsks ${placeholder}`, () =>
@@ -405,7 +399,6 @@ export class OnboardingPageObject extends PageObject {
       await expect(this.page.getByRole("heading", { level: 1, name: "Nearly there" })).toBeFocused();
       await expect(this.get(onboardingNearlyThereTestIds.root)).toContainText(lead);
     });
-
 
   tryAgainFromPreview = () => this.step("tryAgainFromPreview", () => this.click(onboardingPreviewTestIds.tryAgain));
 

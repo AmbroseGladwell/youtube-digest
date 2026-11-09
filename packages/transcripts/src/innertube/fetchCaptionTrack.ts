@@ -25,10 +25,7 @@ export async function fetchCaptionTrack(
   });
 
   if (response.status !== 200) {
-    throw innerTubeError(
-      `the caption track answered ${response.status}`,
-      httpFailure(response.status),
-    );
+    throw innerTubeError(`the caption track answered ${response.status}`, httpFailure(response.status));
   }
   return mapJson3ToSegments(response.body);
 }

@@ -80,9 +80,7 @@ test("the code field asks the phone to offer the code from the message", async (
   await signIn.verifyFieldAttributes("one-time-code", { autocomplete: "one-time-code" });
 });
 
-test("the extension's server address is a link field with no suggestions, beside the email and the code", async ({
-  launcher,
-}) => {
+test("the extension's server address is a link field with no suggestions, beside the email and the code", async ({ launcher }) => {
   await launcher.launch({ sync: true, surface: "extension" });
   const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
   await signIn.verifyFieldsIdentifyThemselves();

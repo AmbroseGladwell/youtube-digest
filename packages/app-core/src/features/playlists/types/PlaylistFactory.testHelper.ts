@@ -1,11 +1,4 @@
-import {
-  PlaylistId,
-  VideoId,
-  type FollowedPlaylist,
-  type PlaylistEntry,
-  type PlaylistLookup,
-  type QueuedCapture,
-} from "@overview/domain";
+import { PlaylistId, VideoId, type FollowedPlaylist, type PlaylistEntry, type PlaylistLookup, type QueuedCapture } from "@overview/domain";
 
 export const makeFollowedPlaylist = (overrides: Partial<FollowedPlaylist> = {}): FollowedPlaylist => ({
   id: PlaylistId.parse("PLpsychology"),

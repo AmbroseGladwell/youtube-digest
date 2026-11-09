@@ -18,13 +18,7 @@ describe("libraryFilterChips", () => {
       TOPICS,
     );
 
-    expect(chips.map(({ label }) => label)).toEqual([
-      "#founder-interview",
-      "Business",
-      "Fresh angle",
-      "Favourites",
-      "Read and unread",
-    ]);
+    expect(chips.map(({ label }) => label)).toEqual(["#founder-interview", "Business", "Fresh angle", "Favourites", "Read and unread"]);
     expect(chips.map(({ clear }) => clear)).toEqual([
       { tag: null },
       { topicId: "all" },

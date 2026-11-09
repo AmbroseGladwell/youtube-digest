@@ -32,9 +32,7 @@ test("a cap no provider enforces is not dropped, it is said in the description",
 });
 
 test("a cap said in words keeps the words the section already wrote", () => {
-  const schema = providerJsonSchema(
-    z.object({ points: z.array(z.string()).max(7).describe("Three to five, seven at the very most.") }),
-  );
+  const schema = providerJsonSchema(z.object({ points: z.array(z.string()).max(7).describe("Three to five, seven at the very most.") }));
 
   const description = String(at(schema, "points").description);
   assert.match(description, /Three to five/);

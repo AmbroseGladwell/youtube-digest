@@ -8,8 +8,7 @@ const OR = new Intl.ListFormat("en-GB", { style: "long", type: "disjunction" });
 export type MonthHoldWay = "addKey" | "seePlans";
 
 // The month resets at UTC midnight, said on the reader's own calendar.
-export const monthResumeDate = (hold: QueueHold, narrow = false): string =>
-  (narrow ? SHORT : LONG).format(new Date(hold.resumesAt));
+export const monthResumeDate = (hold: QueueHold, narrow = false): string => (narrow ? SHORT : LONG).format(new Date(hold.resumesAt));
 
 // The ways round the month's limit the queue offers: a key where one would give more, the
 // plans where one would, and nothing where neither would (design 95p).
@@ -25,7 +24,9 @@ const madeSentence = (limit: LimitMessage | null) =>
 export function monthHoldStripMeta(hold: QueueHold, limit: LimitMessage | null, compact: boolean): string {
   const withKey = monthHoldWays(limit).includes("addKey");
   if (compact) {
-    return withKey ? `Resumes ${monthResumeDate(hold, true)} or with a key` : `${madeSentence(limit)} · resumes ${monthResumeDate(hold, true)}`;
+    return withKey
+      ? `Resumes ${monthResumeDate(hold, true)} or with a key`
+      : `${madeSentence(limit)} · resumes ${monthResumeDate(hold, true)}`;
   }
   return `${madeSentence(limit)}. Resumes ${monthResumeDate(hold)}${withKey ? ", or when you add a key" : ""}.`;
 }

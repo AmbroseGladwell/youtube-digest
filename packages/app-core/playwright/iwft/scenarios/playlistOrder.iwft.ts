@@ -117,7 +117,12 @@ test("changing a playlist's order in Settings turns round what is already waitin
   backendSimulator,
 }) => {
   followingIn(backendSimulator, "oldestFirst");
-  for (const capture of [queued(0, "2026-10-05T09:00:00.000Z"), LECTURE, queued(1, "2026-10-05T09:00:00.002Z"), queued(2, "2026-10-05T09:00:00.003Z")]) {
+  for (const capture of [
+    queued(0, "2026-10-05T09:00:00.000Z"),
+    LECTURE,
+    queued(1, "2026-10-05T09:00:00.002Z"),
+    queued(2, "2026-10-05T09:00:00.003Z"),
+  ]) {
     backendSimulator.playlists.seedQueued(capture);
   }
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);

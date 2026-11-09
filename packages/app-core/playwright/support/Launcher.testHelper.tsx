@@ -5,7 +5,20 @@ import type { AppBuild } from "../../src/app/AppBuildContext.js";
 import type { AppLayout } from "../../src/app/LayoutContext.js";
 import type { PlaybackPosition } from "../../src/app/PlaybackContext.js";
 import type { Surface } from "../../src/app/SurfaceContext.js";
-import { aboutYouPatch, SHARE_PAYLOAD_ELEMENT_ID, type AboutYou, type AccentColour, type HeadImageSize, type LearnedItems, type MilestoneMarks, type NarrationVoice, type Plan, type SectionsEnabled, type Settings, type ThemeMode } from "@overview/domain";
+import {
+  aboutYouPatch,
+  SHARE_PAYLOAD_ELEMENT_ID,
+  type AboutYou,
+  type AccentColour,
+  type HeadImageSize,
+  type LearnedItems,
+  type MilestoneMarks,
+  type NarrationVoice,
+  type Plan,
+  type SectionsEnabled,
+  type Settings,
+  type ThemeMode,
+} from "@overview/domain";
 import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConnection.js";
 import type { OnboardingRunPhase } from "../../src/features/onboarding/useOnboardingRun.js";
@@ -116,9 +129,7 @@ export class Launcher {
       // Signed out, the panel's home is the web's Start compressed, or once the device has
       // had an account, the way back into it (designs 205g and 46q).
       if (options.sync === true && !options.syncConnection?.apiUrl) {
-        await expect(
-          this.page.getByTestId(homePageTestIds.hero).or(this.page.getByTestId(signedOutGateTestIds.root)),
-        ).toBeVisible();
+        await expect(this.page.getByTestId(homePageTestIds.hero).or(this.page.getByTestId(signedOutGateTestIds.root))).toBeVisible();
         return capture;
       }
       return capture.verifyIsShown();
@@ -199,9 +210,7 @@ export class Launcher {
     });
   };
 
-  launchExpectingFirstRun = (
-    options: LaunchOptions = {},
-  ): Promise<GenerateOverviewFormPageObject> =>
+  launchExpectingFirstRun = (options: LaunchOptions = {}): Promise<GenerateOverviewFormPageObject> =>
     test.step("Launcher.launchExpectingFirstRun", async () => {
       const home = await this.launch(options);
       await home.verifyShowsFirstRunHero();
@@ -212,10 +221,7 @@ export class Launcher {
   // The read recovering underneath a dead-end screen, so pressing its action can succeed.
   stopFailing = (read: InMemoryStoreRead): Promise<void> =>
     test.step(`Launcher.stopFailing ${read}`, () =>
-      this.page.evaluate(
-        (next) => window.__iwftStores__.overviewStore.recoverRead(next),
-        read,
-      ));
+      this.page.evaluate((next) => window.__iwftStores__.overviewStore.recoverRead(next), read));
 
   // The shell's own view of which tab is in front, moved the way a tab change moves it.
   // Nothing in app-core can reach chrome.tabs, so the simulated source is the seam.
@@ -255,30 +261,29 @@ export class Launcher {
     test.step("Launcher.settingsStoreRead", () => this.page.evaluate(() => window.__iwftStores__.settingsStore.get()));
 
   readPlaybackSeeks = (): Promise<number[]> =>
-    test.step("Launcher.readPlaybackSeeks", () =>
-      this.page.evaluate(() => window.__iwftPlayback__?.seeks ?? []));
+    test.step("Launcher.readPlaybackSeeks", () => this.page.evaluate(() => window.__iwftPlayback__?.seeks ?? []));
 
   // Opening the link from the email: the sign-in path with the token in the hash, or with
   // no token at all (docs/features/sign-in.md).
   openSignInLink = (token: string | null, returnTo: string | null = null): Promise<void> =>
     test.step(`Launcher.openSignInLink ${token ?? "without a token"}`, () =>
-      this.page.evaluate(
-        ({ path, search, hash }) => window.__iwftRouter__.navigate({ pathname: path, search, hash }),
-        {
-          path: Routes.signIn(),
-          search: returnTo === null ? "" : `?return=${encodeURIComponent(returnTo)}`,
-          hash: token === null ? "" : `#token=${encodeURIComponent(token)}`,
-        },
-      ));
+      this.page.evaluate(({ path, search, hash }) => window.__iwftRouter__.navigate({ pathname: path, search, hash }), {
+        path: Routes.signIn(),
+        search: returnTo === null ? "" : `?return=${encodeURIComponent(returnTo)}`,
+        hash: token === null ? "" : `#token=${encodeURIComponent(token)}`,
+      }));
 
   // The sign-in link opened in another tab of this browser and signed the device in there
   // (docs/features/onboarding.md, "The run lives in one tab").
   signInFromAnotherTab = (): Promise<void> =>
     test.step("Launcher.signInFromAnotherTab", () =>
-      this.page.evaluate(
-        (connection) => window.__iwftAnotherTab__.signsIn(connection),
-        { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL, firstName: null },
-      ));
+      this.page.evaluate((connection) => window.__iwftAnotherTab__.signsIn(connection), {
+        apiUrl: "https://sync.test",
+        token: null,
+        accountId: SIMULATED_ACCOUNT_ID,
+        email: SIMULATED_EMAIL,
+        firstName: null,
+      }));
 
   // Another tab has onboarding's run, and answers for it until it closes.
   anotherTabHoldsOnboardingRun = (link: string, phase: OnboardingRunPhase): Promise<void> =>
@@ -289,13 +294,11 @@ export class Launcher {
     test.step("Launcher.anotherTabCloses", () => this.page.evaluate(() => window.__iwftAnotherTab__.closes()));
 
   // Arriving from an assistant: it sends the reader's browser to the consent screen.
-  openConsent = (requestId: string): Promise<void> =>
-    this.openPage(Routes.connect(requestId));
+  openConsent = (requestId: string): Promise<void> => this.openPage(Routes.connect(requestId));
 
   // Going to a page by its address, the way a typed or bookmarked URL arrives.
   openPage = (path: string): Promise<void> =>
-    test.step(`Launcher.openPage ${path}`, () =>
-      this.page.evaluate((pathname) => window.__iwftRouter__.navigate(pathname), path));
+    test.step(`Launcher.openPage ${path}`, () => this.page.evaluate((pathname) => window.__iwftRouter__.navigate(pathname), path));
 
   get consentPage(): ConsentPageObject {
     return new ConsentPageObject(this.testContext);

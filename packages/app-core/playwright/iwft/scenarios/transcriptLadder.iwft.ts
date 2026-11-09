@@ -9,10 +9,7 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const ANTHROPIC_ONLY = ANTHROPIC_KEY;
 
-test("a shell that can reach YouTube writes a note without asking our server", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a shell that can reach YouTube writes a note without asking our server", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({
     apiKeys: ANTHROPIC_ONLY,
     youTubeFetch: true,
@@ -27,10 +24,7 @@ test("a shell that can reach YouTube writes a note without asking our server", a
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });
 
-test("one player call answers for the metadata and the captions together, not one each", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("one player call answers for the metadata and the captions together, not one each", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({
     apiKeys: ANTHROPIC_ONLY,
     youTubeFetch: true,
@@ -42,10 +36,7 @@ test("one player call answers for the metadata and the captions together, not on
   expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(1);
 });
 
-test("a free rung that fails falls through to our server, rather than failing the run", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a free rung that fails falls through to our server, rather than failing the run", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.INNERTUBE_PLAYER);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY, youTubeFetch: true });
 
@@ -59,10 +50,7 @@ test("a free rung that fails falls through to our server, rather than failing th
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });
 
-test("captions already held are read back, whichever rung could have fetched them", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("captions already held are read back, whichever rung could have fetched them", async ({ launcher, backendSimulator }) => {
   backendSimulator.transcripts.seed(
     makeStoredTranscript({
       videoId: VideoId.parse(IWFT_VIDEO_ID),
@@ -107,10 +95,7 @@ test("a video another account already stored is read from the shared cache, and 
   });
 });
 
-test("the side panel reads a cached video from the shared cache rather than contacting YouTube", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the side panel reads a cached video from the shared cache rather than contacting YouTube", async ({ launcher, backendSimulator }) => {
   backendSimulator.transcripts.seedShared(sharedTranscript());
   const form = await launcher.launchExpectingFirstRun({
     apiKeys: ANTHROPIC_ONLY,
@@ -126,10 +111,7 @@ test("the side panel reads a cached video from the shared cache rather than cont
   expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(0);
 });
 
-test("a video the shared cache has never seen falls through to the next rung", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a video the shared cache has never seen falls through to the next rung", async ({ launcher, backendSimulator }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
 
   await form.submitUrl(VIDEO_URL);
@@ -139,10 +121,7 @@ test("a video the shared cache has never seen falls through to the next rung", a
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 });
 
-test("a shared cache that cannot be reached counts as a miss, not as a failed run", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a shared cache that cannot be reached counts as a miss, not as a failed run", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.SHARED_TRANSCRIPT);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
 
@@ -160,10 +139,7 @@ const serviceTranscript = () =>
   });
 
 // The definition of done for OV-55 (docs/architecture/server-side-transcripts.md).
-test("a web reader with no extension gets an uncached video's transcript from our server", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a web reader with no extension gets an uncached video's transcript from our server", async ({ launcher, backendSimulator }) => {
   backendSimulator.transcripts.seedService(serviceTranscript());
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });
 
@@ -188,10 +164,7 @@ test("a reader with a free rung never reaches our server's metered one", async (
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
 });
 
-test("once our server's budget for the day is spent, the reader is told what else can fetch it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("once our server's budget for the day is spent, the reader is told what else can fetch it", async ({ launcher, backendSimulator }) => {
   backendSimulator.transcripts.seedService(serviceTranscript());
   backendSimulator.simulateEndpointError(EndpointKey.SERVICE_TRANSCRIPT);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });

@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { PLAYLIST_ORDERS, PLAYLIST_PACES, type FollowedPlaylist, type PlaylistCheck, type PlaylistOrder, type PlaylistPace } from "@overview/domain";
+import {
+  PLAYLIST_ORDERS,
+  PLAYLIST_PACES,
+  type FollowedPlaylist,
+  type PlaylistCheck,
+  type PlaylistOrder,
+  type PlaylistPace,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { playlistUrl } from "../../../newOverview/util/parseYouTubeUrl.js";
@@ -62,13 +69,19 @@ export function FollowedPlaylistRow({
       <li className={styles.confirm} role="group" aria-labelledby={titleId} data-testid={followedPlaylistRowTestIds.confirm}>
         <p className={styles.confirmText} id={titleId} ref={confirmTitle} tabIndex={-1}>
           <strong>Unfollow {playlist.title}?</strong>{" "}
-          {waiting > 0 && `${waiting.toLocaleString("en-GB")} ${waiting === 1 ? "video" : "videos"} still queued from it ${waiting === 1 ? "is" : "are"} removed. `}
+          {waiting > 0 &&
+            `${waiting.toLocaleString("en-GB")} ${waiting === 1 ? "video" : "videos"} still queued from it ${waiting === 1 ? "is" : "are"} removed. `}
           {overviews === 0
             ? "Nothing more is queued from it."
             : `The ${overviews.toLocaleString("en-GB")} ${overviews === 1 ? "overview" : "overviews"} already made stay, with their From line.`}
         </p>
         <span className={`${styles.confirmActions} ${stacked ? styles.confirmActionsStacked : ""}`}>
-          <button type="button" className={styles.unfollowNow} onClick={onUnfollow} data-testid={followedPlaylistRowTestIds.confirmUnfollowButton}>
+          <button
+            type="button"
+            className={styles.unfollowNow}
+            onClick={onUnfollow}
+            data-testid={followedPlaylistRowTestIds.confirmUnfollowButton}
+          >
             Unfollow
           </button>
           <button

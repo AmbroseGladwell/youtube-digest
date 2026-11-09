@@ -13,11 +13,7 @@ const FRESH_ANGLE = {
   similarTo: [],
 };
 
-test("the filter sheet opens clear of the bar, rather than sliding its head under it", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("the filter sheet opens clear of the bar, rather than sliding its head under it", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.overviews.seed(makeOverview());
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary();
@@ -27,11 +23,7 @@ test("the filter sheet opens clear of the bar, rather than sliding its head unde
   await library.verifyFilterSheetClearsTheBar();
 });
 
-test("the open sheet holds the keyboard, and gives it back to the button that opened it", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("the open sheet holds the keyboard, and gives it back to the button that opened it", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.overviews.seed(makeOverview());
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary();
@@ -63,11 +55,7 @@ test("the button beside the search marks filters changed from the default, and t
   await library.expectCardCountToBe(1);
 });
 
-test("a filter applied from the sheet glides the list beneath the sheet, never over it", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("a filter applied from the sheet glides the list beneath the sheet, never over it", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.overviews.seed(makeOverview({ tags: ["saas"] }));
   backendSimulator.overviews.seed(makeOverview({ tags: ["energy"] }));
   await page.setViewportSize(PHONE);
@@ -86,9 +74,7 @@ test("on a phone the chips under the search keep to one line, with +N opening th
   page,
 }) => {
   backendSimulator.overviews.seedTopic(BUSINESS);
-  backendSimulator.overviews.seed(
-    makeOverview({ tags: ["founder-interview"], topicIds: [BUSINESS.id], verdict: FRESH_ANGLE }),
-  );
+  backendSimulator.overviews.seed(makeOverview({ tags: ["founder-interview"], topicIds: [BUSINESS.id], verdict: FRESH_ANGLE }));
   await page.setViewportSize({ width: 360, height: 760 });
   const library = await launcher.launchExpectingLibrary();
 

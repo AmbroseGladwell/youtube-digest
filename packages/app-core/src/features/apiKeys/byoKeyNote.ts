@@ -14,5 +14,4 @@ export const BYO_KEY_NOTE =
 // Design 110a and 110m end the section with this rather than opening with it, so the list
 // and the choice land above the fold in the 600-tall panel.
 export const BYO_KEY_NOTE_SHORT =
-  "Bring your own key. Your key stays on this device and goes straight to the provider, " +
-  "never through our servers.";
+  "Bring your own key. Your key stays on this device and goes straight to the provider, " + "never through our servers.";

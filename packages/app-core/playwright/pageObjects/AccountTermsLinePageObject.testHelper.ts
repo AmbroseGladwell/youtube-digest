@@ -20,9 +20,7 @@ export class AccountTermsLinePageObject extends PageObject {
         else await expect(this.get(testId)).not.toHaveAttribute("target");
       }
       const lineBottom = await line.evaluate((element) => element.getBoundingClientRect().bottom);
-      const buttonTop = await this.get(emailLinkFormTestIds.submitButton).evaluate(
-        (element) => element.getBoundingClientRect().top,
-      );
+      const buttonTop = await this.get(emailLinkFormTestIds.submitButton).evaluate((element) => element.getBoundingClientRect().top);
       expect(buttonTop).toBeGreaterThan(lineBottom);
       expect(buttonTop - lineBottom).toBeLessThan(24);
     });

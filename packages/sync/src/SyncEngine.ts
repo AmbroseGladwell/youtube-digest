@@ -55,7 +55,15 @@ export class SyncEngine {
   #running: Promise<SyncStatus> | null = null;
   #askedAgain = false;
 
-  constructor({ api, storage, clientVersion = CLIENT_VERSION, now = () => new Date(), pageSize = 200, onApplied, onFolded }: SyncEngineOptions) {
+  constructor({
+    api,
+    storage,
+    clientVersion = CLIENT_VERSION,
+    now = () => new Date(),
+    pageSize = 200,
+    onApplied,
+    onFolded,
+  }: SyncEngineOptions) {
     this.#api = api;
     this.#storage = storage;
     this.#clientVersion = clientVersion;
@@ -175,9 +183,7 @@ export class SyncEngine {
       return this.#stop("failed", describe(error));
     }
 
-    return belowFloor
-      ? this.#stop("unsupported", "This version of the app can no longer write. Update it.")
-      : this.#finish();
+    return belowFloor ? this.#stop("unsupported", "This version of the app can no longer write. Update it.") : this.#finish();
   }
 
   // A fold rewrites the outbox, dropping this copy's writes and journaling the winner's,
@@ -200,12 +206,7 @@ export class SyncEngine {
       if (blocked.has(key) || this.#waitsBehindParkedNote(entry, blocked)) {
         continue;
       }
-      const outcome = await pushPendingWrite(
-        this.#api,
-        entry,
-        await this.#storage.revisionOf(entry.kind, entry.id),
-        this.#storage,
-      );
+      const outcome = await pushPendingWrite(this.#api, entry, await this.#storage.revisionOf(entry.kind, entry.id), this.#storage);
       switch (outcome.result) {
         case "written":
           await this.#storage.acknowledge(entry.key, { rev: outcome.rev });

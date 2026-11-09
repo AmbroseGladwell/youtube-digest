@@ -26,10 +26,7 @@ const NOTE = makeOverview({
 
 // The bug: every open scrolled the page down to the premise before the reader had asked
 // for anything (docs/features/audio-player.md, "The note follows the voice").
-test("opening a note nobody is reading aloud leaves the page at the top", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening a note nobody is reading aloud leaves the page at the top", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
 
@@ -40,10 +37,7 @@ test("opening a note nobody is reading aloud leaves the page at the top", async 
   await reader.verifyOffersTheWayBackToTheVoice(false);
 });
 
-test("a note opened while it is being read aloud comes to the line being spoken", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note opened while it is being read aloud comes to the line being spoken", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -57,10 +51,7 @@ test("a note opened while it is being read aloud comes to the line being spoken"
   await again.verifyTheSpokenLineIsOnScreen(true);
 });
 
-test("reading ahead of the voice hands the scroll back, and the way back returns to it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("reading ahead of the voice hands the scroll back, and the way back returns to it", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -81,10 +72,7 @@ test("reading ahead of the voice hands the scroll back, and the way back returns
 
 // Nothing is reading, so nothing wants the scroll back: scrolling a note you are reading
 // with your eyes is just reading it.
-test("scrolling a note that is not being read aloud offers no way back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("scrolling a note that is not being read aloud offers no way back", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();

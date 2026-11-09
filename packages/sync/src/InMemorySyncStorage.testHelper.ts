@@ -121,13 +121,8 @@ export class InMemorySyncStorage implements SyncStorage {
         this.revisions.delete(key);
         continue;
       }
-      const pending = this.outbox.filter(
-        (entry) => entry.stuck === null && entry.kind === change.kind && entry.id === change.id,
-      );
-      const rebased = rebasePendingChanges(
-        { ...change.body, schemaVersion: change.schemaVersion, updatedAt: change.updatedAt },
-        pending,
-      );
+      const pending = this.outbox.filter((entry) => entry.stuck === null && entry.kind === change.kind && entry.id === change.id);
+      const rebased = rebasePendingChanges({ ...change.body, schemaVersion: change.schemaVersion, updatedAt: change.updatedAt }, pending);
       if (rebased === null) this.records.delete(key);
       else this.records.set(key, rebased);
       this.revisions.set(key, change.rev);

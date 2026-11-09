@@ -48,11 +48,7 @@ export const budgetExhausted = () =>
 
 // From our own address first, which costs nothing, and through the residential proxy only
 // when YouTube turned that away (docs/architecture/server-side-transcripts.md).
-export async function fetchThroughService(
-  fetches: ServiceFetches,
-  budget: ProxyBudget,
-  videoId: string,
-): Promise<ServiceFetchResult> {
+export async function fetchThroughService(fetches: ServiceFetches, budget: ProxyBudget, videoId: string): Promise<ServiceFetchResult> {
   const url = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
   let lastError: unknown;
   try {

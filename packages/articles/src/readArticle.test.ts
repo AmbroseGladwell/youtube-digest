@@ -1,7 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { ExtractedArticle, type ArticleRead } from "@overview/domain";
-import { BLOG_PAGE, FRONT_PAGE, LINE_BROKEN_ESSAY, NEWS_PAGE, NO_ARTICLE_PAGE, pageFrom, paragraphs, PAYWALLED_PAGE, UNLOCKED_PAGE } from "./pageFixtures.testHelper.js";
+import {
+  BLOG_PAGE,
+  FRONT_PAGE,
+  LINE_BROKEN_ESSAY,
+  NEWS_PAGE,
+  NO_ARTICLE_PAGE,
+  pageFrom,
+  paragraphs,
+  PAYWALLED_PAGE,
+  UNLOCKED_PAGE,
+} from "./pageFixtures.testHelper.js";
 import { readArticle } from "./readArticle.js";
 
 const read = (html: string, url?: string) => {
@@ -27,8 +37,14 @@ test("a news story gives its text, sections and metadata, in the shape the rest 
 
 test("the share image falls back through the tags a page may use", () => {
   const withTags = (tags: string) => NEWS_PAGE.replace('<meta property="og:image" content="/images/bridge.jpg">', tags);
-  assert.equal(articleOf(read(withTags('<meta name="twitter:image" content="https://cdn.example/t.jpg">'))).imageUrl, "https://cdn.example/t.jpg");
-  const linked = withTags("").replace('"headline":"Bridge repairs",', '"headline":"Bridge repairs","image":[{"@type":"ImageObject","url":"https://cdn.example/ld.jpg"}],');
+  assert.equal(
+    articleOf(read(withTags('<meta name="twitter:image" content="https://cdn.example/t.jpg">'))).imageUrl,
+    "https://cdn.example/t.jpg",
+  );
+  const linked = withTags("").replace(
+    '"headline":"Bridge repairs",',
+    '"headline":"Bridge repairs","image":[{"@type":"ImageObject","url":"https://cdn.example/ld.jpg"}],',
+  );
   assert.equal(articleOf(read(linked)).imageUrl, "https://cdn.example/ld.jpg");
 });
 
@@ -40,11 +56,14 @@ test("a page with no share image, or only an insecure one, has none rather than 
 
 test("sections follow the headings, keep the ids a link can point at, and leave the page's furniture behind", () => {
   const { sections, title } = articleOf(read(NEWS_PAGE));
-  assert.deepEqual(sections.map(({ heading, anchor }) => [heading, anchor]), [
-    [null, null],
-    ["Who pays", "who-pays"],
-    ["What happens next", "what-next"],
-  ]);
+  assert.deepEqual(
+    sections.map(({ heading, anchor }) => [heading, anchor]),
+    [
+      [null, null],
+      ["Who pays", "who-pays"],
+      ["What happens next", "what-next"],
+    ],
+  );
   const text = sections.map((section) => section.text).join(" ");
   assert.doesNotMatch(text, /Sign up to our newsletter|Home/);
   assert.ok(!sections.some(({ heading }) => heading === title));
@@ -52,7 +71,13 @@ test("sections follow the headings, keep the ids a link can point at, and leave 
 
 test("the word count is measured from the sections rather than taken from anywhere else", () => {
   const { sections, wordCount } = articleOf(read(NEWS_PAGE));
-  assert.equal(wordCount, sections.map(({ text }) => text).join(" ").split(/\s+/).length);
+  assert.equal(
+    wordCount,
+    sections
+      .map(({ text }) => text)
+      .join(" ")
+      .split(/\s+/).length,
+  );
 });
 
 test("a blog with no structured data falls back to its meta tags", () => {

@@ -71,7 +71,17 @@ export const TEST_SUPPORT_EMAIL = "help@overview.test";
 // (docs/conventions/backend-testing-guide.md).
 export async function createTestApp(
   config: Partial<AppConfig> = {},
-  { narration = true, logger, slowQueryMs, transcriptService, ourKey, embedder, playlistReader, migrationsUpTo, fetchArticlePage }: TestAppOptions = {},
+  {
+    narration = true,
+    logger,
+    slowQueryMs,
+    transcriptService,
+    ourKey,
+    embedder,
+    playlistReader,
+    migrationsUpTo,
+    fetchArticlePage,
+  }: TestAppOptions = {},
 ): Promise<TestApp> {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps(), ...(migrationsUpTo === undefined ? {} : { upTo: migrationsUpTo }) });
@@ -88,7 +98,17 @@ export async function createTestApp(
   const errorSink = makeRecordingErrorSink();
   const personEraser = makeRecordingPersonEraser();
   const app = await buildApp({
-    config: { minSupportedClientVersion: 1, sessionTtlDays: 30, allowedOrigins: [], appUrl: TEST_APP_URL, staticRoot: null, clientIpHeader: null, sampleShareTokens: [], supportEmail: TEST_SUPPORT_EMAIL, ...config },
+    config: {
+      minSupportedClientVersion: 1,
+      sessionTtlDays: 30,
+      allowedOrigins: [],
+      appUrl: TEST_APP_URL,
+      staticRoot: null,
+      clientIpHeader: null,
+      sampleShareTokens: [],
+      supportEmail: TEST_SUPPORT_EMAIL,
+      ...config,
+    },
     sql,
     mailer,
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,

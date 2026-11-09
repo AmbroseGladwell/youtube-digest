@@ -37,8 +37,7 @@ const logExporter =
     ? null
     : new OtlpLogExporter({
         ...config.logs,
-        onFailure: (error) =>
-          process.stderr.write(`${JSON.stringify({ level: 40, time: Date.now(), msg: "logs not shipped", error })}\n`),
+        onFailure: (error) => process.stderr.write(`${JSON.stringify({ level: 40, time: Date.now(), msg: "logs not shipped", error })}\n`),
       });
 const logger = createLogger(logExporter === null ? [process.stdout] : [process.stdout, logExporter]);
 reportProcessErrors({
@@ -68,8 +67,7 @@ const applied = await runMigrations(sql, {
     for (const fold of folds) logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
   }),
 });
-const transcriptService =
-  config.transcriptService === null ? null : createTranscriptServiceSetup(config.transcriptService);
+const transcriptService = config.transcriptService === null ? null : createTranscriptServiceSetup(config.transcriptService);
 const app = await buildApp({
   config,
   sql,
@@ -92,7 +90,8 @@ const app = await buildApp({
 });
 app.log.info(apiLogLines.startup.migrationsApplied({ applied }));
 app.log.info(apiLogLines.startup.magicLinks({ transport: config.mail.transport, appUrl: config.appUrl }));
-app.log.info(apiLogLines.startup.narration(
+app.log.info(
+  apiLogLines.startup.narration(
     config.audio === null
       ? { enabled: false, why: "TTS_URL is not set" }
       : {
@@ -100,8 +99,10 @@ app.log.info(apiLogLines.startup.narration(
           tts: config.audio.ttsUrl,
           store: config.audio.store.kind === "r2" ? `r2:${config.audio.store.bucket}` : config.audio.store.dir,
         },
-  ));
-app.log.info(apiLogLines.startup.transcriptService(
+  ),
+);
+app.log.info(
+  apiLogLines.startup.transcriptService(
     config.transcriptService === null
       ? { enabled: false, why: "TRANSCRIPT_SERVICE is off" }
       : {
@@ -109,8 +110,10 @@ app.log.info(apiLogLines.startup.transcriptService(
           proxy: config.transcriptService.proxyUrl === null ? null : new URL(config.transcriptService.proxyUrl).host,
           proxyDailyFetches: config.transcriptService.proxyDailyFetches,
         },
-  ));
-app.log.info(apiLogLines.startup.ourKey(
+  ),
+);
+app.log.info(
+  apiLogLines.startup.ourKey(
     config.ourKey === null
       ? { enabled: false, why: "OPENAI_API_KEY is not set" }
       : {
@@ -119,24 +122,37 @@ app.log.info(apiLogLines.startup.ourKey(
           dailyGenerations: config.ourKey.dailyGenerations,
           signedOutDailyGenerations: config.ourKey.signedOutDailyGenerations,
         },
-  ));
-app.log.info(apiLogLines.startup.playlists(
+  ),
+);
+app.log.info(
+  apiLogLines.startup.playlists(
     config.youTubeApiKey === null ? { enabled: false, why: "YOUTUBE_API_KEY is not set" } : { enabled: true, source: "YouTube Data API" },
-  ));
-app.log.info(apiLogLines.startup.analytics(
+  ),
+);
+app.log.info(
+  apiLogLines.startup.analytics(
     postHog === null ? { enabled: false, why: "POSTHOG_API_KEY is not set" } : { enabled: true, host: postHog.host, environment },
-  ));
-app.log.info(apiLogLines.startup.accountErasure(
+  ),
+);
+app.log.info(
+  apiLogLines.startup.accountErasure(
     erasure === null
       ? { enabled: false, why: "POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID are not set" }
       : { enabled: true, host: erasure.host, projectId: erasure.projectId },
-  ));
-app.log.info(apiLogLines.startup.webApp(
+  ),
+);
+app.log.info(
+  apiLogLines.startup.webApp(
     config.staticRoot === null ? { enabled: false, why: "STATIC_ROOT is not set" } : { enabled: true, root: config.staticRoot },
-  ));
-app.log.info(apiLogLines.startup.logShipping(
-    config.logs === null ? { enabled: false, why: "no OTLP logs endpoint" } : { enabled: true, endpoint: new URL(config.logs.endpoint).origin },
-  ));
+  ),
+);
+app.log.info(
+  apiLogLines.startup.logShipping(
+    config.logs === null
+      ? { enabled: false, why: "no OTLP logs endpoint" }
+      : { enabled: true, endpoint: new URL(config.logs.endpoint).origin },
+  ),
+);
 
 // Fly stops an idle machine with SIGINT; the last lines are shipped before it goes.
 for (const signal of ["SIGINT", "SIGTERM"] as const) {

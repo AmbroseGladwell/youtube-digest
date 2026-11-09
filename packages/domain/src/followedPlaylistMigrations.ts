@@ -27,9 +27,6 @@ const keepEarlierFollowsOldestFirst: RecordMigration = {
   },
 };
 
-export const FOLLOWED_PLAYLIST_MIGRATIONS: readonly RecordMigration[] = [
-  keepEarlierFollowsAsTheyCome,
-  keepEarlierFollowsOldestFirst,
-];
+export const FOLLOWED_PLAYLIST_MIGRATIONS: readonly RecordMigration[] = [keepEarlierFollowsAsTheyCome, keepEarlierFollowsOldestFirst];
 
 export const CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION = currentSchemaVersion(FOLLOWED_PLAYLIST_MIGRATIONS);

@@ -17,7 +17,14 @@ export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilte
   const query = filters.query.trim().toLowerCase();
 
   if (entry.kind === "unreadable") {
-    return filters.source === "all" && filters.topicId === "all" && filters.novelty === "all" && !filters.dubious && filters.tag === null && !query;
+    return (
+      filters.source === "all" &&
+      filters.topicId === "all" &&
+      filters.novelty === "all" &&
+      !filters.dubious &&
+      filters.tag === null &&
+      !query
+    );
   }
 
   const { overview } = entry;

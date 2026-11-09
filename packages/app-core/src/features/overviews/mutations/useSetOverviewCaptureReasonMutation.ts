@@ -21,16 +21,13 @@ export function useSetOverviewCaptureReasonMutation() {
 
   return useMutation<void, Error, SetOverviewCaptureReasonVariables, SetOverviewCaptureReasonContext>({
     mutationKey: overviewKeys.all,
-    mutationFn: ({ overview, captureReason }) =>
-      overviewStore.setOverviewCaptureReason(overview.id, captureReason),
+    mutationFn: ({ overview, captureReason }) => overviewStore.setOverviewCaptureReason(overview.id, captureReason),
 
     onMutate: async ({ overview, captureReason }) => {
       await queryClient.cancelQueries({ queryKey: overviewKeys.all });
 
       const previousList = queryClient.getQueryData<LibraryEntry[]>(overviewKeys.list());
-      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(
-        overviewKeys.detail(overview.id),
-      );
+      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(overviewKeys.detail(overview.id));
 
       queryClient.setQueryData<LibraryEntry[]>(overviewKeys.list(), (current) =>
         current?.map((entry) =>

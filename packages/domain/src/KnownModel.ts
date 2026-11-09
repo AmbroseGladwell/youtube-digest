@@ -117,8 +117,7 @@ export const knownModel = (provider: Provider, id: string): KnownModel | undefin
 
 // What a model is called when it has a name we know, and its raw id when it does not — the
 // id is what the provider itself lists it under (design 110e).
-export const modelLabel = (provider: Provider, id: string): string =>
-  knownModel(provider, id)?.label ?? id;
+export const modelLabel = (provider: Provider, id: string): string => knownModel(provider, id)?.label ?? id;
 
 // One 20-minute video: a transcript of roughly 3,000 words with the prompt around it, and
 // an overview of roughly 1,100 words back. Measured from the samples rather than guessed,
@@ -128,9 +127,6 @@ export const modelLabel = (provider: Provider, id: string): string =>
 export const OVERVIEW_TOKENS = { input: 5000, output: 1500 };
 
 export function estimatedOverviewCents(model: KnownModel): number {
-  const dollars =
-    (OVERVIEW_TOKENS.input * model.pricePerMillion.input +
-      OVERVIEW_TOKENS.output * model.pricePerMillion.output) /
-    1_000_000;
+  const dollars = (OVERVIEW_TOKENS.input * model.pricePerMillion.input + OVERVIEW_TOKENS.output * model.pricePerMillion.output) / 1_000_000;
   return Math.max(1, Math.round(dollars * 100));
 }

@@ -53,7 +53,17 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
   const lines = recipe.ingredients.map((line) => adjustIngredient(line, factor, units));
   const servings = scale.kind === "servings" && recipe.yield !== null ? servingsLabel(recipe.yield, scale.count) : null;
   if (factor === 1 && units === "asWritten") {
-    return { lines, adjusted: false, status: null, copyNote: null, methodAmounts: [], methodNote: null, actionNote: null, cookingNote: null, servings };
+    return {
+      lines,
+      adjusted: false,
+      status: null,
+      copyNote: null,
+      methodAmounts: [],
+      methodNote: null,
+      actionNote: null,
+      cookingNote: null,
+      servings,
+    };
   }
 
   const unread = lines.filter(({ kind }) => kind === "unreadable").length;

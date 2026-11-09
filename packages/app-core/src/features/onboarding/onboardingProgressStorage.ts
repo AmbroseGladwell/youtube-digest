@@ -62,10 +62,7 @@ export function readOnboardingProgress(storage: Storage = globalThis.localStorag
   }
 }
 
-export function writeOnboardingProgress(
-  progress: OnboardingProgress | null,
-  storage: Storage = globalThis.localStorage,
-): void {
+export function writeOnboardingProgress(progress: OnboardingProgress | null, storage: Storage = globalThis.localStorage): void {
   try {
     if (progress === null) storage.removeItem(STORAGE_KEY);
     else storage.setItem(STORAGE_KEY, JSON.stringify(progress));

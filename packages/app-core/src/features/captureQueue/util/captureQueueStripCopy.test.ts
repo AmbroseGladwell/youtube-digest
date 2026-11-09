@@ -29,7 +29,15 @@ describe("captureQueueStripCopy", () => {
   });
 
   it("words a queue waiting on its playlists' paces as design 95ac does, wide and compact", () => {
-    const making = { kind: "making" as const, position: 1, total: 3, step: "Writing the overview", title: "How Sleep Cleans the Brain", progress: 54, tomorrow: 214 };
+    const making = {
+      kind: "making" as const,
+      position: 1,
+      total: 3,
+      step: "Writing the overview",
+      title: "How Sleep Cleans the Brain",
+      progress: 54,
+      tomorrow: 214,
+    };
     expect(captureQueueStripCopy(making, false)).toEqual({
       title: "Making 1 of 3",
       meta: "Writing the overview · How Sleep Cleans the Brain",
@@ -40,7 +48,10 @@ describe("captureQueueStripCopy", () => {
       title: "Done for today",
       meta: "214 waiting for tomorrow, at each playlist’s pace",
     });
-    expect(captureQueueStripCopy({ kind: "doneForToday", tomorrow: 214 }, true)).toEqual({ title: "Done for today", meta: "214 waiting for tomorrow" });
+    expect(captureQueueStripCopy({ kind: "doneForToday", tomorrow: 214 }, true)).toEqual({
+      title: "Done for today",
+      meta: "214 waiting for tomorrow",
+    });
     expect(captureQueueStripCopy({ kind: "waitingForYou", waiting: 12, playlists: ["Saved for later"] }, false)).toEqual({
       title: "Queue done · 12 waiting for you",
       meta: "From Saved for later, made when you choose them",

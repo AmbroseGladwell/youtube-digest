@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { odometerColumns } from "./odometerColumns.js";
 
-const rowsOf = (from: number, to: number) =>
-  Object.fromEntries(odometerColumns(from, to).map((column) => [column.key, column.rows]));
+const rowsOf = (from: number, to: number) => Object.fromEntries(odometerColumns(from, to).map((column) => [column.key, column.rows]));
 
 describe("odometerColumns", () => {
   it("rolls the units through every minute between the two values", () => {

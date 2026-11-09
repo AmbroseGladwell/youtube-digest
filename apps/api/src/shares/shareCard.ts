@@ -59,14 +59,7 @@ export function shareCardSvg(note: SharedNote): string {
   });
 
   const titles = titleLines.map((line, index) =>
-    text(
-      line,
-      PADDING_X,
-      TITLE_BASELINE - (titleLines.length - 1 - index) * TITLE_LINE_HEIGHT,
-      TITLE_SIZE,
-      TITLE_FONT_FAMILY,
-      INK,
-    ),
+    text(line, PADDING_X, TITLE_BASELINE - (titleLines.length - 1 - index) * TITLE_LINE_HEIGHT, TITLE_SIZE, TITLE_FONT_FAMILY, INK),
   );
 
   return [

@@ -43,7 +43,10 @@ test("with no comma, the noun is the word before how it's prepared", () => {
   assert.equal(doubled("1 garlic clove crushed"), "2 garlic cloves crushed");
   assert.equal(doubled("1 leek finely sliced"), "2 leeks finely sliced");
   assert.equal(doubled("1 ripe avocado stoned and cubed"), "2 ripe avocados stoned and cubed");
-  assert.equal(doubled("1 butternut squash peeled, deseeded and cut into chunks"), "2 butternut squashes peeled, deseeded and cut into chunks");
+  assert.equal(
+    doubled("1 butternut squash peeled, deseeded and cut into chunks"),
+    "2 butternut squashes peeled, deseeded and cut into chunks",
+  );
   assert.equal(doubled("1 dried bay leaf"), "2 dried bay leaves");
   assert.equal(doubled("1 smoked haddock fillet"), "2 smoked haddock fillets");
 });

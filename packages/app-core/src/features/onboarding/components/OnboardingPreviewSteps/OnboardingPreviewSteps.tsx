@@ -23,17 +23,21 @@ const TOPICS_SHOWN = 4;
 // 175a–175d: before writing, what writing waits on, with the step the screen feeds marked Now.
 // It claims only what's known: fetched or not, and the answers given so far. Topics show what was
 // picked, never where the overview will be filed, and the reader's sentence is never quoted.
-export function OnboardingPreviewSteps({ noun, fetching, ready, current, topics, topicsAnswered, personal, soon }: OnboardingPreviewStepsProps) {
+export function OnboardingPreviewSteps({
+  noun,
+  fetching,
+  ready,
+  current,
+  topics,
+  topicsAnswered,
+  personal,
+  soon,
+}: OnboardingPreviewStepsProps) {
   const shownTopics = topics.slice(0, TOPICS_SHOWN);
   const moreTopics = topics.length - shownTopics.length;
   return (
     <ol className={styles.root} aria-label="Before writing" data-testid={onboardingPreviewStepsTestIds.root}>
-      <Row
-        step="source"
-        current={current}
-        mark={ready === null ? "working" : current === "source" ? "now" : "done"}
-        label={noun}
-      >
+      <Row step="source" current={current} mark={ready === null ? "working" : current === "source" ? "now" : "done"} label={noun}>
         <span className={styles.muted} data-testid={onboardingPreviewStepsTestIds.value("source")}>
           {ready === null ? `${fetching}…` : current === "source" ? `${ready}. Is it the right one?` : ready}
         </span>

@@ -20,7 +20,10 @@ test("a magic link sent is logged at info with its surface and purpose, and neve
   await askForLink(testApp);
 
   const [sent] = saying(lines, "magic link sent");
-  assert.deepEqual({ level: sent!.level, surface: sent!.surface, purpose: sent!.purpose }, { level: LOG_LEVELS.info, surface: "web", purpose: "signIn" });
+  assert.deepEqual(
+    { level: sent!.level, surface: sent!.surface, purpose: sent!.purpose },
+    { level: LOG_LEVELS.info, surface: "web", purpose: "signIn" },
+  );
   const logged = JSON.stringify(lines);
   assert.doesNotMatch(logged, /reader@example\.com/);
   assert.doesNotMatch(logged, new RegExp(testApp.mailer.lastToken()));

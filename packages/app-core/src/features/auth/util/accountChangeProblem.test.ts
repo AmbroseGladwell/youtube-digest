@@ -32,7 +32,10 @@ describe("codeProblem", () => {
 
 describe("askProblem", () => {
   it("maps the server's refusals to the field's own words", () => {
-    expect(askProblem(refused("invalid_request"), NOW)).toEqual({ kind: "invalid", message: "That doesn’t look like a full email address." });
+    expect(askProblem(refused("invalid_request"), NOW)).toEqual({
+      kind: "invalid",
+      message: "That doesn’t look like a full email address.",
+    });
     expect(askProblem(refused("too_many_requests", { retryAfterSeconds: 60 }), NOW).kind).toBe("limited");
     expect(askProblem(new Error("x"), NOW).kind).toBe("other");
   });

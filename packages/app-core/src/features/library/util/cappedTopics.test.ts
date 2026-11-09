@@ -3,9 +3,7 @@ import { TopicId } from "@overview/domain";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { cappedTopics } from "./cappedTopics.js";
 
-const TOPICS = ["one", "two", "three", "four", "five", "six", "seven", "eight"].map((name) =>
-  makeTopic({ name }),
-);
+const TOPICS = ["one", "two", "three", "four", "five", "six", "seven", "eight"].map((name) => makeTopic({ name }));
 
 describe("cappedTopics", () => {
   it("shows every topic when there are fewer than the limit, and hides nothing", () => {

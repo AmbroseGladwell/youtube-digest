@@ -20,9 +20,7 @@ export function findOverviewButtonHost(): HTMLElement | null {
     if (!isVisible(actionRow)) {
       continue;
     }
-    const group = Array.from(actionRow.querySelectorAll("#top-level-buttons-computed")).find(
-      isVisible,
-    );
+    const group = Array.from(actionRow.querySelectorAll("#top-level-buttons-computed")).find(isVisible);
     if (group) {
       return group;
     }
@@ -37,9 +35,7 @@ export function findOverviewButtonHost(): HTMLElement | null {
   return (
     Array.from(fallbacks).find(
       (candidate): candidate is HTMLElement =>
-        isVisible(candidate) &&
-        (candidate.closest("ytd-watch-metadata") !== null ||
-          candidate.closest("#primary") !== null),
+        isVisible(candidate) && (candidate.closest("ytd-watch-metadata") !== null || candidate.closest("#primary") !== null),
     ) ?? null
   );
 }

@@ -34,9 +34,7 @@ const refusesModel = (status: number): boolean => status >= 400 && status < 500 
 // OpenAI answers 429 with `insufficient_quota`; Anthropic answers 400 with a message about
 // the credit balance; DeepSeek, and anything else that uses it, 402 Payment Required.
 const outOfCredit = (status: number, body: string): boolean =>
-  status === 402 ||
-  (status === 429 && body.includes("insufficient_quota")) ||
-  (status === 400 && /credit balance is too low/i.test(body));
+  status === 402 || (status === 429 && body.includes("insufficient_quota")) || (status === 400 && /credit balance is too low/i.test(body));
 
 export function providerFailure(status: number, body: string): GenerationError {
   const detail = body.slice(0, 500);

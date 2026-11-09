@@ -45,8 +45,7 @@ export function DeleteOverviewDialog({ title, onDelete, onClose }: DeleteOvervie
           Delete this overview?
         </h2>
         <p className={styles.body} data-testid={deleteOverviewDialogTestIds.body}>
-          “{title}” goes from your library, and from your other devices if you sync. It can’t be
-          undone.
+          “{title}” goes from your library, and from your other devices if you sync. It can’t be undone.
         </p>
 
         <div className={styles.foot}>
@@ -59,12 +58,7 @@ export function DeleteOverviewDialog({ title, onDelete, onClose }: DeleteOvervie
           >
             Cancel
           </button>
-          <button
-            type="button"
-            className={styles.primaryAction}
-            onClick={onDelete}
-            data-testid={deleteOverviewDialogTestIds.deleteButton}
-          >
+          <button type="button" className={styles.primaryAction} onClick={onDelete} data-testid={deleteOverviewDialogTestIds.deleteButton}>
             Delete overview
           </button>
         </div>

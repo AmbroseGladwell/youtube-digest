@@ -17,10 +17,6 @@ test("the default overview state (unread, unfavourited, no user tags) validates 
 
 test("a user tag must be lowercase and hyphenated, same as a model tag", () => {
   const overviewId = randomUUID();
-  assert.doesNotThrow(() =>
-    OverviewState.parse({ overviewId, ...DEFAULT_OVERVIEW_STATE, userTags: ["re-watch"] }),
-  );
-  assert.throws(() =>
-    OverviewState.parse({ overviewId, ...DEFAULT_OVERVIEW_STATE, userTags: ["Re-Watch"] }),
-  );
+  assert.doesNotThrow(() => OverviewState.parse({ overviewId, ...DEFAULT_OVERVIEW_STATE, userTags: ["re-watch"] }));
+  assert.throws(() => OverviewState.parse({ overviewId, ...DEFAULT_OVERVIEW_STATE, userTags: ["Re-Watch"] }));
 });

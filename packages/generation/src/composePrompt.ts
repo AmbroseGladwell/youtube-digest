@@ -10,9 +10,7 @@ function asVideoContent(text: string): string {
 }
 
 function contextBlock(input: GenerationInput): string {
-  const transcript = input.transcript
-    .map((segment, i) => `[${i}] ${asVideoContent(segment.text)}`)
-    .join("\n");
+  const transcript = input.transcript.map((segment, i) => `[${i}] ${asVideoContent(segment.text)}`).join("\n");
   return `
 <video>
 <title>${asVideoContent(input.video.title)}</title>

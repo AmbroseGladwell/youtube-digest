@@ -21,11 +21,7 @@ ${noteHtml(record.overview)}
 </section>`;
 }
 
-export function sideBySideHtml(
-  runName: string,
-  records: readonly RunRecord[],
-  transcripts: readonly FetchedTranscript[],
-): string {
+export function sideBySideHtml(runName: string, records: readonly RunRecord[], transcripts: readonly FetchedTranscript[]): string {
   const videos = transcripts
     .map((fetched) => {
       const id = fetched.video.id ?? fetched.video.url;

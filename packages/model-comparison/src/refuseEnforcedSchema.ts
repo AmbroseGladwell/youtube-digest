@@ -2,7 +2,8 @@ const REFUSAL = JSON.stringify({
   type: "error",
   error: {
     type: "invalid_request_error",
-    message: "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
+    message:
+      "The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.",
   },
 });
 

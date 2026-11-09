@@ -15,7 +15,10 @@ defineOverviewStoreConformanceSuite("IndexedDbOverviewStore", async () => {
     store: new IndexedDbOverviewStore(db),
     seedRawOverview: (raw: unknown) =>
       promisifyRequest(
-        db.transaction(OVERVIEWS_STORE, "readwrite").objectStore(OVERVIEWS_STORE).put(raw as object),
+        db
+          .transaction(OVERVIEWS_STORE, "readwrite")
+          .objectStore(OVERVIEWS_STORE)
+          .put(raw as object),
       ).then(() => undefined),
   };
 });
@@ -24,10 +27,7 @@ test("getOverviewState fills in a field the stored state predates, rather than h
   const db = await openLocalDatabase({ indexedDB: new IDBFactory() });
   const overviewId = OverviewId.parse(randomUUID());
   await promisifyRequest(
-    db
-      .transaction(OVERVIEW_STATES_STORE, "readwrite")
-      .objectStore(OVERVIEW_STATES_STORE)
-      .put({ overviewId, read: true, favourite: false }),
+    db.transaction(OVERVIEW_STATES_STORE, "readwrite").objectStore(OVERVIEW_STATES_STORE).put({ overviewId, read: true, favourite: false }),
   );
 
   const state = await new IndexedDbOverviewStore(db).getOverviewState(overviewId);
@@ -112,9 +112,7 @@ test("an overview is written with the time it was written at on it, and read bac
   const store = new IndexedDbOverviewStore(db);
   const overview = makeOverview();
   const readRaw = () =>
-    promisifyRequest<Record<string, unknown>>(
-      db.transaction(OVERVIEWS_STORE, "readonly").objectStore(OVERVIEWS_STORE).get(overview.id),
-    );
+    promisifyRequest<Record<string, unknown>>(db.transaction(OVERVIEWS_STORE, "readonly").objectStore(OVERVIEWS_STORE).get(overview.id));
 
   await dated(() => store.saveOverview(overview), readRaw);
 
@@ -126,16 +124,11 @@ test("filing an overview under a topic dates that write, not the one that create
   const store = new IndexedDbOverviewStore(db);
   const overview = makeOverview();
   const readRaw = () =>
-    promisifyRequest<Record<string, unknown>>(
-      db.transaction(OVERVIEWS_STORE, "readonly").objectStore(OVERVIEWS_STORE).get(overview.id),
-    );
+    promisifyRequest<Record<string, unknown>>(db.transaction(OVERVIEWS_STORE, "readonly").objectStore(OVERVIEWS_STORE).get(overview.id));
 
   await store.saveOverview(overview);
   const created = (await readRaw()).updatedAt as string;
-  const filed = await dated(
-    () => store.setOverviewTopics(overview.id, [TopicId.parse(randomUUID())]),
-    readRaw,
-  );
+  const filed = await dated(() => store.setOverviewTopics(overview.id, [TopicId.parse(randomUUID())]), readRaw);
 
   assert.ok(filed >= created, "filing left the overview dated by an earlier write");
 });
@@ -149,10 +142,7 @@ test("marking an overview read dates the state record it wrote", async () => {
     () => store.setOverviewState(overviewId, { read: true }),
     () =>
       promisifyRequest<Record<string, unknown>>(
-        db
-          .transaction(OVERVIEW_STATES_STORE, "readonly")
-          .objectStore(OVERVIEW_STATES_STORE)
-          .get(overviewId),
+        db.transaction(OVERVIEW_STATES_STORE, "readonly").objectStore(OVERVIEW_STATES_STORE).get(overviewId),
       ),
   );
 
@@ -173,16 +163,8 @@ test("a topic is written dated, and read back without the stamp", async () => {
     async () => {
       topicId = (await store.createTopic({ name: "Finance" })).id;
     },
-    () =>
-      promisifyRequest<Record<string, unknown>>(
-        db.transaction(TOPICS_STORE, "readonly").objectStore(TOPICS_STORE).get(topicId),
-      ),
+    () => promisifyRequest<Record<string, unknown>>(db.transaction(TOPICS_STORE, "readonly").objectStore(TOPICS_STORE).get(topicId)),
   );
 
-  assert.deepEqual(Object.keys((await store.listTopics())[0]!).sort(), [
-    "createdAt",
-    "description",
-    "id",
-    "name",
-  ]);
+  assert.deepEqual(Object.keys((await store.listTopics())[0]!).sort(), ["createdAt", "description", "id", "name"]);
 });

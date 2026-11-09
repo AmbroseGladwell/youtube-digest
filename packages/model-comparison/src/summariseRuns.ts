@@ -33,16 +33,11 @@ const median = (values: number[]): number | null => {
   return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
 };
 
-export const videoLengthMs = (fetched: FetchedTranscript): number =>
-  fetched.video.durationMs ?? fetched.transcript.at(-1)?.endMs ?? 0;
+export const videoLengthMs = (fetched: FetchedTranscript): number => fetched.video.durationMs ?? fetched.transcript.at(-1)?.endMs ?? 0;
 
-export const isPassed = (record: RunRecord): boolean =>
-  record.outcome === "passed-first" || record.outcome === "passed-after-retry";
+export const isPassed = (record: RunRecord): boolean => record.outcome === "passed-first" || record.outcome === "passed-after-retry";
 
-export function summariseRuns(
-  records: readonly RunRecord[],
-  transcripts: ReadonlyMap<string, FetchedTranscript>,
-): ModelSummary[] {
+export function summariseRuns(records: readonly RunRecord[], transcripts: ReadonlyMap<string, FetchedTranscript>): ModelSummary[] {
   const byModel = new Map<string, RunRecord[]>();
   for (const record of records) {
     const name = `${record.provider}:${record.model}`;
@@ -53,10 +48,7 @@ export function summariseRuns(
     const answered = runs.filter((record) => record.outcome !== "errored");
     const priced = answered.filter((record) => record.costDollars !== null);
     const totalCostDollars = runs.reduce((total, record) => total + (record.costDollars ?? 0), 0);
-    const pricedLengthMs = priced.reduce(
-      (total, record) => total + videoLengthMs(transcripts.get(record.videoId)!),
-      0,
-    );
+    const pricedLengthMs = priced.reduce((total, record) => total + videoLengthMs(transcripts.get(record.videoId)!), 0);
 
     const checks: Record<string, CheckTally> = {};
     for (const record of runs.filter(isPassed)) {
@@ -79,8 +71,7 @@ export function summariseRuns(
       medianLatencyMs: median(runs.filter(isPassed).map((record) => record.latencyMs)),
       totalCostDollars,
       unpricedRuns: answered.length - priced.length,
-      meanCostDollars:
-        priced.length === 0 ? null : priced.reduce((total, record) => total + record.costDollars!, 0) / priced.length,
+      meanCostDollars: priced.length === 0 ? null : priced.reduce((total, record) => total + record.costDollars!, 0) / priced.length,
       costPerTwentyMinutesDollars:
         pricedLengthMs === 0
           ? null

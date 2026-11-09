@@ -7,9 +7,5 @@ export interface PlaybackReport extends PlaybackPosition {
 }
 
 export function isPlaybackReport(message: unknown): message is PlaybackReport {
-  return (
-    typeof message === "object" &&
-    message !== null &&
-    (message as { type?: unknown }).type === PLAYBACK_REPORT
-  );
+  return typeof message === "object" && message !== null && (message as { type?: unknown }).type === PLAYBACK_REPORT;
 }

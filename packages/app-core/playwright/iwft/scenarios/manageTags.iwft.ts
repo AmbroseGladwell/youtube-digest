@@ -1,8 +1,5 @@
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import {
-  makeOverview,
-  makeOverviewState,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 
 const titled = (title: string, tags: string[]) => makeOverview({ source: { ...makeOverview().source, title }, tags });
@@ -56,10 +53,7 @@ test("merging keeps the most used name unless told otherwise, rewrites every ove
   await dialog.select("saas", "micro-saas", "ai-saas");
   await dialog.openMerge();
   await dialog.keepName("saas");
-  await dialog.verifyMergeSays(
-    "4 overviews will be tagged #saas. You can undo this until you close Manage tags.",
-    "Merge into #saas",
-  );
+  await dialog.verifyMergeSays("4 overviews will be tagged #saas. You can undo this until you close Manage tags.", "Merge into #saas");
   await dialog.confirmMerge();
 
   await dialog.verifyNoticeReads("Merged 3 tags into #saas, now on 4 overviews.");
@@ -102,20 +96,14 @@ test("renaming says what it will save as, refuses a name with nothing in it, and
   await dialog.verifyRenameIsRefused();
 
   await dialog.typeNewName("SaaS");
-  await dialog.verifyRenameSays(
-    "#saas already exists. Saving merges #micro-saas into it: 2 overviews move to #saas.",
-    "Merge",
-  );
+  await dialog.verifyRenameSays("#saas already exists. Saving merges #micro-saas into it: 2 overviews move to #saas.", "Merge");
   await dialog.saveRename();
 
   await dialog.verifyNoticeReads("Merged #micro-saas into #saas, now on 3 overviews.");
   await expect.poll(() => tagsOf(backendSimulator, TOOLS)).toEqual(["saas"]);
 });
 
-test("deleting takes the tag off every overview, and Undo puts it and everything else back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("deleting takes the tag off every overview, and Undo puts it and everything else back", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const dialog = await library.filterPanel.openManageTags();
@@ -155,7 +143,15 @@ test("Escape backs out of a step before it closes the dialog", async ({ launcher
   await dialog.openMerge();
   await dialog.pressEscape();
   await dialog.verifyIsShown();
-  await dialog.verifyRowsRead(["#micro-saas2 overviews", "#saas2 overviews", "#ai1 overview", "#ai-saas1 overview", "#energy1 overview", "#nuclear1 overview", "#pricing1 overview"]);
+  await dialog.verifyRowsRead([
+    "#micro-saas2 overviews",
+    "#saas2 overviews",
+    "#ai1 overview",
+    "#ai-saas1 overview",
+    "#energy1 overview",
+    "#nuclear1 overview",
+    "#pricing1 overview",
+  ]);
 
   await dialog.pressEscape();
   await dialog.verifyIsClosed();

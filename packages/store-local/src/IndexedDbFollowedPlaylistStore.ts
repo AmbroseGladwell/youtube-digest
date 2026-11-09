@@ -47,10 +47,7 @@ export class IndexedDbFollowedPlaylistStore implements FollowedPlaylistStore {
   }
 
   async unfollow(playlistId: PlaylistId): Promise<void> {
-    const transaction = this.#db.transaction(
-      [FOLLOWED_PLAYLISTS_STORE, PLAYLIST_CHECKS_STORE, ...JOURNALLED_STORES],
-      "readwrite",
-    );
+    const transaction = this.#db.transaction([FOLLOWED_PLAYLISTS_STORE, PLAYLIST_CHECKS_STORE, ...JOURNALLED_STORES], "readwrite");
     const followed = transaction.objectStore(FOLLOWED_PLAYLISTS_STORE);
     const existing = await promisifyRequest<unknown>(followed.get(playlistId));
     followed.delete(playlistId);

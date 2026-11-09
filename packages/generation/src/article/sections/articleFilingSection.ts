@@ -8,9 +8,7 @@ export const articleFilingSection: ArticlePromptSection = {
     const topicList =
       input.existingTopics.length === 0
         ? "The reader has no topics yet."
-        : input.existingTopics
-            .map((topic) => `- "${topic.name}"${topic.description ? `: ${topic.description}` : ""}`)
-            .join("\n");
+        : input.existingTopics.map((topic) => `- "${topic.name}"${topic.description ? `: ${topic.description}` : ""}`).join("\n");
     const vocabulary = input.existingTags.slice(0, TAG_VOCABULARY_CAP).map(({ tag }) => tag);
     const tagList =
       vocabulary.length === 0 ? "The reader has no tags yet." : `The reader's existing tags, most used first:\n${vocabulary.join(", ")}`;

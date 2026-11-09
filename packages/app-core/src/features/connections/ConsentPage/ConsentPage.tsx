@@ -69,9 +69,7 @@ export function ConsentPage() {
   const [lastEmail, setLastEmail] = useState("");
   const [refused, setRefused] = useState<string | null>(null);
   const [otherDevice] = useState(
-    () =>
-      (location.state as ConsentPageLocationState | null)?.fromSignInLink === true &&
-      !wasConsentLinkAskedHere(requestId),
+    () => (location.state as ConsentPageLocationState | null)?.fromSignInLink === true && !wasConsentLinkAskedHere(requestId),
   );
   const heading = useRef<HTMLHeadingElement | null>(null);
   const loaded = request.data !== undefined;
@@ -91,7 +89,8 @@ export function ConsentPage() {
     return isCode(request.error ?? decide.error, "not_found") ? (
       <ErrorState screen="consentExpired" title="This request has expired" body={EXPIRED_BODY} back />
     ) : (
-      <ErrorState screen="consentLoad"
+      <ErrorState
+        screen="consentLoad"
         title="We couldn't load this request"
         error={request.error ?? decide.error}
         body="The server didn't answer. Check your connection and try again."
@@ -173,10 +172,8 @@ export function ConsentPage() {
             Check your email
           </h1>
           <p className={styles.lead}>
-            If there’s an account for{" "}
-            <strong data-testid={consentPageTestIds.checkEmailAddress}>{sent.email}</strong>, we’ve sent it a sign-in
-            link. It works once, for the next {MAGIC_LINK_TTL_MINUTES} minutes. If there isn’t, the email says how to
-            create one.
+            If there’s an account for <strong data-testid={consentPageTestIds.checkEmailAddress}>{sent.email}</strong>, we’ve sent it a
+            sign-in link. It works once, for the next {MAGIC_LINK_TTL_MINUTES} minutes. If there isn’t, the email says how to create one.
           </p>
           {isPhone && deviceNote}
           <div className={styles.actions}>

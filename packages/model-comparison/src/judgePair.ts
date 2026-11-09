@@ -83,10 +83,7 @@ export async function judgePair({
       answer === null
         ? null
         : (Object.fromEntries(
-            [...JUDGE_DIMENSIONS, "overall" as const].map((dimension) => [
-              dimension,
-              asCandidate(answer![dimension].winner, candidateIsA),
-            ]),
+            [...JUDGE_DIMENSIONS, "overall" as const].map((dimension) => [dimension, asCandidate(answer![dimension].winner, candidateIsA)]),
           ) as JudgeRecord["results"]),
     calls: metered.calls,
     latencyMs: Math.round(now() - began),

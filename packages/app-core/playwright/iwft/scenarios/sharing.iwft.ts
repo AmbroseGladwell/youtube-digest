@@ -51,10 +51,7 @@ test("a reader makes a link, copies it, and stops sharing", async ({ launcher, b
   test.expect(backendSimulator.shares.live()).toEqual([]);
 });
 
-test("the menu offers sharing only where there is an account to share under", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the menu offers sharing only where there is an account to share under", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -72,10 +69,7 @@ test("the menu's copy item says which link it copies", async ({ launcher, backen
   await reader.verifyCopyLinkItemReads("Copy YouTube link");
 });
 
-test("a copy made from an earlier note says so, and offers to replace it behind the same link", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a copy made from an earlier note says so, and offers to replace it behind the same link", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
@@ -116,10 +110,7 @@ test("editing the reason is not an edit to the shared copy", async ({ launcher, 
   await again.verifyDoesNotSayItWasEdited();
 });
 
-test("a share the server refuses says so, and nothing is claimed to have been shared", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a share the server refuses says so, and nothing is claimed to have been shared", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   backendSimulator.simulateEndpointError(EndpointKey.SHARE_CREATE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -133,10 +124,7 @@ test("a share the server refuses says so, and nothing is claimed to have been sh
   test.expect(backendSimulator.shares.live()).toEqual([]);
 });
 
-test("Settings lists what is shared, and stopping from there asks inline", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Settings lists what is shared, and stopping from there asks inline", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
@@ -178,10 +166,7 @@ test("Settings says plainly when nothing is shared", async ({ launcher, backendS
 // was looking at. The reader reads its own store first and the account's copy after, so
 // the copy has to be built the same way — a share built from the local store alone leaves
 // the tab empty for every reader whose device never fetched it (docs/features/sharing.md).
-test("the transcript the reader is looking at travels with the copy", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the transcript the reader is looking at travels with the copy", async ({ launcher, backendSimulator }) => {
   const overview = titled();
   backendSimulator.overviews.seed(overview);
   backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: overview.source.id! }));
@@ -197,10 +182,7 @@ test("the transcript the reader is looking at travels with the copy", async ({
   test.expect(snapshot?.transcript?.segments?.length ?? 0).toBeGreaterThan(0);
 });
 
-test("an overview whose transcript nobody holds is shared without one, rather than refused", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an overview whose transcript nobody holds is shared without one, rather than refused", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();

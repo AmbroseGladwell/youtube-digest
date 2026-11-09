@@ -14,11 +14,7 @@ for (const [name, viewport] of [
   ["on a phone", PHONE],
   ["on a desktop", DESKTOP],
 ] as const) {
-  test(`${name} the paste field lives behind + New, in a dialog Escape closes`, async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test(`${name} the paste field lives behind + New, in a dialog Escape closes`, async ({ launcher, backendSimulator, page }) => {
     backendSimulator.overviews.seed(makeOverview());
     await page.setViewportSize(viewport);
     await launcher.launchExpectingLibrary({ apiKeys: API_KEYS });
@@ -56,9 +52,7 @@ test("each step reports what it produced, and there is no audio step because nob
   await dialog.verifyStepState("02", "done");
 });
 
-test("a finished generation opens in the reader from the dialog, and leaves no strip behind", async ({
-  launcher,
-}) => {
+test("a finished generation opens in the reader from the dialog, and leaves no strip behind", async ({ launcher }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
 
@@ -98,10 +92,7 @@ test("run in the background, the strip carries the run and the new row arrives w
   await library.cardWithTitle("Example").verifyIsEntering(false);
 });
 
-test("the ready strip stands down on its own, once the note is in the library behind it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the ready strip stands down on its own, once the note is in the library behind it", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
 
@@ -116,10 +107,7 @@ test("the ready strip stands down on its own, once the note is in the library be
   await strip.verifyStandsDownOnItsOwn();
 });
 
-test("the strip's Details reopens the same run rather than starting a second one", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the strip's Details reopens the same run rather than starting a second one", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
@@ -133,10 +121,7 @@ test("the strip's Details reopens the same run rather than starting a second one
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
 });
 
-test("cancelling a run saves nothing, even once the call it was waiting on comes back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("cancelling a run saves nothing, even once the call it was waiting on comes back", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
@@ -152,10 +137,7 @@ test("cancelling a run saves nothing, even once the call it was waiting on comes
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
 });
 
-test("a failure hands the dialog back to the form with the link still in it, and saves nothing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a failure hands the dialog back to the form with the link still in it, and saves nothing", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointError(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
 

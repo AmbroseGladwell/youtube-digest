@@ -70,11 +70,7 @@ test("tapping the bar's way back goes back in history, so the library is where t
     .toMatchObject([{ props: { from: "bar" } }]);
 });
 
-test("the head's own link goes back in history too, and is counted as the head's", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("the head's own link goes back in history too, and is counted as the head's", async ({ launcher, backendSimulator, page }) => {
   seedAScrollingLibrary((overview) => backendSimulator.overviews.seed(overview));
   await page.setViewportSize(PHONE);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);

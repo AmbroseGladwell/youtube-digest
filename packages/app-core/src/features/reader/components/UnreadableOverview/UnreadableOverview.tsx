@@ -65,12 +65,9 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
   }
 
   return (
-    <ErrorState screen="unreadableOverview"
-      title={
-        heldBack
-          ? "This overview needs a newer version"
-          : "This overview was saved in an older format"
-      }
+    <ErrorState
+      screen="unreadableOverview"
+      title={heldBack ? "This overview needs a newer version" : "This overview was saved in an older format"}
       body={
         heldBack ? (
           "It was saved by a newer version of the app than this one. Nothing has been lost — update, and it will be here."

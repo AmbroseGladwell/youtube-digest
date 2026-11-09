@@ -44,7 +44,9 @@ export interface BlindSetOptions {
 // started, and picks made in one sitting count towards the set in the next.
 export function blindPairSet(pairs: readonly JudgingPair[], { candidates, limit }: BlindSetOptions): JudgingPair[] {
   const rank = (pair: JudgingPair) =>
-    createHash("sha256").update(pairKey(videoIdOf(pair), pair.candidate.name)).digest("hex");
+    createHash("sha256")
+      .update(pairKey(videoIdOf(pair), pair.candidate.name))
+      .digest("hex");
   return pairs
     .filter((pair) => candidates === undefined || candidates.includes(pair.candidate.name))
     .sort((left, right) => rank(left).localeCompare(rank(right)))

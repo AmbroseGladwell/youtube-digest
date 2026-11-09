@@ -37,11 +37,7 @@ const consumed = (rows: MagicLinkRow[]): ConsumedMagicLink | null => {
 
 // One statement marks the link used and reads it, so two clicks on the same link cannot
 // both sign in: the second finds nothing to update (docs/features/sign-in.md).
-export async function consumeMagicLink(
-  sql: SqlClient,
-  token: string,
-  now: Date,
-): Promise<ConsumedMagicLink | null> {
+export async function consumeMagicLink(sql: SqlClient, token: string, now: Date): Promise<ConsumedMagicLink | null> {
   return consumed(
     await sql.query<MagicLinkRow>(
       `update magic_links set consumed_at = $2::timestamptz
@@ -55,12 +51,7 @@ export async function consumeMagicLink(
 // The code in a web mail spends the same row as its link, so one mail signs in once
 // whichever way it is used, and a code only works with the address it was sent to
 // (docs/features/sign-in.md, "A code in the web mail").
-export async function consumeMagicLinkCode(
-  sql: SqlClient,
-  email: string,
-  code: string,
-  now: Date,
-): Promise<ConsumedMagicLink | null> {
+export async function consumeMagicLinkCode(sql: SqlClient, email: string, code: string, now: Date): Promise<ConsumedMagicLink | null> {
   return consumed(
     await sql.query<MagicLinkRow>(
       `update magic_links set consumed_at = $3::timestamptz

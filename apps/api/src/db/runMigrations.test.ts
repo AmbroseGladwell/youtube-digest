@@ -17,9 +17,7 @@ test("applies every migration file in version order and records each one", async
     applied.map((migration) => migration.version),
     applied.map((_, index) => index + 1),
   );
-  const recorded = await sql.query<{ version: number; name: string }>(
-    "select version, name from schema_migrations order by version",
-  );
+  const recorded = await sql.query<{ version: number; name: string }>("select version, name from schema_migrations order by version");
   assert.deepEqual(recorded, applied);
   await sql.close();
 });
@@ -96,8 +94,16 @@ test("each account keeps the transcripts it stored before the shared cache, and 
     await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);
   }
   const transcript = (generated: boolean) =>
-    JSON.stringify({ videoId: "shared", segments: [{ text: "Said.", startMs: 0, endMs: 1 }], generated, fetchedAt: "2026-09-01T00:00:00.000Z" });
-  for (const [accountId, generated] of [[first, true], [second, false]] as const) {
+    JSON.stringify({
+      videoId: "shared",
+      segments: [{ text: "Said.", startMs: 0, endMs: 1 }],
+      generated,
+      fetchedAt: "2026-09-01T00:00:00.000Z",
+    });
+  for (const [accountId, generated] of [
+    [first, true],
+    [second, false],
+  ] as const) {
     await sql.query("insert into transcripts (account_id, video_id, stored_at, body) values ($1, 'shared', now(), $2::jsonb)", [
       accountId,
       transcript(generated),
@@ -145,7 +151,14 @@ test("a share made before OV-83 reads as common knowledge with untimed key point
   assert.deepEqual(rows, [
     {
       token: "withVerdict00000",
-      verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "Secondhand.", similarTo: [] },
+      verdict: {
+        novelty: "common_knowledge",
+        standsOut: null,
+        dubious: true,
+        dubiousClaims: null,
+        reasoning: "Secondhand.",
+        similarTo: [],
+      },
       key_points: untimed,
     },
     { token: "withoutVerdict00", verdict: null, key_points: untimed },

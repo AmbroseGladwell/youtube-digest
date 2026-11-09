@@ -16,9 +16,7 @@ export interface NoteTiming {
 }
 
 export function noteTiming(lines: NoteLine[]): NoteTiming {
-  const lineSeconds = lines.map((line) =>
-    Math.max(MINIMUM_LINE_SECONDS, (wordCount(line.text) / SPOKEN_WORDS_PER_MINUTE) * 60),
-  );
+  const lineSeconds = lines.map((line) => Math.max(MINIMUM_LINE_SECONDS, (wordCount(line.text) / SPOKEN_WORDS_PER_MINUTE) * 60));
   const words = lines.reduce((total, line) => total + wordCount(line.text), 0);
 
   return {

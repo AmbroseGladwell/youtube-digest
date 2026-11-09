@@ -1,23 +1,15 @@
 import type { Page } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
-import {
-  SIMULATED_ACCOUNT_ID,
-  SIMULATED_EMAIL,
-  type BackendSimulator,
-} from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
-import {
-  ANONYMOUS_ID,
-  makeAnalyticsConsent,
-} from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
+import { ANONYMOUS_ID, makeAnalyticsConsent } from "../../../src/features/analyticsConsent/types/AnalyticsConsentFactory.testHelper.js";
 
 const NEVER_ASKED = { analyticsConsent: null } as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
-const storedConsent = (page: Page) =>
-  page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
+const storedConsent = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
 
 const verifyNothingAsks = async (page: Page) => {
   await test.expect(page.getByText(/improve The Overview\?/)).toHaveCount(0);
@@ -62,11 +54,7 @@ test.describe("answering in onboarding", () => {
     return onboarding;
   };
 
-  test("Allow keeps a random id on the device and sends the reader's usage under it", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
+  test("Allow keeps a random id on the device and sends the reader's usage under it", async ({ launcher, backendSimulator, page }) => {
     const onboarding = await startOnboarding(launcher, backendSimulator);
 
     await onboarding.allowAnalytics();
@@ -93,9 +81,9 @@ test.describe("answering in onboarding", () => {
 
     await onboarding.verifyOnScreen("video");
     test.expect(await storedConsent(page)).toMatchObject({ answer: "dontShare", anonymousId: null });
-    await test.expect.poll(() => backendSimulator.analytics.declines()).toEqual([
-      { context: { surface: "web", layout: "full", appVersion: null, platform: test.expect.any(String) } },
-    ]);
+    await test.expect
+      .poll(() => backendSimulator.analytics.declines())
+      .toEqual([{ context: { surface: "web", layout: "full", appVersion: null, platform: test.expect.any(String) } }]);
     test.expect(backendSimulator.analytics.batches()).toEqual([]);
   });
 });

@@ -24,8 +24,7 @@ export function ConnectExtensionPage() {
   const issue = useIssueLinkCodeMutation();
   const apiUrl = connection.apiUrl ?? globalThis.location?.origin ?? "";
   const sessionEnded =
-    sync.status.phase === "signedOut" ||
-    (issue.isError && isSyncRequestError(issue.error) && issue.error.code === "unauthenticated");
+    sync.status.phase === "signedOut" || (issue.isError && isSyncRequestError(issue.error) && issue.error.code === "unauthenticated");
   const canIssue = surface === "web" && sync.connected && !sessionEnded;
   const started = useRef(false);
   const [code, setCode] = useState<string | null>(null);
@@ -47,7 +46,8 @@ export function ConnectExtensionPage() {
 
   if (sessionEnded) {
     return (
-      <ErrorState screen="extensionSessionEnded"
+      <ErrorState
+        screen="extensionSessionEnded"
         title="This browser's session has ended"
         body="Sign in again, then connect the extension."
         action={{
@@ -60,7 +60,8 @@ export function ConnectExtensionPage() {
 
   if (issue.isError) {
     return (
-      <ErrorState screen="extensionCodeFailed"
+      <ErrorState
+        screen="extensionCodeFailed"
         title="Couldn't make a code for the extension"
         error={issue.error}
         body={authFailureMessage(issue.error, CODE_SPENT)}
@@ -73,12 +74,5 @@ export function ConnectExtensionPage() {
     return <LinkCodeCard code={code} from="webApp" renewing={issue.isPending} onNewCode={makeCode} />;
   }
 
-  return (
-    <AuthScreen
-      testId={connectExtensionPageTestIds.working}
-      icon="puzzle"
-      title="Making your code…"
-      compactTitle
-    />
-  );
+  return <AuthScreen testId={connectExtensionPageTestIds.working} icon="puzzle" title="Making your code…" compactTitle />;
 }

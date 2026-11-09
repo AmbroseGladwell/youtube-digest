@@ -20,7 +20,11 @@ const transcript = () =>
     ],
   });
 
-test("a recipe video's note is the recipe with the video's tabs, and its steps carry their moments", async ({ page, launcher, backendSimulator }) => {
+test("a recipe video's note is the recipe with the video's tabs, and its steps carry their moments", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeVideoOverview());
   const library = await launcher.launchExpectingLibrary();
   await expect(page.getByText(/14:32 recipe video/)).toBeVisible();
@@ -52,7 +56,11 @@ test("a step's moment opens the transcript at the line it starts, named for the 
   await expect(page.getByTestId("TranscriptPanel.stepChip")).toHaveText("Step 2 starts here");
 });
 
-test("each chapter names the steps it covers, and one that holds none says nothing about steps", async ({ page, launcher, backendSimulator }) => {
+test("each chapter names the steps it covers, and one that holds none says nothing about steps", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeVideoOverview());
   backendSimulator.transcripts.seed(transcript());
   const library = await launcher.launchExpectingLibrary();
@@ -87,7 +95,11 @@ test("in the panel the step the video is in is tinted, and its time says it's pl
   await expect(page.locator('[aria-current="step"]')).toContainText("Blend the tomatoes");
 });
 
-test("cooking a recipe video offers each step's part of the video, and a step with no moment offers none", async ({ page, launcher, backendSimulator }) => {
+test("cooking a recipe video offers each step's part of the video, and a step with no moment offers none", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.overviews.seed(makeRecipeVideoOverview());
   const library = await launcher.launchExpectingLibrary();
   await library.nthCard(0).openReader();
@@ -108,7 +120,12 @@ test("cooking a recipe video offers each step's part of the video, and a step wi
   await expect(mode.getByTestId("CookingMode.watchStep")).toHaveCount(0);
 });
 
-test("copying a recipe video names the channel on YouTube and ends each step with its moment", async ({ page, context, launcher, backendSimulator }) => {
+test("copying a recipe video names the channel on YouTube and ends each step with its moment", async ({
+  page,
+  context,
+  launcher,
+  backendSimulator,
+}) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   backendSimulator.overviews.seed(makeRecipeVideoOverview());
   const library = await launcher.launchExpectingLibrary();

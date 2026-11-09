@@ -172,10 +172,7 @@ test("a record from a newer client arrives, is held back and counted, and cannot
   const [unreadable] = await phone.overviews.listUnreadable();
   assert.equal(unreadable?.reason, "future-version");
   assert.equal(unreadable?.id, id);
-  await assert.rejects(
-    () => phone.overviews.setOverviewTopics(id as never, [TopicId.parse(randomUUID())]),
-    UnreadableRecordError,
-  );
+  await assert.rejects(() => phone.overviews.setOverviewTopics(id as never, [TopicId.parse(randomUUID())]), UnreadableRecordError);
   await testApp.close();
 });
 
@@ -388,10 +385,16 @@ test("two devices that generate the same video offline end with one overview car
   await laptop.sync();
 
   assert.equal(laptopStatus.phase, "idle");
-  assert.deepEqual({ phase: phoneStatus.phase, pending: phoneStatus.pending, stuck: phoneStatus.stuck }, { phase: "idle", pending: 0, stuck: 0 });
+  assert.deepEqual(
+    { phase: phoneStatus.phase, pending: phoneStatus.pending, stuck: phoneStatus.stuck },
+    { phase: "idle", pending: 0, stuck: 0 },
+  );
   for (const device of [laptop, phone]) {
     const held = await device.overviews.listOverviews();
-    assert.deepEqual(held.map((overview) => overview.id), [onLaptop.id]);
+    assert.deepEqual(
+      held.map((overview) => overview.id),
+      [onLaptop.id],
+    );
     assert.deepEqual(held[0]!.topicIds, [laptopTopic.id, phoneTopic.id]);
     assert.deepEqual(held[0]!.tags, ["one", "two", "three"]);
     assert.equal(held[0]!.captureReason, "Because");
@@ -427,7 +430,10 @@ test("a device that generates a video the account already holds, before pulling 
   await phone.sync();
 
   assert.deepEqual(folds, [{ from: mine.id, into: theirs.id }]);
-  assert.deepEqual((await telling.overviews.listOverviews()).map((overview) => overview.id), [theirs.id]);
+  assert.deepEqual(
+    (await telling.overviews.listOverviews()).map((overview) => overview.id),
+    [theirs.id],
+  );
   assert.equal((await telling.overviews.getOverviewState(theirs.id)).read, true);
   assert.equal((await phone.overviews.getOverviewState(theirs.id)).read, true);
   assert.equal(await phone.overviews.getOverview(mine.id), null);
@@ -444,7 +450,12 @@ test("an account that already held duplicates ends with one overview per video, 
   for (const overview of [later, earlier]) {
     await account.seedRaw("overview", overview.id, LAST_SCHEMA_VERSION_WITH_VIDEO, { ...withVideo({ ...stored, ...overview }) });
   }
-  await account.seedRaw("overviewState", later.id, CURRENT_SCHEMA_VERSIONS.overviewState, { overviewId: later.id, read: true, favourite: false, userTags: [] });
+  await account.seedRaw("overviewState", later.id, CURRENT_SCHEMA_VERSIONS.overviewState, {
+    overviewId: later.id,
+    read: true,
+    favourite: false,
+    userTags: [],
+  });
   const laptop = await makeDevice(testApp, account);
   const phone = await makeDevice(testApp, account);
   await laptop.sync();
@@ -457,7 +468,10 @@ test("an account that already held duplicates ends with one overview per video, 
 
   for (const device of [laptop, phone]) {
     const held = await device.overviews.listOverviews();
-    assert.deepEqual(held.map((overview) => overview.id), [earlier.id]);
+    assert.deepEqual(
+      held.map((overview) => overview.id),
+      [earlier.id],
+    );
     assert.deepEqual(held[0]!.tags, ["one", "two"]);
     assert.equal((await device.overviews.getOverviewState(earlier.id)).read, true);
     assert.equal(await device.overviews.getOverview(later.id), null);

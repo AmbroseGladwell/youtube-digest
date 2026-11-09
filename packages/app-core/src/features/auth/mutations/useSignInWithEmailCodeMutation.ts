@@ -9,9 +9,7 @@ export interface SignInWithEmailCodeVariables {
   code: string;
 }
 
-export const useSignInWithEmailCodeMutation = (
-  createApi?: (baseUrl: string) => AuthApi,
-) => {
+export const useSignInWithEmailCodeMutation = (createApi?: (baseUrl: string) => AuthApi) => {
   const surface = useClientSurface();
   const api = createApi ?? ((baseUrl: string) => createFetchAuthApi({ baseUrl, surface }));
   return useMutation<SignedIn, Error, SignInWithEmailCodeVariables>({

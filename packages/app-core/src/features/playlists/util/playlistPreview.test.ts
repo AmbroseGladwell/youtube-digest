@@ -17,15 +17,16 @@ describe("playlistPreview", () => {
 
     expect(preview).toMatchObject({ total: 3, inLibrary: 1, unavailable: 0, tokens: 60_000 });
     expect(preview.toMake.map((entry) => entry.videoId)).toEqual(["oldest", "newest"]);
-    expect(playlistPreview(lookup, new Set(["held"]), "newestFirst").toMake.map((entry) => entry.videoId)).toEqual([
-      "newest",
-      "oldest",
-    ]);
+    expect(playlistPreview(lookup, new Set(["held"]), "newestFirst").toMake.map((entry) => entry.videoId)).toEqual(["newest", "oldest"]);
   });
 
   it("leaves private and deleted videos out of what will be made, and counts them", () => {
     const lookup = makePlaylistLookup({
-      entries: [makePlaylistEntry("a"), makePlaylistEntry("b", { availability: "private" }), makePlaylistEntry("c", { availability: "deleted" })],
+      entries: [
+        makePlaylistEntry("a"),
+        makePlaylistEntry("b", { availability: "private" }),
+        makePlaylistEntry("c", { availability: "deleted" }),
+      ],
     });
 
     expect(playlistPreview(lookup, new Set(), "oldestFirst")).toMatchObject({ total: 3, unavailable: 2, tokens: 30_000 });

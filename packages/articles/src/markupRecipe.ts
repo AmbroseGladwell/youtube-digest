@@ -7,7 +7,8 @@ type Section = { part: Part; heading: Element; items: RecipeStep[] };
 
 const INGREDIENTS_HEADING = /^(the )?(ingredients?|what you('ll| will)? need|you('ll| will)? need)$/;
 const METHOD_HEADING = /^(the )?(method|instructions|directions|steps|preparation|how to make it)$/;
-const QUANTITY = /\d|[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]|\b(pinch|handful|bunch|sprigs?|cloves?|knob|splash|dash|drizzle|cans?|tins?|tbsp|tsp|cups?|to taste|to serve)\b/i;
+const QUANTITY =
+  /\d|[¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]|\b(pinch|handful|bunch|sprigs?|cloves?|knob|splash|dash|drizzle|cans?|tins?|tbsp|tsp|cups?|to taste|to serve)\b/i;
 const FEWEST_WORDS_IN_A_STEP = 4;
 const NUMBERED_STEP = /^step \d+$/i;
 const SHOW_ELEMENTS = 1;

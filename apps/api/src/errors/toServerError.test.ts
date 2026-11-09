@@ -31,10 +31,7 @@ test("a server stack keeps its own frames as paths from where it runs, and marks
 test("a server error's message is redacted by the same rules as a reader's", () => {
   const error = new Error('No overview "How to cook rice" for reader@example.com at https://youtube.com/watch?v=abc');
 
-  assert.equal(
-    toServerError(error, { caughtBy: "request", at: AT, root: ROOT }).message,
-    "No overview <text> for <email> at <url>",
-  );
+  assert.equal(toServerError(error, { caughtBy: "request", at: AT, root: ROOT }).message, "No overview <text> for <email> at <url>");
 });
 
 test("something thrown that isn't an Error is still reported, as a NonError", () => {

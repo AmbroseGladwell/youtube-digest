@@ -12,14 +12,17 @@ const ConfigEnv = z
     PORT: z.coerce.number().int().positive().default(3000),
     MIN_SUPPORTED_CLIENT_VERSION: z.coerce.number().int().min(1).default(1),
     SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
-    CORS_ALLOWED_ORIGINS: z.string().optional().transform((value, context) => {
-      try {
-        return allowedOriginsFromEnv(value);
-      } catch (error) {
-        context.addIssue({ code: "custom", message: (error as Error).message });
-        return z.NEVER;
-      }
-    }),
+    CORS_ALLOWED_ORIGINS: z
+      .string()
+      .optional()
+      .transform((value, context) => {
+        try {
+          return allowedOriginsFromEnv(value);
+        } catch (error) {
+          context.addIssue({ code: "custom", message: (error as Error).message });
+          return z.NEVER;
+        }
+      }),
     APP_URL: z.url().default(DEV_APP_URL),
     MAIL_TRANSPORT: z.enum(["log", "brevo"]).default("log"),
     BREVO_API_KEY: z.string().min(1).optional(),
@@ -33,7 +36,10 @@ const ConfigEnv = z
     TTS_URL: z.url().optional(),
     TTS_CONCURRENCY: z.coerce.number().int().positive().default(5),
     AUDIO_DIR: z.string().min(1).optional(),
-    R2_ACCOUNT_ID: z.string().regex(/^[0-9a-f]{32}$/).optional(),
+    R2_ACCOUNT_ID: z
+      .string()
+      .regex(/^[0-9a-f]{32}$/)
+      .optional(),
     R2_BUCKET: z.string().min(3).optional(),
     R2_ACCESS_KEY_ID: z.string().min(1).optional(),
     R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
@@ -48,7 +54,12 @@ const ConfigEnv = z
     SAMPLE_SHARE_TOKENS: z
       .string()
       .default("")
-      .transform((value) => value.split(",").map((token) => token.trim()).filter((token) => token !== ""))
+      .transform((value) =>
+        value
+          .split(",")
+          .map((token) => token.trim())
+          .filter((token) => token !== ""),
+      )
       .pipe(z.array(ShareToken)),
     OPENAI_API_KEY: z.string().min(1).optional(),
     OUR_KEY_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(300),
@@ -100,9 +111,7 @@ const ConfigEnv = z
     message: "must be the https address readers will open, when real mail is being sent",
   });
 
-export type MailConfig =
-  | { transport: "log" }
-  | { transport: "brevo"; brevoApiKey: string; from: string };
+export type MailConfig = { transport: "log" } | { transport: "brevo"; brevoApiKey: string; from: string };
 
 // Narration is on only when there is a TTS service to call and somewhere to keep what it
 // makes; otherwise /api/audio says it is unavailable (docs/features/tts-pre-rendered-speech.md).

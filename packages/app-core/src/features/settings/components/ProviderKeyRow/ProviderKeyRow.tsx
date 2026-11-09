@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  modelFor,
-  modelLabel,
-  PROVIDER_LABEL,
-  PROVIDER_SHORT_LABEL,
-  type ModelByProvider,
-  type Provider,
-} from "@overview/domain";
+import { modelFor, modelLabel, PROVIDER_LABEL, PROVIDER_SHORT_LABEL, type ModelByProvider, type Provider } from "@overview/domain";
 import { useSurface } from "../../../../app/SurfaceContext.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";

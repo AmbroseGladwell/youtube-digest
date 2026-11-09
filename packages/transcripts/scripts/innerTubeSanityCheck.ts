@@ -1,9 +1,4 @@
-import {
-  DEFAULT_CAPTION_CLIENTS,
-  fetchInnerTubeTranscript,
-  TranscriptFetchError,
-  type YouTubeFetch,
-} from "@overview/transcripts";
+import { DEFAULT_CAPTION_CLIENTS, fetchInnerTubeTranscript, TranscriptFetchError, type YouTubeFetch } from "@overview/transcripts";
 
 // No key and no .env: the point of this path is that it costs nothing. What it proves,
 // and what no fixture can, is that the client versions in InnerTubeClientConfig still
@@ -29,9 +24,7 @@ const youTubeFetch: YouTubeFetch = async (request) => {
   });
   const body = await response.text();
   bytes += Buffer.byteLength(body);
-  console.error(
-    `  ${request.method} ${new URL(request.url).pathname} -> ${response.status}, ${Buffer.byteLength(body)}B`,
-  );
+  console.error(`  ${request.method} ${new URL(request.url).pathname} -> ${response.status}, ${Buffer.byteLength(body)}B`);
   return { status: response.status, body };
 };
 
@@ -39,15 +32,13 @@ console.error(`clients: ${DEFAULT_CAPTION_CLIENTS.map((c) => `${c.clientName}/${
 
 // A named failure is an answer, not a crash: "no captions" and "removed by the uploader"
 // are things this script exists to be able to report.
-const result = await fetchInnerTubeTranscript(youTubeFetch, videoId, url, {}).catch(
-  (error: unknown) => {
-    if (error instanceof TranscriptFetchError) {
-      console.error(`\n${error.failure}: ${error.message}`);
-      process.exit(2);
-    }
-    throw error;
-  },
-);
+const result = await fetchInnerTubeTranscript(youTubeFetch, videoId, url, {}).catch((error: unknown) => {
+  if (error instanceof TranscriptFetchError) {
+    console.error(`\n${error.failure}: ${error.message}`);
+    process.exit(2);
+  }
+  throw error;
+});
 const last = result.transcript.at(-1);
 
 console.log(

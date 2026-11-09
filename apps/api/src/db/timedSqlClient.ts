@@ -15,7 +15,10 @@ export interface TimedSqlClientOptions {
 // reader's data (docs/architecture/errors-and-logs.md, "The database").
 const statementOf = (text: string) => text.replace(/\s+/g, " ").trim().slice(0, STATEMENT_LOGGED_CHARACTERS);
 
-export function timedSqlClient(inner: SqlClient, { log, slowMs = SLOW_QUERY_MS, now = () => performance.now() }: TimedSqlClientOptions): SqlClient {
+export function timedSqlClient(
+  inner: SqlClient,
+  { log, slowMs = SLOW_QUERY_MS, now = () => performance.now() }: TimedSqlClientOptions,
+): SqlClient {
   const timed = async <T>(run: () => Promise<T>, slow: (durationMs: number) => void): Promise<T> => {
     const startedAt = now();
     try {

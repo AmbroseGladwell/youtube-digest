@@ -99,12 +99,9 @@ test("the reset keeps topics and settings", async () => {
   const after = await openLocalDatabase({ indexedDB });
 
   assert.equal((await getAll(after, TOPICS_STORE)).length, 1);
-  assert.deepEqual(
-    await promisifyRequest(
-      after.transaction(SETTINGS_STORE, "readonly").objectStore(SETTINGS_STORE).get(SETTINGS_KEY),
-    ),
-    { anthropicApiKey: "sk-test" },
-  );
+  assert.deepEqual(await promisifyRequest(after.transaction(SETTINGS_STORE, "readonly").objectStore(SETTINGS_STORE).get(SETTINGS_KEY)), {
+    anthropicApiKey: "sk-test",
+  });
 });
 
 test("adding the transcripts store keeps the overviews a reader already has", async () => {

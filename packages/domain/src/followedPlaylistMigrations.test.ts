@@ -35,7 +35,12 @@ test("a migrated record is stamped with the current version and parses, which is
 });
 
 test("a record already at the current version keeps the pace it was given", () => {
-  const current = { ...followedBeforePaces, pace: "oneADay", order: "oldestFirst", schemaVersion: CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION };
+  const current = {
+    ...followedBeforePaces,
+    pace: "oneADay",
+    order: "oldestFirst",
+    schemaVersion: CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION,
+  };
 
   assert.equal(FollowedPlaylist.parse(migrate(current)).pace, "oneADay");
 });
@@ -45,7 +50,12 @@ test("a playlist followed before there was an order keeps being made oldest firs
 });
 
 test("a record already at the current version keeps the order it was given", () => {
-  const current = { ...followedBeforePaces, pace: "oneADay", order: "newestFirst", schemaVersion: CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION };
+  const current = {
+    ...followedBeforePaces,
+    pace: "oneADay",
+    order: "newestFirst",
+    schemaVersion: CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION,
+  };
 
   assert.equal(FollowedPlaylist.parse(migrate(current)).order, "newestFirst");
 });

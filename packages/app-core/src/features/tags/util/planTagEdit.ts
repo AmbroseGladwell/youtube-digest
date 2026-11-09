@@ -51,9 +51,7 @@ export function planTagEdit(entries: readonly OverviewWithState[], aliases: TagA
     });
   }
 
-  const nextAliases = edit.from
-    .filter((tag) => tag !== edit.to)
-    .reduce((current, tag) => withTagAlias(current, tag, edit.to), aliases);
+  const nextAliases = edit.from.filter((tag) => tag !== edit.to).reduce((current, tag) => withTagAlias(current, tag, edit.to), aliases);
 
   return {
     apply: { writes: apply, aliases: nextAliases },

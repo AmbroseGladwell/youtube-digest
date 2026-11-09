@@ -13,15 +13,9 @@ const REASON = "Does the capacity argument hold for the UK?";
 const TITLE = "The Quiet Return of Nuclear Baseload";
 
 const storedReasonFor = (backendSimulator: BackendSimulator, title: string) => async () =>
-  (await backendSimulator.overviewStore.listOverviews()).find(
-    (overview) => overview.source.title === title,
-  )?.captureReason;
+  (await backendSimulator.overviewStore.listOverviews()).find((overview) => overview.source.title === title)?.captureReason;
 
-const openReader = async (
-  launcher: Launcher,
-  backendSimulator: BackendSimulator,
-  captureReason: string | null,
-) => {
+const openReader = async (launcher: Launcher, backendSimulator: BackendSimulator, captureReason: string | null) => {
   const overview = makeOverview({
     captureReason,
     source: { ...makeOverview().source, title: TITLE },
@@ -32,10 +26,7 @@ const openReader = async (
   return { overview, reader };
 };
 
-test("a reason typed while the overview is being made is on the record when it lands", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a reason typed while the overview is being made is on the record when it lands", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS });
   const dialog = launcher.appShell.newOverviewDialog;
@@ -70,10 +61,7 @@ test("the field stays through the done state, so a reason added before Read over
   await expect.poll(storedReasonFor(backendSimulator, "The Simulated Video")).toBe(REASON);
 });
 
-test("whatever was typed is kept through Run in background and reopening the run", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("whatever was typed is kept through Run in background and reopening the run", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   await launcher.launchExpectingLibrary({ apiKeys: API_KEYS });
@@ -91,10 +79,7 @@ test("whatever was typed is kept through Run in background and reopening the run
   await expect.poll(storedReasonFor(backendSimulator, "The Simulated Video")).toBe(REASON);
 });
 
-test("an overview without a reason shows no line for one, and the menu offers to add it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an overview without a reason shows no line for one, and the menu offers to add it", async ({ launcher, backendSimulator }) => {
   const { reader } = await openReader(launcher, backendSimulator, null);
 
   await reader.verifyShowsOverviewPanel();
@@ -104,10 +89,7 @@ test("an overview without a reason shows no line for one, and the menu offers to
   await reader.verifyReasonMenuItemReads("Add reason");
 });
 
-test("an overview with a reason reads it back above the note, and the menu offers to edit it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("an overview with a reason reads it back above the note, and the menu offers to edit it", async ({ launcher, backendSimulator }) => {
   const { reader } = await openReader(launcher, backendSimulator, REASON);
 
   await reader.verifyReasonReads(REASON);
@@ -116,10 +98,7 @@ test("an overview with a reason reads it back above the note, and the menu offer
   await reader.verifyReasonMenuItemReads("Edit reason");
 });
 
-test("Add reason turns the line into a field with focus in it, and Enter saves what was typed", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Add reason turns the line into a field with focus in it, and Enter saves what was typed", async ({ launcher, backendSimulator }) => {
   const { overview, reader } = await openReader(launcher, backendSimulator, null);
 
   await reader.editReason();
@@ -131,15 +110,10 @@ test("Add reason turns the line into a field with focus in it, and Enter saves w
 
   await reader.verifyReasonEditorIsShown(false);
   await reader.verifyReasonReads(REASON);
-  await expect
-    .poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason)
-    .toBe(REASON);
+  await expect.poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason).toBe(REASON);
 });
 
-test("Edit reason opens the field on the reason as it is, and Save keeps the change", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Edit reason opens the field on the reason as it is, and Save keeps the change", async ({ launcher, backendSimulator }) => {
   const { overview, reader } = await openReader(launcher, backendSimulator, REASON);
 
   await reader.editReason();
@@ -149,15 +123,10 @@ test("Edit reason opens the field on the reason as it is, and Save keeps the cha
   await reader.clickSaveReason();
 
   await reader.verifyReasonReads("Careers in the AI era");
-  await expect
-    .poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason)
-    .toBe("Careers in the AI era");
+  await expect.poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason).toBe("Careers in the AI era");
 });
 
-test("Escape and Cancel both put the line back as it was, saving nothing", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Escape and Cancel both put the line back as it was, saving nothing", async ({ launcher, backendSimulator }) => {
   const { overview, reader } = await openReader(launcher, backendSimulator, REASON);
 
   await reader.editReason();
@@ -175,10 +144,7 @@ test("Escape and Cancel both put the line back as it was, saving nothing", async
   expect((await backendSimulator.overviews.get(overview.id))?.captureReason).toBe(REASON);
 });
 
-test("Remove reason takes the line away, and the menu goes back to offering to add one", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Remove reason takes the line away, and the menu goes back to offering to add one", async ({ launcher, backendSimulator }) => {
   const { overview, reader } = await openReader(launcher, backendSimulator, REASON);
 
   await reader.editReason();
@@ -186,18 +152,13 @@ test("Remove reason takes the line away, and the menu goes back to offering to a
   await reader.clickRemoveReason();
 
   await reader.verifyHasNoReason();
-  await expect
-    .poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason)
-    .toBeNull();
+  await expect.poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason).toBeNull();
 
   await reader.openActionsMenu();
   await reader.verifyReasonMenuItemReads("Add reason");
 });
 
-test("saving an emptied field is the same as removing the reason", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("saving an emptied field is the same as removing the reason", async ({ launcher, backendSimulator }) => {
   const { overview, reader } = await openReader(launcher, backendSimulator, REASON);
 
   await reader.editReason();
@@ -205,15 +166,10 @@ test("saving an emptied field is the same as removing the reason", async ({
   await reader.pressEnterInReason();
 
   await reader.verifyHasNoReason();
-  await expect
-    .poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason)
-    .toBeNull();
+  await expect.poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason).toBeNull();
 });
 
-test("asked for from another tab, the editor arrives on the Overview tab where the line lives", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("asked for from another tab, the editor arrives on the Overview tab where the line lives", async ({ launcher, backendSimulator }) => {
   const { reader } = await openReader(launcher, backendSimulator, null);
 
   await reader.clickTab("Transcript");
@@ -222,10 +178,7 @@ test("asked for from another tab, the editor arrives on the Overview tab where t
   await reader.verifyShowsOverviewPanel();
 });
 
-test("the side panel asks for the reason while it works, and the overview it opens carries it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the side panel asks for the reason while it works, and the overview it opens carries it", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const capture = await launcher.launchPanel({
     apiKeys: API_KEYS,
@@ -244,10 +197,7 @@ test("the side panel asks for the reason while it works, and the overview it ope
   await expect.poll(storedReasonFor(backendSimulator, "The Simulated Video")).toBe(REASON);
 });
 
-test("the panel's ⋯ menu edits the reason in place the same way, with a shorter Remove", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the panel's ⋯ menu edits the reason in place the same way, with a shorter Remove", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview({ captureReason: REASON });
   backendSimulator.overviews.seed({
     ...overview,
@@ -270,7 +220,5 @@ test("the panel's ⋯ menu edits the reason in place the same way, with a shorte
   await reader.clickRemoveReason();
 
   await reader.verifyHasNoReason();
-  await expect
-    .poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason)
-    .toBeNull();
+  await expect.poll(async () => (await backendSimulator.overviews.get(overview.id))?.captureReason).toBeNull();
 });

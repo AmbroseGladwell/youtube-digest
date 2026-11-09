@@ -69,11 +69,7 @@ export function PlusPlanPanel() {
         {PLAN_CARDS.map((card) => {
           const yours = card.name === planName;
           return (
-            <li
-              className={`${styles.plan} ${yours ? styles.yours : ""}`}
-              key={card.name}
-              data-testid={plusPlanPanelTestIds.planCard}
-            >
+            <li className={`${styles.plan} ${yours ? styles.yours : ""}`} key={card.name} data-testid={plusPlanPanelTestIds.planCard}>
               <div className={styles.planHead}>
                 <span className={styles.planCardName}>{card.name}</span>
                 {yours && <span className={styles.yoursPill}>Your plan</span>}

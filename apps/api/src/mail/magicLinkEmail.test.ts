@@ -41,7 +41,11 @@ test("the preview line, the mark and the footer links come from the link's own s
   assert.ok(html.includes('src="https://overview.example/email-mark.png"'));
   assert.ok(html.includes('href="https://overview.example/privacy"'));
   assert.ok(html.includes('<html lang="en"'));
-  assert.ok(text.endsWith("The Overview · https://overview.example\nYou’re getting this because someone asked to sign in to The Overview with this address."));
+  assert.ok(
+    text.endsWith(
+      "The Overview · https://overview.example\nYou’re getting this because someone asked to sign in to The Overview with this address.",
+    ),
+  );
 });
 
 test("a link asked for from the extension says where the code will appear", () => {
@@ -68,7 +72,9 @@ test("a mail with no code says nothing about one", () => {
 test("a link that creates an account says so and greets the reader by the name they gave", () => {
   const email = magicLinkEmail({ ...mail, purpose: "createAccount", firstName: "Ada <3" });
   assert.equal(email.subject, "Finish creating your account on The Overview");
-  assert.ok(email.text.startsWith("Hi Ada <3,\n\nHere is your link to finish creating your account on The Overview.\n\nCreate my account:\n"));
+  assert.ok(
+    email.text.startsWith("Hi Ada <3,\n\nHere is your link to finish creating your account on The Overview.\n\nCreate my account:\n"),
+  );
   assert.match(email.html, /<p[^>]*>Hi Ada &#60;3,<\/p>/);
   assert.match(email.html, /<h1[^>]*>Finish creating your account<\/h1>/);
   assert.match(email.html, />Create my account<\/a>/);

@@ -62,7 +62,10 @@ const followingAt = (backendSimulator: BackendSimulator, pace: PlaylistPace, cap
 };
 
 const warnings = (backendSimulator: BackendSimulator, name: string) =>
-  backendSimulator.errors.batches().flatMap(({ warnings }) => warnings ?? []).filter((warning) => warning.name === name);
+  backendSimulator.errors
+    .batches()
+    .flatMap(({ warnings }) => warnings ?? [])
+    .filter((warning) => warning.name === name);
 
 const overviewCount = async (backendSimulator: BackendSimulator) => (await backendSimulator.overviewStore.listOverviews()).length;
 
@@ -98,7 +101,10 @@ test("a key added at the month's limit starts the queue again at once", async ({
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
   followingAt(backendSimulator, "asTheyCome", [queued(0)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
-  await launcher.appShell.queueStrip.verifyReads("Queue waiting · 1 video", "This month's 5 are made. Resumes 1 November, or when you add a key.");
+  await launcher.appShell.queueStrip.verifyReads(
+    "Queue waiting · 1 video",
+    "This month's 5 are made. Resumes 1 November, or when you add a key.",
+  );
 
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
   await settings.apiKeysPanel.addKey("anthropic", "sk-ant-api03-simulated-key-for-the-limit");
@@ -115,7 +121,10 @@ test("as the month turns, the queue asks for the counts again and carries on", a
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
   followingAt(backendSimulator, "asTheyCome", [queued(0)]);
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
-  await launcher.appShell.queueStrip.verifyReads("Queue waiting · 1 video", "This month's 5 are made. Resumes 1 November, or when you add a key.");
+  await launcher.appShell.queueStrip.verifyReads(
+    "Queue waiting · 1 video",
+    "This month's 5 are made. Resumes 1 November, or when you add a key.",
+  );
 
   backendSimulator.ourKey.monthHasMade({});
   await page.clock.fastForward(3 * 60 * 60 * 1000);

@@ -82,6 +82,8 @@ Five folders, five different questions.
 - `tts-testing-guide.md` — the Python TTS service's two test kinds, split by whether they
   need the Kokoro model, and how CI caches the model rather than skipping them.
 - `commenting.md` — near-zero comments, and how that differs from the general baseline in `reference/`.
+- `lint-and-format.md` — Oxlint and Oxfmt from the root and in CI, why those two rather than
+  Vite+, the line width, and every lint rule that is off with the reason it is.
 - `local-dev.md` — the Nix dev shell and the Task menu: how to run the stack and the
   suites locally, and which Taskfile conventions are used and why.
 - `versioning.md` — the one semver number for people, the two integer versions for

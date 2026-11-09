@@ -13,8 +13,7 @@ import { generationClientFromEnv } from "./generationClientFromEnv.js";
 
 // The one-off re-tag of a library made before tags were reused: oldest first, each note
 // offered the tags the ones before it ended up with (docs/features/tag-reuse.md).
-const USAGE =
-  "usage: OVERVIEW_API_URL=<url> OVERVIEW_TOKEN=<session> task secrets:run -- npx tsx scripts/retagLibrary.ts [--write]";
+const USAGE = "usage: OVERVIEW_API_URL=<url> OVERVIEW_TOKEN=<session> task secrets:run -- npx tsx scripts/retagLibrary.ts [--write]";
 
 const baseUrl = process.env.OVERVIEW_API_URL;
 const token = process.env.OVERVIEW_TOKEN;
@@ -82,7 +81,9 @@ const missed = [...changed].filter(
   ([id, tags]) => reread.overviews.find((overview) => overview.id === id)?.tags.join(",") !== tags.join(","),
 );
 if (missed.length > 0) {
-  console.error(`${missed.length} of ${changed.size} overviews did not read back with their new tags: ${missed.map(([id]) => id).join(", ")}`);
+  console.error(
+    `${missed.length} of ${changed.size} overviews did not read back with their new tags: ${missed.map(([id]) => id).join(", ")}`,
+  );
   process.exit(1);
 }
 console.error(`${changed.size} overviews re-tagged, each read back from the server.`);

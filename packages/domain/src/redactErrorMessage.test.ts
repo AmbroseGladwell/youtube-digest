@@ -33,12 +33,12 @@ test("a quoted property name is kept, because it says which code failed and noth
 
 test("ids, a video's included, are removed, and plain words and small numbers are kept", () => {
   assert.equal(redactErrorMessage("No overview for dQw4w9WgXcQ"), "No overview for <id>");
-  assert.equal(
-    redactErrorMessage("Record 6f1e2d3c-4b5a-4a8e-9b2a-0b8f5f7e3c1d is at version 3"),
-    "Record <id> is at version 3",
-  );
+  assert.equal(redactErrorMessage("Record 6f1e2d3c-4b5a-4a8e-9b2a-0b8f5f7e3c1d is at version 3"), "Record <id> is at version 3");
   assert.equal(redactErrorMessage("Order 12345678 failed"), "Order <id> failed");
-  assert.equal(redactErrorMessage("The sync server answered 503 without a readable body"), "The sync server answered 503 without a readable body");
+  assert.equal(
+    redactErrorMessage("The sync server answered 503 without a readable body"),
+    "The sync server answered 503 without a readable body",
+  );
 });
 
 test("a long message is cut short, and whitespace is folded", () => {

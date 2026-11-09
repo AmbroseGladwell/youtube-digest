@@ -88,11 +88,7 @@ export function OverviewActionsMenu({
       </button>
 
       {open && (
-        <div
-          className={styles.menu}
-          role="menu"
-          data-testid={overviewActionsMenuTestIds.menu}
-        >
+        <div className={styles.menu} role="menu" data-testid={overviewActionsMenuTestIds.menu}>
           <button
             type="button"
             role="menuitem"

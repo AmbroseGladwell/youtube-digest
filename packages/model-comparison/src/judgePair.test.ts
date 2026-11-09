@@ -35,7 +35,10 @@ function openAiReplying(body: unknown, status = 200) {
     sent.push(`${url} ${String(init.body)}`);
     if (status !== 200) return new Response("down", { status });
     return new Response(
-      JSON.stringify({ choices: [{ message: { content: JSON.stringify(body) } }], usage: { prompt_tokens: 10_000, completion_tokens: 500 } }),
+      JSON.stringify({
+        choices: [{ message: { content: JSON.stringify(body) } }],
+        usage: { prompt_tokens: 10_000, completion_tokens: 500 },
+      }),
       { status: 200 },
     );
   }) as unknown as typeof fetch;
@@ -61,7 +64,8 @@ test("A and B are turned back into the candidate's win or loss, whichever side i
   assert.equal(record.results?.howToApply, "tie");
   assert.equal(record.results?.verdict, record.candidateIsA ? "loss" : "win");
   assert.equal(record.costDollars, (10_000 * 2 + 500 * 10) / 1_000_000);
-  const noteA = sent[0]!.indexOf("=== Note A ==="), candidateLine = sent[0]!.indexOf("The candidate's line.");
+  const noteA = sent[0]!.indexOf("=== Note A ==="),
+    candidateLine = sent[0]!.indexOf("The candidate's line.");
   assert.equal(candidateLine > noteA && candidateLine < sent[0]!.indexOf("=== Note B ==="), record.candidateIsA);
 });
 

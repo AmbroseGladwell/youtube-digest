@@ -49,8 +49,8 @@ describe("transcriptFailureMessage", () => {
   });
 
   it("falls back to a plain sentence when a source failed with something unrecognisable", () => {
-    expect(
-      transcriptFailureMessage([{ tier: "service", outcome: "failed", error: new Error("boom") }]),
-    ).toBe("No transcript source could fetch this video.");
+    expect(transcriptFailureMessage([{ tier: "service", outcome: "failed", error: new Error("boom") }])).toBe(
+      "No transcript source could fetch this video.",
+    );
   });
 });

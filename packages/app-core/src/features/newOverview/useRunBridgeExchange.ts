@@ -45,17 +45,13 @@ export function useRunBridgeExchange(controller: NewOverviewRunController): void
       return;
     }
 
-    const restateCurrentRun = () =>
-      bridge.report(currentRun.current === null ? null : runReportFor(currentRun.current));
+    const restateCurrentRun = () => bridge.report(currentRun.current === null ? null : runReportFor(currentRun.current));
 
     const act = async (videoUrl: string) => {
       // Asked before anything is started, because the button says "Overview ready" on a
       // video the library already holds and pressing it must read that note rather than
       // buy the video a second time (docs/features/injected-button.md).
-      const held = overviewForVideoUrl(
-        await queryClient.fetchQuery(overviewsWithStateQueryOptions(overviewStore)),
-        videoUrl,
-      );
+      const held = overviewForVideoUrl(await queryClient.fetchQuery(overviewsWithStateQueryOptions(overviewStore)), videoUrl);
       if (held !== null) {
         analytics.extension.injectedButton.pressed({ outcome: "openedHeld" });
         restateCurrentRun();

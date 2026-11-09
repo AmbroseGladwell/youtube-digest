@@ -12,12 +12,7 @@ import {
   type ReadyNarration,
 } from "@overview/domain";
 import { isSyncRequestError, isSyncTransportError, type NarrationApi, type VoicedNarration } from "@overview/sync";
-import type {
-  PacerReason,
-  PlayerSnapshot,
-  PlayerSource,
-  PlayerStatus,
-} from "./types/PlayerSnapshot.js";
+import type { PacerReason, PlayerSnapshot, PlayerSource, PlayerStatus } from "./types/PlayerSnapshot.js";
 import type { PlayerTrack } from "./types/PlayerTrack.js";
 import { estimatedLineStarts, type LineTimings } from "./util/estimatedLineStarts.js";
 import { lineAtTime } from "./util/lineAtTime.js";

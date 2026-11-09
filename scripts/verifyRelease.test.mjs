@@ -25,8 +25,7 @@ function releaseZip({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) {
   return { root, zipPath };
 }
 
-const check = (zip, overrides = {}) =>
-  verifyRelease({ zipPath: zip.zipPath, version: "0.1.0", commit: FULL_SHA, ...overrides });
+const check = (zip, overrides = {}) => verifyRelease({ zipPath: zip.zipPath, version: "0.1.0", commit: FULL_SHA, ...overrides });
 
 test("a zip built from the deployed commit at the tagged version passes", () => {
   const zip = releaseZip();

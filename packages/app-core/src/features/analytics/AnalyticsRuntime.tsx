@@ -71,10 +71,7 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
       mode,
       send: (batch, options) => {
         const { api, anonymousId } = sender()!;
-        return api.send(
-          { context: latest.current.context, ...batch, ...(anonymousId === undefined ? {} : { anonymousId }) },
-          options,
-        );
+        return api.send({ context: latest.current.context, ...batch, ...(anonymousId === undefined ? {} : { anonymousId }) }, options);
       },
     });
   });

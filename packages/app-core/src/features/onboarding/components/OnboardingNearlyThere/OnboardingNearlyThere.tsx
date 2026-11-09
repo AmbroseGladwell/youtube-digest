@@ -22,7 +22,9 @@ export function OnboardingNearlyThere({ phase, after, card, onTryAgain }: Onboar
       <div className={styles.intro}>
         <OnboardingHeading>Nearly there</OnboardingHeading>
         <p className={styles.lead}>
-          {after === "plan" ? "Your plan is set. Your overview opens as soon as it's ready." : "You're signed in. Your overview opens as soon as it's ready."}
+          {after === "plan"
+            ? "Your plan is set. Your overview opens as soon as it's ready."
+            : "You're signed in. Your overview opens as soon as it's ready."}
         </p>
       </div>
       <OnboardingArriving phase={phase} onTryAgain={onTryAgain} />

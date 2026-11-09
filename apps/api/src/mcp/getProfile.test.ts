@@ -93,7 +93,9 @@ test("a connection approved before the profile scope is not offered get_profile,
   await patchSettings(reader, { aboutYou: { who: ["dad"], time: [], focus: [] } });
   const client = await connectMcpClient(testApp, reader, "overviews:read overviews:write");
 
-  const { instructions } = (await client.request("initialize", { protocolVersion: "2025-06-18", capabilities: {} })) as { instructions: string };
+  const { instructions } = (await client.request("initialize", { protocolVersion: "2025-06-18", capabilities: {} })) as {
+    instructions: string;
+  };
   const { tools } = (await client.request("tools/list")) as { tools: Array<{ name: string }> };
   const refused = await client.callTool("get_profile");
 

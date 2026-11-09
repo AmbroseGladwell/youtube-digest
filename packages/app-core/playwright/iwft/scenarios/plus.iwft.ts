@@ -22,9 +22,7 @@ const seedHeldOverview = (backendSimulator: BackendSimulator) => {
 
 // The paid plans sell volume, never features, and no plan ever says "unlimited"
 // (docs/architecture/tiers.md).
-test("Settings names the plan, gives every account the features, and sells both paid plans on volume", async ({
-  launcher,
-}) => {
+test("Settings names the plan, gives every account the features, and sells both paid plans on volume", async ({ launcher }) => {
   await launcher.launchPanel(panel);
   const settings = await launcher.appShell.openSettings();
   await settings.verifyRowReads("plan", "Free");
@@ -32,9 +30,7 @@ test("Settings names the plan, gives every account the features, and sells both 
 
   await settings.verifyPlanReads("Free");
   await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
-  await settings.verifyPlanCardsRead(
-    PLAN_CARDS.map((card) => [card.name, card.ourKey, card.ownKey, card.note]),
-  );
+  await settings.verifyPlanCardsRead(PLAN_CARDS.map((card) => [card.name, card.ourKey, card.ownKey, card.note]));
   await settings.verifyPlanMarkedAsYours("Free");
   await settings.verifyPlansAreNotOnSale("isn't built yet");
 });
@@ -56,10 +52,7 @@ test("on Plus, Settings rings the reader's own plan among the three", async ({ l
 
 // Design 2d: the Plus prompt on Listen is retired, since audio is open to every account
 // (docs/features/audio-player.md).
-test("Listen on a free plan docks the player and plays, with no case for Plus", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Listen on a free plan docks the player and plays, with no case for Plus", async ({ launcher, backendSimulator }) => {
   seedHeldOverview(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -73,10 +66,7 @@ test("Listen on a free plan docks the player and plays, with no case for Plus", 
 
 // The bar is the only place a panel listener can pause, so pausing from it must not be
 // the thing that takes it away.
-test("pausing from the docked player leaves it docked, and Listening puts it away", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("pausing from the docked player leaves it docked, and Listening puts it away", async ({ launcher, backendSimulator }) => {
   seedHeldOverview(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
@@ -99,10 +89,7 @@ test("an overview the panel has just written says where it lives, once", async (
   await reader.verifySavedLocallyNoteIsShown(true);
 });
 
-test("dismissing that note is remembered rather than asked again on the next capture", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("dismissing that note is remembered rather than asked again on the next capture", async ({ launcher, backendSimulator }) => {
   const capture = await launcher.launchPanel(panel);
   await capture.clickCreate();
   const reader = await capture.waitForReader();
@@ -110,9 +97,7 @@ test("dismissing that note is remembered rather than asked again on the next cap
   await reader.dismissSavedLocallyNote();
   await reader.verifySavedLocallyNoteIsShown(false);
 
-  await expect
-    .poll(async () => (await backendSimulator.settingsStore.get()).plusNoticeDismissed)
-    .toBe(true);
+  await expect.poll(async () => (await backendSimulator.settingsStore.get()).plusNoticeDismissed).toBe(true);
 });
 
 test("a reader opened from the library, rather than just written, says nothing about where it lives", async ({

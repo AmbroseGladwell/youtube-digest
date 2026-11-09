@@ -41,10 +41,7 @@ const seedTranscript = (backendSimulator: BackendSimulator, segments = SEGMENTS)
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments }));
 };
 
-test("the transcript marks the block the video is inside, and says it is following", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the transcript marks the block the video is inside, and says it is following", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
     apiKeys: API_KEYS,
@@ -59,10 +56,7 @@ test("the transcript marks the block the video is inside, and says it is followi
   await reader.verifyCurrentTranscriptBlockReads(/The opening claim/);
 });
 
-test("playing on moves the mark to the block being spoken", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("playing on moves the mark to the block being spoken", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
     apiKeys: API_KEYS,
@@ -77,10 +71,7 @@ test("playing on moves the mark to the block being spoken", async ({
   await reader.verifyCurrentTranscriptBlockReads(/where the argument is/);
 });
 
-test("a player reporting a different video is not read as this one's position", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a player reporting a different video is not read as this one's position", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
     apiKeys: API_KEYS,
@@ -94,10 +85,7 @@ test("a player reporting a different video is not read as this one's position", 
   await reader.verifyNoTranscriptBlockIsCurrent();
 });
 
-test("the web app, which cannot see a player, offers none of the following", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the web app, which cannot see a player, offers none of the following", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -125,10 +113,7 @@ test("the time against a block sends the video to it", async ({ launcher, backen
   await expect.poll(() => launcher.readPlaybackSeeks()).toEqual([65_000]);
 });
 
-test("the web app, with no player to send anywhere, prints the times as plain text", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the web app, with no player to send anywhere, prints the times as plain text", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -140,10 +125,7 @@ test("the web app, with no player to send anywhere, prints the times as plain te
 
 // Clicking a time does one thing. Whether the transcript is following is a separate
 // question, answered by the control that exists for it.
-test("sending the video somewhere does not quietly re-engage the following", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("sending the video somewhere does not quietly re-engage the following", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
     apiKeys: API_KEYS,
@@ -192,10 +174,10 @@ test("scrolling away from the marked block hands the scroll back, until Follow p
   backendSimulator,
 }) => {
   const longRuns = Array.from({ length: 30 }, (_, index) =>
-    makeCaptionRun(
-      [`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."],
-      { startMs: index * 60_000, cueMs: 3500 },
-    ),
+    makeCaptionRun([`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."], {
+      startMs: index * 60_000,
+      cueMs: 3500,
+    }),
   ).flat();
   seedTranscript(backendSimulator, longRuns);
 
@@ -221,10 +203,7 @@ test("scrolling away from the marked block hands the scroll back, until Follow p
 // The block being spoken sits on a card that bleeds into the column's gutter, and the
 // sticky head it scrolls under has to be at least that wide or the card's corners show
 // either side of it.
-test("the sticky head is wider than the cards that pass under it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the sticky head is wider than the cards that pass under it", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
     apiKeys: API_KEYS,
@@ -240,10 +219,7 @@ test("the sticky head is wider than the cards that pass under it", async ({
 
 // The block the video moves to used to be centred in the window, which on the panel is
 // behind the sticky stack: a tall block lost its time and its first line under the head.
-test("a block the video moves to comes to rest under the head, however tall it is", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a block the video moves to comes to rest under the head, however tall it is", async ({ launcher, backendSimulator }) => {
   const blocks = Array.from({ length: 16 }, (_, index) =>
     makeCaptionRun(
       index % 2 === 0

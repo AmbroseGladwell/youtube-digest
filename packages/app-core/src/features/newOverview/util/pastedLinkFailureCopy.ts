@@ -59,12 +59,27 @@ export function pastedLinkFailureCopy(failure: ArticleFailure, url: string, plac
     case "blocked":
       return elsewhere(url, place, `${site} doesn’t let us read it from here`, "Some sites turn away readers that aren’t a browser.");
     case "paywalled":
-      return elsewhere(url, place, "Only the opening came through", `The rest is behind ${site}’s paywall. If you subscribe, you’re signed in where the extension reads it.`);
+      return elsewhere(
+        url,
+        place,
+        "Only the opening came through",
+        `The rest is behind ${site}’s paywall. If you subscribe, you’re signed in where the extension reads it.`,
+      );
     case "no-answer":
       return plain(`${domainOf(url)} didn’t answer`, "It may be down for a while. Nothing counted.", "tryAgain", "Try again");
     case "not-found":
-      return plain("There’s nothing we can read at that link", "Check the link, or paste another one. Nothing counted.", "tryAnother", "Try another link");
+      return plain(
+        "There’s nothing we can read at that link",
+        "Check the link, or paste another one. Nothing counted.",
+        "tryAnother",
+        "Try another link",
+      );
     default:
-      return plain("That link isn’t an article", "It doesn’t look like a single story or post. Paste the link to one. Nothing counted.", "tryAnother", "Try another link");
+      return plain(
+        "That link isn’t an article",
+        "It doesn’t look like a single story or post. Paste the link to one. Nothing counted.",
+        "tryAnother",
+        "Try another link",
+      );
   }
 }

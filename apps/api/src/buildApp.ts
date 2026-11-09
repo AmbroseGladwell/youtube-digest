@@ -191,16 +191,19 @@ export async function buildApp({
   const urls = oauthUrls(config.appUrl);
   const audioRenders = new AudioRendersRepository(sql);
   const shares = new SharesRepository(sql, clock);
-  const audioQueue =
-    audio === null
-      ? null
-      : new AudioRenderQueue({ renders: audioRenders, clock, log: app.log, ...audio });
+  const audioQueue = audio === null ? null : new AudioRenderQueue({ renders: audioRenders, clock, log: app.log, ...audio });
   app.decorate("audioQueue", audioQueue);
   const claimEmbeddings = new ClaimEmbeddingsRepository(sql);
   const embeddingQueue =
     meaning === null
       ? null
-      : new EmbeddingQueue({ embeddings: claimEmbeddings, embedder: meaning.embedder, clock, log: app.log, runWorkers: meaning.runWorkers });
+      : new EmbeddingQueue({
+          embeddings: claimEmbeddings,
+          embedder: meaning.embedder,
+          clock,
+          log: app.log,
+          runWorkers: meaning.runWorkers,
+        });
   app.decorate("embeddingQueue", embeddingQueue);
   const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder);
   const overviewsWritten = () => embeddingQueue?.kick();
@@ -212,7 +215,10 @@ export async function buildApp({
         await api.register(corsPlugin, { allowedOrigins: config.allowedOrigins });
       }
       await api.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
-      api.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+      api.addHook(
+        "onRequest",
+        rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock),
+      );
       await api.register(clientVersionPlugin);
       await api.register(writeFloorPlugin, {
         minSupportedClientVersion: config.minSupportedClientVersion,
@@ -268,8 +274,7 @@ export async function buildApp({
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
       overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
       generationRoutes(api, {
-        generator:
-          ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, clock }),
+        generator: ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, clock }),
         trials,
         sql,
         clock,
@@ -309,14 +314,20 @@ export async function buildApp({
     registerOAuthErrorHandler(oauth, { errorSink, clock });
     registerFormBodyParser(oauth);
     await oauth.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
-    oauth.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+    oauth.addHook(
+      "onRequest",
+      rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock),
+    );
     oauthRoutes(oauth, { sql, clock, urls });
   });
 
   await app.register(async (mcp) => {
     registerMcpErrorHandler(mcp, { errorSink, clock });
     await mcp.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
-    mcp.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+    mcp.addHook(
+      "onRequest",
+      rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock),
+    );
     await mcp.register(connectionAccessPlugin, { sql, clock, urls });
     mcp.addHook(
       "onRequest",
@@ -341,7 +352,10 @@ export async function buildApp({
     async (page) => {
       registerApiErrorHandler(page, { errorSink, clock });
       await page.register(clientAddressPlugin, { clientIpHeader: config.clientIpHeader });
-      page.addHook("onRequest", rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock));
+      page.addHook(
+        "onRequest",
+        rateLimitHook(rateLimits.perAddress, (request) => request.clientAddress, clock),
+      );
       await sharePagePlugin(page, { shares, appUrl: config.appUrl, staticRoot: config.staticRoot, clock });
     },
     { prefix: "/s" },

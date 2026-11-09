@@ -68,7 +68,12 @@ async function foldOne(
     .map((record) => readCurrent(record, OVERVIEW_MIGRATIONS, accountId, videoId))
     .sort(earliestFirst);
   const [winner, ...losers] = copies as [ReadCopy, ...ReadCopy[]];
-  const states = await statesOf(sql, accountId, copies.map(({ record }) => record.id), videoId);
+  const states = await statesOf(
+    sql,
+    accountId,
+    copies.map(({ record }) => record.id),
+    videoId,
+  );
 
   const filingBefore = filingOf(winner.body);
   const filing = losers.reduce((folded, loser) => foldFiling(folded, filingOf(loser.body)), filingBefore);
@@ -82,7 +87,10 @@ async function foldOne(
   if (Object.keys(changedFields(filingBefore, filing)).length > 0) {
     const body = { ...winner.body, ...filing };
     validateRecordBody("overview", body, CURRENT_SCHEMA_VERSIONS.overview);
-    const updatedAt = latestOf(copies.map(({ record }) => record.updatedAt), now);
+    const updatedAt = latestOf(
+      copies.map(({ record }) => record.updatedAt),
+      now,
+    );
     operations.push({
       kind: "overview",
       id: winner.record.id,
@@ -92,7 +100,10 @@ async function foldOne(
   if (Object.keys(changedFields(stateBefore, state)).length > 0) {
     const body = { ...state, overviewId: winner.record.id };
     validateRecordBody("overviewState", body, CURRENT_SCHEMA_VERSIONS.overviewState);
-    const updatedAt = latestOf([...states.values()].map(({ record }) => record.updatedAt), now);
+    const updatedAt = latestOf(
+      [...states.values()].map(({ record }) => record.updatedAt),
+      now,
+    );
     operations.push({
       kind: "overviewState",
       id: winner.record.id,
@@ -115,12 +126,7 @@ async function foldOne(
 // Every copy is read at the current version before anything is merged, as a field write
 // is (docs/features/sync-api.md, "A merge migrates first"). One this server cannot read
 // stops the fold loudly rather than guessing at it.
-function readCurrent(
-  record: StoredRecord,
-  migrations: readonly RecordMigration[],
-  accountId: string,
-  videoId: string,
-): ReadCopy {
+function readCurrent(record: StoredRecord, migrations: readonly RecordMigration[], accountId: string, videoId: string): ReadCopy {
   const migrated = migrateStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), migrations);
   if (migrated.status === "unreadable") {
     throw new Error(
@@ -164,7 +170,10 @@ async function statesOf(
         accountId,
         videoId,
       );
-      return [record.id, { record, state: { read: body.read === true, favourite: body.favourite === true, userTags: strings(body.userTags) } }];
+      return [
+        record.id,
+        { record, state: { read: body.read === true, favourite: body.favourite === true, userTags: strings(body.userTags) } },
+      ];
     }),
   );
 }

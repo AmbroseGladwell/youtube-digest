@@ -58,7 +58,10 @@ test("a render that will be tried again is a warn, and one that gave up is an er
     ],
   );
   const [gaveUp] = saying(lines, "audio render gave up");
-  assert.deepEqual({ level: gaveUp!.level, attempt: gaveUp!.attempt, status: gaveUp!.status }, { level: LOG_LEVELS.error, attempt: 3, status: "failed" });
+  assert.deepEqual(
+    { level: gaveUp!.level, attempt: gaveUp!.attempt, status: gaveUp!.status },
+    { level: LOG_LEVELS.error, attempt: 3, status: "failed" },
+  );
   assert.match(gaveUp!.error as string, /TTS refused the render/);
   assert.doesNotMatch(JSON.stringify(lines), new RegExp(SPOKEN));
   await testApp.close();

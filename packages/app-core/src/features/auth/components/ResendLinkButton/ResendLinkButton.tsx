@@ -41,13 +41,7 @@ export function ResendLinkButton({ sentAt, sending, label = "Send another link",
   }
 
   return (
-    <button
-      type="button"
-      className={styles.resend}
-      onClick={onResend}
-      disabled={sending}
-      data-testid={resendLinkButtonTestIds.button}
-    >
+    <button type="button" className={styles.resend} onClick={onResend} disabled={sending} data-testid={resendLinkButtonTestIds.button}>
       {label}
     </button>
   );

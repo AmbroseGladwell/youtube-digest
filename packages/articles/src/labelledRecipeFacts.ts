@@ -2,7 +2,34 @@ import { recipeFactsInLines, type Recipe } from "@overview/domain";
 import { isPageFurniture } from "./isPageFurniture.js";
 
 type Facts = Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMinutes" | "yield">;
-const INLINE = new Set(["A", "ABBR", "B", "BDI", "BDO", "CITE", "CODE", "DATA", "DFN", "EM", "FONT", "I", "KBD", "LABEL", "MARK", "Q", "S", "SAMP", "SMALL", "SPAN", "STRONG", "SUB", "SUP", "TIME", "U", "VAR"]);
+const INLINE = new Set([
+  "A",
+  "ABBR",
+  "B",
+  "BDI",
+  "BDO",
+  "CITE",
+  "CODE",
+  "DATA",
+  "DFN",
+  "EM",
+  "FONT",
+  "I",
+  "KBD",
+  "LABEL",
+  "MARK",
+  "Q",
+  "S",
+  "SAMP",
+  "SMALL",
+  "SPAN",
+  "STRONG",
+  "SUB",
+  "SUP",
+  "TIME",
+  "U",
+  "VAR",
+]);
 const UNREAD = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT", "SVG"]);
 const TEXT_NODE = 3;
 const ELEMENT_NODE = 1;

@@ -7,9 +7,7 @@ import { isAllowedYouTubeUrl } from "./youTubeFetchBridge.js";
 // exactly the people most likely to be using this. Anonymous is the shape that works, and
 // the point of fetching here was never the session: it is the address the request comes
 // from (docs/features/transcript-retrieval.md).
-export async function fetchYouTubeInWorker(
-  request: YouTubeFetchRequest,
-): Promise<YouTubeFetchResponse> {
+export async function fetchYouTubeInWorker(request: YouTubeFetchRequest): Promise<YouTubeFetchResponse> {
   if (!isAllowedYouTubeUrl(request.url)) {
     throw new Error("the YouTube fetch bridge was asked for something that is not YouTube");
   }

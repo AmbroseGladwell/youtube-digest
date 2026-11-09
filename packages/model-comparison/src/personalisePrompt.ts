@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { HowToApply, resolveTags, type Overview } from "@overview/domain";
-import {
-  WRITING_RULES,
-  filingSection,
-  howToApplySection,
-  type GenerationInput,
-  type SuggestedTopicShape,
-} from "@overview/generation";
+import { WRITING_RULES, filingSection, howToApplySection, type GenerationInput, type SuggestedTopicShape } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 import { noteForJudging } from "./judgeRubric.js";
 import type { ReaderProfile } from "./ReaderProfile.js";
@@ -38,12 +32,7 @@ ${
 }
 List the indices (if any) whose claim this video repeats, as similarToIndices.`;
 
-export function personalisePrompt(
-  fetched: FetchedTranscript,
-  profile: ReaderProfile,
-  shared: Overview,
-  withTranscript: boolean,
-) {
+export function personalisePrompt(fetched: FetchedTranscript, profile: ReaderProfile, shared: Overview, withTranscript: boolean) {
   const input: GenerationInput = {
     ...profile,
     video: fetched.video,
@@ -74,7 +63,12 @@ ${noteForJudging(sharedPartOf(shared))}${transcript}`,
       similarToIndices:
         profile.pastClaims.length === 0
           ? z.array(z.int()).max(0)
-          : z.array(z.int().min(0).max(profile.pastClaims.length - 1)),
+          : z.array(
+              z
+                .int()
+                .min(0)
+                .max(profile.pastClaims.length - 1),
+            ),
     }),
   };
 }
@@ -84,9 +78,7 @@ export function personalisedOverview(shared: Overview, profile: ReaderProfile, o
   return {
     ...base,
     captureReason: profile.captureReason,
-    topicIds: profile.existingTopics
-      .filter((topic) => output.matchedTopicNames.includes(topic.name))
-      .map((topic) => topic.id),
+    topicIds: profile.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id),
     tags: resolveTags(output.tags, {
       known: new Set(profile.existingTags.map(({ tag }) => tag)),
       aliases: profile.tagAliases,

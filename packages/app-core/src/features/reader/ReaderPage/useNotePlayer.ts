@@ -21,8 +21,7 @@ export interface NotePlayer {
   pause: () => void;
 }
 
-const isBusyElsewhere = (snapshot: PlayerSnapshot) =>
-  snapshot.track !== null && snapshot.status !== "ready" && snapshot.status !== "ended";
+const isBusyElsewhere = (snapshot: PlayerSnapshot) => snapshot.track !== null && snapshot.status !== "ready" && snapshot.status !== "ended";
 
 // One note's view of the app-wide player (docs/features/audio-player.md, "Which note the
 // bar is about"). A note opened while nothing is playing is loaded straight away, so its bar

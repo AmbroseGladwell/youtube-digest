@@ -31,8 +31,7 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
 
     request.onupgradeneeded = (event) => {
       const db = request.result;
-      const upgradingFromBeforeNoveltyRename =
-        event.oldVersion > 0 && event.oldVersion < NOVELTY_RENAME_RESET_VERSION;
+      const upgradingFromBeforeNoveltyRename = event.oldVersion > 0 && event.oldVersion < NOVELTY_RENAME_RESET_VERSION;
       if (upgradingFromBeforeNoveltyRename) {
         for (const store of [OVERVIEWS_STORE, OVERVIEW_STATES_STORE]) {
           if (db.objectStoreNames.contains(store)) db.deleteObjectStore(store);

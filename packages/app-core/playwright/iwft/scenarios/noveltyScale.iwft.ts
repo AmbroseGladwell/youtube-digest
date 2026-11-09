@@ -10,10 +10,7 @@ const SEGMENTS = [
   ...makeCaptionRun(["Here is the spreadsheet,", "year by year."], { startMs: 65_000, cueMs: 4000 }),
 ];
 
-test("a fresh angle names what stands out, and says what it was judged against without a hover", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a fresh angle names what stands out, and says what it was judged against without a hover", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(
     makeOverview({
       verdict: {
@@ -38,7 +35,10 @@ test("a fresh angle names what stands out, and says what it was judged against w
   await reader.verifyNoteCaptionReads(NOVELTY_BASIS);
 });
 
-test("what stands out ends with its start time, which opens a menu that reads the transcript there", async ({ launcher, backendSimulator }) => {
+test("what stands out ends with its start time, which opens a menu that reads the transcript there", async ({
+  launcher,
+  backendSimulator,
+}) => {
   const overview = makeOverview({
     verdict: {
       novelty: "fresh_angle",

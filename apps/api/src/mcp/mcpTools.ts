@@ -26,11 +26,7 @@ import { searchWithMeaning, type LibrarySearch, type ResolvedFilters } from "./s
 export const LISTING_PAGE_SIZE = 50;
 export const OVERVIEWS_PER_CALL = 10;
 
-const Cursor = z
-  .string()
-  .regex(/^\d+$/)
-  .optional()
-  .describe("Where to carry on from: the cursor the previous call ended with");
+const Cursor = z.string().regex(/^\d+$/).optional().describe("Where to carry on from: the cursor the previous call ended with");
 
 const topicNames = (topics: Topic[], entry: LibraryEntry) =>
   entry.overview.topicIds.flatMap((id) => topics.find((topic) => topic.id === id)?.name ?? []);
@@ -73,7 +69,11 @@ interface McpSearch extends LibrarySearch {
 
 // Degrade visibly: when meaning cannot be matched, the assistant is told it is reading word
 // matches only, rather than handed a shorter list that looks complete.
-async function searchEntries(entries: LibraryEntry[], filters: ResolvedFilters, { meaning, accountId, log }: McpToolContext): Promise<McpSearch> {
+async function searchEntries(
+  entries: LibraryEntry[],
+  filters: ResolvedFilters,
+  { meaning, accountId, log }: McpToolContext,
+): Promise<McpSearch> {
   const query = filters.query?.trim() ?? "";
   if (query === "") {
     return { ...searchWithMeaning(entries, filters, []), notes: [] };
@@ -108,9 +108,7 @@ function pageFooter(page: Page<unknown>, noun: string): string[] {
 // Degrade visibly: a record this server cannot read is left out, and the assistant is
 // told so rather than handed a library that silently looks smaller.
 const unreadableNote = (library: Library): string[] =>
-  library.unreadable === 0
-    ? []
-    : [`${library.unreadable} saved overview(s) could not be read by this server and are left out.`];
+  library.unreadable === 0 ? [] : [`${library.unreadable} saved overview(s) could not be read by this server and are left out.`];
 
 const searchOverviews = mcpTool({
   name: "search_overviews",
@@ -178,9 +176,7 @@ const listTags = mcpTool({
   input: z.object({}),
   run: async (_input, { sql, accountId }) => {
     const library = await readLibrary(sql, accountId);
-    const counted = tagUsage(
-      library.entries.map(({ overview, state }) => [...overview.tags, ...(state?.userTags ?? [])]),
-    );
+    const counted = tagUsage(library.entries.map(({ overview, state }) => [...overview.tags, ...(state?.userTags ?? [])]));
     return {
       text: [
         counted.length === 0 ? "The reader's overviews have no tags yet." : `${counted.length} tag(s):`,
@@ -277,4 +273,13 @@ const getTranscript = mcpTool({
   },
 });
 
-export const mcpTools: readonly McpTool[] = [searchOverviews, listTopics, listTags, getOverview, getOverviews, getTranscript, getProfile, markOverviews];
+export const mcpTools: readonly McpTool[] = [
+  searchOverviews,
+  listTopics,
+  listTags,
+  getOverview,
+  getOverviews,
+  getTranscript,
+  getProfile,
+  markOverviews,
+];

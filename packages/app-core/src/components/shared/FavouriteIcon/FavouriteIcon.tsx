@@ -37,11 +37,7 @@ export function FavouriteIcon({ filled }: FavouriteIconProps) {
       strokeLinejoin="round"
     >
       <path d={HEART} />
-      <path
-        className={`${styles.fill} ${filled ? styles.fillOn : ""} ${marking ? styles.marking : ""}`}
-        d={HEART}
-        fill="currentColor"
-      />
+      <path className={`${styles.fill} ${filled ? styles.fillOn : ""} ${marking ? styles.marking : ""}`} d={HEART} fill="currentColor" />
     </svg>
   );
 }

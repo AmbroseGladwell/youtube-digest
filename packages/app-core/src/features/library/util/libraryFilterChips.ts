@@ -41,7 +41,12 @@ export function libraryFilterChips(filters: LibraryFilters, topics: Topic[]): Li
     chips.push({ key: "dubious", label: "Dubious only", removeLabel: "Remove filter Dubious only", clear: { dubious: DEFAULTS.dubious } });
   }
   if (filters.favourite !== DEFAULTS.favourite) {
-    chips.push({ key: "favourite", label: "Favourites", removeLabel: "Remove filter Favourites", clear: { favourite: DEFAULTS.favourite } });
+    chips.push({
+      key: "favourite",
+      label: "Favourites",
+      removeLabel: "Remove filter Favourites",
+      clear: { favourite: DEFAULTS.favourite },
+    });
   }
   if (filters.status !== DEFAULTS.status) {
     const label = { all: "Read and unread", read: "Read", unread: "Unread only" }[filters.status];

@@ -3,7 +3,13 @@ import assert from "node:assert/strict";
 import { generateForAnyoneSteps } from "./generateForAnyoneSteps.js";
 import { GenerationError } from "./GenerationError.js";
 
-const INPUT = { title: "Knife skills", channel: "A cook", inOneLine: "Hold it right.", coreClaim: "Grip matters.", keyPoints: ["The claw grip."] };
+const INPUT = {
+  title: "Knife skills",
+  channel: "A cook",
+  inOneLine: "Hold it right.",
+  coreClaim: "Grip matters.",
+  keyPoints: ["The claw grip."],
+};
 
 test("it asks with no reader in the prompt, from the note and no transcript", async () => {
   let system = "";

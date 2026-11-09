@@ -73,6 +73,8 @@ A fourth, since the policy pages exist:
 
 Read all four before adding a new file, folder, or pattern anywhere in the monorepo.
 
+- `docs/conventions/lint-and-format.md` — Oxlint and Oxfmt; run `task lint` before a PR,
+  and `task format` to fix what it finds.
 - `docs/conventions/secrets.md` — a secret value must never appear in this conversation.
   The repo holds references; `.env` is rendered and never read or printed whole. A hook
   refuses the calls that would, and says why.

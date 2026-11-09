@@ -12,7 +12,11 @@ import { openAiCompatibleAdapter } from "./providers/openAiCompatibleAdapter.js"
 const ADAPTERS: Record<Provider, ProviderAdapter> = {
   anthropic: anthropicAdapter,
   gemini: geminiAdapter,
-  openai: openAiCompatibleAdapter({ baseUrl: `${PROVIDER_API_ORIGIN.openai}/v1`, structure: "schema", tokenLimitField: "max_completion_tokens" }),
+  openai: openAiCompatibleAdapter({
+    baseUrl: `${PROVIDER_API_ORIGIN.openai}/v1`,
+    structure: "schema",
+    tokenLimitField: "max_completion_tokens",
+  }),
   deepseek: openAiCompatibleAdapter({ baseUrl: PROVIDER_API_ORIGIN.deepseek, structure: "prose", tokenLimitField: "max_tokens" }),
   xai: openAiCompatibleAdapter({ baseUrl: `${PROVIDER_API_ORIGIN.xai}/v1`, structure: "schema", tokenLimitField: "max_tokens" }),
   mistral: openAiCompatibleAdapter({ baseUrl: `${PROVIDER_API_ORIGIN.mistral}/v1`, structure: "schema", tokenLimitField: "max_tokens" }),

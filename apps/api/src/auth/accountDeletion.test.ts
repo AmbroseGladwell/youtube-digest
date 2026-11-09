@@ -22,7 +22,12 @@ const deleteAccount = (testApp: TestApp, session: TestSession) =>
   testApp.app.inject({ method: "DELETE", url: "/api/session/account", headers: session.headers });
 
 const askToVerify = (testApp: TestApp, session: TestSession, body?: object) =>
-  testApp.app.inject({ method: "POST", url: "/api/session/verification", headers: session.headers, ...(body === undefined ? {} : { payload: body }) });
+  testApp.app.inject({
+    method: "POST",
+    url: "/api/session/verification",
+    headers: session.headers,
+    ...(body === undefined ? {} : { payload: body }),
+  });
 
 const confirmVerification = (testApp: TestApp, session: TestSession, code: string) =>
   testApp.app.inject({ method: "POST", url: "/api/session/verification/confirm", headers: session.headers, payload: { code } });
@@ -59,11 +64,10 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     "insert into shared_transcripts (video_id, words_hash, body, stored_at) values ($1, $2, $3::jsonb, $4::timestamptz) on conflict do nothing",
     [VIDEO, "words", JSON.stringify({ videoId: VIDEO, blocks: [] }), now],
   );
-  await sql.query("insert into account_transcripts (account_id, video_id, stored_at, words_hash) values ($1, $2, $3::timestamptz, 'words')", [
-    accountId,
-    VIDEO,
-    now,
-  ]);
+  await sql.query(
+    "insert into account_transcripts (account_id, video_id, stored_at, words_hash) values ($1, $2, $3::timestamptz, 'words')",
+    [accountId, VIDEO, now],
+  );
   await sql.query(
     "insert into transcript_contributions (video_id, account_id, words_hash, contributed_at) values ($1, $2, 'words', $3::timestamptz)",
     [VIDEO, accountId, now],
@@ -80,11 +84,10 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     [shareTokenFor(email), accountId, overviewId, now],
   );
   await sql.query("insert into overview_usage (month, account_id, key_source, overviews) values ('2026-11-01', $1, 'own', 1)", [accountId]);
-  await sql.query("insert into overview_reservations (account_id, overview_id, source, reserved_at) values ($1, $2, 'own', $3::timestamptz)", [
-    accountId,
-    overviewId,
-    now,
-  ]);
+  await sql.query(
+    "insert into overview_reservations (account_id, overview_id, source, reserved_at) values ($1, $2, 'own', $3::timestamptz)",
+    [accountId, overviewId, now],
+  );
   await sql.query("insert into narration_render_usage (day, account_id, renders) values ('2026-11-05', $1, 1)", [accountId]);
   await sql.query(
     "insert into overview_embeddings (account_id, overview_id, embedded_rev, model, attempted_rev, updated_at) values ($1, $2, 1, 'test', 1, $3::timestamptz)",
@@ -103,21 +106,19 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     "insert into connections (account_id, client_id, scope, created_at, last_used_at) values ($1, 'claude', 'overviews:read', $2::timestamptz, $2::timestamptz) returning id",
     [accountId, now],
   );
-  await sql.query("insert into connection_tokens (token_hash, connection_id, kind, created_at, expires_at) values ($1, $2, 'access', $3::timestamptz, $3::timestamptz)", [
-    hex64(`token-${email}`),
-    connection!.id,
-    now,
-  ]);
+  await sql.query(
+    "insert into connection_tokens (token_hash, connection_id, kind, created_at, expires_at) values ($1, $2, 'access', $3::timestamptz, $3::timestamptz)",
+    [hex64(`token-${email}`), connection!.id, now],
+  );
   await sql.query(
     `insert into oauth_authorizations (client_id, redirect_uri, code_challenge, scope, created_at, expires_at, account_id, decided_at, approved)
      values ('claude', 'https://claude.ai/cb', $1, 'overviews:read', $2::timestamptz, $2::timestamptz, $3, $2::timestamptz, true)`,
     ["a".repeat(43), now, accountId],
   );
-  await sql.query("insert into email_changes (account_id, old_email, new_email, expires_at) values ($1, $2, 'next@example.org', $3::timestamptz)", [
-    accountId,
-    email,
-    now,
-  ]);
+  await sql.query(
+    "insert into email_changes (account_id, old_email, new_email, expires_at) values ($1, $2, 'next@example.org', $3::timestamptz)",
+    [accountId, email, now],
+  );
   const [row] = await sql.query<{ id: string }>("select id from sessions where account_id = $1 limit 1", [accountId]);
   await sql.query("insert into session_verifications (session_id, code_hash, expires_at) values ($1, $2, $3::timestamptz)", [
     row!.id,
@@ -188,18 +189,33 @@ test("a fresh session deletes everything under the account, leaves the shared ca
   await seedEverything(loggedApp, bystander, OTHER, hex64("theirs"));
   const { account_deletions: none, ...before } = await rowsNamingAccount(loggedApp, session.accountId);
   assert.equal(none, 0);
-  assert.ok(Object.values(before).every((count) => count > 0), JSON.stringify(before));
+  assert.ok(
+    Object.values(before).every((count) => count > 0),
+    JSON.stringify(before),
+  );
 
   const deleted = await deleteAccount(loggedApp, session);
   assert.equal(deleted.statusCode, 204, deleted.body);
 
   const after = await rowsNamingAccount(loggedApp, session.accountId);
-  const kept = Object.entries(after).filter(([, count]) => count > 0).map(([table]) => table);
+  const kept = Object.entries(after)
+    .filter(([, count]) => count > 0)
+    .map(([table]) => table);
   assert.deepEqual(kept.sort(), ["account_deletions", "transcript_contributions"]);
   assert.equal((await loggedApp.sql.query("select 1 from shared_transcripts where video_id = $1", [VIDEO])).length, 1);
   assert.equal((await loggedApp.sql.query("select 1 from magic_links where email = $1", [EMAIL])).length, 0);
-  assert.equal((await loggedApp.sql.query("select 1 from service_transcript_usage where caller = $1", [`account:${session.accountId}`])).length, 0);
-  assert.equal((await loggedApp.sql.query("select 1 from session_verifications sv join sessions s on s.id = sv.session_id where s.account_id = $1", [session.accountId])).length, 0);
+  assert.equal(
+    (await loggedApp.sql.query("select 1 from service_transcript_usage where caller = $1", [`account:${session.accountId}`])).length,
+    0,
+  );
+  assert.equal(
+    (
+      await loggedApp.sql.query("select 1 from session_verifications sv join sessions s on s.id = sv.session_id where s.account_id = $1", [
+        session.accountId,
+      ])
+    ).length,
+    0,
+  );
   assert.equal(await loggedApp.audioStore.get(key), null);
   assert.equal((await loggedApp.app.inject({ method: "GET", url: `/s/${SHARE_TOKEN}` })).statusCode, 404);
   assert.deepEqual(loggedApp.personEraser.erased, [session.accountId, ANONYMOUS_ID]);
@@ -208,16 +224,29 @@ test("a fresh session deletes everything under the account, leaves the shared ca
   assert.equal((await loggedApp.app.inject({ method: "GET", url: "/api/session", headers: bystander.headers })).statusCode, 200);
   const { account_deletions: theirsNone, ...theirs } = await rowsNamingAccount(loggedApp, bystander.accountId);
   assert.equal(theirsNone, 0);
-  assert.ok(Object.values(theirs).every((count) => count > 0), JSON.stringify(theirs));
+  assert.ok(
+    Object.values(theirs).every((count) => count > 0),
+    JSON.stringify(theirs),
+  );
   assert.notEqual(await loggedApp.audioStore.get(hex64("theirs")), null);
 
   const [record] = await new AccountDeletionsRepository(loggedApp.sql).listUnfinished();
   assert.equal(record, undefined);
-  const [row] = await loggedApp.sql.query<{ narration_status: string; posthog_account_status: string; posthog_anonymous_status: string; anonymous_id: string }>(
+  const [row] = await loggedApp.sql.query<{
+    narration_status: string;
+    posthog_account_status: string;
+    posthog_anonymous_status: string;
+    anonymous_id: string;
+  }>(
     "select narration_status, posthog_account_status, posthog_anonymous_status, anonymous_id from account_deletions where account_id = $1",
     [session.accountId],
   );
-  assert.deepEqual(row, { narration_status: "done", posthog_account_status: "queued", posthog_anonymous_status: "queued", anonymous_id: ANONYMOUS_ID });
+  assert.deepEqual(row, {
+    narration_status: "done",
+    posthog_account_status: "queued",
+    posthog_anonymous_status: "queued",
+    anonymous_id: ANONYMOUS_ID,
+  });
 
   const line = lines.find((entry) => entry.msg === "account deleted")!;
   assert.ok(line, "the deletion is logged");
@@ -282,7 +311,12 @@ test("an account with no narration and no linked anonymous id records those step
 test("a revert link for an account that was deleted since is refused, and the address is free to start again", async () => {
   const testApp = await createTestApp();
   const session = await makeSession(testApp.sql, { email: EMAIL, now: testApp.clock.now });
-  await testApp.app.inject({ method: "POST", url: "/api/session/email-change", headers: session.headers, payload: { email: "next@example.org" } });
+  await testApp.app.inject({
+    method: "POST",
+    url: "/api/session/email-change",
+    headers: session.headers,
+    payload: { email: "next@example.org" },
+  });
   await testApp.app.inject({
     method: "POST",
     url: "/api/session/email-change/confirm",

@@ -25,19 +25,13 @@ test("a model's runs are counted by outcome, with latency taken from the ones th
   );
 
   assert.equal(summary?.name, "anthropic:claude-opus-5-5");
-  assert.deepEqual(
-    [summary?.runs, summary?.passedFirst, summary?.passedAfterRetry, summary?.failed, summary?.errored],
-    [4, 1, 1, 1, 1],
-  );
+  assert.deepEqual([summary?.runs, summary?.passedFirst, summary?.passedAfterRetry, summary?.failed, summary?.errored], [4, 1, 1, 1, 1]);
   assert.equal(summary?.medianLatencyMs, 4000);
 });
 
 test("cost per twenty minutes weighs what was spent by how much video it covered", () => {
   const [summary] = summariseRuns(
-    [
-      makeRunRecord({ videoId: "ten", costDollars: 0.02 }),
-      makeRunRecord({ videoId: "thirty", costDollars: 0.1 }),
-    ],
+    [makeRunRecord({ videoId: "ten", costDollars: 0.02 }), makeRunRecord({ videoId: "thirty", costDollars: 0.1 })],
     transcripts,
   );
 

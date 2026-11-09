@@ -25,8 +25,7 @@ export interface TopicLineProps {
 // view-transition-name, which makes it the containing block every fixed descendant
 // resolves against. The sheet therefore leaves the subtree; the popover, positioned
 // against the line itself, does not (docs/features/topic-filing.md).
-const sheet = (isPhone: boolean, content: ReactNode) =>
-  isPhone ? createPortal(content, document.body) : content;
+const sheet = (isPhone: boolean, content: ReactNode) => (isPhone ? createPortal(content, document.body) : content);
 
 // Design 14a/14b/14c: reading, this is the topics the overview is in and nothing else. The
 // editing half is disclosed by the picker, so the line is editable exactly while the picker
@@ -58,9 +57,7 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
     else analytics.topics.added({ topicId });
     setOverviewTopics.mutate({
       overview,
-      topicIds: overview.topicIds.includes(topicId)
-        ? overview.topicIds.filter((id) => id !== topicId)
-        : [...overview.topicIds, topicId],
+      topicIds: overview.topicIds.includes(topicId) ? overview.topicIds.filter((id) => id !== topicId) : [...overview.topicIds, topicId],
     });
   };
 
@@ -71,11 +68,7 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
   return (
     <span className={styles.root} ref={root} data-testid={topicLineTestIds.root}>
       {selected.map((topic) => (
-        <span
-          key={topic.id}
-          className={`${styles.chip} ${editing ? styles.chipEditing : ""}`}
-          data-testid={topicLineTestIds.chip}
-        >
+        <span key={topic.id} className={`${styles.chip} ${editing ? styles.chipEditing : ""}`} data-testid={topicLineTestIds.chip}>
           {topic.name}
           {editing && (
             <button
@@ -93,24 +86,13 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
 
       {editing && (
         <>
-          <button
-            type="button"
-            className={styles.add}
-            onClick={close}
-            aria-expanded={true}
-            data-testid={topicLineTestIds.addButton}
-          >
+          <button type="button" className={styles.add} onClick={close} aria-expanded={true} data-testid={topicLineTestIds.addButton}>
             <StrokeIcon name="plus" size={12} /> Add
           </button>
           {sheet(
             isPhone,
             <>
-              <span
-                className={styles.scrim}
-                onClick={close}
-                aria-hidden="true"
-                data-testid={topicLineTestIds.scrim}
-              />
+              <span className={styles.scrim} onClick={close} aria-hidden="true" data-testid={topicLineTestIds.scrim} />
               <TopicPicker
                 ref={picker}
                 topics={topics}

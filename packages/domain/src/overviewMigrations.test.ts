@@ -23,14 +23,8 @@ test("the registry is a contiguous chain from the first version", () => {
 
 test("registering a migration without its corpus records fails here rather than in a user's library", () => {
   for (const migration of OVERVIEW_MIGRATIONS) {
-    assert.ok(
-      OVERVIEW_CORPUS.has(migration.newSchemaVersion - 1),
-      `version ${migration.newSchemaVersion - 1} has no corpus record`,
-    );
-    assert.ok(
-      OVERVIEW_CORPUS.has(migration.newSchemaVersion),
-      `version ${migration.newSchemaVersion} has no corpus record`,
-    );
+    assert.ok(OVERVIEW_CORPUS.has(migration.newSchemaVersion - 1), `version ${migration.newSchemaVersion - 1} has no corpus record`);
+    assert.ok(OVERVIEW_CORPUS.has(migration.newSchemaVersion), `version ${migration.newSchemaVersion} has no corpus record`);
   }
   assert.deepEqual(
     [...OVERVIEW_CORPUS.keys()].sort((a, b) => a - b),
@@ -49,10 +43,7 @@ test("each migration turns the corpus record below it into the corpus record at 
 });
 
 test("the whole chain carries the oldest record to the current one", () => {
-  assert.deepEqual(
-    migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS),
-    corpusAt(CURRENT_OVERVIEW_SCHEMA_VERSION),
-  );
+  assert.deepEqual(migrateRecord(corpusAt(FIRST_SCHEMA_VERSION), OVERVIEW_MIGRATIONS), corpusAt(CURRENT_OVERVIEW_SCHEMA_VERSION));
 });
 
 test("the record at the current version is an Overview", () => {
@@ -70,10 +61,7 @@ test("parsing removes the version again, so domain code never sees it", () => {
 
 test("a migration refuses a record that is not at exactly the version below it", () => {
   for (const migration of OVERVIEW_MIGRATIONS) {
-    assert.throws(
-      () => applyRecordMigration(corpusAt(migration.newSchemaVersion), migration),
-      RecordMigrationError,
-    );
+    assert.throws(() => applyRecordMigration(corpusAt(migration.newSchemaVersion), migration), RecordMigrationError);
   }
 });
 

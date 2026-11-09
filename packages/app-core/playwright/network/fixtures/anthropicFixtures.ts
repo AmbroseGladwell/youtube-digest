@@ -32,7 +32,8 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     watchAnyway: {
       answer: "partial",
       reason: "Only the fixture's second segment is worth watching directly.",
-      startSegmentIndex: 0, endSegmentIndex: 1,
+      startSegmentIndex: 0,
+      endSegmentIndex: 1,
     },
     ...overrides,
   };

@@ -9,8 +9,7 @@ const READER_TEXT = "A sentence only the reader wrote";
 
 const linesSaying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
 
-const overviewWithText = () =>
-  storedOverview({ inOneLine: READER_TEXT, coreClaim: READER_TEXT, captureReason: READER_TEXT });
+const overviewWithText = () => storedOverview({ inOneLine: READER_TEXT, coreClaim: READER_TEXT, captureReason: READER_TEXT });
 
 test("a write is logged at info by kind, id, rev and seq, under its request's id, and never with the record's text", async () => {
   const { lines, logger } = recordingLogger();
@@ -50,7 +49,10 @@ test("a delete is logged as a deleted write, and its retry as already deleted", 
     ],
   );
   const [again] = linesSaying(lines, "record already deleted");
-  assert.deepEqual({ level: again!.level, kind: again!.kind, id: again!.id }, { level: LOG_LEVELS.info, kind: "overview", id: overview.id });
+  assert.deepEqual(
+    { level: again!.level, kind: again!.kind, id: again!.id },
+    { level: LOG_LEVELS.info, kind: "overview", id: overview.id },
+  );
   await testApp.close();
 });
 

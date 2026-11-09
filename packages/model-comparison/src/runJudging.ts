@@ -89,9 +89,7 @@ export async function runJudging(options: RunJudgingOptions): Promise<SpendOutco
     byJudge.set(judge, [...(byJudge.get(judge) ?? []), () => options.judgePair({ ...pair, keys: options.keys })]);
   }
 
-  const usable = new Set(
-    runnableModels([...byJudge.keys()].map(parseComparedModel), options.keys, options.log).map(comparedModelName),
-  );
+  const usable = new Set(runnableModels([...byJudge.keys()].map(parseComparedModel), options.keys, options.log).map(comparedModelName));
   const outcome = await spendWithinBudget({
     lanes: [...byJudge].filter(([judge]) => usable.has(judge)).map(([, tasks]) => tasks),
     budgetDollars: options.budgetDollars,

@@ -15,9 +15,7 @@ describe("blockParts", () => {
   });
 
   it("leaves no empty part when a hit opens or closes the text", () => {
-    expect(blockParts("hit", [{ index: 0, blockIndex: 0, start: 0, end: 3 }])).toEqual([
-      { text: "hit", match: 0 },
-    ]);
+    expect(blockParts("hit", [{ index: 0, blockIndex: 0, start: 0, end: 3 }])).toEqual([{ text: "hit", match: 0 }]);
   });
 
   it("carries each hit's own number through, not its place in this block", () => {

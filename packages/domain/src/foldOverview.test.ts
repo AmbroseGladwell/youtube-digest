@@ -12,10 +12,7 @@ test("topics and tags are a union with the winner's first, and the capture reaso
 });
 
 test("a winner's capture reason is kept over the loser's", () => {
-  const folded = foldFiling(
-    { topicIds: [], tags: [], captureReason: "Mine" },
-    { topicIds: [], tags: [], captureReason: "Theirs" },
-  );
+  const folded = foldFiling({ topicIds: [], tags: [], captureReason: "Mine" }, { topicIds: [], tags: [], captureReason: "Theirs" });
 
   assert.equal(folded.captureReason, "Mine");
 });

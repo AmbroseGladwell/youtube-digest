@@ -10,5 +10,4 @@ export const connectionRequestQueryOptions = (requestId: string, api: Connection
     enabled: api !== null,
   });
 
-export const useConnectionRequestQuery = (requestId: string) =>
-  useQuery(connectionRequestQueryOptions(requestId, useConnectionsApi()));
+export const useConnectionRequestQuery = (requestId: string) => useQuery(connectionRequestQueryOptions(requestId, useConnectionsApi()));

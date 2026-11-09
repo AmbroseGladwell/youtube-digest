@@ -4,16 +4,12 @@
 // cannot drop it and this rule has to (docs/features/transcript-retrieval.md).
 const RULE_ID = 1;
 
-export const youTubeOriginRule = (
-  extensionId: string,
-): chrome.declarativeNetRequest.Rule => ({
+export const youTubeOriginRule = (extensionId: string): chrome.declarativeNetRequest.Rule => ({
   id: RULE_ID,
   priority: 1,
   action: {
     type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
-    requestHeaders: [
-      { header: "origin", operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE },
-    ],
+    requestHeaders: [{ header: "origin", operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE }],
   },
   // Scoped twice over: only requests this extension makes, and only to YouTube. It must
   // not reach the panel's calls to a provider, which carry the reader's key.

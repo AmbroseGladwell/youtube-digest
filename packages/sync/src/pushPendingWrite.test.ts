@@ -39,7 +39,10 @@ test("a whole-record write the server already holds is retried once with the rev
   const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
 
   assert.equal(outcome.result, "written");
-  assert.deepEqual(api.callsTo("createOverview").map((call) => call.args[1]), [null, 7]);
+  assert.deepEqual(
+    api.callsTo("createOverview").map((call) => call.args[1]),
+    [null, 7],
+  );
 });
 
 test("a whole-record write that keeps losing the revision race is parked rather than retried forever", async () => {
@@ -59,7 +62,12 @@ test("each field write goes to its own route with the date of the local write", 
   await pushPendingWrite(api, entry({ change: { op: "captureReason", captureReason: "why" } }), null, storage);
   await pushPendingWrite(api, entry({ change: { op: "tags", tags: ["saas"] } }), null, storage);
   await pushPendingWrite(api, entry({ kind: "overviewState", change: { op: "state", patch: { read: true } } }), null, storage);
-  await pushPendingWrite(api, entry({ kind: "settings", id: "settings", change: { op: "settings", patch: { readerContext: "me" } } }), null, storage);
+  await pushPendingWrite(
+    api,
+    entry({ kind: "settings", id: "settings", change: { op: "settings", patch: { readerContext: "me" } } }),
+    null,
+    storage,
+  );
 
   assert.deepEqual(api.calls, [
     { method: "setOverviewTopics", args: ["a", ["t"], AT] },
@@ -97,7 +105,12 @@ test("a write the server refuses for what it is gets parked with the server's re
   const api = new ScriptedSyncApi();
   api.failAlways("setOverviewState", { code: "record_newer_than_client" });
 
-  const outcome = await pushPendingWrite(api, entry({ kind: "overviewState", change: { op: "state", patch: { read: true } } }), null, storage);
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "overviewState", change: { op: "state", patch: { read: true } } }),
+    null,
+    storage,
+  );
 
   assert.equal(outcome.result, "stuck");
   assert.equal(outcome.result === "stuck" && outcome.failure.code, "record_newer_than_client");
@@ -114,7 +127,12 @@ test("no network, no session, an unsupported client, a server failure and a thro
   for (const [failure, reason] of cases) {
     const api = new ScriptedSyncApi();
     api.failAlways("setOverviewState", failure);
-    const outcome = await pushPendingWrite(api, entry({ kind: "overviewState", change: { op: "state", patch: { read: true } } }), null, storage);
+    const outcome = await pushPendingWrite(
+      api,
+      entry({ kind: "overviewState", change: { op: "state", patch: { read: true } } }),
+      null,
+      storage,
+    );
     assert.equal(outcome.result, "stopped");
     assert.equal(outcome.result === "stopped" && outcome.reason, reason);
   }
@@ -217,7 +235,10 @@ test("a followed playlist goes to POST /followed-playlists with the revision thi
   );
 
   assert.equal(outcome.result, "written");
-  assert.deepEqual(api.callsTo("saveFollowedPlaylist").map((call) => call.args[1]), [null, 3]);
+  assert.deepEqual(
+    api.callsTo("saveFollowedPlaylist").map((call) => call.args[1]),
+    [null, 3],
+  );
   assert.deepEqual(api.callsTo("createOverview"), []);
 });
 
@@ -252,11 +273,14 @@ test("a new overview the server holds no reservation for reserves a slot and goe
   const outcome = await pushPendingWrite(api, entry({ change: { op: "replace", record: { id: "a" } } }), null, storage);
 
   assert.deepEqual(outcome, { result: "written", rev: 1 });
-  assert.deepEqual(api.calls.map((call) => [call.method, call.args[0]]), [
-    ["createOverview", { id: "a" }],
-    ["reserveOverview", "a"],
-    ["createOverview", { id: "a" }],
-  ]);
+  assert.deepEqual(
+    api.calls.map((call) => [call.method, call.args[0]]),
+    [
+      ["createOverview", { id: "a" }],
+      ["reserveOverview", "a"],
+      ["createOverview", { id: "a" }],
+    ],
+  );
 });
 
 for (const quota of ["own", "ours"]) {

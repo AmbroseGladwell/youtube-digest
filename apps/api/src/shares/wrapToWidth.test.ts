@@ -6,9 +6,7 @@ import { wrapToWidth } from "./wrapToWidth.js";
 const measure = (line: string) => line.length;
 
 test("a title that fits stays on one line", () => {
-  assert.deepEqual(wrapToWidth({ text: "Nuclear baseload", maxWidth: 20, maxLines: 3, measure }), [
-    "Nuclear baseload",
-  ]);
+  assert.deepEqual(wrapToWidth({ text: "Nuclear baseload", maxWidth: 20, maxLines: 3, measure }), ["Nuclear baseload"]);
 });
 
 test("a title too wide breaks between words, never inside one", () => {
@@ -26,9 +24,7 @@ test("what will not fit in the lines there are ends in an ellipsis rather than b
 });
 
 test("a single word wider than the line overhangs rather than being chopped mid-word", () => {
-  assert.deepEqual(wrapToWidth({ text: "Unmaintainability", maxWidth: 5, maxLines: 2, measure }), [
-    "Unmaintainability",
-  ]);
+  assert.deepEqual(wrapToWidth({ text: "Unmaintainability", maxWidth: 5, maxLines: 2, measure }), ["Unmaintainability"]);
 });
 
 test("runs of whitespace are one break, and an empty title is no lines at all", () => {

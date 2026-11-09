@@ -61,10 +61,7 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
 
   if (editing) {
     return (
-      <label
-        className={`${styles.root} ${compact ? styles.rootCompact : ""}`}
-        data-testid={captureReasonLineTestIds.editor}
-      >
+      <label className={`${styles.root} ${compact ? styles.rootCompact : ""}`} data-testid={captureReasonLineTestIds.editor}>
         <span className={styles.label}>What are you hoping to take away?</span>
         <input
           ref={input}
@@ -87,21 +84,11 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
           >
             Save
           </button>
-          <button
-            type="button"
-            className={styles.cancel}
-            onClick={cancel}
-            data-testid={captureReasonLineTestIds.cancelButton}
-          >
+          <button type="button" className={styles.cancel} onClick={cancel} data-testid={captureReasonLineTestIds.cancelButton}>
             Cancel
           </button>
           {overview.captureReason !== null && (
-            <button
-              type="button"
-              className={styles.remove}
-              onClick={() => save(null)}
-              data-testid={captureReasonLineTestIds.removeButton}
-            >
+            <button type="button" className={styles.remove} onClick={() => save(null)} data-testid={captureReasonLineTestIds.removeButton}>
               {compact ? "Remove" : "Remove reason"}
             </button>
           )}
@@ -115,10 +102,7 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
   }
 
   return (
-    <div
-      className={`${styles.root} ${compact ? styles.rootCompact : ""}`}
-      data-testid={captureReasonLineTestIds.root}
-    >
+    <div className={`${styles.root} ${compact ? styles.rootCompact : ""}`} data-testid={captureReasonLineTestIds.root}>
       <span className={styles.label}>You wanted to know</span>
       <span className={styles.reason} data-testid={captureReasonLineTestIds.reason}>
         {overview.captureReason}

@@ -68,7 +68,10 @@ export const serviceTranscriptSource = (api: ServiceTranscriptApi): TranscriptSo
   cost: "metered",
   isReady: () =>
     Promise.race([
-      api.status().then((status) => status.available, () => false),
+      api.status().then(
+        (status) => status.available,
+        () => false,
+      ),
       new Promise<boolean>((resolve) => setTimeout(() => resolve(false), STATUS_TIMEOUT_MS)),
     ]),
   resolve: async (url) => {

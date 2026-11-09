@@ -21,8 +21,7 @@ export function followedPlaylistRoutes(app: FastifyInstance, records: RecordsRep
       {
         kind: "followedPlaylist",
         id,
-        decide: (current) =>
-          decideReplace("followedPlaylist", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!),
+        decide: (current) => decideReplace("followedPlaylist", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!),
       },
     ]);
     return sendWritten(reply, written!, ifMatch === null ? 201 : 200);

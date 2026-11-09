@@ -32,6 +32,5 @@ export const DEFAULT_CAPTION_CLIENTS: readonly InnerTubeClientConfig[] = [
 export const DEFAULT_METADATA_CLIENT: InnerTubeClientConfig = {
   clientName: "WEB",
   clientVersion: "2.20260306.01.00",
-  userAgent:
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 };

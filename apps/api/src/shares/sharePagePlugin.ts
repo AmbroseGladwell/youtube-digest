@@ -85,7 +85,10 @@ export async function sharePagePlugin(app: FastifyInstance, options: SharePagePl
     const token = tokenOf(request);
     const found = token === null ? null : await shares.peek(token);
     if (found === null || found === "revoked") {
-      return reply.status(GONE[found === null ? "unknown" : "revoked"].status).header("cache-control", "no-store").send();
+      return reply
+        .status(GONE[found === null ? "unknown" : "revoked"].status)
+        .header("cache-control", "no-store")
+        .send();
     }
     return reply
       .header("content-type", "image/png")
@@ -99,7 +102,10 @@ export async function sharePagePlugin(app: FastifyInstance, options: SharePagePl
     const token = tokenOf(request);
     const found = token === null ? null : await shares.peek(token);
     if (found === null || found === "revoked") {
-      return reply.status(GONE[found === null ? "unknown" : "revoked"].status).header("cache-control", "no-store").send();
+      return reply
+        .status(GONE[found === null ? "unknown" : "revoked"].status)
+        .header("cache-control", "no-store")
+        .send();
     }
     const { narration } = found.snapshot;
     if (narration === null) {

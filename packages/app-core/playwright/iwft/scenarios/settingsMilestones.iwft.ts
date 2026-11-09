@@ -4,10 +4,7 @@ import { test } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
-import {
-  makeOverview,
-  makeOverviewState,
-} from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const PHONE = { width: 390, height: 800 };
 const SIGNED_IN = {
@@ -117,10 +114,7 @@ test("on a phone the section is its own page from the list", async ({ page, laun
   await settings.milestones.verifyCardPillReads("5 hours saved · 14 Sep");
 });
 
-test("turning the cards off hides the library's card, and the account keeps it off", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("turning the cards off hides the library's card, and the account keeps it off", async ({ launcher, backendSimulator }) => {
   seedRead(backendSimulator, 40);
   const library = await launcher.launchExpectingLibrary({
     milestones: { "30m": { crossedAt: hoursAgo(1), dismissedAt: null } },
@@ -160,10 +154,7 @@ test("with the cards turned off on the account, a milestone crossed today shows 
   await milestones.verifyTileState("30m", "reached");
 });
 
-test("opening the section, picking a milestone and switching the cards are counted", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening the section, picking a milestone and switching the cards are counted", async ({ launcher, backendSimulator }) => {
   seedRead(backendSimulator, NINE_HOURS_47);
   await launcher.launch({ ...SIGNED_IN, milestones: REACHED });
   const settings = await launcher.appShell.openSettings();

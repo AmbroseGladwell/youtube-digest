@@ -19,9 +19,13 @@ export interface SourceOfferProps {
 // only what the tab says: we promise not to read a page until then, and a video's length
 // is not drawn here either.
 export function SourceOffer({ source, title, words = null, recipe = null, video = false }: SourceOfferProps) {
-  const facts = video ? null : recipe !== null ? recipeCounts(recipe, " · ") : words !== null
-    ? `${words.toLocaleString("en-GB")} words · ${articleReadMinutes(words)} min read`
-    : null;
+  const facts = video
+    ? null
+    : recipe !== null
+      ? recipeCounts(recipe, " · ")
+      : words !== null
+        ? `${words.toLocaleString("en-GB")} words · ${articleReadMinutes(words)} min read`
+        : null;
 
   return (
     <div className={styles.card} data-testid={sourceOfferTestIds.card}>

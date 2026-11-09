@@ -28,12 +28,17 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
     case "held":
       if (strip.hold.reason === "monthSpent") {
         return {
-          title: compact ? `Queue waiting · ${strip.waiting.toLocaleString("en-GB")}` : `Queue waiting · ${pluralise(strip.waiting, "video", "videos")}`,
+          title: compact
+            ? `Queue waiting · ${strip.waiting.toLocaleString("en-GB")}`
+            : `Queue waiting · ${pluralise(strip.waiting, "video", "videos")}`,
           meta: monthHoldStripMeta(strip.hold, strip.limit, compact),
         };
       }
       return compact
-        ? { title: `Waiting · ${strip.waiting.toLocaleString("en-GB")} continue after ${resumeTimeText(new Date(strip.hold.resumesAt))}`, meta: null }
+        ? {
+            title: `Waiting · ${strip.waiting.toLocaleString("en-GB")} continue after ${resumeTimeText(new Date(strip.hold.resumesAt))}`,
+            meta: null,
+          }
         : { title: "Waiting for our server", meta: queueHoldStripMeta(strip.hold, strip.waiting, strip.viaExtension) };
     case "checked":
       return {

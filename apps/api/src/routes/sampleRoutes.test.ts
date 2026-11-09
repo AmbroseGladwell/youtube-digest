@@ -52,7 +52,10 @@ test("a sample that isn't a live share is left out, not offered broken", async (
 
   const { samples }: Samples = (await signedOut(app, "/api/samples")).json();
 
-  assert.deepEqual(samples.map(({ token }) => token), [VIDEO]);
+  assert.deepEqual(
+    samples.map(({ token }) => token),
+    [VIDEO],
+  );
   await app.close();
 });
 

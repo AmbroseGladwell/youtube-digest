@@ -271,8 +271,8 @@ export function CapturePage() {
 
         {offeredPage !== null && alreadyHeld === null && keysReady && limit === null && pageAccess === false && (
           <p className={styles.note} data-testid={capturePageTestIds.firstTimeNote}>
-            First time on {domainOf(offeredPage.url)}. Chrome will ask once whether we can read this site. We only read a page
-            when you press Create.
+            First time on {domainOf(offeredPage.url)}. Chrome will ask once whether we can read this site. We only read a page when you
+            press Create.
           </p>
         )}
 
@@ -297,7 +297,6 @@ export function CapturePage() {
             onUndo={milestones.undo}
           />
         </div>
-
       </div>
     </div>
   );
@@ -310,12 +309,7 @@ interface RunInProgressProps {
   onCaptureReasonCommit: () => void;
 }
 
-function RunInProgress({
-  run,
-  onDismiss,
-  onCaptureReasonChange,
-  onCaptureReasonCommit,
-}: RunInProgressProps) {
+function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonCommit }: RunInProgressProps) {
   const analytics = useAnalytics();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const failed = run.error !== null;
@@ -347,13 +341,7 @@ function RunInProgress({
 
       <GenerationSteps run={run} />
 
-      {!failed && (
-        <CaptureReasonField
-          value={run.captureReason}
-          onChange={onCaptureReasonChange}
-          onCommit={onCaptureReasonCommit}
-        />
-      )}
+      {!failed && <CaptureReasonField value={run.captureReason} onChange={onCaptureReasonChange} onCommit={onCaptureReasonCommit} />}
 
       {run.error !== null && (
         <RunErrorMessage

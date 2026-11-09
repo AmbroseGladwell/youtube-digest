@@ -14,7 +14,6 @@ import {
   overviewNoteCaptions,
   overviewNoteLines,
   overviewTimeSaved,
-  formatClock,
   recipeActions as actionsOf,
 } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";
@@ -90,8 +89,7 @@ import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
 const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 
-const madeOn = (savedAt: string) =>
-  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
+const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
@@ -317,7 +315,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       return <UnreadableOverview record={overviewQuery.error.record} />;
     }
     return (
-      <ErrorState screen="overviewLoad"
+      <ErrorState
+        screen="overviewLoad"
         title="Couldn't load this overview"
         error={overviewQuery.error}
         body="Something went wrong reading it. Nothing has been lost."
@@ -422,11 +421,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   return (
     <OverviewAnalyticsProvider value={overviewAnalytics}>
-      <article
-        className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
-        ref={tabsHeight.host}
-        data-testid={readerPageTestIds.root}
-      >
+      <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
         <ReaderMasthead
           overview={overview}
           metaParts={overviewMetaParts(overview)}
@@ -474,32 +469,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         )}
 
         {tabsShown.length > 1 && (
-          <ReaderTabs
-            active={tab}
-            tabId={tabId}
-            panelId={panelId}
-            onChange={changeTab}
-            tabs={tabsShown}
-            ref={tabsHeight.measured}
-          />
+          <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} tabs={tabsShown} ref={tabsHeight.measured} />
         )}
 
-        <div
-          key={tab}
-          className={`${styles.main} ${styles.panel}`}
-          role="tabpanel"
-          id={panelId(tab)}
-          aria-labelledby={tabId(tab)}
-        >
+        <div key={tab} className={`${styles.main} ${styles.panel}`} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
           {tab === "Overview" && (
             <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
               {recipeNote !== null && <RecipeTimes recipe={recipeNote.recipe} source={recipeNote.source} />}
-              <CaptureReasonLine
-                overview={overview}
-                editing={editingReason}
-                compact={isPanel}
-                onEditingChange={setEditingReason}
-              />
+              <CaptureReasonLine overview={overview} editing={editingReason} compact={isPanel} onEditingChange={setEditingReason} />
               {recipeCooking !== null && (
                 <RecipeCookButton
                   placeStep={recipeCooking.placeStep}
@@ -621,12 +598,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             />
           )}
           {tab === "Chapters" && video !== null && (
-            <ChaptersPanel
-              chapters={overview.chapters}
-              video={video}
-              onOpenTranscriptAt={openTranscriptAt}
-              steps={recipe?.steps ?? []}
-            />
+            <ChaptersPanel chapters={overview.chapters} video={video} onOpenTranscriptAt={openTranscriptAt} steps={recipe?.steps ?? []} />
           )}
           {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} onPage={onPage} />}
         </div>

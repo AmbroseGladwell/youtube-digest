@@ -11,13 +11,9 @@ const SIGNED_IN = {
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 // Every factory note takes a minute to read, so a video of n minutes saves n - 1.
-const lasting = (minutes: number) =>
-  makeOverview({ source: { ...makeOverview().source, durationMs: minutes * 60_000 } });
+const lasting = (minutes: number) => makeOverview({ source: { ...makeOverview().source, durationMs: minutes * 60_000 } });
 
-test("Mark read at the end of the note marks it read, agrees with the menu, and undoes", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Mark read at the end of the note marks it read, agrees with the menu, and undoes", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
   const library = await launcher.launchExpectingLibrary();
@@ -28,9 +24,7 @@ test("Mark read at the end of the note marks it read, agrees with the menu, and 
 
   await reader.verifyNoteEndReadButtonReads("Read");
   await reader.verifyIsRead(true);
-  await expect
-    .poll(async () => (await backendSimulator.overviews.getState(overview.id)).read)
-    .toBe(true);
+  await expect.poll(async () => (await backendSimulator.overviews.getState(overview.id)).read).toBe(true);
 
   await reader.clickNoteEndMarkRead();
 
@@ -38,10 +32,7 @@ test("Mark read at the end of the note marks it read, agrees with the menu, and 
   await reader.verifyIsRead(false);
 });
 
-test("the favourite at the end of the note and the one in the head are one state", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the favourite at the end of the note and the one in the head are one state", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
   const library = await launcher.launchExpectingLibrary();
@@ -51,19 +42,14 @@ test("the favourite at the end of the note and the one in the head are one state
 
   await reader.verifyNoteEndFavouriteIs(true);
   await reader.verifyIsFavourited(true);
-  await expect
-    .poll(async () => (await backendSimulator.overviews.getState(overview.id)).favourite)
-    .toBe(true);
+  await expect.poll(async () => (await backendSimulator.overviews.getState(overview.id)).favourite).toBe(true);
 
   await reader.clickFavourite();
 
   await reader.verifyNoteEndFavouriteIs(false);
 });
 
-test("what the reader does at the end of the note is counted as done from there", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("what the reader does at the end of the note is counted as done from there", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);

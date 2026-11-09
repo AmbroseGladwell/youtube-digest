@@ -13,9 +13,7 @@ export type GenerationClient = (request: {
 }) => Promise<unknown>;
 
 export function correctionRequest(previous: unknown, error: z.ZodError): string {
-  const violations = error.issues
-    .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
-    .join("; ");
+  const violations = error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("; ");
   return [
     "Your previous attempt was:",
     JSON.stringify(previous),
@@ -46,9 +44,7 @@ export async function requestGeneratedOutput<Output>(client: GenerationClient, p
   }
 
   if (!parsed.success) {
-    throw new SchemaFailureError(
-      `generated output still failed its own schema after a retry: ${parsed.error.message}`,
-    );
+    throw new SchemaFailureError(`generated output still failed its own schema after a retry: ${parsed.error.message}`);
   }
 
   return parsed.data as unknown as Output;

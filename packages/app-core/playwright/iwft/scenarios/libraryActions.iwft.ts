@@ -22,10 +22,7 @@ test("a row's Read along opens that note in the reader, and the back link return
   await reader.clickBackToLibrary();
 });
 
-test("the way in and the way back are marked as different journeys for the pane to animate", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the way in and the way back are marked as different journeys for the pane to animate", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   const library = await launcher.launchExpectingLibrary();
 
@@ -40,11 +37,7 @@ test("the way in and the way back are marked as different journeys for the pane 
 // shows one — so they have to lay out identically. They don't get there by the same route:
 // a hidden thumbnail is still the first child in the tree, so the selector that gives a
 // thumbnail-less row its own grid fires for one of them and not the other.
-test("on a phone a row drops its thumbnail, whether or not one was ever saved", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("on a phone a row drops its thumbnail, whether or not one was ever saved", async ({ launcher, backendSimulator, page }) => {
   const withThumbnail = makeOverview();
   backendSimulator.overviews.seed({
     ...withThumbnail,
@@ -69,10 +62,7 @@ test("on a phone a row drops its thumbnail, whether or not one was ever saved", 
 
 // The row and the note are one claim about the same overview, so they must not be able to
 // disagree — both read overviewMetaParts rather than estimating separately.
-test("a row prints its read, listen and video times, and the note it opens says the same", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a row prints its read, listen and video times, and the note it opens says the same", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
@@ -101,10 +91,7 @@ test("a row drops the length but keeps the kind when the source recorded no dura
   await library.nthCard(0).verifyMetaReads("1 min read · 1 min listen · Video");
 });
 
-test("a row's favourite and Read line up, and the note's favourite keeps the row's shape", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a row's favourite and Read line up, and the note's favourite keeps the row's shape", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
 
   const library = await launcher.launchExpectingLibrary();
@@ -140,10 +127,7 @@ test("a row rests on its tile, lifts under the pointer, and its text doesn't mov
   await row.verifyRestsWith(restingShadow);
 });
 
-test("the lift follows keyboard focus, so a row hunted by tab looks the same as one pointed at", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the lift follows keyboard focus, so a row hunted by tab looks the same as one pointed at", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-09-10T00:00:00.000Z" }));
 
@@ -156,20 +140,14 @@ test("the lift follows keyboard focus, so a row hunted by tab looks the same as 
   await library.nthCard(0).verifyRestsWith(restingShadow);
 });
 
-test("the row's title is the same way in to the reader as its Read along action", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the row's title is the same way in to the reader as its Read along action", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   const library = await launcher.launchExpectingLibrary();
 
   await library.nthCard(0).openReaderFromTitle();
 });
 
-test("favouriting a card is reflected immediately and actually written to the store", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("favouriting a card is reflected immediately and actually written to the store", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
   const library = await launcher.launchExpectingLibrary();
@@ -185,10 +163,7 @@ test("favouriting a card is reflected immediately and actually written to the st
   }).toPass();
 });
 
-test("marking a card read is reflected immediately and actually written to the store", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("marking a card read is reflected immediately and actually written to the store", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(overview);
   const library = await launcher.launchExpectingLibrary();
@@ -204,10 +179,7 @@ test("marking a card read is reflected immediately and actually written to the s
   }).toPass();
 });
 
-test("clicking a row's thumbnail opens the same reader its title does", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("clicking a row's thumbnail opens the same reader its title does", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
     ...overview,
@@ -238,10 +210,7 @@ test("a card with no thumbnail leaves the image slot out entirely", async ({ lau
 
 // Design 232a: a video is most of the library and names itself in the meta line, so only
 // the other kinds lead with a chip, and a recipe video's is a recipe's.
-test("every row but a video leads with its kind, and every row names it in the meta line", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("every row but a video leads with its kind, and every row names it in the meta line", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-11-09T00:00:00.000Z" }));
   backendSimulator.overviews.seed(makeArticleOverview({ savedAt: "2026-11-08T00:00:00.000Z" }));
   backendSimulator.overviews.seed(makeRecipeOverview({ savedAt: "2026-11-07T00:00:00.000Z" }));

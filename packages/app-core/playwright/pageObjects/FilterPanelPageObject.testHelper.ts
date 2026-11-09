@@ -51,9 +51,7 @@ export class FilterPanelPageObject extends PageObject {
   private tagGroup = () => this.page.getByRole("group", { name: "Filter by tag" });
 
   verifyListsTags = (rows: string[]) =>
-    this.step(`verifyListsTags ${rows.join(", ")}`, () =>
-      expect(this.tagGroup().getByRole("button")).toHaveText(rows),
-    );
+    this.step(`verifyListsTags ${rows.join(", ")}`, () => expect(this.tagGroup().getByRole("button")).toHaveText(rows));
 
   verifyOffersNoTags = () => this.step("verifyOffersNoTags", () => expect(this.tagGroup()).toHaveCount(0));
 
@@ -73,43 +71,30 @@ export class FilterPanelPageObject extends PageObject {
       await expect(this.get(filterPanelTestIds.showAllTagsButton)).toHaveAttribute("aria-expanded", "true");
     });
 
-  clickStatusChip = (status: string) =>
-    this.step(`clickStatusChip ${status}`, () => this.click(filterPanelTestIds.statusChip(status)));
+  clickStatusChip = (status: string) => this.step(`clickStatusChip ${status}`, () => this.click(filterPanelTestIds.statusChip(status)));
 
   // By name rather than by id: a topic the reader has just accepted was minted by the
   // store, so the test never learns its id.
   verifyOffersTopic = (name: string) =>
-    this.step(`verifyOffersTopic ${name}`, () =>
-      expect(this.topicGroup().getByText(name, { exact: true })).toBeVisible(),
-    );
+    this.step(`verifyOffersTopic ${name}`, () => expect(this.topicGroup().getByText(name, { exact: true })).toBeVisible());
 
-  verifyOffersNoTopics = () =>
-    this.step("verifyOffersNoTopics", () => expect(this.topicGroup()).toHaveCount(0));
+  verifyOffersNoTopics = () => this.step("verifyOffersNoTopics", () => expect(this.topicGroup()).toHaveCount(0));
 
   private topicGroup = () => this.page.getByRole("group", { name: "Filter by topic" });
 
   verifyListsTopics = (names: string[]) =>
     this.step(`verifyListsTopics ${names.join(", ")}`, () =>
-      expect(this.topicGroup().getByRole("button").filter({ hasNotText: "All topics" })).toHaveText(
-        names.map((name) => new RegExp(name)),
-      ),
+      expect(this.topicGroup().getByRole("button").filter({ hasNotText: "All topics" })).toHaveText(names.map((name) => new RegExp(name))),
     );
 
-  clickShowAllTopics = () =>
-    this.step("clickShowAllTopics", () => this.click(filterPanelTestIds.showAllTopicsButton));
+  clickShowAllTopics = () => this.step("clickShowAllTopics", () => this.click(filterPanelTestIds.showAllTopicsButton));
 
   verifyShowAllReads = (label: string) =>
-    this.step(`verifyShowAllReads ${label}`, () =>
-      expect(this.get(filterPanelTestIds.showAllTopicsButton)).toHaveText(label),
-    );
+    this.step(`verifyShowAllReads ${label}`, () => expect(this.get(filterPanelTestIds.showAllTopicsButton)).toHaveText(label));
 
-  verifyOffersNoShowAll = () =>
-    this.step("verifyOffersNoShowAll", () =>
-      this.expectNotToBeVisible(filterPanelTestIds.showAllTopicsButton),
-    );
+  verifyOffersNoShowAll = () => this.step("verifyOffersNoShowAll", () => this.expectNotToBeVisible(filterPanelTestIds.showAllTopicsButton));
 
   clickNewTopic = () => this.step("clickNewTopic", () => this.click(filterPanelTestIds.newTopicButton));
 
-  clickTopicChip = (topicId: string) =>
-    this.step(`clickTopicChip ${topicId}`, () => this.click(filterPanelTestIds.topicChip(topicId)));
+  clickTopicChip = (topicId: string) => this.step(`clickTopicChip ${topicId}`, () => this.click(filterPanelTestIds.topicChip(topicId)));
 }

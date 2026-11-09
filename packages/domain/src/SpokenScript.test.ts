@@ -6,7 +6,14 @@ import { MAX_SPOKEN_SCRIPT_CHARACTERS, SpokenScript, spokenLines, spokenScript }
 
 test("speaks every note line in order, headings included, so a timing's index is a line's", () => {
   const overview = makeOverview({
-    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard advice.", similarTo: [] },
+    verdict: {
+      novelty: "common_knowledge",
+      standsOut: null,
+      dubious: false,
+      dubiousClaims: [],
+      reasoning: "Standard advice.",
+      similarTo: [],
+    },
     howToApply: { items: ["Do the thing."] },
   });
 
@@ -46,7 +53,14 @@ test("passes over a line shown but not spoken with an empty entry rather than dr
 
 test("speaks the Verdict heading without the novelty set beside it", () => {
   const overview = makeOverview({
-    verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard advice.", similarTo: [] },
+    verdict: {
+      novelty: "common_knowledge",
+      standsOut: null,
+      dubious: false,
+      dubiousClaims: [],
+      reasoning: "Standard advice.",
+      similarTo: [],
+    },
   });
 
   const script = spokenScript(overview);

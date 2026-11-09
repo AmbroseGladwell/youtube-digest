@@ -18,9 +18,7 @@ export const CoreFields = z.object({
       (s) => wordCount(s) <= IN_ONE_LINE_MAX_WORDS,
       `docs/features/overview-generation-decisions.md: max ${IN_ONE_LINE_MAX_WORDS} words`,
     ),
-  coreClaim: z
-    .string()
-    .refine((s) => wordCount(s) <= 60, "docs/features/overview-generation-decisions.md: max 60 words"),
+  coreClaim: z.string().refine((s) => wordCount(s) <= 60, "docs/features/overview-generation-decisions.md: max 60 words"),
   // Gates Verdict — see Overview.ts's cross-field check and docs/features/overview-generation-decisions.md.
   thin: z.boolean(),
   keyPoints: z.array(KeyPoint).min(3).max(7),

@@ -13,10 +13,7 @@ const TOPICS = [topic("clean tech"), topic("nuclear"), topic("politics")];
 
 describe("topicMatches", () => {
   it("matches anywhere in the name, not only at the start", () => {
-    expect(topicMatches(TOPICS, "cl").map((match) => match.topic.name)).toEqual([
-      "clean tech",
-      "nuclear",
-    ]);
+    expect(topicMatches(TOPICS, "cl").map((match) => match.topic.name)).toEqual(["clean tech", "nuclear"]);
   });
 
   it("splits the name around the match, so the typed part can be marked", () => {

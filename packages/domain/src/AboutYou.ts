@@ -31,8 +31,7 @@ export const joinInProse = (parts: readonly string[]): string =>
 export const aboutYouSectionText = (section: AboutYouSection, entries: readonly string[]): string =>
   joinInProse(entries.map((entry) => withArticle(section, entry)));
 
-export const aboutYouIsEmpty = (aboutYou: AboutYou): boolean =>
-  ABOUT_YOU_SECTIONS.every((section) => aboutYou[section].length === 0);
+export const aboutYouIsEmpty = (aboutYou: AboutYou): boolean => ABOUT_YOU_SECTIONS.every((section) => aboutYou[section].length === 0);
 
 export interface AboutYouSentencePart {
   text: string;

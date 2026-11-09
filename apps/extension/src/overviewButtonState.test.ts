@@ -47,9 +47,7 @@ describe("overviewButtonState", () => {
   });
 
   it("ignores a run whose video is not resolved yet", () => {
-    expect(
-      overviewButtonState({ videoId: VIDEO_ID, report: reportOn(null), held: false }).kind,
-    ).toBe("idle");
+    expect(overviewButtonState({ videoId: VIDEO_ID, report: reportOn(null), held: false }).kind).toBe("idle");
   });
 
   it("is ready when the run it was watching finished", () => {

@@ -68,9 +68,7 @@ const moveToTheNewScaleAndTimedKeyPoints: RecordMigration = {
     return {
       ...record,
       ...(Array.isArray(keyPoints) ? { keyPoints: keyPoints.map((text) => ({ text, range: null })) } : {}),
-      ...(typeof verdict === "object" && verdict !== null
-        ? { verdict: { ...verdict, novelty: "common_knowledge", standsOut: null } }
-        : {}),
+      ...(typeof verdict === "object" && verdict !== null ? { verdict: { ...verdict, novelty: "common_knowledge", standsOut: null } } : {}),
     };
   },
 };

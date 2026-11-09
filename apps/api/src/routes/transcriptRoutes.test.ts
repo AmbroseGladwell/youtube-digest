@@ -115,10 +115,7 @@ test("a transcript filed under a different video than the path names is refused"
   const response = await account.inject({ method: "PUT", url: "/api/transcripts/another-video", body: transcript });
 
   assert.equal(response.json().error.code, "invalid_request");
-  assert.equal(
-    (await account.inject({ method: "GET", url: "/api/transcripts/another-video" })).json().error.code,
-    "not_found",
-  );
+  assert.equal((await account.inject({ method: "GET", url: "/api/transcripts/another-video" })).json().error.code, "not_found");
   await testApp.close();
 });
 
@@ -191,7 +188,11 @@ test("deleting a note on one account leaves another account's transcript of the 
   const transcript = makeStoredTranscript();
   const note = storedOverview({ source: youTubeSource(transcript.video!) });
   for (const account of [deleter, keeper]) {
-    await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ id: note.id, source: youTubeSource(transcript.video!) }) });
+    await account.inject({
+      method: "POST",
+      url: "/api/overviews",
+      body: storedOverview({ id: note.id, source: youTubeSource(transcript.video!) }),
+    });
     await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
   }
 
@@ -235,10 +236,10 @@ test("a delete retried after its first attempt left the transcript behind still 
   const note = storedOverview({ source: youTubeSource(transcript.video!) });
   await account.inject({ method: "POST", url: "/api/overviews", body: note });
   await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
-  await testApp.sql.query(
-    "update records set deleted = true, body = null where account_id = $1 and kind = 'overview' and id = $2",
-    [account.accountId, note.id],
-  );
+  await testApp.sql.query("update records set deleted = true, body = null where account_id = $1 and kind = 'overview' and id = $2", [
+    account.accountId,
+    note.id,
+  ]);
 
   const retried = await account.inject({ method: "DELETE", url: `/api/overviews/${note.id}` });
 
@@ -304,12 +305,15 @@ test("two accounts agree on the words even when their captions were cut into dif
   const testApp = await createTestApp();
   const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
   await contribute(first, makeStoredTranscript({ segments: [{ text: "Hello and welcome.", startMs: 0, endMs: 2000 }] }));
-  await contribute(second, makeStoredTranscript({
-    segments: [
-      { text: "Hello and", startMs: 0, endMs: 1000 },
-      { text: "welcome.", startMs: 1000, endMs: 2000 },
-    ],
-  }));
+  await contribute(
+    second,
+    makeStoredTranscript({
+      segments: [
+        { text: "Hello and", startMs: 0, endMs: 1000 },
+        { text: "welcome.", startMs: 1000, endMs: 2000 },
+      ],
+    }),
+  );
 
   assert.equal((await readShared(testApp, "example")).statusCode, 200);
   await testApp.close();
@@ -331,9 +335,19 @@ test("one account sending the same copy from two devices counts once", async () 
   const laptop = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const phone = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   const transcript = makeStoredTranscript();
-  await testApp.app.inject({ method: "POST", url: "/api/overviews", headers: laptop.headers, payload: storedOverview({ source: youTubeSource(transcript.video!) }) });
+  await testApp.app.inject({
+    method: "POST",
+    url: "/api/overviews",
+    headers: laptop.headers,
+    payload: storedOverview({ source: youTubeSource(transcript.video!) }),
+  });
   for (const device of [laptop, phone]) {
-    await testApp.app.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, headers: device.headers, payload: transcript });
+    await testApp.app.inject({
+      method: "PUT",
+      url: `/api/transcripts/${transcript.videoId}`,
+      headers: device.headers,
+      payload: transcript,
+    });
   }
 
   assert.equal((await readShared(testApp, transcript.videoId)).statusCode, 404);

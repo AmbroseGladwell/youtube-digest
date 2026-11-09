@@ -31,9 +31,7 @@ export class LibraryPageObject extends PageObject {
     );
 
   verifyTimeSavedShows = (figure: string) =>
-    this.step(`verifyTimeSavedShows ${figure}`, () =>
-      expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveText(`${figure}saved`),
-    );
+    this.step(`verifyTimeSavedShows ${figure}`, () => expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveText(`${figure}saved`));
 
   openTimeSaved = (): Promise<TimeSavedSheetPageObject> =>
     this.step("openTimeSaved", async () => {
@@ -51,9 +49,7 @@ export class LibraryPageObject extends PageObject {
     this.step(`verifyCardOrder ${titles.join(", ")}`, () =>
       expect(
         this.get(libraryPageTestIds.list).locator(
-          [libraryOverviewCardTestIds.root, libraryUnreadableCardTestIds.root]
-            .map((testId) => `[data-testid="${testId}"]`)
-            .join(", "),
+          [libraryOverviewCardTestIds.root, libraryUnreadableCardTestIds.root].map((testId) => `[data-testid="${testId}"]`).join(", "),
         ),
       ).toHaveText(titles.map((title) => new RegExp(title))),
     );
@@ -80,11 +76,9 @@ export class LibraryPageObject extends PageObject {
 
   // The search sits over the list rather than in the rail (design 2a), so it is the
   // page's rather than the filter panel's.
-  search = (query: string) =>
-    this.step(`search ${query}`, () => this.get(libraryPageTestIds.searchInput).fill(query));
+  search = (query: string) => this.step(`search ${query}`, () => this.get(libraryPageTestIds.searchInput).fill(query));
 
-  clearTheSearch = () =>
-    this.step("clearTheSearch", () => this.click(libraryPageTestIds.clearSearchButton));
+  clearTheSearch = () => this.step("clearTheSearch", () => this.click(libraryPageTestIds.clearSearchButton));
 
   verifyOffersToClearTheSearch = (offered: boolean) =>
     this.step(`verifyOffersToClearTheSearch ${offered}`, () =>
@@ -94,9 +88,7 @@ export class LibraryPageObject extends PageObject {
     );
 
   verifySearchReads = (query: string) =>
-    this.step(`verifySearchReads ${query}`, () =>
-      expect(this.get(libraryPageTestIds.searchInput)).toHaveValue(query),
-    );
+    this.step(`verifySearchReads ${query}`, () => expect(this.get(libraryPageTestIds.searchInput)).toHaveValue(query));
 
   scrollTheList = () =>
     this.step("scrollTheList", async () => {
@@ -135,10 +127,7 @@ export class LibraryPageObject extends PageObject {
   verifyFiltersAreOpen = (open: boolean) =>
     this.step(`verifyFiltersAreOpen ${open}`, () =>
       expect(async () => {
-        await expect(this.get(libraryPageTestIds.filterButton)).toHaveAttribute(
-          "aria-expanded",
-          String(open),
-        );
+        await expect(this.get(libraryPageTestIds.filterButton)).toHaveAttribute("aria-expanded", String(open));
         const rail = (await this.get(libraryPageTestIds.rail).boundingBox())!;
         const height = this.page.viewportSize()!.height;
         expect(rail.y < height - 40).toBe(open);
@@ -158,11 +147,7 @@ export class LibraryPageObject extends PageObject {
     this.step(`verifyTabbingStaysInTheFilterSheet ${stops}`, async () => {
       for (let step = 0; step < stops; step += 1) {
         await this.page.keyboard.press("Tab");
-        expect(
-          await this.get(libraryPageTestIds.rail).evaluate((rail) =>
-            rail.contains(document.activeElement),
-          ),
-        ).toBe(true);
+        expect(await this.get(libraryPageTestIds.rail).evaluate((rail) => rail.contains(document.activeElement))).toBe(true);
       }
     });
 
@@ -201,9 +186,7 @@ export class LibraryPageObject extends PageObject {
     });
 
   verifyFilterButtonSays = (label: string) =>
-    this.step(`verifyFilterButtonSays ${label}`, () =>
-      expect(this.get(libraryPageTestIds.filterButton)).toHaveAccessibleName(label),
-    );
+    this.step(`verifyFilterButtonSays ${label}`, () => expect(this.get(libraryPageTestIds.filterButton)).toHaveAccessibleName(label));
 
   showResults = (label: string) =>
     this.step(`showResults ${label}`, async () => {
@@ -213,9 +196,7 @@ export class LibraryPageObject extends PageObject {
     });
 
   verifyFocusIsOnTheFilterButton = () =>
-    this.step("verifyFocusIsOnTheFilterButton", () =>
-      expect(this.get(libraryPageTestIds.filterButton)).toBeFocused(),
-    );
+    this.step("verifyFocusIsOnTheFilterButton", () => expect(this.get(libraryPageTestIds.filterButton)).toBeFocused());
 
   // Every filter off, the order kept: the way a scenario that seeds read notes sees them.
   showAll = () => this.step("showAll", () => this.click(libraryPageTestIds.showAllButton));
@@ -223,21 +204,16 @@ export class LibraryPageObject extends PageObject {
   resetView = () => this.step("resetView", () => this.click(libraryPageTestIds.resetViewButton));
 
   verifyViewReads = (summary: string) =>
-    this.step(`verifyViewReads ${summary}`, () =>
-      expect(this.get(libraryPageTestIds.viewSummary)).toHaveText(summary),
-    );
+    this.step(`verifyViewReads ${summary}`, () => expect(this.get(libraryPageTestIds.viewSummary)).toHaveText(summary));
 
   verifyOffersReset = (offered: boolean) =>
     this.step(`verifyOffersReset ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(libraryPageTestIds.resetViewButton)
-        : this.expectNotToBeVisible(libraryPageTestIds.resetViewButton),
+      offered ? this.expectToBeVisible(libraryPageTestIds.resetViewButton) : this.expectNotToBeVisible(libraryPageTestIds.resetViewButton),
     );
 
   verifyCaughtUp = () => this.step("verifyCaughtUp", () => this.expectToBeVisible(libraryPageTestIds.caughtUp));
 
-  showAllFromCaughtUp = () =>
-    this.step("showAllFromCaughtUp", () => this.click(libraryPageTestIds.caughtUpShowAllButton));
+  showAllFromCaughtUp = () => this.step("showAllFromCaughtUp", () => this.click(libraryPageTestIds.caughtUpShowAllButton));
 
   verifyCloseInMeaningShows = (titles: string[]) =>
     this.step(`verifyCloseInMeaningShows ${titles.join(", ")}`, () =>
@@ -258,9 +234,7 @@ export class LibraryPageObject extends PageObject {
 
   verifyChipsRead = (chips: string[]) =>
     this.step(`verifyChipsRead ${chips.join(", ")}`, () =>
-      expect(this.page.getByRole("group", { name: "Filters set" }).locator(":scope > span, :scope > button")).toHaveText(
-        chips,
-      ),
+      expect(this.page.getByRole("group", { name: "Filters set" }).locator(":scope > span, :scope > button")).toHaveText(chips),
     );
 
   verifyNoChips = () => this.step("verifyNoChips", () => this.expectToHaveCount(libraryFilterChipsTestIds.root, 0));
@@ -279,9 +253,7 @@ export class LibraryPageObject extends PageObject {
     );
 
   verifyCountReads = (count: string) =>
-    this.step(`verifyCountReads ${count}`, () =>
-      expect(this.get(libraryPageTestIds.listCount)).toHaveText(count),
-    );
+    this.step(`verifyCountReads ${count}`, () => expect(this.get(libraryPageTestIds.listCount)).toHaveText(count));
 
   nthCard = (index: number): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).nth(index));
@@ -302,8 +274,7 @@ export class LibraryPageObject extends PageObject {
       throw new Error("No library card is wholly on screen");
     });
 
-  readScrollPosition = (): Promise<number> =>
-    this.step("readScrollPosition", () => this.page.evaluate(() => window.scrollY));
+  readScrollPosition = (): Promise<number> => this.step("readScrollPosition", () => this.page.evaluate(() => window.scrollY));
 
   verifyScrollPosition = (expected: number) =>
     this.step(`verifyScrollPosition ${expected}`, () =>
@@ -315,13 +286,8 @@ export class LibraryPageObject extends PageObject {
   }
 
   verifyFilterCountReads = (count: string) =>
-    this.step(`verifyFilterCountReads ${count}`, () =>
-      expect(this.get(libraryPageTestIds.rail).getByText(count)).toBeVisible(),
-    );
+    this.step(`verifyFilterCountReads ${count}`, () => expect(this.get(libraryPageTestIds.rail).getByText(count)).toBeVisible());
 
   cardWithTitle = (title: string): LibraryOverviewCardPageObject =>
-    new LibraryOverviewCardPageObject(
-      this.testContext,
-      this.get(libraryOverviewCardTestIds.root).filter({ hasText: title }),
-    );
+    new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).filter({ hasText: title }));
 }

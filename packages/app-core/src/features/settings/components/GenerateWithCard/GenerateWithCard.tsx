@@ -63,8 +63,8 @@ export function GenerateWithCard({ provider, models, held, onChoose, onAddKeyFor
             {sentenceCase(here)} has no {PROVIDER_SHORT_LABEL[provider]} key.
           </p>
           <p className={styles.note}>
-            You chose {PROVIDER_SHORT_LABEL[provider]} on another device, and keys stay on the device they were
-            added on for security. Add the key here too, or generate with a key {here} already has.
+            You chose {PROVIDER_SHORT_LABEL[provider]} on another device, and keys stay on the device they were added on for security. Add
+            the key here too, or generate with a key {here} already has.
           </p>
           <div className={styles.ways}>
             {/* Focus lands on the first, which is the way out that keeps the reader's

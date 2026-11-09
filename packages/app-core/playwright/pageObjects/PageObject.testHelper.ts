@@ -23,15 +23,13 @@ export abstract class PageObject {
     return this.testContext.page;
   }
 
-  protected step = <T>(name: string, body: () => T | Promise<T>): Promise<T> =>
-    test.step(`${this.name}.${name}`, body);
+  protected step = <T>(name: string, body: () => T | Promise<T>): Promise<T> => test.step(`${this.name}.${name}`, body);
 
   protected get = (testId: string): Locator => this.locatorOrPage().getByTestId(testId);
   protected locatorOrPage = (): Locator | Page => this.locator ?? this.page;
 
   protected click = (target: string | Locator) => this.resolveLocator(target).click();
-  protected resolveLocator = (target: string | Locator): Locator =>
-    typeof target === "string" ? this.get(target) : target;
+  protected resolveLocator = (target: string | Locator): Locator => (typeof target === "string" ? this.get(target) : target);
 
   protected expectToBeVisible = (testId: string) => expect(this.get(testId)).toBeVisible();
   protected expectNotToBeVisible = (testId: string) => expect(this.get(testId)).not.toBeVisible();
@@ -81,17 +79,13 @@ export abstract class PageObject {
           fade: parseFloat(getComputedStyle(lowest, "::after").height),
         };
       });
-      const restsAt = await this.get(testId).evaluate((element) =>
-        parseFloat(getComputedStyle(element).scrollMarginTop),
-      );
+      const restsAt = await this.get(testId).evaluate((element) => parseFloat(getComputedStyle(element).scrollMarginTop));
       expect(restsAt).toBeGreaterThanOrEqual(band.height + band.fade);
     });
 
   verifyFadeIsShown = (shown: boolean) =>
     this.step(`verifyFadeIsShown ${shown}`, () =>
-      expect
-        .poll(async () => (await this.stickyFades()).find((band) => band.drawn)?.opacity, { timeout: 2_000 })
-        .toBe(shown ? 1 : 0),
+      expect.poll(async () => (await this.stickyFades()).find((band) => band.drawn)?.opacity, { timeout: 2_000 }).toBe(shown ? 1 : 0),
     );
 
   scrollToTheFoot = () =>
@@ -113,9 +107,7 @@ export abstract class PageObject {
 
   verifyPageDoesNotScrollSideways = () =>
     this.step("verifyPageDoesNotScrollSideways", async () => {
-      const overflow = await this.page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
+      const overflow = await this.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(0);
     });
 

@@ -22,10 +22,7 @@ const returnToTheLibrary = async (launcher: Launcher, library: LibraryPageObject
   return new LibraryPageObject(library.testContext).verifyIsShown();
 };
 
-test("a first visit opens on unread, says so in words, and offers to show everything", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a first visit opens on unread, says so in words, and offers to show everything", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
 
   const library = await launcher.launchExpectingLibrary();
@@ -40,10 +37,7 @@ test("a first visit opens on unread, says so in words, and offers to show everyt
   await library.verifyOffersReset(true);
 });
 
-test("the filters and order the reader leaves are the ones they come back to", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the filters and order the reader leaves are the ones they come back to", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
@@ -69,10 +63,7 @@ test("Reset goes back to unread, newest first, and that is kept too", async ({ l
   await returned.verifyViewReads("Showing: Unread · Newest saved first");
 });
 
-test("a link that names a view is followed, and the saved view is left as it was", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a link that names a view is followed, and the saved view is left as it was", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
@@ -83,10 +74,7 @@ test("a link that names a view is followed, and the saved view is left as it was
   await returned.verifyViewReads("Showing: Unread · Newest saved first");
 });
 
-test("with nothing unread, the list says the reader is caught up and offers everything", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("with nothing unread, the list says the reader is caught up and offers everything", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   await library.cardWithTitle("Apple").clickMarkRead();
@@ -100,10 +88,7 @@ test("with nothing unread, the list says the reader is caught up and offers ever
   await returned.verifyCardOrder(["Apple", "Already read", "Zebra"]);
 });
 
-test("a row marked read from the unread list stays put until the view changes", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a row marked read from the unread list stays put until the view changes", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
 
@@ -115,10 +100,7 @@ test("a row marked read from the unread list stays put until the view changes", 
   await library.verifyCardOrder(["Zebra"]);
 });
 
-test("Previous and Next walk the list the reader opened it from, in its order", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Previous and Next walk the list the reader opened it from, in its order", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
   await library.sortPill.sortBy("title");
@@ -134,10 +116,7 @@ test("Previous and Next walk the list the reader opened it from, in its order", 
   await reader.verifyPosition("1 of 2");
 });
 
-test("Reset and the caught-up way out are counted, with each filter they change", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("Reset and the caught-up way out are counted, with each filter they change", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary({
     sync: true,
@@ -146,8 +125,8 @@ test("Reset and the caught-up way out are counted, with each filter they change"
   await library.showAll();
   await library.resetView();
 
-  await test
-    .expect.poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("library.")))
+  await test.expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("library.")))
     .toEqual([
       { name: "library.filters.allCleared", props: { applied: 1 } },
       { name: "library.filters.statusChosen", props: { status: "all", from: "clearAll" } },

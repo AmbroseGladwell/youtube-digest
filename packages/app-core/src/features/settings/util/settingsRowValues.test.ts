@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { INITIAL_SYNC_STATUS } from "@overview/sync";
-import { DEFAULT_SECTIONS_ENABLED,
-  EMPTY_ABOUT_YOU, type Provider } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, EMPTY_ABOUT_YOU, type Provider } from "@overview/domain";
 import { DEFAULT_API_KEYS } from "../../apiKeys/ApiKeys.js";
 import { DEFAULT_SYNC_CONNECTION } from "../../sync/types/SyncConnection.js";
 import {
@@ -27,21 +26,15 @@ describe("accountRowValue", () => {
   });
 
   it("falls back to the email when the account has no first name", () => {
-    expect(accountRowValue({ connected: true, status: SYNCED }, SIGNED_IN, NOW)).toBe(
-      "ada@example.com · Synced 2 minutes ago",
-    );
+    expect(accountRowValue({ connected: true, status: SYNCED }, SIGNED_IN, NOW)).toBe("ada@example.com · Synced 2 minutes ago");
   });
 
   it("is the status line alone when neither is known", () => {
-    expect(accountRowValue({ connected: true, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW)).toBe(
-      "Synced 2 minutes ago",
-    );
+    expect(accountRowValue({ connected: true, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW)).toBe("Synced 2 minutes ago");
   });
 
   it("says when no one is signed in", () => {
-    expect(accountRowValue({ connected: false, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW)).toBe(
-      NOT_SIGNED_IN_ROW_VALUE,
-    );
+    expect(accountRowValue({ connected: false, status: SYNCED }, DEFAULT_SYNC_CONNECTION, NOW)).toBe(NOT_SIGNED_IN_ROW_VALUE);
   });
 });
 
@@ -61,21 +54,15 @@ describe("keysRowValue", () => {
   });
 
   it("names the model and says this device holds one key", () => {
-    expect(keysRowValue(withKeys("anthropic"), "anthropic", { anthropic: "claude-sonnet-5-5" })).toBe(
-      "Claude Sonnet 5.5 · 1 key",
-    );
+    expect(keysRowValue(withKeys("anthropic"), "anthropic", { anthropic: "claude-sonnet-5-5" })).toBe("Claude Sonnet 5.5 · 1 key");
   });
 
   it("counts the keys when there are several", () => {
-    expect(
-      keysRowValue(withKeys("anthropic", "openai", "gemini"), "gemini", { gemini: "gemini-3.6" }),
-    ).toBe("Gemini 3.6 · 3 keys");
+    expect(keysRowValue(withKeys("anthropic", "openai", "gemini"), "gemini", { gemini: "gemini-3.6" })).toBe("Gemini 3.6 · 3 keys");
   });
 
   it("says in words when the choice arrived by sync and the key did not, because a count cannot", () => {
-    expect(keysRowValue(withKeys("anthropic"), "gemini", { gemini: "gemini-3.6" })).toBe(
-      "Gemini 3.6 · no Gemini key here",
-    );
+    expect(keysRowValue(withKeys("anthropic"), "gemini", { gemini: "gemini-3.6" })).toBe("Gemini 3.6 · no Gemini key here");
   });
 
   it("falls back to the model we would have picked when the reader has never chosen one", () => {
@@ -83,9 +70,7 @@ describe("keysRowValue", () => {
   });
 
   it("shows a model id we have never heard of as the provider lists it", () => {
-    expect(keysRowValue(withKeys("openai"), "openai", { openai: "gpt-9-unreleased" })).toBe(
-      "gpt-9-unreleased · 1 key",
-    );
+    expect(keysRowValue(withKeys("openai"), "openai", { openai: "gpt-9-unreleased" })).toBe("gpt-9-unreleased · 1 key");
   });
 });
 
@@ -108,9 +93,9 @@ describe("personalisationRowValue", () => {
     expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false }, EMPTY_ABOUT_YOU)).toBe(
       "About you not set · 3 of 4 sections",
     );
-    expect(
-      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }, EMPTY_ABOUT_YOU),
-    ).toBe("About you not set · Summary and key points only");
+    expect(personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }, EMPTY_ABOUT_YOU)).toBe(
+      "About you not set · Summary and key points only",
+    );
   });
 
   it("says how many things were learned, or that learning is off, and nothing of it where learning can't run", () => {

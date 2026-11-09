@@ -45,7 +45,12 @@ export function ArticleLinkStatus({ link, url, place, onRetry, onClear, onOpened
             You already have this article.
             {link.savedAt !== null && ` You made an overview of it on ${madeOn(link.savedAt)}.`}
           </span>
-          <PageLink className={styles.open} to={Routes.overview(link.overviewId)} onClick={onOpened} data-testid={articleLinkStatusTestIds.openHeld}>
+          <PageLink
+            className={styles.open}
+            to={Routes.overview(link.overviewId)}
+            onClick={onOpened}
+            data-testid={articleLinkStatusTestIds.openHeld}
+          >
             Open your overview
           </PageLink>
         </div>

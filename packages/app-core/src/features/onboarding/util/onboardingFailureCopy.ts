@@ -74,7 +74,13 @@ export function onboardingFailureCopy(failure: OnboardingFailure, link: string, 
       return failed("There's nothing we can read at that link", "Check the link, or paste another one.");
     default:
       return isFrontPage(link)
-        ? failed("That looks like a front page", "We make an overview of one article or recipe at a time. Open the one you want, then copy its link.")
-        : failed("We couldn't read that page", "The page didn't give us its text. Some sites build their pages in a way we can't read yet.");
+        ? failed(
+            "That looks like a front page",
+            "We make an overview of one article or recipe at a time. Open the one you want, then copy its link.",
+          )
+        : failed(
+            "We couldn't read that page",
+            "The page didn't give us its text. Some sites build their pages in a way we can't read yet.",
+          );
   }
 }

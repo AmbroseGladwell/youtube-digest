@@ -26,9 +26,7 @@ describe("overviewForVideoUrl", () => {
   it("finds the note taken from that video", () => {
     const held = noteOn("abc");
 
-    expect(
-      overviewForVideoUrl([noteOn("other"), held], "https://www.youtube.com/watch?v=abc"),
-    ).toBe(held.overview);
+    expect(overviewForVideoUrl([noteOn("other"), held], "https://www.youtube.com/watch?v=abc")).toBe(held.overview);
   });
 
   // The stored url is whichever one was pasted, so two spellings of the same video have
@@ -37,9 +35,7 @@ describe("overviewForVideoUrl", () => {
     const held = noteOn("abc");
 
     expect(overviewForVideoUrl([held], "https://youtu.be/abc")).toBe(held.overview);
-    expect(overviewForVideoUrl([held], "https://www.youtube.com/watch?v=abc&t=30")).toBe(
-      held.overview,
-    );
+    expect(overviewForVideoUrl([held], "https://www.youtube.com/watch?v=abc&t=30")).toBe(held.overview);
     expect(overviewForVideoUrl([held], "https://www.youtube.com/shorts/abc")).toBe(held.overview);
   });
 
@@ -47,9 +43,7 @@ describe("overviewForVideoUrl", () => {
     const older = noteOn("abc", "2026-09-15T00:00:00.000Z");
     const newer = noteOn("abc", "2026-09-17T00:00:00.000Z");
 
-    expect(overviewForVideoUrl([older, newer], "https://www.youtube.com/watch?v=abc")).toBe(
-      newer.overview,
-    );
+    expect(overviewForVideoUrl([older, newer], "https://www.youtube.com/watch?v=abc")).toBe(newer.overview);
   });
 
   it("finds nothing for a link that isn't a YouTube video", () => {

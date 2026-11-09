@@ -62,14 +62,11 @@ Judge each dimension on its own, then overall:
 Answer "tie" for a dimension when neither is meaningfully better. For overall, pick the set the
 reader would rather have. Give the reason in one sentence before each winner.`;
 
-const lastAttemptOf = (record: RunRecord): Record<string, unknown> =>
-  (record.attempts.at(-1) ?? {}) as Record<string, unknown>;
+const lastAttemptOf = (record: RunRecord): Record<string, unknown> => (record.attempts.at(-1) ?? {}) as Record<string, unknown>;
 
 export function personalPartsText(record: RunRecord, profile: ReaderProfile): string {
   const overview = record.overview!;
-  const topicNames = profile.existingTopics
-    .filter((topic) => overview.topicIds.includes(topic.id))
-    .map((topic) => topic.name);
+  const topicNames = profile.existingTopics.filter((topic) => overview.topicIds.includes(topic.id)).map((topic) => topic.name);
   const suggested = lastAttemptOf(record).suggestedTopic as { name: string; description: string | null } | null;
   const items = overview.howToApply?.items ?? [];
   return [
@@ -78,9 +75,7 @@ export function personalPartsText(record: RunRecord, profile: ReaderProfile): st
     `Matched topics: ${topicNames.length === 0 ? "none" : topicNames.join(", ")}`,
     `Suggested new topic: ${suggested ? `${suggested.name}${suggested.description ? `: ${suggested.description}` : ""}` : "none"}`,
     `Tags: ${overview.tags.join(", ")}`,
-    `Repeats past claims: ${
-      (overview.verdict?.similarTo ?? []).map((similar) => similar.title).join("; ") || "none"
-    }`,
+    `Repeats past claims: ${(overview.verdict?.similarTo ?? []).map((similar) => similar.title).join("; ") || "none"}`,
   ].join("\n");
 }
 
@@ -142,9 +137,7 @@ export async function judgePersonalPair({
   let error: string | null = null;
   let answer: PersonalJudgeAnswer | null = null;
   try {
-    const parsed = PersonalJudgeAnswer.safeParse(
-      await client(personalJudgePrompt(baseline.record.overview!, profile, partsA, partsB)),
-    );
+    const parsed = PersonalJudgeAnswer.safeParse(await client(personalJudgePrompt(baseline.record.overview!, profile, partsA, partsB)));
     if (parsed.success) {
       answer = parsed.data;
     } else {

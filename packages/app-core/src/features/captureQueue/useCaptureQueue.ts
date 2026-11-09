@@ -161,11 +161,20 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   );
   const orderOf = useCallback((playlistId: PlaylistId) => orders.get(playlistId) ?? "oldestFirst", [orders]);
   const waiting = useMemo(
-    () => inQueueOrder((queue.data ?? []).filter((capture) => capture.status === "waiting"), orderOf),
+    () =>
+      inQueueOrder(
+        (queue.data ?? []).filter((capture) => capture.status === "waiting"),
+        orderOf,
+      ),
     [queue.data, orderOf],
   );
   const madeTodayCounts = useMemo(
-    () => madeTodayByPlaylist(readableEntries(overviews.data ?? []).map(({ overview }) => overview), chosenToday, now),
+    () =>
+      madeTodayByPlaylist(
+        readableEntries(overviews.data ?? []).map(({ overview }) => overview),
+        chosenToday,
+        now,
+      ),
     [overviews.data, chosenToday, now],
   );
   const paceOf = useCallback((playlistId: PlaylistId) => paces.get(playlistId) ?? "asTheyCome", [paces]);
@@ -219,9 +228,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   useEffect(() => {
     if (playlistApi === null || !followed.isSuccess) return;
     if (checked.current.library !== libraryKey) checked.current = { library: libraryKey, playlists: new Set() };
-    const playlists = followed.data
-      .map(({ playlist }) => playlist)
-      .filter((playlist) => !checked.current.playlists.has(playlist.id));
+    const playlists = followed.data.map(({ playlist }) => playlist).filter((playlist) => !checked.current.playlists.has(playlist.id));
     if (playlists.length === 0) return;
     for (const playlist of playlists) checked.current.playlists.add(playlist.id);
 
@@ -271,7 +278,18 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       refresh();
       if (queued > 0) setNotice({ kind: "checked", playlists: playlists.length, queued });
     })();
-  }, [playlistApi, followed.isSuccess, followed.data, libraryKey, followedPlaylistStore, overviewStore, captureQueueStore, queryClient, refresh, reporter]);
+  }, [
+    playlistApi,
+    followed.isSuccess,
+    followed.data,
+    libraryKey,
+    followedPlaylistStore,
+    overviewStore,
+    captureQueueStore,
+    queryClient,
+    refresh,
+    reporter,
+  ]);
 
   useEffect(() => {
     if (notice === null) return;
@@ -499,33 +517,35 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const failed = attention.filter((capture) => capture.status === "failed").length;
   const notMaking = (captures: QueuedCapture[]) =>
     making === null ? captures : captures.filter((capture) => capture.videoId !== making.capture.videoId);
-  const strip = accountNeeded ? null : captureQueueStrip({
-    making:
-      making === null
-        ? null
-        : {
-            title: making.capture.title,
-            step: makingStep(making.run, false).step,
-            stepProgress: generationRunStatus(making.run).progressFraction,
-          },
-    waiting: notMaking(waiting).length,
-    ready: notMaking(paced.ready).length,
-    tomorrow: paced.tomorrow.length,
-    forYou: {
-      waiting: paced.forYou.length,
-      playlists: [...new Set(paced.forYou.map((capture) => capture.fromPlaylist.title))],
-    },
-    failed,
-    skipped: attention.length - failed,
-    paused: preferences.paused,
-    needsKey,
-    hold,
-    limit,
-    viaExtension: youTubeFetch === null,
-    batch,
-    notice,
-    attentionDismissed,
-  });
+  const strip = accountNeeded
+    ? null
+    : captureQueueStrip({
+        making:
+          making === null
+            ? null
+            : {
+                title: making.capture.title,
+                step: makingStep(making.run, false).step,
+                stepProgress: generationRunStatus(making.run).progressFraction,
+              },
+        waiting: notMaking(waiting).length,
+        ready: notMaking(paced.ready).length,
+        tomorrow: paced.tomorrow.length,
+        forYou: {
+          waiting: paced.forYou.length,
+          playlists: [...new Set(paced.forYou.map((capture) => capture.fromPlaylist.title))],
+        },
+        failed,
+        skipped: attention.length - failed,
+        paused: preferences.paused,
+        needsKey,
+        hold,
+        limit,
+        viaExtension: youTubeFetch === null,
+        batch,
+        notice,
+        attentionDismissed,
+      });
 
   return useMemo(
     () => ({

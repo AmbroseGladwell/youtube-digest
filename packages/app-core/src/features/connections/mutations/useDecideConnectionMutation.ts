@@ -11,9 +11,7 @@ export interface DecideConnectionVariables {
 
 // The answer goes back to the assistant by a full page load, so the pending state holds
 // until the page is gone (design 58c), and the event saying so is sent to outlive it.
-export const useDecideConnectionMutation = (
-  leaveFor: (url: string) => void = (url) => globalThis.location.assign(url),
-) => {
+export const useDecideConnectionMutation = (leaveFor: (url: string) => void = (url) => globalThis.location.assign(url)) => {
   const api = useConnectionsApi();
   const analytics = useAnalytics();
   return useMutation<ConnectionDecided, Error, DecideConnectionVariables>({

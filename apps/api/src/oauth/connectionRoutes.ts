@@ -1,11 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import {
-  apiLogLines,
-  ConnectionDecision,
-  type ConnectionDecided,
-  type ConnectionRequest,
-  type Connections,
-} from "@overview/domain";
+import { apiLogLines, ConnectionDecision, type ConnectionDecided, type ConnectionRequest, type Connections } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";

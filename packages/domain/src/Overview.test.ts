@@ -31,7 +31,11 @@ const baseOverview = {
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
-  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+  keyPoints: [
+    { text: "one", range: null },
+    { text: "two", range: null },
+    { text: "three", range: null },
+  ],
   topicIds: [] as string[],
   tags: ["one-tag", "two-tag", "three-tag"],
   verdict: null,
@@ -50,9 +54,7 @@ test("an empty topicIds array is a valid, unsorted overview", () => {
 });
 
 test("an overview can be filed under more than one topic at once", () => {
-  assert.doesNotThrow(() =>
-    Overview.parse({ ...baseOverview, topicIds: [BUSINESS_TOPIC_ID, FINANCE_TOPIC_ID] }),
-  );
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, topicIds: [BUSINESS_TOPIC_ID, FINANCE_TOPIC_ID] }));
 });
 
 test("a thin overview is rejected if it still carries a verdict", () => {
@@ -60,7 +62,14 @@ test("a thin overview is rejected if it still carries a verdict", () => {
     Overview.parse({
       ...baseOverview,
       thin: true,
-      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubious: false, dubiousClaims: [], reasoning: "x", similarTo: [] },
+      verdict: {
+        novelty: "original",
+        standsOut: { text: "A new idea.", range: null },
+        dubious: false,
+        dubiousClaims: [],
+        reasoning: "x",
+        similarTo: [],
+      },
     }),
   );
 });
@@ -139,9 +148,7 @@ test("a partial watch-it-anyway answer requires a range", () => {
 });
 
 test("a yes/no watch-it-anyway answer doesn't need a range", () => {
-  assert.doesNotThrow(() =>
-    Overview.parse({ ...baseOverview, watchAnyway: { answer: "no", reason: "x", range: null } }),
-  );
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, watchAnyway: { answer: "no", reason: "x", range: null } }));
 });
 
 const chapter = (startMs: number, endMs: number) => ({
@@ -154,18 +161,12 @@ const chapter = (startMs: number, endMs: number) => ({
 test("chapters are null for a note made before they existed, and a list for one made since", () => {
   assert.doesNotThrow(() => Overview.parse({ ...baseOverview, chapters: null }));
   assert.doesNotThrow(() => Overview.parse({ ...baseOverview, chapters: [] }));
-  assert.doesNotThrow(() =>
-    Overview.parse({ ...baseOverview, chapters: [chapter(0, 60_000), chapter(60_000, 90_000)] }),
-  );
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, chapters: [chapter(0, 60_000), chapter(60_000, 90_000)] }));
 });
 
 test("chapters run in order and do not overlap", () => {
-  assert.throws(() =>
-    Overview.parse({ ...baseOverview, chapters: [chapter(60_000, 90_000), chapter(0, 60_000)] }),
-  );
-  assert.throws(() =>
-    Overview.parse({ ...baseOverview, chapters: [chapter(0, 60_000), chapter(30_000, 90_000)] }),
-  );
+  assert.throws(() => Overview.parse({ ...baseOverview, chapters: [chapter(60_000, 90_000), chapter(0, 60_000)] }));
+  assert.throws(() => Overview.parse({ ...baseOverview, chapters: [chapter(0, 60_000), chapter(30_000, 90_000)] }));
 });
 
 test("a chapter cannot end before it starts", () => {
@@ -180,12 +181,8 @@ test("a chapter title is at most 8 words and its summary at most 40", () => {
       chapters: [{ ...chapter(0, 1000), title: words(8), summary: words(40) }],
     }),
   );
-  assert.throws(() =>
-    Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), title: words(9) }] }),
-  );
-  assert.throws(() =>
-    Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), summary: words(41) }] }),
-  );
+  assert.throws(() => Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), title: words(9) }] }));
+  assert.throws(() => Overview.parse({ ...baseOverview, chapters: [{ ...chapter(0, 1000), summary: words(41) }] }));
 });
 
 test("in one line allows up to 35 words but no more: 25 is the prompt's target, not a cap", () => {
@@ -203,12 +200,43 @@ test("core claim allows up to 60 words but no more", () => {
 });
 
 test("key points must be 3 to 7 items: the old cap of 5 fell to a real two and a half hour debate", () => {
-  assert.throws(() => Overview.parse({ ...baseOverview, keyPoints: [{ text: "one", range: null }, { text: "two", range: null }] }));
+  assert.throws(() =>
+    Overview.parse({
+      ...baseOverview,
+      keyPoints: [
+        { text: "one", range: null },
+        { text: "two", range: null },
+      ],
+    }),
+  );
   assert.doesNotThrow(() =>
-    Overview.parse({ ...baseOverview, keyPoints: [{ text: "1", range: null }, { text: "2", range: null }, { text: "3", range: null }, { text: "4", range: null }, { text: "5", range: null }, { text: "6", range: null }, { text: "7", range: null }] }),
+    Overview.parse({
+      ...baseOverview,
+      keyPoints: [
+        { text: "1", range: null },
+        { text: "2", range: null },
+        { text: "3", range: null },
+        { text: "4", range: null },
+        { text: "5", range: null },
+        { text: "6", range: null },
+        { text: "7", range: null },
+      ],
+    }),
   );
   assert.throws(() =>
-    Overview.parse({ ...baseOverview, keyPoints: [{ text: "1", range: null }, { text: "2", range: null }, { text: "3", range: null }, { text: "4", range: null }, { text: "5", range: null }, { text: "6", range: null }, { text: "7", range: null }, { text: "8", range: null }] }),
+    Overview.parse({
+      ...baseOverview,
+      keyPoints: [
+        { text: "1", range: null },
+        { text: "2", range: null },
+        { text: "3", range: null },
+        { text: "4", range: null },
+        { text: "5", range: null },
+        { text: "6", range: null },
+        { text: "7", range: null },
+        { text: "8", range: null },
+      ],
+    }),
   );
 });
 
@@ -244,8 +272,7 @@ test("the business/adaptability sample's real content, filed under two topics, v
         standsOut: null,
         dubious: false,
         dubiousClaims: [],
-        reasoning:
-          "The career advice is honest, but the macro half is delivered as diagnosis with no counter-case offered.",
+        reasoning: "The career advice is honest, but the macro half is delivered as diagnosis with no counter-case offered.",
         similarTo: [],
       },
       selling: {
@@ -254,9 +281,7 @@ test("the business/adaptability sample's real content, filed under two topics, v
         compromisesContent: false,
       },
       howToApply: {
-        items: [
-          "Take the free Principles U assessment this week to name your own strengths honestly.",
-        ],
+        items: ["Take the free Principles U assessment this week to name your own strengths honestly."],
       },
       watchAnyway: {
         answer: "no",

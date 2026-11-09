@@ -1,10 +1,5 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import {
-  DEFAULT_OVERVIEW_STATE,
-  OverviewId,
-  type OverviewState,
-  type OverviewStore,
-} from "@overview/domain";
+import { DEFAULT_OVERVIEW_STATE, OverviewId, type OverviewState, type OverviewStore } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import type { LibraryEntry } from "../types/LibraryEntry.js";
 import { overviewKeys } from "../overviewKeys.js";
@@ -22,10 +17,7 @@ export const overviewsWithStateQueryOptions = (overviewStore: OverviewStore) =>
   queryOptions({
     queryKey: overviewKeys.list(),
     queryFn: async (): Promise<LibraryEntry[]> => {
-      const [overviews, unreadable] = await Promise.all([
-        overviewStore.listOverviews(),
-        overviewStore.listUnreadable(),
-      ]);
+      const [overviews, unreadable] = await Promise.all([overviewStore.listOverviews(), overviewStore.listUnreadable()]);
       const unreadableOverviews = unreadable.filter((record) => record.kind === "overview");
 
       const [overviewStates, unreadableStates] = await Promise.all([

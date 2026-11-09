@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  makeOverview,
-  makeOverviewWithState,
-  makeUnreadableEntry,
-} from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { libraryEntrySavedAt, libraryEntryTitle } from "../../overviews/types/LibraryEntry.js";
 import { orderLibraryEntries } from "./orderLibraryEntries.js";
 
@@ -39,21 +35,13 @@ describe("orderLibraryEntries", () => {
     const dated = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z" });
     const undated = makeUnreadableEntry({ salvaged: null });
 
-    expect(orderLibraryEntries([undated, dated], "oldest").map(libraryEntrySavedAt)).toEqual([
-      "2026-09-14T00:00:00.000Z",
-      null,
-    ]);
+    expect(orderLibraryEntries([undated, dated], "oldest").map(libraryEntrySavedAt)).toEqual(["2026-09-14T00:00:00.000Z", null]);
   });
 
   it("sorts by title ignoring case, with numbers in numeric order", () => {
     const entries = [titled("banana"), titled("Apple"), titled("Part 10"), titled("Part 2")];
 
-    expect(orderLibraryEntries(entries, "title").map(libraryEntryTitle)).toEqual([
-      "Apple",
-      "banana",
-      "Part 2",
-      "Part 10",
-    ]);
+    expect(orderLibraryEntries(entries, "title").map(libraryEntryTitle)).toEqual(["Apple", "banana", "Part 2", "Part 10"]);
   });
 
   it("places an unreadable record by its salvaged title, and one without a title last", () => {
@@ -67,11 +55,12 @@ describe("orderLibraryEntries", () => {
       },
     });
 
-    expect(
-      orderLibraryEntries([untitled, titled("Zebra"), salvaged, titled("Aardvark")], "title").map(
-        libraryEntryTitle,
-      ),
-    ).toEqual(["Aardvark", "Middle", "Zebra", null]);
+    expect(orderLibraryEntries([untitled, titled("Zebra"), salvaged, titled("Aardvark")], "title").map(libraryEntryTitle)).toEqual([
+      "Aardvark",
+      "Middle",
+      "Zebra",
+      null,
+    ]);
   });
 
   it("breaks a tie between equal titles by newest saved", () => {

@@ -35,11 +35,7 @@ import { CaptureQueueProvider } from "../../features/captureQueue/CaptureQueueCo
 import { CaptureQueueStripView } from "../../features/captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
 import { QueueRunDialog } from "../../features/captureQueue/components/QueueRunDialog/QueueRunDialog.js";
 import { useCaptureQueue } from "../../features/captureQueue/useCaptureQueue.js";
-import {
-  navigationDirection,
-  shouldAnimateNavigation,
-  useShouldAnimateNavigation,
-} from "../../util/viewTransitions.js";
+import { navigationDirection, shouldAnimateNavigation, useShouldAnimateNavigation } from "../../util/viewTransitions.js";
 import styles from "./AppShell.module.scss";
 import "./paneTransitions.scss";
 import { appShellTestIds } from "./AppShellTestIds.js";
@@ -93,10 +89,7 @@ export function AppShell() {
   // browser takes the "after" snapshot.
   const previousPathname = useRef(pathname);
   useLayoutEffect(() => {
-    document.documentElement.dataset.navDirection = navigationDirection(
-      previousPathname.current,
-      pathname,
-    );
+    document.documentElement.dataset.navDirection = navigationDirection(previousPathname.current, pathname);
     previousPathname.current = pathname;
   }, [pathname]);
 
@@ -183,12 +176,7 @@ export function AppShell() {
           <BackLinkHandoffProvider value={handoff}>
             <div className={styles.root} ref={mastheadHeight.host} data-testid={appShellTestIds.root}>
               <PageScrolledSentinel />
-              <header
-                className={styles.masthead}
-                ref={measureBand}
-                data-sticky-fade=""
-                data-testid={appShellTestIds.masthead}
-              >
+              <header className={styles.masthead} ref={measureBand} data-sticky-fade="" data-testid={appShellTestIds.masthead}>
                 <div className={styles.bar}>
                   <div
                     className={`${styles.brandSlot} ${handoffLive ? styles.brandSlotLive : ""} ${backInBar ? styles.brandSlotBack : ""}`}
@@ -206,9 +194,7 @@ export function AppShell() {
                       <span className={styles.mark}>
                         <OverviewMark />
                       </span>
-                      <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>
-                        The Overview
-                      </h1>
+                      <h1 className={`${styles.title} ${isPanel ? styles.titlePanel : ""}`}>The Overview</h1>
                     </PageLink>
                     {handoffLive && (
                       <PageLink
@@ -252,9 +238,7 @@ export function AppShell() {
                     <>
                       <nav className={styles.nav} aria-label="Sections">
                         <NavLink
-                          className={({ isActive }) =>
-                            `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-                          }
+                          className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
                           to={Routes.home()}
                           viewTransition={animateNavigation}
                           onClick={() => analytics.app.masthead.overviewsChosen()}
@@ -299,12 +283,7 @@ export function AppShell() {
 
                 <StaleClientBanner />
 
-                {onThisTab !== null && (
-                  <OnThisTabLine
-                    tab={onThisTab}
-                    onStartVideo={(url) => newOverview.start(url, { from: "panel" })}
-                  />
-                )}
+                {onThisTab !== null && <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />}
 
                 {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
                   <GenerationStatusStrip
@@ -370,11 +349,7 @@ export function AppShell() {
                 />
               )}
 
-              <QueueRunDialog
-                making={captureQueue.making}
-                open={queueDetailsOpen}
-                onClose={() => setQueueDetailsOpen(false)}
-              />
+              <QueueRunDialog making={captureQueue.making} open={queueDetailsOpen} onClose={() => setQueueDetailsOpen(false)} />
             </div>
           </BackLinkHandoffProvider>
         </HistoryTrailProvider>

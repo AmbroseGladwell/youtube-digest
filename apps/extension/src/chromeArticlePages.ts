@@ -7,8 +7,7 @@ import { chromePageAccess, pagePermission } from "./chromePageAccess.js";
 const RELOAD_TIMEOUT_MS = 20_000;
 const YOUTUBE_HOSTS = new Set(["www.youtube.com", "m.youtube.com", "youtube.com", "youtu.be"]);
 
-export const isOfferablePage = (url: string): boolean =>
-  pagePermission(url) !== null && !YOUTUBE_HOSTS.has(new URL(url).hostname);
+export const isOfferablePage = (url: string): boolean => pagePermission(url) !== null && !YOUTUBE_HOSTS.has(new URL(url).hostname);
 
 let page: ActivePage | null = null;
 let menuRequest: ActivePage | null = null;
@@ -31,9 +30,7 @@ async function refresh(): Promise<void> {
 
 async function pullMenuRequest(): Promise<void> {
   try {
-    const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_PAGE_REQUEST })) as
-      | { page: ActivePage | null }
-      | undefined;
+    const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_PAGE_REQUEST })) as { page: ActivePage | null } | undefined;
     if (reply?.page == null) return;
     menuRequest = reply.page;
     notify();

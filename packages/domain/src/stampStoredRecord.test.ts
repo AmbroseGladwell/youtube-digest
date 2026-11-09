@@ -32,7 +32,11 @@ const overview = {
   inOneLine: "A short description of the video.",
   coreClaim: "The single assertion this video makes.",
   thin: false,
-  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+  keyPoints: [
+    { text: "one", range: null },
+    { text: "two", range: null },
+    { text: "three", range: null },
+  ],
   topicIds: [] as string[],
   tags: ["one-tag", "two-tag", "three-tag"],
   verdict: null,
@@ -50,10 +54,7 @@ test("a stamped record carries both the version it was written at and the time",
 });
 
 test("stamping changes nothing else about the record", () => {
-  const { schemaVersion, updatedAt, ...rest } = stampStoredRecord(overview, 2, WRITTEN_AT) as Record<
-    string,
-    unknown
-  >;
+  const { schemaVersion, updatedAt, ...rest } = stampStoredRecord(overview, 2, WRITTEN_AT) as Record<string, unknown>;
 
   assert.deepEqual(rest, overview);
 });

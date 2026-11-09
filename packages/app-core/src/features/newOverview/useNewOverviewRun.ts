@@ -235,9 +235,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
               });
-              setRun((current) =>
-                current === null ? null : { ...current, overview: saved, finishedAt: Date.now() },
-              );
+              setRun((current) => (current === null ? null : { ...current, overview: saved, finishedAt: Date.now() }));
             }
           },
           onError: (error) => {

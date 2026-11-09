@@ -68,7 +68,9 @@ export interface SampleLibrary {
 // The five real notes in samples/records, as the records this build stores: real content
 // rather than invented fixtures, with the prototype's variance intact (CLAUDE.md).
 export function sampleLibrary(): SampleLibrary {
-  const files = readdirSync(SAMPLES).filter((file) => file.endsWith(".json")).sort();
+  const files = readdirSync(SAMPLES)
+    .filter((file) => file.endsWith(".json"))
+    .sort();
   const samples = files.map((file) => ({ file, sample: JSON.parse(readFileSync(new URL(file, SAMPLES), "utf8")) as SampleRecord }));
   const topics = [...new Set(samples.map(({ sample }) => sample.topic))].map((name) => storedTopic({ name }));
 
@@ -100,7 +102,14 @@ export function sampleLibrary(): SampleLibrary {
         keyPoints: sample.points.map((text) => ({ text, range: null })),
         topicIds: [TopicId.parse(topic.id)],
         tags: sample.tags,
-        verdict: { novelty: NOVELTY[sample.verdict]!, standsOut: null, dubious: false, dubiousClaims: [], reasoning: sample.reasoning, similarTo: [] },
+        verdict: {
+          novelty: NOVELTY[sample.verdict]!,
+          standsOut: null,
+          dubious: false,
+          dubiousClaims: [],
+          reasoning: sample.reasoning,
+          similarTo: [],
+        },
         selling: sample.sells
           ? { type: "own_paid_product", detail: sample.selling, compromisesContent: false }
           : { type: "none", detail: "", compromisesContent: false },

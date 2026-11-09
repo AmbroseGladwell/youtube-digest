@@ -76,15 +76,11 @@ export class IndexedDbOverviewStore implements OverviewStore {
     ]);
 
     return [
-      ...quarantined(overviews, "overview", "id", (raw) =>
-        readStoredRecord(raw, Overview, OVERVIEW_MIGRATIONS),
-      ),
+      ...quarantined(overviews, "overview", "id", (raw) => readStoredRecord(raw, Overview, OVERVIEW_MIGRATIONS)),
       ...quarantined(states, "overviewState", "overviewId", (raw) =>
         readStoredRecord(withStateDefaults(raw), OverviewState, OVERVIEW_STATE_MIGRATIONS),
       ),
-      ...quarantined(topics, "topic", "id", (raw) =>
-        readStoredRecord(raw, Topic, TOPIC_MIGRATIONS),
-      ),
+      ...quarantined(topics, "topic", "id", (raw) => readStoredRecord(raw, Topic, TOPIC_MIGRATIONS)),
     ];
   }
 
@@ -169,10 +165,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
   // The state row goes with the overview, as it does on the server: ids are never reused,
   // so a surviving state would be a permanent orphan (docs/features/sync-api.md).
   async deleteOverview(id: OverviewId) {
-    const transaction = this.#db.transaction(
-      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, ...JOURNALLED_STORES],
-      "readwrite",
-    );
+    const transaction = this.#db.transaction([OVERVIEWS_STORE, OVERVIEW_STATES_STORE, ...JOURNALLED_STORES], "readwrite");
     transaction.objectStore(OVERVIEWS_STORE).delete(id);
     transaction.objectStore(OVERVIEW_STATES_STORE).delete(id);
     const journaled = await appendPendingWrite(transaction, {
@@ -216,18 +209,11 @@ export class IndexedDbOverviewStore implements OverviewStore {
 
   async getOverviewState(overviewId: OverviewId) {
     const raw = await this.#read(OVERVIEW_STATES_STORE, overviewId);
-    const read = readStoredRecord(
-      { ...withStateDefaults(raw), overviewId },
-      OverviewState,
-      OVERVIEW_STATE_MIGRATIONS,
-    );
+    const read = readStoredRecord({ ...withStateDefaults(raw), overviewId }, OverviewState, OVERVIEW_STATE_MIGRATIONS);
     return read.status === "read" ? read.record : { ...DEFAULT_OVERVIEW_STATE, overviewId };
   }
 
-  async setOverviewState(
-    overviewId: OverviewId,
-    patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>,
-  ) {
+  async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>) {
     const raw = await this.#read(OVERVIEW_STATES_STORE, overviewId);
     const current =
       raw === undefined
@@ -248,12 +234,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
   // The patch is merged into the stored record rather than into a parsed one: zod strips
   // the keys it does not know and object spread keeps them, so parsing on the write path
   // is what would delete a newer client's fields (docs/features/record-migrations.md).
-  #writable(
-    kind: "overview" | "overviewState",
-    id: string,
-    raw: unknown,
-    migrations: readonly RecordMigration[],
-  ): Record<string, unknown> {
+  #writable(kind: "overview" | "overviewState", id: string, raw: unknown, migrations: readonly RecordMigration[]): Record<string, unknown> {
     const migrated = migrateStoredRecord(raw, migrations);
     if (migrated.status === "unreadable") {
       throw new UnreadableRecordError(unreadableRecord(kind, id, migrated, raw));
@@ -305,8 +286,6 @@ function quarantined<T>(
 ): UnreadableRecord[] {
   return raws.flatMap((raw) => {
     const result = read(raw);
-    return result.status === "unreadable"
-      ? [unreadableRecord(kind, storedRecordId(raw, keyPath), result, raw)]
-      : [];
+    return result.status === "unreadable" ? [unreadableRecord(kind, storedRecordId(raw, keyPath), result, raw)] : [];
   });
 }

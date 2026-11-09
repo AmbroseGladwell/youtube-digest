@@ -50,7 +50,10 @@ kind of effort or occasion it suits where the video makes that clear.
 Never repeat a step, an amount, a time or a temperature, since the recipe
 sits right below it.`,
   schemaShape: (input) => {
-    const segment = z.int().min(NO_SEGMENT).max(input.transcript.length - 1);
+    const segment = z
+      .int()
+      .min(NO_SEGMENT)
+      .max(input.transcript.length - 1);
     return {
       recipe: z
         .object({
@@ -62,7 +65,12 @@ sits right below it.`,
           steps: z
             .array(
               z
-                .object({ text: RecipeStep.shape.text, group: RecipeStep.shape.group, startSegmentIndex: segment, endSegmentIndex: segment })
+                .object({
+                  text: RecipeStep.shape.text,
+                  group: RecipeStep.shape.group,
+                  startSegmentIndex: segment,
+                  endSegmentIndex: segment,
+                })
                 .refine(
                   ({ startSegmentIndex, endSegmentIndex }) =>
                     startSegmentIndex === NO_SEGMENT

@@ -27,14 +27,10 @@ export function useSetOverviewStateMutation() {
       await queryClient.cancelQueries({ queryKey: overviewKeys.all });
 
       const previousList = queryClient.getQueryData<LibraryEntry[]>(overviewKeys.list());
-      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(
-        overviewKeys.detail(overviewId),
-      );
+      const previousDetail = queryClient.getQueryData<OverviewWithState | null>(overviewKeys.detail(overviewId));
 
       queryClient.setQueryData<LibraryEntry[]>(overviewKeys.list(), (current) =>
-        current?.map((entry) =>
-          libraryEntryId(entry) === overviewId ? { ...entry, state: { ...entry.state, ...patch } } : entry,
-        ),
+        current?.map((entry) => (libraryEntryId(entry) === overviewId ? { ...entry, state: { ...entry.state, ...patch } } : entry)),
       );
       queryClient.setQueryData<OverviewWithState | null>(overviewKeys.detail(overviewId), (current) =>
         current ? { ...current, state: { ...current.state, ...patch } } : current,

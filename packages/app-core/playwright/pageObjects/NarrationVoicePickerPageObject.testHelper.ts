@@ -10,8 +10,7 @@ export class NarrationVoicePickerPageObject extends PageObject {
       return this;
     });
 
-  verifyIsAbsent = () =>
-    this.step("verifyIsAbsent", () => this.expectToHaveCount(narrationVoicePickerTestIds.root, 0));
+  verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectToHaveCount(narrationVoicePickerTestIds.root, 0));
 
   chooseVoice = (voice: NarrationVoice) =>
     this.step(`chooseVoice ${voice}`, () => this.get(narrationVoicePickerTestIds.radio(voice)).check());
@@ -23,30 +22,22 @@ export class NarrationVoicePickerPageObject extends PageObject {
     });
 
   verifyChosenRowIsInView = (voice: NarrationVoice) =>
-    this.step(`verifyChosenRowIsInView ${voice}`, () =>
-      expect(this.get(narrationVoicePickerTestIds.row(voice))).toBeInViewport(),
-    );
+    this.step(`verifyChosenRowIsInView ${voice}`, () => expect(this.get(narrationVoicePickerTestIds.row(voice))).toBeInViewport());
 
   verifyStatusSays = (text: string | RegExp) =>
-    this.step(`verifyStatusSays ${String(text)}`, () =>
-      expect(this.get(narrationVoicePickerTestIds.status)).toHaveText(text),
-    );
+    this.step(`verifyStatusSays ${String(text)}`, () => expect(this.get(narrationVoicePickerTestIds.status)).toHaveText(text));
 
   verifyRowSecondLineReads = (voice: NarrationVoice, text: string | RegExp) =>
     this.step(`verifyRowSecondLineReads ${voice} ${String(text)}`, () =>
       expect(this.get(narrationVoicePickerTestIds.second(voice))).toHaveText(text, { timeout: 10_000 }),
     );
 
-  playSample = (voice: NarrationVoice) =>
-    this.step(`playSample ${voice}`, () => this.click(narrationVoicePickerTestIds.play(voice)));
+  playSample = (voice: NarrationVoice) => this.step(`playSample ${voice}`, () => this.click(narrationVoicePickerTestIds.play(voice)));
 
-  stopSample = (voice: NarrationVoice) =>
-    this.step(`stopSample ${voice}`, () => this.click(narrationVoicePickerTestIds.stop(voice)));
+  stopSample = (voice: NarrationVoice) => this.step(`stopSample ${voice}`, () => this.click(narrationVoicePickerTestIds.stop(voice)));
 
   verifyPlayButtonName = (voice: NarrationVoice, name: string) =>
-    this.step(`verifyPlayButtonName ${voice}`, () =>
-      expect(this.get(narrationVoicePickerTestIds.play(voice))).toHaveAccessibleName(name),
-    );
+    this.step(`verifyPlayButtonName ${voice}`, () => expect(this.get(narrationVoicePickerTestIds.play(voice))).toHaveAccessibleName(name));
 
   verifySampleIsPlaying = (voice: NarrationVoice, playing: boolean) =>
     this.step(`verifySampleIsPlaying ${voice} ${playing}`, async () => {
@@ -67,9 +58,7 @@ export class NarrationVoicePickerPageObject extends PageObject {
     });
 
   verifySamplesDidNotLoad = () =>
-    this.step("verifySamplesDidNotLoad", () =>
-      this.expectToBeVisible(narrationVoicePickerTestIds.samplesUnavailable),
-    );
+    this.step("verifySamplesDidNotLoad", () => this.expectToBeVisible(narrationVoicePickerTestIds.samplesUnavailable));
 
   clickTryAgain = () => this.step("clickTryAgain", () => this.click(narrationVoicePickerTestIds.tryAgain));
 }

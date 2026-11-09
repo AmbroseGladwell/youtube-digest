@@ -13,9 +13,7 @@ export class AboutYouSentencePageObject extends PageObject {
     this.step(`verifySentenceReads ${text}`, () => expect(this.get(aboutYouSentenceTestIds.root)).toHaveText(text));
 
   verifySectionName = (section: AboutYouSection, name: string) =>
-    this.step(`verifySectionName ${section}`, () =>
-      expect(this.get(aboutYouSentenceTestIds.section(section))).toHaveAccessibleName(name),
-    );
+    this.step(`verifySectionName ${section}`, () => expect(this.get(aboutYouSentenceTestIds.section(section))).toHaveAccessibleName(name));
 
   verifySectionHasFocus = (section: AboutYouSection) =>
     this.step(`verifySectionHasFocus ${section}`, () => expect(this.get(aboutYouSentenceTestIds.section(section))).toBeFocused());
@@ -57,8 +55,7 @@ export class AboutYouSentencePageObject extends PageObject {
   verifyOwnCountReads = (text: string | RegExp) =>
     this.step(`verifyOwnCountReads ${text}`, () => expect(this.get(aboutYouSheetTestIds.ownCount)).toContainText(text));
 
-  closeOwnWithEscape = () =>
-    this.step("closeOwnWithEscape", () => this.get(aboutYouSheetTestIds.ownField).press("Escape"));
+  closeOwnWithEscape = () => this.step("closeOwnWithEscape", () => this.get(aboutYouSheetTestIds.ownField).press("Escape"));
 
   verifyOwnChipHasFocus = (group: string) =>
     this.step(`verifyOwnChipHasFocus ${group}`, () => expect(this.get(aboutYouSheetTestIds.ownOpen(group))).toBeFocused());

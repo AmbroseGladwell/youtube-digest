@@ -8,9 +8,7 @@ export interface ExchangeLinkCodeVariables {
   code: string;
 }
 
-export const useExchangeLinkCodeMutation = (
-  createApi?: (baseUrl: string) => AuthApi,
-) => {
+export const useExchangeLinkCodeMutation = (createApi?: (baseUrl: string) => AuthApi) => {
   const surface = useClientSurface();
   const api = createApi ?? ((baseUrl: string) => createFetchAuthApi({ baseUrl, surface }));
   return useMutation<LinkedSession, Error, ExchangeLinkCodeVariables>({

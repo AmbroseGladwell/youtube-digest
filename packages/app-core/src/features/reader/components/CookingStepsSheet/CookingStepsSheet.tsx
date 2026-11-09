@@ -80,7 +80,10 @@ export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, me
                         {step < current ? <StrokeIcon name="check" size={13} /> : step + 1}
                       </i>
                       <span className={styles.text}>
-                        <span className={styles.hidden}>Step {step + 1}{step < current ? ", done" : ""}. </span>
+                        <span className={styles.hidden}>
+                          Step {step + 1}
+                          {step < current ? ", done" : ""}.{" "}
+                        </span>
                         <OvenText text={first?.text ?? ""} us={usTemperatures} amounts={methodAmounts} />
                       </span>
                     </button>

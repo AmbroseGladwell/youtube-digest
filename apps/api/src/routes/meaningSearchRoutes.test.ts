@@ -63,7 +63,10 @@ test("a regenerated overview is matched on what it says now, never on what it sa
   const before = foundersNote();
   await reader.inject({ method: "POST", url: "/api/overviews", body: before });
   await testApp.drainEmbeddings();
-  const regenerated = noteAbout("A sourdough loaf needs patience", ["Feed it", "Fold it", "Bake it"], { id: before.id, source: before.source });
+  const regenerated = noteAbout("A sourdough loaf needs patience", ["Feed it", "Fold it", "Bake it"], {
+    id: before.id,
+    source: before.source,
+  });
   const rewrite = await reader.inject({ method: "POST", url: "/api/overviews", body: regenerated, ifMatch: 1 });
   assert.equal(rewrite.statusCode, 200, rewrite.body);
 
@@ -96,7 +99,10 @@ test("rewriting an overview embeds only the claims that changed", async () => {
   const founders = foundersNote();
   await reader.inject({ method: "POST", url: "/api/overviews", body: founders });
   await testApp.drainEmbeddings();
-  const changed = { ...founders, keyPoints: [...founders.keyPoints.slice(0, 2), { text: "Entrenched leaders resist change", range: null }] };
+  const changed = {
+    ...founders,
+    keyPoints: [...founders.keyPoints.slice(0, 2), { text: "Entrenched leaders resist change", range: null }],
+  };
   await reader.inject({ method: "POST", url: "/api/overviews", body: changed, ifMatch: 1 });
   await testApp.drainEmbeddings();
 

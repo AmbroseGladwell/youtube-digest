@@ -64,11 +64,14 @@ export function authRoutes(
   const magicLinkLimits = [perAddress(rateLimits.magicLinkPerAddress), rateLimitHook(rateLimits.magicLinkPerEmail, emailOf, clock)];
 
   app.post("/auth/magic-link", { ...PUBLIC, preHandler: magicLinkLimits }, async (request, reply) => {
-    const { email, surface, intent, firstName = null, returnTo = null, anonymousId } = parseOrThrow(
-      MagicLinkRequest,
-      request.body,
-      "The sign-in request",
-    );
+    const {
+      email,
+      surface,
+      intent,
+      firstName = null,
+      returnTo = null,
+      anonymousId,
+    } = parseOrThrow(MagicLinkRequest, request.body, "The sign-in request");
     const hasAccount = await accountExists(sql, email);
     const sendsLink = hasAccount || intent === "createAccount";
     const issued = await issueMagicLink(sql, {
@@ -102,16 +105,9 @@ export function authRoutes(
     return reply.status(202).send({ accepted: true });
   });
 
-  const signInWith = async (
-    link: ConsumedMagicLink,
-    now: Date,
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<SignedIn> => {
+  const signInWith = async (link: ConsumedMagicLink, now: Date, request: FastifyRequest, reply: FastifyReply): Promise<SignedIn> => {
     const account =
-      link.intent === "createAccount"
-        ? await findOrCreateAccount(sql, link.email, link.firstName)
-        : await findAccount(sql, link.email);
+      link.intent === "createAccount" ? await findOrCreateAccount(sql, link.email, link.firstName) : await findAccount(sql, link.email);
     if (account === null) {
       request.log.warn(apiLogLines.auth.signInRefused({ intent: link.intent, surface: link.surface }));
       throw new ApiError("link_invalid", "There’s no account for this address. Create one to sign in");
@@ -143,10 +139,7 @@ export function authRoutes(
     }
     const session = await createSessionForAccount(sql, account.id, { now, sessionTtlDays });
     request.log.info(apiLogLines.auth.sessionCreated({ accountId: account.id, sessionId: session.id, surface: "web" }));
-    reply.header(
-      "set-cookie",
-      sessionCookie(session.token, { expiresAt: session.expiresAt, now, secure: sessionCookieSecure }),
-    );
+    reply.header("set-cookie", sessionCookie(session.token, { expiresAt: session.expiresAt, now, secure: sessionCookieSecure }));
     const signedIn: SignedIn = {
       surface: "web",
       accountId: account.id,
@@ -204,22 +197,18 @@ export function authRoutes(
 
   // The button in the old address's mail: public, because every session is about to end,
   // and the token is the whole proof (docs/features/account-changes.md, "Moving it back").
-  app.post(
-    "/auth/email-change/revert",
-    { ...PUBLIC, preHandler: perAddress(rateLimits.emailChangeRevertPerAddress) },
-    async (request) => {
-      const { token } = parseOrThrow(SignInRequest, request.body, "The revert link");
-      const result = await revertEmailChange(sql, token, clock());
-      if (result.outcome === "refused") {
-        request.log.warn(apiLogLines.auth.emailChangeRevertRefused({ reason: result.reason }));
-        throw new ApiError("link_invalid", "This link can’t move the account back", {
-          reason: result.reason,
-          ...(result.reason === "taken" ? { email: result.email } : {}),
-        });
-      }
-      request.log.info(apiLogLines.auth.emailChangeReverted({ accountId: result.accountId }));
-      const reverted: EmailChangeReverted = { email: result.email };
-      return reverted;
-    },
-  );
+  app.post("/auth/email-change/revert", { ...PUBLIC, preHandler: perAddress(rateLimits.emailChangeRevertPerAddress) }, async (request) => {
+    const { token } = parseOrThrow(SignInRequest, request.body, "The revert link");
+    const result = await revertEmailChange(sql, token, clock());
+    if (result.outcome === "refused") {
+      request.log.warn(apiLogLines.auth.emailChangeRevertRefused({ reason: result.reason }));
+      throw new ApiError("link_invalid", "This link can’t move the account back", {
+        reason: result.reason,
+        ...(result.reason === "taken" ? { email: result.email } : {}),
+      });
+    }
+    request.log.info(apiLogLines.auth.emailChangeReverted({ accountId: result.accountId }));
+    const reverted: EmailChangeReverted = { email: result.email };
+    return reverted;
+  });
 }

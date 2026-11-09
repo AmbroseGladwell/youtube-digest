@@ -138,10 +138,11 @@ export class RecordsRepository {
   }
 
   async #get(tx: SqlClient, accountId: AccountId, kind: RecordKind, id: string): Promise<StoredRecord | null> {
-    const rows = await tx.query<RecordRow>(
-      `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = $2 and id = $3`,
-      [accountId, kind, id],
-    );
+    const rows = await tx.query<RecordRow>(`select ${RECORD_COLUMNS} from records where account_id = $1 and kind = $2 and id = $3`, [
+      accountId,
+      kind,
+      id,
+    ]);
     return rows[0] === undefined ? null : storedRecordFromRow(rows[0]);
   }
 }

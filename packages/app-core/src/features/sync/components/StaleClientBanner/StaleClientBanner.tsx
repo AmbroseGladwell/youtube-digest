@@ -24,10 +24,7 @@ export function StaleClientBanner() {
 
   const noun = heldBack.every((record) => record.kind === "overview") ? "overview" : "record";
   const count = heldBack.length;
-  const action =
-    surface === "web"
-      ? { label: "Reload", apply: () => globalThis.location.reload() }
-      : appUpdate;
+  const action = surface === "web" ? { label: "Reload", apply: () => globalThis.location.reload() } : appUpdate;
 
   return (
     <div className={styles.root} role="status" aria-live="polite" data-testid={staleClientBannerTestIds.root}>

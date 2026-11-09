@@ -1,4 +1,12 @@
-import { consentPath, CREATE_ACCOUNT_PATH, REVERT_EMAIL_PATH, SIGN_IN_PATH, sharePath, type OverviewId, type ShareToken } from "@overview/domain";
+import {
+  consentPath,
+  CREATE_ACCOUNT_PATH,
+  REVERT_EMAIL_PATH,
+  SIGN_IN_PATH,
+  sharePath,
+  type OverviewId,
+  type ShareToken,
+} from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
 
 // The single place that knows every path this app has (docs/conventions/frontend-architecture-guide.md

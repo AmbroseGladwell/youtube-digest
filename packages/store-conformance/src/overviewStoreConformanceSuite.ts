@@ -98,19 +98,16 @@ export function defineOverviewStoreConformanceSuite(
     assert.equal(state.favourite, true);
   });
 
-  test(
-    behaviour("getOverviewState defaults to unread, unfavourited, and no user tags for an overview nobody has touched"),
-    async () => {
-      const store = await createStore();
-      const overviewId = OverviewId.parse(randomUUID());
-      assert.deepEqual(await store.getOverviewState(overviewId), {
-        overviewId,
-        read: false,
-        favourite: false,
-        userTags: [],
-      });
-    },
-  );
+  test(behaviour("getOverviewState defaults to unread, unfavourited, and no user tags for an overview nobody has touched"), async () => {
+    const store = await createStore();
+    const overviewId = OverviewId.parse(randomUUID());
+    assert.deepEqual(await store.getOverviewState(overviewId), {
+      overviewId,
+      read: false,
+      favourite: false,
+      userTags: [],
+    });
+  });
 
   test(behaviour("deleteOverview removes it from getOverview and from listOverviews"), async () => {
     const store = await createStore();
@@ -158,9 +155,7 @@ export function defineOverviewStoreConformanceSuite(
     const store = await createStore();
     const overview = makeOverview();
     await store.saveOverview(overview);
-    assert.deepEqual(await store.listClaims(), [
-      { overviewId: overview.id, title: overview.source.title, claim: overview.coreClaim },
-    ]);
+    assert.deepEqual(await store.listClaims(), [{ overviewId: overview.id, title: overview.source.title, claim: overview.coreClaim }]);
   });
 
   test(behaviour("listClaims reflects every saved overview, not just the most recent one"), async () => {
@@ -336,10 +331,7 @@ function defineMigrationChecks(
     });
     if (!store) return;
 
-    await assert.rejects(
-      () => store.setOverviewTopics(oldRecordId, [TopicId.parse(randomUUID())]),
-      UnreadableRecordError,
-    );
+    await assert.rejects(() => store.setOverviewTopics(oldRecordId, [TopicId.parse(randomUUID())]), UnreadableRecordError);
   });
 
   test(behaviour("setOverviewCaptureReason refuses a record this client cannot read"), async () => {
@@ -349,9 +341,6 @@ function defineMigrationChecks(
     });
     if (!store) return;
 
-    await assert.rejects(
-      () => store.setOverviewCaptureReason(oldRecordId, "anything"),
-      UnreadableRecordError,
-    );
+    await assert.rejects(() => store.setOverviewCaptureReason(oldRecordId, "anything"), UnreadableRecordError);
   });
 }

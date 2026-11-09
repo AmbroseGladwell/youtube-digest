@@ -5,11 +5,7 @@
 export const JUST_GENERATED = { justGenerated: true };
 
 export function wasJustGenerated(state: unknown): boolean {
-  return (
-    typeof state === "object" &&
-    state !== null &&
-    (state as { justGenerated?: unknown }).justGenerated === true
-  );
+  return typeof state === "object" && state !== null && (state as { justGenerated?: unknown }).justGenerated === true;
 }
 
 // The right-click route got in on one-time access, so the Create button there may still ask

@@ -52,17 +52,13 @@ export interface ButtonStateChangedMessage {
 const isTyped = (message: unknown, type: string): boolean =>
   typeof message === "object" && message !== null && (message as { type?: unknown }).type === type;
 
-export const isRequestOverview = (message: unknown): message is RequestOverviewMessage =>
-  isTyped(message, BridgeMessage.REQUEST_OVERVIEW);
+export const isRequestOverview = (message: unknown): message is RequestOverviewMessage => isTyped(message, BridgeMessage.REQUEST_OVERVIEW);
 
-export const isTakeRequest = (message: unknown): message is TakeRequestMessage =>
-  isTyped(message, BridgeMessage.TAKE_REQUEST);
+export const isTakeRequest = (message: unknown): message is TakeRequestMessage => isTyped(message, BridgeMessage.TAKE_REQUEST);
 
-export const isReportRun = (message: unknown): boolean =>
-  isTyped(message, BridgeMessage.REPORT_RUN);
+export const isReportRun = (message: unknown): boolean => isTyped(message, BridgeMessage.REPORT_RUN);
 
-export const isReadButtonState = (message: unknown): message is ReadButtonStateMessage =>
-  isTyped(message, BridgeMessage.READ_BUTTON_STATE);
+export const isReadButtonState = (message: unknown): message is ReadButtonStateMessage => isTyped(message, BridgeMessage.READ_BUTTON_STATE);
 
 export const isPageMenuRequest = (message: unknown): boolean => isTyped(message, BridgeMessage.PAGE_MENU_REQUEST);
 

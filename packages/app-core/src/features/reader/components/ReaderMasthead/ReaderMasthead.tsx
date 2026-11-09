@@ -53,8 +53,7 @@ export interface ReaderMastheadProps {
 // Boolean(...), not !== null: an overview saved before publishedAt existed has no such
 // key at all (see OverviewThumbnail, and v1-architecture-decisions.md's swappable-store
 // model, which reads back whatever was written).
-const savedOn = (savedAt: string) =>
-  new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
+const savedOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
 // Design 4a, 5c and 6d: one head, three arrangements. The back link, the actions, the
 // menu and the title block are laid out by grid area, so the desktop's top bar, the
@@ -224,9 +223,7 @@ export function ReaderMasthead({
                   {sourceName(overview.source)}
                 </span>
               )}
-              {!isArticle && overview.verdict && (
-                <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
-              )}
+              {!isArticle && overview.verdict && <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>}
               {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
               {overview.verdict?.dubious && (
                 <button
@@ -274,11 +271,7 @@ export function ReaderMasthead({
           {overview.source.title}
         </h2>
 
-        <TopicLine
-          overview={overview}
-          editing={editingTopics}
-          onEditingChange={onEditingTopicsChange}
-        />
+        <TopicLine overview={overview} editing={editingTopics} onEditingChange={onEditingTopicsChange} />
 
         <p className={styles.metaRow}>
           <span data-testid={readerMastheadTestIds.meta}>

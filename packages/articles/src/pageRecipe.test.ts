@@ -44,7 +44,9 @@ test("the method is read however the page wrote it", () => {
 });
 
 test("a time or a yield the page didn't state in a form code can read stays empty, never guessed", () => {
-  const recipe = recipeIn(recipePage(recipeWith({ prepTime: "10 minutes", cookTime: "PT0M", totalTime: undefined, recipeYield: undefined })));
+  const recipe = recipeIn(
+    recipePage(recipeWith({ prepTime: "10 minutes", cookTime: "PT0M", totalTime: undefined, recipeYield: undefined })),
+  );
   assert.equal(recipe?.prepMinutes, null);
   assert.equal(recipe?.cookMinutes, null);
   assert.equal(recipe?.totalMinutes, null);

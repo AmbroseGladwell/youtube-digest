@@ -109,7 +109,8 @@ function SignedInHome() {
   if (overviewsQuery.isError) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
-        <ErrorState screen="libraryLoad"
+        <ErrorState
+          screen="libraryLoad"
           title="Couldn't load your library"
           error={overviewsQuery.error}
           body="Something went wrong reading your saved overviews. Nothing has been lost."
@@ -289,9 +290,7 @@ function StartHero() {
     >
       {offered ? (
         <div className={styles.offered}>
-          {subject.offer !== null && (
-            <SourceOffer source={subject.offer.source} title={subject.offer.title} video={subject.offer.video} />
-          )}
+          {subject.offer !== null && <SourceOffer source={subject.offer.source} title={subject.offer.title} video={subject.offer.video} />}
           <button type="button" className={styles.heroMake} onClick={subject.make} data-testid={homePageTestIds.generateButton}>
             Make my overview
           </button>
@@ -359,7 +358,15 @@ interface HeroProps {
   panel?: boolean;
 }
 
-function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside = <ExampleOverview />, alignTop = false, panel = false }: HeroProps) {
+function Hero({
+  standfirst,
+  children,
+  verb = "Watch Less,",
+  note = null,
+  aside = <ExampleOverview />,
+  alignTop = false,
+  panel = false,
+}: HeroProps) {
   const surface = useSurface();
   return (
     <div className={alignTop ? `${styles.hero} ${styles.heroTop}` : styles.hero} data-testid={homePageTestIds.hero}>
@@ -376,8 +383,7 @@ function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside =
 
         {panel ? null : surface === "extension" ? (
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>
-            This is the extension's own library, kept separate from the web app's by the browser
-            itself.
+            This is the extension's own library, kept separate from the web app's by the browser itself.
           </p>
         ) : (
           <div className={styles.extensionRow}>
@@ -389,8 +395,7 @@ function Hero({ standfirst, children, verb = "Watch Less,", note = null, aside =
               Overview
             </span>
             <p className={styles.heroAside}>
-              Or press <strong className={styles.heroStrong}>Overview</strong> under any YouTube
-              video with the Chrome extension.
+              Or press <strong className={styles.heroStrong}>Overview</strong> under any YouTube video with the Chrome extension.
             </p>
             <a
               className={styles.getExtension}
@@ -434,8 +439,8 @@ function ExampleOverview() {
         <div className={styles.exampleSection}>
           <p className={styles.exampleSectionLabel}>Premise</p>
           <p className={styles.exampleBody}>
-            A talking-head news explainer walking through three recent UK data points (GDP,
-            productivity, hiring) that suggest the economy is turning a corner.
+            A talking-head news explainer walking through three recent UK data points (GDP, productivity, hiring) that suggest the economy
+            is turning a corner.
           </p>
         </div>
         <div className={styles.exampleSection}>

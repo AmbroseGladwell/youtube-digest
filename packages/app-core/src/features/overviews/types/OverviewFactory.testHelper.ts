@@ -12,38 +12,43 @@ import type { OverviewWithState } from "./OverviewWithState.js";
 
 export type VideoOverview = Overview & { source: YouTubeSource };
 
-export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview => ({
-  id: OverviewId.parse(crypto.randomUUID()),
-  source: {
-    kind: "youtube",
-    id: VideoId.parse("example"),
-    url: "https://www.youtube.com/watch?v=example",
-    title: "Example",
-    channel: "Example Channel",
-    description: null,
-    durationMs: null,
-    publishedAt: null,
-    thumbnailUrl: null,
-  },
-  savedAt: new Date().toISOString(),
-  captureReason: null,
-  fromPlaylist: null,
-  madeOn: null,
-  article: null,
-  recipe: null,
-  inOneLine: "A short description of the video.",
-  coreClaim: "The single assertion this video makes.",
-  thin: false,
-  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
-  topicIds: [],
-  tags: ["one-tag", "two-tag", "three-tag"],
-  verdict: null,
-  selling: null,
-  howToApply: null,
-  watchAnyway: null,
-  chapters: null,
-  ...overrides,
-}) as VideoOverview;
+export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview =>
+  ({
+    id: OverviewId.parse(crypto.randomUUID()),
+    source: {
+      kind: "youtube",
+      id: VideoId.parse("example"),
+      url: "https://www.youtube.com/watch?v=example",
+      title: "Example",
+      channel: "Example Channel",
+      description: null,
+      durationMs: null,
+      publishedAt: null,
+      thumbnailUrl: null,
+    },
+    savedAt: new Date().toISOString(),
+    captureReason: null,
+    fromPlaylist: null,
+    madeOn: null,
+    article: null,
+    recipe: null,
+    inOneLine: "A short description of the video.",
+    coreClaim: "The single assertion this video makes.",
+    thin: false,
+    keyPoints: [
+      { text: "one", range: null },
+      { text: "two", range: null },
+      { text: "three", range: null },
+    ],
+    topicIds: [],
+    tags: ["one-tag", "two-tag", "three-tag"],
+    verdict: null,
+    selling: null,
+    howToApply: null,
+    watchAnyway: null,
+    chapters: null,
+    ...overrides,
+  }) as VideoOverview;
 
 export const makeOverviewState = (overviewId: string, overrides: Partial<OverviewState> = {}): OverviewState => ({
   overviewId: OverviewId.parse(overviewId),
@@ -72,9 +77,24 @@ export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview
     ],
     article: {
       chapters: [
-        { title: "How the survey went wrong", summary: "Rao traces the repair back to a 2011 survey.", place: { anchor: null, quote: "The bridge has been closed since March" }, wordCount: 690 },
-        { title: "Who pays", summary: "She sets out how the bill is split.", place: { anchor: "who-pays", quote: "The county offered half" }, wordCount: 460 },
-        { title: "The budget, line by line", summary: "The tender figures year by year.", place: { anchor: null, quote: "Each line of the tender" }, wordCount: 920 },
+        {
+          title: "How the survey went wrong",
+          summary: "Rao traces the repair back to a 2011 survey.",
+          place: { anchor: null, quote: "The bridge has been closed since March" },
+          wordCount: 690,
+        },
+        {
+          title: "Who pays",
+          summary: "She sets out how the bill is split.",
+          place: { anchor: "who-pays", quote: "The county offered half" },
+          wordCount: 460,
+        },
+        {
+          title: "The budget, line by line",
+          summary: "The tender figures year by year.",
+          place: { anchor: null, quote: "Each line of the tender" },
+          wordCount: 920,
+        },
       ],
       keyPointChapters: [0, 1, 2],
       readAnyway: {
@@ -106,8 +126,7 @@ export const makeRecipeOverview = (overrides: Partial<Overview> = {}): Overview 
     keyPoints: [],
     tags: ["stews", "weeknight", "leeks"],
     recipe: {
-      summary:
-        "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in, so the char flavours the whole pot.",
+      summary: "Okafor's weeknight stew rests on one idea: roast the leeks hard before they go in, so the char flavours the whole pot.",
       ingredients: [
         "3 large leeks, trimmed and halved lengthways",
         "3 tbsp olive oil, plus extra to serve",
@@ -147,7 +166,12 @@ export const makeRecipeVideoOverview = (overrides: Partial<Overview> = {}): Over
     watchAnyway: null,
     tags: ["jollof", "rice"],
     chapters: [
-      { title: "Why party jollof tastes different", summary: "Cooking for fifty, and the smoky bottom of the pot.", startMs: 0, endMs: 65_000 },
+      {
+        title: "Why party jollof tastes different",
+        summary: "Cooking for fifty, and the smoky bottom of the pot.",
+        startMs: 0,
+        endMs: 65_000,
+      },
       { title: "The pepper base", summary: "Blending, boiling it down and frying it.", startMs: 65_000, endMs: 400_000 },
       { title: "Tasting, and leftovers", summary: "She tastes and adjusts the salt.", startMs: 400_000, endMs: 872_000 },
     ],

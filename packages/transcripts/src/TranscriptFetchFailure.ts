@@ -18,16 +18,14 @@ export const TranscriptFetchFailure = {
   DAILY_CAP: "daily-cap",
 } as const;
 
-export type TranscriptFetchFailure =
-  (typeof TranscriptFetchFailure)[keyof typeof TranscriptFetchFailure];
+export type TranscriptFetchFailure = (typeof TranscriptFetchFailure)[keyof typeof TranscriptFetchFailure];
 
 const RETRYABLE: ReadonlySet<TranscriptFetchFailure> = new Set([
   TranscriptFetchFailure.RATE_LIMITED,
   TranscriptFetchFailure.SOURCE_UNAVAILABLE,
 ]);
 
-export const isRetryableFailure = (failure: TranscriptFetchFailure): boolean =>
-  RETRYABLE.has(failure);
+export const isRetryableFailure = (failure: TranscriptFetchFailure): boolean => RETRYABLE.has(failure);
 
 // A failure that says nothing about the video, only about this source's ability to
 // answer for it, so the next rung is worth asking.
@@ -43,5 +41,4 @@ const WORTH_ANOTHER_SOURCE: ReadonlySet<TranscriptFetchFailure> = new Set([
   TranscriptFetchFailure.DAILY_CAP,
 ]);
 
-export const isWorthAnotherSource = (failure: TranscriptFetchFailure): boolean =>
-  WORTH_ANOTHER_SOURCE.has(failure);
+export const isWorthAnotherSource = (failure: TranscriptFetchFailure): boolean => WORTH_ANOTHER_SOURCE.has(failure);

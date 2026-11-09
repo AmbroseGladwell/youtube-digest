@@ -25,7 +25,12 @@ export interface RecipeTextInput {
 // text with "-" and numbers, so it pastes cleanly anywhere (design 144r).
 export function recipeText({ title, from, url, recipe, ingredients, adjusted, methodAmounts = [] }: RecipeTextInput): string {
   const figures = recipeFigures(recipe);
-  const head = [title, `From ${from}: ${url}`, ...(figures.length === 0 ? [] : [recipeFiguresLine(figures)]), ...(adjusted === null ? [] : [adjusted])];
+  const head = [
+    title,
+    `From ${from}: ${url}`,
+    ...(figures.length === 0 ? [] : [recipeFiguresLine(figures)]),
+    ...(adjusted === null ? [] : [adjusted]),
+  ];
   const method =
     recipe.steps.length === 0
       ? [`The method, ${recipe.stepCount} steps, is on ${from}: ${url}`]
@@ -36,5 +41,9 @@ export function recipeText({ title, from, url, recipe, ingredients, adjusted, me
             return `${start + index}. ${inMethodAmounts(step, methodAmounts)}${moment === null ? "" : ` (${moment})`}`;
           }),
         ]);
-  return [head.join("\n"), ["Ingredients", ...ingredients.map((line) => `- ${line}`)].join("\n"), ["Method", ...method].join("\n")].join("\n\n") + "\n";
+  return (
+    [head.join("\n"), ["Ingredients", ...ingredients.map((line) => `- ${line}`)].join("\n"), ["Method", ...method].join("\n")].join(
+      "\n\n",
+    ) + "\n"
+  );
 }

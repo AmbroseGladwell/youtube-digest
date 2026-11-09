@@ -25,9 +25,7 @@ const Params = z.object({ id: OverviewId });
 const TopicsPatch = z.object({ topicIds: z.array(TopicId), updatedAt: UpdatedAt });
 const TagsPatch = z.object({ tags: Filing.shape.tags, updatedAt: UpdatedAt });
 const CaptureReasonPatch = z.object({ captureReason: z.string().nullable(), updatedAt: UpdatedAt });
-const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true })
-  .partial()
-  .extend({ updatedAt: UpdatedAt });
+const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true }).partial().extend({ updatedAt: UpdatedAt });
 
 export function overviewRoutes(
   app: FastifyInstance,
@@ -57,8 +55,7 @@ export function overviewRoutes(
         kind: "overview",
         id,
         sourceKey: storedSourceKey(body),
-        decide: (current, held) =>
-          decideReplace("overview", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!, held),
+        decide: (current, held) => decideReplace("overview", current, { body, schemaVersion, updatedAt, ifMatch }, request.client!, held),
       },
     ]);
     return sendWritten(reply, written!, ifMatch === null ? 201 : 200);
@@ -72,8 +69,7 @@ export function overviewRoutes(
       {
         kind: "overview",
         id,
-        decide: (current) =>
-          decideMerge("overview", current, { patch: { topicIds }, updatedAt, ifMatch, defaults: null }, request.client!),
+        decide: (current) => decideMerge("overview", current, { patch: { topicIds }, updatedAt, ifMatch, defaults: null }, request.client!),
       },
     ]);
     return sendWritten(reply, written!);
@@ -88,12 +84,7 @@ export function overviewRoutes(
         kind: "overview",
         id,
         decide: (current) =>
-          decideMerge(
-            "overview",
-            current,
-            { patch: { captureReason }, updatedAt, ifMatch, defaults: null },
-            request.client!,
-          ),
+          decideMerge("overview", current, { patch: { captureReason }, updatedAt, ifMatch, defaults: null }, request.client!),
       },
     ]);
     return sendWritten(reply, written!);
@@ -107,8 +98,7 @@ export function overviewRoutes(
       {
         kind: "overview",
         id,
-        decide: (current) =>
-          decideMerge("overview", current, { patch: { tags }, updatedAt, ifMatch, defaults: null }, request.client!),
+        decide: (current) => decideMerge("overview", current, { patch: { tags }, updatedAt, ifMatch, defaults: null }, request.client!),
       },
     ]);
     return sendWritten(reply, written!);

@@ -2,8 +2,7 @@ import { PROVIDER_CHOICE_LINE } from "../apiKeys/keyPrompt.js";
 import type { GenerationReadiness } from "../newOverview/useGenerationReadiness.js";
 
 const NO_TRANSCRIPT_SOURCE =
-  "This browser has no way to fetch a transcript yet. The extension reads them from " +
-  "YouTube on this device, for free.";
+  "This browser has no way to fetch a transcript yet. The extension reads them from " + "YouTube on this device, for free.";
 
 // What is missing, said in the words of the thing that is missing. Kept together so the
 // states cannot drift apart across the surfaces that render them
@@ -19,9 +18,7 @@ export const transcriptSourceNote = (readiness: GenerationReadiness): string | n
 // says the other missing thing too when both are missing, rather than sending the reader
 // to Settings to discover the second one (design 110k).
 export function keyPromptDetail(readiness: GenerationReadiness): string {
-  return readiness.needsTranscriptSource
-    ? `${PROVIDER_CHOICE_LINE} ${NO_TRANSCRIPT_SOURCE}`
-    : PROVIDER_CHOICE_LINE;
+  return readiness.needsTranscriptSource ? `${PROVIDER_CHOICE_LINE} ${NO_TRANSCRIPT_SOURCE}` : PROVIDER_CHOICE_LINE;
 }
 
 // The link's own words, so a reader knows where it goes before pressing it.

@@ -94,9 +94,7 @@ export class SettingsPageObject extends PageObject {
     this.step(`verifySectionIntroIsAbsent ${section}`, () => this.expectToHaveCount(settingsSectionTestIds.intro(section), 0));
 
   verifySectionHeadingIsFocused = (section: SettingsSectionId) =>
-    this.step(`verifySectionHeadingIsFocused ${section}`, () =>
-      expect(this.get(settingsSectionTestIds.heading(section))).toBeFocused(),
-    );
+    this.step(`verifySectionHeadingIsFocused ${section}`, () => expect(this.get(settingsSectionTestIds.heading(section))).toBeFocused());
 
   verifyRowsAre = (sections: SettingsSectionId[]) =>
     this.step(`verifyRowsAre ${sections.join(", ")}`, () =>
@@ -121,9 +119,7 @@ export class SettingsPageObject extends PageObject {
 
   verifyListIsShown = (shown: boolean) =>
     this.step(`verifyListIsShown ${shown}`, () =>
-      shown
-        ? this.expectToBeVisible(settingsSectionListTestIds.root)
-        : this.expectToHaveCount(settingsSectionListTestIds.root, 0),
+      shown ? this.expectToBeVisible(settingsSectionListTestIds.root) : this.expectToHaveCount(settingsSectionListTestIds.root, 0),
     );
 
   clickBackToSettings = (): Promise<SettingsPageObject> =>
@@ -137,15 +133,12 @@ export class SettingsPageObject extends PageObject {
       return this;
     });
 
-  clickBackToOverviews = () =>
-    this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.overviewsLink));
+  clickBackToOverviews = () => this.step("clickBackToOverviews", () => this.click(settingsPageTestIds.overviewsLink));
 
   recheckPlan = () => this.step("recheckPlan", () => this.click(plusPlanPanelTestIds.recheckButton));
 
   verifyPlanReads = (plan: string) =>
-    this.step(`verifyPlanReads ${plan}`, () =>
-      expect(this.get(plusPlanPanelTestIds.planName)).toHaveText(plan),
-    );
+    this.step(`verifyPlanReads ${plan}`, () => expect(this.get(plusPlanPanelTestIds.planName)).toHaveText(plan));
 
   verifyEveryAccountIncludes = (features: string[]) =>
     this.step(`verifyEveryAccountIncludes ${features.join(", ")}`, () =>
@@ -186,9 +179,7 @@ export class SettingsPageObject extends PageObject {
     });
 
   verifyPlansAreNotOnSale = (text: string) =>
-    this.step(`verifyPlansAreNotOnSale ${text}`, () =>
-      expect(this.get(plusPlanPanelTestIds.notOnSaleNote)).toContainText(text),
-    );
+    this.step(`verifyPlansAreNotOnSale ${text}`, () => expect(this.get(plusPlanPanelTestIds.notOnSaleNote)).toContainText(text));
 
   verifyBuildLineReads = (text: string) =>
     this.step(`verifyBuildLineReads ${text}`, () => expect(this.get(buildLineTestIds.root)).toHaveText(text));

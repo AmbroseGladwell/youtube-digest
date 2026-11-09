@@ -2,10 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_SETTINGS, Settings, type SettingsStore } from "@overview/domain";
 
-export function defineSettingsStoreConformanceSuite(
-  label: string,
-  createStore: () => SettingsStore | Promise<SettingsStore>,
-): void {
+export function defineSettingsStoreConformanceSuite(label: string, createStore: () => SettingsStore | Promise<SettingsStore>): void {
   const behaviour = (description: string) => `${label} SettingsStore: ${description}`;
 
   test(behaviour("get() seeds and returns the default settings before any update has been made"), async () => {

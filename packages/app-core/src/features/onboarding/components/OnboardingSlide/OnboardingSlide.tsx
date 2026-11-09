@@ -115,8 +115,7 @@ function Scene({
       <div className={styles.chat}>
         <span className={styles.bubbleMine}>What have I saved about sleep?</span>
         <span className={styles.bubble}>
-          Two overviews in Health. <strong>Why Sleep Comes First</strong> says to keep the same wake time, even at
-          weekends.
+          Two overviews in Health. <strong>Why Sleep Comes First</strong> says to keep the same wake time, even at weekends.
         </span>
       </div>
     );

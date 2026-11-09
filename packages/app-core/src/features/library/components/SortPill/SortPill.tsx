@@ -96,13 +96,7 @@ export function SortPill({ sort, onChange, compact = false }: SortPillProps) {
       </button>
 
       {open && (
-        <div
-          className={styles.menu}
-          role="menu"
-          aria-label="Sort overviews"
-          onKeyDown={moveFocus}
-          data-testid={sortPillTestIds.menu}
-        >
+        <div className={styles.menu} role="menu" aria-label="Sort overviews" onKeyDown={moveFocus} data-testid={sortPillTestIds.menu}>
           {LIBRARY_SORTS.map((option, index) => (
             <button
               key={option}

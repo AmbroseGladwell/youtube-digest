@@ -14,9 +14,7 @@ export class RelatedByTagPageObject extends PageObject {
     );
 
   verifyNoTagLinks = () =>
-    this.step("verifyNoTagLinks", () =>
-      expect(this.page.getByRole("list", { name: "Tags" }).getByRole("link")).toHaveCount(0),
-    );
+    this.step("verifyNoTagLinks", () => expect(this.page.getByRole("list", { name: "Tags" }).getByRole("link")).toHaveCount(0));
 
   verifyRelatedRead = (rows: string[]) =>
     this.step(`verifyRelatedRead ${rows.join(", ")}`, () =>
@@ -47,7 +45,9 @@ export class RelatedByTagPageObject extends PageObject {
 
   openRelated = (title: string): Promise<ReaderPageObject> =>
     this.step(`openRelated ${title}`, async () => {
-      await this.get(relatedByTagTestIds.related).getByRole("link", { name: new RegExp(title) }).click();
+      await this.get(relatedByTagTestIds.related)
+        .getByRole("link", { name: new RegExp(title) })
+        .click();
       return new ReaderPageObject(this.testContext).verifyIsShown();
     });
 }

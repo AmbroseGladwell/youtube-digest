@@ -7,8 +7,7 @@ export interface TokenUsage {
   outputTokens: number;
 }
 
-export const promptTokensOf = (usage: TokenUsage): number =>
-  usage.uncachedInputTokens + usage.cachedInputTokens + usage.cacheWriteTokens;
+export const promptTokensOf = (usage: TokenUsage): number => usage.uncachedInputTokens + usage.cachedInputTokens + usage.cacheWriteTokens;
 
 const count = (value: unknown): number => (typeof value === "number" && Number.isFinite(value) ? value : 0);
 

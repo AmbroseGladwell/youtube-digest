@@ -32,7 +32,10 @@ test("the first cycle enrols the library, so everything it already held is pushe
   const status = await engineOver(api, storage).sync();
 
   assert.equal(storage.enrolled, true);
-  assert.deepEqual(api.calls.map((call) => call.method), ["handshake", "createOverview", "setOverviewState", "changes"]);
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    ["handshake", "createOverview", "setOverviewState", "changes"],
+  );
   assert.deepEqual(storage.outbox, []);
   assert.equal(status.phase, "idle");
   assert.equal(status.lastSyncedAt, NOW.toISOString());
@@ -51,10 +54,19 @@ test("pushes go in the order they were journaled, and the feed is pulled after t
 
   await engineOver(api, storage, applied).sync();
 
-  assert.deepEqual(api.calls.map((call) => call.method), ["handshake", "createOverview", "setOverviewTopics", "changes", "changes"]);
-  assert.deepEqual(api.callsTo("changes").map((call) => call.args[0]), [0, 3]);
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    ["handshake", "createOverview", "setOverviewTopics", "changes", "changes"],
+  );
+  assert.deepEqual(
+    api.callsTo("changes").map((call) => call.args[0]),
+    [0, 3],
+  );
   assert.equal(storage.cursorValue, 4);
-  assert.deepEqual(applied.map((page) => page.map((c) => c.id)), [["b"], ["c"]]);
+  assert.deepEqual(
+    applied.map((page) => page.map((c) => c.id)),
+    [["b"], ["c"]],
+  );
   assert.ok(storage.records.has("overview/b") && storage.records.has("overview/c"));
 });
 
@@ -80,7 +92,10 @@ test("a write the server refuses is parked, later writes to that record wait beh
 
   const status = await engineOver(api, storage).sync();
 
-  assert.deepEqual(api.calls.map((call) => call.method), ["handshake", "createOverview", "setOverviewState", "changes"]);
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    ["handshake", "createOverview", "setOverviewState", "changes"],
+  );
   assert.equal(storage.outbox.length, 2);
   assert.equal(storage.outbox[0]?.stuck?.code, "invalid_request");
   assert.equal(storage.outbox[1]?.stuck, null);
@@ -144,7 +159,10 @@ test("below the write floor nothing is pushed, the feed is still pulled, and the
   const status = await engineOver(api, storage).sync();
 
   assert.equal(status.phase, "unsupported");
-  assert.deepEqual(api.calls.map((call) => call.method), ["handshake", "changes"]);
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    ["handshake", "changes"],
+  );
   assert.equal(status.pending, 1);
   assert.ok(storage.records.has("overview/b"));
   assert.deepEqual(status.handshake, api.handshakeAnswer);
@@ -270,7 +288,10 @@ test("a journaled transcript is sent in the cycle and leaves the outbox without 
 
   const status = await engineOver(api, storage).sync();
 
-  assert.deepEqual(api.callsTo("saveTranscript").map((call) => call.args), [[transcript]]);
+  assert.deepEqual(
+    api.callsTo("saveTranscript").map((call) => call.args),
+    [[transcript]],
+  );
   assert.deepEqual(storage.outbox, []);
   assert.equal(storage.revisions.has("transcript/v1"), false);
   assert.equal(status.pending, 0);
@@ -367,17 +388,20 @@ test("an overview the account already holds is folded into the account's copy: p
   assert.deepEqual(folds, [{ from: "mine", into: "theirs" }]);
   assert.equal(status.phase, "idle");
   assert.deepEqual(status, { ...status, pending: 0, stuck: 0 });
-  assert.deepEqual(api.calls.map((call) => call.method), [
-    "handshake",
-    "createOverview",
-    "changes",
-    "saveTranscript",
-    "setOverviewTopics",
-    "setOverviewTags",
-    "setOverviewCaptureReason",
-    "setOverviewState",
-    "changes",
-  ]);
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    [
+      "handshake",
+      "createOverview",
+      "changes",
+      "saveTranscript",
+      "setOverviewTopics",
+      "setOverviewTags",
+      "setOverviewCaptureReason",
+      "setOverviewState",
+      "changes",
+    ],
+  );
   assert.deepEqual(api.callsTo("setOverviewTopics")[0]!.args.slice(0, 2), ["theirs", ["t1", "t2"]]);
   assert.deepEqual(api.callsTo("setOverviewTags")[0]!.args.slice(0, 2), ["theirs", ["one", "two", "three"]]);
   assert.deepEqual(api.callsTo("setOverviewCaptureReason")[0]!.args.slice(0, 2), ["theirs", "Why"]);
@@ -398,7 +422,10 @@ test("an overview held by a copy this device cannot read yet is parked with the 
   const status = await engineOver(api, storage).sync();
 
   assert.equal(status.stuck, 2);
-  assert.deepEqual(storage.outbox.map((entry) => entry.stuck?.code), ["video_already_held", "video_already_held"]);
+  assert.deepEqual(
+    storage.outbox.map((entry) => entry.stuck?.code),
+    ["video_already_held", "video_already_held"],
+  );
 });
 
 test("an overview waiting for the month to turn stays pending, its transcript waits behind it, and other records still go", async () => {
@@ -413,8 +440,14 @@ test("an overview waiting for the month to turn stays pending, its transcript wa
 
   const status = await engineOver(api, storage).sync();
 
-  assert.deepEqual(api.calls.map((call) => call.method), ["handshake", "createOverview", "reserveOverview", "setOverviewState", "changes"]);
-  assert.deepEqual(storage.outbox.map((entry) => entry.stuck), [null, null]);
+  assert.deepEqual(
+    api.calls.map((call) => call.method),
+    ["handshake", "createOverview", "reserveOverview", "setOverviewState", "changes"],
+  );
+  assert.deepEqual(
+    storage.outbox.map((entry) => entry.stuck),
+    [null, null],
+  );
   assert.equal(status.phase, "idle");
   assert.deepEqual([status.pending, status.stuck], [2, 0]);
 });

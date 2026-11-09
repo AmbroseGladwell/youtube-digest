@@ -46,9 +46,7 @@ describe("usageLineOf", () => {
 
 describe("planRowCount", () => {
   it("gives what's left of the next quota, or Checking…", () => {
-    expect(planRowCount({ kind: "quota", key: "ours", left: 7, limit: 10, resetsOn: RESETS_ON, passedOver: null })).toBe(
-      "7 of 10 left",
-    );
+    expect(planRowCount({ kind: "quota", key: "ours", left: 7, limit: 10, resetsOn: RESETS_ON, passedOver: null })).toBe("7 of 10 left");
     expect(planRowCount({ kind: "checking" })).toBe("Checking…");
     expect(planRowCount(null)).toBeNull();
   });

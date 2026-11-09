@@ -3,8 +3,7 @@ import { join } from "node:path";
 import { ACCENT_COLOURS } from "@overview/domain";
 import { beforeEach, describe, expect, it } from "vitest";
 
-const publicFile = (shell: "extension" | "web", path: string) =>
-  join(process.cwd(), "..", "..", "apps", shell, "public", path);
+const publicFile = (shell: "extension" | "web", path: string) => join(process.cwd(), "..", "..", "apps", shell, "public", path);
 
 const script = readFileSync(publicFile("extension", "appearance.js"), "utf8");
 

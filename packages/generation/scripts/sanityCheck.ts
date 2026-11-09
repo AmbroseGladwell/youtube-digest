@@ -1,11 +1,6 @@
 import { readFileSync } from "node:fs";
 import { DEFAULT_MODEL, DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain";
-import {
-  generateOverview,
-  createGenerationClient,
-  type GenerationInput,
-  type TranscriptSegment,
-} from "@overview/generation";
+import { generateOverview, createGenerationClient, type GenerationInput, type TranscriptSegment } from "@overview/generation";
 import { randomUUID } from "node:crypto";
 
 const transcriptPath = process.argv[2];
@@ -40,10 +35,10 @@ const input: GenerationInput = {
 };
 
 const client = createGenerationClient({
-    provider: "anthropic",
-    apiKey: process.env.ANTHROPIC_API_KEY ?? "",
-    model: DEFAULT_MODEL.anthropic,
-  });
+  provider: "anthropic",
+  apiKey: process.env.ANTHROPIC_API_KEY ?? "",
+  model: DEFAULT_MODEL.anthropic,
+});
 
 const overview = await generateOverview(client, input, {
   id: OverviewId.parse(randomUUID()),

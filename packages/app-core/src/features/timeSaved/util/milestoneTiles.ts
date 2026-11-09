@@ -19,12 +19,10 @@ export function milestoneTiles(marks: MilestoneMarks, minutes: number): Mileston
   });
 }
 
-export const reachedCount = (minutes: number): number =>
-  MILESTONES.filter((milestone) => milestone.minutes <= minutes).length;
+export const reachedCount = (minutes: number): number => MILESTONES.filter((milestone) => milestone.minutes <= minutes).length;
 
 // "13 min to go" under an hour, "5h 13m to go" after.
-export const timeToGo = (minutes: number): string =>
-  `${minutes < 60 ? `${minutes} min` : formatTimeSaved(minutes)} to go`;
+export const timeToGo = (minutes: number): string => `${minutes < 60 ? `${minutes} min` : formatTimeSaved(minutes)} to go`;
 
 export const spokenTimeToGo = (minutes: number): string => `${spokenTimeSaved(minutes)} to go`;
 

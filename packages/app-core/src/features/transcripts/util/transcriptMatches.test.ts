@@ -30,9 +30,7 @@ describe("transcriptMatches", () => {
   });
 
   it("matches a phrase across the words of one block", () => {
-    expect(transcriptMatches(BLOCKS, "is the trap")).toEqual([
-      { index: 0, blockIndex: 0, start: 44, end: 55 },
-    ]);
+    expect(transcriptMatches(BLOCKS, "is the trap")).toEqual([{ index: 0, blockIndex: 0, start: 44, end: 55 }]);
   });
 
   it("reads the query as characters, not as a regular expression", () => {

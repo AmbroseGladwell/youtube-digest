@@ -6,9 +6,7 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const API_KEYS = ANTHROPIC_KEY;
 
-test("the extension says its library is its own, where an empty shelf would otherwise be a mystery", async ({
-  launcher,
-}) => {
+test("the extension says its library is its own, where an empty shelf would otherwise be a mystery", async ({ launcher }) => {
   const home = await launcher.launch({ surface: "extension" });
   await home.verifyShowsFirstRunHero();
   await home.verifyShowsSeparateLibraryNote();
@@ -23,9 +21,7 @@ test("signed out, the extension's Settings says signing in keeps its library in 
   await settings.syncPanel.verifyHintReads(/^Sign in with your email, and the extension keeps your library in step/);
 });
 
-test("the web app, which has no second library to be confused with, says none of it", async ({
-  launcher,
-}) => {
+test("the web app, which has no second library to be confused with, says none of it", async ({ launcher }) => {
   const home = await launcher.launch({ surface: "web", sync: true });
   await home.verifyHasNoSeparateLibraryNote();
   await home.verifyOffersTheExtension();
@@ -45,10 +41,7 @@ test("a run in the side panel admits that closing the panel stops it, unlike clo
   await launcher.appShell.newOverviewDialog.verifyFootNote(/Closing the side panel does stop it\./);
 });
 
-test("the same run on the web promises only that the dialog can be closed", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the same run on the web promises only that the dialog can be closed", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.ANTHROPIC_MESSAGES);
   const form = await launcher.launchExpectingFirstRun({ apiKeys: API_KEYS, surface: "web" });
   await form.submitUrl(VALID_URL);

@@ -6,7 +6,8 @@ export type ColumnScale = "full" | "narrow" | "compact";
 export const NARROW_UNDER_PX = 720;
 export const COMPACT_UNDER_PX = 480;
 
-export const columnScale = (width: number): ColumnScale => (width < COMPACT_UNDER_PX ? "compact" : width < NARROW_UNDER_PX ? "narrow" : "full");
+export const columnScale = (width: number): ColumnScale =>
+  width < COMPACT_UNDER_PX ? "compact" : width < NARROW_UNDER_PX ? "narrow" : "full";
 
 export interface CookingColumnScale {
   gauge: RefCallback<HTMLElement>;

@@ -73,9 +73,7 @@ export class OverviewButton {
 
     this.element.setAttribute(
       "aria-label",
-      state.kind === "ready"
-        ? "Read the overview of this video"
-        : "Create an overview of this video",
+      state.kind === "ready" ? "Read the overview of this video" : "Create an overview of this video",
     );
 
     this.#paintLabel();
@@ -90,9 +88,7 @@ export class OverviewButton {
   #paintLabel(): void {
     const { kind, startedAt } = this.#state;
     this.#label.textContent =
-      kind === "generating" && startedAt !== null
-        ? `${LABEL.generating} · ${elapsedLabel(startedAt, Date.now())}`
-        : LABEL[kind];
+      kind === "generating" && startedAt !== null ? `${LABEL.generating} · ${elapsedLabel(startedAt, Date.now())}` : LABEL[kind];
   }
 
   // Ticked from the run's own startedAt rather than counted up from zero here, so a

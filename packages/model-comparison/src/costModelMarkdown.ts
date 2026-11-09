@@ -51,8 +51,7 @@ export function armCost(
 export const breakEvenReaders = (stageOne: number, personal: number, single: number): number | null =>
   single <= personal ? null : stageOne / (single - personal);
 
-export const hybridCostPerReader = (stageOne: number, personal: number, readers: number): number =>
-  stageOne / readers + personal;
+export const hybridCostPerReader = (stageOne: number, personal: number, readers: number): number => stageOne / readers + personal;
 
 const dollars = (value: number) => `$${value.toFixed(4)}`;
 
@@ -63,9 +62,7 @@ function judgingTable(judgments: readonly PersonalJudgeRecord[], candidate: stri
     const count = (result: string) => results.filter((value) => value === result).length;
     return `| ${dimension} | ${count("win")} | ${count("tie")} | ${count("loss")} |`;
   });
-  return [`${judged.length} pairs judged.`, "", "| Dimension | Wins | Ties | Losses |", "|---|---|---|---|", ...rows].join(
-    "\n",
-  );
+  return [`${judged.length} pairs judged.`, "", "| Dimension | Wins | Ties | Losses |", "|---|---|---|---|", ...rows].join("\n");
 }
 
 export function costModelMarkdown(

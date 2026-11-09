@@ -36,11 +36,7 @@ export function eventRoutes(app: FastifyInstance, { sink, records, clock }: Even
       config: { optionalSession: true },
       preHandler: [
         rateLimitHook(rateLimits.eventsPerAccount, (request) => request.session?.accountId ?? null, clock),
-        rateLimitHook(
-          rateLimits.anonymousEventsPerAddress,
-          (request) => (request.session === null ? request.clientAddress : null),
-          clock,
-        ),
+        rateLimitHook(rateLimits.anonymousEventsPerAddress, (request) => (request.session === null ? request.clientAddress : null), clock),
       ],
     },
     async (request, reply) => {

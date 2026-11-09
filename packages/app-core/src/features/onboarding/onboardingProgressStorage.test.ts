@@ -62,7 +62,10 @@ describe("onboardingProgressStorage", () => {
 
   it("reads a share started before samples could start one as a share, not a sample", () => {
     const storage = memoryStorage();
-    const share = { token: ShareToken.parse("k7Qm2x9RfTabcdef"), snapshot: shareSnapshot({ overview: makeOverview(), transcript: null, narration: null }) };
+    const share = {
+      token: ShareToken.parse("k7Qm2x9RfTabcdef"),
+      snapshot: shareSnapshot({ overview: makeOverview(), transcript: null, narration: null }),
+    };
     storage.setItem("overview.onboarding.v1", JSON.stringify({ ...progress, share }));
     expect(readOnboardingProgress(storage)?.share?.sample).toBe(false);
   });

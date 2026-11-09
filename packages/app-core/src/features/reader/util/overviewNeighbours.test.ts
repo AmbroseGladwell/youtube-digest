@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { OverviewId } from "@overview/domain";
-import {
-  makeOverviewWithState,
-  makeUnreadableEntry,
-} from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeOverviewWithState, makeUnreadableEntry } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { DEFAULT_LIBRARY_VIEW } from "../../library/types/LibraryView.js";
 import { overviewNeighbours } from "./overviewNeighbours.js";
 
@@ -52,9 +49,15 @@ describe("overviewNeighbours", () => {
   });
 
   it("walks the view the list was in, filtered and in its order", () => {
-    const zebra = makeOverviewWithState({ savedAt: "2026-09-16T00:00:00.000Z", source: { ...makeOverviewWithState().overview.source, title: "Zebra" } });
+    const zebra = makeOverviewWithState({
+      savedAt: "2026-09-16T00:00:00.000Z",
+      source: { ...makeOverviewWithState().overview.source, title: "Zebra" },
+    });
     const read = makeOverviewWithState({ savedAt: "2026-09-15T00:00:00.000Z" }, { read: true });
-    const apple = makeOverviewWithState({ savedAt: "2026-09-14T00:00:00.000Z", source: { ...makeOverviewWithState().overview.source, title: "Apple" } });
+    const apple = makeOverviewWithState({
+      savedAt: "2026-09-14T00:00:00.000Z",
+      source: { ...makeOverviewWithState().overview.source, title: "Apple" },
+    });
     const view = { ...DEFAULT_LIBRARY_VIEW, sort: "title" as const };
 
     expect(overviewNeighbours([zebra, read, apple], apple.overview.id, { view, kept: new Set() })).toEqual({

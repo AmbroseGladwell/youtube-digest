@@ -6,8 +6,7 @@ export interface LibraryMoveCopy {
   then: string | null;
 }
 
-const keptExisting = (count: number): string =>
-  `so we kept your existing ${count === 1 ? "version" : "versions"}`;
+const keptExisting = (count: number): string => `so we kept your existing ${count === 1 ? "version" : "versions"}`;
 
 // Designs 47e-1 and 47e-2: "added" only ever when something was.
 export function libraryMoveCopy({ moved, alreadyThere }: LibraryMove): LibraryMoveCopy {
@@ -20,8 +19,6 @@ export function libraryMoveCopy({ moved, alreadyThere }: LibraryMove): LibraryMo
   return {
     lead: `${moved} ${overviewsNoun(moved)} added to your account.`,
     then:
-      alreadyThere === 0
-        ? null
-        : `${alreadyThere} ${alreadyThere === 1 ? "was" : "were"} already there, ${keptExisting(alreadyThere)}.`,
+      alreadyThere === 0 ? null : `${alreadyThere} ${alreadyThere === 1 ? "was" : "were"} already there, ${keptExisting(alreadyThere)}.`,
   };
 }

@@ -14,13 +14,24 @@ const EVERYTHING = {
   build: BUILD,
 };
 
-test("on a wide screen, Settings opens beside its first section, and every row carries its value", async ({
-  launcher,
-}) => {
+test("on a wide screen, Settings opens beside its first section, and every row carries its value", async ({ launcher }) => {
   await launcher.launch(EVERYTHING);
   const settings = await launcher.appShell.openSettings();
 
-  await settings.verifyRowsAre(["account", "plan", "keys", "connections", "voice", "personalisation", "appearance", "milestones", "playlists", "shared", "privacy", "about"]);
+  await settings.verifyRowsAre([
+    "account",
+    "plan",
+    "keys",
+    "connections",
+    "voice",
+    "personalisation",
+    "appearance",
+    "milestones",
+    "playlists",
+    "shared",
+    "privacy",
+    "about",
+  ]);
   await settings.verifyCurrentRow("account");
   await settings.verifySectionIsShown("account");
   await settings.verifyRowReads("account", /^Ada · (Synced|Connected)/);
@@ -54,10 +65,7 @@ test("a section's own address opens it beside the list", async ({ launcher }) =>
   await settings.verifyPlanReads("Plus");
 });
 
-test("on a phone the list is the page, and each row opens its section with the way back", async ({
-  page,
-  launcher,
-}) => {
+test("on a phone the list is the page, and each row opens its section with the way back", async ({ page, launcher }) => {
   await page.setViewportSize(PHONE);
   await launcher.launch(EVERYTHING);
   await launcher.openPage(Routes.settings());

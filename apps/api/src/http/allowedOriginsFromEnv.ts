@@ -9,9 +9,7 @@ export function allowedOriginsFromEnv(value: string | undefined): string[] {
     .filter((origin) => origin.length > 0);
   for (const origin of origins) {
     if (!ORIGIN.test(origin)) {
-      throw new AllowedOriginError(
-        `"${origin}" is not an origin: expected scheme://host[:port] with no path, and never *`,
-      );
+      throw new AllowedOriginError(`"${origin}" is not an origin: expected scheme://host[:port] with no path, and never *`);
     }
   }
   return origins;

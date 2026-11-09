@@ -42,7 +42,11 @@ test("a pasted article is named before Generate, then read once and made into a 
   expect(backendSimulator.articles.reads()).toEqual([LINK]);
 });
 
-test("a site that blocks us sends a desktop reader to the extension, and nothing is offered to generate", async ({ page, launcher, backendSimulator }) => {
+test("a site that blocks us sends a desktop reader to the extension, and nothing is offered to generate", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.articles.answerWith({ status: "failed", reason: "blocked" });
   await launcher.launch(SIGNED_IN);
@@ -56,7 +60,11 @@ test("a site that blocks us sends a desktop reader to the extension, and nothing
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 });
 
-test("in the extension's own page, a paywall sends the reader to the article and the side panel", async ({ page, launcher, backendSimulator }) => {
+test("in the extension's own page, a paywall sends the reader to the article and the side panel", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.articles.answerWith({ status: "failed", reason: "paywalled", shownWords: 180, siteName: "The Harbour Post" });
   await launcher.launch({ ...SIGNED_IN, surface: "extension" });
@@ -100,7 +108,11 @@ test("an article already held replaces Generate with the way to it", async ({ pa
   await launcher.readerPage.verifyIsShown();
 });
 
-test("without an account the field stays YouTube's, and a page link is refused, not fetched", async ({ page, launcher, backendSimulator }) => {
+test("without an account the field stays YouTube's, and a page link is refused, not fetched", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   await launcher.launch({ apiKeys: ANTHROPIC_KEY });
   await launcher.appShell.openNewOverview();
 

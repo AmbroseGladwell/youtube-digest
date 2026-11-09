@@ -23,7 +23,11 @@ const FULL = makeOverview({
   captureReason: "Watch again before the next session.",
   inOneLine: "A careful breakdown of the hip hinge.",
   coreClaim: "The swing is a hinge rather than a squat.",
-  keyPoints: [{ text: "Throw the bell back.", range: null }, { text: "Stand tall at the top.", range: null }, { text: "Hinge, don't squat.", range: null }],
+  keyPoints: [
+    { text: "Throw the bell back.", range: null },
+    { text: "Stand tall at the top.", range: null },
+    { text: "Hinge, don't squat.", range: null },
+  ],
   tags: ["kettlebell", "hip-hinge", "technique"],
   verdict: {
     novelty: "original",
@@ -86,7 +90,9 @@ test("opens with where the note came from: channel, length, dates, link and tags
 test("links every chapter to its moment in the video, so a point can be traced back", () => {
   const markdown = overviewMarkdown(FULL);
 
-  assert.ok(markdown.includes("- [0:00](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=0) **The hinge**: Why the swing starts at the hips."));
+  assert.ok(
+    markdown.includes("- [0:00](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=0) **The hinge**: Why the swing starts at the hips."),
+  );
   assert.ok(markdown.includes("- [1:35](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=95) **Three faults**"));
 });
 
@@ -145,9 +151,7 @@ test("leaves out every optional section a sparse note does not have", () => {
 });
 
 test("leaves out selling when the video sells nothing", () => {
-  const markdown = overviewMarkdown(
-    makeOverview({ selling: { type: "none", detail: "", compromisesContent: false } }),
-  );
+  const markdown = overviewMarkdown(makeOverview({ selling: { type: "none", detail: "", compromisesContent: false } }));
 
   assert.ok(!markdown.includes("What it sells"));
 });

@@ -6,6 +6,8 @@ import { usePlaybackPosition } from "../../../app/PlaybackContext.js";
 export function usePlayingStep(steps: readonly RecipeStep[], videoId: string | null): number | null {
   const position = usePlaybackPosition(videoId);
   if (position === null) return null;
-  const at = steps.findIndex(({ range }) => range !== undefined && position.positionMs >= range.startMs && position.positionMs < range.endMs);
+  const at = steps.findIndex(
+    ({ range }) => range !== undefined && position.positionMs >= range.startMs && position.positionMs < range.endMs,
+  );
   return at === -1 ? null : at;
 }

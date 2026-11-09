@@ -9,7 +9,13 @@ const HEADERS = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
 
 const playlistApp = () => {
   const fake = makeFakeYouTubeDataApi([
-    { id: "PLpsychology", title: "Psychology", channelTitle: "Veritasium", privacyStatus: "public", items: [{ videoId: "k3Gw0Nhk2Ls", title: "Why We Can't Remember Being Babies" }] },
+    {
+      id: "PLpsychology",
+      title: "Psychology",
+      channelTitle: "Veritasium",
+      privacyStatus: "public",
+      items: [{ videoId: "k3Gw0Nhk2Ls", title: "Why We Can't Remember Being Babies" }],
+    },
     { id: "PLprivate", title: "Mine", channelTitle: "Me", privacyStatus: "private", items: [] },
   ]);
   return createTestApp({}, { playlistReader: youTubeDataApiPlaylistReader({ apiKey: FAKE_API_KEY, youTubeFetch: fake.youTubeFetch }) });

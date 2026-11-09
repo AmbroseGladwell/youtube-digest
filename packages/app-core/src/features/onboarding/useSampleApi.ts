@@ -8,8 +8,5 @@ import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 export function useSampleApi(): { api: SampleApi; apiUrl: string } | null {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();
-  return useMemo(
-    () => (apiUrl === null ? null : { api: createFetchSampleApi({ baseUrl: apiUrl, surface }), apiUrl }),
-    [apiUrl, surface],
-  );
+  return useMemo(() => (apiUrl === null ? null : { api: createFetchSampleApi({ baseUrl: apiUrl, surface }), apiUrl }), [apiUrl, surface]);
 }

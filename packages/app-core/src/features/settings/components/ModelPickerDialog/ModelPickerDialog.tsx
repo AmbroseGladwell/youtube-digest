@@ -3,12 +3,7 @@ import { listProviderModels } from "@overview/generation";
 import { modelFor, PROVIDER_SHORT_LABEL, type Provider } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
-import {
-  catalogueIsStale,
-  readCatalogues,
-  writeCatalogue,
-  type ModelCatalogue,
-} from "../../../apiKeys/ModelCatalogue.js";
+import { catalogueIsStale, readCatalogues, writeCatalogue, type ModelCatalogue } from "../../../apiKeys/ModelCatalogue.js";
 import { matchingChoices, modelChoices, type ModelChoice } from "../../../apiKeys/modelChoices.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
@@ -177,8 +172,7 @@ export function ModelPickerDialog({ provider, apiKey, onClose }: ModelPickerDial
 
           {choices.source === "known" && (
             <p className={styles.staleNote} data-testid={modelPickerDialogTestIds.staleNote}>
-              These are the models we know for {name}. {name} didn’t send its full list just now, so a newer one may
-              be missing.{" "}
+              These are the models we know for {name}. {name} didn’t send its full list just now, so a newer one may be missing.{" "}
               <button
                 type="button"
                 className={styles.recheck}
@@ -206,8 +200,8 @@ export function ModelPickerDialog({ provider, apiKey, onClose }: ModelPickerDial
           </div>
 
           <p className={styles.costNote} data-testid={modelPickerDialogTestIds.costNote}>
-            ≈ is roughly what {name} charges your key for a 20-minute video, in US dollars, which is what every one
-            of these providers bills in. Longer videos cost more.
+            ≈ is roughly what {name} charges your key for a 20-minute video, in US dollars, which is what every one of these providers bills
+            in. Longer videos cost more.
           </p>
 
           {/* Dropped rather than shown empty when the catalogue call failed: a group that
@@ -237,8 +231,7 @@ export function ModelPickerDialog({ provider, apiKey, onClose }: ModelPickerDial
 
           {choices.unusable > 0 && !searching && (
             <p className={styles.notListed} data-testid={modelPickerDialogTestIds.notListed}>
-              Not listed: {choices.unusable} more that can’t write an overview, such as image, audio and embedding
-              models.
+              Not listed: {choices.unusable} more that can’t write an overview, such as image, audio and embedding models.
             </p>
           )}
         </div>

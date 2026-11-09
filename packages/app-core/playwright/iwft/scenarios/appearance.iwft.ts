@@ -30,10 +30,7 @@ test("a reader who has chosen nothing sees System and Orange, and the page carri
   await settings.appearance.verifyTokenIs("--brand", "#e2511e");
 });
 
-test("choosing a theme and an accent changes the app at once, is saved and is counted", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("choosing a theme and an accent changes the app at once, is saved and is counted", async ({ launcher, backendSimulator }) => {
   await launcher.launch(SIGNED_IN);
   const settings = await (await launcher.appShell.openSettings()).openSection("appearance");
 
@@ -48,9 +45,7 @@ test("choosing a theme and an accent changes the app at once, is saved and is co
   await settings.appearance.verifyTokenIs("--mark", ACCENT_PALETTES.raspberry.dark.mark);
   await settings.appearance.verifyTokenIs("--action", ACCENT_PALETTES.raspberry.light.action);
   await settings.appearance.verifyDeviceCopyIs({ theme: "dark", accentColour: "raspberry" });
-  await expect
-    .poll(() => launcher.settingsStoreRead())
-    .toMatchObject({ theme: "dark", accentColour: "raspberry" });
+  await expect.poll(() => launcher.settingsStoreRead()).toMatchObject({ theme: "dark", accentColour: "raspberry" });
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("settings.appearance.")))
     .toEqual([
@@ -148,10 +143,7 @@ test("the accent is handed on to what the extension's pages can't reach", async 
   await expect.poll(() => launcher.readAccentMirror()).toEqual(expect.arrayContaining(["violet", "lime"]));
 });
 
-test("in the panel both cards start at once with no intro, and the tiles stay big enough to press", async ({
-  page,
-  launcher,
-}) => {
+test("in the panel both cards start at once with no intro, and the tiles stay big enough to press", async ({ page, launcher }) => {
   await page.setViewportSize({ width: 400, height: 600 });
   await launcher.launchPanel({});
   const settings = await (await launcher.appShell.openSettings()).openSection("appearance");
@@ -160,10 +152,7 @@ test("in the panel both cards start at once with no intro, and the tiles stay bi
   await settings.appearance.verifyTilesAreAtLeast(44);
 });
 
-test("on a phone the tiles are big enough to press, and every choice is a named radio in a named group", async ({
-  page,
-  launcher,
-}) => {
+test("on a phone the tiles are big enough to press, and every choice is a named radio in a named group", async ({ page, launcher }) => {
   await page.setViewportSize(PHONE);
   await launcher.launch();
   const settings = await (await launcher.appShell.openSettings()).openSection("appearance");

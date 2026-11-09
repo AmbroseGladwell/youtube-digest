@@ -8,9 +8,7 @@ export interface RequestMagicLinkVariables {
   request: MagicLinkRequest;
 }
 
-export const useRequestMagicLinkMutation = (
-  createApi?: (baseUrl: string) => AuthApi,
-) => {
+export const useRequestMagicLinkMutation = (createApi?: (baseUrl: string) => AuthApi) => {
   const surface = useClientSurface();
   const api = createApi ?? ((baseUrl: string) => createFetchAuthApi({ baseUrl, surface }));
   return useMutation<void, Error, RequestMagicLinkVariables>({

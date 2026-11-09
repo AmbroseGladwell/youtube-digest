@@ -5,7 +5,7 @@ import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEA
 import { generationRequest, makeFakeOpenAi, type FakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { ourKeyModel } from "../generation/ourKeyModel.js";
 import { recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
-import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -25,7 +25,10 @@ async function ourKeyApp(
 ) {
   return createTestApp(
     {},
-    { ourKey: { apiKey: OUR_KEY, dailyGenerations, signedOutDailyGenerations, http: openAi.http }, ...(logger === undefined ? {} : { logger }) },
+    {
+      ourKey: { apiKey: OUR_KEY, dailyGenerations, signedOutDailyGenerations, http: openAi.http },
+      ...(logger === undefined ? {} : { logger }),
+    },
   );
 }
 
@@ -48,7 +51,10 @@ test("a signed-in reader with no key gets an overview made on our key with Sol, 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json().id, request.overviewId);
   assert.equal(response.json().inOneLine, "A short description.");
-  assert.deepEqual(openAi.requests.map((sent) => [sent.model, sent.authorization]), [[ourKeyModel.model, `Bearer ${OUR_KEY}`]]);
+  assert.deepEqual(
+    openAi.requests.map((sent) => [sent.model, sent.authorization]),
+    [[ourKeyModel.model, `Bearer ${OUR_KEY}`]],
+  );
   assert.deepEqual([usage.ours.used, usage.own.used], [1, 0]);
   await testApp.close();
 });
@@ -88,8 +94,16 @@ test("an article is made on our key from what the reader's browser read, and cou
     language: "en",
     imageUrl: null,
     sections: [
-      { heading: null, anchor: null, text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday." },
-      { heading: "Who pays", anchor: "who-pays", text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates." },
+      {
+        heading: null,
+        anchor: null,
+        text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday.",
+      },
+      {
+        heading: "Who pays",
+        anchor: "who-pays",
+        text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates.",
+      },
     ],
     wordCount: 500,
   };

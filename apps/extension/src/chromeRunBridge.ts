@@ -9,8 +9,7 @@ const listeners = new Set<() => void>();
 
 async function pull(): Promise<void> {
   try {
-    const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_REQUEST })) as
-      { videoUrl: string | null } | undefined;
+    const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_REQUEST })) as { videoUrl: string | null } | undefined;
     if (reply?.videoUrl == null) {
       return;
     }
@@ -51,8 +50,6 @@ export const chromeRunBridge: RunBridge = {
   },
 
   report: (report: RunReport | null) => {
-    void chrome.runtime
-      .sendMessage({ type: BridgeMessage.REPORT_RUN, report })
-      .catch(() => undefined);
+    void chrome.runtime.sendMessage({ type: BridgeMessage.REPORT_RUN, report }).catch(() => undefined);
   },
 };

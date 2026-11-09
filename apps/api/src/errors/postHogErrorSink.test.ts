@@ -90,7 +90,10 @@ test("a reader with no account gets a fresh id per error and no person in PostHo
   await sink.capture([error, error], { accountId: null, context, geoAddress: null });
 
   const batch = sent[0]!.body.batch;
-  assert.deepEqual(batch.map(({ distinct_id }) => distinct_id), ["anonymous-1", "anonymous-2"]);
+  assert.deepEqual(
+    batch.map(({ distinct_id }) => distinct_id),
+    ["anonymous-1", "anonymous-2"],
+  );
   assert.ok(batch.every(({ properties }) => properties.$process_person_profile === false));
   assert.ok(batch.every(({ properties }) => !("$ip" in properties)));
 });
@@ -104,7 +107,10 @@ test("frames go to PostHog oldest call first, with the one that threw last", asy
   await sink.capture([{ ...error, frames: [thrownIn, calledFrom] }], { accountId: ACCOUNT_ID, context, geoAddress: null });
 
   const frames = sent[0]!.body.batch[0]!.properties.$exception_list[0].stacktrace.frames;
-  assert.deepEqual(frames.map(({ function: name }: { function: string }) => name), ["ReaderPage", "readTitle"]);
+  assert.deepEqual(
+    frames.map(({ function: name }: { function: string }) => name),
+    ["ReaderPage", "readTitle"],
+  );
 });
 
 test("a frame from an injected build goes as web JavaScript with its chunk id, which PostHog resolves through the uploaded map", async () => {
@@ -142,7 +148,9 @@ test("the server's own error goes as an $exception from the api, under the reade
     caughtBy: "request",
     type: "DatabaseError",
     message: "Connection terminated unexpectedly",
-    frames: [{ function: "RecordsRepository.write", file: "apps/api/dist/records/RecordsRepository.js", line: 41, column: 18, inApp: true }],
+    frames: [
+      { function: "RecordsRepository.write", file: "apps/api/dist/records/RecordsRepository.js", line: 41, column: 18, inApp: true },
+    ],
     request: { id: "5b0d2c1e-8f3a-4c6d-9e7b-1a2b3c4d5e6f", method: "PUT", route: "/api/overviews/:id", status: 500, accountId: ACCOUNT_ID },
     at: AT,
   });

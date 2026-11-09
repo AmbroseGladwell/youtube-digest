@@ -79,10 +79,12 @@ export function pageRecipe(document: Document): Recipe | null {
     .flatMap((node) => [node, ...(isObject(node.mainEntity) ? [node.mainEntity] : [])])
     .filter((node) => typesOf(node).includes("Recipe"));
   if (declared.length === 0) return markupRecipe(document);
-  const usable = declared.filter((node) => !isHidden(node)).flatMap((node) => {
-    const recipe = recipeFrom(document, node);
-    return recipe === null ? [] : [{ name: node.name, recipe }];
-  });
+  const usable = declared
+    .filter((node) => !isHidden(node))
+    .flatMap((node) => {
+      const recipe = recipeFrom(document, node);
+      return recipe === null ? [] : [{ name: node.name, recipe }];
+    });
   const [first] = usable;
   if (first === undefined || usable.some(({ name }) => name !== first.name)) return null;
   return first.recipe;

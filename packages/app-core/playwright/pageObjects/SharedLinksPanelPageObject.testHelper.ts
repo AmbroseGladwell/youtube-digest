@@ -9,28 +9,21 @@ export class SharedLinksPanelPageObject extends PageObject {
       return this;
     });
 
-  verifySaysNothingIsShared = () =>
-    this.step("verifySaysNothingIsShared", () => this.expectToBeVisible(sharedLinksPanelTestIds.empty));
+  verifySaysNothingIsShared = () => this.step("verifySaysNothingIsShared", () => this.expectToBeVisible(sharedLinksPanelTestIds.empty));
 
   expectRowCountToBe = (count: number) =>
     this.step(`expectRowCountToBe ${count}`, () => this.expectToHaveCount(sharedLinksPanelTestIds.row, count));
 
   verifyRowTitles = (titles: string[]) =>
-    this.step(`verifyRowTitles ${titles.join(", ")}`, () =>
-      expect(this.get(sharedLinksPanelTestIds.rowTitle)).toHaveText(titles),
-    );
+    this.step(`verifyRowTitles ${titles.join(", ")}`, () => expect(this.get(sharedLinksPanelTestIds.rowTitle)).toHaveText(titles));
 
-  verifyRowSaysItWasEdited = () =>
-    this.step("verifyRowSaysItWasEdited", () => this.expectToBeVisible(sharedLinksPanelTestIds.editedBadge));
+  verifyRowSaysItWasEdited = () => this.step("verifyRowSaysItWasEdited", () => this.expectToBeVisible(sharedLinksPanelTestIds.editedBadge));
 
   clickStopSharing = () => this.step("clickStopSharing", () => this.click(sharedLinksPanelTestIds.stopButton));
 
-  clickKeepSharing = () =>
-    this.step("clickKeepSharing", () => this.click(sharedLinksPanelTestIds.keepSharingButton));
+  clickKeepSharing = () => this.step("clickKeepSharing", () => this.click(sharedLinksPanelTestIds.keepSharingButton));
 
-  clickConfirmStopSharing = () =>
-    this.step("clickConfirmStopSharing", () => this.click(sharedLinksPanelTestIds.confirmStopButton));
+  clickConfirmStopSharing = () => this.step("clickConfirmStopSharing", () => this.click(sharedLinksPanelTestIds.confirmStopButton));
 
-  verifyAsksBeforeStopping = () =>
-    this.step("verifyAsksBeforeStopping", () => this.expectToBeVisible(sharedLinksPanelTestIds.confirm));
+  verifyAsksBeforeStopping = () => this.step("verifyAsksBeforeStopping", () => this.expectToBeVisible(sharedLinksPanelTestIds.confirm));
 }

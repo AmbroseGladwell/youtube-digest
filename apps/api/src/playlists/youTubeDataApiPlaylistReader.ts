@@ -69,13 +69,7 @@ async function whyUnavailable(youTubeFetch: YouTubeFetch, playlistId: string): P
   return response.status === 401 || response.status === 403 ? "private" : "gone";
 }
 
-export function youTubeDataApiPlaylistReader({
-  apiKey,
-  youTubeFetch,
-}: {
-  apiKey: string;
-  youTubeFetch: YouTubeFetch;
-}): PlaylistReader {
+export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): PlaylistReader {
   const get = async <T>(path: string, params: Record<string, string>, schema: z.ZodType<T>) => {
     // In a header rather than the query, so the key is never part of a URL that a log, a
     // proxy or an error message could carry (Google's API key best practices).

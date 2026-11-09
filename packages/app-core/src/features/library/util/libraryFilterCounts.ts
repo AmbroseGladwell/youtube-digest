@@ -46,9 +46,7 @@ export function libraryFilterCounts(entries: LibraryEntry[]): LibraryFilterCount
     if (novelty) byNovelty[novelty] = (byNovelty[novelty] ?? 0) + 1;
   }
 
-  const byTag = tagUsage(
-    entries.map((entry) => [...(entry.kind === "unreadable" ? [] : entry.overview.tags), ...entry.state.userTags]),
-  );
+  const byTag = tagUsage(entries.map((entry) => [...(entry.kind === "unreadable" ? [] : entry.overview.tags), ...entry.state.userTags]));
 
   return { total: entries.length, unread, favourite, dubious, unreadable, byTopic, byNovelty, byTag, bySource };
 }

@@ -74,7 +74,10 @@ test("a faulted upload is logged at warn with its fault", async () => {
   await upload(account, empty);
 
   const [refused] = saying(lines, "transcript refused");
-  assert.deepEqual({ level: refused!.level, fault: refused!.fault, segments: refused!.segments }, { level: LOG_LEVELS.warn, fault: "no-segments", segments: 0 });
+  assert.deepEqual(
+    { level: refused!.level, fault: refused!.fault, segments: refused!.segments },
+    { level: LOG_LEVELS.warn, fault: "no-segments", segments: 0 },
+  );
   await testApp.close();
 });
 

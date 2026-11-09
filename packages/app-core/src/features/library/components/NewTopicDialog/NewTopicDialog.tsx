@@ -40,11 +40,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
 
   const toggle = (overviewId: OverviewId) => {
     onPick(overviewId, !chosen.includes(overviewId));
-    setChosen((current) =>
-      current.includes(overviewId)
-        ? current.filter((id) => id !== overviewId)
-        : [...current, overviewId],
-    );
+    setChosen((current) => (current.includes(overviewId) ? current.filter((id) => id !== overviewId) : [...current, overviewId]));
   };
 
   const submit = () => {
@@ -148,12 +144,7 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
         )}
 
         <div className={styles.foot}>
-          <button
-            type="button"
-            className={styles.quietAction}
-            onClick={onClose}
-            data-testid={newTopicDialogTestIds.cancelButton}
-          >
+          <button type="button" className={styles.quietAction} onClick={onClose} data-testid={newTopicDialogTestIds.cancelButton}>
             Cancel
           </button>
           <button

@@ -4,7 +4,11 @@ import type { LibraryFilters } from "./LibraryFilters.js";
 
 export type ResolvedFilters = Omit<LibraryFilters, "topic"> & { topicId?: TopicId };
 
-const words = (query: string) => query.toLowerCase().split(/\s+/).filter((word) => word !== "");
+const words = (query: string) =>
+  query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((word) => word !== "");
 
 // The library's own haystack, so a search here finds what the library's search finds, but
 // every word rather than the whole phrase: an assistant sends keywords, not a phrase it saw.

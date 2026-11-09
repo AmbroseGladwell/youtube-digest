@@ -4,8 +4,7 @@ import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { sharePreview } from "./sharePreview.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 
-const noteOf = (overview = makeOverview()) =>
-  shareSnapshot({ overview, transcript: null, narration: null }).note;
+const noteOf = (overview = makeOverview()) => shareSnapshot({ overview, transcript: null, narration: null }).note;
 
 test("the preview leads with the lengths and then the premise", () => {
   const overview = makeOverview({
@@ -35,7 +34,14 @@ test("the verdict is never in the preview, however blunt it is", () => {
   const preview = sharePreview(
     noteOf(
       makeOverview({
-        verdict: { novelty: "common_knowledge", standsOut: null, dubious: true, dubiousClaims: null, reasoning: "Every claim here is secondhand.", similarTo: [] },
+        verdict: {
+          novelty: "common_knowledge",
+          standsOut: null,
+          dubious: true,
+          dubiousClaims: null,
+          reasoning: "Every claim here is secondhand.",
+          similarTo: [],
+        },
       }),
     ),
   );

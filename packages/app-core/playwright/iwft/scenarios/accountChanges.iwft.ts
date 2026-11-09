@@ -126,21 +126,20 @@ test.describe("the email", () => {
     expect(backendSimulator.auth.emailChangeAsks()).toEqual([NEW_EMAIL]);
     const menu = await launcher.appShell.accountMenu.open();
     await menu.verifySignedInAs("Ada", NEW_EMAIL);
-    await expect.poll(() => accountEvents(backendSimulator).map(({ name }) => name)).toEqual([
-      "settings.sync.verificationAsked",
-      "settings.sync.verificationRefused",
-      "settings.sync.verificationConfirmed",
-      "settings.sync.emailChangeRefused",
-      "settings.sync.emailChangeAsked",
-      "settings.sync.emailChangeRefused",
-      "settings.sync.emailChangeConfirmed",
-    ]);
+    await expect
+      .poll(() => accountEvents(backendSimulator).map(({ name }) => name))
+      .toEqual([
+        "settings.sync.verificationAsked",
+        "settings.sync.verificationRefused",
+        "settings.sync.verificationConfirmed",
+        "settings.sync.emailChangeRefused",
+        "settings.sync.emailChangeAsked",
+        "settings.sync.emailChangeRefused",
+        "settings.sync.emailChangeConfirmed",
+      ]);
   });
 
-  test("a session signed in within the last fifteen minutes goes straight to the new address", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a session signed in within the last fifteen minutes goes straight to the new address", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.sessionIsFresh();
     await launcher.launch(SIGNED_IN);
     const { tile } = await openAccountTile(launcher);
@@ -200,10 +199,7 @@ test.describe("the email", () => {
     expect(backendSimulator.auth.verificationAsks()).toBe(2);
   });
 
-  test("a change made on another device shows here once the server is asked who is signed in", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a change made on another device shows here once the server is asked who is signed in", async ({ launcher, backendSimulator }) => {
     backendSimulator.auth.accountEmailIs(NEW_EMAIL);
     backendSimulator.auth.accountIsNamed("Ada");
     await launcher.launch(SIGNED_IN);
@@ -241,10 +237,7 @@ test.describe("moving the account back", () => {
     await launcher.revertEmailPage.clickSignIn();
   });
 
-  test("a browser still signed in to that account is signed out before it goes to sign in", async ({
-    launcher,
-    backendSimulator,
-  }) => {
+  test("a browser still signed in to that account is signed out before it goes to sign in", async ({ launcher, backendSimulator }) => {
     await launcher.launch(SIGNED_IN);
     await launcher.openPage(`${Routes.revertEmail()}#token=revert-token`);
 
@@ -271,9 +264,11 @@ test.describe("moving the account back", () => {
 
     await launcher.openPage(Routes.revertEmail());
     await launcher.revertEmailPage.verifyIsRefused("It has already been used, or the account’s email has changed again since.");
-    await expect.poll(() => accountEvents(backendSimulator)).toEqual([
-      { name: "account.revertPage.refused", props: { reason: "expired" } },
-      { name: "account.revertPage.refused", props: { reason: "taken" } },
-    ]);
+    await expect
+      .poll(() => accountEvents(backendSimulator))
+      .toEqual([
+        { name: "account.revertPage.refused", props: { reason: "expired" } },
+        { name: "account.revertPage.refused", props: { reason: "taken" } },
+      ]);
   });
 });

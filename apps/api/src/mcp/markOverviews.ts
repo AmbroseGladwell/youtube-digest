@@ -95,7 +95,9 @@ export const markOverviews = mcpTool({
       }
     } catch (error) {
       if (isApiError(error) && error.code === "record_newer_than_client") {
-        return toolError("One of these overviews was marked by a newer version of the app than this server knows, so nothing was changed. Try again once the server has updated.");
+        return toolError(
+          "One of these overviews was marked by a newer version of the app than this server knows, so nothing was changed. Try again once the server has updated.",
+        );
       }
       throw error;
     }

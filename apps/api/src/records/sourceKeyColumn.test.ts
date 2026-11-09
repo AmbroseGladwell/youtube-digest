@@ -80,7 +80,11 @@ const movedNote = { id: "a", source: { id: "abc", title: "Kept", kind: "youtube"
 const oldHash = await shareContentHash(oldNote as unknown as SharedNote);
 const movedHash = await shareContentHash(movedNote as unknown as SharedNote);
 const shareRow = async (sql: SqlClient, token: string) =>
-  (await sql.query<{ snapshot: { note: unknown }; content_hash: string }>("select snapshot, content_hash from shares where token = $1", [token]))[0]!;
+  (
+    await sql.query<{ snapshot: { note: unknown }; content_hash: string }>("select snapshot, content_hash from shares where token = $1", [
+      token,
+    ])
+  )[0]!;
 
 test("a share moves to source and its hash follows, so an unedited link does not read as edited", async () => {
   const sql = await databaseWithShares([{ token: "aaaaaaaaaaaaaaaa", note: oldNote, hash: oldHash }]);

@@ -1,14 +1,5 @@
 import { transcriptBlocks, transcriptPlainText, formatTimestamp } from "@overview/domain";
-import {
-  Fragment,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type ReactNode,
-} from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { StoredTranscript, VideoSource, TranscriptBlock } from "@overview/domain";
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
@@ -41,8 +32,8 @@ export interface OpenedFromChapter {
 export interface TranscriptPanelProps {
   video: VideoSource;
   // A transcript the caller already holds — the shared page's own copy, which travels with
-// the shared overview rather than being read out of a store the visitor has not got
-// (docs/features/sharing.md). Absent, the panel reads the reader's own store.
+  // the shared overview rather than being read out of a store the visitor has not got
+  // (docs/features/sharing.md). Absent, the panel reads the reader's own store.
   held?: StoredTranscript | null;
   // Where a chapter asked the transcript to open, or null when the reader chose the tab
   // themselves (docs/features/chapters.md).
@@ -60,10 +51,7 @@ const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "functi
 export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromStep = null, onBackToChapters }: TranscriptPanelProps) {
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
-  const blocks = useMemo(
-    () => (transcript === null ? [] : transcriptBlocks(transcript.segments)),
-    [transcript],
-  );
+  const blocks = useMemo(() => (transcript === null ? [] : transcriptBlocks(transcript.segments)), [transcript]);
 
   // The head is state rather than a ref because every scroll below is measured off it,
   // and those have to run again once it is there.
@@ -201,21 +189,11 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
           {unreadable === null && (
             <div className={styles.toolRow} data-testid={transcriptPanelTestIds.tools}>
               {canCopy() && (
-                <button
-                  type="button"
-                  className={styles.tool}
-                  onClick={copy}
-                  data-testid={transcriptPanelTestIds.copyButton}
-                >
+                <button type="button" className={styles.tool} onClick={copy} data-testid={transcriptPanelTestIds.copyButton}>
                   {copied ? "Copied" : "Copy"}
                 </button>
               )}
-              <button
-                type="button"
-                className={styles.tool}
-                onClick={exportFile}
-                data-testid={transcriptPanelTestIds.exportButton}
-              >
+              <button type="button" className={styles.tool} onClick={exportFile} data-testid={transcriptPanelTestIds.exportButton}>
                 Export
               </button>
             </div>
@@ -242,12 +220,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
       {/* Design 2b: the way back names where the video is, and the dot is the same one
           the following note carries. */}
       {follow.offered && (
-        <button
-          type="button"
-          className={styles.followButton}
-          onClick={followPlayback}
-          data-testid={transcriptPanelTestIds.followButton}
-        >
+        <button type="button" className={styles.followButton} onClick={followPlayback} data-testid={transcriptPanelTestIds.followButton}>
           <span className={styles.followButtonMark} aria-hidden="true" />
           {currentBlock === null ? "Back to the video" : `Back to ${formatTimestamp(currentBlock.startMs)}`}
         </button>
@@ -265,27 +238,15 @@ interface TranscriptState {
 
 // Null means there are blocks to read, which is the one case the tools and the search
 // box are worth drawing for.
-function unreadableTranscript(
-  video: VideoSource,
-  { blocks, isPending, error, retry }: TranscriptState,
-): ReactNode | null {
+function unreadableTranscript(video: VideoSource, { blocks, isPending, error, retry }: TranscriptState): ReactNode | null {
   if (video.id === null) {
-    return (
-      <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>
-    );
+    return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
   if (error) {
     return (
       <div className={styles.failed}>
-        <TranscriptNote testId={transcriptPanelTestIds.errorNote}>
-          Couldn't load this transcript: {error.message}
-        </TranscriptNote>
-        <button
-          type="button"
-          className={styles.tool}
-          onClick={retry}
-          data-testid={transcriptPanelTestIds.retryButton}
-        >
+        <TranscriptNote testId={transcriptPanelTestIds.errorNote}>Couldn't load this transcript: {error.message}</TranscriptNote>
+        <button type="button" className={styles.tool} onClick={retry} data-testid={transcriptPanelTestIds.retryButton}>
           Try again
         </button>
       </div>
@@ -295,9 +256,7 @@ function unreadableTranscript(
     return <TranscriptSkeleton />;
   }
   if (blocks.length === 0) {
-    return (
-      <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>
-    );
+    return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
   return null;
 }
@@ -316,17 +275,7 @@ interface TranscriptRowsProps {
 
 const chapterNumber = (number: number) => String(number).padStart(2, "0");
 
-function TranscriptRows({
-  blocks,
-  search,
-  follow,
-  position,
-  seek,
-  targetRun,
-  openedFrom,
-  openedFromStep,
-  head,
-}: TranscriptRowsProps) {
+function TranscriptRows({ blocks, search, follow, position, seek, targetRun, openedFrom, openedFromStep, head }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
   const analytics = useOverviewPageAnalytics();
@@ -359,15 +308,7 @@ function TranscriptRows({
           <div
             key={`${index}-${block.startMs}`}
             className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""} ${opensRun ? styles.rowTargetOpens : ""} ${closesRun ? styles.rowTargetCloses : ""} ${past(index) ? styles.rowPast : ""}`}
-            ref={
-              opensRun
-                ? setTargetRow
-                : restored
-                  ? position.restoredRow
-                  : current
-                    ? follow.currentRow
-                    : undefined
-            }
+            ref={opensRun ? setTargetRow : restored ? position.restoredRow : current ? follow.currentRow : undefined}
             data-current={current}
             data-target={target}
             data-start-ms={block.startMs}
@@ -409,33 +350,30 @@ function TranscriptRows({
                 </span>
               )}
               <span className={styles.text}>
-              {block.speakerChange && (
-                <span
-                  className={styles.speakerMark}
-                  data-testid={transcriptPanelTestIds.speakerMark}
-                >
-                  —
+                {block.speakerChange && (
+                  <span className={styles.speakerMark} data-testid={transcriptPanelTestIds.speakerMark}>
+                    —
+                  </span>
+                )}
+                <span data-testid={transcriptPanelTestIds.rowText}>
+                  {blockParts(block.text, search.matchesInBlock(index)).map((part, partIndex) => {
+                    if (part.match === null) {
+                      return <Fragment key={partIndex}>{part.text}</Fragment>;
+                    }
+                    const isCurrentMatch = part.match === search.currentIndex;
+                    return (
+                      <mark
+                        key={partIndex}
+                        className={`${styles.match} ${isCurrentMatch ? styles.matchCurrent : ""}`}
+                        ref={isCurrentMatch ? setCurrentMatch : undefined}
+                        data-current={isCurrentMatch}
+                        data-testid={transcriptPanelTestIds.match}
+                      >
+                        {part.text}
+                      </mark>
+                    );
+                  })}
                 </span>
-              )}
-              <span data-testid={transcriptPanelTestIds.rowText}>
-                {blockParts(block.text, search.matchesInBlock(index)).map((part, partIndex) => {
-                  if (part.match === null) {
-                    return <Fragment key={partIndex}>{part.text}</Fragment>;
-                  }
-                  const isCurrentMatch = part.match === search.currentIndex;
-                  return (
-                    <mark
-                      key={partIndex}
-                      className={`${styles.match} ${isCurrentMatch ? styles.matchCurrent : ""}`}
-                      ref={isCurrentMatch ? setCurrentMatch : undefined}
-                      data-current={isCurrentMatch}
-                      data-testid={transcriptPanelTestIds.match}
-                    >
-                      {part.text}
-                    </mark>
-                  );
-                })}
-              </span>
               </span>
             </span>
           </div>
@@ -505,13 +443,7 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
         onKeyDown={onKeyDown}
         data-testid={transcriptPanelTestIds.searchInput}
       />
-      {search.query !== "" && (
-        <ClearFieldButton
-          label="Clear search"
-          onClick={clear}
-          testId={transcriptPanelTestIds.clearSearchButton}
-        />
-      )}
+      {search.query !== "" && <ClearFieldButton label="Clear search" onClick={clear} testId={transcriptPanelTestIds.clearSearchButton} />}
       {searching && (
         <span className={styles.searchResult}>
           <span

@@ -13,12 +13,18 @@ test("the feed pages in seq order, says whether there is more, and hands back wh
   }
 
   const first = await account.changes(0, 2);
-  assert.deepEqual(first.changes.map((change) => change.id), [overviews[0]!.id, overviews[1]!.id]);
+  assert.deepEqual(
+    first.changes.map((change) => change.id),
+    [overviews[0]!.id, overviews[1]!.id],
+  );
   assert.equal(first.more, true);
   assert.equal(first.next, 2);
 
   const rest = await account.changes(first.next, 2);
-  assert.deepEqual(rest.changes.map((change) => change.id), [overviews[2]!.id]);
+  assert.deepEqual(
+    rest.changes.map((change) => change.id),
+    [overviews[2]!.id],
+  );
   assert.equal(rest.more, false);
   assert.equal(rest.next, 3);
 
@@ -37,10 +43,13 @@ test("a record written twice appears once, at its latest seq, after the earlier 
 
   const { changes } = await account.changes();
 
-  assert.deepEqual(changes.map((change) => [change.id, change.seq, change.rev]), [
-    [second.id, 2, 1],
-    [first.id, 3, 2],
-  ]);
+  assert.deepEqual(
+    changes.map((change) => [change.id, change.seq, change.rev]),
+    [
+      [second.id, 2, 1],
+      [first.id, 3, 2],
+    ],
+  );
   await testApp.close();
 });
 

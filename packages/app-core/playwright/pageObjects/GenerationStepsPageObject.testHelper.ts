@@ -20,15 +20,10 @@ export class GenerationStepsPageObject extends PageObject {
     );
 
   verifyStepCountIs = (count: number) =>
-    this.step(`verifyStepCountIs ${count}`, () =>
-      expect(this.get(generationStepsTestIds.root).getByRole("listitem")).toHaveCount(count),
-    );
+    this.step(`verifyStepCountIs ${count}`, () => expect(this.get(generationStepsTestIds.root).getByRole("listitem")).toHaveCount(count));
 
   verifyStepState = (stepNumber: string, state: "waiting" | "running" | "done") =>
     this.step(`verifyStepState ${stepNumber} ${state}`, () =>
-      expect(this.get(generationStepsTestIds.step(stepNumber))).toHaveAttribute(
-        "data-state",
-        state,
-      ),
+      expect(this.get(generationStepsTestIds.step(stepNumber))).toHaveAttribute("data-state", state),
     );
 }

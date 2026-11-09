@@ -83,12 +83,7 @@ export function AddProviderKeyRow({ provider, open, onOpen, onClose, onSaved, in
     return (
       <li className={styles.quiet} data-testid={addProviderKeyRowTestIds.root(provider)}>
         <span className={styles.name}>{PROVIDER_LABEL[provider]}</span>
-        <button
-          type="button"
-          className={styles.open}
-          onClick={onOpen}
-          data-testid={addProviderKeyRowTestIds.open(provider)}
-        >
+        <button type="button" className={styles.open} onClick={onOpen} data-testid={addProviderKeyRowTestIds.open(provider)}>
           Add key
         </button>
       </li>

@@ -46,8 +46,7 @@ export function OnboardingAboutYou({ aboutYou, topicNames, saving, onContinue }:
         <figure className={styles.why} aria-label="What this changes" data-testid={onboardingAboutYouTestIds.why}>
           <figcaption className={styles.whyTitle}>What this changes</figcaption>
           <p className={styles.whyBody}>
-            Each overview ends with a few steps to put it into practice. The more context you give, the more those steps
-            fit around you.
+            Each overview ends with a few steps to put it into practice. The more context you give, the more those steps fit around you.
           </p>
           {!isPanel && (
             <div className={styles.whyExample}>

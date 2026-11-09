@@ -28,19 +28,12 @@ export function overviewMarkdown(overview: Overview): string {
   const facts = [
     sourceName(video),
     video.kind === "web" ? (video.author === null ? null : `by ${video.author}`) : null,
-    video.kind === "web"
-      ? noteSourceLength(overview)
-      : video.durationMs === null
-        ? null
-        : formatTimestamp(video.durationMs),
+    video.kind === "web" ? noteSourceLength(overview) : video.durationMs === null ? null : formatTimestamp(video.durationMs),
     video.publishedAt === null ? null : `published ${video.publishedAt.slice(0, 10)}`,
     `saved ${overview.savedAt.slice(0, 10)}`,
   ].filter((fact) => fact !== null);
 
-  const sections: string[] = [
-    `# ${video.title}`,
-    `${facts.join(" · ")}\n${video.url}\n\nTags: ${overview.tags.join(", ")}`,
-  ];
+  const sections: string[] = [`# ${video.title}`, `${facts.join(" · ")}\n${video.url}\n\nTags: ${overview.tags.join(", ")}`];
   const section = (heading: string, body: string) => sections.push(`## ${heading}\n\n${body}`);
   const chaptersSection = () => {
     if (overview.chapters !== null && overview.chapters.length > 0) {

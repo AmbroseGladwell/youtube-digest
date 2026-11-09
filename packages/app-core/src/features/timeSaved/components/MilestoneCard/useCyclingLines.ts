@@ -11,8 +11,7 @@ export interface CyclingLine {
 
 // Long enough to read the line at an easy pace, never so short it flickers or so long the
 // card looks stuck (docs/features/time-saved.md, "The lines").
-export const lineDurationMs = (line: string): number =>
-  Math.min(13_000, Math.max(6_000, 3_000 + line.split(/\s+/).length * 330));
+export const lineDurationMs = (line: string): number => Math.min(13_000, Math.max(6_000, 3_000 + line.split(/\s+/).length * 330));
 
 export function useCyclingLines(lines: readonly string[], paused: boolean) {
   const [line, setLine] = useState<CyclingLine>({ index: 0, previous: null, direction: 0, turn: 0 });
@@ -20,11 +19,7 @@ export function useCyclingLines(lines: readonly string[], paused: boolean) {
   const startedAt = useRef(0);
 
   const show = (index: number, direction: CyclingLine["direction"]) =>
-    setLine((current) =>
-      index === current.index
-        ? current
-        : { index, previous: current.index, direction, turn: current.turn + 1 },
-    );
+    setLine((current) => (index === current.index ? current : { index, previous: current.index, direction, turn: current.turn + 1 }));
 
   useEffect(() => {
     remaining.current = lineDurationMs(lines[line.index] ?? "");

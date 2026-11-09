@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PlaylistId, VideoId } from "@overview/domain";
 import { makeFollowedPlaylist } from "../types/PlaylistFactory.testHelper.js";
-import {
-  checkedAgo,
-  followedPlaylistFacts,
-  followedPlaylistMeta,
-  followingRowValue,
-  unavailableLine,
-} from "./followedPlaylistLines.js";
+import { checkedAgo, followedPlaylistFacts, followedPlaylistMeta, followingRowValue, unavailableLine } from "./followedPlaylistLines.js";
 
 const check = (videos: number) => ({
   playlistId: PlaylistId.parse("PLpsychology"),

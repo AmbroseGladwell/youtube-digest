@@ -62,12 +62,7 @@ export type ConfirmedEmailChange =
 // The code is spent first, then the account moves only if its email is still the one the
 // change started from, so a change confirmed on two devices moves it once. A unique
 // violation is an address that gained an account between the ask and the confirm.
-export async function confirmEmailChange(
-  sql: SqlClient,
-  accountId: AccountId,
-  code: string,
-  now: Date,
-): Promise<ConfirmedEmailChange> {
+export async function confirmEmailChange(sql: SqlClient, accountId: AccountId, code: string, now: Date): Promise<ConfirmedEmailChange> {
   const consumed = await sql.query<{ id: string; old_email: string; new_email: string }>(
     `update email_changes set consumed_at = $3::timestamptz
       where account_id = $1 and code_hash = $2 and consumed_at is null and expires_at > $3::timestamptz
@@ -95,10 +90,11 @@ export async function confirmEmailChange(
     return { outcome: "invalid" };
   }
   const revertToken = generateToken();
-  await sql.query(
-    "update email_changes set revert_token_hash = $2, revert_expires_at = $3::timestamptz where id = $1",
-    [change.id, hashToken(revertToken), new Date(now.getTime() + EMAIL_CHANGE_REVERT_MS).toISOString()],
-  );
+  await sql.query("update email_changes set revert_token_hash = $2, revert_expires_at = $3::timestamptz where id = $1", [
+    change.id,
+    hashToken(revertToken),
+    new Date(now.getTime() + EMAIL_CHANGE_REVERT_MS).toISOString(),
+  ]);
   return { outcome: "changed", oldEmail: change.old_email, newEmail: change.new_email, revertToken };
 }
 

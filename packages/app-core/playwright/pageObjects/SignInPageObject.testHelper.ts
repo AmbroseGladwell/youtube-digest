@@ -32,9 +32,7 @@ export class SignInPageObject extends PageObject {
 
   verifyAsksForServer = (asks: boolean) =>
     this.step(`verifyAsksForServer ${asks}`, () =>
-      asks
-        ? this.expectToBeVisible(emailLinkFormTestIds.serverInput)
-        : this.expectToHaveCount(emailLinkFormTestIds.serverInput, 0),
+      asks ? this.expectToBeVisible(emailLinkFormTestIds.serverInput) : this.expectToHaveCount(emailLinkFormTestIds.serverInput, 0),
     );
 
   verifyOffersNoOtherServer = () =>
@@ -81,27 +79,20 @@ export class SignInPageObject extends PageObject {
       await expect(this.get(checkEmailTestIds.email)).toHaveText(email);
     });
 
-  chooseCodeFromEmail = () =>
-    this.step("chooseCodeFromEmail", () => this.click(checkEmailTestIds.enterCodeButton));
+  chooseCodeFromEmail = () => this.step("chooseCodeFromEmail", () => this.click(checkEmailTestIds.enterCodeButton));
 
   verifyKickerReads = (text: string) =>
     this.step(`verifyKickerReads ${text}`, () => expect(this.get(authScreenTestIds.kicker)).toHaveText(text));
 
-  verifyHeadingHasFocus = () =>
-    this.step("verifyHeadingHasFocus", () => expect(this.get(authScreenTestIds.title)).toBeFocused());
+  verifyHeadingHasFocus = () => this.step("verifyHeadingHasFocus", () => expect(this.get(authScreenTestIds.title)).toBeFocused());
 
   useDifferentEmail = () =>
     this.step("useDifferentEmail", () =>
-      this.locatorOrPage()
-        .getByTestId(checkEmailTestIds.differentEmailButton)
-        .or(this.get(enterCodeTestIds.differentEmailButton))
-        .click(),
+      this.locatorOrPage().getByTestId(checkEmailTestIds.differentEmailButton).or(this.get(enterCodeTestIds.differentEmailButton)).click(),
     );
 
   verifyResendWaitReads = (text: string) =>
-    this.step(`verifyResendWaitReads ${text}`, () =>
-      expect(this.get(resendLinkButtonTestIds.countdown)).toHaveText(text),
-    );
+    this.step(`verifyResendWaitReads ${text}`, () => expect(this.get(resendLinkButtonTestIds.countdown)).toHaveText(text));
 
   resend = () => this.step("resend", () => this.click(resendLinkButtonTestIds.button));
 
@@ -165,9 +156,7 @@ export class SignInPageObject extends PageObject {
 
   verifyCodeAsksForServer = (asks: boolean) =>
     this.step(`verifyCodeAsksForServer ${asks}`, () =>
-      asks
-        ? this.expectToBeVisible(enterCodeTestIds.serverInput)
-        : this.expectToHaveCount(enterCodeTestIds.serverInput, 0),
+      asks ? this.expectToBeVisible(enterCodeTestIds.serverInput) : this.expectToHaveCount(enterCodeTestIds.serverInput, 0),
     );
 
   sendCodeToServer = (apiUrl: string) =>
@@ -178,8 +167,7 @@ export class SignInPageObject extends PageObject {
       await this.get(enterCodeTestIds.serverInput).fill(apiUrl);
     });
 
-  verifyServerErrorShown = () =>
-    this.step("verifyServerErrorShown", () => this.expectToBeVisible(enterCodeTestIds.serverError));
+  verifyServerErrorShown = () => this.step("verifyServerErrorShown", () => this.expectToBeVisible(enterCodeTestIds.serverError));
 
   chooseEmailInstead = () => this.step("chooseEmailInstead", () => this.click(enterCodeTestIds.emailInsteadButton));
 }

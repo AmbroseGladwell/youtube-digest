@@ -2,7 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { ExtractedArticle, Recipe, type ArticleRead } from "@overview/domain";
 import { markupRecipe } from "./markupRecipe.js";
-import { MARKUP_INGREDIENTS, MARKUP_METHOD, MARKUP_RECIPE_PAGE, markupRecipePage, pageFrom, recipeWith } from "./pageFixtures.testHelper.js";
+import {
+  MARKUP_INGREDIENTS,
+  MARKUP_METHOD,
+  MARKUP_RECIPE_PAGE,
+  markupRecipePage,
+  pageFrom,
+  recipeWith,
+} from "./pageFixtures.testHelper.js";
 import { pageRecipe } from "./pageRecipe.js";
 import { readArticle } from "./readArticle.js";
 
@@ -15,7 +22,13 @@ test("a recipe laid out under its headings arrives whole, with nothing the page 
   const recipe = recipeIn(MARKUP_RECIPE_PAGE);
   assert.doesNotThrow(() => Recipe.parse(recipe));
   assert.deepEqual(recipe, {
-    ingredients: ["3 tbsp olive oil", "1 onion, thinly sliced", "400g can mixed beans, drained", "½ x 250g block halloumi, sliced", "garlic bread, to serve (optional)"],
+    ingredients: [
+      "3 tbsp olive oil",
+      "1 onion, thinly sliced",
+      "400g can mixed beans, drained",
+      "½ x 250g block halloumi, sliced",
+      "garlic bread, to serve (optional)",
+    ],
     steps: [
       { text: "Heat 2 tbsp of oil in a frying pan and fry the onion for 10 mins.", group: null },
       { text: "Fry the halloumi for 2 mins on each side until golden.", group: null },

@@ -143,9 +143,7 @@ export function ReaderPlayerBar({
                 {view.label.lead}
               </span>
             ) : (
-              <strong className={view.label.tone === "warning" ? styles.leadWarning : styles.lead}>
-                {view.label.lead}
-              </strong>
+              <strong className={view.label.tone === "warning" ? styles.leadWarning : styles.lead}>{view.label.lead}</strong>
             )}
             {view.label.rest !== null && (
               <span className={styles.rest}>
@@ -204,12 +202,7 @@ export function ReaderPlayerBar({
       {view.note !== null && <p className={styles.note}>{view.note}</p>}
 
       {view.reRecord !== null && (
-        <button
-          type="button"
-          className={styles.reRecord}
-          onClick={reRecord}
-          data-testid={readerPlayerBarTestIds.reRecordButton}
-        >
+        <button type="button" className={styles.reRecord} onClick={reRecord} data-testid={readerPlayerBarTestIds.reRecordButton}>
           <StrokeIcon name="rotateCw" size={14} />
           {view.reRecord}
         </button>

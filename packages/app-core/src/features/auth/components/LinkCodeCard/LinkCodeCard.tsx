@@ -58,8 +58,7 @@ export function LinkCodeCard(props: LinkCodeCardProps) {
       <p className={styles.expiry}>Works once, for {LINK_CODE_TTL_MINUTES} minutes.</p>
       {props.from === "emailLink" ? (
         <p className={styles.note} data-testid={linkCodeCardTestIds.staysSignedOutNote}>
-          This tab stays signed out. The link was for the extension, so the overviews saved in this browser aren't
-          added to your account.
+          This tab stays signed out. The link was for the extension, so the overviews saved in this browser aren't added to your account.
         </p>
       ) : (
         <>

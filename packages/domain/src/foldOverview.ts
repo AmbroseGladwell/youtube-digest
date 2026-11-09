@@ -11,10 +11,7 @@ export interface FoldableFiling {
 
 export type FoldableState = Omit<OverviewState, "overviewId">;
 
-const union = <T>(first: readonly T[], second: readonly T[]): T[] => [
-  ...first,
-  ...second.filter((item) => !first.includes(item)),
-];
+const union = <T>(first: readonly T[], second: readonly T[]): T[] => [...first, ...second.filter((item) => !first.includes(item))];
 
 // Two overviews of one video become one: the copy that reached the account first is kept
 // and the other's filing is folded onto it. Topics and tags are a union, the winner's

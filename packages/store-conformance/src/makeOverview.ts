@@ -25,7 +25,11 @@ export function makeOverview(overrides: Partial<Overview> = {}): VideoOverview {
     inOneLine: "A short description of the video.",
     coreClaim: "The single assertion this video makes.",
     thin: false,
-    keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+    keyPoints: [
+      { text: "one", range: null },
+      { text: "two", range: null },
+      { text: "three", range: null },
+    ],
     topicIds: [],
     tags: ["one-tag", "two-tag", "three-tag"],
     verdict: null,

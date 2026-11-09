@@ -21,9 +21,7 @@ export function magicLinkEmail({ link, code, surface, purpose, firstName }: Magi
     : "Here is your link to sign in to The Overview.";
   const label = creating ? "Create my account" : "Sign in";
   const finish =
-    surface === "extension"
-      ? "The page it opens will show a code to enter in the extension."
-      : "It signs in the browser you open it in.";
+    surface === "extension" ? "The page it opens will show a code to enter in the extension." : "It signs in the browser you open it in.";
   const codeLead = "Or enter this code on the page you asked from:";
   const notes = [
     `It works once, for the next fifteen minutes. ${finish}`,
@@ -55,9 +53,7 @@ export function magicLinkEmail({ link, code, surface, purpose, firstName }: Magi
     text,
     html: transactionalEmailHtml({
       subject,
-      preview: creating
-        ? "Your link to finish creating your account, valid for 15 minutes."
-        : "Your sign-in link, valid for 15 minutes.",
+      preview: creating ? "Your link to finish creating your account, valid for 15 minutes." : "Your sign-in link, valid for 15 minutes.",
       greeting,
       heading: creating ? "Finish creating your account" : subject,
       body,

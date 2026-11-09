@@ -2,11 +2,16 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { meteredFetch } from "./meteredFetch.js";
 
-const clock = (...readings: number[]) => () => readings.shift() ?? 0;
+const clock =
+  (...readings: number[]) =>
+  () =>
+    readings.shift() ?? 0;
 
 test("a call is timed to the end of its body, and the caller can still read the body", async () => {
   const inner = (async () =>
-    new Response(JSON.stringify({ content: [], usage: { input_tokens: 10, output_tokens: 20 } }), { status: 200 })) as unknown as typeof fetch;
+    new Response(JSON.stringify({ content: [], usage: { input_tokens: 10, output_tokens: 20 } }), {
+      status: 200,
+    })) as unknown as typeof fetch;
   const { http, calls } = meteredFetch("anthropic", inner, clock(1000, 3500));
 
   const response = await http("https://api.anthropic.com/v1/messages");

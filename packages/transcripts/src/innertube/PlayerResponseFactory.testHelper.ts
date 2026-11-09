@@ -5,8 +5,7 @@ import type { PlayerResponse } from "./PlayerResponse.js";
 // lengthSeconds a string, webp thumbnails widest-last) are the ones worth keeping.
 export const FIXTURE_VIDEO_ID = "tL9Lw250spc";
 
-export const CAPTION_BASE_URL =
-  "https://www.youtube.com/api/timedtext?v=tL9Lw250spc&ei=2ECva&lang=en&fmt=srv3";
+export const CAPTION_BASE_URL = "https://www.youtube.com/api/timedtext?v=tL9Lw250spc&ei=2ECva&lang=en&fmt=srv3";
 
 export function makePlayerResponse(overrides: Partial<PlayerResponse> = {}): PlayerResponse {
   return {

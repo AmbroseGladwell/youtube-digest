@@ -2,8 +2,7 @@ import { ACCENT_COLOURS, DEFAULT_ACCENT_COLOUR, type AccentColour } from "@overv
 
 const ACCENT_COLOUR = "overview/accent-colour";
 
-const isAccentColour = (value: unknown): value is AccentColour =>
-  ACCENT_COLOURS.some((accentColour) => accentColour === value);
+const isAccentColour = (value: unknown): value is AccentColour => ACCENT_COLOURS.some((accentColour) => accentColour === value);
 
 // The worker and the content script have no localStorage of the extension's to read, so the
 // pages tell them (docs/features/appearance.md, "The logo").

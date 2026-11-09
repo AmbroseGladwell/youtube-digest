@@ -30,10 +30,7 @@ function onScreen(element: Element): boolean {
 // "Appeared during this transition" has to be asked afresh each time, not remembered from
 // the first render: the head arrives during the journey in, and is the one being left on the
 // journey back. Having once rendered with no transition running is what separates them.
-export function useOverviewImageMorph<T extends HTMLElement>(
-  overviewPath: string,
-  carries: boolean,
-): RefObject<T | null> {
+export function useOverviewImageMorph<T extends HTMLElement>(overviewPath: string, carries: boolean): RefObject<T | null> {
   const element = useRef<T>(null);
   const transitioning = useViewTransitionState(overviewPath);
   const settled = useRef(!transitioning);

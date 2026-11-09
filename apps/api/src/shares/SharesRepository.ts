@@ -130,10 +130,7 @@ export class SharesRepository {
   // The same read without counting a visit, for the card and the audio a link preview
   // fetches after the page it has already counted.
   async peek(token: string): Promise<PublishedShare | "revoked" | null> {
-    const rows = await this.#sql.query<RawPublished>(
-      "select snapshot, shared_at, revoked_at, views from shares where token = $1",
-      [token],
-    );
+    const rows = await this.#sql.query<RawPublished>("select snapshot, shared_at, revoked_at, views from shares where token = $1", [token]);
     return published(rows[0]);
   }
 

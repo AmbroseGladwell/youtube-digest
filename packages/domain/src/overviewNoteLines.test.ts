@@ -1,18 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
-import {
-  HOW_TO_APPLY_SECTION,
-  KEY_POINTS_SECTION,
-  noteSectionNames,
-  overviewNoteLines,
-} from "./overviewNoteLines.js";
+import { HOW_TO_APPLY_SECTION, KEY_POINTS_SECTION, noteSectionNames, overviewNoteLines } from "./overviewNoteLines.js";
 import type { WatchAnyway } from "./WatchAnyway.js";
 
 test("opens with the note's own order: in one line, then the core claim", () => {
-  const lines = overviewNoteLines(
-    makeOverview({ inOneLine: "A short description.", coreClaim: "The claim." }),
-  );
+  const lines = overviewNoteLines(makeOverview({ inOneLine: "A short description.", coreClaim: "The claim." }));
 
   assert.deepEqual(lines.slice(0, 4), [
     { section: "Summary", heading: true, bullet: false, text: "Premise", spoken: "The premise" },
@@ -25,11 +18,7 @@ test("opens with the note's own order: in one line, then the core claim", () => 
 test("titles the claim section 'No clear claim' when the overview is thin", () => {
   const lines = overviewNoteLines(makeOverview({ thin: true, verdict: null }));
 
-  assert.ok(
-    lines.some(
-      (line) => line.section === "Core claim" && line.heading && line.text === "No clear claim",
-    ),
-  );
+  assert.ok(lines.some((line) => line.section === "Core claim" && line.heading && line.text === "No clear claim"));
   assert.ok(!noteSectionNames(lines).includes("Verdict"));
 });
 
@@ -47,10 +36,13 @@ test("shows the novelty beside the Verdict heading, then the reasoning under Why
     }),
   );
 
-  assert.deepEqual(lines.filter((line) => line.section === "Verdict"), [
-    { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict", chip: "Widely covered" },
-    { section: "Verdict", heading: false, bullet: false, text: "Standard advice.", label: "Why" },
-  ]);
+  assert.deepEqual(
+    lines.filter((line) => line.section === "Verdict"),
+    [
+      { section: "Verdict", heading: true, bullet: false, text: "Verdict", spoken: "The verdict", chip: "Widely covered" },
+      { section: "Verdict", heading: false, bullet: false, text: "Standard advice.", label: "Why" },
+    ],
+  );
 });
 
 test("names what stands out first under its own sub-label, speaks it with the sub-label, and carries the stretch of the video it is in", () => {
@@ -79,7 +71,11 @@ test("names what stands out first under its own sub-label, speaks it with the su
 test("gives every key point and every action its own tappable line", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+      keyPoints: [
+        { text: "one", range: null },
+        { text: "two", range: null },
+        { text: "three", range: null },
+      ],
       howToApply: { items: ["do this", "then this"] },
     }),
   );
@@ -92,7 +88,11 @@ test("gives every key point and every action its own tappable line", () => {
 test("bullets the key points and the actions, leaving the mark out of the text", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+      keyPoints: [
+        { text: "Growth beat expectations.", range: null },
+        { text: "two", range: null },
+        { text: "three", range: null },
+      ],
       howToApply: { items: ["do this", "and this"] },
     }),
   );
@@ -141,9 +141,7 @@ test("carries the selling and watch-anyway answers as prose once they exist", ()
 
   const texts = lines.map((line) => `${line.section}: ${line.text}`);
   assert.ok(texts.includes("What it sells: Sells their own paid product. A £99 course."));
-  assert.ok(
-    texts.includes("Watch it anyway?: Skip the video, the overview covers it. The note carries it."),
-  );
+  assert.ok(texts.includes("Watch it anyway?: Skip the video, the overview covers it. The note carries it."));
 });
 
 // The jump control is rendered after the whole note, which only puts it under the
@@ -170,7 +168,14 @@ const spokenIn = (lines: ReturnType<typeof overviewNoteLines>, section: string) 
 test("speaks each heading in its own words while showing the heading unchanged", () => {
   const lines = overviewNoteLines(
     makeOverview({
-      verdict: { novelty: "original", standsOut: { text: "A new trial.", range: null }, dubious: false, dubiousClaims: [], reasoning: "New.", similarTo: [] },
+      verdict: {
+        novelty: "original",
+        standsOut: { text: "A new trial.", range: null },
+        dubious: false,
+        dubiousClaims: [],
+        reasoning: "New.",
+        similarTo: [],
+      },
       howToApply: { items: ["Do it."] },
       selling: { type: "own_paid_product", detail: "A course.", compromisesContent: false },
       watchAnyway: { answer: "no", reason: "Covered.", range: null },
@@ -192,16 +197,22 @@ test("speaks each heading in its own words while showing the heading unchanged",
 });
 
 test("speaks 'No clear claim' as it is shown", () => {
-  const heading = overviewNoteLines(makeOverview({ thin: true })).find(
-    (line) => line.section === "Core claim" && line.heading,
-  );
+  const heading = overviewNoteLines(makeOverview({ thin: true })).find((line) => line.section === "Core claim" && line.heading);
 
   assert.equal(heading?.spoken ?? heading?.text, "No clear claim");
 });
 
 test("counts the key points aloud, then links them the way a person would", () => {
   const lines = overviewNoteLines(
-    makeOverview({ keyPoints: [{ text: "Sets beat weight.", range: null }, { text: "Rest matters.", range: null }, { text: "Sleep counts.", range: null }, { text: "Eat protein.", range: null }, { text: "Track it.", range: null }] }),
+    makeOverview({
+      keyPoints: [
+        { text: "Sets beat weight.", range: null },
+        { text: "Rest matters.", range: null },
+        { text: "Sleep counts.", range: null },
+        { text: "Eat protein.", range: null },
+        { text: "Track it.", range: null },
+      ],
+    }),
   );
 
   assert.equal(lines.find((line) => line.section === KEY_POINTS_SECTION && line.heading)?.spoken, "There are five key points");
@@ -215,7 +226,19 @@ test("counts the key points aloud, then links them the way a person would", () =
 });
 
 test("never repeats a linking word in a list of seven key points", () => {
-  const lines = overviewNoteLines(makeOverview({ keyPoints: [{ text: "A.", range: null }, { text: "B.", range: null }, { text: "C.", range: null }, { text: "D.", range: null }, { text: "E.", range: null }, { text: "F.", range: null }, { text: "G.", range: null }] }));
+  const lines = overviewNoteLines(
+    makeOverview({
+      keyPoints: [
+        { text: "A.", range: null },
+        { text: "B.", range: null },
+        { text: "C.", range: null },
+        { text: "D.", range: null },
+        { text: "E.", range: null },
+        { text: "F.", range: null },
+        { text: "G.", range: null },
+      ],
+    }),
+  );
   const links = spokenIn(lines, KEY_POINTS_SECTION).map((spoken) => spoken.split(",")[0]);
 
   assert.equal(new Set(links).size, 7);
@@ -232,18 +255,21 @@ test("links actions as steps, and leaves a single action alone", () => {
 });
 
 test("keeps the capital on an acronym or 'I' after the ordering word", () => {
-  const lines = overviewNoteLines(makeOverview({ keyPoints: [{ text: "ETFs win.", range: null }, { text: "I said so.", range: null }, { text: "iPhones help.", range: null }] }));
+  const lines = overviewNoteLines(
+    makeOverview({
+      keyPoints: [
+        { text: "ETFs win.", range: null },
+        { text: "I said so.", range: null },
+        { text: "iPhones help.", range: null },
+      ],
+    }),
+  );
 
-  assert.deepEqual(spokenIn(lines, KEY_POINTS_SECTION), [
-    "First, ETFs win.",
-    "Then, I said so.",
-    "And finally, iPhones help.",
-  ]);
+  assert.deepEqual(spokenIn(lines, KEY_POINTS_SECTION), ["First, ETFs win.", "Then, I said so.", "And finally, iPhones help."]);
 });
 
 test("speaks each watch-it-anyway answer before the reason, the partial range in words", () => {
-  const spoken = (watchAnyway: WatchAnyway) =>
-    spokenIn(overviewNoteLines(makeOverview({ watchAnyway })), "Watch it anyway?");
+  const spoken = (watchAnyway: WatchAnyway) => spokenIn(overviewNoteLines(makeOverview({ watchAnyway })), "Watch it anyway?");
 
   assert.deepEqual(spoken({ answer: "yes", reason: "The form is the point.", range: null }), [
     "Yes, it's worth watching. The form is the point.",
@@ -251,19 +277,18 @@ test("speaks each watch-it-anyway answer before the reason, the partial range in
   assert.deepEqual(spoken({ answer: "no", reason: "Nothing visual.", range: null }), [
     "No, you can probably skip the video, the overview covers it. Nothing visual.",
   ]);
-  assert.deepEqual(
-    spoken({ answer: "partial", reason: "The demo.", range: { startMs: 750_000, endMs: 1_125_000 } }),
-    ["Yes, it's worth watching one part, from 12 minutes 30 to 18 minutes 45. The demo."],
-  );
+  assert.deepEqual(spoken({ answer: "partial", reason: "The demo.", range: { startMs: 750_000, endMs: 1_125_000 } }), [
+    "Yes, it's worth watching one part, from 12 minutes 30 to 18 minutes 45. The demo.",
+  ]);
 });
 
 test("the watch-anyway line carries the stretch worth watching, and a plain no carries none", () => {
   const watchLine = (watchAnyway: WatchAnyway) =>
     overviewNoteLines(makeOverview({ watchAnyway })).find((line) => line.section === "Watch it anyway?" && !line.heading);
 
-  assert.deepEqual(
-    watchLine({ answer: "partial", reason: "One stretch.", range: { startMs: 200_000, endMs: 310_000 } })?.range,
-    { startMs: 200_000, endMs: 310_000 },
-  );
+  assert.deepEqual(watchLine({ answer: "partial", reason: "One stretch.", range: { startMs: 200_000, endMs: 310_000 } })?.range, {
+    startMs: 200_000,
+    endMs: 310_000,
+  });
   assert.equal(watchLine({ answer: "no", reason: "Covered.", range: null })?.range, undefined);
 });

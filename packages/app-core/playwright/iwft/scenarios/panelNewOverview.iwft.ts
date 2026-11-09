@@ -11,10 +11,7 @@ const PANEL_OPTIONS = { apiKeys: ANTHROPIC_KEY, youTubeFetch: true };
 const PANEL = { width: 400, height: 780 };
 const PANEL_DRAGGED_WIDE = { width: 800, height: 900 };
 
-test("at panel width + New opens the phone's sheet over the place it was opened from", async ({
-  launcher,
-  page,
-}) => {
+test("at panel width + New opens the phone's sheet over the place it was opened from", async ({ launcher, page }) => {
   await page.setViewportSize(PANEL);
   await launcher.launchPanel(PANEL_OPTIONS);
 
@@ -23,10 +20,7 @@ test("at panel width + New opens the phone's sheet over the place it was opened 
   await dialog.verifyIsTheSheet();
 });
 
-test("dragged to 768 or wider the same + New opens the web's dialog instead", async ({
-  launcher,
-  page,
-}) => {
+test("dragged to 768 or wider the same + New opens the web's dialog instead", async ({ launcher, page }) => {
   await page.setViewportSize(PANEL_DRAGGED_WIDE);
   await launcher.launchPanel(PANEL_OPTIONS);
 
@@ -39,10 +33,7 @@ for (const [name, viewport] of [
   ["the sheet", PANEL],
   ["the dialog", PANEL_DRAGGED_WIDE],
 ] as const) {
-  test(`${name} takes focus and hands it back to + New when Escape closes it`, async ({
-    launcher,
-    page,
-  }) => {
+  test(`${name} takes focus and hands it back to + New when Escape closes it`, async ({ launcher, page }) => {
     await page.setViewportSize(viewport);
     await launcher.launchPanel(PANEL_OPTIONS);
     const dialog = await launcher.appShell.openNewOverview();
@@ -66,10 +57,7 @@ for (const [name, viewport] of [
   });
 }
 
-test("creating from the panel's sheet lands on the new note, as creating from home does", async ({
-  launcher,
-  page,
-}) => {
+test("creating from the panel's sheet lands on the new note, as creating from home does", async ({ launcher, page }) => {
   await page.setViewportSize(PANEL);
   await launcher.launchPanel(PANEL_OPTIONS);
   const dialog = await launcher.appShell.openNewOverview();

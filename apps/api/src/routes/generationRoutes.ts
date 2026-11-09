@@ -38,12 +38,7 @@ const GENERATION_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
 export function generationRoutes(
   app: FastifyInstance,
-  {
-    generator,
-    trials,
-    sql,
-    clock,
-  }: { generator: OurKeyGenerator | null; trials: TrialsRepository; sql: SqlClient; clock: () => Date },
+  { generator, trials, sql, clock }: { generator: OurKeyGenerator | null; trials: TrialsRepository; sql: SqlClient; clock: () => Date },
 ): void {
   app.get("/generations", { config: { public: true } }, async () => {
     const status: OurKeyGenerationStatus = { available: generator !== null };

@@ -23,10 +23,7 @@ const MORE_PANEL_ID = "FilterPanel-more";
 // Closed, the row still says what is set, so a hidden filter is never a surprise
 // ("OV-34 2 Milestones" 34ab, "OV-84 2 Library Filter" 84h).
 const moreSummary = (filters: LibraryFilters): string => {
-  const verdict = [
-    ...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]),
-    ...(filters.dubious ? ["Dubious only"] : []),
-  ];
+  const verdict = [...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]), ...(filters.dubious ? ["Dubious only"] : [])];
   return [
     ...(filters.source === "all" ? [] : [LIBRARY_SOURCE_LABEL[filters.source]]),
     ...(verdict.length === 0 ? ["Any verdict"] : verdict),
@@ -112,12 +109,7 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
             {allTopicsShown ? "Show fewer" : `Show all ${topics.length} topics`}
           </button>
         )}
-        <button
-          type="button"
-          className={styles.newTopic}
-          onClick={onNewTopic}
-          data-testid={filterPanelTestIds.newTopicButton}
-        >
+        <button type="button" className={styles.newTopic} onClick={onNewTopic} data-testid={filterPanelTestIds.newTopicButton}>
           <StrokeIcon name="plus" />
           New topic
         </button>
@@ -266,13 +258,7 @@ function Toggle({
   children: string;
 }) {
   return (
-    <button
-      type="button"
-      className={`${styles.option} ${styles.toggle}`}
-      onClick={onClick}
-      aria-pressed={active}
-      data-testid={testId}
-    >
+    <button type="button" className={`${styles.option} ${styles.toggle}`} onClick={onClick} aria-pressed={active} data-testid={testId}>
       <span className={styles.optionLabel}>
         <span className={`${styles.box} ${active ? styles.boxChecked : ""}`} aria-hidden="true">
           {active && <StrokeIcon name="check" size={11} />}

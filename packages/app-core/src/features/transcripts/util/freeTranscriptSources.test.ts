@@ -11,11 +11,7 @@ const source = (tier: TranscriptSource["tier"], cost: TranscriptSource["cost"]):
 
 describe("freeTranscriptSources", () => {
   it("keeps the rungs that cost nothing, in the order the ladder asks them", () => {
-    const kept = freeTranscriptSources([
-      source("shared-cache", "free"),
-      source("extension", "free"),
-      source("service", "metered"),
-    ]);
+    const kept = freeTranscriptSources([source("shared-cache", "free"), source("extension", "free"), source("service", "metered")]);
 
     expect(kept.map((rung) => rung.tier)).toEqual(["shared-cache", "extension"]);
   });

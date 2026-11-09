@@ -14,10 +14,7 @@ const seedTopics = (backendSimulator: BackendSimulator, count: number) => {
   backendSimulator.overviews.seed(makeOverview({ topicIds: [TOPICS[0]!.id] }));
 };
 
-test("a handful of topics are all listed, with nothing held back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a handful of topics are all listed, with nothing held back", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 4);
 
   const library = await launcher.launchExpectingLibrary();
@@ -26,10 +23,7 @@ test("a handful of topics are all listed, with nothing held back", async ({
   await library.filterPanel.verifyOffersNoShowAll();
 });
 
-test("a long list stops at six, and says how many there are in total", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a long list stops at six, and says how many there are in total", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 
   const library = await launcher.launchExpectingLibrary();
@@ -38,10 +32,7 @@ test("a long list stops at six, and says how many there are in total", async ({
   await library.filterPanel.verifyShowAllReads("Show all 8 topics");
 });
 
-test("showing all reveals the rest, and the same control puts them away again", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("showing all reveals the rest, and the same control puts them away again", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 
   const library = await launcher.launchExpectingLibrary();
@@ -55,10 +46,7 @@ test("showing all reveals the rest, and the same control puts them away again", 
 });
 
 // A filter you cannot see is a filter you cannot clear.
-test("the topic being filtered by stays listed even from beyond the sixth", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the topic being filtered by stays listed even from beyond the sixth", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 
   const library = await launcher.launchExpectingLibrary();

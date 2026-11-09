@@ -60,12 +60,12 @@ function proseOf(output: GeneratedOutput): string[] {
 const NUMBER = /\d+(?:[.,]\d+)*/g;
 const normalisedNumber = (raw: string): string => raw.replace(/,(?=\d{3}\b)/g, "").replace(/[.,]$/, "");
 
-const NUMBER_WORDS: Record<string, number> = Object.fromEntries(
-  [
-    ..."zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty".split(" ").map((word, value) => [word, value] as const),
-    ..."thirty forty fifty sixty seventy eighty ninety".split(" ").map((word, index) => [word, (index + 3) * 10] as const),
-  ],
-);
+const NUMBER_WORDS: Record<string, number> = Object.fromEntries([
+  ..."zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty"
+    .split(" ")
+    .map((word, value) => [word, value] as const),
+  ..."thirty forty fifty sixty seventy eighty ninety".split(" ").map((word, index) => [word, (index + 3) * 10] as const),
+]);
 const SCALES: Record<string, number> = { hundred: 100, thousand: 1_000, million: 1_000_000, billion: 1_000_000_000 };
 
 const withoutSeparators = (source: string): string => source.replace(/(\d),(?=\d{3}(?!\d))/g, "$1");
@@ -166,9 +166,7 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
     result(
       "chaptersSpreadAcrossVideo",
       "chapters",
-      spokenLength >= CHAPTERED_FROM_MS && share > LONGEST_CHAPTER_SHARE
-        ? [`one chapter is ${Math.round(share * 100)}% of the video`]
-        : [],
+      spokenLength >= CHAPTERED_FROM_MS && share > LONGEST_CHAPTER_SHARE ? [`one chapter is ${Math.round(share * 100)}% of the video`] : [],
     ),
   ];
 }

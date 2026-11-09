@@ -51,7 +51,10 @@ test("a trail keeps only names in the catalogue, and a code keeps only codes the
   const read = readClientError({
     ...sent,
     apiErrorCode: "my own words",
-    trail: [{ name: "mcp.consentScreen.shown", at: AT }, { name: "Watched my video", at: AT }],
+    trail: [
+      { name: "mcp.consentScreen.shown", at: AT },
+      { name: "Watched my video", at: AT },
+    ],
   });
   assert.deepEqual(read.trail, [{ name: "mcp.consentScreen.shown", at: AT }]);
   assert.ok(!("apiErrorCode" in read));

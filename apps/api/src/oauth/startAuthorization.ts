@@ -6,9 +6,7 @@ import type { OAuthUrls } from "./oauthUrls.js";
 import { S256_CHALLENGE } from "./verifierMatches.js";
 import { withQueryParams } from "./withQueryParams.js";
 
-export type AuthorizationStart =
-  | { kind: "refuse"; reason: string }
-  | { kind: "redirect"; location: string };
+export type AuthorizationStart = { kind: "refuse"; reason: string } | { kind: "redirect"; location: string };
 
 type Query = Record<string, string | undefined>;
 
@@ -26,8 +24,7 @@ export async function startAuthorization(
   if (client === null) {
     return { kind: "refuse", reason: "This app is not registered to connect." };
   }
-  const redirectUri =
-    query.redirect_uri ?? (client.redirectUris.length === 1 ? client.redirectUris[0]! : undefined);
+  const redirectUri = query.redirect_uri ?? (client.redirectUris.length === 1 ? client.redirectUris[0]! : undefined);
   if (redirectUri === undefined || !client.redirectUris.includes(redirectUri)) {
     return { kind: "refuse", reason: "This app asked to return somewhere it did not register." };
   }

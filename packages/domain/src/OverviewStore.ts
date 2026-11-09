@@ -40,8 +40,5 @@ export interface OverviewStore {
   createTopic(input: { name: string; description?: string }): Promise<Topic>;
 
   getOverviewState(overviewId: OverviewId): Promise<OverviewState>;
-  setOverviewState(
-    overviewId: OverviewId,
-    patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>,
-  ): Promise<void>;
+  setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>): Promise<void>;
 }

@@ -20,10 +20,7 @@ describe("generationRunStatus", () => {
   it("only ever advances the rule on a step that finished", () => {
     expect(generationRunStatus(makeNewOverviewRun()).progressFraction).toBe(0.25);
     expect(generationRunStatus(makeNewOverviewRun({ transcriptWords: 1 })).progressFraction).toBe(0.75);
-    expect(
-      generationRunStatus(makeNewOverviewRun({ transcriptWords: 1, overview: makeOverview() }))
-        .progressFraction,
-    ).toBe(1);
+    expect(generationRunStatus(makeNewOverviewRun({ transcriptWords: 1, overview: makeOverview() })).progressFraction).toBe(1);
   });
 
   it("turns into the ready state once there is an overview", () => {

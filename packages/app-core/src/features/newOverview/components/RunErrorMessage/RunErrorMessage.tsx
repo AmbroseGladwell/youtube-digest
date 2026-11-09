@@ -24,12 +24,7 @@ export function RunErrorMessage({ error, className, testId, testIds, onFollowed 
   return (
     <p className={className} data-testid={testId}>
       {PROVIDER_SHORT_LABEL[error.provider]} couldn’t make this overview with {modelLabel(error.provider, error.model)}.{" "}
-      <PageLink
-        to={Routes.settingsSection("keys")}
-        className={styles.settingsLink}
-        data-testid={testIds.settingsLink}
-        onClick={onFollowed}
-      >
+      <PageLink to={Routes.settingsSection("keys")} className={styles.settingsLink} data-testid={testIds.settingsLink} onClick={onFollowed}>
         Pick another model in Settings
       </PageLink>{" "}
       and try again.

@@ -1,5 +1,4 @@
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
 const mergeOneLevel = (key: string, base: Record<string, unknown>, patch: Record<string, unknown>) =>
   isObject(patch[key]) ? { [key]: { ...(isObject(base[key]) ? base[key] : {}), ...patch[key] } } : {};
@@ -11,10 +10,7 @@ const mergeOneLevel = (key: string, base: Record<string, unknown>, patch: Record
 // chose for Gemini (docs/features/byo-providers.md). learned joins them so that two
 // devices adding and removing items at once both land. One function, run by the local store,
 // the server and the rebase, so the three cannot drift (docs/features/record-migrations.md).
-export function mergeSettingsRecord(
-  base: Record<string, unknown>,
-  patch: Record<string, unknown>,
-): Record<string, unknown> {
+export function mergeSettingsRecord(base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> {
   return {
     ...base,
     ...patch,

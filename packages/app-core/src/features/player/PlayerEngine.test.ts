@@ -233,9 +233,7 @@ describe("PlayerEngine", () => {
     engine.prepare({ ...TRACK, opening: "The Quiet Return of Nuclear Baseload, from Practical Engineering." });
     await settle();
 
-    expect(vi.mocked(api.request).mock.calls[0]![0][0]).toBe(
-      "The Quiet Return of Nuclear Baseload, from Practical Engineering.",
-    );
+    expect(vi.mocked(api.request).mock.calls[0]![0][0]).toBe("The Quiet Return of Nuclear Baseload, from Practical Engineering.");
   });
 
   it("still plays narration made before the opening existed, which has an entry per line and no more", async () => {
@@ -248,10 +246,7 @@ describe("PlayerEngine", () => {
   });
 
   it("narration nobody has made is asked for on the first press, polled, and played when it lands", async () => {
-    const status = vi
-      .fn<NarrationApi["status"]>()
-      .mockResolvedValueOnce({ key: KEY, status: "rendering" })
-      .mockResolvedValueOnce(READY);
+    const status = vi.fn<NarrationApi["status"]>().mockResolvedValueOnce({ key: KEY, status: "rendering" }).mockResolvedValueOnce(READY);
     const engine = engineWith(scriptedApi({ status }));
     engine.load(TRACK);
     await settle();
@@ -320,9 +315,7 @@ describe("PlayerEngine", () => {
   });
 
   it("a render that gave up is failed, and reading along instead is the pacer, chosen", async () => {
-    const engine = engineWith(
-      scriptedApi({ request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })) }),
-    );
+    const engine = engineWith(scriptedApi({ request: vi.fn(async (): Promise<NarrationRender> => ({ key: KEY, status: "failed" })) }));
     engine.load(TRACK);
     engine.play("playerBar");
     await settle();
@@ -382,9 +375,7 @@ describe("PlayerEngine", () => {
   });
 
   it("a session that has ended falls back to the pacer as signed out, not as a failure", async () => {
-    const engine = engineWith(
-      scriptedApi({ peek: vi.fn(async () => Promise.reject(new SyncRequestError("unauthenticated", 401, "No"))) }),
-    );
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => Promise.reject(new SyncRequestError("unauthenticated", 401, "No"))) }));
     engine.load(TRACK);
     await settle();
 
@@ -506,10 +497,7 @@ describe("PlayerEngine", () => {
   });
 
   it("a render already under way is shown preparing, and lands as ready without playing", async () => {
-    const status = vi
-      .fn<NarrationApi["status"]>()
-      .mockResolvedValueOnce({ key: KEY, status: "rendering" })
-      .mockResolvedValueOnce(READY);
+    const status = vi.fn<NarrationApi["status"]>().mockResolvedValueOnce({ key: KEY, status: "rendering" }).mockResolvedValueOnce(READY);
     const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart({ key: KEY, status: "queued" })), status }));
     engine.load(TRACK);
     await settle();
@@ -587,7 +575,10 @@ describe("PlayerEngine", () => {
   });
 
   it("cancelling a first play goes back to watching the render it asked for", async () => {
-    const peek = vi.fn<NarrationApi["peek"]>().mockResolvedValueOnce(null).mockResolvedValue(inHeart({ key: KEY, status: "queued" }));
+    const peek = vi
+      .fn<NarrationApi["peek"]>()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue(inHeart({ key: KEY, status: "queued" }));
     const engine = engineWith(scriptedApi({ peek }));
     engine.load(TRACK);
     await settle();
@@ -601,10 +592,7 @@ describe("PlayerEngine", () => {
   });
 
   it("cancelling while the connection drops goes back to made on first play, not to the pacer", async () => {
-    const peek = vi
-      .fn<NarrationApi["peek"]>()
-      .mockResolvedValueOnce(null)
-      .mockRejectedValue(new SyncTransportError("Offline"));
+    const peek = vi.fn<NarrationApi["peek"]>().mockResolvedValueOnce(null).mockRejectedValue(new SyncTransportError("Offline"));
     const engine = engineWith(scriptedApi({ peek }));
     engine.load(TRACK);
     await settle();
@@ -642,9 +630,7 @@ describe("PlayerEngine", () => {
   });
 
   it("a background request that is refused changes nothing about what is playing", async () => {
-    const request = vi
-      .fn<NarrationApi["request"]>()
-      .mockRejectedValueOnce(new SyncRequestError("too_many_requests", 429, "Three waiting"));
+    const request = vi.fn<NarrationApi["request"]>().mockRejectedValueOnce(new SyncRequestError("too_many_requests", 429, "Three waiting"));
     const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)), request }));
     engine.load(TRACK);
     await settle();
@@ -688,7 +674,11 @@ describe("PlayerEngine", () => {
       engine.reRecord();
       await settle();
 
-      expect(api.request).toHaveBeenCalledWith(TRACK.lines.map((noteLine) => noteLine.text), "bm_george", "interactive");
+      expect(api.request).toHaveBeenCalledWith(
+        TRACK.lines.map((noteLine) => noteLine.text),
+        "bm_george",
+        "interactive",
+      );
       expect(engine.getSnapshot()).toMatchObject({ status: "playing", narratedVoice: "bm_george" });
       expect(media.src).toBe(`https://api.test/api/audio/${GEORGE_KEY}/file`);
       expect(engine.getTime()).toBe(5.3);
@@ -735,7 +725,10 @@ describe("PlayerEngine", () => {
       engine.setVoice("bf_emma");
       await settle();
 
-      expect(api.peek).toHaveBeenLastCalledWith(TRACK.lines.map((noteLine) => noteLine.text), "bf_emma");
+      expect(api.peek).toHaveBeenLastCalledWith(
+        TRACK.lines.map((noteLine) => noteLine.text),
+        "bf_emma",
+      );
       expect(engine.getSnapshot()).toMatchObject({ voice: "bf_emma", narratedVoice: "af_heart" });
     });
 
@@ -785,10 +778,7 @@ describe("PlayerEngine", () => {
     });
 
     it("narration made on the press is timed through the polls that found it, as prepared", async () => {
-      const status = vi
-        .fn<NarrationApi["status"]>()
-        .mockResolvedValueOnce({ key: KEY, status: "rendering" })
-        .mockResolvedValueOnce(READY);
+      const status = vi.fn<NarrationApi["status"]>().mockResolvedValueOnce({ key: KEY, status: "rendering" }).mockResolvedValueOnce(READY);
       const { engine, heard } = timed(scriptedApi({ status }));
       engine.load(TRACK);
       await settle();

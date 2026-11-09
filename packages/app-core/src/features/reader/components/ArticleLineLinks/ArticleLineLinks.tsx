@@ -1,4 +1,13 @@
-import { articlePlaceUrl, articleReadMinutes, READ_ANYWAY_SECTION, sourceName, type ArticleChapter, type ArticleDetails, type NoteLine, type WebSource } from "@overview/domain";
+import {
+  articlePlaceUrl,
+  articleReadMinutes,
+  READ_ANYWAY_SECTION,
+  sourceName,
+  type ArticleChapter,
+  type ArticleDetails,
+  type NoteLine,
+  type WebSource,
+} from "@overview/domain";
 import type { ReactNode } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { ShowOnPage } from "../../useShowOnPage.js";

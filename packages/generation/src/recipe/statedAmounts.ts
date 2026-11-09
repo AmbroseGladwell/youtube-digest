@@ -4,9 +4,26 @@ const NUMBER = `(?:\\d+(?:\\s+|-)\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:\\.\\d+)?(?:\\s*
 const DIGITS = new RegExp(`${NUMBER}(\\s+and\\s+a\\s+half)?`, "g");
 
 const UNITS_WORDS: Record<string, number> = {
-  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
-  eighteen: 18, nineteen: 19,
+  zero: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
 };
 const TENS_WORDS: Record<string, number> = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
 const FRACTION_WORDS: Record<string, number> = { half: 0.5, halves: 0.5, quarter: 0.25, quarters: 0.25, third: 1 / 3, thirds: 1 / 3 };
@@ -16,7 +33,8 @@ const WORD = new RegExp(
   "gi",
 );
 
-const UNIT = "cups?|tbsps?|tbs|tablespoons?|tsps?|teaspoons?|g|grams?|kg|kilos?|kilograms?|mg|ml|millilitres?|milliliters?|l|litres?|liters?|oz|ounces?|lbs?|pounds?|pinch(?:es)?|handfuls?|dash(?:es)?";
+const UNIT =
+  "cups?|tbsps?|tbs|tablespoons?|tsps?|teaspoons?|g|grams?|kg|kilos?|kilograms?|mg|ml|millilitres?|milliliters?|l|litres?|liters?|oz|ounces?|lbs?|pounds?|pinch(?:es)?|handfuls?|dash(?:es)?";
 const LEADING_AMOUNT = new RegExp(
   `^\\s*(?:about|approx\\.?|roughly|around)?\\s*${NUMBER}(?:\\s*[-–]\\s*${NUMBER})?\\s*(?:[x×]\\s*)?(?:(?:${UNIT})\\b\\.?\\s*)?(?:of\\s+)?`,
   "i",

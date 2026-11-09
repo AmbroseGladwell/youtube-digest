@@ -9,31 +9,22 @@ export class TopicPickerPageObject extends PageObject {
       return this;
     });
 
-  verifyIsNotShown = () =>
-    this.step("verifyIsNotShown", () => this.expectNotToBeVisible(topicPickerTestIds.root));
+  verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(topicPickerTestIds.root));
 
-  search = (query: string) =>
-    this.step(`search ${query}`, () => this.get(topicPickerTestIds.searchInput).fill(query));
+  search = (query: string) => this.step(`search ${query}`, () => this.get(topicPickerTestIds.searchInput).fill(query));
 
   verifyOffers = (names: string[]) =>
     this.step(`verifyOffers ${names.join(", ")}`, () =>
-      expect(this.page.getByTestId(/^TopicPicker\.option\./)).toHaveText(
-        names.map((name) => new RegExp(name)),
-      ),
+      expect(this.page.getByTestId(/^TopicPicker\.option\./)).toHaveText(names.map((name) => new RegExp(name))),
     );
 
   verifyOfferedCounts = (counts: string[]) =>
-    this.step(`verifyOfferedCounts ${counts.join(", ")}`, () =>
-      expect(this.get(topicPickerTestIds.optionCount)).toHaveText(counts),
-    );
+    this.step(`verifyOfferedCounts ${counts.join(", ")}`, () => expect(this.get(topicPickerTestIds.optionCount)).toHaveText(counts));
 
   verifyOffersToCreate = (name: string) =>
-    this.step(`verifyOffersToCreate ${name}`, () =>
-      expect(this.get(topicPickerTestIds.createOption)).toContainText(name),
-    );
+    this.step(`verifyOffersToCreate ${name}`, () => expect(this.get(topicPickerTestIds.createOption)).toContainText(name));
 
-  verifyOffersNoCreate = () =>
-    this.step("verifyOffersNoCreate", () => this.expectNotToBeVisible(topicPickerTestIds.createOption));
+  verifyOffersNoCreate = () => this.step("verifyOffersNoCreate", () => this.expectNotToBeVisible(topicPickerTestIds.createOption));
 
   verifyHint = (name: string, hint: string | null) =>
     this.step(`verifyHint ${name} ${hint}`, () =>
@@ -44,8 +35,7 @@ export class TopicPickerPageObject extends PageObject {
 
   clickCreate = () => this.step("clickCreate", () => this.click(topicPickerTestIds.createOption));
 
-  clickTopic = (name: string) =>
-    this.step(`clickTopic ${name}`, () => this.click(topicPickerTestIds.option(name)));
+  clickTopic = (name: string) => this.step(`clickTopic ${name}`, () => this.click(topicPickerTestIds.option(name)));
 
   verifyTopicIsPicked = (name: string, picked: boolean) =>
     this.step(`verifyTopicIsPicked ${name} ${picked}`, () =>

@@ -113,10 +113,7 @@ test("the flag closes the explanation it opened", async ({ launcher, backendSimu
   await panel.verifyIsNotShown();
 });
 
-test("a note made before reasons were saved says so, rather than showing an empty panel", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note made before reasons were saved says so, rather than showing an empty panel", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, null);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -151,10 +148,7 @@ test("beside the video, a claim's moment skips the video there and leaves the ex
   await panel.verifyIsShown();
 });
 
-test("opening the explanation, following a moment and saying it looks wrong are counted", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("opening the explanation, following a moment and saying it looks wrong are counted", async ({ launcher, backendSimulator }) => {
   const overview = seedNote(backendSimulator, CLAIMS);
   const capture = await launcher.launchPanel({
     ...SIGNED_IN,
@@ -220,7 +214,5 @@ test("a freshly generated dubious overview explains itself, its moment timed fro
   const panel = await reader.clickDubiousFlag();
 
   await panel.verifyClaimsRead(["The simulated technique works because the fixture says so."]);
-  await panel.verifyOffersToWatchFrom([
-    { label: "Watch from 0:03", url: `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}&t=3` },
-  ]);
+  await panel.verifyOffersToWatchFrom([{ label: "Watch from 0:03", url: `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}&t=3` }]);
 });

@@ -38,7 +38,5 @@ export function sharePageHead({ note, token, appUrl, hasNarration }: SharePageHe
 // A link the reader turned off, and one that was never issued, both answer with a page
 // rather than a bare status. Neither says anything about the overview that was there.
 export function goneHead(what: string): string {
-  return [`<title>${escapeHtml(what)} · The Overview</title>`, meta("name", "robots", "noindex, nofollow")].join(
-    "\n    ",
-  );
+  return [`<title>${escapeHtml(what)} · The Overview</title>`, meta("name", "robots", "noindex, nofollow")].join("\n    ");
 }

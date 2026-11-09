@@ -415,6 +415,9 @@ test("two overviews of different videos sit side by side, and one of a video wit
     [other, unidentified(), unidentified()].map((body) => account.inject({ method: "POST", url: "/api/overviews", body })),
   );
 
-  assert.deepEqual(responses.map((response) => response.statusCode), [201, 201, 201]);
+  assert.deepEqual(
+    responses.map((response) => response.statusCode),
+    [201, 201, 201],
+  );
   await testApp.close();
 });

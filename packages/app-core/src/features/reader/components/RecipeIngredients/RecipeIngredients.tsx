@@ -1,13 +1,7 @@
 import { useId } from "react";
 import type { AdjustedIngredient, RecipeUnits } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import {
-  MULTIPLIER_LABEL,
-  RECIPE_MULTIPLIERS,
-  UNITS_LABEL,
-  type RecipeAdjustment,
-  type RecipeScale,
-} from "../../util/recipeAdjustment.js";
+import { MULTIPLIER_LABEL, RECIPE_MULTIPLIERS, UNITS_LABEL, type RecipeAdjustment, type RecipeScale } from "../../util/recipeAdjustment.js";
 import { RecipeLineChoice } from "../RecipeMethod/RecipeLineChoice.js";
 import { RecipeReadAloud, type RecipeListVoice } from "../RecipeMethod/RecipeReadAloud.js";
 import { useSpokenLineInView } from "../RecipeMethod/useSpokenLineInView.js";
@@ -36,7 +30,11 @@ const HAS_A_FIGURE = /\d|[¼½¾⅓⅔⅛]/;
 
 // A video's line with nothing to adjust either named no amount or said it in words (122e).
 const unreadableAside = (line: string, fromVideo: boolean): string =>
-  !fromVideo ? "· as written" : HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line) ? "· as said" : "· no amount said";
+  !fromVideo
+    ? "· as written"
+    : HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line)
+      ? "· as said"
+      : "· no amount said";
 
 // Design 122c–122d: one line under the heading says where a video's list came from.
 export const ingredientsSource = (said: readonly number[], total: number): string =>
@@ -181,10 +179,18 @@ export function RecipeIngredients({
               data-testid={active ? recipeIngredientsTestIds.activeLine : recipeIngredientsTestIds.line}
             >
               {voice === null ? (
-                <Line line={line} fromVideo={said !== null} saidAside={said !== null && said.length < lines.length && said.includes(index)} />
+                <Line
+                  line={line}
+                  fromVideo={said !== null}
+                  saidAside={said !== null && said.length < lines.length && said.includes(index)}
+                />
               ) : (
                 <RecipeLineChoice active={active} onChoose={() => voice.onSelect(index)}>
-                  <Line line={line} fromVideo={said !== null} saidAside={said !== null && said.length < lines.length && said.includes(index)} />
+                  <Line
+                    line={line}
+                    fromVideo={said !== null}
+                    saidAside={said !== null && said.length < lines.length && said.includes(index)}
+                  />
                 </RecipeLineChoice>
               )}
             </li>

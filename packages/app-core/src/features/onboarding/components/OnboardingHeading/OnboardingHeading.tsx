@@ -10,7 +10,12 @@ export function OnboardingHeading({ children, small = false }: { children: React
   const isPanel = useIsPanel();
   useEffect(() => heading.current?.focus(), []);
   return (
-    <h1 id={ONBOARDING_HEADING_ID} className={small ? styles.small : `${styles.root} ${isPanel ? styles.panel : ""}`} ref={heading} tabIndex={-1}>
+    <h1
+      id={ONBOARDING_HEADING_ID}
+      className={small ? styles.small : `${styles.root} ${isPanel ? styles.panel : ""}`}
+      ref={heading}
+      tabIndex={-1}
+    >
       {children}
     </h1>
   );

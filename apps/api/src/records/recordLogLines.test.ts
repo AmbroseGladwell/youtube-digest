@@ -38,7 +38,10 @@ test("a write at the version already stored names no migration", async () => {
 
   await account.inject({ method: "PUT", url: `/api/overviews/${overview.id}/topics`, body: { topicIds: [], updatedAt: UPDATED_AT } });
 
-  assert.deepEqual(saying(lines, "record written").map(({ migratedFrom }) => migratedFrom), [undefined, undefined]);
+  assert.deepEqual(
+    saying(lines, "record written").map(({ migratedFrom }) => migratedFrom),
+    [undefined, undefined],
+  );
   await testApp.close();
 });
 
@@ -49,12 +52,21 @@ test("a record newer than the client is refused at warn with its kind and both v
   const id = randomUUID();
   await account.seedRaw("overview", id, CURRENT + 1, { id, fromTheFuture: true });
 
-  await account.inject({ method: "PUT", url: `/api/overviews/${id}/capture-reason`, body: { captureReason: READER_TEXT, updatedAt: UPDATED_AT } });
+  await account.inject({
+    method: "PUT",
+    url: `/api/overviews/${id}/capture-reason`,
+    body: { captureReason: READER_TEXT, updatedAt: UPDATED_AT },
+  });
 
   const [refused] = saying(lines, "request refused");
   assert.equal(refused!.level, LOG_LEVELS.warn);
   assert.deepEqual(
-    { code: refused!.code, kind: refused!.kind, storedSchemaVersion: refused!.storedSchemaVersion, clientSchemaVersion: refused!.clientSchemaVersion },
+    {
+      code: refused!.code,
+      kind: refused!.kind,
+      storedSchemaVersion: refused!.storedSchemaVersion,
+      clientSchemaVersion: refused!.clientSchemaVersion,
+    },
     { code: "record_newer_than_client", kind: "overview", storedSchemaVersion: CURRENT + 1, clientSchemaVersion: CURRENT },
   );
   assert.doesNotMatch(JSON.stringify(lines), new RegExp(READER_TEXT));

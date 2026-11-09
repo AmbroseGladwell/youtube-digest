@@ -29,10 +29,7 @@ const panelWatching = {
   playback: { videoId: VIDEO_ID, positionMs: 0, playing: true },
 };
 
-test("the stretch worth watching ends the paragraph that says so, as its whole range", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the stretch worth watching ends the paragraph that says so, as its whole range", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, partial);
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
@@ -41,10 +38,7 @@ test("the stretch worth watching ends the paragraph that says so, as its whole r
   await reader.verifyLineMenuIsOpen(false);
 });
 
-test("skipping moves the video to the start of that stretch, not to the end of it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("skipping moves the video to the start of that stretch, not to the end of it", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, partial);
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();
@@ -58,10 +52,7 @@ test("skipping moves the video to the start of that stretch, not to the end of i
 
 // The range is how someone gets there on their own, so it is printed whether or not
 // anything here can move a video.
-test("the web app offers the video at that moment, having no player of its own to move", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("the web app offers the video at that moment, having no player of its own to move", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, partial);
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
@@ -89,10 +80,7 @@ test("a panel whose tab has moved to another video offers the video at that mome
   await reader.verifyOffersToWatchFrom("Watch from 3:20", `${VIDEO_URL}&t=200`);
 });
 
-test("a note with no stretch to point at shows none of it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a note with no stretch to point at shows none of it", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, { answer: "no", reason: "Nothing here earns it.", range: null });
   const capture = await launcher.launchPanel(panelWatching);
   const reader = await capture.openStoredOverview();

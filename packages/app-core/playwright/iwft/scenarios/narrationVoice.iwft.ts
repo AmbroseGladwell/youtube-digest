@@ -7,7 +7,11 @@ import { Routes } from "../../../src/app/Routes.js";
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
-  keyPoints: [{ text: "Growth beat expectations.", range: null }, { text: "Productivity is moving.", range: null }, { text: "Hiring intent has turned.", range: null }],
+  keyPoints: [
+    { text: "Growth beat expectations.", range: null },
+    { text: "Productivity is moving.", range: null },
+    { text: "Hiring intent has turned.", range: null },
+  ],
 });
 
 const SIGNED_IN = {
@@ -15,10 +19,7 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
 };
 
-test("a reader hears a sample, chooses that voice, and the next note is asked for in it", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("a reader hears a sample, chooses that voice, and the next note is asked for in it", async ({ launcher, backendSimulator }) => {
   backendSimulator.narration.seedSamples();
   backendSimulator.overviews.seed(NOTE);
   await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -59,10 +60,7 @@ test("one sample plays at a time: pressing another stops the first", async ({ la
   await picker.verifySampleIsPlaying("am_puck", false);
 });
 
-test("samples that do not load leave every voice choosable, and trying again brings them back", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("samples that do not load leave every voice choosable, and trying again brings them back", async ({ launcher, backendSimulator }) => {
   backendSimulator.narration.seedSamples();
   backendSimulator.simulateEndpointError(EndpointKey.NARRATION_SAMPLES);
   await launcher.launch(SIGNED_IN);
@@ -126,10 +124,7 @@ test("the voice the bar names opens Settings at the voice section, with that voi
   await picker.verifyChosenRowIsInView("af_heart");
 });
 
-test("in the panel the voice row names the voice and opens the list on its own page", async ({
-  launcher,
-  backendSimulator,
-}) => {
+test("in the panel the voice row names the voice and opens the list on its own page", async ({ launcher, backendSimulator }) => {
   backendSimulator.narration.seedSamples();
   await launcher.launchPanel({ ...SIGNED_IN, narrationVoice: "bm_fable" });
   const settings = await launcher.appShell.openSettings();

@@ -39,7 +39,10 @@ test("unfollowing journals a delete, and unfollowing what isn't followed journal
 
   assert.deepEqual(
     (await readOutbox(db)).map(({ kind, change }) => [kind, change.op]),
-    [["followedPlaylist", "replace"], ["followedPlaylist", "delete"]],
+    [
+      ["followedPlaylist", "replace"],
+      ["followedPlaylist", "delete"],
+    ],
   );
 });
 
@@ -55,5 +58,8 @@ test("a stored playlist this client cannot read is left out of the list rather t
   const store = new IndexedDbFollowedPlaylistStore(db);
   await store.saveFollowed(makeFollowedPlaylist());
   await putRaw(db, FOLLOWED_PLAYLISTS_STORE, { id: "PLbroken", schemaVersion: CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION + 1 });
-  assert.deepEqual((await store.listFollowed()).map((playlist) => playlist.id), ["PLpsychology"]);
+  assert.deepEqual(
+    (await store.listFollowed()).map((playlist) => playlist.id),
+    ["PLpsychology"],
+  );
 });

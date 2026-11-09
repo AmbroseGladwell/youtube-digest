@@ -132,13 +132,19 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
               <h2 className={styles.heading} id={HEADING_ID} data-testid={deleteAccountDialogTestIds.heading}>
                 Delete your account?
               </h2>
-              <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={deleteAccountDialogTestIds.closeButton}>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={onClose}
+                aria-label="Close"
+                data-testid={deleteAccountDialogTestIds.closeButton}
+              >
                 <StrokeIcon name="close" size={18} />
               </button>
             </div>
             <p className={styles.body} data-testid={deleteAccountDialogTestIds.body}>
-              Your account and everything in it are deleted straight away. This can’t be undone: creating an account
-              with <strong>{email}</strong> again starts a new, empty one.
+              Your account and everything in it are deleted straight away. This can’t be undone: creating an account with{" "}
+              <strong>{email}</strong> again starts a new, empty one.
             </p>
             <div className={styles.group}>
               <p className={styles.groupLabel}>Deleted</p>
@@ -190,7 +196,13 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
                     Continue
                   </button>
                 )}
-                <button type="button" ref={cancel} className={styles.quietAction} onClick={onClose} data-testid={deleteAccountDialogTestIds.cancelButton}>
+                <button
+                  type="button"
+                  ref={cancel}
+                  className={styles.quietAction}
+                  onClick={onClose}
+                  data-testid={deleteAccountDialogTestIds.cancelButton}
+                >
                   Cancel
                 </button>
               </div>
@@ -200,7 +212,13 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
 
         {step.kind === "code" && (
           <>
-            <button type="button" className={`${styles.close} ${styles.closeFloating}`} onClick={onClose} aria-label="Close" data-testid={deleteAccountDialogTestIds.closeButton}>
+            <button
+              type="button"
+              className={`${styles.close} ${styles.closeFloating}`}
+              onClick={onClose}
+              aria-label="Close"
+              data-testid={deleteAccountDialogTestIds.closeButton}
+            >
               <StrokeIcon name="close" size={18} />
             </button>
             <CodeStep
@@ -260,7 +278,13 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
               <h2 className={styles.heading} id={HEADING_ID} ref={heading} tabIndex={-1} data-testid={deleteAccountDialogTestIds.heading}>
                 Your account wasn’t deleted
               </h2>
-              <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={deleteAccountDialogTestIds.closeButton}>
+              <button
+                type="button"
+                className={styles.close}
+                onClick={onClose}
+                aria-label="Close"
+                data-testid={deleteAccountDialogTestIds.closeButton}
+              >
                 <StrokeIcon name="close" size={18} />
               </button>
             </div>
@@ -270,7 +294,12 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
             </p>
             <p className={styles.body}>Try again now, or come back to it later.</p>
             <div className={styles.foot}>
-              <button type="button" className={styles.primaryAction} onClick={runDeletion} data-testid={deleteAccountDialogTestIds.tryAgainButton}>
+              <button
+                type="button"
+                className={styles.primaryAction}
+                onClick={runDeletion}
+                data-testid={deleteAccountDialogTestIds.tryAgainButton}
+              >
                 Try again
               </button>
               <button type="button" className={styles.quietAction} onClick={onClose} data-testid={deleteAccountDialogTestIds.cancelButton}>

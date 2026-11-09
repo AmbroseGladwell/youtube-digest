@@ -76,8 +76,14 @@ test("an unlisted playlist says so", async () => {
 test("a private playlist is told apart from a missing one", async () => {
   const { reader: read } = reader([{ ...psychology, id: "PLprivate", privacyStatus: "private" }]);
 
-  await assert.rejects(read.read(PlaylistId.parse("PLprivate"), silent), (error) => error instanceof PlaylistUnavailableError && error.reason === "private");
-  await assert.rejects(read.read(PlaylistId.parse("PLmissing"), silent), (error) => error instanceof PlaylistUnavailableError && error.reason === "gone");
+  await assert.rejects(
+    read.read(PlaylistId.parse("PLprivate"), silent),
+    (error) => error instanceof PlaylistUnavailableError && error.reason === "private",
+  );
+  await assert.rejects(
+    read.read(PlaylistId.parse("PLmissing"), silent),
+    (error) => error instanceof PlaylistUnavailableError && error.reason === "gone",
+  );
 });
 
 test("the quota a read spent is logged: one unit for the playlist and one for each page", async () => {

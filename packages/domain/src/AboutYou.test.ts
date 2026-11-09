@@ -18,10 +18,7 @@ test("every section filled reads as one sentence", () => {
 });
 
 test("an empty section is left out and the sentence still reads", () => {
-  assert.equal(
-    aboutYouSentence({ ...EMPTY_ABOUT_YOU, who: ["dad"], focus: ["sleep"] }),
-    "I'm a dad, and right now I'm focusing on sleep.",
-  );
+  assert.equal(aboutYouSentence({ ...EMPTY_ABOUT_YOU, who: ["dad"], focus: ["sleep"] }), "I'm a dad, and right now I'm focusing on sleep.");
   assert.equal(aboutYouSentence({ ...EMPTY_ABOUT_YOU, focus: ["sleep"] }), "Right now I'm focusing on sleep.");
 });
 

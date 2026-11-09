@@ -49,11 +49,7 @@ import {
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import {
-  makeAnthropicMessageResponse,
-  makeGeneratedOutputFixture,
-  makeModelListResponse,
-} from "./fixtures/anthropicFixtures.js";
+import { makeAnthropicMessageResponse, makeGeneratedOutputFixture, makeModelListResponse } from "./fixtures/anthropicFixtures.js";
 import {
   IWFT_VIDEO_ID,
   makeJson3Fixture,
@@ -88,8 +84,7 @@ export const SIMULATED_SECONDS_PER_LINE = 2;
 // Long enough that a test can see a sample playing before it ends.
 const SAMPLE_SECONDS = 20;
 
-const keyFor = (lines: string[], voice: string) =>
-  createHash("sha256").update(narrationKeySource(lines, voice)).digest("hex");
+const keyFor = (lines: string[], voice: string) => createHash("sha256").update(narrationKeySource(lines, voice)).digest("hex");
 
 const readyRender = (key: string, lineCount: number, secondsPerLine = SIMULATED_SECONDS_PER_LINE): NarrationRender => ({
   key,
@@ -128,9 +123,7 @@ export class BackendSimulator {
   #seedTranscripts: StoredTranscript[] = [];
   #seedUnreadable: UnreadableRecord[] = [];
 
-  #behaviours = new Map<EndpointKey, EndpointBehaviour>(
-    Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]),
-  );
+  #behaviours = new Map<EndpointKey, EndpointBehaviour>(Object.values(EndpointKey).map((key) => [key, EndpointBehaviour.DEFAULT]));
   #callCounts = new Map<EndpointKey, number>();
   #shares = new Map<string, Share>();
   #shareSnapshots = new Map<string, SharedOverview>();
@@ -282,8 +275,7 @@ export class BackendSimulator {
     // The WEB client is asked only for a publish date and carries no caption tracks, so it
     // is not the call worth counting (docs/features/transcript-retrieval.md).
     await this.#page.route("**/www.youtube.com/youtubei/v1/player**", (route) => {
-      const isMetadataClient =
-        route.request().headers()["x-youtube-client-name"]?.toUpperCase() === "WEB";
+      const isMetadataClient = route.request().headers()["x-youtube-client-name"]?.toUpperCase() === "WEB";
       if (isMetadataClient) {
         return route.fulfill({
           status: 200,
@@ -325,24 +317,28 @@ export class BackendSimulator {
                 status: 400,
                 body: {
                   type: "error",
-                  error: { type: "invalid_request_error", message: "The compiled grammar is too large, which would cause performance issues." },
-                },
-              }
-            : this.#anthropicOutOfCredit
-            ? {
-                status: 400,
-                body: {
-                  type: "error",
                   error: {
                     type: "invalid_request_error",
-                    message: "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+                    message: "The compiled grammar is too large, which would cause performance issues.",
                   },
                 },
               }
-            : {
-                status: 200,
-                body: makeAnthropicMessageResponse(makeGeneratedOutputFixture(this.#generatedOutputOverrides)),
-              },
+            : this.#anthropicOutOfCredit
+              ? {
+                  status: 400,
+                  body: {
+                    type: "error",
+                    error: {
+                      type: "invalid_request_error",
+                      message:
+                        "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
+                    },
+                  },
+                }
+              : {
+                  status: 200,
+                  body: makeAnthropicMessageResponse(makeGeneratedOutputFixture(this.#generatedOutputOverrides)),
+                },
         onError: () => ({
           status: 401,
           body: {
@@ -568,10 +564,7 @@ export class BackendSimulator {
             onError: unauthenticated,
           })
         : this.#respond(route, EndpointKey.SESSION_READ, {
-            onDefault: () =>
-              this.#sessionLapsed
-                ? unauthenticated()
-                : { status: 200, body: sessionInfo() },
+            onDefault: () => (this.#sessionLapsed ? unauthenticated() : { status: 200, body: sessionInfo() }),
             onError: () => ({
               status: 503,
               body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
@@ -664,7 +657,10 @@ export class BackendSimulator {
         onDefault: () => {
           const query = new URL(route.request().url()).searchParams.get("query") ?? "";
           const ids = this.#meaningMatches.get(query) ?? [];
-          return { status: 200, body: { available: true, matches: ids.map((overviewId, index) => ({ overviewId, similarity: 0.6 - index / 100 })) } };
+          return {
+            status: 200,
+            body: { available: true, matches: ids.map((overviewId, index) => ({ overviewId, similarity: 0.6 - index / 100 })) },
+          };
         },
         onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: meaning search failed" } } }),
       }),
@@ -947,18 +943,20 @@ export class BackendSimulator {
     );
 
     await this.#page.route("**/api/generations/topic-suggestions", (route) =>
-      this.#topicSuggestionsHeld ? undefined : this.#respond(route, EndpointKey.TOPIC_SUGGESTIONS, {
-        onDefault: () => {
-          this.#topicSuggestionsAsked.push({
-            input: route.request().postDataJSON() as TopicSuggestionInput,
-            trialToken: route.request().headers()[TRIAL_TOKEN_HEADER] ?? null,
-          });
-          return this.#topicSuggestion === null
-            ? { status: 503, body: { error: { code: "unavailable", message: "Simulated: no suggestions" } } }
-            : { status: 200, body: this.#topicSuggestion };
-        },
-        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
-      }),
+      this.#topicSuggestionsHeld
+        ? undefined
+        : this.#respond(route, EndpointKey.TOPIC_SUGGESTIONS, {
+            onDefault: () => {
+              this.#topicSuggestionsAsked.push({
+                input: route.request().postDataJSON() as TopicSuggestionInput,
+                trialToken: route.request().headers()[TRIAL_TOKEN_HEADER] ?? null,
+              });
+              return this.#topicSuggestion === null
+                ? { status: 503, body: { error: { code: "unavailable", message: "Simulated: no suggestions" } } }
+                : { status: 200, body: this.#topicSuggestion };
+            },
+            onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
+          }),
     );
 
     await this.#page.route("**/api/trials", (route) =>
@@ -1213,8 +1211,7 @@ export class BackendSimulator {
       return;
     }
 
-    const { status, body } =
-      behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();
+    const { status, body } = behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();
     await route.fulfill({ status, contentType: "application/json", body: status === 204 ? "" : JSON.stringify(body) });
   };
 
@@ -1234,16 +1231,8 @@ export class BackendSimulator {
     seedUnreadable: (record: UnreadableRecord): void => {
       this.#seedUnreadable.push(record);
     },
-    get: (id: OverviewId) =>
-      this.#page.evaluate(
-        (overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId),
-        id,
-      ),
-    getState: (id: OverviewId) =>
-      this.#page.evaluate(
-        (overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId),
-        id,
-      ),
+    get: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId), id),
+    getState: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
   };
 
   // The account as the sync server holds it: what a pull would bring down, and where the
@@ -1266,10 +1255,7 @@ export class BackendSimulator {
       }, entries),
     // How many overviews one of this device's libraries still holds, the no-account one under null.
     overviewsHeldIn: (accountId: string | null) =>
-      this.#page.evaluate(
-        async (id) => (await window.__iwftLibraries__.get(id)?.overviewStore.listOverviews())?.length ?? 0,
-        accountId,
-      ),
+      this.#page.evaluate(async (id) => (await window.__iwftLibraries__.get(id)?.overviewStore.listOverviews())?.length ?? 0, accountId),
     // Whether a library was ever enrolled into the account, which is what pushes all of it.
     enrolled: (accountId: string | null) =>
       this.#page.evaluate((id) => window.__iwftLibraries__.get(id)?.syncStorage?.enrolled ?? false, accountId),
@@ -1429,11 +1415,7 @@ export class BackendSimulator {
   // Narration as the server holds it: rendered already, still being made, given up on,
   // or refused because the account has too much waiting (docs/features/audio-player.md).
   narration = {
-    seedReady: (
-      overview: Overview,
-      voice: NarrationVoice = DEFAULT_NARRATION_VOICE,
-      secondsPerLine = SIMULATED_SECONDS_PER_LINE,
-    ): void => {
+    seedReady: (overview: Overview, voice: NarrationVoice = DEFAULT_NARRATION_VOICE, secondsPerLine = SIMULATED_SECONDS_PER_LINE): void => {
       const lines = spokenScript(overview);
       const key = keyFor(lines, voice);
       this.#renders.set(key, { render: readyRender(key, lines.length, secondsPerLine), lineCount: lines.length });
@@ -1571,8 +1553,7 @@ export class BackendSimulator {
   };
 
   transcriptStore = {
-    getTranscript: (videoId: VideoId) =>
-      this.#page.evaluate((id) => window.__iwftStores__.transcriptStore.getTranscript(id), videoId),
+    getTranscript: (videoId: VideoId) => this.#page.evaluate((id) => window.__iwftStores__.transcriptStore.getTranscript(id), videoId),
   };
 
   settingsStore = {
@@ -1580,13 +1561,9 @@ export class BackendSimulator {
   };
 
   overviewStore = {
-    listOverviews: () =>
-      this.#page.evaluate(() => window.__iwftStores__.overviewStore.listOverviews()),
+    listOverviews: () => this.#page.evaluate(() => window.__iwftStores__.overviewStore.listOverviews()),
     listTopics: () => this.#page.evaluate(() => window.__iwftStores__.overviewStore.listTopics()),
     getOverviewState: (id: OverviewId) =>
-      this.#page.evaluate(
-        (overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId),
-        id,
-      ),
+      this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
   };
 }

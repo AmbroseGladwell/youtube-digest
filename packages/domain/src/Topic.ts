@@ -9,5 +9,4 @@ export const Topic = z.object({
 });
 export type Topic = z.infer<typeof Topic>;
 
-export const sameTopicName = (left: string, right: string): boolean =>
-  left.trim().toLocaleLowerCase() === right.trim().toLocaleLowerCase();
+export const sameTopicName = (left: string, right: string): boolean => left.trim().toLocaleLowerCase() === right.trim().toLocaleLowerCase();

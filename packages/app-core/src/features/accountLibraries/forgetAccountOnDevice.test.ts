@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { writeCaptureQueuePreferences, readCaptureQueuePreferences, DEFAULT_CAPTURE_QUEUE_PREFERENCES } from "../captureQueue/captureQueuePreferencesStorage.js";
+import {
+  writeCaptureQueuePreferences,
+  readCaptureQueuePreferences,
+  DEFAULT_CAPTURE_QUEUE_PREFERENCES,
+} from "../captureQueue/captureQueuePreferencesStorage.js";
 import { readLibraryView, writeLibraryView } from "../library/libraryViewStorage.js";
 import { NO_LIBRARY_FILTERS } from "../library/types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT } from "../library/types/LibrarySort.js";

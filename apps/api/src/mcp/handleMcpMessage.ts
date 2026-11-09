@@ -109,8 +109,7 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
   const startedAt = performance.now();
   const durationMs = () => Math.round(performance.now() - startedAt);
   try {
-    const outcome =
-      allowed(tool, context) ? await tool.call(args, context) : toolError(refusal(tool));
+    const outcome = allowed(tool, context) ? await tool.call(args, context) : toolError(refusal(tool));
     context.log.info(
       apiLogLines.mcp.toolCalled({
         ...logged,

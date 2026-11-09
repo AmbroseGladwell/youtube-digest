@@ -116,11 +116,7 @@ export function GenerateOverviewForm({
   const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
 
   return (
-    <form
-      className={styles.root}
-      onSubmit={handleSubmit}
-      data-testid={generateOverviewFormTestIds.root}
-    >
+    <form className={styles.root} onSubmit={handleSubmit} data-testid={generateOverviewFormTestIds.root}>
       <label className={styles.field}>
         <span className={styles.label}>{article.available ? "Link" : "YouTube link"}</span>
         <input
@@ -168,8 +164,7 @@ export function GenerateOverviewForm({
         <p className={styles.provenance} data-testid={generateOverviewFormTestIds.watchingNote}>
           The video you're watching, already filled in.
           {watchedTranscript.isFetching && " Fetching its captions now."}
-          {watchedCaptionsHeld &&
-            " Its captions are already here, so generating won't buy them again."}
+          {watchedCaptionsHeld && " Its captions are already here, so generating won't buy them again."}
         </p>
       )}
 
@@ -218,8 +213,7 @@ export function GenerateOverviewForm({
             : article.link.status === "found" && article.link.article.recipe !== null
               ? "Reads the recipe"
               : "Reads the article"}
-          , then writes the overview. Nothing is
-          saved to your library unless both succeed.
+          , then writes the overview. Nothing is saved to your library unless both succeed.
         </p>
       ) : (
         <KeyPromptNote
@@ -258,12 +252,7 @@ export function GenerateOverviewForm({
       )}
 
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.cancelButton}
-          onClick={onCancel}
-          data-testid={generateOverviewFormTestIds.cancelButton}
-        >
+        <button type="button" className={styles.cancelButton} onClick={onCancel} data-testid={generateOverviewFormTestIds.cancelButton}>
           Cancel
         </button>
         {choosing === null && limit === null && generateOffered && (
@@ -278,9 +267,7 @@ export function GenerateOverviewForm({
         )}
       </div>
 
-      {keysReady && limit === null && (
-        <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />
-      )}
+      {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
     </form>
   );
 }
