@@ -220,6 +220,7 @@ export class BackendSimulator {
   #sharedPageEventBatches: Array<{ token: string; batch: SharedPageEventBatch }> = [];
   #errorBatches: ClientErrorBatch[] = [];
   #playlists = new Map<string, PlaylistLookup | "private">();
+  #meaningMatches = new Map<string, string[]>();
   #seedFollowed: FollowedPlaylist[] = [];
   #seedChecks: PlaylistCheck[] = [];
   #seedQueue: QueuedCapture[] = [];
@@ -646,6 +647,17 @@ export class BackendSimulator {
           status: 503,
           body: { error: { code: "unavailable", message: "Simulated: the database is not reachable" } },
         }),
+      }),
+    );
+
+    await this.#page.route("**/api/search/meaning?*", (route) =>
+      this.#respond(route, EndpointKey.MEANING_SEARCH, {
+        onDefault: () => {
+          const query = new URL(route.request().url()).searchParams.get("query") ?? "";
+          const ids = this.#meaningMatches.get(query) ?? [];
+          return { status: 200, body: { available: true, matches: ids.map((overviewId, index) => ({ overviewId, similarity: 0.6 - index / 100 })) } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: meaning search failed" } } }),
       }),
     );
 
@@ -1513,6 +1525,13 @@ export class BackendSimulator {
       this.#serviceRefusal = null;
     },
     isShared: (videoId: VideoId): boolean => this.#sharedTranscripts.has(videoId),
+  };
+
+  // What the server's embeddings would find for a search, closest first.
+  meaning = {
+    seed: (query: string, overviewIds: string[]): void => {
+      this.#meaningMatches.set(query, overviewIds);
+    },
   };
 
   // YouTube's side of a playlist, as /api/playlists/:id answers for it, and what this library

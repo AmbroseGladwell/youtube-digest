@@ -6,7 +6,7 @@ always comes first.
 
 Built in two slices on one card:
 
-1. **The server** (this slice): embeddings stored beside each library, the worker that makes
+1. **The server**: embeddings stored beside each library, the worker that makes
    them, `search_overviews` and `get_overviews` matching by meaning, and
    `GET /api/search/meaning` for the app.
 2. **The app's library search**, which calls that route and lists meaning matches under the
@@ -111,6 +111,26 @@ cached in memory (500 most recent), since searches repeat.
 so each search scans only one reader's claims, at most a few thousand rows. That is also why
 it scales without a vector index: more readers never makes one search bigger.
 
+## In the library
+
+Typing in the library's search still filters by word on the device, as it always has. Once
+typing settles (`TYPING_SETTLED_MS`, a second, through `useSettledText`), the page asks
+`GET /api/search/meaning` once for that text (`useMeaningMatchesQuery`), never once per key.
+`meaningEntries` keeps the closest five that no word already shows and that pass every other
+filter, and they are listed under the word matches as **Close in meaning**, with a line
+saying they don't use the reader's words. When no word matches at all, "No overviews match
+these filters" gives way to them. An answer is only shown while the field still holds the
+text it was asked for.
+
+It is asked only for a signed-in library, since only a signed-in library has embeddings on
+our server; a library without an account searches by word and offers nothing about meaning.
+When the server can't answer, the page says "Couldn't search by meaning just now, so these
+match your words only" under the list. There were no design frames; the group borrows the
+queue group's heading and subline type.
+
+`library.search.meaningMatched` counts, once per settled search, how many overviews meaning
+added that no word matched, and whether meaning was available. It never carries the words.
+
 ## Degrading visibly
 
 With no OpenAI key configured, nothing is embedded and every search matches by word only. Over
@@ -155,7 +175,6 @@ model quality, answered by the spike, not by these tests.
 
 ## Not built
 
-- The app's library search (slice two).
 - A search-quality check that reruns the spike on demand. The scripts lived in the session's
   scratchpad and were not committed.
 - Embedding the big picture once OV-225 lands; it carries an overview's scope and may be the
