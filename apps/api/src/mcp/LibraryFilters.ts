@@ -5,7 +5,7 @@ export const LibraryFilters = z.object({
   query: z
     .string()
     .optional()
-    .describe("Words to look for, all of which must appear: in the title, channel, claim, key points, verdict, selling or tags"),
+    .describe("Words or an idea to look for. Overviews containing every word come first, from the title, channel, claim, key points, verdict, selling or tags; then up to 5 that are close in meaning without using the words"),
   topic: z.string().optional().describe("A topic's name or id, as list_topics gives them"),
   tag: z.string().optional().describe("A tag, from the video's own tags or the reader's"),
   verdict: Novelty.optional()

@@ -86,6 +86,14 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     now,
   ]);
   await sql.query("insert into narration_render_usage (day, account_id, renders) values ('2026-11-05', $1, 1)", [accountId]);
+  await sql.query(
+    "insert into overview_embeddings (account_id, overview_id, embedded_rev, model, attempted_rev, updated_at) values ($1, $2, 1, 'test', 1, $3::timestamptz)",
+    [accountId, overviewId, now],
+  );
+  await sql.query(
+    "insert into claim_embeddings (account_id, overview_id, position, text_hash, model, embedding) values ($1, $2, 0, 'hash', 'test', array_fill(0, array[1536])::vector)",
+    [accountId, overviewId],
+  );
   await sql.query("insert into service_transcript_usage (day, caller, fetches) values ('2026-11-05', $1, 1)", [`account:${accountId}`]);
   await sql.query(
     "insert into oauth_clients (id, redirect_uris, token_endpoint_auth_method, created_at) values ('claude', '{https://claude.ai/cb}', 'none', $1::timestamptz) on conflict do nothing",

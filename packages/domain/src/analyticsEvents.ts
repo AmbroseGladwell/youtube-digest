@@ -918,6 +918,10 @@ export const analyticsEvents = {
       searched: event("The reader searches the library, counted once they stop typing; never the words", {
         results: z.number().int().nonnegative(),
       }),
+      meaningMatched: event("A library search came back from matching by meaning: how many overviews it added that no word matched, and whether meaning was available; never the words", {
+        meaningOnly: z.number().int().nonnegative(),
+        available: z.boolean(),
+      }),
       cleared: event("The reader clears the library search"),
     },
     sortPill: {

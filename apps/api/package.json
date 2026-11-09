@@ -2,7 +2,7 @@
   "name": "@overview/api",
   "version": "0.0.0",
   "private": true,
-  "description": "The sync API: Fastify on Postgres, the server half of the sync engine (docs/architecture/api.md, docs/features/sync-api.md). @overview is a placeholder scope \u2014 product naming is parked (docs/architecture/v1-architecture-decisions.md).",
+  "description": "The sync API: Fastify on Postgres, the server half of the sync engine (docs/architecture/api.md, docs/features/sync-api.md). @overview is a placeholder scope — product naming is parked (docs/architecture/v1-architecture-decisions.md).",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -35,11 +35,12 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/jsdom": "^21.1.7",
     "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-pgvector": "0.0.9",
     "@overview/store-conformance": "*",
     "@overview/store-local": "*",
     "@overview/sync": "*",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^22.7.5",
     "@types/pg": "^8.23.1",
     "fake-indexeddb": "^6.0.0",

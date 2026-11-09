@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-08";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-09";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -105,8 +105,16 @@ const sections: readonly LegalSection[] = [
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a
           database on Neon in London, so every device you sign in on reads the same library. We read it only to
-          serve it back to you, to render narration, to serve a link you chose to share, and to answer an
-          assistant you connected.
+          serve it back to you, to search it for you, to render narration, to serve a link you chose to share, and
+          to answer an assistant you connected.
+        </p>
+        <p>
+          <strong>Searching by meaning.</strong> With an account, we send each overview's claim and key points to
+          OpenAI in the United States, once, to turn them into embeddings: lists of numbers that let a search find
+          an overview by what it is about rather than by the words it uses. What you type into search, in the app
+          or through an assistant you connected, goes to OpenAI the same way when it is searched by meaning. The
+          embeddings are kept beside your library, are only ever compared with your own searches, and are made
+          again when the overview changes. This happens whichever key wrote the overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. <strong>Kept:</strong> until you delete the
@@ -332,7 +340,7 @@ const sections: readonly LegalSection[] = [
     body: (
       <p>
         You can connect Claude or another assistant to your library. The assistant gets its own tokens, never your
-        session, and they let it list and search your overviews, read them and their transcripts, and mark them read or favourite. Every
+        session, and they let it list and search your overviews, by word and by meaning, read them and their transcripts, and mark them read or favourite. Every
         connection is listed in Settings › Connections, where you can revoke it. We log each call an assistant
         makes, with the tool it used and how long it took, never the overview's contents. The assistant's own
         provider handles what it then does with your library under its own policy.
@@ -357,7 +365,7 @@ const sections: readonly LegalSection[] = [
             ["Cloudflare", "stores narration audio (R2) and serves our domain's DNS", "Cloudflare's network"],
             ["PostHog", "analytics, error reports and server logs", "EU cloud"],
             ["Brevo", "sends sign-in emails", "European Union"],
-            ["OpenAI", "writes overviews and topic suggestions made on our key", "United States"],
+            ["OpenAI", "writes overviews and topic suggestions made on our key, and turns your overviews' claims and your searches into embeddings for search", "United States"],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
             ["YouTube (Google)", "answers our server's requests for a playlist's videos", "varies"],
           ]}
@@ -408,6 +416,7 @@ const sections: readonly LegalSection[] = [
           ["Sign-in links and codes", "15 and 10 minutes, as hashes"],
           ["Codes for changing your email, and the record of each change", "the codes 15 minutes, as hashes; the change itself with the account"],
           ["Your library and settings", "until you delete the overview or the account"],
+          ["Embeddings of your overviews, for search", "until the overview changes or is deleted, or the account is"],
           ["Narration audio", "while an overview uses it; every file your account asked for goes with the account, and is made again for a reader who shared it the next time they play it"],
           ["Shared links", "until you stop them; the copy goes with the account"],
           ["Transcripts linked to your account", "while a note of yours uses the video"],
