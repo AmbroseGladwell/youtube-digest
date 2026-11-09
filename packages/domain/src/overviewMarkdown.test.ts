@@ -76,6 +76,14 @@ test("writes every section of a full note in the reader's order", () => {
   ]);
 });
 
+test("gives an assistant the premise and the big picture both, the label and the ground", () => {
+  const markdown = overviewMarkdown({ ...FULL, bigPicture: "Why so many swings hurt backs." });
+
+  assert.ok(markdown.includes("## Premise\n\n"));
+  assert.ok(markdown.indexOf("## Big picture\n\nWhy so many swings hurt backs.") > markdown.indexOf("## Premise"));
+  assert.ok(markdown.indexOf("## Big picture") < markdown.indexOf("## Core claim"));
+});
+
 test("opens with where the note came from: channel, length, dates, link and tags", () => {
   assert.ok(
     overviewMarkdown(FULL).startsWith(

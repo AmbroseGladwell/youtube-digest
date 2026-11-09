@@ -148,7 +148,7 @@ function FirstRunHero() {
 
   return (
     <Hero
-      standfirst={`Paste a ${article.available ? "YouTube or article link" : "YouTube URL"}. Get a succinct overview, with the main premise, key points, actionable steps and a verdict on if it's worth your time.`}
+      standfirst={`Paste a ${article.available ? "YouTube or article link" : "YouTube URL"}. Get a succinct overview, with the main premise, the big picture, key points, actionable steps and a verdict on if it's worth your time.`}
     >
       <form className={styles.heroForm} onSubmit={generate}>
         <span className={styles.heroFormIcon}>
@@ -441,6 +441,13 @@ function ExampleOverview() {
           <p className={styles.exampleBody}>
             A talking-head news explainer walking through three recent UK data points (GDP, productivity, hiring) that suggest the economy
             is turning a corner.
+          </p>
+        </div>
+        <div className={styles.exampleSection}>
+          <p className={styles.exampleSectionLabel}>Big picture</p>
+          <p className={styles.exampleBody}>
+            After years of gloomy forecasts, the question is whether three good readings mark a real turn or a blip, and why investors are
+            slower to believe it than the data.
           </p>
         </div>
         <div className={styles.exampleSection}>

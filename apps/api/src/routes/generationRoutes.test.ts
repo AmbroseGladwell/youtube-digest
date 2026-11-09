@@ -62,6 +62,7 @@ test("a signed-in reader with no key gets an overview made on our key with Sol, 
 test("an article is made on our key from what the reader's browser read, and counts as one overview", async () => {
   const note = {
     inOneLine: "A reported piece on one town's repair bill.",
+    bigPicture: "",
     coreClaim: "The repair bill doubled because a survey was never checked.",
     thin: false,
     keyPoints: [

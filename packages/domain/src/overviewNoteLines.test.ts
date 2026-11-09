@@ -15,6 +15,30 @@ test("opens with the note's own order: in one line, then the core claim", () => 
   ]);
 });
 
+test("opens on the premise, then the big picture, then the core claim, then the verdict, then the key points", () => {
+  const lines = overviewNoteLines(
+    makeOverview({
+      inOneLine: "A short description.",
+      bigPicture: "The ground the argument stands on.",
+      coreClaim: "The claim.",
+      verdict: { novelty: "common_knowledge", standsOut: null, dubious: false, dubiousClaims: [], reasoning: "Standard.", similarTo: [] },
+    }),
+  );
+
+  assert.deepEqual(lines.slice(2, 4), [
+    { section: "Big picture", heading: true, bullet: false, text: "Big picture", spoken: "The big picture" },
+    { section: "Big picture", heading: false, bullet: false, text: "The ground the argument stands on." },
+  ]);
+  assert.deepEqual(noteSectionNames(lines).slice(0, 5), ["Summary", "Big picture", "Core claim", "Verdict", "Key points"]);
+});
+
+test("goes straight from the premise to the core claim when the source earned no big picture, so an older note reads as it always did", () => {
+  const lines = overviewNoteLines(makeOverview({ inOneLine: "A short description.", bigPicture: null }));
+
+  assert.deepEqual(noteSectionNames(lines).slice(0, 2), ["Summary", "Core claim"]);
+  assert.ok(!noteSectionNames(lines).includes("Big picture"));
+});
+
 test("titles the claim section 'No clear claim' when the overview is thin", () => {
   const lines = overviewNoteLines(makeOverview({ thin: true, verdict: null }));
 
@@ -156,6 +180,17 @@ test("builds watch it anyway last, which is what the jump control sits under", (
         reason: "One stretch earns it.",
         range: { startMs: 0, endMs: 1000 },
       },
+    }),
+  );
+
+  assert.equal(lines.at(-1)?.section, "Watch it anyway?");
+});
+
+test("still ends on watch it anyway when the note opens on a big picture", () => {
+  const lines = overviewNoteLines(
+    makeOverview({
+      bigPicture: "The ground the argument stands on.",
+      watchAnyway: { answer: "no", reason: "The overview covers it.", range: null },
     }),
   );
 

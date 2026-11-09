@@ -12,6 +12,7 @@ export const savedFromShare = (note: SharedNote, sample = false): Overview => ({
   topicIds: [],
   fromPlaylist: null,
   madeOn: null,
+  bigPicture: note.bigPicture ?? null,
   article: note.article ?? null,
   recipe: note.recipe ?? null,
 });

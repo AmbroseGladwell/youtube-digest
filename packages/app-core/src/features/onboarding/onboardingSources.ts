@@ -16,6 +16,7 @@ import {
   type Source,
   type SourceKey,
 } from "@overview/domain";
+import { bigPictureBudget } from "@overview/generation";
 import type { RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
@@ -95,10 +96,22 @@ const pageOpening = (article: ExtractedArticle): string =>
 
 const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
-const WRITTEN_SECTIONS: readonly OnboardingSection[] = ["Premise", "Key points", "How to apply", "Verdict", "Chapters"].map((name) => ({
-  name,
-  fromPage: false,
-}));
+const BIG_PICTURE_FROM_MS = 10 * 60_000;
+
+// Listed only when the source is long enough to earn one: an article's words are known, and a
+// video of ten minutes clears the threshold at any speaking pace (docs/features/overview-generation-decisions.md).
+const mayEarnBigPicture = (source: Source): boolean =>
+  source.kind === "web" ? bigPictureBudget(source.wordCount) > 0 : source.durationMs !== null && source.durationMs >= BIG_PICTURE_FROM_MS;
+
+const writtenSections = (found: OnboardingFound | null): readonly OnboardingSection[] =>
+  [
+    "Premise",
+    ...(found !== null && mayEarnBigPicture(found.source) ? ["Big picture"] : []),
+    "Key points",
+    "How to apply",
+    "Verdict",
+    "Chapters",
+  ].map((name) => ({ name, fromPage: false }));
 const RECIPE_SECTIONS: readonly OnboardingSection[] = [
   { name: "Summary", fromPage: false },
   { name: "Ingredients", fromPage: true },
@@ -106,7 +119,8 @@ const RECIPE_SECTIONS: readonly OnboardingSection[] = [
 ];
 
 const OVERVIEW_LEAD = "We'll turn it into an overview you can read, listen to and come back to.";
-const OVERVIEW_LOCKED = "Key points, How to apply and Verdict open with an account.";
+const overviewLocked = (overview: Overview): string =>
+  `${overview.bigPicture ? "Big picture, key points" : "Key points"}, How to apply and Verdict open with an account.`;
 
 const videoFacts = (source: Source): string =>
   source.kind === "youtube"
@@ -151,11 +165,11 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     fetching: "Fetching the video",
     ready: () => "Transcript ready",
     card: ({ source }) => ({ kicker: null, facts: { line: videoFacts(source) } }),
-    sections: () => WRITTEN_SECTIONS,
+    sections: writtenSections,
     teaser: (overview) => ({
       byline: videoFacts(overview.source),
       first: { label: "Premise", text: overview.inOneLine },
-      locked: OVERVIEW_LOCKED,
+      locked: overviewLocked(overview),
     }),
   },
   web: {
@@ -189,7 +203,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
                 .join(" · "),
             },
           },
-    sections: (found) => (found?.recipe ? RECIPE_SECTIONS : WRITTEN_SECTIONS),
+    sections: (found) => (found?.recipe ? RECIPE_SECTIONS : writtenSections(found)),
     teaser: (overview) =>
       overview.recipe
         ? {
@@ -206,7 +220,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         : {
             byline: [sourceName(overview.source), "Article", readMinutes(overview.source)].filter(Boolean).join(" · "),
             first: { label: "Premise", text: overview.inOneLine },
-            locked: OVERVIEW_LOCKED,
+            locked: overviewLocked(overview),
           },
   },
 };

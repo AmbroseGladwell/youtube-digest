@@ -30,6 +30,7 @@ const overview = assembleOverview(
   },
   {
     inOneLine: "A founder on growing a subscription tool.",
+    bigPicture: "",
     coreClaim: "Charging early is what made it work.",
     thin: false,
     keyPoints: [

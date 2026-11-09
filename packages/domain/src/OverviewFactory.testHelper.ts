@@ -27,6 +27,7 @@ export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview =
     article: null,
     recipe: null,
     inOneLine: "A short description of the video.",
+    bigPicture: null,
     coreClaim: "The single assertion this video makes.",
     thin: false,
     keyPoints: [
@@ -61,6 +62,7 @@ export const makeRecipeOverview = (recipe: Partial<RecipeNote> = {}, overrides: 
   makeOverview({
     source: RECIPE_SOURCE,
     inOneLine: "A weeknight stew built on charred leeks.",
+    bigPicture: null,
     coreClaim: "",
     keyPoints: [],
     recipe: {

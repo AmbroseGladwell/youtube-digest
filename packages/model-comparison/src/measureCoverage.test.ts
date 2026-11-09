@@ -137,6 +137,7 @@ const article: ExtractedArticle = {
 
 const articleOutput = (paragraphs: (number | null)[]): GeneratedArticleOutput => ({
   inOneLine: "",
+  bigPicture: "",
   coreClaim: "",
   thin: false,
   keyPoints: paragraphs.map((paragraphIndex) => ({ text: "", paragraphIndex })),

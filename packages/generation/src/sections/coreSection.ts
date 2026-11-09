@@ -1,15 +1,26 @@
 import { z } from "zod";
 import { CoreFields, IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
+import type { GenerationInput } from "../GenerationInput.js";
 import type { PromptSection } from "../PromptSection.js";
+import { bigPictureBudget } from "../bigPictureBudget.js";
+import { bigPicturePrompt, bigPictureShape } from "./bigPicturePrompt.js";
 import { segmentRangeFields } from "./segmentRangeFields.js";
+
+const { inOneLine, ...afterInOneLine } = CoreFields.shape;
 
 export const KEY_POINT_TARGET_WORDS = 40;
 export const KEY_POINT_MAX_WORDS = 50;
 
+export const videoBigPictureTarget = (input: GenerationInput): number =>
+  bigPictureBudget(input.transcript.reduce((total, segment) => total + wordCount(segment.text), 0));
+
+const GOOD_BIG_PICTURE =
+  "Parents get conflicting advice about screens, and the question underneath is whether the harm comes from the screen itself or from what it pushes out, such as sleep and play. It also covers how to talk to a teenager about their phone.";
+
 export const coreSection: PromptSection = {
   title: "Core",
   key: "structural",
-  prompt: () => `
+  prompt: (input) => `
 ## In one line
 What this video IS, not what it argues. One sentence, ${IN_ONE_LINE_TARGET_WORDS} words at most.
 Cover the format and the subject: who is talking and what territory it
@@ -20,6 +31,7 @@ age, from babies to teenagers."
 Bad: "An insightful exploration of modern parenting challenges."
 Never start it with "This video" or "A video about". Never repeat the
 channel name — it already has its own field.
+${bigPicturePrompt(videoBigPictureTarget(input), { source: "video", good: GOOD_BIG_PICTURE })}
 
 ## Core claim
 One sentence, 60 words at most. The single most important thing to take
@@ -63,7 +75,9 @@ segments below, so the reader can go to it; don't estimate a time. Set
 both to -1 for a point the video builds across several places rather
 than in one stretch.`,
   schemaShape: (input) => ({
-    ...CoreFields.shape,
+    inOneLine,
+    bigPicture: bigPictureShape(videoBigPictureTarget(input)),
+    ...afterInOneLine,
     keyPoints: z
       .object({
         text: z.string().refine((point) => wordCount(point) <= KEY_POINT_MAX_WORDS, `max ${KEY_POINT_MAX_WORDS} words`),
