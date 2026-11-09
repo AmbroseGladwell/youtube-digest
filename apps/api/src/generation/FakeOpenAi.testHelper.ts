@@ -5,9 +5,9 @@ export const validAnswer = {
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: [
-    { text: "one", range: null },
-    { text: "two", range: null },
-    { text: "three", range: null },
+    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
   ],
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],

@@ -33,9 +33,9 @@ const overview = assembleOverview(
     coreClaim: "Charging early is what made it work.",
     thin: false,
     keyPoints: [
-      { text: "Raised prices twice.", range: null },
-      { text: "Answers every support email.", range: null },
-      { text: "Sold the company.", range: null },
+      { text: "Raised prices twice.", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "Answers every support email.", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "Sold the company.", startSegmentIndex: -1, endSegmentIndex: -1 },
     ],
     chapters: [],
     matchedTopicNames: [],

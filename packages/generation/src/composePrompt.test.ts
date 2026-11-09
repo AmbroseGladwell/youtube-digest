@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { DEFAULT_SECTIONS_ENABLED, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
+import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 import { TAG_VOCABULARY_CAP } from "./sections/filingSection.js";
 import { KEY_POINT_MAX_WORDS, KEY_POINT_TARGET_WORDS } from "./sections/coreSection.js";
 import { HOW_TO_APPLY_MAX_WORDS, HOW_TO_APPLY_TARGET_WORDS } from "./sections/howToApplySection.js";
@@ -110,7 +111,7 @@ test("watch-it-anyway's range is a segment-index pair, never a raw timestamp the
   const picked = schema.pick({ watchAnyway: true });
   assert.doesNotThrow(() =>
     picked.parse({
-      watchAnyway: { answer: "partial", reason: "x", range: { startSegmentIndex: 0, endSegmentIndex: 1 } },
+      watchAnyway: { answer: "partial", reason: "x", startSegmentIndex: 0, endSegmentIndex: 1 },
     }),
   );
   assert.throws(() =>
@@ -120,7 +121,7 @@ test("watch-it-anyway's range is a segment-index pair, never a raw timestamp the
   );
 });
 
-test("with an empty transcript, watch-it-anyway's range can only be null", () => {
+test("with an empty transcript, watch-it-anyway's range can only be -1", () => {
   const { schema } = composePrompt({
     ...baseInput,
     transcript: [],
@@ -128,11 +129,11 @@ test("with an empty transcript, watch-it-anyway's range can only be null", () =>
   });
   const picked = schema.pick({ watchAnyway: true });
   assert.doesNotThrow(() =>
-    picked.parse({ watchAnyway: { answer: "no", reason: "x", range: null } }),
+    picked.parse({ watchAnyway: { answer: "no", reason: "x", startSegmentIndex: -1, endSegmentIndex: -1 } }),
   );
   assert.throws(() =>
     picked.parse({
-      watchAnyway: { answer: "partial", reason: "x", range: { startSegmentIndex: 0, endSegmentIndex: 0 } },
+      watchAnyway: { answer: "partial", reason: "x", startSegmentIndex: 0, endSegmentIndex: 0 },
     }),
   );
 });
@@ -244,7 +245,7 @@ test("asks for fewer words than it enforces, so a near miss does not fail the ov
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
   const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
-  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, range: null }));
+  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, startSegmentIndex: -1, endSegmentIndex: -1 }));
 
   assert.ok(KEY_POINT_TARGET_WORDS < KEY_POINT_MAX_WORDS);
   assert.ok(HOW_TO_APPLY_TARGET_WORDS < HOW_TO_APPLY_MAX_WORDS);
@@ -256,7 +257,7 @@ test("refuses a key point or an action over its hard word ceiling, so the retry 
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
   const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
-  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, range: null }));
+  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, startSegmentIndex: -1, endSegmentIndex: -1 }));
 
   assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS))), true);
   assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS + 1))), false);
@@ -322,8 +323,23 @@ test("a recipe is optional, and a step names its stretch as segment indexes insi
   const recipe = (steps: unknown[]) => ({ recipe: { summary: "A stew.", ingredients: ["salt"], steps } });
   const recipeField = schema.shape.recipe as z.ZodType;
   assert.equal(recipeField.safeParse(null).success, true);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 1 } }]).recipe).success, true);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 2 } }]).recipe).success, false);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 1, endSegmentIndex: 0 } }]).recipe).success, false);
-  assert.equal(recipeField.safeParse(recipe([{ text: "Serve.", group: null, range: null }]).recipe).success, true);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, startSegmentIndex: 0, endSegmentIndex: 1 }]).recipe).success, true);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, startSegmentIndex: 0, endSegmentIndex: 2 }]).recipe).success, false);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, startSegmentIndex: 1, endSegmentIndex: 0 }]).recipe).success, false);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Serve.", group: null, startSegmentIndex: -1, endSegmentIndex: -1 }]).recipe).success, true);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Serve.", group: null, startSegmentIndex: -1, endSegmentIndex: 1 }]).recipe).success, false);
+});
+
+test("the video schema keeps to the few fields that may be null, since each one grows the grammar Claude compiles", () => {
+  const unions: string[] = [];
+  const walk = (node: unknown, path: string) => {
+    if (typeof node !== "object" || node === null) return;
+    const schema = node as JsonSchema;
+    if ("anyOf" in schema || Array.isArray(schema.type)) unions.push(path);
+    for (const [key, value] of Object.entries(schema.properties ?? {})) walk(value, `${path}.${key}`);
+    for (const branch of (schema.anyOf as unknown[] | undefined) ?? []) walk(branch, path);
+    walk(schema.items, `${path}[]`);
+  };
+  walk(providerJsonSchema(composePrompt({ ...baseInput, sectionsEnabled: DEFAULT_SECTIONS_ENABLED }).schema), "");
+  assert.deepEqual(unions.sort(), [".recipe", ".recipe.steps[].group", ".suggestedTopic", ".suggestedTopic.description", ".verdict.standsOut"]);
 });

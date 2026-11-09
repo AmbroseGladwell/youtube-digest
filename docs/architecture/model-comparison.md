@@ -28,6 +28,13 @@ The reader is a blank one: no reader context, no capture reason, no topics, tags
 claims, and every optional section switched on. Personalisation would vary from reader to
 reader. Leaving it out keeps the comparison about the model.
 
+That blankness hid OV-246: the schema only reaches the shape Claude refused once a reader has
+a topic. `--reader sample` runs every overview as the reader built from `samples/records/`
+(five topics, their claims and tags, a reader context), the one `cost-model` already uses.
+`--refuse-enforced-schema` answers Claude's enforced-schema request with the grammar refusal,
+without sending it, so the run measures what the schema-in-prompt fallback writes
+(`overview-generation-decisions.md`, "The schema has to fit Claude's grammar").
+
 ### Models
 
 The default set (every model priced in `modelPrices.ts`) is eight models from the three providers whose keys

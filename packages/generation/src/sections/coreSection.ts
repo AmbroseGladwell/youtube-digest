@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CoreFields, wordCount } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
-import { SegmentRangeShape } from "./watchAnywaySection.js";
+import { segmentRangeFields } from "./segmentRangeFields.js";
 
 export const KEY_POINT_TARGET_WORDS = 40;
 export const KEY_POINT_MAX_WORDS = 50;
@@ -59,15 +59,15 @@ Bad: "Volume over load."
 
 Give each point the stretch of the video it comes from, as
 startSegmentIndex/endSegmentIndex taken from the numbered transcript
-segments below, so the reader can go to it; don't estimate a time. Use
-null for a point the video builds across several places rather than in
-one stretch.`,
+segments below, so the reader can go to it; don't estimate a time. Set
+both to -1 for a point the video builds across several places rather
+than in one stretch.`,
   schemaShape: (input) => ({
     ...CoreFields.shape,
     keyPoints: z
       .object({
         text: z.string().refine((point) => wordCount(point) <= KEY_POINT_MAX_WORDS, `max ${KEY_POINT_MAX_WORDS} words`),
-        range: input.transcript.length === 0 ? z.null() : SegmentRangeShape.nullable(),
+        ...segmentRangeFields(input),
       })
       .array()
       .min(3)

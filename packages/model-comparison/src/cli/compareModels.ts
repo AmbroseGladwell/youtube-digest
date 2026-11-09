@@ -3,13 +3,14 @@ import { parseComparedModel } from "../ComparedModel.js";
 import { comparisonPaths, loadTranscripts, providerKeysFromEnv } from "../comparisonPaths.js";
 import { DEFAULT_COMPARED_MODELS } from "../defaultComparedModels.js";
 import { loadSampleReader } from "../ReaderProfile.js";
+import { refuseEnforcedSchema } from "../refuseEnforcedSchema.js";
 import { runComparison } from "../runComparison.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";
 import { isTranscriptSetName } from "../transcriptSet.js";
 
 const USAGE = `usage: task secrets:run -- npm run compare --workspace packages/model-comparison -- \\
-  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...] [--reader sample]`;
+  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...] [--reader sample] [--refuse-enforced-schema]`;
 
 const { values } = parseArgs({
   options: {
@@ -19,6 +20,7 @@ const { values } = parseArgs({
     models: { type: "string" },
     set: { type: "string", default: "main" },
     reader: { type: "string" },
+    "refuse-enforced-schema": { type: "boolean", default: false },
   },
 });
 
@@ -48,7 +50,9 @@ const outcome = await runComparison({
   transcripts: values.limit === undefined ? transcripts : transcripts.slice(0, Number(values.limit)),
   budgetDollars,
   store: runDirectoryStore(comparisonPaths.run(values.run)),
-  runOne,
+  runOne: values["refuse-enforced-schema"]
+    ? (options) => runOne({ ...options, http: refuseEnforcedSchema(globalThis.fetch.bind(globalThis)) })
+    : runOne,
   ...(values.reader === "sample" ? { profile: await loadSampleReader() } : {}),
   log: (line) => console.error(line),
 });
