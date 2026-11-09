@@ -7,7 +7,6 @@ import { Routes } from "../../../src/app/Routes.js";
 import { settingsSectionTestIds } from "../../../src/features/settings/components/SettingsSection/SettingsSectionTestIds.js";
 import { appShellTestIds } from "../../../src/shell/AppShell/AppShellTestIds.js";
 import { readerTabsTestIds } from "../../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
-import { readerMastheadTestIds } from "../../../src/features/reader/components/ReaderMasthead/ReaderMastheadTestIds.js";
 import { transcriptPanelTestIds } from "../../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";

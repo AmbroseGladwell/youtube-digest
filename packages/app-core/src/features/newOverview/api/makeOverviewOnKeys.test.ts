@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { API_ERROR_CODES, DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId, type ApiErrorCode } from "@overview/domain";
 import {
-  generateOverview,
   generateOverviewOf,
   ProviderKeyRefusedError,
   ProviderOutOfCreditError,

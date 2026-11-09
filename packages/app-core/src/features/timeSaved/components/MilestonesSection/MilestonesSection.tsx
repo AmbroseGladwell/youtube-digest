@@ -10,7 +10,6 @@ import { milestoneColourStyle } from "../../util/milestoneColourStyle.js";
 import {
   formatReachedOn,
   milestoneTiles,
-  reachedCount,
   spokenTimeToGo,
   timeToGo,
   type MilestoneTile,

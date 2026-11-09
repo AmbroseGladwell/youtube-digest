@@ -80,7 +80,8 @@ stops it and `task db:psql` opens it; `task clean` deletes it along with every `
 
 **Testing** mirrors CI's jobs one to one: `task test:<package>` for any library package,
 `task test:api`, `task test:extension`, `task test:tooling` for the repo's own scripts and
-hooks, `task iwft`, `task typecheck`, `task build`, and `task test` for the lot.
+hooks, `task iwft`, `task typecheck`, `task lint`, `task build`, and `task test` for the lot.
+`task format` rewrites every JS and TS file with Oxfmt (`lint-and-format.md`).
 
 ## The conventions that carry it
 

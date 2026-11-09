@@ -102,7 +102,7 @@ test("enrolling migrates an old record to this client's version and dates it by 
 
   const [entry] = await storage.listPending();
   assert.equal(entry?.updatedAt, old.savedAt);
-  const record = (entry?.change as { record: Record<string, unknown> }).record;
+  const record = (entry!.change as { record: Record<string, unknown> }).record;
   assert.equal(record.schemaVersion, CURRENT_SCHEMA_VERSIONS.overview);
   assert.equal(record.updatedAt, old.savedAt);
   assert.equal(record.chapters, null);

@@ -3,7 +3,6 @@ import { useId, useState } from "react";
 import { Routes } from "../../../../app/Routes.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { useShouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import type { RelatedOverview } from "../../util/relatedByTag.js";
 import styles from "./RelatedByTag.module.scss";
 import { relatedByTagTestIds } from "./RelatedByTagTestIds.js";
@@ -33,7 +32,6 @@ export function RelatedByTag({
 }: RelatedByTagProps) {
   const [allShown, setAllShown] = useState(false);
   const headingId = useId();
-  const animateNavigation = useShouldAnimateNavigation();
   const shown = allShown ? related : related.slice(0, SHOWN_AT_FIRST);
   const hidden = related.length - SHOWN_AT_FIRST;
 
@@ -90,7 +88,6 @@ export function RelatedByTag({
 }
 
 function TagList({ tags, link, onFollowed }: { tags: string[]; link: boolean; onFollowed?: (() => void) | undefined }) {
-  const animateNavigation = useShouldAnimateNavigation();
   return (
     <ul className={styles.tags} aria-label="Tags">
       {tags.map((tag) => (

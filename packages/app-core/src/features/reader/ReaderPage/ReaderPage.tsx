@@ -14,7 +14,6 @@ import {
   overviewNoteCaptions,
   overviewNoteLines,
   overviewTimeSaved,
-  formatClock,
   recipeActions as actionsOf,
 } from "@overview/domain";
 import { useIsPanel } from "../../../app/LayoutContext.js";

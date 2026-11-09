@@ -38,7 +38,7 @@ test("saving an overview in an enrolled library journals the stored record, date
   assert.equal(entry?.updatedAt, stored.updatedAt);
   assert.equal(entry?.stuck, null);
   assert.deepEqual(entry?.change, { op: "replace", record: stored });
-  assert.equal((entry?.change as { record: Record<string, unknown> }).record.schemaVersion, CURRENT_OVERVIEW_SCHEMA_VERSION);
+  assert.equal((entry!.change as { record: Record<string, unknown> }).record.schemaVersion, CURRENT_OVERVIEW_SCHEMA_VERSION);
 });
 
 test("filing an overview journals the topic ids and nothing else about it", async () => {
@@ -101,7 +101,7 @@ test("creating a topic journals the stored topic record", async () => {
   assert.equal(entry?.kind, "topic");
   assert.equal(entry?.id, topic.id);
   assert.equal(entry?.change.op, "replace");
-  assert.equal((entry?.change as { record: Record<string, unknown> }).record.name, "Finance");
+  assert.equal((entry!.change as { record: Record<string, unknown> }).record.name, "Finance");
 });
 
 test("deleting an overview takes its state with it and journals one delete", async () => {

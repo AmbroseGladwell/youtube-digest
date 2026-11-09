@@ -16,6 +16,17 @@ tasks:
       - npm run build --workspace apps/extension
       - npm run build --workspace apps/api
 
+  lint:
+    desc: 'Lint every workspace with Oxlint, and check the JS and TS are formatted (task format rewrites them)'
+    cmds:
+      - npm run lint -- {{.CLI_ARGS}}
+      - npm run format:check
+
+  format:
+    desc: Format every JS and TS file in place with Oxfmt
+    cmds:
+      - npm run format
+
   typecheck:
     desc: Typecheck every workspace and the IWFT harness
     aliases: [tc]
@@ -24,8 +35,9 @@ tasks:
       - npm run typecheck:iwft --workspace packages/app-core
 
   test:
-    desc: Run every unit suite, in the order CI does, then the IWFT suite
+    desc: Lint, then every unit suite in the order CI does, then the IWFT suite
     cmds:
+      - task: lint
       - for: [domain, articles, transcripts, generation, store-conformance, store-local, sync, app-core]
         task: test:{{.ITEM}}
       - task: test:extension

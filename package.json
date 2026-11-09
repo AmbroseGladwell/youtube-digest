@@ -15,10 +15,15 @@
   "scripts": {
     "build:packages": "npm run build --workspace packages/domain --workspace packages/articles --workspace packages/transcripts --workspace packages/generation --workspace packages/store-conformance --workspace packages/store-local --workspace packages/sync --workspace packages/app-core",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test:tooling": "node --test scripts/*.test.mjs .claude/hooks/*.test.mjs"
+    "test:tooling": "node --test scripts/*.test.mjs .claude/hooks/*.test.mjs",
+    "lint": "oxlint --deny-warnings .",
+    "format": "oxfmt \"**/*.{ts,tsx,mts,cts,js,mjs,cjs}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,tsx,mts,cts,js,mjs,cjs}\""
   },
   "devDependencies": {
     "@posthog/cli": "0.18.9",
+    "oxfmt": "0.75.0",
+    "oxlint": "1.90.0",
     "playwright": "1.62.1"
   }
 }

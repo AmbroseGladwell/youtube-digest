@@ -57,7 +57,6 @@ import { useFirstOverviewMilestone } from "../../timeSaved/useFirstOverviewMiles
 import { FirstOverviewMilestone } from "../../timeSaved/components/FirstOverviewMilestone/FirstOverviewMilestone.js";
 import { useEnteringOverviewIds } from "./useEnteringOverviewIds.js";
 import { LearnedNotice } from "../../settings/components/LearnedNotice/LearnedNotice.js";
-import { useIsPhone } from "../../../util/useIsPhone.js";
 import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";

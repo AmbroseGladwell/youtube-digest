@@ -48,7 +48,7 @@ export function HeadImage({ source, full, className, onToggle, ref, carriesFrom 
     [morph, ref],
   );
 
-  if (!Boolean(imageUrl) || failed) {
+  if (!imageUrl || failed) {
     return null;
   }
 

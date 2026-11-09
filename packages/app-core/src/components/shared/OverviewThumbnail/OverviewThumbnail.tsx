@@ -37,7 +37,7 @@ export function OverviewThumbnail({
   const isArticle = "kind" in video && video.kind === "web";
   const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
 
-  if (isArticle && (!Boolean(imageUrl) || failed)) {
+  if (isArticle && (!imageUrl || failed)) {
     const tile = (
       <span className={styles.nameTile} data-testid={overviewThumbnailTestIds.nameTile}>
         {sourceName(video)}
@@ -59,7 +59,7 @@ export function OverviewThumbnail({
     );
   }
 
-  if (!Boolean(imageUrl) || failed) {
+  if (!imageUrl || failed) {
     return null;
   }
 

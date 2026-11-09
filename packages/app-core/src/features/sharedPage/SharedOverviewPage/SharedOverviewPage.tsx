@@ -11,7 +11,6 @@ import {
   SUMMARY_SECTION,
   overviewNoteCaptions,
   overviewNoteLines,
-  formatClock,
   recipeActions,
   type SharePayload,
   sourceName,

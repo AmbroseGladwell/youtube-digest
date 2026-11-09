@@ -5,7 +5,7 @@ import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEA
 import { generationRequest, makeFakeOpenAi, type FakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { ourKeyModel } from "../generation/ourKeyModel.js";
 import { recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
-import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";

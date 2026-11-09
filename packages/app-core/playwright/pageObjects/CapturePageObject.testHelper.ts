@@ -5,7 +5,6 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { GenerationStepsPageObject } from "./GenerationStepsPageObject.testHelper.js";
 import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
-import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
 export class CapturePageObject extends PageObject {
   get steps(): GenerationStepsPageObject {

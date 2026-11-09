@@ -25,7 +25,6 @@ const RECIPE = makeRecipeOverview();
 const VIDEO_NAME = "Why Sleep Debt Is Real, Video, 12:34";
 const ARTICLE_NAME = "The town that pays its bridge bill twice, Article, 14 min read";
 const RECIPE_NAME = "Charred leek and white bean stew, Recipe, 1 hr 5 min";
-const titled = (title: string) => makeOverview({ source: { ...makeOverview().source, title } });
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 const signedOut = { sync: true, analyticsConsent: makeAnalyticsConsent({ answer: "share" }) };

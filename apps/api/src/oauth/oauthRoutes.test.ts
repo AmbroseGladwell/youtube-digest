@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { hashToken } from "../auth/hashToken.js";
 import { createTestApp, TEST_APP_URL, type TestApp } from "../testing/createTestApp.testHelper.js";
-import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
+import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { ASSISTANT_REDIRECT_URI, makeConnectingAssistant, postForm } from "./ConnectingAssistant.testHelper.js";
 import { AUTHORIZATION_CODE_TTL_MS, REFRESH_TOKEN_TTL_MS } from "./connectionTimings.js";
 import { resolveAccessToken } from "./resolveAccessToken.js";
