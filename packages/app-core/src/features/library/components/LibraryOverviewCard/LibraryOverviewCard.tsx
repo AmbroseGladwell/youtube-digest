@@ -2,7 +2,8 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
-import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved, sourceName, type RecipeNote, type Source } from "@overview/domain";
+import { NOVELTY_LABEL, overviewMetaParts, overviewTimeSaved, sourceName, type Source } from "@overview/domain";
+import { KindChip } from "../../../../components/shared/KindChip/KindChip.js";
 import { SavedChip } from "../../../timeSaved/components/SavedChip/SavedChip.js";
 import { useSavedMoment } from "../../../timeSaved/components/SavedChip/useSavedMoment.js";
 import type { OverviewWithState } from "../../../overviews/types/OverviewWithState.js";
@@ -36,10 +37,6 @@ const SELLING_LABEL: Record<string, string> = {
 // recedes to the muted ink instead (docs/features/stone-theme.md).
 const bylineOf = (source: Source): string =>
   source.kind === "web" && source.author !== null ? `${sourceName(source)} · ${source.author}` : sourceName(source);
-
-// A recipe has nothing to judge, so its chip names the kind and what the page says it
-// makes, never a verdict or "thin" (docs/features/recipe-notes.md, "The library").
-const recipeLabel = (recipe: RecipeNote): string => (recipe.yield === null ? "Recipe" : `Recipe · ${recipe.yield}`);
 
 export function LibraryOverviewCard({
   overviewWithState,
@@ -85,26 +82,29 @@ export function LibraryOverviewCard({
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
-            {topicNames.map((name) => (
-              <span key={name} className={styles.topic}>
-                {name}
+            <span className={styles.kickerGroup}>
+              <KindChip overview={overview} />
+              {topicNames.map((name) => (
+                <span key={name} className={styles.topic}>
+                  {name}
+                </span>
+              ))}
+              {overview.verdict && (
+                <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
+              )}
+              {overview.recipe === null && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
+            </span>
+            {(overview.verdict?.dubious || selling) && (
+              <span className={styles.kickerGroup}>
+                {overview.verdict?.dubious && (
+                  <span className={styles.dubious}>
+                    <StrokeIcon name="alert" size={13} />
+                    Dubious claim
+                  </span>
+                )}
+                {selling && <span className={styles.selling}>{selling}</span>}
               </span>
-            ))}
-            {overview.verdict && (
-              <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>
             )}
-            {overview.recipe !== null ? (
-              <span className={styles.verdict}>{recipeLabel(overview.recipe)}</span>
-            ) : (
-              overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>
-            )}
-            {overview.verdict?.dubious && (
-              <span className={styles.dubious}>
-                <StrokeIcon name="alert" size={13} />
-                Dubious claim
-              </span>
-            )}
-            {selling && <span className={styles.selling}>{selling}</span>}
           </p>
 
           <PageLink
