@@ -3,6 +3,11 @@ import type { Embedder } from "./Embedder.js";
 
 export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 1536;
+export const EMBEDDING_PRICE = {
+  dollarsPerMillionTokens: 0.02,
+  checkedOn: "2026-11-09",
+  source: "https://developers.openai.com/api/docs/pricing",
+};
 const BATCH = 256;
 
 const EmbeddingsResponse = z.object({
@@ -18,6 +23,7 @@ export function createOpenAiEmbedder({ apiKey, http }: { apiKey: string; http: t
   return {
     model: EMBEDDING_MODEL,
     dimensions: EMBEDDING_DIMENSIONS,
+    dollarsPerMillionTokens: EMBEDDING_PRICE.dollarsPerMillionTokens,
     async embed(texts) {
       const vectors: number[][] = [];
       let tokens = 0;

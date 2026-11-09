@@ -71,6 +71,9 @@ Five folders, five different questions.
   figure comes from, the environment and area of each row, not tracked never shown as zero,
   figures entered by hand in a variable because the repository is public, why spend is not
   an analytics event, what tracking it costs, and the secrets it needs.
+- `unit-economics.md` — what each account costs to serve (OV-259): the daily cost tally per
+  account by area and detail, failed attempts included, priced at list price where the app
+  can and as a quantity where only the bill can, and what is still to build.
 - `store-listing.md` — the other half of the extension's release: why the listing is
   unlisted, the store copy, a justification for every permission the manifest asks for, what
   the store is told about data and why, the five screenshots rendered from the real

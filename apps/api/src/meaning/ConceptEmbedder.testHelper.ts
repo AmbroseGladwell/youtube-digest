@@ -20,6 +20,7 @@ function slot(word: string): number {
 export function makeConceptEmbedder(concepts: string[][]): ConceptEmbedder {
   const embedder: ConceptEmbedder = {
     model: "concept-test",
+    dollarsPerMillionTokens: 0.02,
     dimensions: EMBEDDING_DIMENSIONS,
     calls: [],
     failing: false,

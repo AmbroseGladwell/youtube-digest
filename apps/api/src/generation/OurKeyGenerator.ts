@@ -30,6 +30,7 @@ import {
   type MeteredCall,
 } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
+import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
 import { secondsToNextUsageDay, usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
@@ -45,6 +46,7 @@ export interface OurKeyGeneratorOptions {
   usage: OverviewUsageRepository;
   reservations: OverviewReservationsRepository;
   trials: TrialsRepository;
+  costs: AccountCostsRepository;
   http: typeof fetch;
   clock: () => Date;
 }
@@ -94,6 +96,8 @@ export class TrialUnknownError extends Error {
 // An account, counted by the month on its plan, or a signed-out device, counted by its
 // trial token and the address it asks from.
 export type OurKeyCaller = { accountId: AccountId; plan: Plan } | { trialToken: string; address: string };
+
+export type SmallPass = "profile" | "forAnyone" | "topics" | "topicSuggestions";
 
 // The caller's slot, and how to give it back when the overview fails.
 interface HeldSlot {
@@ -164,6 +168,8 @@ export class OurKeyGenerator {
 
     const metered = meteredFetch(ourKeyModel.provider, http);
     const startedAt = now.getTime();
+    const payer: CostPayer = signedOut ? "signed-out" : { accountId: caller.accountId };
+    const recordCost = (detail: string) => this.#recordCost(metered.calls, payer, detail, log);
     try {
       const overview = await generateOverviewOf(createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }), input, {
         id: overviewId,
@@ -171,6 +177,7 @@ export class OurKeyGenerator {
       });
       if (signedOut) await trials.made(now, overviewId);
       else await reservations.madeOnOurKey(now, caller.accountId, overviewId);
+      await recordCost("overview");
       log.info(
         apiLogLines.ourKey.generated({
           ...logged,
@@ -186,6 +193,7 @@ export class OurKeyGenerator {
     } catch (error) {
       await held.release();
       await usage.releaseOurKeyDay(day, signedOut);
+      await recordCost("overview-failed");
       if (error instanceof ProviderKeyRefusedError) {
         log.error(apiLogLines.ourKey.keyRefused({ model: ourKeyModel.model }));
         throw new OurKeyUnavailableError("Our key was refused by its provider", { cause: error });
@@ -210,32 +218,35 @@ export class OurKeyGenerator {
   // Small passes for an account: no overview is made, so nothing counts against the plan or
   // the day's overviews, and their routes share a limit of their own
   // (docs/features/personalisation.md).
-  profilePass(input: ProfilePassInput, log: FastifyBaseLogger): Promise<ProfilePassItem[]> {
-    return this.#smallPass("profile", (client) => generateProfileItems(client, input), log);
+  profilePass(payer: CostPayer, input: ProfilePassInput, log: FastifyBaseLogger): Promise<ProfilePassItem[]> {
+    return this.#smallPass("profile", payer, (client) => generateProfileItems(client, input), log);
   }
 
-  forAnyone(input: ForAnyoneInput, log: FastifyBaseLogger): Promise<string[]> {
-    return this.#smallPass("forAnyone", (client) => generateForAnyoneSteps(client, input), log);
+  forAnyone(payer: CostPayer, input: ForAnyoneInput, log: FastifyBaseLogger): Promise<string[]> {
+    return this.#smallPass("forAnyone", payer, (client) => generateForAnyoneSteps(client, input), log);
   }
 
-  topics(input: TopicMatchInput, log: FastifyBaseLogger): Promise<string[]> {
-    return this.#smallPass("topics", (client) => generateTopicMatches(client, input), log);
+  topics(payer: CostPayer, input: TopicMatchInput, log: FastifyBaseLogger): Promise<string[]> {
+    return this.#smallPass("topics", payer, (client) => generateTopicMatches(client, input), log);
   }
 
-  topicSuggestions(input: TopicSuggestionInput, log: FastifyBaseLogger): Promise<TopicSuggestionResult> {
-    return this.#smallPass("topicSuggestions", (client) => generateTopicSuggestions(client, input), log);
+  topicSuggestions(payer: CostPayer, input: TopicSuggestionInput, log: FastifyBaseLogger): Promise<TopicSuggestionResult> {
+    return this.#smallPass("topicSuggestions", payer, (client) => generateTopicSuggestions(client, input), log);
   }
 
   async #smallPass<Result>(
-    pass: "profile" | "forAnyone" | "topics" | "topicSuggestions",
+    pass: SmallPass,
+    payer: CostPayer,
     run: (client: GenerationClient) => Promise<Result>,
     log: FastifyBaseLogger,
   ): Promise<Result> {
     const { apiKey, http, clock } = this.#options;
     const startedAt = clock().getTime();
     const metered = meteredFetch(ourKeyModel.provider, http);
+    const recordCost = (detail: string) => this.#recordCost(metered.calls, payer, detail, log);
     try {
       const result = await run(createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }));
+      await recordCost(pass);
       log.info(
         apiLogLines.ourKey.smallPass({
           pass,
@@ -246,6 +257,7 @@ export class OurKeyGenerator {
       );
       return result;
     } catch (error) {
+      await recordCost(`${pass}-failed`);
       log.warn(
         apiLogLines.ourKey.smallPassFailed({
           pass,
@@ -257,6 +269,18 @@ export class OurKeyGenerator {
       );
       throw new OurKeyGenerationError(fallbackReasonOf(error), error);
     }
+  }
+
+  async #recordCost(calls: MeteredCall[], payer: CostPayer, detail: string, log: FastifyBaseLogger): Promise<void> {
+    const { inputTokens, outputTokens, costDollars } = meteredUsageOf(calls);
+    if (costDollars === null || calls.every((call) => call.usage === null)) return;
+    const { costs, clock } = this.#options;
+    await costs.recordOrLog(
+      clock(),
+      payer,
+      { area: "generation", detail, quantity: inputTokens + outputTokens, dollars: costDollars },
+      log,
+    );
   }
 
   async #hold(caller: OurKeyCaller, now: Date, log: FastifyBaseLogger): Promise<HeldSlot> {

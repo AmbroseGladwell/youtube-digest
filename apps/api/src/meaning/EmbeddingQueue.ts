@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { OVERVIEW_MIGRATIONS, Overview, apiLogLines, readStoredRecord, redactErrorMessage, stampSchemaVersion } from "@overview/domain";
+import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import type { ClaimEmbeddingsRepository, EmbeddedClaim, PendingOverview } from "./ClaimEmbeddingsRepository.js";
 import { claimsOf } from "./claimsOf.js";
 import type { Embedder } from "./Embedder.js";
@@ -16,10 +17,13 @@ export interface EmbeddingLog {
 export interface EmbeddingQueueOptions {
   embeddings: ClaimEmbeddingsRepository;
   embedder: Embedder;
+  costs: AccountCostsRepository;
   clock: () => Date;
   log: EmbeddingLog;
   runWorkers: boolean;
 }
+
+const dollarsOf = (embedder: Embedder, tokens: number) => (tokens * embedder.dollarsPerMillionTokens) / 1_000_000;
 
 const textHash = (model: string, text: string) => createHash("sha256").update(`${model}\n${text}`).digest("hex");
 
@@ -99,7 +103,7 @@ export class EmbeddingQueue {
   }
 
   async #embed(pending: PendingOverview, claims: string[]): Promise<void> {
-    const { embeddings, embedder, clock, log } = this.#options;
+    const { embeddings, embedder, costs, clock, log } = this.#options;
     const known = new Map(
       (await embeddings.claimsOf(pending.accountId, pending.overviewId, embedder.model)).map((claim) => [claim.textHash, claim.vector]),
     );
@@ -109,6 +113,14 @@ export class EmbeddingQueue {
     fresh.forEach((text, index) => known.set(textHash(embedder.model, text), embedded.vectors[index]!));
     const stored: EmbeddedClaim[] = hashes.map((hash) => ({ textHash: hash, vector: known.get(hash)! }));
     await embeddings.saveEmbedded(pending, { model: embedder.model, tokens: embedded.tokens, claims: stored, now: clock() });
+    if (embedded.tokens > 0) {
+      await costs.recordOrLog(
+        clock(),
+        { accountId: pending.accountId },
+        { area: "embeddings", detail: "overview", quantity: embedded.tokens, dollars: dollarsOf(embedder, embedded.tokens) },
+        log,
+      );
+    }
     log.info(
       apiLogLines.meaning.embedded({
         overviewId: pending.overviewId,

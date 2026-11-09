@@ -52,6 +52,7 @@ test("the tables the migrations create are there to be used", async () => {
   assert.deepEqual(
     tables.map((table) => table.table_name),
     [
+      "account_costs",
       "account_deletions",
       "account_transcripts",
       "accounts",
@@ -76,6 +77,7 @@ test("the tables the migrations create are there to be used", async () => {
       "sessions",
       "shared_transcripts",
       "shares",
+      "signed_out_costs",
       "transcript_contributions",
       "trial_address_usage",
       "trial_overviews",

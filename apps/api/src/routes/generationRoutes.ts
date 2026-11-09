@@ -14,7 +14,9 @@ import {
   type OurKeyGenerationStatus,
   type ProfilePassResult,
 } from "@overview/domain";
+import type { AccountId } from "../auth/AccountId.js";
 import { accountPlan } from "../auth/accountPlan.js";
+import type { CostPayer } from "../costs/AccountCostsRepository.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -64,6 +66,8 @@ export function generationRoutes(
     },
   );
 
+  const payerOf = (request: { session: { accountId: AccountId } | null }): CostPayer =>
+    request.session === null ? "signed-out" : { accountId: request.session.accountId };
   const smallPassLimit = rateLimitHook(rateLimits.smallPassPerAccount, (request) => request.session?.accountId ?? null, clock);
   const smallPass = async <Result>(run: (generator: OurKeyGenerator) => Promise<Result>): Promise<Result> => {
     if (generator === null) {
@@ -81,19 +85,19 @@ export function generationRoutes(
 
   app.post("/generations/profile", { preHandler: smallPassLimit }, async (request) => {
     const input = parseOrThrow(ProfilePassInput, request.body, "The profile pass");
-    const result: ProfilePassResult = { items: await smallPass((passes) => passes.profilePass(input, request.log)) };
+    const result: ProfilePassResult = { items: await smallPass((passes) => passes.profilePass(payerOf(request), input, request.log)) };
     return result;
   });
 
   app.post("/generations/how-to-apply", { preHandler: smallPassLimit }, async (request) => {
     const input = parseOrThrow(ForAnyoneInput, request.body, "The How to apply pass");
-    const result: ForAnyoneResult = { items: await smallPass((passes) => passes.forAnyone(input, request.log)) };
+    const result: ForAnyoneResult = { items: await smallPass((passes) => passes.forAnyone(payerOf(request), input, request.log)) };
     return result;
   });
 
   app.post("/generations/topics", { preHandler: smallPassLimit }, async (request) => {
     const input = parseOrThrow(TopicMatchInput, request.body, "The topic pass");
-    const result: TopicMatchResult = { names: await smallPass((passes) => passes.topics(input, request.log)) };
+    const result: TopicMatchResult = { names: await smallPass((passes) => passes.topics(payerOf(request), input, request.log)) };
     return result;
   });
 
@@ -128,7 +132,7 @@ export function generationRoutes(
           throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
         }
       }
-      const result: TopicSuggestionResult = await smallPass((passes) => passes.topicSuggestions(input, request.log));
+      const result: TopicSuggestionResult = await smallPass((passes) => passes.topicSuggestions(payerOf(request), input, request.log));
       return result;
     },
   );

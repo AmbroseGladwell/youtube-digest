@@ -61,7 +61,7 @@ test does the same: it reads `information_schema.columns` for every `account_id`
 - **Cascades from `delete from accounts`:** `sessions` and with them `session_verifications`;
   `records`; `link_codes`; `account_transcripts`; `connections`, then `connection_tokens`;
   `oauth_authorizations`; `shares`; `overview_usage`; `overview_reservations`;
-  `narration_render_usage`; `email_changes`, whose kept rows hold both addresses.
+  `narration_render_usage`; `account_costs`; `email_changes`, whose kept rows hold both addresses.
 - **Deleted by hand, with no foreign key:** `magic_links` for the address, which hold the
   address, the first name and the anonymous id; `service_transcript_usage` rows whose caller is
   `account:<id>`; `audio_renders where requested_by = account`, and their files in R2.

@@ -1,6 +1,7 @@
 import type { FastifyBaseLogger } from "fastify";
 import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
+import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
 import { hashedAddress } from "../http/hashedAddress.js";
 import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
@@ -25,6 +26,7 @@ export interface ServiceTranscriptsOptions {
   fetches: ServiceFetches;
   usage: ServiceUsageRepository;
   transcripts: TranscriptsRepository;
+  costs: AccountCostsRepository;
   proxyDailyFetches: number;
   clock: () => Date;
 }
@@ -102,7 +104,7 @@ export class ServiceTranscripts {
         throw new QuotaSpentError(retryAfterSeconds);
       }
       try {
-        return await this.#fetch(videoId, log, reservation);
+        return await this.#fetch(videoId, "accountId" in caller ? { accountId: caller.accountId } : "signed-out", log, reservation);
       } catch (error) {
         await usage.releaseFetch(clock(), key);
         throw error;
@@ -112,8 +114,8 @@ export class ServiceTranscripts {
     return fetching;
   }
 
-  async #fetch(videoId: VideoId, log: FastifyBaseLogger, reservation: FetchReservation): Promise<ServiceAnswer> {
-    const { fetches, usage, transcripts, proxyDailyFetches, clock } = this.#options;
+  async #fetch(videoId: VideoId, payer: CostPayer, log: FastifyBaseLogger, reservation: FetchReservation): Promise<ServiceAnswer> {
+    const { fetches, usage, transcripts, costs, proxyDailyFetches, clock } = this.#options;
     const startedAt = clock().getTime();
     let proxyBytes = 0;
     let result: ServiceFetchResult;
@@ -126,6 +128,7 @@ export class ServiceTranscripts {
           spend: async (bytes) => {
             proxyBytes = bytes;
             const today = await usage.addProxyBytes(clock(), bytes);
+            await costs.recordOrLog(clock(), payer, { area: "transcripts", detail: "proxy", quantity: bytes, dollars: 0 }, log);
             log.info(
               apiLogLines.serviceTranscripts.proxySpend({
                 proxyBytes: bytes,
