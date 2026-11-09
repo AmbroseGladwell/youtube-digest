@@ -348,6 +348,12 @@ out, lists each one's note without its transcript or narration. `GET /api/sample
 the whole copy once one is chosen, and only for a listed token. A listed token that isn't live
 is left out and logged as `sample missing`. Neither counts a visit to the share.
 
+**Refreshing a sample** after a prompt change: as the house account, ⋯ Regenerate it, then Share
+again. The overview keeps its id and sharing again replaces the copy behind the same link, so the
+token in `SAMPLE_SHARE_TOKENS` stays. A sample is "written for anyone", so the house account's
+About you and learned items must be empty first, or its profile shapes the note. The house
+account is on Plus (9 Nov 2026), so a refresh has room on our key.
+
 **A sample is free.** It's saved through its share token, so the push is let in uncounted
 (`tiers.md`, "Reserving on the reader's own key"), and it isn't one of the plan's overviews on
 us. A few live shares are far below an account's limit of 50.

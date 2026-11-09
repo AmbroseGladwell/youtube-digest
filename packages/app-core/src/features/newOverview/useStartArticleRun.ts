@@ -6,6 +6,7 @@ import { useNewOverviewRunController } from "./NewOverviewRunContext.js";
 export interface ArticleRunOptions {
   from: CaptureEntry;
   overviewId?: OverviewId | undefined;
+  captureReason?: string | null | undefined;
   // Known not to be needed, so Chrome isn't asked outside a click: right-click grants its own
   // access, and a reload only follows a read that got in.
   accessInHand?: boolean;
@@ -20,7 +21,10 @@ export function useStartArticleRun() {
   const { startArticle } = useNewOverviewRunController();
 
   return useCallback(
-    (page: ActivePage, { from, overviewId, accessInHand = false, oneTimeAccess = false, willAsk = false }: ArticleRunOptions) => {
+    (
+      page: ActivePage,
+      { from, overviewId, captureReason, accessInHand = false, oneTimeAccess = false, willAsk = false }: ArticleRunOptions,
+    ) => {
       if (pages === null) return;
       startArticle({
         url: page.url,
@@ -28,6 +32,7 @@ export function useStartArticleRun() {
         site: domainOf(page.url),
         from,
         overviewId,
+        captureReason,
         access: accessInHand ? Promise.resolve(true) : pages.requestAccess(page.url),
         asking: !accessInHand && willAsk,
         oneTimeAccess,

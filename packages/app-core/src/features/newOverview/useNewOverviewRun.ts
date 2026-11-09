@@ -29,6 +29,8 @@ import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
 export interface StartOverviewRunOptions {
   from: CaptureEntry;
   overviewId?: OverviewId | undefined;
+  // A regeneration's reason box starts with the reason the overview already has.
+  captureReason?: string | null | undefined;
 }
 
 export interface ArticleRunRequest extends StartOverviewRunOptions {
@@ -134,7 +136,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
         }
       };
 
-      draftRef.current = "";
+      draftRef.current = options.captureReason ?? "";
       setRun({
         url,
         startedAt: Date.now(),
@@ -157,7 +159,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
         transcriptWords: null,
         overview: null,
         error: null,
-        captureReason: "",
+        captureReason: draftRef.current,
       });
 
       const what =

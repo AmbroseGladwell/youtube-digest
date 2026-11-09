@@ -61,8 +61,8 @@ opening the place's address.
 
 ## Regenerating
 
-Articles only: there is no ⋯ Regenerate for videos. It writes under the same id, so the old note
-stays until the new one lands. Away from the article the item ends in an ellipsis and explains, since
+Videos regenerate from anywhere too (OV-261, `one-overview-per-video.md`, "Regenerating"). An
+article's writes under the same id, so the old note stays until the new one lands. Away from the article the item ends in an ellipsis and explains, since
 we keep no copy.
 
 ## Differences from the design

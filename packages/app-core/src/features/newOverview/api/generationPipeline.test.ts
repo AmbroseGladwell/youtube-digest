@@ -3,6 +3,8 @@ import {
   DEFAULT_SETTINGS,
   articleSourceId,
   type ArticleRead,
+  type ClaimSummary,
+  type Overview,
   type OverviewId,
   type OverviewStore,
   type Settings,
@@ -29,6 +31,9 @@ const makeDeps = ({ held = true }: { held?: boolean } = {}) => {
   let settings: Settings = DEFAULT_SETTINGS;
   const inputs: GenerationInput[] = [];
   const timings: ClientTimingReport[] = [];
+  const library: Overview[] = [];
+  const claims: ClaimSummary[] = [];
+  const saved: Overview[] = [];
   let clock = 0;
   const stored: StoredTranscript = {
     videoId: VIDEO.id!,
@@ -46,9 +51,12 @@ const makeDeps = ({ held = true }: { held?: boolean } = {}) => {
     } satisfies TranscriptStore,
     overviewStore: {
       listTopics: async () => [...topics],
-      listClaims: async () => [],
-      listOverviews: async () => [],
-      saveOverview: async () => {},
+      listClaims: async () => [...claims],
+      listOverviews: async () => [...library],
+      getOverview: async (id: OverviewId) => library.find((overview) => overview.id === id) ?? null,
+      saveOverview: async (overview: Overview) => {
+        saved.push(overview);
+      },
     } as unknown as OverviewStore,
     settingsStore: { get: async () => settings },
     makeOverview: async (input, { id }) => {
@@ -73,7 +81,12 @@ const makeDeps = ({ held = true }: { held?: boolean } = {}) => {
     deps,
     inputs,
     timings,
+    saved,
     rung,
+    hold: (overview: Overview) => {
+      library.push(overview);
+      claims.push({ overviewId: overview.id, title: overview.source.title, claim: overview.coreClaim });
+    },
     tick: (ms: number) => (clock += ms),
     addTopic: (topic: Topic) => topics.push(topic),
     setAboutYou: (aboutYou: AboutYou) => (settings = { ...settings, aboutYou }),
@@ -211,6 +224,68 @@ const READ: ArticleRead = {
   },
 };
 
+describe("regenerating", () => {
+  it("rewrites what the model wrote and keeps what the reader did: the reason, topics, tags, saved date and playlist", async () => {
+    const { deps, saved, hold } = makeDeps();
+    const previous = makeOverview({
+      captureReason: "For the Thursday meeting.",
+      topicIds: [makeTopic().id],
+      tags: ["my-own-tag"],
+      savedAt: "2026-01-02T03:04:05.000Z",
+      fromPlaylist: { id: "PLsavedtalks", title: "Saved talks" } as Overview["fromPlaylist"],
+      coreClaim: "The old claim.",
+    });
+    hold(previous);
+
+    await runOverviewGeneration(VIDEO.url, deps, { overviewId: previous.id, captureReason: () => "For the Thursday meeting." });
+
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({
+      id: previous.id,
+      captureReason: "For the Thursday meeting.",
+      topicIds: previous.topicIds,
+      tags: ["my-own-tag"],
+      savedAt: "2026-01-02T03:04:05.000Z",
+      fromPlaylist: previous.fromPlaylist,
+    });
+    expect(saved[0]!.coreClaim).not.toBe("The old claim.");
+  });
+
+  it("never offers the overview's own old claim as one it might be similar to", async () => {
+    const { deps, inputs, hold } = makeDeps();
+    const previous = makeOverview();
+    const other = makeOverview();
+    hold(previous);
+    hold(other);
+
+    await runOverviewGeneration(VIDEO.url, deps, { overviewId: previous.id });
+
+    expect(inputs[0]!.pastClaims.map((claim) => claim.overviewId)).toEqual([other.id]);
+  });
+
+  it("regenerates an unreadable record whole, since there is nothing left to keep", async () => {
+    const { deps, saved } = makeDeps();
+    const id = makeOverview().id;
+    deps.overviewStore.getOverview = async () => {
+      throw new Error("Simulated: the record can't be read");
+    };
+
+    await runOverviewGeneration(VIDEO.url, deps, { overviewId: id });
+
+    expect(saved.map((overview) => overview.id)).toEqual([id]);
+  });
+
+  it("clears the reason when the reader emptied it during the run", async () => {
+    const { deps, saved, hold } = makeDeps();
+    const previous = makeOverview({ captureReason: "Old reason." });
+    hold(previous);
+
+    await runOverviewGeneration(VIDEO.url, deps, { overviewId: previous.id, captureReason: () => "" });
+
+    expect(saved[0]!.captureReason).toBeNull();
+  });
+});
+
 describe("runArticleOverviewGeneration", () => {
   const withLibrary = (held: boolean) => {
     const made: unknown[] = [];
@@ -219,6 +294,7 @@ describe("runArticleOverviewGeneration", () => {
       listTopics: async () => [],
       listClaims: async () => [],
       listUnreadable: async () => [],
+      getOverview: async () => null,
       saveOverview: async () => {},
       listOverviews: async () => (held ? [{ ...overview, source: { ...overview.source, id: heldId } }] : []),
     } as unknown as OverviewStore;
