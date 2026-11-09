@@ -132,10 +132,10 @@ points. `CoreFields` keeps its minimum, because it is also the model's schema fo
   Nothing collapses behind Show more: a hidden ingredient is a missed one.
 - **In the panel (144l)** the link moves the recipe page beside it to its top, as articles do.
 - **The library (144m)** names a recipe by its stated total, "1 hr 5 min recipe", or just "Recipe".
-  Where a video's row carries its verdict chip, a recipe's carries "Recipe · 4 servings", or
-  "Recipe" when the page gives no yield, and never "Thin · no clear claim" (OV-179, decided
-  without a design; the yield is the one figure the row didn't already give). Recipes are their own
-  kind in the source filter.
+  The row leads with the kind chip "Recipe · 4 servings", or "Recipe" when the page gives no
+  yield, and never "Thin · no clear claim" (OV-179; moved from the verdict's pill into the kind
+  chip by OV-232, design 232f; the yield is the one figure the row didn't already give). Recipes
+  are their own kind in the source filter. See `library-view.md`, "What kind each row is".
 - **Creating (144o–144q)** says "Reading the recipe" or "Fetching the recipe" with its counts once
   the page has been read, and "Recipe on {site}" under a pasted link. The panel names the kind only
   after Create, not on the card before it as 144o draws: we promise not to read a page until then.

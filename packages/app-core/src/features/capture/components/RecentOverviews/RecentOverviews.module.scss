@@ -39,6 +39,15 @@
   min-width: 0;
 }
 
+.kind {
+  display: flex;
+  margin-bottom: 0.25rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
 .title {
   font-family: var(--font-heading);
   font-size: 0.9375rem;

@@ -3,6 +3,7 @@ import { Routes } from "../../../../app/Routes.js";
 import { useSync } from "../../../sync/SyncContext.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { OverviewThumbnail } from "../../../../components/shared/OverviewThumbnail/OverviewThumbnail.js";
+import { KindChip } from "../../../../components/shared/KindChip/KindChip.js";
 import type { LibraryEntry } from "../../../overviews/types/LibraryEntry.js";
 import { readableEntries } from "../../../overviews/types/LibraryEntry.js";
 import { orderLibraryEntriesBySavedAt } from "../../../overviews/util/orderLibraryEntriesBySavedAt.js";
@@ -18,7 +19,8 @@ const SHOWN = 3;
 
 // Design 77aa: on a page there's nothing to take from, the panel offers what's already made.
 // Design 205f-2 ends it with the way to the whole library, which is the web app's: the panel
-// is one video, not a list (docs/features/extension-panel.md).
+// is one video, not a list (docs/features/extension-panel.md). A row leads with its kind as a
+// library row does (design 232i).
 export function RecentOverviews({ entries }: RecentOverviewsProps) {
   const recent = readableEntries(orderLibraryEntriesBySavedAt(entries)).slice(0, SHOWN);
   const sync = useSync();
@@ -37,6 +39,9 @@ export function RecentOverviews({ entries }: RecentOverviewsProps) {
             <OverviewThumbnail video={overview.source} />
           </span>
           <span className={styles.body}>
+            <span className={styles.kind}>
+              <KindChip overview={overview} />
+            </span>
             <span className={styles.title}>{overview.source.title}</span>
             <span className={styles.site}>{sourceName(overview.source)}</span>
             <span className={styles.facts}>{overviewMetaParts(overview).join(" · ")}</span>

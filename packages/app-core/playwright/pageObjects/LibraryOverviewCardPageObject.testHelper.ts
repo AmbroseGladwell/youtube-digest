@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import type { Locator } from "@playwright/test";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { overviewThumbnailTestIds } from "../../src/components/shared/OverviewThumbnail/OverviewThumbnailTestIds.js";
+import { kindChipTestIds } from "../../src/components/shared/KindChip/KindChipTestIds.js";
 import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedChip/SavedChipTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
@@ -164,6 +165,12 @@ export class LibraryOverviewCardPageObject extends PageObject {
   // Against the row rather than a hardcoded width: what matters is that the title has the
   // whole of it, which is the thing a stray thumbnail column would take away. A pixel count
   // would also move every time the row's own padding or border did.
+  verifyKindChipReads = (kind: string) =>
+    this.step(`verifyKindChipReads ${kind}`, () => expect(this.get(kindChipTestIds.root)).toHaveText(kind));
+
+  verifyHasNoKindChip = () =>
+    this.step("verifyHasNoKindChip", () => expect(this.get(kindChipTestIds.root)).toHaveCount(0));
+
   verifyMetaReads = (meta: string) =>
     this.step(`verifyMetaReads ${meta}`, () =>
       expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta),

@@ -29,12 +29,21 @@ const knownLength = (source: Source): string | null => {
   return source.durationMs ? formatClock(source.durationMs / 1000) : null;
 };
 
+const capitalised = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
+
 // "18:42 video", "14 min article", or "Video" when the length is not known: the kind is named
 // on every card, never by an icon alone, and a missing length is never guessed (OV-232).
 export function sourceLength(source: Source): string {
   const kind = SOURCE_KIND[source.kind];
   const length = knownLength(source);
-  return length === null ? kind.charAt(0).toUpperCase() + kind.slice(1) : `${length} ${kind}`;
+  return length === null ? capitalised(kind) : `${length} ${kind}`;
+}
+
+// The chip a library row leads with. A video is most of the library and says so in its meta
+// line, so it has none; any other kind does, and a recipe keeps its yield (design 232a, 232f).
+export function kindChip(note: { source: Source; recipe?: RecipeNote | null | undefined }): string | null {
+  if (note.recipe != null) return note.recipe.yield === null ? "Recipe" : `Recipe · ${note.recipe.yield}`;
+  return note.source.kind === "youtube" ? null : capitalised(SOURCE_KIND[note.source.kind]);
 }
 
 // A recipe names itself by the page's stated total, "1 hr 5 min recipe", or just "Recipe",
