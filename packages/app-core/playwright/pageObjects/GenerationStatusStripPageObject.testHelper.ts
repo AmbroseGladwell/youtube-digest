@@ -10,6 +10,9 @@ export class GenerationStatusStripPageObject extends PageObject {
       return this;
     });
 
+  verifyHasFailed = () =>
+    this.step("verifyHasFailed", () => expect(this.get(generationStatusStripTestIds.root)).toHaveAttribute("data-state", "failed"));
+
   verifyIsHidden = () => this.step("verifyIsHidden", () => this.expectToHaveCount(generationStatusStripTestIds.root, 0));
 
   verifyReads = (label: string, step: string) =>

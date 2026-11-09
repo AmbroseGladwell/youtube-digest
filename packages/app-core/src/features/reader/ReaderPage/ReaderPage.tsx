@@ -22,6 +22,7 @@ import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { oneTimeAccessHost, wasAlreadyMade, wasJustGenerated } from "../../newOverview/justGenerated.js";
 import { useStartArticleRun } from "../../newOverview/useStartArticleRun.js";
+import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunContext.js";
 import { SavedLocallyNote } from "../../plus/components/SavedLocallyNote/SavedLocallyNote.js";
 import { useSavedLocallyNote } from "../../plus/useSavedLocallyNote.js";
 import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
@@ -201,6 +202,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const onPage = useShowOnPage(webPage);
   const besideArticle = onPage !== null;
   const startArticleRun = useStartArticleRun();
+  const { start: startRun } = useNewOverviewRunController();
   const captions = useMemo(() => {
     const written = overview ? overviewNoteCaptions(overview) : {};
     return besideArticle && written[KEY_POINTS_SECTION] !== undefined
@@ -208,20 +210,31 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       : written;
   }, [overview, besideArticle]);
   const howToApplySlot = useHowToApplySlot(overview);
+  const captureReason = overview?.captureReason ?? null;
+  // A video can be remade from anywhere; an article needs its page open beside the panel,
+  // since we keep no copy (docs/features/one-overview-per-video.md, "Regenerating").
   const regenerate =
-    webPage === null
-      ? null
-      : {
+    webPage !== null
+      ? {
           asksFirst: onPage === null,
           onChoose: () => {
             if (onPage === null) {
               setExplainingRegenerate(true);
               return;
             }
-            startArticleRun(onPage.beside, { from: "regenerate", overviewId, willAsk: true });
+            startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
             void navigate(Routes.home(), { viewTransition: animateNavigation });
           },
-        };
+        }
+      : video !== null
+        ? {
+            asksFirst: false,
+            onChoose: () => {
+              startRun(video.url, { from: "regenerate", overviewId, captureReason });
+              void navigate(Routes.home(), { viewTransition: animateNavigation });
+            },
+          }
+        : null;
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
