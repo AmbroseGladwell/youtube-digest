@@ -237,7 +237,7 @@ assistant sees is what has reached the server through sync.
 
 | Tool | Returns |
 |---|---|
-| `search_overviews` | a light listing, newest saved first: title, channel, verdict, topics, saved date, id, and the one-line premise to choose by. 50 a page |
+| `search_overviews` | a light listing, word matches newest saved first, then up to 5 by meaning: title, channel, verdict, topics, saved date, id, and the one-line premise to choose by. 50 a page |
 | `list_topics` | every topic with how many overviews it holds, its id and description, and how many overviews are not filed |
 | `list_tags` | every tag, the video's own and the reader's, with how many overviews carry it, most used first (OV-84) |
 | `get_overview` | one note in full |
@@ -316,6 +316,12 @@ cheap, and the card's `ILIKE` would only have narrowed what was then read anyway
 library's own search uses (`buildSearchHaystack`: title, channel, premise, claim, verdict
 reasoning, selling, actions, key points and tags). The library matches the whole phrase,
 because a reader types one. An assistant sends keywords.
+
+**Then by meaning (OV-229).** After the word matches, up to five more overviews whose claims
+are close in meaning to the query follow, marked "matched by meaning" in a listing and
+"Matched by meaning, not by word" in a full note. They still have to pass every other filter.
+When meaning can't be matched, the reply says it holds word matches only. How it works is in
+`search-by-meaning.md`.
 
 **Paging is by offset.** The cursor is the position of the next result in the list as it
 stands now, so a note saved between two calls can shift a page by one. For an assistant

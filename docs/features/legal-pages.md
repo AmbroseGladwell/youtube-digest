@@ -66,6 +66,7 @@ these changes, the policy changes with it.
 | Errors: always sent, what a report carries, redaction, no id when signed out | `errors-and-logs.md` |
 | Logs: 14 days at PostHog, route and ids only, never an address or email; rate limits in memory for at most a day; the two daily caps keeping a hashed address 7 days | `errors-and-logs.md`, `api.md` ("Rate limits"), `server-side-transcripts.md` (`CALLER_RETENTION_DAYS`) |
 | Assistants: tokens not sessions, the read tools and `mark_overviews`, every call logged | `mcp-connector.md` |
+| Search by meaning: claims and searches to OpenAI for embeddings, kept beside the library, remade when an overview changes | `search-by-meaning.md`, `V0028` |
 | Processors | `deploy.md`, `analytics.md`, `sign-in.md`, `server-side-transcripts.md`, `playlists.md` |
 | On the device | `analytics-consent.md` ("The record"), `reading-position.md`, `playlists.md`, `tiers.md` (the trial token) |
 
@@ -147,6 +148,7 @@ match the pages' `*_UPDATED_ON`.
 |---|---|---|---|
 | 2026-11-09 | privacy | OV-221 | Settings carried by the account name what is learned from your overviews; assistants you connect can read what we know about you (the sentence and learned items with their sources, never removed or unseen ones) when the consent screen said so, until "Share with your assistants" is turned off, and its calls never log it. |
 | 2026-11-09 | terms | OV-221 | Assistants: a connected assistant can read what we know about you, and Settings › Personalisation stops it. |
+| 2026-11-09 | privacy | OV-229 | Your library says claims, key points and searches go to OpenAI to make embeddings for search by meaning, whichever key wrote the overview; the assistants section says search is by word and by meaning; OpenAI's processor row covers embeddings; the retention table gained a row for them. |
 | 2026-11-08 | privacy | OV-199 | The account section says only creating an account makes one, and an address with no account that asks to sign in is mailed so, with no link; deleting your account says signing in again finds no account, and creating one starts empty. |
 | 2026-11-06 | privacy | OV-184 | Deleting your account describes the button, the code first, what goes in one step, the ask to PostHog and its timing, the deletion record and what stays; the account section says the code guards deletion too; the retention table gained the deletion record and reworded narration. |
 | 2026-11-06 | terms | OV-184 | Accounts: deleted from Settings after a code, not by email. |

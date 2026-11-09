@@ -2,6 +2,7 @@ import type { FastifyBaseLogger } from "fastify";
 import { z } from "zod";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import type { MeaningSearch } from "../meaning/MeaningSearch.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 
@@ -10,6 +11,8 @@ export interface McpToolContext {
   accountId: AccountId;
   transcripts: TranscriptsRepository;
   records: RecordsRepository;
+  // Absent where no embedder is configured; a query then matches by word only, and says so.
+  meaning: MeaningSearch | null;
   clock: () => Date;
   log: FastifyBaseLogger;
 }

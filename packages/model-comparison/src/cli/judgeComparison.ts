@@ -1,11 +1,15 @@
 import { parseArgs } from "node:util";
 import { comparisonPaths, loadComparison, providerKeysFromEnv } from "../comparisonPaths.js";
+import { runDirectoryStore } from "../runDirectoryStore.js";
 import { judgmentStore } from "../judgmentStore.js";
 import { BASELINE_MODEL, judgePair } from "../judgePair.js";
-import { judgingPairs, runJudging } from "../runJudging.js";
+import { judgingPairs, promptPairs, runJudging } from "../runJudging.js";
 
 const USAGE = `usage: task secrets:run -- npm run judge --workspace packages/model-comparison -- \\
-  --run <name> [--budget <dollars>] [--limit <pairs>] [--candidates provider:model,...]`;
+  --run <name> [--against <earlier run>] [--budget <dollars>] [--limit <pairs>] [--candidates provider:model,...]
+
+--against judges each model's note in --run against the same model's note in the earlier run,
+to compare two prompts rather than two models.`;
 
 const { values } = parseArgs({
   options: {
@@ -13,6 +17,7 @@ const { values } = parseArgs({
     budget: { type: "string", default: "10" },
     limit: { type: "string" },
     candidates: { type: "string" },
+    against: { type: "string" },
   },
 });
 
@@ -24,11 +29,16 @@ if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0) {
 
 const { runs, byVideo } = await loadComparison(values.run);
 const only = values.candidates?.split(",").map((name) => name.trim());
-const pairs = judgingPairs(runs, byVideo, BASELINE_MODEL).filter(
+const against = values.against === undefined ? null : await runDirectoryStore(comparisonPaths.run(values.against)).all();
+const pairs = (against === null ? judgingPairs(runs, byVideo, BASELINE_MODEL) : promptPairs(runs, against, byVideo)).filter(
   (pair) => only === undefined || only.includes(pair.candidate.name),
 );
 if (pairs.length === 0) {
-  console.error(`no pairs to judge: run ${values.run} has no passing ${BASELINE_MODEL} overview beside another model's`);
+  console.error(
+    against === null
+      ? `no pairs to judge: run ${values.run} has no passing ${BASELINE_MODEL} overview beside another model's`
+      : `no pairs to judge: no video passed for the same model in both ${values.run} and ${values.against}`,
+  );
   process.exit(1);
 }
 

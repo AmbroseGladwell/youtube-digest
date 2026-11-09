@@ -4,13 +4,13 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { PGlite } from "@electric-sql/pglite";
+import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
 import { createPgliteSqlClient } from "./createPgliteSqlClient.js";
 import { migrationsBefore } from "./migrationsBefore.testHelper.js";
 import { runMigrations } from "./runMigrations.js";
 
 test("applies every migration file in version order and records each one", async () => {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   const applied = await runMigrations(sql);
 
   assert.deepEqual(
@@ -25,7 +25,7 @@ test("applies every migration file in version order and records each one", async
 });
 
 test("a second run applies nothing, so starting the server twice is safe", async () => {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql);
 
   assert.deepEqual(await runMigrations(sql), []);
@@ -38,14 +38,14 @@ test("two migrations with one version refuse to run, rather than skipping one", 
   const dir = await mkdtemp(join(tmpdir(), "migrations-"));
   await writeFile(join(dir, "V0001__first.sql"), "create table first_one (id int)");
   await writeFile(join(dir, "V0001__second.sql"), "create table second_one (id int)");
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
 
   await assert.rejects(runMigrations(sql, { dir: pathToFileURL(`${dir}/`) }), /two migrations share version 1/);
   await sql.close();
 });
 
 test("the tables the migrations create are there to be used", async () => {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql);
 
   const tables = await sql.query<{ table_name: string }>(
@@ -58,6 +58,7 @@ test("the tables the migrations create are there to be used", async () => {
       "account_transcripts",
       "accounts",
       "audio_renders",
+      "claim_embeddings",
       "connection_tokens",
       "connections",
       "email_changes",
@@ -67,6 +68,7 @@ test("the tables the migrations create are there to be used", async () => {
       "oauth_authorizations",
       "oauth_clients",
       "our_key_usage",
+      "overview_embeddings",
       "overview_reservations",
       "overview_usage",
       "records",
@@ -87,7 +89,7 @@ test("the tables the migrations create are there to be used", async () => {
 });
 
 test("each account keeps the transcripts it stored before the shared cache, and none of them is served", async () => {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(9) });
   const [first, second] = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
   for (const id of [first, second]) {
@@ -121,7 +123,7 @@ test("each account keeps the transcripts it stored before the shared cache, and 
 });
 
 test("a share made before OV-83 reads as common knowledge with untimed key points, and one without a verdict keeps none", async () => {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(13) });
   const accountId = "a0000000-0000-4000-8000-000000000001";
   await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [accountId, "a@example.com"]);
@@ -152,7 +154,7 @@ test("a share made before OV-83 reads as common knowledge with untimed key point
 });
 
 test("a share made before dubious claims were saved reads as having none saved, and one without a verdict keeps none", async () => {
-  const sql = createPgliteSqlClient(new PGlite());
+  const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(14) });
   const accountId = "a0000000-0000-4000-8000-000000000001";
   await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [accountId, "a@example.com"]);

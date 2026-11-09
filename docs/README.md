@@ -116,6 +116,11 @@ Five folders, five different questions.
   on-demand script, what counts as an article, and the failures it names.
 - `article-panel.md` — making an overview of an article from the panel: Create, Chrome's box,
   right-click, the failures, duplicates, regenerating, and links that move the page.
+- `search-by-meaning.md` — finding overviews by what they are about: the claim as the unit,
+  why OpenAI's small embedding model won the spike against two self-hosted ones, embeddings kept
+  beside the library and keyed to the record's rev, a worker that is woken rather than polled,
+  word matches first and the closest few by meaning after, the route the app calls, and why no
+  search ever crosses accounts.
 - `pasted-article-links.md` — our server fetching a pasted link: what it will and won't reach, and
   what the field says.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,

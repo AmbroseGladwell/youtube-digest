@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
@@ -29,6 +29,9 @@ import {
   isSameLibraryView,
 } from "../util/libraryFilterParams.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
+import { meaningEntries } from "../util/meaningEntries.js";
+import { useMeaningMatchesQuery } from "../queries/meaningMatchesQuery.js";
+import { useSettledText } from "../../../util/useSettledText.js";
 import { orderLibraryEntries } from "../util/orderLibraryEntries.js";
 import { NO_LIBRARY_FILTERS } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_VIEW } from "../types/LibraryView.js";
@@ -112,6 +115,13 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const searchId = useId();
   const searchSettled = useRef(() => {});
   useTypingSettled(view.filters.query, () => searchSettled.current());
+  const settledQuery = useSettledText(view.filters.query.trim());
+  const meaningQuery = useMeaningMatchesQuery(settledQuery);
+  const meaningSettled = useRef(() => {});
+  const meaningHeadingId = useId();
+  useEffect(() => {
+    if (meaningQuery.data !== undefined && settledQuery !== "") meaningSettled.current();
+  }, [meaningQuery.data, settledQuery]);
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
@@ -183,6 +193,13 @@ export function LibraryPage({ entries }: LibraryPageProps) {
     sort,
   );
   searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
+  // Meaning is asked for once typing settles, so it never answers for words the field no
+  // longer holds (docs/features/search-by-meaning.md, "In the library").
+  const meaningIsCurrent = settledQuery !== "" && settledQuery === filters.query.trim();
+  const closeInMeaning = meaningIsCurrent ? meaningEntries(entries, filters, meaningQuery.data, new Set(visible.map(libraryEntryId))) : [];
+  const meaningUnavailable = meaningIsCurrent && meaningQuery.data?.available === false;
+  meaningSettled.current = () =>
+    analytics.library.search.meaningMatched({ meaningOnly: closeInMeaning.length, available: meaningQuery.data?.available ?? false });
   const unreadShown = visible.filter((entry) => !entry.state.read).length;
   // Only counts: with a tag set the chip under the search names it, so the line says it to a
   // screen reader alone ("OV-84 2 Library Filter" 84o).
@@ -195,6 +212,49 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         <span className={styles.visuallyHidden}> tagged #{filters.tag}</span> · {unreadShown} unread
       </>
     );
+  const row = (entry: LibraryEntry) => (
+    <div key={libraryEntryId(entry)} data-glide-name={libraryRowGlideName(libraryEntryId(entry))}>
+      {entry.kind === "unreadable" ? (
+        <LibraryUnreadableCard
+          onOpen={() => analytics.library.unreadableCard.opened()}
+          readerState={readerState}
+          record={entry.record}
+          entering={entering.has(entry.record.id)}
+        />
+      ) : (
+        <LibraryOverviewCard
+          overviewWithState={entry}
+          entering={entering.has(entry.overview.id)}
+          topicNames={entry.overview.topicIds
+            .map((topicId) => topicNameById.get(topicId))
+            .filter((name): name is string => name !== undefined)}
+          onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from })}
+          readerState={readerState}
+          onToggleFavourite={() => {
+            analytics.library.overviewCard.favouriteSwitched({
+              overviewId: entry.overview.id,
+              favourite: !entry.state.favourite,
+            });
+            keepInPlace(entry.overview.id);
+            setOverviewState.mutate({
+              overviewId: entry.overview.id,
+              patch: { favourite: !entry.state.favourite },
+            });
+          }}
+          onToggleRead={() => {
+            analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read });
+            keepInPlace(entry.overview.id);
+            setOverviewState.mutate({
+              overviewId: entry.overview.id,
+              patch: { read: !entry.state.read },
+            });
+          }}
+          playing={isPlaying(entry.overview.id)}
+          onListen={() => listen(entry.overview)}
+        />
+      )}
+    </div>
+  );
   const timeSavedButton = (
     <button
       type="button"
@@ -427,55 +487,29 @@ export function LibraryPage({ entries }: LibraryPageProps) {
               </button>
             </div>
           ) : visible.length === 0 ? (
-            <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
-              No overviews match these filters.
-            </p>
+            closeInMeaning.length === 0 && (
+              <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
+                No overviews match these filters.
+              </p>
+            )
           ) : (
             <div className={styles.list} data-testid={libraryPageTestIds.list}>
-              {visible.map((entry) => (
-                <div key={libraryEntryId(entry)} data-glide-name={libraryRowGlideName(libraryEntryId(entry))}>
-                  {entry.kind === "unreadable" ? (
-                    <LibraryUnreadableCard
-                      onOpen={() => analytics.library.unreadableCard.opened()}
-                      readerState={readerState}
-                      record={entry.record}
-                      entering={entering.has(entry.record.id)}
-                    />
-                  ) : (
-                    <LibraryOverviewCard
-                      overviewWithState={entry}
-                      entering={entering.has(entry.overview.id)}
-                      topicNames={entry.overview.topicIds
-                        .map((topicId) => topicNameById.get(topicId))
-                        .filter((name): name is string => name !== undefined)}
-                      onOpen={(from) => analytics.library.overviewCard.opened({ overviewId: entry.overview.id, from })}
-                      readerState={readerState}
-                      onToggleFavourite={() => {
-                        analytics.library.overviewCard.favouriteSwitched({
-                          overviewId: entry.overview.id,
-                          favourite: !entry.state.favourite,
-                        });
-                        keepInPlace(entry.overview.id);
-                        setOverviewState.mutate({
-                          overviewId: entry.overview.id,
-                          patch: { favourite: !entry.state.favourite },
-                        });
-                      }}
-                      onToggleRead={() => {
-                        analytics.library.overviewCard.readSwitched({ overviewId: entry.overview.id, read: !entry.state.read });
-                        keepInPlace(entry.overview.id);
-                        setOverviewState.mutate({
-                          overviewId: entry.overview.id,
-                          patch: { read: !entry.state.read },
-                        });
-                      }}
-                      playing={isPlaying(entry.overview.id)}
-                      onListen={() => listen(entry.overview)}
-                    />
-                  )}
-                </div>
-              ))}
+              {visible.map(row)}
             </div>
+          )}
+          {closeInMeaning.length > 0 && (
+            <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
+              <h2 className={styles.meaningHeading} id={meaningHeadingId}>
+                Close in meaning
+              </h2>
+              <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
+              <div className={styles.list}>{closeInMeaning.map(row)}</div>
+            </section>
+          )}
+          {meaningUnavailable && (
+            <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>
+              Couldn't search by meaning just now, so these match your words only.
+            </p>
           )}
         </main>
       </div>

@@ -544,6 +544,46 @@ reason never restates the answer.** Narration says the answer itself before the
 reason, and leaves the novelty label on screen only, so either repetition would be
 heard twice or out of order.
 
+**Decision, 8 Nov 2026 (OV-214): key points are chosen by significance, not by
+sequence.** Until now the rule only took things away. It stripped the hook, the story,
+the restatement and the call to action, then capped the count. Nothing said which of the
+points left over mattered, so on a long source the model followed it from start to
+finish and ran out of points. The prompt now gives a reason to choose: what the rest of
+the source depends on, and what is genuinely new, surprising or contested. It also
+leaves out anything the reader could work out from the premise alone. On a long video it
+says to weigh the whole of it first, because the idea that matters most may come in the
+second hour. Then the points are given in the order the source makes them. Narration's
+"First," and "Then," imply that order, and keeping it means only the choice changed.
+Articles get the same rule.
+
+- **"Has evidence behind it" was considered and left out.** It would drop a source's
+  main unsupported claims, and the reader most needs to hear those, with the verdict's
+  judgment of them.
+- **The anecdote rule went in beside "who claims it".** When a source generalises from a
+  single story or case, the point says it rests on that case. It isn't `dubious`: that
+  flag means contradicted or self-serving, and "rests on one story" is unsupported rather
+  than wrong. Folding it into the flag would make the flag noisy, and the flag is only
+  believed because it is rare (`docs/architecture/overview-quality.md`, "Trust").
+- **On articles, proportional coverage wins where the two rules fight.** A chapter
+  holding over a quarter of the piece, and the last third, are checks in the schema
+  (`article-notes.md`, "Coverage without a rewrite"). They set a floor, and significance
+  chooses everything above it. Video has no such check yet. OV-87 ports them.
+- **Grouping into themes was not taken up.** Chapters already are the grouping
+  (`overview-quality.md`, "Decided 8 Nov 2026: ten points, and no grouping").
+- **Recipes have no key points**, so the rule doesn't reach them.
+
+This came before OV-87's budget on purpose: this card changes *which* points, OV-87
+changes *how many*. Measured on GPT-6.1 Sol (`docs/architecture/model-comparison.md`,
+"Results: significance over sequence, OV-214"):
+
+- **Long sources cover more.** It held on both samples of each prompt.
+- **Short ones are unchanged within run-to-run noise.**
+- **The judges can't separate it from noise.** The whole-note judge called it level, on fields
+  this change doesn't touch. A judge that sees only the key points leaned against the new prompt,
+  but it leaned as far between two runs of the old prompt. Where it does lean, it marks down
+  caveats about evidence, which is the anecdote rule.
+- **It costs the same.**
+
 ## Stress-testing against genres outside the samples
 
 None of the five real samples are a narrative interview, an instructional video, a

@@ -134,3 +134,23 @@ note, then the judge, all under one budget. A settled run isn't paid for twice. 
 written to the run's folder as `report.md`. The pieces are in `packages/model-comparison/src`:
 `ReaderProfile.ts`, `personalisePrompt.ts`, `runPersonalPass.ts`, `judgePersonalPair.ts`
 and `costModelMarkdown.ts`.
+
+## Search by meaning (OV-229)
+
+Measured on 9 Nov 2026, not estimated (`docs/prototype/constraints.md`). OpenAI's own usage report
+for embedding 111 of the owner's overviews (826 claims and key points) and 29 searches with
+`text-embedding-3-small` came to **37,702 tokens**, about **335 tokens an overview**.
+
+| | Tokens | Cost at $0.02 per million |
+|---|---|---|
+| Embedding one overview, once | ~335 | **~$0.0000067**, 0.02% of the $0.0381 single pass |
+| One search | ~10 | ~$0.0000002 |
+| A million searches | ~10M | ~$0.20 |
+| Re-embedding a million overviews, if the model ever changes | ~335M | ~$6.70 |
+
+The price is OpenAI's published rate for `text-embedding-3-small` as of November 2026; check
+it before relying on these figures. Every embedding is paid on our key, whichever key wrote the
+overview, and is not counted against any quota (`tiers.md`): it is too small to be worth a
+reader's thought. The embedding worker logs the tokens each overview cost (`api.meaning.embedded`),
+so the real figure can be read back from the logs. The spike behind the choice of model is in
+`docs/features/search-by-meaning.md`, "Why OpenAI".

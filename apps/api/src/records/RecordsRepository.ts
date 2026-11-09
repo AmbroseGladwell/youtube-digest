@@ -40,13 +40,25 @@ export const RECORD_COLUMNS = "kind, id, schema_version, rev, seq, updated_at, d
 export class RecordsRepository {
   #sql: SqlClient;
   #clock: () => Date;
+  #overviewsWritten: () => void;
 
-  constructor(sql: SqlClient, clock: () => Date) {
+  // `overviewsWritten` runs once a write that changed an overview has committed, which is
+  // what wakes the embedding worker (docs/features/search-by-meaning.md, "The queue").
+  constructor(sql: SqlClient, clock: () => Date, overviewsWritten: () => void = () => undefined) {
     this.#sql = sql;
     this.#clock = clock;
+    this.#overviewsWritten = overviewsWritten;
   }
 
   async write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
+    const outcomes = await this.#write(accountId, operations);
+    if (outcomes.some((outcome) => outcome?.kind === "overview")) {
+      this.#overviewsWritten();
+    }
+    return outcomes;
+  }
+
+  async #write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
     return this.#sql.transaction(async (tx) => {
       const outcomes: Array<WriteOutcome | null> = [];
       for (const { kind, id, sourceKey, decide } of operations) {
