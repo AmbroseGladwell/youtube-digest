@@ -27,7 +27,7 @@ import { ReadAlongNote } from "../../reader/components/ReadAlongNote/ReadAlongNo
 import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ReaderTabs } from "../../reader/components/ReaderTabs/ReaderTabs.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
-import { LineRangeTag } from "../../reader/components/LineRangeTag/LineRangeTag.js";
+import { LineRangeTag, noteLineRange } from "../../reader/components/LineRangeTag/LineRangeTag.js";
 import { RelatedByTag } from "../../reader/components/RelatedByTag/RelatedByTag.js";
 import { ArticleChaptersPanel } from "../../reader/components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../../reader/components/ArticleLineLinks/ArticleLineLinks.js";
@@ -42,7 +42,7 @@ import { useNarrationApi } from "../../player/NarrationApiContext.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { sharedNarrationApi } from "../util/sharedNarrationApi.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
-import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
+import { ARTICLE_TABS, READER_TABS, UNCHAPTERED_RECIPE_VIDEO_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
 import { useCookingMode } from "../../reader/ReaderPage/useCookingMode.js";
 import { useRecipeVoice } from "../../reader/ReaderPage/useRecipeVoice.js";
@@ -98,11 +98,14 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const webArticle =
     note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
   const recipePage = note.source.kind === "web" && note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
+  const recipeNote = note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
   const tabsShown =
     recipePage !== null
       ? ["Overview" as const]
       : webArticle === null
-        ? READER_TABS
+        ? recipeNote !== null && !note?.chapters?.length
+          ? UNCHAPTERED_RECIPE_VIDEO_TABS
+          : READER_TABS
         : webArticle.article.chapters.length > 1
           ? ARTICLE_TABS
           : ["Overview" as const];
@@ -204,7 +207,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     snapshot: notePlayer.snapshot,
     analytics: analytics.sharedPage,
   });
-  const cookable = recipePage !== null && recipePage.recipe.steps.length > 0 && recipeVoice !== null;
+  const cookable = recipeNote !== null && recipeNote.recipe.steps.length > 0 && recipeVoice !== null;
   const recipeCooking = !cookable
     ? null
     : {
@@ -250,13 +253,15 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     setTranscriptOpenAtMs(null);
     setTab(next);
   };
-  const openTranscriptAt = (positionMs: number) => {
+  const [transcriptStep, setTranscriptStep] = useState<number | null>(null);
+  const openTranscriptAt = (positionMs: number, step: number | null = null) => {
     setTranscriptOpenAtMs(positionMs);
+    setTranscriptStep(step);
     setTab("Transcript");
   };
 
   const openedFromChapterIndex =
-    transcriptOpenAtMs === null || note.chapters === null
+    transcriptOpenAtMs === null || transcriptStep !== null || note.chapters === null
       ? -1
       : note.chapters.findIndex((chapter) => chapter.startMs === transcriptOpenAtMs);
   const openedFromChapter = note.chapters?.[openedFromChapterIndex];
@@ -296,7 +301,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               <div className={styles.chips} ref={chips}>
                 <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
                   {note.source.kind === "youtube"
-                    ? sourceName(note.source)
+                    ? recipeNote === null
+                      ? sourceName(note.source)
+                      : `An overview of a recipe video from ${sourceName(note.source)}`
                     : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
                 </span>
                 {note.verdict !== null && (
@@ -339,7 +346,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               data-testid={sharedOverviewPageTestIds.watchButton}
             >
               {note.source.kind === "youtube"
-                ? "Watch on YouTube"
+                ? recipeNote === null
+                  ? "Watch on YouTube"
+                  : "Open the video on YouTube"
                 : `${recipePage === null ? "Read the article" : "Open the recipe"} on ${sourceName(note.source)}`}
               <StrokeIcon name="openOut" size={16} />
             </a>
@@ -352,7 +361,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           <div id={panelId(tab)} role="tabpanel" aria-labelledby={tabId(tab)}>
             {tab === "Overview" && (
               <div className={styles.note} data-testid={sharedOverviewPageTestIds.overviewPanel}>
-                {recipePage !== null && <RecipeTimes recipe={recipePage.recipe} from={sourceName(recipePage.source)} />}
+                {recipeNote !== null && <RecipeTimes recipe={recipeNote.recipe} source={recipeNote.source} />}
                 {recipeCooking !== null && (
                   <RecipeCookButton
                     placeStep={recipeCooking.placeStep}
@@ -369,7 +378,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                   renderRange={(line, range, active) =>
                     video !== null && (
                       <LineRangeTag
-                        line={line}
+                        {...noteLineRange(line)}
                         range={range}
                         video={video}
                         active={active}
@@ -383,13 +392,13 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                     webArticle !== null ? (
                       <ArticleLineLinks line={line} onPage={null} {...webArticle} />
                     ) : (
-                      recipePage !== null &&
+                      recipeNote !== null &&
                       line.section === SUMMARY_SECTION &&
-                      !line.heading && <RecipePageLink source={recipePage.source} onPage={null} />
+                      !line.heading && <RecipePageLink source={recipeNote.source} onPage={null} />
                     )
                   }
                 />
-                {recipePage !== null && adjustment !== null && scale !== null && (
+                {recipeNote !== null && adjustment !== null && scale !== null && (
                   <>
                     <RecipeIngredients
                       adjustment={adjustment}
@@ -398,6 +407,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       columns={!isPhone}
                       adjustable={true}
                       voice={recipeVoice?.ingredients ?? null}
+                      said={note.recipe?.ingredientsSaid ?? null}
                       onScaleChange={setRecipeScale}
                       onUnitsChange={chooseUnits}
                       onReset={() => {
@@ -420,15 +430,34 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                       </p>
                     )}
                     <RecipeMethod
-                      recipe={recipePage.recipe}
+                      recipe={recipeNote.recipe}
                       actions={methodActions}
-                      source={recipePage.source}
+                      source={recipeNote.source}
                       note={adjustment.methodNote}
                       voice={recipeVoice?.method ?? null}
                       cooking={recipeCooking}
                       stacked={isPhone}
                       usTemperatures={recipeUnits === "us"}
                       methodAmounts={adjustment.methodAmounts}
+                      renderMoment={(step) => {
+                        const range = recipeNote.recipe.steps[step]?.range;
+                        return (
+                          video !== null &&
+                          range !== undefined && (
+                            <LineRangeTag
+                              kind="recipeStep"
+                              about={recipeNote.recipe.steps[step]!.text}
+                              step={step + 1}
+                              range={range}
+                              video={video}
+                              active={false}
+                              asSheet={isPhone}
+                              canReadTranscript={payload.snapshot.transcript !== null}
+                              onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs, step + 1)}
+                            />
+                          )
+                        );
+                      }}
                     />
                   </>
                 )}
@@ -441,6 +470,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 held={transcript}
                 openAtMs={transcriptOpenAtMs}
                 openedFrom={openedFrom}
+                openedFromStep={transcriptStep}
                 onBackToChapters={() => changeTab("Chapters")}
               />
             )}
@@ -450,6 +480,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 video={video}
                 held={transcript}
                 onOpenTranscriptAt={openTranscriptAt}
+                steps={note.recipe?.steps ?? []}
               />
             )}
             {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel onPage={null} {...webArticle} />}
@@ -463,14 +494,15 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       {cookable && adjustment !== null && scale !== null && (
         <CookingMode
           mode={cooking}
-          title={recipePage.source.title}
-          from={sourceName(recipePage.source)}
-          steps={recipePage.recipe.steps}
+          title={recipeNote.source.title}
+          from={sourceName(recipeNote.source)}
+          steps={recipeNote.recipe.steps}
           actions={methodActions}
           actionNote={adjustment.actionNote}
           surface={isPhone ? "phone" : "web"}
           usTemperatures={recipeUnits === "us"}
           methodAmounts={adjustment.methodAmounts}
+          videoId={video?.id ?? null}
           ingredients={
             <>
               {adjustment.cookingNote !== null && <p className={styles.cookingAdjusted}>{adjustment.cookingNote}</p>}
@@ -481,6 +513,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 columns={false}
                 adjustable={false}
                 voice={null}
+                said={note.recipe?.ingredientsSaid ?? null}
                 onScaleChange={setRecipeScale}
                 onUnitsChange={chooseUnits}
                 onReset={() => undefined}

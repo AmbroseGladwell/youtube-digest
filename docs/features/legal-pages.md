@@ -145,6 +145,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-09 | privacy | OV-122 | Writing an overview says a video's whole description goes to the model with its captions, title and channel; the providers section says watching a recipe video's step while cooking loads YouTube's player in privacy-enhanced mode, which sees the request and the network address. |
 | 2026-11-08 | privacy | OV-199 | The account section says only creating an account makes one, and an address with no account that asks to sign in is mailed so, with no link; deleting your account says signing in again finds no account, and creating one starts empty. |
 | 2026-11-06 | privacy | OV-184 | Deleting your account describes the button, the code first, what goes in one step, the ask to PostHog and its timing, the deletion record and what stays; the account section says the code guards deletion too; the retention table gained the deletion record and reworded narration. |
 | 2026-11-06 | terms | OV-184 | Accounts: deleted from Settings after a code, not by email. |

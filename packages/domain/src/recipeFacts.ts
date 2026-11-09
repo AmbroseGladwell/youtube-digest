@@ -60,3 +60,15 @@ export function recipeStepGroups(steps: readonly RecipeStep[]): RecipeStepGroup[
   });
   return groups;
 }
+
+// The steps a recipe video's chapter covers, by where each starts: "Steps 1–3", "Step 4", or
+// nothing for a chapter that holds none, the intro or the tasting (design 122j).
+export function chapterStepsLabel(chapter: { startMs: number; endMs: number }, steps: readonly RecipeStep[]): string | null {
+  const numbers = steps.flatMap(({ range }, index) =>
+    range !== undefined && range.startMs >= chapter.startMs && range.startMs < chapter.endMs ? [index + 1] : [],
+  );
+  const [first] = numbers;
+  const last = numbers.at(-1);
+  if (first === undefined || last === undefined) return null;
+  return first === last ? `Step ${first}` : `Steps ${first}–${last}`;
+}

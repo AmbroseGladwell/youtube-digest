@@ -49,6 +49,7 @@ export function mapPlayerResponseToVideoSource(
     title: details.title ?? UNAVAILABLE,
     channel: details.author ?? UNAVAILABLE,
     description: details.shortDescription?.slice(0, 400) || null,
+    ...(details.shortDescription ? { fullDescription: details.shortDescription.slice(0, 5000) } : {}),
     durationMs: durationMs(details.lengthSeconds),
     publishedAt: publishedAt(microformat?.publishDate ?? microformat?.uploadDate),
     thumbnailUrl: widestThumbnail(response),

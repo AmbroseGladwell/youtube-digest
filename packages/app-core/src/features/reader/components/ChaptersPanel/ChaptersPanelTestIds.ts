@@ -1,6 +1,7 @@
 export const chaptersPanelTestIds = {
   root: "ChaptersPanel.root",
   count: "ChaptersPanel.count",
+  steps: "ChaptersPanel.steps",
   note: "ChaptersPanel.note",
   followingNote: "ChaptersPanel.followingNote",
   row: "ChaptersPanel.row",

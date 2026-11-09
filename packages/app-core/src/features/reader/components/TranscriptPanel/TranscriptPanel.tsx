@@ -50,12 +50,14 @@ export interface TranscriptPanelProps {
   // The chapter that asked: its whole stretch of the transcript is marked, named at the
   // top of the run, and offered a way back (design 2c).
   openedFrom: OpenedFromChapter | null;
+  // A recipe video's step that asked, named on the line it starts at (design 122v).
+  openedFromStep?: number | null;
   onBackToChapters: () => void;
 }
 
 const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToChapters }: TranscriptPanelProps) {
+export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromStep = null, onBackToChapters }: TranscriptPanelProps) {
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
   const blocks = useMemo(
@@ -232,6 +234,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, onBackToCha
           seek={seek}
           targetRun={targetRun}
           openedFrom={openedFrom}
+          openedFromStep={openedFromStep}
           head={head}
         />
       )}
@@ -307,6 +310,7 @@ interface TranscriptRowsProps {
   seek: ((positionMs: number) => void) | null;
   targetRun: ChapterBlockRun | null;
   openedFrom: OpenedFromChapter | null;
+  openedFromStep: number | null;
   head: HTMLElement | null;
 }
 
@@ -320,6 +324,7 @@ function TranscriptRows({
   seek,
   targetRun,
   openedFrom,
+  openedFromStep,
   head,
 }: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
@@ -396,6 +401,11 @@ function TranscriptRows({
               {opensRun && openedFrom !== null && (
                 <span className={styles.chapterChip} data-testid={transcriptPanelTestIds.chapterChip}>
                   Chapter {chapterNumber(openedFrom.number)} · {openedFrom.title}
+                </span>
+              )}
+              {opensRun && openedFrom === null && openedFromStep !== null && (
+                <span className={styles.chapterChip} data-testid={transcriptPanelTestIds.stepChip}>
+                  Step {openedFromStep} starts here
                 </span>
               )}
               <span className={styles.text}>

@@ -19,6 +19,7 @@ export const transcriptPanelTestIds = {
   notFollowingNote: "TranscriptPanel.notFollowingNote",
   followButton: "TranscriptPanel.followButton",
   backToChaptersButton: "TranscriptPanel.backToChaptersButton",
+  stepChip: "TranscriptPanel.stepChip",
   chapterChip: "TranscriptPanel.chapterChip",
   playingBadge: "TranscriptPanel.playingBadge",
   row: "TranscriptPanel.row",

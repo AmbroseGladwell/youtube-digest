@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-08";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-09";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -173,6 +173,11 @@ const sections: readonly LegalSection[] = [
           way. If you would rather your transcripts never went through us, turn on "Only ever use my key" in
           Settings › API keys. During onboarding, your first overview and the topic suggestions beside it are made
           on our key too, from the title, description and opening of the video or page.
+        </p>
+        <p>
+          Either way, a video's overview is written from its captions together with its title, channel and whole
+          description, which is where a recipe video usually lists its ingredients. These are what YouTube shows
+          anyone who opens the video.
         </p>
         <p>
           We count how many overviews each account makes in a month on each kind of key, and how many a device
@@ -362,6 +367,11 @@ const sections: readonly LegalSection[] = [
             ["YouTube (Google)", "answers our server's requests for a playlist's videos", "varies"],
           ]}
         />
+        <p>
+          Watching a recipe video's step while cooking step by step loads YouTube's own player, in its
+          privacy-enhanced mode, in your browser. YouTube sees that request and your network address, under
+          Google's privacy policy. The request names the video and the part to play, and we add nothing about you.
+        </p>
         <p>
           A provider you bring your own key for (Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral) is not our
           processor. Your device sends to it directly, under the agreement between you and that provider.

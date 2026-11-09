@@ -69,6 +69,7 @@ test("an article is made on our key from what the reader's browser read, and cou
     ],
     matchedTopicNames: [],
     suggestedTopic: null,
+    recipe: null,
     tags: ["bridges", "local-news", "budgets"],
     howToApply: { items: [] },
     readAnyway: { answer: "no", reason: "This carries it.", leftOut: "It leaves out the council meeting.", chapterIndexes: [] },

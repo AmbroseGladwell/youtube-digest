@@ -52,6 +52,11 @@
   color: var(--ink);
 }
 
+// The step the video beside the panel is in reads in the label ink, as a spoken line does (122i).
+.tagPlaying {
+  color: var(--label);
+}
+
 @media (pointer: coarse) {
   .tag::after {
     inset: -11px -8px;

@@ -189,6 +189,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.source {
+  margin: 0 0 0.125rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
 .aside {
   margin-left: 0.25rem;
   color: var(--muted);

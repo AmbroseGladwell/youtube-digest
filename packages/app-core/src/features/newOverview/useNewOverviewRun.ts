@@ -228,6 +228,8 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 howToApplyWritten: saved.howToApply !== null,
                 howToApplyItems: saved.howToApply?.items.length ?? 0,
                 personalised,
+                recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
+                recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
               });
               setRun((current) =>
                 current === null ? null : { ...current, overview: saved, finishedAt: Date.now() },

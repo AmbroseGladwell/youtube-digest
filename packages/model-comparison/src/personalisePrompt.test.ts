@@ -16,6 +16,7 @@ const validOutput = {
   howToApply: { items: ["Plan next week's meals on Sunday."] },
   matchedTopicNames: ["Finance"],
   suggestedTopic: null,
+  recipe: null,
   tags: ["budgeting", "groceries", "meal-planning"],
   similarToIndices: [0, 0],
 };

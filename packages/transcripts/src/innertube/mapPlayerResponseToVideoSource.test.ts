@@ -61,6 +61,13 @@ test("a description is cut to what VideoSource will hold", () => {
   assert.equal(mapPlayerResponseToVideoSource(response, URL).description?.length, 400);
 });
 
+test("the whole description travels beside the cut one, for generation to read a recipe's ingredients", () => {
+  const response = makePlayerResponse();
+  response.videoDetails!.shortDescription = "x".repeat(900);
+
+  assert.equal(mapPlayerResponseToVideoSource(response, URL).fullDescription?.length, 900);
+});
+
 test("a response with no video id is malformed, because nothing can be filed under it", () => {
   const response = makePlayerResponse();
   delete response.videoDetails!.videoId;

@@ -1,0 +1,51 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+.dialog {
+  @include dialog.dialog-shell;
+}
+
+.panel {
+  @include dialog.dialog-panel;
+
+  gap: 0.75rem;
+}
+
+.handle {
+  @include dialog.dialog-handle;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0.25rem;
+}
+
+.title {
+  margin: 0;
+  font: 400 1.375rem/1.15 var(--font-heading);
+}
+
+.close {
+  @include controls.surface-pill;
+
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 0.875rem;
+  background: var(--surface);
+}
+
+.caption {
+  margin: 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-wrap: pretty;
+}

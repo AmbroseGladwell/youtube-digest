@@ -144,7 +144,9 @@
   -webkit-box-decoration-break: clone;
 }
 
-// The step the reader left cooking at, until they go on (design 150w).
+// The step the reader left cooking at, until they go on (design 150w), and the step the video
+// beside the panel is in (122i).
+.stepPlaying,
 .stepReached {
   margin: 0 -0.625rem;
   padding: 0.5rem 0.625rem;

@@ -9,6 +9,10 @@ export const VideoSource = z.object({
   title: z.string(),
   channel: z.string(),
   description: z.string().max(400).nullable(),
+  // The whole description, for generation alone: a recipe's ingredients are often past the first
+  // 400 characters. Absent where the rung that answered didn't have it, and never on an
+  // overview's source (docs/features/recipe-notes.md, "Recipe videos").
+  fullDescription: z.string().max(5000).optional(),
   // The video's own length, never the end of its last caption — a caption-derived
   // duration is a measurement, and wrong in both directions
   // (docs/features/transcript-retrieval.md). Null for notes generated before any source

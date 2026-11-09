@@ -42,6 +42,14 @@ export function overviewMarkdown(overview: Overview): string {
     `${facts.join(" · ")}\n${video.url}\n\nTags: ${overview.tags.join(", ")}`,
   ];
   const section = (heading: string, body: string) => sections.push(`## ${heading}\n\n${body}`);
+  const chaptersSection = () => {
+    if (overview.chapters !== null && overview.chapters.length > 0) {
+      section(
+        "Chapters",
+        bullets(overview.chapters.map((chapter) => `${moment(video.url, chapter.startMs)} **${chapter.title}**: ${chapter.summary}`)),
+      );
+    }
+  };
 
   if (overview.captureReason !== null && overview.captureReason.trim() !== "") {
     section("Why I saved it", overview.captureReason.trim());
@@ -57,12 +65,21 @@ export function overviewMarkdown(overview: Overview): string {
         ? `${recipe.stepCount} steps, on the page: ${video.url}`
         : recipeStepGroups(recipe.steps)
             .map(({ name, start, steps }) =>
-              [name === null ? null : `### ${name}`, steps.map((step, index) => `${start + index}. ${step}`).join("\n")]
+              [
+                name === null ? null : `### ${name}`,
+                steps
+                  .map((step, index) => {
+                    const range = recipe.steps[start + index - 1]?.range;
+                    return `${start + index}. ${step}${range === undefined ? "" : ` (${moment(video.url, range.startMs)})`}`;
+                  })
+                  .join("\n"),
+              ]
                 .filter((part) => part !== null)
                 .join("\n\n"),
             )
             .join("\n\n"),
     );
+    chaptersSection();
     return `${sections.join("\n\n")}\n`;
   }
 
@@ -122,12 +139,7 @@ export function overviewMarkdown(overview: Overview): string {
       bullets(article.chapters.map(({ title, summary, place }) => `[${title}](${articlePlaceUrl(video.url, place)}): ${summary}`)),
     );
   }
-  if (overview.chapters !== null && overview.chapters.length > 0) {
-    section(
-      "Chapters",
-      bullets(overview.chapters.map((chapter) => `${moment(video.url, chapter.startMs)} **${chapter.title}**: ${chapter.summary}`)),
-    );
-  }
+  chaptersSection();
 
   return `${sections.join("\n\n")}\n`;
 }

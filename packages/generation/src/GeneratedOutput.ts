@@ -3,6 +3,7 @@ import type { SuggestedTopicShape } from "./sections/filingSection.js";
 import type { SegmentRangeShape } from "./sections/watchAnywaySection.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
+import type { GeneratedRecipe } from "./sections/recipeSection.js";
 
 export interface GeneratedTimedText {
   text: string;
@@ -18,6 +19,7 @@ export interface GeneratedOutput {
   matchedTopicNames: string[];
   suggestedTopic: SuggestedTopicShape | null;
   tags: string[];
+  recipe: GeneratedRecipe | null;
   verdict?: {
     novelty: Novelty;
     standsOut: GeneratedTimedText | null;

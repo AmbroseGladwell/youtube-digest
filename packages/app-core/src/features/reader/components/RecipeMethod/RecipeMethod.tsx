@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef } from "react";
-import { recipeStepGroups, sourceName, type MethodAmount, type RecipeAction, type RecipeNote, type WebSource } from "@overview/domain";
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { recipeStepGroups, sourceName, type MethodAmount, type RecipeAction, type RecipeNote, type Source } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import { RecipeLineChoice } from "./RecipeLineChoice.js";
@@ -12,7 +12,7 @@ export interface RecipeMethodProps {
   recipe: RecipeNote;
   // The voice moves through these, so its place is an action and the tint a sentence (design 150ac).
   actions: readonly RecipeAction[];
-  source: WebSource;
+  source: Source;
   // Said once above step 1 when the ingredients were adjusted: what in the method followed them.
   note: string | null;
   voice: RecipeListVoice | null;
@@ -21,6 +21,10 @@ export interface RecipeMethodProps {
   stacked: boolean;
   usTemperatures: boolean;
   methodAmounts: readonly MethodAmount[];
+  // A video's step ends with its moment (design 122g); nothing for a page's.
+  renderMoment?: ((step: number) => ReactNode) | undefined;
+  // The step the video beside the panel is in, tinted but never scrolled to (122i).
+  playingStep?: number | null | undefined;
 }
 
 // The way into cooking step by step (designs 150a, 150w): from step 1, or from where the reader
@@ -35,9 +39,22 @@ export interface RecipeCooking {
 // Designs 144g and 144u: a numbered list whose numbering carries on through the page's own
 // groups, so "step 9" means one thing. Where the method stayed on the page, a copy shared before
 // OV-159 and one saved from it, the heading keeps its count and the page is one link away.
-export function RecipeMethod({ recipe, actions, source, note, voice, cooking, stacked, usTemperatures, methodAmounts }: RecipeMethodProps) {
+export function RecipeMethod({
+  recipe,
+  actions,
+  source,
+  note,
+  voice,
+  cooking,
+  stacked,
+  usTemperatures,
+  methodAmounts,
+  renderMoment,
+  playingStep = null,
+}: RecipeMethodProps) {
   const headingId = useId();
   const from = sourceName(source);
+  const author = source.kind === "web" ? source.author : null;
   const spokenLine = useSpokenLineInView<HTMLLIElement>(voice?.speaking ?? false, voice?.activeIndex ?? null);
   const spoken = voice?.activeIndex == null ? null : (actions[voice.activeIndex] ?? null);
   const reachedLine = useRef<HTMLLIElement | null>(null);
@@ -90,7 +107,7 @@ export function RecipeMethod({ recipe, actions, source, note, voice, cooking, st
       {recipe.steps.length === 0 ? (
         <>
           <p className={styles.away}>
-            The method is in {source.author === null ? "the author’s" : `${source.author}’s`} own words, so it stays on {from}.
+            The method is in {author === null ? "the author’s" : `${author}’s`} own words, so it stays on {from}.
           </p>
           <a className={styles.onThePage} href={source.url} target="_blank" rel="noopener" data-testid={recipeMethodTestIds.onThePage}>
             See the method on {from}
@@ -116,6 +133,7 @@ export function RecipeMethod({ recipe, actions, source, note, voice, cooking, st
                   const number = start + index;
                   const reached = (reachedStep ?? placeStep) === number - 1 && !(voice?.speaking ?? false);
                   const active = spoken?.step === number - 1 && !reached;
+                  const playing = playingStep === number - 1 && !active && !reached;
                   const shown =
                     active && spoken !== null ? (
                       <>
@@ -132,8 +150,8 @@ export function RecipeMethod({ recipe, actions, source, note, voice, cooking, st
                     <li
                       key={number}
                       ref={active ? spokenLine : reached ? reachedLine : undefined}
-                      className={`${styles.step} ${voice === null ? "" : styles.stepChoosable} ${active ? styles.stepActive : ""} ${reached ? styles.stepReached : ""}`}
-                      aria-current={(voice === null && active) || undefined}
+                      className={`${styles.step} ${voice === null ? "" : styles.stepChoosable} ${active ? styles.stepActive : ""} ${reached ? styles.stepReached : ""} ${playing ? styles.stepPlaying : ""}`}
+                      aria-current={playing ? "step" : (voice === null && active) || undefined}
                       onClick={voice === null ? undefined : () => choose(number - 1)}
                       data-testid={reached ? recipeMethodTestIds.reachedStep : active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step}
                     >
@@ -148,6 +166,7 @@ export function RecipeMethod({ recipe, actions, source, note, voice, cooking, st
                             {shown}
                           </RecipeLineChoice>
                         )}
+                        {renderMoment?.(number - 1)}
                       </div>
                     </li>
                   );

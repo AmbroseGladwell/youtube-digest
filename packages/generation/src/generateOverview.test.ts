@@ -38,6 +38,7 @@ test("a well-formed response from the client assembles into a valid Overview", a
     chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
     matchedTopicNames: [],
     suggestedTopic: null,
+    recipe: null,
     tags: ["one-tag", "two-tag", "three-tag"],
     howToApply: { items: ["do this"] },
   });
@@ -67,6 +68,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
         chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
         matchedTopicNames: [],
         suggestedTopic: null,
+        recipe: null,
         tags: ["one-tag", "two-tag", "three-tag"],
         howToApply: { items: [] },
       };
@@ -81,6 +83,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
       matchedTopicNames: [],
       suggestedTopic: null,
+      recipe: null,
       tags: ["one-tag", "two-tag", "three-tag"],
       howToApply: { items: [] },
     };
@@ -116,6 +119,7 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
         chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
         matchedTopicNames: [],
         suggestedTopic: null,
+        recipe: null,
         tags: ["one-tag", "two-tag", "three-tag"],
         howToApply: { items: [] },
       };
@@ -131,6 +135,7 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
       chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
       matchedTopicNames: [],
       suggestedTopic: null,
+      recipe: null,
       tags: ["one-tag", "two-tag", "three-tag"],
       howToApply: { items: [] },
     };

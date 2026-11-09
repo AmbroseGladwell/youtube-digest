@@ -9,6 +9,14 @@ import {
   type TimeRange,
   type VideoSource,
 } from "@overview/domain";
+
+export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep";
+
+// What a line of the note points at, for the tag at its end.
+export const noteLineRange = (line: NoteLine): { kind: RangeKind; about: string } => ({
+  kind: line.section === WATCH_ANYWAY_SECTION ? "watchAnyway" : line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut",
+  about: line.text,
+});
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -18,7 +26,13 @@ import styles from "./LineRangeTag.module.scss";
 import { lineRangeTagTestIds } from "./LineRangeTagTestIds.js";
 
 export interface LineRangeTagProps {
-  line: NoteLine;
+  kind: RangeKind;
+  // The words the stretch belongs to, repeated at the top of the phone's sheet.
+  about: string;
+  // A method step names itself in the tag's label, "Step 4 at 4:12" (design 122g).
+  step?: number;
+  // The video beside the panel is inside this stretch (design 122i).
+  playing?: boolean;
   range: TimeRange;
   video: VideoSource;
   active: boolean;
@@ -42,7 +56,18 @@ const stickyChromeHeight = (element: HTMLElement) => {
 };
 
 // docs/features/novelty-scale.md, "The time is the handle".
-export function LineRangeTag({ line, range, video, active, asSheet, canReadTranscript, onOpenTranscriptAt }: LineRangeTagProps) {
+export function LineRangeTag({
+  kind,
+  about,
+  step,
+  playing = false,
+  range,
+  video,
+  active,
+  asSheet,
+  canReadTranscript,
+  onOpenTranscriptAt,
+}: LineRangeTagProps) {
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
   const root = useRef<HTMLSpanElement | null>(null);
@@ -51,7 +76,7 @@ export function LineRangeTag({ line, range, video, active, asSheet, canReadTrans
   const seek = useSeekPlayback(video.id);
   const analytics = useOverviewPageAnalytics();
 
-  const watchAnyway = line.section === WATCH_ANYWAY_SECTION;
+  const watchAnyway = kind === "watchAnyway";
   const start = formatTimestamp(range.startMs);
   const stretch = formatTimeRange(range.startMs, range.endMs);
 
@@ -87,7 +112,7 @@ export function LineRangeTag({ line, range, video, active, asSheet, canReadTrans
     if (watchAnyway) {
       analytics.watchAnyway.followed({ by });
     } else {
-      analytics.readAlong.rangeFollowed({ line: line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut", by });
+      analytics.readAlong.rangeFollowed({ line: kind, by });
     }
     setOpen(false);
   };
@@ -142,11 +167,13 @@ export function LineRangeTag({ line, range, video, active, asSheet, canReadTrans
             followed("skip");
             seek(range.startMs);
           }}
-          aria-label={`Skip the video to ${start}`}
+          aria-label={`${step === undefined ? "Skip" : "Play"} the video ${step === undefined ? "to" : "from"} ${start}`}
           data-testid={lineRangeTagTestIds.skipButton}
         >
           <StrokeIcon name="skipForward" size={iconSize} />
-          <span className={styles.itemLabel}>Skip to {start}</span>
+          <span className={styles.itemLabel}>
+            {step === undefined ? "Skip to" : "Play from"} {start}
+          </span>
         </button>
       )}
       {canReadTranscript && (
@@ -197,7 +224,7 @@ export function LineRangeTag({ line, range, video, active, asSheet, canReadTrans
         data-testid={lineRangeTagTestIds.menu}
       >
         <span className={styles.handle} aria-hidden="true" />
-        <p className={styles.sheetLine}>{line.text}</p>
+        <p className={styles.sheetLine}>{about}</p>
         <p className={styles.sheetRange} data-testid={lineRangeTagTestIds.menuRange}>
           {stretch} in the video
         </p>
@@ -211,14 +238,19 @@ export function LineRangeTag({ line, range, video, active, asSheet, canReadTrans
       <button
         type="button"
         ref={tag}
-        className={`${styles.tag} ${watchAnyway ? styles.tagFilled : ""} ${active ? styles.tagOnActiveLine : ""}`}
+        className={`${styles.tag} ${watchAnyway ? styles.tagFilled : ""} ${active ? styles.tagOnActiveLine : ""} ${playing ? styles.tagPlaying : ""}`}
         aria-haspopup={asSheet ? "dialog" : "menu"}
         aria-expanded={open}
-        aria-label={`${watchAnyway ? stretch : start}, go to the video or transcript`}
+        aria-label={
+          step === undefined
+            ? `${watchAnyway ? stretch : start}, go to the video or transcript`
+            : `Step ${step} at ${start}${playing ? ", playing now" : ""}: watch or read the transcript`
+        }
         onClick={() => setOpen(!open)}
         data-testid={lineRangeTagTestIds.tag}
       >
         {watchAnyway ? stretch : start}
+        {playing && " · Playing"}
       </button>
       {open && portalled(asSheet, asSheet ? sheet : popover)}
     </span>

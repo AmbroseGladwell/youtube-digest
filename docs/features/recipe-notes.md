@@ -2,6 +2,7 @@
 
 A recipe web page gets a note built around the page's own recipe instead of an argument-shaped
 note. Trello OV-144, decided 2026-11-03. The designs are 144a–144ab in Claude Design (OV-144 1–3).
+A recipe video gets the same note with the video's tabs (OV-122, "Recipe videos" below).
 
 **What is built, and where:**
 
@@ -20,6 +21,10 @@ note. Trello OV-144, decided 2026-11-03. The designs are 144a–144ab in Claude 
 | Cooking step by step | `useCookingMode`, `CookingMode`, `CookingStepsSheet`, `CookingIngredientsSheet`, `cookingPlaceStorage.ts` |
 | Oven temperatures in US units | `usOvenTemperatures.ts`, `OvenText` |
 | Units said in full | `spokenMeasures.ts` |
+| A recipe video's recipe | `recipeSection.ts`, `videoRecipe.ts`, `statedAmounts.ts` in `packages/generation` |
+| A video's whole description | `VideoSource.fullDescription`, `mapPlayerResponseToVideoSource` |
+| A step's moment, the step playing, chapters' steps | `RecipeStep.range`, `LineRangeTag`, `usePlayingStep`, `chapterStepsLabel` |
+| Watching a step while cooking | `CookingStepVideoSheet` |
 
 ## Web pages first, shaped for video too
 
@@ -391,9 +396,75 @@ device talking to an older server has the field stripped and gets an article not
 is schema version 12, null for everything before it, and moves `CLIENT_VERSION` to 12, so older
 clients are handled as for any record change (`record-migrations.md`).
 
+## Recipe videos
+
+Trello OV-122. The owner's call on 2026-11-09: what recipe pages have, for recipe videos, plus the
+Transcript and Chapters tabs every video has. No verdict, key points or Watch it anyway. Designs
+122a–122u in Claude Design (OV-122 1–3).
+
+**A model finds the recipe, and code checks it.** A video has no structured data, so this is the
+one recipe a model reads. The video prompt carries a nullable recipe section (`recipeSection.ts`):
+the model returns null for anything that isn't one dish taught start to finish (a talk, a review,
+food history, a vlog that cooks without teaching, several recipes). One call, so a recipe video
+pays for argument fields it won't show and every other video pays a few tokens for the null.
+When the recipe comes back, `assembleOverview` builds the recipe note with the video's chapters.
+Then code, never the model (`docs/prototype/constraints.md`):
+
+- **Every amount is checked** against the numbers the description and the transcript state, in
+  digits or in words, so "two and a half cups" states 2½ (`statedAmounts.ts`). A line whose
+  number nobody stated keeps its name and loses the amount, the bracket or the comma part that
+  held it: "1 tsp salt" becomes "salt". A line left with nothing is dropped, and a recipe left
+  with no ingredients falls back to the ordinary note. The check is generous by design: any number
+  the source states passes, so it catches invented amounts, not misattributed ones.
+- **Which lines the video said** rather than the description listed is found by comparing each
+  line with the description's words (`ingredientsSaid`, design 122c).
+- **Times and yield are read only from labelled description lines** ("Serves 6", "Prep: 10
+  mins"), by the same reader recipe pages' markup uses (`recipeFactsInLines`). The video's length
+  is never a cook time.
+- **Each step's moment** is its segment range, as a key point's is. A step only the description
+  gives has none and keeps its place (122g, step 9).
+
+**The whole description.** `VideoSource.description` is cut to 400 characters, which cuts off most
+ingredient lists. `fullDescription` carries the whole of it beside, to generation only: optional,
+so older devices strip it unread, and `youTubeSource` leaves it off an overview's source, so
+records and shares don't grow. A transcript held from before it existed has none, and the prompt
+falls back to the cut one.
+
+**The record.** `RecipeStep.range` and `Recipe.ingredientsSaid` are optional and absent on a page's
+recipe, so a shared page recipe's hash doesn't move. Schema version 13 alters nothing; it holds
+the records back from older clients, which would treat a recipe as a page's (client version 14).
+
+**On screen (122a–122v).**
+
+- The masthead says "{Channel} · Recipe video", with the video's thumbnail at its head as a
+  recipe page keeps its image (147s), where 122a drew none. The tab row is a video's, Overview · Transcript ·
+  Chapters, with the recipe inside Overview in 144a's order; a recipe video with no chapters has
+  no Chapters tab (122k). The Summary ends "Open the video on YouTube · 14:32".
+- The time row's caption is "As the video's description gives them." Nothing labelled, no row.
+- The Ingredients card says where the list came from: "From the video's description", "As said
+  in the video. Where no amount is said, the line has none.", or "…, with 2 said in the video",
+  and marks each line from the other source "· said in the video". Adjusted, a line with nothing
+  to adjust reads "· no amount said", or "· as said" for an amount in words.
+- A step ends with its time, which opens a key point's menu: Watch from (in the panel, Play
+  from, which moves the video beside it) and Read in transcript, which opens the line it starts
+  at labelled "Step 4 starts here".
+- In the panel the step whose stretch holds the playhead takes the stone tint, its time reads
+  "4:12 · Playing", and it is `aria-current="step"`. The list never scrolls to follow (122i).
+- Each chapter names the steps that start inside it, "Steps 1–3"; one with none says nothing
+  about steps (122j).
+- Cooking step by step offers "Watch this step · 4:12" on a step with a moment. On a phone and
+  the web it opens a sheet with YouTube's player in privacy-enhanced mode, from the step's start
+  to its end, rounded outwards to whole seconds; in the panel it moves the video beside it (122l,
+  122m). The privacy policy says so.
+- Library: "14:32 recipe video" as the length; the row keeps OV-179's "Recipe · 6 servings"
+  chip, as recipe pages do.
+- Creating: a video's steps, then "Recipe · 16 ingredients, 9 steps" once written (122q).
+- Copy and Print name "{Channel} on YouTube" with the link, and end each step with "(4:12)"
+  (122r, 122s). The markdown export, which MCP returns, links each step's time and keeps the
+  chapters. The shared page is the whole note with its tabs and step times (122t).
+
 ## Not built
 
-- OV-122's moment link under each step (144i).
 - The voice saying "That's the method." at the end of cooking step by step (150o): every spoken
   word comes from a line of the narration, and the method has no such line.
 - Oven temperatures converted in Copy and Print.
@@ -406,5 +477,7 @@ text stays out of the repo. `recipeNote.test.ts` and `adjustIngredient.test.ts` 
 the arithmetic, `recipeActions.test.ts` the splitting on steps taken from real pages,
 `usOvenTemperatures.test.ts` the conversion, `cookingPlaceStorage.test.ts` the kept place, and
 `cookingMode.iwft.ts` the mode, `generateRecipeOverview.test.ts` the prompt and routing with a simulated model, and
-`recipes.iwft.ts` with the shared page scenario cover the screens. Nothing has been run against real
+`recipes.iwft.ts` with the shared page scenario cover the screens. For videos, `statedAmounts.test.ts`
+and `assembleOverview.test.ts` cover the check and the assembly, and `recipeVideos.iwft.ts` the
+screens. Nothing has been run against real
 recipe sites or a real model yet.

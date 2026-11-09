@@ -5,13 +5,16 @@ import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.j
 import { overviewMarkdown } from "./overviewMarkdown.js";
 import { overviewMetaParts } from "./overviewMetaParts.js";
 import { overviewNoteLines } from "./overviewNoteLines.js";
-import { recipeFigures, recipeMinutes, recipeStepGroups, recipeYield } from "./recipeFacts.js";
+import { chapterStepsLabel, recipeFigures, recipeMinutes, recipeStepGroups, recipeYield } from "./recipeFacts.js";
 import { recipeText } from "./recipeText.js";
 import { adjustIngredient } from "./adjustIngredient.js";
 import { methodAmounts } from "./methodAmounts.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 import { SharedNote } from "./SharedNote.js";
 import { overviewTimeSaved } from "./timeSavedSummary.js";
+import { recipeFactsInLines } from "./recipeFactsInLines.js";
+import { youTubeSource } from "./Source.js";
+import { recipeFrom } from "./sourceFacts.js";
 
 test("a recipe's note parses with no key points, and a note without a recipe still needs three", () => {
   assert.equal(Overview.safeParse(makeRecipeOverview()).success, true);
@@ -21,6 +24,31 @@ test("a recipe's note parses with no key points, and a note without a recipe sti
 test("a recipe's note carries no verdict or key points beside it", () => {
   const withPoints = makeRecipeOverview({}, { keyPoints: [{ text: "one", range: null }] });
   assert.equal(Overview.safeParse(withPoints).success, false);
+});
+
+test("a recipe video's note keeps its chapters, and its steps where the video does them", () => {
+  const { source } = makeOverview();
+  const overview = makeRecipeOverview(
+    { steps: [{ text: "Fry the base until it darkens.", group: null, range: { startMs: 61000, endMs: 95000 } }], stepCount: 1 },
+    { source, chapters: [{ title: "The base", summary: "Frying the base.", startMs: 0, endMs: 95000 }] },
+  );
+  assert.equal(Overview.safeParse(overview).success, true);
+});
+
+test("a video's whole description is for generation, and never kept on its overview", () => {
+  const { kind: _kind, ...video } = makeOverview().source;
+  const source = youTubeSource({ ...video, fullDescription: "Ingredients\n2 cups rice" });
+  assert.equal("fullDescription" in source, false);
+});
+
+test("a description's labelled times and yield are read, and never worked out", () => {
+  assert.deepEqual(recipeFactsInLines(["Party jollof for a crowd", "Serves 6", "Prep: 15 mins", "Cook time", "1 hr 10 mins"]), {
+    prepMinutes: 15,
+    cookMinutes: 70,
+    totalMinutes: null,
+    yield: "Serves 6",
+  });
+  assert.deepEqual(recipeFactsInLines(["Prep: 10 mins", "Prep: 15 mins"]).prepMinutes, null);
 });
 
 test("a method that is carried is carried whole", () => {
@@ -199,4 +227,57 @@ test("a yield that already says what it is isn't labelled twice", () => {
   assert.deepEqual(figure("4 servings"), { label: "Makes", value: "4 servings" });
   assert.deepEqual(figure("16 servings"), { label: "Makes", value: "16 servings" });
   assert.deepEqual(recipeYield("Makes about 20 cookies"), { label: "Makes", amount: "about 20 cookies" });
+});
+
+const recipeVideo = () => {
+  const { source } = makeOverview();
+  return makeRecipeOverview(
+    {
+      steps: [
+        { text: "Blend the peppers.", group: null, range: { startMs: 65000, endMs: 130000 } },
+        { text: "Fry the base.", group: null, range: { startMs: 252000, endMs: 340000 } },
+        { text: "Serve with fried plantain.", group: null },
+      ],
+      stepCount: 3,
+      totalMinutes: null,
+    },
+    {
+      source: { ...source, channel: "Kitchen with Ada", durationMs: 872000 },
+      chapters: [
+        { title: "Why party jollof", summary: "The intro.", startMs: 0, endMs: 65000 },
+        { title: "The base", summary: "Blending and frying.", startMs: 65000, endMs: 400000 },
+      ],
+    },
+  );
+};
+
+test("a recipe video's copy names the channel on YouTube, and each step ends with its moment", () => {
+  const overview = recipeVideo();
+  const copied = recipeText({
+    title: overview.source.title,
+    from: recipeFrom(overview.source),
+    url: overview.source.url,
+    recipe: overview.recipe!,
+    ingredients: overview.recipe!.ingredients,
+    adjusted: null,
+  });
+  assert.match(copied, /From Kitchen with Ada on YouTube: https:\/\/www\.youtube\.com\/watch\?v=example/);
+  assert.match(copied, /1\. Blend the peppers\. \(1:05\)\n2\. Fry the base\. \(4:12\)\n3\. Serve with fried plantain\.\n/);
+});
+
+test("a recipe video's length line names it by the video's length", () => {
+  assert.equal(overviewMetaParts(recipeVideo()).at(-1), "14:32 recipe video");
+});
+
+test("a chapter names the steps it covers, and one that holds none says nothing", () => {
+  const { chapters, recipe } = recipeVideo();
+  assert.equal(chapterStepsLabel(chapters![0]!, recipe!.steps), null);
+  assert.equal(chapterStepsLabel(chapters![1]!, recipe!.steps), "Steps 1–2");
+  assert.equal(chapterStepsLabel({ startMs: 200000, endMs: 400000 }, recipe!.steps), "Step 2");
+});
+
+test("a recipe video's markdown links each step to its moment and keeps its chapters", () => {
+  const markdown = overviewMarkdown(recipeVideo());
+  assert.match(markdown, /2\. Fry the base\. \(\[4:12\]\(https:\/\/www\.youtube\.com\/watch\?v=example&t=252\)\)/);
+  assert.match(markdown, /## Chapters/);
 });

@@ -5,18 +5,19 @@ import {
   recipeFigures,
   recipeFiguresLine,
   recipeStepGroups,
+  stepMoment,
   type AdjustedIngredient,
   type IngredientPiece,
   type MethodAmount,
   type RecipeNote,
-  type WebSource,
+  type Source,
 } from "@overview/domain";
 import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import styles from "./RecipePrintSheet.module.scss";
 import { recipePrintSheetTestIds } from "./RecipePrintSheetTestIds.js";
 
 export interface RecipePrintSheetProps {
-  source: WebSource;
+  source: Source;
   from: string;
   recipe: RecipeNote;
   lines: readonly AdjustedIngredient[];
@@ -40,7 +41,8 @@ const piecesOf = (line: AdjustedIngredient): IngredientPiece[] => (line.kind ===
 // page's own image above it and our name and mark at the foot, and none of our words
 // (OV-148). It exists only while the print dialog is open, which waits for the image.
 export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, adjusted, onDone }: RecipePrintSheetProps) {
-  const [imageSettled, setImageSettled] = useState(source.imageUrl === null);
+  const imageUrl = source.kind === "web" ? source.imageUrl : null;
+  const [imageSettled, setImageSettled] = useState(imageUrl === null);
 
   useEffect(() => {
     window.addEventListener("afterprint", onDone);
@@ -56,10 +58,10 @@ export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, a
   const figures = recipeFigures(recipe);
   return createPortal(
     <div className={styles.root} data-recipe-print data-testid={recipePrintSheetTestIds.root}>
-      {source.imageUrl !== null && (
+      {imageUrl !== null && (
         <img
           className={styles.image}
-          src={source.imageUrl}
+          src={imageUrl}
           alt=""
           onLoad={() => setImageSettled(true)}
           onError={(event) => {
@@ -107,11 +109,15 @@ export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, a
               <div key={start}>
                 {name !== null && <h3 className={styles.group}>{name}</h3>}
                 <ol start={start}>
-                  {steps.map((text) => (
-                    <li key={text}>
-                      <Printed pieces={methodPieces(text, methodAmounts)} />
-                    </li>
-                  ))}
+                  {steps.map((text, index) => {
+                    const moment = stepMoment(recipe.steps[start + index - 1]);
+                    return (
+                      <li key={text}>
+                        <Printed pieces={methodPieces(text, methodAmounts)} />
+                        {moment !== null && <span className={styles.moment}> ({moment})</span>}
+                      </li>
+                    );
+                  })}
                 </ol>
               </div>
             ))

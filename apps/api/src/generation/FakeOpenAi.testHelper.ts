@@ -12,6 +12,7 @@ export const validAnswer = {
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],
   suggestedTopic: null,
+  recipe: null,
   tags: ["one-tag", "two-tag", "three-tag"],
   howToApply: { items: ["do this"] },
 };
