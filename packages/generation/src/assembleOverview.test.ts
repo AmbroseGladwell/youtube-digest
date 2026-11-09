@@ -44,7 +44,7 @@ const baseOutput: GeneratedOutput = {
   inOneLine: "A short description.",
   coreClaim: "The core claim of the video.",
   thin: false,
-  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+  keyPoints: [{ text: "one", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 }],
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
@@ -74,7 +74,7 @@ test("a thin overview never carries a verdict, even if the model produced one", 
     {
       ...baseOutput,
       thin: true,
-      verdict: { novelty: "original", standsOut: { text: "A new idea.", range: null }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      verdict: { novelty: "original", standsOut: { text: "A new idea.", startSegmentIndex: -1, endSegmentIndex: -1 }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
     },
     meta,
   );
@@ -99,7 +99,7 @@ test("common knowledge never names what stands out, even if the model did", () =
     baseInput,
     {
       ...baseOutput,
-      verdict: { novelty: "common_knowledge", standsOut: { text: "Nothing much.", range: null }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+      verdict: { novelty: "common_knowledge", standsOut: { text: "Nothing much.", startSegmentIndex: -1, endSegmentIndex: -1 }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
     },
     meta,
   );
@@ -112,7 +112,7 @@ test("a fresh angle keeps what stands out, and a blank one reads as missing", ()
       baseInput,
       {
         ...baseOutput,
-        verdict: { novelty: "fresh_angle", standsOut: { text, range: null }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+        verdict: { novelty: "fresh_angle", standsOut: { text, startSegmentIndex: -1, endSegmentIndex: -1 }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
       },
       meta,
     ).verdict;
@@ -126,7 +126,7 @@ test("what stands out is timed from the transcript, and a range that does not fi
       baseInput,
       {
         ...baseOutput,
-        verdict: { novelty: "original", standsOut: { text: "A trial.", range }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
+        verdict: { novelty: "original", standsOut: { text: "A trial.", ...range }, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
       },
       meta,
     ).verdict?.standsOut;
@@ -221,7 +221,7 @@ test("a partial watch-it-anyway resolves segment indices to the transcript's rea
       watchAnyway: {
         answer: "partial",
         reason: "just the technique",
-        range: { startSegmentIndex: 1, endSegmentIndex: 1 },
+        startSegmentIndex: 1, endSegmentIndex: 1,
       },
     },
     meta,
@@ -239,7 +239,7 @@ test("a watch-it-anyway range pointing past the transcript is a generation error
           watchAnyway: {
             answer: "partial",
             reason: "just the technique",
-            range: { startSegmentIndex: 1, endSegmentIndex: 99 },
+            startSegmentIndex: 1, endSegmentIndex: 99,
           },
         },
         meta,
@@ -348,9 +348,9 @@ const recipeOutput: GeneratedOutput = {
     summary: "A party jollof whose depth comes from frying the paste until it darkens.",
     ingredients: ["3 cups long-grain rice", "2 tbsp tomato paste", "1 tsp salt", "1 onion (about 150g), sliced"],
     steps: [
-      { text: "Fry the paste until it darkens.", group: null, range: { startSegmentIndex: 1, endSegmentIndex: 1 } },
-      { text: "Stir in the rice and cover for 30 minutes.", group: null, range: { startSegmentIndex: 2, endSegmentIndex: 2 } },
-      { text: "Serve with fried plantain.", group: null, range: null },
+      { text: "Fry the paste until it darkens.", group: null, startSegmentIndex: 1, endSegmentIndex: 1 },
+      { text: "Stir in the rice and cover for 30 minutes.", group: null, startSegmentIndex: 2, endSegmentIndex: 2 },
+      { text: "Serve with fried plantain.", group: null, startSegmentIndex: -1, endSegmentIndex: -1 },
     ],
   },
 };

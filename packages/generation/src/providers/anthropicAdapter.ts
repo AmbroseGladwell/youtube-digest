@@ -6,6 +6,25 @@ import { usableModels } from "./usableModels.js";
 const BASE_URL = "https://api.anthropic.com/v1";
 const MAX_TOKENS = 16000;
 
+// Unenforced, Claude can wrap the object in a code fence or add a sentence after it, so the
+// first whole object is taken. Anything malformed inside it still fails the parse.
+function firstJsonObject(text: string): string {
+  const start = text.indexOf("{");
+  if (start === -1) return text;
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < text.length; i++) {
+    const char = text[i];
+    if (inString) {
+      if (char === "\\") i++;
+      else if (char === '"') inString = false;
+    } else if (char === '"') inString = true;
+    else if (char === "{") depth++;
+    else if (char === "}" && --depth === 0) return text.slice(start, i + 1);
+  }
+  return text.slice(start);
+}
+
 // The header Anthropic requires before it will answer a browser at all, and the reason
 // the key can live on the device rather than behind a server of ours
 // (docs/architecture/v1-architecture-decisions.md, Model D). It is sent by hand rather
@@ -18,19 +37,35 @@ const headers = (apiKey: string) => ({
   "anthropic-dangerous-direct-browser-access": "true",
 });
 
+// Claude compiles an enforced schema into a grammar and refuses one past an internal size
+// limit it doesn't publish. The schema is then given in the prompt instead, as DeepSeek is
+// always given it, and the correction pass catches what enforcement would have
+// (docs/features/overview-generation-decisions.md, "When Claude refuses the schema").
+const GRAMMAR_REFUSED = /compiled grammar is too large|schema is too complex/i;
+
 export const anthropicAdapter: ProviderAdapter = {
   async generate(call: ProviderCall, request: GenerationRequest, http: typeof fetch): Promise<unknown> {
-    const response = await http(`${BASE_URL}/messages`, {
-      method: "POST",
-      headers: headers(call.apiKey),
-      body: JSON.stringify({
-        model: call.model,
-        max_tokens: MAX_TOKENS,
-        system: request.systemPrompt,
-        messages: [{ role: "user", content: request.userMessage }],
-        output_config: { format: { type: "json_schema", schema: providerJsonSchema(request.schema) } },
-      }),
-    });
+    const schema = providerJsonSchema(request.schema);
+    const send = (enforced: boolean) =>
+      http(`${BASE_URL}/messages`, {
+        method: "POST",
+        headers: headers(call.apiKey),
+        body: JSON.stringify({
+          model: call.model,
+          max_tokens: MAX_TOKENS,
+          system: enforced
+            ? request.systemPrompt
+            : `${request.systemPrompt}\n\nReply with one JSON object and nothing else. It must match this JSON schema exactly:\n${JSON.stringify(schema)}`,
+          messages: [{ role: "user", content: request.userMessage }],
+          ...(enforced ? { output_config: { format: { type: "json_schema", schema } } } : {}),
+        }),
+      });
+
+    let response = await send(true);
+    if (response.status === 400) {
+      const refusal = await response.text();
+      response = GRAMMAR_REFUSED.test(refusal) ? await send(false) : new Response(refusal, { status: 400 });
+    }
 
     if (!response.ok) {
       throw providerFailure(response.status, await response.text());
@@ -44,7 +79,7 @@ export const anthropicAdapter: ProviderAdapter = {
     // Not the SDK's parse helper: docs/features/overview-generation-decisions.md, "Key points".
     // A response that is nearly right is what the correction pass needs, and parse throws
     // the whole of it away.
-    return JSON.parse(textBlock.text);
+    return JSON.parse(firstJsonObject(textBlock.text));
   },
 
   async listModels(apiKey: string, http: typeof fetch): Promise<ModelListing> {

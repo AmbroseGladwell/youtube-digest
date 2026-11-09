@@ -41,7 +41,7 @@ const answer = (inOneLine: string) => ({
   inOneLine,
   coreClaim: "The core claim.",
   thin: false,
-  keyPoints: [{ text: "one", range: null }, { text: "two", range: null }, { text: "three", range: null }],
+  keyPoints: [{ text: "one", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 }, { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 }],
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],
   suggestedTopic: null,

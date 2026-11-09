@@ -1,6 +1,7 @@
 import { Recipe, recipeFactsInLines } from "@overview/domain";
 import type { GenerationInput } from "../GenerationInput.js";
 import type { GeneratedRecipe } from "../sections/recipeSection.js";
+import { segmentRangeOf } from "../sections/segmentRangeFields.js";
 import { statedNumbersIn, withStatedAmounts } from "./statedAmounts.js";
 
 const comparable = (text: string): string =>
@@ -19,10 +20,14 @@ export function videoRecipe(input: GenerationInput, generated: GeneratedRecipe):
   const description = descriptionOf(input);
   const stated = statedNumbersIn([description, input.transcript.map(({ text }) => text).join(" ")]);
   const { ingredients } = withStatedAmounts(generated.ingredients, stated);
-  const steps = generated.steps.map(({ text, group, range }) => {
+  const steps = generated.steps.map((step) => {
+    const group = step.group?.trim() ? step.group : null;
+    const range = segmentRangeOf(step);
     const start = range === null ? undefined : input.transcript[range.startSegmentIndex];
     const end = range === null ? undefined : input.transcript[range.endSegmentIndex];
-    return start === undefined || end === undefined ? { text, group } : { text, group, range: { startMs: start.startMs, endMs: end.endMs } };
+    return start === undefined || end === undefined
+      ? { text: step.text, group }
+      : { text: step.text, group, range: { startMs: start.startMs, endMs: end.endMs } };
   });
   const listed = ` ${comparable(description)} `;
   const ingredientsSaid = ingredients.flatMap((line, index) => (listed.includes(` ${comparable(line)} `) ? [] : [index]));

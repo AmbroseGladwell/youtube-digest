@@ -19,6 +19,7 @@ import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
 import { videoRecipe } from "./recipe/videoRecipe.js";
+import { segmentRangeOf } from "./sections/segmentRangeFields.js";
 
 export function assembleOverview(
   input: GenerationInput,
@@ -85,7 +86,7 @@ export function assembleOverview(
     ? WatchAnyway.parse({
         answer: output.watchAnyway.answer,
         reason: output.watchAnyway.reason,
-        range: resolveRange(input, output.watchAnyway.range),
+        range: resolveRange(input, segmentRangeOf(output.watchAnyway)),
       })
     : null;
 
@@ -93,7 +94,7 @@ export function assembleOverview(
     ...common,
     coreClaim: output.coreClaim,
     thin: output.thin,
-    keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, point.range) })),
+    keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, segmentRangeOf(point)) })),
     verdict,
     selling,
     howToApply,
@@ -112,7 +113,7 @@ function resolveStandsOut(
   if (novelty === "common_knowledge" || text === "") {
     return null;
   }
-  return { text, range: resolveOptionalRange(input, standsOut?.range ?? null) };
+  return { text, range: resolveOptionalRange(input, standsOut === null ? null : segmentRangeOf(standsOut)) };
 }
 
 // A stretch a line merely points at: one that doesn't fit the transcript loses its jump

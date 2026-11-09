@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DubiousClaim, MAX_DUBIOUS_CLAIMS, Verdict } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
-import { SegmentRangeShape } from "./watchAnywaySection.js";
+import { segmentRangeFields } from "./segmentRangeFields.js";
 
 export const DUBIOUS_CLAIM_TARGET_WORDS = 25;
 export const DUBIOUS_REASON_TARGET_WORDS = 30;
@@ -61,8 +61,8 @@ ORIGINAL only: the thing itself, not praise of it, and the same part the
 reasoning calls fresh. It is null for COMMON_KNOWLEDGE. Give the stretch
 of the video where it is shown or explained as
 startSegmentIndex/endSegmentIndex, taken from the numbered transcript
-segments below; don't estimate a time. Use null when no one stretch
-carries it.
+segments below; don't estimate a time. Set both to -1 when no one
+stretch carries it.
 
 Never begin the reasoning with the novelty word itself; the label is
 shown beside it and the reasoning is read aloud on its own. Don't repeat
@@ -95,7 +95,7 @@ List the indices (if any) whose claim this video repeats, as similarToIndices.`;
     standsOut: z
       .object({
         text: z.string(),
-        range: input.transcript.length === 0 ? z.null() : SegmentRangeShape.nullable(),
+        ...segmentRangeFields(input),
       })
       .nullable(),
     dubiousClaims: z
