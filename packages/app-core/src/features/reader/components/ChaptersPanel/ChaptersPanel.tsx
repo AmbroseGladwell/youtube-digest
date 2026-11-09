@@ -1,5 +1,5 @@
-import { youtubeTimestampUrl, formatTimestamp } from "@overview/domain";
-import type { Chapter, StoredTranscript, VideoSource } from "@overview/domain";
+import { chapterStepsLabel, youtubeTimestampUrl, formatTimestamp } from "@overview/domain";
+import type { Chapter, RecipeStep, StoredTranscript, VideoSource } from "@overview/domain";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { usePlaybackPosition, useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
@@ -23,6 +23,8 @@ export interface ChaptersPanelProps {
 // (docs/features/sharing.md). Absent, the panel reads the reader's own store.
   held?: StoredTranscript | null;
   onOpenTranscriptAt: (positionMs: number) => void;
+  // A recipe video's steps, so each chapter names the ones it covers (design 122j).
+  steps?: readonly RecipeStep[];
 }
 
 const chapterNumber = (index: number) => String(index + 1).padStart(2, "0");
@@ -39,7 +41,7 @@ const throughChapter = (chapter: Chapter, positionMs: number): number => {
 
 // Design 3a: the chapter the video is inside sits on the raised card with an orange
 // range and a thin bar through it; the chapters before it drop to the muted ink.
-export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt }: ChaptersPanelProps) {
+export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps = [] }: ChaptersPanelProps) {
   const isPanel = useIsPanel();
   const seek = useSeekPlayback(video.id);
   const position = usePlaybackPosition(video.id);
@@ -57,6 +59,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt }: Cha
   const currentIndex =
     chapters === null || position === null ? -1 : blockAtPosition(chapters, position.positionMs);
 
+  const stepsOf = (chapter: Chapter) => chapterStepsLabel(chapter, steps);
   if (chapters === null || chapters.length === 0) {
     return (
       <div className={styles.root} data-testid={chaptersPanelTestIds.root}>
@@ -98,6 +101,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt }: Cha
                     {chapterNumber(index)} ·{" "}
                   </span>
                   <ChapterRange chapter={chapter} video={video} seek={seek} linksOut={!isPanel} />
+                  {stepsOf(chapter) !== null && <span data-testid={chaptersPanelTestIds.steps}> · {stepsOf(chapter)}</span>}
                 </span>
                 <span className={styles.metaEnd}>
                   {current && (

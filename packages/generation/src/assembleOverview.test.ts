@@ -48,6 +48,7 @@ const baseOutput: GeneratedOutput = {
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
+  recipe: null,
   tags: ["one-tag", "two-tag", "three-tag"],
 };
 
@@ -325,4 +326,81 @@ test("tags are spelled as the reader's library spells them, and a merged-away ta
     meta,
   );
   assert.deepEqual(overview.tags, ["startup", "saas", "pricing"]);
+});
+
+const recipeInput: GenerationInput = {
+  ...baseInput,
+  video: {
+    ...baseInput.video,
+    description: "Party jollof.",
+    fullDescription: "Party jollof.\nServes 6\n\nIngredients\n3 cups long-grain rice\n2 tbsp tomato paste",
+  },
+  transcript: [
+    { text: "Today it's party jollof.", startMs: 0, endMs: 4000 },
+    { text: "Fry two and a half tablespoons of the paste until it darkens.", startMs: 4000, endMs: 30000 },
+    { text: "Then the rice goes in, cover it for 30 minutes.", startMs: 30000, endMs: 60000 },
+  ],
+};
+
+const recipeOutput: GeneratedOutput = {
+  ...baseOutput,
+  recipe: {
+    summary: "A party jollof whose depth comes from frying the paste until it darkens.",
+    ingredients: ["3 cups long-grain rice", "2 tbsp tomato paste", "1 tsp salt", "1 onion (about 150g), sliced"],
+    steps: [
+      { text: "Fry the paste until it darkens.", group: null, range: { startSegmentIndex: 1, endSegmentIndex: 1 } },
+      { text: "Stir in the rice and cover for 30 minutes.", group: null, range: { startSegmentIndex: 2, endSegmentIndex: 2 } },
+      { text: "Serve with fried plantain.", group: null, range: null },
+    ],
+  },
+};
+
+test("a recipe video's note is its recipe, with its chapters and nothing argument-shaped", () => {
+  const overview = assembleOverview(
+    recipeInput,
+    { ...recipeOutput, verdict: { novelty: "original", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [] }, howToApply: { items: ["a"] } },
+    meta,
+  );
+  assert.equal(overview.recipe?.summary, recipeOutput.recipe?.summary);
+  assert.deepEqual(overview.keyPoints, []);
+  assert.equal(overview.coreClaim, "");
+  assert.equal(overview.verdict, null);
+  assert.equal(overview.howToApply, null);
+  assert.equal(overview.watchAnyway, null);
+  assert.equal(overview.chapters?.length, 1);
+});
+
+test("a recipe video's steps carry where the video does them, and a step it never shows has no moment", () => {
+  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  assert.deepEqual(
+    overview.recipe?.steps.map(({ range }) => range),
+    [{ startMs: 4000, endMs: 30000 }, { startMs: 30000, endMs: 60000 }, undefined],
+  );
+});
+
+test("a line the description doesn't list is marked as said in the video", () => {
+  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  assert.deepEqual(overview.recipe?.ingredientsSaid, [2, 3]);
+});
+
+test("an amount nobody stated is dropped and the ingredient kept", () => {
+  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  assert.deepEqual(overview.recipe?.ingredients, ["3 cups long-grain rice", "2 tbsp tomato paste", "salt", "onion, sliced"]);
+});
+
+test("a recipe video's yield is read from its description's labels, and its times are never worked out", () => {
+  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  assert.equal(overview.recipe?.yield, "Serves 6");
+  assert.equal(overview.recipe?.totalMinutes, null);
+});
+
+test("a video's overview never keeps its whole description", () => {
+  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  assert.equal("fullDescription" in overview.source, false);
+});
+
+test("a video that isn't a recipe keeps its ordinary note", () => {
+  const overview = assembleOverview(recipeInput, baseOutput, meta);
+  assert.equal(overview.recipe, null);
+  assert.equal(overview.keyPoints.length, 3);
 });

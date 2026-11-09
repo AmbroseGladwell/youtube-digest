@@ -1,6 +1,12 @@
 import { recipeFigures, recipeFiguresLine, recipeStepGroups } from "./recipeFacts.js";
 import type { RecipeNote } from "./RecipeNote.js";
 import { inMethodAmounts, type MethodAmount } from "./methodAmounts.js";
+import { formatTimestamp } from "./formatTimestamp.js";
+import type { RecipeStep } from "./Recipe.js";
+
+// A video's step ends with its moment, so a cook with the video on another screen can find it (122r).
+export const stepMoment = (step: RecipeStep | undefined): string | null =>
+  step?.range === undefined ? null : formatTimestamp(step.range.startMs);
 
 export interface RecipeTextInput {
   title: string;
@@ -25,7 +31,10 @@ export function recipeText({ title, from, url, recipe, ingredients, adjusted, me
       ? [`The method, ${recipe.stepCount} steps, is on ${from}: ${url}`]
       : recipeStepGroups(recipe.steps).flatMap(({ name, start, steps }) => [
           ...(name === null ? [] : [name]),
-          ...steps.map((step, index) => `${start + index}. ${inMethodAmounts(step, methodAmounts)}`),
+          ...steps.map((step, index) => {
+            const moment = stepMoment(recipe.steps[start + index - 1]);
+            return `${start + index}. ${inMethodAmounts(step, methodAmounts)}${moment === null ? "" : ` (${moment})`}`;
+          }),
         ]);
   return [head.join("\n"), ["Ingredients", ...ingredients.map((line) => `- ${line}`)].join("\n"), ["Method", ...method].join("\n")].join("\n\n") + "\n";
 }

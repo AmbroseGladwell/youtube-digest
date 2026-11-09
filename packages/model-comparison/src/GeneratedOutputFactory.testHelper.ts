@@ -17,6 +17,7 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
     ],
     matchedTopicNames: [],
     suggestedTopic: null,
+    recipe: null,
     tags: ["budgeting", "groceries", "frugality"],
     verdict: {
       novelty: "common_knowledge",

@@ -5,6 +5,7 @@ import { verdictSection } from "./sections/verdictSection.js";
 import { sellingSection } from "./sections/sellingSection.js";
 import { howToApplySection } from "./sections/howToApplySection.js";
 import { watchAnywaySection } from "./sections/watchAnywaySection.js";
+import { recipeSection } from "./sections/recipeSection.js";
 import type { PromptSection } from "./PromptSection.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
@@ -16,6 +17,7 @@ const REGISTRY: PromptSection[] = [
   sellingSection,
   howToApplySection,
   watchAnywaySection,
+  recipeSection,
 ];
 
 export function enabledSections(input: GenerationInput): PromptSection[] {

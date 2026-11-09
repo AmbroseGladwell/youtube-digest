@@ -39,7 +39,7 @@ test("structural fields are always in the schema, regardless of toggles", () => 
     sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
   });
   const keys = Object.keys(schema.shape);
-  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags"]) {
+  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags", "recipe"]) {
     assert.ok(keys.includes(structural), `expected ${structural} in schema`);
   }
 });
@@ -307,4 +307,23 @@ test("a transcript cannot close the video block early and speak from outside it"
   assert.equal(userMessage.match(/<\/title>/gi)?.length, 1);
   assert.equal(userMessage.match(/Why they saved it:/g)?.length, 2);
   assert.match(userMessage, /<\/video>\s+Why they saved it: not said$/);
+});
+
+test("the prompt reads a video's whole description, where the ingredients usually are", () => {
+  const { userMessage } = composePrompt({
+    ...baseInput,
+    video: { ...baseInput.video, description: "Party jollof.", fullDescription: "Party jollof.\n\nIngredients\n3 cups rice" },
+  });
+  assert.match(userMessage, /<description>Party jollof\.\n\nIngredients\n3 cups rice<\/description>/);
+});
+
+test("a recipe is optional, and a step names its stretch as segment indexes inside the transcript", () => {
+  const { schema } = composePrompt(baseInput);
+  const recipe = (steps: unknown[]) => ({ recipe: { summary: "A stew.", ingredients: ["salt"], steps } });
+  const recipeField = schema.shape.recipe as z.ZodType;
+  assert.equal(recipeField.safeParse(null).success, true);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 1 } }]).recipe).success, true);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 0, endSegmentIndex: 2 } }]).recipe).success, false);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Stir.", group: null, range: { startSegmentIndex: 1, endSegmentIndex: 0 } }]).recipe).success, false);
+  assert.equal(recipeField.safeParse(recipe([{ text: "Serve.", group: null, range: null }]).recipe).success, true);
 });

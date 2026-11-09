@@ -5,6 +5,7 @@ import {
   OverviewId,
   SUMMARY_SECTION,
   adjustedText,
+  recipeFrom,
   recipeText,
   sourceName,
   type RecipeUnits,
@@ -60,13 +61,15 @@ import { useStopSharingMutation } from "../../shares/mutations/useStopSharingMut
 import { useOverviewShare } from "../../shares/useOverviewShare.js";
 import { UnreadableOverview } from "../components/UnreadableOverview/UnreadableOverview.js";
 import { TranscriptPanel } from "../components/TranscriptPanel/TranscriptPanel.js";
-import { LineRangeTag } from "../components/LineRangeTag/LineRangeTag.js";
+import { LineRangeTag, noteLineRange } from "../components/LineRangeTag/LineRangeTag.js";
+import { usePlayingStep } from "./usePlayingStep.js";
+import { useSeekPlayback } from "../../../app/PlaybackContext.js";
 import { RelatedByTag } from "../components/RelatedByTag/RelatedByTag.js";
 import { OnboardingNextSteps } from "../../onboarding/components/OnboardingNextSteps/OnboardingNextSteps.js";
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { overviewTags } from "../../overviews/util/overviewTags.js";
 import { relatedByTag } from "../util/relatedByTag.js";
-import { ARTICLE_TABS, READER_TABS, type ReaderTab } from "../types/ReaderTab.js";
+import { ARTICLE_TABS, READER_TABS, UNCHAPTERED_RECIPE_VIDEO_TABS, type ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
 import { useSavedOnRead } from "./useSavedOnRead.js";
@@ -140,8 +143,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     setTranscriptOpenAtMs(null);
     setTab(next);
   };
-  const openTranscriptAt = (positionMs: number) => {
+  const [transcriptStep, setTranscriptStep] = useState<number | null>(null);
+  const openTranscriptAt = (positionMs: number, step: number | null = null) => {
     setTranscriptOpenAtMs(positionMs);
+    setTranscriptStep(step);
     setTab("Transcript");
   };
 
@@ -158,12 +163,15 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     overview?.source.kind === "web" && overview.article !== null ? { source: overview.source, article: overview.article } : null;
   const recipe = overview?.recipe ?? null;
   const recipePage = overview?.source.kind === "web" && recipe !== null ? { source: overview.source, recipe } : null;
+  const recipeNote = overview !== null && recipe !== null ? { source: overview.source, recipe } : null;
   const webPage = webArticle?.source ?? recipePage?.source ?? null;
   const tabsShown =
     recipePage !== null
       ? ["Overview" as const]
       : webArticle === null
-        ? READER_TABS
+        ? recipeNote !== null && !overview?.chapters?.length
+          ? UNCHAPTERED_RECIPE_VIDEO_TABS
+          : READER_TABS
         : webArticle.article.chapters.length > 1
           ? ARTICLE_TABS
           : ["Overview" as const];
@@ -185,6 +193,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         : [],
     [overview, recipe, shownIngredients, recipeUnits, adjustment],
   );
+  const playingStep = usePlayingStep(recipe?.steps ?? [], video?.id ?? null);
+  const seekVideo = useSeekPlayback(video?.id ?? null);
   const methodActions = useMemo(() => (recipe === null ? [] : actionsOf(recipe.steps)), [recipe]);
   const summaryLines = useMemo(
     () => (recipe === null ? lines : lines.filter(({ section }) => section === SUMMARY_SECTION)),
@@ -329,7 +339,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   const { state } = overviewQuery.data;
   const openedFromChapterIndex =
-    transcriptOpenAtMs === null || overview.chapters === null
+    transcriptOpenAtMs === null || transcriptStep !== null || overview.chapters === null
       ? -1
       : overview.chapters.findIndex((chapter) => chapter.startMs === transcriptOpenAtMs);
   const openedFromChapter = overview.chapters?.[openedFromChapterIndex];
@@ -366,18 +376,18 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       ? noteBarView
       : { ...noteBarView, label: { lead: "Now reading", rest: recipeVoice.nowReading, tone: "ink" as const, pacerTag: false } };
   const recipeActions =
-    recipePage === null || adjustment === null
+    recipeNote === null || adjustment === null
       ? null
       : {
           onCopy: () => {
-            const from = sourceName(recipePage.source);
+            const from = recipeFrom(recipeNote.source);
             void navigator.clipboard
               .writeText(
                 recipeText({
-                  title: recipePage.source.title,
+                  title: recipeNote.source.title,
                   from,
-                  url: recipePage.source.url,
-                  recipe: recipePage.recipe,
+                  url: recipeNote.source.url,
+                  recipe: recipeNote.recipe,
                   ingredients: shownIngredients,
                   adjusted: adjustment.copyNote,
                   methodAmounts: adjustment.methodAmounts,
@@ -387,7 +397,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           },
           onPrint: () => setPrintingRecipe(true),
         };
-  const cookable = recipePage !== null && recipePage.recipe.steps.length > 0 && recipeVoice !== null;
+  const cookable = recipeNote !== null && recipeNote.recipe.steps.length > 0 && recipeVoice !== null;
   const cookFrom = cooking.place;
   const recipeCooking = !cookable
     ? null
@@ -455,9 +465,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
         {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
 
-        {recipeCopied && recipePage !== null && (
+        {recipeCopied && recipeNote !== null && (
           <ReaderNotice>
-            <span role="status">Recipe copied, with a link to {sourceName(recipePage.source)}</span>
+            <span role="status">
+              Recipe copied, with a link to {recipeNote.source.kind === "youtube" ? "the video" : sourceName(recipeNote.source)}
+            </span>
           </ReaderNotice>
         )}
 
@@ -481,7 +493,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         >
           {tab === "Overview" && (
             <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
-              {recipePage !== null && <RecipeTimes recipe={recipePage.recipe} from={sourceName(recipePage.source)} />}
+              {recipeNote !== null && <RecipeTimes recipe={recipeNote.recipe} source={recipeNote.source} />}
               <CaptureReasonLine
                 overview={overview}
                 editing={editingReason}
@@ -506,7 +518,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 renderRange={(line, range, active) =>
                   video !== null && (
                     <LineRangeTag
-                      line={line}
+                      {...noteLineRange(line)}
                       range={range}
                       video={video}
                       active={active}
@@ -520,13 +532,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   webArticle !== null ? (
                     <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />
                   ) : (
-                    recipePage !== null &&
+                    recipeNote !== null &&
                     line.section === SUMMARY_SECTION &&
-                    !line.heading && <RecipePageLink source={recipePage.source} onPage={onPage} />
+                    !line.heading && <RecipePageLink source={recipeNote.source} onPage={onPage} />
                   )
                 }
               />
-              {recipePage !== null && adjustment !== null && scale !== null && (
+              {recipeNote !== null && adjustment !== null && scale !== null && (
                 <>
                   <RecipeIngredients
                     adjustment={adjustment}
@@ -535,6 +547,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     columns={!isPanel && !isPhone}
                     adjustable={true}
                     voice={recipeVoice?.ingredients ?? null}
+                    said={recipe?.ingredientsSaid ?? null}
                     onScaleChange={setRecipeScale}
                     onUnitsChange={chooseUnits}
                     onReset={() => {
@@ -543,15 +556,36 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     }}
                   />
                   <RecipeMethod
-                    recipe={recipePage.recipe}
+                    recipe={recipeNote.recipe}
                     actions={methodActions}
-                    source={recipePage.source}
+                    source={recipeNote.source}
                     note={adjustment.methodNote}
                     voice={recipeVoice?.method ?? null}
                     cooking={recipeCooking}
                     stacked={isPhone && !isPanel}
                     usTemperatures={recipeUnits === "us"}
                     methodAmounts={adjustment.methodAmounts}
+                    playingStep={playingStep}
+                    renderMoment={(step) => {
+                      const range = recipeNote.recipe.steps[step]?.range;
+                      return (
+                        video !== null &&
+                        range !== undefined && (
+                          <LineRangeTag
+                            kind="recipeStep"
+                            about={recipeNote.recipe.steps[step]!.text}
+                            step={step + 1}
+                            playing={playingStep === step}
+                            range={range}
+                            video={video}
+                            active={false}
+                            asSheet={isPhone && !isPanel}
+                            canReadTranscript={true}
+                            onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs, step + 1)}
+                          />
+                        )
+                      );
+                    }}
                   />
                 </>
               )}
@@ -582,6 +616,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               video={video}
               openAtMs={transcriptOpenAtMs}
               openedFrom={openedFrom}
+              openedFromStep={transcriptStep}
               onBackToChapters={() => changeTab("Chapters")}
             />
           )}
@@ -590,6 +625,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               chapters={overview.chapters}
               video={video}
               onOpenTranscriptAt={openTranscriptAt}
+              steps={recipe?.steps ?? []}
             />
           )}
           {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} onPage={onPage} />}
@@ -649,11 +685,11 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           <RegenerateArticleDialog url={webPage.url} onClose={() => setExplainingRegenerate(false)} />
         )}
 
-        {printingRecipe && recipePage !== null && (
+        {printingRecipe && recipeNote !== null && (
           <RecipePrintSheet
-            source={recipePage.source}
-            from={sourceName(recipePage.source)}
-            recipe={recipePage.recipe}
+            source={recipeNote.source}
+            from={recipeFrom(recipeNote.source)}
+            recipe={recipeNote.recipe}
             lines={adjustment?.lines ?? []}
             methodAmounts={adjustment?.methodAmounts ?? []}
             adjusted={adjustment?.copyNote ?? null}
@@ -664,14 +700,16 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
         {cookable && adjustment !== null && scale !== null && (
           <CookingMode
             mode={cooking}
-            title={recipePage.source.title}
-            from={sourceName(recipePage.source)}
-            steps={recipePage.recipe.steps}
+            title={recipeNote.source.title}
+            from={sourceName(recipeNote.source)}
+            steps={recipeNote.recipe.steps}
             actions={methodActions}
             actionNote={adjustment.actionNote}
             surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
             usTemperatures={recipeUnits === "us"}
             methodAmounts={adjustment.methodAmounts}
+            videoId={video?.id ?? null}
+            seekVideo={seekVideo}
             ingredients={
               <>
                 {adjustment.cookingNote !== null && <p className={styles.cookingAdjusted}>{adjustment.cookingNote}</p>}
@@ -682,6 +720,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   columns={false}
                   adjustable={false}
                   voice={null}
+                  said={recipe?.ingredientsSaid ?? null}
                   onScaleChange={setRecipeScale}
                   onUnitsChange={chooseUnits}
                   onReset={() => undefined}

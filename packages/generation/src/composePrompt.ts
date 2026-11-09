@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import { enabledSections } from "./sectionRegistry.js";
+import { descriptionOf } from "./recipe/videoRecipe.js";
 
 const VIDEO_TAG = /<(\/?)(video|title|channel|description|transcript)\b/gi;
 
@@ -16,7 +17,7 @@ function contextBlock(input: GenerationInput): string {
 <video>
 <title>${asVideoContent(input.video.title)}</title>
 <channel>${asVideoContent(input.video.channel)}</channel>
-<description>${input.video.description === null ? "unavailable" : asVideoContent(input.video.description)}</description>
+<description>${descriptionOf(input) === "" ? "unavailable" : asVideoContent(descriptionOf(input))}</description>
 <transcript>
 ${transcript}
 </transcript>

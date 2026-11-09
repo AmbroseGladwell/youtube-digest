@@ -224,8 +224,8 @@ export const overviewPageEvents = {
   readAlong: {
     lineChosen: event("The reader picks a line of the note to listen from"),
     followResumed: event("The reader asks the note to go back to the line being read aloud"),
-    rangeFollowed: event("The reader goes to the stretch of the video a key point or what stands out comes from", {
-      line: z.enum(["keyPoint", "standsOut"]),
+    rangeFollowed: event("The reader goes to the stretch of the video a key point, what stands out or a recipe video's step comes from", {
+      line: z.enum(["keyPoint", "standsOut", "recipeStep"]),
       by: RangeReach,
     }),
   },
@@ -698,7 +698,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, and whether anything about the reader was sent; its duration measured by the app",
+        "An overview the reader asked for is made and saved, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -712,6 +712,10 @@ export const analyticsEvents = {
           howToApplyWritten: z.boolean().optional(),
           howToApplyItems: z.number().int().nonnegative().optional(),
           personalised: z.boolean().optional(),
+          // A recipe video's counts, never its text: its ingredient lines, and how many the video
+          // said rather than its description listed (OV-122).
+          recipeIngredients: z.number().int().nonnegative().optional(),
+          recipeIngredientsSaid: z.number().int().nonnegative().optional(),
         },
       ),
       failed: event("An overview the reader asked for could not be made, and why", {

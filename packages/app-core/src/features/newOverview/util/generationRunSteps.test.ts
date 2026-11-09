@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeRecipeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeNewOverviewRun } from "../types/NewOverviewRunFactory.testHelper.js";
 import { generationRunSteps } from "./generationRunSteps.js";
 
@@ -46,6 +46,12 @@ describe("generationRunSteps", () => {
     expect(generationRunSteps(run)[0]).toMatchObject({ label: "Reading the recipe", detail: "10 ingredients, 6 steps" });
     const fetched = makeNewOverviewRun({ article: { ...articleRun(), fetched: true, recipe: { ingredients: 1, steps: 1 } } });
     expect(generationRunSteps(fetched)[0]).toMatchObject({ label: "Fetching the recipe", detail: "1 ingredient, 1 step" });
+  });
+
+  it("names what came back once a recipe video's overview is written", () => {
+    const recipe = makeRecipeOverview().recipe!;
+    const run = makeNewOverviewRun({ transcriptWords: 2400, overview: makeOverview({ recipe }) });
+    expect(generationRunSteps(run)[1]?.detail).toBe(`Recipe · ${recipe.ingredients.length} ingredients, ${recipe.stepCount} steps`);
   });
 
   it("starts with the transcript running and the overview queued", () => {

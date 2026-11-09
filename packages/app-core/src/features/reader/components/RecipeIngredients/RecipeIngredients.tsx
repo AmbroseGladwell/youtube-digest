@@ -25,17 +25,34 @@ export interface RecipeIngredientsProps {
   // A shared page shows the list as written, with no controls (design 144u).
   adjustable: boolean;
   voice: RecipeListVoice | null;
+  // A video's lines it said rather than its description listed; null for a page's recipe (122c).
+  said: readonly number[] | null;
   onScaleChange: (scale: RecipeScale) => void;
   onUnitsChange: (units: RecipeUnits) => void;
   onReset: () => void;
 }
 
-function Line({ line }: { line: AdjustedIngredient }) {
+const HAS_A_FIGURE = /\d|[¼½¾⅓⅔⅛]/;
+
+// A video's line with nothing to adjust either named no amount or said it in words (122e).
+const unreadableAside = (line: string, fromVideo: boolean): string =>
+  !fromVideo ? "· as written" : HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line) ? "· as said" : "· no amount said";
+
+// Design 122c–122d: one line under the heading says where a video's list came from.
+export const ingredientsSource = (said: readonly number[], total: number): string =>
+  said.length === total
+    ? "As said in the video. Where no amount is said, the line has none."
+    : said.length === 0
+      ? "From the video’s description."
+      : `From the video’s description, with ${said.length} said in the video.`;
+
+function Line({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVideo: boolean; saidAside: boolean }) {
   if (line.kind !== "adjusted") {
     return (
       <>
         {line.line}
-        {line.kind === "unreadable" && <span className={styles.aside}>· as written</span>}
+        {line.kind === "unreadable" && <span className={styles.aside}>{unreadableAside(line.line, fromVideo)}</span>}
+        {saidAside && <span className={styles.aside}>· said in the video</span>}
       </>
     );
   }
@@ -51,6 +68,7 @@ function Line({ line }: { line: AdjustedIngredient }) {
         ),
       )}
       {line.packAsSold && <span className={styles.aside}>· pack size as sold</span>}
+      {saidAside && <span className={styles.aside}>· said in the video</span>}
     </>
   );
 }
@@ -65,6 +83,7 @@ export function RecipeIngredients({
   columns,
   adjustable,
   voice,
+  said,
   onScaleChange,
   onUnitsChange,
   onReset,
@@ -81,6 +100,11 @@ export function RecipeIngredients({
         </h3>
         {voice !== null && <RecipeReadAloud voice={voice} label="them" testId={recipeIngredientsTestIds.readAloud} />}
       </div>
+      {said !== null && (
+        <p className={styles.source} data-testid={recipeIngredientsTestIds.source}>
+          {ingredientsSource(said, lines.length)}
+        </p>
+      )}
 
       {adjustable && (
         <div className={styles.controls}>
@@ -157,10 +181,10 @@ export function RecipeIngredients({
               data-testid={active ? recipeIngredientsTestIds.activeLine : recipeIngredientsTestIds.line}
             >
               {voice === null ? (
-                <Line line={line} />
+                <Line line={line} fromVideo={said !== null} saidAside={said !== null && said.length < lines.length && said.includes(index)} />
               ) : (
                 <RecipeLineChoice active={active} onChoose={() => voice.onSelect(index)}>
-                  <Line line={line} />
+                  <Line line={line} fromVideo={said !== null} saidAside={said !== null && said.length < lines.length && said.includes(index)} />
                 </RecipeLineChoice>
               )}
             </li>

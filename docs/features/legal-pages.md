@@ -146,6 +146,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-09 | privacy | OV-122 | Writing an overview says a video's whole description goes to the model with its captions, title and channel; the providers section says watching a recipe video's step while cooking loads YouTube's player in privacy-enhanced mode, which sees the request and the network address. |
 | 2026-11-09 | privacy | OV-221 | Settings carried by the account name what is learned from your overviews; assistants you connect can read what we know about you (the sentence and learned items with their sources, never removed or unseen ones) when the consent screen said so, until "Share with your assistants" is turned off, and its calls never log it. |
 | 2026-11-09 | terms | OV-221 | Assistants: a connected assistant can read what we know about you, and Settings › Personalisation stops it. |
 | 2026-11-09 | privacy | OV-229 | Your library says claims, key points and searches go to OpenAI to make embeddings for search by meaning, whichever key wrote the overview; the assistants section says search is by word and by meaning; OpenAI's processor row covers embeddings; the retention table gained a row for them. |

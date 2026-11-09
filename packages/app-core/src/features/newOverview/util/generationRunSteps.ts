@@ -59,7 +59,9 @@ export function generationRunSteps(run: NewOverviewRun): GenerationStep[] {
       number: "02",
       label: "Creating overview",
       detail: overviewDone
-        ? `Overview written · ${overviewReadMinutes(run.overview!)} min read`
+        ? run.overview!.recipe != null
+          ? `Recipe · ${recipeCounts({ ingredients: run.overview!.recipe.ingredients.length, steps: run.overview!.recipe.stepCount })}`
+          : `Overview written · ${overviewReadMinutes(run.overview!)} min read`
         : transcriptDone
           ? "Summarising, scoring and filing"
           : "Queued",

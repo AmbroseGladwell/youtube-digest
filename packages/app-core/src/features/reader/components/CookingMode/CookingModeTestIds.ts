@@ -1,4 +1,5 @@
 export const cookingModeTestIds = {
+  watchStep: "CookingMode.watchStep",
   root: "CookingMode.root",
   done: "CookingMode.done",
   ingredients: "CookingMode.ingredients",

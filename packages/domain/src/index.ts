@@ -7,6 +7,7 @@ export * from "./Recipe.js";
 export * from "./RecipeNote.js";
 export * from "./recipeActions.js";
 export * from "./recipeFacts.js";
+export * from "./recipeFactsInLines.js";
 export * from "./adjustIngredient.js";
 export * from "./methodAmounts.js";
 export * from "./recipeText.js";

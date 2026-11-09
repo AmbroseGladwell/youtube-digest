@@ -133,6 +133,43 @@ export const makeRecipeOverview = (overrides: Partial<Overview> = {}): Overview 
     ...overrides,
   });
 
+// A recipe video, modelled on the jollof test (designs 122a–122u).
+export const makeRecipeVideoOverview = (overrides: Partial<Overview> = {}): Overview => {
+  const video = makeOverview();
+  return makeOverview({
+    source: { ...video.source, title: "Party jollof rice at home", channel: "Kitchen with Ada", durationMs: 872_000 },
+    inOneLine: "Party jollof, scaled down for six.",
+    coreClaim: "",
+    keyPoints: [],
+    verdict: null,
+    selling: null,
+    howToApply: null,
+    watchAnyway: null,
+    tags: ["jollof", "rice"],
+    chapters: [
+      { title: "Why party jollof tastes different", summary: "Cooking for fifty, and the smoky bottom of the pot.", startMs: 0, endMs: 65_000 },
+      { title: "The pepper base", summary: "Blending, boiling it down and frying it.", startMs: 65_000, endMs: 400_000 },
+      { title: "Tasting, and leftovers", summary: "She tastes and adjusts the salt.", startMs: 400_000, endMs: 872_000 },
+    ],
+    recipe: {
+      summary: "Ada scales down the jollof she cooks for parties, and says the whole dish rests on the pepper base.",
+      ingredients: ["3 cups long-grain parboiled rice", "5 plum tomatoes", "Salt, to taste", "Fried plantain, to serve"],
+      steps: [
+        { text: "Blend the tomatoes and peppers until smooth.", group: null, range: { startMs: 65_000, endMs: 130_000 } },
+        { text: "Fry the base until the oil rises to the top.", group: null, range: { startMs: 252_000, endMs: 340_000 } },
+        { text: "Serve with fried plantain.", group: null },
+      ],
+      stepCount: 3,
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+      yield: "Serves 6",
+      ingredientsSaid: [3],
+    },
+    ...overrides,
+  });
+};
+
 export const makeOverviewWithState = (
   overviewOverrides: Partial<Overview> = {},
   stateOverrides: Partial<OverviewState> = {},

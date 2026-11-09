@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
-import { inMethodAmounts, inUsOvenTemperatures, type MethodAmount, type RecipeAction, type RecipeStep } from "@overview/domain";
+import { formatTimestamp, inMethodAmounts, inUsOvenTemperatures, type MethodAmount, type RecipeAction, type RecipeStep } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useScreenAwake } from "../../../../util/useScreenAwake.js";
 import type { CookingMode as CookingModeState, CookingVoice } from "../../ReaderPage/useCookingMode.js";
 import { CookingIngredientsDrawer } from "../CookingIngredientsDrawer/CookingIngredientsDrawer.js";
 import { CookingIngredientsSheet } from "../CookingIngredientsSheet/CookingIngredientsSheet.js";
 import { CookingStepsSheet } from "../CookingStepsSheet/CookingStepsSheet.js";
+import { CookingStepVideoSheet } from "../CookingStepVideoSheet/CookingStepVideoSheet.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import styles from "./CookingMode.module.scss";
 import { cookingModeTestIds } from "./CookingModeTestIds.js";
@@ -25,6 +26,10 @@ export interface CookingModeProps {
   surface: CookingSurface;
   usTemperatures: boolean;
   methodAmounts: readonly MethodAmount[];
+  // A recipe video's id, so a step with a moment can be watched (design 122l); null for a page.
+  videoId?: string | null;
+  // In the panel the video beside it moves there instead of a sheet opening.
+  seekVideo?: ((positionMs: number) => void) | null;
 }
 
 const DOTS_UP_TO = 20;
@@ -101,12 +106,26 @@ function ActionText({ action, us, amounts }: { action: RecipeAction; us: boolean
 // biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
 // web is a full-screen takeover with each control's key on it, where the ingredients open as a
 // column beside the step (190a–190k) (docs/features/recipe-notes.md, "Cooking step by step").
-export function CookingMode({ mode, title, from, steps, actions, actionNote, ingredients, surface, usTemperatures, methodAmounts }: CookingModeProps) {
+export function CookingMode({
+  mode,
+  title,
+  from,
+  steps,
+  actions,
+  actionNote,
+  ingredients,
+  surface,
+  usTemperatures,
+  methodAmounts,
+  videoId = null,
+  seekVideo = null,
+}: CookingModeProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const ingredientsButton = useRef<HTMLButtonElement | null>(null);
   const drawerId = useId();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [watching, setWatching] = useState(false);
   const awake = useScreenAwake(mode.open && !mode.finished);
   const action = actions[mode.at];
   const following = actions[mode.at + 1];
@@ -129,6 +148,7 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
     if (!mode.open) {
       setStepsOpen(false);
       setIngredientsOpen(false);
+      setWatching(false);
     }
   }, [mode.open]);
 
@@ -146,7 +166,7 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || stepsOpen) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || stepsOpen || watching) return;
     const key = event.key;
     if (key === "Escape") {
       event.preventDefault();
@@ -177,6 +197,7 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
   const narrowColumn = surface === "panel" || (web && column.scale === "narrow");
   const showPreview = following !== undefined && !(narrowColumn && words > LONG_ACTION_WORDS);
   const group = action === undefined ? null : (steps[action.step]?.group ?? null);
+  const moment = action === undefined || videoId === null ? undefined : steps[action.step]?.range;
   const key = (label: string) => (web ? <kbd className={styles.key}>{label}</kbd> : null);
 
   return (
@@ -327,6 +348,21 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
                   {`${placeOf(action).replace(" · ", ", ")}. ${usTemperatures ? inUsOvenTemperatures(inMethodAmounts(action.text, methodAmounts)) : inMethodAmounts(action.text, methodAmounts)}`}
                 </p>
 
+                {moment !== undefined && (
+                  <div className={styles.watchRow}>
+                    <button
+                      type="button"
+                      className={styles.watch}
+                      aria-label={`Watch step ${action.step + 1} in the video, from ${formatTimestamp(moment.startMs)}`}
+                      onClick={() => (seekVideo === null ? setWatching(true) : seekVideo(moment.startMs))}
+                      data-testid={cookingModeTestIds.watchStep}
+                    >
+                      <StrokeIcon name="play" size={13} />
+                      Watch this step · {formatTimestamp(moment.startMs)}
+                    </button>
+                  </div>
+                )}
+
                 <div className={styles.voice} role="status" data-testid={cookingModeTestIds.voice}>
                   <VoiceLine voice={mode.voice} step={action.step + 1} firstScreen={mode.firstScreen} onTryAgain={mode.tryAgain} />
                 </div>
@@ -370,6 +406,15 @@ export function CookingMode({ mode, title, from, steps, actions, actionNote, ing
               </p>
             )}
 
+            {moment !== undefined && videoId !== null && action !== undefined && (
+              <CookingStepVideoSheet
+                open={watching}
+                videoId={videoId}
+                step={action.step + 1}
+                range={moment}
+                onClose={() => setWatching(false)}
+              />
+            )}
             <CookingStepsSheet
               open={stepsOpen}
               steps={steps}

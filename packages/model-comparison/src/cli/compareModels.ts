@@ -5,9 +5,10 @@ import { DEFAULT_COMPARED_MODELS } from "../defaultComparedModels.js";
 import { runComparison } from "../runComparison.js";
 import { runDirectoryStore } from "../runDirectoryStore.js";
 import { runOne } from "../runOne.js";
+import { isTranscriptSetName } from "../transcriptSet.js";
 
 const USAGE = `usage: task secrets:run -- npm run compare --workspace packages/model-comparison -- \\
-  --run <name> [--budget <dollars>] [--limit <videos>] [--models provider:model,...]`;
+  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...]`;
 
 const { values } = parseArgs({
   options: {
@@ -15,16 +16,17 @@ const { values } = parseArgs({
     budget: { type: "string", default: "10" },
     limit: { type: "string" },
     models: { type: "string" },
+    set: { type: "string", default: "main" },
   },
 });
 
 const budgetDollars = Number(values.budget);
-if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0) {
+if (!values.run || !Number.isFinite(budgetDollars) || budgetDollars <= 0 || !isTranscriptSetName(values.set)) {
   console.error(USAGE);
   process.exit(1);
 }
 
-const transcripts = await loadTranscripts();
+const transcripts = await loadTranscripts(values.set);
 if (transcripts.length === 0) {
   console.error("no transcripts yet: npm run fetch-transcripts --workspace packages/model-comparison");
   process.exit(1);

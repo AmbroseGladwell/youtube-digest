@@ -363,6 +363,21 @@
   }
 }
 
+// Design 122l: a quiet pill between the action and the voice line, on a step with a moment.
+.watchRow {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 0.75rem;
+}
+
+.watch {
+  @include controls.surface-pill;
+
+  height: 2.75rem;
+  padding: 0 1rem;
+  font-size: 0.84375rem;
+}
+
 .voice {
   display: flex;
   align-items: flex-start;

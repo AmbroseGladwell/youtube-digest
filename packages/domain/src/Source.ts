@@ -46,4 +46,7 @@ export const webSource = (article: ExtractedArticle, id: SourceKey): WebSource =
   wordCount: article.wordCount,
 });
 
-export const youTubeSource = (video: VideoSource): YouTubeSource => ({ ...video, kind: "youtube" });
+export const youTubeSource = ({ fullDescription: _forGenerationOnly, ...video }: VideoSource): YouTubeSource => ({
+  ...video,
+  kind: "youtube",
+});

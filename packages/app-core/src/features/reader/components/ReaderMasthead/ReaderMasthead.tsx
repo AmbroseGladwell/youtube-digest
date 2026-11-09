@@ -213,13 +213,13 @@ export function ReaderMasthead({
             carriesFrom={Routes.overview(overview.id)}
           />
           <div className={styles.who}>
-            {isArticle && (
+            {(isArticle || overview.recipe !== null) && (
               <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
-                {sourceName(overview.source)} · {overview.recipe === null ? "Article" : "Recipe"}
+                {sourceName(overview.source)} · {overview.recipe === null ? "Article" : isArticle ? "Recipe" : "Recipe video"}
               </p>
             )}
             <p className={styles.byline}>
-              {!isArticle && (
+              {!isArticle && overview.recipe === null && (
                 <span className={styles.channel} data-testid={readerMastheadTestIds.channel}>
                   {sourceName(overview.source)}
                 </span>

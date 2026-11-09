@@ -4,6 +4,7 @@ import {
   Selling,
   Verdict,
   WatchAnyway,
+  recipeNote,
   resolveTags,
   youTubeSource,
   type Chapter,
@@ -17,6 +18,7 @@ import type { GeneratedOutput, GeneratedTimedText } from "./GeneratedOutput.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
+import { videoRecipe } from "./recipe/videoRecipe.js";
 
 export function assembleOverview(
   input: GenerationInput,
@@ -26,6 +28,24 @@ export function assembleOverview(
   const topicIds = input.existingTopics
     .filter((topic) => output.matchedTopicNames.includes(topic.name))
     .map((topic) => topic.id);
+
+  // A recipe video's note is its recipe, with the chapters a video has (docs/features/recipe-notes.md).
+  const common = {
+    id: meta.id,
+    source: youTubeSource(input.video),
+    savedAt: meta.savedAt,
+    captureReason: input.captureReason,
+    fromPlaylist: null,
+    madeOn: null,
+    inOneLine: output.inOneLine,
+    topicIds,
+    tags: resolveTags(output.tags, {
+      known: new Set(input.existingTags.map(({ tag }) => tag)),
+      aliases: input.tagAliases,
+    }),
+    chapters: resolveChapters(input, output.chapters),
+    article: null,
+  };
 
   const verdict =
     !output.thin && output.verdict
@@ -44,6 +64,21 @@ export function assembleOverview(
         })
       : null;
 
+  const recipe = output.recipe === null ? null : videoRecipe(input, output.recipe);
+  if (recipe !== null && output.recipe !== null) {
+    return Overview.parse({
+      ...common,
+      coreClaim: "",
+      thin: false,
+      keyPoints: [],
+      verdict: null,
+      selling: null,
+      howToApply: null,
+      watchAnyway: null,
+      recipe: recipeNote(recipe, output.recipe.summary),
+    });
+  }
+
   const selling = output.selling ? Selling.parse(output.selling) : null;
   const howToApply = output.howToApply ? HowToApply.parse(output.howToApply) : null;
   const watchAnyway = output.watchAnyway
@@ -55,27 +90,14 @@ export function assembleOverview(
     : null;
 
   return Overview.parse({
-    id: meta.id,
-    source: youTubeSource(input.video),
-    savedAt: meta.savedAt,
-    captureReason: input.captureReason,
-    fromPlaylist: null,
-    madeOn: null,
-    inOneLine: output.inOneLine,
+    ...common,
     coreClaim: output.coreClaim,
     thin: output.thin,
     keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, point.range) })),
-    topicIds,
-    tags: resolveTags(output.tags, {
-      known: new Set(input.existingTags.map(({ tag }) => tag)),
-      aliases: input.tagAliases,
-    }),
     verdict,
     selling,
     howToApply,
     watchAnyway,
-    chapters: resolveChapters(input, output.chapters),
-    article: null,
     recipe: null,
   });
 }

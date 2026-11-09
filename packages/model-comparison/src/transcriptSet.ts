@@ -39,6 +39,17 @@ export const PARENTING_SET: readonly TranscriptSetEntry[] = [
   { url: "https://www.youtube.com/watch?v=xzqhunEabs0", chosenFor: "100 min interview, firm parenting and newborn life" },
 ];
 
-export const TRANSCRIPT_SETS = { main: TRANSCRIPT_SET, parenting: PARENTING_SET } as const;
+// OV-122: recipe videos, with two that cook or talk about recipes without teaching one, to
+// measure what the recipe section costs and check it stays null where it should.
+export const RECIPE_SET: readonly TranscriptSetEntry[] = [
+  { url: "https://www.youtube.com/watch?v=snknj91IWv0", chosenFor: "2 min recipe test, no amounts said, no list in the description" },
+  { url: "https://www.youtube.com/watch?v=zTJPmMJwRzM", chosenFor: "hash browns, a single recipe from a chef's channel" },
+  { url: "https://www.youtube.com/watch?v=lxVavBs0ZpY", chosenFor: "banana bread whose description lists the measurements" },
+  { url: "https://www.youtube.com/watch?v=z4tNAyRdo70", chosenFor: "party jollof, the owner's first recipe video" },
+  { url: "https://www.youtube.com/watch?v=z7b_nmaU9RM", chosenFor: "several creators' chopped cheese compared, so not one recipe" },
+  { url: "https://www.youtube.com/watch?v=KJSSvOY1UOk", chosenFor: "12 min business talk that mentions a recipe channel, so not a recipe" },
+];
+
+export const TRANSCRIPT_SETS = { main: TRANSCRIPT_SET, parenting: PARENTING_SET, recipes: RECIPE_SET } as const;
 export type TranscriptSetName = keyof typeof TRANSCRIPT_SETS;
 export const isTranscriptSetName = (name: string): name is TranscriptSetName => name in TRANSCRIPT_SETS;

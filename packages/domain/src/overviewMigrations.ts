@@ -152,6 +152,10 @@ const fillRecipeAddedWithRecipes: RecordMigration = {
   },
 };
 
+// Nothing to alter: a recipe can now come from a video, whose steps carry their moment, so older
+// clients hold these records back rather than show a recipe they would treat as a page's.
+const allowRecipesFromVideos: RecordMigration = { newSchemaVersion: 13 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -164,6 +168,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   { newSchemaVersion: 10, alterRecord: moveVideoToSource },
   fillArticleAddedWithArticles,
   fillRecipeAddedWithRecipes,
+  allowRecipesFromVideos,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);
