@@ -657,6 +657,32 @@ for a reader with no topics, the sample reader (five topics, its claims and tags
 with 300 topics. **Four more string fields still compile and a fifth never does**, whatever the
 reader. That room is what OV-250's steps block and OV-216's evidence have left between them.
 
+**Measured on 9 Nov 2026**, the 20-video set as the sample reader, two runs a side, against two
+runs of `main` with the same models (`judge-big-picture`, a judge from the other provider):
+
+| | GPT-6.1 Sol | Claude Sonnet 5.5 |
+|---|---|---|
+| Notes that earned one and wrote one | 37/38 | 38/38 |
+| Passes the deletion test | 36/37 (97%) | 37/38 (97%) |
+| Names another thread | 31/37 | 27/38 |
+| Describes the source instead of the subject | 0 | 1 |
+| Words written, 35 target (16 notes a side) | median 27 | median 36, over in 8 |
+| Words written, 60 target (18 a side) | median 40 | median 42 |
+| Words written, 90 and 120 targets (4 a side) | 52 to 62 | 46 to 55 |
+| Output tokens an overview, against `main` | +55 (+3%) | no change |
+| Cost an overview, against `main` | $0.0299 against $0.0290 | $0.0564 against $0.0566 |
+
+- **The split lands.** The two failures were short videos where the big picture restated the core
+  claim's advice as principles. Every other one named the question, and most a second thread.
+- **The targets are not what binds above the first tier.** Both models stop around 40 words when
+  given 60, and near 60 when given 120, so a two-hour source gets about half what the ChatGPT
+  example ran to (101 words, 30 of them new). Raising the targets would not lengthen them; the
+  prompt would have to ask for more. Only the 35 tier pinches, and only Sonnet, by a word or two.
+- **Nothing else moved.** Every other harness check, and every overview written, matched `main`
+  within the usual run-to-run noise.
+- Sonnet tends to name its other threads as a list ("River, affirmations, Goodhart's law,
+  SpaceX-style pruning and refounding"); Sol writes them as a sentence.
+
 **Where else it goes.** A share carries it, absent rather than null when there is none so a
 copy's content hash doesn't move. The markdown export an assistant reads gives the premise and the
 big picture both. Keyword search and the meaning embeddings take it as one more claim. Overview
