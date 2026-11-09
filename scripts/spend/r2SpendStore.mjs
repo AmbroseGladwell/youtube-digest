@@ -1,8 +1,9 @@
 import { AwsClient } from "aws4fetch";
 
-export function r2SpendStore({ accountId, bucket, accessKeyId, secretAccessKey, fetch }) {
+export function r2SpendStore({ accountId, jurisdiction = null, bucket, accessKeyId, secretAccessKey, fetch }) {
   const client = new AwsClient({ accessKeyId, secretAccessKey, service: "s3", region: "auto" });
-  const objectUrl = (key) => `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${key}`;
+  const host = jurisdiction === null ? `${accountId}.r2.cloudflarestorage.com` : `${accountId}.${jurisdiction}.r2.cloudflarestorage.com`;
+  const objectUrl = (key) => `https://${host}/${bucket}/${key}`;
   const send = async (url, init) => fetch(await client.sign(url, init));
   return {
     async put(key, text) {

@@ -33,6 +33,7 @@ jobs:
           SPEND_TO: ${{ inputs.to }}
           R2_ACCOUNT_ID: 781691f32a5cf03b132121e499f510a4
           SPEND_R2_BUCKET: the-overview-spend
+          SPEND_R2_JURISDICTION: eu
           SPEND_R2_ACCESS_KEY_ID: ${{ secrets.SPEND_R2_ACCESS_KEY_ID }}
           SPEND_R2_SECRET_ACCESS_KEY: ${{ secrets.SPEND_R2_SECRET_ACCESS_KEY }}
           OPENAI_ADMIN_KEY: ${{ secrets.OPENAI_ADMIN_KEY }}

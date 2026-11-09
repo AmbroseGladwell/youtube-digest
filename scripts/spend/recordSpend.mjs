@@ -140,6 +140,7 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
   const { from, to } = env.SPEND_FROM ? { from: env.SPEND_FROM, to: env.SPEND_TO || env.SPEND_FROM } : recentDays(new Date());
   const store = r2SpendStore({
     accountId: env.R2_ACCOUNT_ID,
+    jurisdiction: env.SPEND_R2_JURISDICTION || null,
     bucket: env.SPEND_R2_BUCKET,
     accessKeyId: env.SPEND_R2_ACCESS_KEY_ID,
     secretAccessKey: env.SPEND_R2_SECRET_ACCESS_KEY,
