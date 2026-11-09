@@ -185,6 +185,7 @@ export class BackendSimulator {
   #ownMonthSpent = false;
   #madeEarlierThisMonth = { ours: 0, own: 0 };
   #anthropicOutOfCredit = false;
+  #anthropicRefusesModel = false;
   #ourKeyRequests: OurKeyGenerationRequest[] = [];
   #profilePassItems: ProfilePassItem[] = [];
   #profilePasses: ProfilePassInput[] = [];
@@ -319,7 +320,15 @@ export class BackendSimulator {
     await this.#page.route("**/api.anthropic.com/v1/messages**", (route) =>
       this.#respond(route, EndpointKey.ANTHROPIC_MESSAGES, {
         onDefault: () =>
-          this.#anthropicOutOfCredit
+          this.#anthropicRefusesModel
+            ? {
+                status: 400,
+                body: {
+                  type: "error",
+                  error: { type: "invalid_request_error", message: "The compiled grammar is too large, which would cause performance issues." },
+                },
+              }
+            : this.#anthropicOutOfCredit
             ? {
                 status: 400,
                 body: {
@@ -1382,6 +1391,11 @@ export class BackendSimulator {
     },
     anthropicIsOutOfCredit: (): void => {
       this.#anthropicOutOfCredit = true;
+    },
+    // The request is turned down for the model it names, as a smaller model's structured-output
+    // limits turn down the overview's schema (OV-247).
+    anthropicRefusesTheModel: (): void => {
+      this.#anthropicRefusesModel = true;
     },
     generations: (): OurKeyGenerationRequest[] => [...this.#ourKeyRequests],
     writesHowToApply: (items: string[]): void => {

@@ -115,7 +115,7 @@ function useOverviewMaker(apiKeys: ApiKeys) {
     }
     return {
       order,
-      own: apiKey === undefined ? null : { provider, client: createGenerationClient(provider, apiKey, model) },
+      own: apiKey === undefined ? null : { provider, model, client: createGenerationClient(provider, apiKey, model) },
       api: signedIn && knownApiUrl !== null ? createFetchGenerationApi({ baseUrl: knownApiUrl, token: connection.token }) : null,
       trial: !signedIn && knownApiUrl !== null ? createTrialGenerationApi({ baseUrl: knownApiUrl }) : null,
     };

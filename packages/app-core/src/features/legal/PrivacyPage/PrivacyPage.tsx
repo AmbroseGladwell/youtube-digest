@@ -292,7 +292,8 @@ const sections: readonly LegalSection[] = [
         <p>
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such
           as opening an overview, choosing a sort order or playing narration, with the choice you made, a count, or
-          a random id of our own for the overview or topic. An event can never carry a link, a video, a title, an
+          a random id of our own for the overview or topic. When an overview can’t be made because of the model you
+          chose, the event names the provider and the model. An event can never carry a link, a video, a title, an
           overview's words or anything you typed, because there is no field shaped to hold them.
         </p>
         <h3>Three situations</h3>
@@ -370,8 +371,10 @@ const sections: readonly LegalSection[] = [
           Our server writes a log line for each request it handles, and ships those lines to PostHog's log store,
           where they are kept for fourteen days. A line names the route, the request's id, and, once known, the
           account and session it was for. It never holds your email, your network address, a link, a video id, a
-          share link or any words from an overview. Finding the account behind an email is a database lookup, not
-          a log search.
+          share link or any words from an overview. When an overview can’t be made on your own key because the model
+          you chose was refused or kept answering in the wrong shape, the line names the provider and the model, so
+          we can see which models fail; never what the provider said back. Finding the account behind an email is a
+          database lookup, not a log search.
         </p>
         <p>
           To keep the service up and to stop abuse, we rate-limit requests by network address. Those counts live in

@@ -9,6 +9,8 @@ import { PlaylistLinkChoice } from "../../../playlists/components/PlaylistLinkCh
 import type { PlaylistTarget } from "../../../playlists/components/PlaylistFollowFlow/PlaylistFollowFlow.js";
 import { usePlaylistApi } from "../../../playlists/usePlaylistApi.js";
 import { useIsPhone } from "../../../../util/useIsPhone.js";
+import type { RunError } from "../../types/RunError.js";
+import { RunErrorMessage } from "../RunErrorMessage/RunErrorMessage.js";
 import styles from "./GenerateOverviewForm.module.scss";
 import { generateOverviewFormTestIds } from "./GenerateOverviewFormTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -28,7 +30,7 @@ export interface GenerateOverviewFormProps {
   // A playlist link, or one that can't be followed, goes to the playlist flow instead
   // (docs/features/playlists.md, "Pasting a link").
   onPlaylist: (target: PlaylistTarget, pastedUrl: string) => void;
-  generationError?: string | null;
+  generationError?: RunError | null;
   // Whether the dialog holding the form is open, so a limit message can take focus as it
   // comes into view.
   active?: boolean;
@@ -236,9 +238,13 @@ export function GenerateOverviewForm({
       )}
 
       {generationError && (
-        <p className={styles.error} data-testid={generateOverviewFormTestIds.generationError}>
-          {generationError}
-        </p>
+        <RunErrorMessage
+          error={generationError}
+          className={styles.error}
+          testId={generateOverviewFormTestIds.generationError}
+          testIds={generateOverviewFormTestIds.runError}
+          onFollowed={onCancel}
+        />
       )}
 
       {choosing !== null && (

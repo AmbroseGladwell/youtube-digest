@@ -3,6 +3,7 @@ import { GenerationError } from "@overview/generation";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { NoTranscriptSourceError } from "../../transcripts/api/NoTranscriptSourceError.js";
 import { ArticleReadError } from "../api/ArticleReadError.js";
+import { ChosenModelFailedError } from "../api/ChosenModelFailedError.js";
 
 const ARTICLE_FAILURE = {
   declined: "article-declined",
@@ -22,6 +23,7 @@ export function captureFailureOf(error: unknown, { transcriptResolved }: { trans
   if (error instanceof ArticleReadError) return ARTICLE_FAILURE[error.failure.reason];
   if (error instanceof TranscriptFetchError) return error.failure;
   if (error instanceof NoTranscriptSourceError) return "noTranscriptSource";
+  if (error instanceof ChosenModelFailedError) return "model-refused";
   if (error instanceof GenerationError || transcriptResolved) return "generation";
   return "unknown";
 }
