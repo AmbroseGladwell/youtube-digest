@@ -25,14 +25,15 @@ export interface McpToolOutcome {
   overviews?: number;
 }
 
-// A tool that writes is offered only to a connection whose scope allows it
-// (docs/features/mcp-connector.md, "Scopes").
+// A tool that writes, or reads the profile, is offered only to a connection whose scope allows
+// it (docs/features/mcp-connector.md, "Scopes").
 export interface McpTool {
   name: string;
   title: string;
   description: string;
   inputSchema: Record<string, unknown>;
   writes: boolean;
+  readsProfile: boolean;
   call(args: unknown, context: McpToolContext): Promise<McpToolOutcome>;
 }
 
@@ -46,6 +47,7 @@ export function mcpTool<Input extends z.ZodObject>(tool: {
   description: string;
   input: Input;
   writes?: boolean;
+  readsProfile?: boolean;
   run(input: z.infer<Input>, context: McpToolContext): Promise<McpToolOutcome>;
 }): McpTool {
   return {
@@ -54,6 +56,7 @@ export function mcpTool<Input extends z.ZodObject>(tool: {
     description: tool.description,
     inputSchema: z.toJSONSchema(tool.input, { io: "input" }),
     writes: tool.writes ?? false,
+    readsProfile: tool.readsProfile ?? false,
     call: async (args, context) => {
       const parsed = tool.input.safeParse(args ?? {});
       if (!parsed.success) {

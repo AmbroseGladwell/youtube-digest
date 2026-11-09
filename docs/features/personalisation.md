@@ -77,8 +77,10 @@ hovered or focused. Undo removes the item and says so for four seconds; See open
 already in use are used from the next overview.
 
 **Settings › Personalisation** shows What we know about you: the sentence, Learned from your
-overviews with each item's source and Remove, and Keep learning. Off, nothing new is learned and
-what's held stays. Where no key can run the pass (`useCanLearn`), learning isn't offered, though
+overviews with each item's source and Remove, Keep learning, and, signed in, Share with your
+assistants. Keep learning off means nothing new is learned and what's held stays. Share with
+your assistants is on by default and decides whether a connected assistant can read all this
+(OV-221, `mcp-connector.md`, "The profile"); off stops every connection at once. Where no key can run the pass (`useCanLearn`), learning isn't offered, though
 items already held stay readable and removable, because they are still sent.
 
 ### Written for you
@@ -129,8 +131,9 @@ written.
 
 ## Analytics
 
-`settings.personalisation.sectionSwitched` with the section and whether it is now on, and
-`settings.personalisation.aboutYouSaved` with whether it is now set. Onboarding counts the
+`settings.personalisation.sectionSwitched` with the section and whether it is now on,
+`settings.personalisation.aboutYouSaved` with whether it is now set, and
+`settings.personalisation.profileSharingSwitched` with whether assistants may now read it. Onboarding counts the
 entries in each section and how many were typed. The text is never logged.
 
 ### Is How to apply any good?

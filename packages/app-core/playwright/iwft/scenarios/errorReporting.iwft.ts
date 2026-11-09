@@ -15,6 +15,7 @@ const request: ConnectionRequest = {
   clientName: "Claude",
   redirectHost: "claude.ai",
   writes: true,
+  readsProfile: true,
   expiresAt: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
 };
 

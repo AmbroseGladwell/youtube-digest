@@ -99,7 +99,7 @@ const sections: readonly LegalSection[] = [
           plus the video's or page's title, link, channel or site and thumbnail link. Beside it you may add a
           reason you saved it, file it under topics, and mark it read or favourite. Your settings travel with the
           account too: the narration voice, theme and accent colour, which sections an overview shows, the About
-          you sentence that personalises overviews, the tags you have merged, the playlists you follow, and the
+          you sentence that personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and the
           running total of time saved with its milestones.
         </p>
         <p>
@@ -340,10 +340,14 @@ const sections: readonly LegalSection[] = [
     body: (
       <p>
         You can connect Claude or another assistant to your library. The assistant gets its own tokens, never your
-        session, and they let it list and search your overviews, by word and by meaning, read them and their transcripts, and mark them read or favourite. Every
-        connection is listed in Settings › Connections, where you can revoke it. We log each call an assistant
-        makes, with the tool it used and how long it took, never the overview's contents. The assistant's own
-        provider handles what it then does with your library under its own policy.
+        session, and they let it list and search your overviews, by word and by meaning, read them and their transcripts, and mark them read or favourite. A
+        connection whose consent screen said so can also read what we know about you: your About you sentence, and
+        what we have learned from your overviews with where each came from, never anything you removed or have not
+        yet been shown. That is on until you turn off "Share with your assistants" in Settings › Personalisation,
+        which stops every connection reading it at once. Every connection is listed in Settings › Connections,
+        where you can revoke it. We log each call an assistant makes, with the tool it used and how long it took,
+        never the overview's contents or what we know about you. The assistant's own provider handles what it then
+        does with what it reads under its own policy.
       </p>
     ),
   },

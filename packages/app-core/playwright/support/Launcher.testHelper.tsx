@@ -88,6 +88,7 @@ export interface LaunchOptions {
   aboutYou?: AboutYou;
   learned?: LearnedItems;
   keepLearning?: boolean;
+  shareProfileWithAssistants?: boolean;
   sectionsEnabled?: SectionsEnabled;
   runBridge?: boolean;
   youTubeFetch?: boolean;
@@ -171,6 +172,7 @@ export class Launcher {
           ...(options.aboutYou === undefined ? {} : aboutYouPatch(options.aboutYou)),
           ...(options.learned === undefined ? {} : { learned: options.learned }),
           ...(options.keepLearning === undefined ? {} : { keepLearning: options.keepLearning }),
+          ...(options.shareProfileWithAssistants === undefined ? {} : { shareProfileWithAssistants: options.shareProfileWithAssistants }),
           ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
         },
         apiKeys: options.apiKeys,

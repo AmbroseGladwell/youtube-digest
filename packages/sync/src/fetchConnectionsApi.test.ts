@@ -30,7 +30,7 @@ const answering = (status: number, body: unknown) => {
 };
 
 test("a request is read by its id", async () => {
-  const answer = { id: REQUEST_ID, clientName: null, redirectHost: "claude.ai", writes: true, expiresAt: "2026-09-30T10:00:00.000Z" };
+  const answer = { id: REQUEST_ID, clientName: null, redirectHost: "claude.ai", writes: true, readsProfile: true, expiresAt: "2026-09-30T10:00:00.000Z" };
   const { sent, fetch } = answering(200, answer);
   const api = createFetchConnectionsApi({ baseUrl: "https://overview.example", fetch });
 
@@ -63,7 +63,7 @@ test("a refused approval says why", async () => {
 });
 
 test("connections are listed and revoked", async () => {
-  const connection = { id: "c1", clientName: "Claude", createdAt: "2026-09-12T09:00:00.000Z", lastUsedAt: "2026-09-30T09:00:00.000Z" };
+  const connection = { id: "c1", clientName: "Claude", createdAt: "2026-09-12T09:00:00.000Z", lastUsedAt: "2026-09-30T09:00:00.000Z", readsProfile: true };
   const listing = answering(200, { connections: [connection] });
   assert.deepEqual(await createFetchConnectionsApi({ baseUrl: "https://o.example", fetch: listing.fetch }).list(), [connection]);
 

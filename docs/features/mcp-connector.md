@@ -155,27 +155,35 @@ can say when a connection was last used.
 
 ## Scopes
 
-There are two, and the metadata lists both:
+There are three, and the metadata lists all of them:
 
 | Scope | Lets the connection | Held by |
 |---|---|---|
 | `overviews:read` | read overviews, topics, tags and transcripts: the six reading tools | every connection |
 | `overviews:write` | mark overviews read, unread or favourite: `mark_overviews` | a connection that asked for it, or named no scope |
+| `profile:read` | read what is known about the reader: `get_profile` (OV-221, "The profile" below) | a connection that asked for it, or named no scope |
 
 **Every connection reads**, since that is what connecting is, so a request for
-`overviews:write` alone is granted both. **A request that names no scope is granted
-both**, which is what a client that follows the metadata does. **A request for
-`overviews:read` alone is honoured as read-only**, and that is what every connection made
-before OV-109 holds, since `overviews:read` was then the only scope. A scope outside the
-two is `invalid_scope`. The granted scope is stored on the authorization and copied to the
-connection, and the token response names it. `grantedScope` and `connectionWrites` in
-`connectionScope.ts` are the whole rule.
+`overviews:write` or `profile:read` alone is granted `overviews:read` beside it. **A request
+that names no scope is granted all three**, which is what a client that follows the metadata
+does. **A request for fewer is honoured as asked**: `overviews:read` alone is what every
+connection made before OV-109 holds, and `overviews:read overviews:write` is what every
+connection made before OV-221 holds. A scope outside the three is `invalid_scope`. The granted scope is stored on the authorization and copied to the
+connection, and the token response names it. `grantedScope`, `connectionWrites` and
+`connectionReadsProfile` in `connectionScope.ts` are the whole rule.
 
 **The consent screen says what was asked.** `GET /api/oauth/requests/:id` carries
-`writes`, and the permissions card lists marking as granted, and "Not change, add or
+`writes` and `readsProfile`. The permissions card lists reading what is known about the reader
+as granted when `readsProfile` is, and its footnote then says where to stop it (Settings ›
+Personalisation). It lists marking as granted, and "Not change, add or
 delete an overview" as withheld, only when it is; a read-only request shows the original
 three lines, with "Change nothing. Access is read-only". The heading still says "wants to
 read your overviews" in both cases, since reading is what every connection does.
+
+**A connection is not offered a tool its scope doesn't allow.** The same holds for
+`get_profile` without `profile:read`: it is left out of `tools/list`, `initialize` says the
+connection was approved before assistants could read what is known about the reader and
+that reconnecting lets it, and a call anyway fails saying the same.
 
 **A read-only connection is not offered the write tool.** `tools/list` leaves
 `mark_overviews` out, and `initialize` says in its instructions that the connection was
@@ -223,7 +231,7 @@ again rather than seeing a protocol fault.
 
 ## The tools
 
-Six read, and are marked `readOnlyHint`; one writes, and is marked as not read-only, not
+Seven read, and are marked `readOnlyHint`; one writes, and is marked as not read-only, not
 destructive and idempotent. Each reads the account's live records afresh, so what an
 assistant sees is what has reached the server through sync.
 
@@ -235,6 +243,7 @@ assistant sees is what has reached the server through sync.
 | `get_overview` | one note in full |
 | `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
 | `get_transcript` | one video's transcript, by its overview's id |
+| `get_profile` | what is known about the reader, with each learned item's source; profile scope only, and only while the reader shares it (OV-221) |
 | `mark_overviews` | marks up to 50 overviews, by id, read or unread and favourite or not; write scope only (OV-109) |
 
 **The filters** `search_overviews` and `get_overviews` share are `query`, `topic` (a name
@@ -318,6 +327,38 @@ When meaning can't be matched, the reply says it holds word matches only. How it
 stands now, so a note saved between two calls can shift a page by one. For an assistant
 reading a library, that is acceptable.
 
+## The profile
+
+OV-221. `get_profile` hands the assistant what Settings › Personalisation calls What we know
+about you (`personalisation.md`): the About you sentence, quoted as the reader's own words,
+then the learned items, each with its source line ("From 4 overviews on app growth"), so an
+assistant repeating something about the reader can say where it came from. It is a tool
+rather than part of every answer, so it is explicit, skippable and easy to withdraw.
+
+**Two gates, both checked on every call.** The connection must hold `profile:read`, so a
+connection made before OV-221 never gains it silently and has to be reconnected, as OV-109
+handled widening before. And the reader's `Settings.shareProfileWithAssistants` must be on.
+That switch is in Settings › Personalisation, beside Keep learning, signed in only, since
+only an account can connect an assistant. **It is on by default**: the consent screen is where
+sharing is agreed to, and the switch is how a reader withdraws it, from every connection at
+once, effective on the next call. There is no per-connection switch; most readers connect
+one assistant, and the control sits beside the data it shares. Off, the call fails saying
+sharing is off and where to turn it back on, and hands over nothing.
+
+**Only what the reader has seen.** A removed item is never served, including one removed after
+the connection was made, and nor is an item the reader hasn't been shown yet (`noticedAt`
+unset): nothing reaches an assistant that the reader hasn't seen in the app first. Keep
+learning off changes nothing here, as it changes nothing about what generation sends: what
+is held is still served.
+
+**Nothing known, nothing shared.** With an empty sentence and no item to serve, the call
+succeeds with one plain line saying nothing is known yet and not to guess, rather than an
+empty profile that reads like a description. The tool is still listed, since `tools/list` is
+fixed at connection and the profile fills in later.
+
+The settings record is read and migrated the way every record is (`readStoredRecord`); one
+the server can't read is a failed call saying to try again, never an empty profile.
+
 ## The context budget
 
 `get_overviews` returns at most **10 notes a call**. The five sample notes, served as
@@ -331,7 +372,7 @@ Re-measure once real notes with chapters exist. Transcripts are never included.
 ## Logging
 
 Logged, by id only: a client registered (its auth method), a connection made, a request
-decided (approved or not), and a connection revoked, with who revoked it (`reader`,
+decided (approved or not, and whether the request held `profile:read`), and a connection revoked, with who revoked it (`reader`,
 `client`, or `replayed`). A client's name is set by the client and never logged, and no
 token, code or verifier is ever logged.
 
@@ -342,7 +383,9 @@ do), whether it failed, and how long it took. A mark also logs `record written` 
 state record it changed, as every write under `/api` does. These are logs, not analytics
 events: the reader didn't do anything in the app (`docs/architecture/analytics.md`,
 "Actions, not logs"). A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
-told to try again. A query, a topic, a note's content and a transcript are never logged.
+told to try again. A query, a topic, a note's content, a transcript and anything from the profile are never
+logged. How often `get_profile` is called is its `mcp tool called` lines, and turning sharing
+on or off logs `profile sharing set` from the settings route.
 
 ## The consent screen
 
@@ -395,7 +438,11 @@ plan state, because a connection belongs to an account rather than to a plan.
 The intro says an assistant can read the reader's overviews and transcripts and mark them
 read or favourite; it does not say which a given connection holds. It lists each
 connection by name ("No name given" when there is none), when it connected and when it
-was last used. `last_used_at` is touched at most once an hour, so the
+was last used, and under that whether it can read what is known about the reader
+(`connectionProfileLine`): "Can read what we know about you", "Can't read what we know about
+you: it's off in Personalisation" when the reader's switch is off, or "…until it's
+reconnected" for a connection without `profile:read`. `GET /api/connections` carries
+`readsProfile` for that. `last_used_at` is touched at most once an hour, so the
 line says "Used in the last hour", "Used today" or "Last used 14 September", never minutes.
 Below is the connector address (`<server>/mcp`, with Copy where the clipboard can be
 written), three steps for Claude, and with nothing connected, three questions to try, one

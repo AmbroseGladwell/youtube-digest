@@ -1,12 +1,19 @@
 import type { Connection } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
+import { connectionReadsProfile } from "./connectionScope.js";
 
 const iso = (value: string | Date): string => new Date(value).toISOString();
 
 // A connection whose every token has lapsed can do nothing, so it is not listed as one.
 export async function listConnections(sql: SqlClient, accountId: string, now: Date): Promise<Connection[]> {
-  const rows = await sql.query<{ id: string; client_name: string | null; created_at: string | Date; last_used_at: string | Date }>(
-    `select c.id, cl.client_name, c.created_at, c.last_used_at
+  const rows = await sql.query<{
+    id: string;
+    client_name: string | null;
+    scope: string;
+    created_at: string | Date;
+    last_used_at: string | Date;
+  }>(
+    `select c.id, cl.client_name, c.scope, c.created_at, c.last_used_at
        from connections c join oauth_clients cl on cl.id = c.client_id
       where c.account_id = $1
         and exists (select 1 from connection_tokens t
@@ -19,5 +26,6 @@ export async function listConnections(sql: SqlClient, accountId: string, now: Da
     clientName: row.client_name,
     createdAt: iso(row.created_at),
     lastUsedAt: iso(row.last_used_at),
+    readsProfile: connectionReadsProfile(row.scope),
   }));
 }

@@ -17,6 +17,7 @@ const connection = (overrides: Partial<Connection> = {}): Connection => ({
   clientName: "Claude",
   createdAt: "2026-09-12T12:00:00.000Z",
   lastUsedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+  readsProfile: true,
   ...overrides,
 });
 
@@ -41,6 +42,30 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyShowsSetup(`${SERVER}/mcp`);
     await settings.connections.verifyOffersExamples(false);
     await settings.verifySectionHeadingIsFocused("connections");
+  });
+
+  test("each row says whether it can read what we know about you, and why not when it can't", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.connections.seed(connection());
+    backendSimulator.connections.seed(connection({ id: "older", clientName: "ChatGPT", createdAt: "2026-09-03T12:00:00.000Z", readsProfile: false }));
+    await launcher.launch(PLUS);
+    const settings = await (await launcher.appShell.openSettings()).openSection("connections");
+
+    await settings.connections.verifyProfileLineReads(0, "Can read what we know about you");
+    await settings.connections.verifyProfileLineReads(1, "Can’t read what we know about you until it’s reconnected");
+  });
+
+  test("with sharing off in Personalisation, no row says it can read what we know about you", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.connections.seed(connection());
+    await launcher.launch({ ...PLUS, shareProfileWithAssistants: false });
+    const settings = await (await launcher.appShell.openSettings()).openSection("connections");
+
+    await settings.connections.verifyProfileLineReads(0, "Can’t read what we know about you: it’s off in Personalisation");
   });
 
   test("revoking asks once, and keeping it puts the row back with focus on its Revoke", async ({

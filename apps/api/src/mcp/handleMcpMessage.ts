@@ -2,7 +2,7 @@ import { z } from "zod";
 import { apiLogLines } from "@overview/domain";
 import type { McpAssistant } from "./mcpAssistant.js";
 import { mcpPrompts } from "./mcpPrompts.js";
-import { toolError, type McpToolContext } from "./McpTool.js";
+import { toolError, type McpTool, type McpToolContext } from "./McpTool.js";
 import { mcpTools } from "./mcpTools.js";
 
 export const MCP_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26"];
@@ -38,8 +38,10 @@ export type McpReply = { kind: "accepted" } | { kind: "response"; body: JsonRpcR
 export interface McpCallContext extends McpToolContext {
   connectionId: string;
   assistant: McpAssistant;
-  // Whether the connection's scope lets it mark overviews (docs/features/mcp-connector.md, "Scopes").
+  // Whether the connection's scope lets it mark overviews, and read what is known about the
+  // reader (docs/features/mcp-connector.md, "Scopes").
   writes: boolean;
+  readsProfile: boolean;
 }
 
 const READING_INSTRUCTIONS =
@@ -50,12 +52,29 @@ const MARKING_INSTRUCTIONS = "When the reader asks, mark_overviews marks overvie
 const READ_ONLY_INSTRUCTIONS =
   "This connection was approved to read only. To let the assistant mark overviews read or favourite, the reader reconnects it from Settings › Connections.";
 
+const PROFILE_INSTRUCTIONS =
+  "get_profile reads what The Overview knows about the reader, in their own words and learned from what they save, to fit answers to them.";
+const NO_PROFILE_INSTRUCTIONS =
+  "This connection was approved before assistants could read what The Overview knows about the reader. To let it, the reader reconnects it from Settings › Connections.";
+
 const instructionsFor = (context: McpCallContext) =>
-  `${READING_INSTRUCTIONS} ${context.writes ? MARKING_INSTRUCTIONS : READ_ONLY_INSTRUCTIONS}`;
+  [
+    READING_INSTRUCTIONS,
+    context.writes ? MARKING_INSTRUCTIONS : READ_ONLY_INSTRUCTIONS,
+    context.readsProfile ? PROFILE_INSTRUCTIONS : NO_PROFILE_INSTRUCTIONS,
+  ].join(" ");
+
+const allowed = (tool: McpTool, context: McpCallContext) =>
+  (!tool.writes || context.writes) && (!tool.readsProfile || context.readsProfile);
 
 // A tool the connection's scope does not allow is not offered, rather than offered and
 // refused (CLAUDE.md, "Degrade visibly").
-const toolsFor = (context: McpCallContext) => mcpTools.filter((tool) => !tool.writes || context.writes);
+const toolsFor = (context: McpCallContext) => mcpTools.filter((tool) => allowed(tool, context));
+
+const refusal = (tool: McpTool) =>
+  tool.writes
+    ? `This connection was approved to read only, so ${tool.name} is not available. ${READ_ONLY_INSTRUCTIONS}`
+    : `${tool.name} is not available. ${NO_PROFILE_INSTRUCTIONS}`;
 
 class JsonRpcError extends Error {
   constructor(
@@ -91,9 +110,7 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
   const durationMs = () => Math.round(performance.now() - startedAt);
   try {
     const outcome =
-      tool.writes && !context.writes
-        ? toolError(`This connection was approved to read only, so ${name} is not available. ${READ_ONLY_INSTRUCTIONS}`)
-        : await tool.call(args, context);
+      allowed(tool, context) ? await tool.call(args, context) : toolError(refusal(tool));
     context.log.info(
       apiLogLines.mcp.toolCalled({
         ...logged,

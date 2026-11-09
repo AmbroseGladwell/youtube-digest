@@ -43,6 +43,10 @@ export const Settings = z.object({
   // items merge one by one (docs/features/personalisation.md, "A profile that learns").
   learned: LearnedItems.catch({}),
   keepLearning: z.boolean().catch(true),
+  // On, a connected assistant whose connection holds the profile scope can read the sentence and
+  // the learned items. On by default: the consent screen is where it is agreed to
+  // (docs/features/mcp-connector.md, "The profile").
+  shareProfileWithAssistants: z.boolean().catch(true),
   overviewsAtLastProfilePass: z.number().int().nonnegative().catch(0),
   // Which provider and model is not a secret (unlike the API keys they are called with),
   // so the choice belongs here rather than in the device-local ApiKeys store — a genuine
@@ -89,6 +93,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aboutYou: EMPTY_ABOUT_YOU,
   learned: {},
   keepLearning: true,
+  shareProfileWithAssistants: true,
   overviewsAtLastProfilePass: 0,
   provider: DEFAULT_PROVIDER,
   modelByProvider: {},

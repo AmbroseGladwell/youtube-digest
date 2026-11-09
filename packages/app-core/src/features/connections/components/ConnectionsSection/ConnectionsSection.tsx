@@ -7,6 +7,7 @@ import { useSync } from "../../../sync/SyncContext.js";
 import { useSyncConnection } from "../../../sync/useSyncConnection.js";
 import { useRevokeConnectionMutation } from "../../mutations/useRevokeConnectionMutation.js";
 import { useConnectionsQuery } from "../../queries/connectionsQuery.js";
+import { useSettingsQuery } from "../../../settings/queries/settingsQuery.js";
 import { ConnectionRow } from "../ConnectionRow/ConnectionRow.js";
 import { ConnectorSetup } from "../ConnectorSetup/ConnectorSetup.js";
 import { ExampleQuestions } from "../ExampleQuestions/ExampleQuestions.js";
@@ -28,6 +29,7 @@ export function ConnectionsSection() {
   const session = useSessionQuery();
   const connections = useConnectionsQuery();
   const revoke = useRevokeConnectionMutation();
+  const sharingProfile = useSettingsQuery().data?.shareProfileWithAssistants ?? true;
   const connectedLabel = useRef<HTMLParagraphElement>(null);
   const setupLabel = useRef<HTMLParagraphElement>(null);
   const now = new Date();
@@ -129,7 +131,7 @@ export function ConnectionsSection() {
             </p>
             <ul className={styles.list}>
               {listed.map((each) => (
-                <ConnectionRow key={each.id} connection={each} now={now} onRevoke={revokeOne} />
+                <ConnectionRow key={each.id} connection={each} now={now} sharingProfile={sharingProfile} onRevoke={revokeOne} />
               ))}
             </ul>
           </div>

@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
 import type { SqlClient } from "../db/SqlClient.js";
 import type { MeaningSearch } from "../meaning/MeaningSearch.js";
-import { connectionWrites } from "../oauth/connectionScope.js";
+import { connectionReadsProfile, connectionWrites } from "../oauth/connectionScope.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { mcpAssistant } from "./mcpAssistant.js";
@@ -48,6 +48,7 @@ export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, mea
       connectionId: access.connectionId,
       assistant: mcpAssistant(access.clientName),
       writes: connectionWrites(access.scope),
+      readsProfile: connectionReadsProfile(access.scope),
       log: request.log,
     });
     if (handled.kind === "accepted") {
