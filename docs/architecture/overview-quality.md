@@ -188,9 +188,8 @@ The one question left was where the big picture lands relative to the verdict an
 argument (OV-227, merged into OV-225). The recommendation was premise, verdict, big picture, core
 argument.
 
-**Decided by the owner, 9 Nov 2026: big picture, core argument, verdict**, with the premise in the
-big picture's place only when a source earns none. The ground comes before the answer, and the
-premise and the big picture never appear together. **This relaxes the rule above on long sources**:
+**Decided by the owner, 9 Nov 2026: premise, big picture, core argument, verdict.** The ground
+comes before the answer. **This relaxes the rule above on long sources**:
 their note has a paragraph before the verdict. Recorded in `overview-generation-decisions.md`,
 "The big picture".
 
@@ -217,8 +216,10 @@ below is evidence of. So the proposal is to keep both fields and **stop showing 
 note page**: the big picture opens the note, the premise fills in where a short source earns no big
 picture, and the two never appear together. The repetition is then prevented structurally rather
 than by asking the prompt to avoid it. The distinction that makes it hold is that **the premise is
-about the artefact and the big picture is about the subject.** **Adopted by the owner on 9 Nov
-2026** and built in OV-225, with the deletion test as the harness check.
+about the artefact and the big picture is about the subject.** The owner adopted this on 9 Nov
+2026, then put the premise back first the same day: the two now sit next to each other, the
+premise saying what the source is and the big picture the ground under it, and the prompt's
+three-way split keeps them apart. The deletion test passed 97% on the harness (OV-225).
 
 **Decided 8 Nov 2026: a recipe gets no big picture.** A recipe has no argument to set up, and
 its premise is already its orientation. Articles get one on the same rule as video, or the fork

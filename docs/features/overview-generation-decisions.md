@@ -615,19 +615,21 @@ the big picture says what **ground** it stands on and what else is here; the cor
 it **answers**. The prompt tells the model that a big picture that could be deleted without losing
 anything the other two say has failed, and that an empty one beats padding.
 
-**The note opens big picture, core claim, verdict.** Then key points, how to apply, what it sells
-and watch it anyway, which stay last so the narration still ends on "the overview covers it".
-The owner chose this over the card's recommendation (premise, verdict, big picture, core claim):
+**The note opens premise, big picture, core claim, verdict.** Then key points, how to apply, what
+it sells and watch it anyway, which stay last so the narration still ends on "the overview covers
+it". The owner chose this over the card's recommendation (premise, verdict, big picture, core
+claim):
 
-- **The premise opens the note only when there is no big picture.** It stays the library row's
-  label, `search_overviews`' light listing and part of the search haystack, but on the note page
-  the two never appear one after the other, so they cannot read as repetition. The premise is
-  about the artefact and the big picture is about the subject.
+- **The ground comes before the answer**, and the verdict after the claim it judges.
+- **The premise stays first.** The owner first chose to show the big picture in the premise's place
+  and the premise only when there was none, then put the premise back on 9 Nov 2026, after the
+  harness runs below: the premise says what the source is, and the big picture follows it. The
+  two sit next to each other, so the prompt's rule that they never repeat carries all the weight.
 - **It relaxes the triage rule on long sources.** A long source's note now has a paragraph before
   the verdict, where the rule in `overview-quality.md` says the verdict comes before anything long.
   The owner accepted that for the ground coming before the answer.
-- **An older note is unchanged.** It has no big picture, so it opens on its premise as it always
-  did, and its spoken script, and so its cached narration, is the same.
+- **An older note is unchanged.** It has no big picture, so it reads premise then core claim as it
+  always did, and its spoken script, and so its cached narration, is the same.
 
 **It is structural**, like the premise and the key points, not a section a reader can switch off.
 **A recipe gets none**: it has no argument to set up, and its summary is already its orientation.

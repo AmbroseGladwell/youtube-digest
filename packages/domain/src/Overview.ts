@@ -54,8 +54,8 @@ export const Overview = z
   .extend(CoreFields.shape)
   .extend(Filing.shape)
   .extend({
-    // Null when the source earned none, and on a record written before it existed: the note
-    // opens on the premise instead (docs/features/overview-generation-decisions.md, "The big picture").
+    // Null when the source earned none, and on a record written before it existed
+    // (docs/features/overview-generation-decisions.md, "The big picture").
     bigPicture: BigPicture.nullable(),
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),

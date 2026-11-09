@@ -15,7 +15,7 @@ test("opens with the note's own order: in one line, then the core claim", () => 
   ]);
 });
 
-test("opens on the big picture in the premise's place, then the core claim, then the verdict, then the key points", () => {
+test("opens on the premise, then the big picture, then the core claim, then the verdict, then the key points", () => {
   const lines = overviewNoteLines(
     makeOverview({
       inOneLine: "A short description.",
@@ -25,15 +25,14 @@ test("opens on the big picture in the premise's place, then the core claim, then
     }),
   );
 
-  assert.deepEqual(lines.slice(0, 2), [
+  assert.deepEqual(lines.slice(2, 4), [
     { section: "Big picture", heading: true, bullet: false, text: "Big picture", spoken: "The big picture" },
     { section: "Big picture", heading: false, bullet: false, text: "The ground the argument stands on." },
   ]);
-  assert.deepEqual(noteSectionNames(lines).slice(0, 4), ["Big picture", "Core claim", "Verdict", "Key points"]);
-  assert.ok(!lines.some((line) => line.text === "A short description."));
+  assert.deepEqual(noteSectionNames(lines).slice(0, 5), ["Summary", "Big picture", "Core claim", "Verdict", "Key points"]);
 });
 
-test("opens on the premise when the source earned no big picture, so an older note reads as it always did", () => {
+test("goes straight from the premise to the core claim when the source earned no big picture, so an older note reads as it always did", () => {
   const lines = overviewNoteLines(makeOverview({ inOneLine: "A short description.", bigPicture: null }));
 
   assert.deepEqual(noteSectionNames(lines).slice(0, 2), ["Summary", "Core claim"]);

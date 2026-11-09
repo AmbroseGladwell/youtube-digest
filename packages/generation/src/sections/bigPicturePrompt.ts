@@ -16,8 +16,9 @@ claim are enough.`;
   }
   return `
 ## Big picture
-The ground the core claim stands on, ${targetWords} words at most. It is read first,
-before the core claim, so it orients me before the argument arrives. Say
+The ground the core claim stands on, ${targetWords} words at most. It is read straight
+after In one line and before the core claim, so it orients me before the
+argument arrives. Say
 what question the ${source} is engaging and why that question matters. Then
 name anything else substantial it covers that the core claim cannot hold,
 because the core claim is one thing: a second thread, or the case the
