@@ -38,6 +38,7 @@ const meta = { id: OverviewId.parse(crypto.randomUUID()), savedAt: "2026-10-21T0
 
 const answer = (inOneLine: string) => ({
   inOneLine,
+  bigPicture: "",
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: [

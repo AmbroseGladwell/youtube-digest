@@ -77,6 +77,9 @@ export function overviewMarkdown(overview: Overview): string {
   }
 
   section("Premise", overview.inOneLine);
+  if (overview.bigPicture) {
+    section("Big picture", overview.bigPicture);
+  }
   section(overview.thin ? "No clear claim" : "Core claim", overview.coreClaim);
 
   if (overview.verdict !== null) {

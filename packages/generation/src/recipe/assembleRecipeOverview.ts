@@ -24,6 +24,7 @@ export function assembleRecipeOverview(
     fromPlaylist: null,
     madeOn: null,
     inOneLine: output.inOneLine,
+    bigPicture: null,
     coreClaim: "",
     thin: false,
     keyPoints: [],

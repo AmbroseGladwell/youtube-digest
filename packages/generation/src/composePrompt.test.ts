@@ -365,3 +365,25 @@ test("the video schema keeps to the few fields that may be null, since each one 
     ".verdict.standsOut",
   ]);
 });
+
+const spokenFor = (words: number) => [{ text: Array(words).fill("word").join(" "), startMs: 0, endMs: 1000 }];
+
+test("a short video is told to leave the big picture empty, a long one is given its budget, and it comes before the core claim", () => {
+  const short = composePrompt({ ...baseInput, transcript: spokenFor(300) });
+  const long = composePrompt({ ...baseInput, transcript: spokenFor(20_000) });
+
+  assert.match(short.systemPrompt, /leave bigPicture empty/);
+  assert.match(long.systemPrompt, /## Big picture\nThe ground the core claim stands on, 120 words at most/);
+  assert.ok(long.systemPrompt.indexOf("## Big picture") < long.systemPrompt.indexOf("## Core claim"));
+  const keys = Object.keys(long.schema.shape);
+  assert.deepEqual(keys.slice(0, 3), ["inOneLine", "bigPicture", "coreClaim"]);
+});
+
+test("a big picture past its cap is sent back, an empty one never is", () => {
+  const { schema } = composePrompt({ ...baseInput, transcript: spokenFor(4000) });
+  const bigPicture = schema.shape.bigPicture as z.ZodType;
+
+  assert.equal(bigPicture.safeParse("").success, true);
+  assert.equal(bigPicture.safeParse(Array(75).fill("word").join(" ")).success, true);
+  assert.equal(bigPicture.safeParse(Array(76).fill("word").join(" ")).success, false);
+});

@@ -32,6 +32,7 @@ const meta = { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOStri
 test("a well-formed response from the client assembles into a valid Overview", async () => {
   const client: GenerationClient = async () => ({
     inOneLine: "A short description.",
+    bigPicture: "",
     coreClaim: "The core claim.",
     thin: false,
     keyPoints: [
@@ -66,6 +67,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       assert.ok(!userMessage.includes("Your previous attempt was"));
       return {
         inOneLine: Array(40).fill("word").join(" "),
+        bigPicture: "",
         coreClaim: "The core claim.",
         thin: false,
         keyPoints: [
@@ -85,6 +87,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
     assert.ok(userMessage.includes("inOneLine: docs/features/overview-generation-decisions.md: max 35 words"));
     return {
       inOneLine: "A short description.",
+      bigPicture: "",
       coreClaim: "The core claim.",
       thin: false,
       keyPoints: [
@@ -129,6 +132,7 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
     if (calls === 1) {
       return {
         inOneLine: "A long debate.",
+        bigPicture: "",
         coreClaim: "The core claim.",
         thin: false,
         keyPoints: ninePoints,
@@ -145,6 +149,7 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
     assert.ok(userMessage.includes("keeps the ones that matter most"));
     return {
       inOneLine: "A long debate.",
+      bigPicture: "",
       coreClaim: "The core claim.",
       thin: false,
       keyPoints: ninePoints.slice(0, 7),

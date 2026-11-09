@@ -49,3 +49,8 @@ test("what is shared parses as a shared copy, with the whole note in it", () => 
   assert.equal(snapshot.note.inOneLine, overview.inOneLine);
   assert.deepEqual(snapshot.note.keyPoints, overview.keyPoints);
 });
+
+test("a big picture is shared, and a note without one carries no key for it, so its copy's hash doesn't move", () => {
+  assert.equal(snapshotOf(makeOverview({ bigPicture: "The ground it stands on." })).note.bigPicture, "The ground it stands on.");
+  assert.equal("bigPicture" in snapshotOf(makeOverview({ bigPicture: null })).note, false);
+});

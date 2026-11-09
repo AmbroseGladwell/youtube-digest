@@ -9,6 +9,7 @@ export function buildSearchHaystack(overview: Overview): string {
     overview.source.title,
     sourceName(overview.source),
     overview.inOneLine,
+    overview.bigPicture ?? "",
     overview.coreClaim,
     overview.verdict?.reasoning ?? "",
     overview.selling?.detail ?? "",

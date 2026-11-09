@@ -20,6 +20,8 @@ import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
 import { videoRecipe } from "./recipe/videoRecipe.js";
 import { segmentRangeOf } from "./sections/segmentRangeFields.js";
+import { resolvedBigPicture } from "./sections/bigPicturePrompt.js";
+import { videoBigPictureTarget } from "./sections/coreSection.js";
 
 export function assembleOverview(input: GenerationInput, output: GeneratedOutput, meta: { id: OverviewId; savedAt: string }): Overview {
   const topicIds = input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id);
@@ -63,6 +65,7 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
   if (recipe !== null && output.recipe !== null) {
     return Overview.parse({
       ...common,
+      bigPicture: null,
       coreClaim: "",
       thin: false,
       keyPoints: [],
@@ -86,6 +89,7 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
 
   return Overview.parse({
     ...common,
+    bigPicture: resolvedBigPicture(videoBigPictureTarget(input), output.bigPicture),
     coreClaim: output.coreClaim,
     thin: output.thin,
     keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, segmentRangeOf(point)) })),

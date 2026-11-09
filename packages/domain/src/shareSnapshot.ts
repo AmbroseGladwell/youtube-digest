@@ -29,6 +29,7 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     howToApply: overview.howToApply,
     watchAnyway: overview.watchAnyway,
     chapters: overview.chapters,
+    ...(overview.bigPicture === null ? {} : { bigPicture: overview.bigPicture }),
     ...(overview.article === null ? {} : { article: overview.article }),
     ...(overview.recipe === null ? {} : { recipe: overview.recipe }),
   };

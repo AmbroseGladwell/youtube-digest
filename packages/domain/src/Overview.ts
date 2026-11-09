@@ -2,6 +2,7 @@ import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 import { ArticleDetails } from "./ArticleDetails.js";
 import { Source } from "./Source.js";
+import { BigPicture } from "./BigPicture.js";
 import { CoreFields, KeyPoint } from "./CoreFields.js";
 import { RecipeNote } from "./RecipeNote.js";
 import { Filing } from "./Filing.js";
@@ -53,6 +54,9 @@ export const Overview = z
   .extend(CoreFields.shape)
   .extend(Filing.shape)
   .extend({
+    // Null when the source earned none, and on a record written before it existed: the note
+    // opens on the premise instead (docs/features/overview-generation-decisions.md, "The big picture").
+    bigPicture: BigPicture.nullable(),
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),
     howToApply: HowToApply.nullable(),

@@ -13,6 +13,7 @@ import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
 export const SUMMARY_SECTION = "Summary";
+export const BIG_PICTURE_SECTION = "Big picture";
 export const KEY_POINTS_SECTION = "Key points";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
@@ -136,7 +137,13 @@ export function overviewNoteLines(
     return lines;
   }
 
-  section(SUMMARY_SECTION, { text: "Premise", spoken: "The premise" }, [{ text: overview.inOneLine }]);
+  // The premise is the library row's label; a note with a big picture opens on that instead, so
+  // the two never read one after the other (docs/features/overview-generation-decisions.md).
+  if (overview.bigPicture) {
+    section(BIG_PICTURE_SECTION, { text: BIG_PICTURE_SECTION, spoken: "The big picture" }, [{ text: overview.bigPicture }]);
+  } else {
+    section(SUMMARY_SECTION, { text: "Premise", spoken: "The premise" }, [{ text: overview.inOneLine }]);
+  }
   section("Core claim", overview.thin ? { text: "No clear claim" } : { text: "Core claim", spoken: "The core claim" }, [
     { text: overview.coreClaim },
   ]);
