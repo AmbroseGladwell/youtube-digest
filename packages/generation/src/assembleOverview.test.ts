@@ -40,6 +40,7 @@ const baseInput: GenerationInput = {
 
 const baseOutput: GeneratedOutput = {
   inOneLine: "A short description.",
+  bigPicture: "",
   coreClaim: "The core claim of the video.",
   thin: false,
   keyPoints: [
@@ -394,6 +395,7 @@ test("a recipe video's note is its recipe, with its chapters and nothing argumen
     recipeInput,
     {
       ...recipeOutput,
+      bigPicture: "Some ground.",
       verdict: { novelty: "original", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
       howToApply: { items: ["a"] },
     },
@@ -402,6 +404,7 @@ test("a recipe video's note is its recipe, with its chapters and nothing argumen
   assert.equal(overview.recipe?.summary, recipeOutput.recipe?.summary);
   assert.deepEqual(overview.keyPoints, []);
   assert.equal(overview.coreClaim, "");
+  assert.equal(overview.bigPicture, null);
   assert.equal(overview.verdict, null);
   assert.equal(overview.howToApply, null);
   assert.equal(overview.watchAnyway, null);
@@ -441,4 +444,20 @@ test("a video that isn't a recipe keeps its ordinary note", () => {
   const overview = assembleOverview(recipeInput, baseOutput, meta);
   assert.equal(overview.recipe, null);
   assert.equal(overview.keyPoints.length, 3);
+});
+
+const longInput: GenerationInput = {
+  ...baseInput,
+  transcript: [...baseInput.transcript, { text: Array(3000).fill("word").join(" "), startMs: 9000, endMs: 1_200_000 }],
+};
+
+test("a short video earns no big picture, whatever the model wrote", () => {
+  const overview = assembleOverview(baseInput, { ...baseOutput, bigPicture: "Some ground." }, meta);
+
+  assert.equal(overview.bigPicture, null);
+});
+
+test("a longer video keeps its big picture, trimmed, and an empty one is none", () => {
+  assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: "  Some ground.  " }, meta).bigPicture, "Some ground.");
+  assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: " " }, meta).bigPicture, null);
 });

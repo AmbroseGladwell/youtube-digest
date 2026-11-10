@@ -50,6 +50,19 @@ test("in one line over its 25 word target fails, though the schema allows 35", (
   assert.deepEqual(failing(output), ["inOneLineWithinTarget"]);
 });
 
+test("a big picture over its length's target fails, and a short video's is never counted, since code drops it", () => {
+  const long = makeFetchedTranscript();
+  long.transcript = long.transcript.map((segment, index) =>
+    index === 0 ? { ...segment, text: `${segment.text} ${Array(4000).fill("word").join(" ")}` } : segment,
+  );
+  const sixty = makeGeneratedOutput({ bigPicture: Array(60).fill("word").join(" ") });
+  const seventy = makeGeneratedOutput({ bigPicture: Array(70).fill("word").join(" ") });
+
+  assert.deepEqual(failing(sixty, long), []);
+  assert.deepEqual(failing(seventy, long), ["bigPictureWithinTarget"]);
+  assert.deepEqual(failing(seventy), []);
+});
+
 test("a dubious claim or reason over its target fails", () => {
   const output = makeGeneratedOutput({
     verdict: {

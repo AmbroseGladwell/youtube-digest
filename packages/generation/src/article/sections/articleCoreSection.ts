@@ -1,8 +1,15 @@
 import { z } from "zod";
 import { CoreFields, wordCount } from "@overview/domain";
 import { articleNoteBudget, mostWordsPerKeyPoint } from "../articleNoteBudget.js";
+import { bigPictureBudget } from "../../bigPictureBudget.js";
+import { bigPicturePrompt, bigPictureShape } from "../../sections/bigPicturePrompt.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
 import { paragraphIndex } from "./paragraphIndex.js";
+
+const { inOneLine, ...afterInOneLine } = CoreFields.shape;
+
+const GOOD_BIG_PICTURE =
+  "Every town is told its bridges are safe until a repair bill says otherwise, and the question underneath is who decides what counts as safe enough. It also follows the engineer who first raised the alarm.";
 
 export const articleCoreSection: ArticlePromptSection = {
   key: "structural",
@@ -20,6 +27,7 @@ original estimate."
 Bad: "An insightful exploration of infrastructure challenges."
 Never start it with "This article" or "An article about". Never repeat
 the site's name, which already has its own field.
+${bigPicturePrompt(bigPictureBudget(input.article.wordCount), { source: "piece", good: GOOD_BIG_PICTURE })}
 
 ## Core claim
 One sentence, 60 words at most. The single most important thing to take
@@ -86,7 +94,9 @@ start reading.`;
     const budget = articleNoteBudget(input.article.wordCount);
     const mostWords = mostWordsPerKeyPoint(budget);
     return {
-      ...CoreFields.shape,
+      inOneLine,
+      bigPicture: bigPictureShape(bigPictureBudget(input.article.wordCount)),
+      ...afterInOneLine,
       keyPoints: z
         .object({
           text: z.string().refine((point) => wordCount(point) <= mostWords, `max ${mostWords} words`),

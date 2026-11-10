@@ -5,6 +5,7 @@
 export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = {}) {
   return {
     inOneLine: "A simulated creator explains one claim and one technique.",
+    bigPicture: "",
     coreClaim: "The simulated technique works because the fixture says so.",
     thin: false,
     keyPoints: [

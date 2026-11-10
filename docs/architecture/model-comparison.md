@@ -92,6 +92,7 @@ what it does not:
 | `standsOutRangeInside` | overview | the same, for what stands out |
 | `watchAnywayRangeInside` | overview | the same, for the part worth watching |
 | `inOneLineWithinTarget` | overview | the one-liner is over its 25-word target. The schema allows 35 (OV-252) |
+| `bigPictureWithinTarget` | overview | the big picture is over the target for the transcript's length (`bigPictureBudget.ts`). A source too short to earn one is never counted, since code drops it (OV-225) |
 | `keyPointsWithinTarget` | overview | a key point is over its 40-word target. The schema allows 50 |
 | `dubiousClaimsWithinTarget` | overview | a dubious claim is over 25 words, or its reason over 30 |
 | `reasoningDoesNotOpenWithNovelty` | overview | the reasoning begins with the novelty word, the prototype's parser bug (`docs/prototype/constraints.md`) |
@@ -241,6 +242,23 @@ task secrets:evals -- npm run judge-key-points --workspace packages/model-compar
 - **The trust standard is in the rubric, from rubric 2 on.** A point that says what a claim rests on (one person's story, a single case, no figures given) counts as faithful reporting, as long as it is true of the transcript. It isn't marked down as editorialising or wasted space. Outside facts are still unsupported.
 - **Where it goes:** the report lands in `.local/key-point-judgments/<run>--against--<run>--rubric-<n>/report.md`. `KEY_POINTS_RUBRIC_VERSION` goes up whenever the wording changes, so judgments under different rubrics are never mixed or counted as already done.
 - **Cost:** about $0.08 a pair.
+
+`judge-big-picture` runs OV-225's deletion test on every big picture in a run that already
+exists, and generates nothing:
+
+```sh
+task secrets:evals -- npm run judge-big-picture --workspace packages/model-comparison -- \
+  --run ov-225-a --budget 1
+```
+
+- **What the judge sees:** In one line, the big picture and the core claim, and nothing else, not
+  even the transcript. The test is whether removing the big picture loses anything the other two
+  don't say, which needs only the three.
+- **Labels:** the deletion test (loses something or nothing), and whether it names the question,
+  names another thread, or describes the source rather than the subject, which is a fault.
+- **The judge is from another provider than the writer**, as for the actions.
+- **Where it goes:** `.local/big-picture-judgments/<run>/report.md`, per model, with every video's
+  target, words, verdict and reason.
 
 Keys are read as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY`, injected by
 `task secrets:evals` from the `overview-evals` Bitwarden project (`docs/conventions/secrets.md`),

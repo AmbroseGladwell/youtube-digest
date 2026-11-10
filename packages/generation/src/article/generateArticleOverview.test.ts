@@ -46,6 +46,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
 
 const output = (overrides: Record<string, unknown> = {}) => ({
   inOneLine: "A reported piece on one town's repair bill.",
+  bigPicture: "",
   coreClaim: "The repair bill doubled because a survey was never checked.",
   thin: false,
   keyPoints: [
@@ -102,6 +103,19 @@ test("a short article's note is held to a short budget, and an over-long one goe
   const fourPoints = output({ keyPoints: Array.from({ length: 4 }, () => ({ text: "One point.", paragraphIndex: 0 })) });
   const note = await generate(answering(fourPoints, output()));
   assert.equal(note.keyPoints.length, 3);
+});
+
+test("a short article earns no big picture, and a longer one keeps the one it was given", async () => {
+  const withGround = output({ bigPicture: "Who decides what counts as safe enough." });
+  assert.equal((await generate(answering(withGround))).bigPicture, null);
+  assert.equal(
+    (await generate(answering(withGround), { article: { ...article, wordCount: 1200 } })).bigPicture,
+    "Who decides what counts as safe enough.",
+  );
+  assert.match(
+    composeArticlePrompt(input({ article: { ...article, wordCount: 1200 } })).systemPrompt,
+    /## Big picture\nThe ground the core claim stands on, 35 words at most/,
+  );
 });
 
 test("a long article's key points that stop early go back to the model, naming where to reach", async () => {

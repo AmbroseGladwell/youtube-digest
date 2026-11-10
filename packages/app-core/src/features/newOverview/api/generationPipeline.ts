@@ -148,6 +148,18 @@ async function waitToWrite(options: RunOverviewGenerationOptions): Promise<void>
   stopIfCancelled(options);
 }
 
+// A regeneration rewrites what the model wrote and keeps what the reader did: why they saved it,
+// where they filed it, its tags, when they saved it and where it came from
+// (docs/features/one-overview-per-video.md, "Regenerating").
+const keptOnRegeneration = (previous: Overview) => ({
+  savedAt: previous.savedAt,
+  captureReason: previous.captureReason,
+  topicIds: previous.topicIds,
+  tags: previous.tags,
+  fromPlaylist: previous.fromPlaylist,
+  ...(previous.fromSample ? { fromSample: previous.fromSample } : {}),
+});
+
 type WhatToWrite = Pick<Extract<OverviewInput, { video: unknown }>, "video" | "transcript"> | { article: ExtractedArticle };
 
 async function writeOverview(
@@ -156,12 +168,15 @@ async function writeOverview(
   options: RunOverviewGenerationOptions,
   stopwatch: CaptureStopwatch | null = null,
 ): Promise<Overview> {
-  const [existingTopics, pastClaims, library, settings] = await Promise.all([
+  const [existingTopics, claims, library, settings, previous] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),
     deps.overviewStore.listOverviews(),
     deps.settingsStore.get(),
+    // An unreadable record has nothing left to keep, and is regenerated whole.
+    options.overviewId === undefined ? null : deps.overviewStore.getOverview(options.overviewId).catch(() => null),
   ]);
+  const pastClaims = claims.filter((claim) => claim.overviewId !== options.overviewId);
   const existingTags = tagUsage(library.map((overview) => overview.tags));
   const readerContext = composeReaderContext(settings.aboutYou, settings.learned);
   const make = () =>
@@ -191,6 +206,7 @@ async function writeOverview(
   options.onPersonalised?.(readerContext !== null);
   const saved = {
     ...overview,
+    ...(previous === null ? {} : keptOnRegeneration(previous)),
     ...(options.captureReason ? { captureReason: captureReasonFromDraft(options.captureReason()) } : {}),
     ...(options.fromPlaylist ? { fromPlaylist: options.fromPlaylist } : {}),
   };

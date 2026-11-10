@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { Chapters } from "./Chapter.js";
+import { BigPicture } from "./BigPicture.js";
 import { CoreFields, KeyPoint } from "./CoreFields.js";
 import { recipeShape } from "./Overview.js";
 import { RecipeNote } from "./RecipeNote.js";
@@ -26,6 +27,8 @@ export const SharedNote = z
   .extend(CoreFields.shape)
   .extend({ tags: Filing.shape.tags })
   .extend({
+    // Absent rather than null when there is none, so a copy's content hash doesn't move.
+    bigPicture: BigPicture.nullish(),
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),
     howToApply: HowToApply.nullable(),

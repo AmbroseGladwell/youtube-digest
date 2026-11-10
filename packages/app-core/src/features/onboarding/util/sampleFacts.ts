@@ -41,7 +41,10 @@ export function sampleFacts(note: SharedNote): SampleFacts {
     verb: START_VERB[kind],
     name: [note.source.title, KIND_LABEL[kind], length].filter(Boolean).join(", "),
     first: note.recipe ? { label: "Summary", text: note.recipe.summary } : { label: "Premise", text: note.inOneLine },
-    sections: kind === "recipe" ? ["Ingredients", "Method"] : ["Key points", "How to apply", "Verdict"],
+    sections:
+      kind === "recipe"
+        ? ["Ingredients", "Method"]
+        : [...(note.bigPicture ? ["Big picture"] : []), "Key points", "How to apply", "Verdict"],
   };
 }
 

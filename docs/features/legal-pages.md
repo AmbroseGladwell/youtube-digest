@@ -147,7 +147,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
-| 2026-11-09 | privacy | OV-259 | Writing an overview says we keep a daily tally of what serving each account costs: tokens and list-price cost on our key (failed attempts included), embedding tokens and cost, and proxy bytes, amounts only; a device without an account is tallied with nothing on it. The retention row for usage counts covers the tally. |
+| 2026-11-10 | privacy | OV-259 | Writing an overview says we keep a daily tally of what serving each account costs: tokens and list-price cost on our key (failed attempts included), embedding tokens and cost, and proxy bytes, amounts only; a device without an account is tallied with nothing on it. The retention row for usage counts covers the tally. |
+| 2026-11-09 | privacy | OV-225 | Your library names an overview's big picture among what it holds, and among what goes to OpenAI to make embeddings for search by meaning. |
 | 2026-11-09 | privacy | OV-255 | Analytics says the event for an overview made, or one that can’t be made, says whether it was on your key or ours and names the provider and the model, not only when the model was refused. |
 | 2026-11-09 | privacy | OV-247 | Server logs and safety limits says a line names the provider and model when an overview can’t be made on your own key because the model was refused or kept breaking its shape, and never what the provider said back. Analytics says that when an overview can’t be made because of the model you chose, the event names the provider and the model. |
 | 2026-11-09 | privacy | OV-248 | What we learn from your overviews says nothing learned is used until it has been shown, on the library's notice or in Settings › Personalisation, and is used from then on. |

@@ -39,6 +39,7 @@ export * from "./readStoredRecord.js";
 export * from "./VideoSource.js";
 export * from "./TranscriptSegment.js";
 export * from "./StoredTranscript.js";
+export * from "./BigPicture.js";
 export * from "./CoreFields.js";
 export * from "./Filing.js";
 export * from "./Verdict.js";

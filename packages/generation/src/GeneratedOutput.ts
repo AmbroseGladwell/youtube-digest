@@ -11,6 +11,7 @@ export interface GeneratedTimedText extends SegmentRangeShape {
 
 export interface GeneratedOutput {
   inOneLine: string;
+  bigPicture: string;
   coreClaim: string;
   thin: boolean;
   keyPoints: GeneratedTimedText[];

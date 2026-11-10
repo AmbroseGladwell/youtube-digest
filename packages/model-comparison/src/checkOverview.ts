@@ -1,5 +1,5 @@
 import { IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
-import { segmentRangeOf, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
+import { bigPictureBudget, segmentRangeOf, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 
 export type CheckArea = "overview" | "chapters";
@@ -41,6 +41,7 @@ const rangeProblem = (label: string, item: SegmentRangeShape | null | undefined,
 function proseOf(output: GeneratedOutput): string[] {
   return [
     output.inOneLine,
+    output.bigPicture,
     output.coreClaim,
     ...output.keyPoints.map((point) => point.text),
     ...output.chapters.flatMap((chapter) => [chapter.title, chapter.summary]),
@@ -104,6 +105,8 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
   const channel = fetched.video.channel.trim().toLowerCase();
   const share = longestChapterShare(output, fetched);
   const spokenLength = fetched.transcript.at(-1)?.endMs ?? 0;
+  const bigPictureTarget = bigPictureBudget(fetched.transcript.reduce((total, segment) => total + wordCount(segment.text), 0));
+  const bigPictureWords = wordCount(output.bigPicture);
 
   return [
     result(
@@ -117,6 +120,11 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
       "inOneLineWithinTarget",
       "overview",
       wordCount(output.inOneLine) > IN_ONE_LINE_TARGET_WORDS ? [`in one line is ${wordCount(output.inOneLine)} words`] : [],
+    ),
+    result(
+      "bigPictureWithinTarget",
+      "overview",
+      bigPictureTarget > 0 && bigPictureWords > bigPictureTarget ? [`big picture is ${bigPictureWords} words of ${bigPictureTarget}`] : [],
     ),
     result(
       "keyPointsWithinTarget",

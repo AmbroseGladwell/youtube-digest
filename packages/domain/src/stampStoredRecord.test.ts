@@ -30,6 +30,7 @@ const overview = {
   fromPlaylist: null,
   madeOn: null,
   inOneLine: "A short description of the video.",
+  bigPicture: null,
   coreClaim: "The single assertion this video makes.",
   thin: false,
   keyPoints: [

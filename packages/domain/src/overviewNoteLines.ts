@@ -13,6 +13,7 @@ import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
 export const SUMMARY_SECTION = "Summary";
+export const BIG_PICTURE_SECTION = "Big picture";
 export const KEY_POINTS_SECTION = "Key points";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
@@ -137,6 +138,9 @@ export function overviewNoteLines(
   }
 
   section(SUMMARY_SECTION, { text: "Premise", spoken: "The premise" }, [{ text: overview.inOneLine }]);
+  if (overview.bigPicture) {
+    section(BIG_PICTURE_SECTION, { text: BIG_PICTURE_SECTION, spoken: "The big picture" }, [{ text: overview.bigPicture }]);
+  }
   section("Core claim", overview.thin ? { text: "No clear claim" } : { text: "Core claim", spoken: "The core claim" }, [
     { text: overview.coreClaim },
   ]);

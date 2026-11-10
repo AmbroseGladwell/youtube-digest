@@ -3,6 +3,7 @@ import type { GeneratedOutput } from "@overview/generation";
 export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): GeneratedOutput {
   return {
     inOneLine: "A thrift channel tests a grocery budget for three months.",
+    bigPicture: "",
     coreClaim: "Planning meals cut the grocery bill from $1,200 to 960 a month.",
     thin: false,
     keyPoints: [

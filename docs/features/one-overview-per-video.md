@@ -148,6 +148,26 @@ The capture queue does not check. It takes videos from followed playlists, and w
 playlist's video the library already holds should be skipped is a queue question
 (`docs/features/capture-queue.md`).
 
+## Regenerating
+
+OV-261. **⋯ Regenerate is offered on every overview**, a video from anywhere and an article only
+with its page open beside the panel, since we keep no copy (`article-panel.md`). It starts the
+same run as a new overview, naming the overview's id, so it skips the "You already have this"
+check, writes under that id, and the old note stays readable until the new one lands. A failed
+run leaves it as it was. There is no confirm step, as for articles: a regeneration counts as an
+overview like any other run (`tiers.md`), and the reader at their limit gets the usual message.
+
+**The model's text is rewritten; what the reader did is kept** (`keptOnRegeneration` in
+`generationPipeline.ts`): why they saved it, the topics it's filed under, its tags, when it was
+saved, and the playlist or sample it came from. Read and favourite never lived on the record
+(`docs/prototype/decisions.md`). The run's reason box starts with the overview's reason, so the
+reader sees it and can change it; emptying it clears it, as in a new run. The overview's own old
+claim is left out of the claims the verdict compares against, so it is never similar to itself.
+An unreadable record has nothing left to keep and is regenerated whole.
+
+**A share keeps the old copy** until the reader shares again, which replaces the copy behind the
+same link (`sharing.md`), so a refreshed sample keeps its token.
+
 ## Analytics and logging
 
 The server logs the refusal as every refusal, `request refused` at warn with the code and

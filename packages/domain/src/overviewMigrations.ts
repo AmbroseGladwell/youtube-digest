@@ -158,6 +158,18 @@ const allowRecipesFromVideos: RecordMigration = { newSchemaVersion: 13 };
 // so older clients hold these records back rather than quarantine them.
 const allowLongerOneLiners: RecordMigration = { newSchemaVersion: 14 };
 
+// Not derivable: an older note has no ground written for it, and it opens on its premise as
+// it always did (docs/features/overview-generation-decisions.md, "The big picture").
+const fillBigPictureAddedAfterTheFirstNotes: RecordMigration = {
+  newSchemaVersion: 15,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "bigPicture" in record ? record : { ...record, bigPicture: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -172,6 +184,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillRecipeAddedWithRecipes,
   allowRecipesFromVideos,
   allowLongerOneLiners,
+  fillBigPictureAddedAfterTheFirstNotes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);
