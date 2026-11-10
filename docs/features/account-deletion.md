@@ -69,6 +69,8 @@ test does the same: it reads `information_schema.columns` for every `account_id`
   exception (`shared-transcript-cache.md`): a year, so a copy the account vouched for can still
   be removed. `trial_*` and `our_key_usage`, which never carried the account. And the audit
   row, below. The in-memory rate-limit counters expire within a day on their own.
+- **PostHog's copy of the cost reports** drops the account at its next daily full refresh, since
+  the `cost_reports` views read the cascaded tables (`unit-economics.md`).
 - **Nothing at Brevo.** The transactional call creates no contact. No notice mail goes after
   deletion either: the code already proved the inbox, and the done state says it.
 
