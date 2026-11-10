@@ -26,9 +26,12 @@ export function MakeYourOwnAside() {
   const headingId = useId();
   const urlFieldId = useId();
   const analytics = useAnalytics();
-  useTypingSettled(url, () => analytics.sharedPage.makeYourOwn.linkEntered({ recognised: onboardingSourceOf(url) !== null }));
+  const settleTyping = useTypingSettled(url, () =>
+    analytics.sharedPage.makeYourOwn.linkEntered({ recognised: onboardingSourceOf(url) !== null }),
+  );
 
   const make = () => {
+    settleTyping();
     analytics.sharedPage.makeYourOwn.submitted({ recognised: onboardingSourceOf(url) !== null });
     setRefused(!startOnboarding(url));
   };

@@ -168,6 +168,10 @@ the transcript search sends how many matches there were, the topic picker how ma
 matched, the shared page's link field whether it was a YouTube link. A field's starting
 value isn't typing and sends nothing.
 
+A link field that is submitted before that second is up sends its event at the submit, just
+before what the submit sends, so a paste and an Enter is counted the same as a pause
+(OV-93). Without that, whether the link was counted depended on how fast the form went away.
+
 ### Changing a state
 
 An event that changes something says what it changed to: `readSwitched({ read: true })`,

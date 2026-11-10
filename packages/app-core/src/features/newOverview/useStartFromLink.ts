@@ -21,7 +21,7 @@ export function useStartFromLink() {
   const limit = useLimitMessage();
   const article = useArticleLink(url, "home");
   const startArticle = useStartArticleFromLink();
-  useTypingSettled(url, () =>
+  const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
       recognised: isYouTubeUrl(url) || (article.available && isArticleLink(url)),
       from: "home",
@@ -30,6 +30,7 @@ export function useStartFromLink() {
 
   const generate = (event: FormEvent) => {
     event.preventDefault();
+    settleTyping();
     const link = youTubeLink(url);
     if (playlistsAvailable && link !== null && link.kind !== "video") {
       setValidationError(null);
