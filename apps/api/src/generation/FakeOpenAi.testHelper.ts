@@ -13,7 +13,6 @@ export const validAnswer = {
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],
   suggestedTopic: null,
-  recipe: null,
   tags: ["one-tag", "two-tag", "three-tag"],
   howToApply: { items: ["do this"] },
 };
@@ -49,17 +48,32 @@ export interface FakeOpenAi {
   http: typeof fetch;
   answers: FakeOpenAiAnswer[];
   requests: { url: string; authorization: string | null; model: unknown }[];
+  kindChecks: number;
+  kindCheckAnswer: "default" | { status: number; body: unknown };
 }
 
 const USAGE = { prompt_tokens: 1200, completion_tokens: 300, prompt_tokens_details: { cached_tokens: 200, cache_write_tokens: 800 } };
+export const KIND_CHECK_USAGE = { prompt_tokens: 400, completion_tokens: 10 };
 
-// OpenAI's chat completions as our key would meet them: each call takes the next answer,
-// and the last one repeats.
+// OpenAI's chat completions as our key would meet them: a video's kind check is answered
+// "default" apart from the queue, and every other call takes the next answer, the last
+// one repeating.
 export function makeFakeOpenAi(...answers: FakeOpenAiAnswer[]): FakeOpenAi {
   const fake: FakeOpenAi = {
     answers: answers.length === 0 ? ["valid"] : answers,
     requests: [],
+    kindChecks: 0,
+    kindCheckAnswer: "default",
     http: (async (url: string | URL | Request, init: RequestInit = {}) => {
+      const respond = (status: number, body: unknown) =>
+        new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+      if (String(init.body).includes('"noteKind"')) {
+        fake.kindChecks++;
+        const check = fake.kindCheckAnswer;
+        return check === "default"
+          ? respond(200, { choices: [{ message: { content: JSON.stringify({ noteKind: check }) } }], usage: KIND_CHECK_USAGE })
+          : respond(check.status, check.body);
+      }
       const headers = new Headers(init.headers);
       fake.requests.push({
         url: String(url),
@@ -67,8 +81,6 @@ export function makeFakeOpenAi(...answers: FakeOpenAiAnswer[]): FakeOpenAi {
         model: (JSON.parse(String(init.body)) as { model?: unknown }).model,
       });
       const answer = fake.answers.length > 1 ? fake.answers.shift()! : fake.answers[0]!;
-      const respond = (status: number, body: unknown) =>
-        new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
       if (answer === "valid" || answer === "invalid") {
         const content = JSON.stringify(answer === "valid" ? validAnswer : { nonsense: true });
         return respond(200, { choices: [{ message: { content } }], usage: USAGE });

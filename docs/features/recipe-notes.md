@@ -403,11 +403,19 @@ Transcript and Chapters tabs every video has. No verdict, key points or Watch it
 122a–122u in Claude Design (OV-122 1–3).
 
 **A model finds the recipe, and code checks it.** A video has no structured data, so this is the
-one recipe a model reads. The video prompt carries a nullable recipe section (`recipeSection.ts`):
-the model returns null for anything that isn't one dish taught start to finish (a talk, a review,
-food history, a vlog that cooks without teaching, several recipes). One call, so a recipe video
-pays for argument fields it won't show and every other video pays a few tokens for the null.
-When the recipe comes back, `assembleOverview` builds the recipe note with the video's chapters.
+one recipe a model reads. Since OV-275 a small kind check decides first whether the video
+teaches one dish start to finish, from its title, channel, description and the opening of its
+transcript (`checkNoteKind.ts`; `overview-generation-decisions.md`, "The kind check"). A
+recipe video's note is then asked for with only the recipe's sections: In one line as the dish,
+chapters, filing and the recipe (`recipeSection.ts`, `recipeVideoCoreSection.ts`). Every other
+video's schema carries no recipe at all. The recipe call may still return null when the whole
+video turns out not to be one dish (a talk, a review, food history, a vlog that cooks without
+teaching, several recipes), and the video then gets its ordinary note. When the recipe comes
+back, `assembleRecipeVideoOverview` builds the recipe note with the video's chapters.
+
+Before OV-275 this was one call carrying a nullable recipe section, so a recipe video paid for
+argument fields it never showed and every other video's schema carried the recipe block, which
+is what filled Claude's grammar.
 Then code, never the model (`docs/prototype/constraints.md`):
 
 - **Every amount is checked** against the numbers the description and the transcript state, in

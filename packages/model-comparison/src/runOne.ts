@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, type Overview } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, type NoteKind, type Overview } from "@overview/domain";
 import {
   GenerationError,
   ProviderKeyRefusedError,
@@ -70,10 +70,25 @@ export async function runGeneration({
   const metered = meteredFetch(model.provider, http, now);
   const inner = createGenerationClient({ ...model, apiKey, http: metered.http });
   const attempts: unknown[] = [];
+  const checkCalls: MeteredCall[] = [];
+  let checked = false;
+  let noteKind: NoteKind | null = null;
   const client: GenerationClient = async (request) => {
-    const raw = await inner(request);
-    attempts.push(raw);
-    return raw;
+    if (!("noteKind" in request.schema.shape)) {
+      const raw = await inner(request);
+      attempts.push(raw);
+      return raw;
+    }
+    checked = true;
+    const before = metered.calls.length;
+    try {
+      const raw = await inner(request);
+      const answered = request.schema.safeParse(raw);
+      if (answered.success) noteKind = (answered.data as { noteKind: NoteKind }).noteKind;
+      return raw;
+    } finally {
+      checkCalls.push(...metered.calls.slice(before));
+    }
   };
 
   const startedAt = new Date().toISOString();
@@ -101,6 +116,7 @@ export async function runGeneration({
     costDollars: measuredCost(model, metered.calls),
     attempts,
     overview,
+    ...(checked ? { kindCheck: { noteKind, costDollars: measuredCost(model, checkCalls) } } : {}),
   };
 }
 

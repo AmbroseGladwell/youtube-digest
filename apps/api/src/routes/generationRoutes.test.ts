@@ -210,6 +210,9 @@ test("the global daily cap refuses every plan once spent, and turns with the UTC
   await testApp.close();
 });
 
+const OVERVIEW_DOLLARS = (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10) / 1_000_000;
+const KIND_CHECK_DOLLARS = (400 * 2 + 10 * 10) / 1_000_000;
+
 test("a generation logs its tokens and cost, measured from what OpenAI reported", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
@@ -220,8 +223,9 @@ test("a generation logs its tokens and cost, measured from what OpenAI reported"
 
   assert.equal(made?.plan, "free");
   assert.equal(made?.model, ourKeyModel.model);
-  assert.deepEqual([made?.inputTokens, made?.outputTokens], [1200, 300]);
-  assert.equal(made?.costDollars, (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10) / 1_000_000);
+  assert.equal(made?.noteKind, "default");
+  assert.deepEqual([made?.inputTokens, made?.outputTokens], [1200 + 400, 300 + 10]);
+  assert.equal(made?.costDollars, OVERVIEW_DOLLARS + KIND_CHECK_DOLLARS);
   await testApp.close();
 });
 
@@ -234,13 +238,13 @@ test("a failed generation still logs the tokens and cost of the attempts OpenAI 
   const [failed] = saying(lines, "overview on our key failed");
   const attempts = failed?.attempts as number;
 
-  assert.ok(attempts >= 1);
-  assert.deepEqual([failed?.inputTokens, failed?.outputTokens], [1200 * attempts, 300 * attempts]);
-  assert.equal(failed?.costDollars, (attempts * (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10)) / 1_000_000);
+  const noteAttempts = attempts - 1;
+
+  assert.ok(noteAttempts >= 1);
+  assert.deepEqual([failed?.inputTokens, failed?.outputTokens], [1200 * noteAttempts + 400, 300 * noteAttempts + 10]);
+  assert.equal(failed?.costDollars, noteAttempts * OVERVIEW_DOLLARS + KIND_CHECK_DOLLARS);
   await testApp.close();
 });
-
-const OVERVIEW_DOLLARS = (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10) / 1_000_000;
 
 test("an overview on our key is costed against the account that asked, at what the log line says it cost", async () => {
   const { lines, logger } = recordingLogger();
@@ -251,10 +255,12 @@ test("an overview on our key is costed against the account that asked, at what t
   await generate(account);
   const costs = await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId });
 
-  assert.deepEqual(costs, [
-    { day: usageDay(testApp.clock.now), area: "generation", detail: "overview", calls: 2, quantity: 3000, dollars: 2 * OVERVIEW_DOLLARS },
+  const day = usageDay(testApp.clock.now);
+  assert.deepEqual(sortedByDetail(costs), [
+    { day, area: "generation", detail: "kindCheck", calls: 2, quantity: 820, dollars: 2 * KIND_CHECK_DOLLARS },
+    { day, area: "generation", detail: "overview", calls: 2, quantity: 3000, dollars: 2 * OVERVIEW_DOLLARS },
   ]);
-  assert.equal(saying(lines, "overview made on our key").at(0)?.costDollars, OVERVIEW_DOLLARS);
+  assert.equal(saying(lines, "overview made on our key").at(0)?.costDollars, OVERVIEW_DOLLARS + KIND_CHECK_DOLLARS);
   await testApp.close();
 });
 
@@ -264,15 +270,37 @@ test("a failed overview still costs the account every attempt OpenAI answered, k
   const account = await makeAccount(testApp);
 
   await generate(account);
-  const [cost] = await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId });
+  const costs = sortedByDetail(await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId }));
 
-  assert.equal(cost?.detail, "overview-failed");
-  assert.equal(cost?.dollars, saying(lines, "overview on our key failed").at(0)?.costDollars);
+  assert.deepEqual(
+    costs.map(({ detail }) => detail),
+    ["kindCheck", "overview-failed"],
+  );
+  assert.equal(
+    costs.reduce((total, { dollars }) => total + dollars, 0),
+    saying(lines, "overview on our key failed").at(0)?.costDollars,
+  );
+  await testApp.close();
+});
+
+test("a kind check the provider refuses fails the overview before any note is asked for", async () => {
+  const fake = makeFakeOpenAi();
+  fake.kindCheckAnswer = { status: 503, body: { error: { message: "overloaded" } } };
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(fake, { logger });
+  const account = await makeAccount(testApp);
+
+  await generate(account);
+
+  assert.equal(saying(lines, "overview on our key failed").at(0)?.noteKind, null);
+  assert.equal(fake.requests.length, 0);
   await testApp.close();
 });
 
 test("a provider that answers only with an error costs nothing, since it reported no usage", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi({ status: 503, body: { error: { message: "overloaded" } } }));
+  const fake = makeFakeOpenAi({ status: 503, body: { error: { message: "overloaded" } } });
+  fake.kindCheckAnswer = { status: 503, body: { error: { message: "overloaded" } } };
+  const testApp = await ourKeyApp(fake);
   const account = await makeAccount(testApp);
 
   await generate(account);
@@ -290,8 +318,11 @@ test("a trial overview is costed as signed out, never against an account", async
   const costs = new AccountCostsRepository(testApp.sql);
 
   assert.deepEqual(
-    (await costs.of("signed-out")).map((cost) => [cost.detail, cost.calls]),
-    [["overview", 1]],
+    sortedByDetail(await costs.of("signed-out")).map((cost) => [cost.detail, cost.calls]),
+    [
+      ["kindCheck", 1],
+      ["overview", 1],
+    ],
   );
   assert.deepEqual(await costs.of({ accountId: account.accountId }), []);
   await testApp.close();
@@ -341,6 +372,10 @@ test("making an overview on our key needs an account or a trial", async () => {
 });
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+function sortedByDetail<Cost extends { detail: string }>(costs: Cost[]): Cost[] {
+  return [...costs].sort((a, b) => a.detail.localeCompare(b.detail));
+}
 
 test("signed out, a device makes its one onboarding overview on our key on its token, and the next is refused as the trial's", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());

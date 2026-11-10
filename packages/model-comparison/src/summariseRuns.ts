@@ -21,6 +21,10 @@ export interface ModelSummary {
   unpricedRuns: number;
   meanCostDollars: number | null;
   costPerTwentyMinutesDollars: number | null;
+  // The kind check's share, from the runs that made one (OV-275).
+  kindChecked: number;
+  recipeNotes: number;
+  meanKindCheckCostDollars: number | null;
   checks: Record<string, CheckTally>;
 }
 
@@ -51,7 +55,8 @@ export function summariseRuns(records: readonly RunRecord[], transcripts: Readon
     const pricedLengthMs = priced.reduce((total, record) => total + videoLengthMs(transcripts.get(record.videoId)!), 0);
 
     const checks: Record<string, CheckTally> = {};
-    for (const record of runs.filter(isPassed)) {
+    // A recipe note has none of the argument note's fields to check.
+    for (const record of runs.filter((run) => isPassed(run) && run.overview?.recipe == null)) {
       const fetched = transcripts.get(record.videoId);
       if (fetched === undefined) continue;
       for (const check of checkOverview(record.attempts.at(-1) as GeneratedOutput, fetched)) {
@@ -60,6 +65,8 @@ export function summariseRuns(records: readonly RunRecord[], transcripts: Readon
         if (check.passed) tally.passed += 1;
       }
     }
+
+    const checkCosts = runs.flatMap((record) => (record.kindCheck?.costDollars == null ? [] : [record.kindCheck.costDollars]));
 
     return {
       name,
@@ -76,6 +83,9 @@ export function summariseRuns(records: readonly RunRecord[], transcripts: Readon
         pricedLengthMs === 0
           ? null
           : (priced.reduce((total, record) => total + record.costDollars!, 0) / pricedLengthMs) * TWENTY_MINUTES_MS,
+      kindChecked: runs.filter((record) => record.kindCheck !== undefined).length,
+      recipeNotes: runs.filter((record) => record.overview?.recipe != null).length,
+      meanKindCheckCostDollars: checkCosts.length === 0 ? null : checkCosts.reduce((total, cost) => total + cost, 0) / checkCosts.length,
       checks,
     };
   });

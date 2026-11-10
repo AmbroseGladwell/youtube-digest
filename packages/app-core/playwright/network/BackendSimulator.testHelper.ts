@@ -339,7 +339,11 @@ export class BackendSimulator {
                 }
               : {
                   status: 200,
-                  body: makeAnthropicMessageResponse(makeGeneratedOutputFixture(this.#generatedOutputOverrides)),
+                  body: makeAnthropicMessageResponse(
+                    route.request().postData()?.includes('"noteKind"')
+                      ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
+                      : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
+                  ),
                 },
         onError: () => ({
           status: 401,

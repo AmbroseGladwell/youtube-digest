@@ -1,9 +1,11 @@
-import type { Overview, OverviewId } from "@overview/domain";
+import type { NoteKind, Overview, OverviewId } from "@overview/domain";
 import type { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
-import type { GeneratedOutput } from "./GeneratedOutput.js";
+import type { GeneratedOutput, GeneratedRecipeVideoOutput } from "./GeneratedOutput.js";
 import { composePrompt, type ComposedPrompt } from "./composePrompt.js";
-import { assembleOverview } from "./assembleOverview.js";
+import { assembleOverview, assembleRecipeVideoOverview } from "./assembleOverview.js";
+import { checkNoteKind } from "./noteKind/checkNoteKind.js";
+import { kindSampleOfVideo } from "./noteKind/kindSampleOfVideo.js";
 import { SchemaFailureError } from "./GenerationError.js";
 
 export type GenerationClient = (request: {
@@ -50,10 +52,27 @@ export async function requestGeneratedOutput<Output>(client: GenerationClient, p
   return parsed.data as unknown as Output;
 }
 
+// Lets a caller tell the kind check's calls apart from the note's, so each can be costed on
+// its own (docs/architecture/unit-economics.md).
+export interface GenerationObserver {
+  kindChecked?(kind: NoteKind): void;
+}
+
+// The kind is decided first, so the note's schema carries only that kind's sections; a
+// recipe the video turns out not to hold falls back to the default note
+// (docs/features/overview-generation-decisions.md, "The kind check").
 export async function generateOverview(
   client: GenerationClient,
   input: GenerationInput,
   meta: { id: OverviewId; savedAt: string },
+  observer: GenerationObserver = {},
 ): Promise<Overview> {
+  const kind = await checkNoteKind(client, kindSampleOfVideo(input));
+  observer.kindChecked?.(kind);
+  if (kind === "recipe") {
+    const output = await requestGeneratedOutput<GeneratedRecipeVideoOutput>(client, composePrompt(input, "recipe"));
+    const overview = assembleRecipeVideoOverview(input, output, meta);
+    if (overview !== null) return overview;
+  }
   return assembleOverview(input, await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input)), meta);
 }

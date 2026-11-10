@@ -910,6 +910,63 @@ more without enforcement, with the schema written into the system prompt the way
 always given it. The correction pass catches what enforcement would have. The comparison
 harness can force this path (`--refuse-enforced-schema`) to measure the notes it writes.
 
+## The kind check
+
+Decided 10 Nov 2026 (OV-275), when OV-216's evidence fields would not fit.
+
+**The recipe block was what filled the grammar.** OV-122 asked, in the one call, whether a
+video teaches a recipe, so every video's schema carried the whole nullable `recipe`: summary,
+ingredients, steps with their groups and stretches. It was the second-largest part of the schema
+after the verdict, and almost every video left it null. Measured with a 16-token reply on Sonnet
+5.5 and Opus 5.5, with a reader's context, 30 topics, 20 past claims and 50 tags (1 topic and 300
+behaved the same):
+
+| The video schema | Compiles |
+|---|---|
+| As it was | yes |
+| With OV-216's quote positions on key points and what stands out, and its optional line | no |
+| … with the topic list as plain strings, or the suggested topic or what stands out made plain | no |
+| … with `recipe` taken out | **yes** |
+| … and OV-250's steps `{text, range, dubious}` and four more strings | yes |
+
+**So the kind is decided before the note is written.** A small call reads the title, who made
+it, the description and the opening of the transcript (`KIND_CHECK_OPENING_WORDS`, 600 words,
+counted in code: about four minutes of speech) and answers one `NoteKind`. The note's call then
+composes only that kind's sections (`sectionRegistry.ts`):
+
+- **`default`**: today's note, with no recipe block.
+- **`recipe`**: In one line as the dish, chapters, filing and the recipe. Nothing argument-shaped,
+  which is all a recipe note ever showed (`recipe-notes.md`).
+
+The owner chose this over two others: a flag in the one call followed by a second call for
+recipes, which would have doubled a recipe video's cost, and splitting every note into two
+calls, which sends every transcript twice and is kept for when even this room runs out.
+
+**One shared core.** Every kind takes its sections from the same list, so key points, the
+verdict, filing and the note budget can't drift apart between kinds, which is what OV-87 had
+to undo. A kind only adds or leaves out sections.
+
+**A wrong answer degrades, never breaks.** The check answers `default` when unsure, which is a
+complete note for any video, and an answer that still breaks its schema after the retry is
+taken as `default`. A recipe call that finds no recipe the whole video holds, or none whose
+ingredients survive the amount check, falls back to the `default` call. Only a provider failure
+fails the overview, as it would have anyway.
+
+**It is generic on purpose.** The owner's direction: kinds beyond recipe can each have a schema
+shaped for them (OV-276), such as a `process` kind carrying OV-250's steps block, so a section
+only some videos need costs the rest nothing. The check reads a `KindSample` rather than a
+video, so articles and podcasts can use it, but articles don't yet: a recipe page is told
+apart free and exactly by its own recipe markup, and a check would cost a call and change no
+article's note until there is a second kind for them (OV-276).
+
+**It is costed apart.** On our key the check's calls are recorded as `generation` /
+`kindCheck` (or `kindCheck-failed`), the note's as `overview` (`unit-economics.md`). The
+`capture.newOverview.finished` event carries the `noteKind` the note got, and the API's
+"overview made on our key" line the kind the check chose. The comparison harness records the
+check's answer and cost on each run and reports its mean cost and the recipe notes made.
+
+**What it costs** is measured in `docs/architecture/cost-model.md`, "The kind check (OV-275)".
+
 ## Open, still to decide
 
 - The library-size threshold for personal-claim retrieval and topic-list retrieval to
