@@ -11,13 +11,14 @@ test("no variable, or an empty one, means no hand-entered figures", () => {
 });
 
 test("entries parse with an open end by default", () => {
-  assert.deepEqual(parseManualEntries(JSON.stringify([neon])), [{ ...neon, to: null }]);
+  assert.deepEqual(parseManualEntries(JSON.stringify([neon])), [{ ...neon, to: null, waived: null }]);
 });
 
 test("an entry missing a field, or with a negative figure, refuses the whole list", () => {
   assert.throws(() => parseManualEntries(JSON.stringify([{ ...neon, area: "" }])), /entry 0/);
   assert.throws(() => parseManualEntries(JSON.stringify([neon, { ...fly, monthlyDollars: -1 }])), /entry 1/);
   assert.throws(() => parseManualEntries(JSON.stringify([{ ...neon, from: "Nov 1" }])), /entry 0/);
+  assert.throws(() => parseManualEntries(JSON.stringify([{ ...neon, waived: "" }])), /entry 0/);
   assert.throws(() => parseManualEntries("{"), /not JSON/);
   assert.throws(() => parseManualEntries("{}"), /not a list/);
 });
@@ -37,4 +38,19 @@ test("an entry applies only between its dates", () => {
   assert.deepEqual(manualRowsFor(entries, "2026-10-31"), []);
   assert.equal(manualRowsFor(entries, "2026-11-30").length, 1);
   assert.deepEqual(manualRowsFor(entries, "2026-12-01"), []);
+});
+
+test("a cost the provider waived keeps its figure, marked waived with the reason, so it never counts as paid", () => {
+  const entries = parseManualEntries(JSON.stringify([{ ...fly, waived: "under the provider's monthly minimum" }]));
+  assert.deepEqual(manualRowsFor(entries, "2026-11-08"), [
+    {
+      date: "2026-11-08",
+      provider: "fly",
+      environment: "prod",
+      area: "servers",
+      dollars: 1,
+      source: "waived",
+      reason: "under the provider's monthly minimum",
+    },
+  ]);
 });

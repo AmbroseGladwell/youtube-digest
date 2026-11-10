@@ -12,17 +12,18 @@ export function parseManualEntries(json) {
   }
   if (!Array.isArray(entries)) throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not a list");
   return entries.map((entry, index) => {
-    const { provider, environment, area, monthlyDollars, from, to = null } = entry ?? {};
+    const { provider, environment, area, monthlyDollars, from, to = null, waived = null } = entry ?? {};
     const valid =
       [provider, environment, area].every((field) => typeof field === "string" && field.length > 0) &&
       typeof monthlyDollars === "number" &&
       monthlyDollars >= 0 &&
       typeof from === "string" &&
       DAY.test(from) &&
-      (to === null || (typeof to === "string" && DAY.test(to)));
+      (to === null || (typeof to === "string" && DAY.test(to))) &&
+      (waived === null || (typeof waived === "string" && waived.length > 0));
     if (!valid)
       throw new ManualEntriesError(`SPEND_MANUAL_ENTRIES entry ${index} needs provider, environment, area, monthlyDollars and from`);
-    return { provider, environment, area, monthlyDollars, from, to };
+    return { provider, environment, area, monthlyDollars, from, to, waived };
   });
 }
 
@@ -34,12 +35,13 @@ function daysInMonthOf(date) {
 export function manualRowsFor(entries, date) {
   return entries
     .filter((entry) => entry.from <= date && (entry.to === null || date <= entry.to))
-    .map(({ provider, environment, area, monthlyDollars }) => ({
+    .map(({ provider, environment, area, monthlyDollars, waived }) => ({
       date,
       provider,
       environment,
       area,
       dollars: monthlyDollars / daysInMonthOf(date),
-      source: "manual",
+      source: waived === null ? "manual" : "waived",
+      ...(waived === null ? {} : { reason: waived }),
     }));
 }

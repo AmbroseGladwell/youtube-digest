@@ -86,8 +86,8 @@ Europe with no jurisdiction: PostHog's R2 source refuses an EU-jurisdiction buck
 | `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for one bill covering every environment: OpenAI before 9 Nov 2026, and Cloudflare |
 | `area` | `generation`, `embeddings`, `database`, `servers`, `narration`, `transcripts`, `storage` |
 | `dollars` | to six places, **blank when not tracked**, never zero for a figure nobody read |
-| `source` | `bill`, `manual`, `not_tracked`, or `usage` for a row that measures use rather than money |
-| `reason` | why a row is not tracked: a missing key, the status a provider answered, the bill having no figure for the day yet, a day outside what the provider can report, or what to enter by hand |
+| `source` | `bill`, `manual`, `waived` for a cost the provider let off, `not_tracked`, or `usage` for a row that measures use rather than money |
+| `reason` | why a cost was waived, or why a row is not tracked: a missing key, the status a provider answered, the bill having no figure for the day yet, a day outside what the provider can report, or what to enter by hand |
 | `quantity`, `unit` | on a `usage` row, how much and of what (`compute_hours_month_to_date`); blank on rows of money |
 | `recorded_at` | when the job wrote it |
 
@@ -127,7 +127,14 @@ figure in the repository variable `SPEND_MANUAL_ENTRIES`, a JSON list:
 
 `to` is optional and closes an entry, for a price change. A monthly figure is spread evenly
 over its month's days, so a day's total and a month's total both come out right, and every
-such row is `manual`. A hand-entered figure never replaces a bill: if both exist, the bill
+such row is `manual`.
+
+**A cost the provider let off is still entered, with `waived` saying why**, for example
+`"waived": "under Fly's $5 monthly minimum"`. Its rows are `waived`, carrying the reason. Spend
+totals leave them out, since nothing was paid, but unit economics counts them
+(`unit-economics.md`): a waiver ends as soon as use grows, which is when cost per account
+matters. A waived month is whole or nothing (Fly bills every dollar once a month passes $5),
+so the figure entered is the usage cost the provider shows, not the part above the minimum. A hand-entered figure never replaces a bill: if both exist, the bill
 is kept and the run warns. A variable that does not parse warns, and every hand-entered
 figure shows as not tracked until it is fixed.
 
@@ -158,7 +165,7 @@ and write token, so PostHog holding a key can never change or delete the history
 this month, daily spend by environment, monthly spend by environment, spend by provider,
 environment and area with the days each went untracked, what is not tracked on the latest
 day and why, and usage this month for every provider (month-to-date figures and storage as the latest value, daily traffic and requests totalled). Totals count `bill` and `manual` rows only, so a row
-not tracked adds nothing rather than zero, and the table and the not-tracked tile show where
+not tracked adds nothing rather than zero and a waived one adds nothing paid, and the table and the not-tracked tile show where
 the gaps are.
 
 **The alert**, "A day's spend over $10", checks the last row of "Spend per day, last 14 days"

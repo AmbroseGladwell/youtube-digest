@@ -82,5 +82,6 @@ rollup:
   per render beside the tier model's assumptions, income at list price, net per plan, and the
   metered sum against each bill with the gap shown.
 - Fixed costs (servers, Neon's base fee, plan fees) shared out evenly per active account,
-  saying so on the dashboard.
+  saying so on the dashboard. Costs a provider waived (`waived` rows in `spend.md`) count
+  here: they are what serving costs, and the waiver ends as use grows.
 - The tier economics model's inputs updated from the measured figures, with their date.
