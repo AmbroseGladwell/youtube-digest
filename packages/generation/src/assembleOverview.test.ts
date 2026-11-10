@@ -44,9 +44,9 @@ const baseOutput: GeneratedOutput = {
   coreClaim: "The core claim of the video.",
   thin: false,
   keyPoints: [
-    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
-    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
-    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
   ],
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
@@ -74,7 +74,13 @@ test("a thin overview never carries a verdict, even if the model produced one", 
       thin: true,
       verdict: {
         novelty: "original",
-        standsOut: { text: "A new idea.", startSegmentIndex: -1, endSegmentIndex: -1 },
+        standsOut: {
+          text: "A new idea.",
+          startSegmentIndex: -1,
+          endSegmentIndex: -1,
+          quoteStartSegmentIndex: -1,
+          quoteEndSegmentIndex: -1,
+        },
         dubiousClaims: [],
         reasoning: "x",
         similarToIndices: [],
@@ -105,7 +111,13 @@ test("common knowledge never names what stands out, even if the model did", () =
       ...baseOutput,
       verdict: {
         novelty: "common_knowledge",
-        standsOut: { text: "Nothing much.", startSegmentIndex: -1, endSegmentIndex: -1 },
+        standsOut: {
+          text: "Nothing much.",
+          startSegmentIndex: -1,
+          endSegmentIndex: -1,
+          quoteStartSegmentIndex: -1,
+          quoteEndSegmentIndex: -1,
+        },
         dubiousClaims: [],
         reasoning: "x",
         similarToIndices: [],
@@ -124,7 +136,7 @@ test("a fresh angle keeps what stands out, and a blank one reads as missing", ()
         ...baseOutput,
         verdict: {
           novelty: "fresh_angle",
-          standsOut: { text, startSegmentIndex: -1, endSegmentIndex: -1 },
+          standsOut: { text, startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
           dubiousClaims: [],
           reasoning: "x",
           similarToIndices: [],
@@ -144,7 +156,7 @@ test("what stands out is timed from the transcript, and a range that does not fi
         ...baseOutput,
         verdict: {
           novelty: "original",
-          standsOut: { text: "A trial.", ...range },
+          standsOut: { text: "A trial.", ...range, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
           dubiousClaims: [],
           reasoning: "x",
           similarToIndices: [],
@@ -463,4 +475,74 @@ test("a short video earns no big picture, whatever the model wrote", () => {
 test("a longer video keeps its big picture, trimmed, and an empty one is none", () => {
   assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: "  Some ground.  " }, meta).bigPicture, "Some ground.");
   assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: " " }, meta).bigPicture, null);
+});
+
+const quotedInput: GenerationInput = {
+  ...baseInput,
+  transcript: [
+    { text: "Today we talk training.", startMs: 0, endMs: 4000 },
+    { text: "Honestly I'm not sure it works for everyone,", startMs: 4000, endMs: 8000 },
+    { text: "but you're not going to out-train a bad diet.", startMs: 8000, endMs: 12000 },
+    { text: "Thanks for watching.", startMs: 12000, endMs: 16000 },
+  ],
+};
+
+const quotedPoint = (quoteStart: number, quoteEnd: number, quoteAdds: string | null = null, start = 1, end = 2) => ({
+  text: "Diet matters more than training for weight.",
+  startSegmentIndex: start,
+  endSegmentIndex: end,
+  quoteStartSegmentIndex: quoteStart,
+  quoteEndSegmentIndex: quoteEnd,
+  quoteAdds,
+});
+
+const assembleQuoted = (point: ReturnType<typeof quotedPoint>) =>
+  assembleOverview(quotedInput, { ...baseOutput, keyPoints: [point, ...baseOutput.keyPoints.slice(1)] }, meta).keyPoints[0];
+
+test("a key point's quotation is lifted from the transcript by code, with what it adds", () => {
+  assert.deepEqual(assembleQuoted(quotedPoint(1, 2, " He hedges before he says it. "))?.evidence, {
+    text: "Honestly I'm not sure it works for everyone, but you're not going to out-train a bad diet.",
+    range: { startMs: 4000, endMs: 12000 },
+    adds: "He hedges before he says it.",
+  });
+});
+
+test("a quotation outside its point's own stretch, or on a point with no stretch, is no evidence at all", () => {
+  assert.equal("evidence" in assembleQuoted(quotedPoint(0, 1))!, false);
+  assert.equal("evidence" in assembleQuoted(quotedPoint(2, 3))!, false);
+  assert.equal("evidence" in assembleQuoted(quotedPoint(2, 1))!, false);
+  assert.equal("evidence" in assembleQuoted(quotedPoint(1, 1, null, -1, -1))!, false);
+  assert.equal("evidence" in assembleQuoted(quotedPoint(-1, -1, "Something."))!, false);
+});
+
+test("an empty line on what the quotation adds is none", () => {
+  assert.equal(assembleQuoted(quotedPoint(2, 2, "  "))?.evidence?.adds, null);
+});
+
+test("what stands out gains its quotation the same way, never with an added line", () => {
+  const overview = assembleOverview(
+    quotedInput,
+    {
+      ...baseOutput,
+      verdict: {
+        novelty: "original",
+        standsOut: {
+          text: "The diet claim.",
+          startSegmentIndex: 1,
+          endSegmentIndex: 2,
+          quoteStartSegmentIndex: 2,
+          quoteEndSegmentIndex: 2,
+        },
+        dubiousClaims: [],
+        reasoning: "x",
+        similarToIndices: [],
+      },
+    },
+    meta,
+  );
+  assert.deepEqual(overview.verdict?.standsOut?.evidence, {
+    text: "but you're not going to out-train a bad diet.",
+    range: { startMs: 8000, endMs: 12000 },
+    adds: null,
+  });
 });

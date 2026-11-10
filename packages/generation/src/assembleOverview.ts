@@ -9,17 +9,19 @@ import {
   youTubeSource,
   type Chapter,
   type DubiousClaim,
+  type Evidence,
   type Novelty,
   type StandsOut,
   type OverviewId,
 } from "@overview/domain";
 import type { GenerationInput } from "./GenerationInput.js";
-import type { GeneratedOutput, GeneratedRecipeVideoOutput, GeneratedTimedText } from "./GeneratedOutput.js";
+import type { GeneratedOutput, GeneratedQuotedText, GeneratedRecipeVideoOutput } from "./GeneratedOutput.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
 import { videoRecipe } from "./recipe/videoRecipe.js";
-import { segmentRangeOf } from "./sections/segmentRangeFields.js";
+import { quoteRangeOf, segmentRangeOf, type SegmentRangeShape } from "./sections/segmentRangeFields.js";
+import { liftQuotation } from "./liftQuotation.js";
 import { resolvedBigPicture } from "./sections/bigPicturePrompt.js";
 import { transcriptBudget } from "./sections/transcriptBudget.js";
 
@@ -99,7 +101,10 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
     bigPicture: resolvedBigPicture(transcriptBudget(input).bigPictureWords, output.bigPicture),
     coreClaim: output.coreClaim,
     thin: output.thin,
-    keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, segmentRangeOf(point)) })),
+    keyPoints: output.keyPoints.map((point) => {
+      const evidence = resolveEvidence(input, point, point.quoteAdds);
+      return { text: point.text, range: resolveOptionalRange(input, segmentRangeOf(point)), ...(evidence ? { evidence } : {}) };
+    }),
     verdict,
     selling,
     howToApply,
@@ -109,13 +114,32 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
 }
 
 // docs/features/novelty-scale.md, "What stands out".
-function resolveStandsOut(input: GenerationInput, novelty: Novelty, standsOut: GeneratedTimedText | null): StandsOut | null {
+function resolveStandsOut(input: GenerationInput, novelty: Novelty, standsOut: GeneratedQuotedText | null): StandsOut | null {
   const text = standsOut?.text.trim() ?? "";
-  if (novelty === "common_knowledge" || text === "") {
+  if (standsOut === null || novelty === "common_knowledge" || text === "") {
     return null;
   }
-  return { text, range: resolveOptionalRange(input, standsOut === null ? null : segmentRangeOf(standsOut)) };
+  const evidence = resolveEvidence(input, standsOut, null);
+  return { text, range: resolveOptionalRange(input, segmentRangeOf(standsOut)), ...(evidence ? { evidence } : {}) };
 }
+
+// Code lifts the quotation; the model only named where it is, inside the line's own stretch.
+// One that names nothing usable leaves the line without evidence rather than failing the
+// overview (docs/architecture/overview-quality.md, "Evidence: the model points, code quotes").
+function resolveEvidence(input: GenerationInput, line: GeneratedQuotedText, adds: string | null): Evidence | undefined {
+  const stretch = segmentRangeOf(line);
+  const quote = quoteRangeOf(line);
+  if (stretch === null || quote === null || !inside(quote, stretch, input.transcript.length)) return undefined;
+  const lifted = liftQuotation(input.transcript.slice(quote.startSegmentIndex, quote.endSegmentIndex + 1));
+  if (lifted === null) return undefined;
+  return { ...lifted, adds: adds?.trim() ? adds.trim() : null };
+}
+
+const inside = (quote: SegmentRangeShape, stretch: SegmentRangeShape, segments: number): boolean =>
+  stretch.startSegmentIndex <= quote.startSegmentIndex &&
+  quote.startSegmentIndex <= quote.endSegmentIndex &&
+  quote.endSegmentIndex <= stretch.endSegmentIndex &&
+  stretch.endSegmentIndex < segments;
 
 // A stretch a line merely points at: one that doesn't fit the transcript loses its jump
 // rather than failing the overview (docs/features/novelty-scale.md).

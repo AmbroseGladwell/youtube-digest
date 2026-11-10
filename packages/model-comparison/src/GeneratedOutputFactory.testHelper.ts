@@ -7,9 +7,30 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
     coreClaim: "Planning meals cut the grocery bill from $1,200 to 960 a month.",
     thin: false,
     keyPoints: [
-      { text: "Planning a week of meals first cut the bill.", startSegmentIndex: 3, endSegmentIndex: 5 },
-      { text: "Buying store brands saved the most.", startSegmentIndex: -1, endSegmentIndex: -1 },
-      { text: "Shopping once a week stopped impulse buys.", startSegmentIndex: 10, endSegmentIndex: 12 },
+      {
+        text: "Planning a week of meals first cut the bill.",
+        startSegmentIndex: 3,
+        endSegmentIndex: 5,
+        quoteStartSegmentIndex: -1,
+        quoteEndSegmentIndex: -1,
+        quoteAdds: null,
+      },
+      {
+        text: "Buying store brands saved the most.",
+        startSegmentIndex: -1,
+        endSegmentIndex: -1,
+        quoteStartSegmentIndex: -1,
+        quoteEndSegmentIndex: -1,
+        quoteAdds: null,
+      },
+      {
+        text: "Shopping once a week stopped impulse buys.",
+        startSegmentIndex: 10,
+        endSegmentIndex: 12,
+        quoteStartSegmentIndex: -1,
+        quoteEndSegmentIndex: -1,
+        quoteAdds: null,
+      },
     ],
     chapters: [
       { title: "The starting budget", summary: "What they spent before.", startSegmentIndex: 0 },

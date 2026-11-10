@@ -967,6 +967,51 @@ check's answer and cost on each run and reports its mean cost and the recipe not
 
 **What it costs** is measured in `docs/architecture/cost-model.md`, "The kind check (OV-275)".
 
+## Evidence: the source's own words under a key point
+
+Trello OV-216, built 10 Nov 2026. The reasoning is in `docs/architecture/overview-quality.md`,
+"Evidence: the model points, code quotes"; this records what was built.
+
+**The model points, code quotes.** A key point names `quoteStartSegmentIndex` and
+`quoteEndSegmentIndex`, the one or two segments inside its own stretch where the claim is said,
+and `assembleOverview` lifts those segments from the transcript (`liftQuotation.ts`). No model
+writes quotation text, so a quotation can't be invented. What stands out names its quotation
+the same way.
+
+- **A quotation that doesn't fit is dropped, never the overview.** One outside its point's own
+  stretch, running backwards, or on a point with no stretch leaves that point without evidence.
+  The harness counts these (`quotationsInsideTheirLine`) so the rate is measured rather than
+  hidden.
+- **Code cuts it to 40 words** (`EVIDENCE_MOST_WORDS`), at a whole segment where it can, and
+  ends a cut quotation with an ellipsis. A caption's own annotation such as "[Music]" is not
+  quoted.
+- **Auto-captions are quoted as they are**, unpunctuated and possibly misheard, as the owner
+  decided on 10 Nov 2026. Restoring punctuation would mean a model re-emitting the words, which
+  is the thing this design rules out. Whether the captions were auto-generated is already on the
+  stored transcript (`StoredTranscript.generated`), so the page and the connector label a
+  quotation from that rather than the record carrying a copy.
+- **Budgeted, not templated.** The prompt allows a quotation on about two points in five
+  (`mostQuotations`: one on a three-point note, three on seven, four on ten), for the claims
+  that most need the speaker's own words. It is a target the harness checks
+  (`quotationsWithinBudget`), not a refinement: a model that over-quotes gets a longer note,
+  never a failed one.
+- **What the quotation adds is optional and narrow.** `quoteAdds` is null unless the speaker's
+  words add something the point does not: a hedge, a contradiction, bluntness, or phrasing that
+  makes the claim land. It is never why the subject matters, which the big picture and How to
+  apply already say (the owner's gate, 8 Nov 2026). It is nullable rather than an empty string,
+  because a required field is an instruction to fill it. Target 20 words, enforced at 30.
+- **No speaker is named.** Auto-captions carry no speaker labels, so a quotation says what was
+  said, never who said it (OV-226 for when diarisation arrives).
+
+**The record.** `KeyPoint.evidence` and `StandsOut.evidence` (`Evidence.ts`: text, range, adds)
+are absent rather than null when there is none. Overview schema 17 alters nothing and holds
+these records back from clients before version 18, which would strip the evidence on their next
+write.
+
+**The grammar.** It fits only because OV-275 took the recipe block out of the video schema
+("The kind check"). Probed on 10 Nov 2026 with a 16-token reply: the schema with these fields
+compiles on Sonnet 5.5 and Opus 5.5.
+
 ## Open, still to decide
 
 - The library-size threshold for personal-claim retrieval and topic-list retrieval to

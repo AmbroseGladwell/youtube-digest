@@ -45,6 +45,10 @@ export const noteBudget = (form: SourceForm, sourceWords: number): NoteBudget =>
   bigPictureWords: bigPictureBudget(sourceWords),
 });
 
+// About two points in five carry a quotation, about four on a deep note: proof points, not a
+// template (docs/architecture/overview-quality.md, "How much evidence, and how long").
+export const mostQuotations = ({ keyPoints }: NoteBudget): number => Math.max(1, Math.round(keyPoints * 0.4));
+
 export const mostWordsPerKeyPoint = ({ wordsPerKeyPoint }: NoteBudget): number => Math.ceil(wordsPerKeyPoint * ROOM_OVER_THE_TARGET);
 
 // Positions are paragraphs for written sources and transcript segments for spoken ones.

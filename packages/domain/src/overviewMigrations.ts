@@ -174,6 +174,10 @@ const fillBigPictureAddedAfterTheFirstNotes: RecordMigration = {
 // client refuses, so older clients hold these records back rather than quarantine them.
 const allowTenKeyPoints: RecordMigration = { newSchemaVersion: 16 };
 
+// Nothing to alter: a key point or what stands out may now carry the source's own words, which
+// an older client would strip on its next write (OV-216).
+const allowEvidence: RecordMigration = { newSchemaVersion: 17 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -190,6 +194,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   allowLongerOneLiners,
   fillBigPictureAddedAfterTheFirstNotes,
   allowTenKeyPoints,
+  allowEvidence,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

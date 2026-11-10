@@ -6,6 +6,7 @@ export * from "./ExtractedArticle.js";
 export * from "./Recipe.js";
 export * from "./RecipeNote.js";
 export * from "./NoteKind.js";
+export * from "./Evidence.js";
 export * from "./recipeActions.js";
 export * from "./recipeFacts.js";
 export * from "./recipeFactsInLines.js";

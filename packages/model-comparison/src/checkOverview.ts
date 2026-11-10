@@ -1,5 +1,13 @@
-import { IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
-import { segmentRangeOf, transcriptBudget, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
+import { EVIDENCE_ADDS_TARGET_WORDS, IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
+import {
+  mostQuotations,
+  quoteRangeOf,
+  segmentRangeOf,
+  transcriptBudget,
+  type GeneratedOutput,
+  type QuoteRangeShape,
+  type SegmentRangeShape,
+} from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 
 export type CheckArea = "overview" | "chapters";
@@ -35,6 +43,27 @@ const rangeProblem = (label: string, item: SegmentRangeShape | null | undefined,
     return [`${label} ends at segment ${range.endSegmentIndex} of ${segments}`];
   }
   return [];
+};
+
+// A run from before OV-216 has no quotation fields, which is no quotation.
+const quoteOf = (item: Partial<QuoteRangeShape> | null | undefined): SegmentRangeShape | null =>
+  item?.quoteStartSegmentIndex === undefined || item.quoteEndSegmentIndex === undefined ? null : quoteRangeOf(item as QuoteRangeShape);
+
+const quotationProblem = (label: string, item: (SegmentRangeShape & Partial<QuoteRangeShape>) | null | undefined): string[] => {
+  const quote = quoteOf(item);
+  if (quote === null) return [];
+  const stretch = item ? segmentRangeOf(item) : null;
+  if (stretch === null)
+    return [`${label} quotes segments ${quote.startSegmentIndex} to ${quote.endSegmentIndex} with no stretch of its own`];
+  const inside =
+    stretch.startSegmentIndex <= quote.startSegmentIndex &&
+    quote.startSegmentIndex <= quote.endSegmentIndex &&
+    quote.endSegmentIndex <= stretch.endSegmentIndex;
+  return inside
+    ? []
+    : [
+        `${label} quotes segments ${quote.startSegmentIndex} to ${quote.endSegmentIndex}, outside its stretch ${stretch.startSegmentIndex} to ${stretch.endSegmentIndex}`,
+      ];
 };
 
 function proseOf(output: GeneratedOutput): string[] {
@@ -115,6 +144,26 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
       output.keyPoints.flatMap((point, index) => rangeProblem(`key point ${index + 1}`, point, segments)),
     ),
     result("standsOutRangeInside", "overview", rangeProblem("standsOut", verdict?.standsOut, segments)),
+    result("quotationsInsideTheirLine", "overview", [
+      ...output.keyPoints.flatMap((point, index) => quotationProblem(`key point ${index + 1}`, point)),
+      ...quotationProblem("standsOut", verdict?.standsOut),
+    ]),
+    result(
+      "quotationsWithinBudget",
+      "overview",
+      (() => {
+        const quoted = output.keyPoints.filter((point) => quoteOf(point) !== null).length;
+        return quoted > mostQuotations(budget) ? [`${quoted} points quoted of ${mostQuotations(budget)}`] : [];
+      })(),
+    ),
+    result(
+      "quoteAddsWithinTarget",
+      "overview",
+      output.keyPoints.flatMap((point, index) => {
+        const words = point.quoteAdds ? wordCount(point.quoteAdds) : 0;
+        return words > EVIDENCE_ADDS_TARGET_WORDS ? [`key point ${index + 1}'s quoteAdds is ${words} words`] : [];
+      }),
+    ),
     result("watchAnywayRangeInside", "overview", rangeProblem("watch-anyway range", output.watchAnyway, segments)),
     result(
       "inOneLineWithinTarget",

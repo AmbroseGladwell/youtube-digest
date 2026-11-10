@@ -21,3 +21,17 @@ export const segmentRangeOf = (item: SegmentRangeShape): SegmentRangeShape | nul
   item.startSegmentIndex === NO_SEGMENT || item.endSegmentIndex === NO_SEGMENT
     ? null
     : { startSegmentIndex: item.startSegmentIndex, endSegmentIndex: item.endSegmentIndex };
+
+export interface QuoteRangeShape {
+  quoteStartSegmentIndex: number;
+  quoteEndSegmentIndex: number;
+}
+
+// The segments a quotation is lifted from, by the same rules as a stretch: -1 for none.
+export function quoteRangeFields(input: GenerationInput) {
+  const { startSegmentIndex, endSegmentIndex } = segmentRangeFields(input);
+  return { quoteStartSegmentIndex: startSegmentIndex, quoteEndSegmentIndex: endSegmentIndex };
+}
+
+export const quoteRangeOf = (item: QuoteRangeShape): SegmentRangeShape | null =>
+  segmentRangeOf({ startSegmentIndex: item.quoteStartSegmentIndex, endSegmentIndex: item.quoteEndSegmentIndex });

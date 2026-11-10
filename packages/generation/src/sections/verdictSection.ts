@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DubiousClaim, MAX_DUBIOUS_CLAIMS, Verdict } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
-import { segmentRangeFields } from "./segmentRangeFields.js";
+import { quoteRangeFields, segmentRangeFields } from "./segmentRangeFields.js";
 
 export const DUBIOUS_CLAIM_TARGET_WORDS = 25;
 export const DUBIOUS_REASON_TARGET_WORDS = 30;
@@ -62,7 +62,10 @@ reasoning calls fresh. It is null for COMMON_KNOWLEDGE. Give the stretch
 of the video where it is shown or explained as
 startSegmentIndex/endSegmentIndex, taken from the numbered transcript
 segments below; don't estimate a time. Set both to -1 when no one
-stretch carries it.
+stretch carries it. Then name the one or two segments inside that
+stretch where it is said most plainly, as
+quoteStartSegmentIndex/quoteEndSegmentIndex, so code can quote them word
+for word; both -1 when it has no stretch.
 
 Never begin the reasoning with the novelty word itself; the label is
 shown beside it and the reasoning is read aloud on its own. Don't repeat
@@ -96,6 +99,7 @@ List the indices (if any) whose claim this video repeats, as similarToIndices.`;
       .object({
         text: z.string(),
         ...segmentRangeFields(input),
+        ...quoteRangeFields(input),
       })
       .nullable(),
     dubiousClaims: z

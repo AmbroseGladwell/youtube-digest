@@ -6,9 +6,9 @@ export const validAnswer = {
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: [
-    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
-    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
-    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
+    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
   ],
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],

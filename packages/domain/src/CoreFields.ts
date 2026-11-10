@@ -1,10 +1,13 @@
 import { z } from "zod";
+import { Evidence } from "./Evidence.js";
 import { TimeRange } from "./WatchAnyway.js";
 import { wordCount } from "./wordCount.js";
 
 export const KeyPoint = z.object({
   text: z.string(),
   range: TimeRange.nullable(),
+  // Absent on a point with no quotation, and on every note before schema 17 (OV-216).
+  evidence: Evidence.optional(),
 });
 export type KeyPoint = z.infer<typeof KeyPoint>;
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Evidence } from "./Evidence.js";
 import { OverviewId } from "./Brands.js";
 import { TimeRange } from "./WatchAnyway.js";
 import { wordCount } from "./wordCount.js";
@@ -15,6 +16,7 @@ export type SimilarOverview = z.infer<typeof SimilarOverview>;
 export const StandsOut = z.object({
   text: z.string(),
   range: TimeRange.nullable(),
+  evidence: Evidence.optional(),
 });
 export type StandsOut = z.infer<typeof StandsOut>;
 

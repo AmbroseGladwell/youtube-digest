@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { CoreFields, IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
+import { CoreFields, EVIDENCE_ADDS_MAX_WORDS, EVIDENCE_ADDS_TARGET_WORDS, IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
-import { LEAST_KEY_POINTS, mostWordsPerKeyPoint, type NoteBudget } from "../noteBudget.js";
+import { LEAST_KEY_POINTS, mostQuotations, mostWordsPerKeyPoint, type NoteBudget } from "../noteBudget.js";
 import { bigPicturePrompt, bigPictureShape } from "./bigPicturePrompt.js";
-import { segmentRangeFields } from "./segmentRangeFields.js";
+import { quoteRangeFields, segmentRangeFields } from "./segmentRangeFields.js";
 import { transcriptBudget } from "./transcriptBudget.js";
 
 const { inOneLine, ...afterInOneLine } = CoreFields.shape;
@@ -80,7 +80,25 @@ Give each point the stretch of the video it comes from, as
 startSegmentIndex/endSegmentIndex taken from the numbered transcript
 segments below, so the reader can go to it; don't estimate a time. Set
 both to -1 for a point the video builds across several places rather
-than in one stretch.`;
+than in one stretch.
+
+## Quotations
+Where a point rests on something the video says that I would otherwise
+have to take on trust, name the words that carry it, as
+quoteStartSegmentIndex/quoteEndSegmentIndex: the one or two segments
+inside that point's own stretch where it is said. Code copies those
+segments word for word, so you never write a quotation yourself. Do this
+for ${mostQuotations(budget)} points at most, the claims that most need the speaker's own
+words behind them, and set both to -1 on every other point and on any
+point with no stretch.
+
+quoteAdds is one short sentence, ${EVIDENCE_ADDS_TARGET_WORDS} words at most, on what the
+speaker's own words add that the point does not: that they hedged,
+contradicted themselves, put it more bluntly than a summary would dare,
+or that the exact phrasing is what makes the claim land. It is never why
+the subject matters; the big picture and How to apply say that. Set it to
+null whenever it would restate the point, which is most of the time, and
+always on a point with no quotation.`;
   },
   schemaShape: (input) => {
     const budget = transcriptBudget(input);
@@ -93,6 +111,11 @@ than in one stretch.`;
         .object({
           text: z.string().refine((point) => wordCount(point) <= mostWords, `max ${mostWords} words`),
           ...segmentRangeFields(input),
+          ...quoteRangeFields(input),
+          quoteAdds: z
+            .string()
+            .refine((adds) => wordCount(adds) <= EVIDENCE_ADDS_MAX_WORDS, `max ${EVIDENCE_ADDS_MAX_WORDS} words`)
+            .nullable(),
         })
         .array()
         .min(LEAST_KEY_POINTS)

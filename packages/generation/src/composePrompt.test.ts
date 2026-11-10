@@ -53,7 +53,14 @@ test("a short video keeps seven key points of 40 words and its usual chapter hin
   assert.ok(systemPrompt.includes("Seven is the ceiling for a video this\nlength"));
   assert.ok(systemPrompt.includes("Most videos\nhave 3 to 8"));
   assert.ok(!systemPrompt.includes("plainly different from the ones"));
-  const point = { text: "A point.", startSegmentIndex: -1, endSegmentIndex: -1 };
+  const point = {
+    text: "A point.",
+    startSegmentIndex: -1,
+    endSegmentIndex: -1,
+    quoteStartSegmentIndex: -1,
+    quoteEndSegmentIndex: -1,
+    quoteAdds: null,
+  };
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(7).fill(point)).success, true);
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(8).fill(point)).success, false);
 });
@@ -65,7 +72,14 @@ test("a two hour video gets up to ten longer key points and twenty chapters that
   assert.ok(systemPrompt.includes("never spend them\nall on the first hour"));
   assert.ok(systemPrompt.includes("at most\n20;"));
   assert.ok(systemPrompt.includes("plainly different from the ones"));
-  const point = { text: "A point.", startSegmentIndex: -1, endSegmentIndex: -1 };
+  const point = {
+    text: "A point.",
+    startSegmentIndex: -1,
+    endSegmentIndex: -1,
+    quoteStartSegmentIndex: -1,
+    quoteEndSegmentIndex: -1,
+    quoteAdds: null,
+  };
   const chapter = (index: number) => ({ title: "A chapter", summary: "What it covers.", startSegmentIndex: index });
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(10).fill(point)).success, true);
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(11).fill(point)).success, false);
@@ -305,7 +319,15 @@ test("asks for fewer words than it enforces, so a near miss does not fail the ov
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
   const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
-  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, startSegmentIndex: -1, endSegmentIndex: -1 }));
+  const points = (first: string) =>
+    [first, "Two.", "Three."].map((text) => ({
+      text,
+      startSegmentIndex: -1,
+      endSegmentIndex: -1,
+      quoteStartSegmentIndex: -1,
+      quoteEndSegmentIndex: -1,
+      quoteAdds: null,
+    }));
 
   assert.ok(KEY_POINT_TARGET_WORDS < KEY_POINT_MAX_WORDS);
   assert.ok(HOW_TO_APPLY_TARGET_WORDS < HOW_TO_APPLY_MAX_WORDS);
@@ -317,7 +339,15 @@ test("refuses a key point or an action over its hard word ceiling, so the retry 
   const { schema } = composePrompt(baseInput);
   const words = (count: number) => Array.from({ length: count }, () => "word").join(" ");
   const accepts = (field: string, value: unknown) => z.safeParse(schema.shape[field]!, value).success;
-  const points = (first: string) => [first, "Two.", "Three."].map((text) => ({ text, startSegmentIndex: -1, endSegmentIndex: -1 }));
+  const points = (first: string) =>
+    [first, "Two.", "Three."].map((text) => ({
+      text,
+      startSegmentIndex: -1,
+      endSegmentIndex: -1,
+      quoteStartSegmentIndex: -1,
+      quoteEndSegmentIndex: -1,
+      quoteAdds: null,
+    }));
 
   assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS))), true);
   assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS + 1))), false);
@@ -421,7 +451,7 @@ test("the video schema keeps to the few fields that may be null, since each one 
     walk(schema.items, `${path}[]`);
   };
   walk(providerJsonSchema(composePrompt({ ...baseInput, sectionsEnabled: DEFAULT_SECTIONS_ENABLED }).schema), "");
-  assert.deepEqual(unions.sort(), [".suggestedTopic", ".suggestedTopic.description", ".verdict.standsOut"]);
+  assert.deepEqual(unions.sort(), [".keyPoints[].quoteAdds", ".suggestedTopic", ".suggestedTopic.description", ".verdict.standsOut"]);
 });
 
 const spokenFor = (words: number) => [{ text: Array(words).fill("word").join(" "), startMs: 0, endMs: 1000 }];
@@ -445,3 +475,18 @@ test("a big picture past its cap is sent back, an empty one never is", () => {
   assert.equal(bigPicture.safeParse(Array(75).fill("word").join(" ")).success, true);
   assert.equal(bigPicture.safeParse(Array(76).fill("word").join(" ")).success, false);
 });
+
+test("the key points ask for quotations by segment, at most two in five, and never for quotation text", () => {
+  const short = composePrompt(baseInput);
+  const long = composePrompt(longInput);
+  assert.match(short.systemPrompt, /## Quotations/);
+  assert.match(short.systemPrompt, /Code copies those\nsegments word for word, so you never write a quotation yourself/);
+  assert.match(short.systemPrompt, /for 3 points at most/);
+  assert.match(long.systemPrompt, /for 4 points at most/);
+  const point = { text: "A point.", startSegmentIndex: 0, endSegmentIndex: 1, quoteStartSegmentIndex: 1, quoteEndSegmentIndex: 1 };
+  assert.equal(z.safeParse(schemaPoint(short), { ...point, quoteAdds: null }).success, true);
+  assert.equal(z.safeParse(schemaPoint(short), { ...point, quoteAdds: Array(31).fill("word").join(" ") }).success, false);
+  assert.equal(z.safeParse(schemaPoint(short), point).success, false);
+});
+
+const schemaPoint = ({ schema }: ReturnType<typeof composePrompt>) => (schema.shape.keyPoints as z.ZodArray<z.ZodType>).element;

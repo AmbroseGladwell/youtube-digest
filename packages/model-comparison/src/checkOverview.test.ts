@@ -29,7 +29,13 @@ test("a stands-out or watch-anyway range outside the transcript fails its own ch
     verdict: {
       ...makeGeneratedOutput().verdict!,
       novelty: "fresh_angle",
-      standsOut: { text: "A worked budget.", startSegmentIndex: 5, endSegmentIndex: 99 },
+      standsOut: {
+        text: "A worked budget.",
+        startSegmentIndex: 5,
+        endSegmentIndex: 99,
+        quoteStartSegmentIndex: -1,
+        quoteEndSegmentIndex: -1,
+      },
     },
     watchAnyway: { answer: "partial", reason: "The demo is visual.", startSegmentIndex: 40, endSegmentIndex: 41 },
   });
@@ -128,4 +134,41 @@ test("one chapter holding most of a long video fails; a short video may be one c
     chapters: [{ title: "One idea", summary: "The whole clip.", startSegmentIndex: 0 }],
   });
   assert.deepEqual(failing(short, makeFetchedTranscript(6)), []);
+});
+
+const withQuote = (index: number, quote: { quoteStartSegmentIndex: number; quoteEndSegmentIndex: number; quoteAdds?: string | null }) => {
+  const output = makeGeneratedOutput();
+  output.keyPoints[index] = { ...output.keyPoints[index]!, quoteAdds: null, ...quote };
+  return output;
+};
+
+test("a quotation inside its own point's stretch passes, and one outside it or on a point with no stretch fails", () => {
+  const point = makeGeneratedOutput().keyPoints[0]!;
+  assert.deepEqual(failing(withQuote(0, { quoteStartSegmentIndex: point.startSegmentIndex, quoteEndSegmentIndex: point.startSegmentIndex })), []);
+  assert.deepEqual(failing(withQuote(0, { quoteStartSegmentIndex: point.endSegmentIndex + 1, quoteEndSegmentIndex: point.endSegmentIndex + 1 })), [
+    "quotationsInsideTheirLine",
+  ]);
+  const noStretch = withQuote(0, { quoteStartSegmentIndex: 1, quoteEndSegmentIndex: 1 });
+  noStretch.keyPoints[0] = { ...noStretch.keyPoints[0]!, startSegmentIndex: -1, endSegmentIndex: -1 };
+  assert.deepEqual(failing(noStretch), ["quotationsInsideTheirLine"]);
+});
+
+test("quoting more points than the budget allows fails, and a long line on what a quotation adds fails its target", () => {
+  const output = makeGeneratedOutput();
+  const quoted = { ...output.keyPoints[0]!, startSegmentIndex: 3, endSegmentIndex: 5, quoteStartSegmentIndex: 4, quoteEndSegmentIndex: 4 };
+  output.keyPoints = [quoted, quoted, quoted, quoted];
+  assert.deepEqual(failing(output), ["quotationsWithinBudget"]);
+  const point = makeGeneratedOutput().keyPoints[0]!;
+  const long = withQuote(0, {
+    quoteStartSegmentIndex: point.startSegmentIndex,
+    quoteEndSegmentIndex: point.startSegmentIndex,
+    quoteAdds: Array(25).fill("word").join(" "),
+  });
+  assert.deepEqual(failing(long), ["quoteAddsWithinTarget"]);
+});
+
+test("a run from before quotations existed has none, and fails nothing for it", () => {
+  const output = makeGeneratedOutput();
+  output.keyPoints = output.keyPoints.map(({ text, startSegmentIndex, endSegmentIndex }) => ({ text, startSegmentIndex, endSegmentIndex }) as never);
+  assert.deepEqual(failing(output), []);
 });
