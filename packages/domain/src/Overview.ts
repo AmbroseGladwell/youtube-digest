@@ -3,7 +3,7 @@ import { OverviewId } from "./Brands.js";
 import { ArticleDetails } from "./ArticleDetails.js";
 import { Source } from "./Source.js";
 import { BigPicture } from "./BigPicture.js";
-import { CoreFields, KeyPoint } from "./CoreFields.js";
+import { CoreFields, KeyPoint, MOST_KEY_POINTS } from "./CoreFields.js";
 import { RecipeNote } from "./RecipeNote.js";
 import { Filing } from "./Filing.js";
 import { Verdict } from "./Verdict.js";
@@ -69,7 +69,7 @@ export const Overview = z
     // Null for anything but a recipe page, whose note is this in place of the argument-shaped
     // fields, which stay empty (docs/features/recipe-notes.md).
     recipe: RecipeNote.nullable(),
-    keyPoints: z.array(KeyPoint).max(7),
+    keyPoints: z.array(KeyPoint).max(MOST_KEY_POINTS),
   })
   .superRefine((overview, ctx) => {
     recipeShape(overview, ctx);

@@ -38,10 +38,11 @@ verdict scale are unchanged, and the limits are imported so the two can't drift.
 A reader has to trust that nothing important is missing, and the note still has to be far shorter
 than the piece. Those pull against each other, so both are measured rather than left to the prompt.
 
-**The size comes from code.** `articleNoteBudget` takes the measured word count and sets the key
-points, their length and the most chapters, from 3 points of 25 words and one chapter under 400
-words to 7 points
-of 40 words over 6,000. The ceilings are in the schema, so an over-long note goes back to the model.
+**The size comes from code.** `noteBudget` takes the measured word count and sets the key points,
+their length and the most chapters, from 3 points of 25 words and one chapter under 400 words to 6
+points of 40 words at 6,000, then the long rows every source shares, up to 10 points of 60 words and
+20 chapters (`overview-generation-decisions.md`, "One note budget"). The ceilings are in the
+schema, so an over-long note goes back to the model.
 
 **Chapters say what the piece says.** A summary states the finding, reason or number in that stretch,
 not its subject, and uses the room for what the key points left out. Reading down them gives the

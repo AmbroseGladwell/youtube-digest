@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { MOST_KEY_POINTS } from "./CoreFields.js";
 import { Overview } from "./Overview.js";
 import type { DubiousClaim } from "./Verdict.js";
 
@@ -200,45 +201,11 @@ test("core claim allows up to 60 words but no more", () => {
   assert.throws(() => Overview.parse({ ...baseOverview, coreClaim: overLimit }));
 });
 
-test("key points must be 3 to 7 items: the old cap of 5 fell to a real two and a half hour debate", () => {
-  assert.throws(() =>
-    Overview.parse({
-      ...baseOverview,
-      keyPoints: [
-        { text: "one", range: null },
-        { text: "two", range: null },
-      ],
-    }),
-  );
-  assert.doesNotThrow(() =>
-    Overview.parse({
-      ...baseOverview,
-      keyPoints: [
-        { text: "1", range: null },
-        { text: "2", range: null },
-        { text: "3", range: null },
-        { text: "4", range: null },
-        { text: "5", range: null },
-        { text: "6", range: null },
-        { text: "7", range: null },
-      ],
-    }),
-  );
-  assert.throws(() =>
-    Overview.parse({
-      ...baseOverview,
-      keyPoints: [
-        { text: "1", range: null },
-        { text: "2", range: null },
-        { text: "3", range: null },
-        { text: "4", range: null },
-        { text: "5", range: null },
-        { text: "6", range: null },
-        { text: "7", range: null },
-        { text: "8", range: null },
-      ],
-    }),
-  );
+test("key points must be 3 to 10 items: seven fell short of a two hour interview, as five once fell to a debate", () => {
+  const points = (count: number) => Array.from({ length: count }, (_, index) => ({ text: String(index + 1), range: null }));
+  assert.throws(() => Overview.parse({ ...baseOverview, keyPoints: points(2) }));
+  assert.doesNotThrow(() => Overview.parse({ ...baseOverview, keyPoints: points(MOST_KEY_POINTS) }));
+  assert.throws(() => Overview.parse({ ...baseOverview, keyPoints: points(MOST_KEY_POINTS + 1) }));
 });
 
 test("tags must be lowercase and hyphenated", () => {

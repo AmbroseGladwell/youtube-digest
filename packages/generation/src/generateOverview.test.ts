@@ -166,3 +166,54 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
   assert.equal(calls, 2);
   assert.equal(overview.keyPoints.length, 7);
 });
+
+const longTranscript = Array.from({ length: 90 }, (_, index) => ({
+  text: Array.from({ length: 200 }, () => "word").join(" "),
+  startMs: index * 80_000,
+  endMs: (index + 1) * 80_000,
+}));
+
+const answer = (keyPointsAt: number[], chapterStarts = [0]) => ({
+  inOneLine: "A long interview.",
+  bigPicture: "",
+  coreClaim: "The core claim.",
+  thin: false,
+  keyPoints: keyPointsAt.map((at) => ({ text: "A point.", startSegmentIndex: at, endSegmentIndex: at + 1 })),
+  chapters: chapterStarts.map((start) => ({ title: "A chapter", summary: "What it covers.", startSegmentIndex: start })),
+  matchedTopicNames: [],
+  suggestedTopic: null,
+  recipe: null,
+  tags: ["one-tag", "two-tag", "three-tag"],
+  howToApply: { items: ["do this"] },
+});
+
+const answering = (...answers: unknown[]) => {
+  const messages: string[] = [];
+  const client: GenerationClient = async ({ userMessage }) => {
+    messages.push(userMessage);
+    return answers.shift();
+  };
+  return { client, messages };
+};
+
+test("a long video's key points that stop early go back to the model, naming where to reach", async () => {
+  const { client, messages } = answering(answer([0, 10, 20]), answer([0, 30, 80]));
+  const overview = await generateOverview(client, { ...input, transcript: longTranscript }, meta);
+  assert.equal(messages.length, 2);
+  assert.match(messages[1]!, /at least one must come from segment 60 onwards/);
+  assert.equal(overview.keyPoints.length, 3);
+});
+
+test("a long video's chapter too big to skip with no key point goes back to the model, naming the segments", async () => {
+  const { client, messages } = answering(answer([0, 10, 80], [0, 30, 60]), answer([0, 40, 80], [0, 30, 60]));
+  await generateOverview(client, { ...input, transcript: longTranscript }, meta);
+  assert.equal(messages.length, 2);
+  assert.match(messages[1]!, /too much of the video to leave out: at least one key point must come from segments 30 to 59/);
+});
+
+test("a short video's key points may all come from its opening, as before", async () => {
+  const shortTranscript = longTranscript.slice(0, 20);
+  const { client, messages } = answering(answer([0, 1, 2]));
+  await generateOverview(client, { ...input, transcript: shortTranscript }, meta);
+  assert.equal(messages.length, 1);
+});

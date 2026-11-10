@@ -14,7 +14,7 @@ import {
 import { GenerationError } from "../GenerationError.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { articleParagraphs, type ArticleParagraph } from "./articleParagraphs.js";
-import { bigPictureBudget } from "../bigPictureBudget.js";
+import { noteBudget } from "../noteBudget.js";
 import { resolvedBigPicture } from "../sections/bigPicturePrompt.js";
 import type { ArticleChapterShape } from "./sections/articleChaptersSection.js";
 
@@ -74,7 +74,7 @@ export function assembleArticleOverview(
     fromPlaylist: null,
     madeOn: null,
     inOneLine: output.inOneLine,
-    bigPicture: resolvedBigPicture(bigPictureBudget(input.article.wordCount), output.bigPicture),
+    bigPicture: resolvedBigPicture(noteBudget("written", input.article.wordCount).bigPictureWords, output.bigPicture),
     coreClaim: output.coreClaim,
     thin: output.thin,
     keyPoints: output.keyPoints.map(({ text }) => ({ text, range: null })),

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Chapter } from "@overview/domain";
-import { articleNoteBudget } from "../articleNoteBudget.js";
+import { noteBudget } from "../../noteBudget.js";
+import { NEIGHBOURING_CHAPTERS_DIFFER } from "../../sections/chaptersSection.js";
 import { articleParagraphs } from "../articleParagraphs.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
 import { paragraphIndex } from "./paragraphIndex.js";
@@ -25,16 +26,18 @@ const startsAtTheFirstParagraphAndAscends = (chapters: ArticleChapterShape[], ct
 
 export const articleChaptersSection: ArticlePromptSection = {
   key: "structural",
-  prompt: (input) => `
+  prompt: (input) => {
+    const { mostChapters, long } = noteBudget("written", input.article.wordCount);
+    return `
 ## Chapters
 Split the article into chapters at the points where its subject actually
 changes: a new question, a new example, a new stage of the argument. Follow
 the article's own headings where they mark such a change, and find the
 changes yourself where it has none. A chapter is a stretch a reader would
-skip to, not a paragraph. Use at most ${articleNoteBudget(input.article.wordCount).mostChapters} here, and a piece that does one
+skip to, not a paragraph. Use at most ${mostChapters} here, and a piece that does one
 thing has one. Never split a stretch to make the list longer. Every part
 of the article falls in a chapter, including its ending, and no chapter
-should swallow most of it.
+should swallow most of it.${long ? NEIGHBOURING_CHAPTERS_DIFFER : ""}
 
 For each chapter give a title of at most 8 plain words, and a summary of
 one or two sentences (40 words at most) that says what that stretch
@@ -50,7 +53,8 @@ points leave out. Quote nothing at length, and summarise rather than retell.
 
 Name where each chapter begins as startParagraphIndex, taken from the
 numbered paragraphs below. The first chapter starts at paragraph 0, and
-each chapter starts after the one before it.`,
+each chapter starts after the one before it.`;
+  },
   schemaShape: (input) => ({
     chapters: z
       .object({
@@ -60,7 +64,7 @@ each chapter starts after the one before it.`,
       })
       .array()
       .min(1)
-      .max(Math.min(articleNoteBudget(input.article.wordCount).mostChapters, articleParagraphs(input.article).length))
+      .max(Math.min(noteBudget("written", input.article.wordCount).mostChapters, articleParagraphs(input.article).length))
       .superRefine(startsAtTheFirstParagraphAndAscends),
   }),
 };
