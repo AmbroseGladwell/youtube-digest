@@ -851,6 +851,13 @@ one paragraph, so this reads low by design).
 points within the run-to-run spread, at the same output, and the same two articles needed the
 retry on both sides (the ADHD guide and the living-conditions explainer).
 
+**The automatic checks hold on the 20-video set** (`ov-87-checks` against `main-checks`, the
+sample reader). OpenAI calls began hanging for up to an hour around 03:00 UTC, on both sides, so
+three branch notes and five `main` notes never came back. On the 15 both wrote, every check gave
+the same result note for note, except one In one line opening on the branch, a field this change
+doesn't touch. The branch's Shopify note, a long source, passed every check, including
+`keyPointsWithinTarget` against its 50-word target.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
