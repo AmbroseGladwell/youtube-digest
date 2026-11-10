@@ -140,7 +140,13 @@ const articleOutput = (paragraphs: (number | null)[]): GeneratedArticleOutput =>
   bigPicture: "",
   coreClaim: "",
   thin: false,
-  keyPoints: paragraphs.map((paragraphIndex) => ({ text: "", paragraphIndex })),
+  keyPoints: paragraphs.map((paragraphIndex) => ({
+    text: "",
+    paragraphIndex,
+    quoteStartSentence: -1,
+    quoteEndSentence: -1,
+    quoteAdds: null,
+  })),
   chapters: [
     { title: "", summary: "", startParagraphIndex: 0 },
     { title: "", summary: "", startParagraphIndex: 2 },

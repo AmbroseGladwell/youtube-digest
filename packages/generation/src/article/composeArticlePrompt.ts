@@ -4,7 +4,7 @@ import { WRITING_RULES, type ComposedPrompt } from "../composePrompt.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import type { ArticlePromptSection } from "./ArticlePromptSection.js";
 import { chaptersTooBigToSkip, positionsInTheFinalStretch } from "../noteBudget.js";
-import { articleParagraphs } from "./articleParagraphs.js";
+import { articleParagraphs, articleSentences } from "./articleParagraphs.js";
 import { articleChaptersSection, type ArticleChapterShape } from "./sections/articleChaptersSection.js";
 import { articleCoreSection } from "./sections/articleCoreSection.js";
 import { articleFilingSection } from "./sections/articleFilingSection.js";
@@ -75,10 +75,15 @@ const readAnywayNamesRealChapters = (output: Record<string, unknown>, ctx: z.Ref
 function contextBlock(input: ArticleGenerationInput): string {
   const { article } = input;
   let heading: string | null = null;
+  const sentences = articleSentences(article);
   const paragraphs = articleParagraphs(article).flatMap((paragraph, index) => {
     const lines = paragraph.heading !== null && paragraph.heading !== heading ? [`## ${asArticleContent(paragraph.heading)}`] : [];
     heading = paragraph.heading;
-    return [...lines, `[${index}] ${asArticleContent(paragraph.text)}`];
+    const marked = sentences
+      .filter(({ paragraphIndex }) => paragraphIndex === index)
+      .map((sentence) => `{${sentence.index}} ${asArticleContent(sentence.text)}`)
+      .join(" ");
+    return [...lines, `[${index}] ${marked}`];
   });
   return `
 <article>

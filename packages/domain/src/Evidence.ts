@@ -11,9 +11,10 @@ export const EVIDENCE_MOST_WORDS = 40;
 export const EVIDENCE_ADDS_TARGET_WORDS = 20;
 export const EVIDENCE_ADDS_MAX_WORDS = 30;
 
+// An article's quotation has no time; it is found on the page by its own words.
 export const Evidence = z.object({
   text: z.string().min(1),
-  range: TimeRange,
+  range: TimeRange.nullable(),
   adds: z
     .string()
     .min(1)

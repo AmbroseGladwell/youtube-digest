@@ -24,11 +24,18 @@ const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n")
 
 // The source's own words under the line they back, set apart as a quotation so an assistant
 // never takes our prose for theirs, or theirs for ours (OV-216).
-const quotation = (videoUrl: string, evidence: Evidence | undefined, machineHeard: boolean, indent: string): string => {
+// An article quotation is found on its page by its opening words, as a key point's place is.
+const QUOTE_LINK_WORDS = 8;
+
+const quotation = (sourceUrl: string, evidence: Evidence | undefined, machineHeard: boolean, indent: string): string => {
   if (evidence === undefined) return "";
   const heard = machineHeard ? ", auto-generated captions" : "";
+  const where =
+    evidence.range === null
+      ? `[on the page](${articlePlaceUrl(sourceUrl, { anchor: null, quote: evidence.text.split(/\s+/).slice(0, QUOTE_LINK_WORDS).join(" ") })})`
+      : stretch(sourceUrl, evidence.range);
   const adds = evidence.adds === null ? "" : `\n${indent}_${evidence.adds}_`;
-  return `\n${indent}> “${evidence.text}” (${stretch(videoUrl, evidence.range)}${heard})${adds}`;
+  return `\n${indent}> “${evidence.text}” (${where}${heard})${adds}`;
 };
 
 // The note as it reads outside the app: every section the reader sees, with each moment

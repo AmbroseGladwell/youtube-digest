@@ -49,7 +49,7 @@ const quotationOf = (evidence: Evidence | undefined, source: string, machineHear
     : [
         {
           text: evidence.text,
-          range: evidence.range,
+          ...(evidence.range === null ? {} : { range: evidence.range }),
           bullet: false,
           quotation: true,
           label: machineHeard ? MACHINE_HEARD_QUOTATION_LABEL : quotationLabel(source),

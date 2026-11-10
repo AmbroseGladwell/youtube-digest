@@ -67,9 +67,9 @@ test("an article is made on our key from what the reader's browser read, and cou
     coreClaim: "The repair bill doubled because a survey was never checked.",
     thin: false,
     keyPoints: [
-      { text: "The bridge closed in March.", paragraphIndex: 0 },
-      { text: "The county offered half.", paragraphIndex: 2 },
-      { text: "Residents pay the rest.", paragraphIndex: 3 },
+      { text: "The bridge closed in March.", paragraphIndex: 0, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
+      { text: "The county offered half.", paragraphIndex: 2, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
+      { text: "Residents pay the rest.", paragraphIndex: 3, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
     ],
     chapters: [
       { title: "The closure", summary: "Why the bridge shut.", startParagraphIndex: 0 },

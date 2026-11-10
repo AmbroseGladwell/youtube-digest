@@ -2,7 +2,7 @@ import { z } from "zod";
 import { DubiousClaim, MAX_DUBIOUS_CLAIMS, Verdict } from "@overview/domain";
 import { DUBIOUS_CLAIM_TARGET_WORDS, DUBIOUS_REASON_TARGET_WORDS } from "../../sections/verdictSection.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
-import { paragraphIndex } from "./paragraphIndex.js";
+import { paragraphIndex, quoteSentenceFields } from "./paragraphIndex.js";
 
 export const articleVerdictSection: ArticlePromptSection = {
   key: "verdict",
@@ -51,7 +51,10 @@ standsOut names the fresh part in one short line, for FRESH_ANGLE and
 ORIGINAL only: the thing itself, not praise of it, and the same part the
 reasoning calls fresh. It is null for COMMON_KNOWLEDGE. Give the paragraph
 where it is shown or explained as paragraphIndex, taken from the numbered
-paragraphs below. Use null when no one paragraph carries it.
+paragraphs below. Use null when no one paragraph carries it. Then name the
+one or two numbered sentences {n} in that paragraph or later in its section
+where it is said most plainly, as quoteStartSentence/quoteEndSentence, so
+code can quote them word for word; both -1 when it has no paragraph.
 
 Never begin the reasoning with the novelty word itself; the label is
 shown beside it and the reasoning is read aloud on its own. Don't repeat
@@ -82,7 +85,7 @@ List the indices (if any) whose claim this article repeats, as similarToIndices.
   },
   schemaShape: (input) => ({
     novelty: Verdict.shape.novelty,
-    standsOut: z.object({ text: z.string(), paragraphIndex: paragraphIndex(input).nullable() }).nullable(),
+    standsOut: z.object({ text: z.string(), paragraphIndex: paragraphIndex(input).nullable(), ...quoteSentenceFields(input) }).nullable(),
     dubiousClaims: z
       .array(
         z.object({

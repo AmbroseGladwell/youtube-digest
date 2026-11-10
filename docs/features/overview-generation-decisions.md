@@ -1000,6 +1000,18 @@ the same way.
   makes the claim land. It is never why the subject matters, which the big picture and How to
   apply already say (the owner's gate, 8 Nov 2026). It is nullable rather than an empty string,
   because a required field is an instruction to fill it. Target 20 words, enforced at 30.
+- **Articles number their sentences.** A paragraph is too long to quote whole, and a model
+  can't be trusted to count sentences, so the article prompt marks every sentence `{n}`, numbered
+  across the article, after its paragraph's `[n]` (`articleSentences`). A key point or what
+  stands out names `quoteStartSentence`/`quoteEndSentence`, from its own paragraph or later in
+  the same section, never earlier, and code lifts those sentences whole, punctuated as the author
+  wrote them. The split is code's (a full stop, question or exclamation mark or ellipsis before a
+  space and a capital or digit), so "3.5" never splits and "Dr. Rees" does, costing a quotation a
+  word of context, not its truth. The owner chose this on 10 Nov 2026 over quoting a paragraph's
+  opening, which would often miss the sentence, and over letting the model copy a phrase for code
+  to check. An article quotation has no time (`Evidence.range` null) and links to the page by its
+  opening words, as a key point's place does. **Recipes never quote**: a recipe has no argument
+  to back, and a quoted step would just be the step.
 - **No speaker is named.** Auto-captions carry no speaker labels, so a quotation says what was
   said, never who said it (OV-226 for when diarisation arrives).
 
@@ -1025,8 +1037,13 @@ these records back from clients before version 18, which would strip the evidenc
 write.
 
 **The grammar.** It fits only because OV-275 took the recipe block out of the video schema
-("The kind check"). Probed on 10 Nov 2026 with a 16-token reply: the schema with these fields
-compiles on Sonnet 5.5 and Opus 5.5.
+("The kind check"). Probed on 10 Nov 2026 with a 16-token reply: the video schema with these
+fields compiles on Sonnet 5.5 and Opus 5.5, and so does the article schema with its sentence
+fields (a reader's context, 30 topics, 20 past claims and 50 tags).
+
+**What it keeps.** A video's quotation is a few words of a transcript the library already holds.
+An article's is the first article text an overview keeps, so the privacy page says so (OV-216 in
+`legal-pages.md`'s revision log).
 
 ## Open, still to decide
 

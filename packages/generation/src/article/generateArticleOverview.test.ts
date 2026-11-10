@@ -50,9 +50,9 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   coreClaim: "The repair bill doubled because a survey was never checked.",
   thin: false,
   keyPoints: [
-    { text: "The bridge closed in March.", paragraphIndex: 0 },
-    { text: "The county offered half.", paragraphIndex: 2 },
-    { text: "Residents pay the rest.", paragraphIndex: 3 },
+    { text: "The bridge closed in March.", paragraphIndex: 0, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
+    { text: "The county offered half.", paragraphIndex: 2, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
+    { text: "Residents pay the rest.", paragraphIndex: 3, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
   ],
   chapters: [
     { title: "The closure", summary: "Why the bridge shut.", startParagraphIndex: 0 },
@@ -63,7 +63,7 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   tags: ["bridges", "local-news", "budgets"],
   verdict: {
     novelty: "original",
-    standsOut: { text: "The split of the bill.", paragraphIndex: 3 },
+    standsOut: { text: "The split of the bill.", paragraphIndex: 3, quoteStartSentence: -1, quoteEndSentence: -1 },
     dubiousClaims: [],
     reasoning: "The piece has its own sources.",
     similarToIndices: [],
@@ -95,12 +95,20 @@ test("the prompt never talks about a video, and asks the read-anyway question wi
 
 test("paragraphs are numbered across the article, with its headings kept for context", () => {
   const { userMessage } = composeArticlePrompt(input());
-  assert.match(userMessage, /\[1\] The council met/);
-  assert.match(userMessage, /## Who pays\n\[2\] The county offered half/);
+  assert.match(userMessage, /\[1\] \{1\} The council met/);
+  assert.match(userMessage, /## Who pays\n\[2\] \{2\} The county offered half/);
 });
 
 test("a short article's note is held to a short budget, and an over-long one goes back to the model", async () => {
-  const fourPoints = output({ keyPoints: Array.from({ length: 4 }, () => ({ text: "One point.", paragraphIndex: 0 })) });
+  const fourPoints = output({
+    keyPoints: Array.from({ length: 4 }, () => ({
+      text: "One point.",
+      paragraphIndex: 0,
+      quoteStartSentence: -1,
+      quoteEndSentence: -1,
+      quoteAdds: null,
+    })),
+  });
   const note = await generate(answering(fourPoints, output()));
   assert.equal(note.keyPoints.length, 3);
 });
@@ -125,7 +133,14 @@ test("a long article's key points that stop early go back to the model, naming w
     wordCount: 3000,
     sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n") }],
   };
-  const keyPoints = (index: number) => Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: index }));
+  const keyPoints = (index: number) =>
+    Array.from({ length: 3 }, () => ({
+      text: "One point.",
+      paragraphIndex: index,
+      quoteStartSentence: -1,
+      quoteEndSentence: -1,
+      quoteAdds: null,
+    }));
   const chapters = [{ title: "All of it", summary: "The whole piece.", startParagraphIndex: 0 }];
   const readAnyway = { answer: "no", reason: "No need.", leftOut: "It leaves out the rest.", chapterIndexes: [] };
   const corrections: string[] = [];
@@ -141,7 +156,18 @@ test("a long article's key points that stop early go back to the model, naming w
 
 test("a chapter too big to skip with no key point goes back to the model, naming the chapter", async () => {
   const corrections: string[] = [];
-  const answers = [output({ keyPoints: Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: 0 })) }), output()];
+  const answers = [
+    output({
+      keyPoints: Array.from({ length: 3 }, () => ({
+        text: "One point.",
+        paragraphIndex: 0,
+        quoteStartSentence: -1,
+        quoteEndSentence: -1,
+        quoteAdds: null,
+      })),
+    }),
+    output(),
+  ];
   const client: GenerationClient = async ({ userMessage }) => {
     corrections.push(userMessage);
     return answers.shift();
@@ -265,4 +291,37 @@ test("the schema survives the conversion every provider receives, with each sect
   for (const field of ["keyPoints", "chapters", "verdict", "selling", "howToApply", "readAnyway"]) {
     assert.ok((schema.required as string[]).includes(field), field);
   }
+});
+
+test("each sentence is numbered across the article, so a quotation can be named rather than written", () => {
+  const { userMessage } = composeArticlePrompt(
+    input({
+      article: { ...article, sections: [{ heading: null, anchor: null, text: "It cost £3.5m. Was it worth it? Dr. Rees said no." }] },
+    }),
+  );
+  assert.match(userMessage, /\[0\] \{0\} It cost £3\.5m\. \{1\} Was it worth it\? \{2\} Dr\. \{3\} Rees said no\./);
+});
+
+const quoting = (index: number, point: Record<string, unknown>) => {
+  const keyPoints = [...(output().keyPoints as Record<string, unknown>[])];
+  keyPoints[index] = { ...keyPoints[index], ...point };
+  return output({ keyPoints });
+};
+
+test("a key point's quotation is the article's own sentences, lifted by code, with no time", async () => {
+  const note = await generate(
+    answering(quoting(1, { quoteStartSentence: 2, quoteEndSentence: 3, quoteAdds: "The town was never asked." })),
+  );
+  assert.deepEqual(note.keyPoints[1]?.evidence, {
+    text: "The county offered half of the bill to the town. Residents will cover the rest through higher rates.",
+    range: null,
+    adds: "The town was never asked.",
+  });
+});
+
+test("an article quotation before its point's paragraph, or in another section, is no evidence", async () => {
+  const before = await generate(answering(quoting(1, { quoteStartSentence: 1, quoteEndSentence: 1 })));
+  const elsewhere = await generate(answering(quoting(0, { quoteStartSentence: 2, quoteEndSentence: 2 })));
+  assert.equal("evidence" in before.keyPoints[1]!, false);
+  assert.equal("evidence" in elsewhere.keyPoints[0]!, false);
 });

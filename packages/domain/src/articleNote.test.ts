@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
+import { overviewMarkdown } from "./overviewMarkdown.js";
 import { overviewNoteCaptions } from "./overviewNoteCaptions.js";
 import { overviewNoteLines, READ_ANYWAY_SECTION } from "./overviewNoteLines.js";
 import { Overview } from "./Overview.js";
@@ -103,4 +104,29 @@ test("an article the note says to read in full saves nothing", () => {
 test("a partial answer takes the named chapters' reading time off", () => {
   const read = { answer: "partial" as const, reason: "Part of it.", leftOut: "It leaves out the rest.", chapterIndexes: [1] };
   assert.deepEqual(overviewTimeSaved(article({ readAnyway: read })), { kind: "counted", minutes: 4, lessPartToWatch: true });
+});
+
+const quoted = (): Overview => {
+  const overview = article();
+  return {
+    ...overview,
+    keyPoints: [
+      { ...overview.keyPoints[0]!, evidence: { text: "The county offered half of the bill to the town.", range: null, adds: null } },
+      ...overview.keyPoints.slice(1),
+    ],
+  };
+};
+
+test("an article's quotation is said to be the article's words, and has no time to jump to", () => {
+  const line = overviewNoteLines(quoted()).find((candidate) => candidate.quotation);
+  assert.equal(line?.label, "In the article's words");
+  assert.equal(line?.spoken, "In the article's own words, The county offered half of the bill to the town.");
+  assert.equal("range" in line!, false);
+});
+
+test("an article's quotation links to the page by its own opening words, since it has no time", () => {
+  assert.match(
+    overviewMarkdown(quoted()),
+    /> “The county offered half of the bill to the town\.” \(\[on the page\]\([^)]*#:~:text=[^)]+\)\)/,
+  );
 });

@@ -117,6 +117,11 @@ Decided 2026-11-02. Only the note and metadata are stored. So there's no Transcr
 to the live page, regenerating means opening the article again, and the shared cache holds no
 articles. Nothing in this slice writes to `TranscriptStore`.
 
+**Except what a note quotes** (OV-216, 10 Nov 2026). A key point or what stands out may carry a
+sentence or two the article itself says, lifted by code from its numbered sentences, at most 40
+words under any one point. Those words are kept, as part of the note, and nothing else of the
+text is. The privacy page says so ("Transcripts and articles").
+
 ## The record
 
 An article is an `Overview` with a `web` source and an `article` block: chapters, the chapter each

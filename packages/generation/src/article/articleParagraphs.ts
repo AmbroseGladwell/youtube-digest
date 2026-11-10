@@ -24,3 +24,27 @@ export const articleParagraphs = ({ sections }: ExtractedArticle): ArticleParagr
       })),
     )
     .map((paragraph, index) => ({ ...paragraph, index }));
+
+export interface ArticleSentence {
+  index: number;
+  paragraphIndex: number;
+  text: string;
+}
+
+// A sentence ends at a full stop, a question or exclamation mark or an ellipsis, with any
+// closing quote or bracket, before a space and a capital, a digit or an opening quote. "3.5"
+// never splits; "Dr. Smith" does, which costs a quotation a word of context, not its truth.
+const SENTENCE_END = /(?<=[.!?…]["”’)\]]*)\s+(?=["“‘([]?[\p{Lu}\p{N}])/u;
+
+// Numbered across the whole article, so the model names sentences and code lifts them
+// (docs/features/overview-generation-decisions.md, "Evidence").
+export const articleSentences = (article: ExtractedArticle): ArticleSentence[] =>
+  articleParagraphs(article)
+    .flatMap(({ index: paragraphIndex, text }) =>
+      text
+        .split(SENTENCE_END)
+        .map((sentence) => sentence.trim())
+        .filter(Boolean)
+        .map((sentence) => ({ paragraphIndex, text: sentence })),
+    )
+    .map((sentence, index) => ({ ...sentence, index }));
