@@ -2,11 +2,21 @@ import { fileURLToPath } from "node:url";
 
 const TRELLO_API = "https://api.trello.com/1";
 
-export function cardReferencesIn(...texts) {
-  const text = texts.filter(Boolean).join("\n");
-  const shortLinks = [...text.matchAll(/https:\/\/trello\.com\/c\/([A-Za-z0-9]{8})/g)].map((match) => match[1]);
-  const cardNumbers = [...text.matchAll(/\bOV-(\d+)\b/gi)].map((match) => Number(match[1]));
-  return { shortLinks: [...new Set(shortLinks)], cardNumbers: [...new Set(cardNumbers)] };
+const TITLE_CARD = /^\s*OV-(\d+)\b/i;
+const BRANCH_CARD = /^ov-(\d+)(?:-|$)/i;
+const CLOSES_LINE = /^[ \t]*(?:[-*][ \t]+)?closes[ \t]+(?:OV-(\d+)\b|https:\/\/trello\.com\/c\/([A-Za-z0-9]{8}))/gim;
+
+export function cardReferencesIn({ title, body, branch } = {}) {
+  const titleNumber = title?.match(TITLE_CARD)?.[1];
+  const branchNumber = branch?.match(BRANCH_CARD)?.[1];
+  const closing = [...(body ?? "").matchAll(CLOSES_LINE)];
+  const cardNumbers = [titleNumber, branchNumber, ...closing.map((match) => match[1])].filter(Boolean).map(Number);
+  const shortLinks = closing.map((match) => match[2]).filter(Boolean);
+  const warnings =
+    titleNumber && branchNumber && Number(titleNumber) !== Number(branchNumber)
+      ? [`The title names OV-${Number(titleNumber)} but the branch names OV-${Number(branchNumber)}, so both move`]
+      : [];
+  return { shortLinks: [...new Set(shortLinks)], cardNumbers: [...new Set(cardNumbers)], warnings };
 }
 
 export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneListId, apiKey, token, fetch }) {
@@ -40,10 +50,13 @@ export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneLi
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { PR_TITLE, PR_BODY, PR_BRANCH, TRELLO_BOARD_ID, TRELLO_DONE_LIST_ID, TRELLO_API_KEY, TRELLO_TOKEN } = process.env;
-  const { shortLinks, cardNumbers } = cardReferencesIn(PR_TITLE, PR_BODY, PR_BRANCH);
+  const { shortLinks, cardNumbers, warnings } = cardReferencesIn({ title: PR_TITLE, body: PR_BODY, branch: PR_BRANCH });
+  for (const warning of warnings) console.log(`::warning::${warning}`);
   const referenced = shortLinks.length + cardNumbers.length;
   if (referenced === 0) {
-    console.log("No OV-n or Trello card link in the PR's title, description or branch, so no card moves.");
+    console.log(
+      "No leading OV-n in the PR's title, no leading ov-n- in its branch and no Closes line in its description, so no card moves.",
+    );
     process.exit(0);
   }
   if (!TRELLO_API_KEY || !TRELLO_TOKEN) {
