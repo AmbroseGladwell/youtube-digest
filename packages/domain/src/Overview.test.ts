@@ -260,7 +260,7 @@ test("the business/adaptability sample's real content, filed under two topics, v
   );
 });
 
-const quotation = { text: "you're not going to out-train a bad diet", range: { startMs: 20_000, endMs: 24_000 }, adds: null };
+const quotation = { text: "you're not going to out-train a bad diet", range: { startMs: 20_000, endMs: 24_000 } };
 
 test("a key point may carry the source's own words, and one without them has no evidence at all", () => {
   const withEvidence = {
@@ -272,12 +272,11 @@ test("a key point may carry the source's own words, and one without them has no 
   assert.equal("evidence" in parsed.keyPoints[1]!, false);
 });
 
-test("evidence is never empty, and what it adds is short or absent", () => {
+test("evidence is never empty", () => {
   const withEvidence = (evidence: unknown) => ({
     ...baseOverview,
     keyPoints: [{ text: "one", range: null, evidence }, ...baseOverview.keyPoints.slice(1)],
   });
   assert.equal(Overview.safeParse(withEvidence({ ...quotation, text: "" })).success, false);
-  assert.equal(Overview.safeParse(withEvidence({ ...quotation, adds: Array(31).fill("word").join(" ") })).success, false);
-  assert.equal(Overview.safeParse(withEvidence({ ...quotation, adds: "He hedges here." })).success, true);
+  assert.equal(Overview.safeParse(withEvidence({ ...quotation })).success, true);
 });

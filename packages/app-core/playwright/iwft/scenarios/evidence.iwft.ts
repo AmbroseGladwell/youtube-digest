@@ -14,7 +14,7 @@ const seedQuotedNote = (backendSimulator: BackendSimulator, { generated }: { gen
       {
         text: "Adding sets grows the arms faster than adding weight.",
         range: { startMs: 0, endMs: 7_000 },
-        evidence: { text: "sets matter more than weight", range: { startMs: 0, endMs: 3_500 }, adds: "He hedges it in the next breath." },
+        evidence: { text: "sets matter more than weight", range: { startMs: 0, endMs: 3_500 } },
       },
       { text: "Cables keep tension where free weights lose it.", range: null },
       { text: "The video builds its case for frequency throughout.", range: null },
@@ -27,13 +27,13 @@ const seedQuotedNote = (backendSimulator: BackendSimulator, { generated }: { gen
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS, generated }));
 };
 
-test("a key point's quotation sits under it as a quotation, unnumbered, with what it adds", async ({ launcher, backendSimulator }) => {
+test("a key point's quotation sits under it as a quotation, unnumbered", async ({ launcher, backendSimulator }) => {
   seedQuotedNote(backendSimulator, { generated: false });
   const library = await launcher.launchExpectingLibrary();
 
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyQuotationsRead([{ text: "sets matter more than weight", aside: "He hedges it in the next breath." }]);
+  await reader.verifyQuotationsRead(["sets matter more than weight"]);
   await reader.verifyBulletedLinesRead([
     "Adding sets grows the arms faster than adding weight.",
     "Cables keep tension where free weights lose it.",
@@ -48,7 +48,7 @@ test("a quotation from captions a machine heard says so above it", async ({ laun
 
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyQuotationsRead([{ text: "sets matter more than weight", aside: "He hedges it in the next breath." }]);
+  await reader.verifyQuotationsRead(["sets matter more than weight"]);
   await reader.verifyNoteShowsLine("sets matter more than weight", true);
   await reader.verifyNoteLabelsRead(["From the auto-generated captions"]);
 });

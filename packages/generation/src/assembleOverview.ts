@@ -102,7 +102,7 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
     coreClaim: output.coreClaim,
     thin: output.thin,
     keyPoints: output.keyPoints.map((point) => {
-      const evidence = resolveEvidence(input, point, point.quoteAdds);
+      const evidence = resolveEvidence(input, point);
       return { text: point.text, range: resolveOptionalRange(input, segmentRangeOf(point)), ...(evidence ? { evidence } : {}) };
     }),
     verdict,
@@ -119,20 +119,18 @@ function resolveStandsOut(input: GenerationInput, novelty: Novelty, standsOut: G
   if (standsOut === null || novelty === "common_knowledge" || text === "") {
     return null;
   }
-  const evidence = resolveEvidence(input, standsOut, null);
+  const evidence = resolveEvidence(input, standsOut);
   return { text, range: resolveOptionalRange(input, segmentRangeOf(standsOut)), ...(evidence ? { evidence } : {}) };
 }
 
 // Code lifts the quotation; the model only named where it is, inside the line's own stretch.
 // One that names nothing usable leaves the line without evidence rather than failing the
 // overview (docs/architecture/overview-quality.md, "Evidence: the model points, code quotes").
-function resolveEvidence(input: GenerationInput, line: GeneratedQuotedText, adds: string | null): Evidence | undefined {
+function resolveEvidence(input: GenerationInput, line: GeneratedQuotedText): Evidence | undefined {
   const stretch = segmentRangeOf(line);
   const quote = quoteRangeOf(line);
   if (stretch === null || quote === null || !inside(quote, stretch, input.transcript.length)) return undefined;
-  const lifted = liftQuotation(input.transcript.slice(quote.startSegmentIndex, quote.endSegmentIndex + 1));
-  if (lifted === null) return undefined;
-  return { ...lifted, adds: adds?.trim() ? adds.trim() : null };
+  return liftQuotation(input.transcript.slice(quote.startSegmentIndex, quote.endSegmentIndex + 1)) ?? undefined;
 }
 
 const inside = (quote: SegmentRangeShape, stretch: SegmentRangeShape, segments: number): boolean =>

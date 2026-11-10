@@ -730,7 +730,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, how many lines quote the source and how many of those say what the quotation adds, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, how many lines quote the source, and the kind of note it got; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -755,10 +755,8 @@ export const analyticsEvents = {
           keyPoints: z.number().int().nonnegative().optional(),
           keyPointCeiling: z.number().int().positive().optional(),
           chapters: z.number().int().nonnegative().optional(),
-          // How many of its lines quote the source, and how many of those say what the quotation
-          // adds; counts only, never the words (OV-216).
+          // How many of its lines quote the source; a count only, never the words (OV-216).
           quotations: z.number().int().nonnegative().optional(),
-          quotationAsides: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).

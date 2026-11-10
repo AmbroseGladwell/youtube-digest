@@ -44,9 +44,9 @@ const baseOutput: GeneratedOutput = {
   coreClaim: "The core claim of the video.",
   thin: false,
   keyPoints: [
-    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
-    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
-    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+    { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
+    { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
+    { text: "three", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
   ],
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
@@ -487,23 +487,21 @@ const quotedInput: GenerationInput = {
   ],
 };
 
-const quotedPoint = (quoteStart: number, quoteEnd: number, quoteAdds: string | null = null, start = 1, end = 2) => ({
+const quotedPoint = (quoteStart: number, quoteEnd: number, start = 1, end = 2) => ({
   text: "Diet matters more than training for weight.",
   startSegmentIndex: start,
   endSegmentIndex: end,
   quoteStartSegmentIndex: quoteStart,
   quoteEndSegmentIndex: quoteEnd,
-  quoteAdds,
 });
 
 const assembleQuoted = (point: ReturnType<typeof quotedPoint>) =>
   assembleOverview(quotedInput, { ...baseOutput, keyPoints: [point, ...baseOutput.keyPoints.slice(1)] }, meta).keyPoints[0];
 
-test("a key point's quotation is lifted from the transcript by code, with what it adds", () => {
-  assert.deepEqual(assembleQuoted(quotedPoint(1, 2, " He hedges before he says it. "))?.evidence, {
+test("a key point's quotation is lifted from the transcript by code", () => {
+  assert.deepEqual(assembleQuoted(quotedPoint(1, 2))?.evidence, {
     text: "Honestly I'm not sure it works for everyone, but you're not going to out-train a bad diet.",
     range: { startMs: 4000, endMs: 12000 },
-    adds: "He hedges before he says it.",
   });
 });
 
@@ -511,12 +509,8 @@ test("a quotation outside its point's own stretch, or on a point with no stretch
   assert.equal("evidence" in assembleQuoted(quotedPoint(0, 1))!, false);
   assert.equal("evidence" in assembleQuoted(quotedPoint(2, 3))!, false);
   assert.equal("evidence" in assembleQuoted(quotedPoint(2, 1))!, false);
-  assert.equal("evidence" in assembleQuoted(quotedPoint(1, 1, null, -1, -1))!, false);
-  assert.equal("evidence" in assembleQuoted(quotedPoint(-1, -1, "Something."))!, false);
-});
-
-test("an empty line on what the quotation adds is none", () => {
-  assert.equal(assembleQuoted(quotedPoint(2, 2, "  "))?.evidence?.adds, null);
+  assert.equal("evidence" in assembleQuoted(quotedPoint(1, 1, -1, -1))!, false);
+  assert.equal("evidence" in assembleQuoted(quotedPoint(-1, -1))!, false);
 });
 
 test("what stands out gains its quotation the same way, never with an added line", () => {
@@ -543,6 +537,5 @@ test("what stands out gains its quotation the same way, never with an added line
   assert.deepEqual(overview.verdict?.standsOut?.evidence, {
     text: "but you're not going to out-train a bad diet.",
     range: { startMs: 8000, endMs: 12000 },
-    adds: null,
   });
 });

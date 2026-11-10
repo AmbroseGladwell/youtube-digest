@@ -40,7 +40,6 @@ const overview = assembleOverview(
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
       {
         text: "Answers every support email.",
@@ -48,7 +47,6 @@ const overview = assembleOverview(
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
       {
         text: "Sold the company.",
@@ -56,7 +54,6 @@ const overview = assembleOverview(
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
     ],
     chapters: [],

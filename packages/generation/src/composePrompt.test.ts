@@ -59,7 +59,6 @@ test("a short video keeps seven key points of 40 words and its usual chapter hin
     endSegmentIndex: -1,
     quoteStartSegmentIndex: -1,
     quoteEndSegmentIndex: -1,
-    quoteAdds: null,
   };
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(7).fill(point)).success, true);
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(8).fill(point)).success, false);
@@ -78,7 +77,6 @@ test("a two hour video gets up to ten longer key points and twenty chapters that
     endSegmentIndex: -1,
     quoteStartSegmentIndex: -1,
     quoteEndSegmentIndex: -1,
-    quoteAdds: null,
   };
   const chapter = (index: number) => ({ title: "A chapter", summary: "What it covers.", startSegmentIndex: index });
   assert.equal(z.safeParse(schema.shape.keyPoints!, Array(10).fill(point)).success, true);
@@ -326,7 +324,6 @@ test("asks for fewer words than it enforces, so a near miss does not fail the ov
       endSegmentIndex: -1,
       quoteStartSegmentIndex: -1,
       quoteEndSegmentIndex: -1,
-      quoteAdds: null,
     }));
 
   assert.ok(KEY_POINT_TARGET_WORDS < KEY_POINT_MAX_WORDS);
@@ -346,7 +343,6 @@ test("refuses a key point or an action over its hard word ceiling, so the retry 
       endSegmentIndex: -1,
       quoteStartSegmentIndex: -1,
       quoteEndSegmentIndex: -1,
-      quoteAdds: null,
     }));
 
   assert.equal(accepts("keyPoints", points(words(KEY_POINT_MAX_WORDS))), true);
@@ -451,7 +447,7 @@ test("the video schema keeps to the few fields that may be null, since each one 
     walk(schema.items, `${path}[]`);
   };
   walk(providerJsonSchema(composePrompt({ ...baseInput, sectionsEnabled: DEFAULT_SECTIONS_ENABLED }).schema), "");
-  assert.deepEqual(unions.sort(), [".keyPoints[].quoteAdds", ".suggestedTopic", ".suggestedTopic.description", ".verdict.standsOut"]);
+  assert.deepEqual(unions.sort(), [".suggestedTopic", ".suggestedTopic.description", ".verdict.standsOut"]);
 });
 
 const spokenFor = (words: number) => [{ text: Array(words).fill("word").join(" "), startMs: 0, endMs: 1000 }];
@@ -476,17 +472,24 @@ test("a big picture past its cap is sent back, an empty one never is", () => {
   assert.equal(bigPicture.safeParse(Array(76).fill("word").join(" ")).success, false);
 });
 
-test("the key points ask for quotations by segment, at most two in five, and never for quotation text", () => {
+test("the key points ask for quotations that illustrate rather than restate, by segment, and never for quotation text", () => {
   const short = composePrompt(baseInput);
   const long = composePrompt(longInput);
-  assert.match(short.systemPrompt, /## Quotations/);
-  assert.match(short.systemPrompt, /Code copies those\nsegments word for word, so you never write a quotation yourself/);
-  assert.match(short.systemPrompt, /for 3 points at most/);
-  assert.match(long.systemPrompt, /for 4 points at most/);
+  assert.match(short.systemPrompt, /## Quotations\nA quotation illustrates a point in the video's own words/);
+  assert.match(short.systemPrompt, /Never quote the sentence that states the claim/);
+  assert.match(short.systemPrompt, /so you never write a quotation yourself/);
+  assert.match(short.systemPrompt, /Quote 3 points at most/);
+  assert.match(long.systemPrompt, /Quote 4 points at most/);
   const point = { text: "A point.", startSegmentIndex: 0, endSegmentIndex: 1, quoteStartSegmentIndex: 1, quoteEndSegmentIndex: 1 };
-  assert.equal(z.safeParse(schemaPoint(short), { ...point, quoteAdds: null }).success, true);
-  assert.equal(z.safeParse(schemaPoint(short), { ...point, quoteAdds: Array(31).fill("word").join(" ") }).success, false);
-  assert.equal(z.safeParse(schemaPoint(short), point).success, false);
+  assert.equal(z.safeParse(schemaPoint(short), point).success, true);
+  assert.equal(z.safeParse(schemaPoint(short), { text: "A point.", startSegmentIndex: 0, endSegmentIndex: 1 }).success, false);
 });
 
 const schemaPoint = ({ schema }: ReturnType<typeof composePrompt>) => (schema.shape.keyPoints as z.ZodArray<z.ZodType>).element;
+
+test("video and articles share one rule for what a quotation is for", async () => {
+  const { composeArticlePrompt } = await import("./article/composeArticlePrompt.js");
+  assert.ok(typeof composeArticlePrompt === "function");
+  const { quotationPrompt } = await import("./sections/quotationPrompt.js");
+  assert.match(quotationPrompt({ source: "article", most: 2, where: "here." }), /illustrates a point in the article's own words/);
+});

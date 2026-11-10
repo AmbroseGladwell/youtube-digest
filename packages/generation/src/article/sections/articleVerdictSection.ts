@@ -51,10 +51,12 @@ standsOut names the fresh part in one short line, for FRESH_ANGLE and
 ORIGINAL only: the thing itself, not praise of it, and the same part the
 reasoning calls fresh. It is null for COMMON_KNOWLEDGE. Give the paragraph
 where it is shown or explained as paragraphIndex, taken from the numbered
-paragraphs below. Use null when no one paragraph carries it. Then name the
-one or two numbered sentences {n} in that paragraph or later in its section
-where it is said most plainly, as quoteStartSentence/quoteEndSentence, so
-code can quote them word for word; both -1 when it has no paragraph.
+paragraphs below. Use null when no one paragraph carries it. Then, if that
+paragraph or the rest of its section shows the fresh part in the article's
+own words (the example, the demonstration or the data, never the sentence
+that names it), give that short passage as quoteStartSentence/quoteEndSentence
+from the numbered sentences {n} so code can quote it word for word;
+otherwise, and when it has no paragraph, set both to -1.
 
 Never begin the reasoning with the novelty word itself; the label is
 shown beside it and the reasoning is read aloud on its own. Don't repeat

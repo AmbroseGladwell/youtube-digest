@@ -8,6 +8,5 @@ export const readAlongNoteTestIds = {
   activeLine: "ReadAlongNote.activeLine",
   caption: "ReadAlongNote.caption",
   quotation: "ReadAlongNote.quotation",
-  quotationAside: "ReadAlongNote.quotationAside",
   followButton: "ReadAlongNote.followButton",
 };

@@ -501,7 +501,7 @@ const quotedOverview = () => {
       {
         ...base.keyPoints[0]!,
         range: { startMs: 0, endMs: 6000 },
-        evidence: { text: "you're not going to out-train a bad diet", range: { startMs: 2000, endMs: 6000 }, adds: null },
+        evidence: { text: "you're not going to out-train a bad diet", range: { startMs: 2000, endMs: 6000 } },
       },
       ...base.keyPoints.slice(1),
     ],

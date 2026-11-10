@@ -31,7 +31,6 @@ interface Body {
   chip?: string;
   bullet?: boolean;
   quotation?: boolean;
-  aside?: string;
 }
 
 // Auto-captions carry no punctuation, so a quotation is closed before the next sentence is read.
@@ -40,7 +39,7 @@ const ended = (text: string): string => (/[.!?…]["”’]?$/.test(text) ? text
 export const MACHINE_HEARD_QUOTATION_LABEL = "From the auto-generated captions";
 export const quotationLabel = (source: string): string => `In ${source} words`;
 
-// The source's own words under the line they back, introduced in narration rather than
+// The source's own words illustrating the line above them, introduced in narration rather than
 // announced (docs/architecture/overview-quality.md, "Structure the data, compose the
 // narration"). Never numbered, and never a bullet of its own.
 const quotationOf = (evidence: Evidence | undefined, source: string, machineHeard: boolean): Body[] =>
@@ -53,8 +52,7 @@ const quotationOf = (evidence: Evidence | undefined, source: string, machineHear
           bullet: false,
           quotation: true,
           label: machineHeard ? MACHINE_HEARD_QUOTATION_LABEL : quotationLabel(source),
-          spoken: `In ${source} own words, ${ended(evidence.text)}${evidence.adds === null ? "" : ` ${evidence.adds}`}`,
-          ...(evidence.adds === null ? {} : { aside: evidence.adds }),
+          spoken: `In ${source} own words, ${ended(evidence.text)}`,
         },
       ];
 

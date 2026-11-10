@@ -13,7 +13,6 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
         endSegmentIndex: 5,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
       {
         text: "Buying store brands saved the most.",
@@ -21,7 +20,6 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
       {
         text: "Shopping once a week stopped impulse buys.",
@@ -29,7 +27,6 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
         endSegmentIndex: 12,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
     ],
     chapters: [

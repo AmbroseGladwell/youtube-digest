@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { CoreFields, EVIDENCE_ADDS_MAX_WORDS, EVIDENCE_ADDS_TARGET_WORDS, wordCount } from "@overview/domain";
+import { quotationPrompt } from "../../sections/quotationPrompt.js";
+import { CoreFields, wordCount } from "@overview/domain";
 import { LEAST_KEY_POINTS, mostQuotations, mostWordsPerKeyPoint, noteBudget } from "../../noteBudget.js";
 import { bigPicturePrompt, bigPictureShape } from "../../sections/bigPicturePrompt.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
@@ -93,24 +94,12 @@ builds a point over a run of paragraphs or a whole section, give the
 paragraph where that run begins. Use null only when the point gathers
 places far apart in the piece, so no one paragraph is a fair place to
 start reading.
-
-## Quotations
-Where a point rests on something the article says that I would otherwise
-have to take on trust, name the words that carry it, as
-quoteStartSentence/quoteEndSentence: one or two of the numbered sentences
-{n} below, from the point's own paragraph or later in the same section.
-Code copies those sentences word for word, so you never write a quotation
-yourself. Do this for ${mostQuotations(noteBudget("written", input.article.wordCount))} points at most, the claims that most need
-the author's own words behind them, and set both to -1 on every other
-point and on any point with no paragraph.
-
-quoteAdds is one short sentence, ${EVIDENCE_ADDS_TARGET_WORDS} words at most, on what the
-author's own words add that the point does not: that they hedged,
-contradicted themselves, put it more bluntly than a summary would dare,
-or that the exact phrasing is what makes the claim land. It is never why
-the subject matters; the big picture and How to apply say that. Set it to
-null whenever it would restate the point, which is most of the time, and
-always on a point with no quotation.`;
+${quotationPrompt({
+  source: "article",
+  most: mostQuotations(noteBudget("written", input.article.wordCount)),
+  where:
+    "as quoteStartSentence/quoteEndSentence, the numbered sentences {n} below where it begins and ends, from the point's own paragraph or later in the same section.",
+})}`;
   },
   schemaShape: (input) => {
     const budget = noteBudget("written", input.article.wordCount);
@@ -124,10 +113,6 @@ always on a point with no quotation.`;
           text: z.string().refine((point) => wordCount(point) <= mostWords, `max ${mostWords} words`),
           paragraphIndex: paragraphIndex(input).nullable(),
           ...quoteSentenceFields(input),
-          quoteAdds: z
-            .string()
-            .refine((adds) => wordCount(adds) <= EVIDENCE_ADDS_MAX_WORDS, `max ${EVIDENCE_ADDS_MAX_WORDS} words`)
-            .nullable(),
         })
         .array()
         .min(LEAST_KEY_POINTS)

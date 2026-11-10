@@ -11,9 +11,7 @@ export interface GeneratedTimedText extends SegmentRangeShape {
 
 export interface GeneratedQuotedText extends GeneratedTimedText, QuoteRangeShape {}
 
-export interface GeneratedKeyPoint extends GeneratedQuotedText {
-  quoteAdds: string | null;
-}
+export type GeneratedKeyPoint = GeneratedQuotedText;
 
 export interface GeneratedOutput {
   inOneLine: string;

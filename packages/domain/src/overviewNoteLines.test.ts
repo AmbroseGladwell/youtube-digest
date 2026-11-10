@@ -335,14 +335,14 @@ const quotedNote = () => {
       {
         text: "Diet matters more than training for weight.",
         range: { startMs: 4000, endMs: 12_000 },
-        evidence: { text: "you're not going to out-train a bad diet", range: { startMs: 8000, endMs: 12_000 }, adds: "He says it flatly." },
+        evidence: { text: "you're not going to out-train a bad diet", range: { startMs: 8000, endMs: 12_000 } },
       },
       ...overview.keyPoints.slice(1),
     ],
   });
 };
 
-test("a quotation follows the key point it backs, unnumbered, marked as one, with what it adds beside it", () => {
+test("a quotation follows the key point it illustrates, unnumbered and marked as one", () => {
   const lines = overviewNoteLines(quotedNote()).filter((line) => line.section === KEY_POINTS_SECTION && !line.heading);
   assert.equal(lines[0]?.bullet, true);
   assert.deepEqual(lines[1], {
@@ -353,8 +353,7 @@ test("a quotation follows the key point it backs, unnumbered, marked as one, wit
     range: { startMs: 8000, endMs: 12_000 },
     quotation: true,
     label: "In the video's words",
-    spoken: "In the video's own words, you're not going to out-train a bad diet. He says it flatly.",
-    aside: "He says it flatly.",
+    spoken: "In the video's own words, you're not going to out-train a bad diet.",
   });
   assert.equal(lines[2]?.bullet, true);
 });

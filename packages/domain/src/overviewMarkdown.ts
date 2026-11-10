@@ -34,8 +34,7 @@ const quotation = (sourceUrl: string, evidence: Evidence | undefined, machineHea
     evidence.range === null
       ? `[on the page](${articlePlaceUrl(sourceUrl, { anchor: null, quote: evidence.text.split(/\s+/).slice(0, QUOTE_LINK_WORDS).join(" ") })})`
       : stretch(sourceUrl, evidence.range);
-  const adds = evidence.adds === null ? "" : `\n${indent}_${evidence.adds}_`;
-  return `\n${indent}> “${evidence.text}” (${where}${heard})${adds}`;
+  return `\n${indent}> “${evidence.text}” (${where}${heard})`;
 };
 
 // The note as it reads outside the app: every section the reader sees, with each moment

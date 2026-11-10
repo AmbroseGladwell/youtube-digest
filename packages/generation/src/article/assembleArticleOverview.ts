@@ -15,7 +15,7 @@ import {
 import { GenerationError } from "../GenerationError.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { articleParagraphs, articleSentences, type ArticleParagraph } from "./articleParagraphs.js";
-import { quotedWords } from "../liftQuotation.js";
+import { wholePassage } from "../liftQuotation.js";
 import { noteBudget } from "../noteBudget.js";
 import { resolvedBigPicture } from "../sections/bigPicturePrompt.js";
 import type { ArticleChapterShape } from "./sections/articleChaptersSection.js";
@@ -25,7 +25,7 @@ export interface GeneratedArticleOutput {
   bigPicture: string;
   coreClaim: string;
   thin: boolean;
-  keyPoints: Array<{ text: string; paragraphIndex: number | null } & ArticleQuoteShape & { quoteAdds: string | null }>;
+  keyPoints: Array<{ text: string; paragraphIndex: number | null } & ArticleQuoteShape>;
   chapters: ArticleChapterShape[];
   matchedTopicNames: string[];
   tags: string[];
@@ -75,16 +75,15 @@ export function assembleArticleOverview(
   // paragraph or later in the same section, never before it, or the line goes without
   // (docs/features/overview-generation-decisions.md, "Evidence").
   const sentences = articleSentences(input.article);
-  const articleEvidence = (from: number | null, quote: ArticleQuoteShape, adds: string | null): Evidence | undefined => {
+  const articleEvidence = (from: number | null, quote: ArticleQuoteShape): Evidence | undefined => {
     const { quoteStartSentence: start, quoteEndSentence: end } = quote;
     const first = sentences[start];
     const last = sentences[end];
     if (from === null || first === undefined || last === undefined || start > end) return undefined;
     const section = chapterHolding(from, output.chapters);
     if (first.paragraphIndex < from || chapterHolding(last.paragraphIndex, output.chapters) !== section) return undefined;
-    const quoted = quotedWords(sentences.slice(start, end + 1).map(({ text }) => text));
-    if (quoted === null) return undefined;
-    return { text: quoted.text, range: null, adds: adds?.trim() ? adds.trim() : null };
+    const text = wholePassage(sentences.slice(start, end + 1).map((sentence) => sentence.text));
+    return text === null ? undefined : { text, range: null };
   };
 
   const verdict = output.thin ? undefined : output.verdict;
@@ -101,7 +100,7 @@ export function assembleArticleOverview(
     coreClaim: output.coreClaim,
     thin: output.thin,
     keyPoints: output.keyPoints.map((point) => {
-      const evidence = articleEvidence(point.paragraphIndex, point, point.quoteAdds);
+      const evidence = articleEvidence(point.paragraphIndex, point);
       return { text: point.text, range: null, ...(evidence ? { evidence } : {}) };
     }),
     topicIds: input.existingTopics.filter((topic) => output.matchedTopicNames.includes(topic.name)).map((topic) => topic.id),
@@ -115,7 +114,7 @@ export function assembleArticleOverview(
               verdict.novelty === "common_knowledge" || verdict.standsOut === null
                 ? null
                 : (() => {
-                    const evidence = articleEvidence(verdict.standsOut.paragraphIndex, verdict.standsOut, null);
+                    const evidence = articleEvidence(verdict.standsOut.paragraphIndex, verdict.standsOut);
                     return { text: verdict.standsOut.text, range: null, ...(evidence ? { evidence } : {}) };
                   })(),
             dubious: verdict.dubiousClaims.length > 0,

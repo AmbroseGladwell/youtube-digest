@@ -145,7 +145,6 @@ const articleOutput = (paragraphs: (number | null)[]): GeneratedArticleOutput =>
     paragraphIndex,
     quoteStartSentence: -1,
     quoteEndSentence: -1,
-    quoteAdds: null,
   })),
   chapters: [
     { title: "", summary: "", startParagraphIndex: 0 },

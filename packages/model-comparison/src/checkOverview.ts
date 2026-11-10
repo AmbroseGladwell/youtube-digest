@@ -1,4 +1,4 @@
-import { EVIDENCE_ADDS_TARGET_WORDS, IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
+import { IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
 import {
   mostQuotations,
   quoteRangeOf,
@@ -155,14 +155,6 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
         const quoted = output.keyPoints.filter((point) => quoteOf(point) !== null).length;
         return quoted > mostQuotations(budget) ? [`${quoted} points quoted of ${mostQuotations(budget)}`] : [];
       })(),
-    ),
-    result(
-      "quoteAddsWithinTarget",
-      "overview",
-      output.keyPoints.flatMap((point, index) => {
-        const words = point.quoteAdds ? wordCount(point.quoteAdds) : 0;
-        return words > EVIDENCE_ADDS_TARGET_WORDS ? [`key point ${index + 1}'s quoteAdds is ${words} words`] : [];
-      }),
     ),
     result("watchAnywayRangeInside", "overview", rangeProblem("watch-anyway range", output.watchAnyway, segments)),
     result(

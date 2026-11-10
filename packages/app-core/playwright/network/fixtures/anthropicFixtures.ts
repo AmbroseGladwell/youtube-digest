@@ -15,7 +15,6 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
       {
         text: "It states one claim.",
@@ -23,7 +22,6 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
       {
         text: "It closes with how to apply that claim.",
@@ -31,7 +29,6 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
         endSegmentIndex: -1,
         quoteStartSegmentIndex: -1,
         quoteEndSegmentIndex: -1,
-        quoteAdds: null,
       },
     ],
     chapters: [

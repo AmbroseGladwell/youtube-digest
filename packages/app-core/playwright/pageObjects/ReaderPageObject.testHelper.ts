@@ -303,14 +303,11 @@ export class ReaderPageObject extends PageObject {
     });
 
   // A quotation is marked up as one, not styled as one: the words sit in a <q>.
-  verifyQuotationsRead = (quotations: { text: string; aside: string | null }[]) =>
-    this.step(`verifyQuotationsRead ${quotations.map(({ text }) => text).join(", ")}`, async () => {
+  verifyQuotationsRead = (quotations: string[]) =>
+    this.step(`verifyQuotationsRead ${quotations.join(", ")}`, async () => {
       const quoted = this.get(readAlongNoteTestIds.quotation);
-      await expect(quoted).toHaveText(quotations.map(({ text }) => text));
+      await expect(quoted).toHaveText(quotations);
       await expect(quoted.first()).toHaveJSProperty("tagName", "Q");
-      await expect(this.get(readAlongNoteTestIds.quotationAside)).toHaveText(
-        quotations.flatMap(({ aside }) => (aside === null ? [] : [aside])),
-      );
     });
 
   verifyNoteLabelsRead = (labels: string[]) =>

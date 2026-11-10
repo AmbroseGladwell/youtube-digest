@@ -111,7 +111,7 @@ const quoted = (): Overview => {
   return {
     ...overview,
     keyPoints: [
-      { ...overview.keyPoints[0]!, evidence: { text: "The county offered half of the bill to the town.", range: null, adds: null } },
+      { ...overview.keyPoints[0]!, evidence: { text: "The county offered half of the bill to the town.", range: null } },
       ...overview.keyPoints.slice(1),
     ],
   };

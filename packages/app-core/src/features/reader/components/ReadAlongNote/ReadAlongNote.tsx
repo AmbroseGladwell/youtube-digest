@@ -120,11 +120,6 @@ export function ReadAlongNote({
                 )}
                 {line.range && renderRange?.(line, line.range, active)}
                 {renderLineEnd?.(line)}
-                {line.aside && (
-                  <span className={styles.quotationAside} data-testid={readAlongNoteTestIds.quotationAside}>
-                    {line.aside}
-                  </span>
-                )}
               </span>
               {line.heading && slot && (
                 <span className={styles.slotBeside} onClick={(event) => event.stopPropagation()}>

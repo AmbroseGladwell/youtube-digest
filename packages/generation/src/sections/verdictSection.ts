@@ -62,10 +62,11 @@ reasoning calls fresh. It is null for COMMON_KNOWLEDGE. Give the stretch
 of the video where it is shown or explained as
 startSegmentIndex/endSegmentIndex, taken from the numbered transcript
 segments below; don't estimate a time. Set both to -1 when no one
-stretch carries it. Then name the one or two segments inside that
-stretch where it is said most plainly, as
-quoteStartSegmentIndex/quoteEndSegmentIndex, so code can quote them word
-for word; both -1 when it has no stretch.
+stretch carries it. Then, if that stretch shows the fresh part in the
+video's own words (the example, the demonstration or the data, never the
+line that names it), give that short passage as
+quoteStartSegmentIndex/quoteEndSegmentIndex so code can quote it word for
+word; otherwise, and when it has no stretch, set both to -1.
 
 Never begin the reasoning with the novelty word itself; the label is
 shown beside it and the reasoning is read aloud on its own. Don't repeat

@@ -50,9 +50,9 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   coreClaim: "The repair bill doubled because a survey was never checked.",
   thin: false,
   keyPoints: [
-    { text: "The bridge closed in March.", paragraphIndex: 0, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
-    { text: "The county offered half.", paragraphIndex: 2, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
-    { text: "Residents pay the rest.", paragraphIndex: 3, quoteStartSentence: -1, quoteEndSentence: -1, quoteAdds: null },
+    { text: "The bridge closed in March.", paragraphIndex: 0, quoteStartSentence: -1, quoteEndSentence: -1 },
+    { text: "The county offered half.", paragraphIndex: 2, quoteStartSentence: -1, quoteEndSentence: -1 },
+    { text: "Residents pay the rest.", paragraphIndex: 3, quoteStartSentence: -1, quoteEndSentence: -1 },
   ],
   chapters: [
     { title: "The closure", summary: "Why the bridge shut.", startParagraphIndex: 0 },
@@ -106,7 +106,6 @@ test("a short article's note is held to a short budget, and an over-long one goe
       paragraphIndex: 0,
       quoteStartSentence: -1,
       quoteEndSentence: -1,
-      quoteAdds: null,
     })),
   });
   const note = await generate(answering(fourPoints, output()));
@@ -139,7 +138,6 @@ test("a long article's key points that stop early go back to the model, naming w
       paragraphIndex: index,
       quoteStartSentence: -1,
       quoteEndSentence: -1,
-      quoteAdds: null,
     }));
   const chapters = [{ title: "All of it", summary: "The whole piece.", startParagraphIndex: 0 }];
   const readAnyway = { answer: "no", reason: "No need.", leftOut: "It leaves out the rest.", chapterIndexes: [] };
@@ -163,7 +161,6 @@ test("a chapter too big to skip with no key point goes back to the model, naming
         paragraphIndex: 0,
         quoteStartSentence: -1,
         quoteEndSentence: -1,
-        quoteAdds: null,
       })),
     }),
     output(),
@@ -309,13 +306,10 @@ const quoting = (index: number, point: Record<string, unknown>) => {
 };
 
 test("a key point's quotation is the article's own sentences, lifted by code, with no time", async () => {
-  const note = await generate(
-    answering(quoting(1, { quoteStartSentence: 2, quoteEndSentence: 3, quoteAdds: "The town was never asked." })),
-  );
+  const note = await generate(answering(quoting(1, { quoteStartSentence: 2, quoteEndSentence: 3 })));
   assert.deepEqual(note.keyPoints[1]?.evidence, {
     text: "The county offered half of the bill to the town. Residents will cover the rest through higher rates.",
     range: null,
-    adds: "The town was never asked.",
   });
 });
 

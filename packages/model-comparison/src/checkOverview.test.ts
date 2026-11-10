@@ -136,9 +136,9 @@ test("one chapter holding most of a long video fails; a short video may be one c
   assert.deepEqual(failing(short, makeFetchedTranscript(6)), []);
 });
 
-const withQuote = (index: number, quote: { quoteStartSegmentIndex: number; quoteEndSegmentIndex: number; quoteAdds?: string | null }) => {
+const withQuote = (index: number, quote: { quoteStartSegmentIndex: number; quoteEndSegmentIndex: number }) => {
   const output = makeGeneratedOutput();
-  output.keyPoints[index] = { ...output.keyPoints[index]!, quoteAdds: null, ...quote };
+  output.keyPoints[index] = { ...output.keyPoints[index]!, ...quote };
   return output;
 };
 
@@ -157,18 +157,11 @@ test("a quotation inside its own point's stretch passes, and one outside it or o
   assert.deepEqual(failing(noStretch), ["quotationsInsideTheirLine"]);
 });
 
-test("quoting more points than the budget allows fails, and a long line on what a quotation adds fails its target", () => {
+test("quoting more points than the budget allows fails", () => {
   const output = makeGeneratedOutput();
   const quoted = { ...output.keyPoints[0]!, startSegmentIndex: 3, endSegmentIndex: 5, quoteStartSegmentIndex: 4, quoteEndSegmentIndex: 4 };
   output.keyPoints = [quoted, quoted, quoted, quoted];
   assert.deepEqual(failing(output), ["quotationsWithinBudget"]);
-  const point = makeGeneratedOutput().keyPoints[0]!;
-  const long = withQuote(0, {
-    quoteStartSegmentIndex: point.startSegmentIndex,
-    quoteEndSegmentIndex: point.startSegmentIndex,
-    quoteAdds: Array(25).fill("word").join(" "),
-  });
-  assert.deepEqual(failing(long), ["quoteAddsWithinTarget"]);
 });
 
 test("a run from before quotations existed has none, and fails nothing for it", () => {

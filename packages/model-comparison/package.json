@@ -22,7 +22,7 @@
     "judge": "npm run build && node dist/cli/judgeComparison.js",
     "judge-key-points": "npm run build && node dist/cli/judgeKeyPoints.js",
     "judge-big-picture": "npm run build && node dist/cli/judgeBigPictures.js",
-    "judge-quotations": "npm run build && node dist/cli/judgeQuotations.js",
+    "quotations": "npm run build && node dist/cli/reportQuotations.js",
     "blind": "npm run build && node dist/cli/blindCheck.js",
     "cost-model": "npm run build && node dist/cli/compareCostModel.js",
     "readers": "npm run build && node dist/cli/compareReaders.js",

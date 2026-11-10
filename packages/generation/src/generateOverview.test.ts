@@ -37,9 +37,9 @@ test("a well-formed response from the client assembles into a valid Overview", a
     coreClaim: "The core claim.",
     thin: false,
     keyPoints: [
-      { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
-      { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
-      { text: "three", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+      { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
+      { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
+      { text: "three", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
     ],
     chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
     matchedTopicNames: [],
@@ -77,7 +77,6 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
             endSegmentIndex: -1,
             quoteStartSegmentIndex: -1,
             quoteEndSegmentIndex: -1,
-            quoteAdds: null,
           },
           {
             text: "two",
@@ -85,7 +84,6 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
             endSegmentIndex: -1,
             quoteStartSegmentIndex: -1,
             quoteEndSegmentIndex: -1,
-            quoteAdds: null,
           },
           {
             text: "three",
@@ -93,7 +91,6 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
             endSegmentIndex: -1,
             quoteStartSegmentIndex: -1,
             quoteEndSegmentIndex: -1,
-            quoteAdds: null,
           },
         ],
         chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
@@ -111,15 +108,14 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       coreClaim: "The core claim.",
       thin: false,
       keyPoints: [
-        { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
-        { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1, quoteAdds: null },
+        { text: "one", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
+        { text: "two", startSegmentIndex: -1, endSegmentIndex: -1, quoteStartSegmentIndex: -1, quoteEndSegmentIndex: -1 },
         {
           text: "three",
           startSegmentIndex: -1,
           endSegmentIndex: -1,
           quoteStartSegmentIndex: -1,
           quoteEndSegmentIndex: -1,
-          quoteAdds: null,
         },
       ],
       chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
@@ -153,7 +149,6 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
     endSegmentIndex: -1,
     quoteStartSegmentIndex: -1,
     quoteEndSegmentIndex: -1,
-    quoteAdds: null,
   }));
   let calls = 0;
   const client: GenerationClient = async ({ userMessage }) => {
@@ -211,7 +206,6 @@ const answer = (keyPointsAt: number[], chapterStarts = [0]) => ({
     endSegmentIndex: at + 1,
     quoteStartSegmentIndex: -1,
     quoteEndSegmentIndex: -1,
-    quoteAdds: null,
   })),
   chapters: chapterStarts.map((start) => ({ title: "A chapter", summary: "What it covers.", startSegmentIndex: start })),
   matchedTopicNames: [],
@@ -281,7 +275,6 @@ const defaultAnswer = {
     endSegmentIndex: -1,
     quoteStartSegmentIndex: -1,
     quoteEndSegmentIndex: -1,
-    quoteAdds: null,
   })),
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],
