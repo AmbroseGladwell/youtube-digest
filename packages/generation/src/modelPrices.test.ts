@@ -17,6 +17,14 @@ test("a prompt over a model's long-prompt threshold is charged entirely at the h
   assert.equal(costInDollars(haiku, long), (100_001 * 0.5) / 1_000_000);
 });
 
+test("OpenAI's cache writes cost more than uncached input, and a prompt over 272,000 tokens is charged at the long rate", () => {
+  const sol = MODEL_PRICES["openai:gpt-6.1-sol"]!;
+  const written = { uncachedInputTokens: 0, cachedInputTokens: 0, cacheWriteTokens: 272_000, outputTokens: 0 };
+
+  assert.equal(costInDollars(sol, written), (272_000 * 2.5) / 1_000_000);
+  assert.equal(costInDollars(sol, { ...written, cacheWriteTokens: 272_001 }), (272_001 * 5) / 1_000_000);
+});
+
 test("a model is priced by its provider and name together", () => {
   assert.equal(priceOf({ provider: "openai", model: "gpt-6.1-sol" }), MODEL_PRICES["openai:gpt-6.1-sol"]);
   assert.equal(priceOf({ provider: "anthropic", model: "gpt-6.1-sol" }), undefined);

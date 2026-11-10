@@ -23,9 +23,11 @@ import {
   generateTopicSuggestions,
   meteredFetch,
   priceOf,
+  promptTokensOf,
   ProviderKeyRefusedError,
   type FallbackReason,
   type GenerationClient,
+  type MeteredCall,
 } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
 import { secondsToNextUsageDay, usageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -103,6 +105,23 @@ interface HeldSlot {
 // Our own key refused by the provider: ours to fix, never the reader's key problem.
 export class OurKeyUnavailableError extends Error {}
 
+// What a run of calls on our key used and cost, failed attempts included, since the provider
+// bills every response it answers.
+function meteredUsageOf(calls: MeteredCall[]): { inputTokens: number; outputTokens: number; costDollars: number | null } {
+  const price = priceOf(ourKeyModel);
+  return calls.reduce(
+    (total, { usage }) =>
+      usage === null
+        ? total
+        : {
+            inputTokens: total.inputTokens + promptTokensOf(usage),
+            outputTokens: total.outputTokens + usage.outputTokens,
+            costDollars: total.costDollars === null || price === undefined ? null : total.costDollars + costInDollars(price, usage),
+          },
+    { inputTokens: 0, outputTokens: 0, costDollars: price === undefined ? null : 0 },
+  );
+}
+
 export class OurKeyGenerationError extends Error {
   readonly fallback: FallbackReason | null;
 
@@ -150,28 +169,14 @@ export class OurKeyGenerator {
         id: overviewId,
         savedAt: now.toISOString(),
       });
-      const tokens = metered.calls.reduce(
-        (total, call) => ({
-          input: total.input + (call.usage === null ? 0 : call.usage.uncachedInputTokens + call.usage.cachedInputTokens),
-          output: total.output + (call.usage?.outputTokens ?? 0),
-        }),
-        { input: 0, output: 0 },
-      );
       if (signedOut) await trials.made(now, overviewId);
       else await reservations.madeOnOurKey(now, caller.accountId, overviewId);
-      const price = priceOf(ourKeyModel);
-      const costDollars =
-        price === undefined
-          ? null
-          : metered.calls.reduce((total, call) => total + (call.usage === null ? 0 : costInDollars(price, call.usage)), 0);
       log.info(
         apiLogLines.ourKey.generated({
           ...logged,
           model: ourKeyModel.model,
           attempts: metered.calls.length,
-          inputTokens: tokens.input,
-          outputTokens: tokens.output,
-          costDollars,
+          ...meteredUsageOf(metered.calls),
           used: held.used,
           limit: held.limit,
           ms: clock().getTime() - startedAt,
@@ -192,7 +197,9 @@ export class OurKeyGenerator {
           reason: error instanceof Error ? error.constructor.name : "unknown",
           status: (error as { status?: unknown }).status ?? null,
           fallback,
+          model: ourKeyModel.model,
           attempts: metered.calls.length,
+          ...meteredUsageOf(metered.calls),
           ms: clock().getTime() - startedAt,
         }),
       );
@@ -229,15 +236,11 @@ export class OurKeyGenerator {
     const metered = meteredFetch(ourKeyModel.provider, http);
     try {
       const result = await run(createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }));
-      const price = priceOf(ourKeyModel);
       log.info(
         apiLogLines.ourKey.smallPass({
           pass,
           model: ourKeyModel.model,
-          costDollars:
-            price === undefined
-              ? null
-              : metered.calls.reduce((total, call) => total + (call.usage === null ? 0 : costInDollars(price, call.usage)), 0),
+          costDollars: meteredUsageOf(metered.calls).costDollars,
           ms: clock().getTime() - startedAt,
         }),
       );
@@ -247,6 +250,8 @@ export class OurKeyGenerator {
         apiLogLines.ourKey.smallPassFailed({
           pass,
           reason: error instanceof Error ? error.constructor.name : "unknown",
+          model: ourKeyModel.model,
+          costDollars: meteredUsageOf(metered.calls).costDollars,
           ms: clock().getTime() - startedAt,
         }),
       );

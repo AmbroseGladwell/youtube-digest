@@ -220,7 +220,22 @@ test("a generation logs its tokens and cost, measured from what OpenAI reported"
   assert.equal(made?.plan, "free");
   assert.equal(made?.model, ourKeyModel.model);
   assert.deepEqual([made?.inputTokens, made?.outputTokens], [1200, 300]);
-  assert.equal(made?.costDollars, (1000 * 2 + 200 * 0.1 + 300 * 10) / 1_000_000);
+  assert.equal(made?.costDollars, (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10) / 1_000_000);
+  await testApp.close();
+});
+
+test("a failed generation still logs the tokens and cost of the attempts OpenAI answered", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi("invalid"), { logger });
+  const account = await makeAccount(testApp);
+
+  await generate(account);
+  const [failed] = saying(lines, "overview on our key failed");
+  const attempts = failed?.attempts as number;
+
+  assert.ok(attempts >= 1);
+  assert.deepEqual([failed?.inputTokens, failed?.outputTokens], [1200 * attempts, 300 * attempts]);
+  assert.equal(failed?.costDollars, (attempts * (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10)) / 1_000_000);
   await testApp.close();
 });
 

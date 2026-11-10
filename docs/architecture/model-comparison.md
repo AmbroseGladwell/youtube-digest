@@ -50,10 +50,11 @@ is the one compared.
 ### Prices
 
 `packages/generation/src/modelPrices.ts`, shared with the server's cost log for our key,
-per million tokens, checked on 12 Oct 2026 against each provider's
-pricing page, which is named beside each entry. Cached input, cache writes and long-prompt
-tiers are priced separately: Haiku 5.5 costs more above 100,000 prompt tokens, and Gemini
-3.1 Pro above 200,000. **Gemini's Flash prices double on 1 Jan 2027.** The table holds the
+per million tokens, checked on 12 Oct 2026 (OpenAI's again on 9 Nov 2026) against each
+provider's pricing page, which is named beside each entry. Cached input, cache writes and long-prompt
+tiers are priced separately: Haiku 5.5 costs more above 100,000 prompt tokens, Gemini
+3.1 Pro above 200,000, and OpenAI's Sol and Luna above 272,000. OpenAI's cache writes cost
+1.25× uncached input (`spend.md`, "What the app meters on our key"). **Gemini's Flash prices double on 1 Jan 2027.** The table holds the
 2026 prices, and any recommendation that rests on Flash has to say so.
 
 ## Reliability and cost: measured, never estimated

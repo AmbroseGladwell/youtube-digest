@@ -21,6 +21,21 @@ test("OpenAI counts cached tokens inside prompt_tokens, so they are taken back o
   assert.deepEqual(usage, { uncachedInputTokens: 904, cachedInputTokens: 4096, cacheWriteTokens: 0, outputTokens: 1500 });
 });
 
+test("OpenAI's cache writes are counted inside prompt_tokens and kept apart, as a live response on 9 Nov 2026 reported them", () => {
+  const usage = tokenUsageOf("openai", {
+    choices: [],
+    usage: {
+      prompt_tokens: 8423,
+      completion_tokens: 4,
+      total_tokens: 8427,
+      prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 8420, audio_tokens: 0 },
+    },
+  });
+
+  assert.deepEqual(usage, { uncachedInputTokens: 3, cachedInputTokens: 0, cacheWriteTokens: 8420, outputTokens: 4 });
+  assert.equal(promptTokensOf(usage!), 8423);
+});
+
 test("DeepSeek's cache hits are read from its own field", () => {
   const usage = tokenUsageOf("deepseek", {
     usage: { prompt_tokens: 5000, completion_tokens: 1500, prompt_cache_hit_tokens: 1000 },
