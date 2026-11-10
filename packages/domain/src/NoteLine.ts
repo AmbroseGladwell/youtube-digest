@@ -12,6 +12,10 @@
 // what the line is, not what it says. A heading's `chip` is set beside it, and is shown, never
 // spoken: the Verdict heading's novelty label.
 //
+// A `quotation` line is the source's own words under the line before it, lifted by code
+// (OV-216): the page marks it up as a quotation, never styles plain text as one, and `aside`
+// is what the quotation adds, set under it and read after it.
+//
 // `spoken` is what narration says for the line when it differs from what the reader shows,
 // and an empty `spoken` is a line narration passes over (docs/features/tts-pre-rendered-speech.md).
 import type { TimeRange } from "./WatchAnyway.js";
@@ -27,4 +31,6 @@ export interface NoteLine {
   chapterIndex?: number;
   label?: string;
   chip?: string;
+  quotation?: boolean;
+  aside?: string;
 }

@@ -10,11 +10,17 @@ import {
   type VideoSource,
 } from "@overview/domain";
 
-export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep";
+export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep" | "quotation";
 
 // What a line of the note points at, for the tag at its end.
 export const noteLineRange = (line: NoteLine): { kind: RangeKind; about: string } => ({
-  kind: line.section === WATCH_ANYWAY_SECTION ? "watchAnyway" : line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut",
+  kind: line.quotation
+    ? "quotation"
+    : line.section === WATCH_ANYWAY_SECTION
+      ? "watchAnyway"
+      : line.section === KEY_POINTS_SECTION
+        ? "keyPoint"
+        : "standsOut",
   about: line.text,
 });
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";

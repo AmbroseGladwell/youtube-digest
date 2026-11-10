@@ -33,6 +33,18 @@ export class TranscriptsRepository {
     return rows[0]?.body ?? null;
   }
 
+  // Which of these videos' transcripts were heard by a machine, read without the transcripts
+  // themselves, so a quotation can be labelled (OV-216).
+  async machineHeard(accountId: AccountId, videoIds: readonly string[]): Promise<Set<string>> {
+    if (videoIds.length === 0) return new Set();
+    const rows = await this.#sql.query<{ video_id: string }>(
+      `select a.video_id from account_transcripts a join shared_transcripts s using (video_id, words_hash)
+       where a.account_id = $1 and a.video_id = any($2::text[]) and (s.body->>'generated')::boolean`,
+      [accountId, videoIds],
+    );
+    return new Set(rows.map((row) => row.video_id));
+  }
+
   async getShared(videoId: VideoId): Promise<unknown> {
     const rows = await this.#sql.query<{ body: unknown }>(
       `select body from shared_transcripts

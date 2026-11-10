@@ -1003,6 +1003,22 @@ the same way.
 - **No speaker is named.** Auto-captions carry no speaker labels, so a quotation says what was
   said, never who said it (OV-226 for when diarisation arrives).
 
+**Where it shows.** Each quotation is a line of its own under the line it backs
+(`overviewNoteLines`), never numbered, with its moment as a range tag like a key point's:
+
+- **On the page** its words sit in a `<q>`, so it is marked up as a quotation rather than styled
+  as one, with a label above it ("In the video's words", or "From the auto-generated captions"
+  when the stored transcript says a machine heard it) and what it adds set under it. The look is
+  a placeholder until the Claude Design round.
+- **In narration** it is introduced, never announced: "In the video's own words, …", then what
+  it adds. A quotation from captions with no punctuation is closed with a full stop so the next
+  sentence doesn't run into it. The label is never read.
+- **Over MCP** it is a blockquote under its bullet, linked to its moment, with "auto-generated
+  captions" beside the link when that is so (read from the transcript's flag alone, never the
+  transcript), and what it adds after it in italics. `get_overview` says quotations are there.
+- **Analytics**: `capture.newOverview.finished` counts `quotations` and `quotationAsides`, never
+  the words, and following a quotation's range is its own `rangeFollowed` line, `quotation`.
+
 **The record.** `KeyPoint.evidence` and `StandsOut.evidence` (`Evidence.ts`: text, range, adds)
 are absent rather than null when there is none. Overview schema 17 alters nothing and holds
 these records back from clients before version 18, which would strip the evidence on their next

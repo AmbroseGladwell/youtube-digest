@@ -84,6 +84,7 @@ import { bindOverviewId } from "../../analytics/bindOverviewId.js";
 import { OverviewAnalyticsProvider } from "../../analytics/OverviewAnalyticsContext.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import { useHowToApplySlot } from "./useHowToApplySlot.js";
+import { useTranscriptQuery } from "../../transcripts/queries/transcriptQuery.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
@@ -181,16 +182,21 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     [recipe, scale, recipeUnits],
   );
   const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
+  // A quotation from captions a machine heard says so beside it (OV-216).
+  const quotes = overview != null && (overview.keyPoints.some((point) => point.evidence) || overview.verdict?.standsOut?.evidence != null);
+  const machineHeard = useTranscriptQuery(quotes ? (video?.id ?? null) : null).data?.generated === true;
   // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
   const lines = useMemo(
     () =>
       overview
         ? overviewNoteLines(
             overview,
-            recipe === null ? {} : { ingredients: shownIngredients, units: recipeUnits, methodAmounts: adjustment?.methodAmounts ?? [] },
+            recipe === null
+              ? { machineHeard }
+              : { ingredients: shownIngredients, units: recipeUnits, methodAmounts: adjustment?.methodAmounts ?? [] },
           )
         : [],
-    [overview, recipe, shownIngredients, recipeUnits, adjustment],
+    [overview, recipe, shownIngredients, recipeUnits, adjustment, machineHeard],
   );
   const playingStep = usePlayingStep(recipe?.steps ?? [], video?.id ?? null);
   const seekVideo = useSeekPlayback(video?.id ?? null);

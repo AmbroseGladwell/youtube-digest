@@ -57,6 +57,8 @@ test("making an overview is counted from asking to reading it, with where it was
           keyPoints: 3,
           keyPointCeiling: 7,
           chapters: 2,
+          quotations: 0,
+          quotationAsides: 0,
           noteKind: "default",
           key: "own",
           provider: "anthropic",

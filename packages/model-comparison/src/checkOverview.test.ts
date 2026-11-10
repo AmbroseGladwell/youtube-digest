@@ -144,10 +144,14 @@ const withQuote = (index: number, quote: { quoteStartSegmentIndex: number; quote
 
 test("a quotation inside its own point's stretch passes, and one outside it or on a point with no stretch fails", () => {
   const point = makeGeneratedOutput().keyPoints[0]!;
-  assert.deepEqual(failing(withQuote(0, { quoteStartSegmentIndex: point.startSegmentIndex, quoteEndSegmentIndex: point.startSegmentIndex })), []);
-  assert.deepEqual(failing(withQuote(0, { quoteStartSegmentIndex: point.endSegmentIndex + 1, quoteEndSegmentIndex: point.endSegmentIndex + 1 })), [
-    "quotationsInsideTheirLine",
-  ]);
+  assert.deepEqual(
+    failing(withQuote(0, { quoteStartSegmentIndex: point.startSegmentIndex, quoteEndSegmentIndex: point.startSegmentIndex })),
+    [],
+  );
+  assert.deepEqual(
+    failing(withQuote(0, { quoteStartSegmentIndex: point.endSegmentIndex + 1, quoteEndSegmentIndex: point.endSegmentIndex + 1 })),
+    ["quotationsInsideTheirLine"],
+  );
   const noStretch = withQuote(0, { quoteStartSegmentIndex: 1, quoteEndSegmentIndex: 1 });
   noStretch.keyPoints[0] = { ...noStretch.keyPoints[0]!, startSegmentIndex: -1, endSegmentIndex: -1 };
   assert.deepEqual(failing(noStretch), ["quotationsInsideTheirLine"]);
@@ -169,6 +173,8 @@ test("quoting more points than the budget allows fails, and a long line on what 
 
 test("a run from before quotations existed has none, and fails nothing for it", () => {
   const output = makeGeneratedOutput();
-  output.keyPoints = output.keyPoints.map(({ text, startSegmentIndex, endSegmentIndex }) => ({ text, startSegmentIndex, endSegmentIndex }) as never);
+  output.keyPoints = output.keyPoints.map(
+    ({ text, startSegmentIndex, endSegmentIndex }) => ({ text, startSegmentIndex, endSegmentIndex }) as never,
+  );
   assert.deepEqual(failing(output), []);
 });

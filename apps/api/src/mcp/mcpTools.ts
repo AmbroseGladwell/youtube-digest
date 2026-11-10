@@ -57,11 +57,23 @@ function listingLine(library: Library, entry: LibraryEntry, byMeaning: boolean):
   return `- **${overview.source.title}** (${facts.join(" · ")})\n  ${overview.inOneLine}`;
 }
 
-function overviewText(library: Library, entry: LibraryEntry, byMeaning: boolean): string {
+function overviewText(library: Library, entry: LibraryEntry, byMeaning: boolean, machineHeard: ReadonlySet<string>): string {
   const topics = topicNames(library.topics, entry);
   const matched = byMeaning ? "\nMatched by meaning, not by word" : "";
-  return `Overview id: ${entry.overview.id}\nTopics: ${topics.join(", ") || "none"}${matched}\n\n${overviewMarkdown(entry.overview)}`;
+  const key = sourceKey(entry.overview.source);
+  const markdown = overviewMarkdown(entry.overview, { machineHeard: key !== null && machineHeard.has(key) });
+  return `Overview id: ${entry.overview.id}\nTopics: ${topics.join(", ") || "none"}${matched}\n\n${markdown}`;
 }
+
+const quotes = ({ overview }: LibraryEntry): boolean =>
+  overview.keyPoints.some((point) => point.evidence !== undefined) || overview.verdict?.standsOut?.evidence !== undefined;
+
+// Only the overviews that quote anything need to know how their transcript was heard.
+const machineHeardOf = (entries: readonly LibraryEntry[], { transcripts, accountId }: McpToolContext): Promise<Set<string>> =>
+  transcripts.machineHeard(
+    accountId,
+    entries.filter(quotes).flatMap(({ overview }) => sourceKey(overview.source) ?? []),
+  );
 
 interface McpSearch extends LibrarySearch {
   notes: string[];
@@ -190,15 +202,15 @@ const getOverview = mcpTool({
   name: "get_overview",
   title: "Read one overview",
   description:
-    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, and chapters. Every chapter links to its moment in the video, for citing.",
+    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points (some with the video's own words quoted beneath them, lifted from its transcript), how to apply, what it sells, whether to watch it anyway, and chapters. Every chapter and quotation links to its moment in the video, for citing.",
   input: z.object({ id: z.string().describe("The overview's id") }),
-  run: async ({ id }, { sql, accountId }) => {
-    const library = await readLibrary(sql, accountId);
+  run: async ({ id }, context) => {
+    const library = await readLibrary(context.sql, context.accountId);
     const entry = library.entries.find((candidate) => candidate.overview.id === id);
     if (entry === undefined) {
       return toolError(`There is no overview with id ${id} in this library.`);
     }
-    return { text: overviewText(library, entry, false), overviews: 1 };
+    return { text: overviewText(library, entry, false, await machineHeardOf([entry], context)), overviews: 1 };
   },
 });
 
@@ -226,10 +238,11 @@ const getOverviews = mcpTool({
       ...found.notes,
       ...unreadableNote(library),
     ];
+    const machineHeard = await machineHeardOf(page.items, context);
     const body =
       page.total === 0
         ? "No saved overviews match."
-        : page.items.map((entry) => overviewText(library, entry, found.byMeaning.has(entry.overview.id))).join("\n---\n\n");
+        : page.items.map((entry) => overviewText(library, entry, found.byMeaning.has(entry.overview.id), machineHeard)).join("\n---\n\n");
     return {
       text: [`${page.total} saved overview(s) match.`, ...notes, "", body].join("\n").trim(),
       overviews: page.items.length,

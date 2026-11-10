@@ -1,3 +1,4 @@
+import type { Evidence } from "./Evidence.js";
 import type { NoteLine } from "./NoteLine.js";
 import { NOVELTY_LABEL, REASONING_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import type { SharedNote } from "./SharedNote.js";
@@ -28,7 +29,34 @@ interface Body {
   chapterIndex?: number;
   label?: string;
   chip?: string;
+  bullet?: boolean;
+  quotation?: boolean;
+  aside?: string;
 }
+
+// Auto-captions carry no punctuation, so a quotation is closed before the next sentence is read.
+const ended = (text: string): string => (/[.!?…]["”’]?$/.test(text) ? text : `${text}.`);
+
+export const MACHINE_HEARD_QUOTATION_LABEL = "From the auto-generated captions";
+export const quotationLabel = (source: string): string => `In ${source} words`;
+
+// The source's own words under the line they back, introduced in narration rather than
+// announced (docs/architecture/overview-quality.md, "Structure the data, compose the
+// narration"). Never numbered, and never a bullet of its own.
+const quotationOf = (evidence: Evidence | undefined, source: string, machineHeard: boolean): Body[] =>
+  evidence === undefined
+    ? []
+    : [
+        {
+          text: evidence.text,
+          range: evidence.range,
+          bullet: false,
+          quotation: true,
+          label: machineHeard ? MACHINE_HEARD_QUOTATION_LABEL : quotationLabel(source),
+          spoken: `In ${source} own words, ${ended(evidence.text)}${evidence.adds === null ? "" : ` ${evidence.adds}`}`,
+          ...(evidence.adds === null ? {} : { aside: evidence.adds }),
+        },
+      ];
 
 const keepsItsCapital = (word: string) =>
   word === "I" || word.startsWith("I'") || (word.length > 1 && word === word.toUpperCase()) || /.\p{Lu}/u.test(word);
@@ -88,9 +116,18 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
 export function overviewNoteLines(
   overview: SharedNote,
-  shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[] } = {},
+  shown: {
+    ingredients?: readonly string[];
+    units?: RecipeUnits;
+    methodAmounts?: readonly MethodAmount[];
+    // Whether the transcript a quotation was lifted from was heard by a machine, which the
+    // page says beside it (StoredTranscript.generated). Unknown is not said.
+    machineHeard?: boolean;
+  } = {},
 ): NoteLine[] {
   const lines: NoteLine[] = [];
+  const source = overview.article ? "the article's" : "the video's";
+  const machineHeard = shown.machineHeard === true && !overview.article;
 
   const section = (name: string, heading: Body, bodies: Body[], bullet = false) => {
     if (bodies.length === 0) {
@@ -156,6 +193,7 @@ export function overviewNoteLines(
               label: STANDS_OUT_LABEL,
               spoken: `${STANDS_OUT_LABEL}: ${standsOut.text}`,
             },
+            ...quotationOf(standsOut.evidence, source, machineHeard),
           ]),
       { text: reasoning, label: REASONING_LABEL },
     ]);
@@ -170,7 +208,7 @@ export function overviewNoteLines(
         return { ...withRange(point), ...(chapterIndex == null ? {} : { chapterIndex }) };
       }),
       KEY_POINT_LINKS,
-    ),
+    ).flatMap((body, index) => [body, ...quotationOf(overview.keyPoints[index]?.evidence, source, machineHeard)]),
     true,
   );
   section(

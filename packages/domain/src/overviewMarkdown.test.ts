@@ -163,3 +163,27 @@ test("leaves out selling when the video sells nothing", () => {
 
   assert.ok(!markdown.includes("What it sells"));
 });
+
+test("sets a key point's quotation beneath it as a quotation, linked to its moment, with what it adds", () => {
+  const markdown = overviewMarkdown(
+    makeOverview({
+      keyPoints: [
+        {
+          text: "Diet beats training for weight.",
+          range: null,
+          evidence: {
+            text: "you're not going to out-train a bad diet",
+            range: { startMs: 8000, endMs: 12_000 },
+            adds: "He says it flatly.",
+          },
+        },
+        ...makeOverview().keyPoints.slice(1),
+      ],
+    }),
+    { machineHeard: true },
+  );
+  assert.match(
+    markdown,
+    /- Diet beats training for weight\.\n {2}> “you're not going to out-train a bad diet” \(\[0:08–0:12\]\([^)]+\), auto-generated captions\)\n {2}_He says it flatly\._/,
+  );
+});

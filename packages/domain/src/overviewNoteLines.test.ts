@@ -327,3 +327,46 @@ test("the watch-anyway line carries the stretch worth watching, and a plain no c
   });
   assert.equal(watchLine({ answer: "no", reason: "Covered.", range: null })?.range, undefined);
 });
+
+const quotedNote = () => {
+  const overview = makeOverview();
+  return makeOverview({
+    keyPoints: [
+      {
+        text: "Diet matters more than training for weight.",
+        range: { startMs: 4000, endMs: 12_000 },
+        evidence: { text: "you're not going to out-train a bad diet", range: { startMs: 8000, endMs: 12_000 }, adds: "He says it flatly." },
+      },
+      ...overview.keyPoints.slice(1),
+    ],
+  });
+};
+
+test("a quotation follows the key point it backs, unnumbered, marked as one, with what it adds beside it", () => {
+  const lines = overviewNoteLines(quotedNote()).filter((line) => line.section === KEY_POINTS_SECTION && !line.heading);
+  assert.equal(lines[0]?.bullet, true);
+  assert.deepEqual(lines[1], {
+    section: KEY_POINTS_SECTION,
+    heading: false,
+    bullet: false,
+    text: "you're not going to out-train a bad diet",
+    range: { startMs: 8000, endMs: 12_000 },
+    quotation: true,
+    label: "In the video's words",
+    spoken: "In the video's own words, you're not going to out-train a bad diet. He says it flatly.",
+    aside: "He says it flatly.",
+  });
+  assert.equal(lines[2]?.bullet, true);
+});
+
+test("the key points keep their linking words when a quotation sits between them", () => {
+  const lines = overviewNoteLines(quotedNote()).filter((line) => line.section === KEY_POINTS_SECTION && line.bullet);
+  assert.match(lines[0]?.spoken ?? "", /^First, /);
+  assert.match(lines[1]?.spoken ?? "", /^(Then|And finally), /);
+});
+
+test("a quotation from captions a machine heard says so, and the narration never reads the label", () => {
+  const line = overviewNoteLines(quotedNote(), { machineHeard: true }).find((candidate) => candidate.quotation);
+  assert.equal(line?.label, "From the auto-generated captions");
+  assert.ok(!line?.spoken?.includes("auto-generated"));
+});

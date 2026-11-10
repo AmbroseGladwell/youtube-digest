@@ -22,6 +22,7 @@ import type { GenerationAttempt } from "./api/makeOverviewOnKeys.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
 import { madeWithProps } from "./util/madeWithProps.js";
 import { noteBudgetProps } from "./util/noteBudgetProps.js";
+import { quotationCounts } from "./util/quotationCounts.js";
 import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
@@ -246,6 +247,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 personalised,
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
+                ...quotationCounts(saved),
                 noteKind: saved.recipe == null ? "default" : "recipe",
                 ...noteBudgetProps(saved, sourceWords),
                 ...madeWithProps(attempt),

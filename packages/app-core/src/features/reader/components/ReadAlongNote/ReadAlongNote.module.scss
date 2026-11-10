@@ -103,6 +103,22 @@
   color: var(--muted);
 }
 
+// The source's own words under the key point they back (OV-216), set in under the point's
+// text rather than numbered. Placeholder treatment until the Claude Design round.
+.quotationLine {
+  margin: 0.25rem 0 0.375rem 1.5rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--muted);
+}
+
+.quotationAside {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .bulletLine + .bulletLine {
   margin-top: 0.375rem;
 }

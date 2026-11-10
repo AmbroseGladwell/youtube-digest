@@ -8,6 +8,7 @@ import type { Overview } from "./Overview.js";
 import type { TimeRange } from "./WatchAnyway.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import type { DubiousClaim } from "./Verdict.js";
+import type { Evidence } from "./Evidence.js";
 import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 
@@ -21,9 +22,18 @@ const stretch = (videoUrl: string, range: TimeRange) =>
 
 const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n");
 
+// The source's own words under the line they back, set apart as a quotation so an assistant
+// never takes our prose for theirs, or theirs for ours (OV-216).
+const quotation = (videoUrl: string, evidence: Evidence | undefined, machineHeard: boolean, indent: string): string => {
+  if (evidence === undefined) return "";
+  const heard = machineHeard ? ", auto-generated captions" : "";
+  const adds = evidence.adds === null ? "" : `\n${indent}_${evidence.adds}_`;
+  return `\n${indent}> “${evidence.text}” (${stretch(videoUrl, evidence.range)}${heard})${adds}`;
+};
+
 // The note as it reads outside the app: every section the reader sees, with each moment
 // a link into the video, and never the spoken script (docs/features/mcp-connector.md).
-export function overviewMarkdown(overview: Overview): string {
+export function overviewMarkdown(overview: Overview, { machineHeard = false }: { machineHeard?: boolean } = {}): string {
   const { source: video } = overview;
   const facts = [
     sourceName(video),
@@ -87,7 +97,7 @@ export function overviewMarkdown(overview: Overview): string {
     const lines = [`${NOVELTY_LABEL[novelty]}${dubious ? ", and dubious" : ""}. ${reasoning}`];
     if (standsOut !== null) {
       const at = standsOut.range === null ? "" : ` (${stretch(video.url, standsOut.range)})`;
-      lines.push(`${STANDS_OUT_LABEL}${at}: ${standsOut.text}`);
+      lines.push(`${STANDS_OUT_LABEL}${at}: ${standsOut.text}${quotation(video.url, standsOut.evidence, machineHeard, "")}`);
     }
     if (dubious && dubiousClaims === null) {
       lines.push("Why it is dubious: no reason was saved with this overview.");
@@ -111,7 +121,12 @@ export function overviewMarkdown(overview: Overview): string {
 
   section(
     "Key points",
-    bullets(overview.keyPoints.map(({ text, range }) => (range === null ? text : `${text} (${stretch(video.url, range)})`))),
+    bullets(
+      overview.keyPoints.map(
+        ({ text, range, evidence }) =>
+          `${range === null ? text : `${text} (${stretch(video.url, range)})`}${quotation(video.url, evidence, machineHeard, "  ")}`,
+      ),
+    ),
   );
   if (overview.howToApply !== null && overview.howToApply.items.length > 0) {
     section("How to apply", bullets(overview.howToApply.items));

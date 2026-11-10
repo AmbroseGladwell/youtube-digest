@@ -492,3 +492,40 @@ test("a meaning match still has to pass the other filters", async () => {
   assert.match(text, /No saved overviews match\./);
   await testApp.close();
 });
+
+const quotedOverview = () => {
+  const base = storedOverview();
+  return {
+    ...base,
+    keyPoints: [
+      {
+        ...base.keyPoints[0]!,
+        range: { startMs: 0, endMs: 6000 },
+        evidence: { text: "you're not going to out-train a bad diet", range: { startMs: 2000, endMs: 6000 }, adds: null },
+      },
+      ...base.keyPoints.slice(1),
+    ],
+  };
+};
+
+test("get_overview quotes the video under its key point, and says when machine-heard captions were the source", async () => {
+  const testApp = await createTestApp();
+  const reader = await makeAccount(testApp);
+  const heard = quotedOverview();
+  const unknown = quotedOverview();
+  await reader.inject({ method: "POST", url: "/api/overviews", body: heard });
+  await reader.inject({ method: "POST", url: "/api/overviews", body: unknown });
+  await reader.inject({
+    method: "PUT",
+    url: `/api/transcripts/${heard.source.id}`,
+    body: makeStoredTranscript({ videoId: VideoId.parse(heard.source.id!), generated: true }),
+  });
+  const client = await connectMcpClient(testApp, reader);
+
+  const fromHeard = await client.callTool("get_overview", { id: heard.id });
+  const fromUnknown = await client.callTool("get_overview", { id: unknown.id });
+
+  assert.match(fromHeard.text, /> “you're not going to out-train a bad diet” \(\[0:02–0:06\]\([^)]+\), auto-generated captions\)/);
+  assert.match(fromUnknown.text, /> “you're not going to out-train a bad diet” \(\[0:02–0:06\]\([^)]+\)\)/);
+  await testApp.close();
+});

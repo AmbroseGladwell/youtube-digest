@@ -82,7 +82,7 @@ export function ReadAlongNote({
               ref={active ? follow.spokenLine : undefined}
               className={`${styles.line} ${line.heading ? styles.headingLine : styles.bodyLine} ${
                 line.bullet ? styles.bulletLine : ""
-              } ${line.heading && slot ? styles.headingWithSlot : ""} ${active ? styles.lineActive : ""}`}
+              } ${line.quotation ? styles.quotationLine : ""} ${line.heading && slot ? styles.headingWithSlot : ""} ${active ? styles.lineActive : ""}`}
               onClick={() => select(index)}
               data-read-along-line
               data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
@@ -111,7 +111,7 @@ export function ReadAlongNote({
                   }}
                   data-testid={readAlongNoteTestIds.lineText}
                 >
-                  {line.text}
+                  {line.quotation ? <q data-testid={readAlongNoteTestIds.quotation}>{line.text}</q> : line.text}
                 </span>
                 {line.chip && (
                   <span className={styles.chip} data-testid={readAlongNoteTestIds.chip}>
@@ -120,6 +120,11 @@ export function ReadAlongNote({
                 )}
                 {line.range && renderRange?.(line, line.range, active)}
                 {renderLineEnd?.(line)}
+                {line.aside && (
+                  <span className={styles.quotationAside} data-testid={readAlongNoteTestIds.quotationAside}>
+                    {line.aside}
+                  </span>
+                )}
               </span>
               {line.heading && slot && (
                 <span className={styles.slotBeside} onClick={(event) => event.stopPropagation()}>
