@@ -8,7 +8,7 @@ import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
-import { serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
+import { PROXY_PRICE, serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
@@ -84,7 +84,7 @@ test("when YouTube turns our own address away, the transcript is fetched through
   await testApp.close();
 });
 
-test("the proxy's bytes are recorded against the account whose fetch went through it, and a signed-out one apart", async () => {
+test("the proxy's bytes are recorded, priced per GB, against the account whose fetch went through it, and a signed-out one apart", async () => {
   const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "captions" });
   const testApp = await serviceApp(youTube);
   const account = await makeAccount(testApp);
@@ -96,7 +96,8 @@ test("the proxy's bytes are recorded against the account whose fetch went throug
   const [ofAccount] = await costs.of({ accountId: account.accountId });
   const [signedOut] = await costs.of("signed-out");
 
-  assert.deepEqual([ofAccount?.area, ofAccount?.detail, ofAccount?.calls, ofAccount?.dollars], ["transcripts", "proxy", 1, 0]);
+  assert.deepEqual([ofAccount?.area, ofAccount?.detail, ofAccount?.calls], ["transcripts", "proxy", 1]);
+  assert.equal(ofAccount?.dollars, ((ofAccount?.quantity ?? 0) / 1e9) * PROXY_PRICE.dollarsPerGb);
   assert.equal(signedOut?.calls, 1);
   assert.equal((ofAccount?.quantity ?? 0) + (signedOut?.quantity ?? 0), spend.proxyBytes);
   await testApp.close();

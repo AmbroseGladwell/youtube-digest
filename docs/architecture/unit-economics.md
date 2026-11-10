@@ -31,11 +31,12 @@ read.
 | `generation` | `profile`, `forAnyone`, `topics`, `topicSuggestions`, each also `-failed` | tokens | list price | `OurKeyGenerator`'s small passes |
 | `embeddings` | `overview` | tokens of the claims newly embedded | $0.02 per million (`EMBEDDING_PRICE`, checked 9 Nov 2026) | `EmbeddingQueue` |
 | `embeddings` | `search` | tokens of a query not already cached | the same | `MeaningSearch` |
-| `transcripts` | `proxy` | bytes through the residential proxy | 0: only Decodo's bill prices it | `ServiceTranscripts` |
+| `transcripts` | `proxy` | bytes through the residential proxy | $4 per GB, a GB being 10⁹ bytes as Decodo counts it (`PROXY_PRICE`, checked 10 Nov 2026) | `ServiceTranscripts` |
 
-- **Priced where the app can price it, a quantity where only the bill can.** Generation and
-  embeddings carry list-price dollars. Proxy bytes carry none, and their cost is Decodo's bill
-  shared out by bytes.
+- **Every metered area carries list-price dollars.** Decodo is pay as you go, so a byte
+  through the proxy has a price like a token does. Its prepaid top-up is what the spend
+  dashboard shows as paid (`spend.md`); this is what each account used of it, so Decodo isn't
+  part of the fixed share.
 - **Narration isn't recorded here.** Renders per account are already counted in
   `narration_render_usage`, and their cost is the TTS machines' bill shared out by renders.
 - **A response that answers only with an error costs nothing,** since it reported no usage.

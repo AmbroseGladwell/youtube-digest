@@ -12,6 +12,13 @@ import type { TranscriptsRepository } from "./TranscriptsRepository.js";
 
 const MISSING_TTL_MS = 6 * 60 * 60 * 1000;
 
+export const PROXY_PRICE = {
+  dollarsPerGb: 4,
+  checkedOn: "2026-11-10",
+  source: "Decodo residential, pay as you go (docs/architecture/server-side-transcripts.md)",
+};
+const BYTES_PER_GB = 1e9;
+
 // A daily safety cap per caller on cold fetches, well above normal use: it protects our
 // address's standing with YouTube, not our money. A shared-cache hit costs nothing and is
 // never counted (docs/architecture/server-side-transcripts.md, "Limits").
@@ -128,7 +135,17 @@ export class ServiceTranscripts {
           spend: async (bytes) => {
             proxyBytes = bytes;
             const today = await usage.addProxyBytes(clock(), bytes);
-            await costs.recordOrLog(clock(), payer, { area: "transcripts", detail: "proxy", quantity: bytes, dollars: 0 }, log);
+            await costs.recordOrLog(
+              clock(),
+              payer,
+              {
+                area: "transcripts",
+                detail: "proxy",
+                quantity: bytes,
+                dollars: (bytes / BYTES_PER_GB) * PROXY_PRICE.dollarsPerGb,
+              },
+              log,
+            );
             log.info(
               apiLogLines.serviceTranscripts.proxySpend({
                 proxyBytes: bytes,
