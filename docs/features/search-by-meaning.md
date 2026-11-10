@@ -178,6 +178,4 @@ model quality, answered by the spike, not by these tests.
 
 - A search-quality check that reruns the spike on demand. The scripts lived in the session's
   scratchpad and were not committed.
-- Embedding the big picture once OV-225 lands; it carries an overview's scope and may be the
-  best single field for this.
 - Related overviews worked out ahead of time, with nobody searching: that is discovery, and it stays on OV-218.

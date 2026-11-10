@@ -406,9 +406,6 @@ changes in writing first, with the reason, and the build cards follow from it.
 - The privacy page lines if transcript text goes to an embedding provider (`legal-pages.md`'s
   trigger list).
 
-`search-by-meaning.md` says the big picture is embedded, but its "Not built" list still has it.
-Check the code and correct whichever is stale.
-
 ### 3. What an assistant may do: connector scopes
 
 **Today.** `overviews:read`, `overviews:write` (marking read and favourite) and `profile:read`

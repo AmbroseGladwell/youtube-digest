@@ -99,15 +99,20 @@ Keep the board true as you work:
 
 1. **Starting a card:** move it to **In Progress**, and name the branch `ov-n-short-slug`.
 2. **Opening a PR:** start the title with `OV-n:`, put the card's link in the
-   description, and comment the PR's link on the card.
+   description, and comment the PR's link on the card. The description may mention any
+   other card, by number or link: only the title, the branch and `Closes` lines move cards
+   (rule 4). A PR that finishes a second card says so on a line of its own: `Closes OV-n`
+   or `Closes https://trello.com/c/…`.
 3. **Finding new work** (a bug, a gap, a follow-up out of scope): create a card in
    **Backlog** from the template, give it its `OV-n`, place it by priority, and tell the
    user you did.
 4. **Never move a card to Done yourself.** `.github/workflows/trello.yml` does it
-   when the PR merges, for every `OV-n` or card link in the PR's title, description or
-   branch (`scripts/moveCardsToDone.mjs`), and it only reports a card as moved once it
-   reads back in Done. It needs the `TRELLO_API_KEY` and `TRELLO_TOKEN` repository
-   secrets. Without them it warns on the run and moves nothing.
+   when the PR merges (`scripts/moveCardsToDone.mjs`), for the `OV-n` the title starts
+   with, the `ov-n-` the branch starts with, and each line of the description that starts
+   `Closes OV-n` or `Closes <card link>`. Nothing else in the description moves a card. If
+   the title and branch name different cards, both move and the run warns. It only
+   reports a card as moved once it reads back in Done. It needs the `TRELLO_API_KEY` and
+   `TRELLO_TOKEN` repository secrets. Without them it warns on the run and moves nothing.
 
 ## Immediate suggestion
 
