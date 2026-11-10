@@ -213,6 +213,13 @@ export const apiLogLines = coded("api", {
     proxySpend: line("info", "transcript proxy spend", "Bytes billed to the residential proxy, and the day's running total."),
     answeredFromCache: line("info", "service transcript answered from the shared cache", "No fetch was needed; the cache already had it."),
   },
+  costs: {
+    notRecorded: line(
+      "error",
+      "cost not recorded",
+      "A call's cost couldn't be written against its account; the reader's request carried on, and that cost is missing from unit economics.",
+    ),
+  },
   ourKey: {
     generated: line(
       "info",

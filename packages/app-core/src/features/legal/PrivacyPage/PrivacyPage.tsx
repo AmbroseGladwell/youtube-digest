@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-09";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-10";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -181,8 +181,15 @@ const sections: readonly LegalSection[] = [
           seven days, so a limit can't be reset by opening a private window.
         </p>
         <p>
-          <strong>Basis:</strong> performance of our contract with you. Counting is our legitimate interest in keeping the service
-          affordable and fair.
+          We also keep a daily tally of what serving each account costs us, so we can price the plans fairly: for overviews and the smaller
+          passes made on our key, the tokens used and their cost at OpenAI's list price, including attempts that failed; the tokens used to
+          make your library and your searches searchable by meaning, and their cost; and the bytes fetched through our transcript proxy for
+          you. It holds amounts only, never what was sent or found. What a device without an account costs is tallied with no device or
+          account on it.
+        </p>
+        <p>
+          <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
+          the service affordable and fair.
         </p>
       </>
     ),
@@ -456,7 +463,7 @@ const sections: readonly LegalSection[] = [
           ["Transcripts linked to your account", "while a note of yours uses the video"],
           ["A shared cache copy, with no account on it", "until it is removed as wrong"],
           ["The record that your account fetched a video's captions", "one year, even after the account is deleted"],
-          ["Monthly and daily usage counts for an account", "with the account"],
+          ["Monthly and daily usage counts, and the daily cost tally, for an account", "with the account"],
           [
             "The record of a deletion: the account's opaque id, the random analytics id joined to it, the narration files asked for, and how each erasure ended",
             "until every erasure it records is finished, and at most a year",

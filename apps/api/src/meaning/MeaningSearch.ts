@@ -1,4 +1,5 @@
 import type { AccountId } from "../auth/AccountId.js";
+import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import type { ClaimEmbeddingsRepository, MeaningMatch } from "./ClaimEmbeddingsRepository.js";
 import type { Embedder } from "./Embedder.js";
 
@@ -14,11 +15,21 @@ export type MeaningResult = { available: true; matches: MeaningMatch[] } | { ava
 export class MeaningSearch {
   #embeddings: ClaimEmbeddingsRepository;
   #embedder: Embedder;
+  #costs: AccountCostsRepository;
+  #clock: () => Date;
+  #log: { error(line: object): void };
   #cache = new Map<string, number[]>();
 
-  constructor(embeddings: ClaimEmbeddingsRepository, embedder: Embedder) {
+  constructor(
+    embeddings: ClaimEmbeddingsRepository,
+    embedder: Embedder,
+    { costs, clock, log }: { costs: AccountCostsRepository; clock: () => Date; log: { error(line: object): void } },
+  ) {
     this.#embeddings = embeddings;
     this.#embedder = embedder;
+    this.#costs = costs;
+    this.#clock = clock;
+    this.#log = log;
   }
 
   async search(accountId: AccountId, query: string): Promise<MeaningResult> {
@@ -28,7 +39,7 @@ export class MeaningSearch {
     }
     let vector: number[];
     try {
-      vector = await this.#vectorOf(text);
+      vector = await this.#vectorOf(accountId, text);
     } catch {
       return { available: false };
     }
@@ -36,14 +47,20 @@ export class MeaningSearch {
     return { available: true, matches: matches.filter((match) => match.similarity >= MEANING_FLOOR) };
   }
 
-  async #vectorOf(text: string): Promise<number[]> {
+  async #vectorOf(accountId: AccountId, text: string): Promise<number[]> {
     const cached = this.#cache.get(text);
     if (cached !== undefined) {
       this.#cache.delete(text);
       this.#cache.set(text, cached);
       return cached;
     }
-    const { vectors } = await this.#embedder.embed([text]);
+    const { vectors, tokens } = await this.#embedder.embed([text]);
+    await this.#costs.recordOrLog(
+      this.#clock(),
+      { accountId },
+      { area: "embeddings", detail: "search", quantity: tokens, dollars: (tokens * this.#embedder.dollarsPerMillionTokens) / 1_000_000 },
+      this.#log,
+    );
     const vector = vectors[0]!;
     this.#cache.set(text, vector);
     if (this.#cache.size > CACHED_QUERIES) {

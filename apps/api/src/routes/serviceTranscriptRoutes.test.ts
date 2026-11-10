@@ -12,6 +12,7 @@ import { serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
+import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { ServiceUsageRepository, usageDay } from "../transcripts/ServiceUsageRepository.js";
 
 const HEADERS = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
@@ -80,6 +81,24 @@ test("when YouTube turns our own address away, the transcript is fetched through
   assert.equal(youTube.sessionsClosed, 1);
   assert.equal(spend.proxied, 1);
   assert.ok(spend.proxyBytes > 0);
+  await testApp.close();
+});
+
+test("the proxy's bytes are recorded against the account whose fetch went through it, and a signed-out one apart", async () => {
+  const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "captions" });
+  const testApp = await serviceApp(youTube);
+  const account = await makeAccount(testApp);
+
+  await account.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}` });
+  await askAnonymously(testApp, videoIdNumbered(7));
+  const costs = new AccountCostsRepository(testApp.sql);
+  const spend = await new ServiceUsageRepository(testApp.sql).spendOn(usageDay(testApp.clock.now));
+  const [ofAccount] = await costs.of({ accountId: account.accountId });
+  const [signedOut] = await costs.of("signed-out");
+
+  assert.deepEqual([ofAccount?.area, ofAccount?.detail, ofAccount?.calls, ofAccount?.dollars], ["transcripts", "proxy", 1, 0]);
+  assert.equal(signedOut?.calls, 1);
+  assert.equal((ofAccount?.quantity ?? 0) + (signedOut?.quantity ?? 0), spend.proxyBytes);
   await testApp.close();
 });
 

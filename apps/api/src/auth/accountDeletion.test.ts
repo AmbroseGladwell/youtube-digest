@@ -99,6 +99,10 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
   );
   await sql.query("insert into service_transcript_usage (day, caller, fetches) values ('2026-11-05', $1, 1)", [`account:${accountId}`]);
   await sql.query(
+    "insert into account_costs (day, account_id, area, detail, calls, quantity, dollars) values ('2026-11-05', $1, 'generation', 'overview', 1, 3000, 0.01)",
+    [accountId],
+  );
+  await sql.query(
     "insert into oauth_clients (id, redirect_uris, token_endpoint_auth_method, created_at) values ('claude', '{https://claude.ai/cb}', 'none', $1::timestamptz) on conflict do nothing",
     [now],
   );

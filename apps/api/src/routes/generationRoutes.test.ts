@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEADER } from "@overview/domain";
 import { generationRequest, makeFakeOpenAi, type FakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
+import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { ourKeyModel } from "../generation/ourKeyModel.js";
 import { recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
@@ -239,6 +240,63 @@ test("a failed generation still logs the tokens and cost of the attempts OpenAI 
   await testApp.close();
 });
 
+const OVERVIEW_DOLLARS = (200 * 2 + 200 * 0.1 + 800 * 2.5 + 300 * 10) / 1_000_000;
+
+test("an overview on our key is costed against the account that asked, at what the log line says it cost", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
+  const account = await makeAccount(testApp);
+
+  await generate(account);
+  await generate(account);
+  const costs = await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId });
+
+  assert.deepEqual(costs, [
+    { day: usageDay(testApp.clock.now), area: "generation", detail: "overview", calls: 2, quantity: 3000, dollars: 2 * OVERVIEW_DOLLARS },
+  ]);
+  assert.equal(saying(lines, "overview made on our key").at(0)?.costDollars, OVERVIEW_DOLLARS);
+  await testApp.close();
+});
+
+test("a failed overview still costs the account every attempt OpenAI answered, kept apart as failed", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await ourKeyApp(makeFakeOpenAi("invalid"), { logger });
+  const account = await makeAccount(testApp);
+
+  await generate(account);
+  const [cost] = await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId });
+
+  assert.equal(cost?.detail, "overview-failed");
+  assert.equal(cost?.dollars, saying(lines, "overview on our key failed").at(0)?.costDollars);
+  await testApp.close();
+});
+
+test("a provider that answers only with an error costs nothing, since it reported no usage", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi({ status: 503, body: { error: { message: "overloaded" } } }));
+  const account = await makeAccount(testApp);
+
+  await generate(account);
+
+  assert.deepEqual(await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId }), []);
+  await testApp.close();
+});
+
+test("a trial overview is costed as signed out, never against an account", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi());
+  const device = await makeTrialDevice(testApp);
+  const account = await makeAccount(testApp);
+
+  await device.generate();
+  const costs = new AccountCostsRepository(testApp.sql);
+
+  assert.deepEqual(
+    (await costs.of("signed-out")).map((cost) => [cost.detail, cost.calls]),
+    [["overview", 1]],
+  );
+  assert.deepEqual(await costs.of({ accountId: account.accountId }), []);
+  await testApp.close();
+});
+
 test("a server with a key of its own says which provider and model it makes overviews with", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
 
@@ -432,6 +490,20 @@ test("a profile pass answers on our key without counting against the plan or the
   assert.deepEqual(response.json(), { items: [{ text: "building a startup", source: "From 2 overviews on startups" }] });
   assert.equal((await usageOf(account)).ours.used, 0);
   assert.equal((await generate(account)).statusCode, 200);
+});
+
+test("a profile pass is costed against the account as its own detail", async () => {
+  const testApp = await ourKeyApp(makeFakeOpenAi(profileAnswer));
+  const account = await makeAccount(testApp);
+
+  await account.inject({ method: "POST", url: "/api/generations/profile", body: PROFILE_PASS });
+  const [cost] = await new AccountCostsRepository(testApp.sql).of({ accountId: account.accountId });
+
+  assert.deepEqual(
+    [cost?.area, cost?.detail, cost?.quantity, cost?.dollars],
+    ["generation", "profile", 120, (100 * 2 + 20 * 10) / 1_000_000],
+  );
+  await testApp.close();
 });
 
 test("a profile pass needs an account", async () => {

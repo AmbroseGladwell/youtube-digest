@@ -8,5 +8,6 @@ export interface Embedding {
 export interface Embedder {
   model: string;
   dimensions: number;
+  dollarsPerMillionTokens: number;
   embed(texts: string[]): Promise<Embedding>;
 }

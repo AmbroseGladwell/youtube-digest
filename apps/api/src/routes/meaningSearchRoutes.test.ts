@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { CLIENT_VERSION, CLIENT_VERSION_HEADER, MeaningSearchResponse } from "@overview/domain";
+import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { breadNote, conceptEmbedder, foundersNote, noteAbout } from "../testing/meaningFixtures.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
@@ -22,6 +23,26 @@ test("an overview is found by an idea it never puts in those words", async () =>
   await testApp.drainEmbeddings();
 
   assert.deepEqual(matchedIds(await search(reader, "leaders who overstay")), [founders.id]);
+  await testApp.close();
+});
+
+test("embedding an overview and a new search are costed against the reader, and a repeated search costs nothing more", async () => {
+  const testApp = await createTestApp({}, { embedder: conceptEmbedder() });
+  const reader = await makeAccount(testApp);
+  await reader.inject({ method: "POST", url: "/api/overviews", body: foundersNote() });
+  await testApp.drainEmbeddings();
+
+  await search(reader, "leaders who overstay");
+  await search(reader, "leaders who overstay");
+  const costs = await new AccountCostsRepository(testApp.sql).of({ accountId: reader.accountId });
+
+  assert.deepEqual(
+    costs.map((cost) => [cost.area, cost.detail, cost.calls, cost.dollars === (cost.quantity * 0.02) / 1_000_000]),
+    [
+      ["embeddings", "overview", 1, true],
+      ["embeddings", "search", 1, true],
+    ],
+  );
   await testApp.close();
 });
 

@@ -23,6 +23,7 @@ import { webAppPlugin } from "./http/webAppPlugin.js";
 import { CodedLogController } from "./logs/CodedLogController.js";
 import { currentLog, trackCurrentRequest } from "./logs/currentLog.js";
 import type { Mailer } from "./mail/Mailer.js";
+import { AccountCostsRepository } from "./costs/AccountCostsRepository.js";
 import { ClaimEmbeddingsRepository } from "./meaning/ClaimEmbeddingsRepository.js";
 import type { Embedder } from "./meaning/Embedder.js";
 import { EmbeddingQueue } from "./meaning/EmbeddingQueue.js";
@@ -194,18 +195,20 @@ export async function buildApp({
   const audioQueue = audio === null ? null : new AudioRenderQueue({ renders: audioRenders, clock, log: app.log, ...audio });
   app.decorate("audioQueue", audioQueue);
   const claimEmbeddings = new ClaimEmbeddingsRepository(sql);
+  const costs = new AccountCostsRepository(sql);
   const embeddingQueue =
     meaning === null
       ? null
       : new EmbeddingQueue({
           embeddings: claimEmbeddings,
           embedder: meaning.embedder,
+          costs,
           clock,
           log: app.log,
           runWorkers: meaning.runWorkers,
         });
   app.decorate("embeddingQueue", embeddingQueue);
-  const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder);
+  const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder, { costs, clock, log: app.log });
   const overviewsWritten = () => embeddingQueue?.kick();
 
   await app.register(
@@ -274,7 +277,7 @@ export async function buildApp({
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
       overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
       generationRoutes(api, {
-        generator: ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, clock }),
+        generator: ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, costs, clock }),
         trials,
         sql,
         clock,
@@ -289,6 +292,7 @@ export async function buildApp({
                 ...transcriptService,
                 usage: new ServiceUsageRepository(sql),
                 transcripts,
+                costs,
                 clock,
               }),
         sql,
