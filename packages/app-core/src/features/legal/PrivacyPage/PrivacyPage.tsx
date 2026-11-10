@@ -185,7 +185,9 @@ const sections: readonly LegalSection[] = [
           passes made on our key, the tokens used and their cost at OpenAI's list price, including attempts that failed; the tokens used to
           make your library and your searches searchable by meaning, and their cost; and the bytes fetched through our transcript proxy for
           you. It holds amounts only, never what was sent or found. What a device without an account costs is tallied with no device or
-          account on it.
+          account on it. Once a day PostHog copies a monthly summary of the tally for our cost dashboard: the month, your plan, what you
+          cost and how many overviews and narrations you made, under a coded id that is neither your account's id nor the one analytics
+          uses. When an account is deleted, the next day's copy leaves it out.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
@@ -391,7 +393,7 @@ const sections: readonly LegalSection[] = [
             ["Fly.io", "runs our server and the narration service", "London"],
             ["Neon", "our database: accounts, libraries, transcripts, usage counts", "London"],
             ["Cloudflare", "stores narration audio (R2) and serves our domain's DNS", "Cloudflare's network"],
-            ["PostHog", "analytics, error reports and server logs", "EU cloud"],
+            ["PostHog", "analytics, error reports, server logs and the monthly cost summary", "EU cloud"],
             ["Brevo", "sends sign-in emails", "European Union"],
             [
               "OpenAI",
@@ -470,6 +472,7 @@ const sections: readonly LegalSection[] = [
           ],
           ["Hashed addresses for the daily caps", "7 days"],
           ["Analytics events and error reports", "up to a year, at PostHog"],
+          ["The monthly cost summary, at PostHog", "until the day after the account is deleted"],
           ["Server logs", "14 days"],
           ["Your email at Brevo, as the recipient of sign-in mail", "under Brevo's own retention for sent mail"],
         ]}

@@ -49,9 +49,34 @@ read.
 - **Deleting the account deletes its rows** (`account_costs` cascades; `account-deletion.md`).
   `signed_out_costs` names no one.
 
+## What PostHog reads
+
+Three views in their own schema, `cost_reports` (`V0030__cost_reports.sql`), each a monthly
+rollup:
+
+| View | One row per | Holds |
+|---|---|---|
+| `cost_lines` | month, account, area, detail | plan, calls, quantity, dollars; signed-out callers under plan `signed-out` with no account |
+| `account_months` | month, account with any activity | plan, month joined, overviews on each key, renders, metered dollars, proxy bytes, `active` |
+| `plan_accounts` | plan | accounts on it now |
+
+- **An account appears only as `md5('cost-report:' || id)`.** It isn't the account id, and it
+  isn't the distinct id analytics uses, so PostHog can't join cost to a person.
+- **The plan is the account's plan now,** not the plan it was on that month: plans have no
+  history yet.
+- **`cost_reader` can read those three views and nothing else.** The migration creates it
+  without a login and with no role memberships; the tests check both. Views run with their
+  owner's rights, so the reader needs nothing on the tables behind them.
+- **Turning on the login is done by hand, once, on prod,** so no password is ever in the repo:
+  in Neon's SQL editor, `alter role cost_reader with login password '…'`, with the password
+  from Bitwarden. A role made in Neon's console or API instead joins `neon_superuser` and can
+  read every table, so the reader must never be made there.
+- **PostHog's Postgres source syncs the schema daily, as a full refresh.** A full refresh is
+  what makes a deleted account leave PostHog's copy the next day, as the privacy policy says.
+  An incremental sync would keep it.
+
 ## Still to build
 
-- The rollup views, the read-only role and the PostHog Postgres source.
 - The dashboard: accounts and active accounts by plan, cost per active account by plan and
   area (average and the most expensive accounts, by opaque id), measured cost per overview and
   per render beside the tier model's assumptions, income at list price, net per plan, and the
