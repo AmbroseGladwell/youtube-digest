@@ -269,6 +269,41 @@ inside a key point's existing range that carry the claim, and have code lift the
 This supersedes the "if it is a new field" half of OV-216, which left open the possibility of
 generated quotations.
 
+**Built, measured, and shelved (OV-216, 10 Nov 2026).** The mechanism worked; the quotations did
+not earn their place, and the owner shelved them after reading two rounds of real ones. Nothing
+merged: the branches `ov-216-evidence-*` and PRs #284, #286 and #287 hold the build.
+
+- **What worked.** The model named segments (or, for articles, numbered sentences) inside a key
+  point's own stretch and code lifted the words, so no quotation could be invented. Placement
+  was reliable (4 of 255 named quotations fell outside their point) and the budget held. It
+  needed OV-275 first, to make room in Claude's grammar.
+- **Round one: quote where the point is said.** About two points a note were quoted, adding
+  about 30 seconds of narration. The owner's reading: each was "the key point but in the
+  author's own words", a looser version of the point, adding nothing. A word-overlap measure
+  missed this (the median quotation shared only 22% of its words with its point), because the
+  repetition is in meaning, not wording. An optional line on "what the quotation adds" restated
+  its point a third to a half of the time by a judge of another provider, before and after the
+  prompt was tightened.
+- **Round two: quote an illustration.** The prompt asked for an example, a story, a
+  demonstration or the data behind a point, never the sentence stating it, whole or not at all
+  (70 words), with caption scraps trimmed to whole sentences. Quotations fell to under one a note.
+  The owner read all 37: none added anything.
+- **Why, as far as it can be read.** A key point is already asked to keep the specifics that make
+  it worth having (names, numbers, the example), so what a quotation from inside the point's own
+  stretch could add has usually been spent by the point. The two rounds were judged by the owner
+  reading the quotations themselves, which is the test that matters for this feature.
+
+**What does the evidence job instead.** Every key point already links to its moment in the
+video, and "Read in transcript" opens the transcript there, so a reader can check a claim against
+what was said. An assistant reads the same transcript through the connector's `get_transcript`
+(`mcp-connector.md`). OV-233's "explore further" is where any further supporting material would
+go, on demand rather than in every note.
+
+**If this is ever reopened**, start from what failed: a quotation drawn from the point's own
+stretch competes with the point for the same material. Something that adds would have to come
+from elsewhere in the source, or the point would have to give up its specifics to the quotation
+(rejected here because the point then reads thinner on its own).
+
 ### How much evidence, and how long: the two budgets that fight
 
 Added 8 Nov 2026, from the owner's own statement of the promise and from measuring the
