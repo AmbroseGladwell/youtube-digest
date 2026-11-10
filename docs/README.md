@@ -39,6 +39,11 @@ Five folders, five different questions.
   half-decided the library-against-context-engine question, the profile that already learns
   and reaches one prompt section, why `similarTo` is not the connection primitive it looks
   like, and what is on the board for this already.
+- `positioning.md`: how the owner explains the product, as raw material for marketing. It covers
+  the question that comes up most (why not paste a transcript into Claude or ChatGPT?), the
+  one-liner, the owner's answer in their own words, what to take from it for copy, who it's for
+  as a hypothesis, and the caveats any copy has to keep. The store copy itself is in
+  `store-listing.md`.
 - `api.md` — the Fastify service itself: its shape, how a caller is identified, the two
   version numbers on the wire, the one error envelope, configuration, and how to run it.
 - `analytics.md` — what a reader did, counted: analytics, logging and audit records told
