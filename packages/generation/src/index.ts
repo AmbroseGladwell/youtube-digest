@@ -34,3 +34,5 @@ export * from "./recipe/composeRecipePrompt.js";
 export * from "./recipe/generateRecipeOverview.js";
 export * from "./generateTopicSuggestions.js";
 export * from "./bigPictureBudget.js";
+export * from "./noteBudget.js";
+export * from "./sections/transcriptBudget.js";

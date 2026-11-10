@@ -21,6 +21,7 @@ import { useGenerateOverviewMutation } from "./mutations/useGenerateOverviewMuta
 import type { GenerationAttempt } from "./api/makeOverviewOnKeys.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
 import { madeWithProps } from "./util/madeWithProps.js";
+import { noteBudgetProps } from "./util/noteBudgetProps.js";
 import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
@@ -122,6 +123,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const { from } = options;
       const startedAt = Date.now();
       let transcriptSource: CaptureTranscriptSource | null = null;
+      let sourceWords: number | null = null;
       let tagging = { reused: 0, added: 0 };
       let personalised = false;
       let attempt: GenerationAttempt | null = null;
@@ -180,12 +182,14 @@ export function useNewOverviewRun(): NewOverviewRunController {
           captureReason: () => draftRef.current,
           onProgress: (progress) => {
             transcriptSource = progress.transcriptSource;
+            sourceWords = progress.transcriptWords;
             if (isCurrent()) {
               setRun((current) => (current === null ? null : { ...current, ...progress }));
             }
           },
           onArticleRead: (article) => {
             transcriptSource = "article";
+            sourceWords = article.wordCount;
             if (isCurrent()) {
               setRun((current) =>
                 current?.article == null
@@ -242,6 +246,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 personalised,
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
+                ...noteBudgetProps(saved, sourceWords),
                 ...madeWithProps(attempt),
               });
               setRun((current) => (current === null ? null : { ...current, overview: saved, finishedAt: Date.now() }));

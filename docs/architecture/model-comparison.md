@@ -805,6 +805,60 @@ on both prompts. `keyPointsWithinTarget` went from 20 of 20 to 19 of 20: one not
 of 41 words against the target of 40. The schema's limit is 50, and the length instruction
 didn't change.
 
+### Results: one note budget, OV-87, 10 Nov 2026
+
+Long sources get up to ten key points of 60 words and twenty chapters, and a long video's points
+must reach its last third and every chapter holding over a quarter of it
+(`overview-generation-decisions.md`, "One note budget"). Measured on the coverage set, GPT-6.1
+Sol, two samples a side: `coverage-main-a`/`-b` on `main` and `coverage-ov-87-a`/`-b` on the
+branch.
+
+**The three long videos**, where the budget changed:
+
+| Source | Length | Key points, old → new | In a point's range, old | New | Largest gap, old | New |
+|---|---|---|---|---|---|---|
+| Shopify CEO interview | 1:04:49 | 7 → 8 | 47%, 30% | 86%, 82% | 29%, 26% | 12%, 12% |
+| Diary of a CEO, Talarico | 1:36:47 | 7 → 10 | 54%, 44% | 59%, 70% | 19%, 22% | 20%, 17% |
+| Education Committee hearing | 2:22:15 | 7 → 10 | 16%, 25% | 51%, 35% | 33%, 20% | 11%, 28% |
+| **mean** | | | **36%** | **64%** | **25%** | **17%** |
+
+"In a point's range" is the share of words that is used, because it doesn't depend on the chapter count, which itself rose
+(from 9 to 15 chapters, to 14 to 20). "In a reached chapter" is in each run's `coverage.md` but
+compares lists of different lengths.
+
+- **Coverage rose clearly on two of the three.** OV-214's control moved Talarico 13 points with
+  nothing changed. Against that, the Shopify interview moved about 45 points on average and the
+  hearing about 22. Talarico's 15 is within the noise on this number, and its largest gap barely
+  moved; the hand read below is what shows its change.
+- **The Talarico note now reaches the end.** Read by hand: `main`'s points stopped at 1:27 and left
+  out the closing ten minutes (incentives, his term limit, the campaign). The branch's last point
+  covers 1:32 to 1:36. It also separates what `main` crammed together (wealth tax and healthcare,
+  Trump and immigration) and keeps more of his hedges. One loss: `main`'s point on campaign money
+  and gerrymandering (0:24 to 0:27) is not in this sample. Both skip the first 15 minutes.
+- **Points use some of the room, not all of it.** Long-source points ran 44 to 51 words against a
+  target of 60, as the big picture stops under its targets. Key points on Talarico went from 235
+  words to about 465, roughly a minute and a half more listening.
+- **No long video needed the retry.** The two new coverage checks passed first time on all six
+  long-video notes.
+- **Output rose on long sources only:** about 2,100 to 2,800 output tokens before, 2,700 to 3,400
+  after. About 1,000 tokens more, roughly a cent a note on Sol. Run costs here vary with the prompt
+  cache (a run's first notes write it), so compare tokens, not dollars.
+
+**The essay over 6,000 words** (startup ideas, 6,210) went from 7 points to 8 and 10 chapters to
+12, with coverage within noise (9%, 10% → 13%, 11% in a point's range; an article's point names
+one paragraph, so this reads low by design).
+
+**Short sources were unchanged.** The other four videos and four articles wrote the same number of
+points within the run-to-run spread, at the same output, and the same two articles needed the
+retry on both sides (the ADHD guide and the living-conditions explainer).
+
+**The automatic checks hold on the 20-video set** (`ov-87-checks` against `main-checks`, the
+sample reader). OpenAI calls began hanging for up to an hour around 03:00 UTC, on both sides, so
+three branch notes and five `main` notes never came back. On the 15 both wrote, every check gave
+the same result note for note, except one In one line opening on the branch, a field this change
+doesn't touch. The branch's Shopify note, a long source, passed every check, including
+`keyPointsWithinTarget` against its 50-word target.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The

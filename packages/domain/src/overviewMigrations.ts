@@ -170,6 +170,10 @@ const fillBigPictureAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// Nothing to alter: a long source's note may now hold ten key points, past the seven an older
+// client refuses, so older clients hold these records back rather than quarantine them.
+const allowTenKeyPoints: RecordMigration = { newSchemaVersion: 16 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -185,6 +189,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   allowRecipesFromVideos,
   allowLongerOneLiners,
   fillBigPictureAddedAfterTheFirstNotes,
+  allowTenKeyPoints,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

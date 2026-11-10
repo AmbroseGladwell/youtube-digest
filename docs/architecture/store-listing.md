@@ -121,7 +121,7 @@ required (`firstName` is optional in `MagicLinkRequest` and nullable in the colu
 > • In one line: what it is, so you can recognise it later
 > • Core claim: the single assertion it makes
 > • Verdict: how novel it actually was, and why
-> • Key points: three to five bullets, substance only, hook and call to action removed
+> • Key points: three for a short clip, up to ten for a long interview, substance only, hook and call to action removed
 > • How to apply: one to three concrete things to do this week, or an honest "nothing"
 > • What it sells: a course, a membership, a supplement, their own app, recorded every time
 > • Watch it anyway?: and it is allowed to say no
