@@ -19,6 +19,7 @@ export const comparisonPaths = {
   keyPointJudgments: (name: string, against: string, rubric: number) =>
     join(dataDirectory, "key-point-judgments", `${name}--against--${against}--rubric-${rubric}`),
   bigPictureJudgments: (name: string) => join(dataDirectory, "big-picture-judgments", name),
+  quoteAddsJudgments: (name: string) => join(dataDirectory, "quote-adds-judgments", name),
   coverageTranscripts: join(dataDirectory, "coverage", "transcripts"),
   coverageArticles: join(dataDirectory, "coverage", "articles"),
 };

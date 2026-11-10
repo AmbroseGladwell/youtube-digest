@@ -190,6 +190,44 @@ at most a fraction of a cent. The Unit economics dashboard counts the check in i
 per overview and shows its share (`unit-economics.md`), so the live figure can be read against
 these.
 
+## Quotations under key points (OV-216)
+
+Measured on 10 Nov 2026 through the comparison harness, as the sample reader, at the list prices
+in `modelPrices.ts`, not estimated. Video: the 20-video set, two samples a side, against the
+OV-275 runs (`ov-275-*` → `ov-216-*`). Articles: the coverage set's five articles, two samples a
+side, from just before sentence numbering against after (`main-216-articles-*` →
+`ov-216-articles-*`). $6.91 in all, the judge included.
+
+**Dollars moved more than tokens, because of the prompt cache.** Sol's cached share of input fell
+from 55% to 33% between the video runs, which is timing rather than the change, so the honest
+comparison is the same tokens priced with nothing cached:
+
+| | Input tokens | Output tokens | Cost, nothing cached |
+|---|---|---|---|
+| Video, GPT-6.1 Sol | +10% | +18% | **+13%** |
+| Video, Claude Sonnet 5.5 | +2% | +14% | **+6%** |
+| Article, Sol | +4% | +8% | **+6%** |
+| Article, Sonnet | +14% | +14% | **+14%** |
+
+- **Output grows because quotations carry an added line**, and a model writes more around them.
+  The quotation text itself costs nothing: code lifts it.
+- **Input grows with the instructions**, and for articles with the sentence markers, which the
+  articles' +4% on Sol bounds. Sonnet's article input rose more because it needed the correction
+  pass on 8 of 10 articles on both sides (OV-277), so its prompt was sent twice either way.
+- On our key a video overview is now about $0.036 at the cache rates of the OV-275 run, against
+  `tiers.md`'s $0.038, so the allowances still hold, though with less room than OV-275 left.
+
+**What a reader hears.** Quotations add about 30 seconds to a video note's narration, 13–14% of it
+(223 → about 250 seconds on Sol), and 6–10% to an article's. Sol quotes 2.5 points a note and
+Sonnet 1.5, against a budget of 3 on most notes; one note in 80 went over. What stands out was
+quoted on 37% of notes. No video quotation was dropped for falling outside its point (0 of 156
+named), and 2 of 23 article ones were.
+
+**The added line.** Sol wrote one beside 25% of its quotations and Sonnet beside 63%. A judge of
+another provider (Gemini 3.1 Pro) read each against its point: **Sol's added something in 62% of
+cases and restated the point in 33%; Sonnet's added something in 54% and restated in 46%.**
+`overview-generation-decisions.md`, "Evidence", has what was decided about it.
+
 ## Search by meaning (OV-229)
 
 Measured on 9 Nov 2026, not estimated (`docs/prototype/constraints.md`). OpenAI's own usage report
