@@ -36,26 +36,61 @@ function move(trello, references) {
   });
 }
 
-test("card links are found anywhere in a PR description, once each", () => {
-  const body = [
-    "Trello: https://trello.com/c/jzBBw0A9/5-transcripts-sometimes-missing",
-    "Also https://trello.com/c/LaDH3sgN and again https://trello.com/c/jzBBw0A9",
-    "The board https://trello.com/b/yArQIL27/the-overview-backlog is not a card",
-  ].join("\n");
-  assert.deepEqual(cardReferencesIn(body).shortLinks, ["jzBBw0A9", "LaDH3sgN"]);
+test("the title's leading OV number is the card a PR moves", () => {
+  assert.deepEqual(cardReferencesIn({ title: "OV-5: Rest transcripts on refetch failure" }).cardNumbers, [5]);
 });
 
-test("OV numbers are found in the title, description and branch, in any case, once each", () => {
-  const references = cardReferencesIn("OV-5: Rest transcripts on refetch failure", "Also closes OV-20.", "ov-5-transcripts-missing");
+test("an OV number later in the title does not count", () => {
+  assert.deepEqual(cardReferencesIn({ title: "Fix for OV-5" }).cardNumbers, []);
+});
+
+test("the branch's leading ov number counts when the title has none", () => {
+  assert.deepEqual(cardReferencesIn({ title: "Rest transcripts", branch: "ov-5-transcripts" }).cardNumbers, [5]);
+});
+
+test("a title and branch naming the same card move it once, with no warning", () => {
+  const references = cardReferencesIn({ title: "OV-5: Rest transcripts", branch: "ov-5-transcripts" });
+  assert.deepEqual(references.cardNumbers, [5]);
+  assert.deepEqual(references.warnings, []);
+});
+
+test("a title and branch naming different cards move both, with a warning", () => {
+  const references = cardReferencesIn({ title: "OV-5: Rest transcripts", branch: "ov-20-reused-branch" });
   assert.deepEqual(references.cardNumbers, [5, 20]);
+  assert.match(references.warnings[0], /OV-5.*OV-20/);
+});
+
+test("cards the description mentions, by number or link, move nothing", () => {
+  const body = [
+    "Builds on OV-20 (https://trello.com/c/LaDH3sgN/20-something) and unblocks ov-21.",
+    "Trello: https://trello.com/c/jzBBw0A9/5-transcripts-sometimes-missing",
+    "This closes the gap OV-22 left, and Closes OV-23 mid-line does not count.",
+  ].join("\n");
+  assert.deepEqual(cardReferencesIn({ title: "OV-5: Rest transcripts", body }), {
+    shortLinks: [],
+    cardNumbers: [5],
+    warnings: [],
+  });
+});
+
+test("a Closes line in the description moves that card, by number or link, in any case", () => {
+  const body = ["Closes OV-20", "- closes https://trello.com/c/LaDH3sgN/20-something", "  CLOSES ov-21.", "Closes OV-20"].join("\n");
+  assert.deepEqual(cardReferencesIn({ title: "OV-5: Rest transcripts", body }), {
+    shortLinks: ["LaDH3sgN"],
+    cardNumbers: [5, 20, 21],
+    warnings: [],
+  });
 });
 
 test("OV inside another word is not a card number", () => {
-  assert.deepEqual(cardReferencesIn("improv-5 and MOV-3").cardNumbers, []);
+  assert.deepEqual(
+    cardReferencesIn({ title: "improv-5 and MOV-3", body: "Closes MOV-3\nCloses improv-5", branch: "mov-3-x" }).cardNumbers,
+    [],
+  );
 });
 
 test("a PR with nothing in it references no cards", () => {
-  assert.deepEqual(cardReferencesIn(undefined, "", null), { shortLinks: [], cardNumbers: [] });
+  assert.deepEqual(cardReferencesIn({ title: undefined, body: "", branch: null }), { shortLinks: [], cardNumbers: [], warnings: [] });
 });
 
 test("a card is reported moved only once it reads back in Done", async () => {
