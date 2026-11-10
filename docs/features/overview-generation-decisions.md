@@ -501,8 +501,9 @@ most, a field that is too long keeps its meaning and drops words. The cap itself
 from 5 to 7, a hard maximum with "most videos need five or fewer" kept as the
 guidance: the debate genuinely had more than five things worth taking, and a ceiling
 the model keeps breaking on the videos that most need a digest is the wrong ceiling.
-Key points' own instruction now says seven is the ceiling however long the video is,
-and that chapters carry the rest of the structure. What was rejected: truncating the
+Key points' own instruction then said seven is the ceiling however long the video is,
+and that chapters carry the rest of the structure. OV-87 kept seven for a video up to
+6,000 words and raised it for longer ones ("One note budget", below). What was rejected: truncating the
 list in code after a failed retry, which would pick by position rather than by weight
 and hide the loss; and a second retry, which spends another full pass on a model that
 has already been told twice. This is also why `anthropicGenerationClient` uses `messages.create`
@@ -693,6 +694,71 @@ article's words, or a video of ten minutes or more), the teaser names it among w
 opens when the overview has one, and a sample's card shows it among its sections. The home page's
 example overview and its standfirst name it, and so does the voice sample line. Overview
 schema 15 fills null on older records (client version 16).
+
+## One note budget
+
+**Every source is sized by one budget, `noteBudget.ts`, keyed on whether it is spoken or
+written** (OV-87, 10 Nov 2026). It takes the source's length as measured by code (transcript
+words, or an article's words) and gives the key points, their target length, the most
+chapters and the big picture's target. Video and articles used to size themselves apart:
+articles from `articleNoteBudget`, video from a fixed "3 to 7 points" and a "3 to 8 chapters"
+hint at any length. Keying it on spoken or written rather than on the medium means a podcast's
+transcript (OV-106) takes the spoken rows with no budget of its own.
+
+| Up to words | Written | Spoken |
+|---|---|---|
+| 400 | 3 points × 25 words, 1 chapter | 7 × 40, 10 chapters |
+| 1,000 | 4 × 30, 3 | 7 × 40, 10 |
+| 2,500 | 5 × 40, 5 | 7 × 40, 10 |
+| 6,000 | 6 × 40, 7 | 7 × 40, 10 |
+| 12,000 | 8 × 50, 14 | 8 × 50, 14 |
+| beyond | 10 × 60, 20 | 10 × 60, 20 |
+
+**Up to 6,000 words nothing moved.** The owner's call: keep each kind's short rows as they
+were and raise only the ceiling for long sources. A spoken source's chapter ceiling of 10 is
+new, but sits above the "3 to 8" the prompt still asks for, so it bounds a runaway rather than
+shaping a note. The point's word ceiling is still the target plus a quarter, so 50 for 40.
+
+**Why seven stopped being right.** Seven came from a debate that needed more than five, and the
+instruction leaned on chapters to "carry the rest of the structure". That promise is empty for
+a listener: chapters are the reader's third tab and are never read aloud (`overviewNoteLines.ts`).
+Since `open-questions.md` #6 was answered, an overview stands in for its source, and listening
+is the realistic use, so on a two-hour source the key points are the whole of what anyone
+hears. Seven points of 40 words was 4 minutes of speech for two hours of talk.
+
+**Why ten and not more.** A two-hour source could afford twelve to fifteen points inside nine
+minutes (`overview-quality.md`, "What scales and what does not"), but past ten a list read
+aloud stops explaining and starts listing. Grouping points into themes was dropped: a new
+output shape for a problem nobody has shown at ten. OV-228's blind listen is where it would
+show up. `MOST_KEY_POINTS` holds the ten in the record, the share and the generation schema.
+
+**Long sources only, for the rest too.** Above 6,000 words the prompt says the points must
+represent the whole source through to its end, and that a point left out is lost to anyone
+listening; chapters are asked to differ plainly from their neighbours, the navigation failure
+a twenty-chapter list invites. Video also gets the two checks articles have had at every
+length, on segment ranges: any chapter holding over a quarter of the words needs a key point
+inside it, and a key point has to reach the last third, each sending the note back naming
+what is missing. On video they apply only to long sources, so a short video's note and its
+retry rate stay as they were.
+
+**Not in it: density from chapter count.** `overview-quality.md` proposed letting the number of
+chapters raise the allowance, so a short dense source earns more than a short slight one.
+That would change short notes, so it stays on OV-203 to be measured alone.
+
+**Recipe pages are on no budget.** Their note is one paragraph and the page's own recipe, with
+no key points or chapters. A recipe video is a video, so it takes the spoken rows.
+
+**The record.** Overview schema 16 alters nothing and holds ten-point notes back from clients
+that still refuse more than seven (client version 17).
+
+**The grammar.** Array maxima never reach Claude's grammar: `providerJsonSchema` moves `maxItems`
+into the description. Probed on 10 Nov 2026 with a 16-token reply, three times each, at 1,000,
+9,000 and 18,000 transcript words with every section on: the schema compiled 18 of 18 on Sonnet
+5.5 and Opus 5.5.
+
+**Analytics.** `capture.newOverview.finished` carries the source's measured words, the key points
+and chapters the note holds, and the most key points its length allowed, so the dials can be
+read against real notes. Counts only, and absent for a recipe page.
 
 ## Stress-testing against genres outside the samples
 

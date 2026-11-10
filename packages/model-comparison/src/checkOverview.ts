@@ -1,5 +1,5 @@
 import { IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
-import { bigPictureBudget, segmentRangeOf, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
+import { segmentRangeOf, transcriptBudget, type GeneratedOutput, type SegmentRangeShape } from "@overview/generation";
 import type { FetchedTranscript } from "@overview/transcripts";
 
 export type CheckArea = "overview" | "chapters";
@@ -11,7 +11,6 @@ export interface CheckResult {
   detail: string | null;
 }
 
-const KEY_POINT_TARGET_WORDS = 40;
 const DUBIOUS_CLAIM_TARGET_WORDS = 25;
 const DUBIOUS_REASON_TARGET_WORDS = 30;
 const LONGEST_CHAPTER_SHARE = 0.5;
@@ -105,7 +104,8 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
   const channel = fetched.video.channel.trim().toLowerCase();
   const share = longestChapterShare(output, fetched);
   const spokenLength = fetched.transcript.at(-1)?.endMs ?? 0;
-  const bigPictureTarget = bigPictureBudget(fetched.transcript.reduce((total, segment) => total + wordCount(segment.text), 0));
+  const budget = transcriptBudget(fetched);
+  const bigPictureTarget = budget.bigPictureWords;
   const bigPictureWords = wordCount(output.bigPicture);
 
   return [
@@ -131,7 +131,7 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
       "overview",
       output.keyPoints
         .map((point, index) => ({ index, words: wordCount(point.text) }))
-        .filter(({ words }) => words > KEY_POINT_TARGET_WORDS)
+        .filter(({ words }) => words > budget.wordsPerKeyPoint)
         .map(({ index, words }) => `key point ${index + 1} is ${words} words`),
     ),
     result(

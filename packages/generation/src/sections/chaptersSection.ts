@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { Chapter } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
+import type { NoteBudget } from "../noteBudget.js";
+import { transcriptBudget } from "./transcriptBudget.js";
 
 export interface ChapterShape {
   title: string;
@@ -28,26 +30,41 @@ const startsAtTheFirstSegmentAndAscends = (chapters: ChapterShape[], ctx: z.Refi
   });
 };
 
+const howManyChapters = ({ mostChapters, long }: NoteBudget): string =>
+  long
+    ? `A video this long needs more than most to navigate by, at most
+${mostChapters}; never split a stretch to make the list longer, and never merge two
+subjects to make it shorter.`
+    : `Most videos
+have 3 to 8; a short video that does one thing has one. Never split a
+stretch to make the list longer, and never merge two subjects to make it
+shorter.`;
+
+export const NEIGHBOURING_CHAPTERS_DIFFER = `
+With this many chapters, make each one plainly different from the ones
+beside it: if two neighbouring summaries could be swapped without anyone
+noticing, say what actually changes between them.`;
+
 export const chaptersSection: PromptSection = {
   title: "Chapters",
   key: "structural",
-  prompt: () => `
+  prompt: (input) => {
+    const budget = transcriptBudget(input);
+    return `
 ## Chapters
 Split the video into chapters at the points where its subject actually
 changes: a new question, a new example, a new stage of the argument. A
-chapter is a stretch a reader would skip to, not a paragraph. Most videos
-have 3 to 8; a short video that does one thing has one. Never split a
-stretch to make the list longer, and never merge two subjects to make it
-shorter.
+chapter is a stretch a reader would skip to, not a paragraph. ${howManyChapters(budget)}
 
 For each chapter give a title of at most 8 plain words, and a summary of
 one or two sentences (40 words at most) on what that stretch covers, so
-that reading the list down is a map of the video.
+that reading the list down is a map of the video.${budget.long ? NEIGHBOURING_CHAPTERS_DIFFER : ""}
 
 Name where each chapter begins as startSegmentIndex, taken from the
 numbered transcript segments below. The first chapter starts at segment
 0, and each chapter starts after the one before it. Never estimate a
-time: the segment number is the position.`,
+time: the segment number is the position.`;
+  },
   schemaShape: (input) => {
     const lastIndex = input.transcript.length - 1;
     const chapterShape = z.object({
@@ -59,7 +76,11 @@ time: the segment number is the position.`,
       chapters:
         input.transcript.length === 0
           ? z.array(chapterShape).max(0)
-          : z.array(chapterShape).min(1).superRefine(startsAtTheFirstSegmentAndAscends),
+          : z
+              .array(chapterShape)
+              .min(1)
+              .max(Math.min(transcriptBudget(input).mostChapters, input.transcript.length))
+              .superRefine(startsAtTheFirstSegmentAndAscends),
     };
   },
 };

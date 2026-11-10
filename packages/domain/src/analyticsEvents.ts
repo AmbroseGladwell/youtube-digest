@@ -726,7 +726,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -744,6 +744,13 @@ export const analyticsEvents = {
           // said rather than its description listed (OV-122).
           recipeIngredients: z.number().int().nonnegative().optional(),
           recipeIngredientsSaid: z.number().int().nonnegative().optional(),
+          // The note budget's dials, counts only: the source's words as measured by code, the
+          // key points and chapters the note holds, and the most key points its length allowed
+          // (OV-87). Absent for a recipe page, which is on no budget.
+          sourceWords: z.number().int().nonnegative().optional(),
+          keyPoints: z.number().int().nonnegative().optional(),
+          keyPointCeiling: z.number().int().positive().optional(),
+          chapters: z.number().int().nonnegative().optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).
           // Provider and model are absent on our key when the server didn't say them.
           key: GenerationKey.optional(),

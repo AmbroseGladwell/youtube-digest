@@ -3,7 +3,7 @@ import { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { Chapters } from "./Chapter.js";
 import { BigPicture } from "./BigPicture.js";
-import { CoreFields, KeyPoint } from "./CoreFields.js";
+import { CoreFields, KeyPoint, MOST_KEY_POINTS } from "./CoreFields.js";
 import { recipeShape } from "./Overview.js";
 import { RecipeNote } from "./RecipeNote.js";
 import { Filing } from "./Filing.js";
@@ -40,7 +40,7 @@ export const SharedNote = z
     // Absent on anything but a recipe, for the same reason. Copies shared before OV-159 have
     // an empty method (docs/features/recipe-notes.md, "Sharing").
     recipe: RecipeNote.nullish(),
-    keyPoints: z.array(KeyPoint).max(7),
+    keyPoints: z.array(KeyPoint).max(MOST_KEY_POINTS),
   })
   .superRefine(recipeShape);
 export type SharedNote = z.infer<typeof SharedNote>;

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { WRITING_RULES, type ComposedPrompt } from "../composePrompt.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import type { ArticlePromptSection } from "./ArticlePromptSection.js";
-import { chaptersTooBigToSkip, paragraphsInTheFinalStretch } from "./articleNoteBudget.js";
+import { chaptersTooBigToSkip, positionsInTheFinalStretch } from "../noteBudget.js";
 import { articleParagraphs } from "./articleParagraphs.js";
 import { articleChaptersSection, type ArticleChapterShape } from "./sections/articleChaptersSection.js";
 import { articleCoreSection } from "./sections/articleCoreSection.js";
@@ -34,7 +34,7 @@ interface ReadAnywayOutput {
 
 const keyPointsCoverThePiece = (input: ArticleGenerationInput) => (output: Record<string, unknown>, ctx: z.RefinementCtx) => {
   const paragraphWords = articleParagraphs(input.article).map(({ text }) => wordCount(text));
-  const finalStretch = paragraphsInTheFinalStretch(paragraphWords);
+  const finalStretch = positionsInTheFinalStretch(paragraphWords);
   const keyPoints = output.keyPoints as Array<{ paragraphIndex: number | null }>;
   const chapters = output.chapters as ArticleChapterShape[];
   const starts = chapters.map(({ startParagraphIndex }) => startParagraphIndex);

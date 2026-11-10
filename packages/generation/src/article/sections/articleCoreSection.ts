@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { CoreFields, wordCount } from "@overview/domain";
-import { articleNoteBudget, mostWordsPerKeyPoint } from "../articleNoteBudget.js";
-import { bigPictureBudget } from "../../bigPictureBudget.js";
+import { LEAST_KEY_POINTS, mostWordsPerKeyPoint, noteBudget } from "../../noteBudget.js";
 import { bigPicturePrompt, bigPictureShape } from "../../sections/bigPicturePrompt.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
 import { paragraphIndex } from "./paragraphIndex.js";
@@ -11,10 +10,15 @@ const { inOneLine, ...afterInOneLine } = CoreFields.shape;
 const GOOD_BIG_PICTURE =
   "Every town is told its bridges are safe until a repair bill says otherwise, and the question underneath is who decides what counts as safe enough. It also follows the engineer who first raised the alarm.";
 
+const LONG_PIECE = `
+A piece this long covers more ground, so use the room: never leave out a
+long stretch that carries real substance, since a point left out here is
+lost to anyone listening.`;
+
 export const articleCoreSection: ArticlePromptSection = {
   key: "structural",
   prompt: (input) => {
-    const { keyPoints, wordsPerKeyPoint } = articleNoteBudget(input.article.wordCount);
+    const { keyPoints, wordsPerKeyPoint, long, bigPictureWords } = noteBudget("written", input.article.wordCount);
     return `
 ## In one line
 What this piece IS, not what it argues. One sentence, 25 words at most.
@@ -27,7 +31,7 @@ original estimate."
 Bad: "An insightful exploration of infrastructure challenges."
 Never start it with "This article" or "An article about". Never repeat
 the site's name, which already has its own field.
-${bigPicturePrompt(bigPictureBudget(input.article.wordCount), { source: "piece", good: GOOD_BIG_PICTURE })}
+${bigPicturePrompt(bigPictureWords, { source: "piece", good: GOOD_BIG_PICTURE })}
 
 ## Core claim
 One sentence, 60 words at most. The single most important thing to take
@@ -37,7 +41,7 @@ story, that is who did what and when. If it asserts nothing and is pure
 vibes, say so plainly and set thin to true.
 
 ## Key points
-At most ${keyPoints} points, and at least 3. This note has to be far shorter than
+At most ${keyPoints} points, and at least ${LEAST_KEY_POINTS}. This note has to be far shorter than
 the piece it replaces, so it is a judgment of what matters, never a
 paragraph by paragraph retelling. Choose the points by what I need to
 understand, never by where they come in the piece: the ideas the rest of
@@ -49,7 +53,7 @@ the order the piece makes them.
 
 The reader must be able to trust that nothing important is missing, so the
 points together have to represent the whole piece through to its end, not
-just its opening. Don't spend them all on the first half of a long piece.
+just its opening. Don't spend them all on the first half of a long piece.${long ? LONG_PIECE : ""}
 In a news story, where the main facts come first, follow the importance.
 Never repeat the core claim in a key point: each point adds something new.
 
@@ -91,11 +95,11 @@ places far apart in the piece, so no one paragraph is a fair place to
 start reading.`;
   },
   schemaShape: (input) => {
-    const budget = articleNoteBudget(input.article.wordCount);
+    const budget = noteBudget("written", input.article.wordCount);
     const mostWords = mostWordsPerKeyPoint(budget);
     return {
       inOneLine,
-      bigPicture: bigPictureShape(bigPictureBudget(input.article.wordCount)),
+      bigPicture: bigPictureShape(budget.bigPictureWords),
       ...afterInOneLine,
       keyPoints: z
         .object({
@@ -103,7 +107,7 @@ start reading.`;
           paragraphIndex: paragraphIndex(input).nullable(),
         })
         .array()
-        .min(3)
+        .min(LEAST_KEY_POINTS)
         .max(budget.keyPoints),
     };
   },

@@ -6,7 +6,8 @@ import { DEFAULT_SECTIONS_ENABLED, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
 import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 import { TAG_VOCABULARY_CAP } from "./sections/filingSection.js";
-import { KEY_POINT_MAX_WORDS, KEY_POINT_TARGET_WORDS } from "./sections/coreSection.js";
+import { mostWordsPerKeyPoint } from "./noteBudget.js";
+import { transcriptBudget } from "./sections/transcriptBudget.js";
 import { HOW_TO_APPLY_MAX_WORDS, HOW_TO_APPLY_TARGET_WORDS } from "./sections/howToApplySection.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
@@ -33,6 +34,56 @@ const baseInput: GenerationInput = {
   existingTags: [],
   tagAliases: {},
 };
+
+const KEY_POINT_TARGET_WORDS = transcriptBudget(baseInput).wordsPerKeyPoint;
+const KEY_POINT_MAX_WORDS = mostWordsPerKeyPoint(transcriptBudget(baseInput));
+
+const longInput: GenerationInput = {
+  ...baseInput,
+  transcript: Array.from({ length: 90 }, (_, index) => ({
+    text: Array.from({ length: 200 }, () => "word").join(" "),
+    startMs: index * 80_000,
+    endMs: (index + 1) * 80_000,
+  })),
+};
+
+test("a short video keeps seven key points of 40 words and its usual chapter hint", () => {
+  const { systemPrompt, schema } = composePrompt(baseInput);
+  assert.ok(systemPrompt.includes("3 to 7 points."));
+  assert.ok(systemPrompt.includes("Seven is the ceiling for a video this\nlength"));
+  assert.ok(systemPrompt.includes("Most videos\nhave 3 to 8"));
+  assert.ok(!systemPrompt.includes("plainly different from the ones"));
+  const point = { text: "A point.", startSegmentIndex: -1, endSegmentIndex: -1 };
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(7).fill(point)).success, true);
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(8).fill(point)).success, false);
+});
+
+test("a two hour video gets up to ten longer key points and twenty chapters that differ from their neighbours", () => {
+  const { systemPrompt, schema } = composePrompt(longInput);
+  assert.ok(systemPrompt.includes("3 to 10 points."));
+  assert.ok(systemPrompt.includes("one to three complete sentences, 60 words at most"));
+  assert.ok(systemPrompt.includes("never spend them\nall on the first hour"));
+  assert.ok(systemPrompt.includes("at most\n20;"));
+  assert.ok(systemPrompt.includes("plainly different from the ones"));
+  const point = { text: "A point.", startSegmentIndex: -1, endSegmentIndex: -1 };
+  const chapter = (index: number) => ({ title: "A chapter", summary: "What it covers.", startSegmentIndex: index });
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(10).fill(point)).success, true);
+  assert.equal(z.safeParse(schema.shape.keyPoints!, Array(11).fill(point)).success, false);
+  assert.equal(
+    z.safeParse(
+      schema.shape.chapters!,
+      Array.from({ length: 20 }, (_, index) => chapter(index)),
+    ).success,
+    true,
+  );
+  assert.equal(
+    z.safeParse(
+      schema.shape.chapters!,
+      Array.from({ length: 21 }, (_, index) => chapter(index)),
+    ).success,
+    false,
+  );
+});
 
 test("structural fields are always in the schema, regardless of toggles", () => {
   const { schema } = composePrompt({
@@ -91,14 +142,14 @@ test("the topic-match field is constrained to the reader's own topic names", () 
       },
     ],
   });
-  const picked = schema.pick({ matchedTopicNames: true });
+  const picked = z.object({ matchedTopicNames: schema.shape.matchedTopicNames! });
   assert.doesNotThrow(() => picked.parse({ matchedTopicNames: ["fitness"] }));
   assert.throws(() => picked.parse({ matchedTopicNames: ["not-a-real-topic"] }));
 });
 
 test("with no existing topics, the match field can only ever come back empty", () => {
   const { schema } = composePrompt(baseInput);
-  const picked = schema.pick({ matchedTopicNames: true });
+  const picked = z.object({ matchedTopicNames: schema.shape.matchedTopicNames! });
   assert.doesNotThrow(() => picked.parse({ matchedTopicNames: [] }));
   assert.throws(() => picked.parse({ matchedTopicNames: ["anything"] }));
 });
@@ -108,7 +159,7 @@ test("watch-it-anyway's range is a segment-index pair, never a raw timestamp the
     ...baseInput,
     sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, watchAnyway: true },
   });
-  const picked = schema.pick({ watchAnyway: true });
+  const picked = z.object({ watchAnyway: schema.shape.watchAnyway! });
   assert.doesNotThrow(() =>
     picked.parse({
       watchAnyway: { answer: "partial", reason: "x", startSegmentIndex: 0, endSegmentIndex: 1 },
@@ -127,7 +178,7 @@ test("with an empty transcript, watch-it-anyway's range can only be -1", () => {
     transcript: [],
     sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, watchAnyway: true },
   });
-  const picked = schema.pick({ watchAnyway: true });
+  const picked = z.object({ watchAnyway: schema.shape.watchAnyway! });
   assert.doesNotThrow(() => picked.parse({ watchAnyway: { answer: "no", reason: "x", startSegmentIndex: -1, endSegmentIndex: -1 } }));
   assert.throws(() =>
     picked.parse({
@@ -143,26 +194,26 @@ const chapterAt = (startSegmentIndex: number) => ({
 });
 
 test("a chapter names where it starts as a segment index, never a time the model would have to invent", () => {
-  const picked = composePrompt(baseInput).schema.pick({ chapters: true });
+  const picked = z.object({ chapters: composePrompt(baseInput).schema.shape.chapters! });
   assert.doesNotThrow(() => picked.parse({ chapters: [chapterAt(0), chapterAt(1)] }));
   assert.throws(() => picked.parse({ chapters: [{ title: "A chapter", summary: "What it covers.", startMs: 0 }] }));
 });
 
 test("the first chapter starts at segment 0 and each one starts after the one before it", () => {
-  const picked = composePrompt(baseInput).schema.pick({ chapters: true });
+  const picked = z.object({ chapters: composePrompt(baseInput).schema.shape.chapters! });
   assert.throws(() => picked.parse({ chapters: [chapterAt(1)] }));
   assert.throws(() => picked.parse({ chapters: [chapterAt(0), chapterAt(0)] }));
   assert.throws(() => picked.parse({ chapters: [chapterAt(1), chapterAt(0)] }));
 });
 
 test("a chapter cannot start past the last segment, and there is always at least one", () => {
-  const picked = composePrompt(baseInput).schema.pick({ chapters: true });
+  const picked = z.object({ chapters: composePrompt(baseInput).schema.shape.chapters! });
   assert.throws(() => picked.parse({ chapters: [chapterAt(0), chapterAt(2)] }));
   assert.throws(() => picked.parse({ chapters: [] }));
 });
 
 test("with an empty transcript, the chapter list can only be empty", () => {
-  const picked = composePrompt({ ...baseInput, transcript: [] }).schema.pick({ chapters: true });
+  const picked = z.object({ chapters: composePrompt({ ...baseInput, transcript: [] }).schema.shape.chapters! });
   assert.doesNotThrow(() => picked.parse({ chapters: [] }));
   assert.throws(() => picked.parse({ chapters: [chapterAt(0)] }));
 });

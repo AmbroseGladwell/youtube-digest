@@ -1,7 +1,12 @@
+import { wordCount } from "@overview/domain";
 import { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
+import { chaptersTooBigToSkip, positionsInTheFinalStretch } from "./noteBudget.js";
 import { enabledSections } from "./sectionRegistry.js";
 import { descriptionOf } from "./recipe/videoRecipe.js";
+import type { ChapterShape } from "./sections/chaptersSection.js";
+import { segmentRangeOf, type SegmentRangeShape } from "./sections/segmentRangeFields.js";
+import { transcriptBudget } from "./sections/transcriptBudget.js";
 
 const VIDEO_TAG = /<(\/?)(video|title|channel|description|transcript)\b/gi;
 
@@ -23,6 +28,38 @@ ${transcript}
 
 Why they saved it: ${input.captureReason ?? "not said"}`;
 }
+
+// Only a long video is held to its whole length, so a short one's note and retries stay as
+// they were (docs/features/overview-generation-decisions.md, "One note budget").
+const keyPointsCoverALongVideo = (input: GenerationInput) => (output: Record<string, unknown>, ctx: z.RefinementCtx) => {
+  if (!transcriptBudget(input).long) return;
+  const segmentWords = input.transcript.map(({ text }) => wordCount(text));
+  const ranges = (output.keyPoints as SegmentRangeShape[]).flatMap((point) => segmentRangeOf(point) ?? []);
+  const reaches = (from: number, to: number) =>
+    ranges.some(({ startSegmentIndex, endSegmentIndex }) => startSegmentIndex <= to && endSegmentIndex >= from);
+  const starts = (output.chapters as ChapterShape[]).map(({ startSegmentIndex }) => startSegmentIndex);
+  for (const index of chaptersTooBigToSkip(segmentWords, starts)) {
+    const last = (starts[index + 1] ?? segmentWords.length) - 1;
+    if (!reaches(starts[index]!, last)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["keyPoints"],
+        message: `chapter "${(output.chapters as ChapterShape[])[index]!.title}" is too much of the video to leave out: at least one key point must come from segments ${starts[index]} to ${last}`,
+      });
+    }
+  }
+  const finalStretch = positionsInTheFinalStretch(segmentWords);
+  if (finalStretch.size > 0) {
+    const from = Math.min(...finalStretch);
+    if (!reaches(from, segmentWords.length - 1)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["keyPoints"],
+        message: `the key points stop early: at least one must come from segment ${from} onwards, so the note represents the whole video`,
+      });
+    }
+  }
+};
 
 export interface ComposedPrompt {
   systemPrompt: string;
@@ -59,6 +96,6 @@ export function composePrompt(input: GenerationInput): ComposedPrompt {
       WRITING_RULES +
       instructions,
     userMessage: contextBlock(input),
-    schema: z.object(shape),
+    schema: z.object(shape).superRefine(keyPointsCoverALongVideo(input)),
   };
 }

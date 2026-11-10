@@ -1,18 +1,25 @@
 import { z } from "zod";
 import { CoreFields, IN_ONE_LINE_TARGET_WORDS, wordCount } from "@overview/domain";
-import type { GenerationInput } from "../GenerationInput.js";
 import type { PromptSection } from "../PromptSection.js";
-import { bigPictureBudget } from "../bigPictureBudget.js";
+import { LEAST_KEY_POINTS, mostWordsPerKeyPoint, type NoteBudget } from "../noteBudget.js";
 import { bigPicturePrompt, bigPictureShape } from "./bigPicturePrompt.js";
 import { segmentRangeFields } from "./segmentRangeFields.js";
+import { transcriptBudget } from "./transcriptBudget.js";
 
 const { inOneLine, ...afterInOneLine } = CoreFields.shape;
 
-export const KEY_POINT_TARGET_WORDS = 40;
-export const KEY_POINT_MAX_WORDS = 50;
-
-export const videoBigPictureTarget = (input: GenerationInput): number =>
-  bigPictureBudget(input.transcript.reduce((total, segment) => total + wordCount(segment.text), 0));
+const howManyKeyPoints = ({ keyPoints, long }: NoteBudget): string =>
+  long
+    ? `Most videos need five or fewer, but one this long covers more ground:
+use up to ${keyPoints}, and spend them across the whole of it. ${keyPoints} is the ceiling, so
+keep the ones that matter most. Together the points have to represent the
+whole video through to its end, not just its opening: never spend them
+all on the first hour, and never leave out a long stretch that carries
+real substance. Chapters are never read aloud, so a point left out here
+is lost to anyone listening.`
+    : `Most videos need five or fewer. Seven is the ceiling for a video this
+length, so keep the ones that matter most and let the chapters carry the
+rest of the structure.`;
 
 const GOOD_BIG_PICTURE =
   "Parents get conflicting advice about screens, and the question underneath is whether the harm comes from the screen itself or from what it pushes out, such as sleep and play. It also covers how to talk to a teenager about their phone.";
@@ -20,7 +27,9 @@ const GOOD_BIG_PICTURE =
 export const coreSection: PromptSection = {
   title: "Core",
   key: "structural",
-  prompt: (input) => `
+  prompt: (input) => {
+    const budget = transcriptBudget(input);
+    return `
 ## In one line
 What this video IS, not what it argues. One sentence, ${IN_ONE_LINE_TARGET_WORDS} words at most.
 Cover the format and the subject: who is talking and what territory it
@@ -31,7 +40,7 @@ age, from babies to teenagers."
 Bad: "An insightful exploration of modern parenting challenges."
 Never start it with "This video" or "A video about". Never repeat the
 channel name — it already has its own field.
-${bigPicturePrompt(videoBigPictureTarget(input), { source: "video", good: GOOD_BIG_PICTURE })}
+${bigPicturePrompt(budget.bigPictureWords, { source: "video", good: GOOD_BIG_PICTURE })}
 
 ## Core claim
 One sentence, 60 words at most. The single most important thing to take
@@ -40,18 +49,16 @@ described, if it's showing or explaining something instead. If it asserts
 nothing and is pure vibes, say so plainly and set thin to true.
 
 ## Key points
-3 to 7 points. Choose them by what I need to understand, never by where
+${LEAST_KEY_POINTS} to ${budget.keyPoints} points. Choose them by what I need to understand, never by where
 they come in the video: the ideas the rest of it depends on, and what is
 genuinely new, surprising or contested. Leave out anything I could work
 out from the premise alone, and strip the hook, the story, the
 restatement, and the call to action. On a long video, weigh the whole of
 it before choosing: the idea that matters most may come in the second
 hour. Then give the points you chose in the order the video makes them.
-Most videos need five or fewer. Seven is the ceiling however long the
-video is: a two hour debate still gets seven at most, so keep the ones
-that matter most and let the chapters carry the rest of the structure.
+${howManyKeyPoints(budget)}
 
-Each point is one to three complete sentences, ${KEY_POINT_TARGET_WORDS} words at most,
+Each point is one to three complete sentences, ${budget.wordsPerKeyPoint} words at most,
 that make sense heard on their own: never a noun phrase or a fragment.
 Most points need one or two sentences. Use a further sentence for the
 specific detail or example rather than dropping it, and never to restate.
@@ -73,18 +80,23 @@ Give each point the stretch of the video it comes from, as
 startSegmentIndex/endSegmentIndex taken from the numbered transcript
 segments below, so the reader can go to it; don't estimate a time. Set
 both to -1 for a point the video builds across several places rather
-than in one stretch.`,
-  schemaShape: (input) => ({
-    inOneLine,
-    bigPicture: bigPictureShape(videoBigPictureTarget(input)),
-    ...afterInOneLine,
-    keyPoints: z
-      .object({
-        text: z.string().refine((point) => wordCount(point) <= KEY_POINT_MAX_WORDS, `max ${KEY_POINT_MAX_WORDS} words`),
-        ...segmentRangeFields(input),
-      })
-      .array()
-      .min(3)
-      .max(7),
-  }),
+than in one stretch.`;
+  },
+  schemaShape: (input) => {
+    const budget = transcriptBudget(input);
+    const mostWords = mostWordsPerKeyPoint(budget);
+    return {
+      inOneLine,
+      bigPicture: bigPictureShape(budget.bigPictureWords),
+      ...afterInOneLine,
+      keyPoints: z
+        .object({
+          text: z.string().refine((point) => wordCount(point) <= mostWords, `max ${mostWords} words`),
+          ...segmentRangeFields(input),
+        })
+        .array()
+        .min(LEAST_KEY_POINTS)
+        .max(budget.keyPoints),
+    };
+  },
 };
