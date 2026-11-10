@@ -339,6 +339,157 @@ skip something on its say-so, is still the deepest untested question, and a smal
 is a weak test of it: people who know you are the least likely to tell you the verdict was wrong.
 That is a real limit of this release and worth naming before conclusions are drawn from it.
 
+## Decisions in flight, as of 10 November 2026
+
+Added 10 Nov 2026 after a session with the owner that produced several cards in one day. Those
+cards all point the same way, but five decisions are each being made across several of them, and
+no card can see the whole of any one. Each section below says what is settled, what is open, and
+which cards wait on it. **Writing this down decides nothing new.** Where a section proposes a
+rule, it is marked as proposed.
+
+**Cards should cite these sections rather than restate them.** That keeps the answer in one place,
+and it means a card need not name other cards to be understood (until OV-268 lands, a card number
+in a PR description moves that card to Done).
+
+### 1. How a reader goes deeper than the overview
+
+**Settled.** Reasoning is rented: the synthesis happens in the reader's own assistant
+(`mcp-connector.md`, and "A versus B" above). The library has to be worth using with no assistant
+attached. OV-235 is the card that writes this down as a decision.
+
+**In flight, cheapest first:**
+
+- **Follow-up questions that open the reader's own assistant** (OV-266). Three source-specific
+  questions per overview, shown as chips that open Claude, ChatGPT or Gemini with the question
+  filled in, or copy it. They add almost nothing to the overview's cost, and our bill pays for no
+  answers. They work with no assistant connected, which is the risk OV-235 names.
+- **In-app chat, priced before it is decided** (OV-267, an investigation). It reopens the
+  position on purpose, with measured cost and quality per message, and decides build, defer or
+  stay.
+- **Explore further** (OV-233) is probably answered by the two above. Fold it in or close it once
+  OV-267 reports.
+
+**Rule.** OV-235 owns the answer. If OV-267 recommends building chat, OV-235's exception test
+changes in writing first, with the reason, and the build cards follow from it.
+
+### 2. Embeddings: what is embedded, what is shared, what stays private
+
+**Settled, and built** (`search-by-meaning.md`):
+
+- Each overview's big picture, core claim, each key point and a recipe's summary are embedded
+  separately with `text-embedding-3-small`.
+- The vectors are stored in pgvector on Neon and keyed by account.
+- They are tied to the overview's rev, never synced, and never cross accounts.
+
+**Proposed rule: claims connect, chunks prove and find.**
+
+- **Claim vectors are the unit for connections** (OV-218), and they already exist.
+  - Key points and the core claim carry the weight. A big picture matching another big picture
+    says two sources cover the same ground, which helps project suggestions (OV-168) and can
+    strengthen a key-point match. It is not a connection on its own.
+  - **Never one vector per overview,** including by joining fields together before embedding.
+    That brings back the coarse vector this doc and `search-by-meaning.md` already rejected.
+- **Transcript chunk vectors, if OV-267 builds them, are made once per video and shared**, the
+  way transcripts already are (`shared-transcript-cache.md`), because public captions are not
+  personal. Cost then grows with videos rather than readers. They serve three jobs:
+  - chat retrieval;
+  - finding a moment the overview left out;
+  - timestamps on each side of a connection as evidence.
+- **Anything from the reader stays per account:** notes, chats, the learned profile, and their
+  claims.
+
+**Open:**
+
+- Whether chunks are built at all (OV-267's answer).
+- Whether How to apply is embedded, to connect actions across sources. Test it once connections
+  exist.
+- The privacy page lines if transcript text goes to an embedding provider (`legal-pages.md`'s
+  trigger list).
+
+`search-by-meaning.md` says the big picture is embedded, but its "Not built" list still has it.
+Check the code and correct whichever is stale.
+
+### 3. What an assistant may do: connector scopes
+
+**Today.** `overviews:read`, `overviews:write` (marking read and favourite) and `profile:read`
+(`mcp-connector.md`).
+
+**Proposed writes, on several cards:**
+
+- project create and membership (OV-168);
+- saving a link, which spends generation (OV-262, idea 1, at a pace per connection);
+- tags, a reader note, an outcome and a "this looks wrong" flag (OV-262);
+- chats readable by the assistant (OV-267), and notes later.
+
+**The owner's decision, still open: one write scope or two.**
+
+- **One scope for everything additive.** Saving is controlled by the connection's pace and the
+  month's quota.
+- **Two scopes.** `overviews:write` for writes that cost nothing, and a separate scope for saving,
+  so a reader can allow organising without allowing spending.
+
+Whether chats and notes are read under `overviews:read` or a scope of their own is the same kind of
+choice.
+
+**Fixed either way:**
+
+- An assistant never deletes, and never edits what the reader wrote.
+- Every add is undoable and marked with the assistant that made it.
+- A connection without a scope gets a plain "reconnect to allow this", not a failed call.
+
+**Decide this before OV-168 ships its scope.** A scope a reader already approved can only widen if
+they reconnect.
+
+### 4. Reader records: one pattern for everything the reader adds
+
+**The problem is known.**
+
+- Set-valued fields do not merge across devices (`sync-metadata.md`; OV-21 is still open).
+- The overview record is replaced wholesale on regeneration, which is the read and favourite
+  lesson in `CLAUDE.md`.
+
+**Proposed pattern, OV-168's.**
+
+- One synced record per (thing, overview) pair.
+- Adds are additive, and removals are dated rather than deleted.
+- The record is kept apart from the overview, and carries who added it.
+
+It applies to:
+
+- project membership (OV-168);
+- chats (OV-267);
+- notes (not carded yet);
+- outcomes, "did you try it?" (OV-262);
+- tags an assistant adds (OV-262).
+
+Connections (OV-218) are derived, like embeddings. They are probably server-side and not synced,
+but that is to decide.
+
+**Every new kind of reader record also:**
+
+- is deleted with the overview and the account (`account-deletion.md`);
+- is readable over MCP;
+- goes into the export (OV-262, idea 2).
+
+**Notes.** Section 3 above recorded on 7 Nov that notes wait until real users have been talked to.
+On 10 Nov the owner said notes would now be useful, as their own card. Both hold: design chats and
+notes together (both are the reader's own words, both readable over MCP), and decide whether to
+build notes after the friends-and-family release.
+
+### 5. Quota
+
+OV-224 owns this, and three things wait on it:
+
+- **Saving through an assistant.** A connection's pace still counts against the month.
+- **Chat messages.** A counter on every plan, or fair use. `tiers.md` says plans sell volume, never
+  features.
+- **The comparison readers will make.** Plus is £7.99 for 50 a month. Recall Plus is $10 to $12 for
+  unlimited summaries (competitor comment on OV-262, 10 Nov 2026).
+
+Cheap entries for followed sources (OV-219, and "The volume tension" above) are still the idea that
+makes volume affordable. **Answer it from what the friends-and-family cohort actually uses**, not by
+matching a competitor's headline.
+
 ## A reading of the sequence
 
 Not a decision. The order that respects what is already known:
