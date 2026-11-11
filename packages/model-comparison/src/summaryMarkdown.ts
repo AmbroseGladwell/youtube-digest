@@ -12,12 +12,15 @@ export function summaryMarkdown(summaries: readonly ModelSummary[], runName: str
     "Every figure here is measured by code from the providers' own usage reports and the price table in",
     "`packages/model-comparison/src/modelPrices.ts`. Nothing is estimated by a model.",
     "",
-    "| Model | Runs | Valid first time | After retry | Failed | Errored | Median latency | Mean cost | Cost per 20 min of video | Total spent |",
-    "|---|---|---|---|---|---|---|---|---|---|",
+    "Mean cost is the whole overview, the kind check included; the check's own share is its own column.",
+    "",
+    "| Model | Runs | Valid first time | After retry | Failed | Errored | Median latency | Mean cost | Mean kind check | Recipe notes | Cost per 20 min of video | Total spent |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ...summaries.map(
       (summary) =>
         `| ${summary.name} | ${summary.runs} | ${percent(summary.passedFirst, summary.runs)} | ${summary.passedAfterRetry} | ` +
         `${summary.failed} | ${summary.errored} | ${seconds(summary.medianLatencyMs)} | ${dollars(summary.meanCostDollars)} | ` +
+        `${summary.kindChecked === 0 ? "–" : dollars(summary.meanKindCheckCostDollars)} | ${summary.recipeNotes} | ` +
         `${dollars(summary.costPerTwentyMinutesDollars)} | ${dollars(summary.totalCostDollars)}` +
         (summary.unpricedRuns > 0 ? ` (${summary.unpricedRuns} unpriced)` : "") +
         " |",

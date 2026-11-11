@@ -41,7 +41,6 @@ const overview = assembleOverview(
     chapters: [],
     matchedTopicNames: [],
     suggestedTopic: null,
-    recipe: null,
     tags: ["one-tag", "two-tag", "three-tag"],
   },
   { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOString() },

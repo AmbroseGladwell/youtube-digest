@@ -57,6 +57,7 @@ test("making an overview is counted from asking to reading it, with where it was
           keyPoints: 3,
           keyPointCeiling: 7,
           chapters: 2,
+          noteKind: "default",
           key: "own",
           provider: "anthropic",
           model: DEFAULT_MODEL.anthropic,

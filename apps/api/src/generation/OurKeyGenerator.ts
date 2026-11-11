@@ -3,6 +3,7 @@ import {
   apiLogLines,
   TRIAL_OVERVIEWS,
   type ForAnyoneInput,
+  type NoteKind,
   type Overview,
   type OurKeyGenerationRequest,
   type Plan,
@@ -169,19 +170,37 @@ export class OurKeyGenerator {
     const metered = meteredFetch(ourKeyModel.provider, http);
     const startedAt = now.getTime();
     const payer: CostPayer = signedOut ? "signed-out" : { accountId: caller.accountId };
-    const recordCost = (detail: string) => this.#recordCost(metered.calls, payer, detail, log);
+    // The kind check's calls are costed on their own line, apart from the note's
+    // (docs/architecture/unit-economics.md); an article has no check.
+    let noteKind: NoteKind | null = null;
+    let checkCalls = 0;
+    const observer = {
+      kindChecked: (kind: NoteKind) => {
+        noteKind = kind;
+        checkCalls = metered.calls.length;
+      },
+    };
+    const recordCosts = async (failed: boolean) => {
+      const checkEnded = noteKind !== null || "article" in input ? checkCalls : metered.calls.length;
+      const suffix = failed ? "-failed" : "";
+      await this.#recordCost(metered.calls.slice(0, checkEnded), payer, noteKind === null ? `kindCheck${suffix}` : "kindCheck", log);
+      await this.#recordCost(metered.calls.slice(checkEnded), payer, `overview${suffix}`, log);
+    };
     try {
-      const overview = await generateOverviewOf(createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }), input, {
-        id: overviewId,
-        savedAt: now.toISOString(),
-      });
+      const overview = await generateOverviewOf(
+        createGenerationClient({ ...ourKeyModel, apiKey, http: metered.http }),
+        input,
+        { id: overviewId, savedAt: now.toISOString() },
+        observer,
+      );
       if (signedOut) await trials.made(now, overviewId);
       else await reservations.madeOnOurKey(now, caller.accountId, overviewId);
-      await recordCost("overview");
+      await recordCosts(false);
       log.info(
         apiLogLines.ourKey.generated({
           ...logged,
           model: ourKeyModel.model,
+          noteKind,
           attempts: metered.calls.length,
           ...meteredUsageOf(metered.calls),
           used: held.used,
@@ -193,7 +212,7 @@ export class OurKeyGenerator {
     } catch (error) {
       await held.release();
       await usage.releaseOurKeyDay(day, signedOut);
-      await recordCost("overview-failed");
+      await recordCosts(true);
       if (error instanceof ProviderKeyRefusedError) {
         log.error(apiLogLines.ourKey.keyRefused({ model: ourKeyModel.model }));
         throw new OurKeyUnavailableError("Our key was refused by its provider", { cause: error });
@@ -206,6 +225,7 @@ export class OurKeyGenerator {
           status: (error as { status?: unknown }).status ?? null,
           fallback,
           model: ourKeyModel.model,
+          noteKind,
           attempts: metered.calls.length,
           ...meteredUsageOf(metered.calls),
           ms: clock().getTime() - startedAt,

@@ -14,15 +14,12 @@ export const recipeSection: PromptSection = {
   key: "structural",
   prompt: () => `
 ## Recipe
-Give a recipe only when the video teaches one dish from start to finish,
-so that someone could cook it from what the video and its description
-say. Otherwise set recipe to null: a talk, an interview, a restaurant
-review, food history, a taste test, a vlog that cooks without teaching
-it, or a video that runs through several different recipes.
-
-When you give one, the reader sees it in place of the core claim, key
-points and verdict, so write In one line as what the dish is ("A party
-jollof with a smoky, fried tomato base"), never "This video".
+A first look at its opening judged that this video teaches one dish from
+start to finish. Give that recipe, so that someone could cook it from
+what the video and its description say. If the whole of the video shows
+otherwise, set recipe to null: a talk, an interview, a restaurant review,
+food history, a taste test, a vlog that cooks without teaching it, or a
+video that runs through several different recipes.
 
 Ingredients: one line per ingredient, in the order given, with its amount
 first. Where the description lists the ingredients, copy its lines. Where

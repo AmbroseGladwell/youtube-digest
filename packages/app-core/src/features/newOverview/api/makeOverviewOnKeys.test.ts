@@ -49,16 +49,15 @@ const answer = (inOneLine: string) => ({
   chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
   matchedTopicNames: [],
   suggestedTopic: null,
-  recipe: null,
   tags: ["one-tag", "two-tag", "three-tag"],
   howToApply: { items: [] },
 });
 
 const ownClient =
   (outcome: "made" | Error): GenerationClient =>
-  async () => {
+  async ({ schema }) => {
     if (outcome instanceof Error) throw outcome;
-    return answer("Made on the reader's key.");
+    return "noteKind" in schema.shape ? { noteKind: "default" } : answer("Made on the reader's key.");
   };
 
 const refusal = (code: ApiErrorCode, details?: Record<string, unknown>) =>

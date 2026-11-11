@@ -2,10 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId, TopicId, VideoId } from "@overview/domain";
-import { assembleOverview } from "./assembleOverview.js";
+import { assembleOverview, assembleRecipeVideoOverview } from "./assembleOverview.js";
 import { GenerationError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
-import type { GeneratedOutput } from "./GeneratedOutput.js";
+import type { GeneratedOutput, GeneratedRecipeVideoOutput } from "./GeneratedOutput.js";
 
 const fitnessId = TopicId.parse(randomUUID());
 const financeId = TopicId.parse(randomUUID());
@@ -51,7 +51,6 @@ const baseOutput: GeneratedOutput = {
   chapters: [{ title: "The whole thing", summary: "One stretch.", startSegmentIndex: 0 }],
   matchedTopicNames: ["fitness"],
   suggestedTopic: null,
-  recipe: null,
   tags: ["one-tag", "two-tag", "three-tag"],
 };
 
@@ -377,8 +376,12 @@ const recipeInput: GenerationInput = {
   ],
 };
 
-const recipeOutput: GeneratedOutput = {
-  ...baseOutput,
+const recipeOutput: GeneratedRecipeVideoOutput = {
+  inOneLine: "A party jollof with a smoky, fried tomato base.",
+  chapters: baseOutput.chapters,
+  matchedTopicNames: [],
+  suggestedTopic: null,
+  tags: baseOutput.tags,
   recipe: {
     summary: "A party jollof whose depth comes from frying the paste until it darkens.",
     ingredients: ["3 cups long-grain rice", "2 tbsp tomato paste", "1 tsp salt", "1 onion (about 150g), sliced"],
@@ -390,17 +393,14 @@ const recipeOutput: GeneratedOutput = {
   },
 };
 
+const assembleRecipe = (output: GeneratedRecipeVideoOutput = recipeOutput) => {
+  const overview = assembleRecipeVideoOverview(recipeInput, output, meta);
+  assert.ok(overview);
+  return overview;
+};
+
 test("a recipe video's note is its recipe, with its chapters and nothing argument-shaped", () => {
-  const overview = assembleOverview(
-    recipeInput,
-    {
-      ...recipeOutput,
-      bigPicture: "Some ground.",
-      verdict: { novelty: "original", standsOut: null, dubiousClaims: [], reasoning: "x", similarToIndices: [] },
-      howToApply: { items: ["a"] },
-    },
-    meta,
-  );
+  const overview = assembleRecipe();
   assert.equal(overview.recipe?.summary, recipeOutput.recipe?.summary);
   assert.deepEqual(overview.keyPoints, []);
   assert.equal(overview.coreClaim, "");
@@ -412,7 +412,7 @@ test("a recipe video's note is its recipe, with its chapters and nothing argumen
 });
 
 test("a recipe video's steps carry where the video does them, and a step it never shows has no moment", () => {
-  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  const overview = assembleRecipe();
   assert.deepEqual(
     overview.recipe?.steps.map(({ range }) => range),
     [{ startMs: 4000, endMs: 30000 }, { startMs: 30000, endMs: 60000 }, undefined],
@@ -420,30 +420,33 @@ test("a recipe video's steps carry where the video does them, and a step it neve
 });
 
 test("a line the description doesn't list is marked as said in the video", () => {
-  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  const overview = assembleRecipe();
   assert.deepEqual(overview.recipe?.ingredientsSaid, [2, 3]);
 });
 
 test("an amount nobody stated is dropped and the ingredient kept", () => {
-  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  const overview = assembleRecipe();
   assert.deepEqual(overview.recipe?.ingredients, ["3 cups long-grain rice", "2 tbsp tomato paste", "salt", "onion, sliced"]);
 });
 
 test("a recipe video's yield is read from its description's labels, and its times are never worked out", () => {
-  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  const overview = assembleRecipe();
   assert.equal(overview.recipe?.yield, "Serves 6");
   assert.equal(overview.recipe?.totalMinutes, null);
 });
 
 test("a video's overview never keeps its whole description", () => {
-  const overview = assembleOverview(recipeInput, recipeOutput, meta);
+  const overview = assembleRecipe();
   assert.equal("fullDescription" in overview.source, false);
 });
 
-test("a video that isn't a recipe keeps its ordinary note", () => {
-  const overview = assembleOverview(recipeInput, baseOutput, meta);
-  assert.equal(overview.recipe, null);
-  assert.equal(overview.keyPoints.length, 3);
+test("a recipe the video turns out not to hold assembles nothing, so the video gets its ordinary note", () => {
+  assert.equal(assembleRecipeVideoOverview(recipeInput, { ...recipeOutput, recipe: null }, meta), null);
+});
+
+test("a recipe whose every ingredient is dropped assembles nothing", () => {
+  const unlisted = { ...recipeOutput.recipe!, ingredients: [] };
+  assert.equal(assembleRecipeVideoOverview(recipeInput, { ...recipeOutput, recipe: unlisted }, meta), null);
 });
 
 const longInput: GenerationInput = {

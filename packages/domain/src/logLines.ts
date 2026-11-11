@@ -224,12 +224,12 @@ export const apiLogLines = coded("api", {
     generated: line(
       "info",
       "overview made on our key",
-      "An overview made on our key: plan, model, tokens (input counts cache reads and writes), cost in dollars over every attempt, the month's count and how long it took.",
+      "An overview made on our key: plan, model, the note kind its check chose, tokens (input counts cache reads and writes), cost in dollars over every attempt, the month's count and how long it took.",
     ),
     failed: line(
       "warn",
       "overview on our key failed",
-      "A generation on our key failed and its slots were given back; `reason` says why, `fallback` whether it may move to the next key, and the tokens and cost of the attempts the provider still billed.",
+      "A generation on our key failed and its slots were given back; `noteKind` is the kind its check chose (null if it never answered), `reason` says why, `fallback` whether it may move to the next key, and the tokens and cost of the attempts the provider still billed.",
     ),
     smallPass: line(
       "info",

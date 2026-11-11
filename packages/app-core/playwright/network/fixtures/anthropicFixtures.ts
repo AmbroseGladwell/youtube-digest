@@ -19,7 +19,6 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     ],
     matchedTopicNames: [],
     suggestedTopic: null,
-    recipe: null,
     tags: ["iwft-fixture", "simulated-video", "test-data"],
     verdict: {
       novelty: "original",

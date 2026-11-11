@@ -1,4 +1,4 @@
-import { wordCount } from "@overview/domain";
+import { wordCount, type NoteKind } from "@overview/domain";
 import { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import { chaptersTooBigToSkip, positionsInTheFinalStretch } from "./noteBudget.js";
@@ -75,8 +75,15 @@ export const WRITING_RULES =
   "Brief parentheses are allowed only for a specific such as a year or a citation. They are not read aloud, " +
   "so never put anything the sentence needs inside them.";
 
-export function composePrompt(input: GenerationInput): ComposedPrompt {
-  const sections = enabledSections(input);
+const SYSTEM_OPENING: Record<NoteKind, string> = {
+  default:
+    "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly. ",
+  recipe:
+    "You write the note on a saved recipe video for one reader, from its transcript and description alone. Follow the sections below exactly. ",
+};
+
+export function composePrompt(input: GenerationInput, kind: NoteKind = "default"): ComposedPrompt {
+  const sections = enabledSections(input, kind);
 
   const instructions = sections.map((section) => section.prompt(input)).join("\n");
 
@@ -90,12 +97,10 @@ export function composePrompt(input: GenerationInput): ComposedPrompt {
     }
   }
 
+  const schema = z.object(shape);
   return {
-    systemPrompt:
-      "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly. " +
-      WRITING_RULES +
-      instructions,
+    systemPrompt: SYSTEM_OPENING[kind] + WRITING_RULES + instructions,
     userMessage: contextBlock(input),
-    schema: z.object(shape).superRefine(keyPointsCoverALongVideo(input)),
+    schema: kind === "default" ? schema.superRefine(keyPointsCoverALongVideo(input)) : schema,
   };
 }

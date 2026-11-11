@@ -19,7 +19,6 @@ export interface GeneratedOutput {
   matchedTopicNames: string[];
   suggestedTopic: SuggestedTopicShape | null;
   tags: string[];
-  recipe: GeneratedRecipe | null;
   verdict?: {
     novelty: Novelty;
     standsOut: GeneratedTimedText | null;
@@ -40,3 +39,10 @@ export interface GeneratedOutput {
     reason: string;
   };
 }
+
+export type GeneratedRecipeVideoOutput = Pick<
+  GeneratedOutput,
+  "inOneLine" | "chapters" | "matchedTopicNames" | "suggestedTopic" | "tags"
+> & {
+  recipe: GeneratedRecipe | null;
+};

@@ -27,7 +27,8 @@ read.
 
 | Area | Detail | Quantity | Dollars | Recorded by |
 |---|---|---|---|---|
-| `generation` | `overview`, `overview-failed` | prompt and output tokens over every attempt | list price (`modelPrices.ts`) | `OurKeyGenerator.generate` |
+| `generation` | `overview`, `overview-failed` | prompt and output tokens over every attempt of the note | list price (`modelPrices.ts`) | `OurKeyGenerator.generate` |
+| `generation` | `kindCheck`, `kindCheck-failed` | tokens of a video's kind check, before its note (OV-275) | list price | `OurKeyGenerator.generate` |
 | `generation` | `profile`, `forAnyone`, `topics`, `topicSuggestions`, each also `-failed` | tokens | list price | `OurKeyGenerator`'s small passes |
 | `embeddings` | `overview` | tokens of the claims newly embedded | $0.02 per million (`EMBEDDING_PRICE`, checked 9 Nov 2026) | `EmbeddingQueue` |
 | `embeddings` | `search` | tokens of a query not already cached | the same | `MeaningSearch` |

@@ -91,9 +91,22 @@ test("structural fields are always in the schema, regardless of toggles", () => 
     sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
   });
   const keys = Object.keys(schema.shape);
-  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags", "recipe"]) {
+  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags"]) {
     assert.ok(keys.includes(structural), `expected ${structural} in schema`);
   }
+});
+
+test("the default note's schema carries no recipe, and a recipe note's carries nothing argument-shaped", () => {
+  assert.equal("recipe" in composePrompt(baseInput).schema.shape, false);
+  const recipeKeys = Object.keys(composePrompt(baseInput, "recipe").schema.shape).sort();
+  assert.deepEqual(recipeKeys, ["chapters", "inOneLine", "matchedTopicNames", "recipe", "suggestedTopic", "tags"]);
+});
+
+test("a recipe note ignores the reader's section toggles, since it has none of those sections", () => {
+  const { systemPrompt } = composePrompt({ ...baseInput, sectionsEnabled: DEFAULT_SECTIONS_ENABLED }, "recipe");
+  assert.ok(!systemPrompt.includes("## Key points"));
+  assert.ok(!systemPrompt.includes("Verdict"));
+  assert.ok(systemPrompt.includes("## Recipe"));
 });
 
 test("the em dash ban is always in the prompt, regardless of which sections are toggled", () => {
@@ -370,8 +383,8 @@ test("the prompt reads a video's whole description, where the ingredients usuall
   assert.match(userMessage, /<description>Party jollof\.\n\nIngredients\n3 cups rice<\/description>/);
 });
 
-test("a recipe is optional, and a step names its stretch as segment indexes inside the transcript", () => {
-  const { schema } = composePrompt(baseInput);
+test("a recipe note's recipe may be null, and a step names its stretch as segment indexes inside the transcript", () => {
+  const { schema } = composePrompt(baseInput, "recipe");
   const recipe = (steps: unknown[]) => ({ recipe: { summary: "A stew.", ingredients: ["salt"], steps } });
   const recipeField = schema.shape.recipe as z.ZodType;
   assert.equal(recipeField.safeParse(null).success, true);
@@ -408,13 +421,7 @@ test("the video schema keeps to the few fields that may be null, since each one 
     walk(schema.items, `${path}[]`);
   };
   walk(providerJsonSchema(composePrompt({ ...baseInput, sectionsEnabled: DEFAULT_SECTIONS_ENABLED }).schema), "");
-  assert.deepEqual(unions.sort(), [
-    ".recipe",
-    ".recipe.steps[].group",
-    ".suggestedTopic",
-    ".suggestedTopic.description",
-    ".verdict.standsOut",
-  ]);
+  assert.deepEqual(unions.sort(), [".suggestedTopic", ".suggestedTopic.description", ".verdict.standsOut"]);
 });
 
 const spokenFor = (words: number) => [{ text: Array(words).fill("word").join(" "), startMs: 0, endMs: 1000 }];

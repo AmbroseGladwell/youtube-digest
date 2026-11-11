@@ -135,6 +135,61 @@ written to the run's folder as `report.md`. The pieces are in `packages/model-co
 `ReaderProfile.ts`, `personalisePrompt.ts`, `runPersonalPass.ts`, `judgePersonalPair.ts`
 and `costModelMarkdown.ts`.
 
+## The kind check (OV-275)
+
+Measured on 10 Nov 2026, not estimated (`docs/prototype/constraints.md`). Every figure comes from
+the providers' own usage reports at the list prices in `modelPrices.ts`, through the comparison
+harness, as the sample reader. `main` (runs `main-275-*`) against the branch (runs `ov-275-*`), two
+samples a side, on OV-92's 20 videos and OV-122's recipe set of six (four recipes, a taste test
+and a talk). $9.16 in all.
+
+**What it is.** Since OV-275 a video's overview is two calls: a small check that reads the title,
+channel, description and about four minutes of the transcript and answers the note's kind, then
+the note, whose schema now carries only that kind's sections (`overview-generation-decisions.md`,
+"The kind check").
+
+**The 20-video set** (no recipes), mean cost per overview:
+
+| | Before | After: the note | After: the check | After: in all | Change |
+|---|---|---|---|---|---|
+| GPT-6.1 Sol, our key | $0.0333 | $0.0301 | $0.0019 | **$0.0319** | **−4%** |
+| Claude Sonnet 5.5 | $0.0552 | $0.0553 | $0.0044 | **$0.0597** | **+8%** |
+
+| | Note input tokens, median | Note output tokens, median | Check input / output | Median wait |
+|---|---|---|---|---|
+| Sol, before → after | 9,500 → 8,578 | 1,570 → 1,638 | 1,317 / 12 | 35.5s → 38.1s |
+| Sonnet, before → after | 14,921 → 14,130 | 1,712 → 1,851 | 2,084 / 13 | 13.6s → 16.2s |
+
+- **Taking the recipe block out saves about 800 to 900 input tokens on every video.** On Sol that
+  more than pays for the check, so an overview on our key costs slightly less than before. On
+  Sonnet the saving was cancelled by longer output in this sample (139 tokens, within the
+  run-to-run spread OV-87 saw), so the check's cost shows through.
+- **The check is about 6% of an overview on Sol and 8% on Sonnet.** Its output is a dozen tokens;
+  its cost is its input, most of it the description and the opening. A shorter opening is the
+  dial if that share matters.
+- **It adds about two and a half seconds**, since the note can't start until the kind is known.
+
+**The recipe set**, mean cost per overview:
+
+| | Before | After, in all | Change |
+|---|---|---|---|
+| Sol | $0.0325 | $0.0290 | −11% |
+| Sonnet | $0.0654 | $0.0464 | −29% |
+
+A recipe video's note no longer pays for key points, a verdict and the rest it never showed, so
+its note costs far less and the check is more than paid for.
+
+**Detection.** Every recipe video was a recipe note in all four of its runs (16 of 16), the taste
+test and the talk were the default note in all of theirs, and none of the 80 overviews of the
+20-video set was routed as a recipe. Before, the shortest recipe video errored on Sonnet twice and
+Sonnet needed three retries on the set; after, every recipe run passed first time.
+
+**What it means for the tiers.** On our key an overview is $0.0319 against `tiers.md`'s $0.038,
+so nothing the allowances were sized on moves. On a reader's own key the check is theirs to pay,
+at most a fraction of a cent. The Unit economics dashboard counts the check in its measured cost
+per overview and shows its share (`unit-economics.md`), so the live figure can be read against
+these.
+
 ## Search by meaning (OV-229)
 
 Measured on 9 Nov 2026, not estimated (`docs/prototype/constraints.md`). OpenAI's own usage report
