@@ -1,0 +1,77 @@
+{
+  "sourceId": "Jab_QOxKEO4",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:28:14.409Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Double your contributions to £600 instead of chasing a 7% return over a 5% return, because earning more and saving more is what actually moves the needle.",
+      "kind": "instruction",
+      "start": 157,
+      "end": 162
+    },
+    {
+      "text": "Until a year of market growth is bigger than a year of your contributions, you are not living off of the returns of compound interest, but just living off of your own hard work and contributions.",
+      "kind": "rule",
+      "start": 166,
+      "end": 173
+    },
+    {
+      "text": "Do not sell at the bottom.",
+      "kind": "rule",
+      "start": 241,
+      "end": 242
+    },
+    {
+      "text": "Stop expecting the market to make you rich.",
+      "kind": "instruction",
+      "start": 275,
+      "end": 276
+    },
+    {
+      "text": "In stage one, prioritize capital velocity by turning your time, skills, and ability to make money into money that you can invest.",
+      "kind": "step",
+      "start": 277,
+      "end": 282
+    },
+    {
+      "text": "Once you hit critical mass, the point where a year of market growth matches or comes close to beating a year of contribution, the game completely changes to optimization and efficiency.",
+      "kind": "rule",
+      "start": 293,
+      "end": 299
+    },
+    {
+      "text": "Invest in an ISA or whatever tax-sheltered account exists where you live, so you can have a tax advantage where it is not going to have tax friction.",
+      "kind": "instruction",
+      "start": 304,
+      "end": 309
+    },
+    {
+      "text": "When lowering your costs, make sure it is exactly the same eggs for eggs thing that you are comparing it with.",
+      "kind": "rule",
+      "start": 320,
+      "end": 323
+    },
+    {
+      "text": "Stop waiting for time to do the work, grow your income, push your savings rate, cut the fees, cut the tax drag, and build a critical mass, because you have to build the engine first.",
+      "kind": "instruction",
+      "start": 339,
+      "end": 343
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 48379,
+      "usage": {
+        "uncachedInputTokens": 5518,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 8270
+      }
+    }
+  ],
+  "latencyMs": 48380,
+  "costDollars": 0.110276
+}

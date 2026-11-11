@@ -1,0 +1,71 @@
+{
+  "sourceId": "ZT4kiDO_g7M",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:28:57.059Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Be the PR agent or the mayor of the town you sell in.",
+      "kind": "instruction",
+      "start": 6,
+      "end": 7
+    },
+    {
+      "text": "Let the world fall in love with you.",
+      "kind": "instruction",
+      "start": 8,
+      "end": 8
+    },
+    {
+      "text": "Make more golf content if you are into it, because it helps people who like golf get to know and like you, making them more interested in potentially buying from you.",
+      "kind": "instruction",
+      "start": 11,
+      "end": 17
+    },
+    {
+      "text": "Get into content to build your personal brand, because it acts as a moat and is the one true asset that doesn't get commoditized even in an AI world.",
+      "kind": "instruction",
+      "start": 68,
+      "end": 78
+    },
+    {
+      "text": "If you are a local business that people come to, run 10-mile radius Facebook ads because it is disproportionately the biggest opportunity to grow your business, traffic, and average receipt size.",
+      "kind": "instruction",
+      "start": 105,
+      "end": 110
+    },
+    {
+      "text": "Make content at stores, in parking lots, and at festivals, because the best studio in the world is the world.",
+      "kind": "instruction",
+      "start": 136,
+      "end": 140
+    },
+    {
+      "text": "Produce a high quantity of content because it is an incredible ingredient in breaking through and gives you at-bats at making the piece of content that changes your life.",
+      "kind": "instruction",
+      "start": 232,
+      "end": 243
+    },
+    {
+      "text": "Include quality as a part of the equation, but keep in mind that quality is subjective while quantity is not.",
+      "kind": "rule",
+      "start": 247,
+      "end": 252
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 42646,
+      "usage": {
+        "uncachedInputTokens": 4167,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 5745
+      }
+    }
+  ],
+  "latencyMs": 42647,
+  "costDollars": 0.077274
+}

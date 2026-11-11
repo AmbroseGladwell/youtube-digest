@@ -1,0 +1,35 @@
+{
+  "sourceId": "CbNGgh5xWlg",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:27:26.028Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Honor the normal that you're in, realize that you want to be out of that, and put things in place to create a new baseline that you can live in so you give yourself a shot and can actually make promises that can be withheld.",
+      "kind": "rule",
+      "start": 316,
+      "end": 324
+    },
+    {
+      "text": "Be aware of your strengths and your weaknesses.",
+      "kind": "instruction",
+      "start": 336,
+      "end": 338
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 14626,
+      "usage": {
+        "uncachedInputTokens": 5603,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 1977
+      }
+    }
+  ],
+  "latencyMs": 14629,
+  "costDollars": 0.03493
+}

@@ -1,0 +1,59 @@
+{
+  "sourceId": "9ypqs_2fAl8",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:27:35.897Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Instead of using aggressive last-minute discounts, which you should only consider for events like Cyber Monday or Black Friday, offer a larger trial to ensure you stay compliant and safe.",
+      "kind": "rule",
+      "start": 145,
+      "end": 152
+    },
+    {
+      "text": "Ideally default to a yearly product because it has the highest lifetime value.",
+      "kind": "rule",
+      "start": 201,
+      "end": 203
+    },
+    {
+      "text": "Only show two pricing options to decrease cognitive load on the user.",
+      "kind": "rule",
+      "start": 207,
+      "end": 209
+    },
+    {
+      "text": "If you want to support other pricing options, always hide them behind a view all plans button that opens up a sheet with all the different pricing.",
+      "kind": "instruction",
+      "start": 209,
+      "end": 213
+    },
+    {
+      "text": "Keep the base paywall simple and get a bunch of users in there to see how your base stats perform before you start optimizing all your different placements.",
+      "kind": "rule",
+      "start": 213,
+      "end": 217
+    },
+    {
+      "text": "Test every copy, the pricing, and the flow until something clearly wins.",
+      "kind": "rule",
+      "start": 326,
+      "end": 327
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 24510,
+      "usage": {
+        "uncachedInputTokens": 5073,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 3919
+      }
+    }
+  ],
+  "latencyMs": 24512,
+  "costDollars": 0.057174
+}

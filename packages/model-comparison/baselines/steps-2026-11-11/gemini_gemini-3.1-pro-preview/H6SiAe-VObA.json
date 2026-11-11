@@ -1,0 +1,77 @@
+{
+  "sourceId": "H6SiAe-VObA",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:27:53.462Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "If you take a weight loss peptide, lift weights and maintain proper protein intake so you do not lose a lot of muscle mass.",
+      "kind": "rule",
+      "start": 242,
+      "end": 247
+    },
+    {
+      "text": "Do not take a GLP-1 peptide if you are already at a healthy body fat percentage, feel good, and are performing well.",
+      "kind": "rule",
+      "start": 327,
+      "end": 331
+    },
+    {
+      "text": "Make diet and exercise your first go-to for weight loss.",
+      "kind": "instruction",
+      "start": 332,
+      "end": 333
+    },
+    {
+      "text": "If you have been struggling to lose weight, talk to your doctor about a GLP-1 medication so you can come to a decision together.",
+      "kind": "instruction",
+      "start": 333,
+      "end": 337
+    },
+    {
+      "text": "Manage your training loads, try to find pain-free variations, and gradually build yourself back up over time to heal an injury.",
+      "kind": "instruction",
+      "start": 434,
+      "end": 437
+    },
+    {
+      "text": "If your injury is not getting better, have it looked at by a qualified physical therapist.",
+      "kind": "instruction",
+      "start": 437,
+      "end": 439
+    },
+    {
+      "text": "Do not take BPC 157 because the human evidence is lacking and sourcing can be sketchy; stick to verified, safe methods instead.",
+      "kind": "rule",
+      "start": 442,
+      "end": 447
+    },
+    {
+      "text": "To help slow down aging, exercise, sleep well, do not smoke, do not drink too much, and try to maintain a healthy body weight.",
+      "kind": "instruction",
+      "start": 523,
+      "end": 525
+    },
+    {
+      "text": "Do not take an anti-aging peptide because the human evidence is really scant.",
+      "kind": "rule",
+      "start": 528,
+      "end": 531
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 35571,
+      "usage": {
+        "uncachedInputTokens": 8473,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 5920
+      }
+    }
+  ],
+  "latencyMs": 35573,
+  "costDollars": 0.087986
+}

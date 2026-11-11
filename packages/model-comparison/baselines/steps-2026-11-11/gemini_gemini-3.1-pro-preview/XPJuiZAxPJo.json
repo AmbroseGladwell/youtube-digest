@@ -1,0 +1,113 @@
+{
+  "sourceId": "XPJuiZAxPJo",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:21:28.904Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Notice the entry small talk gives you and go deep.",
+      "kind": "instruction",
+      "start": 65,
+      "end": 66
+    },
+    {
+      "text": "Instead of just bouncing from topic to topic in a wide conversation, start learning how to have deeper conversations.",
+      "kind": "instruction",
+      "start": 94,
+      "end": 98
+    },
+    {
+      "text": "Deeper conversations are always finding new layers inside the topic that you have already got, rather than always looking for new topics.",
+      "kind": "rule",
+      "start": 122,
+      "end": 125
+    },
+    {
+      "text": "Adding one more sentence is probably the easiest way to make your conversations more interesting.",
+      "kind": "rule",
+      "start": 126,
+      "end": 129
+    },
+    {
+      "text": "When you're answering somebody's question, just tell yourself to add one more sentence to give them a way to start a good new fun conversation.",
+      "kind": "instruction",
+      "start": 137,
+      "end": 148
+    },
+    {
+      "text": "When you're the one asking the questions, don't just rapid-fire ask them, because that is just simply question, answer, question, answer.",
+      "kind": "instruction",
+      "start": 164,
+      "end": 175
+    },
+    {
+      "text": "Before asking another question, try adding one more sentence.",
+      "kind": "instruction",
+      "start": 176,
+      "end": 178
+    },
+    {
+      "text": "React to what they meant, not just what they said.",
+      "kind": "instruction",
+      "start": 198,
+      "end": 199
+    },
+    {
+      "text": "Try and find the meaning underneath what you think they're trying to communicate to you.",
+      "kind": "instruction",
+      "start": 212,
+      "end": 215
+    },
+    {
+      "text": "Don't just listen to the information that people are always giving you; instead, sometimes ask yourself why they are telling you this and what the deeper meaning behind it is.",
+      "kind": "instruction",
+      "start": 238,
+      "end": 243
+    },
+    {
+      "text": "Stop exchanging facts and instead ask for opinions, because facts will just tell you what's happened, but opinions will tell you what people actually think about what has happened.",
+      "kind": "instruction",
+      "start": 243,
+      "end": 283
+    },
+    {
+      "text": "You can also do this by flipping this around and asking for their opinion to actually start finding what they actually like.",
+      "kind": "instruction",
+      "start": 284,
+      "end": 295
+    },
+    {
+      "text": "Stop trying to make every conversation deep.",
+      "kind": "instruction",
+      "start": 297,
+      "end": 298
+    },
+    {
+      "text": "If you try going a little bit deeper and they say nothing really particularly exciting, it is okay to leave the conversation topic how it is and move on to the next one.",
+      "kind": "rule",
+      "start": 299,
+      "end": 307
+    },
+    {
+      "text": "If you mention a new topic and they suddenly engage with it, that is exactly where you stay in the conversation and go a little bit deeper.",
+      "kind": "rule",
+      "start": 307,
+      "end": 317
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 47310,
+      "usage": {
+        "uncachedInputTokens": 4812,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 8581
+      }
+    }
+  ],
+  "latencyMs": 47313,
+  "costDollars": 0.112596
+}

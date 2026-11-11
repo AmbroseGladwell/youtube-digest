@@ -1,0 +1,107 @@
+{
+  "sourceId": "f-Ar8mwm3kQ",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:29:04.313Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Use key frames when you want to go from shape A to shape B and you want to change different elements like the color, the opacity, the alpha, or the size.",
+      "kind": "rule",
+      "start": 159,
+      "end": 166
+    },
+    {
+      "text": "Use physics animations when you want the world to feel more interactable and you do not want to pre-program the animation's behavior.",
+      "kind": "rule",
+      "start": 226,
+      "end": 230
+    },
+    {
+      "text": "Use physics if you want some surface to feel based on how you are moving the phone, using the gyroscope to make a ball fall down and making the bounds and the elements inside of it have collision so they bounce around.",
+      "kind": "rule",
+      "start": 245,
+      "end": 254
+    },
+    {
+      "text": "If you want something to go from point A to point B in some weird curve, draw an SVG curve, hide that curve, and then have the little thing follow it.",
+      "kind": "instruction",
+      "start": 258,
+      "end": 263
+    },
+    {
+      "text": "Use a shader to change the pixels one by one to do morphing if you do not have SVG vector lines.",
+      "kind": "rule",
+      "start": 276,
+      "end": 285
+    },
+    {
+      "text": "If your app needs more high-fidelity characters that need to do a lot of little things, rig the character, put it into your world, and program the individual parts to be controllable, potentially combining rigging with physics so they feel real.",
+      "kind": "rule",
+      "start": 301,
+      "end": 313
+    },
+    {
+      "text": "Use tools like Rive or Lottie if you want to do more high-fidelity animations, especially around characters or something more fancy that needs a lot of visual feedback to do.",
+      "kind": "rule",
+      "start": 353,
+      "end": 360
+    },
+    {
+      "text": "Feed the animation cheat sheet into your AI agent so it can take these elements into account, allowing you to reason about it and steer the AI when it is talking to you.",
+      "kind": "instruction",
+      "start": 386,
+      "end": 391
+    },
+    {
+      "text": "When designing animations, use a state machine where everything has a resting state so that the animation always goes back to a resting state when settled, providing a good starting and end point to transition to any other animation.",
+      "kind": "rule",
+      "start": 533,
+      "end": 550
+    },
+    {
+      "text": "Manually validate and review your animations visually because AI is very bad at catching edge cases and tests of this nature.",
+      "kind": "rule",
+      "start": 554,
+      "end": 562
+    },
+    {
+      "text": "If an animation like a button being pressed feels wrong, try changing the easing function to accelerate faster or start slower.",
+      "kind": "rule",
+      "start": 567,
+      "end": 572
+    },
+    {
+      "text": "If the edges of a morphing animation are a little crooked, make the SVG path smoother by adding more points to the vector.",
+      "kind": "rule",
+      "start": 572,
+      "end": 578
+    },
+    {
+      "text": "Use computer tools to control software if the tools you are trying to use do not have an MCP or CLI tool.",
+      "kind": "instruction",
+      "start": 583,
+      "end": 586
+    },
+    {
+      "text": "Explore and play around with these tools to understand how they work underneath the hood so that it will help you steer and guide your AI.",
+      "kind": "instruction",
+      "start": 593,
+      "end": 597
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 39607,
+      "usage": {
+        "uncachedInputTokens": 9556,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 6007
+      }
+    }
+  ],
+  "latencyMs": 39608,
+  "costDollars": 0.091196
+}

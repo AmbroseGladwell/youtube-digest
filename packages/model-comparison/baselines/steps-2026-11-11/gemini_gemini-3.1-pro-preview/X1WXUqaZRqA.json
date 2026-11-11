@@ -1,0 +1,35 @@
+{
+  "sourceId": "X1WXUqaZRqA",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:28:24.705Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "As a black nation, do way more in unifying and spreading the message for Congo, Sudan, Haiti, and Yemen.",
+      "kind": "instruction",
+      "start": 17,
+      "end": 23
+    },
+    {
+      "text": "Even if you are not a big influencer, be a sponge for information and understand the arguments and viewpoints so that you can participate in the conversation in your day-to-day life, activism, and social media, because numbers matter.",
+      "kind": "instruction",
+      "start": 178,
+      "end": 186
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 31239,
+      "usage": {
+        "uncachedInputTokens": 4627,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 4524
+      }
+    }
+  ],
+  "latencyMs": 31240,
+  "costDollars": 0.063542
+}
