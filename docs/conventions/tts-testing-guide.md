@@ -48,6 +48,13 @@ Kokoro's phonemiser at the shell's `espeak-ng`, because the copy `espeakng-loade
 cannot find its data on macOS; on Linux, in CI and in the image, the bundled copy works and
 nothing is set.
 
+That also makes a checkout whose path has a space in it work, such as a worktree under
+`~/Library/Application Support` (OV-49): the shell's data lives in the nix store, so
+nothing espeak-ng reads has a space in its path, and `services/tts/.venv` can stay where it
+is. Outside the dev shell the service fails on macOS from any path, with espeak-ng looking
+for `phontab` where `espeakng-loader` was built (`/Users/runner/…`). The fix is to enter
+the dev shell, not to move the venv.
+
 ## Rules
 
 - **No sleeping.** The idle exit takes its scheduler as an argument, and the tests hand it a
