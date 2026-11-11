@@ -4,7 +4,8 @@
 set -euo pipefail
 
 dir="${1:-models}"
-release="https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+release="${KOKORO_RELEASE_URL:-https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0}"
+retry_delay="${KOKORO_RETRY_DELAY_SECONDS:-0}"
 mkdir -p "$dir"
 
 sha256() {
@@ -16,7 +17,9 @@ fetch() {
   if [ -f "$dir/$file" ] && [ "$(sha256 "$dir/$file")" = "$expected" ]; then
     return
   fi
-  curl -fsSL -o "$dir/$file.part" "$release/$file"
+  rm -f "$dir/$file.part"
+  curl -fL --no-progress-meter --retry 5 --retry-all-errors --retry-delay "$retry_delay" \
+    -o "$dir/$file.part" "$release/$file"
   if [ "$(sha256 "$dir/$file.part")" != "$expected" ]; then
     rm -f "$dir/$file.part"
     echo "$file does not match its pinned SHA-256" >&2

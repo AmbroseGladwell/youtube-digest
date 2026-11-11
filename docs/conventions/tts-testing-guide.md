@@ -24,6 +24,15 @@ checkout runs the fast suite without a 353 MB download. CI never skips them: the
 `unit (tts)` job restores the model from a cache keyed on `download_model.sh`, which
 pins both files' SHA-256, and downloads it only when the key changes.
 
+The image build has no such cache and downloads the model on every build, from the
+kokoro-onnx GitHub release. One bad answer from that host used to fail a deploy of main
+(OV-187), so `download_model.sh` retries each file up to five times, backing off, and
+prints each retry in the build log. A `.part` left by an interrupted run is deleted and
+fetched again, never resumed. The hash check comes after the retries and is unchanged: a
+file whose SHA-256 differs is refused, whatever it took to arrive. `test_download_model.py`
+proves all three against a local host that answers 504, and takes a few seconds because
+curl's shortest retry delay is one second.
+
 ## Running
 
 ```
