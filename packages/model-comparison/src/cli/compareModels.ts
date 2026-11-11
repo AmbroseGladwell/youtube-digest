@@ -10,13 +10,14 @@ import { runOne } from "../runOne.js";
 import { isTranscriptSetName } from "../transcriptSet.js";
 
 const USAGE = `usage: task secrets:evals -- npm run compare --workspace packages/model-comparison -- \\
-  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--models provider:model,...] [--reader sample] [--refuse-enforced-schema]`;
+  --run <name> [--set main|parenting|recipes] [--budget <dollars>] [--limit <videos>] [--videos id,id] [--models provider:model,...] [--reader sample] [--refuse-enforced-schema]`;
 
 const { values } = parseArgs({
   options: {
     run: { type: "string" },
     budget: { type: "string", default: "10" },
     limit: { type: "string" },
+    videos: { type: "string" },
     models: { type: "string" },
     set: { type: "string", default: "main" },
     reader: { type: "string" },
@@ -43,11 +44,13 @@ if (transcripts.length === 0) {
 }
 
 const keys = providerKeysFromEnv();
+const videoIds = values.videos === undefined ? null : new Set(values.videos.split(",").map((id) => id.trim()));
+const chosen = videoIds === null ? transcripts : transcripts.filter(({ video }) => video.id !== null && videoIds.has(video.id));
 
 const outcome = await runComparison({
   models: (values.models?.split(",") ?? DEFAULT_COMPARED_MODELS).map((name) => parseComparedModel(name.trim())),
   keys,
-  transcripts: values.limit === undefined ? transcripts : transcripts.slice(0, Number(values.limit)),
+  transcripts: chosen.slice(0, values.limit === undefined ? chosen.length : Number(values.limit)),
   budgetDollars,
   store: runDirectoryStore(comparisonPaths.run(values.run)),
   runOne: values["refuse-enforced-schema"]

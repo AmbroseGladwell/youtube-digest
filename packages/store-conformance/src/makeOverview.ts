@@ -24,6 +24,7 @@ export function makeOverview(overrides: Partial<Overview> = {}): VideoOverview {
     madeOn: null,
     inOneLine: "A short description of the video.",
     bigPicture: null,
+    sourceSteps: null,
     coreClaim: "The single assertion this video makes.",
     thin: false,
     keyPoints: [

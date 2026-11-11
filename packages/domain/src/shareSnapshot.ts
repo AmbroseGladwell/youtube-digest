@@ -30,6 +30,7 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     watchAnyway: overview.watchAnyway,
     chapters: overview.chapters,
     ...(overview.bigPicture === null ? {} : { bigPicture: overview.bigPicture }),
+    ...(overview.sourceSteps === null ? {} : { sourceSteps: overview.sourceSteps }),
     ...(overview.article === null ? {} : { article: overview.article }),
     ...(overview.recipe === null ? {} : { recipe: overview.recipe }),
   };

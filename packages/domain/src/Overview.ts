@@ -9,6 +9,7 @@ import { Filing } from "./Filing.js";
 import { Verdict } from "./Verdict.js";
 import { Selling } from "./Selling.js";
 import { HowToApply } from "./HowToApply.js";
+import { SourceSteps } from "./SourceSteps.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 import { Chapters } from "./Chapter.js";
 import { MadeOn } from "./MadeOn.js";
@@ -59,6 +60,9 @@ export const Overview = z
     bigPicture: BigPicture.nullable(),
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),
+    // Null when the source gives no process to follow, for a recipe (whose method is its steps),
+    // and on a record written before it existed (docs/features/source-steps.md).
+    sourceSteps: SourceSteps.nullable(),
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
     // Null for a record written before chapters existed; a list, possibly empty, for one

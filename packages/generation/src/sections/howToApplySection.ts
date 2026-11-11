@@ -23,7 +23,11 @@ list rather than inventing something.
 
 Each is one complete sentence, ${HOW_TO_APPLY_TARGET_WORDS} words at most, that reads
 naturally after "First,", "Then," or "And finally,": an instruction, never a
-label and a colon.${readerFit(readerContext)}`;
+label and a colon.
+
+When The steps it gives lists the source's own steps, never repeat them
+here: apply or adapt them to me, or say what to do instead of one that
+does not hold up.${readerFit(readerContext)}`;
 
 export const howToApplyShape = () => ({
   items: HowToApply.shape.items.element

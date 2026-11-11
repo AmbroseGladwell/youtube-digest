@@ -45,6 +45,7 @@ test("a well-formed response from the client assembles into a valid Overview", a
     matchedTopicNames: [],
     suggestedTopic: null,
     tags: ["one-tag", "two-tag", "three-tag"],
+    sourceSteps: [],
     howToApply: { items: ["do this"] },
   });
 
@@ -79,6 +80,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
         matchedTopicNames: [],
         suggestedTopic: null,
         tags: ["one-tag", "two-tag", "three-tag"],
+        sourceSteps: [],
         howToApply: { items: [] },
       };
     }
@@ -98,6 +100,7 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       matchedTopicNames: [],
       suggestedTopic: null,
       tags: ["one-tag", "two-tag", "three-tag"],
+      sourceSteps: [],
       howToApply: { items: [] },
     };
   };
@@ -138,6 +141,7 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
         matchedTopicNames: [],
         suggestedTopic: null,
         tags: ["one-tag", "two-tag", "three-tag"],
+        sourceSteps: [],
         howToApply: { items: [] },
       };
     }
@@ -154,6 +158,7 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
       matchedTopicNames: [],
       suggestedTopic: null,
       tags: ["one-tag", "two-tag", "three-tag"],
+      sourceSteps: [],
       howToApply: { items: [] },
     };
   };
@@ -179,6 +184,7 @@ const answer = (keyPointsAt: number[], chapterStarts = [0]) => ({
   matchedTopicNames: [],
   suggestedTopic: null,
   tags: ["one-tag", "two-tag", "three-tag"],
+  sourceSteps: [],
   howToApply: { items: ["do this"] },
 });
 
@@ -242,6 +248,7 @@ const defaultAnswer = {
   matchedTopicNames: [],
   suggestedTopic: null,
   tags: ["one-tag", "two-tag", "three-tag"],
+  sourceSteps: [],
   howToApply: { items: ["do this"] },
 };
 

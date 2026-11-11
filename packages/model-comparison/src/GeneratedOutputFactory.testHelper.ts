@@ -27,6 +27,7 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
       similarToIndices: [],
     },
     selling: { type: "none", detail: "Nothing is sold.", compromisesContent: false },
+    sourceSteps: [],
     howToApply: { items: ["Plan a week of meals before shopping."] },
     watchAnyway: { answer: "no", reason: "The overview covers it.", startSegmentIndex: -1, endSegmentIndex: -1 },
     ...overrides,

@@ -113,6 +113,17 @@ export function overviewMarkdown(overview: Overview): string {
     "Key points",
     bullets(overview.keyPoints.map(({ text, range }) => (range === null ? text : `${text} (${stretch(video.url, range)})`))),
   );
+  if (overview.sourceSteps !== null) {
+    section(
+      "The steps it gives",
+      overview.sourceSteps.items
+        .map(
+          ({ text, range, dubious }, index) =>
+            `${index + 1}. ${text}${dubious ? " _(dubious: see the verdict)_" : ""}${range === null ? "" : ` (${moment(video.url, range.startMs)})`}`,
+        )
+        .join("\n"),
+    );
+  }
   if (overview.howToApply !== null && overview.howToApply.items.length > 0) {
     section("How to apply", bullets(overview.howToApply.items));
   }

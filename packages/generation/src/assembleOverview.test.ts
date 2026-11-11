@@ -40,6 +40,7 @@ const baseInput: GenerationInput = {
 
 const baseOutput: GeneratedOutput = {
   inOneLine: "A short description.",
+  sourceSteps: [],
   bigPicture: "",
   coreClaim: "The core claim of the video.",
   thin: false,
@@ -463,4 +464,45 @@ test("a short video earns no big picture, whatever the model wrote", () => {
 test("a longer video keeps its big picture, trimmed, and an empty one is none", () => {
   assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: "  Some ground.  " }, meta).bigPicture, "Some ground.");
   assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: " " }, meta).bigPicture, null);
+});
+
+test("every step the video gives is kept in its order, a dubious one flagged rather than dropped, each timed from the transcript", () => {
+  const steps = ["one", "two", "three", "four", "five", "six"].map((text, index) => ({
+    text: `Step ${text}.`,
+    startSegmentIndex: index % 3,
+    endSegmentIndex: index % 3,
+    dubious: index === 3,
+  }));
+  const overview = assembleOverview(baseInput, { ...baseOutput, sourceSteps: steps }, meta);
+
+  assert.deepEqual(
+    overview.sourceSteps?.items.map(({ text }) => text),
+    ["Step one.", "Step two.", "Step three.", "Step four.", "Step five.", "Step six."],
+  );
+  assert.deepEqual(overview.sourceSteps?.items[1]?.range, { startMs: 2000, endMs: 8000 });
+  assert.deepEqual(
+    overview.sourceSteps?.items.map(({ dubious }) => dubious),
+    [false, false, false, true, false, false],
+  );
+});
+
+test("a video that gives no steps has no steps block, not an empty one", () => {
+  assert.equal(assembleOverview(baseInput, baseOutput, meta).sourceSteps, null);
+  assert.equal(
+    assembleOverview(
+      baseInput,
+      { ...baseOutput, sourceSteps: [{ text: " ", startSegmentIndex: -1, endSegmentIndex: -1, dubious: false }] },
+      meta,
+    ).sourceSteps,
+    null,
+  );
+});
+
+test("a step whose stretch does not fit the transcript loses its moment rather than failing the overview", () => {
+  const overview = assembleOverview(
+    baseInput,
+    { ...baseOutput, sourceSteps: [{ text: "Breathe out.", startSegmentIndex: 1, endSegmentIndex: 9, dubious: false }] },
+    meta,
+  );
+  assert.deepEqual(overview.sourceSteps?.items, [{ text: "Breathe out.", range: null, dubious: false }]);
 });

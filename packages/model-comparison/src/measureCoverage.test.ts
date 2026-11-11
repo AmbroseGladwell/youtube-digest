@@ -137,6 +137,7 @@ const article: ExtractedArticle = {
 
 const articleOutput = (paragraphs: (number | null)[]): GeneratedArticleOutput => ({
   inOneLine: "",
+  sourceSteps: [],
   bigPicture: "",
   coreClaim: "",
   thin: false,

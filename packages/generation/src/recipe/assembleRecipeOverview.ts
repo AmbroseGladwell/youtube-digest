@@ -25,6 +25,7 @@ export function assembleRecipeOverview(
     madeOn: null,
     inOneLine: output.inOneLine,
     bigPicture: null,
+    sourceSteps: null,
     coreClaim: "",
     thin: false,
     keyPoints: [],

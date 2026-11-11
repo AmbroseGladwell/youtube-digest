@@ -18,7 +18,9 @@ not get back.
 The reason is read aloud straight after the answer, as in "No, you can
 probably skip the article, the overview covers it." followed by the reason,
 so never restate yes, no, or skip in it, and never say again that the
-overview covers it. Give the reason itself in one or two sentences.
+overview covers it. Give the reason itself in one or two sentences. Never
+count anything in it, such as how many steps or points there are, and never
+say how much of the article something takes up.
 
 Then say what this overview leaves out, as leftOut, in one sentence of 30
 words at most, so I can judge for myself: "It leaves out the code samples

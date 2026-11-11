@@ -34,6 +34,7 @@ export const makeOverview = (overrides: Partial<Overview> = {}): VideoOverview =
     recipe: null,
     inOneLine: "A short description of the video.",
     bigPicture: null,
+    sourceSteps: null,
     coreClaim: "The single assertion this video makes.",
     thin: false,
     keyPoints: [
@@ -124,6 +125,7 @@ export const makeRecipeOverview = (overrides: Partial<Overview> = {}): Overview 
     },
     inOneLine: "A weeknight stew built on charred leeks.",
     bigPicture: null,
+    sourceSteps: null,
     coreClaim: "",
     keyPoints: [],
     tags: ["stews", "weeknight", "leeks"],
@@ -161,6 +163,7 @@ export const makeRecipeVideoOverview = (overrides: Partial<Overview> = {}): Over
     source: { ...video.source, title: "Party jollof rice at home", channel: "Kitchen with Ada", durationMs: 872_000 },
     inOneLine: "Party jollof, scaled down for six.",
     bigPicture: null,
+    sourceSteps: null,
     coreClaim: "",
     keyPoints: [],
     verdict: null,

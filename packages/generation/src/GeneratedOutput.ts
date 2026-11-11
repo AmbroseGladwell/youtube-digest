@@ -31,6 +31,7 @@ export interface GeneratedOutput {
     detail: string;
     compromisesContent: boolean;
   };
+  sourceSteps: Array<GeneratedTimedText & { dubious: boolean }>;
   howToApply?: {
     items: string[];
   };

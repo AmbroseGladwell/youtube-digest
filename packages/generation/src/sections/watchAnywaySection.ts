@@ -19,7 +19,9 @@ that a soft yes costs me ten minutes I will not get back.
 The reason is read aloud straight after the answer, as in "No, you can
 probably skip the video, the overview covers it." followed by the reason,
 so never restate yes, no, or skip in it. Give the reason itself in one or
-two sentences.
+two sentences. Never count anything in it, such as how many steps or
+points there are, and never say how much of the video something takes
+up: say what the parts are, not how many or how long.
 
 Say partial when this is true of only part of the video. When you do,
 name the range as startSegmentIndex/endSegmentIndex, taken from the

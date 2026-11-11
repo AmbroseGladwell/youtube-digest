@@ -19,6 +19,7 @@ import type { ChapterShape } from "./sections/chaptersSection.js";
 import type { DubiousClaimShape } from "./sections/verdictSection.js";
 import { GenerationError } from "./GenerationError.js";
 import { videoRecipe } from "./recipe/videoRecipe.js";
+import { sourceStepsOf } from "./sourceStepsOf.js";
 import { segmentRangeOf } from "./sections/segmentRangeFields.js";
 import { resolvedBigPicture } from "./sections/bigPicturePrompt.js";
 import { transcriptBudget } from "./sections/transcriptBudget.js";
@@ -53,6 +54,7 @@ export function assembleRecipeVideoOverview(input: GenerationInput, output: Gene
   return Overview.parse({
     ...commonFields(input, output, meta),
     bigPicture: null,
+    sourceSteps: null,
     coreClaim: "",
     thin: false,
     keyPoints: [],
@@ -85,6 +87,9 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
       : null;
 
   const selling = output.selling ? Selling.parse(output.selling) : null;
+  const sourceSteps = sourceStepsOf(
+    output.sourceSteps.map(({ text, dubious, ...range }) => ({ text, dubious, range: resolveOptionalRange(input, segmentRangeOf(range)) })),
+  );
   const howToApply = output.howToApply ? HowToApply.parse(output.howToApply) : null;
   const watchAnyway = output.watchAnyway
     ? WatchAnyway.parse({
@@ -102,6 +107,7 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
     keyPoints: output.keyPoints.map((point) => ({ text: point.text, range: resolveOptionalRange(input, segmentRangeOf(point)) })),
     verdict,
     selling,
+    sourceSteps,
     howToApply,
     watchAnyway,
     recipe: null,

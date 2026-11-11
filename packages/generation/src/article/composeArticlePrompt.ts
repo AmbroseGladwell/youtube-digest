@@ -10,6 +10,7 @@ import { articleCoreSection } from "./sections/articleCoreSection.js";
 import { articleFilingSection } from "./sections/articleFilingSection.js";
 import { articleHowToApplySection } from "./sections/articleHowToApplySection.js";
 import { articleSellingSection } from "./sections/articleSellingSection.js";
+import { articleSourceStepsSection } from "./sections/articleSourceStepsSection.js";
 import { articleVerdictSection } from "./sections/articleVerdictSection.js";
 import { readAnywaySection } from "./sections/readAnywaySection.js";
 
@@ -19,6 +20,7 @@ const REGISTRY: ArticlePromptSection[] = [
   articleFilingSection,
   articleVerdictSection,
   articleSellingSection,
+  articleSourceStepsSection,
   articleHowToApplySection,
   readAnywaySection,
 ];
