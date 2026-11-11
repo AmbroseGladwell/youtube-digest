@@ -5,7 +5,7 @@ import { wordCount } from "./wordCount.js";
 // from, and why they are arithmetic over the note's own words rather than an estimate
 // anybody guessed: docs/features/overview-redesign.md, "Read and listen times".
 const READING_WORDS_PER_MINUTE = 220;
-const SPOKEN_WORDS_PER_MINUTE = 150;
+export const SPOKEN_WORDS_PER_MINUTE = 150;
 const MINIMUM_LINE_SECONDS = 1.5;
 
 export interface NoteTiming {

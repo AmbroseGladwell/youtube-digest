@@ -862,6 +862,77 @@ the same result note for note, except one In one line opening on the branch, a f
 doesn't touch. The branch's Shopify note, a long source, passed every check, including
 `keyPointsWithinTarget` against its 50-word target.
 
+## Steps carried (OV-251)
+
+Watch it anyway usually says "skip it, the overview covers it". Nothing checked that claim until
+OV-251. Coverage (above) can't: a step dropped inside a stretch a key point already spans still
+scores as covered. This check asks, of what a source tells the reader to do, how much the note
+carries. It is the baseline OV-250's steps block is judged against.
+
+```sh
+task secrets:evals -- npm run steps --workspace packages/model-comparison -- --run ov-275-a --budget 2
+# the same report again, free
+npm run steps --workspace packages/model-comparison -- --run ov-275-a --measure-only
+```
+
+**Two passes, never the writer marking itself.**
+
+1. **List** (`extractActionableItems.ts`): a judge reads the source as numbered units and lists
+   every step, instruction and rule of thumb it gives for acting, each with its place, including
+   how to tell it is working. Sponsor reads, adverts and calls to like or buy are left out, as are
+   claims, findings and stories. **One list per source per judge**, kept in
+   `.local/actionable-items/<judge>/` and reused by every later run, so runs are compared against
+   the same items.
+2. **Judge** (`judgeStepsCarried.ts`): for each note, the judge reads what the note shows a reader
+   (core claim, big picture, what stands out, key points, How to apply, chapters; never the
+   watch-anyway reason, which is the claim being checked) and marks each item **carried**,
+   **partly** (the action is there but a reader would do it wrongly or at the wrong time: the
+   condition for when, an amount or duration, a limit), or **missing**, with a reason of a few
+   words. A dropped explanation, mechanism or exact figure a reader would not act on differently
+   still counts as carried.
+
+**The judge is Gemini 3.1 Pro** (owner, 11 Nov 2026): a third provider, so it never reads a note
+its own provider wrote, for either writer, and one judge keeps one list per source.
+
+**Code joins and counts** (`stepsMarkdown.ts`): per note, the missing items with their timestamps
+as the headline, the carried share second, the note's spoken length beside it so a fix can't
+simply write more, and any count or time claim in the watch-anyway reason (`reasonClaims.ts`,
+model-free: digits, number words, "much of the running time"), reported, never scored. A source
+with nothing to do reports "no steps", never 0%.
+
+**Spending.** `--budget` is what one invocation may spend. `--sources a,b` limits it to those
+sources, `--relist` and `--rejudge` redo their lists or verdicts after a prompt change, and
+`--list-only` lists without judging, to check lists before paying to judge against them. A note
+costs about $0.045 to judge and a source about $0.075 to list.
+
+**Calibrated** on the card's hand-checked Dr K case (the success check, "you are on the right
+path", missing from both notes; the rest carried or partly) and then on the owner's hand check of
+five notes and 53 items, 11 Nov 2026: mostly agreed. Two corrections came out of calibration: the
+first listing prompt took in a sponsor read and missed the success check, and the first "partly"
+marked dropped explanations and exact figures, which the owner's definition excludes.
+
+### Baseline, 11 Nov 2026
+
+Runs `ov-275-a` and `ov-275-b`: today's prompt (OV-275), the 20-video set, GPT-6.1 Sol and Claude
+Sonnet 5.5, as the sample reader. 7 of the 20 videos give nothing to do; the other 13 list 128
+items.
+
+| Run | Writer | Carried | Partly | Missing | Notes missing anything | Of those, saying skip it | Median spoken length |
+|---|---|---|---|---|---|---|---|
+| a | Claude Sonnet 5.5 | 48% | 23% | 29% | 10 of 13 | 9 | 206s |
+| a | GPT-6.1 Sol | 52% | 18% | 30% | 11 of 13 | 10 | 186s |
+| b | Claude Sonnet 5.5 | 55% | 20% | 26% | 10 of 13 | 9 | 212s |
+| b | GPT-6.1 Sol | 48% | 20% | 32% | 11 of 13 | 10 | 190s |
+
+**About a third of what a video tells you to do is missing, and nearly every note that misses
+something still tells the reader to skip the video.** That is the trust gap OV-250 has to close.
+Count or time claims in the reason were rare: two, both in run a's Sonnet notes.
+
+**For OV-250:** generate the 20-video set on the new prompt as two runs, then `npm run steps` on
+each with the same judge. The lists are reused, so only judging is paid for (about $3 for both
+runs). It improves on this if the missing share falls clearly in both samples and the spoken
+length doesn't rise to match.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The
