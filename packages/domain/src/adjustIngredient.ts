@@ -182,6 +182,8 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   const body = line.slice(lead.length);
   const amount = body.match(AMOUNT);
   if (amount === null) return { kind: "unreadable", line };
+  const both = inBothSystems(line, lead, body, factor, units);
+  if (both !== null) return both;
 
   let rest = body.slice(amount[0].length);
   const low = parseNumber(amount[1]!);
@@ -232,6 +234,68 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   ].filter(({ text }) => text !== "");
   const written = `${amount[0]}${named === null ? "" : rest.slice(0, spaced.length + named.length)}`;
   return { kind: "adjusted", pieces, packAsSold: pack !== null || packSized, written, plural: pluralTaken(afterUnit, tail) };
+}
+
+interface Measure {
+  text: string;
+  low: number;
+  high: number | null;
+  unit: Unit;
+  unitText: string;
+}
+
+// "150g", "150–200g", "50g–100g", and "1lb 2oz", which is one amount in two units of a kind.
+const measureAt = (text: string): Measure | null => {
+  const amount = text.match(AMOUNT);
+  if (amount === null) return null;
+  const spaced = text.slice(amount[0].length).match(/^\s*/)![0];
+  const named = unitNamed(text.slice(amount[0].length + spaced.length));
+  if (named === null) return null;
+  const unit = UNITS[named.unit]!;
+  const unitText = text.slice(amount[0].length, amount[0].length + spaced.length + named.length);
+  let length = amount[0].length + unitText.length;
+  let low = parseNumber(amount[1]!);
+  let high = amount[2] === undefined ? null : parseNumber(amount[2]);
+  const more = text.slice(length).match(new RegExp(`^(\\s*[-–]\\s*|\\s+)(${NUMBER})\\s*`));
+  const next = more === null ? null : unitNamed(text.slice(length + more[0].length));
+  if (more !== null && next !== null && high === null) {
+    const nextUnit = UNITS[next.unit]!;
+    if (/[-–]/.test(more[1]!) && nextUnit === unit) {
+      high = parseNumber(more[2]!);
+      length += more[0].length + next.length;
+    } else if (!/[-–]/.test(more[1]!) && nextUnit.kind === unit.kind && nextUnit.size < unit.size) {
+      low += (parseNumber(more[2]!) * nextUnit.size) / unit.size;
+      length += more[0].length + next.length;
+    }
+  }
+  return { text: text.slice(0, length), low, high, unit, unitText };
+};
+
+// "200ml/7fl oz stock" is one amount written in both systems (OV-241). As written scales both
+// halves; Metric and US keep the half already in their system (owner, 11 Nov 2026).
+function inBothSystems(line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null {
+  const first = measureAt(body);
+  const slash = first === null ? null : body.slice(first.text.length).match(/^\s*\/\s*/);
+  if (first === null || slash === null) return null;
+  const second = measureAt(body.slice(first.text.length + slash[0].length));
+  if (second === null) return null;
+  const tail = body.slice(first.text.length + slash[0].length + second.text.length);
+  const metric = [first, second].filter(({ unit }) => unit.system === "metric");
+  if (first.unit.kind !== second.unit.kind || metric.length !== 1 || ANY_NUMBER.test(tail) || PACK_WORD.test(tail)) {
+    return { kind: "unreadable", line };
+  }
+  const scaled = ({ low, high, unit, unitText }: Measure) =>
+    `${formatNumber(low * factor, unit)}${high === null ? "" : `–${formatNumber(high * factor, unit)}`}${agreeing(unitText, low * factor > 1 || high !== null)}`;
+  const shown =
+    units === "asWritten"
+      ? `${scaled(first)}${slash[0]}${scaled(second)}`
+      : scaled(units === "metric" ? metric[0]! : first === metric[0] ? second : first);
+  const pieces: IngredientPiece[] = [
+    { text: lead, changed: false },
+    { text: shown, changed: true },
+    { text: tail, changed: false },
+  ].filter(({ text }) => text !== "");
+  return { kind: "adjusted", pieces, packAsSold: false, written: `${first.text}${slash[0]}${second.text}`, plural: null };
 }
 
 const pluralTaken = (before: string, after: string): { from: string; to: string } | null => {
