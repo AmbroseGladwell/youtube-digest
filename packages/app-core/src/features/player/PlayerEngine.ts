@@ -29,6 +29,9 @@ export const PACER_TICK_MS = 250;
 // early is set again rather than trusted.
 export const STOP_AHEAD_SECONDS = 0.04;
 const STOP_TIMER_SLACK_SECONDS = 0.005;
+// Chromium can sit in `waiting` for good after seeks close together, with the audio already
+// there; one seek to where it is gets it going again (OV-278).
+export const STALL_NUDGE_MS = 3_000;
 const POLL_FAILURES_BEFORE_GIVING_UP = 3;
 
 export type PlayerMedia = Pick<
@@ -142,6 +145,7 @@ export class PlayerEngine {
   #pacerTimer: ReturnType<typeof setInterval> | null = null;
   #stopLine: number | null = null;
   #stopTimer: ReturnType<typeof setTimeout> | null = null;
+  #stallTimer: ReturnType<typeof setTimeout> | null = null;
   #pollFailures = 0;
   #watchChecks = 0;
   #warn: (warning: ClientWarningReport) => void;
@@ -761,7 +765,8 @@ export class PlayerEngine {
       media.src = url;
       this.#mediaSrc = url;
     }
-    media.currentTime = this.#time;
+    // A second seek to where a pending one is going can leave Chromium waiting for good (OV-278).
+    if (media.currentTime !== this.#time) media.currentTime = this.#time;
     media.playbackRate = this.#snapshot.rate;
     this.#unlocked = true;
     return media;
@@ -786,8 +791,22 @@ export class PlayerEngine {
     this.#set({ status });
     if (status === "playing") this.#sounded("audio");
     if (status === "ended") this.#endListen("finished");
+    this.#watchForStall();
     this.#armStop();
     this.#emitTime();
+  }
+
+  #watchForStall(): void {
+    if (this.#stallTimer !== null) clearTimeout(this.#stallTimer);
+    this.#stallTimer = null;
+    if (this.#snapshot.status !== "buffering") return;
+    this.#stallTimer = setTimeout(() => {
+      this.#stallTimer = null;
+      if (this.#snapshot.status !== "buffering" || !this.#mediaIsCurrent()) return;
+      const media = this.#media!;
+      const here = media.currentTime;
+      media.currentTime = here;
+    }, STALL_NUDGE_MS);
   }
 
   #sounded(source: PlayerSource): void {
@@ -865,6 +884,8 @@ export class PlayerEngine {
     this.#press = null;
     this.#stopLine = null;
     this.#armStop();
+    if (this.#stallTimer !== null) clearTimeout(this.#stallTimer);
+    this.#stallTimer = null;
     this.#generation += 1;
     this.#clearPreparing();
     this.#stopPacer();

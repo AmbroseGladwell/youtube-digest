@@ -8,6 +8,7 @@ import {
   PREPARING_LONG_AFTER_MS,
   POLL_INTERVAL_MS,
   PlayerEngine,
+  STALL_NUDGE_MS,
   STOP_AHEAD_SECONDS,
   WATCH_GIVES_UP_AFTER_MS,
   WATCH_INTERVAL_MS,
@@ -52,7 +53,8 @@ const READY: NarrationRender = {
 
 class FakeMedia extends EventTarget implements PlayerMedia {
   src = "";
-  currentTime = 0;
+  #time = 0;
+  seeks: number[] = [];
   playbackRate = 1;
   paused = true;
   preload: "" | "none" | "metadata" | "auto" = "";
@@ -77,8 +79,17 @@ class FakeMedia extends EventTarget implements PlayerMedia {
     this.dispatchEvent(new Event("pause"));
   };
 
+  get currentTime(): number {
+    return this.#time;
+  }
+
+  set currentTime(seconds: number) {
+    this.#time = seconds;
+    this.seeks.push(seconds);
+  }
+
   reachTime = (seconds: number) => {
-    this.currentTime = seconds;
+    this.#time = seconds;
     this.dispatchEvent(new Event("timeupdate"));
   };
 
@@ -166,6 +177,56 @@ describe("PlayerEngine", () => {
     expect(media.paused).toBe(true);
     expect(engine.getTime()).toBeLessThan(1.02);
     expect(engine.getLine()).toBe(0);
+  });
+
+  it("moving the voice while the audio is still finding its place seeks the element once, not again on play", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load(TRACK);
+    await settle();
+    engine.play("playerBar");
+    engine.seekLine(2);
+    media.dispatchEvent(new Event("waiting"));
+    expect(engine.getSnapshot().status).toBe("buffering");
+    media.seeks = [];
+
+    engine.seekLine(1);
+    engine.play("readAloud");
+
+    expect(media.seeks).toEqual([READY.lineStartsSeconds[1]]);
+  });
+
+  it("audio stuck waiting with nothing arriving is seeked once to where it is, which starts it again", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load(TRACK);
+    await settle();
+    engine.play("playerBar");
+    media.reachTime(0.5);
+    media.seeks = [];
+    media.dispatchEvent(new Event("waiting"));
+
+    await vi.advanceTimersByTimeAsync(STALL_NUDGE_MS - 1);
+    expect(media.seeks).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(media.seeks).toEqual([0.5]);
+
+    media.dispatchEvent(new Event("playing"));
+    await vi.advanceTimersByTimeAsync(STALL_NUDGE_MS);
+    expect(engine.getSnapshot().status).toBe("playing");
+    expect(media.seeks).toEqual([0.5]);
+  });
+
+  it("audio that waits and then plays on is left alone", async () => {
+    const engine = engineWith(scriptedApi({ peek: vi.fn(async () => inHeart(READY)) }));
+    engine.load(TRACK);
+    await settle();
+    engine.play("playerBar");
+    media.seeks = [];
+    media.dispatchEvent(new Event("waiting"));
+    await vi.advanceTimersByTimeAsync(STALL_NUDGE_MS / 2);
+    media.dispatchEvent(new Event("playing"));
+
+    await vi.advanceTimersByTimeAsync(STALL_NUDGE_MS);
+    expect(media.seeks).toEqual([]);
   });
 
   it("a stop the audio has already passed, between two time updates, pulls it back inside the line", async () => {

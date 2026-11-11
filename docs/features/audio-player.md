@@ -158,6 +158,14 @@ notes nobody has played yet as ready.
 | 1k | signed out | the pacer, tagged, "Sign in for audio" |
 | 1l | 503, or no connection | the pacer, tagged, "narration is unavailable right now" |
 
+**Buffering that never ends gets one nudge.** Chromium can leave the audio element in
+`waiting` for good after a few seeks close together, with the audio already downloaded and
+nothing on the network (OV-278: a cook pressing → Space ← in cooking mode). After
+`STALL_NUDGE_MS` (3 s) still buffering, the engine seeks the element to where it already is,
+once per stall, which starts it again. A real slow network loses nothing by it: the same
+range is asked for again. The engine also never seeks the element to where it already is
+on play, which was one of the seeks that stacked up.
+
 "Read along meanwhile" (1d) starts the pacer and keeps polling. When the narration lands it
 takes over at the line the pacer reached, playing if the pacer was playing and paused if it
 was not.
