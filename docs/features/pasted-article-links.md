@@ -33,20 +33,38 @@ the machine itself. So, in order:
   parser turns spellings like `2130706433` into `127.0.0.1` first.
 - **Redirects are followed by hand**, at most five, each checked as if it had been pasted.
 - **20 seconds and 3 MB**, for the whole fetch.
-- **HTML only**, and jsdom's defaults run no script and load no resource.
-- **Parsed on a worker thread**, one at a time, for at most 15 seconds. BBC's front page, at 1 MB,
-  took 3.7 seconds of CPU on a loaded laptop, and on the server's one thread that would have stopped
-  every other reader's requests.
-- **A worker costs well over 100MB**, whatever the page: loading jsdom is most of it, and a 555 KB
-  BBC Good Food recipe grew the process by 120–140MB on a laptop. On the 256MB machine this ran on
-  until OV-279, reads of ordinary recipe pages ran into the 15 seconds and the reader was told the
-  page wasn't an article. The machine has 512MB, and reads queue rather than run side by side.
-- **Giving up is ours**: a parse that runs out of time or whose worker fails is `unfinished`, and
-  the reader is asked to try again. It is never `nothing-readable`, which tells them the page
-  isn't an article.
+- **HTML only.** Neither parser below runs script or loads anything the page refers to.
+- **Parsed on a worker, with limits**, described under Parsing.
 
 A link refused for any of these reads to the reader as "nothing we can read at that link": we don't
 say which address we wouldn't visit.
+
+## Parsing
+
+Parsing takes CPU, and on the server's one thread a big page would stop every other reader's
+requests, so it happens on a worker thread.
+
+- **One warm worker, one page at a time.** It is started on the first read and kept, so a read
+  doesn't pay to start it. A worker that loaded jsdom for every read (until OV-280) cost about 0.6
+  seconds and 120–140MB before reading a word. On the 256MB machine it ran on until OV-279, ordinary
+  recipe pages ran out of time and the reader was told the page wasn't an article.
+- **parse5, then linkedom.** parse5 is the parser jsdom itself uses, and it lays the page out as a
+  browser would: a missing `<head>` or `<body>`, unclosed tags, misplaced table rows. linkedom then
+  builds a light DOM for `readArticle`. On its own, linkedom put a minified page's content outside
+  its body (danluu.com), and Readability broke on it. With parse5 in front, 24 real pages (BBC
+  News, the Guardian, BBC Good Food recipes and front pages, Wikipedia, Paul Graham, Simon Willison,
+  danluu.com) read exactly as they did under jsdom: same title, words, sections, recipe, author and
+  image. They read 2–4× faster: a recipe in about 60ms rather than 130ms on a laptop.
+- **15 seconds and a 160MB heap.** A page that runs past either is `unfinished`, and the worker is
+  replaced. 160MB is the smallest limit that reads a page at the fetch's 3 MB cap; 96MB and 128MB
+  gave it up.
+- **Giving up is ours.** `unfinished` asks the reader to try again. It is never
+  `nothing-readable`, which tells them the page isn't an article.
+- **Measured under load** (laptop, one worker): 100 of the same BBC Good Food recipe at once all
+  read, the last after about 6–7 seconds, peaking at 190MB for the whole process. 100 Wikipedia
+  articles, about three times the work, finished in 20–25 seconds at about 225MB. A Fly
+  `shared-cpu-1x` machine is slower than a laptop; that is what more machines are for
+  (`docs/architecture/deploy.md`, "When it's busy").
 
 ## Being an honest visitor
 

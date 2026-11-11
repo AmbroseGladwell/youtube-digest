@@ -59,9 +59,10 @@ nobody builds until deploy day does not.
 
 ## The machine
 
-`fly.toml` is the shape the architecture doc settled: one `shared-cpu-1x` machine with
-512MB (256MB until OV-279: a pasted link's parse worker alone needs well over 100MB,
-see docs/features/pasted-article-links.md), in `lhr` to sit beside the Neon project's London region, `auto_stop_machines`
+`fly.toml` is the shape the architecture doc settled: `shared-cpu-1x` machines with 512MB
+(256MB until OV-279, when a pasted link's parse ran it out of memory:
+`docs/features/pasted-article-links.md`, "Parsing"), in `lhr` to sit beside the Neon project's
+London region, `auto_stop_machines`
 and `auto_start_machines` so idle time costs nothing, `min_machines_running = 0`, and
 no volume, since Postgres is on Neon and the API keeps nothing on disk. `force_https`
 means `APP_URL` is https, which `loadConfig` insists on whenever real mail is sent.
@@ -83,6 +84,24 @@ database fails the deploy.
 called something else. Everything that is not a secret lives in `[env]` here, in the
 repository, where a change to it is a diff: the mail transport, the sender, the floor, the
 session length.
+
+## When it's busy
+
+There are three API machines, all stopped until the proxy needs them (`fly scale count 3`, run
+once by hand: Fly starts machines that exist, and never makes new ones). The proxy counts each
+machine's requests in flight. Past `soft_limit` (20) it starts a stopped machine and sends new
+requests there. `hard_limit` (250) is high on purpose, so a busy moment queues on a machine rather
+than turning a reader away.
+
+The heavy request is a pasted link, whose parse runs one at a time on each machine's warm worker
+(`docs/features/pasted-article-links.md`, "Parsing"). Three machines read three pages at once.
+
+- **Cost.** A stopped machine costs only its image's storage, pennies a month. A running one is
+  billed by the second, so an extra machine started for a busy minute costs a fraction of a penny.
+- **Rate limits are per machine.** `FixedWindowLimiter` keeps its windows in memory, so with three
+  machines running an address can reach up to three times a limit. Anything that has to hold
+  exactly (trial reads, monthly overview counts) is counted in Postgres.
+- **More machines** is `fly scale count` again, and costs nothing until they're used.
 
 ## Secrets
 
