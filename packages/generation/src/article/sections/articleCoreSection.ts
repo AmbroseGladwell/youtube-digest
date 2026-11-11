@@ -72,8 +72,12 @@ Good: "Pretty and premium are different. Packaging studies from 2010 and
 is what gets it called premium."
 Bad: "Premium requires evidence, consistency, recovery and care."
 
+Steps the piece tells me to follow go in The steps it gives, below, and
+are never repeated here: a key point keeps the idea or the reason behind
+them, and leaves the steps to that list.
+
 Keep the specifics that make a point worth having: names, numbers,
-dates, studies, and the concrete steps. Always keep any caveat, criticism
+dates, studies, and the concrete details. Always keep any caveat, criticism
 or counter-argument the piece itself raises, and keep who claims
 something when the piece presents it as one person's claim rather than
 settled fact. When the piece generalises from a single story or case,
