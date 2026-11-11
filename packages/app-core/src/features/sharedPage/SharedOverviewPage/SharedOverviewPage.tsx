@@ -139,7 +139,8 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   const track = useMemo(() => playerTrackFor(note, lines), [note, lines]);
   const notePlayer = useNotePlayer(track);
   const methodActions = useMemo(() => (note.recipe == null ? [] : recipeActions(note.recipe.steps)), [note.recipe]);
-  const recipeVoice = useRecipeVoice(track, lines, methodActions, note.recipe?.stepCount ?? 0, notePlayer);
+  const analytics = useAnalytics();
+  const recipeVoice = useRecipeVoice(track, lines, methodActions, note.recipe?.stepCount ?? 0, notePlayer, analytics.sharedPage);
   const summaryLines = useMemo(
     () => (note.recipe == null ? lines : lines.filter(({ section }) => section === SUMMARY_SECTION)),
     [lines, note.recipe],
@@ -159,7 +160,6 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     player.setApi(!adjusted ? sharedApi : own ? accountApi : null);
   }, [player, adjusted, signedIn, sharedApi, accountApi, accountVoice, narration]);
   const navigate = useNavigate();
-  const analytics = useAnalytics();
   const { overviewStore } = useStores();
   const held = useQuery({ ...overviewWithStateQueryOptions(overviewStore, note.id), enabled: signedIn });
   const saveFromShare = useSaveFromShare();

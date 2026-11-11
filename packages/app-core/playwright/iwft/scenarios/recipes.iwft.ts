@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "../../support/fixtures.testHelper.js";
+import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 test("a recipe's note is its summary, the page's times, the ingredients and the method, with no verdict or tabs", async ({
@@ -184,6 +185,28 @@ test("tapping a step or an ingredient moves the voice there, as tapping a line o
   await expect(page.getByTestId("RecipeIngredients.activeLine")).toHaveText("500ml vegetable stock");
   await expect(page.getByTestId("RecipeMethod.activeStep")).toHaveCount(0);
   await expect(page.getByTestId("ReaderPlayerBar.label")).toContainText("Now reading · Ingredients · 4 of 8");
+});
+
+test("tapping a step or an ingredient on the reader is counted as a line chosen, as a line of the note is", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const recipe = makeRecipeOverview();
+  backendSimulator.overviews.seed(recipe);
+  const library = await launcher.launchExpectingLibrary({
+    sync: true,
+    syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+  });
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId("RecipeMethod.step").filter({ hasText: "Add the beans" }).click();
+  await page.getByTestId("RecipeIngredients.line").filter({ hasText: "500ml vegetable stock" }).click();
+
+  const chosen = { name: "reader.readAlong.lineChosen", props: { overviewId: recipe.id } };
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "reader.readAlong.lineChosen"))
+    .toEqual([chosen, chosen]);
 });
 
 test("a recipe line is reached and chosen by keyboard", async ({ page, launcher, backendSimulator }) => {

@@ -238,7 +238,6 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
-  const recipeVoice = useRecipeVoice(track, lines, methodActions, recipe?.stepCount ?? 0, notePlayer);
   useEffect(() => {
     if (!recipeCopied) return;
     const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
@@ -253,6 +252,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const analytics = useAnalytics();
   const reader = useMemo(() => bindOverviewId(analytics.reader, overviewId), [analytics, overviewId]);
   const overviewAnalytics = useMemo(() => ({ page: reader, reader }), [reader]);
+  const recipeVoice = useRecipeVoice(track, lines, methodActions, recipe?.stepCount ?? 0, notePlayer, reader);
   const cooking = useCookingMode({
     overviewId,
     title: overview?.source.title ?? "",

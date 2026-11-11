@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { INGREDIENTS_SECTION, METHOD_SECTION, type NoteLine, type RecipeAction } from "@overview/domain";
-import { useOverviewPageAnalytics } from "../../analytics/OverviewAnalyticsContext.js";
+import type { OverviewPageAnalytics } from "../../analytics/bindOverviewId.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import type { PlayerTrack } from "../../player/types/PlayerTrack.js";
 import type { RecipeListVoice } from "../components/RecipeMethod/RecipeReadAloud.js";
@@ -51,9 +51,9 @@ export function useRecipeVoice(
   actions: readonly RecipeAction[],
   stepCount: number,
   notePlayer: NotePlayer,
+  analytics: OverviewPageAnalytics,
 ): RecipeVoice | null {
   const engine = usePlayer();
-  const analytics = useOverviewPageAnalytics();
   const [stopAfter, setStop] = useState<number | null>(null);
   const { activeIndex, playing } = notePlayer;
   const ended = notePlayer.snapshot.status === "ended";
