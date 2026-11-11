@@ -1,0 +1,71 @@
+{
+  "sourceId": "xJiGHnxpFNQ",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:21:16.724Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Do not skip leg day, because stressing your quadriceps muscles is one of the greatest endogenous signals that stimulate testosterone production.",
+      "kind": "instruction",
+      "start": 281,
+      "end": 292
+    },
+    {
+      "text": "Work out your legs and improve your cardiovascular health, because the stronger your cardiovascular system is, the healthier your penis will become and the longer you will be able to maintain an erection.",
+      "kind": "instruction",
+      "start": 313,
+      "end": 380
+    },
+    {
+      "text": "To retrain your penis, abstain from masturbating for ten days to two weeks before having sex to let your body start shifting.",
+      "kind": "step",
+      "start": 338,
+      "end": 396
+    },
+    {
+      "text": "If you are able to maintain an erection through the completion of a sexual act, you are on the right path.",
+      "kind": "rule",
+      "start": 405,
+      "end": 410
+    },
+    {
+      "text": "When you resume masturbating, use a loose grip and lots of lube to mimic the 30 pounds per square inch of pressure of a vagina.",
+      "kind": "step",
+      "start": 412,
+      "end": 414
+    },
+    {
+      "text": "When you engage in masturbation after waiting a week, do not use pornography and instead let your thoughts do the work for you.",
+      "kind": "step",
+      "start": 440,
+      "end": 445
+    },
+    {
+      "text": "If you struggle with premature ejaculation, think non-sexual thoughts like math problems and prime factor analysis.",
+      "kind": "instruction",
+      "start": 463,
+      "end": 469
+    },
+    {
+      "text": "If you are trying to engage in sex and especially if you have anxiety-induced issues, be really relaxed so blood flow increases to your genital organs and dirty thoughts can excite you to help you climax.",
+      "kind": "instruction",
+      "start": 487,
+      "end": 501
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 35128,
+      "usage": {
+        "uncachedInputTokens": 7603,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 5973
+      }
+    }
+  ],
+  "latencyMs": 35132,
+  "costDollars": 0.086882
+}

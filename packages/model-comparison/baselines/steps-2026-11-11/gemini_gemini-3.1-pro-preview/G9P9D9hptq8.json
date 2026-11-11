@@ -1,0 +1,125 @@
+{
+  "sourceId": "G9P9D9hptq8",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:28:24.667Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "You must prune, rebuild, and create an end for things because you cannot make things better and better by adding stuff.",
+      "kind": "instruction",
+      "start": 0,
+      "end": 4
+    },
+    {
+      "text": "Live in everyone else's relative future, look around, and solve problems the way you have already seen them being solved in other adjacent fields to predict the future.",
+      "kind": "instruction",
+      "start": 523,
+      "end": 529
+    },
+    {
+      "text": "Study the greats and go far and deep into why things look good or what systems lasted.",
+      "kind": "instruction",
+      "start": 818,
+      "end": 827
+    },
+    {
+      "text": "Study institutions that have lasted over a thousand years, like the Catholic Church, to understand what that tells us about people systems design.",
+      "kind": "instruction",
+      "start": 828,
+      "end": 838
+    },
+    {
+      "text": "Study these things to find hidden harmonies behind the best solutions to problems, for which you must understand people's limitations and the solutions to them.",
+      "kind": "instruction",
+      "start": 849,
+      "end": 855
+    },
+    {
+      "text": "You must be truth-seeking and dig deeper to figure out why things truly are the way they are, rather than simply accepting the stories you hear around them, because usually someone is trying to sell you something.",
+      "kind": "instruction",
+      "start": 873,
+      "end": 880
+    },
+    {
+      "text": "Be aware that people pedal complex answers to simple problems, and punch through this to find simpler core ideas that give you information to help you find the best set of tradeoffs with what you're trying to accomplish.",
+      "kind": "rule",
+      "start": 902,
+      "end": 914
+    },
+    {
+      "text": "Take the position that if a solution is observable and you are being pulled towards it, it is probably not the optimal solution, and let yourself be convinced otherwise.",
+      "kind": "rule",
+      "start": 1138,
+      "end": 1145
+    },
+    {
+      "text": "Be incredibly suspicious if the offered solution happens to correlate to how the problem is solved most of the time in the industry or is an orthodox way to solve a problem.",
+      "kind": "rule",
+      "start": 1146,
+      "end": 1152
+    },
+    {
+      "text": "If you want to edit something about yourself, just try to say that the goal has been accomplished over and over again, ideally written by pen.",
+      "kind": "instruction",
+      "start": 1201,
+      "end": 1207
+    },
+    {
+      "text": "Stop using negative affirmations and instead say the opposite to yourself, and write it a couple of times.",
+      "kind": "instruction",
+      "start": 1252,
+      "end": 1255
+    },
+    {
+      "text": "Open chat and tell it to make you an app, artifact, or site where you can do math reps, test how good you are, and adjust to your current level on multiplication and division so you can do some reps.",
+      "kind": "instruction",
+      "start": 1258,
+      "end": 1265
+    },
+    {
+      "text": "Write it out a bunch of times and do some reps for two weeks until you are good.",
+      "kind": "instruction",
+      "start": 1267,
+      "end": 1269
+    },
+    {
+      "text": "Take the attitude that you cannot say you are not good at something without appending the word 'yet' behind it.",
+      "kind": "rule",
+      "start": 1273,
+      "end": 1278
+    },
+    {
+      "text": "Do not let a metric become the objective, because it is only a proxy heuristic to tell you you are going in the right direction, and making it a goal will cause your company to overfit.",
+      "kind": "rule",
+      "start": 1329,
+      "end": 1339
+    },
+    {
+      "text": "You must prune, rebuild, and create an end for things because you cannot make things better and better by adding stuff.",
+      "kind": "instruction",
+      "start": 1515,
+      "end": 1519
+    },
+    {
+      "text": "Solve problems by making a 2.0 version of a department, giving it a refounding event, taking it from the top, and building in more exploration of systems.",
+      "kind": "instruction",
+      "start": 1555,
+      "end": 1562
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 48766,
+      "usage": {
+        "uncachedInputTokens": 24460,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 8756
+      }
+    }
+  ],
+  "latencyMs": 48769,
+  "costDollars": 0.153992
+}

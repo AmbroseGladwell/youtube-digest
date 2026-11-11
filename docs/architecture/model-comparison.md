@@ -924,6 +924,31 @@ items.
 | b | Claude Sonnet 5.5 | 55% | 20% | 26% | 10 of 13 | 9 | 212s |
 | b | GPT-6.1 Sol | 48% | 20% | 32% | 11 of 13 | 10 | 190s |
 
+The sources, by the number of items listed (the lists themselves are committed in
+`packages/model-comparison/baselines/steps-2026-11-11/`, so OV-250 is judged against exactly these;
+to restore them, copy that folder's judge folder into `.local/actionable-items/`):
+
+| Items | Video id | Video |
+|---|---|---|
+| 22 | x9TFKNgaDjo | How I Find App Ideas People Will Actually Pay For!! |
+| 17 | G9P9D9hptq8 | Shopify CEO: This Is Your Edge Against AI |
+| 15 | XPJuiZAxPJo | How to make small talk so fun, people want to keep talking to you |
+| 14 | f-Ar8mwm3kQ | AI App Animations is Hard Until You Learn This |
+| 10 | bdGO6Khl2-M | Dermatologist: I Took Collagen Peptides for 2 Years |
+| 9 | H6SiAe-VObA | Peptides Are Insane |
+| 9 | Jab_QOxKEO4 | We Were Wrong About Compound Interest |
+| 8 | xJiGHnxpFNQ | The 10-Day "Erectile Reset" Every Man Should Know (Dr K) |
+| 8 | ZT4kiDO_g7M | What to Post When You Run a Small Business |
+| 6 | bq3-qH-CpYQ | I Made $1.5M From An App You've Never Heard Of |
+| 6 | 9ypqs_2fAl8 | We Studied 2,995 Paywalls. Here's What Actually Converts. |
+| 2 | X1WXUqaZRqA | Big Narstie Just Said What Black Celebrities Won't Say Enough |
+| 2 | CbNGgh5xWlg | Your Wife Isn't The Same Woman You Married |
+
+No steps: tXdD-eydL7k (accounting principles for a 10-year-old), Fm1IMtsTD1g (Is Meta dying?),
+rayrrXot17M (Nothing Headphone 1 Pro), TOk-DUDmN6E (Education Committee on AI), Cky15wRl1rs (They
+Somehow Made It Weird), CZoh4DhJB48 (Why Europe Wants the UK to Rejoin the EU), Kwl5xfnGXeY (my wife
+said this about my arms).
+
 **About a third of what a video tells you to do is missing, and nearly every note that misses
 something still tells the reader to skip the video.** That is the trust gap OV-250 has to close.
 Count or time claims in the reason were rare: two, both in run a's Sonnet notes.

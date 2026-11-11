@@ -1,0 +1,22 @@
+{
+  "sourceId": "Cky15wRl1rs",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:27:21.297Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 9897,
+      "usage": {
+        "uncachedInputTokens": 10354,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 1007
+      }
+    }
+  ],
+  "latencyMs": 9897,
+  "costDollars": 0.032792
+}

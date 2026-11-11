@@ -1,0 +1,22 @@
+{
+  "sourceId": "TOk-DUDmN6E",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:28:43.269Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 18596,
+      "usage": {
+        "uncachedInputTokens": 50129,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 1219
+      }
+    }
+  ],
+  "latencyMs": 18599,
+  "costDollars": 0.114886
+}

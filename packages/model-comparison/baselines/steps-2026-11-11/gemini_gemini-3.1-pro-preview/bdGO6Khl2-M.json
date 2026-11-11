@@ -1,0 +1,83 @@
+{
+  "sourceId": "bdGO6Khl2-M",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:28:18.359Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "If you have a fish allergy, you shouldn't be taking fish, including marine collagen.",
+      "kind": "rule",
+      "start": 266,
+      "end": 268
+    },
+    {
+      "text": "If you have a religious reason for avoiding beef, then bovine collagen peptides are not for you.",
+      "kind": "rule",
+      "start": 268,
+      "end": 271
+    },
+    {
+      "text": "Make sure you check the label if you have restrictions, because Verisol collagen is sold under many different brands and can come from cow, pig, or fish.",
+      "kind": "instruction",
+      "start": 311,
+      "end": 315
+    },
+    {
+      "text": "Take 2.5 to 5 g a day if you are only taking collagen peptides for your skin, but take 10 g a day if you are taking them for your joints, because taking more than you need to increases the cost and potential for GI upset like bloating.",
+      "kind": "rule",
+      "start": 338,
+      "end": 348
+    },
+    {
+      "text": "When you consider how much it costs per serving, don't look at the number of doses on the label, because that's based on the manufacturer recommended serving size of 15 or 20 g a day.",
+      "kind": "instruction",
+      "start": 350,
+      "end": 354
+    },
+    {
+      "text": "For any collagen peptide supplement you take, look for third-party certification from the NSF or consistent testing from an independent lab like SGS or Eurofins to test for things like heavy metals and other contaminants.",
+      "kind": "rule",
+      "start": 358,
+      "end": 364
+    },
+    {
+      "text": "For travel or for people sensitive to taste, you might like collagen pills or chews better.",
+      "kind": "rule",
+      "start": 375,
+      "end": 377
+    },
+    {
+      "text": "You do not need to take vitamin C at the same time you take collagen peptides.",
+      "kind": "instruction",
+      "start": 419,
+      "end": 421
+    },
+    {
+      "text": "If you experience mild GI side effects like nausea or bloating, reduce your dose by half.",
+      "kind": "rule",
+      "start": 458,
+      "end": 461
+    },
+    {
+      "text": "Talk about adding collagen peptides with your doctor if you have gout or severe kidney disease, because it adds a protein load to your diet.",
+      "kind": "instruction",
+      "start": 461,
+      "end": 465
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 43462,
+      "usage": {
+        "uncachedInputTokens": 7229,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 7233
+      }
+    }
+  ],
+  "latencyMs": 43463,
+  "costDollars": 0.101254
+}

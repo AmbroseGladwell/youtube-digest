@@ -1,0 +1,59 @@
+{
+  "sourceId": "bq3-qH-CpYQ",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:29:07.120Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "When deciding what programming language to use, do what you think works and is interesting, as the tech stack is not as important as sheer speed.",
+      "kind": "rule",
+      "start": 131,
+      "end": 135
+    },
+    {
+      "text": "Accept that you must validate and be willing to let your idea die.",
+      "kind": "instruction",
+      "start": 233,
+      "end": 234
+    },
+    {
+      "text": "Validate fast, validate often, and validate early.",
+      "kind": "instruction",
+      "start": 240,
+      "end": 242
+    },
+    {
+      "text": "Think about growth and entrepreneurship as a scientist by being willing to experiment, fail, and devise a strategy to get data back so you can reiterate.",
+      "kind": "instruction",
+      "start": 274,
+      "end": 280
+    },
+    {
+      "text": "Start up right now by coming up with a stupid idea that everyone tells you will not work, and just do it.",
+      "kind": "instruction",
+      "start": 398,
+      "end": 402
+    },
+    {
+      "text": "Pursue your idea in a controlled way that does not completely ruin you, lose all your money, or get you arrested, because you will learn more from that mess up than you will from reading 20 books.",
+      "kind": "rule",
+      "start": 406,
+      "end": 411
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 23846,
+      "usage": {
+        "uncachedInputTokens": 7220,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 3685
+      }
+    }
+  ],
+  "latencyMs": 23848,
+  "costDollars": 0.05866
+}

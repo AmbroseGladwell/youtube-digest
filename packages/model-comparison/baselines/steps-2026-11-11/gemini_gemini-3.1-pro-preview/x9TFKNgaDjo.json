@@ -1,0 +1,155 @@
+{
+  "sourceId": "x9TFKNgaDjo",
+  "judge": "gemini:gemini-3.1-pro-preview",
+  "extractedAt": "2026-11-11T12:30:13.408Z",
+  "outcome": "judged",
+  "error": null,
+  "items": [
+    {
+      "text": "Stop trying to come up with app ideas.",
+      "kind": "instruction",
+      "start": 23,
+      "end": 24
+    },
+    {
+      "text": "Look for problems, and specifically, problems people are already trying to solve.",
+      "kind": "step",
+      "start": 31,
+      "end": 34
+    },
+    {
+      "text": "Look at how people are currently solving a problem without your app.",
+      "kind": "instruction",
+      "start": 54,
+      "end": 56
+    },
+    {
+      "text": "Pay attention when somebody is willing to put up with an annoying five-step process every day, because there might be an opportunity to turn those five steps into one.",
+      "kind": "rule",
+      "start": 64,
+      "end": 70
+    },
+    {
+      "text": "Look for these problems in places where people actually talk about them, such as Reddit, Discord communities, GitHub issues, YouTube comments, reviews for existing products, or even conversations you have at work.",
+      "kind": "step",
+      "start": 70,
+      "end": 77
+    },
+    {
+      "text": "Look for specific phrases people say, such as \"Does anyone know a way to\", \"I wish this could\", or \"Why doesn't this do?\"",
+      "kind": "instruction",
+      "start": 77,
+      "end": 80
+    },
+    {
+      "text": "Once you find someone who actually has the problem, investigate further.",
+      "kind": "step",
+      "start": 83,
+      "end": 86
+    },
+    {
+      "text": "Before spending months building something, look for evidence that the problem is valuable enough by checking if people are already paying for other solutions, if businesses pay employees to do it manually, or if it costs someone time and is painful.",
+      "kind": "step",
+      "start": 161,
+      "end": 169
+    },
+    {
+      "text": "The closer your app gets to making someone money, saving them money, saving them time, or removing a massive frustration, the easier it becomes to justify paying for it.",
+      "kind": "rule",
+      "start": 169,
+      "end": 174
+    },
+    {
+      "text": "Don't be afraid of the competition.",
+      "kind": "instruction",
+      "start": 183,
+      "end": 183
+    },
+    {
+      "text": "Finding that there are already products solving an idea is a good sign because it means there is probably a market.",
+      "kind": "rule",
+      "start": 190,
+      "end": 194
+    },
+    {
+      "text": "Ask yourself if you can solve that problem differently or for a specific group of people.",
+      "kind": "instruction",
+      "start": 194,
+      "end": 197
+    },
+    {
+      "text": "Go through competitor one-star, two-star, and three-star reviews to understand where users are frustrated.",
+      "kind": "step",
+      "start": 206,
+      "end": 209
+    },
+    {
+      "text": "If hundreds of people keep complaining about the same missing feature in competitor reviews, that is an interesting opportunity.",
+      "kind": "rule",
+      "start": 210,
+      "end": 212
+    },
+    {
+      "text": "You do not always need to create a completely new category; sometimes you just need to build a better solution for a smaller problem.",
+      "kind": "rule",
+      "start": 212,
+      "end": 216
+    },
+    {
+      "text": "Run any app idea through a simple filter to ask if there is a real problem, if you can find people who have it, if they are already trying to solve it somehow, if the problem is painful enough that someone might pay to fix it, and if you can build a small version that solves it.",
+      "kind": "step",
+      "start": 217,
+      "end": 224
+    },
+    {
+      "text": "Do not build the app if you cannot answer the filter questions and your goal is to make money.",
+      "kind": "rule",
+      "start": 224,
+      "end": 227
+    },
+    {
+      "text": "Start paying attention to the problems around you, look at what people complain about, look at the awkward workarounds they use, and look at products people already pay for and what they're frustrated with.",
+      "kind": "instruction",
+      "start": 244,
+      "end": 250
+    },
+    {
+      "text": "When you find something interesting, do not disappear for 6 months and build the entire thing.",
+      "kind": "instruction",
+      "start": 250,
+      "end": 252
+    },
+    {
+      "text": "Talk to people, test it, and build the smallest version you can.",
+      "kind": "step",
+      "start": 252,
+      "end": 253
+    },
+    {
+      "text": "Get it into someone's hands and see if they will actually pay you for it.",
+      "kind": "step",
+      "start": 254,
+      "end": 256
+    },
+    {
+      "text": "Rather than asking yourself what a good app idea is, start asking what problem you could solve.",
+      "kind": "instruction",
+      "start": 262,
+      "end": 265
+    }
+  ],
+  "calls": [
+    {
+      "status": 200,
+      "latencyMs": 66285,
+      "usage": {
+        "uncachedInputTokens": 4106,
+        "cachedInputTokens": 0,
+        "cacheWriteTokens": 0,
+        "outputTokens": 11329
+      }
+    }
+  ],
+  "latencyMs": 66287,
+  "costDollars": 0.14416
+}
