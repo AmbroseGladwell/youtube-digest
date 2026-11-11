@@ -10,6 +10,7 @@ export const ArticleReadFailure = z.enum([
   "blocked",
   "not-found",
   "no-answer",
+  "unfinished",
 ]);
 export type ArticleReadFailure = z.infer<typeof ArticleReadFailure>;
 

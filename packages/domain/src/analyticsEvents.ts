@@ -133,6 +133,7 @@ export const CaptureFailure = z.enum([
   "article-blocked",
   "article-not-found",
   "article-no-answer",
+  "article-unfinished",
   "model-refused",
   "generation",
   "unknown",

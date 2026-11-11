@@ -5,7 +5,7 @@ const LINK = "https://fieldnotes.com/essays/the-case-for-boredom";
 
 describe("onboardingFailureCopy", () => {
   it("never says nothing counted, since a trial read always counts", () => {
-    const reasons = ["nothing-readable", "paywalled", "blocked", "not-found", "no-answer"] as const;
+    const reasons = ["nothing-readable", "paywalled", "blocked", "not-found", "no-answer", "unfinished"] as const;
     for (const reason of reasons) {
       const copy = onboardingFailureCopy({ kind: "read", failure: { status: "failed", reason } }, LINK, "computer");
       expect(copy.body).not.toMatch(/counted/i);
@@ -24,6 +24,8 @@ describe("onboardingFailureCopy", () => {
   it("offers Try again only where waiting might help", () => {
     const noAnswer = onboardingFailureCopy({ kind: "read", failure: { status: "failed", reason: "no-answer" } }, LINK, "computer");
     const paywalled = onboardingFailureCopy({ kind: "read", failure: { status: "failed", reason: "paywalled" } }, LINK, "computer");
+    const unfinished = onboardingFailureCopy({ kind: "read", failure: { status: "failed", reason: "unfinished" } }, LINK, "computer");
+    expect(unfinished).toMatchObject({ title: "We couldn't finish reading that page", tryAgain: true });
     expect(noAnswer).toMatchObject({ title: "fieldnotes.com didn't respond", tryAgain: true });
     expect(paywalled).toMatchObject({ title: "That article is behind a paywall", tryAgain: false });
   });

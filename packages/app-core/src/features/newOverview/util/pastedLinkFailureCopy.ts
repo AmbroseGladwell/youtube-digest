@@ -67,6 +67,8 @@ export function pastedLinkFailureCopy(failure: ArticleFailure, url: string, plac
       );
     case "no-answer":
       return plain(`${domainOf(url)} didn’t answer`, "It may be down for a while. Nothing counted.", "tryAgain", "Try again");
+    case "unfinished":
+      return plain("We couldn’t finish reading that page", "Try again in a moment. Nothing counted.", "tryAgain", "Try again");
     case "not-found":
       return plain(
         "There’s nothing we can read at that link",

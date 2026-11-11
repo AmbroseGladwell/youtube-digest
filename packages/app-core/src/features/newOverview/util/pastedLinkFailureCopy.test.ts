@@ -28,4 +28,11 @@ describe("pastedLinkFailureCopy", () => {
   it("doesn't send anyone to the extension for a link that isn't an article", () => {
     expect(pastedLinkFailureCopy({ status: "failed", reason: "nothing-readable" }, URL_OF_PAGE, "computer").sentToExtension).toBe(false);
   });
+
+  it("asks for another try, not another link, when our server gave up reading the page", () => {
+    const copy = pastedLinkFailureCopy({ status: "failed", reason: "unfinished" }, URL_OF_PAGE, "computer");
+    expect(copy.title).toBe("We couldn’t finish reading that page");
+    expect(copy.way).toBe("tryAgain");
+    expect(copy.sentToExtension).toBe(false);
+  });
 });

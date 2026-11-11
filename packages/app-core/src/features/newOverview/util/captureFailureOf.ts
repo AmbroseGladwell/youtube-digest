@@ -14,6 +14,7 @@ const ARTICLE_FAILURE = {
   blocked: "article-blocked",
   "not-found": "article-not-found",
   "no-answer": "article-no-answer",
+  unfinished: "article-unfinished",
 } as const;
 
 // A failed run by name, never by its message, which can quote a provider's own words
