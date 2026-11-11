@@ -1,5 +1,6 @@
-import { parentPort, workerData } from "node:worker_threads";
+import { parentPort } from "node:worker_threads";
 import { parseArticlePage } from "./parseArticlePage.js";
 
-const { html, url } = workerData as { html: string; url: string };
-parentPort?.postMessage(parseArticlePage(html, url));
+parentPort?.on("message", ({ id, html, url }: { id: number; html: string; url: string }) => {
+  parentPort?.postMessage({ id, read: parseArticlePage(html, url) });
+});
