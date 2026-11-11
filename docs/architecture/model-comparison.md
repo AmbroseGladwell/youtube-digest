@@ -620,6 +620,9 @@ task secrets:evals -- npm run coverage --workspace packages/model-comparison -- 
 npm run coverage --workspace packages/model-comparison -- --run coverage-2026-11-08 --measure-only
 ```
 
+`--kind article` (or `--kind video`) runs one kind of source alone, so a change to only one
+kind's prompt is measured without paying for the other (added for OV-216).
+
 `coverage.md` lands in the run's folder. A rerun under the same name pays only for what
 hasn't settled, so a prompt or budget change gets a new run name and is compared beside the
 old one.

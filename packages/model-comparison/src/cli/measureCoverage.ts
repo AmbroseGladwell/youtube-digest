@@ -21,7 +21,7 @@ import { spendWithinBudget, totalSpent } from "../spendWithinBudget.js";
 import { videoCoverageInput } from "../videoCoverageInput.js";
 
 const USAGE = `usage: task secrets:evals -- npm run coverage --workspace packages/model-comparison -- \\
-  --run <name> [--budget <dollars>] [--model provider:model] [--measure-only]`;
+  --run <name> [--budget <dollars>] [--model provider:model] [--kind video|article] [--measure-only]`;
 
 const LANES = 4;
 
@@ -30,6 +30,7 @@ const { values } = parseArgs({
     run: { type: "string" },
     budget: { type: "string", default: "1" },
     model: { type: "string", default: "openai:gpt-6.1-sol" },
+    kind: { type: "string" },
     "measure-only": { type: "boolean", default: false },
   },
 });
@@ -94,7 +95,9 @@ async function fetchArticle(url: string): Promise<ExtractedArticle> {
 const sourceIdOf = (loaded: LoadedSource) =>
   loaded.kind === "video" ? (loaded.fetched.video.id ?? loaded.fetched.video.url) : loaded.article.url;
 
-const loaded = (await Promise.all(COVERAGE_SET.map(loadSource))).filter((source): source is LoadedSource => source !== null);
+// One kind alone, so a change to only articles' prompt is measured without paying for videos.
+const chosenSources = values.kind === undefined ? COVERAGE_SET : COVERAGE_SET.filter((source) => source.kind === values.kind);
+const loaded = (await Promise.all(chosenSources.map(loadSource))).filter((source): source is LoadedSource => source !== null);
 const store = runDirectoryStore(comparisonPaths.run(values.run));
 
 if (!values["measure-only"]) {
