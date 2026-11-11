@@ -75,7 +75,7 @@ export function GenerateOverviewForm({
   const urlFieldId = useId();
   const article = useArticleLink(url, "dialog");
   const startArticle = useStartArticleFromLink();
-  useTypingSettled(url, () =>
+  const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
       recognised: isYouTubeUrl(url) || (article.available && isArticleLink(url)),
       from: "dialog",
@@ -84,6 +84,7 @@ export function GenerateOverviewForm({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    settleTyping();
     const target = playlistsAvailable ? playlistTargetOf(url) : null;
     if (target !== null) {
       setValidationError(null);

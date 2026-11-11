@@ -37,6 +37,7 @@ test("making an overview is counted from asking to reading it, with where it was
     .poll(() => captureEvents(backendSimulator))
     .toEqual([
       { name: "capture.newOverviewDialog.opened", props: { from: "newButton" } },
+      { name: "capture.newOverviewForm.linkEntered", props: { from: "dialog", recognised: true } },
       { name: "capture.newOverview.started", props: { from: "dialog" } },
       {
         name: "capture.newOverview.finished",
@@ -65,6 +66,30 @@ test("making an overview is counted from asking to reading it, with where it was
       },
       { name: "capture.newOverviewDialog.readChosen", props: { overviewId: overview!.id, from: "dialog" } },
     ]);
+});
+
+test("a link is counted as entered once, before the overview starts, whether the typing settled before the submit or not", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  await page.clock.install();
+  await launcher.launch(SIGNED_IN);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.fillUrl(VALID_URL);
+  await page.clock.runFor(2_000);
+  await dialog.form.clickGenerate();
+  await dialog.clickReadOverview();
+  await launcher.readerPage.verifyIsShown();
+
+  await expect
+    .poll(() =>
+      captureEvents(backendSimulator)
+        .map(({ name }) => name)
+        .slice(0, 3),
+    )
+    .toEqual(["capture.newOverviewDialog.opened", "capture.newOverviewForm.linkEntered", "capture.newOverview.started"]);
+  expect(captureEvents(backendSimulator).filter(({ name }) => name === "capture.newOverviewForm.linkEntered")).toHaveLength(1);
 });
 
 const finishedProps = (backendSimulator: BackendSimulator) =>

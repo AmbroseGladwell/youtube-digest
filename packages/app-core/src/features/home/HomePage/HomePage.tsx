@@ -244,12 +244,13 @@ function StartHero() {
   const [url, setUrl] = useState("");
   const [refused, setRefused] = useState(false);
   const [pasting, setPasting] = useState(false);
-  useTypingSettled(url, () =>
+  const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({ recognised: onboardingSourceOf(url) !== null, from: "home" }),
   );
 
   const start = (event: FormEvent) => {
     event.preventDefault();
+    settleTyping();
     setRefused(!startOnboarding(url));
   };
 
