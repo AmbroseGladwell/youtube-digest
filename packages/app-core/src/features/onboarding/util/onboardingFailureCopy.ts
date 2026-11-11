@@ -65,6 +65,8 @@ export function onboardingFailureCopy(failure: OnboardingFailure, link: string, 
       return failed(`${site} didn't respond`, "The site took too long to answer. Try again in a moment, or use another link.", {
         tryAgain: true,
       });
+    case "unfinished":
+      return failed("We couldn't finish reading that page", "Try again in a moment, or use another link.", { tryAgain: true });
     case "paywalled":
       return failed(
         "That article is behind a paywall",

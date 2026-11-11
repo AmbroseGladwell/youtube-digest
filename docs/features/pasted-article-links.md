@@ -34,9 +34,16 @@ the machine itself. So, in order:
 - **Redirects are followed by hand**, at most five, each checked as if it had been pasted.
 - **20 seconds and 3 MB**, for the whole fetch.
 - **HTML only**, and jsdom's defaults run no script and load no resource.
-- **Parsed on a worker thread**, two at a time, for at most 15 seconds. BBC's front page, at 1 MB,
+- **Parsed on a worker thread**, one at a time, for at most 15 seconds. BBC's front page, at 1 MB,
   took 3.7 seconds of CPU on a loaded laptop, and on the server's one thread that would have stopped
   every other reader's requests.
+- **A worker costs well over 100MB**, whatever the page: loading jsdom is most of it, and a 555 KB
+  BBC Good Food recipe grew the process by 120–140MB on a laptop. On the 256MB machine this ran on
+  until OV-279, reads of ordinary recipe pages ran into the 15 seconds and the reader was told the
+  page wasn't an article. The machine has 512MB, and reads queue rather than run side by side.
+- **Giving up is ours**: a parse that runs out of time or whose worker fails is `unfinished`, and
+  the reader is asked to try again. It is never `nothing-readable`, which tells them the page
+  isn't an article.
 
 A link refused for any of these reads to the reader as "nothing we can read at that link": we don't
 say which address we wouldn't visit.

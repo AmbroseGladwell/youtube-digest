@@ -60,7 +60,8 @@ nobody builds until deploy day does not.
 ## The machine
 
 `fly.toml` is the shape the architecture doc settled: one `shared-cpu-1x` machine with
-256MB, in `lhr` to sit beside the Neon project's London region, `auto_stop_machines`
+512MB (256MB until OV-279: a pasted link's parse worker alone needs well over 100MB,
+see docs/features/pasted-article-links.md), in `lhr` to sit beside the Neon project's London region, `auto_stop_machines`
 and `auto_start_machines` so idle time costs nothing, `min_machines_running = 0`, and
 no volume, since Postgres is on Neon and the API keeps nothing on disk. `force_https`
 means `APP_URL` is https, which `loadConfig` insists on whenever real mail is sent.

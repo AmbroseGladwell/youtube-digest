@@ -3,8 +3,8 @@ import type { ArticleRead } from "@overview/domain";
 import type { FetchedPage } from "./fetchArticlePage.js";
 
 const PARSE_TIMEOUT_MS = 15_000;
-const MOST_AT_ONCE = 2;
-const NOTHING_READABLE: ArticleRead = { status: "failed", reason: "nothing-readable" };
+const MOST_AT_ONCE = 1;
+const UNFINISHED: ArticleRead = { status: "failed", reason: "unfinished" };
 
 let running = 0;
 const waiting: (() => void)[] = [];
@@ -31,15 +31,16 @@ function parseInWorker(html: string, url: string): Promise<ArticleRead> {
       resolve(read);
       void worker.terminate();
     };
-    const timer = setTimeout(() => finish(NOTHING_READABLE), PARSE_TIMEOUT_MS);
+    const timer = setTimeout(() => finish(UNFINISHED), PARSE_TIMEOUT_MS);
     worker.once("message", finish);
-    worker.once("error", () => finish(NOTHING_READABLE));
+    worker.once("error", () => finish(UNFINISHED));
   });
 }
 
 // Parsing a large page takes seconds of CPU, which on this process would stop every other
-// reader's requests, so it happens on a worker, a couple at a time, and is given up on if a
-// page is built to be slow (docs/features/pasted-article-links.md).
+// reader's requests, so it happens on a worker, one at a time because a worker holding jsdom
+// needs well over 100MB, and is given up on if a page is built to be slow. Giving up is ours,
+// not the page's, so it never says the page isn't an article (docs/features/pasted-article-links.md).
 export async function fetchedArticle(page: FetchedPage): Promise<ArticleRead> {
   if (page.status !== "page") return page;
   await turn();

@@ -50,6 +50,13 @@ export function articleFailureCopy(failure: ArticleFailure, url: string): Articl
         way: null,
         wayLabel: null,
       };
+    case "unfinished":
+      return {
+        title: "We couldn’t finish reading this page",
+        body: "Try again in a moment. Nothing counted.",
+        way: "tryAgain",
+        wayLabel: "Try again",
+      };
     case "nothing-readable":
       return {
         title: "This page isn’t an article",
