@@ -30,6 +30,21 @@
   font-size: 1.375rem;
 }
 
+.titles {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recipe {
+  color: var(--muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .close {
   @include controls.surface-pill;
 

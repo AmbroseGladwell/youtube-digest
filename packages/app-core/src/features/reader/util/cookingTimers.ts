@@ -1,4 +1,7 @@
+// Where a timer came from: the recipe (an overview's id, or a shared copy's), the action, which
+// time in it, and which end of a range (OV-288 edge case 3).
 export interface CookingTimerSource {
+  recipe: string;
   action: number;
   time: number;
   seconds: number;
@@ -10,6 +13,10 @@ export interface CookingTimer {
   step: number;
   source: CookingTimerSource;
   range: boolean;
+  // The recipe's title, for the timer outside the mode, and the action's text, so the way back
+  // can tell whether the method has changed since (OV-288 edge case 4).
+  recipeTitle: string;
+  actionText: string;
   totalMs: number;
   endsAt: number | null;
   leftMs: number | null;
@@ -21,6 +28,8 @@ export interface CookingTimerStart {
   step: number;
   source: CookingTimerSource;
   range: boolean;
+  recipeTitle: string;
+  actionText: string;
 }
 
 const MINUTE_MS = 60_000;
@@ -69,4 +78,4 @@ export const oldestRingingFirst = (timers: readonly CookingTimer[]): CookingTime
   timers.filter(isRinging).sort((a, b) => a.rangAt! - b.rangAt! || a.id - b.id);
 
 export const isSameSource = (a: CookingTimerSource, b: CookingTimerSource): boolean =>
-  a.action === b.action && a.time === b.time && a.seconds === b.seconds;
+  a.recipe === b.recipe && a.action === b.action && a.time === b.time && a.seconds === b.seconds;

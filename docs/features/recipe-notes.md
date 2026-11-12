@@ -412,12 +412,10 @@ Trello OV-284, designs 284a–284ah (OV-284 1–3 in Claude Design), with the ow
   left to the cooking screen itself, so Space and the arrows move on again without a click (OV-287). In the panel "Then" gives way to the banner. While a timer rings the
   headphones' play and pause dismiss it (owner's question; the design's recommendation); the track
   buttons stay Back and Next.
-- **Leaving (284x–284ac).** With a timer running, Done, Esc and Back to the recipe ask "Leave cooking
-  mode?", naming one timer ("Your boil timer has 12 minutes left. Leaving stops it.") or listing
-  several soonest first. Keep cooking is first, filled and focused, and Esc means it; Leave stops
-  them all and leaves as before. A sheet on a phone and in the panel, a dialog on the web. Closing
-  the tab or going back while one runs gets the browser's own prompt. Finish doesn't stop timers,
-  since the last step is often the bake; it still forgets the place.
+- **Leaving (284x–284ac, rewritten by OV-288 as 288a–288f).** With this recipe's timer running or
+  ringing, Done, Esc and Back to the recipe ask whether to keep it: see "Outside the mode" below.
+  Closing the tab or going back while one runs gets the browser's own prompt. Finish doesn't stop
+  timers, since the last step is often the bake; it still forgets the place.
 - **Where sound can't be counted on (284ad, 284ae).** While a timer runs the wake line changes
   rather than adding one: on iOS "Screen stays on. Keep it open to hear your timer", on the web
   "… Keep this tab in front to hear your timer", and with no wake lock "Keep this screen on to hear
@@ -439,8 +437,63 @@ Trello OV-284, designs 284a–284ah (OV-284 1–3 in Claude Design), with the ow
 - **Keys (284af, 284ag).** T starts the action's one timer, or with two times or a range moves focus
   to the first pill, where Space or Enter starts the focused one. T is shown on the first pill.
 - **Not done.** No spoken "your timer is done": the narration is pre-made audio, so it is the timer
-  sound only (the design's recommendation). Timers live only while the mode is open: never kept with the
-  place, never synced.
+  sound only (the design's recommendation). Timers live only in this tab: never kept with the place,
+  never synced, gone on a reload (owner, OV-288).
+
+#### Outside the mode
+
+Trello OV-288, designs 288a–288ah (OV-288 1–3 in Claude Design), with the owner's choices of 12 Nov
+2026. Timers carry on outside cooking mode and outside the recipe.
+
+- **One runtime for the tab.** `CookingTimersRuntime` holds the timers above the router, beside
+  `PlayerRuntime`; `useCookingTimers()` reads it. The shared page provides its own, scoped to that
+  page. A timer knows its recipe (an overview's id), the recipe's title and its action's words, so
+  matching a time in a step checks the recipe too (`isSameSource`), and the way back can tell whether
+  the method has changed. The runtime holds the one ring, the wake lock while any timer runs, and the
+  browser's "Leave site?" prompt.
+- **Leaving asks keep or stop (288a–288d).** Only for this recipe's timers: "Keep the bake timer
+  running?" ("Keep both / all three timers running?", listed soonest first), with Keep running filled
+  and focused, Stop timer(s), and a quiet Keep cooking that Esc means. With only a ringing timer: "The
+  simmer timer is ringing", Dismiss and leave (filled), Keep it ringing, Keep cooking. With nothing of
+  this recipe's running or ringing, leaving doesn't ask.
+- **A second recipe (288e, 288f).** The strip shows every running timer, soonest first; another
+  recipe's read "Bake · Lemon drizzle loaf". Tapping one opens its controls with the way back, which
+  leaves this mode first. Leaving asks about this recipe's timers only, and says the other carries on
+  either way.
+- **The dock (288g–288r).** `CookingTimerDock` sits at the foot of every page, centred at the floating
+  player's width, holding the timers above `MiniPlayer`; with no player they take its place. One timer
+  is a full tile, "Bake · Lemon drizzle loaf" and its time; two or three sit side by side by verb; four
+  or more fold into "Timers +3", which lists them all (288p). The dock publishes how much of the foot
+  it covers (`--mini-player-clearance`), as the player alone did, and steps aside while a cooking mode
+  is open, since the mode shows the timers itself.
+- **Controls (288s–288v).** OV-284's sheet with the recipe under the title, and above Cancel timer a
+  way back: "Back to step 4", which opens that recipe's cooking mode at the timer's action (the action
+  is carried with the timer, not read from the saved place). If the action's words have changed since
+  (a regenerated note), "Open the recipe's cooking mode, at the start: the method has changed since";
+  if the note is gone, a line says the timer carries on, with no link. The recipe is looked up afresh
+  each time the controls open.
+- **Ringing (288w–288z).** The banner in the timers' place, the recipe named under "Bake timer is
+  done". A ring pauses the narration and the floating player says "Paused for the timer"; the last
+  dismiss carries it on only if the ring paused it and the same note is still at the same place. Focus
+  moves to Dismiss (Space on the web) and goes back where it was.
+- **Where sound can't be counted on (288aa, 288ab).** The screen is kept on while any timer runs. Where
+  it can't be, a quiet line above the timers: "Keep this screen on to hear your timer", on iOS "Keep
+  this screen open…". In the panel, which has no "Leave site?" prompt: "Closing the panel stops
+  timers".
+- **The shared page (288ac–288af, owner's option C).** It has its own runtime, scoped to the page. A
+  kept timer sits in the same dock at the page's foot, and "Back to step" opens the shared copy's
+  cooking mode. Going into the app while one runs warns first ("Your bake timer will stop"): Save to
+  my overviews in its own words ("Save and stop the timer"), and every other way in through the
+  router's blocker ("Go on and stop the timer"). Stay on this page is filled and Esc means it.
+- **Signing out (288ag).** The account menu's and Settings' Sign out warn the same way, "Signing out
+  stops your timers, since they belong to this account's recipes", with Stay signed in filled;
+  going on stops them (`by: "signedOut"`).
+- **Two contexts.** `useCookingTimers()` ticks four times a second for what shows a countdown;
+  `useCookingTimerList()` changes only when a timer starts, rings or ends, for what only needs to
+  know which there are (the warnings, the player's "Paused for the timer").
+- **Analytics.** `reader.cooking.timersKept` (how many, and whether ringing), `timerOpenedOutside`,
+  and `backToStep` (landed at the step or the start), each on the timer's own recipe; `started` gains
+  `from: "timer"`.
 
 ## Oven temperatures in US units
 
