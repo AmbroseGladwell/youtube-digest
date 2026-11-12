@@ -21,11 +21,13 @@ const article: ExtractedArticle = {
       heading: null,
       anchor: null,
       text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday.",
+      links: [],
     },
     {
       heading: "Who pays",
       anchor: "who-pays",
       text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates.",
+      links: [],
     },
   ],
   wordCount: 500,
@@ -124,7 +126,7 @@ test("a long article's key points that stop early go back to the model, naming w
   const long = {
     ...article,
     wordCount: 3000,
-    sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n") }],
+    sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n"), links: [] }],
   };
   const keyPoints = (index: number) => Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: index }));
   const chapters = [{ title: "All of it", summary: "The whole piece.", startParagraphIndex: 0 }];
@@ -288,4 +290,57 @@ test("with the steps switched off, an article is asked for none, and nothing poi
   assert.equal(off.schema.shape.sourceSteps, undefined);
   assert.doesNotMatch(off.systemPrompt, /The steps it gives/);
   assert.match(composeArticlePrompt(input()).systemPrompt, /The steps it gives/);
+});
+
+const linked: ExtractedArticle = {
+  ...article,
+  sections: [
+    article.sections[0]!,
+    {
+      ...article.sections[1]!,
+      links: [
+        { text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund" },
+        { text: "Bridge inspection survey 2011", href: "https://data.example.org/survey-2011" },
+      ],
+    },
+  ],
+};
+
+test("a page with no links gets no resources section and the same prompt as before", () => {
+  const { systemPrompt, userMessage, schema } = composeArticlePrompt(input());
+  assert.doesNotMatch(systemPrompt, /Resources it links to/);
+  assert.doesNotMatch(userMessage, /link \d/);
+  assert.equal("resourceLinks" in (schema as unknown as { shape: Record<string, unknown> }).shape, false);
+});
+
+test("a section's links follow its last paragraph, numbered, with where they go", () => {
+  const { systemPrompt, userMessage } = composeArticlePrompt(input({ article: linked }));
+  assert.match(systemPrompt, /## Resources it links to/);
+  assert.match(
+    userMessage,
+    /\[3\] Residents will cover the rest through higher rates\.\n {2}link 0: "The county's repair fund rules" \(county\.example\.gov\)\n {2}link 1: "Bridge inspection survey 2011" \(data\.example\.org\)/,
+  );
+});
+
+test("the links the model names are copied onto the note by code, in its order", async () => {
+  const note = await generate(answering(output({ resourceLinks: [1, 0] })), { article: linked });
+  assert.deepEqual(note.article?.resources, [
+    { text: "Bridge inspection survey 2011", href: "https://data.example.org/survey-2011" },
+    { text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund" },
+  ]);
+});
+
+test("naming no links leaves the note with no resources, not an empty list", async () => {
+  const note = await generate(answering(output({ resourceLinks: [] })), { article: linked });
+  assert.equal(note.article !== null && "resources" in note.article, false);
+});
+
+test("a link that doesn't exist goes back to the model", async () => {
+  const note = await generate(answering(output({ resourceLinks: [2] }), output({ resourceLinks: [0] })), { article: linked });
+  assert.equal(note.article?.resources?.length, 1);
+});
+
+test("a link named twice goes back to the model", async () => {
+  const note = await generate(answering(output({ resourceLinks: [0, 0] }), output({ resourceLinks: [0] })), { article: linked });
+  assert.deepEqual(note.article?.resources, [{ text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund" }]);
 });

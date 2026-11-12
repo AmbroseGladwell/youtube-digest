@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ArticleLink } from "./ArticleLink.js";
 import { Recipe } from "./Recipe.js";
 
 export const ArticleSection = z.object({
@@ -7,6 +8,9 @@ export const ArticleSection = z.object({
   // The heading's own id on the page, where it has one (docs/features/article-extraction.md).
   anchor: z.string().nullable(),
   text: z.string().min(1),
+  // The links out of this section, in page order. Defaulted because a device that predates them
+  // still posts an article without (docs/features/article-resources.md).
+  links: z.array(ArticleLink).default([]),
 });
 export type ArticleSection = z.infer<typeof ArticleSection>;
 

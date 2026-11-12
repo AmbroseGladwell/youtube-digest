@@ -140,6 +140,9 @@ export function overviewMarkdown(overview: Overview): string {
     const { answer, reason, leftOut } = article.readAnyway;
     section("Read it anyway?", `${READ_ANYWAY_ANSWER[answer]}. ${reason} ${leftOut}`.trim());
   }
+  if (article?.resources) {
+    section("Resources it links to", bullets(article.resources.map(({ text, href }) => `[${text}](${href})`)));
+  }
   if (article !== null) {
     section(
       "Chapters",

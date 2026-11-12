@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ArticlePlace } from "./ArticlePlace.js";
+import { ArticleLink, MOST_RESOURCES } from "./ArticleLink.js";
 import { Chapter } from "./Chapter.js";
 import { WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
 import { wordCount } from "./wordCount.js";
@@ -35,5 +36,9 @@ export const ArticleDetails = z.object({
   // One entry per key point: the chapter it comes from, or null where it spans several.
   keyPointChapters: z.array(z.int().nonnegative().nullable()),
   readAnyway: ReadAnyway.nullable(),
+  // The links out of the piece a reader would want to open, chosen by the model from the page's own
+  // and copied by code. Absent rather than empty when there are none, so an older note and its
+  // share hash are unchanged (docs/features/article-resources.md).
+  resources: z.array(ArticleLink).min(1).max(MOST_RESOURCES).optional(),
 });
 export type ArticleDetails = z.infer<typeof ArticleDetails>;
