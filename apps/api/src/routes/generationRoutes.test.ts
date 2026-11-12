@@ -79,6 +79,7 @@ test("an article is made on our key from what the reader's browser read, and cou
     suggestedTopic: null,
     recipe: null,
     tags: ["bridges", "local-news", "budgets"],
+    sourceSteps: [],
     howToApply: { items: [] },
     readAnyway: { answer: "no", reason: "This carries it.", leftOut: "It leaves out the council meeting.", chapterIndexes: [] },
   };
