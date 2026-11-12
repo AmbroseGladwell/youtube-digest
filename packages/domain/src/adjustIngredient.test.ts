@@ -107,6 +107,50 @@ test("units convert within their kind only", () => {
   assert.equal(adjustedText(adjustIngredient("2.2kg lamb shoulder", 1, "us")), "4¾ lb lamb shoulder");
 });
 
+test("one amount in both systems scales both halves as written, the metric half in Metric, and US units in US", () => {
+  const atDouble = (line: string) =>
+    (["asWritten", "metric", "us"] as const).map((units) => adjustedText(adjustIngredient(line, 2, units)));
+  assert.deepEqual(atDouble("200ml/7fl oz chicken stock"), ["400ml/14fl oz chicken stock", "400ml chicken stock", "1⅔ cups chicken stock"]);
+  assert.deepEqual(atDouble("400ml/14fl oz coconut milk"), ["800ml/28fl oz coconut milk", "800ml coconut milk", "3⅓ cups coconut milk"]);
+  assert.deepEqual(atDouble("150g/5½oz mangetout, finely sliced"), [
+    "300g/11oz mangetout, finely sliced",
+    "300g mangetout, finely sliced",
+    "11oz mangetout, finely sliced",
+  ]);
+  assert.deepEqual(atDouble("500g/1lb 2oz jasmine or basmati rice"), [
+    "1000g/2¼lb jasmine or basmati rice",
+    "1000g jasmine or basmati rice",
+    "2¼lb jasmine or basmati rice",
+  ]);
+  assert.deepEqual(atDouble("150–200g/5½–7oz tinned black-eyed beans"), [
+    "300–400g/11–14oz tinned black-eyed beans",
+    "300–400g tinned black-eyed beans",
+    "11–14oz tinned black-eyed beans",
+  ]);
+  assert.deepEqual(atDouble("50g–100g/1¾oz–3½oz peanuts"), ["100–200g/3½–7oz peanuts", "100–200g peanuts", "3½–7oz peanuts"]);
+  assert.deepEqual(changed(adjustIngredient("200ml/7fl oz chicken stock", 2, "asWritten")), ["400ml/14fl oz"]);
+});
+
+test("US keeps the page's own half where it is already in US units, and converts British fl oz and big ounces", () => {
+  const inUs = (line: string, factor: number) => adjustedText(adjustIngredient(line, factor, "us"));
+  assert.equal(inUs("400g/14oz beef mince", 1), "14oz beef mince");
+  assert.equal(inUs("400g/14oz beef mince", 2), "1¾ lb beef mince");
+  assert.equal(inUs("200ml/7fl oz chicken stock", 1), "¾ cup chicken stock");
+  assert.equal(inUs("3 tbsp/45ml olive oil", 2), "6 tbsp olive oil");
+});
+
+test("in Metric a line in both systems drops the other half even unscaled", () => {
+  assert.equal(adjustedText(adjustIngredient("200ml/7fl oz chicken stock", 1, "metric")), "200ml chicken stock");
+  assert.equal(adjustedText(adjustIngredient("3 tbsp/45ml olive oil", 1, "metric")), "45ml olive oil");
+});
+
+test("a slash that isn't one amount in both systems keeps the line as written", () => {
+  assert.equal(adjustIngredient("2cm/¾in fresh root ginger", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("200g/7fl oz yoghurt", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("200g/250g butter", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("200ml/7fl oz stock, plus 2 tbsp", 2, "asWritten").kind, "unreadable");
+});
+
 test("a line already in the units asked for is the same, not marked", () => {
   assert.equal(adjustIngredient("3 tbsp olive oil", 1, "us").kind, "same");
   assert.equal(adjustIngredient("3 large leeks", 1, "metric").kind, "same");
