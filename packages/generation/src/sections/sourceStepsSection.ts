@@ -7,9 +7,10 @@ import { segmentRangeFields } from "./segmentRangeFields.js";
 // when Watch it anyway says so. Measured by OV-251's steps check (docs/features/source-steps.md).
 export const sourceStepsInstructions = (source: "video" | "article", where: string) => `
 ## The steps it gives
-Only when the ${source} tells me what to do: a protocol, a routine, a method,
-or concrete instructions and rules meant to be followed. Then give every
-step it gives, in its order, so I could follow them without the ${source}.
+Whenever the ${source} tells me to do something concrete: a protocol, a
+routine, a method, or advice I could act on, even when it comes inside an
+argument, an interview or a story. Then give every step it gives, in its
+order, so I could follow them without the ${source}.
 Leaving one out is worse than one too many: a step left out here is lost
 to me, because I will not go back to the ${source}.
 
@@ -24,8 +25,9 @@ That belongs in How to apply. Keep a step it gives even when it is shaky,
 and set dubious to true when the step rests on a claim that does not hold
 up. Otherwise set dubious to false.
 
-If the ${source} argues, explains, reviews or reports rather than telling me
-what to do, return an empty list. Never invent steps to fill it.
+Return an empty list only when the ${source} tells me to do nothing at all:
+it only reports, reviews, or explains how something works. Never invent
+steps to fill it.
 
 Each step is one or two complete sentences, ${SOURCE_STEP_TARGET_WORDS} words at most, that read
 naturally after "First," or "Then,": an instruction, never a label and a
