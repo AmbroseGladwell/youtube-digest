@@ -10,24 +10,82 @@ export interface ClientSchemaVersions {
 // registry; clientSchemaVersions.test.ts fails if a registry moves without one
 // (docs/architecture/api.md).
 export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
-  { clientVersion: 1, schemaVersions: { overview: 4, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0 } },
-  { clientVersion: 2, schemaVersions: { overview: 5, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0 } },
-  { clientVersion: 3, schemaVersions: { overview: 6, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0 } },
-  { clientVersion: 4, schemaVersions: { overview: 7, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 1 } },
-  { clientVersion: 5, schemaVersions: { overview: 8, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 1 } },
-  { clientVersion: 6, schemaVersions: { overview: 8, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 1 } },
-  { clientVersion: 7, schemaVersions: { overview: 9, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 1 } },
-  { clientVersion: 8, schemaVersions: { overview: 9, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 2 } },
-  { clientVersion: 9, schemaVersions: { overview: 10, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 2 } },
-  { clientVersion: 10, schemaVersions: { overview: 11, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 2 } },
-  { clientVersion: 11, schemaVersions: { overview: 11, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 2 } },
-  { clientVersion: 12, schemaVersions: { overview: 12, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 2 } },
-  { clientVersion: 13, schemaVersions: { overview: 12, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3 } },
-  { clientVersion: 14, schemaVersions: { overview: 13, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3 } },
-  { clientVersion: 15, schemaVersions: { overview: 14, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3 } },
-  { clientVersion: 16, schemaVersions: { overview: 15, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3 } },
-  { clientVersion: 17, schemaVersions: { overview: 16, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3 } },
-  { clientVersion: 18, schemaVersions: { overview: 17, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3 } },
+  {
+    clientVersion: 1,
+    schemaVersions: { overview: 4, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 2,
+    schemaVersions: { overview: 5, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 3,
+    schemaVersions: { overview: 6, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 0, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 4,
+    schemaVersions: { overview: 7, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 1, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 5,
+    schemaVersions: { overview: 8, overviewState: 1, topic: 1, settings: 1, followedPlaylist: 1, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 6,
+    schemaVersions: { overview: 8, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 1, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 7,
+    schemaVersions: { overview: 9, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 1, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 8,
+    schemaVersions: { overview: 9, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 2, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 9,
+    schemaVersions: { overview: 10, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 2, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 10,
+    schemaVersions: { overview: 11, overviewState: 1, topic: 1, settings: 2, followedPlaylist: 2, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 11,
+    schemaVersions: { overview: 11, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 2, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 12,
+    schemaVersions: { overview: 12, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 2, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 13,
+    schemaVersions: { overview: 12, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 14,
+    schemaVersions: { overview: 13, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 15,
+    schemaVersions: { overview: 14, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 16,
+    schemaVersions: { overview: 15, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 17,
+    schemaVersions: { overview: 16, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 18,
+    schemaVersions: { overview: 17, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 0, projectMember: 0 },
+  },
+  {
+    clientVersion: 19,
+    schemaVersions: { overview: 17, overviewState: 1, topic: 1, settings: 3, followedPlaylist: 3, project: 1, projectMember: 1 },
+  },
 ];
 
 export function schemaVersionsForClient(clientVersion: number): SchemaVersions {

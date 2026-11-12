@@ -161,6 +161,10 @@ Five folders, five different questions.
   telling a private one from a missing one, the preview and its estimate counted in code,
   followed playlists synced and what each device has seen kept on it, checking on opening,
   Settings › YouTube playlists, unfollowing, and the From line an overview keeps.
+- `projects.md` — what the reader is working on, built for their assistant to use: a name, a
+  purpose line and a set of overviews; membership as one synced record per project and
+  overview with a dated removal and a merge that commutes; deleting a project or an overview
+  takes its members with it; the decisions taken on OV-168.
 - `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
   time, oldest first, while the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and

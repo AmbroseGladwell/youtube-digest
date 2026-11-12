@@ -434,8 +434,9 @@ choice.
 - Every add is undoable and marked with the assistant that made it.
 - A connection without a scope gets a plain "reconnect to allow this", not a failed call.
 
-**Decide this before OV-168 ships its scope.** A scope a reader already approved can only widen if
-they reconnect.
+**Decided for OV-168 on 12 Nov 2026: project writes reuse `overviews:write`.** Whether saving gets
+a scope of its own is still open, and is OV-262's to settle; either way project writes stay on
+`overviews:write` (`projects.md`).
 
 ### 4. Reader records: one pattern for everything the reader adds
 

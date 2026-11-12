@@ -11,6 +11,8 @@ export type OutboxChange =
   | { op: "tags"; tags: string[] }
   | { op: "state"; patch: Record<string, unknown> }
   | { op: "settings"; patch: Record<string, unknown> }
+  | { op: "project"; patch: Record<string, unknown> }
+  | { op: "member"; change: Record<string, unknown> }
   | { op: "delete" }
   // No body: the transcript is read from the store when the entry is pushed, so megabytes
   // of segments are not copied into the journal. The note that sent it, which it waits

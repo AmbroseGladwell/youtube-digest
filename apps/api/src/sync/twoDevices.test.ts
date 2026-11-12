@@ -10,7 +10,7 @@ import {
   VideoId,
   youTubeSource,
 } from "@overview/domain";
-import { makeOverview, makeStoredTranscript } from "@overview/store-conformance";
+import { makeOverview, makeProject, makeStoredTranscript } from "@overview/store-conformance";
 import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
@@ -476,5 +476,86 @@ test("an account that already held duplicates ends with one overview per video, 
     assert.equal((await device.overviews.getOverviewState(earlier.id)).read, true);
     assert.equal(await device.overviews.getOverview(later.id), null);
   }
+  await testApp.close();
+});
+
+test("two devices filling one project while apart both end up with every overview in it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const project = makeProject();
+  const [fromLaptop, fromPhone] = [makeOverview({ source: distinctVideo() }), makeOverview({ source: distinctVideo() })];
+  await laptop.projects.createProject(project);
+  await laptop.sync();
+  await phone.sync();
+
+  await laptop.overviews.saveOverview(fromLaptop);
+  await laptop.projects.addToProject(project.id, fromLaptop.id);
+  await phone.overviews.saveOverview(fromPhone);
+  await phone.projects.addToProject(project.id, fromPhone.id);
+  await laptop.sync();
+  await phone.sync();
+  await laptop.sync();
+
+  for (const device of [laptop, phone]) {
+    assert.deepEqual(
+      (await device.projects.listMembers()).map(({ overviewId }) => overviewId).sort(),
+      [fromLaptop.id, fromPhone.id].sort(),
+    );
+  }
+  await testApp.close();
+});
+
+test("one device taking an overview out while another puts it back settles on the later act on both", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const project = makeProject();
+  const overview = makeOverview();
+  await laptop.overviews.saveOverview(overview);
+  await laptop.projects.createProject(project);
+  await laptop.projects.addToProject(project.id, overview.id);
+  await laptop.sync();
+  await phone.sync();
+
+  await phone.projects.removeFromProject(project.id, overview.id);
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  await laptop.projects.removeFromProject(project.id, overview.id);
+  await laptop.projects.addToProject(project.id, overview.id);
+  await laptop.sync();
+  await phone.sync();
+  await laptop.sync();
+
+  for (const device of [laptop, phone]) {
+    assert.deepEqual(
+      (await device.projects.listMembers()).map(({ overviewId }) => overviewId),
+      [overview.id],
+    );
+  }
+  await testApp.close();
+});
+
+test("a project deleted on one device leaves the other with neither the project nor its membership records", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const project = makeProject();
+  const overview = makeOverview();
+  await laptop.overviews.saveOverview(overview);
+  await laptop.projects.createProject(project);
+  await laptop.projects.addToProject(project.id, overview.id);
+  await laptop.sync();
+  await phone.sync();
+
+  await laptop.projects.deleteProject(project.id);
+  await laptop.sync();
+  await phone.sync();
+
+  assert.deepEqual(await phone.projects.listProjects(), []);
+  assert.deepEqual(await phone.projects.listMembers(), []);
+  assert.equal((await laptop.sync()).pending, 0);
   await testApp.close();
 });
