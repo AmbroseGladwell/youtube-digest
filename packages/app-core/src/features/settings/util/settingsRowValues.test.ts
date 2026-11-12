@@ -88,14 +88,14 @@ describe("milestonesRowValue", () => {
 });
 
 describe("personalisationRowValue", () => {
-  it("says how many of the four optional sections the next overview will have", () => {
+  it("says how many of the five optional sections the next overview will have", () => {
     expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, EMPTY_ABOUT_YOU)).toBe("About you not set · Every section");
     expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false }, EMPTY_ABOUT_YOU)).toBe(
-      "About you not set · 3 of 4 sections",
+      "About you not set · 4 of 5 sections",
     );
-    expect(personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false }, EMPTY_ABOUT_YOU)).toBe(
-      "About you not set · Summary and key points only",
-    );
+    expect(
+      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false }, EMPTY_ABOUT_YOU),
+    ).toBe("About you not set · Summary and key points only");
   });
 
   it("says how many things were learned, or that learning is off, and nothing of it where learning can't run", () => {

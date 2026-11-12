@@ -97,7 +97,11 @@ Why they saved it: ${input.captureReason ?? "not said"}`;
 }
 
 export function composeArticlePrompt(input: ArticleGenerationInput): ComposedPrompt {
-  const sections = REGISTRY.filter((section) => section.key === "structural" || input.sectionsEnabled[section.key]);
+  const sections = REGISTRY.filter(
+    (section) =>
+      (section !== articleSourceStepsSection || input.sectionsEnabled.steps) &&
+      (section.key === "structural" || input.sectionsEnabled[section.key]),
+  );
   const shape: Record<string, z.ZodType> = {};
   for (const section of sections) {
     const sectionShape = section.schemaShape(input);

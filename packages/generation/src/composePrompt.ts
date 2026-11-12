@@ -2,7 +2,7 @@ import { wordCount, type NoteKind } from "@overview/domain";
 import { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import { chaptersTooBigToSkip, positionsInTheFinalStretch } from "./noteBudget.js";
-import { enabledSections } from "./sectionRegistry.js";
+import { enabledSections, writtenKind } from "./sectionRegistry.js";
 import { descriptionOf } from "./recipe/videoRecipe.js";
 import type { ChapterShape } from "./sections/chaptersSection.js";
 import { segmentRangeOf, type SegmentRangeShape } from "./sections/segmentRangeFields.js";
@@ -101,7 +101,7 @@ export function composePrompt(input: GenerationInput, kind: NoteKind = "default"
 
   const schema = z.object(shape);
   return {
-    systemPrompt: SYSTEM_OPENING[kind] + WRITING_RULES + instructions,
+    systemPrompt: SYSTEM_OPENING[writtenKind(input, kind)] + WRITING_RULES + instructions,
     userMessage: contextBlock(input),
     schema: kind === "recipe" ? schema : schema.superRefine(keyPointsCoverALongVideo(input)),
   };

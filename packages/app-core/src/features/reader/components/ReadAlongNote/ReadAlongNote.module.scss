@@ -91,6 +91,91 @@
   min-width: 0;
 }
 
+// Design 250a: the steps block's caption, at the far end of its heading row, never spoken.
+.aside {
+  font-size: 0.78125rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--muted);
+}
+
+// Design 250a: beside the numbered steps, the other lists take a dot, so only the source's
+// process reads as an order.
+.dot {
+  flex: none;
+  align-self: flex-start;
+  width: 5px;
+  height: 5px;
+  margin: 0.72em 0.4375rem 0 0.1875rem;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+// Design 250a: the source's steps numbered in surface circles, the recipe method's, so they
+// read as an ordered process beside How to apply's list.
+.stepLine {
+  gap: 0.75rem;
+}
+
+.stepNumber {
+  flex: none;
+  align-self: flex-start;
+  width: 1.625rem;
+  height: 1.625rem;
+  margin-top: 0.125rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--label);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  line-height: 1.625rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepLine + .stepLine {
+  margin-top: 0.625rem;
+}
+
+// Design 250e: the step the video beside the panel is in takes the stone tint whole.
+.linePlaying {
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+}
+
+.linePlaying .stepNumber {
+  background: var(--ground);
+}
+
+// Design 250m: how many more there are and where they run to, so the list plainly carries on.
+.showAllSteps {
+  @include controls.surface-control;
+
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.0625rem;
+  width: max-content;
+  margin: 0.875rem 0 0 2.375rem;
+  padding: 0.5625rem 1.125rem;
+  border-radius: 1.125rem;
+  font-size: 0.84375rem;
+  font-weight: 600;
+
+  small {
+    font-size: 0.78125rem;
+    font-weight: 500;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 // Design 94: a verdict line's sub-label, What stands out or Why, sits above its words and
 // is never tinted with them.
 .lineLabel {

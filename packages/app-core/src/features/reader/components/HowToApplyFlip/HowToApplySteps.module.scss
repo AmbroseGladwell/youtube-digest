@@ -1,8 +1,21 @@
+@use "../../../../theme/controls.scss" as controls;
+
 .line {
   margin: 0 0 0.375rem;
   font-size: 0.78125rem;
   color: var(--muted);
   text-wrap: pretty;
+}
+
+// Design 250a: How to apply is the reader's, beside the steps that are the source's.
+.personalised {
+  @include controls.chip;
+}
+
+.link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .steps {

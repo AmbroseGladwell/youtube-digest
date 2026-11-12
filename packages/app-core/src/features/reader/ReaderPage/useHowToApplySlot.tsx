@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { EMPTY_ABOUT_YOU, firstAboutYouText, HOW_TO_APPLY_SECTION, type Overview } from "@overview/domain";
+import { composeReaderContext, EMPTY_ABOUT_YOU, firstAboutYouText, HOW_TO_APPLY_SECTION, type Overview } from "@overview/domain";
+import { Routes } from "../../../app/Routes.js";
+import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { HowToApplyFlip, type FlipSide } from "../components/HowToApplyFlip/HowToApplyFlip.js";
@@ -12,9 +14,13 @@ import { useForAnyoneSteps } from "./useForAnyoneSteps.js";
 // Design 141o: the reveal's flip, worn by How to apply. Written for you stays the note's own
 // lines; For anyone stands in for them without moving what the voice reads. A sample has no
 // version written for the reader, so it says so instead and offers no flip (155j).
-export function useHowToApplySlot(overview: Overview | null): NoteSectionSlot | null {
+//
+// Beside the steps a source gives, How to apply says whose it is: a Personalised tag when we know
+// the reader, and the way to tell us when we don't (designs 250a, 250p).
+export function useHowToApplySlot(overview: Overview | null, besideSteps: boolean): NoteSectionSlot | null {
   const steps = useForAnyoneSteps(overview);
-  const aboutYou = useSettingsQuery().data?.aboutYou ?? EMPTY_ABOUT_YOU;
+  const settings = useSettingsQuery().data;
+  const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const analytics = useAnalytics();
   const [side, setSide] = useState<FlipSide>("you");
   if (isRevealedSample(overview?.id ?? null) && (overview?.howToApply?.items.length ?? 0) > 0) {
@@ -29,7 +35,27 @@ export function useHowToApplySlot(overview: Overview | null): NoteSectionSlot | 
       replacement: null,
     };
   }
-  if (steps.status === "hidden") return null;
+  if (steps.status === "hidden") {
+    if (!besideSteps || (overview?.howToApply?.items.length ?? 0) === 0 || settings === undefined) return null;
+    const known = composeReaderContext(settings.aboutYou, settings.learned) !== null;
+    return {
+      section: HOW_TO_APPLY_SECTION,
+      beside: known ? (
+        <span className={styles.personalised} data-testid={howToApplyFlipTestIds.personalised}>
+          Personalised
+        </span>
+      ) : null,
+      under: known ? null : (
+        <p className={styles.line} data-testid={howToApplyFlipTestIds.forAnyoneLine}>
+          <PageLink to={Routes.settingsSection("personalisation")} className={styles.link}>
+            Tell us about yourself
+          </PageLink>{" "}
+          in Settings and these fit around you.
+        </p>
+      ),
+      replacement: null,
+    };
+  }
 
   const anyone = side === "anyone" && steps.status === "ready";
   const who = firstAboutYouText(aboutYou);

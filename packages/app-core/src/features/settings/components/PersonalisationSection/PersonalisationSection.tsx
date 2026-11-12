@@ -81,6 +81,12 @@ export function PersonalisationSection() {
             onSwitch={() => switchSection(section)}
           />
         ))}
+        {!sectionsEnabled.steps && (
+          <p className={styles.note} data-testid={personalisationSectionTestIds.stepsOffNote}>
+            The steps are hidden on every overview, and new overviews are written without them. Turn it back on to see them on overviews
+            that have them.
+          </p>
+        )}
       </div>
     </div>
   );

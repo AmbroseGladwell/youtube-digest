@@ -21,6 +21,7 @@ import { savedChipTestIds } from "../../src/features/timeSaved/components/SavedC
 import { onThisTabLineTestIds } from "../../src/features/capture/components/OnThisTabLine/OnThisTabLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
+import { SourceStepsPageObject } from "./SourceStepsPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
 import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
@@ -34,6 +35,10 @@ import { madeOnLineTestIds } from "../../src/features/reader/components/MadeOnLi
 export class ReaderPageObject extends PageObject {
   get relatedByTag(): RelatedByTagPageObject {
     return new RelatedByTagPageObject(this.testContext);
+  }
+
+  get sourceSteps(): SourceStepsPageObject {
+    return new SourceStepsPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<ReaderPageObject> =>

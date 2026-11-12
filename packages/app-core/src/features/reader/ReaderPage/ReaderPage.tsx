@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
   KEY_POINTS_SECTION,
   OverviewId,
+  SOURCE_STEPS_SECTION,
   SUMMARY_SECTION,
   adjustedText,
   recipeFrom,
@@ -84,6 +85,7 @@ import { bindOverviewId } from "../../analytics/bindOverviewId.js";
 import { OverviewAnalyticsProvider } from "../../analytics/OverviewAnalyticsContext.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import { useHowToApplySlot } from "./useHowToApplySlot.js";
+import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
@@ -181,18 +183,27 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     [recipe, scale, recipeUnits],
   );
   const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
+  // The reader's switch hides the steps on every overview, as well as leaving them out of new ones.
+  const stepsOn = useSettingsQuery().data?.sectionsEnabled.steps ?? true;
   // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
   const lines = useMemo(
     () =>
       overview
         ? overviewNoteLines(
             overview,
-            recipe === null ? {} : { ingredients: shownIngredients, units: recipeUnits, methodAmounts: adjustment?.methodAmounts ?? [] },
+            recipe === null
+              ? { steps: stepsOn }
+              : { ingredients: shownIngredients, units: recipeUnits, methodAmounts: adjustment?.methodAmounts ?? [] },
           )
         : [],
-    [overview, recipe, shownIngredients, recipeUnits, adjustment],
+    [overview, recipe, shownIngredients, recipeUnits, adjustment, stepsOn],
   );
   const playingStep = usePlayingStep(recipe?.steps ?? [], video?.id ?? null);
+  const sourceStepLines = useMemo(
+    () => lines.flatMap((line, index) => (line.section === SOURCE_STEPS_SECTION && !line.heading ? [{ index, range: line.range }] : [])),
+    [lines],
+  );
+  const playingSourceStep = usePlayingStep(sourceStepLines, video?.id ?? null);
   const seekVideo = useSeekPlayback(video?.id ?? null);
   const methodActions = useMemo(() => (recipe === null ? [] : actionsOf(recipe.steps)), [recipe]);
   const summaryLines = useMemo(
@@ -209,7 +220,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       ? { ...written, [KEY_POINTS_SECTION]: "Chapter links move the article beside this panel to that place." }
       : written;
   }, [overview, besideArticle]);
-  const howToApplySlot = useHowToApplySlot(overview);
+  const howToApplySlot = useHowToApplySlot(
+    overview,
+    lines.some(({ section }) => section === SOURCE_STEPS_SECTION),
+  );
   const captureReason = overview?.captureReason ?? null;
   // A video can be remade from anywhere; an article needs its page open beside the panel,
   // since we keep no copy (docs/features/one-overview-per-video.md, "Regenerating").
@@ -274,8 +288,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       dubious: loaded.overview.verdict?.dubious ?? false,
       read: loaded.state.read,
       favourite: loaded.state.favourite,
+      steps: stepsOn ? (loaded.overview.sourceSteps?.items.length ?? 0) : 0,
     });
-  }, [loaded, overviewId, reader]);
+  }, [loaded, overviewId, reader, stepsOn]);
 
   // Design 2d: the panel's Listen plays straight away and docks the bar; the Plus prompt
   // it used to raise is retired, since audio is open to every account
@@ -505,19 +520,25 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 activeIndex={notePlayer.activeIndex}
                 speaking={notePlayer.playing}
                 onSelectLine={notePlayer.selectLine}
-                renderRange={(line, range, active) =>
-                  video !== null && (
-                    <LineRangeTag
-                      {...noteLineRange(line)}
-                      range={range}
-                      video={video}
-                      active={active}
-                      asSheet={isPhone && !isPanel}
-                      canReadTranscript={true}
-                      onOpenTranscriptAt={openTranscriptAt}
-                    />
-                  )
-                }
+                playingIndex={playingSourceStep === null ? null : (sourceStepLines[playingSourceStep]?.index ?? null)}
+                renderRange={(line, range, active) => {
+                  const step = noteLineRange(line, lines);
+                  const playing = step.step !== undefined && playingSourceStep === step.step - 1;
+                  return (
+                    video !== null && (
+                      <LineRangeTag
+                        {...step}
+                        playing={playing}
+                        range={range}
+                        video={video}
+                        active={active}
+                        asSheet={isPhone && !isPanel}
+                        canReadTranscript={true}
+                        onOpenTranscriptAt={openTranscriptAt}
+                      />
+                    )
+                  );
+                }}
                 renderLineEnd={(line) =>
                   webArticle !== null ? (
                     <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />

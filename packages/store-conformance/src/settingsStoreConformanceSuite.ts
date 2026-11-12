@@ -31,19 +31,21 @@ export function defineSettingsStoreConformanceSuite(label: string, createStore: 
   test(behaviour("update() merges the patch onto the current settings, it does not replace them"), async () => {
     const store = await createStore();
     await store.update({ readerContext: "I'm a beginner cook." });
-    const updated = await store.update({ sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true } });
+    const updated = await store.update({
+      sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true, steps: true },
+    });
     assert.equal(updated.readerContext, "I'm a beginner cook.");
   });
 
   test(behaviour("update() takes every toggle a sectionsEnabled patch names"), async () => {
     const store = await createStore();
     await store.update({
-      sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
+      sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false },
     });
     const updated = await store.update({
-      sectionsEnabled: { verdict: true, selling: false, howToApply: false, watchAnyway: false },
+      sectionsEnabled: { verdict: true, selling: false, howToApply: false, watchAnyway: false, steps: false },
     });
-    assert.deepEqual(updated.sectionsEnabled, { verdict: true, selling: false, howToApply: false, watchAnyway: false });
+    assert.deepEqual(updated.sectionsEnabled, { verdict: true, selling: false, howToApply: false, watchAnyway: false, steps: false });
   });
 
   test(behaviour("unreadable() is null while the stored settings parse"), async () => {
@@ -55,7 +57,7 @@ export function defineSettingsStoreConformanceSuite(label: string, createStore: 
   test(behaviour("consecutive updates accumulate across separate calls"), async () => {
     const store = await createStore();
     await store.update({ readerContext: "first" });
-    await store.update({ sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true } });
+    await store.update({ sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true, steps: true } });
     const final = await store.get();
     assert.equal(final.readerContext, "first");
     assert.equal(final.sectionsEnabled.verdict, false);

@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-10";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-12";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -86,11 +86,11 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          An overview is a note about a video or an article: its big picture, claims, verdict, key points, chapters and tags, plus the
-          video's or page's title, link, channel or site and thumbnail link. Beside it you may add a reason you saved it, file it under
-          topics, and mark it read or favourite. Your settings travel with the account too: the narration voice, theme and accent colour,
-          which sections an overview shows, the About you sentence that personalises overviews and what we have learned from your overviews,
-          the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
+          An overview is a note about a video or an article: its big picture, claims, verdict, key points, the steps it gives, chapters and
+          tags, plus the video's or page's title, link, channel or site and thumbnail link. Beside it you may add a reason you saved it,
+          file it under topics, and mark it read or favourite. Your settings travel with the account too: the narration voice, theme and
+          accent colour, which sections an overview shows, the About you sentence that personalises overviews and what we have learned from
+          your overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,

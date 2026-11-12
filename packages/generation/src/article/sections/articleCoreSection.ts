@@ -7,6 +7,13 @@ import { paragraphIndex } from "./paragraphIndex.js";
 
 const { inOneLine, ...afterInOneLine } = CoreFields.shape;
 
+// Only with the steps switched on, since otherwise there is no list to leave them to.
+const LEAVE_STEPS_TO_THE_LIST = `Steps the piece tells me to follow go in The steps it gives, below, and
+are never repeated here: a key point keeps the idea or the reason behind
+them, and leaves the steps to that list.
+
+`;
+
 const GOOD_BIG_PICTURE =
   "Every town is told its bridges are safe until a repair bill says otherwise, and the question underneath is who decides what counts as safe enough. It also follows the engineer who first raised the alarm.";
 
@@ -72,11 +79,7 @@ Good: "Pretty and premium are different. Packaging studies from 2010 and
 is what gets it called premium."
 Bad: "Premium requires evidence, consistency, recovery and care."
 
-Steps the piece tells me to follow go in The steps it gives, below, and
-are never repeated here: a key point keeps the idea or the reason behind
-them, and leaves the steps to that list.
-
-Keep the specifics that make a point worth having: names, numbers,
+${input.sectionsEnabled.steps ? LEAVE_STEPS_TO_THE_LIST : ""}Keep the specifics that make a point worth having: names, numbers,
 dates, studies, and the concrete details. Always keep any caveat, criticism
 or counter-argument the piece itself raises, and keep who claims
 something when the piece presents it as one person's claim rather than

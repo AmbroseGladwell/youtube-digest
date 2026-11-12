@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type 
 import { createPortal } from "react-dom";
 import {
   KEY_POINTS_SECTION,
+  SOURCE_STEPS_SECTION,
   WATCH_ANYWAY_SECTION,
   formatTimestamp,
   youtubeTimestampUrl,
@@ -10,13 +11,21 @@ import {
   type VideoSource,
 } from "@overview/domain";
 
-export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep";
+export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep" | "sourceStep";
 
-// What a line of the note points at, for the tag at its end.
-export const noteLineRange = (line: NoteLine): { kind: RangeKind; about: string } => ({
-  kind: line.section === WATCH_ANYWAY_SECTION ? "watchAnyway" : line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut",
-  about: line.text,
-});
+// What a line of the note points at, for the tag at its end. One of the steps a source gives
+// names its number, counted from the note's lines (design 250d).
+export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): { kind: RangeKind; about: string; step?: number } => {
+  if (line.section === SOURCE_STEPS_SECTION) {
+    const steps = lines.filter((each) => each.section === SOURCE_STEPS_SECTION && !each.heading);
+    const at = steps.indexOf(line);
+    return { kind: "sourceStep", about: line.text, ...(at === -1 ? {} : { step: at + 1 }) };
+  }
+  return {
+    kind: line.section === WATCH_ANYWAY_SECTION ? "watchAnyway" : line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut",
+    about: line.text,
+  };
+};
 import { useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -29,9 +38,10 @@ export interface LineRangeTagProps {
   kind: RangeKind;
   // The words the stretch belongs to, repeated at the top of the phone's sheet.
   about: string;
-  // A method step names itself in the tag's label, "Step 4 at 4:12" (design 122g).
+  // A method step, or one of the steps a source gives, names itself in the tag's label,
+  // "Step 4 at 4:12" (designs 122g, 250d).
   step?: number;
-  // The video beside the panel is inside this stretch (design 122i).
+  // The video beside the panel is inside this stretch (designs 122i, 250e).
   playing?: boolean;
   range: TimeRange;
   video: VideoSource;

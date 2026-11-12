@@ -54,6 +54,7 @@ test("opening an overview is counted with what its verdict said, and what the re
           dubious: overview.verdict?.dubious ?? false,
           read: false,
           favourite: false,
+          steps: 0,
         },
       },
       { name: "reader.tabs.switched", props: { overviewId, tab: "chapters" } },

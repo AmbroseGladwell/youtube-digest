@@ -97,3 +97,12 @@
     height: 26px;
   }
 }
+
+// Design 250s: unlike the other switches, this one also hides what is already written.
+.note {
+  margin: 0.625rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}

@@ -11,6 +11,15 @@ export class PersonalisationSectionPageObject extends PageObject {
       expect(this.page.getByRole("switch", { name })).toHaveAttribute("aria-checked", String(on)),
     );
 
+  verifyStepsOffNoteIsShown = (shown: boolean) =>
+    this.step(`verifyStepsOffNoteIsShown ${shown}`, () =>
+      shown
+        ? expect(this.page.getByTestId(personalisationSectionTestIds.stepsOffNote)).toHaveText(
+            "The steps are hidden on every overview, and new overviews are written without them. Turn it back on to see them on overviews that have them.",
+          )
+        : expect(this.page.getByTestId(personalisationSectionTestIds.stepsOffNote)).toHaveCount(0),
+    );
+
   get sentence() {
     return new AboutYouSentencePageObject(this.testContext);
   }

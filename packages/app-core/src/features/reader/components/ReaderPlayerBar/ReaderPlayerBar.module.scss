@@ -157,6 +157,11 @@
   @include controls.pill-sm;
 }
 
+// Design 250h: "Skip steps" where the bar is short of room.
+.skipStepsNarrow {
+  display: none;
+}
+
 .primaryAction {
   @include controls.action-pill;
   @include controls.pill-sm;
@@ -198,6 +203,14 @@
 // transport and favourite on one row, then the label, any note and any way out, centred.
 // The wrappers dissolve so their children can take areas of their own.
 @media (max-width: 61.9375rem) {
+  .skipStepsWide {
+    display: none;
+  }
+
+  .skipStepsNarrow {
+    display: inline;
+  }
+
   .root {
     display: grid;
     grid-template-columns: 3.125rem minmax(0, 1fr) 3.125rem;
