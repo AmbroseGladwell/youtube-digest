@@ -409,6 +409,7 @@ export const analyticsEvents = {
     shareDialog: {
       created: event("The reader makes a share link for the overview"),
       updated: event("The reader replaces the shared copy with the overview as it is now"),
+      audioAdded: event("The reader adds audio rendered since sharing to the shared copy, behind the same link"),
       stopAsked: event("The reader asks to stop sharing the overview, before confirming"),
       stopped: event("The reader confirms stopping sharing the overview"),
       stopCancelled: event("The reader backs out of stopping sharing the overview"),
