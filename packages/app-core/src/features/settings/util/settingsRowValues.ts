@@ -37,7 +37,8 @@ export function accountRowValue(sync: { connected: boolean; status: SyncStatus }
   return name === null ? line : `${name} · ${line}`;
 }
 
-export const timerSoundRowValue = (sound: TimerSound): string => `Timer sound: ${TIMER_SOUND_LABELS[sound].name}`;
+export const cookingRowValue = (readStepsAloud: boolean, sound: TimerSound): string =>
+  `Voice ${readStepsAloud ? "on" : "off"} · ${TIMER_SOUND_LABELS[sound].name}`;
 
 export function voiceRowValue(voice: NarrationVoice): string {
   return `${narrationVoiceName(voice)} · ${ACCENT_GROUP_LABELS[narrationAccent(voice)]}`;

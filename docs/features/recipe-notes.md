@@ -341,7 +341,7 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   holds a wake lock. While the mode is open the media session's track buttons are Next and Back, and
   play/pause is Next while the voice waits and pause or resume while it reads (owner). A dismissible
   line says so on the first two entries where there is a voice. Keys: Space or → Next, ← Back,
-  R Say it again, I Ingredients, Esc Done, shown on the web's buttons.
+  R Say it again, I Ingredients, M Mute, Esc Done, shown on the web's buttons.
 - **Leaving (150w).** Done or Esc, no confirm unless a timer is running (see "Timers"). The place is kept on this device for 24 hours (owner)
   and cleared by Finish; the method says "You stopped at step 8 of 16.", tints that step, and offers
   "Carry on from step 8" and "Start from step 1".
@@ -350,6 +350,28 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   `reader.cooking.timerStarted` (seconds, step, whether it was one end of a range) and
   `reader.cooking.timerEnded` (dismissed, cancelled or left, and whether it rang). Settings sends
   `settings.cooking.timerSoundChosen`, `timerSoundPlayed` and `timerSoundStopped`, each with the sound.
+  Muting sends `reader.cooking.voiceMuted` (muted or not, by the button or M), and the Settings
+  switch `settings.cooking.readStepsAloudChosen`.
+
+### Muting the voice
+
+Trello OV-289, designs 289a–289n (OV-289 in Claude Design), 12 Nov 2026. One synced setting,
+`Settings.readStepsAloud`, on by default, read two ways round:
+
+- **In the mode (289b–289g).** A 44px speaker in the top bar, between Ingredients and the step count,
+  named "Mute voice" with `aria-pressed`. Pressed, it takes the stone tint and ring and the speaker is
+  crossed out. The voice stops at once, mid-sentence if it was reading, and the voice line says "Voice
+  muted. The steps are text only". Say it again goes, as with no narration, and R does nothing. The
+  headphones' play/pause is Next. Muted, the mode only holds the narration at the action and never
+  plays it, so no audio is asked for or paid for. Unmuting reads the current action from its start,
+  except on the end screen or while a timer rings.
+- **No narration.** A recipe with none has nothing to mute: no button, and the line stays "No
+  narration on this recipe". The setting is kept for the next recipe.
+- **Timers (289h).** They ring as before. Under the banner, the line keeps saying the voice is muted
+  rather than "the voice waits".
+- **Settings › Cooking (289i–289l).** A "Read steps aloud" switch above Timer sound, with one line on
+  what off means. The Cooking row reads "Voice on · Ready" or "Voice off · Ready". Both the switch
+  and the button save at once and sync, so muting on the phone opens the mode muted on the web.
 
 ### Timers
 

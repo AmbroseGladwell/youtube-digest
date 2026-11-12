@@ -42,7 +42,7 @@ import {
   milestonesRowValue,
   personalisationRowValue,
   sharedLinksRowValue,
-  timerSoundRowValue,
+  cookingRowValue,
   voiceRowValue,
 } from "./util/settingsRowValues.js";
 
@@ -123,7 +123,11 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           },
         ]
       : []),
-    { id: "cooking", title: "Cooking", value: timerSoundRowValue(settings?.timerSound ?? DEFAULT_TIMER_SOUND) },
+    {
+      id: "cooking",
+      title: "Cooking",
+      value: cookingRowValue(settings?.readStepsAloud ?? true, settings?.timerSound ?? DEFAULT_TIMER_SOUND),
+    },
     {
       id: "personalisation",
       title: "Personalisation",

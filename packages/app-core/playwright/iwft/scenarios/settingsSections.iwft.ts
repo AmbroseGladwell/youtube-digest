@@ -37,7 +37,7 @@ test("on a wide screen, Settings opens beside its first section, and every row c
   await settings.verifySectionIsShown("account");
   await settings.verifyRowReads("account", /^Ada · (Synced|Connected)/);
   await settings.verifyRowReads("voice", "George · British English");
-  await settings.verifyRowReads("cooking", "Timer sound: Ready");
+  await settings.verifyRowReads("cooking", "Voice on · Ready");
   await settings.verifyRowReads("keys", /· 1 key$/);
   await settings.verifyRowReads("connections", "None");
   await settings.verifyRowReads("milestones", "0m saved · 0 of 10");

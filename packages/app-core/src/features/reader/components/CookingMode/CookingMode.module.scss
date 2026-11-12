@@ -134,6 +134,25 @@
   flex: none;
 }
 
+.topEnd {
+  display: flex;
+  gap: 0.5rem;
+  flex: none;
+}
+
+// Design 289c, 289b: a 44px speaker in the top bar; pressed, the stone tint and ring.
+.mute {
+  min-width: 2.75rem;
+  justify-content: center;
+  padding: 0 0.625rem;
+
+  &[aria-pressed="true"] {
+    background: var(--stone-tint);
+    color: var(--on-stone-tint);
+    box-shadow: inset 0 0 0 2px var(--label);
+  }
+}
+
 .title {
   flex: 1;
   min-width: 0;

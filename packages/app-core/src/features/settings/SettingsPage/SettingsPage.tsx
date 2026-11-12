@@ -16,6 +16,7 @@ import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
 import { NARRATION_VOICE_STANDFIRST, NarrationVoicePicker } from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
 import { PERSONALISATION_STANDFIRST, PersonalisationSection } from "../components/PersonalisationSection/PersonalisationSection.js";
+import { ReadStepsAloudSwitch } from "../components/ReadStepsAloudSwitch/ReadStepsAloudSwitch.js";
 import { COOKING_STANDFIRST, TimerSoundPicker } from "../components/TimerSoundPicker/TimerSoundPicker.js";
 import { SettingsSection, settingsSectionHeadingId } from "../components/SettingsSection/SettingsSection.js";
 import { SettingsSectionList } from "../components/SettingsSectionList/SettingsSectionList.js";
@@ -57,7 +58,12 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
     case "voice":
       return <NarrationVoicePicker scrollToChosen labelledBy={settingsSectionHeadingId("voice")} />;
     case "cooking":
-      return <TimerSoundPicker />;
+      return (
+        <div className={styles.cooking}>
+          <ReadStepsAloudSwitch />
+          <TimerSoundPicker />
+        </div>
+      );
     case "personalisation":
       return <PersonalisationSection />;
     case "appearance":

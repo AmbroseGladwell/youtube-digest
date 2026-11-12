@@ -9,7 +9,7 @@ const SIGNED_IN = {
 test("Settings › Cooking chooses the timer sound, saved at once and named on its row", async ({ page, launcher, backendSimulator }) => {
   await launcher.launch(SIGNED_IN);
   const settings = await launcher.appShell.openSettings();
-  await settings.verifyRowReads("cooking", "Timer sound: Ready");
+  await settings.verifyRowReads("cooking", "Voice on · Ready");
   await settings.openSection("cooking");
 
   await expect(page.getByTestId("TimerSoundPicker.root")).toContainText("Timer sound");
@@ -22,7 +22,7 @@ test("Settings › Cooking chooses the timer sound, saved at once and named on i
   await expect(page.getByTestId("TimerSoundPicker.chosenTag")).toHaveCount(1);
   await expect(page.getByTestId("TimerSoundPicker.row.marimba")).toContainText("Your sound");
   await expect.poll(async () => (await backendSimulator.settingsStore.get()).timerSound).toBe("marimba");
-  await settings.verifyRowReads("cooking", "Timer sound: Marimba");
+  await settings.verifyRowReads("cooking", "Voice on · Marimba");
 });
 
 test("a sound plays as a sample, one at a time, and can be stopped", async ({ page, launcher }) => {
