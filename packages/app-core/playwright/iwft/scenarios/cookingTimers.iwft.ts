@@ -23,7 +23,7 @@ const SIGNED_IN = {
 const MINUTE = 60_000;
 
 const sentEvents = async (page: Page, events: () => { name: string }[], name: string) => {
-  await page.clock.runFor(MINUTE);
+  await page.clock.fastForward(MINUTE);
   return events().filter((event) => event.name === name);
 };
 
@@ -61,7 +61,7 @@ test("a time in the step starts a timer that stays in view and counts down as th
   await expect(chipTimes(page)).toHaveText(["15:00"]);
   await expect(page.getByTestId("CookingTimerPills.running")).toHaveText(/15 min · running/);
 
-  await page.clock.runFor(MINUTE);
+  await page.clock.fastForward(MINUTE);
   await expect(chipTimes(page)).toHaveText(["14:00"]);
   await page.getByTestId("CookingMode.forward").click();
   await page.getByTestId("CookingMode.forward").click();
@@ -101,7 +101,7 @@ test("a timer rings on whatever step the reader is on, Dismiss answers it, and S
   await page.getByRole("button", { name: "Start a 15-minute timer" }).click();
   await goToStep(page, 3);
 
-  await page.clock.runFor(15 * MINUTE);
+  await page.clock.fastForward(15 * MINUTE);
   await expect(page.getByTestId("CookingTimerBanner.title")).toHaveText("Boil timer is done");
   await expect(page.getByTestId("CookingTimerBanner.root")).toContainText("Step 1 · 15 min · just now");
   await expect(page.getByTestId("CookingMode.voice")).toHaveText("Timer ringing· the voice waits");
@@ -118,7 +118,7 @@ test("a timer rings on whatever step the reader is on, Dismiss answers it, and S
 
 test("+1 min on a ringing timer runs it again for a minute", async ({ page }) => {
   await page.getByRole("button", { name: "Start a 15-minute timer" }).click();
-  await page.clock.runFor(15 * MINUTE);
+  await page.clock.fastForward(15 * MINUTE);
   await page.getByTestId("CookingTimerBanner.more").click();
   await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
   await expect(chipTimes(page)).toHaveText(["1:00"]);
@@ -128,7 +128,7 @@ test("two ringing at once get a row each, oldest first, each dismissed on its ow
   await goToStep(page, 2);
   await page.getByRole("button", { name: "Start a 5-minute rest timer" }).click();
   await page.getByRole("button", { name: "Start a 10-minute simmer timer" }).click();
-  await page.clock.runFor(10 * MINUTE);
+  await page.clock.fastForward(10 * MINUTE);
   await expect(page.getByTestId("CookingTimerBanner.title")).toHaveText("Two timers are done");
   await expect(page.getByTestId("CookingTimerBanner.row")).toHaveCount(2);
   await expect(page.getByTestId("CookingTimerBanner.row").first()).toContainText("Rest");
@@ -145,10 +145,10 @@ test("a running timer's sheet takes a minute off, pauses, resumes and cancels", 
 
   await page.getByTestId("CookingTimerSheet.pause").click();
   await expect(page.getByTestId("CookingTimerSheet.line")).toHaveText("paused · left of 14 min");
-  await page.clock.runFor(5 * MINUTE);
+  await page.clock.fastForward(5 * MINUTE);
   await expect(page.getByTestId("CookingTimerSheet.clock")).toHaveText("14:00");
   await page.getByTestId("CookingTimerSheet.pause").click();
-  await page.clock.runFor(MINUTE);
+  await page.clock.fastForward(MINUTE);
   await expect(page.getByTestId("CookingTimerSheet.clock")).toHaveText("13:00");
 
   await page.getByTestId("CookingTimerSheet.cancel").click();
