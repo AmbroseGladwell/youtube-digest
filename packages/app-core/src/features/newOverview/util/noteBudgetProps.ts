@@ -12,14 +12,14 @@ const UNBUDGETED: NoteBudgetProps = { sourceWords: undefined, keyPoints: undefin
 
 // Counts only, so the budget's dials can be read against real notes. A recipe page has no key
 // points and is on no budget (docs/features/overview-generation-decisions.md, "One note budget").
-export function noteBudgetProps(overview: Overview, sourceWords: number | null): NoteBudgetProps {
+export function noteBudgetProps(overview: Overview, sourceWords: number | null, headedParts = 0): NoteBudgetProps {
   if (sourceWords === null || overview.keyPoints.length === 0) {
     return UNBUDGETED;
   }
   return {
     sourceWords,
     keyPoints: overview.keyPoints.length,
-    keyPointCeiling: noteBudget(overview.article === null ? "spoken" : "written", sourceWords).keyPoints,
+    keyPointCeiling: noteBudget(overview.article === null ? "spoken" : "written", sourceWords, headedParts).keyPoints,
     chapters: (overview.article?.chapters ?? overview.chapters)?.length ?? 0,
   };
 }

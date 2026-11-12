@@ -18,6 +18,10 @@ describe("noteBudgetProps", () => {
     expect(noteBudgetProps(makeArticleOverview(), 3_220)).toMatchObject({ keyPointCeiling: 6, chapters: 3 });
   });
 
+  it("counts a heading-dense article against the row above its length", () => {
+    expect(noteBudgetProps(makeArticleOverview(), 1_401, 8)).toMatchObject({ keyPointCeiling: 6 });
+  });
+
   it("says nothing for a recipe page, which has no key points, or when the length is unknown", () => {
     const nothing = { sourceWords: undefined, keyPoints: undefined, keyPointCeiling: undefined, chapters: undefined };
     expect(noteBudgetProps(makeRecipeOverview(), 900)).toEqual(nothing);

@@ -101,11 +101,13 @@ test("an article is made on our key from what the reader's browser read, and cou
         heading: null,
         anchor: null,
         text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday.",
+        links: [],
       },
       {
         heading: "Who pays",
         anchor: "who-pays",
         text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates.",
+        links: [],
       },
     ],
     wordCount: 500,
