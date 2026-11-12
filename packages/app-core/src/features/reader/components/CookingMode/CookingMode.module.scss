@@ -25,6 +25,14 @@
   &::backdrop {
     background: var(--ground);
   }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+:global(html):has(.root[open]) {
+  overflow: hidden;
 }
 
 .panel {

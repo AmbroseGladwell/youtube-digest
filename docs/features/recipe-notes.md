@@ -294,7 +294,7 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   52 to 32 on the web, in rem), and the next action muted under it: "Then", or "Then step 5" when
   it starts a new step. In the panel the preview drops for an action over 30 words. Next is the
   biggest thing on the screen; Back and Say it again sit above it. Next becomes Finish on the last
-  action.
+  action. The page behind doesn't scroll while the mode is open (OV-287).
 - **The voice (150i, 150j).** It reads the action's own line of the recipe's narration and stops,
   using the same stop as Read aloud, so the mode needs no render of its own. One line says what it
   is doing: Reading step 4, Waiting for you, the voice on its way while the audio renders (the reader
@@ -386,7 +386,8 @@ Trello OV-284, designs 284a–284ah (OV-284 1–3 in Claude Design), with the ow
   first. The reader's timer sound, made with Web Audio and unlocked by the tap that started the
   timer, repeats until dismissed with a vibration where there is one; the voice pauses ("Timer ringing · the voice
   waits") and carries on once nothing rings. Focus moves to Dismiss, so Space dismisses, and Next's
-  Space label hides meanwhile. In the panel "Then" gives way to the banner. While a timer rings the
+  Space label hides meanwhile. Once one is answered, focus goes to the next Dismiss, and with none
+  left to the cooking screen itself, so Space and the arrows move on again without a click (OV-287). In the panel "Then" gives way to the banner. While a timer rings the
   headphones' play and pause dismiss it (owner's question; the design's recommendation); the track
   buttons stay Back and Next.
 - **Leaving (284x–284ac).** With a timer running, Done, Esc and Back to the recipe ask "Leave cooking
