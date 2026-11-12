@@ -41,7 +41,7 @@ export function useActionSwipe(onUp: () => void, onDown: () => void, enabled: bo
     handlers: {
       onPointerDown: (event) => {
         if (!enabled || (event.pointerType === "mouse" && event.button !== 0)) return;
-        if ((event.target as HTMLElement).closest("button, a")) return;
+        if ((event.target as HTMLElement).closest("button, a, [data-swipe-ignore]")) return;
         start.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
         event.currentTarget.setPointerCapture?.(event.pointerId);
       },

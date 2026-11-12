@@ -4,6 +4,7 @@ export const SETTINGS_SECTION_IDS = [
   "keys",
   "connections",
   "voice",
+  "cooking",
   "personalisation",
   "appearance",
   "milestones",

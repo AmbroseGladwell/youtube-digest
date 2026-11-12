@@ -2,6 +2,7 @@ import {
   DEFAULT_NARRATION_VOICE,
   DEFAULT_PROVIDER,
   DEFAULT_SECTIONS_ENABLED,
+  DEFAULT_TIMER_SOUND,
   EMPTY_ABOUT_YOU,
   keptLearnedItems,
   timeSavedSummary,
@@ -41,6 +42,7 @@ import {
   milestonesRowValue,
   personalisationRowValue,
   sharedLinksRowValue,
+  timerSoundRowValue,
   voiceRowValue,
 } from "./util/settingsRowValues.js";
 
@@ -121,6 +123,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
           },
         ]
       : []),
+    { id: "cooking", title: "Cooking", value: timerSoundRowValue(settings?.timerSound ?? DEFAULT_TIMER_SOUND) },
     {
       id: "personalisation",
       title: "Personalisation",

@@ -325,6 +325,14 @@
   text-wrap: pretty;
 }
 
+// Design 284a: a time the reader can start, marked apart from the stone tint of a changed number.
+.time {
+  text-decoration: underline dotted var(--mark);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
 // The condition of a branch, set apart by weight and colour (150at, owner 3 Nov 2026).
 .condition {
   color: var(--label);
@@ -458,6 +466,13 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
+  color: var(--alert);
+}
+
+.ringing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   color: var(--alert);
 }
 

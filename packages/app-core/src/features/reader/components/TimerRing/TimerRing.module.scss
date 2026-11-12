@@ -1,0 +1,22 @@
+.ring {
+  flex: none;
+}
+
+.track,
+.fill {
+  fill: none;
+  stroke-width: 4.5;
+}
+
+.track {
+  stroke: var(--ground);
+}
+
+.fill {
+  stroke: var(--mark);
+  stroke-linecap: round;
+}
+
+.paused .fill {
+  stroke: var(--muted);
+}

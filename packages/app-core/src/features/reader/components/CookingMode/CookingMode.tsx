@@ -3,17 +3,25 @@ import {
   formatTimestamp,
   inMethodAmounts,
   inUsOvenTemperatures,
+  methodTimes,
   type MethodAmount,
+  type MethodTime,
   type RecipeAction,
   type RecipeStep,
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { isAppleMobile } from "../../../../util/isAppleMobile.js";
 import { useScreenAwake } from "../../../../util/useScreenAwake.js";
 import type { CookingMode as CookingModeState, CookingVoice } from "../../ReaderPage/useCookingMode.js";
+import { CookingLeaveSheet } from "../CookingLeaveSheet/CookingLeaveSheet.js";
 import { CookingIngredientsDrawer } from "../CookingIngredientsDrawer/CookingIngredientsDrawer.js";
 import { CookingIngredientsSheet } from "../CookingIngredientsSheet/CookingIngredientsSheet.js";
 import { CookingStepsSheet } from "../CookingStepsSheet/CookingStepsSheet.js";
 import { CookingStepVideoSheet } from "../CookingStepVideoSheet/CookingStepVideoSheet.js";
+import { CookingTimerBanner } from "../CookingTimerBanner/CookingTimerBanner.js";
+import { CookingTimerPills } from "../CookingTimerPills/CookingTimerPills.js";
+import { CookingTimerSheet } from "../CookingTimerSheet/CookingTimerSheet.js";
+import { CookingTimerStrip } from "../CookingTimerStrip/CookingTimerStrip.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import styles from "./CookingMode.module.scss";
 import { cookingModeTestIds } from "./CookingModeTestIds.js";
@@ -107,17 +115,74 @@ function VoiceLine({
   );
 }
 
-function ActionText({ action, us, amounts }: { action: RecipeAction; us: boolean; amounts: readonly MethodAmount[] }) {
-  if (action.condition === null) return <OvenText text={action.text} us={us} amounts={amounts} />;
+interface TimedTextProps {
+  text: string;
+  offset: number;
+  times: readonly MethodTime[];
+  us: boolean;
+  amounts: readonly MethodAmount[];
+  onTime: (index: number) => void;
+}
+
+// Design 284a: each time in the action is underlined in orange, and tapping it does what its pill does.
+function TimedText({ text, offset, times, us, amounts, onTime }: TimedTextProps) {
+  const parts: ReactNode[] = [];
+  let from = 0;
+  times.forEach((time, index) => {
+    const start = Math.max(time.start - offset, 0);
+    const end = Math.min(time.end - offset, text.length);
+    if (end <= from || start >= text.length) return;
+    if (start > from) parts.push(<OvenText key={`text${from}`} text={text.slice(from, start)} us={us} amounts={amounts} />);
+    parts.push(
+      <span
+        key={`time${index}`}
+        className={styles.time}
+        onClick={() => onTime(index)}
+        data-swipe-ignore=""
+        data-testid={cookingModeTestIds.time}
+      >
+        {text.slice(start, end)}
+      </span>,
+    );
+    from = end;
+  });
+  if (from < text.length) parts.push(<OvenText key={`text${from}`} text={text.slice(from)} us={us} amounts={amounts} />);
+  return <>{parts}</>;
+}
+
+interface ActionTextProps {
+  action: RecipeAction;
+  times: readonly MethodTime[];
+  us: boolean;
+  amounts: readonly MethodAmount[];
+  onTime: (index: number) => void;
+}
+
+function ActionText({ action, times, us, amounts, onTime }: ActionTextProps) {
+  if (action.condition === null) return <TimedText text={action.text} offset={0} times={times} us={us} amounts={amounts} onTime={onTime} />;
   return (
     <>
       <b className={styles.condition} data-testid={cookingModeTestIds.condition}>
-        <OvenText text={action.condition} us={us} amounts={amounts} />
+        <TimedText text={action.condition} offset={0} times={times} us={us} amounts={amounts} onTime={onTime} />
       </b>
-      <OvenText text={action.text.slice(action.condition.length)} us={us} amounts={amounts} />
+      <TimedText
+        text={action.text.slice(action.condition.length)}
+        offset={action.condition.length}
+        times={times}
+        us={us}
+        amounts={amounts}
+        onTime={onTime}
+      />
     </>
   );
 }
+
+const wakeLineFor = (awake: boolean, timing: boolean, web: boolean): string | null => {
+  if (!timing) return awake ? "Screen stays on while you cook" : null;
+  if (isAppleMobile()) return awake ? "Screen stays on. Keep it open to hear your timer" : "Keep this screen on to hear your timer";
+  if (web) return awake ? "Screen stays on. Keep this tab in front to hear your timer" : "Keep this tab in front to hear your timer";
+  return awake ? "Screen stays on while you cook" : "Keep this screen on to hear your timer";
+};
 
 // Designs 150c–150au: the action being cooked, large, with the next one under it, and Next the
 // biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
@@ -143,7 +208,13 @@ export function CookingMode({
   const [stepsOpen, setStepsOpen] = useState(false);
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [watching, setWatching] = useState(false);
-  const awake = useScreenAwake(mode.open && !mode.finished);
+  const [timerShown, setTimerShown] = useState<number | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  const firstPill = useRef<HTMLButtonElement | null>(null);
+  const timers = mode.timers;
+  const timing = timers.running.length > 0;
+  const ringing = timers.ringing.length > 0;
+  const awake = useScreenAwake(mode.open && (!mode.finished || timing));
   const action = actions[mode.at];
   const following = actions[mode.at + 1];
   const isLast = mode.at >= actions.length - 1;
@@ -166,6 +237,8 @@ export function CookingMode({
       setStepsOpen(false);
       setIngredientsOpen(false);
       setWatching(false);
+      setTimerShown(null);
+      setLeaving(false);
     }
   }, [mode.open]);
 
@@ -175,7 +248,36 @@ export function CookingMode({
     drawerWasOpen.current = web && ingredientsOpen;
   }, [web, ingredientsOpen]);
 
-  const leave = () => (mode.finished ? mode.close() : mode.done());
+  useEffect(() => {
+    if (!timing) setLeaving(false);
+  }, [timing]);
+
+  const leaveNow = () => (mode.finished ? mode.close() : mode.done());
+  const leave = () => (timing ? setLeaving(true) : leaveNow());
+  const backToRecipe = () => (timing ? setLeaving(true) : mode.close());
+  const times = action === undefined ? [] : methodTimes(action.text);
+  const shownTimer = timers.running.find((timer) => timer.id === timerShown) ?? null;
+
+  const startTimer = (time: MethodTime, index: number, seconds: number) => {
+    if (action === undefined) return;
+    timers.start({ name: time.name, step: action.step, source: { action: mode.at, time: index, seconds }, range: time.seconds.length > 1 });
+  };
+
+  const onTime = (index: number) => {
+    const time = times[index];
+    if (time === undefined) return;
+    const only = time.seconds.length === 1 ? time.seconds[0]! : null;
+    const running = only === null ? undefined : timers.runningFrom({ action: mode.at, time: index, seconds: only });
+    if (running !== undefined) setTimerShown(running.id);
+    else if (only !== null) startTimer(time, index, only);
+    else firstPill.current?.focus();
+  };
+
+  const timerKey = () => {
+    const only = times.length === 1 && times[0]!.seconds.length === 1;
+    if (only) firstPill.current?.click();
+    else firstPill.current?.focus();
+  };
 
   const drawerHasTheKey = (event: KeyboardEvent<HTMLDialogElement>) => {
     const target = event.target as HTMLElement;
@@ -183,7 +285,8 @@ export function CookingMode({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || stepsOpen || watching) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || stepsOpen || watching || leaving || shownTimer !== null)
+      return;
     const key = event.key;
     if (key === "Escape") {
       event.preventDefault();
@@ -197,6 +300,12 @@ export function CookingMode({
       return;
     }
     if (mode.finished || (ingredientsOpen && !web) || drawerHasTheKey(event)) return;
+    if ((key === " " || key === "Enter") && (event.target as HTMLElement).closest("[data-cooking-own-keys] button") !== null) return;
+    if ((key === "t" || key === "T") && times.length > 0) {
+      event.preventDefault();
+      timerKey();
+      return;
+    }
     if (key === " " || key === "ArrowRight") {
       event.preventDefault();
       mode.next();
@@ -212,10 +321,23 @@ export function CookingMode({
   const words = action === undefined ? 0 : wordsIn(action.text);
   const length = Math.min(Math.max((words - 3) / 27, 0), 1);
   const narrowColumn = surface === "panel" || (web && column.scale === "narrow");
-  const showPreview = following !== undefined && !(narrowColumn && words > LONG_ACTION_WORDS);
+  const showPreview = following !== undefined && !(narrowColumn && words > LONG_ACTION_WORDS) && !(surface === "panel" && ringing);
   const group = action === undefined ? null : (steps[action.step]?.group ?? null);
   const moment = action === undefined || videoId === null ? undefined : steps[action.step]?.range;
   const key = (label: string) => (web ? <kbd className={styles.key}>{label}</kbd> : null);
+  const wakeLine = wakeLineFor(awake, timing, web);
+  const timerBlock = (
+    <>
+      <CookingTimerBanner
+        ringing={timers.ringing}
+        now={timers.now}
+        onDismiss={timers.dismiss}
+        onMore={(id) => timers.adjust(id, 1)}
+        dismissKey={key("Space")}
+      />
+      <CookingTimerStrip timers={timers.running} now={timers.now} onOpen={setTimerShown} />
+    </>
+  );
 
   return (
     <dialog
@@ -282,6 +404,7 @@ export function CookingMode({
 
             {mode.finished ? (
               <div className={styles.end} data-testid={cookingModeTestIds.end}>
+                {timerBlock}
                 <div className={styles.endBody}>
                   <p className={styles.place}>All {steps.length} steps</p>
                   <p className={styles.endLine} role="status">
@@ -300,7 +423,7 @@ export function CookingMode({
                     <StrokeIcon name="rotateCcw" size={18} />
                     Start again
                   </button>
-                  <button type="button" className={styles.next} onClick={mode.close} data-testid={cookingModeTestIds.backToRecipe}>
+                  <button type="button" className={styles.next} onClick={backToRecipe} data-testid={cookingModeTestIds.backToRecipe}>
                     Back to the recipe
                   </button>
                 </div>
@@ -326,6 +449,8 @@ export function CookingMode({
                     <b style={{ width: `${((mode.at + 1) / actions.length) * 100}%` }} />
                   </div>
                 )}
+
+                {timerBlock}
 
                 <div className={styles.stage}>
                   <div
@@ -354,8 +479,17 @@ export function CookingMode({
                       </p>
                     )}
                     <p className={styles.action} style={{ "--length": length } as CSSProperties} data-testid={cookingModeTestIds.action}>
-                      <ActionText action={action} us={usTemperatures} amounts={methodAmounts} />
+                      <ActionText action={action} times={times} us={usTemperatures} amounts={methodAmounts} onTime={onTime} />
                     </p>
+                    <CookingTimerPills
+                      times={times}
+                      action={mode.at}
+                      runningFrom={timers.runningFrom}
+                      onStart={startTimer}
+                      onOpen={setTimerShown}
+                      firstPill={firstPill}
+                      firstKey={key("T")}
+                    />
                     {showPreview && (
                       <div className={styles.preview} data-testid={cookingModeTestIds.next}>
                         <b data-testid={cookingModeTestIds.nextLead}>
@@ -389,7 +523,17 @@ export function CookingMode({
                 )}
 
                 <div className={styles.voice} role="status" data-testid={cookingModeTestIds.voice}>
-                  <VoiceLine voice={mode.voice} step={action.step + 1} firstScreen={mode.firstScreen} onTryAgain={mode.tryAgain} />
+                  {ringing ? (
+                    <>
+                      <span className={styles.ringing}>
+                        <StrokeIcon name="bell" size={14} />
+                        Timer ringing
+                      </span>
+                      <span>· the voice waits</span>
+                    </>
+                  ) : (
+                    <VoiceLine voice={mode.voice} step={action.step + 1} firstScreen={mode.firstScreen} onTryAgain={mode.tryAgain} />
+                  )}
                 </div>
 
                 {mode.hint && voiced && (
@@ -430,16 +574,16 @@ export function CookingMode({
                   <button type="button" className={styles.next} onClick={mode.next} data-testid={cookingModeTestIds.forward}>
                     {isLast ? "Finish" : "Next"}
                     {isLast ? <StrokeIcon name="check" size={26} /> : <StrokeIcon name="arrowRight" size={26} />}
-                    {key("Space")}
+                    {!ringing && key("Space")}
                   </button>
                 </div>
               </>
             )}
 
-            {awake && !mode.finished && (
+            {wakeLine !== null && (!mode.finished || timing) && (
               <p className={styles.awake} data-testid={cookingModeTestIds.awake}>
-                <StrokeIcon name="sun" size={13} />
-                Screen stays on while you cook
+                <StrokeIcon name={awake ? "sun" : "timer"} size={13} />
+                {wakeLine}
               </p>
             )}
 
@@ -452,6 +596,30 @@ export function CookingMode({
                 onClose={() => setWatching(false)}
               />
             )}
+            <CookingTimerSheet
+              timer={shownTimer}
+              now={timers.now}
+              onPause={timers.pause}
+              onResume={timers.resume}
+              onAdjust={timers.adjust}
+              onCancel={(id) => {
+                timers.cancel(id);
+                setTimerShown(null);
+              }}
+              onClose={() => setTimerShown(null)}
+            />
+            <CookingLeaveSheet
+              open={leaving}
+              timers={timers.running}
+              now={timers.now}
+              web={web}
+              keepKey={key("Esc")}
+              onKeep={() => setLeaving(false)}
+              onLeave={() => {
+                setLeaving(false);
+                leaveNow();
+              }}
+            />
             <CookingStepsSheet
               open={stepsOpen}
               steps={steps}
