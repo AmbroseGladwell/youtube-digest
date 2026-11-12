@@ -45,6 +45,16 @@ const FULL = makeOverview({
     similarTo: [{ overviewId: SIMILAR_ID, title: "Hinge before you load" }],
   },
   selling: { type: "own_paid_product", detail: "A paid programme is pitched twice.", compromisesContent: false },
+  sourceSteps: {
+    items: [
+      { text: "Hinge until the bell passes between your knees.", range: { startMs: 95_000, endMs: 110_000 }, dubiousReason: null },
+      {
+        text: "Swing fifty times a day for a month to fix your back.",
+        range: null,
+        dubiousReason: "No trial backs swings as a fix for back pain.",
+      },
+    ],
+  },
   howToApply: { items: ["Film one set from the side."] },
   watchAnyway: {
     answer: "partial",
@@ -69,6 +79,7 @@ test("writes every section of a full note in the reader's order", () => {
     "## Core claim",
     "## Verdict",
     "## Key points",
+    "## The steps it gives",
     "## How to apply",
     "## What it sells",
     "## Watch it anyway?",
@@ -156,6 +167,16 @@ test("leaves out every optional section a sparse note does not have", () => {
   const headings = markdown.split("\n").filter((line) => line.startsWith("#"));
   assert.deepEqual(headings, ["# Example", "## Premise", "## No clear claim", "## Key points"]);
   assert.ok(markdown.includes("Example Channel · saved 2026-01-04\n"));
+});
+
+test("numbers the source's steps in its order, each linked to its moment, a dubious one flagged rather than dropped", () => {
+  assert.ok(
+    overviewMarkdown(FULL).includes(
+      "## The steps it gives\n\n" +
+        "1. Hinge until the bell passes between your knees. ([1:35](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=95))\n" +
+        "2. Swing fifty times a day for a month to fix your back. _(dubious: No trial backs swings as a fix for back pain.)_",
+    ),
+  );
 });
 
 test("leaves out selling when the video sells nothing", () => {

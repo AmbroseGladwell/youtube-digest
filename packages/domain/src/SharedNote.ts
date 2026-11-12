@@ -10,6 +10,7 @@ import { Filing } from "./Filing.js";
 import { HowToApply } from "./HowToApply.js";
 import { Selling } from "./Selling.js";
 import { Source } from "./Source.js";
+import { SourceSteps } from "./SourceSteps.js";
 import { Verdict } from "./Verdict.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 
@@ -31,6 +32,8 @@ export const SharedNote = z
     bigPicture: BigPicture.nullish(),
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),
+    // Absent rather than null when the source gives no steps, for the same reason.
+    sourceSteps: SourceSteps.nullish(),
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
     chapters: Chapters.nullable(),

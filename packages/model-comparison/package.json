@@ -23,6 +23,7 @@
     "judge-key-points": "npm run build && node dist/cli/judgeKeyPoints.js",
     "judge-big-picture": "npm run build && node dist/cli/judgeBigPictures.js",
     "steps": "npm run build && node dist/cli/checkSteps.js",
+    "kinds": "npm run build && node dist/cli/checkKinds.js",
     "blind": "npm run build && node dist/cli/blindCheck.js",
     "cost-model": "npm run build && node dist/cli/compareCostModel.js",
     "readers": "npm run build && node dist/cli/compareReaders.js",

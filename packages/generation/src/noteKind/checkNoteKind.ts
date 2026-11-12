@@ -14,9 +14,10 @@ export function composeKindCheckPrompt(sample: KindSample): ComposedPrompt {
 
 Answer with one noteKind:
 - recipe: it teaches one dish from start to finish, so that someone could cook it from what it says.
-- default: anything else. That includes a talk, an interview, a restaurant review, food history, a taste test, a vlog that cooks without teaching it, and one that runs through several different recipes.
+- process: it tells its audience to do something concrete: a protocol, a routine, a method, a how-to, or practical advice they could act on, even when that comes inside an interview, an argument or a story, and even when it comes later than the opening.
+- default: it tells its audience to do nothing at all: it only reports, reviews, argues or explains. That includes a restaurant review, food history, a taste test, a vlog that cooks without teaching it, and one that runs through several different recipes.
 
-When you are unsure, answer default.`,
+When you are unsure whether it is a recipe, answer default. When you are unsure whether it tells its audience to do something, answer process.`,
     userMessage: `
 <source>
 <title>${asContent(sample.title)}</title>

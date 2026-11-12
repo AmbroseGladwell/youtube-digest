@@ -52,6 +52,7 @@ function proseOf(output: GeneratedOutput): string[] {
         ]
       : []),
     output.selling?.detail ?? "",
+    ...(output.sourceSteps ?? []).map((step) => step.text),
     ...(output.howToApply?.items ?? []),
     output.watchAnyway?.reason ?? "",
   ].filter((text) => text !== "");

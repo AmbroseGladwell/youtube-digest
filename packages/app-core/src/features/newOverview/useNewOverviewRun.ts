@@ -246,7 +246,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 personalised,
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
-                noteKind: saved.recipe == null ? "default" : "recipe",
+                noteKind: saved.recipe != null ? "recipe" : saved.sourceSteps != null ? "process" : "default",
                 ...noteBudgetProps(saved, sourceWords),
                 ...madeWithProps(attempt),
               });

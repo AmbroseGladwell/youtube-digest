@@ -31,6 +31,8 @@ export interface GeneratedOutput {
     detail: string;
     compromisesContent: boolean;
   };
+  // Absent on any note but a process one (docs/features/source-steps.md).
+  sourceSteps?: Array<GeneratedTimedText & { dubious: boolean; dubiousReason: string }>;
   howToApply?: {
     items: string[];
   };

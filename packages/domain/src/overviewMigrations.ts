@@ -174,6 +174,18 @@ const fillBigPictureAddedAfterTheFirstNotes: RecordMigration = {
 // client refuses, so older clients hold these records back rather than quarantine them.
 const allowTenKeyPoints: RecordMigration = { newSchemaVersion: 16 };
 
+// Not derivable: an older note has no steps written for it, and keeps what it always carried
+// (docs/features/source-steps.md).
+const fillSourceStepsAddedAfterTheFirstNotes: RecordMigration = {
+  newSchemaVersion: 17,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "sourceSteps" in record ? record : { ...record, sourceSteps: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -190,6 +202,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   allowLongerOneLiners,
   fillBigPictureAddedAfterTheFirstNotes,
   allowTenKeyPoints,
+  fillSourceStepsAddedAfterTheFirstNotes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

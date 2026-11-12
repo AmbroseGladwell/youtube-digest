@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { DEFAULT_SECTIONS_ENABLED, TopicId, VideoId } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, MOST_SOURCE_STEPS, SOURCE_STEP_REASON_MAX_WORDS, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
 import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 import { TAG_VOCABULARY_CAP } from "./sections/filingSection.js";
@@ -444,4 +444,44 @@ test("a big picture past its cap is sent back, an empty one never is", () => {
   assert.equal(bigPicture.safeParse("").success, true);
   assert.equal(bigPicture.safeParse(Array(75).fill("word").join(" ")).success, true);
   assert.equal(bigPicture.safeParse(Array(76).fill("word").join(" ")).success, false);
+});
+
+const step = { text: "Take it slowly.", startSegmentIndex: 0, endSegmentIndex: 1, dubious: false, dubiousReason: "" };
+
+test("the steps block holds a long protocol whole, and stops only a runaway list", () => {
+  const { schema } = composePrompt(baseInput, "process");
+  const stepsOf = (count: number) =>
+    z.safeParse(
+      schema.shape.sourceSteps!,
+      Array.from({ length: count }, () => step),
+    ).success;
+  assert.equal(stepsOf(0), true);
+  assert.equal(stepsOf(12), true);
+  assert.equal(stepsOf(MOST_SOURCE_STEPS), true);
+  assert.equal(stepsOf(MOST_SOURCE_STEPS + 1), false);
+});
+
+test("a dubious step's reason past its cap is sent back", () => {
+  const { schema } = composePrompt(baseInput, "process");
+  const withReason = (words: number) =>
+    z.safeParse(schema.shape.sourceSteps!, [{ ...step, dubious: true, dubiousReason: Array(words).fill("word").join(" ") }]).success;
+  assert.equal(withReason(SOURCE_STEP_REASON_MAX_WORDS), true);
+  assert.equal(withReason(SOURCE_STEP_REASON_MAX_WORDS + 1), false);
+});
+
+test("the steps come before How to apply, which is told to apply them rather than repeat them", () => {
+  const { systemPrompt } = composePrompt(baseInput, "process");
+  assert.ok(systemPrompt.indexOf("## The steps it gives") < systemPrompt.indexOf("## How to apply"));
+  assert.ok(systemPrompt.includes("never repeat them\nhere"));
+});
+
+test("a recipe's method is its steps, so a recipe note has no steps block", () => {
+  assert.equal("sourceSteps" in composePrompt(baseInput, "recipe").schema.shape, false);
+});
+
+test("a note whose source gives no steps is asked for nothing about steps, so its key points are written as before", () => {
+  const { systemPrompt, schema } = composePrompt(baseInput);
+  assert.equal("sourceSteps" in schema.shape, false);
+  assert.ok(!systemPrompt.includes("The steps it gives"));
+  assert.ok(systemPrompt.includes("the concrete cues or steps"));
 });

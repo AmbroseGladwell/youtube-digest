@@ -59,6 +59,10 @@ export function noteText(overview: Overview): string {
       "Key points",
       overview.keyPoints.map(({ text }) => text),
     ),
+    ...section(
+      "The steps it gives",
+      (overview.sourceSteps?.items ?? []).map(({ text }) => text),
+    ),
     ...section("How to apply", overview.howToApply?.items ?? []),
     ...section(
       "Chapters",

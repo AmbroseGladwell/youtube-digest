@@ -24,7 +24,15 @@ rest of the structure.`;
 const GOOD_BIG_PICTURE =
   "Parents get conflicting advice about screens, and the question underneath is whether the harm comes from the screen itself or from what it pushes out, such as sleep and play. It also covers how to talk to a teenager about their phone.";
 
-export const coreSection: PromptSection = {
+// Only a process note has a steps block for its key points to leave the steps to
+// (docs/features/source-steps.md).
+const LEAVE_STEPS_TO_THE_BLOCK = `Steps the video tells me to follow go in The steps it gives, below, and
+are never repeated here: a key point keeps the idea or the reason behind
+them, and leaves the steps to that list.
+
+`;
+
+const coreSectionFor = (steps: boolean): PromptSection => ({
   title: "Core",
   key: "structural",
   prompt: (input) => {
@@ -63,8 +71,8 @@ that make sense heard on their own: never a noun phrase or a fragment.
 Most points need one or two sentences. Use a further sentence for the
 specific detail or example rather than dropping it, and never to restate.
 
-Keep the specifics that make a point worth having: names, numbers,
-dates, studies, and the concrete cues or steps. Always keep any caveat,
+${steps ? LEAVE_STEPS_TO_THE_BLOCK : ""}Keep the specifics that make a point worth having: names, numbers,
+dates, studies, and the concrete ${steps ? "cues" : "cues or steps"}. Always keep any caveat,
 criticism or counter-argument the video itself raises, and keep who
 claims something when the video presents it as one person's claim rather
 than settled fact. When the video generalises from a single story or
@@ -99,4 +107,7 @@ than in one stretch.`;
         .max(budget.keyPoints),
     };
   },
-};
+});
+
+export const coreSection = coreSectionFor(false);
+export const processCoreSection = coreSectionFor(true);

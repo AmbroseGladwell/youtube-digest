@@ -16,6 +16,7 @@ import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { articleParagraphs, type ArticleParagraph } from "./articleParagraphs.js";
 import { noteBudget } from "../noteBudget.js";
 import { resolvedBigPicture } from "../sections/bigPicturePrompt.js";
+import { sourceStepsOf } from "../sourceStepsOf.js";
 import type { ArticleChapterShape } from "./sections/articleChaptersSection.js";
 
 export interface GeneratedArticleOutput {
@@ -35,6 +36,7 @@ export interface GeneratedArticleOutput {
     similarToIndices: number[];
   };
   selling?: unknown;
+  sourceSteps: Array<{ text: string; dubious: boolean; dubiousReason: string }>;
   howToApply?: unknown;
   readAnyway?: { answer: string; reason: string; leftOut: string; chapterIndexes: number[] };
 }
@@ -96,6 +98,7 @@ export function assembleArticleOverview(
             }),
           },
     selling: output.selling === undefined ? null : Selling.parse(output.selling),
+    sourceSteps: sourceStepsOf(output.sourceSteps.map((step) => ({ ...step, range: null }))),
     howToApply: output.howToApply === undefined ? null : HowToApply.parse(output.howToApply),
     watchAnyway: null,
     chapters: null,

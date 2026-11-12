@@ -14,7 +14,13 @@ they handle this today" fits a founder; "Film a problem on your ward" forces a n
 export const readerFit = (readerContext: string | null) =>
   readerContext ? `\n\nAbout the reader, for fit: ${readerContext}\n\n${FIT}` : "";
 
-export const howToApplyInstructions = (readerContext: string | null) => `
+export const APPLY_THE_STEPS = `
+
+When The steps it gives lists the source's own steps, never repeat them
+here: apply or adapt them to me, or say what to do instead of one that
+does not hold up.`;
+
+export const howToApplyInstructions = (readerContext: string | null, steps = false) => `
 ## How to apply
 1 to 3 things I could actually do, concrete and specific, not principles.
 "Do a 10 minute phone-free wind-down before bed on school nights." not
@@ -23,7 +29,7 @@ list rather than inventing something.
 
 Each is one complete sentence, ${HOW_TO_APPLY_TARGET_WORDS} words at most, that reads
 naturally after "First,", "Then," or "And finally,": an instruction, never a
-label and a colon.${readerFit(readerContext)}`;
+label and a colon.${steps ? APPLY_THE_STEPS : ""}${readerFit(readerContext)}`;
 
 export const howToApplyShape = () => ({
   items: HowToApply.shape.items.element
@@ -37,4 +43,9 @@ export const howToApplySection: PromptSection = {
   key: "howToApply",
   prompt: (input) => howToApplyInstructions(input.readerContext),
   schemaShape: howToApplyShape,
+};
+
+export const processHowToApplySection: PromptSection = {
+  ...howToApplySection,
+  prompt: (input) => howToApplyInstructions(input.readerContext, true),
 };
