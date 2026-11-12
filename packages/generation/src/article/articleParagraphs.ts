@@ -6,7 +6,6 @@ export interface ArticleParagraph {
   index: number;
   text: string;
   heading: string | null;
-  section: number;
   place: ArticlePlace;
 }
 
@@ -14,11 +13,10 @@ export interface ArticleParagraph {
 // decides where that is. Only a section's first paragraph can use the heading's id.
 export const articleParagraphs = ({ sections }: ExtractedArticle): ArticleParagraph[] =>
   sections
-    .flatMap(({ heading, anchor, text }, section) =>
+    .flatMap(({ heading, anchor, text }) =>
       text.split("\n\n").map((paragraph, index) => ({
         text: paragraph,
         heading,
-        section,
         place: {
           anchor: index === 0 ? anchor : null,
           quote: paragraph.split(/\s+/).slice(0, WORDS_IN_A_QUOTE).join(" "),

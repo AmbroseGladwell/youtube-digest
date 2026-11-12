@@ -141,7 +141,15 @@ export function overviewMarkdown(overview: Overview): string {
     section("Read it anyway?", `${READ_ANYWAY_ANSWER[answer]}. ${reason} ${leftOut}`.trim());
   }
   if (article?.resources) {
-    section("Resources it links to", bullets(article.resources.map(({ text, href }) => `[${text}](${href})`)));
+    section(
+      "Resources it links to",
+      bullets(
+        article.resources.map(({ text, href, why, place, chapter }) => {
+          const from = article.chapters[chapter]!.title;
+          return `[${text}](${href}): ${why} From [${from}](${articlePlaceUrl(video.url, place)}).`;
+        }),
+      ),
+    );
   }
   if (article !== null) {
     section(

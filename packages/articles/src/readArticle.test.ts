@@ -149,7 +149,10 @@ ${paragraphs(3)}
     all.map(({ href }) => href),
     ["https://toolkit.example/neuro", "https://w3.example/coga"],
   );
-  assert.deepEqual(article.sections.find(({ heading }) => heading === "Useful resources")?.links.length, 2);
+  assert.deepEqual(
+    article.sections.find(({ heading }) => heading === "Useful resources")?.links.map(({ paragraph }) => paragraph),
+    [0, 0],
+  );
 });
 
 test("a page that links to nothing reads with no links", () => {

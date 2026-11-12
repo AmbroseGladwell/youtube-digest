@@ -299,8 +299,8 @@ const linked: ExtractedArticle = {
     {
       ...article.sections[1]!,
       links: [
-        { text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund" },
-        { text: "Bridge inspection survey 2011", href: "https://data.example.org/survey-2011" },
+        { text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund", paragraph: 0 },
+        { text: "Bridge inspection survey 2011", href: "https://data.example.org/survey-2011", paragraph: 1 },
       ],
     },
   ],
@@ -310,37 +310,59 @@ test("a page with no links gets no resources section and the same prompt as befo
   const { systemPrompt, userMessage, schema } = composeArticlePrompt(input());
   assert.doesNotMatch(systemPrompt, /Resources it links to/);
   assert.doesNotMatch(userMessage, /link \d/);
-  assert.equal("resourceLinks" in (schema as unknown as { shape: Record<string, unknown> }).shape, false);
+  assert.equal("resources" in (schema as unknown as { shape: Record<string, unknown> }).shape, false);
 });
 
-test("a section's links follow its last paragraph, numbered, with where they go", () => {
+test("a link follows the paragraph it sits in, numbered, with where it goes", () => {
   const { systemPrompt, userMessage } = composeArticlePrompt(input({ article: linked }));
   assert.match(systemPrompt, /## Resources it links to/);
   assert.match(
     userMessage,
-    /\[3\] Residents will cover the rest through higher rates\.\n {2}link 0: "The county's repair fund rules" \(county\.example\.gov\)\n {2}link 1: "Bridge inspection survey 2011" \(data\.example\.org\)/,
+    /\[2\] The county offered half of the bill to the town\.\n {2}link 0: "The county's repair fund rules" \(county\.example\.gov\)\n\[3\] Residents will cover the rest through higher rates\.\n {2}link 1: "Bridge inspection survey 2011" \(data\.example\.org\)/,
   );
 });
 
-test("the links the model names are copied onto the note by code, in its order", async () => {
-  const note = await generate(answering(output({ resourceLinks: [1, 0] })), { article: linked });
+const why = (link: number, text = "The rules the county's offer is based on.") => ({ link, why: text });
+
+test("the links the model names are copied by code, in its order, with why and where in the piece they were shared", async () => {
+  const note = await generate(answering(output({ resources: [why(1, "The 2011 survey the estimate reused."), why(0)] })), {
+    article: linked,
+  });
   assert.deepEqual(note.article?.resources, [
-    { text: "Bridge inspection survey 2011", href: "https://data.example.org/survey-2011" },
-    { text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund" },
+    {
+      text: "Bridge inspection survey 2011",
+      href: "https://data.example.org/survey-2011",
+      why: "The 2011 survey the estimate reused.",
+      place: { anchor: null, quote: "Residents will cover the rest through higher rates." },
+      chapter: 1,
+    },
+    {
+      text: "The county's repair fund rules",
+      href: "https://county.example.gov/repair-fund",
+      why: "The rules the county's offer is based on.",
+      place: { anchor: "who-pays", quote: "The county offered half of the bill to" },
+      chapter: 1,
+    },
   ]);
 });
 
 test("naming no links leaves the note with no resources, not an empty list", async () => {
-  const note = await generate(answering(output({ resourceLinks: [] })), { article: linked });
+  const note = await generate(answering(output({ resources: [] })), { article: linked });
   assert.equal(note.article !== null && "resources" in note.article, false);
 });
 
 test("a link that doesn't exist goes back to the model", async () => {
-  const note = await generate(answering(output({ resourceLinks: [2] }), output({ resourceLinks: [0] })), { article: linked });
+  const note = await generate(answering(output({ resources: [why(2)] }), output({ resources: [why(0)] })), { article: linked });
   assert.equal(note.article?.resources?.length, 1);
 });
 
 test("a link named twice goes back to the model", async () => {
-  const note = await generate(answering(output({ resourceLinks: [0, 0] }), output({ resourceLinks: [0] })), { article: linked });
-  assert.deepEqual(note.article?.resources, [{ text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund" }]);
+  const note = await generate(answering(output({ resources: [why(0), why(0)] }), output({ resources: [why(0)] })), { article: linked });
+  assert.equal(note.article?.resources?.[0]?.href, "https://county.example.gov/repair-fund");
+});
+
+test("a why over 25 words goes back to the model", async () => {
+  const long = Array.from({ length: 26 }, () => "word").join(" ");
+  const note = await generate(answering(output({ resources: [why(0, long)] }), output({ resources: [why(0)] })), { article: linked });
+  assert.equal(note.article?.resources?.[0]?.why, "The rules the county's offer is based on.");
 });

@@ -21,29 +21,39 @@ asked to write an address.
    **back into the same page** or to **the site's front page**, and isn't in the page's furniture. Readability has
    already removed most navigation, share bars and footers. Another page on the same site is
    kept, since a guide often links to its siblings.
-2. **The prompt numbers them** (`offeredLinks.ts`). After a section's last paragraph come its
-   links as `link N: "text" (host)`, so the model can see which part of the piece each belongs
-   to. Up to 60 are offered, in page order. Past that a long read's citations are cut rather
-   than the prompt grown.
-3. **The model names up to five** as `resourceLinks`, the most useful first, and an empty list
-   is often the right answer (`articleResourcesSection.ts`). A number outside the list, or one
-   named twice, goes back to the model.
+2. **The prompt numbers them** (`offeredLinks.ts`). Each link follows **the paragraph it sits
+   in**, as `link N: "text" (host)`, so the model reads it beside the words that introduce it.
+   Up to 60 are offered, in page order. Past that a long read's citations are cut rather than
+   the prompt grown.
+3. **The model names up to five, each with why**, the most useful first, and an empty list is
+   often the right answer (`articleResourcesSection.ts`). Why is one sentence, a 20-word target
+   and a 25-word cap: what the piece says the link is and why a reader would open it, from the
+   paragraph around it only. The model hasn't seen the page the link goes to, so it is told never
+   to describe it beyond what the piece says. A number outside the list, one named twice, or a
+   why over the cap goes back to the model.
 4. **Code copies the named links** onto the note's article block as `resources`
-   (`assembleArticleOverview.ts`).
+   (`assembleArticleOverview.ts`), and **adds where each was shared**: the paragraph's place
+   (the same anchor or opening words a chapter links with) and the note's chapter holding it.
+
+**A link without its context isn't much use** (the owner, 12 November 2026). The piece's own
+sentence around the link was considered and not chosen. Keeping it would keep article text,
+against `article-notes.md`'s decision, and those sentences are often thin ("see X for more", a
+bare list item), as OV-216 found of verbatim lifts. Why is written; the place is code's.
 
 **A page with no links is unchanged**: no section in the prompt, no field in the schema, and
 the same prompt byte for byte.
 
 ## The record
 
-`ArticleDetails.resources` holds one to five `{ text, href }`, both taken from the page.
-**Absent rather than empty** when there are none, so an older note, a note without resources
-and their share hashes are all unchanged. Overview schema 18 alters nothing and holds these
-records back from clients that would drop the field and write the note back without it
-(client version 19).
+`ArticleDetails.resources` holds one to five `{ text, href, why, place, chapter }`: the link's
+text and address from the page, the model's why, and code's place and chapter index, which must
+be one of the note's chapters. **Absent rather than empty** when there are none, so an older note,
+a note without resources and their share hashes are all unchanged. Overview schema 18 alters
+nothing and holds these records back from clients that would drop the field and write the note
+back without it (client version 19).
 
 **This is new stored data.** No article text is kept (`article-notes.md`), but these few
-addresses and their link text now are, on the note and on a shared copy of it. The privacy
+addresses, their link text and a line about each now are, on the note and on a shared copy of it. The privacy
 policy's library section says so (`legal-pages.md`, revision log, 12 November 2026).
 
 **A link rots.** The note holds what the page linked to when it was made, as the
@@ -51,13 +61,13 @@ quote-based deep links do.
 
 ## Where it reaches
 
-- **Assistants** read it in `overviewMarkdown` as "Resources it links to", a list of named
-  links, after Read it anyway.
+- **Assistants** read it in `overviewMarkdown` as "Resources it links to": each named link, its
+  why, and the chapter it was shared in, linked to that place on the page.
 - **Shared links** carry it inside the article block.
 - **The screen and narration** don't show it yet. They wait on a Claude Design round:
   where the block sits, how it reads beside Read it anyway's "what this leaves out", and what
-  one link looks like against five. Narration should say there are resources, never read an
-  address (`spokenScript`).
+  one link looks like against five. Narration can read each name and its why, never an address
+  (`spokenScript`).
 
 ## Analytics
 

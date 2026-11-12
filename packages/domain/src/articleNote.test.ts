@@ -107,21 +107,40 @@ test("a partial answer takes the named chapters' reading time off", () => {
 });
 
 const resources = [
-  { text: "Neurodiversity Design Toolkit", href: "https://toolkit.example/neuro" },
-  { text: "Cognitive accessibility guidance", href: "https://w3.example/coga" },
+  {
+    text: "Neurodiversity Design Toolkit",
+    href: "https://toolkit.example/neuro",
+    why: "The author's starting point for designing for neurodivergent people.",
+    place: { anchor: "who-pays", quote: "The county" },
+    chapter: 1,
+  },
+  {
+    text: "Cognitive accessibility guidance",
+    href: "https://w3.example/coga",
+    why: "The standard the piece's checklist follows.",
+    place: { anchor: null, quote: "The bridge" },
+    chapter: 0,
+  },
 ];
 
 test("an article's resources are stored, at most five, and only https", () => {
   assert.doesNotThrow(() => Overview.parse(article({ resources })));
   assert.throws(() => Overview.parse(article({ resources: Array.from({ length: 6 }, () => resources[0]!) })));
-  assert.throws(() => Overview.parse(article({ resources: [{ text: "Old guide", href: "http://old.example/guide" }] })));
+  assert.throws(() => Overview.parse(article({ resources: [{ ...resources[0]!, href: "http://old.example/guide" }] })));
   assert.throws(() => Overview.parse(article({ resources: [] })));
 });
 
-test("an assistant reads the resources as named links, and a note without them has no such section", () => {
+test("a resource says why in 25 words at most, and names a chapter the note has", () => {
+  assert.throws(() =>
+    Overview.parse(article({ resources: [{ ...resources[0]!, why: Array.from({ length: 26 }, () => "word").join(" ") }] })),
+  );
+  assert.throws(() => Overview.parse(article({ resources: [{ ...resources[0]!, chapter: 2 }] })));
+});
+
+test("an assistant reads each resource with why and the chapter it was shared in, and a note without them has no such section", () => {
   assert.match(
     overviewMarkdown(article({ resources })),
-    /## Resources it links to\n\n- \[Neurodiversity Design Toolkit\]\(https:\/\/toolkit\.example\/neuro\)\n- \[Cognitive accessibility guidance\]\(https:\/\/w3\.example\/coga\)/,
+    /## Resources it links to\n\n- \[Neurodiversity Design Toolkit\]\(https:\/\/toolkit\.example\/neuro\): The author's starting point for designing for neurodivergent people\. From \[Who pays\]\(https:\/\/news\.example\.com\/bridge#who-pays\)\.\n- \[Cognitive accessibility guidance\]/,
   );
   assert.doesNotMatch(overviewMarkdown(article()), /Resources it links to/);
 });

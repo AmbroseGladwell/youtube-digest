@@ -85,12 +85,12 @@ function contextBlock(input: ArticleGenerationInput): string {
   const paragraphs = numbered.flatMap((paragraph, index) => {
     const lines = paragraph.heading !== null && paragraph.heading !== heading ? [`## ${asArticleContent(paragraph.heading)}`] : [];
     heading = paragraph.heading;
-    const endsSection = numbered[index + 1]?.section !== paragraph.section;
-    const sectionLinks = endsSection ? links.filter(({ section }) => section === paragraph.section) : [];
     return [
       ...lines,
       `[${index}] ${asArticleContent(paragraph.text)}`,
-      ...sectionLinks.map(({ index: number, text, href }) => `  link ${number}: "${asArticleContent(text)}" (${new URL(href).hostname})`),
+      ...links
+        .filter(({ articleParagraph }) => articleParagraph === index)
+        .map(({ index: number, text, href }) => `  link ${number}: "${asArticleContent(text)}" (${new URL(href).hostname})`),
     ];
   });
   return `

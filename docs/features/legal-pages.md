@@ -147,7 +147,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
-| 2026-11-12 | privacy | OV-203 | Your library says an article's overview may keep up to five of the links the page makes, with their words; Transcripts and articles says so beside "never the article's text", and that they go with a shared link and to a connected assistant. |
+| 2026-11-12 | privacy | OV-203 | Your library says an article's overview may keep up to five of the links the page makes, with their words and a line on why each is worth opening; Transcripts and articles says so beside "never the article's text", and that they go with a shared link and to a connected assistant. |
 | 2026-11-12 | privacy | OV-285 | Transcripts and articles says our server also fetches an article when you regenerate its overview without the article open beside the extension; only an article the extension reads in your browser stays unseen. |
 | 2026-11-12 | privacy | OV-284 | The settings that travel with the account include the cooking timer sound. |
 | 2026-11-12 | privacy | OV-250 | Your library names the steps a video or article gives among what an overview holds. |
