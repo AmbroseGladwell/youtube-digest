@@ -958,6 +958,52 @@ each with the same judge. The lists are reused, so only judging is paid for (abo
 runs). It improves on this if the missing share falls clearly in both samples and the spoken
 length doesn't rise to match.
 
+### The steps block (OV-250), 12 Nov 2026
+
+Runs `ov-250-a` and `ov-250-b`: the same 20 videos, writers and reader as the baseline, with
+every note asked for its steps (`docs/features/source-steps.md`), judged with the same lists.
+These runs came before the `process` kind, so every note was asked for steps; with the kind, a
+source the check calls `default` gets the baseline's prompt.
+
+| Run | Writer | Carried | Partly | Missing | Notes missing anything | Of those, saying skip it | Median spoken length |
+|---|---|---|---|---|---|---|---|
+| a | Claude Sonnet 5.5 | 57% | 15% | 28% | 9 of 13 | 8 | 214s |
+| a | GPT-6.1 Sol | 70% | 11% | 19% | 6 of 13 | 5 | 219s |
+| b | Claude Sonnet 5.5 | 62% | 17% | 21% | 9 of 13 | 7 | 223s |
+| b | GPT-6.1 Sol | 76% | 10% | 14% | 6 of 13 | 5 | 227s |
+
+**Where a note has the block, almost nothing is missing** (Dr K 8 of 8 on Sol, 7 of 8 on Sonnet;
+the collagen video 9 of 9 and 8 of 8; the paywall study 1 of 6 carried before, 5 of 6 now). What
+is left is notes with no block, and one screen demonstration, the app-animation tutorial, where a
+block still missed 8 of 14. Sonnet gave a block on only 5 or 6 of the 13 step-giving videos, Sol on
+10 or 11. Told to give one whenever the video says to do something concrete
+(`ov-250-sonnet-when`), Sonnet gave one on all six it had skipped, and missed 9 of their 45 items
+where it had missed 25 and 16; 8 of those 9 are the animation tutorial.
+
+**It costs listening time.** The block counts as heard (`stepsMarkdown.ts`), and a note with one
+runs about 30 to 55 seconds longer: the key points keep their length and spend it on other ideas.
+
+**Key points repeating the steps** (a step counts when half or more of its words are in one key
+point, model-free): GPT-6.1 Sol 3 of 232, Claude Sonnet 5.5 33 of 130, Claude Opus 5.5 6 of 17 on
+the app-ideas video (`ov-250-opus-a`, `-b`, which carried 19 and 16 of 22 against Sol's 22 and 21).
+A line telling key points never to be instructions (`ov-250-sonnet-kp`) left Sonnet at 13 of 35
+on its six worst notes, so it was dropped.
+
+**Coverage by position** (the share of a transcript's words inside a stretch the note names): on
+the 13 step-giving videos the median rose from 67% to 70% for Sol and 68% to 70% for Sonnet, the
+steps reaching stretches the key points now leave; the 7 others moved within noise (60% to 57%,
+75% to 74%). Whether the ideas outside the steps are all still carried isn't measured.
+
+**The kind check** (`npm run kinds`, run alone, about $0.004 a check): GPT-6.1 Sol called 13 of
+the 13 step-giving videos a process, Claude Sonnet 5.5 11 (it called Peptides and the Big Narstie
+interview default); each called one of the 7 others a process, the arms video, where Sonnet had
+already written steps. On the recipe set (`--set recipes --expected-from ov-275-recipes-a`) all
+four recipes stayed recipes on both, the taste test stayed default, and the self-help talk became
+a process. With the kind in place, Dr K got its block on both writers (8 of 8 and 6 of 8 carried,
+none missing) and "Is Meta dying?" got none (`ov-250-kind-spot`).
+
+OV-250 spent about $9.65 on these runs.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The

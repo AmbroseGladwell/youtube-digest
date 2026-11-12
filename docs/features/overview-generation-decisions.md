@@ -19,6 +19,9 @@ and nothing to file without them, so they always run. Verdict, Selling, How to a
 exactly the four things README's own "Design principles" section calls out — and are
 the four made toggleable, each defaulting on to match current behaviour.
 
+The steps block (OV-250, `source-steps.md`) is asked for only on a `process` note ("The kind
+check"), where it is structural for now. It becomes toggleable with its design, like the four above.
+
 **A toggle removes the field from the request, it doesn't ask the model to skip it.**
 Since generation is moving to structured output (`docs/architecture/v1-architecture-decisions.md`
 already decided this, to fix the markdown-parsing fragility `samples/` exposes),
@@ -880,6 +883,11 @@ before anything is stored, so the `Overview` record did not change. Only the rec
 step's group, what stands out and the suggested topic may still be null, and a test holds that
 list. Measured headroom with the group nullable: three more string fields compile, six do not. After OV-225's big picture, four more compile and five do not ("The big picture"): more than the count above left, measured on a different schema and reader, so take the edge as approximate.
 
+**The steps block fitted.** OV-275 took the recipe out of the video schema, and OV-250's
+`sourceSteps` (a list of text, two indexes and a boolean, no union) compiled on Claude Sonnet 5.5
+and Opus 5.5 in every run of its comparison: no request in 62 Claude notes was refused, so none
+needed the schema-in-prompt fallback. It sits only in the `process` kind's schema.
+
 **A recipe step's group stayed nullable.** Made a plain string, empty for none, it left room for
 six more fields, but GPT-6.1 Sol stopped naming the parts of a method: the party jollof's seven
 groups, there in both runs before, were in neither. Given "a name or null" it names them again
@@ -937,6 +945,10 @@ composes only that kind's sections (`sectionRegistry.ts`):
 - **`default`**: today's note, with no recipe block.
 - **`recipe`**: In one line as the dish, chapters, filing and the recipe. Nothing argument-shaped,
   which is all a recipe note ever showed (`recipe-notes.md`).
+- **`process`** (OV-250, 12 Nov 2026): the `default` note plus the steps the source gives, with
+  key points and How to apply told to leave the steps to that block (`source-steps.md`). A
+  `default` note is asked nothing about steps, so a source that gives none gets the note it
+  always did.
 
 The owner chose this over two others: a flag in the one call followed by a second call for
 recipes, which would have doubled a recipe video's cost, and splitting every note into two
@@ -946,15 +958,19 @@ calls, which sends every transcript twice and is kept for when even this room ru
 verdict, filing and the note budget can't drift apart between kinds, which is what OV-87 had
 to undo. A kind only adds or leaves out sections.
 
-**A wrong answer degrades, never breaks.** The check answers `default` when unsure, which is a
-complete note for any video, and an answer that still breaks its schema after the retry is
-taken as `default`. A recipe call that finds no recipe the whole video holds, or none whose
+**A wrong answer degrades, never breaks.** The check answers `default` when unsure of a recipe,
+which is a complete note for any video, and `process` when unsure whether the source tells its
+audience to do something: a wrong `process` costs an empty steps list, a wrong `default` loses
+the block. Measured on 12 Nov 2026 with `npm run kinds` (`model-comparison.md`, "The steps block
+(OV-250)"): GPT-6.1 Sol called 13 of the 13 step-giving videos a process and Claude Sonnet 5.5
+11, each called one of the 7 others a process, and all four recipe videos stayed recipes.
+An answer that still breaks its schema after the retry is taken as `default`. A recipe call that finds no recipe the whole video holds, or none whose
 ingredients survive the amount check, falls back to the `default` call. Only a provider failure
 fails the overview, as it would have anyway.
 
 **It is generic on purpose.** The owner's direction: kinds beyond recipe can each have a schema
-shaped for them (OV-276), such as a `process` kind carrying OV-250's steps block, so a section
-only some videos need costs the rest nothing. The check reads a `KindSample` rather than a
+shaped for them (OV-276), so a section only some videos need costs the rest nothing. `process`
+was the first. The check reads a `KindSample` rather than a
 video, so articles and podcasts can use it, but articles don't yet: a recipe page is told
 apart free and exactly by its own recipe markup, and a check would cost a call and change no
 article's note until there is a second kind for them (OV-276).
