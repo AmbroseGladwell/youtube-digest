@@ -147,6 +147,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-12 | privacy | OV-285 | Transcripts and articles says our server also fetches an article when you regenerate its overview without the article open beside the extension; only an article the extension reads in your browser stays unseen. |
 | 2026-11-12 | privacy | OV-250 | Your library names the steps a video or article gives among what an overview holds. |
 | 2026-11-10 | privacy | OV-259 | Writing an overview says PostHog copies a monthly summary of the cost tally once a day (month, plan, cost, overviews and narrations, under a coded id that is neither the account id nor the analytics id) and the next copy after a deletion leaves the account out; PostHog's processor row and the retention table cover the summary. |
 | 2026-11-10 | privacy | OV-259 | Writing an overview says we keep a daily tally of what serving each account costs: tokens and list-price cost on our key (failed attempts included), embedding tokens and cost, and proxy bytes, amounts only; a device without an account is tallied with nothing on it. The retention row for usage counts covers the tally. |

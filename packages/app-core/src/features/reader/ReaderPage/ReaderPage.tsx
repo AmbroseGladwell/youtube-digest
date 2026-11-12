@@ -23,6 +23,7 @@ import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { oneTimeAccessHost, wasAlreadyMade, wasJustGenerated } from "../../newOverview/justGenerated.js";
 import { useStartArticleRun } from "../../newOverview/useStartArticleRun.js";
+import { useStartArticleFromUrl } from "../../newOverview/useStartArticleFromUrl.js";
 import { useNewOverviewRunController } from "../../newOverview/NewOverviewRunContext.js";
 import { SavedLocallyNote } from "../../plus/components/SavedLocallyNote/SavedLocallyNote.js";
 import { useSavedLocallyNote } from "../../plus/useSavedLocallyNote.js";
@@ -213,6 +214,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const onPage = useShowOnPage(webPage);
   const besideArticle = onPage !== null;
   const startArticleRun = useStartArticleRun();
+  const startArticleFromUrl = useStartArticleFromUrl();
   const { start: startRun } = useNewOverviewRunController();
   const captions = useMemo(() => {
     const written = overview ? overviewNoteCaptions(overview) : {};
@@ -225,18 +227,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     lines.some(({ section }) => section === SOURCE_STEPS_SECTION),
   );
   const captureReason = overview?.captureReason ?? null;
-  // A video can be remade from anywhere; an article needs its page open beside the panel,
-  // since we keep no copy (docs/features/one-overview-per-video.md, "Regenerating").
+  // A video can be remade from anywhere. We keep no copy of an article, so it is read again:
+  // from the page beside the panel, where the reader may be signed in, or else by our server
+  // from its link; with neither, the menu explains (docs/features/article-panel.md, "Regenerating").
   const regenerate =
     webPage !== null
       ? {
-          asksFirst: onPage === null,
+          asksFirst: onPage === null && startArticleFromUrl === null,
           onChoose: () => {
-            if (onPage === null) {
+            if (onPage !== null) {
+              startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
+            } else if (startArticleFromUrl !== null) {
+              startArticleFromUrl(webPage.url, { from: "regenerate", title: webPage.title, overviewId, captureReason });
+            } else {
               setExplainingRegenerate(true);
               return;
             }
-            startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
             void navigate(Routes.home(), { viewTransition: animateNavigation });
           },
         }

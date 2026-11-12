@@ -150,8 +150,8 @@ playlist's video the library already holds should be skipped is a queue question
 
 ## Regenerating
 
-OV-261. **⋯ Regenerate is offered on every overview**, a video from anywhere and an article only
-with its page open beside the panel, since we keep no copy (`article-panel.md`). It starts the
+OV-261. **⋯ Regenerate is offered on every overview**, a video from anywhere and an article from
+anywhere it can be read again, since we keep no copy (`article-panel.md`, "Regenerating"). It starts the
 same run as a new overview, naming the overview's id, so it skips the "You already have this"
 check, writes under that id, and the old note stays readable until the new one lands. A failed
 run leaves it as it was. There is no confirm step, as for articles: a regeneration counts as an

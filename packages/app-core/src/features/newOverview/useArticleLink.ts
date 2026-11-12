@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { articleSourceId, heldOverviewOf, OverviewId, sourceKey, type ExtractedArticle } from "@overview/domain";
 import { createFetchArticleApi } from "@overview/sync";
-import { useSurface } from "../../app/SurfaceContext.js";
 import { useStores } from "../../stores/StoresContext.js";
-import { useIsPhone } from "../../util/useIsPhone.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
@@ -14,7 +12,8 @@ import { generationKeys } from "./generationKeys.js";
 import { captureFailureOf } from "./util/captureFailureOf.js";
 import { ArticleReadError } from "./api/ArticleReadError.js";
 import { isYouTubeUrl, youTubeLink } from "./util/parseYouTubeUrl.js";
-import { pastedLinkFailureCopy, type ReaderPlace } from "./util/pastedLinkFailureCopy.js";
+import { pastedLinkFailureCopy } from "./util/pastedLinkFailureCopy.js";
+import { useReaderPlace } from "./useReaderPlace.js";
 
 export type ArticleLink =
   | { status: "none" }
@@ -46,11 +45,9 @@ export function useArticleLink(url: string, from: "dialog" | "home") {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { overviewStore } = useStores();
-  const surface = useSurface();
-  const phone = useIsPhone();
+  const place = useReaderPlace();
   const analytics = useAnalytics();
   const available = apiUrl !== null && libraryAccountIdOf(connection) !== null;
-  const place: ReaderPlace = surface === "extension" ? "extension" : phone ? "phone" : "computer";
 
   const link = url.trim();
   const [settled, setSettled] = useState("");

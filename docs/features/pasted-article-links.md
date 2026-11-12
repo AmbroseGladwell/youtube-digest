@@ -88,7 +88,8 @@ the page gave.
 - The steps are two, as in the panel (`article-panel.md`).
 - 77aq's "That link is a front page" reads "That link isn't an article", and "didn't respond in 20
   seconds" loses the number: the same failure covers a 5xx.
-- Regenerating on the web still explains itself, even for an article our server could read again.
+- Regenerating an article away from its page reads it from here too (OV-285, `article-panel.md`,
+  "Regenerating"). Its failure is the run's, so it offers only the way that leaves the app.
 - **Onboarding takes articles too** (OV-154), through the trial rather than an account.
 - There's no way to tell from the web app whether a reader has the extension, so on a computer the
   web app always offers the Web Store. 77an's route appears on the extension's own full page.

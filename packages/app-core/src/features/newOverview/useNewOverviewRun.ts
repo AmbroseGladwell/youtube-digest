@@ -281,7 +281,10 @@ export function useNewOverviewRun(): NewOverviewRunController {
                         current.article !== null && error instanceof ArticleReadError
                           ? { ...current.article, asking: false, failure: error.failure }
                           : current.article,
-                      error: runErrorOf(error),
+                      error: runErrorOf(
+                        error,
+                        articleRequest?.fetched === true ? { url, regenerating: options.overviewId !== undefined } : null,
+                      ),
                       finishedAt: Date.now(),
                     },
               );

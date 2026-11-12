@@ -292,22 +292,32 @@ test("beside the article, chapters move the page and say when a place has gone",
   await expect(page.getByTestId(articleChaptersPanelTestIds.missing)).toContainText("Couldn’t find this place on the page.");
 });
 
-test("regenerating beside the article runs; away from it the menu explains first", async ({ page, launcher, backendSimulator }) => {
+test("regenerating beside the article reads the page; away from it our server fetches the link", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
   backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith(READ);
   const overview = makeArticleOverview();
   backendSimulator.overviews.seed(overview);
-  await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside({ page: null }) });
+  await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside() });
   await launcher.openPage(Routes.overview(overview.id));
 
   await page.getByTestId(overviewActionsMenuTestIds.trigger).click();
-  await page.getByRole("menuitem", { name: "Regenerate…" }).click();
-  await expect(page.getByTestId(regenerateArticleDialogTestIds.root)).toContainText("We don’t keep a copy of it");
-  await page.getByTestId(regenerateArticleDialogTestIds.cancelButton).click();
+  await page.getByRole("menuitem", { name: "Regenerate", exact: true }).click();
+  await launcher.readerPage.verifyIsShown();
+  await expect.poll(() => backendSimulator.ourKey.generations().length).toBe(1);
+  expect(backendSimulator.ourKey.generations()[0]?.overviewId).toBe(overview.id);
+  expect(backendSimulator.articles.reads()).toEqual([]);
 
-  await chrome.moveTo(page, OPEN_PAGE);
+  await chrome.moveTo(page, null);
+  await launcher.openPage(Routes.overview(overview.id));
   await page.getByTestId(overviewActionsMenuTestIds.trigger).click();
   await page.getByRole("menuitem", { name: "Regenerate", exact: true }).click();
 
-  await launcher.readerPage.verifyIsShown();
-  expect(backendSimulator.ourKey.generations()[0]?.overviewId).toBe(overview.id);
+  await expect.poll(() => backendSimulator.ourKey.generations().length).toBe(2);
+  expect(backendSimulator.ourKey.generations()[1]?.overviewId).toBe(overview.id);
+  expect(backendSimulator.articles.reads()).toEqual([ARTICLE_URL]);
+  await expect(page.getByTestId(regenerateArticleDialogTestIds.root)).toHaveCount(0);
 });
