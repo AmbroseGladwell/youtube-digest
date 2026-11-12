@@ -344,6 +344,7 @@ export function CookingMode({
       ref={dialog}
       className={`${styles.root} ${styles[surface]} ${web ? styles[column.scale] : ""}`}
       aria-label={`Cooking ${title} step by step`}
+      tabIndex={-1}
       onCancel={(event) => {
         event.preventDefault();
         if (event.target !== dialog.current) return;

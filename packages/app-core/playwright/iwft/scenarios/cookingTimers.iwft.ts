@@ -111,6 +111,8 @@ test("a timer rings on whatever step the reader is on, Dismiss answers it, and S
   await page.keyboard.press("Space");
   await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
   await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 3");
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 4");
   await expect
     .poll(() => sentEvents(page, () => backendSimulator.analytics.events(), "reader.cooking.timerEnded"))
     .toMatchObject([{ props: { by: "dismissed", rang: true } }]);
@@ -119,9 +121,11 @@ test("a timer rings on whatever step the reader is on, Dismiss answers it, and S
 test("+1 min on a ringing timer runs it again for a minute", async ({ page }) => {
   await page.getByRole("button", { name: "Start a 15-minute timer" }).click();
   await page.clock.fastForward(15 * MINUTE);
-  await page.getByTestId("CookingTimerBanner.more").click();
+  await page.getByTestId("CookingTimerBanner.more").press("Enter");
   await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
   await expect(chipTimes(page)).toHaveText(["1:00"]);
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 2");
 });
 
 test("two ringing at once get a row each, oldest first, each dismissed on its own", async ({ page }) => {
@@ -134,6 +138,22 @@ test("two ringing at once get a row each, oldest first, each dismissed on its ow
   await expect(page.getByTestId("CookingTimerBanner.row").first()).toContainText("Rest");
   await page.getByRole("button", { name: "Dismiss rest timer" }).click();
   await expect(page.getByTestId("CookingTimerBanner.title")).toHaveText("Simmer timer is done");
+});
+
+test("Space dismisses each of two ringing timers in turn, then moves on again", async ({ page }) => {
+  await goToStep(page, 2);
+  await page.getByRole("button", { name: "Start a 5-minute rest timer" }).click();
+  await page.getByRole("button", { name: "Start a 10-minute simmer timer" }).click();
+  await page.clock.fastForward(10 * MINUTE);
+  await expect(page.getByTestId("CookingTimerBanner.row")).toHaveCount(2);
+
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingTimerBanner.title")).toHaveText("Simmer timer is done");
+  await expect(page.getByTestId("CookingTimerBanner.dismiss")).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 3");
 });
 
 test("a running timer's sheet takes a minute off, pauses, resumes and cancels", async ({ page, backendSimulator }) => {

@@ -18,14 +18,26 @@ const detail = (timer: CookingTimer, now: number) =>
 
 // Designs 284s–284w: a banner in the strip's place on whatever step the reader is on, its edge
 // pulsing, with Dismiss and +1 min; two or more ringing get a row each, oldest first. Focus
-// moves to the first Dismiss when one starts.
+// moves to the first Dismiss when one starts, to the next Dismiss as each is answered, and to
+// the cooking screen itself once none ring, so Space and the arrows move on again.
 export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey }: CookingTimerBannerProps) {
   const firstDismiss = useRef<HTMLButtonElement | null>(null);
+  const screen = useRef<HTMLElement | null>(null);
   const newest = ringing.reduce((latest, timer) => Math.max(latest, timer.id), 0);
+  const ids = ringing.map((timer) => timer.id).join(" ");
 
   useEffect(() => {
-    if (newest > 0) firstDismiss.current?.focus({ preventScroll: true });
+    const button = firstDismiss.current;
+    if (newest === 0 || button === null) return;
+    screen.current = button.closest("dialog");
+    button.focus({ preventScroll: true });
   }, [newest]);
+
+  useEffect(() => {
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
+    (firstDismiss.current ?? screen.current)?.focus({ preventScroll: true });
+  }, [ids]);
 
   if (ringing.length === 0) return null;
   const only = ringing.length === 1 ? ringing[0]! : null;
