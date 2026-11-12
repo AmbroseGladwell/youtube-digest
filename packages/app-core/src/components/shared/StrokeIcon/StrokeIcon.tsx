@@ -37,6 +37,8 @@ export type StrokeIconName =
   | "settings"
   | "mail"
   | "clock"
+  | "timer"
+  | "bell"
   | "copy"
   | "scrollText"
   | "share"
@@ -283,6 +285,19 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="10" />
       <path d="M12 6v6l4 2" />
+    </>
+  ),
+  timer: (
+    <>
+      <path d="M10 2h4" />
+      <path d="m12 14 3-3" />
+      <circle cx="12" cy="14" r="8" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M10.268 21a2 2 0 0 0 3.464 0" />
+      <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" />
     </>
   ),
   copy: (

@@ -16,6 +16,7 @@ import { ApiKeysSection } from "../components/ApiKeysSection/ApiKeysSection.js";
 import { BuildLine } from "../components/BuildLine/BuildLine.js";
 import { NARRATION_VOICE_STANDFIRST, NarrationVoicePicker } from "../components/NarrationVoicePicker/NarrationVoicePicker.js";
 import { PERSONALISATION_STANDFIRST, PersonalisationSection } from "../components/PersonalisationSection/PersonalisationSection.js";
+import { COOKING_STANDFIRST, TimerSoundPicker } from "../components/TimerSoundPicker/TimerSoundPicker.js";
 import { SettingsSection, settingsSectionHeadingId } from "../components/SettingsSection/SettingsSection.js";
 import { SettingsSectionList } from "../components/SettingsSectionList/SettingsSectionList.js";
 import type { SettingsSectionId } from "../SettingsSectionId.js";
@@ -34,6 +35,7 @@ export interface SettingsPageProps {
 const INTROS: Record<SettingsSectionId, string | null> = {
   account: "Who is signed in, and whether this device is in step.",
   voice: NARRATION_VOICE_STANDFIRST,
+  cooking: COOKING_STANDFIRST,
   personalisation: PERSONALISATION_STANDFIRST,
   appearance: APPEARANCE_STANDFIRST,
   // Design 110a moves the standing note to the foot of the panel, so the list and the
@@ -54,6 +56,8 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
       return <SyncPanel />;
     case "voice":
       return <NarrationVoicePicker scrollToChosen labelledBy={settingsSectionHeadingId("voice")} />;
+    case "cooking":
+      return <TimerSoundPicker />;
     case "personalisation":
       return <PersonalisationSection />;
     case "appearance":

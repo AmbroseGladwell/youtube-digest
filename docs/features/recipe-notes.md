@@ -19,6 +19,7 @@ A recipe video gets the same note with the video's tabs (OV-122, "Recipe videos"
 | Narrating the whole recipe | `overviewNoteLines`, `useRecipeVoice` |
 | A step's actions | `recipeActions.ts` |
 | Cooking step by step | `useCookingMode`, `CookingMode`, `CookingStepsSheet`, `CookingIngredientsSheet`, `cookingPlaceStorage.ts` |
+| Timers while cooking | `methodTimes.ts` and `TimerSound.ts` (domain), `useCookingTimers`, `cookingTimers.ts`, `timerSounds.ts`, `TimerSoundPicker`, `CookingTimerPills`, `CookingTimerStrip`, `CookingTimerBanner`, `CookingTimerSheet`, `CookingLeaveSheet` |
 | Oven temperatures in US units | `usOvenTemperatures.ts`, `OvenText` |
 | Units said in full | `spokenMeasures.ts` |
 | A recipe video's recipe | `recipeSection.ts`, `videoRecipe.ts`, `statedAmounts.ts` in `packages/generation` |
@@ -341,11 +342,82 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   play/pause is Next while the voice waits and pause or resume while it reads (owner). A dismissible
   line says so on the first two entries where there is a voice. Keys: Space or → Next, ← Back,
   R Say it again, I Ingredients, Esc Done, shown on the web's buttons.
-- **Leaving (150w).** Done or Esc, no confirm. The place is kept on this device for 24 hours (owner)
+- **Leaving (150w).** Done or Esc, no confirm unless a timer is running (see "Timers"). The place is kept on this device for 24 hours (owner)
   and cleared by Finish; the method says "You stopped at step 8 of 16.", tints that step, and offers
   "Carry on from step 8" and "Start from step 1".
 - **Analytics.** `reader.cooking.started` with where from and the step, and `reader.cooking.left`
-  with Done or Finish, the actions reached, and whether the last step was.
+  with Done or Finish, the actions reached, and whether the last step was. Timers add
+  `reader.cooking.timerStarted` (seconds, step, whether it was one end of a range) and
+  `reader.cooking.timerEnded` (dismissed, cancelled or left, and whether it rang). Settings sends
+  `settings.cooking.timerSoundChosen`, `timerSoundPlayed` and `timerSoundStopped`, each with the sound.
+
+### Timers
+
+Trello OV-284, designs 284a–284ah (OV-284 1–3 in Claude Design), with the owner's choices of
+12 Nov 2026. Prompted by Apple Home's cooking timers.
+
+- **Reading the times.** `methodTimes` in the domain finds each time in an action's own text:
+  digits, fractions, words up to twelve and a few tens, "half an hour", "1 hr 15", "1h15", "5 more
+  minutes", and a range ("8–10", "1 to 1½ hours", "10 or 12", "45 minutes to 1 hour") as both ends.
+  Code reads them, never the model (`docs/prototype/constraints.md`), so every recipe already saved
+  has them. Left alone: "within", "every" and "each" before a time, vague ones ("a few minutes",
+  "overnight") and anything over a day. Measured on the owner's 22 recipes on 12 Nov 2026: 83 times
+  in 68 of 121 steps, no false hits, the only misses the vague ones.
+- **The name (284g).** The nearest cooking verb before the time in its sentence, said as a command
+  ("…and rest it for 5 minutes"), else that verb in any form, from a short list in `methodTimes.ts`;
+  else the timer is "Step 2 timer". 4 of the 83 fell back.
+- **Starting (284a–284f).** A "Start a timer" row under the action and above "Then", one pill per
+  time; two times in an action are named by their verb ("Simmer · 10 min"), and a range is its two
+  ends with "or" between, under "Start a timer, either end". The time in the action is dotted and
+  underlined in orange, and tapping it does what its pill does (a range's words move focus to its
+  first pill). The stone tint stays the mark for changed numbers. A started pill reads "15 min ·
+  running" and opens its timer; the other end of a range still starts a second one.
+- **Running (284g–284o).** A strip under the step dots on every screen of the mode, the end screen
+  included, soonest first. One timer reads "Boil · step 2" with its time; two or more drop the step.
+  The ring empties as it runs. Past three the strip scrolls sideways. A timer is an end time read
+  from the clock, so a hidden or throttled tab shows the right time when it comes back, and a timer
+  that ran out meanwhile rings at once, at the time it ran out.
+- **A timer's sheet (284q, 284r).** Tapping a running timer opens Pause or Resume, −1 min and +1 min
+  in a row, and Cancel timer in warning ink. Paused keeps what was left, not an end time, reads
+  "· paused" with a muted ring, and still counts as running for leaving. −1 min past zero rings.
+- **Ringing (284s–284w).** A banner in the strip's place on whatever step the reader is on, its
+  edge pulsing (still and heavier under reduced motion): "Boil timer is done", the step, its length
+  and how long ago, with Dismiss and +1 min, which runs it again. Two or more get a row each, oldest
+  first. The reader's timer sound, made with Web Audio and unlocked by the tap that started the
+  timer, repeats until dismissed with a vibration where there is one; the voice pauses ("Timer ringing · the voice
+  waits") and carries on once nothing rings. Focus moves to Dismiss, so Space dismisses, and Next's
+  Space label hides meanwhile. In the panel "Then" gives way to the banner. While a timer rings the
+  headphones' play and pause dismiss it (owner's question; the design's recommendation); the track
+  buttons stay Back and Next.
+- **Leaving (284x–284ac).** With a timer running, Done, Esc and Back to the recipe ask "Leave cooking
+  mode?", naming one timer ("Your boil timer has 12 minutes left. Leaving stops it.") or listing
+  several soonest first. Keep cooking is first, filled and focused, and Esc means it; Leave stops
+  them all and leaves as before. A sheet on a phone and in the panel, a dialog on the web. Closing
+  the tab or going back while one runs gets the browser's own prompt. Finish doesn't stop timers,
+  since the last step is often the bake; it still forgets the place.
+- **Where sound can't be counted on (284ad, 284ae).** While a timer runs the wake line changes
+  rather than adding one: on iOS "Screen stays on. Keep it open to hear your timer", on the web
+  "… Keep this tab in front to hear your timer", and with no wake lock "Keep this screen on to hear
+  your timer". Elsewhere it is unchanged. Nothing claims a timer will ring when it might not.
+- **The sound (284ai–284al).** Settings › Cooking, right after Narration voice, its row reading
+  "Timer sound: Ready". Ten sounds, all made in `timerSounds.ts` with Web Audio so none needs a
+  file, chosen by the owner on 12 Nov 2026 from a listening page that went past the design's four.
+  **Ready** is the signature and the default: a rising marimba call with a glass sparkle, over a
+  soft swell of low strings. Then Chime (two glass-like notes), Low tone, Rise, Marimba and Pulse
+  (the three for a loud kitchen), Crystal, Music box, Vibraphone and Harp. Each layers tones in
+  the ratios a real instrument makes, with soft attacks, a little room echo made in code and a
+  gentle limiter, so they stay full on a phone speaker. The design's Bell and Beeps were dropped
+  (owner: a nicer alarm instead of beeps). The rows are the voice picker's, each with a sample that
+  plays once with a ring for its length, one at a time. Choosing saves at once as `timerSound` in
+  the settings record, so it syncs. It isn't chosen in the mode itself: it's set once, and wet
+  hands shouldn't be choosing sounds. A ringing timer repeats its sound with 1.5 s of quiet between
+  rings (Ready about every 4.7 s), and however many ring at once, one sound plays. Every sound has
+  the iOS limits above.
+- **Keys (284af, 284ag).** T starts the action's one timer, or with two times or a range moves focus
+  to the first pill, where Space or Enter starts the focused one. T is shown on the first pill.
+- **Not done.** No spoken "your timer is done": the narration is pre-made audio, so it is the timer
+  sound only (the design's recommendation). Timers live only while the mode is open: never kept with the
+  place, never synced.
 
 ## Oven temperatures in US units
 
@@ -492,7 +564,7 @@ the records back from older clients, which would treat a recipe as a page's (cli
 text stays out of the repo. `recipeNote.test.ts` and `adjustIngredient.test.ts` cover the record and
 the arithmetic, `recipeActions.test.ts` the splitting on steps taken from real pages,
 `usOvenTemperatures.test.ts` the conversion, `cookingPlaceStorage.test.ts` the kept place, and
-`cookingMode.iwft.ts` the mode, `generateRecipeOverview.test.ts` the prompt and routing with a simulated model, and
+`cookingMode.iwft.ts` the mode, `cookingTimers.iwft.ts` its timers (with `methodTimes.test.ts` and `cookingTimers.test.ts` for the reading and the clock), `generateRecipeOverview.test.ts` the prompt and routing with a simulated model, and
 `recipes.iwft.ts` with the shared page scenario cover the screens. For videos, `statedAmounts.test.ts`
 and `assembleOverview.test.ts` cover the check and the assembly, and `recipeVideos.iwft.ts` the
 screens. Nothing has been run against real

@@ -13,6 +13,7 @@ export const cookingModeTestIds = {
   label: "CookingMode.label",
   note: "CookingMode.note",
   action: "CookingMode.action",
+  time: "CookingMode.time",
   condition: "CookingMode.condition",
   next: "CookingMode.next",
   nextLead: "CookingMode.nextLead",

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { OverviewId, RecipeAction, RecipeStep } from "@overview/domain";
+import { DEFAULT_TIMER_SOUND, type OverviewId, type RecipeAction, type RecipeStep } from "@overview/domain";
+import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import type { OverviewPageAnalytics } from "../../analytics/bindOverviewId.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import type { PlayerSnapshot } from "../../player/types/PlayerSnapshot.js";
@@ -13,6 +14,7 @@ import {
   type CookingPlace,
 } from "../cookingPlaceStorage.js";
 import type { RecipeVoice } from "./useRecipeVoice.js";
+import { useCookingTimers, type CookingTimers } from "./useCookingTimers.js";
 
 export type CookingVoice = "reading" | "paused" | "waiting" | "loading" | "textOnly" | "stopped";
 export type CookingEntry = "heading" | "summary" | "bar" | "carryOn";
@@ -27,6 +29,7 @@ export interface CookingMode {
   place: CookingPlace | null;
   // The step the reader had reached when they left, for the note to show (design 150w).
   reachedStep: number | null;
+  timers: CookingTimers;
   start: (from: CookingEntry, action: number) => void;
   next: () => void;
   back: () => void;
@@ -72,6 +75,32 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
   const [place, setPlace] = useState<CookingPlace | null>(() => readCookingPlace(overviewId));
   const [reachedStep, setReachedStep] = useState<number | null>(null);
   const heard = useRef(new Set<number>());
+  const timerSound = useSettingsQuery().data?.timerSound ?? DEFAULT_TIMER_SOUND;
+  const timers = useCookingTimers({
+    sound: timerSound,
+    onStarted: (timer) => analytics.cooking.timerStarted({ seconds: timer.source.seconds, step: timer.step + 1, range: timer.range }),
+    onEnded: (by, rang) => analytics.cooking.timerEnded({ by, rang }),
+  });
+  const timersRef = useRef(timers);
+  timersRef.current = timers;
+
+  useEffect(() => {
+    if (!open) timersRef.current.stopAll();
+  }, [open]);
+
+  const ringing = timers.ringing.length > 0;
+  const voiceHeldForTimer = useRef(false);
+  useEffect(() => {
+    if (ringing) {
+      const { status } = engine.getSnapshot();
+      if (status !== "playing" && status !== "buffering") return;
+      engine.pause();
+      voiceHeldForTimer.current = true;
+    } else if (voiceHeldForTimer.current) {
+      voiceHeldForTimer.current = false;
+      if (open) engine.play("cooking");
+    }
+  }, [ringing, engine, open]);
 
   useEffect(() => {
     setPlace(readCookingPlace(overviewId));
@@ -146,8 +175,8 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     setOpen(false);
   };
 
-  const mediaRef = useRef({ next, back, voice, paused });
-  mediaRef.current = { next, back, voice, paused };
+  const mediaRef = useRef({ next, back, voice, paused, ringing });
+  mediaRef.current = { next, back, voice, paused, ringing };
   const action = actions[at];
   const group = action === undefined ? null : (steps[action.step]?.group ?? null);
   const mediaTitle = action === undefined ? "" : `Step ${action.step + 1} of ${steps.length}${group === null ? "" : ` · ${group}`}`;
@@ -158,7 +187,9 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
       artist: title,
       onPlay: () => {
         const current = mediaRef.current;
-        if (current.paused) {
+        if (current.ringing) {
+          timersRef.current.dismissAll();
+        } else if (current.paused) {
           setPaused(false);
           engine.play("cooking");
         } else if (current.voice !== "reading") {
@@ -166,6 +197,10 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
         }
       },
       onPause: () => {
+        if (mediaRef.current.ringing) {
+          timersRef.current.dismissAll();
+          return;
+        }
         if (mediaRef.current.voice !== "reading") return;
         engine.pause();
         setPaused(true);
@@ -184,6 +219,7 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     hint,
     place,
     reachedStep,
+    timers,
     start,
     next,
     back,

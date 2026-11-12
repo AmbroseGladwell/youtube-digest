@@ -9,6 +9,7 @@ import { Provider } from "./Provider.js";
 import { AuthIntent } from "./AuthIntent.js";
 import { EmailChangeRevertRefusal } from "./EmailChangeReverted.js";
 import { NarrationVoice } from "./NarrationVoice.js";
+import { TimerSound } from "./TimerSound.js";
 import { MAX_DUBIOUS_CLAIMS, Novelty } from "./Verdict.js";
 import { WatchAnswer } from "./WatchAnyway.js";
 import { QueuedCaptureProblem } from "./QueuedCapture.js";
@@ -179,6 +180,7 @@ export type AccountMenuItem = z.infer<typeof AccountMenuItem>;
 export const SettingsSection = z.enum([
   "account",
   "voice",
+  "cooking",
   "personalisation",
   "appearance",
   "keys",
@@ -252,6 +254,18 @@ export const overviewPageEvents = {
       by: z.enum(["done", "finish"]),
       actionsHeard: z.number().int().nonnegative(),
       reachedLastStep: z.boolean(),
+    }),
+    timerStarted: event(
+      "The reader starts a timer from a time in the step they are cooking, with its length and whether it was one end of a range",
+      {
+        seconds: z.number().int().positive(),
+        step: z.number().int().positive(),
+        range: z.boolean(),
+      },
+    ),
+    timerEnded: event("A cooking timer ends: dismissed once it rang, cancelled, or stopped by leaving cooking step by step", {
+      by: z.enum(["dismissed", "cancelled", "left"]),
+      rang: z.boolean(),
     }),
   },
   watchAnyway: {
@@ -674,6 +688,11 @@ export const analyticsEvents = {
       samplePlayed: event("The reader plays a voice's sample", { voice: NarrationVoice }),
       sampleStopped: event("The reader stops a voice's sample", { voice: NarrationVoice }),
       samplesRetried: event("The reader tries loading the voice samples again"),
+    },
+    cooking: {
+      timerSoundChosen: event("The reader chooses the sound a cooking timer rings with", { sound: TimerSound }),
+      timerSoundPlayed: event("The reader plays a timer sound to hear it", { sound: TimerSound }),
+      timerSoundStopped: event("The reader stops a timer sound they were hearing", { sound: TimerSound }),
     },
     personalisation: {
       aboutYouSaved: event("The reader saves About you in Settings › Personalisation, or clears it; never what it says", {

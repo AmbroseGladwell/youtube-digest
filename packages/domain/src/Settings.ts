@@ -11,6 +11,7 @@ import {
 import { ModelByProvider } from "./ModelByProvider.js";
 import { DEFAULT_PROVIDER, Provider } from "./Provider.js";
 import { DEFAULT_NARRATION_VOICE, NarrationVoice } from "./NarrationVoice.js";
+import { DEFAULT_TIMER_SOUND, TimerSound } from "./TimerSound.js";
 import { DEFAULT_PLAN, Plan } from "./Plan.js";
 import { MilestoneMarks } from "./Milestone.js";
 import { TagAliases } from "./TagAliases.js";
@@ -61,6 +62,8 @@ export const Settings = z.object({
   plan: Plan,
   plusNoticeDismissed: z.boolean(),
   narrationVoice: NarrationVoice.catch(DEFAULT_NARRATION_VOICE),
+  // What a cooking timer rings with, on every device (docs/features/recipe-notes.md, "Timers").
+  timerSound: TimerSound.catch(DEFAULT_TIMER_SOUND),
   // When each time-saved milestone was crossed and dismissed, on the account so both hold
   // on every device (docs/features/time-saved.md).
   milestones: MilestoneMarks.catch({}),
@@ -103,6 +106,7 @@ export const DEFAULT_SETTINGS: Settings = {
   plan: DEFAULT_PLAN,
   plusNoticeDismissed: false,
   narrationVoice: DEFAULT_NARRATION_VOICE,
+  timerSound: DEFAULT_TIMER_SOUND,
   milestones: {},
   showMilestoneCards: true,
   analyticsOptOut: false,

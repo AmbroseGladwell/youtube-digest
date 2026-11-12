@@ -14,10 +14,12 @@ import {
   type NarrationVoice,
   type SectionsEnabled,
   type ThemeMode,
+  type TimerSound,
 } from "@overview/domain";
 import { modelFor, type ModelByProvider } from "@overview/domain";
 import type { SyncStatus } from "@overview/sync";
 import type { AppBuild } from "../../../app/AppBuildContext.js";
+import { TIMER_SOUND_LABELS } from "./timerSoundLabels.js";
 import { hasKeyFor, providersWithKeys, type ApiKeys } from "../../apiKeys/ApiKeys.js";
 import type { SyncConnection } from "../../sync/types/SyncConnection.js";
 import { syncStatusLine } from "../../sync/util/syncStatusLine.js";
@@ -34,6 +36,8 @@ export function accountRowValue(sync: { connected: boolean; status: SyncStatus }
   const line = syncStatusLine(sync.status, now);
   return name === null ? line : `${name} · ${line}`;
 }
+
+export const timerSoundRowValue = (sound: TimerSound): string => `Timer sound: ${TIMER_SOUND_LABELS[sound].name}`;
 
 export function voiceRowValue(voice: NarrationVoice): string {
   return `${narrationVoiceName(voice)} · ${ACCENT_GROUP_LABELS[narrationAccent(voice)]}`;
