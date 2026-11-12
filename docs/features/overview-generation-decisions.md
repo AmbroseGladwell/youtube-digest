@@ -758,13 +758,14 @@ headings, and anything already in the last row, is unchanged. The case that rais
 chapters to 6 and 7. Video has no headings, so it never moves.
 
 Measured on 12 Nov 2026 over the five coverage articles, two samples each on GPT-6.1 Sol and
-Sonnet 5.5, against main's saved runs. Only the ADHD guide and the Our World in Data explainer
-changed budget. On the guide, Sonnet used the sixth point both times and gained the piece's
-point on marking new content, while keeping the design advice. Sol used it once, and once
-dropped the design advice entirely with five points: that is which points get chosen, not how
-many are allowed. The share of the guide inside a key point's paragraph rose from 6–13% to
-15–17%. Two Sonnet samples failed the final-stretch check on articles whose prompt hadn't
-changed, the Fowler essay and the Paul Graham essay, so that is not this change.
+Sonnet 5.5, against current main run the same day. Only the ADHD guide and the Our World in Data
+explainer changed budget. On the guide, main gave 5 key points every time and this gave 5, 6, 6
+and 6 (the 5 on Sol), with 6 or 7 chapters where main had 4 or 5. Sonnet's extra point was the
+piece's advice on marking new content. Both sides put the design checklist in the steps block,
+as OV-250 intends. The share of the guide inside a key point's paragraph moved only from 13–16%
+to 15–17%: one more point buys a little reach, not a different note. The explainer went from 6
+points to 8. The final-stretch check failed on unchanged prompts on both sides (the Fowler essay
+on main and on this branch, the Paul Graham essay on this branch), so that is not this change.
 
 **Recipe pages are on no budget.** Their note is one paragraph and the page's own recipe, with
 no key points or chapters. A recipe video is a video, so it takes the spoken rows.
