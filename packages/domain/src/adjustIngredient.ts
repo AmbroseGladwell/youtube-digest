@@ -272,7 +272,9 @@ const measureAt = (text: string): Measure | null => {
 };
 
 // "200ml/7fl oz stock" is one amount written in both systems (OV-241). As written scales both
-// halves; Metric and US keep the half already in their system (owner, 11 Nov 2026).
+// halves and Metric keeps the metric half. US keeps the page's other half where it is already in
+// the unit US would choose, or a spoon; British fl oz, or ounces past a pound, are converted from
+// the metric half as any metric line is, into cups or pounds (owner, 12 Nov 2026).
 function inBothSystems(line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null {
   const first = measureAt(body);
   const slash = first === null ? null : body.slice(first.text.length).match(/^\s*\/\s*/);
@@ -286,10 +288,16 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
   }
   const scaled = ({ low, high, unit, unitText }: Measure) =>
     `${formatNumber(low * factor, unit)}${high === null ? "" : `–${formatNumber(high * factor, unit)}`}${agreeing(unitText, low * factor > 1 || high !== null)}`;
-  const shown =
-    units === "asWritten"
-      ? `${scaled(first)}${slash[0]}${scaled(second)}`
-      : scaled(units === "metric" ? metric[0]! : first === metric[0] ? second : first);
+  const grams = metric[0]!;
+  const other = first === grams ? second : first;
+  const usUnit = target(grams.unit, grams.low * factor * grams.unit.size, "us");
+  const inUs = () => {
+    if (other.unit.system === "both" || other.unit === usUnit) return scaled(other);
+    const value = (amount: number) => formatNumber((amount * factor * grams.unit.size) / usUnit.size, usUnit);
+    const many = (grams.low * factor * grams.unit.size) / usUnit.size > 1 || grams.high !== null;
+    return `${value(grams.low)}${grams.high === null ? "" : `–${value(grams.high)}`} ${many ? usUnit.plural : usUnit.singular}`;
+  };
+  const shown = units === "asWritten" ? `${scaled(first)}${slash[0]}${scaled(second)}` : units === "metric" ? scaled(grams) : inUs();
   const pieces: IngredientPiece[] = [
     { text: lead, changed: false },
     { text: shown, changed: true },

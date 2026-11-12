@@ -162,8 +162,11 @@ guess:
 - A pack size in brackets straight after the pack ("1 small tub (200g) crème fraîche") is the
   pack's size, not a second amount: the count scales and the bracket stays.
 - One amount given in both systems ("200ml/7fl oz chicken stock", "500g/1lb 2oz rice") is not a
-  second amount either (OV-241, owner 11 Nov 2026). As written scales both halves and keeps the
-  slash ("400ml/14fl oz"); Metric and US keep only the half already in their system, even at 1×.
+  second amount either (OV-241, owner 11–12 Nov 2026). As written scales both halves and keeps the
+  slash ("400ml/14fl oz"), and Metric keeps the metric half, even at 1×. US keeps the page's other
+  half where it is already the unit US would choose ("14oz") or a spoon, and otherwise converts the
+  metric half like any metric line: British fl oz become cups ("1⅔ cups"), and ounces past a pound
+  become pounds ("1¾ lb").
   Both halves must be the same kind, one of them metric. A length ("2cm/¾in") has no unit to read,
   so it stays as written.
 - One becoming several takes the plural of its noun: "1 small garlic clove" doubled is "2 small

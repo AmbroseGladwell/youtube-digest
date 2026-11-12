@@ -107,11 +107,11 @@ test("units convert within their kind only", () => {
   assert.equal(adjustedText(adjustIngredient("2.2kg lamb shoulder", 1, "us")), "4¾ lb lamb shoulder");
 });
 
-test("one amount in both systems scales both halves as written, and keeps its own half in Metric or US", () => {
+test("one amount in both systems scales both halves as written, the metric half in Metric, and US units in US", () => {
   const atDouble = (line: string) =>
     (["asWritten", "metric", "us"] as const).map((units) => adjustedText(adjustIngredient(line, 2, units)));
-  assert.deepEqual(atDouble("200ml/7fl oz chicken stock"), ["400ml/14fl oz chicken stock", "400ml chicken stock", "14fl oz chicken stock"]);
-  assert.deepEqual(atDouble("400ml/14fl oz coconut milk"), ["800ml/28fl oz coconut milk", "800ml coconut milk", "28fl oz coconut milk"]);
+  assert.deepEqual(atDouble("200ml/7fl oz chicken stock"), ["400ml/14fl oz chicken stock", "400ml chicken stock", "1⅔ cups chicken stock"]);
+  assert.deepEqual(atDouble("400ml/14fl oz coconut milk"), ["800ml/28fl oz coconut milk", "800ml coconut milk", "3⅓ cups coconut milk"]);
   assert.deepEqual(atDouble("150g/5½oz mangetout, finely sliced"), [
     "300g/11oz mangetout, finely sliced",
     "300g mangetout, finely sliced",
@@ -131,8 +131,16 @@ test("one amount in both systems scales both halves as written, and keeps its ow
   assert.deepEqual(changed(adjustIngredient("200ml/7fl oz chicken stock", 2, "asWritten")), ["400ml/14fl oz"]);
 });
 
-test("in Metric or US a line in both systems drops the other half even unscaled", () => {
-  assert.equal(adjustedText(adjustIngredient("200ml/7fl oz chicken stock", 1, "us")), "7fl oz chicken stock");
+test("US keeps the page's own half where it is already in US units, and converts British fl oz and big ounces", () => {
+  const inUs = (line: string, factor: number) => adjustedText(adjustIngredient(line, factor, "us"));
+  assert.equal(inUs("400g/14oz beef mince", 1), "14oz beef mince");
+  assert.equal(inUs("400g/14oz beef mince", 2), "1¾ lb beef mince");
+  assert.equal(inUs("200ml/7fl oz chicken stock", 1), "¾ cup chicken stock");
+  assert.equal(inUs("3 tbsp/45ml olive oil", 2), "6 tbsp olive oil");
+});
+
+test("in Metric a line in both systems drops the other half even unscaled", () => {
+  assert.equal(adjustedText(adjustIngredient("200ml/7fl oz chicken stock", 1, "metric")), "200ml chicken stock");
   assert.equal(adjustedText(adjustIngredient("3 tbsp/45ml olive oil", 1, "metric")), "45ml olive oil");
 });
 
