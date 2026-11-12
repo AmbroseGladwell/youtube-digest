@@ -752,6 +752,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           <ShareOverviewDialog
             share={overviewShare.share}
             edited={overviewShare.edited}
+            audioMissing={overviewShare.audioMissing}
             signedIn={sync.connected}
             busy={shareOverview.isPending || stopSharing.isPending}
             failed={shareOverview.isError || stopSharing.isError}

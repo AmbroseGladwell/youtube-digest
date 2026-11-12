@@ -10,6 +10,7 @@ import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.
 export interface ShareOverviewDialogProps {
   share: Share | null;
   edited: boolean;
+  audioMissing: boolean;
   signedIn: boolean;
   busy: boolean;
   failed: boolean;
@@ -27,6 +28,7 @@ const PRIVATE = ["Your reason", "Your topics", "Read and favourite state"];
 export function ShareOverviewDialog({
   share,
   edited,
+  audioMissing,
   signedIn,
   busy,
   failed,
@@ -244,7 +246,7 @@ export function ShareOverviewDialog({
         </div>
 
         {edited ? (
-          <div className={styles.editedNotice} data-testid={shareOverviewDialogTestIds.editedNotice}>
+          <div className={styles.notice} data-testid={shareOverviewDialogTestIds.editedNotice}>
             <p>You’ve edited this overview since sharing it. The link still shows the earlier copy.</p>
             <button
               type="button"
@@ -257,6 +259,22 @@ export function ShareOverviewDialog({
               data-testid={shareOverviewDialogTestIds.updateButton}
             >
               {busy ? "Updating…" : "Update shared copy"}
+            </button>
+          </div>
+        ) : audioMissing ? (
+          <div className={styles.notice} data-testid={shareOverviewDialogTestIds.audioMissingNotice}>
+            <p>The shared copy has no audio yet. Add yours, and anyone who opens the link can listen too.</p>
+            <button
+              type="button"
+              className={styles.noticeAction}
+              onClick={() => {
+                analytics.shareDialog.audioAdded();
+                onCreate();
+              }}
+              disabled={busy}
+              data-testid={shareOverviewDialogTestIds.addAudioButton}
+            >
+              {busy ? "Adding audio…" : "Add audio"}
             </button>
           </div>
         ) : (

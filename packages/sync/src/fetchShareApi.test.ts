@@ -34,6 +34,7 @@ const aShare = (overrides: Partial<Share> = {}): Share => ({
   updatedAt: "2026-09-30T11:00:00.000Z",
   views: 12,
   contentHash: "a".repeat(64),
+  hasNarration: false,
   ...overrides,
 });
 

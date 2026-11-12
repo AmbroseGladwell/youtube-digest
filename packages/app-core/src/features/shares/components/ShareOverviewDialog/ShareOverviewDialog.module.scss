@@ -178,7 +178,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   @include controls.field-input;
 }
 
-.editedNotice {
+.notice {
   background: var(--stone-tint);
   color: var(--on-stone-tint);
   border-radius: var(--radius-panel);
@@ -189,7 +189,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   gap: 0.875rem;
 }
 
-.editedNotice p {
+.notice p {
   margin: 0;
   font-size: 0.84375rem;
   line-height: 1.5;
@@ -273,7 +273,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
     align-items: stretch;
   }
 
-  .editedNotice {
+  .notice {
     flex-direction: column;
     align-items: stretch;
   }

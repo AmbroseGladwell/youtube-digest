@@ -10,6 +10,8 @@ export const shareOverviewDialogTestIds = {
   systemShareButton: "ShareOverviewDialog.systemShareButton",
   editedNotice: "ShareOverviewDialog.editedNotice",
   updateButton: "ShareOverviewDialog.updateButton",
+  audioMissingNotice: "ShareOverviewDialog.audioMissingNotice",
+  addAudioButton: "ShareOverviewDialog.addAudioButton",
   stopButton: "ShareOverviewDialog.stopButton",
   confirmStopButton: "ShareOverviewDialog.confirmStopButton",
   keepSharingButton: "ShareOverviewDialog.keepSharingButton",
