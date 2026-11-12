@@ -126,8 +126,46 @@ it, as the transcript cleanup already does.
 - IndexedDB version 6 adds the `projects` and `projectMembers` stores, the latter indexed by
   project and by overview for the cascades.
 
-## Not in this slice
+## Over MCP
 
-The MCP tools (`list_projects`, `get_project`, `create_project`, `change_project_members`, the
-`project` filter and the `project_brief` prompt), `projectMarkdown`, moving a no-account
-library's projects into an account, analytics, and every screen. Each is on the card.
+`mcp-connector.md`, "Projects", has the tools, the scope and the prompt. Two things belong here.
+
+### get_project, and projectMarkdown
+
+`projectMarkdown` in `@overview/domain` is the brief: the purpose, or an instruction to ask
+for one; who made the project and when; the overview count, the unread count and the verdict
+spread, all over the whole project; then its overviews, and every How to apply step from them
+under each overview's title and id. `get_project` serves it a page at a time and the reader's
+Copy as Markdown will serve it whole, so the two never differ.
+
+**Overviews are ordered freshest verdict first** (original, fresh angle, widely covered, then
+none), then newest saved, so an assistant reading page by page meets what is least likely to
+be known already. Dubious ones are flagged, unread ones say so, and those an assistant added
+say which. The ordering and every count are code (`docs/prototype/constraints.md`).
+
+The card asked how long the gathered steps may be. How to apply holds at most three items,
+so a page of 25 overviews carries at most 75; the size is measured in `mcp-connector.md`,
+"The context budget". No separate cap was needed.
+
+### The real-assistant check
+
+The card's definition of done includes a hand-judged check against Claude and one other
+client, which needs the connector deployed with these tools. The prompts, against a library
+with two or three projects that have purpose lines:
+
+1. "What should I do next on my kitchen?" with no project named. Does it find the project
+   from its purpose alone and use `get_project`?
+2. The same project asked about in other words ("the renovation", "the house stuff").
+3. "Make me a project for launching my app and put in what I've saved that's relevant." Does
+   it search, propose and then make it, with a sensible set and no invented purpose?
+4. "Take the videos about pricing out of my launch project." Does it remove only those?
+5. On a read-only connection, ask it to add something. Does it say how to reconnect rather
+   than fail silently?
+6. The `project_brief` prompt, picked from the client's prompt list.
+
+The result is recorded on the card.
+
+## Not yet built
+
+Moving a no-account library's projects into an account (step 4 decides whether one can exist),
+analytics events, and every screen.

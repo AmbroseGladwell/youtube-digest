@@ -159,8 +159,8 @@ There are three, and the metadata lists all of them:
 
 | Scope | Lets the connection | Held by |
 |---|---|---|
-| `overviews:read` | read overviews, topics, tags and transcripts: the six reading tools | every connection |
-| `overviews:write` | mark overviews read, unread or favourite: `mark_overviews` | a connection that asked for it, or named no scope |
+| `overviews:read` | read overviews, topics, tags, projects and transcripts: the eight reading tools | every connection |
+| `overviews:write` | mark overviews read, unread or favourite, make projects and change what is in them: `mark_overviews`, `create_project`, `change_project_members` (OV-168) | a connection that asked for it, or named no scope |
 | `profile:read` | read what is known about the reader: `get_profile` (OV-221, "The profile" below) | a connection that asked for it, or named no scope |
 
 **Every connection reads**, since that is what connecting is, so a request for
@@ -185,10 +185,10 @@ read your overviews" in both cases, since reading is what every connection does.
 connection was approved before assistants could read what is known about the reader and
 that reconnecting lets it, and a call anyway fails saying the same.
 
-**A read-only connection is not offered the write tool.** `tools/list` leaves
-`mark_overviews` out, and `initialize` says in its instructions that the connection was
-approved to read only and that reconnecting it from Settings › Connections lets the
-assistant mark overviews, so the assistant can tell the reader rather than silently lacking
+**A read-only connection is not offered the write tools.** `tools/list` leaves
+`mark_overviews`, `create_project` and `change_project_members` out, and `initialize` says in
+its instructions that the connection was approved to read only and that reconnecting it from
+Settings › Connections lets the assistant mark overviews and organise projects, so the assistant can tell the reader rather than silently lacking
 the tool ("Degrade visibly", `CLAUDE.md`). A call to it anyway is a failed call saying the
 same. Reconnecting means revoking in Settings and connecting again from the assistant,
 which asks the current metadata's scopes; there is no in-place upgrade of a connection's
@@ -231,8 +231,10 @@ again rather than seeing a protocol fault.
 
 ## The tools
 
-Seven read, and are marked `readOnlyHint`; one writes, and is marked as not read-only, not
-destructive and idempotent. Each reads the account's live records afresh, so what an
+Nine read, and are marked `readOnlyHint`; three write, and are marked as not read-only and
+not destructive. Every tool but `create_project` is marked idempotent: a second identical
+`create_project` is refused, since the name is taken, rather than leaving things as the first
+left them. Each reads the account's live records afresh, so what an
 assistant sees is what has reached the server through sync.
 
 | Tool | Returns |
@@ -244,13 +246,18 @@ assistant sees is what has reached the server through sync.
 | `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
 | `get_transcript` | one video's transcript, by its overview's id |
 | `get_profile` | what is known about the reader, with each learned item's source; profile scope only, and only while the reader shares it (OV-221) |
+| `list_projects` | the reader's projects, most recently changed first: purpose, overview and unread counts, verdict spread, last changed, who made it. Active only unless `archived`. 50 a page (OV-168) |
+| `get_project` | one project as a brief, `projectMarkdown`: purpose, counts, its overviews freshest verdict first, and every How to apply step gathered. 25 overviews a page (OV-168) |
 | `mark_overviews` | marks up to 50 overviews, by id, read or unread and favourite or not; write scope only (OV-109) |
+| `create_project` | makes a project with a name, the reader's purpose and up to 50 overviews, marked as the assistant's; write scope only (OV-168) |
+| `change_project_members` | puts up to 50 overviews in a project or takes them out, by id; write scope only (OV-168) |
 
 **The filters** `search_overviews` and `get_overviews` share are `query`, `topic` (a name
-or an id), `tag` (the video's own or the reader's `userTags`), `verdict`, `dubious`,
+or an id), `project` (a name or an id: only the overviews in it now), `tag` (the video's own or the reader's `userTags`), `verdict`, `dubious`,
 `favourite`, `read`, and `savedFrom`/`savedTo` as inclusive days. A topic that does not
 exist is a failed call that points at `list_topics`, rather than an empty result that
-looks like an answer.
+looks like an answer, and a project that does not exist points at `list_projects`. A project
+name two projects share is a failed call naming both, so the assistant passes the id.
 
 **A note is `overviewMarkdown(overview)`** from `@overview/domain`, behind two lines naming
 its id and topics: title, channel, length and dates, the link and tags, then the reader's
@@ -298,6 +305,30 @@ that says nothing was changed.
 
 The reply names what was marked, by title, and what already was; it carries no ids
 beyond the missing ones, since the assistant has them.
+
+### Projects
+
+What a project is and how it syncs is `projects.md`. Over MCP, the assistant is a project's
+main user: `list_projects` and `get_project` read, `create_project` and
+`change_project_members` write, and every write is marked with the connection's name as it
+registered (`addedBy`/`createdBy`, `{ by: "assistant", connectionId, name }`), so the reader
+sees what it did. **An assistant can never rename a project, change its purpose, archive it
+or delete it**: the purpose is the reader's own statement of intent, and the rest is not
+reversible enough to hand over. It may set a purpose when it makes a project, and the tool
+tells it to leave one out rather than invent it.
+
+The writes reuse `overviews:write` (decided 12 Nov 2026): membership is reader state with the
+same reversible reach as read and favourite marks, and existing write connections need no
+reconnecting.
+
+Like `mark_overviews`, the writes are by id only, dated by the server's clock
+(`memberChangeTime` keeps each change after the record's last), idempotent where already so,
+and refused for an id not in the account. `create_project` refuses a name an existing project
+has, pointing at `change_project_members`, so an assistant asked twice does not make two.
+
+The **`project_brief` prompt** asks the assistant to read a project with `get_project` and its
+notes with `get_overviews`, then say what to do next for the project's purpose, citing each
+overview, and to ask the reader for a purpose first when there is none.
 
 The **`compare_topic` prompt** asks the assistant to read everything under one topic with
 `get_overviews`, following the cursor, and say where the videos agree, contradict each
@@ -368,6 +399,11 @@ roughly 1.3–1.8k tokens. Claude Code warns when one tool result passes 10,000 
 refuses past 25,000 (`MAX_MCP_OUTPUT_TOKENS`), so twenty a call, the first guess, would
 break there. Ten sits near the warning with room to spare, and the cursor pages the rest.
 Re-measure once real notes with chapters exist. Transcripts are never included.
+
+`get_project` lists **25 overviews a page**, with their How to apply steps (at most three
+each, by the schema). A full page built from the five sample notes, which carry two or three
+steps each, measures 22.8 KB, about 4,050 words, so roughly 5.5k tokens: about half the
+warning. The steps are most of it.
 
 ## Logging
 
@@ -472,10 +508,10 @@ still logs every decision and revoke itself, as above.
   added when one is wanted.
 - **A sweep** of unused clients, lapsed authorization requests and expired tokens, which
   waits for the same future job as expired sessions (`api.md`).
-- **Other writes**: filing under a topic, tags, the capture reason. `mark_overviews` is
-  the only tool that writes, and the write scope covers only marks; another kind of write
-  would be another tool under the same scope, or a scope of its own if the reader should be
-  able to allow one without the other.
+- **Other writes**: filing under a topic, tags, the capture reason. Marks and projects are
+  what the write scope covers; another kind of write would be another tool under the same
+  scope, or a scope of its own if the reader should be able to allow one without the other
+  (saving a link, which spends generation, is the case in question: OV-262).
 - **Which scope a connection holds, in Settings.** A connection from before OV-109 is
   read-only and the row does not say so; the assistant says so when it is asked to mark.
 - **Audio.** Narration is not exposed, and would wait for sync to carry it.

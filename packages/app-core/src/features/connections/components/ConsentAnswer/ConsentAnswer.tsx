@@ -21,7 +21,11 @@ interface Permission {
 }
 
 const READS: Permission = { icon: "check", text: "Read your overviews and their transcripts", granted: true };
-const MARKS: Permission = { icon: "check", text: "Mark overviews read, unread or favourite", granted: true };
+const MARKS: Permission = {
+  icon: "check",
+  text: "Mark overviews read, unread or favourite, and organise them into projects",
+  granted: true,
+};
 export const READS_PROFILE_TEXT = "Read what we know about you: your sentence, and what we’ve learned from your overviews";
 const READS_PROFILE: Permission = { icon: "check", text: READS_PROFILE_TEXT, granted: true };
 const CHANGES_NOTHING: Permission = { icon: "circleMinus", text: "Change nothing. Access is read-only", granted: false };

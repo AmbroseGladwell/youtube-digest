@@ -62,33 +62,54 @@ test("initialize answers with its own latest version when it does not know the c
   await testApp.close();
 });
 
-test("tools/list offers the eight tools, all but mark_overviews marked read-only, with a schema for each one's arguments", async () => {
+test("tools/list offers every tool, only the writing ones not marked read-only, with a schema for each one's arguments", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await makeAccount(testApp));
 
   const { tools } = (await client.request("tools/list")) as {
-    tools: Array<{ name: string; inputSchema: { type: string }; annotations: { readOnlyHint: boolean; destructiveHint: boolean } }>;
+    tools: Array<{
+      name: string;
+      inputSchema: { type: string };
+      annotations: { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean };
+    }>;
   };
 
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    ["search_overviews", "list_topics", "list_tags", "get_overview", "get_overviews", "get_transcript", "get_profile", "mark_overviews"],
+    [
+      "search_overviews",
+      "list_topics",
+      "list_tags",
+      "get_overview",
+      "get_overviews",
+      "get_transcript",
+      "list_projects",
+      "get_project",
+      "get_profile",
+      "mark_overviews",
+      "create_project",
+      "change_project_members",
+    ],
   );
   assert.deepEqual(
     tools.filter((tool) => !tool.annotations.readOnlyHint).map((tool) => tool.name),
-    ["mark_overviews"],
+    ["mark_overviews", "create_project", "change_project_members"],
   );
   assert.ok(tools.every((tool) => !tool.annotations.destructiveHint && tool.inputSchema.type === "object"));
+  assert.deepEqual(
+    tools.filter((tool) => !tool.annotations.idempotentHint).map((tool) => tool.name),
+    ["create_project"],
+  );
   await testApp.close();
 });
 
-test("tools/list offers a connection approved to read only the six reading tools", async () => {
+test("tools/list offers a connection approved to read only the eight reading tools", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await makeAccount(testApp), "overviews:read");
 
   const { tools } = (await client.request("tools/list")) as { tools: Array<{ name: string; annotations: { readOnlyHint: boolean } }> };
 
-  assert.equal(tools.length, 6);
+  assert.equal(tools.length, 8);
   assert.ok(tools.every((tool) => tool.annotations.readOnlyHint));
   await testApp.close();
 });
@@ -104,7 +125,7 @@ test("the compare prompt names the topic it was given and asks for citations", a
 
   assert.deepEqual(
     listed.prompts.map((listedPrompt) => listedPrompt.name),
-    ["compare_topic"],
+    ["compare_topic", "project_brief"],
   );
   assert.equal(prompt.messages[0]!.role, "user");
   assert.match(prompt.messages[0]!.content.text, /get_overviews tool \(topic: "fitness"\)/);

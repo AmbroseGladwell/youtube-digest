@@ -2,7 +2,7 @@ import { buildSearchHaystack, type TopicId } from "@overview/domain";
 import type { LibraryEntry } from "./Library.js";
 import type { LibraryFilters } from "./LibraryFilters.js";
 
-export type ResolvedFilters = Omit<LibraryFilters, "topic"> & { topicId?: TopicId };
+export type ResolvedFilters = Omit<LibraryFilters, "topic" | "project"> & { topicId?: TopicId; inProject?: ReadonlySet<string> };
 
 const words = (query: string) =>
   query
@@ -18,6 +18,7 @@ export function searchLibrary(entries: LibraryEntry[], filters: ResolvedFilters)
 
   return entries.filter(({ overview, state }) => {
     if (filters.topicId !== undefined && !overview.topicIds.includes(filters.topicId)) return false;
+    if (filters.inProject !== undefined && !filters.inProject.has(overview.id)) return false;
     if (tag !== undefined && !overview.tags.includes(tag) && !(state?.userTags ?? []).includes(tag)) return false;
     if (filters.verdict !== undefined && overview.verdict?.novelty !== filters.verdict) return false;
     if (filters.dubious !== undefined && (overview.verdict?.dubious ?? false) !== filters.dubious) return false;

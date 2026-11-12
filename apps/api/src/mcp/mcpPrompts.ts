@@ -27,4 +27,16 @@ export const mcpPrompts: readonly McpPrompt[] = [
         "Cite every point with the video's title and a link to its moment in the video from the chapters, and say where the verdict judged a video dubious.",
       ].join(" "),
   },
+  {
+    name: "project_brief",
+    title: "What should I do next on a project?",
+    description: "Read one of my projects and what I've saved for it, and tell me what to do next, for the purpose I gave it",
+    arguments: [{ name: "project", description: "The project's name", required: true }],
+    text: ({ project }) =>
+      [
+        `Read my project "${project}" with the get_project tool, following its cursor until you have every overview, then read their full notes with get_overviews (project: "${project}").`,
+        "Tell me what to do next on it, for the purpose the project gives, drawing on the How to apply steps where they fit. If it has no purpose, ask me what it is for first.",
+        "Cite every point with the video's title and a link to its moment in the video, and say where the verdict judged a video dubious.",
+      ].join(" "),
+  },
 ];
