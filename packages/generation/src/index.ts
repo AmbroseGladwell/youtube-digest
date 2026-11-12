@@ -36,6 +36,7 @@ export * from "./generateTopicSuggestions.js";
 export * from "./bigPictureBudget.js";
 export * from "./noteBudget.js";
 export * from "./sections/transcriptBudget.js";
+export * from "./article/articleBudget.js";
 export * from "./noteKind/KindSample.js";
 export * from "./noteKind/checkNoteKind.js";
 export * from "./noteKind/kindSampleOfVideo.js";
