@@ -44,3 +44,7 @@ test("link text loses square brackets, so it can't break a Markdown link", () =>
     { text: "W3C Cognitive accessibility", href: "https://w3.example/coga" },
   ]);
 });
+
+test("a link that opens a picture is not a resource, however it is named", () => {
+  assert.deepEqual(linksIn('<a href="https://ourworldindata.example/uploads/Optimistic-about-the-future.png">survey</a>'), []);
+});

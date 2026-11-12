@@ -17,8 +17,8 @@ asked to write an address.
 1. **Extraction keeps the links** (`articleLinks.ts`, `articleSections.ts`). Each section
    carries the links its blocks make, in page order, once per article, as `{ text, href }`.
    A link is kept only when it is **https**, is **named in its own words** (not "here",
-   "read more", a bare address or a footnote number), doesn't point **back into the same
-   page** or to **the site's front page**, and isn't in the page's furniture. Readability has
+   "read more", a bare address or a footnote number), doesn't open **a picture**, doesn't point
+   **back into the same page** or to **the site's front page**, and isn't in the page's furniture. Readability has
    already removed most navigation, share bars and footers. Another page on the same site is
    kept, since a guide often links to its siblings.
 2. **The prompt numbers them** (`offeredLinks.ts`). After a section's last paragraph come its
