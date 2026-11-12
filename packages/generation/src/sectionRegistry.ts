@@ -30,6 +30,11 @@ const REGISTRY: Record<NoteKind, PromptSection[]> = {
   recipe: [recipeVideoCoreSection, chaptersSection, filingSection, recipeSection],
 };
 
+// With the steps switched off, a process note is written as a default one, so its key points
+// and How to apply aren't told to leave steps to a block it won't have (docs/features/source-steps.md).
+export const writtenKind = (input: GenerationInput, kind: NoteKind): NoteKind =>
+  kind === "process" && !input.sectionsEnabled.steps ? "default" : kind;
+
 export function enabledSections(input: GenerationInput, kind: NoteKind = "default"): PromptSection[] {
-  return REGISTRY[kind].filter((section) => section.key === "structural" || input.sectionsEnabled[section.key]);
+  return REGISTRY[writtenKind(input, kind)].filter((section) => section.key === "structural" || input.sectionsEnabled[section.key]);
 }

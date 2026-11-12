@@ -88,7 +88,7 @@ test("a two hour video gets up to ten longer key points and twenty chapters that
 test("structural fields are always in the schema, regardless of toggles", () => {
   const { schema } = composePrompt({
     ...baseInput,
-    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
+    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false },
   });
   const keys = Object.keys(schema.shape);
   for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags"]) {
@@ -112,7 +112,7 @@ test("a recipe note ignores the reader's section toggles, since it has none of t
 test("the em dash ban is always in the prompt, regardless of which sections are toggled", () => {
   const { systemPrompt } = composePrompt({
     ...baseInput,
-    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
+    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false },
   });
   assert.ok(systemPrompt.includes("Never use an em dash"));
 });
@@ -120,7 +120,7 @@ test("the em dash ban is always in the prompt, regardless of which sections are 
 test("a disabled section removes its field from the schema entirely, not just from the prompt", () => {
   const { schema } = composePrompt({
     ...baseInput,
-    sectionsEnabled: { verdict: false, selling: true, howToApply: false, watchAnyway: false },
+    sectionsEnabled: { verdict: false, selling: true, howToApply: false, watchAnyway: false, steps: false },
   });
   const keys = Object.keys(schema.shape);
   assert.ok(!keys.includes("verdict"));
@@ -249,7 +249,7 @@ test("a video saved without a reason says so, rather than leaving the line blank
 test("asks for fields that read well aloud, whichever sections are on", () => {
   const { systemPrompt } = composePrompt({
     ...baseInput,
-    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false },
+    sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false },
   });
   assert.ok(systemPrompt.includes("write for the ear as well as the eye"));
   assert.ok(systemPrompt.includes("Keep numbers, money and symbols as digits and symbols"));
@@ -484,4 +484,14 @@ test("a note whose source gives no steps is asked for nothing about steps, so it
   assert.equal("sourceSteps" in schema.shape, false);
   assert.ok(!systemPrompt.includes("The steps it gives"));
   assert.ok(systemPrompt.includes("the concrete cues or steps"));
+});
+
+test("with the steps switched off, a process video is written as a default note", () => {
+  const off = composePrompt({ ...baseInput, sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, steps: false } }, "process");
+  assert.equal(off.schema.shape.sourceSteps, undefined);
+  assert.doesNotMatch(off.systemPrompt, /The steps it gives/);
+  assert.equal(
+    off.systemPrompt,
+    composePrompt({ ...baseInput, sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, steps: false } }).systemPrompt,
+  );
 });

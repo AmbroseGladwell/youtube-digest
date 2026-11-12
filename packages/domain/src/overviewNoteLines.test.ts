@@ -1,7 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { makeOverview } from "./OverviewFactory.testHelper.js";
-import { HOW_TO_APPLY_SECTION, KEY_POINTS_SECTION, noteSectionNames, overviewNoteLines } from "./overviewNoteLines.js";
+import { RECIPE_SOURCE, makeOverview } from "./OverviewFactory.testHelper.js";
+import {
+  HOW_TO_APPLY_SECTION,
+  KEY_POINTS_SECTION,
+  SOURCE_STEPS_SECTION,
+  noteSectionNames,
+  overviewNoteLines,
+} from "./overviewNoteLines.js";
 import type { WatchAnyway } from "./WatchAnyway.js";
 
 test("opens with the note's own order: in one line, then the core claim", () => {
@@ -326,4 +332,66 @@ test("the watch-anyway line carries the stretch worth watching, and a plain no c
     endMs: 310_000,
   });
   assert.equal(watchLine({ answer: "no", reason: "Covered.", range: null })?.range, undefined);
+});
+
+const step = (text: string, dubiousReason: string | null = null) => ({ text, range: null, dubiousReason });
+const headingSpoken = (lines: ReturnType<typeof overviewNoteLines>, section: string) =>
+  lines.find((line) => line.section === section && line.heading)?.spoken;
+const withSteps = (...items: ReturnType<typeof step>[]) =>
+  makeOverview({ sourceSteps: { items }, howToApply: { items: ["Try one this week."] } });
+
+test("puts the source's steps between the key points and How to apply, numbered, under a caption that is never spoken", () => {
+  const lines = overviewNoteLines(withSteps(step("Sleep at ten."), step("Wake at six.")));
+
+  const names = noteSectionNames(lines);
+  assert.deepEqual(
+    [KEY_POINTS_SECTION, SOURCE_STEPS_SECTION, HOW_TO_APPLY_SECTION].map((name) => names.indexOf(name) - names.indexOf(KEY_POINTS_SECTION)),
+    [0, 1, 2],
+  );
+  const heading = lines.find((line) => line.section === SOURCE_STEPS_SECTION && line.heading);
+  assert.equal(heading?.aside, "From the video, in its order");
+  assert.ok(lines.filter((line) => line.section === SOURCE_STEPS_SECTION && !line.heading).every((line) => line.bullet));
+});
+
+test("introduces the steps as the source's own, counted from the list, then reads them first, then, finally", () => {
+  const three = overviewNoteLines(withSteps(step("Sleep at ten."), step("Wake at six."), step("Walk in daylight.")));
+  const one = overviewNoteLines(withSteps(step("Sleep at ten.")));
+  const many = overviewNoteLines(withSteps(...Array.from({ length: 18 }, (_, index) => step(`Do ${index}.`))));
+
+  assert.equal(headingSpoken(three, SOURCE_STEPS_SECTION), "The video gives three steps of its own, in this order.");
+  assert.deepEqual(spokenIn(three, SOURCE_STEPS_SECTION), ["First, sleep at ten.", "Then, wake at six.", "Finally, walk in daylight."]);
+  assert.equal(headingSpoken(one, SOURCE_STEPS_SECTION), "The video gives one step of its own.");
+  assert.deepEqual(spokenIn(one, SOURCE_STEPS_SECTION), ["Sleep at ten."]);
+  assert.equal(headingSpoken(many, SOURCE_STEPS_SECTION), "The video gives eighteen steps of its own, in this order.");
+});
+
+test("a dubious step keeps its place and says why it is doubted after it, aloud and on the line", () => {
+  const lines = overviewNoteLines(withSteps(step("Sleep at ten."), step("Wait 90 minutes for coffee.", "It rests on one small study.")));
+  const dubious = lines.find((line) => line.text === "Wait 90 minutes for coffee.");
+
+  assert.equal(dubious?.dubiousReason, "It rests on one small study.");
+  assert.equal(dubious?.spoken, "Finally, wait 90 minutes for coffee. The note flags this step as doubtful: it rests on one small study.");
+});
+
+test("How to apply is introduced as the reader's use of the source's process, only when the steps are there", () => {
+  const withBlock = overviewNoteLines(withSteps(step("Sleep at ten.")));
+  const without = overviewNoteLines(makeOverview({ howToApply: { items: ["Try one this week."] } }));
+
+  assert.equal(headingSpoken(withBlock, HOW_TO_APPLY_SECTION), "That's the video's own process. Here's how you might put it to use.");
+  assert.equal(headingSpoken(without, HOW_TO_APPLY_SECTION), "How you could apply it");
+});
+
+test("the reader's switch hides the steps, and How to apply is introduced as it was", () => {
+  const lines = overviewNoteLines(withSteps(step("Sleep at ten.")), { steps: false });
+
+  assert.ok(!noteSectionNames(lines).includes(SOURCE_STEPS_SECTION));
+  assert.equal(headingSpoken(lines, HOW_TO_APPLY_SECTION), "How you could apply it");
+});
+
+test("an article's steps say they are the article's", () => {
+  const article = { ...withSteps(step("Ask for the meeting by name.")), source: RECIPE_SOURCE };
+  const lines = overviewNoteLines(article);
+
+  assert.equal(lines.find((line) => line.section === SOURCE_STEPS_SECTION && line.heading)?.aside, "From the article, in its order");
+  assert.equal(headingSpoken(lines, SOURCE_STEPS_SECTION), "The article gives one step of its own.");
 });

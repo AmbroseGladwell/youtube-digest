@@ -1,0 +1,76 @@
+// The byline's flag (ReaderMasthead's .dubious): warning ink, its alert icon and chevron.
+.root {
+  display: block;
+  margin-top: 0.3125rem;
+  cursor: default;
+}
+
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  margin-left: -0.4375rem;
+  padding: 0.1875rem 0.5rem 0.1875rem 0.4375rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--alert);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--alert) 8%, transparent);
+  }
+}
+
+.flagOpen {
+  background: color-mix(in srgb, var(--alert) 14%, transparent);
+}
+
+// Design 250j: the reason on the stone tint, as the Dubious reasons panel's, with the moment.
+.panel {
+  display: block;
+  margin-top: 0.375rem;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.heading {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.reason {
+  display: block;
+}
+
+.saidAt {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.78125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: open var(--motion-state) var(--motion-ease) both;
+  }
+}
+
+@keyframes open {
+  from {
+    opacity: 0;
+  }
+}

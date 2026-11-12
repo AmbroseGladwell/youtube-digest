@@ -4,6 +4,8 @@ import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/Favou
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { PlayerScrubber } from "../../../player/components/PlayerScrubber/PlayerScrubber.js";
+import { lineAtTime } from "../../../player/util/lineAtTime.js";
+import { isInSourceSteps, sourceStepsStretch } from "../../../player/util/sourceStepsStretch.js";
 import type { PlayerStatus } from "../../../player/types/PlayerSnapshot.js";
 import { SKIP_SECONDS } from "../../../player/PlayerEngine.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
@@ -89,6 +91,13 @@ export function ReaderPlayerBar({
     analytics.playerBar.reRecordChosen();
     onReRecord();
   };
+  // Design 250f: while the voice is in the steps a source gives, a way past them to what follows.
+  const steps = sourceStepsStretch(lines);
+  const pastSteps = steps?.after == null ? undefined : lineStarts[steps.after];
+  const skipSteps =
+    view.seekable && pastSteps !== undefined && isInSourceSteps(steps, lineAtTime(lineStarts, time))
+      ? { to: pastSteps, next: lines[steps!.after!]!.text }
+      : null;
 
   return (
     <div className={styles.root} data-testid={readerPlayerBarTestIds.root}>
@@ -208,8 +217,24 @@ export function ReaderPlayerBar({
         </button>
       )}
 
-      {(actions.length > 0 || onCookFromHere !== null) && (
+      {(actions.length > 0 || onCookFromHere !== null || skipSteps !== null) && (
         <div className={styles.actions}>
+          {skipSteps !== null && (
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => {
+                analytics.sourceSteps.skipped();
+                onSeek(skipSteps.to);
+              }}
+              aria-label={`Skip the steps, to ${skipSteps.next}`}
+              data-testid={readerPlayerBarTestIds.skipSteps}
+            >
+              <StrokeIcon name="skipForward" size={14} />
+              <span className={styles.skipStepsWide}>Skip to {skipSteps.next}</span>
+              <span className={styles.skipStepsNarrow}>Skip steps</span>
+            </button>
+          )}
           {onCookFromHere !== null && (
             <button type="button" className={styles.action} onClick={onCookFromHere} data-testid={readerPlayerBarTestIds.cookFromHere}>
               <StrokeIcon name="chefHat" size={14} />

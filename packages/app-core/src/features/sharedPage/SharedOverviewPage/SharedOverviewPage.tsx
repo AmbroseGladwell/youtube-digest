@@ -375,7 +375,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                   renderRange={(line, range, active) =>
                     video !== null && (
                       <LineRangeTag
-                        {...noteLineRange(line)}
+                        {...noteLineRange(line, lines)}
                         range={range}
                         video={video}
                         active={active}

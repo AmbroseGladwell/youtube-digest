@@ -23,6 +23,8 @@ export const SectionsEnabled = z.object({
   selling: z.boolean(),
   howToApply: z.boolean(),
   watchAnyway: z.boolean(),
+  // The steps it gives (OV-250). On for settings saved before it, as the block was.
+  steps: z.boolean().catch(true),
 });
 export type SectionsEnabled = z.infer<typeof SectionsEnabled>;
 
@@ -31,6 +33,7 @@ export const DEFAULT_SECTIONS_ENABLED: SectionsEnabled = {
   selling: true,
   howToApply: true,
   watchAnyway: true,
+  steps: true,
 };
 
 export const Settings = z.object({

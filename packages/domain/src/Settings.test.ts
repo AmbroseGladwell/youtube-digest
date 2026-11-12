@@ -12,7 +12,15 @@ test("every section defaults to enabled, matching current behaviour", () => {
     selling: true,
     howToApply: true,
     watchAnyway: true,
+    steps: true,
   });
+});
+
+test("settings saved before the steps switch read with the steps on", () => {
+  const { steps: _, ...before } = DEFAULT_SECTIONS_ENABLED;
+  const read = Settings.parse({ ...DEFAULT_SETTINGS, sectionsEnabled: { ...before, verdict: false } });
+
+  assert.deepEqual(read.sectionsEnabled, { ...DEFAULT_SECTIONS_ENABLED, verdict: false });
 });
 
 test("the narration voice starts as Heart", () => {

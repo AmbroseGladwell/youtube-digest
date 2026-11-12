@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { DEFAULT_SECTIONS_ENABLED } from "@overview/domain";
 import type { ArticleGenerationInput } from "../ArticleGenerationInput.js";
 import { articleHowToApplySection } from "./articleHowToApplySection.js";
 
-const promptFor = (readerContext: string | null) => articleHowToApplySection.prompt({ readerContext } as ArticleGenerationInput);
+const promptFor = (readerContext: string | null) =>
+  articleHowToApplySection.prompt({ readerContext, sectionsEnabled: DEFAULT_SECTIONS_ENABLED } as ArticleGenerationInput);
 
 test("a reader's context comes with the same rule videos have: fit their life, don't invent one", () => {
   const prompt = promptFor("I'm a nurse.");

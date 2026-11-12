@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { articlePlaceUrl, OverviewId, type ExtractedArticle, type Overview } from "@overview/domain";
+import { articlePlaceUrl, DEFAULT_SECTIONS_ENABLED, OverviewId, type ExtractedArticle, type Overview } from "@overview/domain";
 import type { GenerationClient } from "../generateOverview.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { providerJsonSchema } from "../providerJsonSchema.js";
@@ -36,7 +36,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true },
+  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],
@@ -185,7 +185,9 @@ test("the page's text cannot close the block it sits in", () => {
 });
 
 test("switching a section off leaves it out of the prompt and the output", () => {
-  const prompt = composeArticlePrompt(input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false } }));
+  const prompt = composeArticlePrompt(
+    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true } }),
+  );
   assert.doesNotMatch(prompt.systemPrompt, /Read it anyway/);
   assert.ok(!("readAnyway" in prompt.schema.shape));
 });
@@ -279,4 +281,11 @@ test("an article's steps are kept in its order, with no moment, and none means n
     { text: "Allow 20 extra minutes until spring.", range: null, dubiousReason: null },
   ]);
   assert.equal((await generate(answering(output()))).sourceSteps, null);
+});
+
+test("with the steps switched off, an article is asked for none, and nothing points to a list it won't have", () => {
+  const off = composeArticlePrompt(input({ sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, steps: false } }));
+  assert.equal(off.schema.shape.sourceSteps, undefined);
+  assert.doesNotMatch(off.systemPrompt, /The steps it gives/);
+  assert.match(composeArticlePrompt(input()).systemPrompt, /The steps it gives/);
 });

@@ -30,6 +30,16 @@
   background: var(--label);
 }
 
+// Design 250f: the steps a source gives, outlined in the stone ink and 1px proud of the track.
+.stepsSpan {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--label);
+  pointer-events: none;
+}
+
 .notch {
   position: absolute;
   top: 0;

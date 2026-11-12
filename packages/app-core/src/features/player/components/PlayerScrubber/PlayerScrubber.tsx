@@ -2,6 +2,7 @@ import { formatClock } from "@overview/domain";
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { NoteLine } from "@overview/domain";
 import { lineAtTime, nearestLineStart } from "../../util/lineAtTime.js";
+import { sourceStepsStretch } from "../../util/sourceStepsStretch.js";
 import { sectionHeadingAt, type PlayerBarView } from "../../util/playerBarView.js";
 import styles from "./PlayerScrubber.module.scss";
 import { playerScrubberTestIds } from "./PlayerScrubberTestIds.js";
@@ -50,6 +51,14 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
   const [landing, setLanding] = useState<{ index: number; seconds: number } | null>(null);
   const { fill, tone, thumb } = view.track;
   const percent = landing === null || durationSeconds <= 0 ? view.track.percent : (landing.seconds / durationSeconds) * 100;
+  // Design 250f: the steps a source gives as an outlined span, so they can be seen coming.
+  const steps = sourceStepsStretch(lines);
+  const stepsFrom = steps === null ? undefined : lineStarts[steps.first];
+  const stepsTo = steps?.after == null ? durationSeconds : lineStarts[steps.after];
+  const stepsSpan =
+    view.seekable && durationSeconds > 0 && stepsFrom !== undefined && stepsTo !== undefined
+      ? { left: (stepsFrom / durationSeconds) * 100, width: ((stepsTo - stepsFrom) / durationSeconds) * 100 }
+      : null;
 
   const landingAt = (clientX: number) => {
     const box = track.current!.getBoundingClientRect();
@@ -120,6 +129,13 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
           />
         )}
         {fill === "sweep" && <span className={styles.sweep} data-testid={playerScrubberTestIds.sweep} />}
+        {stepsSpan !== null && (
+          <span
+            className={styles.stepsSpan}
+            style={{ left: `${stepsSpan.left}%`, width: `${stepsSpan.width}%` }}
+            data-testid={playerScrubberTestIds.stepsSpan}
+          />
+        )}
         {view.notches.map((at) => (
           <span key={at} className={styles.notch} style={{ left: `${at * 100}%` }} />
         ))}

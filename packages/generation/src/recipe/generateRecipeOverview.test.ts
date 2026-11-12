@@ -37,7 +37,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true },
+  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],

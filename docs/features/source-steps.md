@@ -17,9 +17,45 @@ something still told the reader to skip the video.
 | Outside the app | `overviewMarkdown` ("The steps it gives"), so an assistant over MCP has it |
 | Shares | `SharedNote.sourceSteps`, absent rather than null, so a copy's hash doesn't move |
 | Measuring it | `npm run steps` (OV-251) reads the block as part of the note and counts it in spoken length; `npm run kinds` scores the kind check |
+| Showing it | `overviewNoteLines` (`SOURCE_STEPS_SECTION`), `ReadAlongNote`, `DubiousStepFlag`, `LineRangeTag` in `packages/app-core` |
+| The reader's switch | `SectionsEnabled.steps`, Settings › Personalisation (`OVERVIEW_SECTIONS`) |
+| Counting it | `reader.page.opened`'s `steps`, and `reader.sourceSteps.*` |
 
-The reader page, the read-along, the reader's section toggle and analytics come with the block's
-design (the second slice of OV-250).
+## On the note
+
+Designed in Claude Design (project `668753e1…`, 250a–250w) and decided with the owner on
+12 Nov 2026.
+
+- **After Key points, before How to apply.** The opening is unchanged, so the block adds nothing
+  to the first screen, and the narration still ends on Watch it anyway.
+- **"The steps it gives"**, with "From the video, in its order" (or "the article") at the other
+  end of the heading row, shown and never spoken. Steps, Step by step and The process were
+  compared: the first says nothing of whose they are, the second is cooking mode's name, the
+  third is stiff for a list of tips.
+- **Only the steps are numbered.** On a note with the block, Key points and How to apply take a
+  dot instead of their numbers, so two numbered lists don't read as two processes (owner,
+  12 Nov 2026). A note without the block keeps its numbers.
+- **Numbered in surface circles**, the recipe method's, each with its moment (`LineRangeTag`,
+  "Step 3 at 3:01"); an article's have none. In the panel, the step whose stretch holds the
+  video's playhead takes the stone tint and reads "· Playing", with no scrolling.
+- **How to apply says whose it is**: a Personalised tag when we know the reader, and a line
+  pointing to Settings when we don't. It stays beside the steps for a reader we know nothing
+  about, since it still says what the source won't, such as when a step doesn't apply (250p).
+- **A dubious step** keeps its number and ink, with "Dubious step" under it in the byline flag's
+  button, which opens why in place, with "Said at m:ss".
+- **Past eight steps**, the first five and "Show all 18 steps · 13 more, up to 60:30". The rest
+  opens by itself when the voice or the playhead reaches it, or the browser's find-in-page finds
+  it (`hidden="until-found"`), and Show all moves focus to step six.
+- **Read in full.** "The video gives seven steps of its own, in this order", counted from the
+  list, then First, Then and Finally; a dubious step is followed by "The note flags this step as
+  doubtful:" and its reason. How to apply then opens "That's the video's own process. Here's how
+  you might put it to use." While the voice is in the steps, the player bar offers "Skip to How
+  to apply" ("Skip steps" where room is short), and the scrubber outlines their stretch.
+- **The switch** in Settings › Personalisation, between the other sections in note order. How to
+  apply's hint became "Ways to put it to use in your own life, written for you.", so "steps"
+  belongs to one block. Off, a process video is written as a default note and an article is
+  asked for no steps, and the block is hidden on every overview.
+- **Shares** show the same block from `SharedNote.sourceSteps`.
 
 ## Only on a process note
 

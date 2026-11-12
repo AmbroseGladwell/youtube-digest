@@ -15,6 +15,7 @@ import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 export const SUMMARY_SECTION = "Summary";
 export const BIG_PICTURE_SECTION = "Big picture";
 export const KEY_POINTS_SECTION = "Key points";
+export const SOURCE_STEPS_SECTION = "The steps it gives";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
 export const READ_ANYWAY_SECTION = "Read it anyway?";
@@ -28,6 +29,8 @@ interface Body {
   chapterIndex?: number;
   label?: string;
   chip?: string;
+  aside?: string;
+  dubiousReason?: string;
 }
 
 const keepsItsCapital = (word: string) =>
@@ -54,6 +57,20 @@ const inOrder = (items: Body[], middleLinks: string[]): Body[] =>
 const withRange = ({ text, range }: { text: string; range: TimeRange | null }): Body => (range === null ? { text } : { text, range });
 
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
+const STEP_COUNT_NAME = [
+  ...COUNT_NAME,
+  ...["eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"],
+  ...["twenty", "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five"],
+];
+
+// Counted from the list, never by the model (docs/prototype/constraints.md), and introduced as the
+// source's own, so a listener hears where the source ends and How to apply begins (design 250g).
+const sourceStepsHeading = (count: number, source: string) =>
+  count === 1
+    ? `The ${source} gives one step of its own.`
+    : `The ${source} gives ${STEP_COUNT_NAME[count] ?? count} steps of its own, in this order.`;
+
+const flaggedAloud = (reason: string) => ` The note flags this step as doubtful: ${afterOrdinal(reason)}`;
 
 const keyPointsHeading = (count: number) =>
   count >= 2 && count < COUNT_NAME.length ? `There are ${COUNT_NAME[count]} key points` : "The key points";
@@ -86,9 +103,11 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // (docs/features/sharing.md). An Overview is a SharedNote with more on it.
 // A recipe's ingredients can be read as the reader adjusted them, so what is heard is what is
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
+// `steps: false` is the reader's switch: the block is hidden everywhere, and How to apply is
+// introduced as it was before the block.
 export function overviewNoteLines(
   overview: SharedNote,
-  shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[] } = {},
+  shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[]; steps?: boolean } = {},
 ): NoteLine[] {
   const lines: NoteLine[] = [];
 
@@ -173,9 +192,26 @@ export function overviewNoteLines(
     ),
     true,
   );
+  const sourceWord = overview.source.kind === "youtube" ? "video" : "article";
+  const steps = shown.steps === false ? [] : (overview.sourceSteps?.items ?? []);
+  section(
+    SOURCE_STEPS_SECTION,
+    { text: SOURCE_STEPS_SECTION, spoken: sourceStepsHeading(steps.length, sourceWord), aside: `From the ${sourceWord}, in its order` },
+    steps.map(({ text, range, dubiousReason }, index) => {
+      const link = steps.length === 1 ? null : index === 0 ? "First" : index === steps.length - 1 ? "Finally" : "Then";
+      const said = link === null ? text : `${link}, ${afterOrdinal(text)}`;
+      const body = withRange({ text, range });
+      if (dubiousReason !== null) return { ...body, dubiousReason, spoken: `${said}${flaggedAloud(dubiousReason)}` };
+      return link === null ? body : { ...body, spoken: said };
+    }),
+    true,
+  );
   section(
     HOW_TO_APPLY_SECTION,
-    { text: HOW_TO_APPLY_SECTION, spoken: "How you could apply it" },
+    {
+      text: HOW_TO_APPLY_SECTION,
+      spoken: steps.length === 0 ? "How you could apply it" : `That's the ${sourceWord}'s own process. Here's how you might put it to use.`,
+    },
     inOrder(
       (overview.howToApply?.items ?? []).map((text) => ({ text })),
       ACTION_LINKS,

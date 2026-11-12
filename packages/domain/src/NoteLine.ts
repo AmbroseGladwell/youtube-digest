@@ -12,6 +12,10 @@
 // what the line is, not what it says. A heading's `chip` is set beside it, and is shown, never
 // spoken: the Verdict heading's novelty label.
 //
+// A heading's `aside` sits at the other end of its row, shown and never spoken: the steps block's
+// "From the video, in its order". A source step's `dubiousReason` says why the note doubts it,
+// opened from a flag under the step and read after it (docs/features/source-steps.md).
+//
 // `spoken` is what narration says for the line when it differs from what the reader shows,
 // and an empty `spoken` is a line narration passes over (docs/features/tts-pre-rendered-speech.md).
 import type { TimeRange } from "./WatchAnyway.js";
@@ -27,4 +31,6 @@ export interface NoteLine {
   chapterIndex?: number;
   label?: string;
   chip?: string;
+  aside?: string;
+  dubiousReason?: string;
 }

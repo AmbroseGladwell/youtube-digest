@@ -37,7 +37,7 @@ export function personalisePrompt(fetched: FetchedTranscript, profile: ReaderPro
     ...profile,
     video: fetched.video,
     transcript: withTranscript ? fetched.transcript : [],
-    sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true },
+    sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true },
   };
   const transcript = withTranscript
     ? `\n\nTranscript, as numbered segments:\n${fetched.transcript.map((segment, i) => `[${i}] ${segment.text}`).join("\n")}`

@@ -15,15 +15,9 @@ export interface StepsNote {
   claims: string[];
 }
 
-// The steps block counts as heard, so carrying more steps can't hide as a longer note while the
-// read-along doesn't speak it yet (OV-250).
-const stepWords = (overview: Overview) => (overview.sourceSteps?.items ?? []).reduce((total, { text }) => total + wordCount(text), 0);
-
 const spokenSecondsOf = (overview: Overview) =>
   Math.round(
-    ((overviewNoteLines(overview).reduce((total, line) => total + wordCount(line.spoken ?? line.text), 0) + stepWords(overview)) /
-      SPOKEN_WORDS_PER_MINUTE) *
-      60,
+    (overviewNoteLines(overview).reduce((total, line) => total + wordCount(line.spoken ?? line.text), 0) / SPOKEN_WORDS_PER_MINUTE) * 60,
   );
 
 // Joined by code from what the two passes recorded, never estimated (docs/prototype/constraints.md).

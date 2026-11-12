@@ -224,10 +224,20 @@ export const overviewPageEvents = {
   readAlong: {
     lineChosen: event("The reader picks a line of the note to listen from"),
     followResumed: event("The reader asks the note to go back to the line being read aloud"),
-    rangeFollowed: event("The reader goes to the stretch of the video a key point, what stands out or a recipe video's step comes from", {
-      line: z.enum(["keyPoint", "standsOut", "recipeStep"]),
-      by: RangeReach,
+    rangeFollowed: event(
+      "The reader goes to the stretch of the video a key point, what stands out, a recipe video's step or one of the steps it gives comes from",
+      {
+        line: z.enum(["keyPoint", "standsOut", "recipeStep", "sourceStep"]),
+        by: RangeReach,
+      },
+    ),
+  },
+  sourceSteps: {
+    allShown: event("The reader shows every step of a long list of the steps a source gives", {
+      steps: z.number().int().positive(),
     }),
+    dubiousOpened: event("The reader opens why one of the steps a source gives is flagged dubious"),
+    skipped: event("The reader skips the steps a source gives from the player bar, on to How to apply"),
   },
   cooking: {
     started: event(
@@ -296,6 +306,9 @@ export const analyticsEvents = {
         dubious: z.boolean(),
         read: z.boolean(),
         favourite: z.boolean(),
+        // How many steps the source gives that the note shows: none on a note with no block,
+        // or with the reader's steps switch off (OV-250).
+        steps: z.number().int().nonnegative(),
       }),
       neighbourFollowed: event("The reader steps to the previous or next overview from the reader's foot", {
         direction: Direction,

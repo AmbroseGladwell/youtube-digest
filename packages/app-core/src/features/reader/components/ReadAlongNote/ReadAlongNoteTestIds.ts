@@ -8,4 +8,7 @@ export const readAlongNoteTestIds = {
   activeLine: "ReadAlongNote.activeLine",
   caption: "ReadAlongNote.caption",
   followButton: "ReadAlongNote.followButton",
+  aside: "ReadAlongNote.aside",
+  showAllSteps: "ReadAlongNote.showAllSteps",
+  stepNumber: "ReadAlongNote.stepNumber",
 };
