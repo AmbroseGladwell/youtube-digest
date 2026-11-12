@@ -5,10 +5,12 @@ import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import type { ArticlePromptSection } from "./ArticlePromptSection.js";
 import { chaptersTooBigToSkip, positionsInTheFinalStretch } from "../noteBudget.js";
 import { articleParagraphs } from "./articleParagraphs.js";
+import { offeredLinks } from "./offeredLinks.js";
 import { articleChaptersSection, type ArticleChapterShape } from "./sections/articleChaptersSection.js";
 import { articleCoreSection } from "./sections/articleCoreSection.js";
 import { articleFilingSection } from "./sections/articleFilingSection.js";
 import { articleHowToApplySection } from "./sections/articleHowToApplySection.js";
+import { articleResourcesSection } from "./sections/articleResourcesSection.js";
 import { articleSellingSection } from "./sections/articleSellingSection.js";
 import { articleSourceStepsSection } from "./sections/articleSourceStepsSection.js";
 import { articleVerdictSection } from "./sections/articleVerdictSection.js";
@@ -23,9 +25,10 @@ const REGISTRY: ArticlePromptSection[] = [
   articleSourceStepsSection,
   articleHowToApplySection,
   readAnywaySection,
+  articleResourcesSection,
 ];
 
-const ARTICLE_TAG = /<(\/?)(article|title|site|author|published|paragraphs)\b/gi;
+const ARTICLE_TAG = /<(\/?)(article|title|site|author|published|paragraphs|links?)\b/gi;
 
 const asArticleContent = (text: string): string => text.replace(ARTICLE_TAG, "‹$1$2");
 
@@ -77,10 +80,18 @@ const readAnywayNamesRealChapters = (output: Record<string, unknown>, ctx: z.Ref
 function contextBlock(input: ArticleGenerationInput): string {
   const { article } = input;
   let heading: string | null = null;
-  const paragraphs = articleParagraphs(article).flatMap((paragraph, index) => {
+  const numbered = articleParagraphs(article);
+  const links = offeredLinks(article);
+  const paragraphs = numbered.flatMap((paragraph, index) => {
     const lines = paragraph.heading !== null && paragraph.heading !== heading ? [`## ${asArticleContent(paragraph.heading)}`] : [];
     heading = paragraph.heading;
-    return [...lines, `[${index}] ${asArticleContent(paragraph.text)}`];
+    return [
+      ...lines,
+      `[${index}] ${asArticleContent(paragraph.text)}`,
+      ...links
+        .filter(({ articleParagraph }) => articleParagraph === index)
+        .map(({ index: number, text, href }) => `  link ${number}: "${asArticleContent(text)}" (${new URL(href).hostname})`),
+    ];
   });
   return `
 <article>
@@ -100,6 +111,7 @@ export function composeArticlePrompt(input: ArticleGenerationInput): ComposedPro
   const sections = REGISTRY.filter(
     (section) =>
       (section !== articleSourceStepsSection || input.sectionsEnabled.steps) &&
+      (section !== articleResourcesSection || offeredLinks(input.article).length > 0) &&
       (section.key === "structural" || input.sectionsEnabled[section.key]),
   );
   const shape: Record<string, z.ZodType> = {};

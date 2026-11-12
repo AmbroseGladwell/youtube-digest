@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { articleBudget, headedParts } from "./articleBudget.js";
 
-const section = (heading: string | null) => ({ heading, anchor: null, text: "Some words here." });
+const section = (heading: string | null) => ({ heading, anchor: null, text: "Some words here.", links: [] });
 
 test("the text before the first heading is not a headed part", () => {
   assert.equal(headedParts({ sections: [section(null), section("One"), section("Two")] }), 2);

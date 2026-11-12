@@ -20,10 +20,10 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
   const body = document.implementation.createHTMLDocument("").body;
   body.innerHTML = parsed?.content ?? "";
   const recipe = pageRecipe(document);
-  const written = articleSections(body, parsed?.title ?? "");
+  const written = articleSections(body, parsed?.title ?? "", pageUrl);
   const sections =
     written.length === 0 && recipe !== null
-      ? [{ heading: null, anchor: null, text: recipe.steps.map(({ text }) => text).join(" ") }]
+      ? [{ heading: null, anchor: null, text: recipe.steps.map(({ text }) => text).join(" "), links: [] }]
       : written;
   const words = sections.reduce((total, { text }) => total + wordCount(text), 0);
 
