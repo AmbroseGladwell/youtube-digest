@@ -50,3 +50,10 @@
 .rootStacked > .backLink {
   margin-bottom: -0.5rem;
 }
+
+// Design 289i: Read steps aloud leads the section, and the timer sound follows.
+.cooking {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}

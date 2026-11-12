@@ -267,6 +267,10 @@ export const overviewPageEvents = {
       by: z.enum(["dismissed", "cancelled", "left"]),
       rang: z.boolean(),
     }),
+    voiceMuted: event("The reader mutes or unmutes the voice in cooking step by step, by its button or by M", {
+      muted: z.boolean(),
+      by: z.enum(["button", "key"]),
+    }),
   },
   watchAnyway: {
     followed: event("The reader goes to the stretch of the video the verdict says is worth watching", {
@@ -693,6 +697,7 @@ export const analyticsEvents = {
       timerSoundChosen: event("The reader chooses the sound a cooking timer rings with", { sound: TimerSound }),
       timerSoundPlayed: event("The reader plays a timer sound to hear it", { sound: TimerSound }),
       timerSoundStopped: event("The reader stops a timer sound they were hearing", { sound: TimerSound }),
+      readStepsAloudChosen: event("The reader turns Read steps aloud on or off for cooking step by step", { on: z.boolean() }),
     },
     personalisation: {
       aboutYouSaved: event("The reader saves About you in Settings › Personalisation, or clears it; never what it says", {

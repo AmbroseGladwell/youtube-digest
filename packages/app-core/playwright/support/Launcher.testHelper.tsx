@@ -86,6 +86,7 @@ export interface LaunchOptions {
   // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
   narrationVoice?: NarrationVoice;
+  readStepsAloud?: boolean;
   // Which provider this account generates with. It syncs while the keys do not, so a
   // scenario can seed the device that holds the wrong one (docs/features/byo-providers.md).
   provider?: Provider;
@@ -172,6 +173,7 @@ export class Launcher {
         ...this.backendSimulator.buildHooksConfig(),
         seedSettings: {
           ...(options.narrationVoice === undefined ? {} : { narrationVoice: options.narrationVoice }),
+          ...(options.readStepsAloud === undefined ? {} : { readStepsAloud: options.readStepsAloud }),
           ...(options.provider === undefined ? {} : { provider: options.provider }),
           ...(options.modelByProvider === undefined ? {} : { modelByProvider: options.modelByProvider }),
           ...(options.milestones === undefined ? {} : { milestones: options.milestones }),

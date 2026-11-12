@@ -106,6 +106,14 @@ function VoiceLine({
       </>
     ) : null;
   }
+  if (voice === "muted") {
+    return (
+      <>
+        <StrokeIcon name="volumeOff" size={14} />
+        <span>Voice muted. The steps are text only</span>
+      </>
+    );
+  }
   if (voice === "paused") return <span>Paused</span>;
   return (
     <>
@@ -219,6 +227,7 @@ export function CookingMode({
   const following = actions[mode.at + 1];
   const isLast = mode.at >= actions.length - 1;
   const voiced = mode.voice === "reading" || mode.voice === "waiting" || mode.voice === "paused";
+  const mutable = mode.voice !== "textOnly";
   const web = surface === "web";
   const swipe = useActionSwipe(mode.next, () => mode.at > 0 && mode.back(), mode.open && !mode.finished);
   const column = useCookingColumnScale(web && ingredientsOpen);
@@ -297,6 +306,11 @@ export function CookingMode({
     if (key === "i" || key === "I") {
       event.preventDefault();
       setIngredientsOpen((shown) => !shown);
+      return;
+    }
+    if ((key === "m" || key === "M") && mutable) {
+      event.preventDefault();
+      mode.toggleMute("key");
       return;
     }
     if (mode.finished || (ingredientsOpen && !web) || drawerHasTheKey(event)) return;
@@ -390,17 +404,32 @@ export function CookingMode({
                   {title}
                 </span>
               )}
-              <button
-                type="button"
-                className={styles.pill}
-                aria-label={`Step ${action.step + 1} of ${steps.length}. All steps`}
-                aria-haspopup="dialog"
-                onClick={() => setStepsOpen(true)}
-                data-testid={cookingModeTestIds.steps}
-              >
-                <StrokeIcon name="list" size={15} />
-                {action.step + 1} of {steps.length}
-              </button>
+              <span className={styles.topEnd}>
+                {mutable && (
+                  <button
+                    type="button"
+                    className={`${styles.pill} ${styles.mute}`}
+                    aria-label="Mute voice"
+                    aria-pressed={mode.voice === "muted"}
+                    onClick={() => mode.toggleMute("button")}
+                    data-testid={cookingModeTestIds.mute}
+                  >
+                    <StrokeIcon name={mode.voice === "muted" ? "volumeOff" : "volumeOn"} size={18} />
+                    {key("M")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={styles.pill}
+                  aria-label={`Step ${action.step + 1} of ${steps.length}. All steps`}
+                  aria-haspopup="dialog"
+                  onClick={() => setStepsOpen(true)}
+                  data-testid={cookingModeTestIds.steps}
+                >
+                  <StrokeIcon name="list" size={15} />
+                  {action.step + 1} of {steps.length}
+                </button>
+              </span>
             </div>
 
             {mode.finished ? (
@@ -524,7 +553,7 @@ export function CookingMode({
                 )}
 
                 <div className={styles.voice} role="status" data-testid={cookingModeTestIds.voice}>
-                  {ringing ? (
+                  {ringing && mode.voice !== "muted" ? (
                     <>
                       <span className={styles.ringing}>
                         <StrokeIcon name="bell" size={14} />

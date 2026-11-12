@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_TIMER_SOUND, type OverviewId, type RecipeAction, type RecipeStep } from "@overview/domain";
+import { useUpdateSettingsMutation } from "../../settings/mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import type { OverviewPageAnalytics } from "../../analytics/bindOverviewId.js";
 import { usePlayer } from "../../player/PlayerContext.js";
@@ -16,7 +17,7 @@ import {
 import type { RecipeVoice } from "./useRecipeVoice.js";
 import { useCookingTimers, type CookingTimers } from "./useCookingTimers.js";
 
-export type CookingVoice = "reading" | "paused" | "waiting" | "loading" | "textOnly" | "stopped";
+export type CookingVoice = "reading" | "paused" | "waiting" | "loading" | "textOnly" | "muted" | "stopped";
 export type CookingEntry = "heading" | "summary" | "bar" | "carryOn";
 
 export interface CookingMode {
@@ -30,6 +31,7 @@ export interface CookingMode {
   // The step the reader had reached when they left, for the note to show (design 150w).
   reachedStep: number | null;
   timers: CookingTimers;
+  toggleMute: (by: "button" | "key") => void;
   start: (from: CookingEntry, action: number) => void;
   next: () => void;
   back: () => void;
@@ -54,8 +56,9 @@ interface CookingModeInput {
   analytics: OverviewPageAnalytics;
 }
 
-const voiceOf = ({ status, source }: PlayerSnapshot, canNarrate: boolean, paused: boolean): CookingVoice => {
+const voiceOf = ({ status, source }: PlayerSnapshot, canNarrate: boolean, paused: boolean, muted: boolean): CookingVoice => {
   if (!canNarrate || source === "pacer") return "textOnly";
+  if (muted) return "muted";
   if (status === "failed" || status === "busy") return "stopped";
   if (status === "preparing") return "loading";
   if (status === "playing" || status === "buffering") return "reading";
@@ -75,7 +78,12 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
   const [place, setPlace] = useState<CookingPlace | null>(() => readCookingPlace(overviewId));
   const [reachedStep, setReachedStep] = useState<number | null>(null);
   const heard = useRef(new Set<number>());
-  const timerSound = useSettingsQuery().data?.timerSound ?? DEFAULT_TIMER_SOUND;
+  const settings = useSettingsQuery().data;
+  const updateSettings = useUpdateSettingsMutation();
+  const timerSound = settings?.timerSound ?? DEFAULT_TIMER_SOUND;
+  const muted = settings?.readStepsAloud === false;
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
   const timers = useCookingTimers({
     sound: timerSound,
     onStarted: (timer) => analytics.cooking.timerStarted({ seconds: timer.source.seconds, step: timer.step + 1, range: timer.range }),
@@ -108,7 +116,7 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     setOpen(false);
   }, [overviewId]);
 
-  const voice = voiceOf(snapshot, engine.canNarrate(), paused);
+  const voice = voiceOf(snapshot, engine.canNarrate(), paused, muted);
   const last = actions.length - 1;
 
   const go = useCallback(
@@ -117,7 +125,7 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
       setAt(target);
       setPaused(false);
       heard.current.add(target);
-      if (engine.canNarrate() && engine.getSnapshot().source !== "pacer") recipeVoice?.readAction(target);
+      if (!mutedRef.current && engine.canNarrate() && engine.getSnapshot().source !== "pacer") recipeVoice?.readAction(target);
       else recipeVoice?.holdAt(target);
     },
     [engine, last, recipeVoice],
@@ -220,6 +228,19 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     place,
     reachedStep,
     timers,
+    toggleMute: (by) => {
+      const muting = !muted;
+      mutedRef.current = muting;
+      analytics.cooking.voiceMuted({ muted: muting, by });
+      updateSettings.mutate({ readStepsAloud: !muting });
+      if (muting) {
+        voiceHeldForTimer.current = false;
+        recipeVoice?.holdAt(at);
+        setPaused(false);
+      } else if (!finished && !ringing) {
+        go(at);
+      }
+    },
     start,
     next,
     back,

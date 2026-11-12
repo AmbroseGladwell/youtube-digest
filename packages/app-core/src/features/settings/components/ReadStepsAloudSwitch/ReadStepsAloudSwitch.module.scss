@@ -1,0 +1,64 @@
+// Design 289i: the milestones switch (MilestonesSection), on a card of its own.
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: var(--radius-btn);
+  background: var(--card);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.label {
+  font-size: 0.90625rem;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.switch {
+  flex: none;
+  display: flex;
+  justify-content: flex-start;
+  width: 46px;
+  height: 28px;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  cursor: pointer;
+  transition: background var(--motion-state) var(--motion-ease);
+
+  &[aria-checked="true"] {
+    justify-content: flex-end;
+    background: var(--label);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.knob {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-badge);
+  background: var(--card);
+
+  .switch[aria-checked="true"] & {
+    background: var(--ground);
+  }
+}
