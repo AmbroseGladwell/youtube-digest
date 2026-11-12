@@ -11,6 +11,8 @@ export * from "./recipeFacts.js";
 export * from "./recipeFactsInLines.js";
 export * from "./adjustIngredient.js";
 export * from "./methodAmounts.js";
+export * from "./methodTimes.js";
+export * from "./TimerSound.js";
 export * from "./recipeText.js";
 export * from "./usOvenTemperatures.js";
 export * from "./Provider.js";

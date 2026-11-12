@@ -1,0 +1,78 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+.dialog {
+  @include dialog.dialog-shell;
+}
+
+.panel {
+  @include dialog.dialog-panel;
+
+  gap: 0;
+}
+
+.handle {
+  @include dialog.dialog-handle;
+
+  margin: 0 0 0.75rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0.25rem;
+}
+
+.heading {
+  @include dialog.dialog-heading;
+
+  font-size: 1.375rem;
+}
+
+.close {
+  @include controls.surface-pill;
+
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.clock {
+  margin: 0.875rem 0.25rem 0.25rem;
+  font-size: 3.5rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  margin: 0 0.25rem 1rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+  margin: 0 0 0.625rem;
+}
+
+.control {
+  @include controls.surface-pill;
+
+  height: 3.5rem;
+  border-radius: 1.25rem;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cancel {
+  @include controls.surface-pill;
+
+  height: 3.5rem;
+  border-radius: 1.25rem;
+  color: var(--alert);
+  font-size: 1rem;
+}
