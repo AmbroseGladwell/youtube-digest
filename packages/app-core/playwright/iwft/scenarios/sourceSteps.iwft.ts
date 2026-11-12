@@ -123,7 +123,7 @@ test("the steps have their own switch in Settings › Personalisation, which say
 
   await settings.personalisation.verifySwitchIs("The steps it gives", false);
   await settings.personalisation.verifyStepsOffNoteIsShown(true);
-  await settings.verifyRowReads("personalisation", "About you not set · 4 of 5 sections");
+  await settings.verifyRowReads("personalisation", "About you not set · 5 of 6 sections");
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("settings.personalisation.")))
     .toEqual([{ name: "settings.personalisation.sectionSwitched", props: { section: "steps", on: false } }]);

@@ -13,7 +13,15 @@ test("every section defaults to enabled, matching current behaviour", () => {
     howToApply: true,
     watchAnyway: true,
     steps: true,
+    resources: true,
   });
+});
+
+test("settings saved before the resources switch read with resources shown", () => {
+  const { resources: _, ...before } = DEFAULT_SECTIONS_ENABLED;
+  const read = Settings.parse({ ...DEFAULT_SETTINGS, sectionsEnabled: { ...before, selling: false } });
+
+  assert.deepEqual(read.sectionsEnabled, { ...DEFAULT_SECTIONS_ENABLED, selling: false });
 });
 
 test("settings saved before the steps switch read with the steps on", () => {

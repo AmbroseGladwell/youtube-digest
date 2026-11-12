@@ -38,7 +38,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true },
+  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],
@@ -188,7 +188,7 @@ test("the page's text cannot close the block it sits in", () => {
 
 test("switching a section off leaves it out of the prompt and the output", () => {
   const prompt = composeArticlePrompt(
-    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true } }),
+    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true, resources: true } }),
   );
   assert.doesNotMatch(prompt.systemPrompt, /Read it anyway/);
   assert.ok(!("readAnyway" in prompt.schema.shape));
@@ -365,4 +365,9 @@ test("a why over 25 words goes back to the model", async () => {
   const long = Array.from({ length: 26 }, () => "word").join(" ");
   const note = await generate(answering(output({ resources: [why(0, long)] }), output({ resources: [why(0)] })), { article: linked });
   assert.equal(note.article?.resources?.[0]?.why, "The rules the county's offer is based on.");
+});
+
+test("with links listed, Read it anyway's leftOut leaves the further reading to them", () => {
+  assert.match(composeArticlePrompt(input({ article: linked })).systemPrompt, /never name\nthem, or its further reading, in leftOut/);
+  assert.doesNotMatch(composeArticlePrompt(input()).systemPrompt, /further reading, in leftOut/);
 });

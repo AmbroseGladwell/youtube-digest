@@ -26,6 +26,9 @@ export const SectionsEnabled = z.object({
   watchAnyway: z.boolean(),
   // The steps it gives (OV-250). On for settings saved before it, as the block was.
   steps: z.boolean().catch(true),
+  // Resources it points to (OV-203). Hides the block only: resources are still made and kept,
+  // since no article text is kept to make them from later. On for settings saved before it.
+  resources: z.boolean().catch(true),
 });
 export type SectionsEnabled = z.infer<typeof SectionsEnabled>;
 
@@ -35,6 +38,7 @@ export const DEFAULT_SECTIONS_ENABLED: SectionsEnabled = {
   howToApply: true,
   watchAnyway: true,
   steps: true,
+  resources: true,
 };
 
 export const Settings = z.object({

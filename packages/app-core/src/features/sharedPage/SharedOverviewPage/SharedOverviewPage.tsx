@@ -30,6 +30,7 @@ import { LineRangeTag, noteLineRange } from "../../reader/components/LineRangeTa
 import { RelatedByTag } from "../../reader/components/RelatedByTag/RelatedByTag.js";
 import { ArticleChaptersPanel } from "../../reader/components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../../reader/components/ArticleLineLinks/ArticleLineLinks.js";
+import { ArticleResources } from "../../reader/components/ArticleResources/ArticleResources.js";
 import { RecipeIngredients } from "../../reader/components/RecipeIngredients/RecipeIngredients.js";
 import { RecipeMethod } from "../../reader/components/RecipeMethod/RecipeMethod.js";
 import { RecipePageLink } from "../../reader/components/RecipePageLink/RecipePageLink.js";
@@ -395,6 +396,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                     )
                   }
                 />
+                {webArticle !== null && <ArticleResources {...webArticle} onPage={null} compact={isPhone} />}
                 {recipeNote !== null && adjustment !== null && scale !== null && (
                   <>
                     <RecipeIngredients

@@ -87,6 +87,11 @@ export function PersonalisationSection() {
             that have them.
           </p>
         )}
+        {!sectionsEnabled.resources && (
+          <p className={styles.note} data-testid={personalisationSectionTestIds.resourcesOffNote}>
+            Resources are hidden on every overview. They’re still kept, so turning this back on shows them again.
+          </p>
+        )}
       </div>
     </div>
   );

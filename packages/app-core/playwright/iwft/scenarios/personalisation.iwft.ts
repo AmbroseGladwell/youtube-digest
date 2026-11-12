@@ -38,7 +38,7 @@ test("turning a section off in Settings › Personalisation leaves it out of the
 
   await settings.personalisation.verifySwitchIs("Watch it anyway?", false);
   await settings.personalisation.verifySwitchIs("Verdict", true);
-  await settings.verifyRowReads("personalisation", "About you not set · 4 of 5 sections");
+  await settings.verifyRowReads("personalisation", "About you not set · 5 of 6 sections");
   await expect
     .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("settings.personalisation.")))
     .toEqual([{ name: "settings.personalisation.sectionSwitched", props: { section: "watchAnyway", on: false } }]);
