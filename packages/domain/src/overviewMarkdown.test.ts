@@ -47,8 +47,12 @@ const FULL = makeOverview({
   selling: { type: "own_paid_product", detail: "A paid programme is pitched twice.", compromisesContent: false },
   sourceSteps: {
     items: [
-      { text: "Hinge until the bell passes between your knees.", range: { startMs: 95_000, endMs: 110_000 }, dubious: false },
-      { text: "Swing fifty times a day for a month to fix your back.", range: null, dubious: true },
+      { text: "Hinge until the bell passes between your knees.", range: { startMs: 95_000, endMs: 110_000 }, dubiousReason: null },
+      {
+        text: "Swing fifty times a day for a month to fix your back.",
+        range: null,
+        dubiousReason: "No trial backs swings as a fix for back pain.",
+      },
     ],
   },
   howToApply: { items: ["Film one set from the side."] },
@@ -170,7 +174,7 @@ test("numbers the source's steps in its order, each linked to its moment, a dubi
     overviewMarkdown(FULL).includes(
       "## The steps it gives\n\n" +
         "1. Hinge until the bell passes between your knees. ([1:35](https://www.youtube.com/watch?v=kQu7vN2wLpE&t=95))\n" +
-        "2. Swing fifty times a day for a month to fix your back. _(dubious: see the verdict)_",
+        "2. Swing fifty times a day for a month to fix your back. _(dubious: No trial backs swings as a fix for back pain.)_",
     ),
   );
 });

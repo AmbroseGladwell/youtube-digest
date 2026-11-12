@@ -21,7 +21,7 @@ ${verdict ? `<p class="label">Verdict: ${escapeHtml(verdict.novelty)}${verdict.d
 ${verdict?.standsOut ? `<p class="label">Stands out</p><p>${escapeHtml(verdict.standsOut.text)}</p>` : ""}
 ${(verdict?.dubiousClaims ?? []).map((claim) => `<p class="dubious">“${escapeHtml(claim.claim)}” ${escapeHtml(claim.reason)}</p>`).join("")}
 <p class="label">Key points</p><ol>${overview.keyPoints.map((point) => `<li>${escapeHtml(point.text)}</li>`).join("")}</ol>
-${overview.sourceSteps ? `<p class="label">The steps it gives</p><ol>${overview.sourceSteps.items.map((step) => `<li>${escapeHtml(step.text)}${step.dubious ? " <i>(dubious)</i>" : ""}</li>`).join("")}</ol>` : ""}
+${overview.sourceSteps ? `<p class="label">The steps it gives</p><ol>${overview.sourceSteps.items.map((step) => `<li>${escapeHtml(step.text)}${step.dubiousReason === null ? "" : ` <i class="dubious">(dubious: ${escapeHtml(step.dubiousReason)})</i>`}</li>`).join("")}</ol>` : ""}
 ${overview.howToApply ? `<p class="label">How to apply</p><ul>${overview.howToApply.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
 ${overview.selling ? `<p class="label">Selling: ${escapeHtml(overview.selling.type)}</p><p>${escapeHtml(overview.selling.detail)}</p>` : ""}
 ${overview.watchAnyway ? `<p class="label">Watch anyway: ${escapeHtml(overview.watchAnyway.answer)}</p><p>${escapeHtml(overview.watchAnyway.reason)}</p>` : ""}

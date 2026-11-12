@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { DEFAULT_SECTIONS_ENABLED, MOST_SOURCE_STEPS, TopicId, VideoId } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, MOST_SOURCE_STEPS, SOURCE_STEP_REASON_MAX_WORDS, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
 import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 import { TAG_VOCABULARY_CAP } from "./sections/filingSection.js";
@@ -446,7 +446,7 @@ test("a big picture past its cap is sent back, an empty one never is", () => {
   assert.equal(bigPicture.safeParse(Array(76).fill("word").join(" ")).success, false);
 });
 
-const step = { text: "Take it slowly.", startSegmentIndex: 0, endSegmentIndex: 1, dubious: false };
+const step = { text: "Take it slowly.", startSegmentIndex: 0, endSegmentIndex: 1, dubious: false, dubiousReason: "" };
 
 test("the steps block holds a long protocol whole, and stops only a runaway list", () => {
   const { schema } = composePrompt(baseInput, "process");
@@ -459,6 +459,14 @@ test("the steps block holds a long protocol whole, and stops only a runaway list
   assert.equal(stepsOf(12), true);
   assert.equal(stepsOf(MOST_SOURCE_STEPS), true);
   assert.equal(stepsOf(MOST_SOURCE_STEPS + 1), false);
+});
+
+test("a dubious step's reason past its cap is sent back", () => {
+  const { schema } = composePrompt(baseInput, "process");
+  const withReason = (words: number) =>
+    z.safeParse(schema.shape.sourceSteps!, [{ ...step, dubious: true, dubiousReason: Array(words).fill("word").join(" ") }]).success;
+  assert.equal(withReason(SOURCE_STEP_REASON_MAX_WORDS), true);
+  assert.equal(withReason(SOURCE_STEP_REASON_MAX_WORDS + 1), false);
 });
 
 test("the steps come before How to apply, which is told to apply them rather than repeat them", () => {

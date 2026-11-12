@@ -56,7 +56,7 @@ test("a big picture is shared, and a note without one carries no key for it, so 
 });
 
 test("the source's steps are shared, and a note without them carries no key for them, so its copy's hash doesn't move", () => {
-  const sourceSteps = { items: [{ text: "Hinge, don't squat.", range: null, dubious: false }] };
+  const sourceSteps = { items: [{ text: "Hinge, don't squat.", range: null, dubiousReason: null }] };
   assert.deepEqual(snapshotOf(makeOverview({ sourceSteps })).note.sourceSteps, sourceSteps);
   assert.equal("sourceSteps" in snapshotOf(makeOverview({ sourceSteps: null })).note, false);
 });

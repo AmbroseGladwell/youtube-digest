@@ -270,13 +270,13 @@ test("the schema survives the conversion every provider receives, with each sect
 
 test("an article's steps are kept in its order, with no moment, and none means no block", async () => {
   const sourceSteps = [
-    { text: "Check the council's site for the new route.", dubious: false },
-    { text: "Allow 20 extra minutes until spring.", dubious: false },
+    { text: "Check the council's site for the new route.", dubious: false, dubiousReason: "" },
+    { text: "Allow 20 extra minutes until spring.", dubious: false, dubiousReason: "" },
   ];
   const note = await generate(answering(output({ sourceSteps })));
   assert.deepEqual(note.sourceSteps?.items, [
-    { text: "Check the council's site for the new route.", range: null, dubious: false },
-    { text: "Allow 20 extra minutes until spring.", range: null, dubious: false },
+    { text: "Check the council's site for the new route.", range: null, dubiousReason: null },
+    { text: "Allow 20 extra minutes until spring.", range: null, dubiousReason: null },
   ]);
   assert.equal((await generate(answering(output()))).sourceSteps, null);
 });

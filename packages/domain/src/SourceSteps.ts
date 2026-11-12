@@ -7,6 +7,8 @@ export const SOURCE_STEP_MAX_WORDS = 45;
 // Completeness is the point, so this stops only a runaway list, never a real protocol
 // (docs/features/source-steps.md).
 export const MOST_SOURCE_STEPS = 25;
+export const SOURCE_STEP_REASON_TARGET_WORDS = 25;
+export const SOURCE_STEP_REASON_MAX_WORDS = 40;
 
 export const SourceStep = z.object({
   text: z
@@ -14,8 +16,13 @@ export const SourceStep = z.object({
     .min(1)
     .refine((text) => wordCount(text) <= SOURCE_STEP_MAX_WORDS, `max ${SOURCE_STEP_MAX_WORDS} words`),
   range: TimeRange.nullable(),
-  // The verdict says why; the step stays, since leaving it out would be a quiet omission.
-  dubious: z.boolean(),
+  // A shaky step stays, since leaving it out would be a quiet omission, and says why. A step is
+  // dubious only with a reason: a flag that can't say why only confuses.
+  dubiousReason: z
+    .string()
+    .min(1)
+    .refine((reason) => wordCount(reason) <= SOURCE_STEP_REASON_MAX_WORDS, `max ${SOURCE_STEP_REASON_MAX_WORDS} words`)
+    .nullable(),
 });
 export type SourceStep = z.infer<typeof SourceStep>;
 

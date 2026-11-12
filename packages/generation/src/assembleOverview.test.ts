@@ -466,12 +466,13 @@ test("a longer video keeps its big picture, trimmed, and an empty one is none", 
   assert.equal(assembleOverview(longInput, { ...baseOutput, bigPicture: " " }, meta).bigPicture, null);
 });
 
-test("every step the video gives is kept in its order, a dubious one flagged rather than dropped, each timed from the transcript", () => {
+test("every step the video gives is kept in its order, a dubious one kept with its reason, each timed from the transcript", () => {
   const steps = ["one", "two", "three", "four", "five", "six"].map((text, index) => ({
     text: `Step ${text}.`,
     startSegmentIndex: index % 3,
     endSegmentIndex: index % 3,
     dubious: index === 3,
+    dubiousReason: index === 3 ? " It rests on one small study. " : "",
   }));
   const overview = assembleOverview(baseInput, { ...baseOutput, sourceSteps: steps }, meta);
 
@@ -481,8 +482,26 @@ test("every step the video gives is kept in its order, a dubious one flagged rat
   );
   assert.deepEqual(overview.sourceSteps?.items[1]?.range, { startMs: 2000, endMs: 8000 });
   assert.deepEqual(
-    overview.sourceSteps?.items.map(({ dubious }) => dubious),
-    [false, false, false, true, false, false],
+    overview.sourceSteps?.items.map(({ dubiousReason }) => dubiousReason),
+    [null, null, null, "It rests on one small study.", null, null],
+  );
+});
+
+test("a step flagged without a reason is not dubious, and a sound step never carries one", () => {
+  const overview = assembleOverview(
+    baseInput,
+    {
+      ...baseOutput,
+      sourceSteps: [
+        { text: "Fast for three days.", startSegmentIndex: -1, endSegmentIndex: -1, dubious: true, dubiousReason: " " },
+        { text: "Drink water.", startSegmentIndex: -1, endSegmentIndex: -1, dubious: false, dubiousReason: "Stray words." },
+      ],
+    },
+    meta,
+  );
+  assert.deepEqual(
+    overview.sourceSteps?.items.map(({ dubiousReason }) => dubiousReason),
+    [null, null],
   );
 });
 
@@ -491,7 +510,7 @@ test("a video that gives no steps has no steps block, not an empty one", () => {
   assert.equal(
     assembleOverview(
       baseInput,
-      { ...baseOutput, sourceSteps: [{ text: " ", startSegmentIndex: -1, endSegmentIndex: -1, dubious: false }] },
+      { ...baseOutput, sourceSteps: [{ text: " ", startSegmentIndex: -1, endSegmentIndex: -1, dubious: false, dubiousReason: "" }] },
       meta,
     ).sourceSteps,
     null,
@@ -501,8 +520,8 @@ test("a video that gives no steps has no steps block, not an empty one", () => {
 test("a step whose stretch does not fit the transcript loses its moment rather than failing the overview", () => {
   const overview = assembleOverview(
     baseInput,
-    { ...baseOutput, sourceSteps: [{ text: "Breathe out.", startSegmentIndex: 1, endSegmentIndex: 9, dubious: false }] },
+    { ...baseOutput, sourceSteps: [{ text: "Breathe out.", startSegmentIndex: 1, endSegmentIndex: 9, dubious: false, dubiousReason: "" }] },
     meta,
   );
-  assert.deepEqual(overview.sourceSteps?.items, [{ text: "Breathe out.", range: null, dubious: false }]);
+  assert.deepEqual(overview.sourceSteps?.items, [{ text: "Breathe out.", range: null, dubiousReason: null }]);
 });

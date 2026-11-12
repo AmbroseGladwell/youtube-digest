@@ -68,8 +68,14 @@ and the note has no block, not an empty one.
 - **Completeness over brevity.** No count cap a real protocol can reach: at most
   `MOST_SOURCE_STEPS` (25), only to stop a runaway list. Each step is bounded instead, at
   `SOURCE_STEP_TARGET_WORDS` asked and `SOURCE_STEP_MAX_WORDS` enforced.
-- **Dubious steps stay, flagged.** A shaky step is still what the source says. Dropping it would be
-  a quiet omission; the verdict's dubious claims say why it does not hold up.
+- **Dubious steps stay, flagged, with their own reason.** A shaky step is still what the source
+  says, and dropping it would be a quiet omission. Each flagged step carries a one-sentence `reason`
+  (`SOURCE_STEP_REASON_TARGET_WORDS` asked, `SOURCE_STEP_REASON_MAX_WORDS` enforced), because the
+  verdict's dubious claims don't always cover a step: the Shopify CEO note flagged its affirmations
+  step and named no dubious claim. A step is dubious only with a reason (`dubiousReason`): one the
+  writer flagged without saying why is shown as sound, since a flag that can't say why only
+  confuses (owner, 12 Nov 2026), and the verdict's own flag still covers the note
+  (`sourceStepsOf`).
 - **Each video step has its moment**, as a key point does, and loses only its link when the
   stretch does not fit the transcript. An article's steps have no position, like its key points.
 - **A recipe has no block.** Its method is its steps (`recipe-notes.md`).

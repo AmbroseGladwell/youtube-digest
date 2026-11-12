@@ -118,8 +118,8 @@ export function overviewMarkdown(overview: Overview): string {
       "The steps it gives",
       overview.sourceSteps.items
         .map(
-          ({ text, range, dubious }, index) =>
-            `${index + 1}. ${text}${dubious ? " _(dubious: see the verdict)_" : ""}${range === null ? "" : ` (${moment(video.url, range.startMs)})`}`,
+          ({ text, range, dubiousReason }, index) =>
+            `${index + 1}. ${text}${dubiousReason === null ? "" : ` _(dubious: ${dubiousReason})_`}${range === null ? "" : ` (${moment(video.url, range.startMs)})`}`,
         )
         .join("\n"),
     );

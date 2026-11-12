@@ -36,7 +36,7 @@ export interface GeneratedArticleOutput {
     similarToIndices: number[];
   };
   selling?: unknown;
-  sourceSteps: Array<{ text: string; dubious: boolean }>;
+  sourceSteps: Array<{ text: string; dubious: boolean; dubiousReason: string }>;
   howToApply?: unknown;
   readAnyway?: { answer: string; reason: string; leftOut: string; chapterIndexes: number[] };
 }

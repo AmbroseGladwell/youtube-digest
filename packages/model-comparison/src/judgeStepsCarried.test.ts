@@ -6,7 +6,7 @@ import { makeOverview } from "./OverviewFactory.testHelper.js";
 test("the judge reads the steps block as part of the note, and never the watch-anyway reason", () => {
   const text = noteText({
     ...makeOverview(),
-    sourceSteps: { items: [{ text: "Finish fast; it means it is working.", range: null, dubious: false }] },
+    sourceSteps: { items: [{ text: "Finish fast; it means it is working.", range: null, dubiousReason: null }] },
     watchAnyway: { answer: "no", reason: "The overview covers every step.", range: null },
   });
 
