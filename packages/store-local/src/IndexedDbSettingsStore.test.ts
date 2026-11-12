@@ -35,7 +35,7 @@ test("get() fills in a field the stored settings predate, rather than handing ba
 
 test("get() keeps what the stored settings do say, it does not reset them to the defaults", async () => {
   const store = await storeHoldingSettings({
-    sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true, steps: true },
+    sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
     readerContext: "I'm a beginner cook.",
     provider: DEFAULT_SETTINGS.provider,
   });
@@ -57,7 +57,7 @@ test("a toggle a newer client added to sectionsEnabled survives this client chan
   const store = new IndexedDbSettingsStore(db);
 
   await store.update({
-    sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true, steps: true },
+    sectionsEnabled: { verdict: false, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
   });
 
   const stored = await promisifyRequest<Record<string, Record<string, unknown>>>(

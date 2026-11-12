@@ -64,10 +64,23 @@ quote-based deep links do.
 - **Assistants** read it in `overviewMarkdown` as "Resources it links to": each named link, its
   why, and the chapter it was shared in, linked to that place on the page.
 - **Shared links** carry it inside the article block.
-- **The screen and narration** don't show it yet. They wait on a Claude Design round:
-  where the block sits, how it reads beside Read it anyway's "what this leaves out", and what
-  one link looks like against five. Narration can read each name and its why, never an address
-  (`spokenScript`).
+- **The note** shows them last, after Read it anyway, closed to start (designs 203a–203w in
+  Claude Design, project `668753e1…`, decided with the owner on 12 November 2026;
+  `ArticleResources.tsx`). Closed, the heading row ("Resources it points to · 4", or "A resource
+  it points to · 1") is one 44px button with a chevron, over a muted line naming the first two
+  ("…and 2 more"). Open, each resource is four lines: its site, its name as the link out, why,
+  and "From ‹chapter›" opening the article at the place it was shared. With one chapter that line
+  is "Where the article shares it". Beside the article in the panel, "From" moves the page there
+  instead of opening a tab, as chapter links do. Each note starts closed.
+- **Narration doesn't read them.** The block takes no lines in `overviewNoteLines`, so the
+  read-along, the scrubber and the spoken script end on Read it anyway, as on a note without
+  resources.
+- **Read it anyway** no longer names the further reading in "It leaves out…" when the page has
+  links, since the block carries it (`readAnywaySection.ts`).
+- **The shared page** shows the same block, and "From" opens the article itself.
+- **Settings › Personalisation** has a switch, last in the list. Off hides the block on every
+  overview. Unlike the other switches, resources are still made and kept while it's off, because
+  no article text is kept to make them from later; the note under the switch says so.
 
 ## Analytics
 
@@ -78,4 +91,5 @@ as `articleLinks` and `articleResources`. Never an address.
 
 - **Video descriptions** routinely carry the links an episode mentions. The shape would be
   the same; it would be its own card.
-- **A section switch.** Resources are always asked for when a page has links.
+- **Opening by itself** when a link points into the block: nothing links into a note's
+  sections yet.
