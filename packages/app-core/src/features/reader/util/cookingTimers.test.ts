@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   adjustedTimer,
+  isSameSource,
   oldestRingingFirst,
   pausedTimer,
   ranOut,
@@ -15,7 +16,18 @@ const MINUTE = 60_000;
 const T0 = 1_000_000;
 
 const timer = (id: number, minutes: number, at = T0): CookingTimer =>
-  startedTimer(id, { name: "Boil", step: 1, source: { action: 2, time: 0, seconds: minutes * 60 }, range: false }, at);
+  startedTimer(
+    id,
+    {
+      name: "Boil",
+      step: 1,
+      source: { recipe: "curry", action: 2, time: 0, seconds: minutes * 60 },
+      range: false,
+      recipeTitle: "Weeknight curry",
+      actionText: "Boil for 15 minutes.",
+    },
+    at,
+  );
 
 describe("cookingTimers", () => {
   it("reads the time left from the clock, so a throttled tab shows the right time when it comes back", () => {
@@ -61,5 +73,11 @@ describe("cookingTimers", () => {
     const rung = ranOut([timer(4, 1), timer(5, 1, T0 - 30_000)], now);
     expect(oldestRingingFirst(rung).map((t) => t.id)).toEqual([5, 4]);
     expect(soonestFirst(rung, now)).toEqual([]);
+  });
+
+  it("tells the same time in two recipes apart, so one recipe's step 3 never reads as another's (OV-288)", () => {
+    const source = { recipe: "curry", action: 3, time: 0, seconds: 600 };
+    expect(isSameSource(source, { ...source })).toBe(true);
+    expect(isSameSource(source, { ...source, recipe: "loaf" })).toBe(false);
   });
 });

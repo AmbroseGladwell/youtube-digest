@@ -1,14 +1,8 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 3a: a floating card at the same elevation as the reader's bar, centred over the
-// foot of the page, with a 3px progress line along its own foot.
+// Design 3a: a floating card at the same elevation as the reader's bar, with a 3px progress
+// line along its own foot. The cooking timers' dock places it at the foot of the page (288g).
 .root {
-  position: fixed;
-  left: 50%;
-  bottom: 1.25rem;
-  z-index: 4;
-  transform: translateX(-50%);
-  width: min(32.5rem, calc(100% - 2rem));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

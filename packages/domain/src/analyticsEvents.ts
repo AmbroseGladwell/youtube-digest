@@ -246,7 +246,7 @@ export const overviewPageEvents = {
     started: event(
       "The reader starts cooking a recipe step by step, from the method's heading, the button above the summary, the bar's Cook from here, or the place they left",
       {
-        from: z.enum(["heading", "summary", "bar", "carryOn"]),
+        from: z.enum(["heading", "summary", "bar", "carryOn", "timer"]),
         step: z.number().int().positive(),
       },
     ),
@@ -263,10 +263,24 @@ export const overviewPageEvents = {
         range: z.boolean(),
       },
     ),
-    timerEnded: event("A cooking timer ends: dismissed once it rang, cancelled, or stopped by leaving cooking step by step", {
-      by: z.enum(["dismissed", "cancelled", "left"]),
-      rang: z.boolean(),
+    timerEnded: event(
+      "A cooking timer ends: dismissed once it rang, cancelled, stopped on leaving cooking step by step, by signing out, or by leaving a shared page",
+      {
+        by: z.enum(["dismissed", "cancelled", "left", "signedOut", "leftPage"]),
+        rang: z.boolean(),
+      },
+    ),
+    timersKept: event("The reader leaves cooking step by step and keeps this recipe's timers running, or ringing, outside it", {
+      count: z.number().int().positive(),
+      ringing: z.boolean(),
     }),
+    timerOpenedOutside: event("The reader opens a timer's controls from outside cooking step by step"),
+    backToStep: event(
+      "The reader goes back into cooking step by step from a timer, at its action or, if the method changed, at the start",
+      {
+        landed: z.enum(["step", "start"]),
+      },
+    ),
     voiceMuted: event("The reader mutes or unmutes the voice in cooking step by step, by its button or by M", {
       muted: z.boolean(),
       by: z.enum(["button", "key"]),
