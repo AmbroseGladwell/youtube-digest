@@ -114,7 +114,7 @@ the run already says.
 ## No article text is kept
 
 Decided 2026-11-02. Only the note and metadata are stored. So there's no Transcript tab, links go
-to the live page, regenerating means opening the article again, and the shared cache holds no
+to the live page, regenerating reads the article again (`article-panel.md`), and the shared cache holds no
 articles. Nothing in this slice writes to `TranscriptStore`.
 
 ## The record

@@ -7,6 +7,8 @@ import { articleFailureNoticeTestIds } from "../../../src/features/capture/compo
 import { articleLinkStatusTestIds } from "../../../src/features/newOverview/components/ArticleLinkStatus/ArticleLinkStatusTestIds.js";
 import { generateOverviewFormTestIds } from "../../../src/features/newOverview/components/GenerateOverviewForm/GenerateOverviewFormTestIds.js";
 import { CHROME_EXTENSION_URL } from "../../../src/util/chromeExtensionUrl.js";
+import { overviewActionsMenuTestIds } from "../../../src/features/reader/components/OverviewActionsMenu/OverviewActionsMenuTestIds.js";
+import { regenerateArticleDialogTestIds } from "../../../src/features/reader/components/RegenerateArticleDialog/RegenerateArticleDialogTestIds.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -119,5 +121,62 @@ test("without an account the field stays YouTube's, and a page link is refused, 
   await expect(page.getByTestId(generateOverviewFormTestIds.urlInput)).not.toHaveAttribute("placeholder", /article/);
   await page.getByTestId(generateOverviewFormTestIds.urlInput).fill(LINK);
   await expect(page.getByTestId(articleLinkStatusTestIds.reading)).toHaveCount(0);
+  expect(backendSimulator.articles.reads()).toEqual([]);
+});
+
+// OV-285: we keep no copy of an article, so regenerating away from it reads the link again.
+test("an article regenerates from its link under the same id, without opening it", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "read", article: ARTICLE });
+  const old = makeArticleOverview();
+  backendSimulator.overviews.seed(old);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId(overviewActionsMenuTestIds.trigger).click();
+  await page.getByRole("menuitem", { name: "Regenerate", exact: true }).click();
+
+  await expect.poll(() => backendSimulator.ourKey.generations().length).toBe(1);
+  expect(backendSimulator.ourKey.generations()[0]?.overviewId).toBe(old.id);
+  expect(backendSimulator.articles.reads()).toEqual([LINK]);
+  await expect(page.getByTestId(regenerateArticleDialogTestIds.root)).toHaveCount(0);
+});
+
+test("an article our server can't read again keeps its note and sends a desktop reader to the extension", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.articles.answerWith({ status: "failed", reason: "blocked" });
+  const old = makeArticleOverview();
+  backendSimulator.overviews.seed(old);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId(overviewActionsMenuTestIds.trigger).click();
+  await page.getByRole("menuitem", { name: "Regenerate", exact: true }).click();
+
+  await launcher.appShell.generationStatusStrip.verifyHasFailed();
+  await launcher.appShell.generationStatusStrip.clickDetails();
+  await expect(page.getByTestId(articleFailureNoticeTestIds.title)).toHaveText("theharbourpost.example doesn’t let us read it from here");
+  await expect(page.getByRole("link", { name: "Get the extension on the Chrome Web Store" })).toHaveAttribute("href", CHROME_EXTENSION_URL);
+  expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+  expect(await backendSimulator.overviewStore.listOverviews()).toEqual([old]);
+});
+
+test("with no account to fetch through, regenerating an article explains that it needs the page open", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(makeArticleOverview());
+  const library = await launcher.launchExpectingLibrary({ apiKeys: ANTHROPIC_KEY });
+  await library.nthCard(0).openReader();
+
+  await page.getByTestId(overviewActionsMenuTestIds.trigger).click();
+  await page.getByRole("menuitem", { name: "Regenerate…" }).click();
+
+  await expect(page.getByTestId(regenerateArticleDialogTestIds.root)).toContainText("We don’t keep a copy of it");
   expect(backendSimulator.articles.reads()).toEqual([]);
 });

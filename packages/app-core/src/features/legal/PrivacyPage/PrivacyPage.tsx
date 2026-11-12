@@ -135,9 +135,10 @@ const sections: readonly LegalSection[] = [
           we log that a lookup happened, never the video.
         </p>
         <p>
-          <strong>Articles.</strong> When you paste a link to an article on the web app, our server fetches the page, turns it into text and
-          sends that text back to your device. We keep the overview and the page's title and address, never the article's text, and the link
-          never appears in our logs. In the extension the article is read in your own browser and our server never sees the page.
+          <strong>Articles.</strong> When you paste a link to an article on the web app, or regenerate an article's overview without the
+          article open beside the extension, our server fetches the page, turns it into text and sends that text back to your device. We
+          keep the overview and the page's title and address, never the article's text, and the link never appears in our logs. When the
+          extension reads an article open in your own browser, our server never sees the page.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you for your own transcripts, and our legitimate interest in serving

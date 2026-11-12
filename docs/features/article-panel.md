@@ -62,8 +62,19 @@ opening the place's address.
 ## Regenerating
 
 Videos regenerate from anywhere too (OV-261, `one-overview-per-video.md`, "Regenerating"). An
-article's writes under the same id, so the old note stays until the new one lands. Away from the article the item ends in an ellipsis and explains, since
-we keep no copy.
+article's writes under the same id, so the old note stays until the new one lands. We keep no
+copy, so it is read again (OV-285):
+
+- **Beside the article,** from the page, which is what the reader sees, signed in or past a
+  paywall.
+- **Anywhere else, with an account,** by our server from the link we hold, as a pasted link is
+  (`pasted-article-links.md`). The run says "Fetching the article". If the server can't read it,
+  the run's failure says why in the pasted link's words and sends the reader to the extension,
+  naming Regenerate rather than Create overview. The old note stays.
+- **With no account to fetch through,** the item ends in an ellipsis and explains (77au).
+
+An article first read through a subscription may come back as the public teaser. That's accepted:
+the old note isn't compared with what was read.
 
 ## Differences from the design
 

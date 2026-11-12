@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ModelRefusedError } from "@overview/generation";
+import { ArticleReadError } from "../api/ArticleReadError.js";
 import { ChosenModelFailedError } from "../api/ChosenModelFailedError.js";
 import { runErrorOf } from "./runErrorOf.js";
 
@@ -19,5 +20,20 @@ describe("runErrorOf", () => {
       kind: "message",
       message: "Add your Anthropic API key first.",
     });
+  });
+
+  it("gives an article our server fetched the failure and the link, so it can be said as a pasted link's is", () => {
+    const blocked = new ArticleReadError({ status: "failed", reason: "blocked" });
+
+    expect(runErrorOf(blocked, { url: "https://example.com/a", regenerating: true })).toEqual({
+      kind: "articleFetch",
+      failure: { status: "failed", reason: "blocked" },
+      url: "https://example.com/a",
+      regenerating: true,
+    });
+  });
+
+  it("leaves a page read beside the panel to the panel's own words", () => {
+    expect(runErrorOf(new ArticleReadError({ status: "failed", reason: "blocked" }))).toMatchObject({ kind: "message" });
   });
 });
