@@ -217,6 +217,7 @@ export function CookingMode({
   const drawerId = useId();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [ingredientsAsked, setIngredientsAsked] = useState(false);
   const [watching, setWatching] = useState(false);
   const [timerShown, setTimerShown] = useState<number | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -248,9 +249,13 @@ export function CookingMode({
   }, [mode.open]);
 
   useEffect(() => {
+    setIngredientsOpen(mode.open && web);
+    setIngredientsAsked(false);
+  }, [mode.open, web]);
+
+  useEffect(() => {
     if (!mode.open) {
       setStepsOpen(false);
-      setIngredientsOpen(false);
       setWatching(false);
       setTimerShown(null);
       setLeaving(false);
@@ -266,6 +271,16 @@ export function CookingMode({
   useEffect(() => {
     if (!asking) setLeaving(false);
   }, [asking]);
+
+  const toggleIngredients = () => {
+    setIngredientsAsked(true);
+    setIngredientsOpen((shown) => !shown);
+  };
+
+  const closeIngredients = () => {
+    setIngredientsAsked(true);
+    setIngredientsOpen(false);
+  };
 
   const leaveNow = () => (mode.finished ? mode.close() : mode.done());
   const leave = () => (asking ? setLeaving(true) : leaveNow());
@@ -312,13 +327,13 @@ export function CookingMode({
     const key = event.key;
     if (key === "Escape") {
       event.preventDefault();
-      if (ingredientsOpen) setIngredientsOpen(false);
+      if (ingredientsOpen && ingredientsAsked) closeIngredients();
       else leave();
       return;
     }
     if (key === "i" || key === "I") {
       event.preventDefault();
-      setIngredientsOpen((shown) => !shown);
+      toggleIngredients();
       return;
     }
     if ((key === "m" || key === "M") && mutable) {
@@ -377,7 +392,7 @@ export function CookingMode({
         event.preventDefault();
         if (event.target !== dialog.current) return;
         if (stepsOpen) setStepsOpen(false);
-        else if (ingredientsOpen) setIngredientsOpen(false);
+        else if (ingredientsOpen && ingredientsAsked) closeIngredients();
         else leave();
       }}
       onKeyDown={onKeyDown}
@@ -406,7 +421,7 @@ export function CookingMode({
                   aria-haspopup={web ? undefined : "dialog"}
                   aria-controls={web ? drawerId : undefined}
                   aria-expanded={ingredientsOpen}
-                  onClick={() => setIngredientsOpen((shown) => !shown)}
+                  onClick={toggleIngredients}
                   data-testid={cookingModeTestIds.ingredients}
                 >
                   Ingredients
@@ -699,7 +714,7 @@ export function CookingMode({
               onClose={() => setStepsOpen(false)}
             />
             {!web && (
-              <CookingIngredientsSheet open={ingredientsOpen} onClose={() => setIngredientsOpen(false)}>
+              <CookingIngredientsSheet open={ingredientsOpen} onClose={closeIngredients}>
                 {ingredients}
               </CookingIngredientsSheet>
             )}
@@ -708,7 +723,8 @@ export function CookingMode({
             <CookingIngredientsDrawer
               id={drawerId}
               open={ingredientsOpen}
-              onClose={() => setIngredientsOpen(false)}
+              asked={ingredientsAsked}
+              onClose={closeIngredients}
               onSettled={column.onDrawerSettled}
             >
               {ingredients}
