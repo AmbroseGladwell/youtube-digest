@@ -5,16 +5,20 @@ import type { NoteKind } from "@overview/domain";
 import { checkNoteKind, createGenerationClient, kindSampleOfVideo, meteredFetch } from "@overview/generation";
 import { comparedModelName, parseComparedModel } from "../ComparedModel.js";
 import { comparisonPaths, loadTranscripts, providerKeysFromEnv } from "../comparisonPaths.js";
+import { isTranscriptSetName } from "../transcriptSet.js";
 import type { ActionableItemsRecord } from "../extractActionableItems.js";
 import { jsonRecordStore, safePathPart } from "../jsonRecordStore.js";
+import type { RunRecord } from "../RunRecord.js";
 import { comparisonInput, measuredCost } from "../runOne.js";
 import { spendWithinBudget } from "../spendWithinBudget.js";
 
 const USAGE = `usage: task secrets:evals -- npm run kinds --workspace packages/model-comparison -- \\
   --run <name> --models provider:model,... [--budget <dollars>] [--judge provider:model] [--videos id,id]
+  [--set recipes --expected-from <run>]
 
-Runs the kind check alone on the main set, and scores whether it calls each video a process
-against the steps check's lists: a video whose list has items should be one (OV-250).`;
+Runs the kind check alone and scores it. On the main set a video whose steps-check list has
+items should be a process (OV-250); on another set, the kinds an earlier run's check answered
+are what each video should still be.`;
 
 const { values } = parseArgs({
   options: {
@@ -23,10 +27,19 @@ const { values } = parseArgs({
     budget: { type: "string", default: "0.2" },
     judge: { type: "string", default: "gemini:gemini-3.1-pro-preview" },
     videos: { type: "string" },
+    set: { type: "string", default: "main" },
+    "expected-from": { type: "string" },
   },
 });
 const budgetDollars = Number(values.budget);
-if (!values.run || !values.models || !Number.isFinite(budgetDollars) || budgetDollars <= 0) {
+if (
+  !values.run ||
+  !values.models ||
+  !Number.isFinite(budgetDollars) ||
+  budgetDollars <= 0 ||
+  !isTranscriptSetName(values.set) ||
+  (values.set !== "main" && values["expected-from"] === undefined)
+) {
   console.error(USAGE);
   process.exit(1);
 }
@@ -35,21 +48,31 @@ interface KindCheckRecord {
   videoId: string;
   model: string;
   noteKind: NoteKind | null;
-  expected: "process" | "default";
+  expected: NoteKind;
   error: string | null;
   costDollars: number | null;
 }
 
-const listsDirectory = join(comparisonPaths.actionableItems, safePathPart(values.judge));
-const expectedOf = new Map<string, "process" | "default">();
-for (const file of await readdir(listsDirectory)) {
-  const list = JSON.parse(await readFile(join(listsDirectory, file), "utf-8")) as ActionableItemsRecord;
-  if (list.items !== null) expectedOf.set(list.sourceId, list.items.length > 0 ? "process" : "default");
+const expectedOf = new Map<string, NoteKind>();
+if (values["expected-from"] === undefined) {
+  const listsDirectory = join(comparisonPaths.actionableItems, safePathPart(values.judge));
+  for (const file of await readdir(listsDirectory)) {
+    const list = JSON.parse(await readFile(join(listsDirectory, file), "utf-8")) as ActionableItemsRecord;
+    if (list.items !== null) expectedOf.set(list.sourceId, list.items.length > 0 ? "process" : "default");
+  }
+} else {
+  const runDirectory = comparisonPaths.run(values["expected-from"]);
+  for (const writer of await readdir(runDirectory)) {
+    for (const file of await readdir(join(runDirectory, writer))) {
+      const record = JSON.parse(await readFile(join(runDirectory, writer, file), "utf-8")) as RunRecord;
+      if (record.kindCheck?.noteKind != null) expectedOf.set(record.videoId, record.kindCheck.noteKind);
+    }
+  }
 }
 
 const keys = providerKeysFromEnv();
 const chosen = values.videos === undefined ? null : new Set(values.videos.split(",").map((id) => id.trim()));
-const transcripts = (await loadTranscripts()).filter(
+const transcripts = (await loadTranscripts(values.set)).filter(
   (fetched) => fetched.video.id !== null && expectedOf.has(fetched.video.id) && (chosen === null || chosen.has(fetched.video.id)),
 );
 const models = values.models.split(",").map((name) => parseComparedModel(name.trim()));
@@ -88,13 +111,18 @@ const outcome = await spendWithinBudget({
 const records = await store.all();
 for (const model of models) {
   const mine = records.filter((record) => record.model === comparedModelName(model));
-  const missed = mine.filter((record) => record.expected === "process" && record.noteKind !== "process");
-  const extra = mine.filter((record) => record.expected === "default" && record.noteKind === "process");
+  const kinds = [...new Set(mine.map((record) => record.expected))].sort();
   console.log(
-    `${comparedModelName(model)}: ${mine.filter((record) => record.expected === "process").length - missed.length} of ` +
-      `${mine.filter((record) => record.expected === "process").length} step-giving videos called process, ` +
-      `${extra.length} of ${mine.filter((record) => record.expected === "default").length} others called process too`,
+    `${comparedModelName(model)}: ` +
+      kinds
+        .map((kind) => {
+          const these = mine.filter((record) => record.expected === kind);
+          return `${these.filter((record) => record.noteKind === kind).length} of ${these.length} ${kind}`;
+        })
+        .join(", "),
   );
-  for (const record of [...missed, ...extra]) console.log(`  ${record.videoId}: ${record.noteKind} (expected ${record.expected})`);
+  for (const record of mine.filter((record) => record.noteKind !== record.expected)) {
+    console.log(`  ${record.videoId}: ${record.noteKind ?? record.error} (expected ${record.expected})`);
+  }
 }
 console.error(`$${outcome.spentDollars.toFixed(4)} spent.${outcome.stoppedForBudget ? " Stopped at the budget." : ""}`);
