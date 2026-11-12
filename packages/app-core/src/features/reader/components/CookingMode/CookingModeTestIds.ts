@@ -4,6 +4,7 @@ export const cookingModeTestIds = {
   done: "CookingMode.done",
   ingredients: "CookingMode.ingredients",
   steps: "CookingMode.steps",
+  mute: "CookingMode.mute",
   title: "CookingMode.title",
   progress: "CookingMode.progress",
   stepFill: "CookingMode.stepFill",

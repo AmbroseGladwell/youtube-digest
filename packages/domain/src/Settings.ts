@@ -68,6 +68,9 @@ export const Settings = z.object({
   narrationVoice: NarrationVoice.catch(DEFAULT_NARRATION_VOICE),
   // What a cooking timer rings with, on every device (docs/features/recipe-notes.md, "Timers").
   timerSound: TimerSound.catch(DEFAULT_TIMER_SOUND),
+  // Off, cooking step by step is text only: the mode's Mute and Settings › Cooking's switch
+  // are this one setting (docs/features/recipe-notes.md, "Muting the voice").
+  readStepsAloud: z.boolean().catch(true),
   // When each time-saved milestone was crossed and dismissed, on the account so both hold
   // on every device (docs/features/time-saved.md).
   milestones: MilestoneMarks.catch({}),
@@ -111,6 +114,7 @@ export const DEFAULT_SETTINGS: Settings = {
   plusNoticeDismissed: false,
   narrationVoice: DEFAULT_NARRATION_VOICE,
   timerSound: DEFAULT_TIMER_SOUND,
+  readStepsAloud: true,
   milestones: {},
   showMilestoneCards: true,
   analyticsOptOut: false,

@@ -39,6 +39,11 @@ The card left five questions open, and the design answered them before drawing a
   says: the label, the clocks, the middle button, the track, the ways out. Every state in
   the design is one branch of it, and each has a unit test.
 
+The floating player off a note's own page is `MiniPlayer`. Since OV-288 it sits in the cooking
+timers' dock (`CookingTimerDock`), under any running timers, and the dock publishes the clearance
+the reader's bar and a page's last row sit above. A ringing timer pauses the narration and the
+player says "Paused for the timer" until it is dismissed (`recipe-notes.md`, "Outside the mode").
+
 The bar itself is still `ReaderPlayerBar`, rewritten to draw that view. The web reader's
 floating card and the panel and phone layout are one DOM order with two sets of grid areas,
 as before.

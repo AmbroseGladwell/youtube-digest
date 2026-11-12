@@ -6,6 +6,7 @@ import { OnboardingRunRuntime } from "../features/onboarding/OnboardingRunRuntim
 import { AnalyticsRuntime } from "../features/analytics/AnalyticsRuntime.js";
 import { AppearanceRuntime } from "../features/appearance/AppearanceRuntime.js";
 import { ErrorReportingRuntime } from "../features/errors/ErrorReportingRuntime.js";
+import { CookingTimersRuntime } from "../features/cookingTimers/CookingTimersRuntime.js";
 import { PlayerRuntime } from "../features/player/PlayerRuntime.js";
 import { ShareRuntime } from "../features/shares/ShareRuntime.js";
 import { SyncRuntime } from "../features/sync/SyncRuntime.js";
@@ -98,9 +99,11 @@ export function App({
                                             <LibraryMoveRuntime>
                                               <OnboardingRunRuntime>
                                                 <PlayerRuntime>
-                                                  <ShareRuntime>
-                                                    <RouterProvider router={router} />
-                                                  </ShareRuntime>
+                                                  <CookingTimersRuntime scope="reader">
+                                                    <ShareRuntime>
+                                                      <RouterProvider router={router} />
+                                                    </ShareRuntime>
+                                                  </CookingTimersRuntime>
                                                 </PlayerRuntime>
                                               </OnboardingRunRuntime>
                                             </LibraryMoveRuntime>

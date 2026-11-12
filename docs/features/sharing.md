@@ -345,6 +345,10 @@ they're not (`recipe-notes.md`, "Sharing").
 
 ## The way in
 
+**Cooking timers stay on the page.** A visitor who leaves cooking mode keeping a timer sees it at
+the foot of the page while they stay on it, and going into the app warns that it will stop
+(OV-288, owner's option C; `recipe-notes.md`, "Outside the mode").
+
 The page is also how new people arrive, and **every way in goes through onboarding**
 (OV-152, `onboarding.md`, "From a shared page"), so someone who came by a link is asked the
 same questions and picks a plan like anyone else.

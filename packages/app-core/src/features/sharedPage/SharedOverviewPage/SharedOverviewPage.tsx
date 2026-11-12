@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useBlocker, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   adjustedText,
@@ -55,6 +55,9 @@ import { SharedOverviewGone } from "../components/SharedOverviewGone/SharedOverv
 import { PageScrolledSentinel } from "../../../components/shared/PageScrolledSentinel/PageScrolledSentinel.js";
 import { SharedPageHeader } from "../components/SharedPageHeader/SharedPageHeader.js";
 import { SharedPlayerRuntime } from "../SharedPlayerRuntime.js";
+import { CookingTimersRuntime } from "../../cookingTimers/CookingTimersRuntime.js";
+import { CookingTimerDock } from "../../cookingTimers/components/CookingTimerDock/CookingTimerDock.js";
+import { useTimersWillStop } from "../../cookingTimers/useTimersWillStop.js";
 import { startOnboardingFromShare } from "../../onboarding/useOnboardingProgress.js";
 import { overviewWithStateQueryOptions } from "../../overviews/queries/overviewWithStateQuery.js";
 import { useStores } from "../../../stores/StoresContext.js";
@@ -87,7 +90,9 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
   }
   return (
     <SharedPlayerRuntime narration={payload.snapshot.narration}>
-      <SharedOverview payload={payload} />
+      <CookingTimersRuntime scope="sharedPage">
+        <SharedOverview payload={payload} />
+      </CookingTimersRuntime>
     </SharedPlayerRuntime>
   );
 }
@@ -196,6 +201,49 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             void saveIntoAccount();
           },
         };
+  // Owner's option C (OV-288): a visitor's timers stay while they stay on this page, and going
+  // into the app warns first, since they don't come along (designs 288ac–288af).
+  const willStop = useTimersWillStop();
+  const stopping = useRef({ count: 0, going: false });
+  stopping.current.count = willStop.count;
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      !stopping.current.going && stopping.current.count > 0 && currentLocation.pathname !== nextLocation.pathname,
+  );
+  const { ask } = willStop;
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    ask(
+      {
+        sentence: "Going on opens The Overview, and timers on this shared page don’t come with you.",
+        stay: "Stay on this page",
+        go: stopping.current.count === 1 ? "Go on and stop the timer" : "Go on and stop the timers",
+      },
+      "leftPage",
+      () => {
+        stopping.current.going = true;
+        blocker.proceed();
+      },
+      () => blocker.reset(),
+    );
+    // A blocked navigation asks once; the blocker itself changes on every render.
+  }, [blocker.state]);
+  const chooseSave = () =>
+    saveAction.label === "Open in my overviews"
+      ? saveAction.onChoose()
+      : willStop.ask(
+          {
+            sentence: "Saving opens The Overview, and timers on this shared page don’t come with you.",
+            stay: "Stay on this page",
+            go: willStop.count === 1 ? "Save and stop the timer" : "Save and stop the timers",
+          },
+          "leftPage",
+          () => {
+            stopping.current.going = true;
+            saveAction.onChoose();
+          },
+        );
+
   const cooking = useCookingMode({
     overviewId: note.id,
     title: note.source.title,
@@ -329,7 +377,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
               type="button"
               className={styles.surfaceAction}
               disabled={saving || (signedIn && held.isPending)}
-              onClick={saveAction.onChoose}
+              onClick={chooseSave}
               data-testid={sharedOverviewPageTestIds.saveButton}
             >
               {saveAction.label}
@@ -546,6 +594,8 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         }}
         onReRecord={() => undefined}
       />
+      <CookingTimerDock />
+      {willStop.dialog}
     </div>
   );
 }

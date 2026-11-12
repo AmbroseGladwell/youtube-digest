@@ -88,6 +88,31 @@ test("the keys move through it: Space or → for Next, ← for Back, I for the i
   await expect(page.getByTestId("CookingMode.root")).toBeHidden();
 });
 
+test("the page behind doesn't scroll while cooking, and scrolls again after leaving", async ({ page, launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(cookingRecipe());
+  const library = await launcher.launchExpectingLibrary();
+  await library.nthCard(0).openReader();
+  const scrollY = () => page.evaluate(() => window.scrollY);
+  const pageLocked = () => page.evaluate(() => getComputedStyle(document.documentElement).overflowY === "hidden");
+  expect(await pageLocked()).toBe(false);
+
+  await page.getByTestId("RecipeMethod.cook").click();
+  await expect(page.getByTestId("CookingMode.root")).toBeVisible();
+  expect(await pageLocked()).toBe(true);
+  const before = await scrollY();
+  await page.mouse.move(200, 300);
+  await page.mouse.wheel(0, 600);
+  await page.keyboard.press("PageDown");
+  await page.waitForTimeout(300);
+  expect(await scrollY()).toBe(before);
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("CookingMode.root")).toBeHidden();
+  expect(await pageLocked()).toBe(false);
+  await page.mouse.wheel(0, 600);
+  await expect.poll(scrollY).toBeGreaterThan(before);
+});
+
 test("leaving keeps the place, and the method offers to carry on from it", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(cookingRecipe());
   const library = await launcher.launchExpectingLibrary();

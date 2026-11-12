@@ -111,6 +111,8 @@ test("a timer rings on whatever step the reader is on, Dismiss answers it, and S
   await page.keyboard.press("Space");
   await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
   await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 3");
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 4");
   await expect
     .poll(() => sentEvents(page, () => backendSimulator.analytics.events(), "reader.cooking.timerEnded"))
     .toMatchObject([{ props: { by: "dismissed", rang: true } }]);
@@ -119,9 +121,11 @@ test("a timer rings on whatever step the reader is on, Dismiss answers it, and S
 test("+1 min on a ringing timer runs it again for a minute", async ({ page }) => {
   await page.getByRole("button", { name: "Start a 15-minute timer" }).click();
   await page.clock.fastForward(15 * MINUTE);
-  await page.getByTestId("CookingTimerBanner.more").click();
+  await page.getByTestId("CookingTimerBanner.more").press("Enter");
   await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
   await expect(chipTimes(page)).toHaveText(["1:00"]);
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 2");
 });
 
 test("two ringing at once get a row each, oldest first, each dismissed on its own", async ({ page }) => {
@@ -134,6 +138,22 @@ test("two ringing at once get a row each, oldest first, each dismissed on its ow
   await expect(page.getByTestId("CookingTimerBanner.row").first()).toContainText("Rest");
   await page.getByRole("button", { name: "Dismiss rest timer" }).click();
   await expect(page.getByTestId("CookingTimerBanner.title")).toHaveText("Simmer timer is done");
+});
+
+test("Space dismisses each of two ringing timers in turn, then moves on again", async ({ page }) => {
+  await goToStep(page, 2);
+  await page.getByRole("button", { name: "Start a 5-minute rest timer" }).click();
+  await page.getByRole("button", { name: "Start a 10-minute simmer timer" }).click();
+  await page.clock.fastForward(10 * MINUTE);
+  await expect(page.getByTestId("CookingTimerBanner.row")).toHaveCount(2);
+
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingTimerBanner.title")).toHaveText("Simmer timer is done");
+  await expect(page.getByTestId("CookingTimerBanner.dismiss")).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingTimerBanner.root")).toHaveCount(0);
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 3");
 });
 
 test("a running timer's sheet takes a minute off, pauses, resumes and cancels", async ({ page, backendSimulator }) => {
@@ -169,15 +189,19 @@ test("a paused timer reads as paused in the strip", async ({ page }) => {
   await expect(chipNames(page)).toHaveText(["Boil · step 1 · paused"]);
 });
 
-test("leaving with a timer running asks first: Keep cooking stays, Esc keeps cooking, Leave stops it", async ({
+test("leaving with a timer running asks keep or stop: Keep running is focused, Keep cooking and Esc stay, Stop timer stops it", async ({
   page,
   backendSimulator,
 }) => {
   await page.getByRole("button", { name: "Start a 15-minute timer" }).click();
   await page.getByTestId("CookingMode.done").click();
-  await expect(page.getByTestId("CookingLeaveSheet.sentence")).toHaveText("Your boil timer has 15 minutes left. Leaving stops it.");
+  await expect(page.getByTestId("CookingLeaveSheet.heading")).toHaveText("Keep the boil timer running?");
+  await expect(page.getByTestId("CookingLeaveSheet.sentence")).toHaveText(
+    /^1[45]:\d\d left\. It carries on beside the player while you read, and rings wherever you are in the app\.$/,
+  );
   await expect(page.getByTestId("CookingLeaveSheet.keep")).toBeFocused();
-  await page.getByTestId("CookingLeaveSheet.keep").click();
+  await expect(page.getByTestId("CookingLeaveSheet.keep")).toHaveText("Keep running");
+  await page.getByTestId("CookingLeaveSheet.stay").click();
   await expect(page.getByTestId("CookingLeaveSheet.root")).toBeHidden();
   await expect(page.getByTestId("CookingMode.root")).toBeVisible();
 
@@ -188,7 +212,7 @@ test("leaving with a timer running asks first: Keep cooking stays, Esc keeps coo
   await expect(page.getByTestId("CookingMode.root")).toBeVisible();
 
   await page.getByTestId("CookingMode.done").click();
-  await page.getByTestId("CookingLeaveSheet.leave").click();
+  await page.getByTestId("CookingLeaveSheet.stop").click();
   await expect(page.getByTestId("CookingMode.root")).toBeHidden();
   await expect
     .poll(() => sentEvents(page, () => backendSimulator.analytics.events(), "reader.cooking.timerEnded"))
@@ -200,7 +224,8 @@ test("with several running, the confirm lists them soonest first", async ({ page
   await page.getByRole("button", { name: "Start a 10-minute simmer timer" }).click();
   await page.getByRole("button", { name: "Start a 5-minute rest timer" }).click();
   await page.getByTestId("CookingMode.done").click();
-  await expect(page.getByTestId("CookingLeaveSheet.sentence")).toHaveText("Two timers are running. Leaving stops them all.");
+  await expect(page.getByTestId("CookingLeaveSheet.heading")).toHaveText("Keep both timers running?");
+  await expect(page.getByTestId("CookingLeaveSheet.stop")).toHaveText("Stop timers");
   await expect(page.getByTestId("CookingLeaveSheet.timer")).toHaveText([/Rest · step 2\s*5:00/, /Simmer · step 2\s*10:00/]);
 });
 
@@ -211,7 +236,7 @@ test("Finish keeps a running timer on the end screen, and Back to the recipe ask
   await expect(page.getByTestId("CookingMode.end")).toContainText("That’s the method.");
   await expect(chipNames(page)).toHaveText(["Bake · step 4"]);
   await page.getByTestId("CookingMode.backToRecipe").click();
-  await expect(page.getByTestId("CookingLeaveSheet.sentence")).toHaveText("Your bake timer has 45 minutes left. Leaving stops it.");
+  await expect(page.getByTestId("CookingLeaveSheet.heading")).toHaveText("Keep the bake timer running?");
 });
 
 test("T starts the action's one timer, and with two it moves to the first pill", async ({ page }) => {

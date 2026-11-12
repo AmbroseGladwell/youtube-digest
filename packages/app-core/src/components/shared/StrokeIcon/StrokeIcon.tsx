@@ -5,6 +5,8 @@ export type StrokeIconName =
   | "plus"
   | "minus"
   | "volume"
+  | "volumeOn"
+  | "volumeOff"
   | "check"
   | "sun"
   | "moon"
@@ -87,6 +89,20 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <path d="M11 5 6 9H2v6h4l5 4V5z" />
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </>
+  ),
+  volumeOn: (
+    <>
+      <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" />
+      <path d="M16 9a5 5 0 0 1 0 6" />
+      <path d="M19.364 18.364a9 9 0 0 0 0-12.728" />
+    </>
+  ),
+  volumeOff: (
+    <>
+      <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" />
+      <path d="m22 9-6 6" />
+      <path d="m16 9 6 6" />
     </>
   ),
   plus: (

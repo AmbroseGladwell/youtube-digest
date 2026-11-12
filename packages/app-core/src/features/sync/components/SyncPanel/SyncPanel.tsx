@@ -9,6 +9,7 @@ import styles from "./SyncPanel.module.scss";
 import { syncPanelTestIds } from "./SyncPanelTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
+import { signOutCopy, useTimersWillStop } from "../../../cookingTimers/useTimersWillStop.js";
 import { AccountTile } from "../../../auth/components/AccountTile/AccountTile.js";
 import { DeleteAccountDialog } from "../../../auth/components/DeleteAccountDialog/DeleteAccountDialog.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
@@ -25,7 +26,9 @@ const EXTENSION_NOTE =
 export function SyncPanel() {
   const analytics = useAnalytics();
   const sync = useSync();
-  const signOut = useSignOut();
+  const signOutNow = useSignOut();
+  const willStop = useTimersWillStop();
+  const signOut = () => willStop.ask(signOutCopy(willStop.count), "signedOut", () => void signOutNow());
   const surface = useSurface();
   const { connection } = useSyncConnection();
   const [editingAccount, setEditingAccount] = useState(false);
@@ -40,6 +43,7 @@ export function SyncPanel() {
     const inStep = sync.status.phase === "idle" && sync.status.pending === 0 && sync.status.stuck === 0;
     return (
       <div className={styles.root} data-testid={syncPanelTestIds.root}>
+        {willStop.dialog}
         {connection.email !== null && (
           <AccountTile email={connection.email} firstName={connection.firstName} onEditingChange={setEditingAccount} />
         )}

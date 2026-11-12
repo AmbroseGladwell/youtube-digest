@@ -23,6 +23,8 @@ import { CookingTimerPills } from "../CookingTimerPills/CookingTimerPills.js";
 import { CookingTimerSheet } from "../CookingTimerSheet/CookingTimerSheet.js";
 import { CookingTimerStrip } from "../CookingTimerStrip/CookingTimerStrip.js";
 import { OvenText } from "../OvenText/OvenText.js";
+import { TimerControlsSheet } from "../../../cookingTimers/components/TimerControlsSheet/TimerControlsSheet.js";
+import type { CookingTimer } from "../../util/cookingTimers.js";
 import styles from "./CookingMode.module.scss";
 import { cookingModeTestIds } from "./CookingModeTestIds.js";
 import { useActionSwipe } from "./useActionSwipe.js";
@@ -105,6 +107,14 @@ function VoiceLine({
         <span>No narration on this recipe, so it’s text only</span>
       </>
     ) : null;
+  }
+  if (voice === "muted") {
+    return (
+      <>
+        <StrokeIcon name="volumeOff" size={14} />
+        <span>Voice muted. The steps are text only</span>
+      </>
+    );
   }
   if (voice === "paused") return <span>Paused</span>;
   return (
@@ -212,13 +222,18 @@ export function CookingMode({
   const [leaving, setLeaving] = useState(false);
   const firstPill = useRef<HTMLButtonElement | null>(null);
   const timers = mode.timers;
+  const ours = (timer: CookingTimer) => timer.source.recipe === mode.recipe;
+  const ourRunning = timers.running.filter(ours);
+  const ourRinging = timers.ringing.filter(ours);
   const timing = timers.running.length > 0;
+  const asking = ourRunning.length > 0 || ourRinging.length > 0;
   const ringing = timers.ringing.length > 0;
   const awake = useScreenAwake(mode.open && (!mode.finished || timing));
   const action = actions[mode.at];
   const following = actions[mode.at + 1];
   const isLast = mode.at >= actions.length - 1;
   const voiced = mode.voice === "reading" || mode.voice === "waiting" || mode.voice === "paused";
+  const mutable = mode.voice !== "textOnly";
   const web = surface === "web";
   const swipe = useActionSwipe(mode.next, () => mode.at > 0 && mode.back(), mode.open && !mode.finished);
   const column = useCookingColumnScale(web && ingredientsOpen);
@@ -249,25 +264,32 @@ export function CookingMode({
   }, [web, ingredientsOpen]);
 
   useEffect(() => {
-    if (!timing) setLeaving(false);
-  }, [timing]);
+    if (!asking) setLeaving(false);
+  }, [asking]);
 
   const leaveNow = () => (mode.finished ? mode.close() : mode.done());
-  const leave = () => (timing ? setLeaving(true) : leaveNow());
-  const backToRecipe = () => (timing ? setLeaving(true) : mode.close());
+  const leave = () => (asking ? setLeaving(true) : leaveNow());
+  const backToRecipe = () => (asking ? setLeaving(true) : mode.close());
   const times = action === undefined ? [] : methodTimes(action.text);
   const shownTimer = timers.running.find((timer) => timer.id === timerShown) ?? null;
 
   const startTimer = (time: MethodTime, index: number, seconds: number) => {
     if (action === undefined) return;
-    timers.start({ name: time.name, step: action.step, source: { action: mode.at, time: index, seconds }, range: time.seconds.length > 1 });
+    timers.start({
+      name: time.name,
+      step: action.step,
+      source: { recipe: mode.recipe, action: mode.at, time: index, seconds },
+      range: time.seconds.length > 1,
+      recipeTitle: mode.recipeTitle,
+      actionText: action.text,
+    });
   };
 
   const onTime = (index: number) => {
     const time = times[index];
     if (time === undefined) return;
     const only = time.seconds.length === 1 ? time.seconds[0]! : null;
-    const running = only === null ? undefined : timers.runningFrom({ action: mode.at, time: index, seconds: only });
+    const running = only === null ? undefined : timers.runningFrom({ recipe: mode.recipe, action: mode.at, time: index, seconds: only });
     if (running !== undefined) setTimerShown(running.id);
     else if (only !== null) startTimer(time, index, only);
     else firstPill.current?.focus();
@@ -297,6 +319,11 @@ export function CookingMode({
     if (key === "i" || key === "I") {
       event.preventDefault();
       setIngredientsOpen((shown) => !shown);
+      return;
+    }
+    if ((key === "m" || key === "M") && mutable) {
+      event.preventDefault();
+      mode.toggleMute("key");
       return;
     }
     if (mode.finished || (ingredientsOpen && !web) || drawerHasTheKey(event)) return;
@@ -334,8 +361,9 @@ export function CookingMode({
         onDismiss={timers.dismiss}
         onMore={(id) => timers.adjust(id, 1)}
         dismissKey={key("Space")}
+        here={mode.recipe}
       />
-      <CookingTimerStrip timers={timers.running} now={timers.now} onOpen={setTimerShown} />
+      <CookingTimerStrip timers={timers.running} now={timers.now} here={mode.recipe} onOpen={setTimerShown} />
     </>
   );
 
@@ -344,6 +372,7 @@ export function CookingMode({
       ref={dialog}
       className={`${styles.root} ${styles[surface]} ${web ? styles[column.scale] : ""}`}
       aria-label={`Cooking ${title} step by step`}
+      tabIndex={-1}
       onCancel={(event) => {
         event.preventDefault();
         if (event.target !== dialog.current) return;
@@ -389,17 +418,32 @@ export function CookingMode({
                   {title}
                 </span>
               )}
-              <button
-                type="button"
-                className={styles.pill}
-                aria-label={`Step ${action.step + 1} of ${steps.length}. All steps`}
-                aria-haspopup="dialog"
-                onClick={() => setStepsOpen(true)}
-                data-testid={cookingModeTestIds.steps}
-              >
-                <StrokeIcon name="list" size={15} />
-                {action.step + 1} of {steps.length}
-              </button>
+              <span className={styles.topEnd}>
+                {mutable && (
+                  <button
+                    type="button"
+                    className={`${styles.pill} ${styles.mute}`}
+                    aria-label="Mute voice"
+                    aria-pressed={mode.voice === "muted"}
+                    onClick={() => mode.toggleMute("button")}
+                    data-testid={cookingModeTestIds.mute}
+                  >
+                    <StrokeIcon name={mode.voice === "muted" ? "volumeOff" : "volumeOn"} size={18} />
+                    {key("M")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={styles.pill}
+                  aria-label={`Step ${action.step + 1} of ${steps.length}. All steps`}
+                  aria-haspopup="dialog"
+                  onClick={() => setStepsOpen(true)}
+                  data-testid={cookingModeTestIds.steps}
+                >
+                  <StrokeIcon name="list" size={15} />
+                  {action.step + 1} of {steps.length}
+                </button>
+              </span>
             </div>
 
             {mode.finished ? (
@@ -484,7 +528,7 @@ export function CookingMode({
                     <CookingTimerPills
                       times={times}
                       action={mode.at}
-                      runningFrom={timers.runningFrom}
+                      runningFrom={(source) => timers.runningFrom({ ...source, recipe: mode.recipe })}
                       onStart={startTimer}
                       onOpen={setTimerShown}
                       firstPill={firstPill}
@@ -523,7 +567,7 @@ export function CookingMode({
                 )}
 
                 <div className={styles.voice} role="status" data-testid={cookingModeTestIds.voice}>
-                  {ringing ? (
+                  {ringing && mode.voice !== "muted" ? (
                     <>
                       <span className={styles.ringing}>
                         <StrokeIcon name="bell" size={14} />
@@ -596,8 +640,11 @@ export function CookingMode({
                 onClose={() => setWatching(false)}
               />
             )}
+            {shownTimer !== null && !ours(shownTimer) && (
+              <TimerControlsSheet timer={shownTimer} onClose={() => setTimerShown(null)} onLeaving={mode.done} />
+            )}
             <CookingTimerSheet
-              timer={shownTimer}
+              timer={shownTimer !== null && ours(shownTimer) ? shownTimer : null}
               now={timers.now}
               onPause={timers.pause}
               onResume={timers.resume}
@@ -610,13 +657,31 @@ export function CookingMode({
             />
             <CookingLeaveSheet
               open={leaving}
-              timers={timers.running}
+              running={ourRunning}
+              ringing={ourRinging}
+              others={timers.running.filter((timer) => !ours(timer))}
               now={timers.now}
               web={web}
-              keepKey={key("Esc")}
-              onKeep={() => setLeaving(false)}
-              onLeave={() => {
+              stayKey={key("Esc")}
+              onStay={() => setLeaving(false)}
+              onKeep={() => {
+                const kept = ourRunning.length + ourRinging.length;
                 setLeaving(false);
+                if (kept > 0) mode.timersKept(kept, ourRunning.length === 0);
+                leaveNow();
+              }}
+              onStop={() => {
+                setLeaving(false);
+                if (ourRunning.length > 0)
+                  timers.stop(
+                    [...ourRunning, ...ourRinging].map((timer) => timer.id),
+                    "left",
+                  );
+                else
+                  timers.stop(
+                    ourRinging.map((timer) => timer.id),
+                    "dismissed",
+                  );
                 leaveNow();
               }}
             />

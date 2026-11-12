@@ -10,6 +10,7 @@ import {
   keysRowValue,
   milestonesRowValue,
   appearanceRowValue,
+  cookingRowValue,
   personalisationRowValue,
   voiceRowValue,
 } from "./settingsRowValues.js";
@@ -127,5 +128,12 @@ describe("appearanceRowValue", () => {
   it("names the theme and the accent", () => {
     expect(appearanceRowValue("system", "orange")).toBe("System · Orange");
     expect(appearanceRowValue("dark", "raspberry")).toBe("Dark · Raspberry");
+  });
+});
+
+describe("cookingRowValue", () => {
+  it("says whether the voice reads the steps, then names the timer sound (design 289i)", () => {
+    expect(cookingRowValue(true, "ready")).toBe("Voice on · Ready");
+    expect(cookingRowValue(false, "lowTone")).toBe("Voice off · Low tone");
   });
 });
