@@ -449,7 +449,7 @@ test("a big picture past its cap is sent back, an empty one never is", () => {
 const step = { text: "Take it slowly.", startSegmentIndex: 0, endSegmentIndex: 1, dubious: false };
 
 test("the steps block holds a long protocol whole, and stops only a runaway list", () => {
-  const { schema } = composePrompt(baseInput);
+  const { schema } = composePrompt(baseInput, "process");
   const stepsOf = (count: number) =>
     z.safeParse(
       schema.shape.sourceSteps!,
@@ -462,11 +462,18 @@ test("the steps block holds a long protocol whole, and stops only a runaway list
 });
 
 test("the steps come before How to apply, which is told to apply them rather than repeat them", () => {
-  const { systemPrompt } = composePrompt(baseInput);
+  const { systemPrompt } = composePrompt(baseInput, "process");
   assert.ok(systemPrompt.indexOf("## The steps it gives") < systemPrompt.indexOf("## How to apply"));
   assert.ok(systemPrompt.includes("never repeat them\nhere"));
 });
 
 test("a recipe's method is its steps, so a recipe note has no steps block", () => {
   assert.equal("sourceSteps" in composePrompt(baseInput, "recipe").schema.shape, false);
+});
+
+test("a note whose source gives no steps is asked for nothing about steps, so its key points are written as before", () => {
+  const { systemPrompt, schema } = composePrompt(baseInput);
+  assert.equal("sourceSteps" in schema.shape, false);
+  assert.ok(!systemPrompt.includes("The steps it gives"));
+  assert.ok(systemPrompt.includes("the concrete cues or steps"));
 });

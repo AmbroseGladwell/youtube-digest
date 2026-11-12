@@ -88,7 +88,11 @@ export function assembleOverview(input: GenerationInput, output: GeneratedOutput
 
   const selling = output.selling ? Selling.parse(output.selling) : null;
   const sourceSteps = sourceStepsOf(
-    output.sourceSteps.map(({ text, dubious, ...range }) => ({ text, dubious, range: resolveOptionalRange(input, segmentRangeOf(range)) })),
+    (output.sourceSteps ?? []).map(({ text, dubious, ...range }) => ({
+      text,
+      dubious,
+      range: resolveOptionalRange(input, segmentRangeOf(range)),
+    })),
   );
   const howToApply = output.howToApply ? HowToApply.parse(output.howToApply) : null;
   const watchAnyway = output.watchAnyway

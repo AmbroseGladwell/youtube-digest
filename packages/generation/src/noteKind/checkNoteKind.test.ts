@@ -56,9 +56,11 @@ test("text that imitates the check's own tags can't close the source early", () 
   assert.equal(userMessage.match(/<\/source>/g)?.length, 1);
 });
 
-test("the check answers one kind from a closed list, defaulting when unsure", () => {
+test("the check answers one kind from a closed list: unsure of a recipe means default, unsure of steps means process", () => {
   const { schema, systemPrompt } = composeKindCheckPrompt(kindSampleOfVideo(input([])));
   assert.equal(schema.safeParse({ noteKind: "recipe" }).success, true);
+  assert.equal(schema.safeParse({ noteKind: "process" }).success, true);
   assert.equal(schema.safeParse({ noteKind: "cookbook" }).success, false);
-  assert.ok(systemPrompt.includes("When you are unsure, answer default."));
+  assert.ok(systemPrompt.includes("When you are unsure whether it is a recipe, answer default."));
+  assert.ok(systemPrompt.includes("When you are unsure whether it tells its audience to do something, answer process."));
 });

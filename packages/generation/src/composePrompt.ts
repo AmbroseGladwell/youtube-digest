@@ -78,6 +78,8 @@ export const WRITING_RULES =
 const SYSTEM_OPENING: Record<NoteKind, string> = {
   default:
     "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly. ",
+  process:
+    "You produce a blunt judgment record of a saved video for one reader, from its transcript alone. Follow the sections below exactly. ",
   recipe:
     "You write the note on a saved recipe video for one reader, from its transcript and description alone. Follow the sections below exactly. ",
 };
@@ -101,6 +103,6 @@ export function composePrompt(input: GenerationInput, kind: NoteKind = "default"
   return {
     systemPrompt: SYSTEM_OPENING[kind] + WRITING_RULES + instructions,
     userMessage: contextBlock(input),
-    schema: kind === "default" ? schema.superRefine(keyPointsCoverALongVideo(input)) : schema,
+    schema: kind === "recipe" ? schema : schema.superRefine(keyPointsCoverALongVideo(input)),
   };
 }

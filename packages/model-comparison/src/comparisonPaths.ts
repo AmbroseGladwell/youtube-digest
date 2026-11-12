@@ -17,6 +17,7 @@ export const comparisonPaths = {
   // A source's actionable items, one list per judge in its own folder, shared by every run (OV-251).
   actionableItems: join(dataDirectory, "actionable-items"),
   stepsJudgments: (name: string) => join(dataDirectory, "steps-judgments", name),
+  kindChecks: (name: string) => join(dataDirectory, "kind-checks", name),
   judgments: (name: string) => join(dataDirectory, "judgments", name),
   picks: (name: string) => join(dataDirectory, "picks", name),
   keyPointJudgments: (name: string, against: string, rubric: number) =>

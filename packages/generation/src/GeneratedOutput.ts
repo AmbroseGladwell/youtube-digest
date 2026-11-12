@@ -31,7 +31,8 @@ export interface GeneratedOutput {
     detail: string;
     compromisesContent: boolean;
   };
-  sourceSteps: Array<GeneratedTimedText & { dubious: boolean }>;
+  // Absent on any note but a process one (docs/features/source-steps.md).
+  sourceSteps?: Array<GeneratedTimedText & { dubious: boolean }>;
   howToApply?: {
     items: string[];
   };

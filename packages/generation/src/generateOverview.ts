@@ -59,7 +59,8 @@ export interface GenerationObserver {
 }
 
 // The kind is decided first, so the note's schema carries only that kind's sections; a
-// recipe the video turns out not to hold falls back to the default note
+// recipe the video turns out not to hold falls back to the default note, and a process note is the
+// default one with the steps the source gives
 // (docs/features/overview-generation-decisions.md, "The kind check").
 export async function generateOverview(
   client: GenerationClient,
@@ -74,5 +75,6 @@ export async function generateOverview(
     const overview = assembleRecipeVideoOverview(input, output, meta);
     if (overview !== null) return overview;
   }
-  return assembleOverview(input, await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input)), meta);
+  const noteKind = kind === "process" ? "process" : "default";
+  return assembleOverview(input, await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input, noteKind)), meta);
 }

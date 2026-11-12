@@ -1,10 +1,10 @@
 import type { NoteKind } from "@overview/domain";
-import { coreSection } from "./sections/coreSection.js";
+import { coreSection, processCoreSection } from "./sections/coreSection.js";
 import { chaptersSection } from "./sections/chaptersSection.js";
 import { filingSection } from "./sections/filingSection.js";
 import { verdictSection } from "./sections/verdictSection.js";
 import { sellingSection } from "./sections/sellingSection.js";
-import { howToApplySection } from "./sections/howToApplySection.js";
+import { howToApplySection, processHowToApplySection } from "./sections/howToApplySection.js";
 import { sourceStepsSection } from "./sections/sourceStepsSection.js";
 import { watchAnywaySection } from "./sections/watchAnywaySection.js";
 import { recipeSection } from "./sections/recipeSection.js";
@@ -16,14 +16,15 @@ import type { GenerationInput } from "./GenerationInput.js";
 // others can't drift apart from theirs (docs/features/overview-generation-decisions.md,
 // "The kind check").
 const REGISTRY: Record<NoteKind, PromptSection[]> = {
-  default: [
-    coreSection,
+  default: [coreSection, chaptersSection, filingSection, verdictSection, sellingSection, howToApplySection, watchAnywaySection],
+  process: [
+    processCoreSection,
     chaptersSection,
     filingSection,
     verdictSection,
     sellingSection,
     sourceStepsSection,
-    howToApplySection,
+    processHowToApplySection,
     watchAnywaySection,
   ],
   recipe: [recipeVideoCoreSection, chaptersSection, filingSection, recipeSection],
