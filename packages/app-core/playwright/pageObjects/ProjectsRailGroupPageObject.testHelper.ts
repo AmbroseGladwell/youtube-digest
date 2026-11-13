@@ -9,14 +9,31 @@ import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js
 export class ProjectsRailGroupPageObject extends PageObject {
   private rows = () => this.get(projectsRailGroupTestIds.root).getByRole("listitem");
 
+  private measure = (testId: string) =>
+    this.get(testId).evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        height: element.getBoundingClientRect().height,
+        fontSize: style.fontSize,
+        padding: style.padding,
+        margin: style.margin,
+        borderRadius: style.borderRadius,
+        color: style.color,
+      };
+    });
+
   verifyRowMatchesTopicRow = (name: string, topicId: string) =>
     this.step(`verifyRowMatchesTopicRow ${name} ${topicId}`, async () => {
-      const measure = (testId: string) =>
-        this.get(testId).evaluate((element) => {
-          const style = getComputedStyle(element);
-          return { height: element.getBoundingClientRect().height, fontSize: style.fontSize, padding: style.padding };
-        });
-      expect(await measure(projectsRailGroupTestIds.project(name))).toEqual(await measure(filterPanelTestIds.topicChip(topicId)));
+      const { height, fontSize, padding } = await this.measure(projectsRailGroupTestIds.project(name));
+      const topic = await this.measure(filterPanelTestIds.topicChip(topicId));
+      expect({ height, fontSize, padding }).toEqual({ height: topic.height, fontSize: topic.fontSize, padding: topic.padding });
+    });
+
+  // "Show all N topics" and New topic share one shape; All projects takes it, underlined.
+  verifyAllProjectsIsShapedLikeTheTopicsButtons = () =>
+    this.step("verifyAllProjectsIsShapedLikeTheTopicsButtons", async () => {
+      expect(await this.measure(projectsRailGroupTestIds.allProjectsLink)).toEqual(await this.measure(filterPanelTestIds.newTopicButton));
+      await expect(this.get(projectsRailGroupTestIds.allProjectsLink)).toHaveCSS("text-decoration-line", "underline");
     });
 
   verifyListsProjects = (names: string[]) =>

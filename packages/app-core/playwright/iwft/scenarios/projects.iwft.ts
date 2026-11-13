@@ -370,6 +370,7 @@ test.describe("on a phone and in the panel", () => {
 
     await library.openFilters();
     await library.projectsRail.verifyRowMatchesTopicRow("Kitchen renovation", home.id);
+    await library.projectsRail.verifyAllProjectsIsShapedLikeTheTopicsButtons();
     const head = await library.projectsRail.openProject("Kitchen renovation");
 
     await library.verifyFiltersAreOpen(false);
