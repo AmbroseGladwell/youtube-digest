@@ -8,6 +8,7 @@ import { answeringKindCheck } from "../noteKind/answeringKindCheck.testHelper.js
 import { providerJsonSchema } from "../providerJsonSchema.js";
 import { composePodcastPrompt } from "./composePodcastPrompt.js";
 import { generatePodcastOverview } from "./generatePodcastOverview.js";
+import { generateOverviewOf } from "../article/generateOverviewOf.js";
 import { VIDEO_WORDS } from "./inPodcastWords.js";
 import { episodeAsVideo, type PodcastGenerationInput } from "./PodcastGenerationInput.js";
 
@@ -122,5 +123,16 @@ test("an episode the kind check calls a recipe gets the default note", async () 
     meta,
   );
   assert.equal(overview.recipe ?? null, null);
+  assert.ok(asked.every((prompt) => prompt.startsWith("You produce a blunt judgment record of a saved podcast episode")));
+});
+
+test("an episode given to the one entry point every key uses is written as an episode, never as a video", async () => {
+  const asked: string[] = [];
+  const client: GenerationClient = async ({ systemPrompt }) => {
+    asked.push(systemPrompt.slice(0, 120));
+    return answer;
+  };
+  const overview = await generateOverviewOf(answeringKindCheck(client), inputOf(10, { sectionsEnabled: WITHOUT_VERDICT }), meta);
+  assert.deepEqual(overview.source, podcast);
   assert.ok(asked.every((prompt) => prompt.startsWith("You produce a blunt judgment record of a saved podcast episode")));
 });

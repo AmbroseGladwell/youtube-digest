@@ -23,4 +23,4 @@ export const episodeAsVideo = (podcast: PodcastSource, notes: string): VideoSour
   thumbnailUrl: podcast.imageUrl,
 });
 
-export const isPodcastInput = (input: GenerationInput): input is PodcastGenerationInput => "podcast" in input;
+export const isPodcastInput = (input: object): input is PodcastGenerationInput => "podcast" in input;

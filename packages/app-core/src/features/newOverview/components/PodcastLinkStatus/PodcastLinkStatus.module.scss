@@ -1,0 +1,117 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 106b, compact: the episode's square art beside the show, the kind and where the link
+// came from, then the title and its own facts.
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 1.125rem;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.art,
+.blank,
+.tile {
+  flex: none;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.blank {
+  background: var(--surface);
+}
+
+.tile {
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  padding: 0.375rem;
+  overflow: hidden;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-family: var(--font-heading);
+  font-size: 0.6875rem;
+  line-height: 1.05;
+}
+
+.words {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.host {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finding {
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.kicker {
+  color: var(--label);
+  font-size: 0.78125rem;
+  font-weight: 600;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  line-height: 1.15;
+  text-wrap: pretty;
+}
+
+.facts {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  margin: 0.5rem 0 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.held {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-tile);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.84375rem;
+}
+
+.open {
+  flex: none;
+
+  @include controls.action-pill;
+  @include controls.pill-sm;
+}
+
+.retry {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}

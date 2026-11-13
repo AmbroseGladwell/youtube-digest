@@ -7,9 +7,10 @@ They ship as stacked PRs, like the rest of the card:
 1. **An episode's overview reads and plays** (this doc, first). `PodcastSource` joins `Source`, and
    every place that shows an overview handles an episode: the reader, the library, the share page,
    its link preview, Markdown and MCP. The episode plays inside its note. Nothing makes one yet.
-2. **Making one**: pasting a link, the steps while it's made, the failures, onboarding's entry, and
-   `/privacy` and the terms.
-3. **The panel beside a Spotify or Apple episode tab** (106k).
+2. **Making one** (below): pasting a link, the steps while it's made, the failures, no transcript,
+   and `/privacy`.
+3. **Onboarding**: the trial reaching the podcast routes, and its entry in onboarding's table.
+4. **The panel beside a Spotify or Apple episode tab** (106k).
 
 **What is built, and where:**
 
@@ -35,11 +36,9 @@ helper rather than `source.url`. The share page uses the sharer's link (106w).
 The platform is read from the link's own shape (`parsePodcastLink`), never stored separately, so it
 can't disagree with the link.
 
-**For the next PR:** a Spotify share link carries `si=`, a token tied to the account that shared it,
-and the share page shows the sharer's link. The link is kept without `si=` and the `utm_` parameters,
-so a shared overview can't pass on who shared the episode with them. `/privacy` changes there too:
-the link kept on the overview, the share page showing it, and the show's host receiving the reader's
-request when the episode plays.
+The link is kept without Spotify's `si=`, a token tied to the account that shared it, or the `utm_`
+parameters (`keptSharedLink`), since the share page shows the sharer's link and shouldn't pass on
+who shared the episode with them. A `spotify:` address is kept as the web page it names.
 
 ## The head, the row and the chip
 
@@ -88,7 +87,68 @@ the skips and the scrubber never show it. Screen readers hear it once per note.
 content security policy that limits media, so a feed's audio from any host plays in both. Chrome
 upgrades an `http:` enclosure to `https:`; a host with no `https:` fails, and the strip says so.
 
-## Not in this PR
+## Making one
+
+The second PR. A reader signed in to an account pastes an Apple Podcasts, Spotify or show-page link
+into New overview, on the web's dialog, the home page's field or the panel and phone's sheet.
+
+**What is built, and where:**
+
+| The decision | Where it lives |
+|---|---|
+| Reading the link before Create | `usePodcastLink` |
+| An episode or an article | `pastedLinkState`, `PastedLinkStatus` |
+| The card, held and the failures | `PodcastLinkStatus`, `podcastLinkFailureCopy` |
+| The run | `runPodcastOverviewGeneration`, `useRunPodcastGeneration`, `startPodcast` |
+| The steps | `generationRunSteps` |
+| No transcript | `RunErrorMessage`'s `PodcastNoTranscript` |
+| Our key makes an episode | `OurKeyGenerationRequest`, `generateOverviewOf` |
+
+**Read as soon as it settles,** as an article link is (`pasted-article-links.md`): what was found,
+or why it can't be used, is known before Create, and reading costs nothing against the month.
+A Spotify or Apple link is only ever an episode. Any other page may be a show's own episode page,
+so it is read as an episode and as an article at once; it is an episode only once our server finds
+one there, and a page that isn't one is left to the article. That second read is one more fetch of
+the page on our server, inside the same per-address limit.
+
+**The card** (106b) shows the art, "The Diary Of A CEO · Podcast · from Spotify", the title and
+"1 hr 56 min · 10 Nov 2026", the date alone with no length. An episode already in the library
+offers the way to it instead of Generate.
+
+**Failures** (106d–106f) are our server's five reasons, each in the reader's terms and each ending
+"No overview was used.": a whole show, not in the show's public feed (we never swap in a different
+episode), most likely a Spotify exclusive, a feed we couldn't read, and no answer in time, which
+alone offers Try again.
+
+**The steps** (106g) are Finding the episode, done before Create with the length beside it, then
+Looking for a transcript, a stage of its own because it is the one that fails for half of episodes,
+then Writing the overview. They never say where the words came from. Recording the narration isn't
+a step here, as it isn't for any kind: narration renders after.
+
+**No transcript** (106h) is drawn as an everyday outcome: what happened, that it's common, that no
+overview was used, "Transcribing is coming soon" where Transcribe it will go, and a pointer to paste
+the episode's YouTube link instead. Nothing is left in the library (owner, 13 Nov 2026). Nothing is
+reserved until the words are found, so nothing is used.
+
+**The run** finds the words through `podcastTranscript` (the free routes: our cache and the feed's
+transcript on our server, then the show's YouTube channel, searched in the reader's browser by the
+extension and checked by our server, or searched by our server without one), keeps them on the
+device under the episode's key for the Transcript tab, and writes the note with the episode as its
+source. On our key the request carries the episode first, so it isn't read as the video it also
+carries.
+
+**Not in this PR:** onboarding. A reader with no account can't reach the podcast routes, which need
+an account or, as articles do, a trial token; that and onboarding's entry are the next PR. Until
+then onboarding's table claims no podcast links.
+
+## Before it merges
+
+The owner checks the terms `podcast-links.md` lists ("Terms, still to check"): Apple's search and
+lookup API used this way, reading Spotify's public episode pages, keeping a show's transcript in the
+shared cache, and searching YouTube from our server (`podcast-on-youtube.md`). `/privacy` describes
+all of it since this PR.
+
+## Not in these PRs
 
 - **The shell's one bar naming what plays** (106q, 106q-2): "The overview" or "The episode", the
   paused overview held with Resume while the strip is in view, and the bar carrying the episode once

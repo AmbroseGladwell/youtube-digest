@@ -2,7 +2,8 @@ import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, type ArticleRead, type Overview } from "@overview/domain";
 import type { OverviewInput } from "@overview/generation";
-import { createFetchGenerationApi } from "@overview/sync";
+import { createFetchGenerationApi, createFetchPodcastApi } from "@overview/sync";
+import { podcastTranscript } from "../podcasts/api/podcastTranscript.js";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useStores, type Stores } from "../../stores/StoresContext.js";
 import type { ApiKeys } from "../apiKeys/ApiKeys.js";
@@ -12,7 +13,13 @@ import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { createGenerationClient, createTranscriptSources } from "./api/generationClients.js";
-import { runArticleOverviewGeneration, runOverviewGeneration, type RunOverviewGenerationOptions } from "./api/generationPipeline.js";
+import {
+  runArticleOverviewGeneration,
+  runOverviewGeneration,
+  runPodcastOverviewGeneration,
+  type PodcastRunRequest,
+  type RunOverviewGenerationOptions,
+} from "./api/generationPipeline.js";
 import { makeOverviewOnKeys, type OverviewMeta } from "./api/makeOverviewOnKeys.js";
 import { createTrialGenerationApi } from "../signedOutTrial/api/createTrialGenerationApi.js";
 import { currentSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
@@ -91,6 +98,38 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled),
     [makeWith, learnFrom, settled, shown],
+  );
+}
+
+// An episode's words come through our server, so this needs an account on one; the reader's
+// extension searches YouTube for the episode on their own connection when it can
+// (docs/features/podcast-on-youtube.md).
+export function useRunPodcastGeneration(apiKeys: ApiKeys) {
+  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const shown = useStores();
+  const youTubeFetch = useYouTubeFetch();
+  const knownApiUrl = useKnownApiUrl();
+  const { connection } = useSyncConnection();
+
+  return useCallback(
+    async (request: PodcastRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
+      if (knownApiUrl === null) throw new Error("Episodes need an account on our server");
+      const api = createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token });
+      return runPodcastOverviewGeneration(
+        request,
+        (episode) => podcastTranscript(api, episode, youTubeFetch),
+        {
+          makeOverview: makeWith(),
+          overviewStore: stores.overviewStore,
+          settingsStore: stores.settingsStore,
+          transcriptStore: stores.transcriptStore,
+        },
+        options,
+      )
+        .then((overview) => learnFrom(overview, stores))
+        .finally(settled);
+    },
+    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch],
   );
 }
 

@@ -109,9 +109,9 @@ it went, how many transcript tags the episode has and how long it took. It never
 Before readers can use this, check: Apple's terms for its search and lookup API used this way;
 reading Spotify's public episode pages (tags any link preview reads, but still Spotify's pages);
 and writing a transcript of an episode and keeping it in the shared cache, which is a different use
-from playing the episode and needs its own answer. The privacy policy names none of these yet,
-because no reader can reach the route. The slice that lets a reader paste a podcast link adds
-Apple, Spotify and show hosts to `/privacy` (`legal-pages.md`).
+from playing the episode and needs its own answer. `/privacy` names them since the screens' slice
+that lets a reader paste a podcast link (`legal-pages.md`, 13 Nov 2026); the terms checks above are
+the owner's, and still open until that slice merges (`podcast-screens.md`, "Before it merges").
 
 ## What comes next
 

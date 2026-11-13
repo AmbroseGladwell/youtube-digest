@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-12";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-13";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -86,13 +86,15 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          An overview is a note about a video or an article: its big picture, claims, verdict, key points, the steps it gives, chapters and
-          tags, plus the video's or page's title, link, channel or site and thumbnail link, and for an article up to five of the links the
-          page makes, with their words and a line on why each is worth opening. Beside it you may add a reason you saved it, file it under
-          topics, and mark it read or favourite. Your settings travel with the account too: the narration voice, whether cooking step by
-          step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an overview shows, the About you
-          sentence that personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you
-          follow, and the running total of time saved with its milestones.
+          An overview is a note about a video, an article or a podcast episode: its big picture, claims, verdict, key points, the steps it
+          gives, chapters and tags, plus the video's, page's or episode's title, link, channel, site or show and thumbnail or artwork link,
+          and for an article up to five of the links the page makes, with their words and a line on why each is worth opening. For an
+          episode it also keeps the address of its show's feed and audio, and the Apple Podcasts, Spotify or show page link you pasted, with
+          the code Spotify adds to say who shared it removed; a shared link shows that link. Beside it you may add a reason you saved it,
+          file it under topics, and mark it read or favourite. Your settings travel with the account too: the narration voice, whether
+          cooking step by step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an overview shows,
+          the About you sentence that personalises overviews and what we have learned from your overviews, the tags you have merged, the
+          playlists you follow, and the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -142,6 +144,15 @@ const sections: readonly LegalSection[] = [
           may keep up to five of the links the article makes, each with the words it was linked by and a line on why it is worth opening,
           and these go with a shared link and to an assistant you connect. When the extension reads an article open in your own browser, our
           server never sees the page.
+        </p>
+        <p>
+          <strong>Podcast episodes.</strong> When you paste a link to a podcast episode, our server reads the page it points to, looks the
+          show up in Apple's podcast directory where it needs to, and reads the show's public feed to find the episode. It then looks for
+          the episode's words: in our shared transcript cache, in a transcript the show publishes, or in the same episode on the show's
+          YouTube channel. With the extension, that YouTube search runs in your own browser and our server checks the one video it found;
+          without it, our server searches. Words found this way are public and the same for everyone, so they are kept in the shared
+          transcript cache under the episode, with no account on them. Neither the link nor the episode ever appears in our logs. An episode
+          whose words can't be found makes no overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you for your own transcripts, and our legitimate interest in serving
@@ -406,13 +417,22 @@ const sections: readonly LegalSection[] = [
               "United States",
             ],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
-            ["YouTube (Google)", "answers our server's requests for a playlist's videos", "varies"],
+            [
+              "YouTube (Google)",
+              "answers our server's requests for a playlist's videos, and its searches for a podcast episode's video",
+              "varies",
+            ],
           ]}
         />
         <p>
           Watching a recipe video's step while cooking step by step loads YouTube's own player, in its privacy-enhanced mode, in your
           browser. YouTube sees that request and your network address, under Google's privacy policy. The request names the video and the
           part to play, and we add nothing about you.
+        </p>
+        <p>
+          Playing a podcast episode inside its overview loads the episode's audio in your browser, from the address in the show's public
+          feed. The show's host, and any service it uses to add adverts, sees that request and your network address, under its own policy,
+          as it would in a podcast app. We add nothing about you.
         </p>
         <p>
           A provider you bring your own key for (Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral) is not our processor. Your device

@@ -9,6 +9,7 @@ import { TagAliases } from "./TagAliases.js";
 import { Topic } from "./Topic.js";
 import { TranscriptSegment } from "./TranscriptSegment.js";
 import { VideoSource } from "./VideoSource.js";
+import { PodcastSource } from "./Source.js";
 
 const readerContext = {
   captureReason: z.string().nullable(),
@@ -25,7 +26,10 @@ const readerContext = {
 // prompt is production's either way (docs/architecture/tiers.md, "Which key an overview uses").
 export const OurKeyGenerationRequest = z.object({
   overviewId: OverviewId,
+  // An episode first: it carries the video's fields too, and read as a video it would lose the
+  // episode it is (docs/features/podcast-screens.md).
   input: z.union([
+    z.object({ podcast: PodcastSource, video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
     z.object({ video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
     z.object({ article: ExtractedArticle, ...readerContext }),
   ]),

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.js";
 import { SourceKey } from "./Brands.js";
-import { articleSourceId, type PodcastSource, type WebSource } from "./Source.js";
+import { articleSourceId, keptSharedLink, type PodcastSource, type WebSource } from "./Source.js";
 import { articleReadMinutes, kindChip, openPodcastLabel, sourceImage, sourceLength, sourceName, sourceUrl } from "./sourceFacts.js";
 
 const article: WebSource = {
@@ -91,4 +91,16 @@ test("an episode's way out is the link the reader shared, never the feed's audio
   assert.equal(openPodcastLabel("https://spotify.link/abc123"), "Open in Spotify");
   assert.equal(openPodcastLabel("https://podcasts.apple.com/gb/podcast/x/id1291423644?i=1000735123456"), "Open in Apple Podcasts");
   assert.equal(openPodcastLabel("https://www.thediary.example/episodes/241"), "Open the show’s page");
+});
+
+test("the link kept for the way back drops who shared it and the campaign, and keeps what names the episode", () => {
+  assert.equal(
+    keptSharedLink("https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk?si=a1b2c3d4e5f6&utm_source=copy-link"),
+    "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk",
+  );
+  assert.equal(
+    keptSharedLink("https://podcasts.apple.com/gb/podcast/x/id1291423644?i=1000735123456&utm_medium=share"),
+    "https://podcasts.apple.com/gb/podcast/x/id1291423644?i=1000735123456",
+  );
+  assert.equal(keptSharedLink("spotify:episode:4rOoJ6Egrf8K2IrywzwOMk"), "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk");
 });
