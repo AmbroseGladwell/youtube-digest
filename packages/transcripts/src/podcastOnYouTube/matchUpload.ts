@@ -32,6 +32,14 @@ const titleWords = (title: string): string[] =>
 const lengthWithin = (episode: number | null, upload: number | null, slack: { seconds: number; share: number }): boolean =>
   episode !== null && upload !== null && Math.abs(episode - upload) <= Math.max(slack.seconds, slack.share * episode);
 
+// "Part 2" and "Part 1" share every word but one. A number on one side only is fine, since
+// shows drop the episode number on YouTube; a different number on each side is another episode.
+const numbersDisagree = (a: readonly string[], b: readonly string[]): boolean => {
+  const numbersOf = (words: readonly string[]) => new Set(words.filter((word) => /^\d+$/.test(word)));
+  const [left, right] = [numbersOf(a), numbersOf(b)];
+  return [...left].some((number) => !right.has(number)) && [...right].some((number) => !left.has(number));
+};
+
 // The episode's title, nearly word for word, on an upload of nearly its length. A clip has the
 // title and not the length, so it is never taken for the episode.
 export function titleMatch(episode: EpisodeToFind, uploads: readonly ListedUpload[]): ListedUpload | null {
@@ -39,12 +47,20 @@ export function titleMatch(episode: EpisodeToFind, uploads: readonly ListedUploa
   if (words.length < 2) return null;
   return (
     uploads.find((upload) => {
-      const uploadWords = new Set(titleWords(upload.title));
-      const shared = words.filter((word) => uploadWords.has(word)).length / words.length;
-      return shared >= TITLE_WORDS_SHARED && lengthWithin(episode.durationSeconds, upload.lengthSeconds, TITLE_LENGTH_SLACK);
+      const uploadWords = titleWords(upload.title);
+      const uploadSet = new Set(uploadWords);
+      const shared = words.filter((word) => uploadSet.has(word)).length / words.length;
+      return (
+        shared >= TITLE_WORDS_SHARED &&
+        !numbersDisagree(words, uploadWords) &&
+        lengthWithin(episode.durationSeconds, upload.lengthSeconds, TITLE_LENGTH_SLACK)
+      );
     }) ?? null
   );
 }
+
+export const retitledLengthMatches = (episode: EpisodeToFind, uploadSeconds: number | null): boolean =>
+  lengthWithin(episode.durationSeconds, uploadSeconds, CANDIDATE_LENGTH_SLACK);
 
 export const daysAgo = (iso: string, now: Date): number => (now.getTime() - Date.parse(iso)) / DAY_MS;
 

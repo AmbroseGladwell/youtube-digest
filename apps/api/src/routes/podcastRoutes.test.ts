@@ -161,3 +161,16 @@ test("only an account can ask for a podcast transcript, and only for a feed addr
   assert.equal(notAFeed.statusCode, 400);
   await testApp.close();
 });
+
+test("the YouTube rung is asked with a video id that looks like one, or for a search, never both", async () => {
+  const testApp = await appOverWeb(scriptedWeb({}));
+  const account = await makeAccount(testApp);
+  const episode = { feedUrl: EPISODE.feedUrl, guid: EPISODE.guid };
+  for (const body of [
+    { ...episode, youTubeVideoId: "not-an-id" },
+    { ...episode, youTubeVideoId: "VIDEO000001", searchYouTube: true },
+  ]) {
+    assert.equal((await account.inject({ method: "POST", url: "/api/podcasts/transcript", body })).statusCode, 400, JSON.stringify(body));
+  }
+  await testApp.close();
+});

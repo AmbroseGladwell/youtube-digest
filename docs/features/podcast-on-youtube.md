@@ -1,8 +1,9 @@
 # A podcast episode on YouTube
 
 Finding the same episode on the show's own YouTube channel, whose captions are free. Trello OV-106's
-third slice, 13 Nov 2026. This slice is the matching. Running it in the extension, falling back to
-our server, and remembering what was found are the next.
+third and fourth slices, 13 Nov 2026: the matching, then the rung that uses it, from the reader's
+extension to the shared cache. Nothing in the app calls it yet: the podcast note and its screens are
+the next slices.
 
 **Decided by the owner, 13 Nov 2026:** the matching runs **in the extension**, on the reader's own
 connection, as the free YouTube captions already do (`transcript-retrieval.md`). Only when that
@@ -19,6 +20,10 @@ a `YouTubeFetch`, so the same code runs in both places.
 | What is read from YouTube's pages | `channelsIn`, `uploadsIn`, `ageInDays` in `youTubeListings.ts` |
 | An episode's own words | `episodeKeywords`, `noteWords` in `noteWords.ts`; `PodcastEpisode.notesKeywords` |
 | The notes of the episodes beside it | `neighbourNotes` from `readFeedEpisode` in `apps/api` |
+| Checking a video someone else found | `confirmEpisodeOnYouTube` in `packages/transcripts` |
+| The reader's part of the rung | `podcastTranscript` in `packages/app-core/src/features/podcasts/api/` |
+| Our server's part | the YouTube step in `apps/api/src/podcasts/createPodcastTranscripts.ts` |
+| Any YouTube request through our address, then the proxy | `throughService`, `ServiceTranscripts.onYouTube` |
 
 ## How it finds the episode
 
@@ -26,7 +31,9 @@ a `YouTubeFetch`, so the same code runs in both places.
    three are tried.
 2. **By title, on each one's first page of uploads:** the episode's title nearly word for word
    (80% of its words) on an upload within 10% or 3 minutes of its length. A clip has the title and
-   not the length, so it is never taken for the episode.
+   not the length, so it is never taken for the episode. Titles whose numbers disagree are two
+   episodes: "Part 2" is not "Part 1", though every other word matches. A number on one side only
+   is fine, since shows drop the episode number on YouTube.
 3. **Further down the show's channel,** the first of the three whose name carries the show's
    (60% of its words), five more pages of 30, by title the same way.
 4. **By description, for an upload that was retitled:** shows often give the YouTube upload a
@@ -89,18 +96,80 @@ episodes each (the 2nd and 6th newest, 376 with a title):
 - **The control, on this code:** 150 episodes each searched under a different show's name (pairs
   sharing a word were skipped, so Pod Save America never stood in for Pod Save the World). **No
   match**, so no wrong one.
+- **Run again once titles with disagreeing numbers were ruled out:** still 43% (134 by title, 28 by
+  description). It corrected two title matches the first run had wrong: "It Could Happen Here
+  Weekly 256" had taken Weekly 251's video, and "NFL Week 9 Preview" Week 10's. The other changes
+  between runs were YouTube's listings moving on. One title match looks wrong by its YouTube title
+  and isn't: YouTube tries more than one title on some videos, and the listing showed the episode's
+  own title while the player showed another.
 - **The description matches checked by hand.** All 27 were read against their YouTube titles. The
   three whose titles didn't make it obvious (an HRC episode and two of Still Counting) were checked
   against the descriptions themselves, and each carries the episode's notes word for word.
 
+## The rung, from the reader to the shared cache
+
+Decided with the owner, 13 Nov 2026: what is kept is the **transcript**, under the episode's own key,
+so once one reader's episode is matched, nobody searches for it again. What one reader's extension
+found decides what every later reader is given, so our server checks it before anything is kept.
+
+### The reader's part
+
+`podcastTranscript` asks our server first (`POST /api/podcasts/transcript` with the feed and the
+guid): the shared cache, then the feed's own transcript (`podcast-transcripts.md`). Only when that
+answers `no-captions`:
+
+1. **With the extension,** it runs `findEpisodeOnYouTube` over the extension's `YouTubeFetch`, on
+   the reader's own connection, which costs us nothing. A video found is sent to our server
+   (`youTubeVideoId`) to be checked.
+2. **The extension looked and the episode isn't there:** `no-captions`. Our server isn't asked to
+   look again, since it would search the same way and find the same nothing.
+3. **YouTube turned the extension away, or there is no extension:** our server is asked to search
+   itself (`searchYouTube: true`).
+4. **Our server couldn't confirm the video:** the reader's extension fetches that video's
+   captions and the reader uses them, `keptForEveryone: false`. Nothing is kept for anyone else.
+   The extension's search had a runner-up to beat, so its pick is usually right; it just isn't
+   right enough to give other people.
+
+### Checking a match
+
+`confirmEpisodeOnYouTube` decides from **one** player response, against the episode as our server
+read it from the feed itself, never as the caller describes it: the title and length rule above,
+or the description holding 40% of the episode's own words, its exact date within three days, and a
+length within 3% or 90 seconds. There is no runner-up to lead, so the search's lead is the one rule
+taken on trust from whoever searched.
+
+Checked against real videos, 13 Nov 2026:
+
+| Case | Confirmed |
+|---|---|
+| The video the search found (15 by title, 15 by description) | 30 of 30 |
+| Another show's episode's video | 0 of 30 |
+| The same show's other episode's video (62 pairs) | 0 of 62, once titles with disagreeing numbers were ruled out. Before that, "Closing Up for the Season, Part 2" took Part 1's video |
+
+### Our server's part
+
+After the feed's own transcript, the ladder takes what the caller asked for: a video to check, a
+search, or nothing (then `no-captions`). Either way, every request goes the way server-side
+captions do: our own address first, then the residential proxy within the day's budget, with its
+bytes recorded against the account (`throughService`, `ServiceTranscripts.onYouTube`). The video's
+captions come from `ServiceTranscripts.resolve`, so they are the YouTube shared cache's when it has
+them, and fetched once under the video's own key otherwise, counted against the caller's daily
+cap like any server-side caption fetch. A copy goes into the shared cache under the episode's key.
+
+A video that doesn't pass is answered `422` with `failure: "no-captions"` and `match:
+"unconfirmed"`. The daily cap is a `429`, and a spent proxy budget a `422` with `budget-exhausted`, as
+`/service-transcripts` answers them. With server-side YouTube fetching switched off, the YouTube
+step answers `no-captions`.
+
+The log line says `via: "youtube"`, `matchedBy` (title or description) and `searchedBy`
+(extension or server), or the failure, whether the video was unconfirmed and what was asked.
+
 ## Next
 
-- **The extension rung:** the panel asks the extension to find the episode, then fetches that
-  video's captions by the existing path. They are shared under the YouTube video's own key, so
-  they are fetched once ever like any video's.
-- **Our server's fallback:** the same function over the service's `YouTubeFetch`, direct then
-  proxied, counted against its own daily budget.
-- **Remembering a match**, so the next reader skips the search. What our server matched can be
-  shared as it stands. What one reader's extension matched decides what other readers are given,
-  so it needs the same care the shared cache takes (two accounts agreeing, or our server
-  confirming), and is decided in that slice.
+- **The note:** a podcast note, a small fork of the video note, generated from whichever rung
+  answered.
+- **The screens,** after a design round, which call `podcastTranscript` with the extension's
+  `YouTubeFetch` in the panel and `null` on the web.
+- **The YouTube terms position** in `server-side-transcripts.md` covers fetching a video's captions
+  on a reader's behalf. Searching YouTube and reading a channel's pages from our server is new, and
+  is checked with the privacy policy before a reader can reach it.

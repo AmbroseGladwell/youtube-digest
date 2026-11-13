@@ -25,8 +25,8 @@ comments.
 | Rung | Episodes | Built |
 |---|---|---|
 | The feed's transcript tag | 6% | here |
-| The same episode on the show's YouTube channel, by title and length | 34% | next |
-| The same, confirmed by the YouTube description when the upload was retitled | +9% | next |
+| The same episode on the show's YouTube channel, by title and length | 34% | `podcast-on-youtube.md` |
+| The same, confirmed by the YouTube description when the upload was retitled | +9% | `podcast-on-youtube.md` |
 | **Every free route** | **about 47%** | |
 | Speech to text on the audio | the rest | after the owner's call |
 
