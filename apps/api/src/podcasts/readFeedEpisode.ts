@@ -20,7 +20,11 @@ export interface FeedShow {
   imageUrl: string | null;
 }
 
-export type FeedEpisode = { show: FeedShow; item: FeedItem | null; itemsRead: number };
+// The notes of the episodes beside the wanted one, newest first, which say what the show repeats
+// in every episode (docs/features/podcast-on-youtube.md, "An episode's own words").
+export type FeedEpisode = { show: FeedShow; item: FeedItem | null; itemsRead: number; neighbourNotes: string[] };
+
+const NEIGHBOURS = 10;
 
 const webUrl = (value: string | undefined): string | null => {
   if (value === undefined) return null;
@@ -61,13 +65,15 @@ const emptyItem = (): FeedItem => ({
   chaptersUrl: null,
 });
 
-// Reads a feed as it arrives and stops at the first item that is wanted, since feeds run to
-// tens of megabytes and list the newest first (docs/features/podcast-links.md).
+// Reads a feed as it arrives and stops soon after the first item that is wanted, since feeds run
+// to tens of megabytes and list the newest first (docs/features/podcast-links.md).
 export async function readFeedEpisode(chunks: AsyncIterable<string>, isWanted: (item: FeedItem) => boolean): Promise<FeedEpisode> {
   const show: FeedShow = { title: null, imageUrl: null };
   let item: FeedItem | null = null;
   let found: FeedItem | null = null;
+  let done = false;
   let itemsRead = 0;
+  const neighbourNotes: string[] = [];
   let text = "";
   let notesHtml = "";
   const open: string[] = [];
@@ -117,6 +123,12 @@ export async function readFeedEpisode(chunks: AsyncIterable<string>, isWanted: (
           if (notesHtml !== "") item.notes = htmlToText(notesHtml);
           if (found === null && isWanted(item)) {
             found = item;
+          } else {
+            neighbourNotes.push(item.notes);
+            if (found === null && neighbourNotes.length > NEIGHBOURS) neighbourNotes.shift();
+          }
+          if (found !== null && neighbourNotes.length >= NEIGHBOURS) {
+            done = true;
             parser.pause();
           }
           item = null;
@@ -137,8 +149,8 @@ export async function readFeedEpisode(chunks: AsyncIterable<string>, isWanted: (
 
   for await (const chunk of chunks) {
     parser.write(chunk);
-    if (found !== null) break;
+    if (done) break;
   }
-  if (found === null) parser.end();
-  return { show, item: found, itemsRead };
+  if (!done) parser.end();
+  return { show, item: found, itemsRead, neighbourNotes: found === null ? [] : neighbourNotes };
 }

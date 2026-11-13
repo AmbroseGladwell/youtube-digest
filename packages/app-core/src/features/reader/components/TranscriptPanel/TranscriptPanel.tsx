@@ -17,6 +17,7 @@ import { useTranscriptSearch, type TranscriptSearch } from "./useTranscriptSearc
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
 import styles from "./TranscriptPanel.module.scss";
 import { transcriptPanelTestIds } from "./TranscriptPanelTestIds.js";
+import { timedNoun } from "../../util/timedSource.js";
 
 const SKELETON_ROWS = 4;
 const COPIED_MS = 2000;
@@ -205,6 +206,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
 
       {unreadable ?? (
         <TranscriptRows
+          noun={timedNoun(video)}
           blocks={blocks}
           search={search}
           follow={follow}
@@ -222,7 +224,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
       {follow.offered && (
         <button type="button" className={styles.followButton} onClick={followPlayback} data-testid={transcriptPanelTestIds.followButton}>
           <span className={styles.followButtonMark} aria-hidden="true" />
-          {currentBlock === null ? "Back to the video" : `Back to ${formatTimestamp(currentBlock.startMs)}`}
+          {currentBlock === null ? `Back to the ${timedNoun(video)}` : `Back to ${formatTimestamp(currentBlock.startMs)}`}
         </button>
       )}
     </div>
@@ -267,6 +269,7 @@ interface TranscriptRowsProps {
   follow: FollowPlayback;
   position: ReadingPosition;
   seek: ((positionMs: number) => void) | null;
+  noun: "video" | "episode";
   targetRun: ChapterBlockRun | null;
   openedFrom: OpenedFromChapter | null;
   openedFromStep: number | null;
@@ -275,7 +278,18 @@ interface TranscriptRowsProps {
 
 const chapterNumber = (number: number) => String(number).padStart(2, "0");
 
-function TranscriptRows({ blocks, search, follow, position, seek, targetRun, openedFrom, openedFromStep, head }: TranscriptRowsProps) {
+function TranscriptRows({
+  blocks,
+  search,
+  follow,
+  position,
+  seek,
+  noun,
+  targetRun,
+  openedFrom,
+  openedFromStep,
+  head,
+}: TranscriptRowsProps) {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
   const analytics = useOverviewPageAnalytics();
@@ -326,7 +340,7 @@ function TranscriptRows({ blocks, search, follow, position, seek, targetRun, ope
                   analytics.transcript.timestampChosen({ by: "skip" });
                   seek(block.startMs);
                 }}
-                aria-label={`Play the video from ${formatTimestamp(block.startMs)}`}
+                aria-label={`Play the ${noun} from ${formatTimestamp(block.startMs)}`}
                 data-testid={transcriptPanelTestIds.rowTime}
               >
                 {formatTimestamp(block.startMs)}

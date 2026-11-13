@@ -1,5 +1,13 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { recipeStepGroups, sourceName, type MethodAmount, type RecipeAction, type RecipeNote, type Source } from "@overview/domain";
+import {
+  recipeStepGroups,
+  sourceName,
+  sourceUrl,
+  type MethodAmount,
+  type RecipeAction,
+  type RecipeNote,
+  type Source,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { OvenText } from "../OvenText/OvenText.js";
 import { RecipeLineChoice } from "./RecipeLineChoice.js";
@@ -123,7 +131,13 @@ export function RecipeMethod({
           <p className={styles.away}>
             The method is in {author === null ? "the author’s" : `${author}’s`} own words, so it stays on {from}.
           </p>
-          <a className={styles.onThePage} href={source.url} target="_blank" rel="noopener" data-testid={recipeMethodTestIds.onThePage}>
+          <a
+            className={styles.onThePage}
+            href={sourceUrl(source)}
+            target="_blank"
+            rel="noopener"
+            data-testid={recipeMethodTestIds.onThePage}
+          >
             See the method on {from}
             <StrokeIcon name="openOut" size={13} />
           </a>

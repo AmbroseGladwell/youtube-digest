@@ -1,6 +1,7 @@
 import { domainOf, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY } from "@overview/domain";
 import type { ReaderPlace } from "../../newOverview/util/pastedLinkFailureCopy.js";
 import type { OnboardingFailure } from "./onboardingFailureOf.js";
+import { podcastLinkFailureCopy } from "../../newOverview/util/podcastLinkFailureCopy.js";
 
 export interface OnboardingFailureCopy {
   title: string;
@@ -9,6 +10,8 @@ export interface OnboardingFailureCopy {
   // Out of reads, only a video link is worth asking for: it uses none.
   videoOnly: boolean;
   extension: string | null;
+  // Where Transcribe it will go once speech-to-text exists (design 106i).
+  comingSoon: boolean;
 }
 
 const failed = (title: string, body: string, more: Partial<OnboardingFailureCopy> = {}): OnboardingFailureCopy => ({
@@ -17,6 +20,7 @@ const failed = (title: string, body: string, more: Partial<OnboardingFailureCopy
   tryAgain: false,
   videoOnly: false,
   extension: null,
+  comingSoon: false,
   ...more,
 });
 
@@ -49,6 +53,17 @@ export function onboardingFailureCopy(failure: OnboardingFailure, link: string, 
       return failed("We couldn't read that page", "Something went wrong reading it. Try again in a moment, or use another link.", {
         tryAgain: true,
       });
+    case "podcastRead": {
+      // The foot says the free overview is untouched, so the line the dialog ends on goes.
+      const copy = podcastLinkFailureCopy(failure.reason, failure.showName);
+      return failed(copy.title, copy.body.replace(/ No overview was used\.$/, ""), { tryAgain: copy.way === "tryAgain" });
+    }
+    case "podcastNoTranscript":
+      return failed(
+        "There’s no transcript for this episode yet",
+        "We found the episode, but we couldn’t find a transcript for it, and an overview is written from the words. Many episodes don’t have one yet. Have it on YouTube? Paste that link instead.",
+        { comingSoon: true },
+      );
     case "read":
       break;
   }

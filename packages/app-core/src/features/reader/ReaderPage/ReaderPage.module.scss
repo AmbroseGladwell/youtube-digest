@@ -115,3 +115,12 @@
   color: var(--muted);
   font-size: 0.8125rem;
 }
+
+// Design 106p: the episode's strip under the head, in the reading column.
+.episode {
+  width: 100%;
+  max-width: calc(var(--reader-column) + 2 * var(--reader-gutter));
+  margin: 0 auto;
+  padding: 1rem var(--reader-gutter) 0.25rem;
+  box-sizing: border-box;
+}
