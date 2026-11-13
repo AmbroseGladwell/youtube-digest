@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { sourceKey, type SharedOverview, type ShareToken, type SourceKey } from "@overview/domain";
+import { sourceKey, sourceUrl, type SharedOverview, type ShareToken, type SourceKey } from "@overview/domain";
 import { onboardingTabId } from "./onboardingTab.js";
 import {
   isOnboardingProgressKey,
@@ -64,7 +64,7 @@ export function startOnboarding(link: string, key: SourceKey | null, tabId: numb
 // the copy as its overview: already made, so there is nothing to wait for and no video to check.
 export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOverview, sample = false): void {
   writeProgress({
-    link: snapshot.note.source.url,
+    link: sourceUrl(snapshot.note.source),
     sourceKey: sourceKey(snapshot.note.source),
     tabId: null,
     step: "analytics",

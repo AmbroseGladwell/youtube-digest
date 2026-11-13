@@ -6,6 +6,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./DubiousReasonsPanel.module.scss";
 import { dubiousReasonsPanelTestIds } from "./DubiousReasonsPanelTestIds.js";
+import { timedNoun } from "../../util/timedSource.js";
 
 export const DUBIOUS_REASONS_PANEL_ID = "DubiousReasonsPanel";
 const HEADING_ID = "DubiousReasonsPanel-heading";
@@ -109,7 +110,7 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
                           analytics.dubiousReasons.momentFollowed({ by: "skip" });
                           seek(dubiousClaim.startMs!);
                         }}
-                        aria-label={`Skip the video to ${formatTimestamp(dubiousClaim.startMs)}`}
+                        aria-label={`Skip the ${timedNoun(video)} to ${formatTimestamp(dubiousClaim.startMs)}`}
                         data-testid={dubiousReasonsPanelTestIds.skipButton}
                       >
                         <StrokeIcon name="skipForward" size={14} />

@@ -264,7 +264,8 @@ const getTranscript = mcpTool({
     if (!transcript.success) {
       return toolError("No transcript is kept for this video.");
     }
-    const text = transcriptPlainText(source, transcriptBlocks(transcript.data.segments));
+    const head = source.kind === "podcast" ? { title: source.title, channel: source.showName, url: source.sharedFrom } : source;
+    const text = transcriptPlainText(head, transcriptBlocks(transcript.data.segments));
     return {
       text: transcript.data.generated
         ? `Machine-transcribed: the video had no captions of its own, so some words may be misheard.\n\n${text}`

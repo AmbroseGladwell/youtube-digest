@@ -3,7 +3,11 @@ import type { Overview } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
-import { useRunArticleGeneration, useRunOverviewGeneration } from "../newOverview/useRunOverviewGeneration.js";
+import { useRunArticleGeneration, useRunOverviewGeneration, useRunPodcastGeneration } from "../newOverview/useRunOverviewGeneration.js";
+import { createFetchPodcastApi } from "@overview/sync";
+import { createTrialPodcastApi } from "../signedOutTrial/api/createTrialPodcastApi.js";
+import { useSyncConnection } from "../sync/useSyncConnection.js";
+import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { useArticlePages } from "../../app/ArticlePagesContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
 import { useOpenLibrary } from "../../stores/OpenLibraryContext.js";
@@ -54,6 +58,8 @@ export function useOnboardingRun({
   const { apiKeys } = useApiKeys();
   const runVideo = useRunOverviewGeneration(apiKeys);
   const runArticle = useRunArticleGeneration(apiKeys);
+  const runPodcast = useRunPodcastGeneration(apiKeys);
+  const { connection } = useSyncConnection();
   const knownApiUrl = useKnownApiUrl();
   const pages = useArticlePages();
   const analytics = useAnalytics();
@@ -70,8 +76,40 @@ export function useOnboardingRun({
     if (knownApiUrl === null) throw new Error("There's no server to read that link through.");
     return createTrialArticleApi({ baseUrl: knownApiUrl }).read(url);
   };
-  const latest = useRef({ source, runVideo, runArticle, readArticle, onFound, onMade, analytics, shown, shownAccountId, openLibrary });
-  latest.current = { source, runVideo, runArticle, readArticle, onFound, onMade, analytics, shown, shownAccountId, openLibrary };
+  const readPodcast = async (url: string) => {
+    if (knownApiUrl === null) throw new Error("There's no server to read that link through.");
+    return libraryAccountIdOf(connection) !== null
+      ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token }).read(url)
+      : createTrialPodcastApi({ baseUrl: knownApiUrl }).read(url);
+  };
+  const latest = useRef({
+    source,
+    runVideo,
+    runArticle,
+    runPodcast,
+    readArticle,
+    readPodcast,
+    onFound,
+    onMade,
+    analytics,
+    shown,
+    shownAccountId,
+    openLibrary,
+  });
+  latest.current = {
+    source,
+    runVideo,
+    runArticle,
+    runPodcast,
+    readArticle,
+    readPodcast,
+    onFound,
+    onMade,
+    analytics,
+    shown,
+    shownAccountId,
+    openLibrary,
+  };
   const mayWriteNow = useRef(mayWrite);
   const releaseWriting = useRef<(() => void) | null>(null);
 
@@ -102,6 +140,8 @@ export function useOnboardingRun({
       video: (url, options) => latest.current.runVideo(url, options, stores),
       article: (read, options) => latest.current.runArticle(read, options, stores),
       readArticle: (url) => latest.current.readArticle(url),
+      podcast: (request, options) => latest.current.runPodcast(request, options, stores),
+      readPodcast: (url) => latest.current.readPodcast(url),
     });
 
     library()

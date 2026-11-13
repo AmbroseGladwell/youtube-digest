@@ -7,6 +7,7 @@ import {
   type CaptureTranscriptSource,
   type ClientTimingReport,
   type Overview,
+  podcastPlatform,
 } from "@overview/domain";
 import { headedParts, offeredLinks } from "@overview/generation";
 import { useStores } from "../../stores/StoresContext.js";
@@ -27,6 +28,7 @@ import { runErrorOf } from "./util/runErrorOf.js";
 import { extractYouTubeVideoId } from "./util/parseYouTubeUrl.js";
 import type { AlreadyHeld } from "./types/AlreadyHeld.js";
 import type { ArticleRun, NewOverviewRun } from "./types/NewOverviewRun.js";
+import type { PodcastRunRequest } from "./api/generationPipeline.js";
 
 export interface StartOverviewRunOptions {
   from: CaptureEntry;
@@ -62,6 +64,7 @@ export interface NewOverviewRunController {
   close: () => void;
   start: (url: string, options: StartOverviewRunOptions) => void;
   startArticle: (request: ArticleRunRequest) => void;
+  startPodcast: (request: PodcastRunRequest & StartOverviewRunOptions) => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -119,7 +122,13 @@ export function useNewOverviewRun(): NewOverviewRunController {
   // The callbacks are stable because the status strip's self-dismiss timer depends on
   // them: a fresh identity every render would restart the countdown on every re-render.
   const generate = useCallback(
-    (url: string, options: StartOverviewRunOptions, runId: number, articleRequest: ArticleRunRequest | null = null) => {
+    (
+      url: string,
+      options: StartOverviewRunOptions,
+      runId: number,
+      articleRequest: ArticleRunRequest | null = null,
+      podcastRequest: PodcastRunRequest | null = null,
+    ) => {
       const isCurrent = () => runIdRef.current === runId;
       const { from } = options;
       const startedAt = Date.now();
@@ -161,6 +170,17 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 regenerating: options.overviewId !== undefined,
                 failure: null,
               },
+        podcast:
+          podcastRequest === null
+            ? null
+            : {
+                show: podcastRequest.episode.showName,
+                title: podcastRequest.episode.title,
+                platform: podcastPlatform(podcastRequest.sharedFrom),
+                durationSeconds: podcastRequest.episode.durationSeconds,
+                imageUrl: podcastRequest.episode.imageUrl,
+                words: null,
+              },
         transcriptWords: null,
         overview: null,
         error: null,
@@ -168,15 +188,17 @@ export function useNewOverviewRun(): NewOverviewRunController {
       });
 
       const what =
-        articleRequest === null
-          ? { url }
-          : {
-              readArticle: async (): Promise<ArticleRead> => {
-                const allowed = await articleRequest.access;
-                updateArticle({ asking: false });
-                return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
-              },
-            };
+        podcastRequest !== null
+          ? { podcast: podcastRequest }
+          : articleRequest === null
+            ? { url }
+            : {
+                readArticle: async (): Promise<ArticleRead> => {
+                  const allowed = await articleRequest.access;
+                  updateArticle({ asking: false });
+                  return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
+                },
+              };
 
       mutate(
         {
@@ -188,6 +210,15 @@ export function useNewOverviewRun(): NewOverviewRunController {
             sourceWords = progress.transcriptWords;
             if (isCurrent()) {
               setRun((current) => (current === null ? null : { ...current, ...progress }));
+            }
+          },
+          onEpisodeWords: (words) => {
+            transcriptSource = "podcast";
+            sourceWords = words;
+            if (isCurrent()) {
+              setRun((current) =>
+                current?.podcast == null ? current : { ...current, transcriptWords: words, podcast: { ...current.podcast, words } },
+              );
             }
           },
           onArticleRead: (article) => {
@@ -291,6 +322,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                       error: runErrorOf(
                         error,
                         articleRequest?.fetched === true ? { url, regenerating: options.overviewId !== undefined } : null,
+                        podcastRequest !== null,
                       ),
                       finishedAt: Date.now(),
                     },
@@ -326,6 +358,15 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const runId = (runIdRef.current += 1);
       setHeld(null);
       generate(request.url, request, runId, request);
+    },
+    [generate],
+  );
+
+  const startPodcast = useCallback(
+    (request: PodcastRunRequest & StartOverviewRunOptions) => {
+      const runId = (runIdRef.current += 1);
+      setHeld(null);
+      generate(request.sharedFrom, request, runId, null, { episode: request.episode, sharedFrom: request.sharedFrom });
     },
     [generate],
   );
@@ -376,6 +417,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
     close,
     start,
     startArticle,
+    startPodcast,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

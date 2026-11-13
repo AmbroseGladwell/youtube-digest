@@ -63,16 +63,15 @@ matches, so the video prompts are byte for byte as they were. The one shared cha
 check's correction message, takes its noun as a parameter defaulting to "video", with the same text.
 A deliberate change to the video prompt updates the fingerprints, in a PR that says so.
 
-## Not joined to `Source` yet
+## Joined to `Source` with the screens
 
 Decided with the owner, 13 Nov 2026: `PodcastSource` joins the `Source` union **with the screens**,
-after the design round and the `/privacy` and terms update, and not here. A kind in `Source` is one
-readers can reach. Onboarding's table must have a real entry for every kind ("a kind joining Source
-can't ship until it has an entry"), and the library, the reader and the share page must handle it.
-Until then a podcast note is a `PodcastOverview`: an `Overview` with the episode as its source. On
-joining, that becomes an `Overview` like any other, and the compiler names every place that assumed
-a video or an article. A trial join on this branch named 29, chiefly code reading `source.url`.
-Those want a `sourceUrl` helper. Where a moment in an episode goes is the next section.
+after the design round, rather than with the note. A kind in `Source` is one readers can reach.
+Onboarding's table must have a real entry for every kind ("a kind joining Source can't ship until it
+has an entry"), and the library, the reader and the share page must handle it. It joined in the
+screens' first PR (`podcast-screens.md`), where the compiler named 30 places that assumed a video or
+an article, chiefly code reading `source.url`; they read `sourceUrl` now. A podcast note from
+generation is still typed `PodcastOverview`, an `Overview` known to be of an episode.
 
 ## Times and the episode's audio
 

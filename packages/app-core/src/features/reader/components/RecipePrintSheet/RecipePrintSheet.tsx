@@ -5,6 +5,7 @@ import {
   recipeFigures,
   recipeFiguresLine,
   recipeStepGroups,
+  sourceUrl,
   stepMoment,
   type AdjustedIngredient,
   type IngredientPiece,
@@ -76,7 +77,7 @@ export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, a
       )}
       <h1 className={styles.title}>{source.title}</h1>
       <p className={styles.source}>
-        {from} · {source.url.replace(/^https?:\/\/(www\.)?/, "")}
+        {from} · {sourceUrl(source).replace(/^https?:\/\/(www\.)?/, "")}
         {figures.length > 0 && (
           <>
             <br />
@@ -105,7 +106,7 @@ export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, a
           <h2 className={styles.heading}>Method</h2>
           {recipe.steps.length === 0 ? (
             <p>
-              The method, {recipe.stepCount} steps, is on {from}: {source.url}
+              The method, {recipe.stepCount} steps, is on {from}: {sourceUrl(source)}
             </p>
           ) : (
             recipeStepGroups(recipe.steps).map(({ name, start, steps }) => (

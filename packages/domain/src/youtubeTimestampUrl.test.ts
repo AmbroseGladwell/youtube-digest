@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
+import { youtubeMomentUrl, youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 
 describe("youtubeTimestampUrl", () => {
   it("adds a bare-seconds t= param to a standard watch URL, matching YouTube's own share links", () => {
@@ -20,5 +20,15 @@ describe("youtubeTimestampUrl", () => {
 
   it("floors sub-second precision", () => {
     assert.equal(youtubeTimestampUrl("https://www.youtube.com/watch?v=abc123", 1_999), "https://www.youtube.com/watch?v=abc123&t=1");
+  });
+});
+
+describe("youtubeMomentUrl", () => {
+  it("links a moment on YouTube", () => {
+    assert.equal(youtubeMomentUrl("https://www.youtube.com/watch?v=abc123", 135_000), "https://www.youtube.com/watch?v=abc123&t=135");
+  });
+
+  it("gives an episode's moment no link, since a time on Spotify would land wherever that listen's ads put it", () => {
+    assert.equal(youtubeMomentUrl("https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk", 135_000), null);
   });
 });

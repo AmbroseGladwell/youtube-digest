@@ -147,6 +147,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-13 | privacy | OV-106 | What we keep about a device without an account counts its podcast link reads beside its article reads, now that onboarding reads a podcast link on the trial. |
+| 2026-11-13 | privacy | OV-106 | Your library says an overview may be of a podcast episode, keeping its feed and audio addresses and the link the reader pasted without Spotify's sharer code, which a shared link shows. Transcripts and articles explains how our server reads a podcast link (the page, Apple's directory, the feed), where an episode's words come from (the shared cache, the show's own transcript, the show's YouTube channel, searched in the reader's browser with the extension) and that they join the shared cache with no account. Processors: YouTube also answers searches for an episode's video; playing an episode loads its audio from the show's host, which sees the request and the reader's address. |
 | 2026-11-12 | privacy | OV-203 | Your library says an article's overview may keep up to five of the links the page makes, with their words and a line on why each is worth opening; Transcripts and articles says so beside "never the article's text", and that they go with a shared link and to a connected assistant. |
 | 2026-11-12 | privacy | OV-285 | Transcripts and articles says our server also fetches an article when you regenerate its overview without the article open beside the extension; only an article the extension reads in your browser stays unseen. |
 | 2026-11-12 | privacy | OV-284 | The settings that travel with the account include the cooking timer sound. |

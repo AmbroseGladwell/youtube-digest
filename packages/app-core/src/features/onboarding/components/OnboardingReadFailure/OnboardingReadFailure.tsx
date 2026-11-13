@@ -47,6 +47,13 @@ export function OnboardingReadFailure({ copy, link, onTryAgain, onAnotherLink }:
         </button>
       )}
 
+      {copy.comingSoon && (
+        <p className={styles.comingSoon} data-testid={onboardingReadFailureTestIds.comingSoon}>
+          <StrokeIcon name="mic" size={14} />
+          Transcribing is coming soon
+        </p>
+      )}
+
       <form id={`${fieldId}-form`} className={styles.form} onSubmit={submit}>
         <label htmlFor={fieldId} className={styles.label}>
           {copy.videoOnly ? "Try a video link" : "Try another link"}

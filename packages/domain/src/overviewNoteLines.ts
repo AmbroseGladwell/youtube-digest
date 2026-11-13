@@ -10,7 +10,7 @@ import { spokenDuration } from "./spokenDuration.js";
 import { spokenMeasures } from "./spokenMeasures.js";
 import type { ReadAnyway } from "./ArticleDetails.js";
 import type { TimeRange, WatchAnswer, WatchAnyway } from "./WatchAnyway.js";
-import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
+import { LISTEN_ANYWAY_LABEL, WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 
 export const SUMMARY_SECTION = "Summary";
 export const BIG_PICTURE_SECTION = "Big picture";
@@ -18,6 +18,8 @@ export const KEY_POINTS_SECTION = "Key points";
 export const SOURCE_STEPS_SECTION = "The steps it gives";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
+// The same section on an episode, in its words (docs/features/podcast-notes.md).
+export const LISTEN_ANYWAY_HEADING = "Listen to it anyway?";
 export const READ_ANYWAY_SECTION = "Read it anyway?";
 export const RESOURCES_SECTION = "Resources it points to";
 export const INGREDIENTS_SECTION = "Ingredients";
@@ -76,16 +78,17 @@ const flaggedAloud = (reason: string) => ` The note flags this step as doubtful:
 const keyPointsHeading = (count: number) =>
   count >= 2 && count < COUNT_NAME.length ? `There are ${COUNT_NAME[count]} key points` : "The key points";
 
-const spokenWatchAnswer = ({ answer, range }: WatchAnyway) => {
+const spokenWatchAnswer = ({ answer, range }: WatchAnyway, episode: boolean) => {
+  const verb = episode ? "listening to" : "watching";
   if (answer === "yes") {
-    return "Yes, it's worth watching.";
+    return `Yes, it's worth ${verb}.`;
   }
   if (answer === "no") {
-    return "No, you can probably skip the video, the overview covers it.";
+    return `No, you can probably skip the ${episode ? "episode" : "video"}, the overview covers it.`;
   }
   return range === null
-    ? "Yes, it's worth watching one part."
-    : `Yes, it's worth watching one part, from ${spokenDuration(range.startMs)} to ${spokenDuration(range.endMs)}.`;
+    ? `Yes, it's worth ${verb} one part.`
+    : `Yes, it's worth ${verb} one part, from ${spokenDuration(range.startMs)} to ${spokenDuration(range.endMs)}.`;
 };
 
 const READ_ANYWAY_LABEL: Record<WatchAnswer, string> = { no: "No", yes: "Yes", partial: "Just part of it" };
@@ -193,7 +196,7 @@ export function overviewNoteLines(
     ),
     true,
   );
-  const sourceWord = overview.source.kind === "youtube" ? "video" : "article";
+  const sourceWord = { youtube: "video", web: "article", podcast: "episode" }[overview.source.kind];
   const steps = shown.steps === false ? [] : (overview.sourceSteps?.items ?? []);
   section(
     SOURCE_STEPS_SECTION,
@@ -228,10 +231,17 @@ export function overviewNoteLines(
 
   if (overview.watchAnyway) {
     const { watchAnyway } = overview;
-    section(WATCH_ANYWAY_SECTION, { text: WATCH_ANYWAY_SECTION, spoken: "Should you watch it anyway?" }, [
+    const heading =
+      overview.source.kind === "podcast"
+        ? { text: LISTEN_ANYWAY_HEADING, spoken: "Should you listen to it anyway?" }
+        : { text: WATCH_ANYWAY_SECTION, spoken: "Should you watch it anyway?" };
+    section(WATCH_ANYWAY_SECTION, heading, [
       {
-        ...withRange({ text: `${WATCH_ANYWAY_LABEL[watchAnyway.answer]}. ${watchAnyway.reason}`.trim(), range: watchAnyway.range }),
-        spoken: `${spokenWatchAnswer(watchAnyway)} ${watchAnyway.reason}`.trim(),
+        ...withRange({
+          text: `${(overview.source.kind === "podcast" ? LISTEN_ANYWAY_LABEL : WATCH_ANYWAY_LABEL)[watchAnyway.answer]}. ${watchAnyway.reason}`.trim(),
+          range: watchAnyway.range,
+        }),
+        spoken: `${spokenWatchAnswer(watchAnyway, overview.source.kind === "podcast")} ${watchAnyway.reason}`.trim(),
       },
     ]);
   }

@@ -148,6 +148,9 @@ Five folders, five different questions.
 - `podcast-notes.md` — a podcast episode's note: the video note in a podcast's words, Listen to it
   anyway forked, no recipe note, videos held unchanged by a golden test, and why the kind joins
   `Source` only with the screens.
+- `podcast-screens.md` — what a reader sees of an episode: the way out to the link they shared, the
+  head's square art, the Podcast chip, and the episode's own player in the note, which every time
+  jumps, with the line that says a jump may land early.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
 - `article-resources.md` — the links an article makes: which extraction keeps, how the model

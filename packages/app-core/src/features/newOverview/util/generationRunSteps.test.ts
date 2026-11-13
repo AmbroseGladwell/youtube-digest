@@ -74,3 +74,30 @@ describe("generationRunSteps", () => {
     expect(steps.every((step) => step.state === "done")).toBe(true);
   });
 });
+
+describe("an episode's steps", () => {
+  const podcast = {
+    show: "The Diary Of A CEO",
+    title: "An episode",
+    platform: "spotify" as const,
+    durationSeconds: 6948,
+    imageUrl: null,
+    words: null,
+  };
+
+  it("has looking for a transcript as a stage of its own, after the episode is found", () => {
+    const steps = generationRunSteps(makeNewOverviewRun({ podcast }));
+    expect(steps.map(({ label, state }) => [label, state])).toEqual([
+      ["Finding the episode", "done"],
+      ["Looking for a transcript", "running"],
+      ["Writing the overview", "waiting"],
+    ]);
+    expect(steps[0]!.detail).toBe("1 hr 56 min");
+  });
+
+  it("says how many words were found, never where", () => {
+    const steps = generationRunSteps(makeNewOverviewRun({ podcast: { ...podcast, words: 21_480 }, transcriptWords: 21_480 }));
+    expect(steps[1]).toMatchObject({ state: "done", detail: "Found · 21,480 words" });
+    expect(steps[2]!.state).toBe("running");
+  });
+});

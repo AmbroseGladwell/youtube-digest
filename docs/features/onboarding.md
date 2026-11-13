@@ -123,7 +123,17 @@ accounts. Signed out, the device's trial token reads it: 5 links a token (`TRIAL
 15 a UTC day per address across every token, apart from the trial's one overview. A read is
 counted whether or not the page could be read, since fetching it is the cost; it never spends
 the overview, so a wrong paste, a paywall or a front page doesn't use up a reader's only try
-(decided 3 Nov 2026). Podcasts and reels join the table when they ship.
+(decided 3 Nov 2026). Reels join the table when they ship.
+
+**A podcast episode** (OV-106) is an Apple Podcasts or Spotify link; a show's own episode page is
+left to the web entry, which reads it as a page. Reading the link spends one of the trial's reads,
+as an article's does (`reserveTrialRead`, shared by both routes). The episode's words are then found
+on the same token while it hasn't made its overview, and only then does the card show, "Is this the
+right episode?", as a video's transcript is fetched before its card does. So an episode with no
+words stops at the confirm step (106i): what happened, that it's common, "Transcribing is coming
+soon", and a field for another link, with the free overview unused. A link our server can't use
+gets that reason's words at the same step (`podcastLinkFailureCopy`), without "No overview was
+used.", since the foot says the free overview hasn't been.
 
 **The progress** keeps the link given and, once known, the source's key: the video's id from
 the link or the playlist video chosen, or the article's once it has been read. Progress kept
