@@ -89,6 +89,6 @@ export const createProject = mcpTool({
       ...(adding.length === 0 ? [] : [`Added ${adding.length} overview(s):`, ...adding.map((id) => `- **${titles.get(id)}**`)]),
       ...(missing.length === 0 ? [] : [`Not in this library, so not added: ${missing.join(", ")}.`]),
     ];
-    return { text: lines.join("\n"), overviews: adding.length };
+    return { text: lines.join("\n"), overviews: adding.length, project: { id: project.id, hasPurpose: project.purpose !== null } };
   },
 });

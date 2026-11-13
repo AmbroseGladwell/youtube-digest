@@ -31,6 +31,10 @@ export const getProject = mcpTool({
       ...(page.next === null ? [] : [`More remain: call again with cursor "${page.next}".`]),
     ];
     const text = projectMarkdown(project, items, { from: page.first, count: PROJECT_PAGE_SIZE });
-    return { text: [text.trim(), ...footer].join("\n\n"), overviews: page.items.length };
+    return {
+      text: [text.trim(), ...footer].join("\n\n"),
+      overviews: page.items.length,
+      project: { id: project.id, hasPurpose: project.purpose !== null },
+    };
   },
 });

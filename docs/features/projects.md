@@ -165,7 +165,20 @@ with two or three projects that have purpose lines:
 
 The result is recorded on the card.
 
+## Measures
+
+The card names two measures this feature exists to produce. Both are counts and ids, never a
+name or a purpose.
+
+- **Is a project with a purpose read over MCP more than one without?** Every `get_project`
+  and `create_project` call's `mcp tool called` line carries `projectId` and
+  `projectHasPurpose`. Reads per project, split by whether it has a purpose, answer it.
+  These are logs rather than analytics events, since an assistant's call is not something the
+  reader did in the app (`mcp-connector.md`, "Logging").
+- **How often does the reader take out what an assistant added?** That is a reader's act in
+  the app, so it is an analytics event, and it comes with the screens in step 4.
+
 ## Not yet built
 
 Moving a no-account library's projects into an account (step 4 decides whether one can exist),
-analytics events, and every screen.
+the reader's analytics events, and every screen.

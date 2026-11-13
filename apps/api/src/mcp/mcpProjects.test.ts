@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { CURRENT_SCHEMA_VERSIONS, projectMemberId } from "@overview/domain";
 import { makeProject } from "@overview/store-conformance";
+import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { sampleLibrary, type SampleLibrary } from "../testing/sampleLibrary.testHelper.js";
 import { storedOverview, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
@@ -305,5 +306,35 @@ test("the server's instructions point at projects, and project_brief asks for th
   assert.match(text, /get_project/);
   assert.match(text, /get_overviews \(project: "Kitchen renovation"\)/);
   assert.match(text, /If it has no purpose, ask me what it is for first/);
+  await testApp.close();
+});
+
+test("reading or making one project logs its id and whether it has a purpose, and never its name or purpose", async () => {
+  const { lines, logger } = recordingLogger();
+  const testApp = await createTestApp({}, { logger });
+  const reader = await makeAccount(testApp);
+  const client = await connectMcpClient(testApp, reader);
+  const withPurpose = await readerProject(reader);
+  const without = await readerProject(reader, { name: "Garden", purpose: null });
+
+  await client.callTool("get_project", { project: withPurpose.id });
+  await client.callTool("get_project", { project: without.id });
+  await client.callTool("create_project", { name: "Launching my app" });
+  await client.callTool("list_projects");
+
+  const called = lines.filter((line) => line.msg === "mcp tool called");
+  assert.deepEqual(
+    called.map(({ tool, projectId, projectHasPurpose }) => ({ tool, hasProject: projectId !== undefined, projectHasPurpose })),
+    [
+      { tool: "get_project", hasProject: true, projectHasPurpose: true },
+      { tool: "get_project", hasProject: true, projectHasPurpose: false },
+      { tool: "create_project", hasProject: true, projectHasPurpose: false },
+      { tool: "list_projects", hasProject: false, projectHasPurpose: undefined },
+    ],
+  );
+  assert.equal(called[0]!.projectId, withPurpose.id);
+  const logged = JSON.stringify(lines);
+  for (const secret of ["Kitchen renovation", "Choosing a layout", "Garden", "Launching my app"])
+    assert.ok(!logged.includes(secret), secret);
   await testApp.close();
 });

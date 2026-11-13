@@ -27,6 +27,9 @@ export interface McpToolOutcome {
   text: string;
   isError?: boolean;
   overviews?: number;
+  // The one project a call read or made, and whether it has a purpose, so the logs can say
+  // whether a purpose makes a project read more (docs/features/projects.md, "Measures").
+  project?: { id: string; hasPurpose: boolean };
 }
 
 // A tool that writes, or reads the profile, is offered only to a connection whose scope allows

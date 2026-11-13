@@ -115,6 +115,7 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
       apiLogLines.mcp.toolCalled({
         ...logged,
         overviews: outcome.overviews ?? null,
+        ...(outcome.project === undefined ? {} : { projectId: outcome.project.id, projectHasPurpose: outcome.project.hasPurpose }),
         failed: outcome.isError === true,
         durationMs: durationMs(),
       }),

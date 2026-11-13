@@ -414,8 +414,10 @@ token, code or verifier is ever logged.
 
 Every tool call is logged as `mcp tool called` with the connection's id, the assistant
 (`claude`, `chatgpt` or `other`, from the name it registered with by `mcpAssistant`, never
-the name itself), the tool's name, how many overviews it returned or marked (for the four that
-do), whether it failed, and how long it took. A mark also logs `record written` for each
+the name itself), the tool's name, how many overviews it returned or marked (for the tools that
+do), whether it failed, and how long it took. A call that reads or makes one project
+(`get_project`, `create_project`) adds the project's id and whether it has a purpose
+(`projectId`, `projectHasPurpose`), never its name or purpose (`projects.md`, "Measures"). A mark also logs `record written` for each
 state record it changed, as every write under `/api` does. These are logs, not analytics
 events: the reader didn't do anything in the app (`docs/architecture/analytics.md`,
 "Actions, not logs"). A tool that throws is logged at `error` as `mcp tool failed`, and the assistant is
