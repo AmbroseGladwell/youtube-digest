@@ -81,24 +81,27 @@ Asked for by the owner. Five chart episodes of 45 to 116 minutes, each the newes
 minutes or more in its feed with a transcript tag. Each was read and transcribed by the real feed
 reader and rungs, then sent through the harness's `runGeneration` with this prompt. The episodes:
 Diary of a CEO (an interview, 116 min), Behind the Bastards (a comic history, 85), Stuff You Should
-Know (an explainer, 47), My Favorite Murder (two stories, 63) and Page 94 (a panel, 45). Sol wrote all
-five notes and Sonnet 5.5 wrote two before the evals account's Anthropic credit ran out. The run is
-`.local/runs/ov-106-podcasts`.
+Know (an explainer, 47), My Favorite Murder (two stories, 63) and Page 94 (a panel, 45), each written
+by Sol and by Sonnet 5.5. The run is `.local/runs/ov-106-podcasts`.
 
 - **Every note assembled on its first attempt.** No video word was left in any note.
-- **Key points reach the end.** In all seven notes the last key point ends between 86% and 99% of
+- **Key points reach the end.** In all ten notes the last key point ends between 86% and 99% of
   the way through. The lowest is Sonnet on the interview (99 of 116 minutes), whose last 15 minutes
   are the guest's family. Chapters run to the close in every note.
-- **Listen to it anyway defaulted to no**, six notes out of seven, including the comic history and
+- **Listen to it anyway defaulted to no**, nine notes out of ten, including the comic history and
   the storytelling show, where the banter was judged personality rather than substance. The one
   partial was Sol on the interview: the guest's account of his father's decline, a reason the
   section allows ("a voice worth hearing for itself"). Sonnet said no to the same episode.
+- **Sol is the stricter fact-checker.** On the explainer it flagged three errors: 2.5 million
+  heartbeats in a lifetime where the hosts' own figures give about 2.6 billion, driving yourself to
+  hospital during a heart attack, and the ion line below. Sonnet flagged none. Sonnet also placed one
+  of that note's key points out of time order.
 - **The kind check called the interview a process episode** (both models), and its steps are the
   guest's prevention advice. The other four were default notes.
 - **Two of Sol's 44 key points came back unplaced** (the flat -1 range, shown without a time), as
-  a video's can.
+  a video's can. All 38 of Sonnet's were placed.
 - **Cost moves with length,** about $0.07 for a 45-minute episode to $0.14 for 116 minutes on Sol,
-  kind check included. Sonnet was about 10% dearer on the same two episodes.
+  kind check included. Sonnet was 5% to 14% dearer, episode for episode.
 - **Machine transcripts make dubious claims of their own.** Sol flagged "strip them into charged
   ions, which they shoot at the heart", which may be the transcript mishearing rather than the host
   misspeaking. Auto captions on a video carry the same risk.
