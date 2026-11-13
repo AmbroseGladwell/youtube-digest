@@ -104,9 +104,10 @@ streams.
 - **A transcript from YouTube (about 43% of episodes) is timed to that video,** so its moments play
   that video, which we already know. The YouTube player in the note, or a link out, is the design's
   to settle.
-- **A transcript from the feed (about 6%) has times that aren't played.** They're shown as text so a
-  reader can find their place, and the episode plays from its start. A confident jump to the wrong
-  place is worse than none.
+- **A transcript from the feed (about 6%) keeps its times, and they jump the episode's audio** as
+  any time in a note does, though they can land up to two minutes from the moment (the owner, 13 Nov
+  2026). In all five episodes above the served audio was longer than the transcript, which fits ads
+  added before a moment, so a jump would land at or before it. That wasn't checked against the words.
 
 ## Measured on five long episodes, 13 Nov 2026
 
