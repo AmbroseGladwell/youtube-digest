@@ -101,13 +101,27 @@ streams.
 - **The episode plays inside the note,** from its audio file. Playing it from our page needs no
   permission from the host, but the content security policy must allow media from any host, on the
   web and in the panel. Check that on a few real feeds before building.
-- **A transcript from YouTube (about 43% of episodes) is timed to that video,** so its moments play
-  that video, which we already know. The YouTube player in the note, or a link out, is the design's
-  to settle.
-- **A transcript from the feed (about 6%) keeps its times, and they jump the episode's audio** as
-  any time in a note does, though they can land up to two minutes from the moment (the owner, 13 Nov
-  2026). In all five episodes above the served audio was longer than the transcript, which fits ads
-  added before a moment, so a jump would land at or before it. That wasn't checked against the words.
+- **Every time jumps the episode's audio,** wherever the transcript came from. A reader who shared
+  a Spotify or Apple link is listening to a podcast, and where the words came from is ours to know,
+  not theirs (the owner, 13 Nov 2026). So a podcast note has one player and no YouTube player or
+  link, and its way out is the link the reader shared: Spotify, Apple, or the show's page.
+- **So times can land away from the moment, and that is accepted.** In all five episodes above the
+  served audio was longer than the transcript, which fits ads added before a moment, so a jump would
+  land at or before it. That wasn't checked against the words.
+
+A transcript from YouTube (about 43% of episodes) is timed to the video, which drifts the same way.
+Twelve matched episodes, one per show and 30 minutes or more, were downloaded once as a podcast app
+asks and compared with the matched video's length:
+
+| Served audio against the video | Episodes |
+|---|---|
+| Within 12 s | 5 (Ramsey, This American Life, The World and Everything In It, No Such Thing As A Fish, Bongino) |
+| 26 s to 3 min longer | 6 (Page 94, Joe Rogan, The Square Ball, Sword and Scale, Planet Money, Football Weekly) |
+| 7 min longer | 1 (Adam Carolla) |
+
+So a YouTube transcript is often exact against the audio, usually within three minutes, and
+occasionally further out, where the podcast carries more ads or a different cut than the video.
+Lengths only: where in the episode the difference sits wasn't checked.
 
 ## Measured on five long episodes, 13 Nov 2026
 
