@@ -2,8 +2,8 @@
 
 Finding the same episode on the show's own YouTube channel, whose captions are free. Trello OV-106's
 third and fourth slices, 13 Nov 2026: the matching, then the rung that uses it, from the reader's
-extension to the shared cache. Nothing in the app calls it yet: the podcast note and its screens are
-the next slices.
+extension to our server's check. Since OV-297, what is kept for everyone is which video is the
+episode, never its captions (`podcast-transcripts.md`, "Each reader's own copy").
 
 **Decided by the owner, 13 Nov 2026:** the matching runs **in the extension**, on the reader's own
 connection, as the free YouTube captions already do (`transcript-retrieval.md`). Only when that
@@ -106,16 +106,18 @@ episodes each (the 2nd and 6th newest, 376 with a title):
   three whose titles didn't make it obvious (an HRC episode and two of Still Counting) were checked
   against the descriptions themselves, and each carries the episode's notes word for word.
 
-## The rung, from the reader to the shared cache
+## The rung, from the reader to our server's check
 
-Decided with the owner, 13 Nov 2026: what is kept is the **transcript**, under the episode's own key,
-so once one reader's episode is matched, nobody searches for it again. What one reader's extension
-found decides what every later reader is given, so our server checks it before anything is kept.
+Decided with the owner, 13 Nov 2026, and changed by the terms review the same day (OV-297): what is
+kept is **which video is the episode**, under the episode's own key, so once one reader's episode is
+matched, nobody searches for it again; each reader's captions are fetched for them. What one
+reader's extension found decides where every later reader's words come from, so our server checks
+it before anything is kept.
 
 ### The reader's part
 
 `podcastTranscript` asks our server first (`POST /api/podcasts/transcript` with the feed and the
-guid): the shared cache, then the feed's own transcript (`podcast-transcripts.md`). Only when that
+guid): where the words were found before, then the feed's own transcript (`podcast-transcripts.md`). Only when that
 answers `no-captions`:
 
 1. **With the extension,** it runs `findEpisodeOnYouTube` over the extension's `YouTubeFetch`, on
@@ -154,7 +156,8 @@ captions do: our own address first, then the residential proxy within the day's 
 bytes recorded against the account (`throughService`, `ServiceTranscripts.onYouTube`). The video's
 captions come from `ServiceTranscripts.resolve`, so they are the YouTube shared cache's when it has
 them, and fetched once under the video's own key otherwise, counted against the caller's daily
-cap like any server-side caption fetch. A copy goes into the shared cache under the episode's key.
+cap like any server-side caption fetch. The video is remembered under the episode's key; its captions
+are not kept there.
 
 A video that doesn't pass is answered `422` with `failure: "no-captions"` and `match:
 "unconfirmed"`. The daily cap is a `429`, and a spent proxy budget a `422` with `budget-exhausted`, as

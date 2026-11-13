@@ -39,7 +39,7 @@ interface WayOut {
 }
 
 // The way back to the source, in its own words. An episode's goes where the reader came from:
-// "Open in Spotify", and the link copied is that one too (design 106n).
+// "Listen on Spotify", and the link copied is that one too (design 106n).
 function wayOut(source: Source, recipe: boolean): WayOut {
   if (source.kind === "podcast") {
     return { open: "openEpisode", openLabel: openPodcastLabel(source.sharedFrom), copy: "copyEpisodeLink", copyLabel: "Copy episode link" };

@@ -70,6 +70,7 @@ test("the tables the migrations create are there to be used", async () => {
       "overview_embeddings",
       "overview_reservations",
       "overview_usage",
+      "podcast_transcript_sources",
       "records",
       "schema_migrations",
       "service_transcript_usage",

@@ -1,6 +1,7 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, StoredTranscript, VideoId } from "@overview/domain";
+import { apiLogLines, StoredTranscript, VideoId, type SourceKey } from "@overview/domain";
+import type { AccountId } from "../auth/AccountId.js";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
@@ -12,14 +13,25 @@ const TRANSCRIPT_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
 const Params = z.object({ videoId: VideoId });
 
-// Another kind's key holds a colon (docs/features/source-identity.md). Those transcripts come
-// from our own fetch alone, so no account can file one (docs/features/podcast-transcripts.md).
+// Another kind's key holds a colon (docs/features/source-identity.md). An episode's words are
+// fetched from their source for each reader and never kept here, so no account files one
+// (docs/features/podcast-transcripts.md).
 const isYouTubeKey = (key: string): boolean => !key.includes(":");
 
-export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsRepository, clock: () => Date): void {
+// An episode's words by its key alone, fetched afresh from where they were found, for a reader's
+// device that holds the key but not the words (docs/features/podcast-transcripts.md).
+export type EpisodeWords = (key: SourceKey, accountId: AccountId, log: FastifyBaseLogger) => Promise<StoredTranscript | null>;
+
+export function transcriptRoutes(
+  app: FastifyInstance,
+  { transcripts, episodeWords, clock }: { transcripts: TranscriptsRepository; episodeWords: EpisodeWords; clock: () => Date },
+): void {
   app.get("/transcripts/:videoId", async (request) => {
     const { videoId } = parseOrThrow(Params, request.params, "The video id");
-    const transcript = await transcripts.get(request.session!.accountId, videoId);
+    const accountId = request.session!.accountId;
+    const transcript = isYouTubeKey(videoId)
+      ? await transcripts.get(accountId, videoId)
+      : await episodeWords(videoId, accountId, request.log);
     if (transcript === null) {
       throw new ApiError("not_found", "No transcript is kept for this video");
     }

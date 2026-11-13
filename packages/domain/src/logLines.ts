@@ -356,7 +356,7 @@ export const apiLogLines = coded("api", {
     transcript: line(
       "info",
       "podcast transcript resolved",
-      "A podcast episode's transcript was asked for; `via` is the rung that answered (cache, tag) and `format` the tag's, or `failure` why none could. Never the feed or the episode.",
+      "A podcast episode's transcript was asked for; `via` is the rung that answered (remembered, tag, youtube), `from` where a remembered source was, and `format` the tag's, or `failure` why none could. Never the feed or the episode, and the words are never kept.",
     ),
   },
   playlists: {

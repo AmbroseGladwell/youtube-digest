@@ -34,12 +34,13 @@ export function podcastPlatform(sharedFrom: string): PodcastPlatform {
 }
 
 const OPEN_PODCAST: Record<PodcastPlatform, string> = {
-  spotify: "Open in Spotify",
-  apple: "Open in Apple Podcasts",
+  spotify: "Listen on Spotify",
+  apple: "Listen on Apple Podcasts",
   page: "Open the show’s page",
 };
 
-// "Open in Spotify": the way back to where the reader came from (design 106n).
+// "Listen on Spotify": the way back to where the reader came from (design 106n), in the words
+// Apple's and Spotify's own guidelines ask for (OV-297).
 export const openPodcastLabel = (sharedFrom: string): string => OPEN_PODCAST[podcastPlatform(sharedFrom)];
 
 // Where a recipe came from, as Copy and Print say it: "Kitchen with Ada on YouTube" (design 122r).

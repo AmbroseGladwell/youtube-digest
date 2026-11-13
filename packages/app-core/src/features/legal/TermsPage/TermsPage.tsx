@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-12";
+export const TERMS_UPDATED_ON = "2026-11-13";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -170,11 +170,18 @@ const sections: readonly LegalSection[] = [
     id: "third-parties",
     heading: "YouTube and other third parties",
     body: (
-      <p>
-        {service} is not affiliated with YouTube or Google, or with any provider you bring a key for. Watching a video, following a playlist
-        and reading a page happen under those sites' own terms. If a site withdraws something, or stops the service reading it, the service
-        may stop working for that content, and that is not a failure on our part.
-      </p>
+      <>
+        <p>
+          {service} is not affiliated with YouTube or Google, Apple, Spotify, any podcast or its host, or any provider you bring a key for.
+          Watching a video, following a playlist, reading a page and listening to an episode happen under those sites' own terms. If a site
+          withdraws something, or stops the service reading it, the service may stop working for that content, and that is not a failure on
+          our part.
+        </p>
+        <p>
+          Apple Podcasts and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries and regions. Spotify is
+          a trademark of Spotify AB.
+        </p>
+      </>
     ),
   },
   {

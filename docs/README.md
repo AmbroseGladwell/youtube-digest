@@ -140,9 +140,9 @@ Five folders, five different questions.
   what the field says.
 - `podcast-links.md` — an Apple, Spotify or show-page link turned into one episode of its show's
   feed: Apple's directory, Spotify's public page, matching strictly, reading a feed as it arrives.
-- `podcast-transcripts.md` — where a podcast episode's words come from: the shared cache, then the
-  feed's transcript tag in five formats, kept once for everyone; the YouTube rungs and speech to text
-  still to come.
+- `podcast-transcripts.md` — where a podcast episode's words come from: the feed's transcript tag in
+  five formats or the show's YouTube channel, fetched for each reader; only where they were found is
+  shared (OV-297).
 - `podcast-on-youtube.md` — finding a podcast episode on its show's YouTube channel: by title and
   length, by description when retitled, the episode's own words, and how sure a match is.
 - `podcast-notes.md` — a podcast episode's note: the video note in a podcast's words, Listen to it

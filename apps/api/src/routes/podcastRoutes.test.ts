@@ -102,30 +102,54 @@ function scriptedWeb(pages: Record<string, { body: string; type: string }>) {
 const appOverWeb = (web: ReturnType<typeof scriptedWeb>, logger?: ReturnType<typeof recordingLogger>["logger"]) =>
   createTestApp({}, { podcastWeb: web.podcastWeb, ...(logger === undefined ? {} : { logger }) });
 
-test("an episode's transcript comes from its feed's tag once, and from the shared cache after", async () => {
+test("an episode's words are fetched from where they were found for each reader, and never kept for everyone", async () => {
   const web = scriptedWeb({
     [EPISODE.feedUrl]: { body: FEED_XML, type: "application/rss+xml" },
     "https://show.example/ep1.vtt": { body: VTT, type: "text/vtt" },
   });
   const testApp = await appOverWeb(web);
   const account = await makeAccount(testApp);
+  const another = await makeAccount(testApp);
   const body = { feedUrl: EPISODE.feedUrl, guid: EPISODE.guid };
 
   const first = await account.inject({ method: "POST", url: "/api/podcasts/transcript", body });
-  const second = await account.inject({ method: "POST", url: "/api/podcasts/transcript", body });
+  const second = await another.inject({ method: "POST", url: "/api/podcasts/transcript", body });
 
   assert.equal(first.statusCode, 200);
   assert.deepEqual(first.json().segments, [{ text: "Hello there.", startMs: 1000, endMs: 3000 }]);
   assert.match(first.json().videoId, /^podcast:[0-9a-f]{32}$/);
-  assert.deepEqual(second.json(), first.json());
-  assert.equal(web.asked.length, 2);
+  assert.deepEqual(second.json().segments, first.json().segments);
+  assert.deepEqual(web.asked, [EPISODE.feedUrl, "https://show.example/ep1.vtt", "https://show.example/ep1.vtt"]);
 
   const shared = await testApp.app.inject({
     method: "GET",
     url: `/api/shared-transcripts/${encodeURIComponent(first.json().videoId)}`,
     headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
   });
-  assert.equal(shared.statusCode, 200);
+  assert.equal(shared.statusCode, 404);
+  await testApp.close();
+});
+
+test("a reader's other device gets an episode's words by its key, from where they were found", async () => {
+  const web = scriptedWeb({
+    [EPISODE.feedUrl]: { body: FEED_XML, type: "application/rss+xml" },
+    "https://show.example/ep1.vtt": { body: VTT, type: "text/vtt" },
+  });
+  const testApp = await appOverWeb(web);
+  const account = await makeAccount(testApp);
+  const found = await account.inject({
+    method: "POST",
+    url: "/api/podcasts/transcript",
+    body: { feedUrl: EPISODE.feedUrl, guid: EPISODE.guid },
+  });
+  const key = encodeURIComponent(found.json().videoId);
+
+  const elsewhere = await account.inject({ method: "GET", url: `/api/transcripts/${key}` });
+  const unknown = await account.inject({ method: "GET", url: `/api/transcripts/${encodeURIComponent("podcast:0000")}` });
+
+  assert.equal(elsewhere.statusCode, 200);
+  assert.deepEqual(elsewhere.json().segments, [{ text: "Hello there.", startMs: 1000, endMs: 3000 }]);
+  assert.equal(unknown.statusCode, 404);
   await testApp.close();
 });
 

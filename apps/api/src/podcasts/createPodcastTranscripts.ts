@@ -12,7 +12,7 @@ import type { CostPayer } from "../costs/AccountCostsRepository.js";
 import { readBodyText, type createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import type { ServiceCaller, ServiceTranscripts } from "../transcripts/ServiceTranscripts.js";
 import { transcriptFault } from "../transcripts/transcriptFault.js";
-import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
+import type { EpisodeWordSource, EpisodeWordSources } from "./EpisodeWordSourcesRepository.js";
 import { feedItemGuid, fetchFeedEpisode } from "./fetchFeedEpisode.js";
 import {
   FORMAT_PREFERENCE,
@@ -22,7 +22,7 @@ import {
 } from "./parsePodcastTranscript.js";
 
 export type PodcastTranscriptAnswer =
-  | { via: "cache" }
+  | { via: "remembered"; from: EpisodeWordSource["via"] }
   | { via: "tag"; format: PodcastTranscriptFormat }
   | { via: "youtube"; matchedBy: "title" | "description"; searchedBy: "extension" | "server" };
 
@@ -42,7 +42,7 @@ export interface PodcastTranscriptRequest {
 
 export interface PodcastTranscriptsOptions {
   fetchPublicWeb: ReturnType<typeof createPublicWebFetch>;
-  transcripts: Pick<TranscriptsRepository, "getShared" | "putServiceFetched">;
+  sources: EpisodeWordSources;
   // Our server's YouTube fetching; absent, the YouTube rung can't be asked here.
   youTubeService: Pick<ServiceTranscripts, "resolve" | "onYouTube"> | null;
   clock: () => Date;
@@ -72,12 +72,13 @@ const byPreference = (links: readonly PodcastTranscriptLink[]) =>
 const noCaptions = (message: string, sourceId: string) =>
   new TranscriptFetchError(message, { failure: TranscriptFetchFailure.NO_CAPTIONS, sourceId });
 
-// The podcast rungs, each asked only if the one before couldn't answer, and every answer kept
-// in the shared cache so an episode is fetched once, ever (docs/features/podcast-transcripts.md,
-// docs/features/podcast-on-youtube.md). The episode is read again from its own feed, never taken
-// from the caller, and a video a caller names is checked against it by our server, so nothing a
-// caller sends decides what is kept under an episode's key.
-export function createPodcastTranscripts({ fetchPublicWeb, transcripts, youTubeService, clock }: PodcastTranscriptsOptions) {
+// The podcast rungs, each asked only if the one before couldn't answer. What is kept for everyone
+// is where the words were found, never the words: a show's transcript is its own work, so each
+// reader fetches it from its source for themselves, and the search isn't repeated
+// (docs/features/podcast-transcripts.md, "Each reader's own copy"; OV-297). The episode is read
+// again from its own feed, never taken from the caller, and a video a caller names is checked
+// against it by our server, so nothing a caller sends decides where an episode's words are.
+export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeService, clock }: PodcastTranscriptsOptions) {
   const fromTag = async (key: SourceKey, links: readonly PodcastTranscriptLink[]) => {
     for (const { link, format } of byPreference(links)) {
       const answer = await fetchPublicWeb(link.url, { accept: link.type });
@@ -90,7 +91,7 @@ export function createPodcastTranscripts({ fetchPublicWeb, transcripts, youTubeS
         generated: true,
         fetchedAt: clock().toISOString(),
       };
-      if (transcriptFault(transcript, key) === null) return { transcript, format };
+      if (transcriptFault(transcript, key) === null) return { transcript, format, link };
     }
     return null;
   };
@@ -120,15 +121,51 @@ export function createPodcastTranscripts({ fetchPublicWeb, transcripts, youTubeS
       fetchedAt: clock().toISOString(),
     };
     if (transcriptFault(transcript, key) !== null) throw noCaptions("The video's captions couldn't be read", "podcast-youtube");
-    return { transcript, answer: { via: "youtube" as const, matchedBy: found.matchedBy, searchedBy: found.searchedBy } };
+    return {
+      transcript,
+      videoId: found.videoId,
+      answer: { via: "youtube" as const, matchedBy: found.matchedBy, searchedBy: found.searchedBy },
+    };
   };
 
-  return async function resolvePodcastTranscript(
-    request: PodcastTranscriptRequest,
-  ): Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }> {
+  // The words, fetched afresh from where they were found before; null where that no longer answers.
+  const fromSource = async (
+    key: SourceKey,
+    source: EpisodeWordSource,
+    caller: ServiceCaller,
+    log: FastifyBaseLogger,
+  ): Promise<StoredTranscript | null> => {
+    if (source.via === "tag") return (await fromTag(key, [{ url: source.url, type: source.type, language: null }]))?.transcript ?? null;
+    if (youTubeService === null) return null;
+    try {
+      const captions = await youTubeService.resolve(VideoId.parse(source.videoId), caller, log);
+      const transcript: StoredTranscript = {
+        videoId: key,
+        segments: captions.transcript.segments,
+        generated: captions.transcript.generated,
+        fetchedAt: clock().toISOString(),
+      };
+      return transcriptFault(transcript, key) === null ? transcript : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // An episode's words by its key alone, for a reader's other device, which knows the key but
+  // not the feed: only where they were found before (docs/features/podcast-transcripts.md).
+  const remembered = async (key: SourceKey, caller: ServiceCaller, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
+    const source = await sources.get(key);
+    return source === null ? null : fromSource(key, source, caller, log);
+  };
+
+  const resolve = async (request: PodcastTranscriptRequest): Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }> => {
     const key = await podcastSourceKey(request);
-    const cached = StoredTranscript.safeParse(await transcripts.getShared(key));
-    if (cached.success) return { transcript: cached.data, answer: { via: "cache" } };
+    const known = await sources.get(key);
+    if (known !== null) {
+      const words = await fromSource(key, known, request.caller, request.log);
+      if (words !== null) return { transcript: words, answer: { via: "remembered", from: known.via } };
+      await sources.forget(key);
+    }
 
     const read = await fetchFeedEpisode(fetchPublicWeb, request.feedUrl, (item) => feedItemGuid(item) === request.guid);
     if (read.status === "failed") {
@@ -147,7 +184,7 @@ export function createPodcastTranscripts({ fetchPublicWeb, transcripts, youTubeS
 
     const tagged = await fromTag(key, item.transcripts);
     if (tagged !== null) {
-      await transcripts.putServiceFetched(tagged.transcript);
+      await sources.put(key, { via: "tag", url: tagged.link.url, type: tagged.link.type }, clock());
       return { transcript: tagged.transcript, answer: { via: "tag", format: tagged.format } };
     }
     if (request.youTube === null || item.title === null || show.title === null) {
@@ -161,7 +198,9 @@ export function createPodcastTranscripts({ fetchPublicWeb, transcripts, youTubeS
       keywords: episodeKeywords(item.notes, neighbourNotes),
     };
     const answered = await fromYouTube(key, episode, request.youTube, request);
-    await transcripts.putServiceFetched(answered.transcript);
-    return answered;
+    await sources.put(key, { via: "youtube", videoId: answered.videoId }, clock());
+    return { transcript: answered.transcript, answer: answered.answer };
   };
+
+  return { resolve, remembered };
 }

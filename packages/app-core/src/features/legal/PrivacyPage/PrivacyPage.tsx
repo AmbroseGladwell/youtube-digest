@@ -149,11 +149,12 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>Podcast episodes.</strong> When you paste a link to a podcast episode, our server reads the page it points to, looks the
           show up in Apple's podcast directory where it needs to, and reads the show's public feed to find the episode. It then looks for
-          the episode's words: in our shared transcript cache, in a transcript the show publishes, or in the same episode on the show's
-          YouTube channel. With the extension, that YouTube search runs in your own browser and our server checks the one video it found;
-          without it, our server searches. Words found this way are public and the same for everyone, so they are kept in the shared
-          transcript cache under the episode, with no account on them. Neither the link nor the episode ever appears in our logs. An episode
-          whose words can't be found makes no overview.
+          the episode's words: in a transcript the show publishes, or in the same episode on the show's YouTube channel. With the extension,
+          that YouTube search runs in your own browser and our server checks the one video it found; without it, our server searches. The
+          words are fetched for you and sent to your device, which keeps them. Our server doesn't store them, and never shows them to anyone
+          else. What it keeps, with no account on it, is where they were found (the address of the show's transcript, or which YouTube video
+          is the episode), so the search isn't repeated for the next reader, who fetches the words for themselves. We don't record the link
+          or the episode in our logs. An episode whose words can't be found makes no overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you for your own transcripts, and our legitimate interest in serving
@@ -433,8 +434,8 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           Playing a podcast episode inside its overview loads the episode's audio in your browser, from the address in the show's public
-          feed. The show's host, and any service it uses to add adverts, sees that request and your network address, under its own policy,
-          as it would in a podcast app. We add nothing about you.
+          feed. Your browser asks the show's host directly, so the host, and any service it uses to add adverts, sees your network address,
+          your browser's details and that the request came from our site, under its own policy, as it would in a podcast app.
         </p>
         <p>
           A provider you bring your own key for (Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral) is not our processor. Your device
@@ -491,6 +492,7 @@ const sections: readonly LegalSection[] = [
           ["Shared links", "until you stop them; the copy goes with the account"],
           ["Transcripts linked to your account", "while a note of yours uses the video"],
           ["A shared cache copy, with no account on it", "until it is removed as wrong"],
+          ["Where a podcast episode's words were found, with no account on it", "until that source stops answering"],
           ["The record that your account fetched a video's captions", "one year, even after the account is deleted"],
           ["Monthly and daily usage counts, and the daily cost tally, for an account", "with the account"],
           [

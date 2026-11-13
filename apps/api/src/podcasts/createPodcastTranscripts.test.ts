@@ -10,10 +10,12 @@ import {
   createPodcastTranscripts,
   MatchUnconfirmedError,
   podcastSourceKey,
+  type PodcastTranscriptRequest,
   type PodcastTranscriptsOptions,
   type YouTubeAsk,
 } from "./createPodcastTranscripts.js";
 import { feedOf } from "./podcastFeedFixtures.testHelper.js";
+import type { EpisodeWordSource } from "./EpisodeWordSourcesRepository.js";
 
 const FEED_URL = "https://feeds.example/show.xml";
 const EPISODE = { feedUrl: FEED_URL, guid: "ep-guid" };
@@ -39,11 +41,12 @@ type Answer = { body: string; type: string } | "down";
 
 function ladderOver(
   web: Record<string, Answer>,
-  shared: unknown = null,
+  known: EpisodeWordSource | null = null,
   youTubeService: PodcastTranscriptsOptions["youTubeService"] = null,
 ) {
   const asked: string[] = [];
-  const kept: StoredTranscript[] = [];
+  const sources = new Map<string, EpisodeWordSource>();
+  const kept = () => [...sources.values()];
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
     const answer = web[link];
@@ -51,18 +54,28 @@ function ladderOver(
     if (answer === "down") return { status: "failed", reason: "no-answer" };
     return { status: "answered", url: link, response: new Response(answer.body, { headers: { "content-type": answer.type } }) };
   };
-  const resolve = createPodcastTranscripts({
+  const ready = podcastSourceKey(EPISODE).then((key) => {
+    if (known !== null) sources.set(key, known);
+  });
+  const podcastTranscripts = createPodcastTranscripts({
     fetchPublicWeb,
-    transcripts: {
-      getShared: async () => shared,
-      putServiceFetched: async (transcript) => {
-        kept.push(transcript);
+    sources: {
+      get: async (key) => sources.get(key) ?? null,
+      put: async (key, source) => {
+        sources.set(key, source);
+      },
+      forget: async (key) => {
+        sources.delete(key);
       },
     },
     youTubeService,
     clock: () => new Date("2026-11-13T09:00:00.000Z"),
   });
-  return { resolve, asked, kept };
+  const resolve = async (request: PodcastTranscriptRequest) => {
+    await ready;
+    return podcastTranscripts.resolve(request);
+  };
+  return { resolve, remembered: podcastTranscripts.remembered, asked, kept };
 }
 
 const failureOf = async (promise: Promise<unknown>) => {
@@ -75,7 +88,7 @@ const failureOf = async (promise: Promise<unknown>) => {
   return assert.fail("expected a TranscriptFetchError");
 };
 
-test("the feed's transcript tag answers, timed, under the episode's own key, and is kept in the shared cache", async () => {
+test("the feed's transcript tag answers, timed, under the episode's own key, and only where it was found is kept", async () => {
   const { resolve, kept } = ladderOver({
     [FEED_URL]: {
       body: feedOf(itemWith(`<podcast:transcript url="https://t.example/ep.vtt" type="text/vtt"/>`)),
@@ -93,21 +106,47 @@ test("the feed's transcript tag answers, timed, under the episode's own key, and
     generated: true,
     fetchedAt: "2026-11-13T09:00:00.000Z",
   });
-  assert.deepEqual(kept, [transcript]);
+  assert.deepEqual(kept(), [{ via: "tag", url: "https://t.example/ep.vtt", type: "text/vtt" }]);
 });
 
-test("a cached transcript answers without the feed being asked", async () => {
+test("where the words were found answers next time, fetched afresh from there, without the feed being asked", async () => {
+  const { resolve, asked } = ladderOver(
+    { "https://t.example/ep.vtt": { body: VTT, type: "text/vtt" } },
+    { via: "tag", url: "https://t.example/ep.vtt", type: "text/vtt" },
+  );
+  const { transcript, answer } = await resolve(asking(EPISODE));
+  assert.deepEqual(answer, { via: "remembered", from: "tag" });
+  assert.deepEqual(transcript.segments, [{ text: "Hello there.", startMs: 1000, endMs: 3000 }]);
+  assert.deepEqual(asked, ["https://t.example/ep.vtt"]);
+});
+
+test("a source that no longer answers is forgotten, and the episode's own feed is read again", async () => {
+  const { resolve, asked, kept } = ladderOver(
+    {
+      [FEED_URL]: {
+        body: feedOf(itemWith(`<podcast:transcript url="https://t.example/new.vtt" type="text/vtt"/>`)),
+        type: "application/rss+xml",
+      },
+      "https://t.example/new.vtt": { body: VTT, type: "text/vtt" },
+    },
+    { via: "tag", url: "https://t.example/gone.vtt", type: "text/vtt" },
+  );
+  assert.deepEqual((await resolve(asking(EPISODE))).answer, { via: "tag", format: "vtt" });
+  assert.deepEqual(asked, ["https://t.example/gone.vtt", FEED_URL, "https://t.example/new.vtt"]);
+  assert.deepEqual(kept(), [{ via: "tag", url: "https://t.example/new.vtt", type: "text/vtt" }]);
+});
+
+test("a reader's other device, holding only the episode's key, gets the words from where they were found, and nothing without", async () => {
   const key = await podcastSourceKey(EPISODE);
-  const cached: StoredTranscript = {
-    videoId: key,
-    segments: [{ text: "Kept.", startMs: 0, endMs: 1 }],
-    generated: true,
-    fetchedAt: "2026-11-01T00:00:00.000Z",
-  };
-  const { resolve, asked, kept } = ladderOver({}, cached);
-  assert.deepEqual(await resolve(asking(EPISODE)), { transcript: cached, answer: { via: "cache" } });
-  assert.deepEqual(asked, []);
-  assert.deepEqual(kept, []);
+  const known = ladderOver(
+    { "https://t.example/ep.vtt": { body: VTT, type: "text/vtt" } },
+    { via: "tag", url: "https://t.example/ep.vtt", type: "text/vtt" },
+  );
+  await known.resolve(asking(EPISODE));
+  const words = await known.remembered(key, asking(EPISODE).caller, log);
+  assert.deepEqual(words?.segments, [{ text: "Hello there.", startMs: 1000, endMs: 3000 }]);
+  const unknown = ladderOver({});
+  assert.equal(await unknown.remembered(key, asking(EPISODE).caller, log), null);
 });
 
 test("of several tags, timed cues are tried first, and one that can't be read gives way to the next", async () => {
@@ -138,7 +177,7 @@ test("an episode with no usable tag says there are no captions, and nothing is k
     },
   });
   assert.equal(await failureOf(resolve(asking(EPISODE))), "no-captions");
-  assert.deepEqual(kept, []);
+  assert.deepEqual(kept(), []);
 });
 
 test("an episode missing from its feed is unavailable, and a feed that doesn't answer is a source that couldn't", async () => {
@@ -197,22 +236,32 @@ function youTubeServiceOver(player: { title: string; lengthSeconds: string }) {
 
 const feedWithoutTags = { [FEED_URL]: { body: feedOf(NOTES_ITEM), type: "application/rss+xml" } };
 
-test("a video the reader's extension found is checked by our server, and its captions kept under the episode's own key", async () => {
+test("a video the reader's extension found is checked by our server, its captions answer under the episode's own key, and the video is remembered", async () => {
   const youTube = youTubeServiceOver({ title: "Susie Wiles Out, Stephen Miller In: What Happens Now?", lengthSeconds: "2170" });
   const { resolve, kept } = ladderOver(feedWithoutTags, null, youTube.service);
   const { transcript, answer } = await resolve(asking(EPISODE, { videoId: "VIDEO000001" }));
   assert.deepEqual(answer, { via: "youtube", matchedBy: "title", searchedBy: "extension" });
   assert.equal(transcript.videoId, await podcastSourceKey(EPISODE));
   assert.deepEqual(transcript.segments, CAPTIONS.segments);
-  assert.deepEqual(kept, [transcript]);
+  assert.deepEqual(kept(), [{ via: "youtube", videoId: "VIDEO000001" }]);
   assert.deepEqual(youTube.calls, ["youtube:player:VIDEO000001", "captions:VIDEO000001"]);
+});
+
+test("a remembered video gives its captions without the episode being looked for again", async () => {
+  const youTube = youTubeServiceOver({ title: "unused", lengthSeconds: "1" });
+  const { resolve, asked } = ladderOver({}, { via: "youtube", videoId: "VIDEO000001" }, youTube.service);
+  const { transcript, answer } = await resolve(asking(EPISODE, { search: true }));
+  assert.deepEqual(answer, { via: "remembered", from: "youtube" });
+  assert.deepEqual(transcript.segments, CAPTIONS.segments);
+  assert.deepEqual(youTube.calls, ["captions:VIDEO000001"]);
+  assert.deepEqual(asked, []);
 });
 
 test("a video that isn't the episode by our server's check keeps nothing, and says so", async () => {
   const youTube = youTubeServiceOver({ title: "Something else entirely", lengthSeconds: "300" });
   const { resolve, kept } = ladderOver(feedWithoutTags, null, youTube.service);
   await assert.rejects(resolve(asking(EPISODE, { videoId: "VIDEO000001" })), (error) => error instanceof MatchUnconfirmedError);
-  assert.deepEqual(kept, []);
+  assert.deepEqual(kept(), []);
   assert.deepEqual(youTube.calls, ["youtube:player:VIDEO000001"]);
 });
 
