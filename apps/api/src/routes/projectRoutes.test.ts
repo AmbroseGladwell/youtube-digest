@@ -232,7 +232,7 @@ test("a client built before projects is never sent one, and its feed still moves
   const project = await withProject(account);
   await member(account, project.id, storedOverview().id, { addedAt: UPDATED_AT });
 
-  const response = await account.inject({ method: "GET", url: "/api/changes?since=0", clientVersion: 18 });
+  const response = await account.inject({ method: "GET", url: "/api/changes?since=0", clientVersion: 19 });
 
   assert.deepEqual(response.json().changes, []);
   assert.equal(response.json().next, 0);

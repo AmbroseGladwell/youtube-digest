@@ -19,6 +19,7 @@ export const SOURCE_STEPS_SECTION = "The steps it gives";
 export const HOW_TO_APPLY_SECTION = "How to apply";
 export const WATCH_ANYWAY_SECTION = "Watch it anyway?";
 export const READ_ANYWAY_SECTION = "Read it anyway?";
+export const RESOURCES_SECTION = "Resources it points to";
 export const INGREDIENTS_SECTION = "Ingredients";
 export const METHOD_SECTION = "Method";
 

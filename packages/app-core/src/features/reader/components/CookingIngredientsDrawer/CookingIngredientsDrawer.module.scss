@@ -35,6 +35,11 @@
   }
 }
 
+// Open from the start of the mode, it is there with the screen rather than sliding in.
+.drawer.inPlace {
+  transition: none;
+}
+
 .body {
   flex: none;
   box-sizing: border-box;

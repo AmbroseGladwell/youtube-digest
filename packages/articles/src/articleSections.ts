@@ -1,4 +1,5 @@
-import { wordCount, type ArticleSection } from "@overview/domain";
+import { wordCount, type ArticleLink, type ArticleSection, type PageLink } from "@overview/domain";
+import { articleLinks } from "./articleLinks.js";
 
 const HEADINGS = "h1, h2, h3, h4, h5, h6";
 const BLOCKS = `${HEADINGS}, p, li, blockquote, pre, figcaption, td, th`;
@@ -12,31 +13,51 @@ const repeatsTitle = (heading: string, title: string): boolean => title.includes
 const anchorOf = (heading: Element): string | null =>
   heading.getAttribute("id") || heading.querySelector("[id]")?.getAttribute("id") || null;
 
+const uniqueLinks = (links: ArticleLink[]): ArticleLink[] =>
+  links.filter((link, index) => links.findIndex(({ href }) => href === link.href) === index);
+
 const hasBlockInside = (element: Element): boolean => element.querySelector(BLOCKS) !== null;
 
 // Blocks rather than the article's whole text, so a section can be pointed at. A page built
 // out of something else falls back to one section (docs/features/article-extraction.md).
-export function articleSections(body: HTMLElement, title: string): ArticleSection[] {
-  const sections: Array<{ heading: string | null; anchor: string | null; blocks: string[] }> = [];
+export function articleSections(body: HTMLElement, title: string, pageUrl: string): ArticleSection[] {
+  const sections: Array<{ heading: string | null; anchor: string | null; blocks: string[]; links: PageLink[] }> = [];
+  const linked = new Set<string>();
   for (const element of body.querySelectorAll(BLOCKS)) {
     if (element.matches(HEADINGS)) {
       const heading = clean(element.textContent);
       if (heading !== "" && !(sections.length === 0 && repeatsTitle(heading, clean(title)))) {
-        sections.push({ heading, anchor: anchorOf(element), blocks: [] });
+        sections.push({ heading, anchor: anchorOf(element), blocks: [], links: [] });
       }
     } else if (!hasBlockInside(element)) {
       const text = clean(element.textContent);
       if (text === "") continue;
-      if (sections.length === 0) sections.push({ heading: null, anchor: null, blocks: [] });
-      sections.at(-1)!.blocks.push(text);
+      if (sections.length === 0) sections.push({ heading: null, anchor: null, blocks: [], links: [] });
+      const section = sections.at(-1)!;
+      for (const link of articleLinks(element, pageUrl)) {
+        if (!linked.has(link.href)) {
+          linked.add(link.href);
+          section.links.push({ ...link, paragraph: section.blocks.length });
+        }
+      }
+      section.blocks.push(text);
     }
   }
 
   const kept = sections
     .filter(({ blocks }) => blocks.length > 0)
-    .map(({ heading, anchor, blocks }) => ({ heading, anchor, text: blocks.join("\n\n") }));
+    .map(({ heading, anchor, blocks, links }) => ({ heading, anchor, text: blocks.join("\n\n"), links }));
   const whole = clean(body.textContent);
   const keptWords = kept.reduce((total, { text }) => total + wordCount(text), 0);
   if (keptWords >= wordCount(whole) * TOO_MUCH_LOST) return kept;
-  return whole === "" ? [] : [{ heading: null, anchor: null, text: whole }];
+  return whole === ""
+    ? []
+    : [
+        {
+          heading: null,
+          anchor: null,
+          text: whole,
+          links: uniqueLinks(articleLinks(body, pageUrl)).map((link) => ({ ...link, paragraph: 0 })),
+        },
+      ];
 }

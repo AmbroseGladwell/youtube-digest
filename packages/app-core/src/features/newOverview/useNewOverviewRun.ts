@@ -8,6 +8,7 @@ import {
   type ClientTimingReport,
   type Overview,
 } from "@overview/domain";
+import { headedParts, offeredLinks } from "@overview/generation";
 import { useStores } from "../../stores/StoresContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
@@ -124,6 +125,8 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const startedAt = Date.now();
       let transcriptSource: CaptureTranscriptSource | null = null;
       let sourceWords: number | null = null;
+      let sourceHeadings = 0;
+      let articleLinks: number | undefined;
       let tagging = { reused: 0, added: 0 };
       let personalised = false;
       let attempt: GenerationAttempt | null = null;
@@ -190,6 +193,8 @@ export function useNewOverviewRun(): NewOverviewRunController {
           onArticleRead: (article) => {
             transcriptSource = "article";
             sourceWords = article.wordCount;
+            sourceHeadings = headedParts(article);
+            articleLinks = offeredLinks(article).length;
             if (isCurrent()) {
               setRun((current) =>
                 current?.article == null
@@ -247,7 +252,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
                 noteKind: saved.recipe != null ? "recipe" : saved.sourceSteps != null ? "process" : "default",
-                ...noteBudgetProps(saved, sourceWords),
+                ...noteBudgetProps(saved, sourceWords, sourceHeadings),
+                articleLinks,
+                articleResources: articleLinks === undefined ? undefined : (saved.article?.resources?.length ?? 0),
                 ...madeWithProps(attempt),
               });
               setRun((current) => (current === null ? null : { ...current, overview: saved, finishedAt: Date.now() }));

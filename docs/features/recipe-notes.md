@@ -317,10 +317,12 @@ Trello OV-150, designs 150a–150au (OV-150 1–10 in Claude Design), with the o
   it is a modal sheet. On the web it is a second column on the right, 24rem wide, and the step
   narrows to make room rather than going under it: nothing dims, no key stops working, and it stays
   open across Next and Back, because a reader who opened it is reading ahead (owner's question,
-  answered in 190k). It opens in 280ms and shuts in 200ms on the app's ease, the list sitting at
+  answered in 190k). The mode starts with it open on the web, already in place rather than sliding
+  in, and focus stays on the step. It opens in 280ms and shuts in 200ms on the app's ease, the list sitting at
   its left edge and uncovered as it widens; under reduced motion it just appears. Focus moves into
-  it on open and back to the Ingredients button on close; it is a plain `aside`, so Tab runs on
-  through it and Esc shuts it before it leaves the mode. The cooking screen is the window's
+  it when the reader opens it and back to the Ingredients button on close; it is a plain `aside`, so Tab runs on
+  through it, and Esc shuts it before it leaves the mode once the reader has opened it; left as
+  the mode started, Esc just leaves. The cooking screen is the window's
   height, so a list longer than it scrolls inside the drawer and the step and its controls never
   move; the `aside` itself is the scroller, being what focus lands on, so the keys read the rest
   of the list (OV-200). The cooking column is measured, not the window: under 720px the action

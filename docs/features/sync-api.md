@@ -187,7 +187,7 @@ the first kind this applies to (`docs/features/playlists.md`).
 Followed playlists are written by `POST /api/followed-playlists`, replace-with-`If-Match`
 as an overview is, and unfollowed by `DELETE /api/followed-playlists/:id`, a tombstone.
 
-`project` and `projectMember`, added at client version 19, have routes of their own under
+`project` and `projectMember`, added at client version 20, have routes of their own under
 `/api/projects`. A member is one record per project and overview, with a dated removal and a
 merge that commutes, and deleting a project or an overview tombstones its members
 (`projects.md`).
