@@ -73,6 +73,10 @@ the panel, where the slot never swaps anyway); a section page lends `← Setting
 settings links used to stick under the masthead (43h) and now scroll away like the
 overview's, which is what lets the slot take over (`settings.md`, "Ways back").
 
+OV-168's pages shipped without lending theirs and were brought into line after: a
+project's page lends `← All projects`, and All projects lends `← All overviews`. **Any new page with a back link lends it the same
+way** (`frontend-architecture-guide.md` §1.3).
+
 ## Back in history, or home
 
 The design's definition of done is that the library comes back where the reader left it.

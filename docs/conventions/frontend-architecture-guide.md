@@ -102,6 +102,16 @@ Route definitions reference params through it too:
 **Why:** the factory is the single place that knows about encoding and query params.
 A parallel string literal in a test silently rots.
 
+### 1.3 Every page's back link is lent to the bar
+
+A page with a "← Somewhere" link at its head lends it with `useLentBackLink`, puts the
+returned ref on the link, and sends both the link and the bar through `useBackTo`. On a
+phone and in the panel the shell's brand slot then takes the link over once it scrolls
+under the band, and both go back in history when the destination is the entry behind
+(`docs/features/back-within-reach.md`). A back link drawn as a plain `PageLink` scrolls
+away with nothing in its place, which is how the project pages first shipped (OV-168).
+Add the page to the list in "Every page with a way back" in that doc.
+
 ---
 
 ## Part 2 — Animation and route transitions
@@ -593,6 +603,7 @@ a password manager from offering to save an API key as the site's password. The
 - [ ] Snapshot `z-index` asserted for anything overlapping the swapping region.
 - [ ] Enter and leave have different durations and curves.
 - [ ] Every non-obvious `::view-transition-*` rule carries a one-line *why*.
+- [ ] Every page's back link is lent to the bar with `useLentBackLink` (§1.3).
 
 **State**
 - [ ] No server data in a global client store.

@@ -7,6 +7,7 @@ import { AccountMenuPageObject } from "./AccountMenuPageObject.testHelper.js";
 import { GenerateOverviewFormPageObject } from "./GenerateOverviewFormPageObject.testHelper.js";
 import { GenerationStatusStripPageObject } from "./GenerationStatusStripPageObject.testHelper.js";
 import { NewOverviewDialogPageObject } from "./NewOverviewDialogPageObject.testHelper.js";
+import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 import { StaleClientBannerPageObject } from "./StaleClientBannerPageObject.testHelper.js";
 import { ErrorStatePageObject } from "./ErrorStatePageObject.testHelper.js";
@@ -272,6 +273,12 @@ export class AppShellPageObject extends PageObject {
     this.step("clickBackInBar", async () => {
       await this.tapBackInBar();
       return new LibraryPageObject(this.testContext).verifyIsShown();
+    });
+
+  clickBackInBarToAllProjects = (): Promise<ProjectsIndexPageObject> =>
+    this.step("clickBackInBarToAllProjects", async () => {
+      await this.tapBackInBar();
+      return new ProjectsIndexPageObject(this.testContext).verifyIsShown();
     });
 
   clickBackInBarToSettings = (): Promise<SettingsPageObject> =>

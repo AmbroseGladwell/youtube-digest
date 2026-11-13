@@ -8,6 +8,8 @@ import {
   type Novelty,
 } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
+import { useBackTo } from "../../../../app/useBackTo.js";
+import { useLentBackLink } from "../../../../app/useLentBackLink.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { projectLongDate, projectShortDate } from "../../util/projectDates.js";
@@ -57,6 +59,8 @@ export function ProjectHead({
   const menu = useRef<HTMLButtonElement | null>(null);
   const editButton = useRef<HTMLButtonElement | null>(null);
   const returnTo = useRef<RefObject<HTMLButtonElement | null>>(menu);
+  const backToProjects = useBackTo(Routes.projects());
+  const backLink = useLentBackLink({ to: Routes.projects(), label: "All projects", follow: backToProjects });
 
   useEffect(() => {
     if (!copied) return;
@@ -81,7 +85,13 @@ export function ProjectHead({
 
   return (
     <div className={styles.root} data-testid={projectHeadTestIds.root}>
-      <PageLink className={styles.back} to={Routes.projects()} data-testid={projectHeadTestIds.backLink}>
+      <PageLink
+        ref={backLink}
+        className={styles.back}
+        to={Routes.projects()}
+        onClick={backToProjects}
+        data-testid={projectHeadTestIds.backLink}
+      >
         <StrokeIcon name="arrowLeft" size={15} />
         All projects
       </PageLink>
