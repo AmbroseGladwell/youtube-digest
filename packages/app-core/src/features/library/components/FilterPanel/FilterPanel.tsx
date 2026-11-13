@@ -16,7 +16,7 @@ export interface FilterPanelProps {
   onChange: (patch: Partial<LibraryFilters>) => void;
   onNewTopic: () => void;
   onManageTags: () => void;
-  // The Projects group, first in the rail and the sheet ("OV-168 4 Phone Panel and Decisions" 168ac).
+  // The Projects group, under Show in the rail and the sheet (docs/features/projects.md).
   projects?: ReactNode;
 }
 
@@ -52,7 +52,6 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
 
   return (
     <div className={styles.root} data-testid={filterPanelTestIds.root}>
-      {projects}
       <div className={styles.group}>
         <p className={styles.label}>Show</p>
         <Toggle
@@ -72,6 +71,7 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
           Only favourites
         </Toggle>
       </div>
+      {projects}
 
       <div className={styles.group}>
         <p className={styles.label}>Topic</p>

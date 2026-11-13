@@ -81,9 +81,9 @@ export function ProjectHead({
 
   return (
     <div className={styles.root} data-testid={projectHeadTestIds.root}>
-      <PageLink className={styles.back} to={Routes.home()} data-testid={projectHeadTestIds.backLink}>
+      <PageLink className={styles.back} to={Routes.projects()} data-testid={projectHeadTestIds.backLink}>
         <StrokeIcon name="arrowLeft" size={15} />
-        All overviews
+        All projects
       </PageLink>
       <p className={styles.kicker} data-testid={projectHeadTestIds.kicker}>
         Project
