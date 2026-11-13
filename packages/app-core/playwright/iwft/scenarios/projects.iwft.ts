@@ -1,5 +1,5 @@
 import type { Connection, Overview } from "@overview/domain";
-import { projectMarkdown } from "@overview/domain";
+import { ProjectId, projectMarkdown } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -373,6 +373,34 @@ test.describe("on a phone and in the panel", () => {
 
     const index = await head.clickBackToAllProjects();
     await index.verifySummaryReads("1 project");
+  });
+
+  test("the project pages lend their way back to the bar once it scrolls under", async ({ launcher, backendSimulator, page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const project = makeProject();
+    backendSimulator.projects.seed(project);
+    for (let index = 0; index < 14; index += 1) {
+      const overview = titled(`Overview ${index + 1}`);
+      backendSimulator.overviews.seed(overview);
+      backendSimulator.projects.seedMember(makeProjectMember(project, overview.id));
+    }
+    for (let index = 0; index < 8; index += 1) {
+      backendSimulator.projects.seed(makeProject({ id: ProjectId.parse(crypto.randomUUID()), name: `Project ${index + 1}` }));
+    }
+    const library = await launcher.launchExpectingLibrary();
+    const shell = launcher.appShell;
+    await library.openFilters();
+    await library.projectsRail.openProject("Kitchen renovation");
+
+    await shell.verifyBarHoldsTheBrand("All projects");
+    await library.scrollTheList();
+    await shell.verifyBarHoldsTheWayBack("All projects");
+    await shell.clickBackInBarToAllProjects();
+
+    await shell.verifyBarHoldsTheBrand("All overviews");
+    await library.scrollTheList();
+    await shell.verifyBarHoldsTheWayBack("All overviews");
+    await shell.clickBackInBar();
   });
 
   test("New project is a sheet across the whole width", async ({ launcher, backendSimulator, page }) => {
