@@ -1,4 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { filterPanelTestIds } from "../../src/features/library/components/FilterPanel/FilterPanelTestIds.js";
 import { projectsRailGroupTestIds } from "../../src/features/projects/components/ProjectsRailGroup/ProjectsRailGroupTestIds.js";
 import { NewProjectDialogPageObject } from "./NewProjectDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
@@ -7,6 +8,16 @@ import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js
 
 export class ProjectsRailGroupPageObject extends PageObject {
   private rows = () => this.get(projectsRailGroupTestIds.root).getByRole("listitem");
+
+  verifyRowMatchesTopicRow = (name: string, topicId: string) =>
+    this.step(`verifyRowMatchesTopicRow ${name} ${topicId}`, async () => {
+      const measure = (testId: string) =>
+        this.get(testId).evaluate((element) => {
+          const style = getComputedStyle(element);
+          return { height: element.getBoundingClientRect().height, fontSize: style.fontSize, padding: style.padding };
+        });
+      expect(await measure(projectsRailGroupTestIds.project(name))).toEqual(await measure(filterPanelTestIds.topicChip(topicId)));
+    });
 
   verifyListsProjects = (names: string[]) =>
     this.step(`verifyListsProjects ${names.join(", ")}`, () =>

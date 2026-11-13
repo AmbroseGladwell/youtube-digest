@@ -87,3 +87,10 @@
   margin: 0.25rem 0.25rem 0;
   color: var(--muted);
 }
+
+@media (max-width: 47.9375rem) {
+  .option {
+    min-height: 2.75rem;
+    font-size: 0.9rem;
+  }
+}

@@ -3,6 +3,7 @@ import { ProjectId, projectMarkdown } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
 
 const NOW = new Date("2026-11-13T10:00:00.000Z");
@@ -358,14 +359,17 @@ test.describe("on a phone and in the panel", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 760 });
-    const overview = titled("The kitchen layout mistakes I see every week");
+    const home = makeTopic({ name: "Home" });
+    const overview = titled("The kitchen layout mistakes I see every week", { topicIds: [home.id] });
     const project = makeProject();
+    backendSimulator.overviews.seedTopic(home);
     backendSimulator.overviews.seed(overview);
     backendSimulator.projects.seed(project);
     backendSimulator.projects.seedMember(makeProjectMember(project, overview.id));
     const library = await launcher.launchExpectingLibrary();
 
     await library.openFilters();
+    await library.projectsRail.verifyRowMatchesTopicRow("Kitchen renovation", home.id);
     const head = await library.projectsRail.openProject("Kitchen renovation");
 
     await library.verifyFiltersAreOpen(false);
