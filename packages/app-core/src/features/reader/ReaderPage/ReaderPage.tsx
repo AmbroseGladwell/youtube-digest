@@ -42,6 +42,7 @@ import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
 import { ArticleChaptersPanel } from "../components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLinks.js";
+import { ArticleResources } from "../components/ArticleResources/ArticleResources.js";
 import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
@@ -188,7 +189,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   );
   const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
   // The reader's switch hides the steps on every overview, as well as leaving them out of new ones.
-  const stepsOn = useSettingsQuery().data?.sectionsEnabled.steps ?? true;
+  const sectionsEnabled = useSettingsQuery().data?.sectionsEnabled;
+  const stepsOn = sectionsEnabled?.steps ?? true;
+  const resourcesOn = sectionsEnabled?.resources ?? true;
   // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
   const lines = useMemo(
     () =>
@@ -562,6 +565,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   )
                 }
               />
+              {webArticle !== null && resourcesOn && (
+                <ArticleResources key={`resources-${overviewId}`} {...webArticle} onPage={onPage} compact={isPanel || isPhone} />
+              )}
               {recipeNote !== null && adjustment !== null && scale !== null && (
                 <>
                   <RecipeIngredients
@@ -755,6 +761,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           <ShareOverviewDialog
             share={overviewShare.share}
             edited={overviewShare.edited}
+            audioMissing={overviewShare.audioMissing}
             signedIn={sync.connected}
             busy={shareOverview.isPending || stopSharing.isPending}
             failed={shareOverview.isError || stopSharing.isError}

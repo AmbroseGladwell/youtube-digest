@@ -1,10 +1,16 @@
 import { z } from "zod";
 import { WatchAnswer, WatchAnyway } from "@overview/domain";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
+import { offeredLinks } from "../offeredLinks.js";
+
+// The resources block carries the further reading, so leftOut never names it (design 203w).
+const LEAVE_LINKS_TO_THE_RESOURCES = `
+The links the piece points to are listed with the note, so never name
+them, or its further reading, in leftOut.`;
 
 export const readAnywaySection: ArticlePromptSection = {
   key: "watchAnyway",
-  prompt: () => `
+  prompt: (input) => `
 ## Read it anyway?
 Yes, no, or partial, plus a reason. Default to no. Say yes only if this
 note cannot get me to the same place: original reporting or data I would
@@ -27,7 +33,7 @@ words at most, so I can judge for myself: "It leaves out the code samples
 and the author's account of the argument with his boss." Name the actual
 things: examples, quotes, background, a table, a section. Read it aloud
 straight after the reason, so start it with "It leaves out". Never claim
-it leaves out nothing, and never say whether that matters; the reason does.
+it leaves out nothing, and never say whether that matters; the reason does.${offeredLinks(input.article).length > 0 ? LEAVE_LINKS_TO_THE_RESOURCES : ""}
 
 Say partial when this is true of only part of the article. When you do,
 name the parts worth reading as chapterIndexes, counting your own chapters

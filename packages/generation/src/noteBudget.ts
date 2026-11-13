@@ -38,12 +38,21 @@ const FINAL_STRETCH = 2 / 3;
 const CHAPTER_TOO_BIG_TO_SKIP = 0.25;
 
 // Sized from the source's measured length. Each form keeps its own rows up to 6,000 words,
-// and beyond that every source shares the same long rows (docs/features/overview-generation-decisions.md,
-// "One note budget").
-export const noteBudget = (form: SourceForm, sourceWords: number): NoteBudget => ({
-  ...ROWS[form].find(([upToWords]) => sourceWords <= upToWords)![1],
-  bigPictureWords: bigPictureBudget(sourceWords),
-});
+// and beyond that every source shares the same long rows. A source whose author marks out more
+// parts than its row has key points takes the next row's counts, keeping its own length and
+// point size (docs/features/overview-generation-decisions.md, "One note budget").
+export function noteBudget(form: SourceForm, sourceWords: number, headedParts = 0): NoteBudget {
+  const rows = ROWS[form];
+  const row = rows.findIndex(([upToWords]) => sourceWords <= upToWords);
+  const own = rows[row]![1];
+  const next = rows[row + 1]?.[1];
+  const dense = next !== undefined && headedParts > own.keyPoints;
+  return {
+    ...own,
+    ...(dense ? { keyPoints: next.keyPoints, mostChapters: next.mostChapters } : {}),
+    bigPictureWords: bigPictureBudget(sourceWords),
+  };
+}
 
 export const mostWordsPerKeyPoint = ({ wordsPerKeyPoint }: NoteBudget): number => Math.ceil(wordsPerKeyPoint * ROOM_OVER_THE_TARGET);
 

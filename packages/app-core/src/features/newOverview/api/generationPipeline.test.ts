@@ -218,7 +218,7 @@ const READ: ArticleRead = {
     publishedAt: null,
     language: "en",
     imageUrl: null,
-    sections: [{ heading: null, anchor: null, text: "The county reused a survey." }],
+    sections: [{ heading: null, anchor: null, text: "The county reused a survey.", links: [] }],
     wordCount: 3200,
     recipe: null,
   },

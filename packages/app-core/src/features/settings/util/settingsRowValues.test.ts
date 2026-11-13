@@ -89,13 +89,16 @@ describe("milestonesRowValue", () => {
 });
 
 describe("personalisationRowValue", () => {
-  it("says how many of the five optional sections the next overview will have", () => {
+  it("says how many of the six optional sections the next overview will have", () => {
     expect(personalisationRowValue(DEFAULT_SECTIONS_ENABLED, EMPTY_ABOUT_YOU)).toBe("About you not set · Every section");
     expect(personalisationRowValue({ ...DEFAULT_SECTIONS_ENABLED, selling: false }, EMPTY_ABOUT_YOU)).toBe(
-      "About you not set · 4 of 5 sections",
+      "About you not set · 5 of 6 sections",
     );
     expect(
-      personalisationRowValue({ verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false }, EMPTY_ABOUT_YOU),
+      personalisationRowValue(
+        { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false, resources: false },
+        EMPTY_ABOUT_YOU,
+      ),
     ).toBe("About you not set · Summary and key points only");
   });
 

@@ -24,6 +24,7 @@ import { onThisTabLineTestIds } from "../../src/features/capture/components/OnTh
 import { PageObject } from "./PageObject.testHelper.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 import { SourceStepsPageObject } from "./SourceStepsPageObject.testHelper.js";
+import { ArticleResourcesPageObject } from "./ArticleResourcesPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
 import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
@@ -41,6 +42,10 @@ export class ReaderPageObject extends PageObject {
 
   get sourceSteps(): SourceStepsPageObject {
     return new SourceStepsPageObject(this.testContext);
+  }
+
+  get resources(): ArticleResourcesPageObject {
+    return new ArticleResourcesPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<ReaderPageObject> =>

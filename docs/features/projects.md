@@ -33,7 +33,7 @@ library's select mode, which files several overviews at once.
 
 ## Two synced kinds
 
-`project` and `projectMember`, both added at client version 19. A client built before then
+`project` and `projectMember`, both added at client version 20. A client built before then
 is never sent either (`sync-api.md`, "A kind a client was built before").
 
 ```

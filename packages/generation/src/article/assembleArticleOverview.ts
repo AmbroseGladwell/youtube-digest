@@ -14,7 +14,8 @@ import {
 import { GenerationError } from "../GenerationError.js";
 import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { articleParagraphs, type ArticleParagraph } from "./articleParagraphs.js";
-import { noteBudget } from "../noteBudget.js";
+import { articleBudget } from "./articleBudget.js";
+import { offeredLinks } from "./offeredLinks.js";
 import { resolvedBigPicture } from "../sections/bigPicturePrompt.js";
 import { sourceStepsOf } from "../sourceStepsOf.js";
 import type { ArticleChapterShape } from "./sections/articleChaptersSection.js";
@@ -40,6 +41,8 @@ export interface GeneratedArticleOutput {
   sourceSteps?: Array<{ text: string; dubious: boolean; dubiousReason: string }>;
   howToApply?: unknown;
   readAnyway?: { answer: string; reason: string; leftOut: string; chapterIndexes: number[] };
+  // Absent when the page links to nothing.
+  resources?: Array<{ link: number; why: string }>;
 }
 
 const chapterHolding = (paragraphIndex: number, chapters: ArticleChapterShape[]): number =>
@@ -68,6 +71,20 @@ export function assembleArticleOverview(
     };
   });
   const verdict = output.thin ? undefined : output.verdict;
+  const links = offeredLinks(input.article);
+  const resources = (output.resources ?? []).map(({ link: index, why }) => {
+    const link = links[index];
+    if (link === undefined) {
+      throw new GenerationError(`the model named link ${index} (the article offers ${links.length})`);
+    }
+    return {
+      text: link.text,
+      href: link.href,
+      why: why.trim(),
+      place: paragraphAt(link.articleParagraph).place,
+      chapter: chapterHolding(link.articleParagraph, output.chapters),
+    };
+  });
 
   return Overview.parse({
     id: meta.id,
@@ -77,7 +94,7 @@ export function assembleArticleOverview(
     fromPlaylist: null,
     madeOn: null,
     inOneLine: output.inOneLine,
-    bigPicture: resolvedBigPicture(noteBudget("written", input.article.wordCount).bigPictureWords, output.bigPicture),
+    bigPicture: resolvedBigPicture(articleBudget(input.article).bigPictureWords, output.bigPicture),
     coreClaim: output.coreClaim,
     thin: output.thin,
     keyPoints: output.keyPoints.map(({ text }) => ({ text, range: null })),
@@ -110,6 +127,7 @@ export function assembleArticleOverview(
         paragraphIndex === null ? null : chapterHolding(paragraphAt(paragraphIndex).index, output.chapters),
       ),
       readAnyway: output.readAnyway === undefined ? null : ReadAnyway.parse(output.readAnyway),
+      ...(resources.length === 0 ? {} : { resources }),
     },
   });
 }
