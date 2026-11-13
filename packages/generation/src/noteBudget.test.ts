@@ -71,3 +71,34 @@ test("a ceiling leaves room over the target, so a near miss doesn't cost a retry
   assert.equal(mostWordsPerKeyPoint(noteBudget("written", 335)), 32);
   assert.equal(mostWordsPerKeyPoint(noteBudget("spoken", 18000)), 75);
 });
+
+test("a written piece with more headed parts than its row has points takes the next row's counts", () => {
+  assert.deepEqual(counts("written", 1401), { keyPoints: 5, wordsPerKeyPoint: 40, mostChapters: 5 });
+  const dense = noteBudget("written", 1401, 8);
+  assert.deepEqual(
+    { keyPoints: dense.keyPoints, wordsPerKeyPoint: dense.wordsPerKeyPoint, mostChapters: dense.mostChapters },
+    {
+      keyPoints: 6,
+      wordsPerKeyPoint: 40,
+      mostChapters: 7,
+    },
+  );
+  assert.equal(dense.bigPictureWords, noteBudget("written", 1401).bigPictureWords);
+});
+
+test("headed parts no more than the row's points change nothing", () => {
+  assert.deepEqual(noteBudget("written", 1401, 5), noteBudget("written", 1401));
+  assert.deepEqual(noteBudget("written", 335, 3), noteBudget("written", 335));
+});
+
+test("a dense piece below the long rows gets more points without becoming long", () => {
+  const dense = noteBudget("written", 4500, 15);
+  assert.equal(dense.keyPoints, 8);
+  assert.equal(dense.mostChapters, 14);
+  assert.equal(dense.long, false);
+  assert.equal(dense.wordsPerKeyPoint, 40);
+});
+
+test("the last row has nothing above it, however many headings", () => {
+  assert.deepEqual(noteBudget("written", 18000, 40), noteBudget("written", 18000));
+});

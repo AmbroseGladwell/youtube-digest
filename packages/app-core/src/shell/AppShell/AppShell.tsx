@@ -8,6 +8,7 @@ import { Routes } from "../../app/Routes.js";
 import { OverviewMark } from "../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon } from "../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MiniPlayer } from "../../features/player/components/MiniPlayer/MiniPlayer.js";
+import { CookingTimerDock } from "../../features/cookingTimers/components/CookingTimerDock/CookingTimerDock.js";
 import { AccountMenu } from "../../features/auth/components/AccountMenu/AccountMenu.js";
 import { SignedOutGate } from "../../features/accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { LibraryMoveNotice } from "../../features/accountLibraries/components/LibraryMoveNotice/LibraryMoveNotice.js";
@@ -321,7 +322,9 @@ export function AppShell() {
                 )}
               </div>
 
-              <MiniPlayer />
+              <CookingTimerDock>
+                <MiniPlayer />
+              </CookingTimerDock>
 
               <SignOutNotice />
 

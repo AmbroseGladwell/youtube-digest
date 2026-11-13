@@ -90,6 +90,33 @@ test("a copy made from an earlier note says so, and offers to replace it behind 
   await again.verifyLinkReads(made!.url);
 });
 
+// Narration is left out of the edited check on purpose, so audio rendered after sharing
+// needs its own way onto the link, or the recipient never hears it (docs/features/sharing.md).
+test("audio rendered after sharing is offered to the copy, and added behind the same link", async ({ launcher, backendSimulator }) => {
+  const overview = titled();
+  backendSimulator.overviews.seed(overview);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  const dialog = await reader.clickShare();
+  await dialog.clickCreateLink();
+  await dialog.verifyStatusReads("0 views");
+  await dialog.verifyDoesNotSayAudioIsMissing();
+  const [made] = backendSimulator.shares.live();
+  test.expect(backendSimulator.shares.snapshot(made!.token)?.narration).toBeNull();
+  await dialog.clickDone();
+
+  backendSimulator.narration.seedReady(overview);
+
+  const again = await reader.clickShare();
+  await again.verifySaysAudioIsMissing();
+  await again.verifyDoesNotSayItWasEdited();
+  await again.clickAddAudio();
+
+  await again.verifyDoesNotSayAudioIsMissing();
+  await again.verifyLinkReads(made!.url);
+  test.expect(backendSimulator.shares.snapshot(made!.token)?.narration).not.toBeNull();
+});
+
 // The reason, the topics and read state are the reader's own and are not in the copy, so
 // changing one is not a reason to tell them the link has gone stale
 // (docs/features/sharing.md).

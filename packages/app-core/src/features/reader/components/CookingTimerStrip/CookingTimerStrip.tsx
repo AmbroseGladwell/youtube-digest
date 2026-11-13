@@ -7,17 +7,20 @@ import { cookingTimerStripTestIds } from "./CookingTimerStripTestIds.js";
 export interface CookingTimerStripProps {
   timers: readonly CookingTimer[];
   now: number;
+  // The recipe being cooked; another recipe's timers are named by it (design 288e).
+  here: string;
   onOpen: (id: number) => void;
 }
 
-const timerLabel = (timer: CookingTimer, now: number): string => {
-  const where = timer.name === null ? `Step ${timer.step + 1} timer` : `${timer.name} timer, step ${timer.step + 1}`;
+const timerLabel = (timer: CookingTimer, now: number, here: string): string => {
+  const step = timer.name === null ? `Step ${timer.step + 1} timer` : `${timer.name} timer, step ${timer.step + 1}`;
+  const where = timer.source.recipe === here ? step : `${step}, ${timer.recipeTitle}`;
   return `${where}, ${isPaused(timer) ? "paused, " : ""}${timeLeftWords(timeLeftMs(timer, now))} left`;
 };
 
 // Designs 284g–284o: the running timers under the step dots on every screen of the mode,
 // soonest first. One is named by its verb and step; two or more by the verb alone.
-export function CookingTimerStrip({ timers, now, onOpen }: CookingTimerStripProps) {
+export function CookingTimerStrip({ timers, now, here, onOpen }: CookingTimerStripProps) {
   if (timers.length === 0) return null;
   const solo = timers.length === 1;
   return (
@@ -31,13 +34,18 @@ export function CookingTimerStrip({ timers, now, onOpen }: CookingTimerStripProp
       {timers.map((timer) => {
         const left = timeLeftMs(timer, now);
         const paused = isPaused(timer);
-        const name = solo ? timerFullName(timer) : timerShortName(timer);
+        const name =
+          timer.source.recipe !== here
+            ? `${timerShortName(timer)} · ${timer.recipeTitle}`
+            : solo
+              ? timerFullName(timer)
+              : timerShortName(timer);
         return (
           <button
             key={timer.id}
             type="button"
             className={`${styles.chip} ${solo ? styles.solo : ""}`}
-            aria-label={timerLabel(timer, now)}
+            aria-label={timerLabel(timer, now, here)}
             onClick={() => onOpen(timer.id)}
             data-testid={cookingTimerStripTestIds.chip}
           >

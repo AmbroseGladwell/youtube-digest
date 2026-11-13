@@ -1,0 +1,273 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Design 203ab: open in 280ms, the preview line fading first and each line dropping 4px into
+// place 40ms apart; close in 200ms, the list fading before the space shrinks. Nothing below
+// moves, since the block is last in the note. With reduced motion it opens and closes at once.
+.root {
+  --open: 280ms;
+  --close: 200ms;
+
+  margin-top: 1.375rem;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible .chevron {
+    outline: 2px solid var(--label);
+    outline-offset: 2px;
+  }
+}
+
+.heading {
+  @include controls.section-label;
+
+  flex: 1;
+  min-width: 0;
+}
+
+.count {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.order {
+  color: var(--muted);
+  font-size: 0.78125rem;
+  font-weight: 500;
+}
+
+.chevron {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+
+  svg {
+    @media (prefers-reduced-motion: no-preference) {
+      transition: transform var(--open) var(--motion-ease);
+    }
+  }
+}
+
+.open .chevron svg {
+  transform: rotate(180deg);
+}
+
+.previewWrap,
+.bodyWrap {
+  display: grid;
+  min-height: 0;
+
+  > div {
+    overflow: hidden;
+    min-height: 0;
+  }
+}
+
+.previewWrap {
+  grid-template-rows: 1fr;
+  opacity: 1;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      grid-template-rows var(--close) var(--motion-ease) 80ms,
+      opacity 160ms 80ms;
+  }
+}
+
+.open .previewWrap {
+  grid-template-rows: 0fr;
+  opacity: 0;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      grid-template-rows var(--close) var(--motion-ease),
+      opacity 100ms;
+  }
+}
+
+.preview {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.bodyWrap {
+  grid-template-rows: 0fr;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: grid-template-rows var(--close) var(--motion-ease) 60ms;
+  }
+}
+
+.open .bodyWrap {
+  grid-template-rows: 1fr;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: grid-template-rows var(--open) var(--motion-ease);
+  }
+}
+
+.explanation,
+.item {
+  opacity: 0;
+  transform: translateY(-0.25rem);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      opacity 100ms,
+      transform 100ms;
+  }
+}
+
+.open .explanation,
+.open .item {
+  opacity: 1;
+  transform: none;
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      opacity 220ms calc(60ms + var(--i, 0) * 40ms),
+      transform var(--open) var(--motion-ease) calc(60ms + var(--i, 0) * 40ms);
+  }
+}
+
+.explanation {
+  max-width: 60ch;
+  margin: 0.125rem 0 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin: 0.875rem 0 0;
+  padding: 0 0 0.25rem;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.site {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 0.78125rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.name {
+  max-width: 100%;
+  color: var(--ink);
+  font-size: var(--resource-name-size, 1rem);
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+
+  svg {
+    margin-left: 0.3125rem;
+    vertical-align: -0.0625rem;
+  }
+
+  &:hover {
+    color: var(--ink);
+    text-decoration-thickness: 2px;
+  }
+}
+
+.why {
+  max-width: 60ch;
+  margin: 0.125rem 0 0;
+  color: var(--ink);
+  font-size: var(--resource-why-size, 0.90625rem);
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.from {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  margin-top: 0.3125rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+
+  b {
+    color: var(--label);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  &:hover b {
+    text-decoration-thickness: 2px;
+  }
+}
+
+.onPage {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.compact {
+  --resource-name-size: 0.9375rem;
+  --resource-why-size: 0.875rem;
+
+  .list {
+    gap: 1.125rem;
+  }
+}

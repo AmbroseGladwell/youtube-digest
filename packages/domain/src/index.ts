@@ -1,4 +1,5 @@
 export * from "./ArticleDetails.js";
+export * from "./ArticleLink.js";
 export * from "./ArticlePlace.js";
 export * from "./ArticleRead.js";
 export * from "./PodcastEpisode.js";
