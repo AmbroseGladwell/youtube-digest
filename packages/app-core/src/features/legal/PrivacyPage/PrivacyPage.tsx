@@ -91,10 +91,11 @@ const sections: readonly LegalSection[] = [
           and for an article up to five of the links the page makes, with their words and a line on why each is worth opening. For an
           episode it also keeps the address of its show's feed and audio, and the Apple Podcasts, Spotify or show page link you pasted, with
           the code Spotify adds to say who shared it removed; a shared link shows that link. Beside it you may add a reason you saved it,
-          file it under topics, and mark it read or favourite. Your settings travel with the account too: the narration voice, whether
-          cooking step by step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an overview shows,
-          the About you sentence that personalises overviews and what we have learned from your overviews, the tags you have merged, the
-          playlists you follow, and the running total of time saved with its milestones.
+          file it under topics, put it in projects of your own, and mark it read or favourite. A project holds its name, a line on what it
+          is for, and for each overview in it whether you or a connected assistant put it there, and when. Your settings travel with the
+          account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent
+          colour, which sections an overview shows, the About you sentence that personalises overviews and what we have learned from your
+          overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -286,10 +287,10 @@ const sections: readonly LegalSection[] = [
       <>
         <p>
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such as opening an overview,
-          choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview or
-          topic. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider and
-          the model. An event can never carry a link, a video, a title, an overview's words or anything you typed, because there is no field
-          shaped to hold them.
+          choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview, topic
+          or project. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider
+          and the model. An event can never carry a link, a video, a title, an overview's words or anything you typed, because there is no
+          field shaped to hold them.
         </p>
         <h3>Three situations</h3>
         <ul>
@@ -383,13 +384,14 @@ const sections: readonly LegalSection[] = [
     body: (
       <p>
         You can connect Claude or another assistant to your library. The assistant gets its own tokens, never your session, and they let it
-        list and search your overviews, by word and by meaning, read them and their transcripts, and mark them read or favourite. A
-        connection whose consent screen said so can also read what we know about you: your About you sentence, and what we have learned from
-        your overviews with where each came from, never anything you removed or have not yet been shown. That is on until you turn off
-        "Share with your assistants" in Settings › Personalisation, which stops every connection reading it at once. Every connection is
-        listed in Settings › Connections, where you can revoke it. We log each call an assistant makes, with the tool it used and how long
-        it took, never the overview's contents or what we know about you. The assistant's own provider handles what it then does with what
-        it reads under its own policy.
+        list and search your overviews, by word and by meaning, read them and their transcripts, and mark them read or favourite. It can
+        also read your projects, make a project, and put overviews in a project or take them out; what it makes or puts in is marked with
+        its name, and it cannot rename, archive or delete a project. A connection whose consent screen said so can also read what we know
+        about you: your About you sentence, and what we have learned from your overviews with where each came from, never anything you
+        removed or have not yet been shown. That is on until you turn off "Share with your assistants" in Settings › Personalisation, which
+        stops every connection reading it at once. Every connection is listed in Settings › Connections, where you can revoke it. We log
+        each call an assistant makes, with the tool it used and how long it took, never the overview's contents or what we know about you.
+        The assistant's own provider handles what it then does with what it reads under its own policy.
       </p>
     ),
   },
@@ -453,8 +455,8 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>Strictly necessary</strong>, because the app can't work without it: your library and its transcripts, in the browser's
           database; any API keys you added; your settings; your sign-in state, and in the extension the server it talks to; where you got to
-          in each transcript; which of a followed playlist's videos this device has seen; and, before you have an account, the trial token
-          that lets you make a first overview.
+          in each transcript; which of a followed playlist's videos this device has seen; when you chose to keep a project the app asked
+          about after it was left alone; and, before you have an account, the trial token that lets you make a first overview.
         </p>
         <p>
           <strong>Analytics only</strong>, and deleted when you say no: your answer to the analytics question, the date you gave it, and,

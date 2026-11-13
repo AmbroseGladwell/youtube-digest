@@ -103,6 +103,24 @@ export class ScriptedSyncApi implements SyncApi {
     return this.#answer("deleteFollowedPlaylist", [id], () => null);
   }
 
+  async createProject(record: Record<string, unknown>) {
+    return this.#answer("createProject", [record], () => this.#written(String(record.id)));
+  }
+
+  async updateProject(id: string, patch: Record<string, unknown>, updatedAt: string) {
+    return this.#answer("updateProject", [id, patch, updatedAt], () => this.#written(id));
+  }
+
+  async deleteProject(id: string) {
+    return this.#answer("deleteProject", [id], () => null);
+  }
+
+  async changeProjectMember(projectId: string, overviewId: string, change: Record<string, unknown>, updatedAt: string) {
+    return this.#answer("changeProjectMember", [projectId, overviewId, change, updatedAt], () =>
+      this.#written(`${projectId}:${overviewId}`),
+    );
+  }
+
   async saveTranscript(transcript: StoredTranscript) {
     return this.#answer("saveTranscript", [transcript], () => {
       this.transcripts.set(transcript.videoId, transcript);

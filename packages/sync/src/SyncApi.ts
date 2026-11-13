@@ -18,6 +18,10 @@ export interface SyncApi {
   updateSettings(patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   saveFollowedPlaylist(record: Record<string, unknown>, ifMatch: number | null): Promise<WrittenRecord>;
   deleteFollowedPlaylist(id: string): Promise<WrittenRecord | null>;
+  createProject(record: Record<string, unknown>): Promise<WrittenRecord>;
+  updateProject(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
+  deleteProject(id: string): Promise<WrittenRecord | null>;
+  changeProjectMember(projectId: string, overviewId: string, change: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   saveTranscript(transcript: StoredTranscript): Promise<void>;
   // Null when the account keeps no transcript for the video.
   getTranscript(videoId: string): Promise<StoredTranscript | null>;

@@ -84,6 +84,7 @@ test("a long list shows its first five and says how many more there are and wher
 
   await reader.sourceSteps.verifyShownStepsRead(LONG_STEPS.slice(0, 5).map(({ text }) => text));
   await reader.sourceSteps.verifyShowAllReads("Show all 18 steps13 more, up to 18:00");
+  await reader.sourceSteps.verifySitsUnderStep("Do step 5 of the routine.");
 
   await reader.sourceSteps.clickShowAll();
 

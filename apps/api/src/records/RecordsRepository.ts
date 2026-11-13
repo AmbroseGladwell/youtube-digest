@@ -22,7 +22,9 @@ export interface WriteOperation {
   // under another id that already holds it, if there is one, so it can refuse a second
   // (docs/features/one-overview-per-video.md).
   sourceKey?: string | null;
-  decide: (current: StoredRecord | null, held: StoredRecord | null) => WriteDecision;
+  // Other records the decision depends on, read in the same transaction as this one.
+  requires?: ReadonlyArray<{ kind: RecordKind; id: string }>;
+  decide: (current: StoredRecord | null, held: StoredRecord | null, required: Array<StoredRecord | null>) => WriteDecision;
 }
 
 export interface ChangesPage {
@@ -61,11 +63,12 @@ export class RecordsRepository {
   async #write(accountId: AccountId, operations: WriteOperation[]): Promise<Array<WriteOutcome | null>> {
     return this.#sql.transaction(async (tx) => {
       const outcomes: Array<WriteOutcome | null> = [];
-      for (const { kind, id, sourceKey, decide } of operations) {
+      for (const { kind, id, sourceKey, requires = [], decide } of operations) {
         const seq = await allocateSeq(tx, accountId);
         const current = await this.#get(tx, accountId, kind, id);
         const held = sourceKey == null ? null : await this.#liveOverviewOf(tx, accountId, sourceKey, id);
-        const decision = decide(current, held);
+        const required = await Promise.all(requires.map((other) => this.#get(tx, accountId, other.kind, other.id)));
+        const decision = decide(current, held, required);
         if (decision.action === "nothing") {
           outcomes.push(null);
           continue;
@@ -121,6 +124,15 @@ export class RecordsRepository {
       next: changes.at(-1)?.seq ?? since,
       more: rows.length > limit,
     };
+  }
+
+  // A pattern in SQL's LIKE syntax, over ids of one kind that are not tombstoned.
+  async listLiveIds(accountId: AccountId, kind: RecordKind, idPattern: string): Promise<string[]> {
+    const rows = await this.#sql.query<{ id: string }>(
+      `select id from records where account_id = $1 and kind = $2 and not deleted and id like $3 order by seq`,
+      [accountId, kind, idPattern],
+    );
+    return rows.map(({ id }) => id);
   }
 
   async read(accountId: AccountId, kind: RecordKind, id: string): Promise<StoredRecord | null> {

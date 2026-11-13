@@ -63,6 +63,7 @@ import { settingsRoutes } from "./routes/settingsRoutes.js";
 import { shareRoutes } from "./routes/shareRoutes.js";
 import { sampleRoutes } from "./routes/sampleRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
+import { projectRoutes } from "./routes/projectRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
 import { SharesRepository } from "./shares/SharesRepository.js";
@@ -280,6 +281,7 @@ export async function buildApp({
       topicRoutes(api, records);
       meaningSearchRoutes(api, meaningSearch);
       followedPlaylistRoutes(api, records);
+      projectRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);

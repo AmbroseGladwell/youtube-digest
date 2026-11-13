@@ -4,6 +4,10 @@ import {
   DATABASE_NAME,
   DATABASE_VERSION,
   FOLLOWED_PLAYLISTS_STORE,
+  MEMBERS_BY_OVERVIEW_INDEX,
+  MEMBERS_BY_PROJECT_INDEX,
+  PROJECTS_STORE,
+  PROJECT_MEMBERS_STORE,
   OUTBOX_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
@@ -69,6 +73,14 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       }
       if (!db.objectStoreNames.contains(CAPTURE_QUEUE_STORE)) {
         db.createObjectStore(CAPTURE_QUEUE_STORE, { keyPath: "videoId" });
+      }
+      if (!db.objectStoreNames.contains(PROJECTS_STORE)) {
+        db.createObjectStore(PROJECTS_STORE, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(PROJECT_MEMBERS_STORE)) {
+        const members = db.createObjectStore(PROJECT_MEMBERS_STORE, { keyPath: "id" });
+        members.createIndex(MEMBERS_BY_PROJECT_INDEX, "projectId");
+        members.createIndex(MEMBERS_BY_OVERVIEW_INDEX, "overviewId");
       }
     };
 

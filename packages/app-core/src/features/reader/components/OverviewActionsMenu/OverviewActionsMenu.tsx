@@ -26,6 +26,8 @@ export interface OverviewActionsMenuProps {
   onEditTopics: () => void;
   onEditReason: () => void;
   onToggleRead: () => void;
+  // Null where there is no library to keep projects in; otherwise how many it's in (168r).
+  projects: { count: number; onAdd: () => void } | null;
   onDelete: () => void;
 }
 
@@ -74,6 +76,7 @@ export function OverviewActionsMenu({
   onEditTopics,
   onEditReason,
   onToggleRead,
+  projects,
   onDelete,
 }: OverviewActionsMenuProps) {
   const [open, setOpen] = useState(false);
@@ -148,6 +151,22 @@ export function OverviewActionsMenu({
               data-testid={overviewActionsMenuTestIds.regenerateItem}
             >
               {regenerate.asksFirst ? "Regenerate…" : "Regenerate"}
+            </button>
+          )}
+          {projects !== null && (
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.item}
+              onClick={choose("addToProject", projects.onAdd)}
+              data-testid={overviewActionsMenuTestIds.addToProjectItem}
+            >
+              Add to project…
+              {projects.count > 0 && (
+                <span className={styles.count} data-testid={overviewActionsMenuTestIds.projectCount}>
+                  In {projects.count}
+                </span>
+              )}
             </button>
           )}
           <button

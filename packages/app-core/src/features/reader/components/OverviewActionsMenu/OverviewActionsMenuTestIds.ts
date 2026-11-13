@@ -7,6 +7,8 @@ export const overviewActionsMenuTestIds = {
   regenerateItem: "OverviewActionsMenu.regenerateItem",
   reasonItem: "OverviewActionsMenu.reasonItem",
   readItem: "OverviewActionsMenu.readItem",
+  addToProjectItem: "OverviewActionsMenu.addToProjectItem",
+  projectCount: "OverviewActionsMenu.projectCount",
   watchItem: "OverviewActionsMenu.watchItem",
   shareItem: "OverviewActionsMenu.shareItem",
   copyRecipeItem: "OverviewActionsMenu.copyRecipeItem",

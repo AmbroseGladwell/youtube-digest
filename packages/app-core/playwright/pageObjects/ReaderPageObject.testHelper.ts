@@ -10,6 +10,8 @@ import { playerScrubberTestIds } from "../../src/features/player/components/Play
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { chaptersPanelTestIds } from "../../src/features/reader/components/ChaptersPanel/ChaptersPanelTestIds.js";
 import { topicLineTestIds } from "../../src/features/reader/components/TopicLine/TopicLineTestIds.js";
+import { projectsLineTestIds } from "../../src/features/projects/components/ProjectsLine/ProjectsLineTestIds.js";
+import { ProjectPickerPageObject } from "./ProjectPickerPageObject.testHelper.js";
 import { overviewActionsMenuTestIds } from "../../src/features/reader/components/OverviewActionsMenu/OverviewActionsMenuTestIds.js";
 import { TopicPickerPageObject } from "./TopicPickerPageObject.testHelper.js";
 import { transcriptPanelTestIds } from "../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
@@ -1230,5 +1232,40 @@ export class ReaderPageObject extends PageObject {
       const box = (await this.get(readerMastheadTestIds[part]).boundingBox())!;
       const title = (await this.get(readerMastheadTestIds.title).boundingBox())!;
       expect(box.y + box.height).toBeLessThanOrEqual(title.y);
+    });
+
+  addToProject = (): Promise<ProjectPickerPageObject> =>
+    this.step("addToProject", async () => {
+      await this.openActionsMenu();
+      await this.click(overviewActionsMenuTestIds.addToProjectItem);
+      return new ProjectPickerPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyMenuSaysInProjects = (text: string | null) =>
+    this.step(`verifyMenuSaysInProjects ${text}`, async () => {
+      await this.openActionsMenu();
+      if (text === null) await this.expectNotToBeVisible(overviewActionsMenuTestIds.projectCount);
+      else await expect(this.get(overviewActionsMenuTestIds.projectCount)).toHaveText(text);
+      await this.page.keyboard.press("Escape");
+    });
+
+  verifyProjectsLineReads = (text: string | null) =>
+    this.step(`verifyProjectsLineReads ${text}`, () =>
+      text === null ? this.expectNotToBeVisible(projectsLineTestIds.root) : expect(this.get(projectsLineTestIds.root)).toHaveText(text),
+    );
+
+  verifyProjectLinkHref = (name: string, href: RegExp) =>
+    this.step(`verifyProjectLinkHref ${name}`, () => expect(this.get(projectsLineTestIds.projectLink(name))).toHaveAttribute("href", href));
+
+  changeProjects = (): Promise<ProjectPickerPageObject> =>
+    this.step("changeProjects", async () => {
+      await this.click(projectsLineTestIds.changeButton);
+      return new ProjectPickerPageObject(this.testContext).verifyIsShown();
+    });
+
+  openMoreProjects = (): Promise<ProjectPickerPageObject> =>
+    this.step("openMoreProjects", async () => {
+      await this.click(projectsLineTestIds.moreButton);
+      return new ProjectPickerPageObject(this.testContext).verifyIsShown();
     });
 }

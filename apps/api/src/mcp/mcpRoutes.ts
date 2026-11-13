@@ -46,6 +46,7 @@ export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, mea
       clock,
       accountId: access.accountId,
       connectionId: access.connectionId,
+      connection: { id: access.connectionId, name: access.clientName?.trim() || "An assistant" },
       assistant: mcpAssistant(access.clientName),
       writes: connectionWrites(access.scope),
       readsProfile: connectionReadsProfile(access.scope),

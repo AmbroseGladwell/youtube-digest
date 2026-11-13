@@ -73,7 +73,7 @@ test("a refused approval says why", async () => {
   await assert.rejects(api.decide(REQUEST_ID, true), (error) => isSyncRequestError(error) && error.code === "not_found");
 });
 
-test("connections are listed and revoked", async () => {
+test("connections are listed and revoked, and one from a server that predates writes can't write", async () => {
   const connection = {
     id: "c1",
     clientName: "Claude",
@@ -82,7 +82,9 @@ test("connections are listed and revoked", async () => {
     readsProfile: true,
   };
   const listing = answering(200, { connections: [connection] });
-  assert.deepEqual(await createFetchConnectionsApi({ baseUrl: "https://o.example", fetch: listing.fetch }).list(), [connection]);
+  assert.deepEqual(await createFetchConnectionsApi({ baseUrl: "https://o.example", fetch: listing.fetch }).list(), [
+    { ...connection, writes: false },
+  ]);
 
   const revoking = answering(204, null);
   await createFetchConnectionsApi({ baseUrl: "https://o.example", fetch: revoking.fetch }).revoke("c1");

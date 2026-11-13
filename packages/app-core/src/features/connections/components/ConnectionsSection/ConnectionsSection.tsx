@@ -17,7 +17,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export const CONNECTIONS_INTRO =
-  "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, and mark them read or favourite for you.";
+  "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, mark them read or favourite for you, and gather them into projects.";
 
 // Design 58i–58r. A connection belongs to an account rather than to a plan
 // (docs/architecture/tiers.md), so signed out is the only state that says what it would take

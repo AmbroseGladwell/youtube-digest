@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { NOVELTY_LABEL, NOVELTY_ORDER, type Novelty, type Topic } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { LibraryFilterCounts } from "../../util/libraryFilterCounts.js";
@@ -16,6 +16,8 @@ export interface FilterPanelProps {
   onChange: (patch: Partial<LibraryFilters>) => void;
   onNewTopic: () => void;
   onManageTags: () => void;
+  // The Projects group, under Show in the rail and the sheet (docs/features/projects.md).
+  projects?: ReactNode;
 }
 
 const MORE_PANEL_ID = "FilterPanel-more";
@@ -31,7 +33,7 @@ const moreSummary = (filters: LibraryFilters): string => {
   ].join(" · ");
 };
 
-export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onManageTags }: FilterPanelProps) {
+export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
   // A tag arriving from a note opens the group the tag is in (84g).
   const [moreShown, setMoreShown] = useState(filters.tag !== null);
@@ -69,6 +71,7 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
           Only favourites
         </Toggle>
       </div>
+      {projects}
 
       <div className={styles.group}>
         <p className={styles.label}>Topic</p>

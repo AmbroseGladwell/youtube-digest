@@ -187,4 +187,13 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   verifyHasThumbnail = () => this.expectToBeVisible(overviewThumbnailTestIds.image);
   verifyHasNoThumbnail = () => this.expectNotToBeVisible(overviewThumbnailTestIds.image);
+
+  verifyAddedByReads = (text: string | null) =>
+    this.step(`verifyAddedByReads ${text}`, () =>
+      text === null
+        ? this.expectNotToBeVisible(libraryOverviewCardTestIds.addedBy)
+        : expect(this.get(libraryOverviewCardTestIds.addedBy)).toHaveText(text),
+    );
+
+  clickRemoveFromProject = () => this.step("clickRemoveFromProject", () => this.click(libraryOverviewCardTestIds.removeFromProjectButton));
 }

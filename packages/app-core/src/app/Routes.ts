@@ -5,6 +5,7 @@ import {
   SIGN_IN_PATH,
   sharePath,
   type OverviewId,
+  type ProjectId,
   type ShareToken,
 } from "@overview/domain";
 import type { SettingsSectionId } from "../features/settings/SettingsSectionId.js";
@@ -37,6 +38,10 @@ export const Routes = {
   privacy: () => "/privacy",
   terms: () => "/terms",
   overview: (overviewId: OverviewId | string) => `/overviews/${overviewId}`,
+  // Every project, then one project's page: the library's main column given over to it
+  // (docs/features/projects.md, "The project page").
+  projects: () => "/projects",
+  project: (projectId: ProjectId | string) => `/projects/${projectId}`,
   // The address the API writes into every shared link, so the two cannot drift
   // (docs/features/sharing.md).
   sharedOverview: (token: ShareToken | string) => sharePath(token),
@@ -44,6 +49,7 @@ export const Routes = {
 
 export const RouteParams = {
   overviewId: "overviewId",
+  projectId: "projectId",
   requestId: "requestId",
   shareToken: "token",
 } as const;

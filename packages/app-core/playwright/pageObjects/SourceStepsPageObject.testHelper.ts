@@ -42,6 +42,17 @@ export class SourceStepsPageObject extends PageObject {
       await expect(this.get(readAlongNoteTestIds.showAllSteps)).toHaveAttribute("aria-expanded", "false");
     });
 
+  verifySitsUnderStep = (text: string) =>
+    this.step(`verifySitsUnderStep ${text}`, async () => {
+      const step = await this.stepLines().filter({ hasText: text }).boundingBox();
+      const button = await this.get(readAlongNoteTestIds.showAllSteps).boundingBox();
+      expect(step).not.toBeNull();
+      expect(button).not.toBeNull();
+      const gap = button!.y - (step!.y + step!.height);
+      expect(gap).toBeGreaterThanOrEqual(0);
+      expect(gap).toBeLessThanOrEqual(16);
+    });
+
   verifyNoShowAll = () => this.step("verifyNoShowAll", () => this.expectToHaveCount(readAlongNoteTestIds.showAllSteps, 0));
 
   clickShowAll = () =>

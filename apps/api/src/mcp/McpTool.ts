@@ -15,6 +15,10 @@ export interface McpToolContext {
   meaning: MeaningSearch | null;
   clock: () => Date;
   log: FastifyBaseLogger;
+  // Who is calling, named as it registered, for marking what it adds (docs/features/projects.md).
+  connection: { id: string; name: string };
+  // Whether the connection's scope lets it write (docs/features/mcp-connector.md, "Scopes").
+  writes: boolean;
 }
 
 // `overviews` is how many a call returned or marked, the one number about a call that is
@@ -23,6 +27,9 @@ export interface McpToolOutcome {
   text: string;
   isError?: boolean;
   overviews?: number;
+  // The one project a call read or made, and whether it has a purpose, so the logs can say
+  // whether a purpose makes a project read more (docs/features/projects.md, "Measures").
+  project?: { id: string; hasPurpose: boolean };
 }
 
 // A tool that writes, or reads the profile, is offered only to a connection whose scope allows
@@ -33,6 +40,7 @@ export interface McpTool {
   description: string;
   inputSchema: Record<string, unknown>;
   writes: boolean;
+  idempotent: boolean;
   readsProfile: boolean;
   call(args: unknown, context: McpToolContext): Promise<McpToolOutcome>;
 }
@@ -47,6 +55,8 @@ export function mcpTool<Input extends z.ZodObject>(tool: {
   description: string;
   input: Input;
   writes?: boolean;
+  // False for a tool whose second identical call does not leave things as the first did.
+  idempotent?: boolean;
   readsProfile?: boolean;
   run(input: z.infer<Input>, context: McpToolContext): Promise<McpToolOutcome>;
 }): McpTool {
@@ -56,6 +66,7 @@ export function mcpTool<Input extends z.ZodObject>(tool: {
     description: tool.description,
     inputSchema: z.toJSONSchema(tool.input, { io: "input" }),
     writes: tool.writes ?? false,
+    idempotent: tool.idempotent ?? true,
     readsProfile: tool.readsProfile ?? false,
     call: async (args, context) => {
       const parsed = tool.input.safeParse(args ?? {});

@@ -42,7 +42,7 @@ test("an overview's own events carry its id on the reader, and leave it to the s
 });
 
 test("a model id is a provider's own id, and nothing shaped like a sentence or a link", () => {
-  const model = ANALYTICS_IDS[2];
+  const model = ANALYTICS_IDS[3];
   for (const id of ["claude-haiku-5-5", "gpt-6.1-sol", "models/gemini-3.6", "mistral-medium-2508"]) {
     assert.ok(model.safeParse(id).success, id);
   }

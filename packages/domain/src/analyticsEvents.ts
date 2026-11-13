@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AccentColour, HeadImageSize, ThemeMode } from "./Appearance.js";
-import { OverviewId, TopicId } from "./Brands.js";
+import { OverviewId, ProjectId, TopicId } from "./Brands.js";
 import { MilestoneId, MilestoneLineControl } from "./Milestone.js";
 import { ModelId } from "./ModelId.js";
 import { NoteKind } from "./NoteKind.js";
@@ -22,7 +22,7 @@ import { OnboardingStep } from "./OnboardingStep.js";
 // provider's model id: nothing that could carry a URL, a video id or a sentence the reader
 // wrote (docs/architecture/analytics.md, "What an event may carry"). One added to an event
 // that already exists is optional, so an older client's event still parses ("Adding a property").
-export const ANALYTICS_IDS = [OverviewId, TopicId, ModelId] as const;
+export const ANALYTICS_IDS = [OverviewId, TopicId, ProjectId, ModelId] as const;
 type AnalyticsValue = z.ZodEnum | z.ZodBoolean | z.ZodNumber | (typeof ANALYTICS_IDS)[number];
 export type AnalyticsProp = AnalyticsValue | z.ZodOptional<AnalyticsValue>;
 export type AnalyticsProps = Record<string, AnalyticsProp>;
@@ -208,6 +208,7 @@ export const OverviewMenuItem = z.enum([
   "copyRecipe",
   "printRecipe",
   "regenerate",
+  "addToProject",
   "openInWebApp",
   "delete",
 ]);
@@ -1028,6 +1029,24 @@ export const analyticsEvents = {
       }),
       undone: event("The reader undoes the last change in Manage tags"),
     },
+    // Counts only: never which overviews (OV-168, "OV-168 5" 168az).
+    selection: {
+      started: event("The reader starts selecting overviews in the library or a project"),
+      stopped: event("The reader stops selecting overviews, with how many were selected", {
+        selected: z.number().int().nonnegative(),
+      }),
+      acted: event("The reader acts on the overviews they selected, from the bar", {
+        action: z.enum(["addToProject", "addToTopic", "markRead", "markUnread", "favourite", "unfavourite", "removeFromProject", "delete"]),
+        overviews: z.number().int().positive(),
+      }),
+      topicChanged: event("The reader gives a topic to every selected overview, or takes it from them", {
+        topicId: TopicId,
+        given: z.boolean(),
+        overviews: z.number().int().positive(),
+      }),
+      deleted: event("The reader confirms deleting the overviews they selected", { overviews: z.number().int().positive() }),
+      deleteKept: event("The reader keeps the overviews they selected after asking to delete them"),
+    },
     filterSheet: {
       opened: event("The reader opens the filter sheet on a narrow screen"),
       closed: event("The reader closes the filter sheet on a narrow screen"),
@@ -1081,6 +1100,76 @@ export const analyticsEvents = {
         filed: z.number().int().nonnegative(),
       }),
       cancelled: event("The reader closes the new topic dialog without creating one"),
+    },
+  },
+  // Ids and counts only: never a project's name or what it's for (docs/features/projects.md, "Measures").
+  projects: {
+    rail: {
+      projectOpened: event("The reader opens a project from the library's rail or filter sheet", { projectId: ProjectId }),
+      projectLeft: event("The reader leaves a project's page for the whole library by choosing the project again"),
+      allProjectsOpened: event("The reader opens the page of every project"),
+    },
+    index: {
+      projectOpened: event("The reader opens a project from the page of every project", { projectId: ProjectId, archived: z.boolean() }),
+      archivedShown: event("The reader shows or hides the archived projects on the page of every project", { shown: z.boolean() }),
+    },
+    page: {
+      markdownCopied: event("The reader copies a project as Markdown, with how many overviews it holds", {
+        projectId: ProjectId,
+        overviews: z.number().int().nonnegative(),
+      }),
+      renamed: event("The reader renames a project", { projectId: ProjectId }),
+      purposeEdited: event("The reader saves what a project is for, and whether an assistant had written what it replaced", {
+        projectId: ProjectId,
+        replacedAssistants: z.boolean(),
+        cleared: z.boolean(),
+      }),
+      archived: event("The reader archives a project, from its menu or the quiet line on a project left alone", {
+        projectId: ProjectId,
+        from: z.enum(["menu", "nudge"]),
+      }),
+      restored: event("The reader restores an archived project", { projectId: ProjectId, from: z.enum(["page", "index"]) }),
+      nudgeKept: event("The reader keeps a project the page asked about after it was left alone", { projectId: ProjectId }),
+      deleteAsked: event("The reader asks to delete a project, before confirming", { projectId: ProjectId }),
+      deleted: event("The reader deletes a project, with how many overviews it held", {
+        projectId: ProjectId,
+        overviews: z.number().int().nonnegative(),
+      }),
+      deleteKept: event("The reader keeps a project after asking to delete it", { projectId: ProjectId }),
+      promptCopied: event("The reader copies the prompt an empty project offers to give their assistant", { projectId: ProjectId }),
+    },
+    membership: {
+      added: event("The reader puts an overview in a project", {
+        projectId: ProjectId,
+        overviewId: OverviewId,
+        from: z.enum(["picker", "newProject", "selection"]),
+      }),
+      // The measure: how often the reader takes out what an assistant put in.
+      removed: event("The reader takes an overview out of a project, and whether they or an assistant had put it there", {
+        projectId: ProjectId,
+        overviewId: OverviewId,
+        addedBy: z.enum(["reader", "assistant"]),
+        from: z.enum(["row", "picker", "selection"]),
+      }),
+    },
+    picker: {
+      opened: event("The reader opens the list of projects to put an overview in", {
+        overviewId: OverviewId,
+        from: z.enum(["menu", "line"]),
+      }),
+      closed: event("The reader closes the list of projects to put an overview in"),
+    },
+    newProjectDialog: {
+      opened: event("The reader opens the new project dialog", { from: z.enum(["rail", "index", "picker", "selection"]) }),
+      created: event("The reader makes a project, and whether they said what it's for", {
+        projectId: ProjectId,
+        from: z.enum(["rail", "index", "picker", "selection"]),
+        hasPurpose: z.boolean(),
+      }),
+      cancelled: event("The reader closes the new project dialog without making one"),
+    },
+    overviewLine: {
+      projectOpened: event("The reader opens a project from the line under an overview's byline", { projectId: ProjectId }),
     },
   },
   sharedPage: {

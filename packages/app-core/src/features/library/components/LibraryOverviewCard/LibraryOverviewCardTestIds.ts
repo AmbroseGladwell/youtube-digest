@@ -6,4 +6,6 @@ export const libraryOverviewCardTestIds = {
   listenButton: "LibraryOverviewCard.listenButton",
   favouriteButton: "LibraryOverviewCard.favouriteButton",
   readButton: "LibraryOverviewCard.readButton",
+  addedBy: "LibraryOverviewCard.addedBy",
+  removeFromProjectButton: "LibraryOverviewCard.removeFromProjectButton",
 };

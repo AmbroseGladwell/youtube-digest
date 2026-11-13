@@ -15,11 +15,17 @@ import {
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
+import { changeProjectMembers } from "./changeProjectMembers.js";
+import { createProject } from "./createProject.js";
 import { getProfile } from "./getProfile.js";
+import { getProject } from "./getProject.js";
+import { listProjects } from "./listProjects.js";
 import { markOverviews } from "./markOverviews.js";
 import { mcpTool, toolError, type McpTool, type McpToolContext, type McpToolOutcome } from "./McpTool.js";
 import { pageOf, type Page } from "./pageOf.js";
+import { projectOverviews } from "./projectOverviews.js";
 import { readLibrary } from "./readLibrary.js";
+import { isProject, resolveProject } from "./resolveProject.js";
 import { searchWithMeaning, type LibrarySearch, type ResolvedFilters } from "./searchLibrary.js";
 
 // Why these sizes: docs/features/mcp-connector.md, "The context budget".
@@ -31,15 +37,21 @@ const Cursor = z.string().regex(/^\d+$/).optional().describe("Where to carry on 
 const topicNames = (topics: Topic[], entry: LibraryEntry) =>
   entry.overview.topicIds.flatMap((id) => topics.find((topic) => topic.id === id)?.name ?? []);
 
-function resolveFilters(library: Library, { topic, ...filters }: LibraryFilters): ResolvedFilters | McpToolOutcome {
-  if (topic === undefined) {
-    return filters;
+function resolveFilters(library: Library, { topic, project, ...filters }: LibraryFilters): ResolvedFilters | McpToolOutcome {
+  let resolved: ResolvedFilters = filters;
+  if (topic !== undefined) {
+    const found = library.topics.find((candidate) => candidate.id === topic || sameTopicName(candidate.name, topic));
+    if (found === undefined) {
+      return toolError(`There is no topic called "${topic}" in this library. list_topics names every topic.`);
+    }
+    resolved = { ...resolved, topicId: found.id };
   }
-  const found = library.topics.find((candidate) => candidate.id === topic || sameTopicName(candidate.name, topic));
-  if (found === undefined) {
-    return toolError(`There is no topic called "${topic}" in this library. list_topics names every topic.`);
+  if (project !== undefined) {
+    const found = resolveProject(library, project);
+    if (!isProject(found)) return found;
+    resolved = { ...resolved, inProject: new Set(projectOverviews(library, found.id).map(({ overview }) => overview.id)) };
   }
-  return { ...filters, topicId: found.id };
+  return resolved;
 }
 
 const isOutcome = (value: ResolvedFilters | McpToolOutcome): value is McpToolOutcome => "text" in value;
@@ -281,6 +293,10 @@ export const mcpTools: readonly McpTool[] = [
   getOverview,
   getOverviews,
   getTranscript,
+  listProjects,
+  getProject,
   getProfile,
   markOverviews,
+  createProject,
+  changeProjectMembers,
 ];

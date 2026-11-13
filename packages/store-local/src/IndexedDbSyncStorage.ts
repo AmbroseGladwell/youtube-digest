@@ -5,6 +5,14 @@ import {
   FOLLOWED_PLAYLIST_MIGRATIONS,
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
+  PROJECT_MEMBER_MIGRATIONS,
+  PROJECT_MIGRATIONS,
+  ProjectMember,
+  isInProject,
+  memberChangeTime,
+  mergeProjectMember,
+  projectMemberId,
+  BY_READER,
   SETTINGS_MIGRATIONS,
   QueuedCapture,
   StoredTranscript,
@@ -35,7 +43,11 @@ import {
 import {
   CAPTURE_QUEUE_STORE,
   FOLLOWED_PLAYLISTS_STORE,
+  MEMBERS_BY_OVERVIEW_INDEX,
+  MEMBERS_BY_PROJECT_INDEX,
   OUTBOX_STORE,
+  PROJECTS_STORE,
+  PROJECT_MEMBERS_STORE,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
   PLAYLIST_CHECKS_STORE,
@@ -60,6 +72,8 @@ const RECORD_STORES: Record<SyncedRecordKind, string> = {
   topic: TOPICS_STORE,
   settings: SETTINGS_STORE,
   followedPlaylist: FOLLOWED_PLAYLISTS_STORE,
+  project: PROJECTS_STORE,
+  projectMember: PROJECT_MEMBERS_STORE,
 };
 
 const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
@@ -68,6 +82,8 @@ const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
   topic: "id",
   settings: null,
   followedPlaylist: "id",
+  project: "id",
+  projectMember: "id",
 };
 
 const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
@@ -76,6 +92,8 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
   topic: TOPIC_MIGRATIONS,
   settings: SETTINGS_MIGRATIONS,
   followedPlaylist: FOLLOWED_PLAYLIST_MIGRATIONS,
+  project: PROJECT_MIGRATIONS,
+  projectMember: PROJECT_MEMBER_MIGRATIONS,
 };
 
 // What every library that pulled before the cursor's kinds were kept was pulled with.
@@ -166,6 +184,8 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const states = promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEW_STATES_STORE).getAll());
     const topics = promisifyRequest<unknown[]>(transaction.objectStore(TOPICS_STORE).getAll());
     const followed = promisifyRequest<unknown[]>(transaction.objectStore(FOLLOWED_PLAYLISTS_STORE).getAll());
+    const projects = promisifyRequest<unknown[]>(transaction.objectStore(PROJECTS_STORE).getAll());
+    const members = promisifyRequest<unknown[]>(transaction.objectStore(PROJECT_MEMBERS_STORE).getAll());
     const settings = promisifyRequest<unknown>(transaction.objectStore(SETTINGS_STORE).get(SETTINGS_KEY));
 
     const now = this.#now();
@@ -173,6 +193,8 @@ export class IndexedDbSyncStorage implements SyncStorage {
       ...(await overviews).flatMap((raw) => wholeRecordWrite("overview", raw, "savedAt", now)),
       ...(await topics).flatMap((raw) => wholeRecordWrite("topic", raw, "createdAt", now)),
       ...(await followed).flatMap((raw) => wholeRecordWrite("followedPlaylist", raw, "followedAt", now)),
+      ...(await projects).flatMap((raw) => wholeRecordWrite("project", raw, "createdAt", now)),
+      ...(await members).flatMap((raw) => memberWrite(raw, now)),
       ...(await states).flatMap((raw) => stateWrite(raw, now)),
       ...settingsWrite(await settings, now),
     ];
@@ -237,7 +259,10 @@ export class IndexedDbSyncStorage implements SyncStorage {
   // write is re-pointed at the winner, which is of the same video. Nothing is touched when
   // the winner is not here to fold onto, or cannot be read (docs/features/one-overview-per-video.md).
   async foldOverview(from: string, into: string): Promise<OverviewFold | null> {
-    const transaction = this.#db.transaction([OVERVIEWS_STORE, OVERVIEW_STATES_STORE, OUTBOX_STORE, SYNC_META_STORE], "readwrite");
+    const transaction = this.#db.transaction(
+      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, OUTBOX_STORE, SYNC_META_STORE],
+      "readwrite",
+    );
     const overviews = transaction.objectStore(OVERVIEWS_STORE);
     const states = transaction.objectStore(OVERVIEW_STATES_STORE);
     const outbox = transaction.objectStore(OUTBOX_STORE);
@@ -290,10 +315,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
       await appendPendingWrite(transaction, { kind: "overviewState", id: into, updatedAt, change: { op: "state", patch } });
     }
 
+    const movedMembers = await this.#moveMembers(transaction, from, into, now);
+
     overviews.delete(from);
     states.delete(from);
     for (const entry of pending) {
       if ((entry.kind === "overview" || entry.kind === "overviewState") && entry.id === from) {
+        outbox.delete(entry.key);
+      } else if (entry.kind === "projectMember" && movedMembers.has(entry.id)) {
         outbox.delete(entry.key);
       } else if (entry.change.op === "transcript" && entry.change.overviewId === from) {
         outbox.put({ ...entry, change: { ...entry.change, overviewId: into } });
@@ -301,6 +330,27 @@ export class IndexedDbSyncStorage implements SyncStorage {
     }
     await promisifyTransaction(transaction);
     return { from, into };
+  }
+
+  // The loser's projects become the winner's, as the reader's own adds made now.
+  async #moveMembers(transaction: IDBTransaction, from: string, into: string, now: Date): Promise<Set<string>> {
+    const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
+    const moved = new Set<string>();
+    for (const raw of await promisifyRequest<unknown[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAll(from))) {
+      const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
+      if (read.status !== "read") continue;
+      moved.add(read.record.id);
+      members.delete(read.record.id);
+      if (!isInProject(read.record)) continue;
+      const id = projectMemberId(read.record.projectId, into);
+      const existingRaw = await promisifyRequest<unknown>(members.get(id));
+      const existing = existingRaw === undefined ? undefined : (readable("projectMember", existingRaw) ?? undefined);
+      const change = { addedAt: memberChangeTime(existing, now), addedBy: BY_READER };
+      const base = existing ?? { id, projectId: read.record.projectId, overviewId: into, removedAt: null };
+      members.put(stampStoredRecord(mergeProjectMember(base, change), CURRENT_SCHEMA_VERSIONS.projectMember, now));
+      await appendPendingWrite(transaction, { kind: "projectMember", id, updatedAt: now.toISOString(), change: { op: "member", change } });
+    }
+    return moved;
   }
 
   async transcriptToPush(videoId: string): Promise<StoredTranscript | null> {
@@ -336,6 +386,8 @@ export class IndexedDbSyncStorage implements SyncStorage {
         store.delete(key);
         if (change.kind === "overview") transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
         if (change.kind === "followedPlaylist") await forgetFollowing(transaction, change.id);
+        if (change.kind === "overview") await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
+        if (change.kind === "project") await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
         revisions.delete([change.kind, change.id]);
         continue;
       }
@@ -393,7 +445,12 @@ function writtenAt(raw: Record<string, unknown>, creationKey: string | null, now
   return Number.isNaN(parsed.getTime()) ? now : parsed;
 }
 
-function wholeRecordWrite(kind: "overview" | "topic" | "followedPlaylist", raw: unknown, creationKey: string, now: Date): PendingWrite[] {
+function wholeRecordWrite(
+  kind: "overview" | "topic" | "followedPlaylist" | "project",
+  raw: unknown,
+  creationKey: string,
+  now: Date,
+): PendingWrite[] {
   const migrated = readable(kind, raw);
   if (migrated === null || typeof migrated.id !== "string") return [];
   const at = writtenAt(migrated, creationKey, now);
@@ -405,6 +462,27 @@ function wholeRecordWrite(kind: "overview" | "topic" | "followedPlaylist", raw: 
       change: { op: "replace", record: stampStoredRecord(migrated, CURRENT_SCHEMA_VERSIONS[kind], at) },
     },
   ];
+}
+
+// Only the membership record of an overview still in its project is sent: one taken out
+// never needs to reach the server, which has never heard of it.
+function memberWrite(raw: unknown, now: Date): PendingWrite[] {
+  const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
+  if (read.status !== "read" || !isInProject(read.record) || !isObject(raw)) return [];
+  const { id, addedAt, addedBy } = read.record;
+  return [
+    {
+      kind: "projectMember",
+      id,
+      updatedAt: writtenAt(raw, "addedAt", now).toISOString(),
+      change: { op: "member", change: { addedAt, addedBy } },
+    },
+  ];
+}
+
+async function forgetMembers(transaction: IDBTransaction, index: string, parentId: string): Promise<void> {
+  const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
+  for (const key of await promisifyRequest<IDBValidKey[]>(members.index(index).getAllKeys(parentId))) members.delete(key);
 }
 
 function stateWrite(raw: unknown, now: Date): PendingWrite[] {

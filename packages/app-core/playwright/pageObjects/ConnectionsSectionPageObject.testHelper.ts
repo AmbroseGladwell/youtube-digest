@@ -21,6 +21,9 @@ export class ConnectionsSectionPageObject extends PageObject {
       expect(this.get(connectionRowTestIds.profileLine).nth(index)).toHaveText(text),
     );
 
+  verifyWriteLinesRead = (lines: string[]) =>
+    this.step(`verifyWriteLinesRead ${lines.join(", ")}`, () => expect(this.get(connectionRowTestIds.writeLine)).toHaveText(lines));
+
   startRevoking = (name: string) =>
     this.step(`startRevoking ${name}`, () => this.page.getByRole("button", { name: `Revoke ${name}` }).click());
 

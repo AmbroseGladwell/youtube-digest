@@ -250,9 +250,167 @@
 }
 
 .searchRow {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.searchControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  transition: opacity 120ms var(--motion-ease) 80ms;
+}
+
+.searchOpener {
+  @include controls.circle(2.75rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+// Select turns into × on an ink fill while selecting, and back: the one thing here that
+// turns, as an icon marking itself ("OV-168 5" 168bb).
+.selectButton {
+  @include controls.surface-pill;
+  @include controls.circle(2.75rem);
+
+  position: relative;
+  color: var(--ink);
+  transition:
+    background 200ms var(--motion-ease),
+    color 200ms var(--motion-ease);
+
+  &[aria-pressed="true"],
+  &[aria-pressed="true"]:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--ground);
+  }
+}
+
+.selectIcon,
+.stopIcon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    opacity 200ms var(--motion-ease),
+    transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.stopIcon {
+  opacity: 0;
+  transform: rotate(45deg);
+}
+
+.selectButton[aria-pressed="true"] {
+  .selectIcon {
+    opacity: 0;
+    transform: rotate(-45deg);
+  }
+
+  .stopIcon {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.listCountSelecting {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.selectionLine {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.notSelectable {
+  opacity: 0.5;
+}
+
+// A phone folds the search into an icon at the row's left edge, with sort, Filters and select
+// together on the right. Opening grows the field across the row and the three fade out; a
+// query kept with the keyboard down leaves it open beside them ("OV-168 5" 168au–168aw).
+@media (max-width: 47.9375rem) {
+  .searchRow[data-search] {
+    min-height: 2.75rem;
+
+    .search {
+      flex: 1 1 auto;
+      max-width: 2.75rem;
+      padding: 0;
+      overflow: hidden;
+      background: var(--surface);
+      transition:
+        max-width 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+        background 160ms var(--motion-ease);
+    }
+
+    .searchIcon {
+      display: none;
+    }
+
+    .searchOpener {
+      width: 100%;
+      height: 100%;
+    }
+
+    .searchInput {
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 120ms var(--motion-ease),
+        visibility 0s linear 200ms;
+    }
+  }
+
+  .searchRow[data-search="open"],
+  .searchRow[data-search="kept"] {
+    .search {
+      max-width: 100%;
+      padding: 0 0.375rem 0 1rem;
+      background: var(--card);
+    }
+
+    .searchInput {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 120ms var(--motion-ease) 120ms;
+    }
+  }
+
+  .searchRow[data-search="open"] {
+    .search {
+      transition-duration: 240ms;
+    }
+
+    .searchControls {
+      position: absolute;
+      right: 0;
+      opacity: 0;
+      transition-delay: 0s;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .searchRow[data-search] .search,
+    .searchRow[data-search] .searchInput,
+    .searchControls {
+      transition: opacity 120ms ease;
+    }
+  }
 }
 
 // Beside the search on a narrow screen, where the rail is a sheet, with a dot while anything

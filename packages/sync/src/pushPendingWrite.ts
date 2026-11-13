@@ -60,6 +60,8 @@ async function send(
           return createTopic(api, change.record);
         case "followedPlaylist":
           return replaceWithRetry((ifMatch) => api.saveFollowedPlaylist(change.record, ifMatch), knownRev);
+        case "project":
+          return createOnce(() => api.createProject(change.record));
         default:
           return createOverview(api, change.record, knownRev);
       }
@@ -73,8 +75,15 @@ async function send(
       return written(await api.setOverviewState(entry.id, change.patch, entry.updatedAt));
     case "settings":
       return written(await api.updateSettings(change.patch, entry.updatedAt));
+    case "project":
+      return written(await api.updateProject(entry.id, change.patch, entry.updatedAt));
+    case "member": {
+      const [projectId = "", overviewId = ""] = entry.id.split(":");
+      const { addedBy: _addedBy, ...sent } = change.change;
+      return written(await api.changeProjectMember(projectId, overviewId, sent, entry.updatedAt));
+    }
     case "delete": {
-      await (entry.kind === "followedPlaylist" ? api.deleteFollowedPlaylist(entry.id) : api.deleteOverview(entry.id));
+      await deleteFor(api, entry);
       return { result: "gone" };
     }
     case "transcript": {
@@ -155,11 +164,24 @@ async function reserve(api: SyncApi, overviewId: string): Promise<PushOutcome | 
   }
 }
 
-// Topics are create-only. One the server already holds under this id is this same topic,
-// pushed once before and not acknowledged in time; there is nothing to replace.
-async function createTopic(api: SyncApi, record: Record<string, unknown>): Promise<PushOutcome> {
+function deleteFor(api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | null> {
+  switch (entry.kind) {
+    case "followedPlaylist":
+      return api.deleteFollowedPlaylist(entry.id);
+    case "project":
+      return api.deleteProject(entry.id);
+    default:
+      return api.deleteOverview(entry.id);
+  }
+}
+
+const createTopic = (api: SyncApi, record: Record<string, unknown>): Promise<PushOutcome> => createOnce(() => api.createTopic(record));
+
+// Topics and projects are created once. One the server already holds under this id is this
+// same record, pushed before and not acknowledged in time; there is nothing to replace.
+async function createOnce(create: () => Promise<WrittenRecord>): Promise<PushOutcome> {
   try {
-    return written(await api.createTopic(record));
+    return written(await create());
   } catch (error) {
     const named = revisionNamedBy(error);
     if (isSyncRequestError(error) && error.code === "already_exists" && named !== null) {

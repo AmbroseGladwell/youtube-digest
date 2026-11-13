@@ -76,6 +76,11 @@ export function ConnectionRow({ connection, now, sharingProfile, onRevoke }: Con
         <span className={styles.useLine} data-testid={connectionRowTestIds.profileLine}>
           {connectionProfileLine(connection.readsProfile, sharingProfile)}
         </span>
+        {!connection.writes && (
+          <span className={styles.useLine} data-testid={connectionRowTestIds.writeLine}>
+            Read only: reconnect it to let it mark overviews or organise projects
+          </span>
+        )}
       </span>
       <button
         type="button"

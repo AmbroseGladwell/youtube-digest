@@ -29,20 +29,21 @@ export interface UseLibraryViewResult {
 
 // The URL holds the view. Opened with none of its params, the list takes the view this
 // account left on this device, or unread first; a link that names a view wins and is not
-// saved (docs/features/library-view.md).
-export function useLibraryView(topics: Topic[] | undefined): UseLibraryViewResult {
+// saved (docs/features/library-view.md). A project's page starts from every overview in it
+// and keeps nothing (docs/features/projects.md).
+export function useLibraryView(topics: Topic[] | undefined, { remember = true }: { remember?: boolean } = {}): UseLibraryViewResult {
   const [searchParams, setSearchParams] = useSearchParams();
   const accountId = libraryAccountIdOf(useSyncConnection().connection);
   const [restoredAccountId, setRestoredAccountId] = useState(accountId);
   const [restoring, setRestoring] = useState<RestoredLibraryView | null>(() =>
-    hasLibraryViewParams(searchParams) ? null : restoringFor(accountId),
+    !remember || hasLibraryViewParams(searchParams) ? null : restoringFor(accountId),
   );
 
   const target = useRef<{ restoring: RestoredLibraryView; search: string } | null>(null);
 
   if (restoredAccountId !== accountId) {
     setRestoredAccountId(accountId);
-    setRestoring(restoringFor(accountId));
+    setRestoring(remember ? restoringFor(accountId) : null);
   }
 
   if (restoring !== null && target.current?.restoring === restoring && target.current.search === searchParams.toString()) {
@@ -69,7 +70,7 @@ export function useLibraryView(topics: Topic[] | undefined): UseLibraryViewResul
   const change = (next: URLSearchParams) => {
     setRestoring(null);
     setSearchParams(next, { replace: true });
-    writeLibraryView(accountId, parseLibraryView(next));
+    if (remember) writeLibraryView(accountId, parseLibraryView(next));
   };
 
   return { searchParams: shown, view: parseLibraryView(shown), change };

@@ -36,7 +36,7 @@ test.describe("answering an assistant's request", () => {
     await consent.verifySignedInAs(SIMULATED_EMAIL);
     await consent.verifyListsPermissions([
       "Read your overviews and their transcripts",
-      "Mark overviews read, unread or favourite",
+      "Mark overviews read, unread or favourite, and organise them into projects",
       "Read what we know about you: your sentence, and what we’ve learned from your overviews",
       "Not change, add or delete an overview",
       "Not see your API keys. They stay on your device",

@@ -30,6 +30,11 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
     updateSettings: (patch, updatedAt) => written(request("PUT", "/settings", WrittenRecord, { body: { ...patch, updatedAt } })),
     saveFollowedPlaylist: (record, ifMatch) => written(request("POST", "/followed-playlists", WrittenRecord, { body: record, ifMatch })),
     deleteFollowedPlaylist: (id) => request("DELETE", `/followed-playlists/${encodeURIComponent(id)}`, WrittenRecord),
+    createProject: (record) => written(request("POST", "/projects", WrittenRecord, { body: record })),
+    updateProject: (id, patch, updatedAt) => written(request("PUT", `/projects/${id}`, WrittenRecord, { body: { ...patch, updatedAt } })),
+    deleteProject: (id) => request("DELETE", `/projects/${id}`, WrittenRecord),
+    changeProjectMember: (projectId, overviewId, change, updatedAt) =>
+      written(request("PUT", `/projects/${projectId}/members/${overviewId}`, WrittenRecord, { body: { ...change, updatedAt } })),
     saveTranscript: async (transcript) => {
       await request("PUT", `/transcripts/${encodeURIComponent(transcript.videoId)}`, z.unknown(), { body: transcript });
     },
