@@ -22,6 +22,24 @@ export const WebSource = z.object({
 });
 export type WebSource = z.infer<typeof WebSource>;
 
+// One episode of a show, as its own feed names it: the canonical link is the episode's, never the
+// Apple or Spotify page it was shared from. It joins `Source` with the screens, after the design
+// round, since a kind there is a kind readers can reach (docs/features/podcast-notes.md).
+export const PodcastSource = z.object({
+  kind: z.literal("podcast"),
+  id: SourceKey,
+  feedUrl: z.url(),
+  guid: z.string().min(1),
+  title: z.string(),
+  showName: z.string(),
+  publishedAt: z.iso.datetime().nullable(),
+  durationMs: z.number().int().positive().nullable(),
+  audioUrl: z.url(),
+  pageUrl: z.url().nullable(),
+  imageUrl: z.url().nullable(),
+});
+export type PodcastSource = z.infer<typeof PodcastSource>;
+
 export const Source = z.discriminatedUnion("kind", [YouTubeSource, WebSource]);
 export type Source = z.infer<typeof Source>;
 
