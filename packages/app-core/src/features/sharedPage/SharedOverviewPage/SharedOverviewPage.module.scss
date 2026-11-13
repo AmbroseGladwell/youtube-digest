@@ -173,3 +173,26 @@
     column-gap: 0.875rem;
   }
 }
+
+// Design 106w: the show's square art beside the byline, as on the note.
+.art {
+  width: 100%;
+}
+
+.lead:has(> .art) {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  column-gap: 1.125rem;
+  align-items: center;
+}
+
+.lead:has(> .art) .chips {
+  min-width: 0;
+}
+
+@media (max-width: 47.9375rem) {
+  .lead:has(> .art) {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    column-gap: 0.875rem;
+  }
+}

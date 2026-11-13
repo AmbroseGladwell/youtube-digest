@@ -1,4 +1,4 @@
-import { PlaylistId, VideoId } from "@overview/domain";
+import { PlaylistId, VideoId, sourceUrl } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
@@ -111,7 +111,7 @@ test("a video link inside a playlist asks which was meant, and Just this video c
 
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
   const [overview] = await backendSimulator.overviewStore.listOverviews();
-  expect(overview?.source.url).toBe(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
+  expect(overview && sourceUrl(overview.source)).toBe(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   expect(overview?.fromPlaylist).toBeNull();
 });
 

@@ -203,6 +203,8 @@ export const OverviewMenuItem = z.enum([
   "copyYouTubeLink",
   "readArticle",
   "copyArticleLink",
+  "openEpisode",
+  "copyEpisodeLink",
   "copyRecipe",
   "printRecipe",
   "regenerate",
@@ -563,7 +565,7 @@ export const analyticsEvents = {
         "A reader with no account starts onboarding from one of Start's samples: where it sat in the list and its kind, never its title or link",
         {
           sample: z.number().int().nonnegative(),
-          kind: z.enum(["video", "article", "recipe"]),
+          kind: z.enum(["video", "article", "recipe", "podcast"]),
         },
       ),
     },
@@ -979,7 +981,7 @@ export const analyticsEvents = {
       topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),
       topicCleared: event("The reader stops filtering the library by topic", { from: FilterControl }),
       sourceChosen: event("The reader filters the library to one kind of source, or back to all", {
-        source: z.enum(["all", "video", "article", "recipe"]),
+        source: z.enum(["all", "video", "article", "recipe", "podcast"]),
         from: FilterControl,
       }),
       noveltyChosen: event("The reader filters the library by the verdict's novelty, or back to all", {

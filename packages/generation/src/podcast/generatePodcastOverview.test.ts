@@ -23,6 +23,7 @@ const podcast: PodcastSource = {
   audioUrl: "https://media.example/ep.mp3",
   pageUrl: null,
   imageUrl: "https://cdn.example/art.jpg",
+  sharedFrom: "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk",
 };
 
 const inputOf = (segments: number, overrides: Partial<PodcastGenerationInput> = {}): PodcastGenerationInput => ({

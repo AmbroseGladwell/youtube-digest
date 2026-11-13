@@ -49,6 +49,9 @@ export interface LineRangeTagProps {
   asSheet: boolean;
   canReadTranscript: boolean;
   onOpenTranscriptAt: (positionMs: number) => void;
+  // An episode's note: the time is a play chip that jumps the episode's own player, and Listen
+  // to it anyway's range plays and stops at its end (designs 106p, 106s).
+  direct?: boolean;
 }
 
 type Reach = "skip" | "youtube" | "transcript";
@@ -77,6 +80,7 @@ export function LineRangeTag({
   asSheet,
   canReadTranscript,
   onOpenTranscriptAt,
+  direct = false,
 }: LineRangeTagProps) {
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
@@ -126,6 +130,28 @@ export function LineRangeTag({
     }
     setOpen(false);
   };
+
+  if (direct && seek !== null) {
+    return (
+      <span className={styles.root} onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className={`${styles.playChip} ${watchAnyway ? styles.playChipRange : ""} ${playing ? styles.tagPlaying : ""}`}
+          onClick={() => {
+            followed("skip");
+            if (watchAnyway) seek(range.startMs, range.endMs);
+            else seek(range.startMs);
+          }}
+          aria-label={watchAnyway ? `Play ${stretch}` : `Play the episode from ${start}`}
+          data-testid={lineRangeTagTestIds.playChip}
+        >
+          <StrokeIcon name="play" size={11} />
+          {watchAnyway ? `Play ${stretch}` : start}
+        </button>
+        {watchAnyway && <span className={styles.rangeLength}>{rangeLength(range)}, then it stops</span>}
+      </span>
+    );
+  }
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const all = items();
@@ -266,5 +292,11 @@ export function LineRangeTag({
     </span>
   );
 }
+
+// "8 min", how long a range plays before it stops (design 106s).
+const rangeLength = ({ startMs, endMs }: TimeRange): string => {
+  const minutes = Math.max(1, Math.round((endMs - startMs) / 60_000));
+  return `${minutes} min`;
+};
 
 const portalled = (asSheet: boolean, content: ReactNode) => (asSheet ? createPortal(content, document.body) : content);

@@ -21,6 +21,8 @@ export function RecipePageLink({ source, onPage }: RecipePageLinkProps) {
       </a>
     );
   }
+  // An episode the kind check calls a recipe gets the default note (podcast-notes.md).
+  if (source.kind === "podcast") return null;
   const minutes = articleReadMinutes(source.wordCount);
   return onPage === null ? (
     <a className={styles.link} href={source.url} target="_blank" rel="noopener" data-testid={recipePageLinkTestIds.link}>

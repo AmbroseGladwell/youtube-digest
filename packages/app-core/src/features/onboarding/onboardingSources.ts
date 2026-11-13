@@ -20,6 +20,7 @@ import { bigPictureBudget } from "@overview/generation";
 import type { RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
+import { formatPublishedDate } from "../../util/formatPublishedDate.js";
 
 export type OnboardingLinkKind = "video" | "playlist" | "article";
 
@@ -127,6 +128,13 @@ const videoFacts = (source: Source): string =>
     ? [source.channel, source.durationMs === null ? null : formatClock(source.durationMs / 1000)].filter(Boolean).join(" · ")
     : sourceName(source);
 
+const episodeLength = (source: Source): string | null =>
+  source.kind === "podcast" && source.durationMs !== null ? recipeMinutes(Math.round(source.durationMs / 60_000)) : null;
+
+// "1 hr 56 min · 10 Nov 2026", or the date alone when the feed gives no length (design 106b).
+const episodeFacts = (source: Source): string =>
+  [episodeLength(source), source.publishedAt === null ? null : formatPublishedDate(source.publishedAt)].filter(Boolean).join(" · ");
+
 const readMinutes = (source: Source): string | null => (source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null);
 
 // Everything onboarding does differently for each kind of source, so a kind joining `Source`
@@ -168,6 +176,32 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     sections: writtenSections,
     teaser: (overview) => ({
       byline: videoFacts(overview.source),
+      first: { label: "Premise", text: overview.inOneLine },
+      locked: overviewLocked(overview),
+    }),
+  },
+  // Design 106c: an episode takes the same card in a podcast's words. It claims no link until
+  // pasting one makes an episode's overview; until then a shared episode's overview still
+  // reaches onboarding from Save to my overviews, through its card and teaser.
+  podcast: {
+    linkKind: () => null,
+    keyFromLink: () => null,
+    target: ({ link }) => link,
+    make: () => Promise.reject(new Error("Episodes aren't made from onboarding yet")),
+    noun: (_linkKind, found) => (found === null ? "page" : "episode"),
+    lead: () => OVERVIEW_LEAD,
+    pending: (link) => domainOf(link),
+    finding: "Finding the episode…",
+    notFound: "We couldn't find that episode.",
+    fetching: "Finding the episode",
+    ready: () => "Transcript ready",
+    card: ({ source }) => ({
+      kicker: `${sourceName(source)} · Podcast`,
+      facts: { line: episodeFacts(source) },
+    }),
+    sections: writtenSections,
+    teaser: (overview) => ({
+      byline: [sourceName(overview.source), "Podcast", episodeLength(overview.source)].filter(Boolean).join(" · "),
       first: { label: "Premise", text: overview.inOneLine },
       locked: overviewLocked(overview),
     }),

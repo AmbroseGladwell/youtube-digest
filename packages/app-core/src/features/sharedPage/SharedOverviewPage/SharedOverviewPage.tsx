@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,7 +13,9 @@ import {
   overviewNoteLines,
   recipeActions,
   type SharePayload,
+  openPodcastLabel,
   sourceName,
+  sourceUrl,
 } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -21,6 +23,11 @@ import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { CookingMode } from "../../reader/components/CookingMode/CookingMode.js";
 import { ChaptersPanel } from "../../reader/components/ChaptersPanel/ChaptersPanel.js";
 import { HeadImage } from "../../reader/components/HeadImage/HeadImage.js";
+import { EpisodeArt } from "../../reader/components/EpisodeArt/EpisodeArt.js";
+import { timedSource } from "../../reader/util/timedSource.js";
+import { useEpisodeEngine } from "../../reader/episode/useEpisodeEngine.js";
+import { EpisodePlayer } from "../../reader/components/EpisodePlayer/EpisodePlayer.js";
+import { PlaybackProvider } from "../../../app/PlaybackContext.js";
 import { useHeadImageMotion } from "../../reader/components/ReaderMasthead/useHeadImageMotion.js";
 import { ReadAlongNote } from "../../reader/components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderPlayerBar } from "../../reader/components/ReaderPlayerBar/ReaderPlayerBar.js";
@@ -99,7 +106,7 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
 
 function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) {
   const { note, transcript } = payload.snapshot;
-  const video = note.source.kind === "youtube" ? note.source : null;
+  const video = useMemo(() => timedSource(note.source), [note.source]);
   const webArticle = note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
   const recipePage = note.source.kind === "web" && note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
   const recipeNote = note.recipe != null ? { source: note.source, recipe: note.recipe } : null;
@@ -152,6 +159,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
     [lines, note.recipe],
   );
   const player = usePlayer();
+  const episode = useEpisodeEngine(note.source);
   const { signedIn } = useSharedPageReader();
   // The copy's narration is the sharer's render of the recipe as written, so it plays only for
   // that. Adjusted, a signed-in visitor renders afresh on their own account; signed out, the
@@ -327,7 +335,10 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       ? noteBarView
       : { ...noteBarView, label: { lead: "Now reading", rest: recipeVoice.nowReading, tone: "ink" as const, pacerTag: false } };
 
-  return (
+  // Design 106w: the episode player as on the note, and every time plays it.
+  const withEpisode = (page: ReactNode) => (episode === null ? page : <PlaybackProvider value={episode.playback}>{page}</PlaybackProvider>);
+
+  return withEpisode(
     <div className={styles.page} ref={publishHeightsOn} data-testid={sharedOverviewPageTestIds.root}>
       <PageScrolledSentinel />
       <SharedPageHeader ref={mastheadHeight.measured} />
@@ -336,21 +347,27 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
         <main className={styles.main}>
           <div className={styles.head} ref={head}>
             <div className={`${styles.lead} ${headImageFull ? styles.leadFull : ""}`}>
-              <HeadImage
-                key={note.id}
-                ref={image}
-                source={note.source}
-                full={headImageFull}
-                className={styles.image}
-                onToggle={toggleHeadImage}
-              />
+              {note.source.kind === "podcast" ? (
+                <EpisodeArt source={note.source} className={styles.art} />
+              ) : (
+                <HeadImage
+                  key={note.id}
+                  ref={image}
+                  source={note.source}
+                  full={headImageFull}
+                  className={styles.image}
+                  onToggle={toggleHeadImage}
+                />
+              )}
               <div className={styles.chips} ref={chips}>
                 <span className={styles.channel} data-testid={sharedOverviewPageTestIds.channel}>
                   {note.source.kind === "youtube"
                     ? recipeNote === null
                       ? sourceName(note.source)
                       : `An overview of a recipe video from ${sourceName(note.source)}`
-                    : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
+                    : note.source.kind === "podcast"
+                      ? `An overview of an episode of ${note.source.showName}`
+                      : `An overview of ${recipePage === null ? "an article" : "a recipe"} from ${sourceName(note.source)}`}
                 </span>
                 {note.verdict !== null && (
                   <span className={styles.chip} data-testid={sharedOverviewPageTestIds.noveltyChip}>
@@ -370,6 +387,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             <p className={styles.meta} data-testid={sharedOverviewPageTestIds.meta}>
               {sharedMetaParts(note, payload.sharedAt).join(" · ")}
             </p>
+            {episode !== null && note.source.kind === "podcast" && <EpisodePlayer engine={episode} source={note.source} />}
           </div>
 
           <div className={styles.actions}>
@@ -385,7 +403,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
             </button>
             <a
               className={styles.surfaceAction}
-              href={note.source.url}
+              href={sourceUrl(note.source)}
               target="_blank"
               rel="noopener"
               onClick={() => analytics.sharedPage.actions.watchOnYouTubeChosen()}
@@ -395,7 +413,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 ? recipeNote === null
                   ? "Watch on YouTube"
                   : "Open the video on YouTube"
-                : `${recipePage === null ? "Read the article" : "Open the recipe"} on ${sourceName(note.source)}`}
+                : note.source.kind === "podcast"
+                  ? openPodcastLabel(note.source.sharedFrom)
+                  : `${recipePage === null ? "Read the article" : "Open the recipe"} on ${sourceName(note.source)}`}
               <StrokeIcon name="openOut" size={16} />
             </a>
           </div>
@@ -431,6 +451,7 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                         asSheet={isPhone}
                         canReadTranscript={payload.snapshot.transcript !== null}
                         onOpenTranscriptAt={openTranscriptAt}
+                        direct={episode !== null}
                       />
                     )
                   }
@@ -596,6 +617,6 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       />
       <CookingTimerDock />
       {willStop.dialog}
-    </div>
+    </div>,
   );
 }
