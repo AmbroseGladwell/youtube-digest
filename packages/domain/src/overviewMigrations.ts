@@ -186,6 +186,11 @@ const fillSourceStepsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
+// Nothing to alter: an article's note may now carry the links it names, which an older client
+// would drop and then write back without, so older clients hold these records back
+// (docs/features/article-resources.md).
+const allowArticleResources: RecordMigration = { newSchemaVersion: 18 };
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -203,6 +208,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillBigPictureAddedAfterTheFirstNotes,
   allowTenKeyPoints,
   fillSourceStepsAddedAfterTheFirstNotes,
+  allowArticleResources,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

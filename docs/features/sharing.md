@@ -118,6 +118,20 @@ voice, is not an edit the reader made, and a notice that fired on those would te
 ignore it. The hash is taken over a key-sorted serialisation so that two objects with the
 same content hash the same however they were built.
 
+## Audio rendered after sharing
+
+Leaving narration out of the hash has a cost: a copy shared before its audio existed would
+stay silent for good, because nothing would ever offer to replace it, and stopping and
+sharing again breaks the link already sent. So each share also says whether its copy plays
+(`hasNarration`, read from the stored snapshot), and when it doesn't, the dialog peeks for
+narration in the reader's voice the same way sharing does. If some is ready, the dialog says
+the shared copy has no audio yet and offers **Add audio**. That button runs the same upsert
+as Update shared copy, so the link and its share date stay as they were, and a recipient who
+reloads the page gets the player (OV-290).
+
+The edited notice wins when both apply, since updating carries the audio anyway. Nothing is
+queued: a reader who never rendered audio is never offered any.
+
 ## The page
 
 **Fastify writes the document; the app renders it.** This is a departure from the design
@@ -344,6 +358,10 @@ account's, in the visitor's voice, when they're signed in; none, which is the pa
 they're not (`recipe-notes.md`, "Sharing").
 
 ## The way in
+
+**Cooking timers stay on the page.** A visitor who leaves cooking mode keeping a timer sees it at
+the foot of the page while they stay on it, and going into the app warns that it will stop
+(OV-288, owner's option C; `recipe-notes.md`, "Outside the mode").
 
 The page is also how new people arrive, and **every way in goes through onboarding**
 (OV-152, `onboarding.md`, "From a shared page"), so someone who came by a link is asked the

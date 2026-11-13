@@ -58,7 +58,7 @@ test("cooking step by step shows one action at a time, the next one under it, an
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Turn the heat up to high.");
 });
 
-test("the keys move through it: Space or → for Next, ← for Back, I for the ingredients, Esc to leave", async ({
+test("the keys move through it: Space or → for Next, ← for Back, I for the ingredients, Esc to leave, shutting them first only once opened", async ({
   page,
   launcher,
   backendSimulator,
@@ -74,12 +74,17 @@ test("the keys move through it: Space or → for Next, ← for Back, I for the i
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Add the onions");
 
-  await page.keyboard.press("i");
   await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeVisible();
   await expect(page.getByTestId("CookingIngredientsDrawer.root")).toContainText("3 large leeks");
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("CookingMode.root")).toBeHidden();
+
+  await page.getByTestId("RecipeMethod.carryOn").click();
+  await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeVisible();
   await page.keyboard.press("i");
   await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeHidden();
   await page.keyboard.press("i");
+  await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeHidden();
   await expect(page.getByTestId("CookingMode.root")).toBeVisible();
@@ -317,7 +322,7 @@ const longActionRecipe = () => {
 
 const boxOf = async (locator: Locator) => (await locator.boundingBox())!;
 
-test("on the wide web the ingredients make room beside the step, and every key keeps working with them open", async ({
+test("on the wide web the mode starts with the ingredients beside the step, and every key keeps working with them open", async ({
   page,
   launcher,
   backendSimulator,
@@ -332,12 +337,19 @@ test("on the wide web the ingredients make room beside the step, and every key k
 
   const drawer = page.getByTestId("CookingIngredientsDrawer.root");
   const ingredients = page.getByTestId("CookingMode.ingredients");
-  await page.keyboard.press("i");
+  const focusInDrawer = () =>
+    page.evaluate(() => document.activeElement?.closest('[data-testid="CookingIngredientsDrawer.root"]') !== null);
   await expect(drawer).toBeVisible();
   await expect(drawer).toContainText("3 large leeks");
   await expect(ingredients).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByTestId("CookingIngredientsSheet.root")).toHaveCount(0);
   await expect(page.locator("dialog[open]")).toHaveCount(1);
+  expect(await focusInDrawer()).toBe(false);
+
+  await page.keyboard.press("i");
+  await expect(drawer).toBeHidden();
+  await page.keyboard.press("i");
+  await expect(drawer).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.activeElement?.closest('[data-testid="CookingIngredientsDrawer.root"]') !== null))
     .toBe(true);
@@ -378,14 +390,14 @@ test("Space on the drawer's Close button closes it rather than moving on", async
   await library.nthCard(0).openReader();
   await page.getByTestId("RecipeMethod.cook").click();
 
-  await page.getByTestId("CookingMode.ingredients").click();
+  await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeVisible();
   await page.getByTestId("CookingIngredientsDrawer.close").focus();
   await page.keyboard.press("Space");
   await expect(page.getByTestId("CookingIngredientsDrawer.root")).toBeHidden();
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Heat the oil in a large pan.");
 });
 
-test("beside the drawer the action's size follows the column: one step down at 1024, the phone's at 768 and still narrow shut, and a long action fits", async ({
+test("beside the drawer the action's size follows the column: one step down at 1024, the phone's at 768 and still narrow shut, full at 1024 shut, and a long action fits", async ({
   page,
   launcher,
   backendSimulator,
@@ -398,10 +410,6 @@ test("beside the drawer the action's size follows the column: one step down at 1
 
   const action = page.getByTestId("CookingMode.action");
   const fontSize = () => action.evaluate((element) => getComputedStyle(element).fontSize);
-  await expect.poll(fontSize).toBe("32px");
-  await expect(page.getByTestId("CookingMode.next")).toBeVisible();
-
-  await page.keyboard.press("i");
   await expect.poll(fontSize).toBe("28px");
   await expect(page.getByTestId("CookingMode.next")).toHaveCount(0);
   await expect(page.getByTestId("CookingMode.title")).toBeHidden();
@@ -421,6 +429,10 @@ test("beside the drawer the action's size follows the column: one step down at 1
   await page.keyboard.press("i");
   await expect(drawer).toBeHidden();
   await expect.poll(fontSize).toBe("28px");
+
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await expect.poll(fontSize).toBe("32px");
+  await expect(page.getByTestId("CookingMode.next")).toBeVisible();
 });
 
 test("at phone width the ingredients are still a modal sheet, and Esc leaves only once it is shut", async ({
@@ -434,6 +446,8 @@ test("at phone width the ingredients are still a modal sheet, and Esc leaves onl
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByTestId("RecipeMethod.cook").click();
 
+  await expect(page.getByTestId("CookingMode.root")).toBeVisible();
+  await expect(page.getByTestId("CookingIngredientsSheet.root")).toBeHidden();
   await page.getByTestId("CookingMode.ingredients").click();
   await expect(page.locator('dialog:modal[data-testid="CookingIngredientsSheet.root"]')).toBeVisible();
   await expect(page.getByTestId("CookingIngredientsDrawer.root")).toHaveCount(0);
@@ -453,8 +467,11 @@ test("under reduced motion the drawer just appears", async ({ page, launcher, ba
   await library.nthCard(0).openReader();
   await page.getByTestId("RecipeMethod.cook").click();
 
-  await page.keyboard.press("i");
   const drawer = page.getByTestId("CookingIngredientsDrawer.root");
+  await expect(drawer).toBeVisible();
+  await page.keyboard.press("i");
+  await expect(drawer).toBeHidden();
+  await page.keyboard.press("i");
   await expect(drawer).toBeVisible();
   expect(await drawer.evaluate((element) => getComputedStyle(element).transitionDuration)).toBe("0s");
   expect((await boxOf(drawer)).width).toBe(384);
@@ -479,7 +496,6 @@ test("an ingredients list longer than the window scrolls in the drawer, and the 
   await page.getByTestId("RecipeMethod.cook").click();
 
   const drawer = page.getByTestId("CookingIngredientsDrawer.root");
-  await page.keyboard.press("i");
   await expect(drawer).toBeVisible();
   await expect.poll(async () => (await boxOf(drawer)).width).toBe(384);
 
@@ -490,6 +506,7 @@ test("an ingredients list longer than the window scrolls in the drawer, and the 
   expect(await root.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
 
   expect(await drawer.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+  await drawer.focus();
   await page.keyboard.press("End");
   await expect.poll(() => drawer.evaluate((element) => element.scrollTop > 0)).toBe(true);
   await expect(drawer).toContainText("30 tbsp");

@@ -9,7 +9,8 @@ import { cookingTimerPillsTestIds } from "./CookingTimerPillsTestIds.js";
 export interface CookingTimerPillsProps {
   times: readonly MethodTime[];
   action: number;
-  runningFrom: (source: CookingTimerSource) => CookingTimer | undefined;
+  // This recipe's running timer from a time, if any (the recipe is the caller's to add).
+  runningFrom: (source: Omit<CookingTimerSource, "recipe">) => CookingTimer | undefined;
   onStart: (time: MethodTime, index: number, seconds: number) => void;
   onOpen: (id: number) => void;
   firstPill: Ref<HTMLButtonElement>;

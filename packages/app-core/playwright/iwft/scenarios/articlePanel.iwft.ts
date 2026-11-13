@@ -31,7 +31,7 @@ const ARTICLE: ExtractedArticle = {
   publishedAt: null,
   language: "en",
   imageUrl: null,
-  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
+  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011.", links: [] }],
   wordCount: 3200,
   recipe: null,
 };
@@ -290,6 +290,45 @@ test("beside the article, chapters move the page and say when a place has gone",
   await chrome.willFindPlaces(page, false);
   await page.getByTestId(articleChaptersPanelTestIds.show).nth(1).click();
   await expect(page.getByTestId(articleChaptersPanelTestIds.missing)).toContainText("Couldn’t find this place on the page.");
+});
+
+test("beside the article, a resource's “From” moves the page to where it was shared, and its name still opens a tab", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const overview = makeArticleOverview();
+  const place = { anchor: "who-pays", quote: "The county offered half" };
+  backendSimulator.overviews.seed({
+    ...overview,
+    article: {
+      ...overview.article!,
+      resources: [
+        {
+          text: "County repair fund rules",
+          href: "https://county.example.gov/repair-fund",
+          why: "The rules the offer rests on.",
+          place,
+          chapter: 1,
+        },
+      ],
+    },
+  });
+  await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside() });
+  await launcher.openPage(Routes.overview(overview.id));
+
+  await page.getByRole("button", { name: /A resource it points to/ }).click();
+  await expect(
+    page.getByText("The name opens in a new tab. “From” links move the article beside this panel to the place it was shared."),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "County repair fund rules, on county.example.gov, opens in a new tab" })).toHaveAttribute(
+    "target",
+    "_blank",
+  );
+
+  await page.getByRole("button", { name: "From Who pays: moves the article beside this panel to the place it was shared" }).click();
+
+  await expect.poll(() => page.evaluate(() => window.__iwftArticlePages__?.shown)).toContainEqual(place);
 });
 
 test("regenerating beside the article reads the page; away from it our server fetches the link", async ({

@@ -31,6 +31,12 @@ export class ShareOverviewDialogPageObject extends PageObject {
   verifyDoesNotSayItWasEdited = () =>
     this.step("verifyDoesNotSayItWasEdited", () => this.expectNotToBeVisible(shareOverviewDialogTestIds.editedNotice));
 
+  verifySaysAudioIsMissing = () =>
+    this.step("verifySaysAudioIsMissing", () => this.expectToBeVisible(shareOverviewDialogTestIds.audioMissingNotice));
+
+  verifyDoesNotSayAudioIsMissing = () =>
+    this.step("verifyDoesNotSayAudioIsMissing", () => this.expectNotToBeVisible(shareOverviewDialogTestIds.audioMissingNotice));
+
   verifyCopyButtonReads = (label: string) =>
     this.step(`verifyCopyButtonReads ${label}`, () => expect(this.get(shareOverviewDialogTestIds.copyButton)).toHaveText(label));
 
@@ -43,6 +49,8 @@ export class ShareOverviewDialogPageObject extends PageObject {
   clickCopyLink = () => this.step("clickCopyLink", () => this.click(shareOverviewDialogTestIds.copyButton));
 
   clickUpdateSharedCopy = () => this.step("clickUpdateSharedCopy", () => this.click(shareOverviewDialogTestIds.updateButton));
+
+  clickAddAudio = () => this.step("clickAddAudio", () => this.click(shareOverviewDialogTestIds.addAudioButton));
 
   clickStopSharing = () => this.step("clickStopSharing", () => this.click(shareOverviewDialogTestIds.stopButton));
 

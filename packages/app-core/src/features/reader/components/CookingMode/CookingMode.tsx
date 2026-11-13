@@ -23,6 +23,8 @@ import { CookingTimerPills } from "../CookingTimerPills/CookingTimerPills.js";
 import { CookingTimerSheet } from "../CookingTimerSheet/CookingTimerSheet.js";
 import { CookingTimerStrip } from "../CookingTimerStrip/CookingTimerStrip.js";
 import { OvenText } from "../OvenText/OvenText.js";
+import { TimerControlsSheet } from "../../../cookingTimers/components/TimerControlsSheet/TimerControlsSheet.js";
+import type { CookingTimer } from "../../util/cookingTimers.js";
 import styles from "./CookingMode.module.scss";
 import { cookingModeTestIds } from "./CookingModeTestIds.js";
 import { useActionSwipe } from "./useActionSwipe.js";
@@ -215,12 +217,17 @@ export function CookingMode({
   const drawerId = useId();
   const [stepsOpen, setStepsOpen] = useState(false);
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [ingredientsAsked, setIngredientsAsked] = useState(false);
   const [watching, setWatching] = useState(false);
   const [timerShown, setTimerShown] = useState<number | null>(null);
   const [leaving, setLeaving] = useState(false);
   const firstPill = useRef<HTMLButtonElement | null>(null);
   const timers = mode.timers;
+  const ours = (timer: CookingTimer) => timer.source.recipe === mode.recipe;
+  const ourRunning = timers.running.filter(ours);
+  const ourRinging = timers.ringing.filter(ours);
   const timing = timers.running.length > 0;
+  const asking = ourRunning.length > 0 || ourRinging.length > 0;
   const ringing = timers.ringing.length > 0;
   const awake = useScreenAwake(mode.open && (!mode.finished || timing));
   const action = actions[mode.at];
@@ -242,9 +249,13 @@ export function CookingMode({
   }, [mode.open]);
 
   useEffect(() => {
+    setIngredientsOpen(mode.open && web);
+    setIngredientsAsked(false);
+  }, [mode.open, web]);
+
+  useEffect(() => {
     if (!mode.open) {
       setStepsOpen(false);
-      setIngredientsOpen(false);
       setWatching(false);
       setTimerShown(null);
       setLeaving(false);
@@ -258,25 +269,42 @@ export function CookingMode({
   }, [web, ingredientsOpen]);
 
   useEffect(() => {
-    if (!timing) setLeaving(false);
-  }, [timing]);
+    if (!asking) setLeaving(false);
+  }, [asking]);
+
+  const toggleIngredients = () => {
+    setIngredientsAsked(true);
+    setIngredientsOpen((shown) => !shown);
+  };
+
+  const closeIngredients = () => {
+    setIngredientsAsked(true);
+    setIngredientsOpen(false);
+  };
 
   const leaveNow = () => (mode.finished ? mode.close() : mode.done());
-  const leave = () => (timing ? setLeaving(true) : leaveNow());
-  const backToRecipe = () => (timing ? setLeaving(true) : mode.close());
+  const leave = () => (asking ? setLeaving(true) : leaveNow());
+  const backToRecipe = () => (asking ? setLeaving(true) : mode.close());
   const times = action === undefined ? [] : methodTimes(action.text);
   const shownTimer = timers.running.find((timer) => timer.id === timerShown) ?? null;
 
   const startTimer = (time: MethodTime, index: number, seconds: number) => {
     if (action === undefined) return;
-    timers.start({ name: time.name, step: action.step, source: { action: mode.at, time: index, seconds }, range: time.seconds.length > 1 });
+    timers.start({
+      name: time.name,
+      step: action.step,
+      source: { recipe: mode.recipe, action: mode.at, time: index, seconds },
+      range: time.seconds.length > 1,
+      recipeTitle: mode.recipeTitle,
+      actionText: action.text,
+    });
   };
 
   const onTime = (index: number) => {
     const time = times[index];
     if (time === undefined) return;
     const only = time.seconds.length === 1 ? time.seconds[0]! : null;
-    const running = only === null ? undefined : timers.runningFrom({ action: mode.at, time: index, seconds: only });
+    const running = only === null ? undefined : timers.runningFrom({ recipe: mode.recipe, action: mode.at, time: index, seconds: only });
     if (running !== undefined) setTimerShown(running.id);
     else if (only !== null) startTimer(time, index, only);
     else firstPill.current?.focus();
@@ -299,13 +327,13 @@ export function CookingMode({
     const key = event.key;
     if (key === "Escape") {
       event.preventDefault();
-      if (ingredientsOpen) setIngredientsOpen(false);
+      if (ingredientsOpen && ingredientsAsked) closeIngredients();
       else leave();
       return;
     }
     if (key === "i" || key === "I") {
       event.preventDefault();
-      setIngredientsOpen((shown) => !shown);
+      toggleIngredients();
       return;
     }
     if ((key === "m" || key === "M") && mutable) {
@@ -348,8 +376,9 @@ export function CookingMode({
         onDismiss={timers.dismiss}
         onMore={(id) => timers.adjust(id, 1)}
         dismissKey={key("Space")}
+        here={mode.recipe}
       />
-      <CookingTimerStrip timers={timers.running} now={timers.now} onOpen={setTimerShown} />
+      <CookingTimerStrip timers={timers.running} now={timers.now} here={mode.recipe} onOpen={setTimerShown} />
     </>
   );
 
@@ -363,7 +392,7 @@ export function CookingMode({
         event.preventDefault();
         if (event.target !== dialog.current) return;
         if (stepsOpen) setStepsOpen(false);
-        else if (ingredientsOpen) setIngredientsOpen(false);
+        else if (ingredientsOpen && ingredientsAsked) closeIngredients();
         else leave();
       }}
       onKeyDown={onKeyDown}
@@ -392,7 +421,7 @@ export function CookingMode({
                   aria-haspopup={web ? undefined : "dialog"}
                   aria-controls={web ? drawerId : undefined}
                   aria-expanded={ingredientsOpen}
-                  onClick={() => setIngredientsOpen((shown) => !shown)}
+                  onClick={toggleIngredients}
                   data-testid={cookingModeTestIds.ingredients}
                 >
                   Ingredients
@@ -514,7 +543,7 @@ export function CookingMode({
                     <CookingTimerPills
                       times={times}
                       action={mode.at}
-                      runningFrom={timers.runningFrom}
+                      runningFrom={(source) => timers.runningFrom({ ...source, recipe: mode.recipe })}
                       onStart={startTimer}
                       onOpen={setTimerShown}
                       firstPill={firstPill}
@@ -626,8 +655,11 @@ export function CookingMode({
                 onClose={() => setWatching(false)}
               />
             )}
+            {shownTimer !== null && !ours(shownTimer) && (
+              <TimerControlsSheet timer={shownTimer} onClose={() => setTimerShown(null)} onLeaving={mode.done} />
+            )}
             <CookingTimerSheet
-              timer={shownTimer}
+              timer={shownTimer !== null && ours(shownTimer) ? shownTimer : null}
               now={timers.now}
               onPause={timers.pause}
               onResume={timers.resume}
@@ -640,13 +672,31 @@ export function CookingMode({
             />
             <CookingLeaveSheet
               open={leaving}
-              timers={timers.running}
+              running={ourRunning}
+              ringing={ourRinging}
+              others={timers.running.filter((timer) => !ours(timer))}
               now={timers.now}
               web={web}
-              keepKey={key("Esc")}
-              onKeep={() => setLeaving(false)}
-              onLeave={() => {
+              stayKey={key("Esc")}
+              onStay={() => setLeaving(false)}
+              onKeep={() => {
+                const kept = ourRunning.length + ourRinging.length;
                 setLeaving(false);
+                if (kept > 0) mode.timersKept(kept, ourRunning.length === 0);
+                leaveNow();
+              }}
+              onStop={() => {
+                setLeaving(false);
+                if (ourRunning.length > 0)
+                  timers.stop(
+                    [...ourRunning, ...ourRinging].map((timer) => timer.id),
+                    "left",
+                  );
+                else
+                  timers.stop(
+                    ourRinging.map((timer) => timer.id),
+                    "dismissed",
+                  );
                 leaveNow();
               }}
             />
@@ -664,7 +714,7 @@ export function CookingMode({
               onClose={() => setStepsOpen(false)}
             />
             {!web && (
-              <CookingIngredientsSheet open={ingredientsOpen} onClose={() => setIngredientsOpen(false)}>
+              <CookingIngredientsSheet open={ingredientsOpen} onClose={closeIngredients}>
                 {ingredients}
               </CookingIngredientsSheet>
             )}
@@ -673,7 +723,8 @@ export function CookingMode({
             <CookingIngredientsDrawer
               id={drawerId}
               open={ingredientsOpen}
-              onClose={() => setIngredientsOpen(false)}
+              asked={ingredientsAsked}
+              onClose={closeIngredients}
               onSettled={column.onDrawerSettled}
             >
               {ingredients}

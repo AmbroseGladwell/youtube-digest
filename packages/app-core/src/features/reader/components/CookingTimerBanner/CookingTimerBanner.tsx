@@ -11,18 +11,25 @@ export interface CookingTimerBannerProps {
   onDismiss: (id: number) => void;
   onMore: (id: number) => void;
   dismissKey: ReactNode;
+  // The recipe being cooked; a timer from any other, or any timer outside the mode (null), is
+  // named by its recipe (design 288w).
+  here?: string | null;
 }
 
-const detail = (timer: CookingTimer, now: number) =>
-  `Step ${timer.step + 1} · ${timerLength(timer.source.seconds)} · ${timerAgo(now - (timer.rangAt ?? now))}`;
+const detail = (timer: CookingTimer, now: number, here: string | null) =>
+  timer.source.recipe === here
+    ? `Step ${timer.step + 1} · ${timerLength(timer.source.seconds)} · ${timerAgo(now - (timer.rangAt ?? now))}`
+    : `${timer.recipeTitle} · step ${timer.step + 1} · ${timerLength(timer.source.seconds)}`;
 
 // Designs 284s–284w: a banner in the strip's place on whatever step the reader is on, its edge
 // pulsing, with Dismiss and +1 min; two or more ringing get a row each, oldest first. Focus
 // moves to the first Dismiss when one starts, to the next Dismiss as each is answered, and to
-// the cooking screen itself once none ring, so Space and the arrows move on again.
-export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey }: CookingTimerBannerProps) {
+// the cooking screen itself once none ring, so Space and the arrows move on again. Outside the
+// mode it goes back to wherever it was before the ring (design 288y).
+export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey, here = null }: CookingTimerBannerProps) {
   const firstDismiss = useRef<HTMLButtonElement | null>(null);
   const screen = useRef<HTMLElement | null>(null);
+  const before = useRef<Element | null>(null);
   const newest = ringing.reduce((latest, timer) => Math.max(latest, timer.id), 0);
   const ids = ringing.map((timer) => timer.id).join(" ");
 
@@ -30,13 +37,20 @@ export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey
     const button = firstDismiss.current;
     if (newest === 0 || button === null) return;
     screen.current = button.closest("dialog");
+    if (!button.closest("[role=alert]")?.contains(document.activeElement)) before.current = document.activeElement;
     button.focus({ preventScroll: true });
   }, [newest]);
 
   useEffect(() => {
     const active = document.activeElement;
     if (active !== null && active !== document.body) return;
-    (firstDismiss.current ?? screen.current)?.focus({ preventScroll: true });
+    if (firstDismiss.current !== null || screen.current !== null) {
+      (firstDismiss.current ?? screen.current)?.focus({ preventScroll: true });
+      return;
+    }
+    const back = before.current;
+    before.current = null;
+    if (back instanceof HTMLElement && back.isConnected) back.focus({ preventScroll: true });
   }, [ids]);
 
   if (ringing.length === 0) return null;
@@ -52,7 +66,7 @@ export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey
           <b data-testid={cookingTimerBannerTestIds.title}>
             {only === null ? `${countWord(ringing.length)} timers are done` : `${timerSpokenName(only)} is done`}
           </b>
-          <small>{only === null ? "Oldest first" : detail(only, now)}</small>
+          <small>{only === null ? "Oldest first" : detail(only, now, here)}</small>
         </span>
       </div>
       {only === null ? (
@@ -60,7 +74,7 @@ export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey
           <div key={timer.id} className={styles.row} data-testid={cookingTimerBannerTestIds.row}>
             <span className={styles.rowText}>
               <b>{timerShortName(timer)}</b>
-              <small>{detail(timer, now)}</small>
+              <small>{detail(timer, now, here)}</small>
             </span>
             <button
               type="button"
