@@ -52,6 +52,7 @@ import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js
 import { articleRoutes } from "./routes/articleRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
 import { podcastRoutes } from "./routes/podcastRoutes.js";
+import { accountPlan } from "./auth/accountPlan.js";
 import { createPodcastReader } from "./podcasts/createPodcastReader.js";
 import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
 import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
@@ -281,11 +282,6 @@ export async function buildApp({
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
-      podcastRoutes(api, {
-        readEpisode: readPodcastEpisode,
-        resolveTranscript: createPodcastTranscripts({ fetchPublicWeb: podcastWeb, transcripts, clock }),
-        clock,
-      });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
@@ -296,20 +292,16 @@ export async function buildApp({
         sql,
         clock,
       });
-      serviceTranscriptRoutes(api, {
-        usage: overviewUsage,
+      const youTubeService =
+        transcriptService === null
+          ? null
+          : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), transcripts, costs, clock });
+      serviceTranscriptRoutes(api, { usage: overviewUsage, trials, service: youTubeService, sql, clock });
+      podcastRoutes(api, {
+        readEpisode: readPodcastEpisode,
+        resolveTranscript: createPodcastTranscripts({ fetchPublicWeb: podcastWeb, transcripts, youTubeService, clock }),
+        planOf: (accountId) => accountPlan(sql, accountId),
         trials,
-        service:
-          transcriptService === null
-            ? null
-            : new ServiceTranscripts({
-                ...transcriptService,
-                usage: new ServiceUsageRepository(sql),
-                transcripts,
-                costs,
-                clock,
-              }),
-        sql,
         clock,
       });
       shareRoutes(api, shares, config.appUrl);

@@ -322,10 +322,10 @@ function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
         <>
           <div>
             <h2 className={styles.workingTitle} data-testid={capturePageTestIds.workingTitle}>
-              {run.video?.title ?? "New overview"}
+              {run.video?.title ?? run.podcast?.title ?? "New overview"}
             </h2>
             <p className={styles.workingChannel} data-testid={capturePageTestIds.workingChannel}>
-              {run.video?.channel ?? run.url}
+              {run.video?.channel ?? (run.podcast === null ? run.url : `${run.podcast.show} · Podcast`)}
             </p>
           </div>
 

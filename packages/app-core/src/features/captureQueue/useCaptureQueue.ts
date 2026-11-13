@@ -313,6 +313,7 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
         finishedAt: null,
         video: null,
         article: null,
+        podcast: null,
         transcriptWords: null,
         overview: null,
         error: null,

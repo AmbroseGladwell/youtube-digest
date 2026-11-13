@@ -1,4 +1,4 @@
-import type { Overview, VideoSource } from "@overview/domain";
+import type { Overview, PodcastPlatform, VideoSource } from "@overview/domain";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 import type { RunError } from "./RunError.js";
 
@@ -18,6 +18,17 @@ export interface ArticleRun {
   failure: ArticleFailure | null;
 }
 
+// What a run of an episode knows: what our server read before Create was pressed, then
+// whether its words were found (design 106g).
+export interface PodcastRun {
+  show: string;
+  title: string;
+  platform: PodcastPlatform;
+  durationSeconds: number | null;
+  imageUrl: string | null;
+  words: number | null;
+}
+
 // One generation, from the moment Generate is pressed until it is dismissed. It outlives
 // the dialog: closing the dialog leaves the run going and hands it to the status strip
 // (docs/features/overview-redesign.md, "Generating in the background").
@@ -27,6 +38,7 @@ export interface NewOverviewRun {
   finishedAt: number | null;
   video: VideoSource | null;
   article: ArticleRun | null;
+  podcast: PodcastRun | null;
   transcriptWords: number | null;
   overview: Overview | null;
   error: RunError | null;

@@ -1,4 +1,12 @@
-import { overviewMetaParts, SHARE_PAYLOAD_ELEMENT_ID, type SharePayload, sourceName } from "@overview/domain";
+import {
+  openPodcastLabel,
+  overviewMetaParts,
+  SHARE_PAYLOAD_ELEMENT_ID,
+  type SharePayload,
+  type SharedNote,
+  sourceName,
+  sourceUrl,
+} from "@overview/domain";
 import { escapeHtml } from "./escapeHtml.js";
 
 export interface SharePageHtmlInput {
@@ -37,13 +45,15 @@ function fallbackBody(payload: SharePayload): string {
     `<h1>${escapeHtml(note.source.title)}</h1>`,
     `<p>${escapeHtml(sourceName(note.source))} · ${escapeHtml(overviewMetaParts(note).join(" · "))}</p>`,
     `<p>${escapeHtml(note.inOneLine)}</p>`,
-    `<p><a href="${escapeHtml(note.source.url)}">${
-      note.source.kind === "web"
-        ? `${note.recipe == null ? "Read the article" : "Open the recipe"} on ${escapeHtml(sourceName(note.source))}`
-        : "Watch on YouTube"
-    }</a></p>`,
+    `<p><a href="${escapeHtml(sourceUrl(note.source))}">${escapeHtml(wayOut(note))}</a></p>`,
     "</main>",
   ].join("");
+}
+
+function wayOut({ source, recipe }: SharedNote): string {
+  if (source.kind === "youtube") return "Watch on YouTube";
+  if (source.kind === "podcast") return openPodcastLabel(source.sharedFrom);
+  return `${recipe == null ? "Read the article" : "Open the recipe"} on ${sourceName(source)}`;
 }
 
 export function sharePageHtml({ head, payload, shell }: SharePageHtmlInput): string {

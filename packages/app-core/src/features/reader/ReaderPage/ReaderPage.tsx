@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
   KEY_POINTS_SECTION,
@@ -9,6 +9,7 @@ import {
   recipeFrom,
   recipeText,
   sourceName,
+  sourceUrl,
   type RecipeUnits,
   isUnreadableRecordError,
   overviewMetaParts,
@@ -17,6 +18,10 @@ import {
   overviewTimeSaved,
   recipeActions as actionsOf,
 } from "@overview/domain";
+import { timedSource } from "../util/timedSource.js";
+import { useEpisodeEngine } from "../episode/useEpisodeEngine.js";
+import { EpisodePlayer } from "../components/EpisodePlayer/EpisodePlayer.js";
+import { PlaybackProvider } from "../../../app/PlaybackContext.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
@@ -161,7 +166,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   };
 
   const overview = overviewQuery.data?.overview ?? null;
-  const video = overview?.source.kind === "youtube" ? overview.source : null;
+  const video = useMemo(() => (overview === null ? null : timedSource(overview.source)), [overview]);
   const webArticle =
     overview?.source.kind === "web" && overview.article !== null ? { source: overview.source, article: overview.article } : null;
   const recipe = overview?.recipe ?? null;
@@ -261,6 +266,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
+  const episode = useEpisodeEngine(overview?.source ?? null);
   useEffect(() => {
     if (!recipeCopied) return;
     const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
@@ -422,7 +428,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                 recipeText({
                   title: recipeNote.source.title,
                   from,
-                  url: recipeNote.source.url,
+                  url: sourceUrl(recipeNote.source),
                   recipe: recipeNote.recipe,
                   ingredients: shownIngredients,
                   adjusted: adjustment.copyNote,
@@ -456,7 +462,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     void navigate(Routes.home(), { replace: true, viewTransition: animateNavigation });
   };
 
-  return (
+  // An episode's note moves its own player: every time in it plays the episode (design 106p).
+  const withEpisode = (page: ReactNode) => (episode === null ? page : <PlaybackProvider value={episode.playback}>{page}</PlaybackProvider>);
+
+  return withEpisode(
     <OverviewAnalyticsProvider value={overviewAnalytics}>
       <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
         <ReaderMasthead
@@ -492,6 +501,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           recipeActions={recipeActions}
           onDelete={() => setConfirmingDelete(true)}
         />
+
+        {episode !== null && overview.source.kind === "podcast" && (
+          <div className={styles.episode}>
+            <EpisodePlayer engine={episode} source={overview.source} />
+          </div>
+        )}
 
         {wasAlreadyMade(location.state) && <ReaderNotice>You made an overview of this on {madeOn(overview.savedAt)}.</ReaderNotice>}
 
@@ -544,6 +559,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                         asSheet={isPhone && !isPanel}
                         canReadTranscript={true}
                         onOpenTranscriptAt={openTranscriptAt}
+                        direct={episode !== null}
                       />
                     )
                   );
@@ -800,7 +816,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           />
         )}
       </article>
-    </OverviewAnalyticsProvider>
+    </OverviewAnalyticsProvider>,
   );
 }
 

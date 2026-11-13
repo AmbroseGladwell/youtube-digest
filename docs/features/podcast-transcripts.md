@@ -25,8 +25,8 @@ comments.
 | Rung | Episodes | Built |
 |---|---|---|
 | The feed's transcript tag | 6% | here |
-| The same episode on the show's YouTube channel, by title and length | 34% | next |
-| The same, confirmed by the YouTube description when the upload was retitled | +9% | next |
+| The same episode on the show's YouTube channel, by title and length | 34% | `podcast-on-youtube.md` |
+| The same, confirmed by the YouTube description when the upload was retitled | +9% | `podcast-on-youtube.md` |
 | **Every free route** | **about 47%** | |
 | Speech to text on the audio | the rest | after the owner's call |
 
@@ -103,5 +103,5 @@ format, the number of segments and the time, or the failure. Never the feed or t
 ## Terms
 
 Keeping a host's transcript in the shared cache is the use `podcast-links.md`, "Terms, still to
-check", names. It is checked before any reader can reach this route, in the slice that adds podcasts
-to `/privacy`.
+check", names. `/privacy` says so since the screens' slice that lets a reader paste a link; the
+terms check is the owner's, before that slice merges (`podcast-screens.md`, "Before it merges").

@@ -3,6 +3,8 @@ import {
   articleSourceId,
   heldOverviewOf,
   OverviewId,
+  podcastSource,
+  podcastSourceId,
   sourceKey,
   tagUsage,
   type ArticleRead,
@@ -11,12 +13,14 @@ import {
   type ExtractedArticle,
   type Overview,
   type OverviewStore,
+  type PodcastEpisode,
   type PlaylistOrigin,
   type SettingsStore,
   type TranscriptStore,
   type VideoSource,
 } from "@overview/domain";
-import type { OverviewInput } from "@overview/generation";
+import { episodeAsVideo, type OverviewInput, type PodcastGenerationInput } from "@overview/generation";
+import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
 import { countWords } from "../../../util/countWords.js";
 import { captureReasonFromDraft } from "../../overviews/util/captureReasonFromDraft.js";
 import { resolveVideo, type VideoResolutionDeps } from "../../transcripts/api/resolveVideo.js";
@@ -56,6 +60,8 @@ export interface GenerationPipelineDeps {
 export interface RunOverviewGenerationOptions {
   onProgress?: ((progress: GenerationProgress) => void) | undefined;
   onArticleRead?: ((article: ExtractedArticle) => void) | undefined;
+  // An episode's words were found, so the steps can say so (design 106g).
+  onEpisodeWords?: ((words: number) => void) | undefined;
   isCancelled?: (() => boolean) | undefined;
   // Regenerating an unreadable record writes under its own id, so the separate state row
   // — read, favourite, user tags — stays attached rather than being orphaned under a new
@@ -138,6 +144,36 @@ export async function runArticleOverviewGeneration(
   return writeOverview({ article: result.article }, deps, options);
 }
 
+export interface PodcastRunRequest {
+  episode: PodcastEpisode;
+  // The link the reader pasted, kept as the overview's way out.
+  sharedFrom: string;
+}
+
+// An episode is read before Create is pressed, so the run starts at its words: the free routes,
+// then the note in a podcast's words. An episode with no words found makes nothing and costs
+// nothing (docs/features/podcast-screens.md).
+export async function runPodcastOverviewGeneration(
+  { episode, sharedFrom }: PodcastRunRequest,
+  findWords: (episode: PodcastEpisode) => Promise<PodcastTranscript>,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore">,
+  options: RunOverviewGenerationOptions = {},
+): Promise<Overview> {
+  const id = await podcastSourceId(episode);
+  const key = sourceKey({ kind: "podcast", id })!;
+  if (options.overviewId === undefined) {
+    const held = await heldOverviewOf(deps.overviewStore, key);
+    if (held !== null) throw new ArticleAlreadyHeldError(held);
+  }
+  const { transcript } = await findWords(episode);
+  stopIfCancelled(options);
+  await deps.transcriptStore.saveTranscript({ ...transcript, videoId: key });
+  options.onEpisodeWords?.(transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0));
+  await waitToWrite(options);
+  const podcast = podcastSource(episode, id, sharedFrom);
+  return writeOverview({ podcast, video: episodeAsVideo(podcast, episode.notes), transcript: transcript.segments }, deps, options);
+}
+
 function stopIfCancelled(options: RunOverviewGenerationOptions): void {
   if (options.isCancelled?.()) throw new GenerationCancelledError();
 }
@@ -160,7 +196,10 @@ const keptOnRegeneration = (previous: Overview) => ({
   ...(previous.fromSample ? { fromSample: previous.fromSample } : {}),
 });
 
-type WhatToWrite = Pick<Extract<OverviewInput, { video: unknown }>, "video" | "transcript"> | { article: ExtractedArticle };
+type WhatToWrite =
+  | Pick<Extract<OverviewInput, { video: unknown }>, "video" | "transcript">
+  | Pick<PodcastGenerationInput, "podcast" | "video" | "transcript">
+  | { article: ExtractedArticle };
 
 async function writeOverview(
   what: WhatToWrite,

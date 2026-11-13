@@ -41,3 +41,6 @@ export * from "./article/offeredLinks.js";
 export * from "./noteKind/KindSample.js";
 export * from "./noteKind/checkNoteKind.js";
 export * from "./noteKind/kindSampleOfVideo.js";
+export * from "./podcast/PodcastGenerationInput.js";
+export * from "./podcast/composePodcastPrompt.js";
+export * from "./podcast/generatePodcastOverview.js";

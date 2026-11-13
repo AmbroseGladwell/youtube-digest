@@ -36,6 +36,16 @@ bounds, and they are the position:**
   traffic. If proxied fetches pass a few thousand a day, or YouTube or anyone else
   objects, get a lawyer's view before raising the cap.
 
+**Podcasts widen "captions only" (OV-106, decided with the owner 13 Nov 2026).** Finding a
+podcast episode on its show's YouTube channel reads more than a player response: a channel search,
+a channel's Videos pages and up to five player responses, at most 14 requests
+(`docs/features/podcast-on-youtube.md`). The same bounds hold. The reader's extension searches
+first, on their own address, and our server is asked to search only when there is no extension or
+YouTube turned it away. Checking the video an extension found is one player request. The answer is
+kept under the episode's key, so an episode is matched once, ever. It is `metered`, so never in the
+background. And it runs only with the service switched on, through the same proxy budget. It
+still never downloads audio or video, never signs in and never touches comments or accounts.
+
 What this does not claim: that the rung is within YouTube's terms. It is not. The claim
 is that the exposure is small, bounded and reversible, and that the ladder exists to keep
 it that way.

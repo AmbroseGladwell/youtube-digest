@@ -11,7 +11,9 @@ export interface PlaybackSource {
   getPosition: () => PlaybackPosition | null;
   // The one thing here that writes to the page rather than reading it, and only ever
   // because someone pressed something (docs/features/following-playback.md).
-  seekTo: (positionMs: number) => void;
+  // An episode in its note can also stop at the end of a range (design 106s); a video beside
+  // the panel plays on.
+  seekTo: (positionMs: number, untilMs?: number) => void;
 }
 
 // Injected by the shell for the same reason ActiveVideoSource is: app-core cannot read
@@ -35,7 +37,7 @@ export function useCanFollowPlayback(): boolean {
 // (docs/prototype/constraints.md).
 // Null unless there is a player to move and it is playing the video being read, which
 // is what keeps the control off the web app and off a note about another video.
-export function useSeekPlayback(videoId: string | null): ((positionMs: number) => void) | null {
+export function useSeekPlayback(videoId: string | null): ((positionMs: number, untilMs?: number) => void) | null {
   const source = useContext(PlaybackContext);
   const reporting = usePlaybackPosition(videoId) !== null;
   return source !== null && reporting ? source.seekTo : null;

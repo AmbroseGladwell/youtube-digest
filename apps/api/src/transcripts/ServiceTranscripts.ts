@@ -1,10 +1,16 @@
 import type { FastifyBaseLogger } from "fastify";
 import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
-import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
+import { TranscriptFetchError, TranscriptFetchFailure, type YouTubeFetch } from "@overview/transcripts";
 import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
 import { hashedAddress } from "../http/hashedAddress.js";
-import { fetchThroughService, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
+import {
+  fetchThroughService,
+  throughService,
+  type ProxyBudget,
+  type ServiceFetches,
+  type ServiceFetchResult,
+} from "./fetchThroughService.js";
 import { secondsToNextUsageDay, type FetchReservation, type ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { transcriptFault } from "./transcriptFault.js";
@@ -121,40 +127,45 @@ export class ServiceTranscripts {
     return fetching;
   }
 
+  // Any YouTube request on our server's behalf, the same way a caption fetch goes: our own
+  // address first, then the proxy within today's budget, its bytes recorded against the payer
+  // (docs/features/podcast-on-youtube.md, "Our server's part").
+  async onYouTube<T>(operation: (youTubeFetch: YouTubeFetch) => Promise<T>, payer: CostPayer, log: FastifyBaseLogger): Promise<T> {
+    return (await throughService(this.#options.fetches, this.#budget(payer, log), operation)).value;
+  }
+
+  #budget(payer: CostPayer, log: FastifyBaseLogger, onSpent: (bytes: number) => void = () => undefined): ProxyBudget {
+    const { usage, costs, proxyDailyFetches, clock } = this.#options;
+    return {
+      reserve: () => usage.reserveProxy(clock(), proxyDailyFetches),
+      release: () => usage.releaseProxy(clock()),
+      spend: async (bytes) => {
+        onSpent(bytes);
+        const today = await usage.addProxyBytes(clock(), bytes);
+        await costs.recordOrLog(
+          clock(),
+          payer,
+          { area: "transcripts", detail: "proxy", quantity: bytes, dollars: (bytes / BYTES_PER_GB) * PROXY_PRICE.dollarsPerGb },
+          log,
+        );
+        log.info(
+          apiLogLines.serviceTranscripts.proxySpend({ proxyBytes: bytes, proxiedToday: today.proxied, proxyBytesToday: today.proxyBytes }),
+        );
+      },
+    };
+  }
+
   async #fetch(videoId: VideoId, payer: CostPayer, log: FastifyBaseLogger, reservation: FetchReservation): Promise<ServiceAnswer> {
-    const { fetches, usage, transcripts, costs, proxyDailyFetches, clock } = this.#options;
+    const { fetches, transcripts, clock } = this.#options;
     const startedAt = clock().getTime();
     let proxyBytes = 0;
     let result: ServiceFetchResult;
     try {
       result = await fetchThroughService(
         fetches,
-        {
-          reserve: () => usage.reserveProxy(clock(), proxyDailyFetches),
-          release: () => usage.releaseProxy(clock()),
-          spend: async (bytes) => {
-            proxyBytes = bytes;
-            const today = await usage.addProxyBytes(clock(), bytes);
-            await costs.recordOrLog(
-              clock(),
-              payer,
-              {
-                area: "transcripts",
-                detail: "proxy",
-                quantity: bytes,
-                dollars: (bytes / BYTES_PER_GB) * PROXY_PRICE.dollarsPerGb,
-              },
-              log,
-            );
-            log.info(
-              apiLogLines.serviceTranscripts.proxySpend({
-                proxyBytes: bytes,
-                proxiedToday: today.proxied,
-                proxyBytesToday: today.proxyBytes,
-              }),
-            );
-          },
-        },
+        this.#budget(payer, log, (bytes) => {
+          proxyBytes = bytes;
+        }),
         videoId,
       );
     } catch (error) {
