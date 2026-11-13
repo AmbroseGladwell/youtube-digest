@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import type { ArticleDetails } from "./ArticleDetails.js";
 import { OverviewId } from "./Brands.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
+import { overviewMarkdown } from "./overviewMarkdown.js";
 import { overviewNoteCaptions } from "./overviewNoteCaptions.js";
 import { overviewNoteLines, READ_ANYWAY_SECTION } from "./overviewNoteLines.js";
 import { Overview } from "./Overview.js";
@@ -103,4 +104,51 @@ test("an article the note says to read in full saves nothing", () => {
 test("a partial answer takes the named chapters' reading time off", () => {
   const read = { answer: "partial" as const, reason: "Part of it.", leftOut: "It leaves out the rest.", chapterIndexes: [1] };
   assert.deepEqual(overviewTimeSaved(article({ readAnyway: read })), { kind: "counted", minutes: 4, lessPartToWatch: true });
+});
+
+const resources = [
+  {
+    text: "Neurodiversity Design Toolkit",
+    href: "https://toolkit.example/neuro",
+    why: "The author's starting point for designing for neurodivergent people.",
+    place: { anchor: "who-pays", quote: "The county" },
+    chapter: 1,
+  },
+  {
+    text: "Cognitive accessibility guidance",
+    href: "https://w3.example/coga",
+    why: "The standard the piece's checklist follows.",
+    place: { anchor: null, quote: "The bridge" },
+    chapter: 0,
+  },
+];
+
+test("an article's resources are stored, at most five, and only https", () => {
+  assert.doesNotThrow(() => Overview.parse(article({ resources })));
+  assert.throws(() => Overview.parse(article({ resources: Array.from({ length: 6 }, () => resources[0]!) })));
+  assert.throws(() => Overview.parse(article({ resources: [{ ...resources[0]!, href: "http://old.example/guide" }] })));
+  assert.throws(() => Overview.parse(article({ resources: [] })));
+});
+
+test("a resource says why in 25 words at most, and names a chapter the note has", () => {
+  assert.throws(() =>
+    Overview.parse(article({ resources: [{ ...resources[0]!, why: Array.from({ length: 26 }, () => "word").join(" ") }] })),
+  );
+  assert.throws(() => Overview.parse(article({ resources: [{ ...resources[0]!, chapter: 2 }] })));
+});
+
+test("an assistant reads each resource with why and the chapter it was shared in, and a note without them has no such section", () => {
+  assert.match(
+    overviewMarkdown(article({ resources })),
+    /## Resources it links to\n\n- \[Neurodiversity Design Toolkit\]\(https:\/\/toolkit\.example\/neuro\): The author's starting point for designing for neurodivergent people\. From \[Who pays\]\(https:\/\/news\.example\.com\/bridge#who-pays\)\.\n- \[Cognitive accessibility guidance\]/,
+  );
+  assert.doesNotMatch(overviewMarkdown(article()), /Resources it links to/);
+});
+
+test("a shared article keeps its resources, and one without them shares exactly as before", () => {
+  assert.deepEqual(
+    shareSnapshot({ overview: article({ resources }), transcript: null, narration: null }).note.article?.resources,
+    resources,
+  );
+  assert.ok(!("resources" in shareSnapshot({ overview: article(), transcript: null, narration: null }).note.article!));
 });

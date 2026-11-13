@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEFAULT_TIMER_SOUND, type OverviewId, type RecipeAction, type RecipeStep } from "@overview/domain";
+import type { OverviewId, RecipeAction, RecipeStep } from "@overview/domain";
+import { useCookingTimers, type CookingTimers } from "../../cookingTimers/CookingTimersContext.js";
 import { useUpdateSettingsMutation } from "../../settings/mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import type { OverviewPageAnalytics } from "../../analytics/bindOverviewId.js";
@@ -15,12 +16,14 @@ import {
   type CookingPlace,
 } from "../cookingPlaceStorage.js";
 import type { RecipeVoice } from "./useRecipeVoice.js";
-import { useCookingTimers, type CookingTimers } from "./useCookingTimers.js";
 
 export type CookingVoice = "reading" | "paused" | "waiting" | "loading" | "textOnly" | "muted" | "stopped";
-export type CookingEntry = "heading" | "summary" | "bar" | "carryOn";
+export type CookingEntry = "heading" | "summary" | "bar" | "carryOn" | "timer";
 
 export interface CookingMode {
+  // The recipe being cooked, as its timers name it (OV-288).
+  recipe: string;
+  recipeTitle: string;
   open: boolean;
   at: number;
   finished: boolean;
@@ -32,6 +35,7 @@ export interface CookingMode {
   reachedStep: number | null;
   timers: CookingTimers;
   toggleMute: (by: "button" | "key") => void;
+  timersKept: (count: number, ringing: boolean) => void;
   start: (from: CookingEntry, action: number) => void;
   next: () => void;
   back: () => void;
@@ -80,35 +84,18 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
   const heard = useRef(new Set<number>());
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
-  const timerSound = settings?.timerSound ?? DEFAULT_TIMER_SOUND;
   const muted = settings?.readStepsAloud === false;
   const mutedRef = useRef(muted);
   mutedRef.current = muted;
-  const timers = useCookingTimers({
-    sound: timerSound,
-    onStarted: (timer) => analytics.cooking.timerStarted({ seconds: timer.source.seconds, step: timer.step + 1, range: timer.range }),
-    onEnded: (by, rang) => analytics.cooking.timerEnded({ by, rang }),
-  });
+  const timers = useCookingTimers();
   const timersRef = useRef(timers);
   timersRef.current = timers;
-
-  useEffect(() => {
-    if (!open) timersRef.current.stopAll();
-  }, [open]);
-
   const ringing = timers.ringing.length > 0;
-  const voiceHeldForTimer = useRef(false);
+  const { setCookingOpen } = timers;
   useEffect(() => {
-    if (ringing) {
-      const { status } = engine.getSnapshot();
-      if (status !== "playing" && status !== "buffering") return;
-      engine.pause();
-      voiceHeldForTimer.current = true;
-    } else if (voiceHeldForTimer.current) {
-      voiceHeldForTimer.current = false;
-      if (open) engine.play("cooking");
-    }
-  }, [ringing, engine, open]);
+    setCookingOpen(open);
+    return () => setCookingOpen(false);
+  }, [open, setCookingOpen]);
 
   useEffect(() => {
     setPlace(readCookingPlace(overviewId));
@@ -156,6 +143,17 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     analytics.cooking.started({ from, step: (actions[target]?.step ?? 0) + 1 });
     go(target);
   };
+
+  // A timer's "Back to step" (design 288s): opens this recipe's mode at the action the timer came
+  // from, or at the start if that action's words have changed since (edge case 4).
+  const request = timers.cookRequest;
+  const startRef = useRef(start);
+  startRef.current = start;
+  useEffect(() => {
+    if (request === null || request.recipe !== overviewId || actions.length === 0) return;
+    timersRef.current.takeCookRequest();
+    startRef.current("timer", actions[request.action]?.text === request.actionText ? request.action : 0);
+  }, [request, overviewId, actions]);
 
   const quiet = () => {
     recipeVoice?.holdAt(at);
@@ -219,6 +217,8 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
   }, [open, finished, mediaTitle, title, engine]);
 
   return {
+    recipe: overviewId,
+    recipeTitle: title,
     open,
     at,
     finished,
@@ -228,13 +228,14 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
     place,
     reachedStep,
     timers,
+    timersKept: (count, ringing) => analytics.cooking.timersKept({ count, ringing }),
     toggleMute: (by) => {
       const muting = !muted;
       mutedRef.current = muting;
       analytics.cooking.voiceMuted({ muted: muting, by });
       updateSettings.mutate({ readStepsAloud: !muting });
       if (muting) {
-        voiceHeldForTimer.current = false;
+        timers.forgetHeldNarration();
         recipeVoice?.holdAt(at);
         setPaused(false);
       } else if (!finished && !ringing) {

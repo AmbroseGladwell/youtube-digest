@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { isPaused, timeLeftMs, type CookingTimer } from "../../util/cookingTimers.js";
 import { timerAtClock, timerClock, timerFullName, timerLength, timerSpokenName } from "../../util/timerText.js";
@@ -13,11 +13,24 @@ export interface CookingTimerSheetProps {
   onAdjust: (id: number, minutes: number) => void;
   onCancel: (id: number) => void;
   onClose: () => void;
+  // Outside the mode, or a recipe other than the one being cooked (OV-288, design 288s).
+  recipeTitle?: string | null;
+  wayBack?: ReactNode;
 }
 
 // Designs 284q and 284r (owner, 12 Nov 2026): a running timer's own sheet, with Pause or Resume,
 // −1 min and +1 min in one row, and Cancel timer set apart under them.
-export function CookingTimerSheet({ timer, now, onPause, onResume, onAdjust, onCancel, onClose }: CookingTimerSheetProps) {
+export function CookingTimerSheet({
+  timer,
+  now,
+  onPause,
+  onResume,
+  onAdjust,
+  onCancel,
+  onClose,
+  recipeTitle = null,
+  wayBack = null,
+}: CookingTimerSheetProps) {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const open = timer !== null;
 
@@ -56,7 +69,14 @@ export function CookingTimerSheet({ timer, now, onPause, onResume, onAdjust, onC
         <div className={styles.panel}>
           <span className={styles.handle} aria-hidden="true" />
           <div className={styles.head}>
-            <h2 className={styles.heading}>{timerFullName(timer)}</h2>
+            <span className={styles.titles}>
+              <h2 className={styles.heading}>{timerFullName(timer)}</h2>
+              {recipeTitle !== null && (
+                <span className={styles.recipe} data-testid={cookingTimerSheetTestIds.recipe}>
+                  {recipeTitle}
+                </span>
+              )}
+            </span>
             <button type="button" className={styles.close} aria-label="Close" onClick={onClose}>
               <StrokeIcon name="close" size={16} />
             </button>
@@ -96,6 +116,7 @@ export function CookingTimerSheet({ timer, now, onPause, onResume, onAdjust, onC
               +1 min
             </button>
           </div>
+          {wayBack}
           <button type="button" className={styles.cancel} onClick={() => onCancel(timer.id)} data-testid={cookingTimerSheetTestIds.cancel}>
             Cancel timer
           </button>

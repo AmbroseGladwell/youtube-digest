@@ -1,5 +1,5 @@
 import { formatClock } from "@overview/domain";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { PlayPauseIcon } from "../../../../components/shared/PlayPauseIcon/PlayPauseIcon.js";
@@ -13,15 +13,14 @@ import styles from "./MiniPlayer.module.scss";
 import { miniPlayerTestIds } from "./MiniPlayerTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
-
-const CLEARANCE_PROPERTY = "--mini-player-clearance";
-const CLEARANCE_GAP_PX = 8;
+import { useCookingTimerList } from "../../../cookingTimers/CookingTimersContext.js";
 
 const DOCKED_STATUSES = new Set<PlayerSnapshot["status"]>(["preparing", "playing", "paused", "buffering"]);
 
 // Design 3a: leaving a note that is playing docks this at the foot of every page — title,
 // section and clock, the transport, and × to stop. It is absent on the playing note's own
-// reader, whose bar already says all of it (docs/features/audio-player.md).
+// reader, whose bar already says all of it (docs/features/audio-player.md). It sits in the
+// cooking timers' dock, under any timers (design 288g).
 export function MiniPlayer() {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
@@ -37,7 +36,7 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
   const engine = usePlayer();
   const time = usePlayerTime();
   const analytics = useAnalytics();
-  const root = useRef<HTMLDivElement | null>(null);
+  const { narrationHeld } = useCookingTimerList();
   const [artworkFailed, setArtworkFailed] = useState(false);
   const track = snapshot.track!;
   const { timings, status, source } = snapshot;
@@ -47,28 +46,8 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
   const playing = status === "playing" || status === "buffering";
   const preparing = status === "preparing";
 
-  // How much of the window's foot this covers, so a reader's own bar and the last row of
-  // a page can sit above it rather than under it.
-  useLayoutEffect(() => {
-    const element = root.current;
-    if (element === null) return;
-    const publish = () => {
-      const clearance = window.innerHeight - element.getBoundingClientRect().top + CLEARANCE_GAP_PX;
-      document.documentElement.style.setProperty(CLEARANCE_PROPERTY, `${Math.max(0, clearance)}px`);
-    };
-    publish();
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(publish);
-    observer?.observe(element);
-    window.addEventListener("resize", publish);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", publish);
-      document.documentElement.style.removeProperty(CLEARANCE_PROPERTY);
-    };
-  }, []);
-
   return (
-    <div className={styles.root} role="region" aria-label="Now playing" ref={root} data-testid={miniPlayerTestIds.root}>
+    <div className={styles.root} role="region" aria-label="Now playing" data-testid={miniPlayerTestIds.root}>
       <div className={styles.row}>
         {track.artworkUrl !== null && !artworkFailed ? (
           <img className={styles.artwork} src={track.artworkUrl} alt="" onError={() => setArtworkFailed(true)} />
@@ -85,7 +64,9 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
           <span className={styles.meta} data-testid={miniPlayerTestIds.meta}>
             {preparing
               ? "Preparing audio"
-              : `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`}
+              : narrationHeld && status === "paused"
+                ? "Paused for the timer"
+                : `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`}
           </span>
         </PageLink>
         <button

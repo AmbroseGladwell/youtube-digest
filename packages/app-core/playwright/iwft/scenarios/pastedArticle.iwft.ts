@@ -23,7 +23,7 @@ const ARTICLE: ExtractedArticle = {
   publishedAt: null,
   language: "en",
   imageUrl: null,
-  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
+  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011.", links: [] }],
   wordCount: 3220,
   recipe: null,
 };

@@ -1077,6 +1077,7 @@ export class BackendSimulator {
       updatedAt: "2026-09-30T11:00:00.000Z",
       views: existing?.views ?? 0,
       contentHash: createHash("sha256").update(shareContentSource(note)).digest("hex"),
+      hasNarration: snapshot.narration !== null,
     };
     this.#shares.set(token, share);
     this.#shareSnapshots.set(token, snapshot);

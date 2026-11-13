@@ -62,19 +62,18 @@
   }
 }
 
+.others {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
 .buttons {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
   margin: 1.125rem 0 0;
-
-  .web & {
-    flex-direction: row-reverse;
-
-    > * {
-      flex: 1;
-    }
-  }
 }
 
 .keep {
@@ -96,4 +95,13 @@
     height: 4rem;
     border-radius: 1.375rem;
   }
+}
+
+// Design 288a: Keep cooking is a quiet third, and Esc means it.
+.stay {
+  @include controls.ghost-pill;
+
+  height: 3rem;
+  border-radius: 1.25rem;
+  font-size: 0.9375rem;
 }
