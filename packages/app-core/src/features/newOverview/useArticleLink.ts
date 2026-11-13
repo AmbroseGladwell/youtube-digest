@@ -14,6 +14,7 @@ import { ArticleReadError } from "./api/ArticleReadError.js";
 import { isYouTubeUrl, youTubeLink } from "./util/parseYouTubeUrl.js";
 import { pastedLinkFailureCopy } from "./util/pastedLinkFailureCopy.js";
 import { useReaderPlace } from "./useReaderPlace.js";
+import { isPlatformPodcastLink } from "./usePodcastLink.js";
 
 export type ArticleLink =
   | { status: "none" }
@@ -28,7 +29,7 @@ const KEPT_MS = 5 * 60 * 1000;
 
 export const isArticleLink = (input: string): boolean => {
   const link = input.trim();
-  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null) return false;
+  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null || isPlatformPodcastLink(link)) return false;
   try {
     const { protocol, hostname } = new URL(link);
     return (protocol === "http:" || protocol === "https:") && hostname.includes(".");

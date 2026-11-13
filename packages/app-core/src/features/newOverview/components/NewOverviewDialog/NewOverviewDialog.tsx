@@ -1,3 +1,4 @@
+import { episodeFacts } from "../PodcastLinkStatus/PodcastLinkStatus.js";
 import { formatClock } from "@overview/domain";
 import { useEffect, useRef, useState } from "react";
 import type { Overview } from "@overview/domain";
@@ -298,6 +299,17 @@ function RunProgress({
               </p>
             </div>
           </>
+        ) : run.podcast !== null ? (
+          <div className={styles.sourceText}>
+            <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>
+              {run.podcast.title}
+            </h2>
+            <p className={styles.sourceMeta}>
+              {[run.podcast.show, "Podcast", episodeFacts({ durationSeconds: run.podcast.durationSeconds, publishedAt: null }) || null]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
         ) : run.article !== null ? (
           <div className={styles.sourceText}>
             <h2 className={styles.sourceTitle} id={headingId} data-testid={newOverviewDialogTestIds.sourceTitle}>

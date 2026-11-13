@@ -20,7 +20,10 @@ import { LimitMessageNote } from "../LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../useLimitMessage.js";
 import { isArticleLink, useArticleLink } from "../../useArticleLink.js";
 import { useStartArticleFromLink } from "../../useStartArticleFromLink.js";
-import { ArticleLinkStatus } from "../ArticleLinkStatus/ArticleLinkStatus.js";
+import { PastedLinkStatus } from "../PastedLinkStatus/PastedLinkStatus.js";
+import { isPlatformPodcastLink, usePodcastLink } from "../../usePodcastLink.js";
+import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
+import { pastedLinkState } from "../../util/pastedLinkState.js";
 
 export interface GenerateOverviewFormProps {
   url: string;
@@ -75,9 +78,12 @@ export function GenerateOverviewForm({
   const urlFieldId = useId();
   const article = useArticleLink(url, "dialog");
   const startArticle = useStartArticleFromLink();
+  const podcast = usePodcastLink(url);
+  const { startPodcast } = useNewOverviewRunController();
+  const { podcastShown, reading, generateOffered } = pastedLinkState(article.link, podcast);
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
-      recognised: isYouTubeUrl(url) || (article.available && isArticleLink(url)),
+      recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url))),
       from: "dialog",
     }),
   );
@@ -92,6 +98,16 @@ export function GenerateOverviewForm({
       return;
     }
     if (choosing !== null || limit !== null) {
+      return;
+    }
+    if (podcastShown) {
+      if (podcast.link.status === "found") {
+        setValidationError(null);
+        startPodcast({ episode: podcast.link.episode, sharedFrom: url.trim(), from: "dialog" });
+      }
+      return;
+    }
+    if (reading) {
       return;
     }
     if (article.link.status === "found") {
@@ -110,7 +126,6 @@ export function GenerateOverviewForm({
     setValidationError(null);
     onSubmit(url);
   };
-  const generateOffered = article.link.status !== "held" && article.link.status !== "failed";
 
   const isWatchedVideo = activeVideoUrl !== null && activeVideoUrl === url.trim();
   const offersWatchedVideo = activeVideoUrl !== null && !isWatchedVideo;
@@ -132,7 +147,7 @@ export function GenerateOverviewForm({
           className={styles.urlInput}
           placeholder={
             article.available
-              ? "Paste a YouTube or article link"
+              ? "Paste a YouTube, podcast or article link"
               : playlistsAvailable
                 ? "Paste a YouTube video or playlist link"
                 : "Paste a YouTube link"
@@ -152,14 +167,7 @@ export function GenerateOverviewForm({
         />
       </label>
 
-      <ArticleLinkStatus
-        link={article.link}
-        url={url.trim()}
-        place={article.place}
-        onRetry={article.retry}
-        onClear={() => onUrlChange("")}
-        onOpened={onCancel}
-      />
+      <PastedLinkStatus article={article} podcast={podcast} url={url.trim()} onClear={() => onUrlChange("")} onOpened={onCancel} />
 
       {isWatchedVideo && (
         <p className={styles.provenance} data-testid={generateOverviewFormTestIds.watchingNote}>
@@ -209,11 +217,13 @@ export function GenerateOverviewForm({
         />
       ) : keysReady ? (
         <p className={styles.note}>
-          {article.link.status === "none"
-            ? "Fetches the transcript"
-            : article.link.status === "found" && article.link.article.recipe !== null
-              ? "Reads the recipe"
-              : "Reads the article"}
+          {podcastShown
+            ? "Finds the episode’s transcript"
+            : article.link.status === "none"
+              ? "Fetches the transcript"
+              : article.link.status === "found" && article.link.article.recipe !== null
+                ? "Reads the recipe"
+                : "Reads the article"}
           , then writes the overview. Nothing is saved to your library unless both succeed.
         </p>
       ) : (
@@ -260,7 +270,7 @@ export function GenerateOverviewForm({
           <button
             type="submit"
             className={styles.generateButton}
-            disabled={!keysReady || article.link.status === "reading"}
+            disabled={!keysReady || reading}
             data-testid={generateOverviewFormTestIds.generateButton}
           >
             Generate

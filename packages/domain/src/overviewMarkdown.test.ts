@@ -184,3 +184,32 @@ test("leaves out selling when the video sells nothing", () => {
 
   assert.ok(!markdown.includes("What it sells"));
 });
+
+test("an episode's note goes back to the link the reader shared, says listen, and gives its times without links", () => {
+  const overview = makeOverview({
+    keyPoints: [{ text: "Most decline starts a decade before anyone notices it.", range: { startMs: 860_000, endMs: 900_000 } }],
+    watchAnyway: { answer: "partial", reason: "Her father's last years.", range: { startMs: 6_190_000, endMs: 6_680_000 } },
+  });
+  const markdown = overviewMarkdown({
+    ...overview,
+    source: {
+      kind: "podcast",
+      id: overview.source.id!,
+      feedUrl: "https://feeds.example/diary.xml",
+      guid: "episode-guid",
+      title: "Why your parents’ decline is a preview",
+      showName: "The Diary Of A CEO",
+      publishedAt: "2026-11-10T06:00:00.000Z",
+      durationMs: 6_948_000,
+      audioUrl: "https://media.example/episode.mp3",
+      pageUrl: null,
+      imageUrl: null,
+      sharedFrom: "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk",
+    },
+  });
+  assert.match(markdown, /The Diary Of A CEO · .*1 hr 56 min episode/);
+  assert.match(markdown, /\nhttps:\/\/open\.spotify\.com\/episode\/4rOoJ6Egrf8K2IrywzwOMk\n/);
+  assert.match(markdown, /- Most decline starts a decade before anyone notices it\. \(14:20–15:00\)/);
+  assert.match(markdown, /## Listen to it anyway\?\n\nWorth listening to one part\. Her father's last years\. 1:43:10–1:51:20/);
+  assert.doesNotMatch(markdown, /media\.example|\?t=|&t=/);
+});

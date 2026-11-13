@@ -1,3 +1,4 @@
+import { sourceUrl } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
@@ -28,7 +29,7 @@ test("a live link shared from the iOS app makes a note, stored under the plain w
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
 
   const [overview] = await backendSimulator.overviewStore.listOverviews();
-  expect(overview?.source.url).toBe(VALID_URL);
+  expect(overview && sourceUrl(overview.source)).toBe(VALID_URL);
 });
 
 test("the transcript-fetch phase surfaces its error, and generation never reaches Anthropic", async ({ launcher, backendSimulator }) => {

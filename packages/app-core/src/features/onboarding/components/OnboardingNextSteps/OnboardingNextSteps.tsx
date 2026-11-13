@@ -4,7 +4,7 @@ import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
-import { ArticleLinkStatus } from "../../../newOverview/components/ArticleLinkStatus/ArticleLinkStatus.js";
+import { PastedLinkStatus } from "../../../newOverview/components/PastedLinkStatus/PastedLinkStatus.js";
 import { useStartFromLink } from "../../../newOverview/useStartFromLink.js";
 import { readNextSteps, writeNextSteps, type NextStep } from "../../nextStepsStorage.js";
 import styles from "./OnboardingNextSteps.module.scss";
@@ -85,7 +85,7 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
 // the empty library's field starts, and it hides when there's no way to make one.
 function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
   const analytics = useAnalytics();
-  const { ready, limit, url, setUrl, validationError, generate, article } = useStartFromLink();
+  const { ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
   const headingId = useId();
   const fieldId = useId();
   if (!ready || limit !== null) return null;
@@ -127,13 +127,13 @@ function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
         <button
           type="submit"
           className={styles.ownSubmit}
-          disabled={url.trim() === "" || article.link.status === "reading"}
+          disabled={url.trim() === "" || pasted.reading}
           data-testid={onboardingNextStepsTestIds.action("own")}
         >
           Make an overview
         </button>
       </form>
-      <ArticleLinkStatus link={article.link} url={url.trim()} place={article.place} onRetry={article.retry} onClear={() => setUrl("")} />
+      <PastedLinkStatus article={article} podcast={podcast} url={url.trim()} onClear={() => setUrl("")} />
       {validationError !== null && (
         <p className={styles.ownError} role="alert">
           {validationError}

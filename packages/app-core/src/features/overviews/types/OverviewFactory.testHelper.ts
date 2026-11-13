@@ -58,6 +58,26 @@ export const makeOverviewState = (overviewId: string, overrides: Partial<Overvie
   ...overrides,
 });
 
+// An episode shared from Spotify, with a key point and a chapter at times in it.
+export const makePodcastOverview = (overrides: Partial<Overview> = {}): Overview =>
+  makeOverview({
+    source: {
+      kind: "podcast",
+      id: VideoId.parse("fedcba9876543210fedcba9876543210"),
+      feedUrl: "https://feeds.example/diary.xml",
+      guid: "episode-guid",
+      title: "Why your parents’ decline is a preview",
+      showName: "The Diary Of A CEO",
+      publishedAt: "2026-11-10T06:00:00.000Z",
+      durationMs: 6_948_000,
+      audioUrl: "https://media.example/episode.mp3",
+      pageUrl: null,
+      imageUrl: "https://cdn.example/art.jpg",
+      sharedFrom: "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk",
+    },
+    ...overrides,
+  });
+
 export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
     source: {

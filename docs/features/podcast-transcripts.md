@@ -103,5 +103,5 @@ format, the number of segments and the time, or the failure. Never the feed or t
 ## Terms
 
 Keeping a host's transcript in the shared cache is the use `podcast-links.md`, "Terms, still to
-check", names. It is checked before any reader can reach this route, in the slice that adds podcasts
-to `/privacy`.
+check", names. `/privacy` says so since the screens' slice that lets a reader paste a link; the
+terms check is the owner's, before that slice merges (`podcast-screens.md`, "Before it merges").
