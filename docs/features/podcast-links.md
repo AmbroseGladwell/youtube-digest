@@ -117,10 +117,10 @@ Apple, Spotify and show hosts to `/privacy` (`legal-pages.md`).
 
 The next slices of OV-106, decided 12 Nov 2026 (free routes first, speech to text last):
 
-1. The transcript rungs: the shared cache, the feed's transcript tag, then the same episode on the
-   show's YouTube channel, matched by title and length, with the YouTube description as the fallback
-   when the upload was retitled. That was measured on the card: about 47% of recent chart episodes
-   can be had for free.
+1. The transcript rungs: the shared cache and the feed's transcript tag are built
+   (`podcast-transcripts.md`). The same episode on the show's YouTube channel, matched by title and
+   length, with the YouTube description as the fallback when the upload was retitled, comes next.
+   That was measured on the card: about 47% of recent chart episodes can be had for free.
 2. The podcast note, a small fork of the video note.
 3. The screens, after a design round, and podcasts joining onboarding's table.
 4. Speech to text, whose options are talked through with the owner first.

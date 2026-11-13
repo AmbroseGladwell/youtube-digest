@@ -59,6 +59,7 @@ because a rung has to answer with the video as well as its captions.
 | `no-segments` | nothing to read, and InnerTube already treats an empty track as blocked rather than as captions |
 | `no-words` | every segment is blank |
 | `times-out-of-order` | a segment ends before it starts, or starts before the one before it. Two captions starting on the same millisecond are allowed, because one cue can hold two lines. |
+| `fetched-by-server` | the key is another kind's (it holds a colon). A podcast's transcript is only ever kept from our server's own fetch of the show's feed, never from an upload (`podcast-transcripts.md`) |
 
 A faulted upload is answered `204` and kept nowhere, neither shared nor on the account,
 and logged at `warn` as `transcript refused` with the fault. It isn't answered `400`, because a `400`

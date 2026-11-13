@@ -53,6 +53,7 @@ import { articleRoutes } from "./routes/articleRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
 import { podcastRoutes } from "./routes/podcastRoutes.js";
 import { createPodcastReader } from "./podcasts/createPodcastReader.js";
+import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
 import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
@@ -133,6 +134,8 @@ export interface BuildAppOptions {
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
   readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
+  // What every podcast fetch goes through; a test hands in a scripted web.
+  podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
@@ -180,7 +183,8 @@ export async function buildApp({
   logger = null,
   slowQueryMs = SLOW_QUERY_MS,
   fetchArticlePage = createArticlePageFetcher(),
-  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: createPublicWebFetch() }),
+  podcastWeb = createPublicWebFetch(),
+  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb }),
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -277,7 +281,11 @@ export async function buildApp({
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
-      podcastRoutes(api, { readEpisode: readPodcastEpisode, clock });
+      podcastRoutes(api, {
+        readEpisode: readPodcastEpisode,
+        resolveTranscript: createPodcastTranscripts({ fetchPublicWeb: podcastWeb, transcripts, clock }),
+        clock,
+      });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });

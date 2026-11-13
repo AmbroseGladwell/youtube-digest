@@ -3,12 +3,12 @@ import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js"
 import { readBodyText } from "../publicWeb/createPublicWebFetch.js";
 import { appleDirectory, type DirectoryShow } from "./appleDirectory.js";
 import { pageMeta, type PageMeta } from "./pageMeta.js";
-import { readFeedEpisode, type FeedEpisode, type FeedItem } from "./readFeedEpisode.js";
+import { feedItemGuid, fetchFeedEpisode, MOST_FEED_BYTES, type FeedRead } from "./fetchFeedEpisode.js";
+import type { FeedItem } from "./readFeedEpisode.js";
 import { episodeTitleKey, pickEpisode, sameEpisode, type EpisodeFacts } from "./sameEpisode.js";
 import { spotifyEpisodeFacts } from "./spotifyEpisodeFacts.js";
 
 type FetchPublicWeb = ReturnType<typeof createPublicWebFetch>;
-type FeedRead = { status: "feed"; feed: FeedEpisode } | { status: "failed"; reason: PodcastReadFailure };
 
 export interface PodcastReaderOptions {
   fetchPublicWeb: FetchPublicWeb;
@@ -16,10 +16,8 @@ export interface PodcastReaderOptions {
 }
 
 const HTML = "text/html,application/xhtml+xml";
-const FEED = "application/rss+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.1";
 const MOST_PAGE_BYTES = 3 * 1024 * 1024;
 const MOST_JSON_BYTES = 5 * 1024 * 1024;
-const MOST_FEED_BYTES = 50 * 1024 * 1024;
 const MOST_SHOWS_TRIED = 3;
 const XML_TYPE = /\b(application|text)\/(rss\+xml|atom\+xml|xml)\b/i;
 
@@ -30,22 +28,6 @@ const failed = (reason: PodcastReadFailure, showName?: string | null): PodcastRe
 });
 
 class NoAnswerError extends Error {}
-
-async function* decodedChunks(body: ReadableStream<Uint8Array>, mostBytes: number): AsyncGenerator<string> {
-  const reader = body.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let bytes = 0;
-  try {
-    for (let read = await reader.read(); !read.done; read = await reader.read()) {
-      bytes += read.value.byteLength;
-      if (bytes > mostBytes) return;
-      yield decoder.decode(read.value, { stream: true });
-    }
-    yield decoder.decode();
-  } finally {
-    await reader.cancel().catch(() => undefined);
-  }
-}
 
 const samePage = (a: string | null, b: string | null): boolean => {
   if (a === null || b === null) return false;
@@ -80,18 +62,8 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
 
   const directory = appleDirectory(fetchJson);
 
-  const readFeed = async (feedUrl: string, isWanted: (item: FeedItem) => boolean): Promise<FeedRead> => {
-    const answer = await fetchPublicWeb(feedUrl, { accept: FEED });
-    if (answer.status === "failed") return { status: "failed", reason: answer.reason === "no-answer" ? "no-answer" : "no-public-feed" };
-    if (answer.response.body === null) return { status: "failed", reason: "feed-unreadable" };
-    try {
-      const feed = await readFeedEpisode(decodedChunks(answer.response.body as ReadableStream<Uint8Array>, mostFeedBytes), isWanted);
-      if (feed.show.title === null && feed.itemsRead === 0) return { status: "failed", reason: "feed-unreadable" };
-      return { status: "feed", feed };
-    } catch {
-      return { status: "failed", reason: "no-answer" };
-    }
-  };
+  const readFeed = (feedUrl: string, isWanted: (item: FeedItem) => boolean): Promise<FeedRead> =>
+    fetchFeedEpisode(fetchPublicWeb, feedUrl, isWanted, mostFeedBytes);
 
   const episodeFrom = async (feedUrl: string, read: FeedRead, linkFrom: PodcastLinkFrom, showName: string | null): Promise<PodcastRead> => {
     if (read.status === "failed") return failed(read.reason, showName);
@@ -100,7 +72,7 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
     if (item === null || item.audioUrl === null || item.title === null) return failed("not-found", name);
     const episode = PodcastEpisode.safeParse({
       feedUrl,
-      guid: item.guid ?? item.audioUrl,
+      guid: feedItemGuid(item),
       title: item.title,
       showName: name ?? new URL(feedUrl).hostname,
       publishedAt: item.publishedAt,
