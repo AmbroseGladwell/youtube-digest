@@ -47,3 +47,26 @@ describe("onboardingFailureCopy", () => {
     });
   });
 });
+
+describe("onboardingFailureCopy for an episode", () => {
+  const SPOTIFY = "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk";
+
+  it("leaves the free overview to the foot rather than saying no overview was used", () => {
+    const copy = onboardingFailureCopy({ kind: "podcastRead", reason: "not-found", showName: "The Diary Of A CEO" }, SPOTIFY, "computer");
+    expect(copy.title).toBe("This episode isn’t in The Diary Of A CEO’s public feed");
+    expect(copy.body).not.toContain("No overview was used");
+  });
+
+  it("offers to try again only when our server didn't hear back", () => {
+    expect(onboardingFailureCopy({ kind: "podcastRead", reason: "no-answer", showName: null }, SPOTIFY, "computer").tryAgain).toBe(true);
+    expect(onboardingFailureCopy({ kind: "podcastRead", reason: "no-public-feed", showName: null }, SPOTIFY, "computer").tryAgain).toBe(
+      false,
+    );
+  });
+
+  it("says an episode with no words is common, and where transcribing will go", () => {
+    const copy = onboardingFailureCopy({ kind: "podcastNoTranscript" }, SPOTIFY, "phone");
+    expect(copy.body).toContain("Many episodes don’t have one yet.");
+    expect(copy.comingSoon).toBe(true);
+  });
+});

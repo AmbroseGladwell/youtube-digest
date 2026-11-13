@@ -368,7 +368,7 @@ const sections: readonly LegalSection[] = [
         <p>
           To keep the service up and to stop abuse, we rate-limit requests by network address. Those counts live in the server's memory for
           at most a day. Two daily caps keep a hashed form of the address in the database for seven days: how many captions our server
-          fetched for a device, and how many overviews and article reads a device made before it had an account.
+          fetched for a device, and how many overviews and article and podcast link reads a device made before it had an account.
         </p>
         <p>
           <strong>Basis:</strong> our legitimate interest in running a reliable and safe service, and in answering a support request after

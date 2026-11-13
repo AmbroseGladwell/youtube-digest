@@ -99,8 +99,9 @@ measurement redirects (Podtrac, Chartable and others), which those rules already
 ## The route
 
 `POST /api/podcasts/read` takes `{ url }` and answers with a `PodcastRead`: the episode, or the
-reason it couldn't be read, and the show's name where it is known. It needs an account. Onboarding's
-trial joins when podcasts join its table (`onboarding.md`, "Any kind of link"). It is limited to 120
+reason it couldn't be read, and the show's name where it is known. An account reads without
+counting; signed out, onboarding's trial token reads it as one of its reads (`onboarding.md`,
+"Any kind of link"). It is limited to 120
 an hour per address, like article reads. The log line says which platform the link came from, how
 it went, how many transcript tags the episode has and how long it took. It never logs the link.
 

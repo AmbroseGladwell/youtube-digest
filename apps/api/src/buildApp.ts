@@ -301,6 +301,7 @@ export async function buildApp({
         readEpisode: readPodcastEpisode,
         resolveTranscript: createPodcastTranscripts({ fetchPublicWeb: podcastWeb, transcripts, youTubeService, clock }),
         planOf: (accountId) => accountPlan(sql, accountId),
+        trials,
         clock,
       });
       shareRoutes(api, shares, config.appUrl);

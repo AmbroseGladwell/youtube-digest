@@ -22,6 +22,7 @@ import {
 } from "./api/generationPipeline.js";
 import { makeOverviewOnKeys, type OverviewMeta } from "./api/makeOverviewOnKeys.js";
 import { createTrialGenerationApi } from "../signedOutTrial/api/createTrialGenerationApi.js";
+import { createTrialPodcastApi } from "../signedOutTrial/api/createTrialPodcastApi.js";
 import { currentSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
 import { useOurKeyStatusQuery } from "./queries/ourKeyStatusQuery.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
@@ -101,7 +102,7 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
   );
 }
 
-// An episode's words come through our server, so this needs an account on one; the reader's
+// An episode's words come through our server, on the account or signed out on the trial; the reader's
 // extension searches YouTube for the episode on their own connection when it can
 // (docs/features/podcast-on-youtube.md).
 export function useRunPodcastGeneration(apiKeys: ApiKeys) {
@@ -110,11 +111,14 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
+  const signedIn = libraryAccountIdOf(connection) !== null;
 
   return useCallback(
     async (request: PodcastRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
-      if (knownApiUrl === null) throw new Error("Episodes need an account on our server");
-      const api = createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token });
+      if (knownApiUrl === null) throw new Error("Episodes are read through our server, and there isn't one here");
+      const api = signedIn
+        ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token })
+        : createTrialPodcastApi({ baseUrl: knownApiUrl });
       return runPodcastOverviewGeneration(
         request,
         (episode) => podcastTranscript(api, episode, youTubeFetch),
@@ -129,7 +133,7 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled);
     },
-    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch],
+    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, signedIn],
   );
 }
 
