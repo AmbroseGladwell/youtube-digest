@@ -409,6 +409,7 @@ export const analyticsEvents = {
     shareDialog: {
       created: event("The reader makes a share link for the overview"),
       updated: event("The reader replaces the shared copy with the overview as it is now"),
+      audioAdded: event("The reader adds audio rendered since sharing to the shared copy, behind the same link"),
       stopAsked: event("The reader asks to stop sharing the overview, before confirming"),
       stopped: event("The reader confirms stopping sharing the overview"),
       stopCancelled: event("The reader backs out of stopping sharing the overview"),
@@ -779,7 +780,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, and the kind of note it got; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -804,6 +805,10 @@ export const analyticsEvents = {
           keyPoints: z.number().int().nonnegative().optional(),
           keyPointCeiling: z.number().int().positive().optional(),
           chapters: z.number().int().nonnegative().optional(),
+          // An article's links, counts only, never an address: how many the page offered the model
+          // and how many the note names as resources (OV-203). Absent for a video.
+          articleLinks: z.number().int().nonnegative().optional(),
+          articleResources: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).

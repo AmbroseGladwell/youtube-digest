@@ -128,8 +128,13 @@ const article: ExtractedArticle = {
   language: "en",
   imageUrl: null,
   sections: [
-    { heading: null, anchor: null, text: "One two three four five.\n\nSix seven eight nine ten." },
-    { heading: "Later", anchor: "later", text: "Eleven twelve thirteen fourteen fifteen.\n\nSixteen seventeen eighteen nineteen twenty." },
+    { heading: null, anchor: null, text: "One two three four five.\n\nSix seven eight nine ten.", links: [] },
+    {
+      heading: "Later",
+      anchor: "later",
+      text: "Eleven twelve thirteen fourteen fifteen.\n\nSixteen seventeen eighteen nineteen twenty.",
+      links: [],
+    },
   ],
   wordCount: 20,
   recipe: null,

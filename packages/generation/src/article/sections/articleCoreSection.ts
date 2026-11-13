@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CoreFields, wordCount } from "@overview/domain";
-import { LEAST_KEY_POINTS, mostWordsPerKeyPoint, noteBudget } from "../../noteBudget.js";
+import { LEAST_KEY_POINTS, mostWordsPerKeyPoint } from "../../noteBudget.js";
+import { articleBudget } from "../articleBudget.js";
 import { bigPicturePrompt, bigPictureShape } from "../../sections/bigPicturePrompt.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
 import { paragraphIndex } from "./paragraphIndex.js";
@@ -25,7 +26,7 @@ lost to anyone listening.`;
 export const articleCoreSection: ArticlePromptSection = {
   key: "structural",
   prompt: (input) => {
-    const { keyPoints, wordsPerKeyPoint, long, bigPictureWords } = noteBudget("written", input.article.wordCount);
+    const { keyPoints, wordsPerKeyPoint, long, bigPictureWords } = articleBudget(input.article);
     return `
 ## In one line
 What this piece IS, not what it argues. One sentence, 25 words at most.
@@ -102,7 +103,7 @@ places far apart in the piece, so no one paragraph is a fair place to
 start reading.`;
   },
   schemaShape: (input) => {
-    const budget = noteBudget("written", input.article.wordCount);
+    const budget = articleBudget(input.article);
     const mostWords = mostWordsPerKeyPoint(budget);
     return {
       inOneLine,

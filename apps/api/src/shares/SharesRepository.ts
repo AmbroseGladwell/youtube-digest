@@ -11,6 +11,7 @@ export interface ShareRow {
   updatedAt: string;
   views: number;
   contentHash: string;
+  hasNarration: boolean;
 }
 
 export interface PublishedShare {
@@ -27,6 +28,7 @@ interface RawShare {
   updated_at: Date;
   views: string | number;
   content_hash: string;
+  has_narration: boolean;
 }
 
 const describe = (row: RawShare): ShareRow => ({
@@ -37,10 +39,12 @@ const describe = (row: RawShare): ShareRow => ({
   updatedAt: row.updated_at.toISOString(),
   views: Number(row.views),
   contentHash: row.content_hash,
+  hasNarration: row.has_narration,
 });
 
 const LIVE_COLUMNS = `token, overview_id, snapshot -> 'note' -> 'source' ->> 'title' as title,
-  shared_at, updated_at, views, content_hash`;
+  shared_at, updated_at, views, content_hash,
+  coalesce(jsonb_typeof(snapshot -> 'narration') = 'object', false) as has_narration`;
 
 interface RawPublished {
   snapshot: SharedOverview;
