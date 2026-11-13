@@ -75,11 +75,38 @@ a video or an article. A trial join on this branch named 29, chiefly code readin
 Those want a `sourceUrl` helper, and a moment in an episode links to its audio by a media fragment
 (`audio.mp3#t=135`).
 
-## Not measured yet
+## Measured on five long episodes, 13 Nov 2026
 
-No real note has been generated: that is a paid run, and the owner is asked before one. The obvious
-first one is a few long episodes through the model-comparison harness, to read Listen to it anyway's
-answers and to see that key points reach the end of an hour-long conversation.
+Asked for by the owner. Five chart episodes of 45 to 116 minutes, each the newest episode of 45
+minutes or more in its feed with a transcript tag. Each was read and transcribed by the real feed
+reader and rungs, then sent through the harness's `runGeneration` with this prompt. The episodes:
+Diary of a CEO (an interview, 116 min), Behind the Bastards (a comic history, 85), Stuff You Should
+Know (an explainer, 47), My Favorite Murder (two stories, 63) and Page 94 (a panel, 45). Sol wrote all
+five notes and Sonnet 5.5 wrote two before the evals account's Anthropic credit ran out. The run is
+`.local/runs/ov-106-podcasts`.
+
+- **Every note assembled on its first attempt.** No video word was left in any note.
+- **Key points reach the end.** In all seven notes the last key point ends between 86% and 99% of
+  the way through. The lowest is Sonnet on the interview (99 of 116 minutes), whose last 15 minutes
+  are the guest's family. Chapters run to the close in every note.
+- **Listen to it anyway defaulted to no**, six notes out of seven, including the comic history and
+  the storytelling show, where the banter was judged personality rather than substance. The one
+  partial was Sol on the interview: the guest's account of his father's decline, a reason the
+  section allows ("a voice worth hearing for itself"). Sonnet said no to the same episode.
+- **The kind check called the interview a process episode** (both models), and its steps are the
+  guest's prevention advice. The other four were default notes.
+- **Two of Sol's 44 key points came back unplaced** (the flat -1 range, shown without a time), as
+  a video's can.
+- **Cost moves with length,** about $0.07 for a 45-minute episode to $0.14 for 116 minutes on Sol,
+  kind check included. Sonnet was about 10% dearer on the same two episodes.
+- **Machine transcripts make dubious claims of their own.** Sol flagged "strip them into charged
+  ions, which they shoot at the heart", which may be the transcript mishearing rather than the host
+  misspeaking. Auto captions on a video carry the same risk.
+
+Maintenance Phase had a transcript tag that wasn't read. Buzzsprout serves it as HTML paragraphs with
+speakers and no times, and a transcript with no times reads as none (`podcast-transcripts.md`). Such
+a transcript is hand-made and exact, but has nothing for a key point to link to. Whether to use one
+instead of speech to text, with times estimated or none shown, is a question for that slice.
 
 Chapters from the feed's `<podcast:chapters>` aren't used: none of the 189 chart feeds carried them
 (`podcast-links.md`). Chapters come from the transcript, as for a video without creator chapters.
