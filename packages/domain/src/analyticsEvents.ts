@@ -1027,6 +1027,24 @@ export const analyticsEvents = {
       }),
       undone: event("The reader undoes the last change in Manage tags"),
     },
+    // Counts only: never which overviews (OV-168, "OV-168 5" 168az).
+    selection: {
+      started: event("The reader starts selecting overviews in the library or a project"),
+      stopped: event("The reader stops selecting overviews, with how many were selected", {
+        selected: z.number().int().nonnegative(),
+      }),
+      acted: event("The reader acts on the overviews they selected, from the bar", {
+        action: z.enum(["addToProject", "addToTopic", "markRead", "markUnread", "favourite", "unfavourite", "removeFromProject", "delete"]),
+        overviews: z.number().int().positive(),
+      }),
+      topicChanged: event("The reader gives a topic to every selected overview, or takes it from them", {
+        topicId: TopicId,
+        given: z.boolean(),
+        overviews: z.number().int().positive(),
+      }),
+      deleted: event("The reader confirms deleting the overviews they selected", { overviews: z.number().int().positive() }),
+      deleteKept: event("The reader keeps the overviews they selected after asking to delete them"),
+    },
     filterSheet: {
       opened: event("The reader opens the filter sheet on a narrow screen"),
       closed: event("The reader closes the filter sheet on a narrow screen"),
@@ -1122,14 +1140,14 @@ export const analyticsEvents = {
       added: event("The reader puts an overview in a project", {
         projectId: ProjectId,
         overviewId: OverviewId,
-        from: z.enum(["picker", "newProject"]),
+        from: z.enum(["picker", "newProject", "selection"]),
       }),
       // The measure: how often the reader takes out what an assistant put in.
       removed: event("The reader takes an overview out of a project, and whether they or an assistant had put it there", {
         projectId: ProjectId,
         overviewId: OverviewId,
         addedBy: z.enum(["reader", "assistant"]),
-        from: z.enum(["row", "picker"]),
+        from: z.enum(["row", "picker", "selection"]),
       }),
     },
     picker: {
@@ -1140,10 +1158,10 @@ export const analyticsEvents = {
       closed: event("The reader closes the list of projects to put an overview in"),
     },
     newProjectDialog: {
-      opened: event("The reader opens the new project dialog", { from: z.enum(["rail", "index", "picker"]) }),
+      opened: event("The reader opens the new project dialog", { from: z.enum(["rail", "index", "picker", "selection"]) }),
       created: event("The reader makes a project, and whether they said what it's for", {
         projectId: ProjectId,
-        from: z.enum(["rail", "index", "picker"]),
+        from: z.enum(["rail", "index", "picker", "selection"]),
         hasPurpose: z.boolean(),
       }),
       cancelled: event("The reader closes the new project dialog without making one"),

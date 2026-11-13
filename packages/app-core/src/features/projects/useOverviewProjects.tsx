@@ -58,11 +58,12 @@ export function useOverviewProjects(overview: Overview | null, webApp: ProjectsL
       {picking && overview !== null && (
         <ProjectPicker
           summaries={active}
-          inProject={new Set(holding.map(({ project }) => project.id))}
+          holding={(projectId) => (holding.some(({ project }) => project.id === projectId) ? 1 : 0)}
+          of={1}
           onToggle={toggle}
           onNewProject={() => {
             setPicking(false);
-            newProject.open("picker", { id: overview.id, title: overview.source.title });
+            newProject.open("picker", [{ id: overview.id, title: overview.source.title }]);
           }}
           onClose={() => {
             analytics.projects.picker.closed();

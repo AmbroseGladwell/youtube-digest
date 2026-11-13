@@ -76,7 +76,10 @@ export type StrokeIconName =
   | "expand"
   | "shrink"
   | "folder"
-  | "archive";
+  | "archive"
+  | "squareCheck"
+  | "tag"
+  | "checkCheck";
 
 export interface StrokeIconProps {
   name: StrokeIconName;
@@ -523,6 +526,24 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
       <rect width="20" height="5" x="2" y="3" rx="1" />
       <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
       <path d="M10 12h4" />
+    </>
+  ),
+  squareCheck: (
+    <>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="m9 12 2 2 4-4" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+      <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+    </>
+  ),
+  checkCheck: (
+    <>
+      <path d="M18 6 7 17l-5-5" />
+      <path d="m22 10-7.5 7.5L13 16" />
     </>
   ),
 };

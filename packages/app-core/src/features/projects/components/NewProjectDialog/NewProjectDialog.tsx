@@ -6,7 +6,7 @@ import { newProjectDialogTestIds } from "./NewProjectDialogTestIds.js";
 
 export interface NewProjectDialogProps {
   // The overview made from the picker, which the new project takes with it (168x).
-  adds: string | null;
+  adds: { title: string } | { count: number } | null;
   // Whether the reader has an assistant connected, which the helper line mentions only then.
   assistantConnected: boolean;
   takenNames: string[];
@@ -64,7 +64,7 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
         {adds !== null && (
           <p className={styles.adds} data-testid={newProjectDialogTestIds.adds}>
             <StrokeIcon name="folder" size={14} />
-            <span>Also adds “{adds}”</span>
+            <span>{"title" in adds ? `Also adds “${adds.title}”` : `Also adds ${adds.count} overviews`}</span>
           </p>
         )}
         <div className={styles.field}>
