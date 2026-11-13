@@ -1,0 +1,124 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/dialog.scss" as dialog;
+
+.dialog {
+  @include dialog.dialog-shell;
+  overflow: visible;
+}
+
+.panel {
+  @include dialog.dialog-panel;
+  width: min(28.75rem, calc(100vw - 2.5rem));
+  gap: 1rem;
+}
+
+.handle {
+  @include dialog.dialog-handle;
+}
+
+.heading {
+  @include dialog.dialog-heading;
+}
+
+.adds {
+  margin: 0;
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  border-radius: 14px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.84375rem;
+  overflow-wrap: anywhere;
+
+  svg {
+    flex: none;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.count,
+.optional {
+  color: var(--muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.input {
+  @include controls.field-solo;
+  background: var(--ground);
+  font-size: 0.9375rem;
+  padding: 0.6875rem 1rem;
+}
+
+.textarea {
+  @include controls.field-solo;
+  background: var(--ground);
+  border-radius: 16px;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  padding: 0.6875rem 1rem;
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.help {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.taken {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--alert);
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.quietAction {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.primaryAction {
+  @include controls.action-pill;
+  @include controls.pill-md;
+}
+
+@media (max-width: 47.9375rem) {
+  .foot {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .quietAction,
+  .primaryAction {
+    min-height: 3rem;
+  }
+}

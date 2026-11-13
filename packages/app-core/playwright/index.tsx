@@ -26,6 +26,7 @@ import { InMemoryTranscriptStore } from "./network/InMemoryTranscriptStore.testH
 import { InMemorySyncStorage } from "./network/InMemorySyncStorage.testHelper.js";
 import { InMemoryFollowedPlaylistStore } from "../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import { InMemoryCaptureQueueStore } from "../src/features/captureQueue/types/InMemoryCaptureQueueStore.testHelper.js";
+import { InMemoryProjectStore } from "../src/features/projects/types/InMemoryProjectStore.testHelper.js";
 import type {} from "./network/iwftWindow.testHelper.js";
 
 const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
@@ -34,15 +35,16 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const transcriptStore = new InMemoryTranscriptStore();
   const followedPlaylistStore = new InMemoryFollowedPlaylistStore();
   const captureQueueStore = new InMemoryCaptureQueueStore();
+  const projectStore = new InMemoryProjectStore();
   const syncStorage = syncAvailable ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore) : null;
-  return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, syncStorage };
+  return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore, syncStorage };
 };
 
 beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   const syncAvailable = hooksConfig?.syncAvailable === true;
   const connection = SyncConnection.parse(hooksConfig?.syncConnection ?? DEFAULT_SYNC_CONNECTION);
   const seeded = makeStores(syncAvailable);
-  const { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore } = seeded;
+  const { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore } = seeded;
   const libraries = new Map<string | null, Window["__iwftStores__"]>([[libraryAccountIdOf(connection), seeded]]);
 
   for (const overview of hooksConfig?.seedOverviews ?? []) overviewStore.seedOverview(overview);
@@ -54,6 +56,8 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   for (const playlist of hooksConfig?.seedFollowedPlaylists ?? []) followedPlaylistStore.seedFollowed(playlist);
   for (const check of hooksConfig?.seedPlaylistChecks ?? []) followedPlaylistStore.seedCheck(check);
   await captureQueueStore.enqueue(hooksConfig?.seedQueue ?? []);
+  for (const project of hooksConfig?.seedProjects ?? []) projectStore.seedProject(project);
+  for (const member of hooksConfig?.seedProjectMembers ?? []) projectStore.seedMember(member);
   for (const read of hooksConfig?.failingReads ?? []) overviewStore.failOn(read);
   if (hooksConfig?.apiKeys) writeApiKeys(hooksConfig.apiKeys);
   writeSyncConnection(connection);

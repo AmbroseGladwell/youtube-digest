@@ -14,10 +14,14 @@ export const Project = z.object({
   purpose: ProjectPurpose,
   createdAt: z.iso.datetime(),
   createdBy: ProjectAuthor,
+  // Who wrote the purpose as it stands, so the page can say an assistant wrote it until the
+  // reader saves their own (docs/features/projects.md, "The project page").
+  purposeBy: ProjectAuthor.nullable(),
   archivedAt: z.iso.datetime().nullable(),
 });
 export type Project = z.infer<typeof Project>;
 
-// Only the reader edits a project once it exists (docs/features/projects.md).
-export const ProjectPatch = Project.pick({ name: true, purpose: true, archivedAt: true }).partial();
+// Only the reader edits a project once it exists, so a purpose edited carries the reader as
+// its author (docs/features/projects.md).
+export const ProjectPatch = Project.pick({ name: true, purpose: true, purposeBy: true, archivedAt: true }).partial();
 export type ProjectPatch = z.infer<typeof ProjectPatch>;

@@ -1,6 +1,6 @@
 import type { Connection } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
-import { connectionReadsProfile } from "./connectionScope.js";
+import { connectionReadsProfile, connectionWrites } from "./connectionScope.js";
 
 const iso = (value: string | Date): string => new Date(value).toISOString();
 
@@ -27,5 +27,6 @@ export async function listConnections(sql: SqlClient, accountId: string, now: Da
     createdAt: iso(row.created_at),
     lastUsedAt: iso(row.last_used_at),
     readsProfile: connectionReadsProfile(row.scope),
+    writes: connectionWrites(row.scope),
   }));
 }

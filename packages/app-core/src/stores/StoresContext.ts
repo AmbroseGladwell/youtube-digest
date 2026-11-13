@@ -3,6 +3,7 @@ import type {
   CaptureQueueStore,
   FollowedPlaylistStore,
   OverviewStore,
+  ProjectStore,
   SettingsStore,
   SyncStorage,
   TranscriptStore,
@@ -14,6 +15,7 @@ export interface Stores {
   transcriptStore: TranscriptStore;
   followedPlaylistStore: FollowedPlaylistStore;
   captureQueueStore: CaptureQueueStore;
+  projectStore: ProjectStore;
   // Null is a shell whose library cannot sync at all, and every sync control hides itself
   // rather than offering something that cannot work (docs/features/sync-client.md).
   syncStorage: SyncStorage | null;

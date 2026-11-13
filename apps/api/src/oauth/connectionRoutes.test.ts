@@ -162,6 +162,23 @@ test("Settings is told which connections can read the profile, so one approved b
   await testApp.close();
 });
 
+test("Settings is told which connections can change the library, so a project page offers only those the job of filling it", async () => {
+  const testApp = await createTestApp();
+  const assistant = await makeConnectingAssistant(testApp);
+  const reader = await makeAccount(testApp);
+  await assistant.connect(reader, { scope: "overviews:read" });
+  testApp.clock.advance(1000);
+  await assistant.connect(reader);
+
+  const { connections } = (await reader.inject({ method: "GET", url: "/api/connections" })).json();
+
+  assert.deepEqual(
+    connections.map((connection: { writes: boolean }) => connection.writes),
+    [true, false],
+  );
+  await testApp.close();
+});
+
 test("a connection whose tokens have all lapsed is not listed", async () => {
   const testApp = await createTestApp();
   const assistant = await makeConnectingAssistant(testApp);

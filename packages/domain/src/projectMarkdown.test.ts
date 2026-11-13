@@ -13,6 +13,7 @@ const project: Project = {
   purpose: "Choosing a layout and a budget for a small galley kitchen.",
   createdAt: "2026-11-12T09:00:00.000Z",
   createdBy: { by: "reader" },
+  purposeBy: { by: "reader" },
   archivedAt: null,
 };
 

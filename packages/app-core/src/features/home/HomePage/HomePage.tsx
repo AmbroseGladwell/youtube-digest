@@ -13,6 +13,7 @@ import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { LibraryPage } from "../../library/LibraryPage/LibraryPage.js";
+import { WHOLE_LIBRARY, type LibraryPlace } from "../../library/types/LibraryPlace.js";
 import { OpeningLibrary } from "../../accountLibraries/components/OpeningLibrary/OpeningLibrary.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { CapturePage } from "../../capture/CapturePage/CapturePage.js";
@@ -48,7 +49,7 @@ import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 // Signed out where there are accounts, home is onboarding's Start, in the panel as on the
 // web (205g), or, once this device has had an account, the way back into it unless Create
 // account asked for Start (docs/features/onboarding.md).
-export function HomePage() {
+export function HomePage({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) {
   const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
   const location = useLocation();
@@ -68,10 +69,10 @@ export function HomePage() {
       </div>
     );
   }
-  return <LibraryHome accountNeeded={accountNeeded} />;
+  return <LibraryHome accountNeeded={accountNeeded} place={place} />;
 }
 
-function LibraryHome({ accountNeeded }: { accountNeeded: boolean }) {
+function LibraryHome({ accountNeeded, place }: { accountNeeded: boolean; place: LibraryPlace }) {
   if (accountNeeded) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
@@ -79,10 +80,10 @@ function LibraryHome({ accountNeeded }: { accountNeeded: boolean }) {
       </div>
     );
   }
-  return <SignedInHome />;
+  return <SignedInHome place={place} />;
 }
 
-function SignedInHome() {
+function SignedInHome({ place }: { place: LibraryPlace }) {
   const overviewsQuery = useOverviewsWithStateQuery();
   const sync = useSync();
 
@@ -120,7 +121,7 @@ function SignedInHome() {
     );
   }
 
-  if (overviewsQuery.data.length === 0) {
+  if (overviewsQuery.data.length === 0 && place.kind === "library") {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
         <LibraryQueueGroup />
@@ -131,7 +132,7 @@ function SignedInHome() {
 
   return (
     <div className={styles.wide} data-testid={homePageTestIds.root}>
-      <LibraryPage entries={overviewsQuery.data} />
+      <LibraryPage entries={overviewsQuery.data} place={place} />
     </div>
   );
 }

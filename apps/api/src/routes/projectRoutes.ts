@@ -47,6 +47,9 @@ export function projectRoutes(app: FastifyInstance, records: RecordsRepository):
     if (Object.keys(patch).length === 0) {
       throw new ApiError("invalid_request", "The project patch changes nothing");
     }
+    if (patch.purposeBy !== undefined && patch.purposeBy?.by !== BY_READER.by) {
+      throw new ApiError("invalid_request", "A purpose edited in the app is the reader's");
+    }
     const [written] = await records.write(request.session!.accountId, [
       {
         kind: "project",
