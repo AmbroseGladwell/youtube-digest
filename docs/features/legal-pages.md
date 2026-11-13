@@ -147,6 +147,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-12 | privacy | OV-168 | Your library says an overview can be put in projects, and what a project holds (its name, a line on what it is for, and who put each overview in it and when). Assistants you connect says an assistant can read projects, make one, and put overviews in or take them out, marked with its name, and can't rename, archive or delete one. |
+| 2026-11-12 | terms | OV-168 | Assistants: a connected assistant can organise overviews into projects on your behalf. |
 | 2026-11-12 | privacy | OV-203 | Your library says an article's overview may keep up to five of the links the page makes, with their words and a line on why each is worth opening; Transcripts and articles says so beside "never the article's text", and that they go with a shared link and to a connected assistant. |
 | 2026-11-12 | privacy | OV-285 | Transcripts and articles says our server also fetches an article when you regenerate its overview without the article open beside the extension; only an article the extension reads in your browser stays unseen. |
 | 2026-11-12 | privacy | OV-284 | The settings that travel with the account include the cooking timer sound. |

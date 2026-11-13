@@ -9,6 +9,10 @@ export const LibraryFilters = z.object({
       "Words or an idea to look for. Overviews containing every word come first, from the title, channel, claim, key points, verdict, selling or tags; then up to 5 that are close in meaning without using the words",
     ),
   topic: z.string().optional().describe("A topic's name or id, as list_topics gives them"),
+  project: z
+    .string()
+    .optional()
+    .describe("A project's name or id, as list_projects gives them: only the overviews the reader is using for that project"),
   tag: z.string().optional().describe("A tag, from the video's own tags or the reader's"),
   verdict: Novelty.optional().describe(
     "How much of the video a well-read person in its field would already know, as judged by the AI that wrote the overview: common_knowledge, fresh_angle (one fresh part) or original. Not whether the reader has seen it before",

@@ -38,19 +38,20 @@ export type McpReply = { kind: "accepted" } | { kind: "response"; body: JsonRpcR
 export interface McpCallContext extends McpToolContext {
   connectionId: string;
   assistant: McpAssistant;
-  // Whether the connection's scope lets it mark overviews, and read what is known about the
-  // reader (docs/features/mcp-connector.md, "Scopes").
-  writes: boolean;
+  // Whether the connection's scope lets it read what is known about the reader
+  // (docs/features/mcp-connector.md, "Scopes").
   readsProfile: boolean;
 }
 
 const READING_INSTRUCTIONS =
   "These tools read the reader's own library of saved YouTube video overviews: short, blunt notes on what each video claims and whether it holds up. " +
   "Find overviews with search_overviews or list_topics, then read them in full with get_overview, or many at once with get_overviews to compare or combine what several videos say. " +
-  "Use get_transcript only to check what a video actually said. Cite the video's title and the timestamp links the notes carry.";
-const MARKING_INSTRUCTIONS = "When the reader asks, mark_overviews marks overviews read, unread or favourite by id.";
+  "Use get_transcript only to check what a video actually said. Cite the video's title and the timestamp links the notes carry. " +
+  "When the reader talks about something they are working on, list_projects shows their projects, each with a purpose in their own words, and get_project reads one as a brief.";
+const MARKING_INSTRUCTIONS =
+  "When the reader asks, mark_overviews marks overviews read, unread or favourite by id, create_project makes a project, and change_project_members puts overviews in a project or takes them out.";
 const READ_ONLY_INSTRUCTIONS =
-  "This connection was approved to read only. To let the assistant mark overviews read or favourite, the reader reconnects it from Settings › Connections.";
+  "This connection was approved to read only. To let the assistant mark overviews read or favourite, or organise projects, the reader reconnects it from Settings › Connections.";
 
 const PROFILE_INSTRUCTIONS =
   "get_profile reads what The Overview knows about the reader, in their own words and learned from what they save, to fit answers to them.";
@@ -114,6 +115,7 @@ async function callTool(params: unknown, context: McpCallContext): Promise<Recor
       apiLogLines.mcp.toolCalled({
         ...logged,
         overviews: outcome.overviews ?? null,
+        ...(outcome.project === undefined ? {} : { projectId: outcome.project.id, projectHasPurpose: outcome.project.hasPurpose }),
         failed: outcome.isError === true,
         durationMs: durationMs(),
       }),
@@ -156,12 +158,12 @@ async function answer(method: string, params: unknown, context: McpCallContext):
       return {};
     case "tools/list":
       return {
-        tools: toolsFor(context).map(({ name, title, description, inputSchema, writes }) => ({
+        tools: toolsFor(context).map(({ name, title, description, inputSchema, writes, idempotent }) => ({
           name,
           title,
           description,
           inputSchema,
-          annotations: { title, readOnlyHint: !writes, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+          annotations: { title, readOnlyHint: !writes, destructiveHint: false, idempotentHint: idempotent, openWorldHint: false },
         })),
       };
     case "tools/call":
