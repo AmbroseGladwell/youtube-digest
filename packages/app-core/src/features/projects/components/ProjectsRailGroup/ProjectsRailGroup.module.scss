@@ -68,15 +68,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+// Shaped like the topics' "Show all", underlined because it leaves for a page of its own.
 .all {
-  padding: 0.4375rem 0.75rem;
-  font-size: 0.8125rem;
+  @include controls.ghost-pill;
+  @include controls.pill-sm;
+
+  align-self: flex-start;
+  margin: 0.25rem 0.25rem 0;
   color: var(--muted);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent);
-
-  @include controls.quiet-control;
 }
 
 .newProject {
@@ -86,4 +88,11 @@
   align-self: flex-start;
   margin: 0.25rem 0.25rem 0;
   color: var(--muted);
+}
+
+@media (max-width: 47.9375rem) {
+  .option {
+    min-height: 2.75rem;
+    font-size: 0.9rem;
+  }
 }
