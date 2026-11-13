@@ -1,6 +1,8 @@
 import {
   articleReadMinutes,
   articleSourceId,
+  podcastSource,
+  podcastSourceId,
   domainOf,
   formatClock,
   recipeFigures,
@@ -9,6 +11,7 @@ import {
   webSource,
   youTubeSource,
   type ArticleRead,
+  type PodcastRead,
   type ExtractedArticle,
   type Overview,
   type Recipe,
@@ -17,12 +20,15 @@ import {
   type SourceKey,
 } from "@overview/domain";
 import { bigPictureBudget } from "@overview/generation";
-import type { RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
+import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
+import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
 import { formatPublishedDate } from "../../util/formatPublishedDate.js";
 
-export type OnboardingLinkKind = "video" | "playlist" | "article";
+export type OnboardingLinkKind = "video" | "playlist" | "article" | "episode";
 
 export type RecipeTimes = Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMinutes" | "yield">;
 
@@ -39,6 +45,8 @@ export interface OnboardingMakers {
   video: (url: string, options: RunOverviewGenerationOptions) => Promise<Overview>;
   article: (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readArticle: (url: string) => Promise<ArticleRead>;
+  podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
+  readPodcast: (url: string) => Promise<PodcastRead>;
 }
 
 export interface OnboardingMakeOptions {
@@ -180,14 +188,34 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       locked: overviewLocked(overview),
     }),
   },
-  // Design 106c: an episode takes the same card in a podcast's words. It claims no link until
-  // pasting one makes an episode's overview; until then a shared episode's overview still
-  // reaches onboarding from Save to my overviews, through its card and teaser.
+  // Design 106c: an episode takes the same card in a podcast's words. It claims Apple and Spotify
+  // links; a show's own page is left to the web, which reads it as a page. It is found, and its
+  // words with it, before the card shows, as a video's transcript is fetched before its card
+  // does, so an episode with no words stops at the confirm step (106i).
   podcast: {
-    linkKind: () => null,
+    linkKind: (link) => (isPlatformPodcastLink(link) ? "episode" : null),
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: () => Promise.reject(new Error("Episodes aren't made from onboarding yet")),
+    make: async (target, makers, { onFound, isCancelled, waitToWrite }) => {
+      const read = await makers.readPodcast(target);
+      if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
+      const id = await podcastSourceId(read.episode);
+      return makers
+        .podcast(
+          { episode: read.episode, sharedFrom: target },
+          {
+            isCancelled,
+            waitToWrite,
+            onEpisodeWords: () => onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes }),
+          },
+        )
+        .catch((error: unknown) => {
+          if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
+            throw new PodcastNoTranscriptError();
+          }
+          throw error;
+        });
+    },
     noun: (_linkKind, found) => (found === null ? "page" : "episode"),
     lead: () => OVERVIEW_LEAD,
     pending: (link) => domainOf(link),

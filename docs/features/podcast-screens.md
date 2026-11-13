@@ -137,9 +137,17 @@ device under the episode's key for the Transcript tab, and writes the note with 
 source. On our key the request carries the episode first, so it isn't read as the video it also
 carries.
 
-**Not in this PR:** onboarding. A reader with no account can't reach the podcast routes, which need
-an account or, as articles do, a trial token; that and onboarding's entry are the next PR. Until
-then onboarding's table claims no podcast links.
+## Onboarding
+
+The third PR. Both podcast routes take a signed-out trial token as `/articles/read` does: a read
+spends one of the trial's reads (`reserveTrialRead`, now shared), and finding the words is allowed
+while the token hasn't made its overview, with our server's YouTube fetching counted to the address
+as a signed-out video's is. Onboarding's table claims Apple and Spotify links and makes the episode
+from them (`onboarding.md`, "Any kind of link"). The card shows once the words are found, so an
+episode with no transcript stops at the confirm step (106i) with "Transcribing is coming soon"
+above the field for another link. Onboarding's bar says "Finding the episode" throughout rather than
+the design's separate "Looking for a transcript" stage, since it has one fetching stage for every
+kind.
 
 ## Before it merges
 

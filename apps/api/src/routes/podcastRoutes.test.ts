@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, type PodcastEpisode, type PodcastRead } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_READS, type PodcastEpisode, type PodcastRead } from "@overview/domain";
 import { Response } from "undici";
 import { recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import type { PublicWebAnswer } from "../publicWeb/createPublicWebFetch.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
+import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
+import { makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 
 const LINK = "https://podcasts.apple.com/gb/podcast/a-show/id42?i=1001";
 const EPISODE: PodcastEpisode = {
@@ -51,7 +53,7 @@ test("an episode that can't be reached answers with why, not an error", async ()
   await testApp.close();
 });
 
-test("only an account can ask our server to read a podcast link", async () => {
+test("only an account or a trial can ask our server to read a podcast link", async () => {
   const testApp = await appReading({ status: "read", episode: EPISODE });
 
   const response = await testApp.app.inject({
@@ -147,7 +149,7 @@ test("an episode with no transcript tag says why, as the YouTube rungs do", asyn
   await testApp.close();
 });
 
-test("only an account can ask for a podcast transcript, and only for a feed address", async () => {
+test("only an account or a trial can ask for a podcast transcript, and only for a feed address", async () => {
   const testApp = await appOverWeb(scriptedWeb({}));
   const signedOut = await testApp.app.inject({
     method: "POST",
@@ -172,5 +174,50 @@ test("the YouTube rung is asked with a video id that looks like one, or for a se
   ]) {
     assert.equal((await account.inject({ method: "POST", url: "/api/podcasts/transcript", body })).statusCode, 400, JSON.stringify(body));
   }
+  await testApp.close();
+});
+
+test("signed out, onboarding's trial reads a podcast link, and the read counts as one of the trial's reads", async () => {
+  const testApp = await createTestApp(
+    {},
+    {
+      readPodcastEpisode: async () => ({ status: "read", episode: EPISODE }),
+      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+    },
+  );
+  const device = await makeTrialDevice(testApp);
+
+  const answered = [];
+  for (let n = 0; n <= TRIAL_READS; n += 1) answered.push(await device.readPodcast(LINK));
+
+  assert.deepEqual(answered[0]!.json(), { status: "read", episode: EPISODE });
+  assert.equal(answered.at(-1)!.statusCode, 429);
+  assert.equal(answered.at(-1)!.json().error.details.quota, "trial-reads");
+  await testApp.close();
+});
+
+test("signed out, a trial finds an episode's words until it has made its one overview", async () => {
+  const web = scriptedWeb({
+    [EPISODE.feedUrl]: { body: FEED_XML, type: "application/rss+xml" },
+    "https://show.example/ep1.vtt": { body: VTT, type: "text/vtt" },
+  });
+  const testApp = await createTestApp(
+    {},
+    {
+      podcastWeb: web.podcastWeb,
+      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+    },
+  );
+  const device = await makeTrialDevice(testApp);
+  const episode = { feedUrl: EPISODE.feedUrl, guid: EPISODE.guid };
+
+  const found = await device.podcastTranscript(episode);
+  assert.equal(found.statusCode, 200);
+  assert.deepEqual(found.json().segments, [{ text: "Hello there.", startMs: 1000, endMs: 3000 }]);
+
+  assert.equal((await device.generate()).statusCode, 200);
+  const afterwards = await device.podcastTranscript(episode);
+  assert.equal(afterwards.statusCode, 429);
+  assert.equal(afterwards.json().error.details.quota, "trial");
   await testApp.close();
 });
