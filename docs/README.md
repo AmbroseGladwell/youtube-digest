@@ -143,6 +143,8 @@ Five folders, five different questions.
 - `podcast-transcripts.md` — where a podcast episode's words come from: the shared cache, then the
   feed's transcript tag in five formats, kept once for everyone; the YouTube rungs and speech to text
   still to come.
+- `podcast-on-youtube.md` — finding a podcast episode on its show's YouTube channel: by title and
+  length, by description when retitled, the episode's own words, and how sure a match is.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
 - `recipe-notes.md` — a recipe page's note: what code reads from the page, which pages count as a

@@ -23,6 +23,9 @@ export const PodcastEpisode = z.object({
   pageUrl: z.url().nullable(),
   imageUrl: z.url().nullable(),
   notes: z.string(),
+  // Its notes' own words, less what the show repeats in every episode, for telling a retitled
+  // upload apart (docs/features/podcast-on-youtube.md).
+  notesKeywords: z.array(z.string()),
   transcripts: z.array(PodcastTranscriptLink),
   chaptersUrl: z.url().nullable(),
   linkFrom: PodcastLinkFrom,

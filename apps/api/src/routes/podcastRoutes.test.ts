@@ -19,6 +19,7 @@ const EPISODE: PodcastEpisode = {
   pageUrl: null,
   imageUrl: null,
   notes: "",
+  notesKeywords: [],
   transcripts: [{ url: "https://show.example/ep1.vtt", type: "text/vtt", language: "en" }],
   chaptersUrl: null,
   linkFrom: "apple",

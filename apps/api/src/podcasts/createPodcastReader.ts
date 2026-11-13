@@ -1,4 +1,5 @@
 import { parsePodcastLink, PodcastEpisode, type PodcastLinkFrom, type PodcastRead, type PodcastReadFailure } from "@overview/domain";
+import { episodeKeywords } from "@overview/transcripts";
 import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import { readBodyText } from "../publicWeb/createPublicWebFetch.js";
 import { appleDirectory, type DirectoryShow } from "./appleDirectory.js";
@@ -81,6 +82,7 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
       pageUrl: item.pageUrl,
       imageUrl: item.imageUrl ?? show.imageUrl,
       notes: item.notes,
+      notesKeywords: episodeKeywords(item.notes, read.feed.neighbourNotes),
       transcripts: item.transcripts,
       chaptersUrl: item.chaptersUrl,
       linkFrom,

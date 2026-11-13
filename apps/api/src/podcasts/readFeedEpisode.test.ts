@@ -29,13 +29,40 @@ test("the wanted item is read whole, with its transcripts, chapters and notes, f
   });
 });
 
-test("reading stops at the wanted item, so the rest of a long feed is never parsed", async () => {
-  const { item, itemsRead } = await readFeedEpisode(
-    inPieces(feedOf(FEED_ITEM_NEWEST, FEED_ITEM_OLDER) + "<item><title>broken"),
-    byGuid("newest-guid"),
+const numbered = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, index) => `<item><title>E${index}</title><guid>g${index}</guid><description>Notes ${index}</description></item>`,
   );
-  assert.equal(item?.guid, "newest-guid");
-  assert.equal(itemsRead, 1);
+
+test("reading stops ten episodes past the wanted one, whose notes come back beside it, and the rest is never parsed", async () => {
+  const { item, itemsRead, neighbourNotes } = await readFeedEpisode(
+    inPieces(feedOf(...numbered(15)) + "<item><title>broken"),
+    byGuid("g1"),
+  );
+  assert.equal(item?.guid, "g1");
+  assert.equal(itemsRead, 11);
+  assert.deepEqual(neighbourNotes, [
+    "Notes 0",
+    "Notes 2",
+    "Notes 3",
+    "Notes 4",
+    "Notes 5",
+    "Notes 6",
+    "Notes 7",
+    "Notes 8",
+    "Notes 9",
+    "Notes 10",
+  ]);
+});
+
+test("an episode deep in the feed brings the ten before it, and nothing after", async () => {
+  const { itemsRead, neighbourNotes } = await readFeedEpisode(inPieces(feedOf(...numbered(30))), byGuid("g20"));
+  assert.equal(itemsRead, 21);
+  assert.deepEqual(
+    neighbourNotes,
+    Array.from({ length: 10 }, (_, index) => `Notes ${index + 10}`),
+  );
 });
 
 test("an episode's own artwork wins over the show's", async () => {
@@ -51,7 +78,7 @@ test("no wanted item reads to the end and says so", async () => {
 
 test("what isn't a feed reads as no show and no items", async () => {
   const feed = await readFeedEpisode(inPieces("<html><body>Not found</body></html>"), () => true);
-  assert.deepEqual(feed, { show: { title: null, imageUrl: null }, item: null, itemsRead: 0 });
+  assert.deepEqual(feed, { show: { title: null, imageUrl: null }, item: null, itemsRead: 0, neighbourNotes: [] });
 });
 
 test("durations come as seconds or as clock time, and nonsense is no duration", () => {
