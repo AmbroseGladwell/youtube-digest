@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId } from "@overview/domain";
+import { flushSync } from "react-dom";
+import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -9,7 +10,7 @@ import { ClearFieldButton } from "../../../components/shared/ClearFieldButton/Cl
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { libraryEntryId, readableEntries, type LibraryEntry } from "../../overviews/types/LibraryEntry.js";
-import { unsortedOverviews } from "../../overviews/util/topicCounts.js";
+import { topicCounts, unsortedOverviews } from "../../overviews/util/topicCounts.js";
 import { FilterPanel } from "../components/FilterPanel/FilterPanel.js";
 import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
@@ -56,10 +57,21 @@ import { useLibraryProjects } from "../../projects/useLibraryProjects.js";
 import { WHOLE_LIBRARY, type LibraryPlace } from "../types/LibraryPlace.js";
 import { NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
 import { DEFAULT_LIBRARY_SORT } from "../types/LibrarySort.js";
+import { useSetOverviewTopicsMutation } from "../../overviews/mutations/useSetOverviewTopicsMutation.js";
+import { useDeleteOverviewMutation } from "../../overviews/mutations/useDeleteOverviewMutation.js";
+import { filedUnderTopic, unfiledFromTopic } from "../../overviews/util/filedUnderTopic.js";
+import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
+import { SelectionBar } from "../components/SelectionBar/SelectionBar.js";
+import { SelectionTopicsPicker } from "../components/SelectionTopicsPicker/SelectionTopicsPicker.js";
+import { DeleteOverviewsDialog } from "../components/DeleteOverviewsDialog/DeleteOverviewsDialog.js";
+import { useOverviewSelection } from "./useOverviewSelection.js";
 
 // Below this width the rail is a sheet behind the filter button, so a milestone sits at
 // the top of the list instead (LibraryPage.module.scss; "OV-34 3 Phone and Panel" 34ad).
 const RAIL_SHEET_QUERY = "(max-width: 61.9375rem)";
+// A phone folds the search into an icon, so the row holds search, sort, Filters and select
+// ("OV-168 5" 168au), and its selection bar is icons alone.
+const PHONE_QUERY = "(max-width: 47.9375rem)";
 
 export interface LibraryPageProps {
   entries: LibraryEntry[];
@@ -89,6 +101,14 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     else apply();
   };
   const setOverviewState = useSetOverviewStateMutation();
+  const setOverviewTopics = useSetOverviewTopicsMutation();
+  const deleteOverview = useDeleteOverviewMutation();
+  const selection = useOverviewSelection(place.kind === "project" ? place.projectId : place.kind);
+  const [choosingTopics, setChoosingTopics] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchInput = useRef<HTMLInputElement | null>(null);
+  const searchOpener = useRef<HTMLButtonElement | null>(null);
   const player = usePlayer();
   const playerSnapshot = usePlayerSnapshot();
 
@@ -123,6 +143,8 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     if (meaningQuery.data !== undefined && settledQuery !== "") meaningSettled.current();
   }, [meaningQuery.data, settledQuery]);
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
+  const isPhone = useMediaQuery(PHONE_QUERY);
+  const coarsePointer = useMediaQuery("(pointer: coarse)");
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
   // A sample saved during onboarding isn't the reader's first overview of their own
@@ -202,6 +224,38 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   meaningSettled.current = () =>
     analytics.library.search.meaningMatched({ meaningOnly: closeInMeaning.length, available: meaningQuery.data?.available ?? false });
   const unreadShown = visible.filter((entry) => !entry.state.read).length;
+  const selected: OverviewWithState[] = [...visible, ...closeInMeaning].filter(
+    (entry): entry is LibraryEntry & OverviewWithState => entry.kind === "overview" && selection.picked.has(entry.overview.id),
+  );
+  const selectable = readableEntries(entries).length > 0;
+  const allRead = selected.length > 0 && selected.every((entry) => entry.state.read);
+  const allFavourite = selected.length > 0 && selected.every((entry) => entry.state.favourite);
+  const selectionLine = selected.length > 0 ? `${selected.length} selected` : coarsePointer ? "Tap to select" : "Click to select";
+  const stopSelecting = () => {
+    analytics.library.selection.stopped({ selected: selected.length });
+    selection.stop();
+  };
+  const acted = (action: Parameters<typeof analytics.library.selection.acted>[0]["action"]) =>
+    analytics.library.selection.acted({ action, overviews: selected.length });
+  const setSelectedState = (patch: { read: boolean } | { favourite: boolean }) => {
+    for (const entry of selected) {
+      const [key, value] = Object.entries(patch)[0] as ["read" | "favourite", boolean];
+      if (entry.state[key] === value) continue;
+      keepInPlace(entry.overview.id);
+      setOverviewState.mutate({ overviewId: entry.overview.id, patch });
+    }
+  };
+  const changeSelectedTopic = (topicId: TopicId, give: boolean) => {
+    analytics.library.selection.topicChanged({ topicId, given: give, overviews: selected.length });
+    for (const { overview } of selected) {
+      if (overview.topicIds.includes(topicId) === give) continue;
+      keepInPlace(overview.id);
+      setOverviewTopics.mutate({
+        overview,
+        topicIds: (give ? filedUnderTopic(overview, topicId) : unfiledFromTopic(overview, topicId)).topicIds,
+      });
+    }
+  };
   // Only counts: with a tag set the chip under the search names it, so the line says it to a
   // screen reader alone ("OV-84 2 Library Filter" 84o).
   const countLine =
@@ -213,8 +267,13 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         <span className={styles.visuallyHidden}> tagged #{filters.tag}</span> · {unreadShown} unread
       </>
     );
-  const row = (entry: LibraryEntry) => (
-    <div key={libraryEntryId(entry)} data-glide-name={libraryRowGlideName(libraryEntryId(entry))}>
+  const row = (entry: LibraryEntry, order: number) => (
+    <div
+      key={libraryEntryId(entry)}
+      data-glide-name={libraryRowGlideName(libraryEntryId(entry))}
+      className={selection.selecting && entry.kind === "unreadable" ? styles.notSelectable : undefined}
+      inert={selection.selecting && entry.kind === "unreadable"}
+    >
       {entry.kind === "unreadable" ? (
         <LibraryUnreadableCard
           onOpen={() => analytics.library.unreadableCard.opened()}
@@ -253,6 +312,11 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           playing={isPlaying(entry.overview.id)}
           onListen={() => listen(entry.overview)}
           addedBy={projects.addedByFor(entry.overview.id)}
+          selection={
+            selection.selecting
+              ? { selected: selection.picked.has(entry.overview.id), onToggle: () => selection.toggle(entry.overview.id), order }
+              : null
+          }
         />
       )}
     </div>
@@ -274,6 +338,23 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       <span>saved</span>
     </button>
   );
+  const phoneSearch: "folded" | "open" | "kept" | undefined = !isPhone
+    ? undefined
+    : searchFocused
+      ? "open"
+      : filters.query !== ""
+        ? "kept"
+        : "folded";
+  // Focus moves inside the tap, so a phone raises its keyboard.
+  const openSearch = () => {
+    flushSync(() => setSearchFocused(true));
+    searchInput.current?.focus();
+  };
+  const closeSearch = () => {
+    if (filters.query !== "") changeFilters({ query: "" });
+    flushSync(() => setSearchFocused(false));
+    searchOpener.current?.focus();
+  };
   const sortControl = (
     <SortPill
       sort={sort}
@@ -368,9 +449,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                       <h1 className={styles.title}>Overviews</h1>
                       {railIsSheet && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
                     </div>
-                    <p className={styles.listCount} aria-live="polite">
-                      <span data-testid={libraryPageTestIds.listCount}>{countLine}</span>
-                      {!railIsSheet && (
+                    <p className={`${styles.listCount} ${selection.selecting ? styles.listCountSelecting : ""}`} aria-live="polite">
+                      <span data-testid={libraryPageTestIds.listCount}>{selection.selecting ? selectionLine : countLine}</span>
+                      {!railIsSheet && !selection.selecting && (
                         <>
                           <span aria-hidden="true">·</span>
                           {timeSavedButton}
@@ -378,18 +459,30 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                       )}
                     </p>
                   </div>
-                  {!railIsSheet && sortControl}
                 </div>
               )}
 
               {projects.empty === null && (
                 <>
-                  <div className={styles.searchRow}>
+                  <div className={styles.searchRow} data-search={phoneSearch}>
                     <div className={styles.search}>
+                      {phoneSearch === "folded" && (
+                        <button
+                          type="button"
+                          ref={searchOpener}
+                          className={styles.searchOpener}
+                          onClick={openSearch}
+                          aria-label="Search"
+                          data-testid={libraryPageTestIds.openSearchButton}
+                        >
+                          <StrokeIcon name="search" size={17} />
+                        </button>
+                      )}
                       <span className={styles.searchIcon} aria-hidden="true">
                         <StrokeIcon name="search" size={16} />
                       </span>
                       <input
+                        ref={searchInput}
                         id={searchId}
                         name="library-search"
                         type="search"
@@ -399,36 +492,79 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                         placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
                         value={filters.query}
                         onChange={(event) => changeFilters({ query: event.target.value })}
+                        onFocus={() => setSearchFocused(true)}
+                        onBlur={() => setSearchFocused(false)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape" && isPhone) {
+                            event.preventDefault();
+                            closeSearch();
+                          }
+                        }}
+                        tabIndex={phoneSearch === "folded" ? -1 : undefined}
                         aria-label="Search overviews"
                         data-testid={libraryPageTestIds.searchInput}
                       />
-                      {filters.query !== "" && (
+                      {(phoneSearch === "open" || phoneSearch === "kept" || (!isPhone && filters.query !== "")) && (
                         <ClearFieldButton
-                          label="Clear search"
+                          label={isPhone ? "Clear and close search" : "Clear search"}
                           onClick={() => {
                             analytics.library.search.cleared();
-                            changeFilters({ query: "" });
+                            if (isPhone) closeSearch();
+                            else changeFilters({ query: "" });
                           }}
                           testId={libraryPageTestIds.clearSearchButton}
                         />
                       )}
                     </div>
-                    {(railIsSheet || projects.current !== null) && sortControl}
-                    <button
-                      type="button"
-                      className={styles.filterButton}
-                      onClick={() => {
-                        analytics.library.filterSheet.opened();
-                        setFiltersOpen(true);
-                      }}
-                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
-                      aria-expanded={filtersOpen}
-                      data-testid={libraryPageTestIds.filterButton}
-                    >
-                      <StrokeIcon name="filter" size={17} />
-                      {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
-                    </button>
+                    <div className={styles.searchControls} inert={phoneSearch === "open"}>
+                      {sortControl}
+                      <button
+                        type="button"
+                        className={styles.filterButton}
+                        onClick={() => {
+                          analytics.library.filterSheet.opened();
+                          setFiltersOpen(true);
+                        }}
+                        aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
+                        aria-expanded={filtersOpen}
+                        data-testid={libraryPageTestIds.filterButton}
+                      >
+                        <StrokeIcon name="filter" size={17} />
+                        {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+                      </button>
+                      {selectable && (
+                        <button
+                          type="button"
+                          className={styles.selectButton}
+                          onClick={() => {
+                            if (selection.selecting) {
+                              stopSelecting();
+                            } else {
+                              analytics.library.selection.started();
+                              selection.start();
+                            }
+                          }}
+                          aria-pressed={selection.selecting}
+                          aria-label={selection.selecting ? "Stop selecting" : "Select"}
+                          title={selection.selecting ? "Stop selecting" : "Select"}
+                          data-testid={libraryPageTestIds.selectButton}
+                        >
+                          <span className={styles.selectIcon} aria-hidden="true">
+                            <StrokeIcon name="squareCheck" size={16} />
+                          </span>
+                          <span className={styles.stopIcon} aria-hidden="true">
+                            <StrokeIcon name="close" size={16} />
+                          </span>
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {selection.selecting && projects.current !== null && (
+                    <p className={styles.selectionLine} aria-live="polite" data-testid={libraryPageTestIds.selectionLine}>
+                      {selectionLine}
+                    </p>
+                  )}
 
                   <LibraryFilterChips
                     chips={chips}
@@ -503,7 +639,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                   )
                 ) : (
                   <div className={styles.list} data-testid={libraryPageTestIds.list}>
-                    {visible.map(row)}
+                    {visible.map((entry, index) => row(entry, index))}
                   </div>
                 ))}
               {closeInMeaning.length > 0 && (
@@ -512,13 +648,48 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                     Close in meaning
                   </h2>
                   <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
-                  <div className={styles.list}>{closeInMeaning.map(row)}</div>
+                  <div className={styles.list}>{closeInMeaning.map((entry, index) => row(entry, visible.length + index))}</div>
                 </section>
               )}
               {meaningUnavailable && (
                 <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>
                   Couldn't search by meaning just now, so these match your words only.
                 </p>
+              )}
+              {selection.selecting && (
+                <SelectionBar
+                  count={selected.length}
+                  iconsOnly={isPhone}
+                  allRead={allRead}
+                  allFavourite={allFavourite}
+                  projectName={projects.current?.project.name ?? null}
+                  onAddToProject={() => {
+                    acted("addToProject");
+                    projects.fileSelection(selected);
+                  }}
+                  onAddToTopic={() => {
+                    acted("addToTopic");
+                    setChoosingTopics(true);
+                  }}
+                  onToggleRead={() => {
+                    acted(allRead ? "markUnread" : "markRead");
+                    setSelectedState({ read: !allRead });
+                  }}
+                  onToggleFavourite={() => {
+                    acted(allFavourite ? "unfavourite" : "favourite");
+                    setSelectedState({ favourite: !allFavourite });
+                  }}
+                  onRemoveFromProject={() => {
+                    acted("removeFromProject");
+                    const ids = selected.map(({ overview }) => overview.id);
+                    projects.removeFromCurrent(ids);
+                    selection.drop(ids);
+                  }}
+                  onDelete={() => {
+                    acted("delete");
+                    setConfirmingDelete(true);
+                  }}
+                />
               )}
             </>
           )}
@@ -563,6 +734,42 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       />
 
       {projects.dialogs}
+
+      {choosingTopics && (
+        <SelectionTopicsPicker
+          topics={topics}
+          overviews={selected}
+          countByTopic={topicCounts(readableEntries(allEntries).map((entry) => entry.overview))}
+          onToggle={changeSelectedTopic}
+          onCreate={(name) =>
+            createTopic.mutate(
+              { name, overviews: selected.map(({ overview }) => overview) },
+              {
+                onSuccess: (topic) =>
+                  analytics.library.selection.topicChanged({ topicId: topic.id, given: true, overviews: selected.length }),
+              },
+            )
+          }
+          onClose={() => setChoosingTopics(false)}
+        />
+      )}
+
+      {confirmingDelete && (
+        <DeleteOverviewsDialog
+          count={selected.length}
+          onDelete={() => {
+            analytics.library.selection.deleted({ overviews: selected.length });
+            const ids = selected.map(({ overview }) => overview.id);
+            for (const overviewId of ids) deleteOverview.mutate({ overviewId });
+            selection.drop(ids);
+            setConfirmingDelete(false);
+          }}
+          onClose={() => {
+            analytics.library.selection.deleteKept();
+            setConfirmingDelete(false);
+          }}
+        />
+      )}
     </div>
   );
 }

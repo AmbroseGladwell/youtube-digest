@@ -10,9 +10,8 @@ The assistant is treated as a project's main user, and the reader is the person 
 purpose and checks its work. The server gathers and counts; it never writes anything about a
 project with a model (`mcp-connector.md`, the rented-intelligence position).
 
-This document covers the data and how it syncs, the MCP tools, and the reader's screens. The
-library's select mode, which adds several overviews to a project at once, follows on the same
-card.
+This document covers the data and how it syncs, the MCP tools, the reader's screens, and the
+library's select mode, which files several overviews at once.
 
 ## Decisions taken with the owner, 12 Nov 2026
 
@@ -211,6 +210,43 @@ From the Claude Design round, "OV-168 1–6" in the design project, decided with
   on the device like the rest of its library; it never moves them into an account, since it has
   none.
 
+## Selecting in the library
+
+From "OV-168 5 Search Sort Filters Select" and "OV-168 6 Motion Prototype", decided with the
+owner on 13 Nov 2026.
+
+- **The select button is the one way in**, at the end of the search row, on the library and on
+  a project's page. There is no long-press or hover shortcut. While selecting it is × on an ink
+  fill ("Stop selecting"), and Escape stops too. Each row is then one checkbox named by its
+  title, and nothing in it opens; a row that couldn't be read dims and can't be ticked. The
+  count line says "2 selected", or "Tap to select" / "Click to select" before any are ticked;
+  on a project's page, whose head has no count line, the line sits under the search row.
+- **What is selected is what is ticked and on screen.** A filter or search that hides a ticked
+  row leaves it out of what the bar acts on. Moving to another project or the library ends
+  selecting.
+- **The bar** rides at the foot of the list, above the floating player: Add to project… (the
+  one orange), Add to topic…, Mark read (Mark unread when every one is read), the heart
+  (filled when every one is a favourite, and then it takes them out), Delete… in warning ink.
+  A project's page adds Remove from {project} before Delete; removing is silent, like the
+  row's own Remove. On a phone every action is an icon named for a screen reader.
+- **Both pickers are one checklist** (`ChecklistPicker`), the one an overview's own Add to
+  project… opens. With several overviews a project or topic only some of them have shows a
+  dash and "1 of 3 in it" / "1 of 3 have it"; ticking it gives it to all, unticking one they
+  all have takes it from all, and each tick saves. The foot names what they have ("Home on
+  all 3 · Money on 1"). New project… makes a project with every selected overview in it; New
+  topic… names one in place and files them all under it.
+- **Delete always asks**, with the count, saying they leave their projects too, and Cancel
+  takes the focus.
+- **On a phone the search folds into an icon** at the row's left edge, with sort, Filters and
+  select on the right. Opening it grows the field across the row with the keyboard up, focused
+  inside the tap; × or Escape clears it and folds it back; a query kept with the keyboard down
+  leaves it open beside the three icons. From 768px up the field stays open, with sort,
+  Filters (while the rail is a sheet) and select after it; on a wide screen sort has moved
+  from beside the title into this row.
+- **Analytics** (`library.selection.*`) carry the action and how many overviews, a topic's id
+  when one is given or taken, and never which overviews. Membership changes made from the bar
+  are `projects.membership.*` with `from: "selection"`.
+
 ## Measures
 
 The card names two measures this feature exists to produce. Both are counts and ids, never a
@@ -223,10 +259,5 @@ name or a purpose.
   reader did in the app (`mcp-connector.md`, "Logging").
 - **How often does the reader take out what an assistant added?** That is a reader's act in
   the app, so it is an analytics event: `projects.membership.removed` carries `addedBy`, from
-  the row's Remove and from unticking in the picker alike. `projects.*` events carry ids,
+  the row's Remove, from unticking in a picker and from the selection bar alike. `projects.*` events carry ids,
   counts and choices only.
-
-## Not yet built
-
-The library's select mode and its bar ("OV-168 5 Search Sort Filters Select"): adding several
-overviews to a project, or a topic, at once, with search folded to an icon on a phone.

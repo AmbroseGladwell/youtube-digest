@@ -3,6 +3,7 @@ import { libraryPageTestIds } from "../../src/features/library/LibraryPage/Libra
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { libraryUnreadableCardTestIds } from "../../src/features/library/components/LibraryUnreadableCard/LibraryUnreadableCardTestIds.js";
+import { SelectionBarPageObject } from "./SelectionBarPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
 import { FilterPanelPageObject } from "./FilterPanelPageObject.testHelper.js";
@@ -86,7 +87,67 @@ export class LibraryPageObject extends PageObject {
 
   // The search sits over the list rather than in the rail (design 2a), so it is the
   // page's rather than the filter panel's.
-  search = (query: string) => this.step(`search ${query}`, () => this.get(libraryPageTestIds.searchInput).fill(query));
+  // On a phone the search is folded into an icon until it is opened ("OV-168 5" 168au).
+  search = (query: string) =>
+    this.step(`search ${query}`, async () => {
+      if (await this.get(libraryPageTestIds.openSearchButton).isVisible()) await this.click(libraryPageTestIds.openSearchButton);
+      await this.get(libraryPageTestIds.searchInput).fill(query);
+    });
+
+  openSearch = () => this.step("openSearch", () => this.click(libraryPageTestIds.openSearchButton));
+
+  verifySearchIsFolded = (folded: boolean) =>
+    this.step(`verifySearchIsFolded ${folded}`, async () => {
+      if (folded) {
+        await this.expectToBeVisible(libraryPageTestIds.openSearchButton);
+        await expect(this.get(libraryPageTestIds.searchInput)).not.toBeVisible();
+      } else {
+        await this.expectNotToBeVisible(libraryPageTestIds.openSearchButton);
+        await expect(this.get(libraryPageTestIds.searchInput)).toBeVisible();
+      }
+    });
+
+  verifySearchIsFocused = () => this.step("verifySearchIsFocused", () => expect(this.get(libraryPageTestIds.searchInput)).toBeFocused());
+
+  blurTheSearch = () => this.step("blurTheSearch", () => this.get(libraryPageTestIds.searchInput).blur());
+
+  pressEscapeInTheSearch = () => this.step("pressEscapeInTheSearch", () => this.get(libraryPageTestIds.searchInput).press("Escape"));
+
+  startSelecting = () =>
+    this.step("startSelecting", async () => {
+      await this.click(libraryPageTestIds.selectButton);
+      await expect(this.get(libraryPageTestIds.selectButton)).toHaveAttribute("aria-pressed", "true");
+    });
+
+  stopSelecting = () =>
+    this.step("stopSelecting", async () => {
+      await this.click(libraryPageTestIds.selectButton);
+      await expect(this.get(libraryPageTestIds.selectButton)).toHaveAttribute("aria-pressed", "false");
+    });
+
+  verifySelectButtonReads = (label: string) =>
+    this.step(`verifySelectButtonReads ${label}`, () =>
+      expect(this.get(libraryPageTestIds.selectButton)).toHaveAttribute("aria-label", label),
+    );
+
+  verifyOffersSelect = (offered: boolean) =>
+    this.step(`verifyOffersSelect ${offered}`, () =>
+      offered ? this.expectToBeVisible(libraryPageTestIds.selectButton) : this.expectToHaveCount(libraryPageTestIds.selectButton, 0),
+    );
+
+  pick = (title: string) => this.step(`pick ${title}`, () => this.get(libraryOverviewCardTestIds.root).filter({ hasText: title }).click());
+
+  verifyPicked = (title: string, picked: boolean) =>
+    this.step(`verifyPicked ${title} ${picked}`, () =>
+      expect(this.page.getByRole("checkbox", { name: title, exact: false })).toHaveAttribute("aria-checked", String(picked)),
+    );
+
+  verifySelectionLineReads = (text: string) =>
+    this.step(`verifySelectionLineReads ${text}`, () => expect(this.get(libraryPageTestIds.selectionLine)).toHaveText(text));
+
+  get selectionBar(): SelectionBarPageObject {
+    return new SelectionBarPageObject(this.testContext);
+  }
 
   clearTheSearch = () => this.step("clearTheSearch", () => this.click(libraryPageTestIds.clearSearchButton));
 

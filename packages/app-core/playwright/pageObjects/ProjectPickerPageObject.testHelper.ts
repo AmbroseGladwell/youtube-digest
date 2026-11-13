@@ -22,6 +22,12 @@ export class ProjectPickerPageObject extends PageObject {
       expect(this.get(projectPickerTestIds.option(name)).getByRole("checkbox")).toBeChecked({ checked: ticked }),
     );
 
+  verifyIsMixed = (name: string) =>
+    this.step(`verifyIsMixed ${name}`, () => expect(this.get(projectPickerTestIds.option(name))).toHaveAttribute("data-state", "some"));
+
+  verifyHeadingReads = (text: string) =>
+    this.step(`verifyHeadingReads ${text}`, () => expect(this.get(projectPickerTestIds.root).getByRole("heading")).toHaveText(text));
+
   verifyFindIsOffered = (offered: boolean) =>
     this.step(`verifyFindIsOffered ${offered}`, () =>
       offered ? this.expectToBeVisible(projectPickerTestIds.findInput) : this.expectNotToBeVisible(projectPickerTestIds.findInput),

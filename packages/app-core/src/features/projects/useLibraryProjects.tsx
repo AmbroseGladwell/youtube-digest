@@ -7,6 +7,7 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import type { LibraryPlace } from "../library/types/LibraryPlace.js";
 import type { OverviewWithState } from "../overviews/types/OverviewWithState.js";
 import { DeleteProjectDialog } from "./components/DeleteProjectDialog/DeleteProjectDialog.js";
+import { ProjectPicker } from "./components/ProjectPicker/ProjectPicker.js";
 import { ProjectEmpty } from "./components/ProjectEmpty/ProjectEmpty.js";
 import { ProjectHead } from "./components/ProjectHead/ProjectHead.js";
 import { ProjectsIndex } from "./components/ProjectsIndex/ProjectsIndex.js";
@@ -43,6 +44,7 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
   const newProject = useNewProject(summaries.map(({ project }) => project.name));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [keptNow, setKeptNow] = useState<ReadonlySet<string>>(new Set());
+  const [filing, setFiling] = useState<OverviewWithState[] | null>(null);
   const now = new Date();
 
   const active = activeSummaries(summaries);
@@ -141,8 +143,52 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     };
   };
 
+  const removeFromCurrent = (overviewIds: OverviewId[]) => {
+    if (current === null) return;
+    for (const overviewId of overviewIds) {
+      const item = current.items.find((each) => each.overview.id === overviewId);
+      if (item === undefined) continue;
+      analytics.projects.membership.removed({ projectId: current.project.id, overviewId, addedBy: item.addedBy.by, from: "selection" });
+      setMember.mutate({ projectId: current.project.id, overviewId, inProject: false });
+    }
+  };
+
+  const fileSelection = (projectId: ProjectId, inProject: boolean) => {
+    const summary = summaries.find(({ project }) => project.id === projectId);
+    if (filing === null || summary === undefined) return;
+    for (const { overview } of filing) {
+      const item = summary.items.find((each) => each.overview.id === overview.id);
+      if (inProject === (item !== undefined)) continue;
+      if (inProject) {
+        analytics.projects.membership.added({ projectId, overviewId: overview.id, from: "selection" });
+      } else {
+        analytics.projects.membership.removed({ projectId, overviewId: overview.id, addedBy: item!.addedBy.by, from: "selection" });
+      }
+      setMember.mutate({ projectId, overviewId: overview.id, inProject });
+    }
+  };
+
   const dialogs = (
     <>
+      {filing !== null && (
+        <ProjectPicker
+          summaries={active}
+          holding={(projectId) => {
+            const summary = summaries.find(({ project }) => project.id === projectId);
+            return filing.filter(({ overview }) => summary?.items.some((item) => item.overview.id === overview.id)).length;
+          }}
+          of={filing.length}
+          onToggle={fileSelection}
+          onNewProject={() => {
+            setFiling(null);
+            newProject.open(
+              "selection",
+              filing.map(({ overview }) => ({ id: overview.id, title: overview.source.title })),
+            );
+          }}
+          onClose={() => setFiling(null)}
+        />
+      )}
       {newProject.dialog}
       {confirmingDelete && current !== null && (
         <DeleteProjectDialog
@@ -174,6 +220,8 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     head,
     empty,
     addedByFor,
+    fileSelection: (overviews: OverviewWithState[]) => setFiling(overviews),
+    removeFromCurrent,
     dialogs,
   };
 }

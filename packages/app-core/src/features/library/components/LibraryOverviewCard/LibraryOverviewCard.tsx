@@ -1,3 +1,4 @@
+import type { CSSProperties, KeyboardEvent } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
@@ -25,6 +26,9 @@ export interface LibraryOverviewCardProps {
   // On a project's page, a row an assistant put there says so, with a way to take it out
   // ("OV-168 2 The Project Page" 168f).
   addedBy?: { name: string; on: string; projectName: string; onRemove: () => void } | null;
+  // While the library is selecting, the whole row is one checkbox and nothing in it opens
+  // ("OV-168 5" 168ax, 168az).
+  selection?: { selected: boolean; onToggle: () => void; order: number } | null;
 }
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
@@ -52,6 +56,7 @@ export function LibraryOverviewCard({
   onListen,
   readerState,
   addedBy = null,
+  selection = null,
 }: LibraryOverviewCardProps) {
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
@@ -68,14 +73,39 @@ export function LibraryOverviewCard({
     onToggleRead();
   };
 
+  const box = (className: string | undefined) => (
+    <span className={`${styles.box} ${className ?? ""}`} aria-hidden="true">
+      <StrokeIcon name="check" size={13} />
+    </span>
+  );
+
   return (
     <article
       className={`${styles.root} ${entering ? styles.entering : ""}`}
       data-entering={entering || undefined}
       data-read={state.read || undefined}
+      data-selecting={selection !== null || undefined}
+      data-selected={selection?.selected || undefined}
+      style={{ "--select-order": Math.min(selection?.order ?? 0, 12) } as CSSProperties}
+      {...(selection === null
+        ? {}
+        : {
+            role: "checkbox",
+            "aria-checked": selection.selected,
+            "aria-label": overview.source.title,
+            tabIndex: 0,
+            onClick: selection.onToggle,
+            onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+              if (event.key === " " || event.key === "Enter") {
+                event.preventDefault();
+                selection.onToggle();
+              }
+            },
+          })}
       data-testid={libraryOverviewCardTestIds.root}
     >
-      <div className={styles.row} data-testid={libraryOverviewCardTestIds.row}>
+      {box(styles.thumbnailBox)}
+      <div className={styles.row} inert={selection !== null} data-testid={libraryOverviewCardTestIds.row}>
         <OverviewThumbnail
           video={overview.source}
           to={readerPath}
@@ -86,6 +116,7 @@ export function LibraryOverviewCard({
         />
         <div className={styles.body}>
           <p className={styles.kickerRow}>
+            {box(styles.kickerBox)}
             <span className={styles.kickerGroup}>
               <KindChip overview={overview} />
               {topicNames.map((name) => (
