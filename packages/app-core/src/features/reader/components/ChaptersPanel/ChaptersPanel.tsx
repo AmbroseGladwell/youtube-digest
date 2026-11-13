@@ -8,6 +8,7 @@ import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./ChaptersPanel.module.scss";
 import { chaptersPanelTestIds } from "./ChaptersPanelTestIds.js";
+import { timedNoun } from "../../util/timedSource.js";
 
 const NOT_MADE = "Chapters weren't made for this note. Generating it again adds them.";
 const NOTHING_TO_SPLIT = "This video's transcript had nothing to split into chapters.";
@@ -175,7 +176,7 @@ function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
           analytics.chapters.videoOpened({ by: "skip" });
           seek(chapter.startMs);
         }}
-        aria-label={`Play the video from ${formatTimestamp(chapter.startMs)}`}
+        aria-label={`Play the ${timedNoun(video)} from ${formatTimestamp(chapter.startMs)}`}
         data-testid={chaptersPanelTestIds.range}
       >
         {label}

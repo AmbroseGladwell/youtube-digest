@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { OverviewMenuItem } from "@overview/domain";
+import { openPodcastLabel, sourceUrl as linkOf, type OverviewMenuItem, type Source } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
@@ -11,8 +11,7 @@ export interface OverviewActionsMenuProps {
   topicCount: number;
   hasReason: boolean;
   read: boolean;
-  sourceUrl: string;
-  isArticle: boolean;
+  source: Source;
   // Recipes only (design 144r): the page's recipe as it stands on screen, with its source.
   recipe: { onCopy: () => void; onPrint: () => void } | null;
   // Absent where there is no account to share under, which is how the item hides itself
@@ -30,6 +29,35 @@ export interface OverviewActionsMenuProps {
   onDelete: () => void;
 }
 
+interface WayOut {
+  open: OverviewMenuItem;
+  openLabel: string;
+  copy: OverviewMenuItem;
+  copyLabel: string;
+}
+
+// The way back to the source, in its own words. An episode's goes where the reader came from:
+// "Open in Spotify", and the link copied is that one too (design 106n).
+function wayOut(source: Source, recipe: boolean): WayOut {
+  if (source.kind === "podcast") {
+    return { open: "openEpisode", openLabel: openPodcastLabel(source.sharedFrom), copy: "copyEpisodeLink", copyLabel: "Copy episode link" };
+  }
+  if (source.kind === "web") {
+    return {
+      open: "readArticle",
+      openLabel: recipe ? "Open the recipe" : "Read the article",
+      copy: "copyArticleLink",
+      copyLabel: recipe ? "Copy recipe link" : "Copy article link",
+    };
+  }
+  return {
+    open: "watchOnYouTube",
+    openLabel: recipe ? "Open the recipe" : "Watch on YouTube",
+    copy: "copyYouTubeLink",
+    copyLabel: recipe ? "Copy recipe link" : "Copy YouTube link",
+  };
+}
+
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
 // Design 4b/6h: everything about the note that is not reading it.
@@ -37,8 +65,7 @@ export function OverviewActionsMenu({
   topicCount,
   hasReason,
   read,
-  sourceUrl,
-  isArticle,
+  source,
   recipe,
   compact,
   webApp,
@@ -52,6 +79,8 @@ export function OverviewActionsMenu({
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const analytics = useReaderAnalytics();
+  const sourceUrl = linkOf(source);
+  const way = wayOut(source, recipe !== null);
 
   const close = () => {
     analytics.actionsMenu.closed();
@@ -175,20 +204,20 @@ export function OverviewActionsMenu({
             href={sourceUrl}
             target="_blank"
             rel="noopener"
-            onClick={choose(isArticle ? "readArticle" : "watchOnYouTube", () => undefined)}
+            onClick={choose(way.open, () => undefined)}
             data-testid={overviewActionsMenuTestIds.watchItem}
           >
-            {recipe !== null ? "Open the recipe" : isArticle ? "Read the article" : "Watch on YouTube"}
+            {way.openLabel}
           </a>
           {canWriteClipboard() && (
             <button
               type="button"
               role="menuitem"
               className={styles.item}
-              onClick={choose(isArticle ? "copyArticleLink" : "copyYouTubeLink", () => void navigator.clipboard.writeText(sourceUrl))}
+              onClick={choose(way.copy, () => void navigator.clipboard.writeText(sourceUrl))}
               data-testid={overviewActionsMenuTestIds.copyLinkItem}
             >
-              {recipe !== null ? "Copy recipe link" : isArticle ? "Copy article link" : "Copy YouTube link"}
+              {way.copyLabel}
             </button>
           )}
           {/* Design 6h: only the panel has a web app elsewhere to open the note in, and

@@ -353,6 +353,11 @@ export const apiLogLines = coded("api", {
       "podcast episode read",
       "A podcast link was turned into an episode from its feed, and how that went; `linkFrom` is the platform, `outcome` the reason it failed. Never the link.",
     ),
+    transcript: line(
+      "info",
+      "podcast transcript resolved",
+      "A podcast episode's transcript was asked for; `via` is the rung that answered (cache, tag) and `format` the tag's, or `failure` why none could. Never the feed or the episode.",
+    ),
   },
   playlists: {
     read: line("info", "playlist read", "A followed playlist was read, and what it cost in YouTube quota units."),

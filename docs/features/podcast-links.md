@@ -99,8 +99,9 @@ measurement redirects (Podtrac, Chartable and others), which those rules already
 ## The route
 
 `POST /api/podcasts/read` takes `{ url }` and answers with a `PodcastRead`: the episode, or the
-reason it couldn't be read, and the show's name where it is known. It needs an account. Onboarding's
-trial joins when podcasts join its table (`onboarding.md`, "Any kind of link"). It is limited to 120
+reason it couldn't be read, and the show's name where it is known. An account reads without
+counting; signed out, onboarding's trial token reads it as one of its reads (`onboarding.md`,
+"Any kind of link"). It is limited to 120
 an hour per address, like article reads. The log line says which platform the link came from, how
 it went, how many transcript tags the episode has and how long it took. It never logs the link.
 
@@ -109,18 +110,18 @@ it went, how many transcript tags the episode has and how long it took. It never
 Before readers can use this, check: Apple's terms for its search and lookup API used this way;
 reading Spotify's public episode pages (tags any link preview reads, but still Spotify's pages);
 and writing a transcript of an episode and keeping it in the shared cache, which is a different use
-from playing the episode and needs its own answer. The privacy policy names none of these yet,
-because no reader can reach the route. The slice that lets a reader paste a podcast link adds
-Apple, Spotify and show hosts to `/privacy` (`legal-pages.md`).
+from playing the episode and needs its own answer. `/privacy` names them since the screens' slice
+that lets a reader paste a podcast link (`legal-pages.md`, 13 Nov 2026); the terms checks above are
+the owner's, and still open until that slice merges (`podcast-screens.md`, "Before it merges").
 
 ## What comes next
 
 The next slices of OV-106, decided 12 Nov 2026 (free routes first, speech to text last):
 
-1. The transcript rungs: the shared cache, the feed's transcript tag, then the same episode on the
-   show's YouTube channel, matched by title and length, with the YouTube description as the fallback
-   when the upload was retitled. That was measured on the card: about 47% of recent chart episodes
-   can be had for free.
+1. The transcript rungs: the shared cache and the feed's transcript tag are built
+   (`podcast-transcripts.md`). The same episode on the show's YouTube channel, matched by title and
+   length, with the YouTube description as the fallback when the upload was retitled, comes next.
+   That was measured on the card: about 47% of recent chart episodes can be had for free.
 2. The podcast note, a small fork of the video note.
 3. The screens, after a design round, and podcasts joining onboarding's table.
 4. Speech to text, whose options are talked through with the owner first.

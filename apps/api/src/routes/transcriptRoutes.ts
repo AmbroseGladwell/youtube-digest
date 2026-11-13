@@ -12,6 +12,10 @@ const TRANSCRIPT_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
 const Params = z.object({ videoId: VideoId });
 
+// Another kind's key holds a colon (docs/features/source-identity.md). Those transcripts come
+// from our own fetch alone, so no account can file one (docs/features/podcast-transcripts.md).
+const isYouTubeKey = (key: string): boolean => !key.includes(":");
+
 export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsRepository, clock: () => Date): void {
   app.get("/transcripts/:videoId", async (request) => {
     const { videoId } = parseOrThrow(Params, request.params, "The video id");
@@ -29,7 +33,7 @@ export function transcriptRoutes(app: FastifyInstance, transcripts: TranscriptsR
     if (transcript.videoId !== videoId) {
       throw new ApiError("invalid_request", "The transcript is for a different video than the path names");
     }
-    const fault = transcriptFault(transcript, videoId);
+    const fault = isYouTubeKey(videoId) ? transcriptFault(transcript, videoId) : "fetched-by-server";
     if (fault !== null) {
       request.log.warn(apiLogLines.transcripts.refused({ fault, segments: transcript.segments.length }));
       return reply.status(204).send();

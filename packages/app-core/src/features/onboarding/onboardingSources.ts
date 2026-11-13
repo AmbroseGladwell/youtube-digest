@@ -1,6 +1,8 @@
 import {
   articleReadMinutes,
   articleSourceId,
+  podcastSource,
+  podcastSourceId,
   domainOf,
   formatClock,
   recipeFigures,
@@ -9,6 +11,7 @@ import {
   webSource,
   youTubeSource,
   type ArticleRead,
+  type PodcastRead,
   type ExtractedArticle,
   type Overview,
   type Recipe,
@@ -17,11 +20,15 @@ import {
   type SourceKey,
 } from "@overview/domain";
 import { bigPictureBudget } from "@overview/generation";
-import type { RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
+import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
+import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
+import { formatPublishedDate } from "../../util/formatPublishedDate.js";
 
-export type OnboardingLinkKind = "video" | "playlist" | "article";
+export type OnboardingLinkKind = "video" | "playlist" | "article" | "episode";
 
 export type RecipeTimes = Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMinutes" | "yield">;
 
@@ -38,6 +45,8 @@ export interface OnboardingMakers {
   video: (url: string, options: RunOverviewGenerationOptions) => Promise<Overview>;
   article: (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readArticle: (url: string) => Promise<ArticleRead>;
+  podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
+  readPodcast: (url: string) => Promise<PodcastRead>;
 }
 
 export interface OnboardingMakeOptions {
@@ -127,6 +136,13 @@ const videoFacts = (source: Source): string =>
     ? [source.channel, source.durationMs === null ? null : formatClock(source.durationMs / 1000)].filter(Boolean).join(" · ")
     : sourceName(source);
 
+const episodeLength = (source: Source): string | null =>
+  source.kind === "podcast" && source.durationMs !== null ? recipeMinutes(Math.round(source.durationMs / 60_000)) : null;
+
+// "1 hr 56 min · 10 Nov 2026", or the date alone when the feed gives no length (design 106b).
+const episodeFacts = (source: Source): string =>
+  [episodeLength(source), source.publishedAt === null ? null : formatPublishedDate(source.publishedAt)].filter(Boolean).join(" · ");
+
 const readMinutes = (source: Source): string | null => (source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null);
 
 // Everything onboarding does differently for each kind of source, so a kind joining `Source`
@@ -168,6 +184,52 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     sections: writtenSections,
     teaser: (overview) => ({
       byline: videoFacts(overview.source),
+      first: { label: "Premise", text: overview.inOneLine },
+      locked: overviewLocked(overview),
+    }),
+  },
+  // Design 106c: an episode takes the same card in a podcast's words. It claims Apple and Spotify
+  // links; a show's own page is left to the web, which reads it as a page. It is found, and its
+  // words with it, before the card shows, as a video's transcript is fetched before its card
+  // does, so an episode with no words stops at the confirm step (106i).
+  podcast: {
+    linkKind: (link) => (isPlatformPodcastLink(link) ? "episode" : null),
+    keyFromLink: () => null,
+    target: ({ link }) => link,
+    make: async (target, makers, { onFound, isCancelled, waitToWrite }) => {
+      const read = await makers.readPodcast(target);
+      if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
+      const id = await podcastSourceId(read.episode);
+      return makers
+        .podcast(
+          { episode: read.episode, sharedFrom: target },
+          {
+            isCancelled,
+            waitToWrite,
+            onEpisodeWords: () => onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes }),
+          },
+        )
+        .catch((error: unknown) => {
+          if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
+            throw new PodcastNoTranscriptError();
+          }
+          throw error;
+        });
+    },
+    noun: (_linkKind, found) => (found === null ? "page" : "episode"),
+    lead: () => OVERVIEW_LEAD,
+    pending: (link) => domainOf(link),
+    finding: "Finding the episode…",
+    notFound: "We couldn't find that episode.",
+    fetching: "Finding the episode",
+    ready: () => "Transcript ready",
+    card: ({ source }) => ({
+      kicker: `${sourceName(source)} · Podcast`,
+      facts: { line: episodeFacts(source) },
+    }),
+    sections: writtenSections,
+    teaser: (overview) => ({
+      byline: [sourceName(overview.source), "Podcast", episodeLength(overview.source)].filter(Boolean).join(" · "),
       first: { label: "Premise", text: overview.inOneLine },
       locked: overviewLocked(overview),
     }),

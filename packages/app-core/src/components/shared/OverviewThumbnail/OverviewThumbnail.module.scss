@@ -43,3 +43,21 @@
   font-size: clamp(0.75rem, 10.5cqi, 1.125rem);
   line-height: 1.05;
 }
+
+.matte {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: var(--stone-tint);
+}
+
+.art {
+  display: block;
+  height: 84%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}

@@ -140,6 +140,17 @@ Five folders, five different questions.
   what the field says.
 - `podcast-links.md` — an Apple, Spotify or show-page link turned into one episode of its show's
   feed: Apple's directory, Spotify's public page, matching strictly, reading a feed as it arrives.
+- `podcast-transcripts.md` — where a podcast episode's words come from: the shared cache, then the
+  feed's transcript tag in five formats, kept once for everyone; the YouTube rungs and speech to text
+  still to come.
+- `podcast-on-youtube.md` — finding a podcast episode on its show's YouTube channel: by title and
+  length, by description when retitled, the episode's own words, and how sure a match is.
+- `podcast-notes.md` — a podcast episode's note: the video note in a podcast's words, Listen to it
+  anyway forked, no recipe note, videos held unchanged by a golden test, and why the kind joins
+  `Source` only with the screens.
+- `podcast-screens.md` — what a reader sees of an episode: the way out to the link they shared, the
+  head's square art, the Podcast chip, and the episode's own player in the note, which every time
+  jumps, with the line that says a jump may land early.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
 - `article-resources.md` — the links an article makes: which extraction keeps, how the model

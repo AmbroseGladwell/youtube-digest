@@ -27,10 +27,10 @@ export function OverviewThumbnail({ video, className, to, state, onOpen, carries
   const [failed, setFailed] = useState(false);
   const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
 
-  const isArticle = "kind" in video && video.kind === "web";
+  const kind = "kind" in video ? video.kind : "youtube";
   const imageUrl = "kind" in video ? sourceImage(video) : video.thumbnailUrl;
 
-  if (isArticle && (!imageUrl || failed)) {
+  if ("kind" in video && video.kind !== "youtube" && (!imageUrl || failed)) {
     const tile = (
       <span className={styles.nameTile} data-testid={overviewThumbnailTestIds.nameTile}>
         {sourceName(video)}
@@ -56,9 +56,9 @@ export function OverviewThumbnail({ video, className, to, state, onOpen, carries
     return null;
   }
 
-  const image = (
+  const picture = (
     <img
-      className={to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`}
+      className={kind === "podcast" ? styles.art : to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`}
       src={imageUrl!}
       alt=""
       loading="lazy"
@@ -66,6 +66,14 @@ export function OverviewThumbnail({ video, className, to, state, onOpen, carries
       data-testid={overviewThumbnailTestIds.image}
     />
   );
+  // Design 106u: a show's square art matted on the stone tint inside the same 16:9 slot, so
+  // rows stay one height and the title starts in one place.
+  const image =
+    kind === "podcast" ? (
+      <span className={to ? styles.matte : `${styles.thumbnail} ${styles.matte} ${className ?? ""}`}>{picture}</span>
+    ) : (
+      picture
+    );
 
   if (!to) {
     return image;

@@ -5,6 +5,7 @@ import { ArticleFailureNotice } from "../../../capture/components/ArticleFailure
 import type { RunError } from "../../types/RunError.js";
 import { useReaderPlace } from "../../useReaderPlace.js";
 import { pastedLinkFailureCopy } from "../../util/pastedLinkFailureCopy.js";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import styles from "./RunErrorMessage.module.scss";
 import type { RunErrorMessageTestIds } from "./RunErrorMessageTestIds.js";
 
@@ -19,6 +20,9 @@ export interface RunErrorMessageProps {
 export function RunErrorMessage({ error, className, testId, testIds, onFollowed }: RunErrorMessageProps) {
   if (error.kind === "articleFetch") {
     return <ArticleFetchFailure error={error} />;
+  }
+  if (error.kind === "podcastNoTranscript") {
+    return <PodcastNoTranscript testId={testId} />;
   }
   if (error.kind === "message") {
     return (
@@ -51,5 +55,26 @@ function ArticleFetchFailure({ error }: { error: Extract<RunError, { kind: "arti
       after={after}
       onWay={() => undefined}
     />
+  );
+}
+
+// Design 106h: about half of episodes have no words we can find yet, so this is drawn as an
+// everyday outcome: what happened, that it's common, that nothing was used, and where
+// Transcribe it will go once speech-to-text exists. It never says where we looked.
+function PodcastNoTranscript({ testId }: { testId: string }) {
+  return (
+    <div className={styles.noTranscript} role="alert" data-testid={testId}>
+      <span className={styles.rule} aria-hidden="true" />
+      <h3 className={styles.noTranscriptHeading}>There’s no transcript for this episode yet</h3>
+      <p className={styles.noTranscriptBody}>
+        We found the episode, but we couldn’t find a transcript for it, and an overview is written from the words. Many episodes don’t have
+        one yet. No overview was used.
+      </p>
+      <p className={styles.comingSoon}>
+        <StrokeIcon name="mic" size={14} />
+        Transcribing is coming soon
+      </p>
+      <p className={styles.noTranscriptBody}>Have it on YouTube? Paste that link above, or another episode.</p>
+    </div>
   );
 }

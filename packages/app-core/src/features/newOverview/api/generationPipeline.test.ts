@@ -14,15 +14,24 @@ import {
   type AboutYou,
   type ClientTimingReport,
   type LearnedItems,
+  type PodcastEpisode,
+  podcastSourceId,
 } from "@overview/domain";
+import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
+import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
 import type { GenerationInput } from "@overview/generation";
-import { makeArticleOverview, makeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
-import { runArticleOverviewGeneration, runOverviewGeneration, type GenerationPipelineDeps } from "./generationPipeline.js";
+import {
+  runArticleOverviewGeneration,
+  runOverviewGeneration,
+  runPodcastOverviewGeneration,
+  type GenerationPipelineDeps,
+} from "./generationPipeline.js";
 
 const VIDEO = makeOverview().source;
 
@@ -363,5 +372,97 @@ describe("runArticleOverviewGeneration", () => {
     await runArticleOverviewGeneration(async () => READ, deps, { overviewId: makeArticleOverview().id as OverviewId });
 
     expect(made).toHaveLength(1);
+  });
+});
+
+describe("runPodcastOverviewGeneration", () => {
+  const episode: PodcastEpisode = {
+    feedUrl: "https://feeds.example/diary.xml",
+    guid: "episode-guid",
+    title: "Why your parents’ decline is a preview",
+    showName: "The Diary Of A CEO",
+    publishedAt: "2026-11-10T06:00:00.000Z",
+    durationSeconds: 6948,
+    audioUrl: "https://media.example/episode.mp3",
+    pageUrl: null,
+    imageUrl: null,
+    notes: "This week, ageing.",
+    notesKeywords: [],
+    transcripts: [],
+    chaptersUrl: null,
+    linkFrom: "spotify",
+  };
+  const words = (key: string): PodcastTranscript => ({
+    transcript: {
+      videoId: key as StoredTranscript["videoId"],
+      segments: [{ startMs: 0, endMs: 4_000, text: "Most decline starts a decade early." }],
+      generated: true,
+      fetchedAt: "2026-11-13T09:00:00.000Z",
+    },
+    keptForEveryone: true,
+  });
+
+  const setUp = (heldIds: string[] = []) => {
+    const made: unknown[] = [];
+    const kept: StoredTranscript[] = [];
+    const store = {
+      listTopics: async () => [],
+      listClaims: async () => [],
+      listUnreadable: async () => [],
+      getOverview: async () => null,
+      saveOverview: async () => {},
+      listOverviews: async () => heldIds.map((id) => makePodcastOverview({ source: { ...makePodcastOverview().source, id: id as never } })),
+    } as unknown as OverviewStore;
+    const deps = {
+      overviewStore: store,
+      settingsStore: { get: async () => DEFAULT_SETTINGS },
+      transcriptStore: {
+        getTranscript: async () => null,
+        saveTranscript: async (transcript: StoredTranscript) => {
+          kept.push(transcript);
+        },
+        deleteTranscript: async () => {},
+      } satisfies TranscriptStore,
+      makeOverview: (async (input, { id }) => {
+        made.push(input);
+        return makePodcastOverview({ id });
+      }) satisfies GenerationPipelineDeps["makeOverview"],
+    };
+    return { deps, made, kept };
+  };
+
+  it("writes the episode as an episode, keeping the link the reader shared without who shared it", async () => {
+    const { deps, made, kept } = setUp();
+    const key = `podcast:${await podcastSourceId(episode)}`;
+    let found: number | null = null;
+    await runPodcastOverviewGeneration(
+      { episode, sharedFrom: "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk?si=abc123" },
+      async () => words(key),
+      deps,
+      { onEpisodeWords: (count) => (found = count) },
+    );
+    expect(found).toBe(6);
+    expect(kept[0]?.videoId).toBe(key);
+    const input = made[0] as { podcast: { sharedFrom: string; durationMs: number }; video: { channel: string } };
+    expect(input.podcast.sharedFrom).toBe("https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk");
+    expect(input.podcast.durationMs).toBe(6_948_000);
+    expect(input.video.channel).toBe("The Diary Of A CEO");
+  });
+
+  it("makes nothing when no words are found, so nothing is used", async () => {
+    const { deps, made } = setUp();
+    const none = new TranscriptFetchError("No transcript", { failure: TranscriptFetchFailure.NO_CAPTIONS, sourceId: "podcast" });
+    await expect(
+      runPodcastOverviewGeneration({ episode, sharedFrom: "https://open.spotify.com/episode/x" }, async () => Promise.reject(none), deps),
+    ).rejects.toBe(none);
+    expect(made).toHaveLength(0);
+  });
+
+  it("opens the overview the library already holds rather than spending another", async () => {
+    const { deps, made } = setUp([await podcastSourceId(episode)]);
+    await expect(
+      runPodcastOverviewGeneration({ episode, sharedFrom: "https://open.spotify.com/episode/x" }, async () => words("k"), deps),
+    ).rejects.toBeInstanceOf(ArticleAlreadyHeldError);
+    expect(made).toHaveLength(0);
   });
 });
