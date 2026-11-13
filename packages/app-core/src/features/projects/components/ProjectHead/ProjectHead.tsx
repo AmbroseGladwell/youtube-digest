@@ -34,7 +34,7 @@ const SPREAD: Novelty[] = ["original", "fresh_angle", "common_knowledge"];
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-// The top of a project's page: what it's for on the stone tint as the largest body text,
+// The top of a project's page: what it's for on the stone tint (1rem, 0.8rem on a phone),
 // counts from code, the verdict spread, then Copy as Markdown and ⋯
 // ("OV-168 2 The Project Page" 168f–168l, 168p, 168bd–168bf).
 export function ProjectHead({
