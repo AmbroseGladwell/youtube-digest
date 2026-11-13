@@ -7,4 +7,6 @@ import type { ArticleFailure } from "../api/ArticleReadError.js";
 export type RunError =
   | { kind: "message"; message: string }
   | { kind: "chosenModel"; provider: Provider; model: string }
-  | { kind: "articleFetch"; failure: ArticleFailure; url: string; regenerating: boolean };
+  | { kind: "articleFetch"; failure: ArticleFailure; url: string; regenerating: boolean }
+  // An episode whose words weren't found: common, and nothing was used (design 106h).
+  | { kind: "podcastNoTranscript" };

@@ -111,7 +111,7 @@ export type CaptureEntry = z.infer<typeof CaptureEntry>;
 export const GenerationKey = z.enum(["own", "ours", "trial"]);
 export type GenerationKey = z.infer<typeof GenerationKey>;
 
-export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article"]);
+export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article", "podcast"]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([
@@ -558,7 +558,7 @@ export const analyticsEvents = {
   onboarding: {
     start: {
       linkSubmitted: event("A reader with no account gives the home page a link to start their first overview", {
-        kind: z.enum(["video", "playlist", "article"]),
+        kind: z.enum(["video", "playlist", "article", "episode"]),
       }),
       linkRefused: event("A reader with no account gives the home page something that isn't a link we can read"),
       sampleChosen: event(

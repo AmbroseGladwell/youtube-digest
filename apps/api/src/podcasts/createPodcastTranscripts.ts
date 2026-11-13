@@ -34,7 +34,9 @@ export interface PodcastTranscriptRequest {
   feedUrl: string;
   guid: string;
   youTube: YouTubeAsk;
-  caller: Extract<ServiceCaller, { accountId: unknown }>;
+  // An account, or signed out the address a trial asks from, as our server's YouTube fetching
+  // counts either (docs/features/server-side-transcripts.md).
+  caller: ServiceCaller;
   log: FastifyBaseLogger;
 }
 
@@ -95,7 +97,7 @@ export function createPodcastTranscripts({ fetchPublicWeb, transcripts, youTubeS
 
   const fromYouTube = async (key: SourceKey, episode: EpisodeToFind, ask: Exclude<YouTubeAsk, null>, request: PodcastTranscriptRequest) => {
     if (youTubeService === null) throw noCaptions("Our server doesn't fetch from YouTube", "podcast-youtube");
-    const payer: CostPayer = { accountId: request.caller.accountId };
+    const payer: CostPayer = "accountId" in request.caller ? { accountId: request.caller.accountId } : "signed-out";
     let found: { videoId: string; matchedBy: "title" | "description"; searchedBy: "extension" | "server" };
     if ("videoId" in ask) {
       const matchedBy = await youTubeService.onYouTube(

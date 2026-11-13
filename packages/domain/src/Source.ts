@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { SourceKey } from "./Brands.js";
 import type { ExtractedArticle } from "./ExtractedArticle.js";
+import type { PodcastEpisode } from "./PodcastEpisode.js";
 import { VideoSource } from "./VideoSource.js";
 
 export const YouTubeSource = VideoSource.extend({ kind: z.literal("youtube") });
@@ -69,4 +70,36 @@ export const webSource = (article: ExtractedArticle, id: SourceKey): WebSource =
 export const youTubeSource = ({ fullDescription: _forGenerationOnly, ...video }: VideoSource): YouTubeSource => ({
   ...video,
   kind: "youtube",
+});
+
+const SHARER_PARAMETERS = /^(si|utm_.+|context|nd|_branch_match_id|_branch_referrer)$/;
+
+// The link a reader pasted, as kept for the way back: Spotify's `si=` is a token tied to the
+// account that shared it, and a shared overview shows its sharer's link, so it and the campaign
+// parameters are dropped. A `spotify:` address becomes the web page it names
+// (docs/features/podcast-screens.md).
+export function keptSharedLink(link: string): string {
+  const uri = /^spotify:(episode|show):([A-Za-z0-9]{22})$/.exec(link.trim());
+  if (uri !== null) return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
+  const url = new URL(link.trim());
+  for (const name of [...url.searchParams.keys()]) {
+    if (SHARER_PARAMETERS.test(name)) url.searchParams.delete(name);
+  }
+  url.hash = "";
+  return url.toString();
+}
+
+export const podcastSource = (episode: PodcastEpisode, id: SourceKey, sharedFrom: string): PodcastSource => ({
+  kind: "podcast",
+  id,
+  feedUrl: episode.feedUrl,
+  guid: episode.guid,
+  title: episode.title,
+  showName: episode.showName,
+  publishedAt: episode.publishedAt,
+  durationMs: episode.durationSeconds === null ? null : episode.durationSeconds * 1000,
+  audioUrl: episode.audioUrl,
+  pageUrl: episode.pageUrl,
+  imageUrl: episode.imageUrl,
+  sharedFrom: keptSharedLink(sharedFrom),
 });
