@@ -147,6 +147,8 @@ Five folders, five different questions.
   length, by description when retitled, the episode's own words, and how sure a match is.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
+- `article-resources.md` — the links an article makes: which extraction keeps, how the model
+  names up to five with why and code copies them, what is stored, and how the note shows them.
 - `recipe-notes.md` — a recipe page's note: what code reads from the page, which pages count as a
   recipe, the summary, servings and units, copy and print, each list read aloud, and sharing.
 - `source-steps.md` — the steps a source gives, carried whole and from it alone: what counts as a

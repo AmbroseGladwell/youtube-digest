@@ -447,7 +447,7 @@ const ARTICLE: ExtractedArticle = {
   publishedAt: null,
   language: "en",
   imageUrl: null,
-  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011." }],
+  sections: [{ heading: null, anchor: null, text: "The county reused a survey from 2011.", links: [] }],
   wordCount: 3220,
   recipe: null,
 };
@@ -511,7 +511,12 @@ test("topics suggested from a page's title and text come first, and picking one 
       ...ARTICLE,
       title: "Why your workout matters less than your sleep",
       sections: [
-        { heading: null, anchor: null, text: "Muscle is built in recovery, not in the gym. Training hard on poor sleep undoes it." },
+        {
+          heading: null,
+          anchor: null,
+          text: "Muscle is built in recovery, not in the gym. Training hard on poor sleep undoes it.",
+          links: [],
+        },
       ],
     },
   });

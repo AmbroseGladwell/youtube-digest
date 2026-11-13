@@ -17,7 +17,8 @@ export const ShareRequest = z.object({
 export type ShareRequest = z.infer<typeof ShareRequest>;
 
 // One live link, as the dialog and Settings › Shared links read it. contentHash is what the
-// reader's copy is compared against to decide whether it has been edited since sharing.
+// reader's copy is compared against to decide whether it has been edited since sharing;
+// hasNarration is whether the copy plays, so audio rendered later can be offered.
 export const Share = z.object({
   token: ShareToken,
   url: z.url(),
@@ -27,6 +28,7 @@ export const Share = z.object({
   updatedAt: z.iso.datetime(),
   views: z.number().int().nonnegative(),
   contentHash: z.string(),
+  hasNarration: z.boolean(),
 });
 export type Share = z.infer<typeof Share>;
 

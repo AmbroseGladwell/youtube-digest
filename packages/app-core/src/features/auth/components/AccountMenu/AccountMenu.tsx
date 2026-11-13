@@ -13,6 +13,7 @@ import styles from "./AccountMenu.module.scss";
 import { accountMenuTestIds } from "./AccountMenuTestIds.js";
 import type { AccountMenuItem } from "@overview/domain";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { signOutCopy, useTimersWillStop } from "../../../cookingTimers/useTimersWillStop.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 
@@ -27,7 +28,14 @@ export function AccountMenu() {
   const isPanel = useIsPanel();
   const surface = useSurface();
   const sync = useSync();
-  const signOut = useSignOut();
+  const signOutNow = useSignOut();
+  const willStop = useTimersWillStop();
+  // Signing out stops the timers, which belong to this account's recipes (design 288ag).
+  const signOut = () =>
+    new Promise<void>((resolve) => {
+      if (willStop.count > 0) setOpen(false);
+      willStop.ask(signOutCopy(willStop.count), "signedOut", () => void signOutNow().then(resolve));
+    });
   const { connection } = useSyncConnection();
   const { pending } = usePendingSignIn();
   const [open, setOpen] = useState(false);
@@ -211,6 +219,7 @@ export function AccountMenu() {
 
   return (
     <div className={styles.root} ref={root} data-testid={accountMenuTestIds.root}>
+      {willStop.dialog}
       <button
         type="button"
         ref={trigger}

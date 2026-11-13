@@ -21,11 +21,13 @@ const article: ExtractedArticle = {
       heading: null,
       anchor: null,
       text: "The bridge has been closed since March because of cracks.\n\nThe council met for three hours on Tuesday.",
+      links: [],
     },
     {
       heading: "Who pays",
       anchor: "who-pays",
       text: "The county offered half of the bill to the town.\n\nResidents will cover the rest through higher rates.",
+      links: [],
     },
   ],
   wordCount: 500,
@@ -36,7 +38,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true },
+  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],
@@ -124,7 +126,7 @@ test("a long article's key points that stop early go back to the model, naming w
   const long = {
     ...article,
     wordCount: 3000,
-    sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n") }],
+    sections: [{ heading: null, anchor: null, text: Array.from({ length: 10 }, () => paragraph).join("\n\n"), links: [] }],
   };
   const keyPoints = (index: number) => Array.from({ length: 3 }, () => ({ text: "One point.", paragraphIndex: index }));
   const chapters = [{ title: "All of it", summary: "The whole piece.", startParagraphIndex: 0 }];
@@ -186,7 +188,7 @@ test("the page's text cannot close the block it sits in", () => {
 
 test("switching a section off leaves it out of the prompt and the output", () => {
   const prompt = composeArticlePrompt(
-    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true } }),
+    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true, resources: true } }),
   );
   assert.doesNotMatch(prompt.systemPrompt, /Read it anyway/);
   assert.ok(!("readAnyway" in prompt.schema.shape));
@@ -288,4 +290,84 @@ test("with the steps switched off, an article is asked for none, and nothing poi
   assert.equal(off.schema.shape.sourceSteps, undefined);
   assert.doesNotMatch(off.systemPrompt, /The steps it gives/);
   assert.match(composeArticlePrompt(input()).systemPrompt, /The steps it gives/);
+});
+
+const linked: ExtractedArticle = {
+  ...article,
+  sections: [
+    article.sections[0]!,
+    {
+      ...article.sections[1]!,
+      links: [
+        { text: "The county's repair fund rules", href: "https://county.example.gov/repair-fund", paragraph: 0 },
+        { text: "Bridge inspection survey 2011", href: "https://data.example.org/survey-2011", paragraph: 1 },
+      ],
+    },
+  ],
+};
+
+test("a page with no links gets no resources section and the same prompt as before", () => {
+  const { systemPrompt, userMessage, schema } = composeArticlePrompt(input());
+  assert.doesNotMatch(systemPrompt, /Resources it links to/);
+  assert.doesNotMatch(userMessage, /link \d/);
+  assert.equal("resources" in (schema as unknown as { shape: Record<string, unknown> }).shape, false);
+});
+
+test("a link follows the paragraph it sits in, numbered, with where it goes", () => {
+  const { systemPrompt, userMessage } = composeArticlePrompt(input({ article: linked }));
+  assert.match(systemPrompt, /## Resources it links to/);
+  assert.match(
+    userMessage,
+    /\[2\] The county offered half of the bill to the town\.\n {2}link 0: "The county's repair fund rules" \(county\.example\.gov\)\n\[3\] Residents will cover the rest through higher rates\.\n {2}link 1: "Bridge inspection survey 2011" \(data\.example\.org\)/,
+  );
+});
+
+const why = (link: number, text = "The rules the county's offer is based on.") => ({ link, why: text });
+
+test("the links the model names are copied by code, in its order, with why and where in the piece they were shared", async () => {
+  const note = await generate(answering(output({ resources: [why(1, "The 2011 survey the estimate reused."), why(0)] })), {
+    article: linked,
+  });
+  assert.deepEqual(note.article?.resources, [
+    {
+      text: "Bridge inspection survey 2011",
+      href: "https://data.example.org/survey-2011",
+      why: "The 2011 survey the estimate reused.",
+      place: { anchor: null, quote: "Residents will cover the rest through higher rates." },
+      chapter: 1,
+    },
+    {
+      text: "The county's repair fund rules",
+      href: "https://county.example.gov/repair-fund",
+      why: "The rules the county's offer is based on.",
+      place: { anchor: "who-pays", quote: "The county offered half of the bill to" },
+      chapter: 1,
+    },
+  ]);
+});
+
+test("naming no links leaves the note with no resources, not an empty list", async () => {
+  const note = await generate(answering(output({ resources: [] })), { article: linked });
+  assert.equal(note.article !== null && "resources" in note.article, false);
+});
+
+test("a link that doesn't exist goes back to the model", async () => {
+  const note = await generate(answering(output({ resources: [why(2)] }), output({ resources: [why(0)] })), { article: linked });
+  assert.equal(note.article?.resources?.length, 1);
+});
+
+test("a link named twice goes back to the model", async () => {
+  const note = await generate(answering(output({ resources: [why(0), why(0)] }), output({ resources: [why(0)] })), { article: linked });
+  assert.equal(note.article?.resources?.[0]?.href, "https://county.example.gov/repair-fund");
+});
+
+test("a why over 25 words goes back to the model", async () => {
+  const long = Array.from({ length: 26 }, () => "word").join(" ");
+  const note = await generate(answering(output({ resources: [why(0, long)] }), output({ resources: [why(0)] })), { article: linked });
+  assert.equal(note.article?.resources?.[0]?.why, "The rules the county's offer is based on.");
+});
+
+test("with links listed, Read it anyway's leftOut leaves the further reading to them", () => {
+  assert.match(composeArticlePrompt(input({ article: linked })).systemPrompt, /never name\nthem, or its further reading, in leftOut/);
+  assert.doesNotMatch(composeArticlePrompt(input()).systemPrompt, /further reading, in leftOut/);
 });

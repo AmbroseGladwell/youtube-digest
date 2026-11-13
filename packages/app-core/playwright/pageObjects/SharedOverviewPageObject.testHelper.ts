@@ -8,8 +8,13 @@ import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTa
 import { HeadImagePageObject } from "./HeadImagePageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
+import { ArticleResourcesPageObject } from "./ArticleResourcesPageObject.testHelper.js";
 
 export class SharedOverviewPageObject extends PageObject {
+  get resources(): ArticleResourcesPageObject {
+    return new ArticleResourcesPageObject(this.testContext);
+  }
+
   get relatedByTag(): RelatedByTagPageObject {
     return new RelatedByTagPageObject(this.testContext);
   }

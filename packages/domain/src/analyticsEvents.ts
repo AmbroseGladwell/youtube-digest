@@ -246,7 +246,7 @@ export const overviewPageEvents = {
     started: event(
       "The reader starts cooking a recipe step by step, from the method's heading, the button above the summary, the bar's Cook from here, or the place they left",
       {
-        from: z.enum(["heading", "summary", "bar", "carryOn"]),
+        from: z.enum(["heading", "summary", "bar", "carryOn", "timer"]),
         step: z.number().int().positive(),
       },
     ),
@@ -263,10 +263,24 @@ export const overviewPageEvents = {
         range: z.boolean(),
       },
     ),
-    timerEnded: event("A cooking timer ends: dismissed once it rang, cancelled, or stopped by leaving cooking step by step", {
-      by: z.enum(["dismissed", "cancelled", "left"]),
-      rang: z.boolean(),
+    timerEnded: event(
+      "A cooking timer ends: dismissed once it rang, cancelled, stopped on leaving cooking step by step, by signing out, or by leaving a shared page",
+      {
+        by: z.enum(["dismissed", "cancelled", "left", "signedOut", "leftPage"]),
+        rang: z.boolean(),
+      },
+    ),
+    timersKept: event("The reader leaves cooking step by step and keeps this recipe's timers running, or ringing, outside it", {
+      count: z.number().int().positive(),
+      ringing: z.boolean(),
     }),
+    timerOpenedOutside: event("The reader opens a timer's controls from outside cooking step by step"),
+    backToStep: event(
+      "The reader goes back into cooking step by step from a timer, at its action or, if the method changed, at the start",
+      {
+        landed: z.enum(["step", "start"]),
+      },
+    ),
     voiceMuted: event("The reader mutes or unmutes the voice in cooking step by step, by its button or by M", {
       muted: z.boolean(),
       by: z.enum(["button", "key"]),
@@ -395,6 +409,7 @@ export const analyticsEvents = {
     shareDialog: {
       created: event("The reader makes a share link for the overview"),
       updated: event("The reader replaces the shared copy with the overview as it is now"),
+      audioAdded: event("The reader adds audio rendered since sharing to the shared copy, behind the same link"),
       stopAsked: event("The reader asks to stop sharing the overview, before confirming"),
       stopped: event("The reader confirms stopping sharing the overview"),
       stopCancelled: event("The reader backs out of stopping sharing the overview"),
@@ -765,7 +780,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, and the kind of note it got; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -790,6 +805,10 @@ export const analyticsEvents = {
           keyPoints: z.number().int().nonnegative().optional(),
           keyPointCeiling: z.number().int().positive().optional(),
           chapters: z.number().int().nonnegative().optional(),
+          // An article's links, counts only, never an address: how many the page offered the model
+          // and how many the note names as resources (OV-203). Absent for a video.
+          articleLinks: z.number().int().nonnegative().optional(),
+          articleResources: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).
