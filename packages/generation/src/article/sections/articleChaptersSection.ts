@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Chapter } from "@overview/domain";
-import { noteBudget } from "../../noteBudget.js";
+import { articleBudget } from "../articleBudget.js";
 import { NEIGHBOURING_CHAPTERS_DIFFER } from "../../sections/chaptersSection.js";
 import { articleParagraphs } from "../articleParagraphs.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
@@ -27,7 +27,7 @@ const startsAtTheFirstParagraphAndAscends = (chapters: ArticleChapterShape[], ct
 export const articleChaptersSection: ArticlePromptSection = {
   key: "structural",
   prompt: (input) => {
-    const { mostChapters, long } = noteBudget("written", input.article.wordCount);
+    const { mostChapters, long } = articleBudget(input.article);
     return `
 ## Chapters
 Split the article into chapters at the points where its subject actually
@@ -64,7 +64,7 @@ each chapter starts after the one before it.`;
       })
       .array()
       .min(1)
-      .max(Math.min(noteBudget("written", input.article.wordCount).mostChapters, articleParagraphs(input.article).length))
+      .max(Math.min(articleBudget(input.article).mostChapters, articleParagraphs(input.article).length))
       .superRefine(startsAtTheFirstParagraphAndAscends),
   }),
 };

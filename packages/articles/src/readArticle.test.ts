@@ -129,3 +129,37 @@ test("an essay laid out with line breaks instead of paragraphs is still an artic
 test("a front page is refused however much text it has, because headlines are not sentences", () => {
   assert.deepEqual(read(FRONT_PAGE, "https://news.example.com/"), { status: "failed", reason: "nothing-readable" });
 });
+
+test("a section keeps the links its paragraphs make, once each, and none from the page's navigation or share bar", () => {
+  const html = `<!doctype html><html lang="en"><head><title>Designing for ADHD</title></head><body>
+<nav><a href="https://blog.example.com/about">About the author</a></nav>
+<article><h1>Designing for ADHD</h1>
+${paragraphs(3)}
+<h2>Useful resources</h2>
+<p>Start with the <a href="https://toolkit.example/neuro">Neurodiversity Design Toolkit</a> and read
+<a href="https://w3.example/coga">Making content usable for people with cognitive disabilities</a>.</p>
+<p>The <a href="https://toolkit.example/neuro">same toolkit</a> again, and <a href="https://a.example/x">here</a>.</p>
+<div class="share"><a href="https://twitter.example/share?u=1">Share on Twitter</a></div>
+</article>
+<footer><a href="https://blog.example.com/privacy">Privacy policy</a></footer></body></html>`;
+  const article = articleOf(read(html, "https://blog.example.com/posts/design-adhd"));
+  assert.doesNotThrow(() => ExtractedArticle.parse(article));
+  const all = article.sections.flatMap(({ links }) => links);
+  assert.deepEqual(
+    all.map(({ href }) => href),
+    ["https://toolkit.example/neuro", "https://w3.example/coga"],
+  );
+  assert.deepEqual(
+    article.sections.find(({ heading }) => heading === "Useful resources")?.links.map(({ paragraph }) => paragraph),
+    [0, 0],
+  );
+});
+
+test("a page that links to nothing reads with no links", () => {
+  const html = `<!doctype html><html lang="en"><head><title>A plain piece</title></head><body><article><h1>A plain piece</h1>${paragraphs(4)}</article></body></html>`;
+  const article = articleOf(read(html));
+  assert.deepEqual(
+    article.sections.flatMap(({ links }) => links),
+    [],
+  );
+});

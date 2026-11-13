@@ -118,6 +118,20 @@ voice, is not an edit the reader made, and a notice that fired on those would te
 ignore it. The hash is taken over a key-sorted serialisation so that two objects with the
 same content hash the same however they were built.
 
+## Audio rendered after sharing
+
+Leaving narration out of the hash has a cost: a copy shared before its audio existed would
+stay silent for good, because nothing would ever offer to replace it, and stopping and
+sharing again breaks the link already sent. So each share also says whether its copy plays
+(`hasNarration`, read from the stored snapshot), and when it doesn't, the dialog peeks for
+narration in the reader's voice the same way sharing does. If some is ready, the dialog says
+the shared copy has no audio yet and offers **Add audio**. That button runs the same upsert
+as Update shared copy, so the link and its share date stay as they were, and a recipient who
+reloads the page gets the player (OV-290).
+
+The edited notice wins when both apply, since updating carries the audio anyway. Nothing is
+queued: a reader who never rendered audio is never offered any.
+
 ## The page
 
 **Fastify writes the document; the app renders it.** This is a departure from the design

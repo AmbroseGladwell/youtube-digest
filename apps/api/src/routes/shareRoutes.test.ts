@@ -111,6 +111,23 @@ test("a transcript and a narration key travel with the copy", async () => {
   await app.close();
 });
 
+test("a link says whether its copy plays, and audio added later is said behind the same link", async () => {
+  const app = await createTestApp();
+  const account = await makeAccount(app);
+  const overview = makeOverview();
+  const narration = { key: "a".repeat(64), voice: "bf_emma", durationSeconds: 364, lineStartsSeconds: [0, 12.5] };
+
+  const silent: Share = (await share(account, { overview })).json();
+  assert.equal(silent.hasNarration, false);
+
+  const playing: Share = (await share(account, { overview, narration })).json();
+  assert.equal(playing.token, silent.token);
+  assert.equal(playing.contentHash, silent.contentHash);
+  assert.equal(playing.hasNarration, true);
+  assert.equal((await live(account))[0]!.hasNarration, true);
+  await app.close();
+});
+
 test("an account is held to a limit of live links at once", async () => {
   const app = await createTestApp();
   const account = await makeAccount(app);
