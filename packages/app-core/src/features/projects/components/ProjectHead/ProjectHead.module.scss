@@ -93,7 +93,7 @@
 
 .purposeText {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.5;
   text-wrap: pretty;
   overflow-wrap: anywhere;
@@ -244,7 +244,7 @@
 .purposeInput {
   @include controls.field-solo;
   border-radius: 16px;
-  font-size: 1.0625rem;
+  font-size: 1rem;
   line-height: 1.5;
   padding: 0.6875rem 1rem;
   min-height: 6rem;
@@ -287,6 +287,10 @@
 }
 
 @media (max-width: 47.9375rem) {
+  .purposeText {
+    font-size: 0.8rem;
+  }
+
   .editorActions > * {
     flex: 1;
     min-height: 2.75rem;

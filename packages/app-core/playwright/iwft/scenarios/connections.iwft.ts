@@ -57,6 +57,15 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyProfileLineReads(1, "Can’t read what we know about you until it’s reconnected");
   });
 
+  test("a read-only row says reconnecting lets it mark overviews and organise projects", async ({ launcher, backendSimulator }) => {
+    backendSimulator.connections.seed(connection());
+    backendSimulator.connections.seed(connection({ id: "older", clientName: "ChatGPT", writes: false }));
+    await launcher.launch(PLUS);
+    const settings = await (await launcher.appShell.openSettings()).openSection("connections");
+
+    await settings.connections.verifyWriteLinesRead(["Read only: reconnect it to let it mark overviews or organise projects"]);
+  });
+
   test("with sharing off in Personalisation, no row says it can read what we know about you", async ({ launcher, backendSimulator }) => {
     backendSimulator.connections.seed(connection());
     await launcher.launch({ ...PLUS, shareProfileWithAssistants: false });

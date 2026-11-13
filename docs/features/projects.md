@@ -173,8 +173,8 @@ The result is recorded on the card.
 From the Claude Design round, "OV-168 1–6" in the design project, decided with the owner on
 13 Nov 2026.
 
-- **Where projects live.** A Projects group heads the library's rail, and the Filters sheet on
-  a phone. It is always there: with none, a heading and New project. Five show, last changed
+- **Where projects live.** A Projects group sits under Show in the library's rail, and in the
+  Filters sheet on a phone (moved there from the top by the owner after release). It is always there: with none, a heading and New project. Five show, last changed
   first; "All projects" (or "All N projects", with "· N archived") sits under them once any
   exist. Choosing one turns the main column into its page at `/projects/:id`; choosing it
   again goes back to the whole library. The rail's other filters still apply inside a project,
@@ -182,7 +182,7 @@ From the Claude Design round, "OV-168 1–6" in the design project, decided with
 - **"Last changed"** is the latest of when the project was made and when anything was put in
   it. A membership record taken out leaves nothing on the device to date it by, and a project's
   rename isn't dated either, so neither counts.
-- **The page.** "Project · Made 4 Nov" or "Made by Claude · 9 Nov"; the name; what it's for on
+- **The page.** "← All projects", which goes back to All projects rather than the library; "Project · Made 4 Nov" or "Made by Claude · 9 Nov"; the name; what it's for on
   the stone tint, or a dashed invitation to write it; counts and the verdict spread, from code;
   Copy as Markdown, which copies `projectMarkdown` whole; ⋯ with Rename, Edit what it's for,
   Archive and Delete project…. Rename and the purpose edit in place. An archived project says

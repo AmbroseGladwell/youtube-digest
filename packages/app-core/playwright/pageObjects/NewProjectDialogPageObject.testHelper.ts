@@ -11,6 +11,12 @@ export class NewProjectDialogPageObject extends PageObject {
 
   verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(newProjectDialogTestIds.root));
 
+  verifySpansTheScreen = (width: number) =>
+    this.step(`verifySpansTheScreen ${width}`, async () => {
+      const box = await this.get(newProjectDialogTestIds.root).locator("form").boundingBox();
+      expect(box).toMatchObject({ x: 0, width });
+    });
+
   typeName = (name: string) => this.step(`typeName ${name}`, () => this.get(newProjectDialogTestIds.nameInput).fill(name));
   typePurpose = (purpose: string) => this.step("typePurpose", () => this.get(newProjectDialogTestIds.purposeInput).fill(purpose));
 

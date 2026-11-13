@@ -107,6 +107,16 @@ export class LibraryPageObject extends PageObject {
       }
     });
 
+  verifySearchIconIsCentred = () =>
+    this.step("verifySearchIconIsCentred", async () => {
+      const opener = this.get(libraryPageTestIds.openSearchButton);
+      const pill = await opener.locator("..").boundingBox();
+      const icon = await opener.locator("svg").boundingBox();
+      const centre = (box: { x: number; y: number; width: number; height: number } | null) =>
+        box === null ? null : { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) };
+      expect(centre(icon)).toEqual(centre(pill));
+    });
+
   verifySearchIsFocused = () => this.step("verifySearchIsFocused", () => expect(this.get(libraryPageTestIds.searchInput)).toBeFocused());
 
   blurTheSearch = () => this.step("blurTheSearch", () => this.get(libraryPageTestIds.searchInput).blur());

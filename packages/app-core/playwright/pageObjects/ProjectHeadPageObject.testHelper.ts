@@ -4,12 +4,20 @@ import { projectEmptyTestIds } from "../../src/features/projects/components/Proj
 import { projectHeadTestIds } from "../../src/features/projects/components/ProjectHead/ProjectHeadTestIds.js";
 import { DeleteProjectDialogPageObject } from "./DeleteProjectDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js";
 
 export class ProjectHeadPageObject extends PageObject {
   verifyIsShown = (): Promise<ProjectHeadPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(projectHeadTestIds.root);
       return this;
+    });
+
+  clickBackToAllProjects = (): Promise<ProjectsIndexPageObject> =>
+    this.step("clickBackToAllProjects", async () => {
+      await expect(this.get(projectHeadTestIds.backLink)).toHaveText("All projects");
+      await this.click(projectHeadTestIds.backLink);
+      return new ProjectsIndexPageObject(this.testContext).verifyIsShown();
     });
 
   verifyNameReads = (name: string) =>

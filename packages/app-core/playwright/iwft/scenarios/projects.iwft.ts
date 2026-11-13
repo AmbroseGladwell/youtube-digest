@@ -352,7 +352,7 @@ test.describe("on an overview", () => {
 });
 
 test.describe("on a phone and in the panel", () => {
-  test("Projects come first in the Filters sheet, and choosing one closes it onto the project's page", async ({
+  test("Projects sit in the Filters sheet, choosing one closes it onto the project's page, and back goes to All projects", async ({
     launcher,
     backendSimulator,
     page,
@@ -370,6 +370,20 @@ test.describe("on a phone and in the panel", () => {
 
     await library.verifyFiltersAreOpen(false);
     await head.verifyNameReads("Kitchen renovation");
+
+    const index = await head.clickBackToAllProjects();
+    await index.verifySummaryReads("1 project");
+  });
+
+  test("New project is a sheet across the whole width", async ({ launcher, backendSimulator, page }) => {
+    await page.setViewportSize({ width: 390, height: 760 });
+    backendSimulator.overviews.seed(titled("The kitchen layout mistakes I see every week"));
+    const library = await launcher.launchExpectingLibrary();
+
+    await library.openFilters();
+    const dialog = await library.projectsRail.clickNewProject();
+
+    await dialog.verifySpansTheScreen(390);
   });
 
   test("in the panel a project's name opens it in the web app", async ({ launcher, backendSimulator }) => {

@@ -10,6 +10,12 @@ body,
   height: 100%;
 }
 
+// iOS Safari enlarges text when a phone turns to landscape unless told not to.
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--ground);

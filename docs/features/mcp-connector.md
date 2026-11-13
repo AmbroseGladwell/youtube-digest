@@ -192,7 +192,9 @@ Settings › Connections lets the assistant mark overviews and organise projects
 the tool ("Degrade visibly", `CLAUDE.md`). A call to it anyway is a failed call saying the
 same. Reconnecting means revoking in Settings and connecting again from the assistant,
 which asks the current metadata's scopes; there is no in-place upgrade of a connection's
-scope, which would need a consent screen of its own.
+scope, which would need a consent screen of its own. Settings › Connections says so on the row
+of a read-only connection ("Read only: reconnect it to let it mark overviews or organise
+projects"), so the reader finds out there rather than from an assistant's refusal.
 
 ## The endpoint
 

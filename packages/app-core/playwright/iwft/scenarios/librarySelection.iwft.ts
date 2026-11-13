@@ -250,6 +250,7 @@ test.describe("on a phone", () => {
     const library = await launcher.launchExpectingLibrary();
 
     await library.verifySearchIsFolded(true);
+    await library.verifySearchIconIsCentred();
     await library.openSearch();
     await library.verifySearchIsFolded(false);
     await library.verifySearchIsFocused();
