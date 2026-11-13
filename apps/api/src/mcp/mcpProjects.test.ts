@@ -183,6 +183,7 @@ test("create_project makes a project and its first overviews, marked as this ass
     name: "Claude",
   });
   assert.equal(project.body!.purpose, "Getting the first hundred users for a reading app.");
+  assert.deepEqual(project.body!.purposeBy, project.body!.createdBy);
   const members = changes.filter((change) => change.kind === "projectMember");
   assert.deepEqual(
     members.map((change) => change.id).sort(),

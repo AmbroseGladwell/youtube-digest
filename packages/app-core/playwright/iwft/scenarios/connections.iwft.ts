@@ -18,6 +18,7 @@ const connection = (overrides: Partial<Connection> = {}): Connection => ({
   createdAt: "2026-09-12T12:00:00.000Z",
   lastUsedAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
   readsProfile: true,
+  writes: true,
   ...overrides,
 });
 

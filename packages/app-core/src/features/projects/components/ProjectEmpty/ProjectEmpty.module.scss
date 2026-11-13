@@ -1,0 +1,45 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  max-width: 35rem;
+}
+
+.heading {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.text {
+  margin: 0 0 0.5rem;
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0.625rem 0 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 16px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.copy {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  align-self: flex-start;
+  background: var(--ground);
+}
+
+.link {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}

@@ -80,6 +80,9 @@ import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useOverviewInWebApp } from "../../sync/useOverviewInWebApp.js";
+import { useSyncConnection } from "../../sync/useSyncConnection.js";
+import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
+import { useOverviewProjects } from "../../projects/useOverviewProjects.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { bindOverviewId } from "../../analytics/bindOverviewId.js";
@@ -266,6 +269,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const endPrinting = useCallback(() => setPrintingRecipe(false), []);
   const sync = useSync();
   const webApp = useOverviewInWebApp(overviewId);
+  const { connection } = useSyncConnection();
+  const accountNeeded = useAccountNeeded();
+  const projects = useOverviewProjects(overview, !isPanel ? "here" : sync.connected ? connection.apiUrl : null);
   const overviewShare = useOverviewShare(overview);
   const shareOverview = useShareOverviewMutation();
   const stopSharing = useStopSharingMutation();
@@ -488,6 +494,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           regenerate={regenerate}
           recipeActions={recipeActions}
           onDelete={() => setConfirmingDelete(true)}
+          projects={accountNeeded ? null : projects}
         />
 
         {wasAlreadyMade(location.state) && <ReaderNotice>You made an overview of this on {madeOn(overview.savedAt)}.</ReaderNotice>}
@@ -681,6 +688,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             )}
           </nav>
         )}
+
+        {!accountNeeded && projects.dialogs}
 
         {confirmingDelete && (
           <DeleteOverviewDialog

@@ -1,4 +1,4 @@
-import { useRef, useState, type Ref } from "react";
+import { useRef, useState, type ReactNode, type Ref } from "react";
 import { NOVELTY_LABEL, type Overview, sourceName, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
@@ -47,6 +47,8 @@ export interface ReaderMastheadProps {
   regenerate: OverviewActionsMenuProps["regenerate"];
   recipeActions: OverviewActionsMenuProps["recipe"];
   onDelete: () => void;
+  // Null where there is no library to keep projects in (signed out).
+  projects: { line: ReactNode; count: number; openPicker: (from: "menu") => void } | null;
   ref?: Ref<HTMLElement> | undefined;
 }
 
@@ -90,6 +92,7 @@ export function ReaderMasthead({
   regenerate,
   recipeActions,
   onDelete,
+  projects,
   ref,
 }: ReaderMastheadProps) {
   const analytics = useReaderAnalytics();
@@ -193,6 +196,7 @@ export function ReaderMasthead({
           onEditTopics={() => onEditingTopicsChange(true)}
           onEditReason={onEditReason}
           onToggleRead={() => onToggleRead("actionsMenu")}
+          projects={projects === null ? null : { count: projects.count, onAdd: () => projects.openPicker("menu") }}
           onDelete={onDelete}
         />
       </div>
@@ -299,6 +303,7 @@ export function ReaderMasthead({
         </p>
 
         <PlaylistFromLine overview={overview} />
+        {projects?.line}
         <MadeOnLine overview={overview} />
       </div>
     </header>

@@ -18,6 +18,8 @@ import {
   type PlaylistCheck,
   type PlaylistLookup,
   type QueuedCapture,
+  type Project,
+  type ProjectMember,
   TRIAL_TOKEN_HEADER,
   type AuthSurface,
   type Connection,
@@ -220,6 +222,8 @@ export class BackendSimulator {
   #seedFollowed: FollowedPlaylist[] = [];
   #seedChecks: PlaylistCheck[] = [];
   #seedQueue: QueuedCapture[] = [];
+  #seedProjects: Project[] = [];
+  #seedProjectMembers: ProjectMember[] = [];
 
   constructor(page: Page) {
     this.#page = page;
@@ -270,6 +274,8 @@ export class BackendSimulator {
     seedFollowedPlaylists: this.#seedFollowed,
     seedPlaylistChecks: this.#seedChecks,
     seedQueue: this.#seedQueue,
+    seedProjects: this.#seedProjects,
+    seedProjectMembers: this.#seedProjectMembers,
   });
 
   handleNetworking = async (): Promise<void> => {
@@ -1567,6 +1573,18 @@ export class BackendSimulator {
 
   settingsStore = {
     get: () => this.#page.evaluate(() => window.__iwftStores__.settingsStore.get()),
+  };
+
+  // Projects as this device holds them (docs/features/projects.md).
+  projects = {
+    seed: (project: Project): void => {
+      this.#seedProjects.push(project);
+    },
+    seedMember: (member: ProjectMember): void => {
+      this.#seedProjectMembers.push(member);
+    },
+    list: () => this.#page.evaluate(() => window.__iwftStores__.projectStore.listProjects()),
+    members: () => this.#page.evaluate(() => window.__iwftStores__.projectStore.listMembers()),
   };
 
   overviewStore = {

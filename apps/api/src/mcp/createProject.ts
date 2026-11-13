@@ -58,6 +58,7 @@ export const createProject = mcpTool({
       purpose: purpose ?? null,
       createdAt: now.toISOString(),
       createdBy: by,
+      purposeBy: purpose == null ? null : by,
       archivedAt: null,
     };
 

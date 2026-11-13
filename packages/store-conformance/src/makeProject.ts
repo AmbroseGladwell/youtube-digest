@@ -7,6 +7,7 @@ export const makeProject = (overrides: Partial<Project> = {}): Project => ({
   purpose: "Choosing a layout and a budget for a small galley kitchen.",
   createdAt: "2026-11-12T09:00:00.000Z",
   createdBy: BY_READER,
+  purposeBy: BY_READER,
   archivedAt: null,
   ...overrides,
 });

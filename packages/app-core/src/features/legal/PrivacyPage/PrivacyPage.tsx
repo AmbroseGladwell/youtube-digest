@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-12";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-13";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -273,10 +273,10 @@ const sections: readonly LegalSection[] = [
       <>
         <p>
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such as opening an overview,
-          choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview or
-          topic. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider and
-          the model. An event can never carry a link, a video, a title, an overview's words or anything you typed, because there is no field
-          shaped to hold them.
+          choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview, topic
+          or project. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider
+          and the model. An event can never carry a link, a video, a title, an overview's words or anything you typed, because there is no
+          field shaped to hold them.
         </p>
         <h3>Three situations</h3>
         <ul>
@@ -432,8 +432,8 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>Strictly necessary</strong>, because the app can't work without it: your library and its transcripts, in the browser's
           database; any API keys you added; your settings; your sign-in state, and in the extension the server it talks to; where you got to
-          in each transcript; which of a followed playlist's videos this device has seen; and, before you have an account, the trial token
-          that lets you make a first overview.
+          in each transcript; which of a followed playlist's videos this device has seen; when you chose to keep a project the app asked
+          about after it was left alone; and, before you have an account, the trial token that lets you make a first overview.
         </p>
         <p>
           <strong>Analytics only</strong>, and deleted when you say no: your answer to the analytics question, the date you gave it, and,

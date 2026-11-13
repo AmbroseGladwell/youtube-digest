@@ -14,10 +14,20 @@ import { NewTopicDialogPageObject } from "./NewTopicDialogPageObject.testHelper.
 import { SortPillPageObject } from "./SortPillPageObject.testHelper.js";
 import { MilestoneStackPageObject } from "./MilestoneStackPageObject.testHelper.js";
 import { TimeSavedSheetPageObject } from "./TimeSavedSheetPageObject.testHelper.js";
+import { ProjectsRailGroupPageObject } from "./ProjectsRailGroupPageObject.testHelper.js";
+import { ProjectHeadPageObject } from "./ProjectHeadPageObject.testHelper.js";
 
 export class LibraryPageObject extends PageObject {
   get filterPanel(): FilterPanelPageObject {
     return new FilterPanelPageObject(this.testContext);
+  }
+
+  get projectsRail(): ProjectsRailGroupPageObject {
+    return new ProjectsRailGroupPageObject(this.testContext);
+  }
+
+  get projectHead(): ProjectHeadPageObject {
+    return new ProjectHeadPageObject(this.testContext);
   }
 
   get milestones(): MilestoneStackPageObject {

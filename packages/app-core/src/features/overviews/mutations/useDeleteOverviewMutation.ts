@@ -3,6 +3,7 @@ import type { OverviewId } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { libraryEntryId, type LibraryEntry } from "../types/LibraryEntry.js";
 import { overviewKeys } from "../overviewKeys.js";
+import { projectKeys } from "../../projects/projectKeys.js";
 
 export interface DeleteOverviewVariables {
   overviewId: OverviewId;
@@ -41,6 +42,7 @@ export function useDeleteOverviewMutation() {
 
     onSuccess: (_data, { overviewId }) => {
       queryClient.removeQueries({ queryKey: overviewKeys.detail(overviewId) });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.all });
     },
 
     onSettled: () => {

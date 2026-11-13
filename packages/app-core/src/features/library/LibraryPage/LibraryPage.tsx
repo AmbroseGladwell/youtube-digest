@@ -52,6 +52,10 @@ import { libraryCountLine } from "../util/libraryCountLine.js";
 import styles from "./LibraryPage.module.scss";
 import { libraryPageTestIds } from "./LibraryPageTestIds.js";
 import { LibraryQueueGroup } from "../../captureQueue/components/LibraryQueueGroup/LibraryQueueGroup.js";
+import { useLibraryProjects } from "../../projects/useLibraryProjects.js";
+import { WHOLE_LIBRARY, type LibraryPlace } from "../types/LibraryPlace.js";
+import { NO_LIBRARY_FILTERS as EVERY_OVERVIEW } from "../types/LibraryFilters.js";
+import { DEFAULT_LIBRARY_SORT } from "../types/LibrarySort.js";
 
 // Below this width the rail is a sheet behind the filter button, so a milestone sits at
 // the top of the list instead (LibraryPage.module.scss; "OV-34 3 Phone and Panel" 34ad).
@@ -59,11 +63,18 @@ const RAIL_SHEET_QUERY = "(max-width: 61.9375rem)";
 
 export interface LibraryPageProps {
   entries: LibraryEntry[];
+  place?: LibraryPlace;
 }
 
-export function LibraryPage({ entries }: LibraryPageProps) {
+// A project's page starts from every overview in it (docs/features/projects.md).
+const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
+
+export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
-  const { searchParams, view, change } = useLibraryView(topicsQuery.data);
+  const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
+  const projects = useLibraryProjects(place, readableEntries(allEntries));
+  const entries = projects.inScope === null ? allEntries : allEntries.filter((entry) => projects.inScope!.has(libraryEntryId(entry)));
+  const defaultView = place.kind === "library" ? DEFAULT_LIBRARY_VIEW : PROJECT_VIEW;
   const [keptIds, setKeptIds] = useState<ReadonlySet<string>>(new Set());
   const main = useRef<HTMLElement | null>(null);
   const glide = useLibraryGlide(main, searchParams.toString());
@@ -165,16 +176,16 @@ export function LibraryPage({ entries }: LibraryPageProps) {
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
   const resetView = () => {
     analytics.library.view.reset({ applied: applied.length });
-    recordLibraryFilterChange(analytics.library.filters, filters, DEFAULT_LIBRARY_VIEW.filters, "reset");
-    changeView(applyLibraryView(searchParams, DEFAULT_LIBRARY_VIEW));
+    recordLibraryFilterChange(analytics.library.filters, filters, defaultView.filters, "reset");
+    changeView(applyLibraryView(searchParams, defaultView));
   };
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
   const readerState = libraryViewState(searchParams, keptIds);
   const caughtUp = filters.status === "unread" && counts.unread === 0;
   // The dot marks a view the reader changed, not the default's own Unread; the search says
   // itself, so it is not counted (84i, docs/features/tag-reuse.md).
-  const changedFilters = filtersChangedFromDefault(filters);
-  const chips = libraryFilterChips(filters, topics);
+  const changedFilters = filtersChangedFromDefault(filters, defaultView.filters);
+  const chips = libraryFilterChips(filters, topics, defaultView.filters);
 
   // A row changed from the list stays where it is until the view changes, rather than
   // vanishing from under the pointer (docs/features/library-view.md).
@@ -241,6 +252,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           }}
           playing={isPlaying(entry.overview.id)}
           onListen={() => listen(entry.overview)}
+          addedBy={projects.addedByFor(entry.overview.id)}
         />
       )}
     </div>
@@ -318,6 +330,7 @@ export function LibraryPage({ entries }: LibraryPageProps) {
                 setFiltersOpen(false);
                 setManageTagsOpen(true);
               }}
+              projects={<div onClickCapture={() => setFiltersOpen(false)}>{projects.railGroup}</div>}
             />
             {!railIsSheet && <div className={styles.milestones}>{milestoneStack}</div>}
           </div>
@@ -341,153 +354,173 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         </aside>
 
         <main className={styles.main} ref={main}>
-          <div className={styles.listHead}>
-            <div className={styles.titleBlock}>
-              {/* Narrow, time saved sits beside the title and the count has its line to itself (84o). */}
-              <div className={styles.titleRow}>
-                <h1 className={styles.title}>Overviews</h1>
-                {railIsSheet && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
-              </div>
-              <p className={styles.listCount} aria-live="polite">
-                <span data-testid={libraryPageTestIds.listCount}>{countLine}</span>
-                {!railIsSheet && (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    {timeSavedButton}
-                  </>
-                )}
-              </p>
-            </div>
-            {!railIsSheet && sortControl}
-          </div>
-
-          <div className={styles.searchRow}>
-            <div className={styles.search}>
-              <span className={styles.searchIcon} aria-hidden="true">
-                <StrokeIcon name="search" size={16} />
-              </span>
-              <input
-                id={searchId}
-                name="library-search"
-                type="search"
-                autoComplete="off"
-                enterKeyHint="search"
-                className={styles.searchInput}
-                placeholder={searchPlaceholder}
-                value={filters.query}
-                onChange={(event) => changeFilters({ query: event.target.value })}
-                aria-label="Search overviews"
-                data-testid={libraryPageTestIds.searchInput}
-              />
-              {filters.query !== "" && (
-                <ClearFieldButton
-                  label="Clear search"
-                  onClick={() => {
-                    analytics.library.search.cleared();
-                    changeFilters({ query: "" });
-                  }}
-                  testId={libraryPageTestIds.clearSearchButton}
-                />
+          {place.kind === "projects" ? (
+            projects.index
+          ) : projects.missing ? (
+            <ErrorState screen="notFound" title="This project isn't here any more" back />
+          ) : place.kind === "project" && projects.current === null ? null : (
+            <>
+              {projects.head ?? (
+                <div className={styles.listHead}>
+                  <div className={styles.titleBlock}>
+                    {/* Narrow, time saved sits beside the title and the count has its line to itself (84o). */}
+                    <div className={styles.titleRow}>
+                      <h1 className={styles.title}>Overviews</h1>
+                      {railIsSheet && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}
+                    </div>
+                    <p className={styles.listCount} aria-live="polite">
+                      <span data-testid={libraryPageTestIds.listCount}>{countLine}</span>
+                      {!railIsSheet && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          {timeSavedButton}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  {!railIsSheet && sortControl}
+                </div>
               )}
-            </div>
-            {railIsSheet && sortControl}
-            <button
-              type="button"
-              className={styles.filterButton}
-              onClick={() => {
-                analytics.library.filterSheet.opened();
-                setFiltersOpen(true);
-              }}
-              aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
-              aria-expanded={filtersOpen}
-              data-testid={libraryPageTestIds.filterButton}
-            >
-              <StrokeIcon name="filter" size={17} />
-              {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
-            </button>
-          </div>
 
-          <LibraryFilterChips
-            chips={chips}
-            onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
-            onMore={() => {
-              if (railIsSheet) {
-                analytics.library.filterSheet.opened();
-                setFiltersOpen(true);
-              } else {
-                rail.current?.querySelector<HTMLButtonElement>("[aria-controls]")?.focus();
-              }
-            }}
-          />
+              {projects.empty === null && (
+                <>
+                  <div className={styles.searchRow}>
+                    <div className={styles.search}>
+                      <span className={styles.searchIcon} aria-hidden="true">
+                        <StrokeIcon name="search" size={16} />
+                      </span>
+                      <input
+                        id={searchId}
+                        name="library-search"
+                        type="search"
+                        autoComplete="off"
+                        enterKeyHint="search"
+                        className={styles.searchInput}
+                        placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
+                        value={filters.query}
+                        onChange={(event) => changeFilters({ query: event.target.value })}
+                        aria-label="Search overviews"
+                        data-testid={libraryPageTestIds.searchInput}
+                      />
+                      {filters.query !== "" && (
+                        <ClearFieldButton
+                          label="Clear search"
+                          onClick={() => {
+                            analytics.library.search.cleared();
+                            changeFilters({ query: "" });
+                          }}
+                          testId={libraryPageTestIds.clearSearchButton}
+                        />
+                      )}
+                    </div>
+                    {(railIsSheet || projects.current !== null) && sortControl}
+                    <button
+                      type="button"
+                      className={styles.filterButton}
+                      onClick={() => {
+                        analytics.library.filterSheet.opened();
+                        setFiltersOpen(true);
+                      }}
+                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
+                      aria-expanded={filtersOpen}
+                      data-testid={libraryPageTestIds.filterButton}
+                    >
+                      <StrokeIcon name="filter" size={17} />
+                      {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+                    </button>
+                  </div>
 
-          <div className={styles.viewLine}>
-            <p className={styles.viewSummary} aria-live="polite" data-testid={libraryPageTestIds.viewSummary}>
-              {libraryViewSummary(applied, sort)}
-            </p>
-            {!isSameLibraryView(view, DEFAULT_LIBRARY_VIEW) && (
-              <button type="button" className={styles.viewAction} onClick={resetView} data-testid={libraryPageTestIds.resetViewButton}>
-                Reset
-              </button>
-            )}
-            {applied.length > 0 && (
-              <button
-                type="button"
-                className={styles.viewAction}
-                onClick={() => {
-                  analytics.library.filters.allCleared({ applied: applied.length });
-                  showAll("clearAll");
-                }}
-                data-testid={libraryPageTestIds.showAllButton}
-              >
-                Show all
-              </button>
-            )}
-          </div>
+                  <LibraryFilterChips
+                    chips={chips}
+                    onRemove={(chip) => changeFilters(chip.clear, "filterChip")}
+                    onMore={() => {
+                      if (railIsSheet) {
+                        analytics.library.filterSheet.opened();
+                        setFiltersOpen(true);
+                      } else {
+                        rail.current?.querySelector<HTMLButtonElement>("[aria-controls]")?.focus();
+                      }
+                    }}
+                  />
 
-          <LibraryQueueGroup />
+                  <div className={styles.viewLine}>
+                    <p className={styles.viewSummary} aria-live="polite" data-testid={libraryPageTestIds.viewSummary}>
+                      {libraryViewSummary(applied, sort)}
+                    </p>
+                    {!isSameLibraryView(view, defaultView) && (
+                      <button
+                        type="button"
+                        className={styles.viewAction}
+                        onClick={resetView}
+                        data-testid={libraryPageTestIds.resetViewButton}
+                      >
+                        Reset
+                      </button>
+                    )}
+                    {applied.length > 0 && (
+                      <button
+                        type="button"
+                        className={styles.viewAction}
+                        onClick={() => {
+                          analytics.library.filters.allCleared({ applied: applied.length });
+                          showAll("clearAll");
+                        }}
+                        data-testid={libraryPageTestIds.showAllButton}
+                      >
+                        Show all
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
 
-          {railIsSheet && milestoneStack}
+              {projects.current === null && <LibraryQueueGroup />}
 
-          {visible.length === 0 && caughtUp ? (
-            <div className={styles.caughtUp} data-testid={libraryPageTestIds.caughtUp}>
-              <p className={styles.caughtUpTitle}>You're all caught up</p>
-              <p className={styles.caughtUpBody}>Every overview here is read.</p>
-              <button
-                type="button"
-                className={styles.caughtUpAction}
-                onClick={() => {
-                  analytics.library.caughtUp.allShown();
-                  showAll("caughtUp");
-                }}
-                data-testid={libraryPageTestIds.caughtUpShowAllButton}
-              >
-                Show all overviews
-              </button>
-            </div>
-          ) : visible.length === 0 ? (
-            closeInMeaning.length === 0 && (
-              <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
-                No overviews match these filters.
-              </p>
-            )
-          ) : (
-            <div className={styles.list} data-testid={libraryPageTestIds.list}>
-              {visible.map(row)}
-            </div>
-          )}
-          {closeInMeaning.length > 0 && (
-            <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
-              <h2 className={styles.meaningHeading} id={meaningHeadingId}>
-                Close in meaning
-              </h2>
-              <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
-              <div className={styles.list}>{closeInMeaning.map(row)}</div>
-            </section>
-          )}
-          {meaningUnavailable && (
-            <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>
-              Couldn't search by meaning just now, so these match your words only.
-            </p>
+              {railIsSheet && projects.current === null && milestoneStack}
+
+              {projects.empty ??
+                (visible.length === 0 && caughtUp ? (
+                  <div className={styles.caughtUp} data-testid={libraryPageTestIds.caughtUp}>
+                    <p className={styles.caughtUpTitle}>You're all caught up</p>
+                    <p className={styles.caughtUpBody}>Every overview here is read.</p>
+                    <button
+                      type="button"
+                      className={styles.caughtUpAction}
+                      onClick={() => {
+                        analytics.library.caughtUp.allShown();
+                        showAll("caughtUp");
+                      }}
+                      data-testid={libraryPageTestIds.caughtUpShowAllButton}
+                    >
+                      Show all overviews
+                    </button>
+                  </div>
+                ) : visible.length === 0 ? (
+                  closeInMeaning.length === 0 && (
+                    <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
+                      No overviews match these filters.
+                    </p>
+                  )
+                ) : (
+                  <div className={styles.list} data-testid={libraryPageTestIds.list}>
+                    {visible.map(row)}
+                  </div>
+                ))}
+              {closeInMeaning.length > 0 && (
+                <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
+                  <h2 className={styles.meaningHeading} id={meaningHeadingId}>
+                    Close in meaning
+                  </h2>
+                  <p className={styles.meaningSub}>These don't use your words, but they're about something close.</p>
+                  <div className={styles.list}>{closeInMeaning.map(row)}</div>
+                </section>
+              )}
+              {meaningUnavailable && (
+                <p className={styles.meaningSub} data-testid={libraryPageTestIds.meaningUnavailable}>
+                  Couldn't search by meaning just now, so these match your words only.
+                </p>
+              )}
+            </>
           )}
         </main>
       </div>
@@ -508,11 +541,11 @@ export function LibraryPage({ entries }: LibraryPageProps) {
         }}
       />
 
-      <ManageTagsDialog open={manageTagsOpen} entries={readableEntries(entries)} onClose={() => setManageTagsOpen(false)} />
+      <ManageTagsDialog open={manageTagsOpen} entries={readableEntries(allEntries)} onClose={() => setManageTagsOpen(false)} />
 
       <NewTopicDialog
         open={newTopicOpen}
-        unsorted={unsortedOverviews(readableEntries(entries).map((entry) => entry.overview))}
+        unsorted={unsortedOverviews(readableEntries(allEntries).map((entry) => entry.overview))}
         busy={createTopic.isPending}
         onCreate={(input) => {
           createTopic.mutate(input, {
@@ -528,6 +561,8 @@ export function LibraryPage({ entries }: LibraryPageProps) {
           setNewTopicOpen(false);
         }}
       />
+
+      {projects.dialogs}
     </div>
   );
 }

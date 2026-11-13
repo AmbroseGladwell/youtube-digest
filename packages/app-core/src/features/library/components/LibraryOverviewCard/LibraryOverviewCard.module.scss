@@ -268,3 +268,27 @@
     font-size: 1rem;
   }
 }
+
+// Under the summary, never in the kicker, so it can't be read as a judgement (168f).
+.added {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.remove {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent);
+  cursor: pointer;
+}

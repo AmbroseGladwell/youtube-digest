@@ -10,8 +10,9 @@ The assistant is treated as a project's main user, and the reader is the person 
 purpose and checks its work. The server gathers and counts; it never writes anything about a
 project with a model (`mcp-connector.md`, the rented-intelligence position).
 
-This document covers the data and how it syncs, which is the first slice to ship. The MCP
-tools, the reader's screens and the real-assistant check follow on the same card.
+This document covers the data and how it syncs, the MCP tools, and the reader's screens. The
+library's select mode, which adds several overviews to a project at once, follows on the same
+card.
 
 ## Decisions taken with the owner, 12 Nov 2026
 
@@ -37,14 +38,17 @@ tools, the reader's screens and the real-assistant check follow on the same card
 is never sent either (`sync-api.md`, "A kind a client was built before").
 
 ```
-project       { id, name, purpose, createdAt, createdBy, archivedAt }
+project       { id, name, purpose, createdAt, createdBy, purposeBy, archivedAt }
 projectMember { id, projectId, overviewId, addedAt, addedBy, removedAt }
 ```
 
 `createdBy` and `addedBy` are a `ProjectAuthor`: `{ by: "reader" }`, or
 `{ by: "assistant", connectionId, name }`, with the connection's name as it was when it acted,
 so the mark survives the connection being renamed or revoked. Name is 1 to 80 characters,
-purpose 1 to 280 or null.
+purpose 1 to 280 or null. `purposeBy` is who wrote the purpose as it stands, null with no
+purpose: an assistant that makes a project with a purpose is its author, and the reader's edit
+sends `purposeBy` as the reader in the same patch, which the server refuses to take for anyone
+else. The page says "Written by Claude" until then.
 
 ### A membership record is one overview in one project, never a list
 
@@ -165,6 +169,48 @@ with two or three projects that have purpose lines:
 
 The result is recorded on the card.
 
+## The reader's screens
+
+From the Claude Design round, "OV-168 1–6" in the design project, decided with the owner on
+13 Nov 2026.
+
+- **Where projects live.** A Projects group heads the library's rail, and the Filters sheet on
+  a phone. It is always there: with none, a heading and New project. Five show, last changed
+  first; "All projects" (or "All N projects", with "· N archived") sits under them once any
+  exist. Choosing one turns the main column into its page at `/projects/:id`; choosing it
+  again goes back to the whole library. The rail's other filters still apply inside a project,
+  starting from every overview in it, and that view is never saved as the library's.
+- **"Last changed"** is the latest of when the project was made and when anything was put in
+  it. A membership record taken out leaves nothing on the device to date it by, and a project's
+  rename isn't dated either, so neither counts.
+- **The page.** "Project · Made 4 Nov" or "Made by Claude · 9 Nov"; the name; what it's for on
+  the stone tint, or a dashed invitation to write it; counts and the verdict spread, from code;
+  Copy as Markdown, which copies `projectMarkdown` whole; ⋯ with Rename, Edit what it's for,
+  Archive and Delete project…. Rename and the purpose edit in place. An archived project says
+  so under the name and offers Restore. A row an assistant put there says "Added by Claude ·
+  11 Nov · Remove"; removing is silent.
+- **Assistant lines only with a connection.** "Your assistant works from this", the
+  invitation's sentence about an assistant, the create dialog's first helper sentence and the
+  archived and delete clauses show only when the reader has at least one connection. An empty
+  project offers a prompt to give an assistant only when a connection can write: the
+  connection list now says which can (`writes`).
+- **The quiet line.** A project with nothing put in it for 60 days asks "Still working on
+  this?" on its own page only, with Keep it and Archive. Keep it is remembered on the device,
+  per account, for another 60 days.
+- **All projects** at `/projects`: a card per active project, then Archived as a group that
+  opens, each with Restore. The only place archived projects are listed.
+- **On an overview.** "In A, B and C · Change" under the byline, most recently changed first,
+  archived ones left off; four or more name two and "and N more". Long names cut at about 32
+  characters in CSS, with the full name in a tooltip on hover and focus. Add to project… in ⋯
+  ("In 3" beside it) and Change open the picker: a dialog, a sheet on a phone, a checkbox per
+  active project that saves as it is ticked, "Find a project" past eight, and New project…
+  last, which makes one with this overview in it.
+- **The panel** has the line and the picker only; a project's name opens its page in the web
+  app.
+- **Signed out** there is no library, so no projects. A shell with no server keeps its projects
+  on the device like the rest of its library; it never moves them into an account, since it has
+  none.
+
 ## Measures
 
 The card names two measures this feature exists to produce. Both are counts and ids, never a
@@ -176,9 +222,11 @@ name or a purpose.
   These are logs rather than analytics events, since an assistant's call is not something the
   reader did in the app (`mcp-connector.md`, "Logging").
 - **How often does the reader take out what an assistant added?** That is a reader's act in
-  the app, so it is an analytics event, and it comes with the screens in step 4.
+  the app, so it is an analytics event: `projects.membership.removed` carries `addedBy`, from
+  the row's Remove and from unticking in the picker alike. `projects.*` events carry ids,
+  counts and choices only.
 
 ## Not yet built
 
-Moving a no-account library's projects into an account (step 4 decides whether one can exist),
-the reader's analytics events, and every screen.
+The library's select mode and its bar ("OV-168 5 Search Sort Filters Select"): adding several
+overviews to a project, or a topic, at once, with search folded to an icon on a phone.

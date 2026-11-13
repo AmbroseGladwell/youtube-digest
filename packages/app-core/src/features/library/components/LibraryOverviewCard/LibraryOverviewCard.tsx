@@ -22,6 +22,9 @@ export interface LibraryOverviewCardProps {
   playing: boolean;
   onListen: () => void;
   readerState: LibraryViewState;
+  // On a project's page, a row an assistant put there says so, with a way to take it out
+  // ("OV-168 2 The Project Page" 168f).
+  addedBy?: { name: string; on: string; projectName: string; onRemove: () => void } | null;
 }
 
 const SAVED_CHIP_SHOWN_MS = 3_200;
@@ -48,6 +51,7 @@ export function LibraryOverviewCard({
   playing,
   onListen,
   readerState,
+  addedBy = null,
 }: LibraryOverviewCardProps) {
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
@@ -117,6 +121,24 @@ export function LibraryOverviewCard({
               <span className={styles.channel}>{bylineOf(overview.source)}</span> · {overview.inOneLine}
             </span>
           </PageLink>
+
+          {addedBy !== null && (
+            <p className={styles.added} data-testid={libraryOverviewCardTestIds.addedBy}>
+              <span>
+                Added by {addedBy.name} · {addedBy.on}
+              </span>
+              <span aria-hidden="true">·</span>
+              <button
+                type="button"
+                className={styles.remove}
+                onClick={addedBy.onRemove}
+                aria-label={`Remove from ${addedBy.projectName}`}
+                data-testid={libraryOverviewCardTestIds.removeFromProjectButton}
+              >
+                Remove
+              </button>
+            </p>
+          )}
 
           <div className={styles.foot}>
             <span className={styles.reading}>

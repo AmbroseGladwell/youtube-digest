@@ -78,6 +78,30 @@ test("a rename on one device and an archive on another both land", async () => {
   await testApp.close();
 });
 
+test("the reader's purpose is marked as theirs, and a patch that says an assistant wrote it is refused", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const project = await withProject(account);
+
+  const claimed = await account.inject({
+    method: "PUT",
+    url: `/api/projects/${project.id}`,
+    body: { purpose: "Theirs", purposeBy: { by: "assistant", connectionId: "conn-1", name: "Claude" }, updatedAt: UPDATED_AT },
+  });
+  const edited = await account.inject({
+    method: "PUT",
+    url: `/api/projects/${project.id}`,
+    body: { purpose: "Mine now", purposeBy: { by: "reader" }, updatedAt: UPDATED_AT },
+  });
+
+  assert.equal(claimed.statusCode, 400);
+  assert.equal(edited.statusCode, 200);
+  const { body } = await account.change("project", project.id);
+  assert.equal(body!.purpose, "Mine now");
+  assert.deepEqual(body!.purposeBy, { by: "reader" });
+  await testApp.close();
+});
+
 test("changing a project that isn't there is a 404", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

@@ -6,6 +6,8 @@ import type {
   Overview,
   OverviewState,
   PlaylistCheck,
+  Project,
+  ProjectMember,
   QueuedCapture,
   Settings,
   StoredTranscript,
@@ -41,6 +43,8 @@ export interface IwftHooksConfig {
   seedFollowedPlaylists?: FollowedPlaylist[];
   seedPlaylistChecks?: PlaylistCheck[];
   seedQueue?: QueuedCapture[];
+  seedProjects?: Project[];
+  seedProjectMembers?: ProjectMember[];
   // Store reads told to throw, for the dead-end screen's own scenarios.
   failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;

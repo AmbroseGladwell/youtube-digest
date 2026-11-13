@@ -1,0 +1,112 @@
+// The playlist's From line (PlaylistFromLine.module.scss), with names that cut at about 32
+// characters and say themselves in a tooltip on hover and keyboard focus (168r-3).
+.root {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 0.1875rem;
+}
+
+.text {
+  min-width: 0;
+}
+
+.name {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ink) 25%, transparent);
+  text-underline-offset: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+span.name {
+  text-decoration: none;
+}
+
+.cutWrap {
+  position: relative;
+  display: inline-block;
+  vertical-align: bottom;
+  max-width: min(32ch, calc(100% - 3.5em));
+}
+
+.cut {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.tip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 3;
+  width: max-content;
+  max-width: 18.75rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--ground);
+  font-size: 0.78125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-wrap: pretty;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--motion-state) var(--motion-ease);
+}
+
+.cutWrap:hover .tip,
+.cutWrap:focus-within .tip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.more,
+.change {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  text-underline-offset: 3px;
+}
+
+.more {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.change {
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+
+  &:hover {
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
+}
