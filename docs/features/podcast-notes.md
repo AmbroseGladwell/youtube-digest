@@ -72,8 +72,41 @@ can't ship until it has an entry"), and the library, the reader and the share pa
 Until then a podcast note is a `PodcastOverview`: an `Overview` with the episode as its source. On
 joining, that becomes an `Overview` like any other, and the compiler names every place that assumed
 a video or an article. A trial join on this branch named 29, chiefly code reading `source.url`.
-Those want a `sourceUrl` helper, and a moment in an episode links to its audio by a media fragment
-(`audio.mp3#t=135`).
+Those want a `sourceUrl` helper. Where a moment in an episode goes is the next section.
+
+## Times and the episode's audio
+
+The design round (13 Nov 2026) put an episode player inside the note, and Claude Design asked whether
+a transcript's times can be trusted against the audio a reader hears. **They can't.** The five
+episodes above were each downloaded twice, once as a podcast app asks and once as Chrome does, and
+measured with ffprobe against the span their transcript covers:
+
+| Episode | Transcript covers | Served, app | Served, browser |
+|---|---|---|---|
+| Diary of a CEO | 6938 s | +94 s | +124 s |
+| Behind the Bastards | 5106 s | +132 s | +62 s |
+| Stuff You Should Know | 2797 s | +56 s | +66 s |
+| My Favorite Murder | 3748 s | +13 s | +13 s |
+| Page 94 | 2729 s | +80 s | +49 s |
+
+The audio served runs one to two minutes longer than the audio the transcript was timed against.
+In four of the five, two downloads a moment apart differ by 10 to 70 seconds, so ads are stitched in
+per request. So a moment can be off by anything up to two minutes, and differently on each play.
+Ads sit differently in each show (the owner, 13 Nov 2026), so no single correction fixes it. Lining
+the times up on our server can't work either, since the copy lined up isn't the copy the reader
+streams.
+
+**Decided with the owner, 13 Nov 2026:**
+
+- **The episode plays inside the note,** from its audio file. Playing it from our page needs no
+  permission from the host, but the content security policy must allow media from any host, on the
+  web and in the panel. Check that on a few real feeds before building.
+- **A transcript from YouTube (about 43% of episodes) is timed to that video,** so its moments play
+  that video, which we already know. The YouTube player in the note, or a link out, is the design's
+  to settle.
+- **A transcript from the feed (about 6%) has times that aren't played.** They're shown as text so a
+  reader can find their place, and the episode plays from its start. A confident jump to the wrong
+  place is worse than none.
 
 ## Measured on five long episodes, 13 Nov 2026
 
