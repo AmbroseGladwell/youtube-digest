@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode, type Ref } from "react";
-import { NOVELTY_LABEL, type Overview, sourceName, articleReadMinutes, type WebSource } from "@overview/domain";
+import { NOVELTY_LABEL, type Overview, sourceName, sourceUrl, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { FavouriteIcon } from "../../../../components/shared/FavouriteIcon/FavouriteIcon.js";
@@ -14,6 +14,9 @@ import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewA
 import { MadeOnLine } from "../MadeOnLine/MadeOnLine.js";
 import { TopicLine } from "../TopicLine/TopicLine.js";
 import { HeadImage } from "../HeadImage/HeadImage.js";
+import { EpisodeArt } from "../EpisodeArt/EpisodeArt.js";
+import { timedSource } from "../../util/timedSource.js";
+import { KindChip } from "../../../../components/shared/KindChip/KindChip.js";
 import { useHeadImageSize } from "../../../appearance/useHeadImageSize.js";
 import { useHeadImageMotion } from "./useHeadImageMotion.js";
 import { PlaylistFromLine } from "../../../playlists/components/PlaylistFromLine/PlaylistFromLine.js";
@@ -186,8 +189,7 @@ export function ReaderMasthead({
           topicCount={overview.topicIds.length}
           hasReason={overview.captureReason !== null}
           read={read}
-          sourceUrl={overview.source.url}
-          isArticle={isArticle}
+          source={overview.source}
           compact={compact}
           webApp={webApp}
           onShare={onShare}
@@ -206,15 +208,19 @@ export function ReaderMasthead({
             beside it. Without an image, once it fails, or at full width (151b), the lead
             lays out as the head always did, under the image. */}
         <div className={`${styles.lead} ${full ? styles.leadFull : ""}`}>
-          <HeadImage
-            key={overview.id}
-            ref={image}
-            source={overview.source}
-            full={full}
-            className={styles.image}
-            onToggle={toggleHeadImage}
-            carriesFrom={Routes.overview(overview.id)}
-          />
+          {overview.source.kind === "podcast" ? (
+            <EpisodeArt source={overview.source} className={`${styles.art} ${compact ? styles.artCompact : ""}`} />
+          ) : (
+            <HeadImage
+              key={overview.id}
+              ref={image}
+              source={overview.source}
+              full={full}
+              className={styles.image}
+              onToggle={toggleHeadImage}
+              carriesFrom={Routes.overview(overview.id)}
+            />
+          )}
           <div className={styles.who}>
             {(isArticle || overview.recipe !== null) && (
               <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
@@ -227,6 +233,7 @@ export function ReaderMasthead({
                   {sourceName(overview.source)}
                 </span>
               )}
+              {overview.source.kind === "podcast" && <KindChip overview={overview} />}
               {!isArticle && overview.verdict && <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>}
               {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
               {overview.verdict?.dubious && (
@@ -262,7 +269,7 @@ export function ReaderMasthead({
           <div className={styles.dubiousReasons}>
             <DubiousReasonsPanel
               dubiousClaims={overview.verdict.dubiousClaims}
-              video={overview.source}
+              video={timedSource(overview.source) ?? { id: overview.source.id, url: sourceUrl(overview.source) }}
               onClose={() => {
                 setExplainingDubious(false);
                 dubiousFlag.current?.focus();

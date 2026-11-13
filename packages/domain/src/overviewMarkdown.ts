@@ -1,5 +1,5 @@
 import { articlePlaceUrl } from "./ArticlePlace.js";
-import { noteSourceLength, sourceName } from "./sourceFacts.js";
+import { noteSourceLength, sourceName, sourceUrl } from "./sourceFacts.js";
 import { recipeFigures, recipeFiguresLine, recipeStepGroups } from "./recipeFacts.js";
 import { DUBIOUS_BASIS_LABEL } from "./dubiousBasisLabel.js";
 import { formatTimestamp } from "./formatTimestamp.js";
@@ -8,15 +8,17 @@ import type { Overview } from "./Overview.js";
 import type { TimeRange } from "./WatchAnyway.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import type { DubiousClaim } from "./Verdict.js";
-import { WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
+import { LISTEN_ANYWAY_LABEL, WATCH_ANYWAY_LABEL } from "./watchAnywayLabel.js";
 import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 
 const READ_ANYWAY_ANSWER = { yes: "Yes", no: "No", partial: "Just part of it" } as const;
 
-const moment = (videoUrl: string, startMs: number, label = formatTimestamp(startMs)) =>
-  `[${label}](${youtubeTimestampUrl(videoUrl, startMs)})`;
+// An episode's moment is its time alone: a link into the feed's audio would land wherever that
+// listen's ads put it (docs/features/podcast-notes.md, "Times and the episode's audio").
+const moment = (videoUrl: string | null, startMs: number, label = formatTimestamp(startMs)) =>
+  videoUrl === null ? label : `[${label}](${youtubeTimestampUrl(videoUrl, startMs)})`;
 
-const stretch = (videoUrl: string, range: TimeRange) =>
+const stretch = (videoUrl: string | null, range: TimeRange) =>
   moment(videoUrl, range.startMs, `${formatTimestamp(range.startMs)}–${formatTimestamp(range.endMs)}`);
 
 const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n");
@@ -25,21 +27,23 @@ const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n")
 // a link into the video, and never the spoken script (docs/features/mcp-connector.md).
 export function overviewMarkdown(overview: Overview): string {
   const { source: video } = overview;
+  const link = sourceUrl(video);
+  const timed = video.kind === "podcast" ? null : link;
   const facts = [
     sourceName(video),
     video.kind === "web" ? (video.author === null ? null : `by ${video.author}`) : null,
-    video.kind === "web" ? noteSourceLength(overview) : video.durationMs === null ? null : formatTimestamp(video.durationMs),
+    video.kind === "youtube" ? (video.durationMs === null ? null : formatTimestamp(video.durationMs)) : noteSourceLength(overview),
     video.publishedAt === null ? null : `published ${video.publishedAt.slice(0, 10)}`,
     `saved ${overview.savedAt.slice(0, 10)}`,
   ].filter((fact) => fact !== null);
 
-  const sections: string[] = [`# ${video.title}`, `${facts.join(" · ")}\n${video.url}\n\nTags: ${overview.tags.join(", ")}`];
+  const sections: string[] = [`# ${video.title}`, `${facts.join(" · ")}\n${link}\n\nTags: ${overview.tags.join(", ")}`];
   const section = (heading: string, body: string) => sections.push(`## ${heading}\n\n${body}`);
   const chaptersSection = () => {
     if (overview.chapters !== null && overview.chapters.length > 0) {
       section(
         "Chapters",
-        bullets(overview.chapters.map((chapter) => `${moment(video.url, chapter.startMs)} **${chapter.title}**: ${chapter.summary}`)),
+        bullets(overview.chapters.map((chapter) => `${moment(timed, chapter.startMs)} **${chapter.title}**: ${chapter.summary}`)),
       );
     }
   };
@@ -55,7 +59,7 @@ export function overviewMarkdown(overview: Overview): string {
     section(
       "Method",
       recipe.steps.length === 0
-        ? `${recipe.stepCount} steps, on the page: ${video.url}`
+        ? `${recipe.stepCount} steps, on the page: ${link}`
         : recipeStepGroups(recipe.steps)
             .map(({ name, start, steps }) =>
               [
@@ -63,7 +67,7 @@ export function overviewMarkdown(overview: Overview): string {
                 steps
                   .map((step, index) => {
                     const range = recipe.steps[start + index - 1]?.range;
-                    return `${start + index}. ${step}${range === undefined ? "" : ` (${moment(video.url, range.startMs)})`}`;
+                    return `${start + index}. ${step}${range === undefined ? "" : ` (${moment(timed, range.startMs)})`}`;
                   })
                   .join("\n"),
               ]
@@ -86,7 +90,7 @@ export function overviewMarkdown(overview: Overview): string {
     const { novelty, standsOut, dubious, dubiousClaims, reasoning, similarTo } = overview.verdict;
     const lines = [`${NOVELTY_LABEL[novelty]}${dubious ? ", and dubious" : ""}. ${reasoning}`];
     if (standsOut !== null) {
-      const at = standsOut.range === null ? "" : ` (${stretch(video.url, standsOut.range)})`;
+      const at = standsOut.range === null ? "" : ` (${stretch(timed, standsOut.range)})`;
       lines.push(`${STANDS_OUT_LABEL}${at}: ${standsOut.text}`);
     }
     if (dubious && dubiousClaims === null) {
@@ -95,7 +99,7 @@ export function overviewMarkdown(overview: Overview): string {
     if (dubiousClaims !== null && dubiousClaims.length > 0) {
       const claimLine = (dubiousClaim: DubiousClaim) =>
         [
-          dubiousClaim.startMs === null ? null : moment(video.url, dubiousClaim.startMs),
+          dubiousClaim.startMs === null ? null : moment(timed, dubiousClaim.startMs),
           `“${dubiousClaim.claim}”: ${DUBIOUS_BASIS_LABEL[dubiousClaim.basis]}. ${dubiousClaim.reason}`,
         ]
           .filter((part) => part !== null)
@@ -111,7 +115,7 @@ export function overviewMarkdown(overview: Overview): string {
 
   section(
     "Key points",
-    bullets(overview.keyPoints.map(({ text, range }) => (range === null ? text : `${text} (${stretch(video.url, range)})`))),
+    bullets(overview.keyPoints.map(({ text, range }) => (range === null ? text : `${text} (${stretch(timed, range)})`))),
   );
   if (overview.sourceSteps !== null) {
     section(
@@ -119,7 +123,7 @@ export function overviewMarkdown(overview: Overview): string {
       overview.sourceSteps.items
         .map(
           ({ text, range, dubiousReason }, index) =>
-            `${index + 1}. ${text}${dubiousReason === null ? "" : ` _(dubious: ${dubiousReason})_`}${range === null ? "" : ` (${moment(video.url, range.startMs)})`}`,
+            `${index + 1}. ${text}${dubiousReason === null ? "" : ` _(dubious: ${dubiousReason})_`}${range === null ? "" : ` (${moment(timed, range.startMs)})`}`,
         )
         .join("\n"),
     );
@@ -132,8 +136,11 @@ export function overviewMarkdown(overview: Overview): string {
   }
   if (overview.watchAnyway !== null) {
     const { answer, reason, range } = overview.watchAnyway;
-    const where = range === null ? "" : ` ${stretch(video.url, range)}`;
-    section("Watch it anyway?", `${WATCH_ANYWAY_LABEL[answer]}. ${reason}${where}`.trim());
+    const where = range === null ? "" : ` ${stretch(timed, range)}`;
+    section(
+      video.kind === "podcast" ? "Listen to it anyway?" : "Watch it anyway?",
+      `${(video.kind === "podcast" ? LISTEN_ANYWAY_LABEL : WATCH_ANYWAY_LABEL)[answer]}. ${reason}${where}`.trim(),
+    );
   }
   const article = overview.article;
   if (article?.readAnyway) {
@@ -146,7 +153,7 @@ export function overviewMarkdown(overview: Overview): string {
       bullets(
         article.resources.map(({ text, href, why, place, chapter }) => {
           const from = article.chapters[chapter]!.title;
-          return `[${text}](${href}): ${why} From [${from}](${articlePlaceUrl(video.url, place)}).`;
+          return `[${text}](${href}): ${why} From [${from}](${articlePlaceUrl(link, place)}).`;
         }),
       ),
     );
@@ -154,7 +161,7 @@ export function overviewMarkdown(overview: Overview): string {
   if (article !== null) {
     section(
       "Chapters",
-      bullets(article.chapters.map(({ title, summary, place }) => `[${title}](${articlePlaceUrl(video.url, place)}): ${summary}`)),
+      bullets(article.chapters.map(({ title, summary, place }) => `[${title}](${articlePlaceUrl(link, place)}): ${summary}`)),
     );
   }
   chaptersSection();

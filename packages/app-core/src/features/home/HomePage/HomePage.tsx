@@ -8,7 +8,7 @@ import { keyPromptDetail } from "../../transcripts/transcriptSourceNote.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
-import { ArticleLinkStatus } from "../../newOverview/components/ArticleLinkStatus/ArticleLinkStatus.js";
+import { PastedLinkStatus } from "../../newOverview/components/PastedLinkStatus/PastedLinkStatus.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
@@ -142,14 +142,14 @@ function SignedInHome({ place }: { place: LibraryPlace }) {
 // progress it makes — so there is one pipeline and one place a run lives
 // (docs/features/stone-theme.md, "First run").
 function FirstRunHero() {
-  const { readiness, ready, limit, url, setUrl, validationError, generate, article } = useStartFromLink();
+  const { readiness, ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
   const analytics = useAnalytics();
   const urlFieldId = useId();
-  const linkName = article.available ? "YouTube or article link" : "YouTube link";
+  const linkName = article.available ? "YouTube, podcast or article link" : "YouTube link";
 
   return (
     <Hero
-      standfirst={`Paste a ${article.available ? "YouTube or article link" : "YouTube URL"}. Get a succinct overview, with the main premise, the big picture, key points, actionable steps and a verdict on if it's worth your time.`}
+      standfirst={`Paste a ${article.available ? "YouTube, podcast or article link" : "YouTube URL"}. Get a succinct overview, with the main premise, the big picture, key points, actionable steps and a verdict on if it's worth your time.`}
     >
       <form className={styles.heroForm} onSubmit={generate}>
         <span className={styles.heroFormIcon}>
@@ -172,11 +172,11 @@ function FirstRunHero() {
           aria-label={linkName}
           data-testid={homePageTestIds.urlInput}
         />
-        {limit === null && article.link.status !== "held" && article.link.status !== "failed" && (
+        {limit === null && pasted.generateOffered && (
           <button
             type="submit"
             className={styles.heroGenerate}
-            disabled={!ready || article.link.status === "reading"}
+            disabled={!ready || pasted.reading}
             data-testid={homePageTestIds.generateButton}
           >
             Generate overview
@@ -184,7 +184,7 @@ function FirstRunHero() {
         )}
       </form>
 
-      <ArticleLinkStatus link={article.link} url={url.trim()} place={article.place} onRetry={article.retry} onClear={() => setUrl("")} />
+      <PastedLinkStatus article={article} podcast={podcast} url={url.trim()} onClear={() => setUrl("")} />
 
       {validationError && (
         <p className={styles.heroError} data-testid={homePageTestIds.validationError}>

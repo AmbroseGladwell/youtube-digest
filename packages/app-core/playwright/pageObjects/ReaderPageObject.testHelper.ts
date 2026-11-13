@@ -34,6 +34,9 @@ import { playlistFromLineTestIds } from "../../src/features/playlists/components
 import { HeadImagePageObject } from "./HeadImagePageObject.testHelper.js";
 import { overviewThumbnailTestIds } from "../../src/components/shared/OverviewThumbnail/OverviewThumbnailTestIds.js";
 import { madeOnLineTestIds } from "../../src/features/reader/components/MadeOnLine/MadeOnLineTestIds.js";
+import { episodeArtTestIds } from "../../src/features/reader/components/EpisodeArt/EpisodeArtTestIds.js";
+import { kindChipTestIds } from "../../src/components/shared/KindChip/KindChipTestIds.js";
+import { EpisodePlayerPageObject } from "./EpisodePlayerPageObject.testHelper.js";
 
 export class ReaderPageObject extends PageObject {
   get relatedByTag(): RelatedByTagPageObject {
@@ -535,6 +538,31 @@ export class ReaderPageObject extends PageObject {
       await this.openActionsMenu();
       await this.expectNotToBeVisible(overviewActionsMenuTestIds.openInWebItem);
     });
+
+  get episode(): EpisodePlayerPageObject {
+    return new EpisodePlayerPageObject(this.testContext);
+  }
+
+  // Design 106l: the show's art leads the head and goes where the reader came from, with the
+  // show and its Podcast chip beside it.
+  verifyEpisodeHead = ({ show, wayOut, href }: { show: string; wayOut: string; href: string }) =>
+    this.step(`verifyEpisodeHead ${show}`, async () => {
+      const art = this.get(readerMastheadTestIds.root).getByTestId(episodeArtTestIds.link);
+      await expect(art).toHaveAttribute("href", href);
+      await expect(art).toHaveAttribute("aria-label", `${wayOut}, opens in a new tab`);
+      await expect(this.get(readerMastheadTestIds.channel)).toHaveText(show);
+      await expect(this.get(readerMastheadTestIds.root).getByTestId(kindChipTestIds.root)).toHaveText("Podcast");
+    });
+
+  verifyWayOutItem = (label: string, href: string) =>
+    this.step(`verifyWayOutItem ${label}`, async () => {
+      await this.openActionsMenu();
+      await expect(this.get(overviewActionsMenuTestIds.watchItem)).toHaveText(label);
+      await expect(this.get(overviewActionsMenuTestIds.watchItem)).toHaveAttribute("href", href);
+      await this.page.keyboard.press("Escape");
+    });
+
+  clickPlayChip = (label: string) => this.step(`clickPlayChip ${label}`, () => this.page.getByRole("button", { name: label }).click());
 
   verifyCopyLinkItemReads = (label: string) =>
     this.step(`verifyCopyLinkItemReads ${label}`, async () => {

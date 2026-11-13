@@ -14,7 +14,7 @@ import { SharedNote } from "./SharedNote.js";
 import { overviewTimeSaved } from "./timeSavedSummary.js";
 import { recipeFactsInLines } from "./recipeFactsInLines.js";
 import { youTubeSource } from "./Source.js";
-import { recipeFrom } from "./sourceFacts.js";
+import { recipeFrom, sourceUrl } from "./sourceFacts.js";
 
 test("a recipe's note parses with no key points, and a note without a recipe still needs three", () => {
   assert.equal(Overview.safeParse(makeRecipeOverview()).success, true);
@@ -196,7 +196,7 @@ test("a copied recipe is the page's recipe with its source, and never the summar
   const text = recipeText({
     title: overview.source.title,
     from: "Example Kitchen",
-    url: overview.source.url,
+    url: sourceUrl(overview.source),
     recipe: overview.recipe!,
     ingredients: overview.recipe!.ingredients,
     adjusted: null,
@@ -282,7 +282,7 @@ test("a recipe video's copy names the channel on YouTube, and each step ends wit
   const copied = recipeText({
     title: overview.source.title,
     from: recipeFrom(overview.source),
-    url: overview.source.url,
+    url: sourceUrl(overview.source),
     recipe: overview.recipe!,
     ingredients: overview.recipe!.ingredients,
     adjusted: null,

@@ -27,6 +27,7 @@ import {
   type Plan,
   type MagicLinkRequest,
   type ArticleRead,
+  type PodcastRead,
   type OurKeyGenerationRequest,
   type ProfilePassInput,
   type ProfilePassItem,
@@ -198,6 +199,10 @@ export class BackendSimulator {
   #articleReadTrialTokens: Array<string | null> = [];
   #articleReadsSpent: "trial-reads" | "trial-reads-address" | null = null;
   #articleAnswer: ArticleRead = { status: "failed", reason: "nothing-readable" };
+  #podcastAnswer: PodcastRead = { status: "failed", reason: "not-an-episode" };
+  #podcastWords: StoredTranscript | null = null;
+  #podcastReads: string[] = [];
+  #podcastTranscriptAsks: Array<{ feedUrl: string; guid: string }> = [];
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
   #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
@@ -894,6 +899,24 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
     });
 
+    await this.#page.route("**/api/podcasts/read", (route) => {
+      this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastAnswer) });
+    });
+
+    await this.#page.route("**/api/podcasts/transcript", (route) => {
+      this.#podcastTranscriptAsks.push(route.request().postDataJSON() as { feedUrl: string; guid: string });
+      return this.#podcastWords === null
+        ? route.fulfill({
+            status: 422,
+            contentType: "application/json",
+            body: JSON.stringify({
+              error: { code: "transcript_unavailable", message: "Simulated: no transcript", details: { failure: "no-captions" } },
+            }),
+          })
+        : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastWords) });
+    });
+
     await this.#page.route("**/api/generations", (route) =>
       route.request().method() === "GET"
         ? this.#respond(route, EndpointKey.OUR_KEY_STATUS, {
@@ -915,14 +938,16 @@ export class BackendSimulator {
               return {
                 status: 200,
                 body:
-                  "article" in request.input
-                    ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
-                    : makeOverview({
-                        id: request.overviewId,
-                        source: youTubeSource(request.input.video),
-                        inOneLine: "Made on our key.",
-                        ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
-                      }),
+                  "podcast" in request.input
+                    ? makeOverview({ id: request.overviewId, source: request.input.podcast, inOneLine: "Made from the episode." })
+                    : "article" in request.input
+                      ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
+                      : makeOverview({
+                          id: request.overviewId,
+                          source: youTubeSource(request.input.video),
+                          inOneLine: "Made on our key.",
+                          ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
+                        }),
               };
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
@@ -1370,6 +1395,20 @@ export class BackendSimulator {
     trialReadsSpent: (quota: "trial-reads" | "trial-reads-address"): void => {
       this.#articleReadsSpent = quota;
     },
+  };
+
+  // A pasted podcast link, as our server reads it, and the episode's words from its rungs
+  // (docs/features/podcast-links.md, docs/features/podcast-transcripts.md).
+  podcasts = {
+    answerWith: (read: PodcastRead): void => {
+      this.#podcastAnswer = read;
+    },
+    // The words our server finds for the episode; without them, it found none.
+    wordsAre: (transcript: StoredTranscript): void => {
+      this.#podcastWords = transcript;
+    },
+    reads: (): string[] => [...this.#podcastReads],
+    transcriptAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastTranscriptAsks],
   };
 
   // Our key as our server offers it, and the reservations the reader's own key takes

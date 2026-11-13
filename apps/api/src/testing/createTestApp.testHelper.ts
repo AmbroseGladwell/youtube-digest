@@ -51,6 +51,8 @@ export interface TestApp {
 
 export interface TestAppOptions {
   fetchArticlePage?: BuildAppOptions["fetchArticlePage"];
+  readPodcastEpisode?: BuildAppOptions["readPodcastEpisode"];
+  podcastWeb?: BuildAppOptions["podcastWeb"];
   narration?: boolean;
   logger?: FastifyBaseLogger;
   slowQueryMs?: number;
@@ -81,6 +83,8 @@ export async function createTestApp(
     playlistReader,
     migrationsUpTo,
     fetchArticlePage,
+    readPodcastEpisode,
+    podcastWeb,
   }: TestAppOptions = {},
 ): Promise<TestApp> {
   const sql = createPgliteSqlClient(createTestPglite());
@@ -116,6 +120,8 @@ export async function createTestApp(
     ourKey: ourKey ?? null,
     meaning: embedder === undefined ? null : { embedder, runWorkers: false },
     ...(fetchArticlePage === undefined ? {} : { fetchArticlePage }),
+    ...(readPodcastEpisode === undefined ? {} : { readPodcastEpisode }),
+    ...(podcastWeb === undefined ? {} : { podcastWeb }),
     playlistReader: playlistReader ?? null,
     eventSink,
     errorSink,

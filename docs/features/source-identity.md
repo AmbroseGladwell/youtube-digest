@@ -48,7 +48,9 @@ function.
 `extractYouTubeVideoId` now refuses one that does, so `?v=web:9f2c` is not a way to name
 another kind's key. `POST /overviews` does not check this: a forged body only reaches its
 own account's library, but the slice that lets another kind into the shared cache has to
-close that, since that cache is shared between accounts.
+close that, since that cache is shared between accounts. Podcasts did (OV-106): `PUT
+/transcripts/:key` refuses any key holding a colon, so another kind's transcript only reaches the
+shared cache from our server's own fetch (`podcast-transcripts.md`).
 
 ## What did not change
 

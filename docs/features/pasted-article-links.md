@@ -8,7 +8,7 @@ server fetches the page.
 
 | The decision | Where it lives |
 |---|---|
-| What the server will fetch | `apps/api/src/articles/fetchArticlePage.ts`, `isPublicAddress.ts` |
+| What the server will fetch | `apps/api/src/publicWeb/createPublicWebFetch.ts` and `isPublicAddress.ts`, shared with podcast links; `articles/fetchArticlePage.ts` |
 | Turning the page into an article | `fetchedArticle.ts`, the same `readArticle` the extension runs |
 | The route | `POST /api/articles/read`, `src/routes/articleRoutes.ts` |
 | Reading a link as it's pasted | `useArticleLink.ts` |

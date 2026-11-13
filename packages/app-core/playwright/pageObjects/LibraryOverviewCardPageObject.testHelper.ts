@@ -156,6 +156,9 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   verifyHasNoKindChip = () => this.step("verifyHasNoKindChip", () => expect(this.get(kindChipTestIds.root)).toHaveCount(0));
 
+  verifyMetaEndsWith = (end: string) =>
+    this.step(`verifyMetaEndsWith ${end}`, () => expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(new RegExp(`${end}$`)));
+
   verifyMetaReads = (meta: string) =>
     this.step(`verifyMetaReads ${meta}`, () => expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta));
 

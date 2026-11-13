@@ -1,5 +1,5 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
-import { REQUEST_ID_HEADER, type ShareToken } from "@overview/domain";
+import { REQUEST_ID_HEADER, type PodcastRead, type ShareToken } from "@overview/domain";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
 import type { AudioStore } from "./audio/AudioStore.js";
@@ -51,6 +51,11 @@ import { meaningSearchRoutes } from "./routes/meaningSearchRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { articleRoutes } from "./routes/articleRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
+import { podcastRoutes } from "./routes/podcastRoutes.js";
+import { accountPlan } from "./auth/accountPlan.js";
+import { createPodcastReader } from "./podcasts/createPodcastReader.js";
+import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
+import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
@@ -130,6 +135,9 @@ export interface BuildAppOptions {
   ourKey?: OurKeySetup | null;
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
+  readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
+  // What every podcast fetch goes through; a test hands in a scripted web.
+  podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
@@ -177,6 +185,8 @@ export async function buildApp({
   logger = null,
   slowQueryMs = SLOW_QUERY_MS,
   fetchArticlePage = createArticlePageFetcher(),
+  podcastWeb = createPublicWebFetch(),
+  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb }),
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -284,20 +294,16 @@ export async function buildApp({
         sql,
         clock,
       });
-      serviceTranscriptRoutes(api, {
-        usage: overviewUsage,
+      const youTubeService =
+        transcriptService === null
+          ? null
+          : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), transcripts, costs, clock });
+      serviceTranscriptRoutes(api, { usage: overviewUsage, trials, service: youTubeService, sql, clock });
+      podcastRoutes(api, {
+        readEpisode: readPodcastEpisode,
+        resolveTranscript: createPodcastTranscripts({ fetchPublicWeb: podcastWeb, transcripts, youTubeService, clock }),
+        planOf: (accountId) => accountPlan(sql, accountId),
         trials,
-        service:
-          transcriptService === null
-            ? null
-            : new ServiceTranscripts({
-                ...transcriptService,
-                usage: new ServiceUsageRepository(sql),
-                transcripts,
-                costs,
-                clock,
-              }),
-        sql,
         clock,
       });
       shareRoutes(api, shares, config.appUrl);

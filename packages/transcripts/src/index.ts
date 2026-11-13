@@ -10,3 +10,8 @@ export * from "./innertube/selectCaptionTrack.js";
 export * from "./innertube/mapJson3ToSegments.js";
 export * from "./innertube/mapPlayerResponseToVideoSource.js";
 export * from "./innertube/fetchInnerTubeTranscript.js";
+export * from "./podcastOnYouTube/noteWords.js";
+export * from "./podcastOnYouTube/youTubeListings.js";
+export * from "./podcastOnYouTube/matchUpload.js";
+export * from "./podcastOnYouTube/findEpisodeOnYouTube.js";
+export * from "./podcastOnYouTube/confirmEpisodeOnYouTube.js";

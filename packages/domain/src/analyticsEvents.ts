@@ -111,7 +111,7 @@ export type CaptureEntry = z.infer<typeof CaptureEntry>;
 export const GenerationKey = z.enum(["own", "ours", "trial"]);
 export type GenerationKey = z.infer<typeof GenerationKey>;
 
-export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article"]);
+export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article", "podcast"]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([
@@ -203,6 +203,8 @@ export const OverviewMenuItem = z.enum([
   "copyYouTubeLink",
   "readArticle",
   "copyArticleLink",
+  "openEpisode",
+  "copyEpisodeLink",
   "copyRecipe",
   "printRecipe",
   "regenerate",
@@ -557,14 +559,14 @@ export const analyticsEvents = {
   onboarding: {
     start: {
       linkSubmitted: event("A reader with no account gives the home page a link to start their first overview", {
-        kind: z.enum(["video", "playlist", "article"]),
+        kind: z.enum(["video", "playlist", "article", "episode"]),
       }),
       linkRefused: event("A reader with no account gives the home page something that isn't a link we can read"),
       sampleChosen: event(
         "A reader with no account starts onboarding from one of Start's samples: where it sat in the list and its kind, never its title or link",
         {
           sample: z.number().int().nonnegative(),
-          kind: z.enum(["video", "article", "recipe"]),
+          kind: z.enum(["video", "article", "recipe", "podcast"]),
         },
       ),
     },
@@ -980,7 +982,7 @@ export const analyticsEvents = {
       topicChosen: event("The reader filters the library to one topic", { topicId: TopicId, from: FilterControl }),
       topicCleared: event("The reader stops filtering the library by topic", { from: FilterControl }),
       sourceChosen: event("The reader filters the library to one kind of source, or back to all", {
-        source: z.enum(["all", "video", "article", "recipe"]),
+        source: z.enum(["all", "video", "article", "recipe", "podcast"]),
         from: FilterControl,
       }),
       noveltyChosen: event("The reader filters the library by the verdict's novelty, or back to all", {

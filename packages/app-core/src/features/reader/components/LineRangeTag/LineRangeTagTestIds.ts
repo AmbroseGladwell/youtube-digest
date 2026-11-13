@@ -1,4 +1,5 @@
 export const lineRangeTagTestIds = {
+  playChip: "LineRangeTag.playChip",
   tag: "LineRangeTag.tag",
   menu: "LineRangeTag.menu",
   menuRange: "LineRangeTag.menuRange",

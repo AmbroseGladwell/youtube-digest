@@ -557,3 +557,33 @@ test("forgetting the accounts that vouched for a copy takes every copy they vouc
   assert.equal((await readShared(testApp, "fine-one")).statusCode, 200);
   await testApp.close();
 });
+
+test("no account can file a transcript under another kind's key: those come from our own fetch alone", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const id = VideoId.parse("0123456789abcdef0123456789abcdef");
+  const key = VideoId.parse(`web:${id}`);
+  const transcript = makeStoredTranscript({ videoId: key });
+  const source = {
+    kind: "web" as const,
+    id,
+    url: "https://news.example/story",
+    title: "A story",
+    siteName: null,
+    author: null,
+    publishedAt: null,
+    language: null,
+    imageUrl: null,
+    wordCount: 500,
+  };
+  assert.equal((await account.inject({ method: "POST", url: "/api/overviews", body: storedOverview({ source }) })).statusCode, 201);
+
+  const response = await account.inject({ method: "PUT", url: `/api/transcripts/${encodeURIComponent(key)}`, body: transcript });
+
+  assert.equal(response.statusCode, 204);
+  assert.equal(
+    (await account.inject({ method: "GET", url: `/api/transcripts/${encodeURIComponent(key)}` })).json().error.code,
+    "not_found",
+  );
+  await testApp.close();
+});
