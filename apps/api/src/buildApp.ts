@@ -1,5 +1,5 @@
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
-import { REQUEST_ID_HEADER, type ShareToken } from "@overview/domain";
+import { REQUEST_ID_HEADER, type PodcastRead, type ShareToken } from "@overview/domain";
 import { AudioRenderQueue } from "./audio/AudioRenderQueue.js";
 import { AudioRendersRepository } from "./audio/AudioRendersRepository.js";
 import type { AudioStore } from "./audio/AudioStore.js";
@@ -51,6 +51,9 @@ import { meaningSearchRoutes } from "./routes/meaningSearchRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { articleRoutes } from "./routes/articleRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
+import { podcastRoutes } from "./routes/podcastRoutes.js";
+import { createPodcastReader } from "./podcasts/createPodcastReader.js";
+import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
@@ -129,6 +132,7 @@ export interface BuildAppOptions {
   ourKey?: OurKeySetup | null;
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
+  readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
@@ -176,6 +180,7 @@ export async function buildApp({
   logger = null,
   slowQueryMs = SLOW_QUERY_MS,
   fetchArticlePage = createArticlePageFetcher(),
+  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: createPublicWebFetch() }),
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -272,6 +277,7 @@ export async function buildApp({
       followedPlaylistRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
+      podcastRoutes(api, { readEpisode: readPodcastEpisode, clock });
       settingsRoutes(api, records);
       transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });

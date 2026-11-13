@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { createArticlePageFetcher } from "./fetchArticlePage.js";
-import { isPublicAddress } from "./isPublicAddress.js";
+import { isPublicAddress } from "../publicWeb/isPublicAddress.js";
 
 const ARTICLE = "<html><head><title>A</title></head><body><p>Hello</p></body></html>";
 let seen: { path: string | undefined; cookie: string | undefined }[] = [];

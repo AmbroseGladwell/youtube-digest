@@ -138,6 +138,8 @@ Five folders, five different questions.
   search ever crosses accounts.
 - `pasted-article-links.md` — our server fetching a pasted link: what it will and won't reach, and
   what the field says.
+- `podcast-links.md` — an Apple, Spotify or show-page link turned into one episode of its show's
+  feed: Apple's directory, Spotify's public page, matching strictly, reading a feed as it arrives.
 - `article-notes.md` — the note forked for articles: read it anyway, chapters without times,
   positions as numbered paragraphs, and why no article text is kept.
 - `recipe-notes.md` — a recipe page's note: what code reads from the page, which pages count as a
