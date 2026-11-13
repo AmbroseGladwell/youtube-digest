@@ -29,7 +29,13 @@ import {
 } from "@overview/domain";
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
-import { OVERVIEWS_STORE, OVERVIEW_STATES_STORE, TOPICS_STORE } from "./localDatabaseSchema.js";
+import {
+  MEMBERS_BY_OVERVIEW_INDEX,
+  OVERVIEWS_STORE,
+  OVERVIEW_STATES_STORE,
+  PROJECT_MEMBERS_STORE,
+  TOPICS_STORE,
+} from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 import { storedRecordId } from "./storedRecordId.js";
@@ -165,9 +171,14 @@ export class IndexedDbOverviewStore implements OverviewStore {
   // The state row goes with the overview, as it does on the server: ids are never reused,
   // so a surviving state would be a permanent orphan (docs/features/sync-api.md).
   async deleteOverview(id: OverviewId) {
-    const transaction = this.#db.transaction([OVERVIEWS_STORE, OVERVIEW_STATES_STORE, ...JOURNALLED_STORES], "readwrite");
+    const transaction = this.#db.transaction(
+      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, ...JOURNALLED_STORES],
+      "readwrite",
+    );
     transaction.objectStore(OVERVIEWS_STORE).delete(id);
     transaction.objectStore(OVERVIEW_STATES_STORE).delete(id);
+    const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
+    for (const key of await promisifyRequest<IDBValidKey[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAllKeys(id))) members.delete(key);
     const journaled = await appendPendingWrite(transaction, {
       kind: "overview",
       id,

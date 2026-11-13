@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { makeFollowedPlaylist, makeOverview, makeQueuedCapture, makeStoredTranscript } from "@overview/store-conformance";
+import { makeFollowedPlaylist, makeOverview, makeProject, makeQueuedCapture, makeStoredTranscript } from "@overview/store-conformance";
 import {
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_SETTINGS,
   OVERVIEW_CORPUS,
   OverviewId,
+  projectMemberId,
   TopicId,
   VideoId,
   type RecordChange,
@@ -15,6 +16,7 @@ import {
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
 import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
+import { IndexedDbProjectStore } from "./IndexedDbProjectStore.js";
 import { IndexedDbSettingsStore } from "./IndexedDbSettingsStore.js";
 import { IndexedDbSyncStorage } from "./IndexedDbSyncStorage.js";
 import { IndexedDbTranscriptStore } from "./IndexedDbTranscriptStore.js";
@@ -624,4 +626,132 @@ test("a fold whose copy already matches the account's journals nothing but still
     (await readOutbox(db)).map((entry) => entry.change.op),
     ["transcript"],
   );
+});
+
+test("enrolling journals every project and the membership record of every overview still in one, and leaves out overviews taken out", async () => {
+  const db = await openTestDatabase();
+  const projects = new IndexedDbProjectStore(db);
+  const project = makeProject();
+  const [kept, removed] = [OverviewId.parse(randomUUID()), OverviewId.parse(randomUUID())];
+  await projects.createProject(project);
+  await projects.addToProject(project.id, kept);
+  await projects.addToProject(project.id, removed);
+  await projects.removeFromProject(project.id, removed);
+  const storage = new IndexedDbSyncStorage(db, { now });
+
+  await storage.enrol();
+
+  const entries = await recordsPending(storage);
+  assert.deepEqual(
+    entries.map(({ kind, id, change: pending }) => ({ kind, id, op: pending.op })),
+    [
+      { kind: "project", id: project.id, op: "replace" },
+      { kind: "projectMember", id: projectMemberId(project.id, kept), op: "member" },
+    ],
+  );
+  const member = entries[1]!.change;
+  assert.ok(member.op === "member" && member.change.addedBy !== undefined && member.change.removedAt === undefined);
+});
+
+test("a pulled project and its membership records arrive, and one an assistant added says so", async () => {
+  const db = await openTestDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const projects = new IndexedDbProjectStore(db);
+  const project = makeProject();
+  const overviewId = OverviewId.parse(randomUUID());
+  const id = projectMemberId(project.id, overviewId);
+  const addedBy = { by: "assistant", connectionId: "conn-1", name: "Claude" };
+
+  await storage.applyChanges(
+    [
+      change({ kind: "project", id: project.id, body: project }),
+      change({
+        kind: "projectMember",
+        id,
+        seq: 2,
+        body: { id, projectId: project.id, overviewId, addedAt: "2026-11-12T09:00:00.000Z", addedBy, removedAt: null },
+      }),
+    ],
+    2,
+  );
+
+  assert.deepEqual(await projects.listProjects(), [project]);
+  assert.deepEqual(
+    (await projects.listMembers()).map((member) => member.addedBy),
+    [addedBy],
+  );
+});
+
+test("a pulled membership record with a pending local removal stays out until the removal is pushed", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const projects = new IndexedDbProjectStore(db);
+  const project = makeProject();
+  const overviewId = OverviewId.parse(randomUUID());
+  const id = projectMemberId(project.id, overviewId);
+  await projects.createProject(project);
+  await projects.addToProject(project.id, overviewId);
+  await projects.removeFromProject(project.id, overviewId);
+
+  await storage.applyChanges(
+    [
+      change({
+        kind: "projectMember",
+        id,
+        body: { id, projectId: project.id, overviewId, addedAt: "2026-11-12T09:00:00.000Z", addedBy: { by: "reader" }, removedAt: null },
+      }),
+    ],
+    1,
+  );
+
+  assert.deepEqual(await projects.listMembers(), []);
+});
+
+test("a project or an overview deleted on another device takes its membership records off this one", async () => {
+  const db = await openTestDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const projects = new IndexedDbProjectStore(db);
+  const [doomedProject, keptProject] = [makeProject(), makeProject({ name: "Launching my app" })];
+  const [doomedOverview, keptOverview] = [OverviewId.parse(randomUUID()), OverviewId.parse(randomUUID())];
+  for (const project of [doomedProject, keptProject]) {
+    await projects.createProject(project);
+    for (const overviewId of [doomedOverview, keptOverview]) await projects.addToProject(project.id, overviewId);
+  }
+
+  await storage.applyChanges(
+    [
+      change({ kind: "project", id: doomedProject.id, deleted: true }),
+      change({ kind: "overview", id: doomedOverview, seq: 2, deleted: true }),
+    ],
+    2,
+  );
+
+  assert.deepEqual(
+    (await projects.listMembers()).map(({ projectId, overviewId }) => ({ projectId, overviewId })),
+    [{ projectId: keptProject.id, overviewId: keptOverview }],
+  );
+});
+
+test("folding an overview into the account's copy puts the copy in the duplicate's projects, and drops the duplicate's membership writes", async () => {
+  const db = await openEnrolledDatabase();
+  const storage = new IndexedDbSyncStorage(db, { now });
+  const overviews = new IndexedDbOverviewStore(db);
+  const projects = new IndexedDbProjectStore(db);
+  const video = { ...makeOverview().source, id: VideoId.parse("twice") };
+  const theirs = makeOverview({ source: video });
+  const mine = makeOverview({ source: video });
+  const project = makeProject();
+  await storage.applyChanges([change({ kind: "overview", id: theirs.id, body: theirs })], 1);
+  await overviews.saveOverview(mine);
+  await projects.createProject(project);
+  await projects.addToProject(project.id, mine.id);
+
+  await storage.foldOverview(mine.id, theirs.id);
+
+  assert.deepEqual(
+    (await projects.listMembers()).map(({ overviewId }) => overviewId),
+    [theirs.id],
+  );
+  const memberWrites = (await readOutbox(db)).filter((entry) => entry.kind === "projectMember").map(({ id }) => id);
+  assert.deepEqual(memberWrites, [projectMemberId(project.id, theirs.id)]);
 });

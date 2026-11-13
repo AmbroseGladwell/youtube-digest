@@ -6,6 +6,10 @@ import {
   OVERVIEW_STATE_MIGRATIONS,
   Overview,
   OverviewState,
+  PROJECT_MEMBER_MIGRATIONS,
+  PROJECT_MIGRATIONS,
+  Project,
+  ProjectMember,
   SETTINGS_MIGRATIONS,
   Settings,
   TOPIC_MIGRATIONS,
@@ -27,4 +31,6 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindConfig> = {
   topic: { schema: Topic, migrations: TOPIC_MIGRATIONS },
   settings: { schema: Settings, migrations: SETTINGS_MIGRATIONS },
   followedPlaylist: { schema: FollowedPlaylist, migrations: FOLLOWED_PLAYLIST_MIGRATIONS },
+  project: { schema: Project, migrations: PROJECT_MIGRATIONS },
+  projectMember: { schema: ProjectMember, migrations: PROJECT_MEMBER_MIGRATIONS },
 };

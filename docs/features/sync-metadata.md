@@ -311,6 +311,8 @@ here" from "not pulled yet".
   *attributable* rather than preventable: merging sets needs per-element information — when each
   tag was added, and whether a tag's absence is a removal or an ignorance — which no amount of
   record-level dating supplies. The fix is a different shape of data, not more of this one.
+  Project membership is the first data built in that shape: one membership record per overview in a project, with a dated
+  removal (`projects.md`). Tags could follow it.
 - **The first sync between two libraries.** Two devices that each generated an overview of the
   same video hold two records with different ids and no relationship. That is a duplicate rather
   than a conflict, dates will not resolve it, and what the library should do about it is open,

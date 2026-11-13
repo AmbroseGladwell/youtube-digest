@@ -19,6 +19,7 @@ import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
+import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 import { ApiError } from "../http/ApiError.js";
 
 const Params = z.object({ id: OverviewId });
@@ -143,6 +144,7 @@ export function overviewRoutes(
       { kind: "overviewState", id, decide: (current) => decideTombstone("overviewState", current, null, request.client!) },
     ]);
     // On every delete, the retry of one already done included, so a failure here heals.
+    await tombstoneProjectMembers(records, accountId, { overviewId: id });
     const forgotten = await transcripts.forgetUnnoted(accountId);
     if (forgotten > 0) {
       request.log.info(apiLogLines.transcripts.forgotten({ count: forgotten }));

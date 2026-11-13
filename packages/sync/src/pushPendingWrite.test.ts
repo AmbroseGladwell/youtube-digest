@@ -305,3 +305,62 @@ test("a throttled reservation stops the push like any throttle, rather than wait
 
   assert.equal(outcome.result, "stopped");
 });
+
+const PROJECT = "7a1d3c1e-5d0a-4b8e-9d55-0d1f6a0f2b11";
+const OVERVIEW = "0b8f5f5a-3c2e-4f51-8a43-6a1d7c2e9f10";
+
+test("a new project goes to POST /projects, and one the server already holds counts as created", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("createProject", { code: "already_exists", details: { rev: 3 } });
+  const record = { id: PROJECT, name: "Kitchen renovation" };
+
+  const outcome = await pushPendingWrite(api, entry({ kind: "project", id: PROJECT, change: { op: "replace", record } }), null, storage);
+
+  assert.deepEqual(outcome, { result: "written", rev: 3 });
+  assert.deepEqual(api.callsTo("createProject").length, 1);
+});
+
+test("a change to a project sends only its fields, with the date of the local write", async () => {
+  const api = new ScriptedSyncApi();
+
+  await pushPendingWrite(api, entry({ kind: "project", id: PROJECT, change: { op: "project", patch: { archivedAt: AT } } }), 1, storage);
+
+  assert.deepEqual(api.calls, [{ method: "updateProject", args: [PROJECT, { archivedAt: AT }, AT] }]);
+});
+
+test("deleting a project deletes the project, not an overview", async () => {
+  const api = new ScriptedSyncApi();
+
+  const outcome = await pushPendingWrite(api, entry({ kind: "project", id: PROJECT, change: { op: "delete" } }), 1, storage);
+
+  assert.deepEqual(outcome, { result: "gone" });
+  assert.deepEqual(api.calls, [{ method: "deleteProject", args: [PROJECT] }]);
+});
+
+test("a change to a membership record goes to its project and overview, and never claims who made it: the server says", async () => {
+  const api = new ScriptedSyncApi();
+  const id = `${PROJECT}:${OVERVIEW}`;
+
+  await pushPendingWrite(
+    api,
+    entry({ kind: "projectMember", id, change: { op: "member", change: { addedAt: AT, addedBy: { by: "reader" } } } }),
+    null,
+    storage,
+  );
+
+  assert.deepEqual(api.calls, [{ method: "changeProjectMember", args: [PROJECT, OVERVIEW, { addedAt: AT }, AT] }]);
+});
+
+test("a change to a membership record whose project the server no longer has is done with", async () => {
+  const api = new ScriptedSyncApi();
+  api.failOnce("changeProjectMember", { code: "not_found" });
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "projectMember", id: `${PROJECT}:${OVERVIEW}`, change: { op: "member", change: { removedAt: AT } } }),
+    null,
+    storage,
+  );
+
+  assert.deepEqual(outcome, { result: "gone" });
+});

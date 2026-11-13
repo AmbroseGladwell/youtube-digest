@@ -6,6 +6,9 @@ export type OverviewId = z.infer<typeof OverviewId>;
 export const TopicId = z.uuid().brand("TopicId");
 export type TopicId = z.infer<typeof TopicId>;
 
+export const ProjectId = z.uuid().brand("ProjectId");
+export type ProjectId = z.infer<typeof ProjectId>;
+
 // A platform's own id for the video, not a uuid we mint: it is
 // what makes one stored transcript answer for every note taken from the same video
 // (docs/features/transcript-storage.md).

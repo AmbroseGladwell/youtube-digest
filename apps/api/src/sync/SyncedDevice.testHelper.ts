@@ -4,6 +4,7 @@ import { IDBFactory } from "fake-indexeddb";
 import { CLIENT_VERSION, type OverviewFold } from "@overview/domain";
 import {
   IndexedDbOverviewStore,
+  IndexedDbProjectStore,
   IndexedDbSettingsStore,
   IndexedDbSyncStorage,
   IndexedDbTranscriptStore,
@@ -39,6 +40,7 @@ export interface SyncedDevice {
   overviews: IndexedDbOverviewStore;
   settings: IndexedDbSettingsStore;
   transcripts: IndexedDbTranscriptStore;
+  projects: IndexedDbProjectStore;
   storage: IndexedDbSyncStorage;
   engine: SyncEngine;
   sync(): Promise<SyncStatus>;
@@ -70,6 +72,7 @@ export async function makeDevice(
   const overviews = new IndexedDbOverviewStore(db, { onJournaled: storage.notifyJournaled });
   const settings = new IndexedDbSettingsStore(db, { onJournaled: storage.notifyJournaled });
   const transcripts = new IndexedDbTranscriptStore(db);
+  const projects = new IndexedDbProjectStore(db, { onJournaled: storage.notifyJournaled });
   await before?.({ overviews, settings, transcripts });
   const engine = new SyncEngine({
     api: createFetchSyncApi({ baseUrl: "http://api.test", token, clientVersion, fetch: injectingFetch(testApp.app) }),
@@ -79,5 +82,5 @@ export async function makeDevice(
     now: () => testApp.clock.now,
     onFolded,
   });
-  return { overviews, settings, transcripts, storage, engine, sync: () => engine.sync() };
+  return { overviews, settings, transcripts, projects, storage, engine, sync: () => engine.sync() };
 }

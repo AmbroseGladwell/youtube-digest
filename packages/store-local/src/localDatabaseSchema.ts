@@ -1,5 +1,5 @@
 export const DATABASE_NAME = "overview-local-store";
-export const DATABASE_VERSION = 5;
+export const DATABASE_VERSION = 6;
 
 export const OVERVIEWS_STORE = "overviews";
 export const TOPICS_STORE = "topics";
@@ -8,6 +8,10 @@ export const TRANSCRIPTS_STORE = "transcripts";
 export const SETTINGS_STORE = "settings";
 export const SETTINGS_KEY = "settings";
 export const FOLLOWED_PLAYLISTS_STORE = "followedPlaylists";
+export const PROJECTS_STORE = "projects";
+export const PROJECT_MEMBERS_STORE = "projectMembers";
+export const MEMBERS_BY_PROJECT_INDEX = "byProject";
+export const MEMBERS_BY_OVERVIEW_INDEX = "byOverview";
 
 // This device's own: what it has seen of each followed playlist, and what it has queued
 // from them (docs/features/playlists.md, docs/features/capture-queue.md).
