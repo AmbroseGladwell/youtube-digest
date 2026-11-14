@@ -1,8 +1,9 @@
 import { FOLLOW_UP_ASSISTANTS, type FollowUpAssistant } from "./FollowUpAssistant.js";
 
-// The longest link the owner has seen Claude and ChatGPT fill in from (14 November 2026). Past
-// it a link may arrive cut short, so the prompt is copied instead.
-export const MOST_PREFILL_URL_LENGTH = 10_700;
+// Just under the longest link the owner has seen Claude and ChatGPT fill in from whole, about
+// 51,000 characters (14 November 2026). Past it a link may arrive cut short, so the prompt is
+// copied instead.
+export const MOST_PREFILL_URL_LENGTH = 50_000;
 
 export type FollowUpHandOff = { kind: "prefill"; url: string } | { kind: "copyThenOpen"; url: string; text: string };
 

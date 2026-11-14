@@ -11,8 +11,8 @@ export interface FollowUpAssistantLink {
   prefillParam: string | null;
 }
 
-// Tested by the owner on 14 November 2026: Claude and ChatGPT fill in from a link of about
-// 10,700 characters, Claude under its own caution banner. Gemini opens but stays empty.
+// Tested by the owner on 14 November 2026: Claude and ChatGPT fill in from a link of up to
+// about 51,000 characters, Claude under its own caution banner. Gemini opens but stays empty.
 export const FOLLOW_UP_ASSISTANTS: Record<FollowUpAssistant, FollowUpAssistantLink> = {
   claude: { name: "Claude", openUrl: "https://claude.ai/new", prefillParam: "q" },
   chatgpt: { name: "ChatGPT", openUrl: "https://chatgpt.com/", prefillParam: "q" },

@@ -105,10 +105,10 @@ box filled in where that works. Tested by the owner on 14 November 2026.
 - **Not connected:** `<question>…</question>` and the whole note as Markdown inside
   `<overview>…</overview>`.
 
-**Too long for a link** (`followUpHandOff`): a link longer than 10,700 characters, the longest the
-owner has seen fill in, is copied and the assistant opened instead, so a prompt never arrives cut
-short. A typical 20-minute talk's note comes to about 10,400, so longer notes are copied until a
-longer link is tested.
+**Too long for a link** (`followUpHandOff`): Claude and ChatGPT filled in whole from links of up to
+about 51,000 characters in the owner's test, so a link longer than 50,000 is copied and the
+assistant opened instead, and a prompt never arrives cut short. A typical 20-minute talk's note
+comes to about 10,400, so nearly every note goes in the link.
 
 **Which assistant** (`followUpAssistantFor`): the synced setting "Ask follow-up questions in"
 (`Settings.followUpAssistant`: Claude, ChatGPT or Gemini). Until the reader picks, a reader whose
