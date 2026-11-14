@@ -66,13 +66,13 @@ export const APPLE_BUDGET: CallBudgetOptions = {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
 
-// Podcast Index publishes no number, so this is a polite guess, and a call that would wait more
-// than a moment goes to Apple instead. Its terms allow keeping an answer only as long as its cache
-// header says, so nothing is kept.
+// Podcast Index tunes its limits without publishing them, so this is a polite guess, and a call
+// that would wait more than a moment goes to Apple instead. Its terms suggest "a good caching
+// strategy": a show's episodes are kept an hour, a search a day.
 export const PODCAST_INDEX_BUDGET: CallBudgetOptions = {
   perMinute: 20,
   mostWaitMs: 2_000,
-  keepMs: () => 0,
+  keepMs: (url) => (url.includes("/search/") ? 24 * HOUR_MS : HOUR_MS),
   now: () => Date.now(),
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };

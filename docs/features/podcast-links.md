@@ -108,9 +108,10 @@ startup says which directories are on.
 **Their limits.** Each directory sees our server's address, not each reader's, so every call this
 process makes to one shares a budget (`callBudget.ts`). Apple's is 15 a minute, under its "approximately
 20", waiting up to 15 seconds past it, with lookups kept an hour and searches a day. Podcast Index
-publishes no number, so its budget is a polite 20 a minute, and a call that would wait more than two
-seconds goes to Apple instead. Its terms allow keeping an answer only as long as its cache header says,
-so nothing of its is kept.
+tunes its limits without publishing them, so its budget is a polite 20 a minute, and a call that would
+wait more than two seconds goes to Apple instead. Its terms suggest "a good caching strategy", so its
+answers are kept like Apple's: a show's episodes an hour, a search a day. Every call names us in its
+User-Agent, which its terms require.
 
 ## What the server will fetch
 
@@ -148,13 +149,14 @@ review"), and acted on in OV-297:
 
 ### Official routes, checked 14 Nov 2026 (OV-294)
 
-- **Podcast Index API: fits, and is used** ("The directories"). Its terms (v1.1, March 2021) were
-  read from its own repository, since its site refuses automated fetches. They name no bar on
-  commercial use. They ask that answers not be kept "longer than permitted by the cache header",
-  that credentials not be "embedded in open source projects" (ours are references in the secret
-  manager, `docs/conventions/secrets.md`), and that we "display all attribution(s) required … as
-  described in the documentation". No attribution requirement was found in the API's docs; the
-  owner checks its site when registering the key.
+- **Podcast Index API: fits, and is used** ("The directories"). Its terms (v2.0, 4 Oct 2026, pasted
+  by the owner when registering, since its site refuses automated fetches) allow any use "including
+  commercial". They bar two things: a public service that proxies its API, and scraping it for bulk
+  data. Ours makes targeted lookups for a link a reader pasted, and passes nothing through. They ask
+  that credentials stay out of "client-side code or open-source repositories" (ours are references
+  in the secret manager, `docs/conventions/secrets.md`) and that the User-Agent name the app
+  honestly. Its rate limits are unpublished and tuned over time. No attribution is required. Its API
+  logs are kept 90 days; they hold the show names our server asked for, never a reader's details.
 - **Spotify Web API: doesn't fit.** Client credentials could read an episode's title, show, date and
   length, but the Developer Policy (15 May 2025) says "commercial uses are not permitted" beyond
   selling access to an app that streams nothing, the Developer Terms' licence is for "private
