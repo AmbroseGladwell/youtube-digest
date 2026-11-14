@@ -17,6 +17,7 @@ import { articleParagraphs, type ArticleParagraph } from "./articleParagraphs.js
 import { articleBudget } from "./articleBudget.js";
 import { offeredLinks } from "./offeredLinks.js";
 import { resolvedBigPicture } from "../sections/bigPicturePrompt.js";
+import { resolvedFollowUpQuestions } from "../sections/followUpQuestionsSection.js";
 import { sourceStepsOf } from "../sourceStepsOf.js";
 import type { ArticleChapterShape } from "./sections/articleChaptersSection.js";
 
@@ -43,6 +44,7 @@ export interface GeneratedArticleOutput {
   readAnyway?: { answer: string; reason: string; leftOut: string; chapterIndexes: number[] };
   // Absent when the page links to nothing.
   resources?: Array<{ link: number; why: string }>;
+  followUpQuestions: string[];
 }
 
 const chapterHolding = (paragraphIndex: number, chapters: ArticleChapterShape[]): number =>
@@ -121,6 +123,7 @@ export function assembleArticleOverview(
     watchAnyway: null,
     chapters: null,
     recipe: null,
+    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions),
     article: {
       chapters,
       keyPointChapters: output.keyPoints.map(({ paragraphIndex }) =>

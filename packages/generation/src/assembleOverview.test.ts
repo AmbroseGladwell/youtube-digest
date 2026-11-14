@@ -42,6 +42,7 @@ const baseOutput: GeneratedOutput = {
   inOneLine: "A short description.",
   sourceSteps: [],
   bigPicture: "",
+  followUpQuestions: [],
   coreClaim: "The core claim of the video.",
   thin: false,
   keyPoints: [
@@ -60,6 +61,19 @@ const meta = { id: OverviewId.parse(randomUUID()), savedAt: new Date().toISOStri
 test("matched topic names map to the corresponding topic ids, unmatched names are ignored", () => {
   const overview = assembleOverview(baseInput, { ...baseOutput, matchedTopicNames: ["fitness", "some-made-up-name"] }, meta);
   assert.deepEqual(overview.topicIds, [fitnessId]);
+});
+
+test("the note keeps the questions the model wrote to ask next", () => {
+  const questions = ["Is the keeper test fair?", "Would it work on a team of three?", "What would I lose by trying it?"];
+  assert.deepEqual(assembleOverview(baseInput, { ...baseOutput, followUpQuestions: questions }, meta).followUpQuestions, questions);
+});
+
+test("a recipe video's note keeps its questions too", () => {
+  const questions = ["Could I make this with brown rice?"];
+  assert.deepEqual(
+    assembleRecipeVideoOverview(recipeInput, { ...recipeOutput, followUpQuestions: questions }, meta)?.followUpQuestions,
+    questions,
+  );
 });
 
 test("no matches means unsorted, not an error", () => {
@@ -383,6 +397,7 @@ const recipeOutput: GeneratedRecipeVideoOutput = {
   matchedTopicNames: [],
   suggestedTopic: null,
   tags: baseOutput.tags,
+  followUpQuestions: [],
   recipe: {
     summary: "A party jollof whose depth comes from frying the paste until it darkens.",
     ingredients: ["3 cups long-grain rice", "2 tbsp tomato paste", "1 tsp salt", "1 onion (about 150g), sliced"],

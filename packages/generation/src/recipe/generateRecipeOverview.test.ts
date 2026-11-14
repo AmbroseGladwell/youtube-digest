@@ -53,6 +53,7 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   matchedTopicNames: [],
   suggestedTopic: null,
   tags: ["stews", "weeknight", "leeks"],
+  followUpQuestions: [],
   ...overrides,
 });
 
@@ -75,6 +76,11 @@ test("a page with a recipe gets a recipe note, and the recipe is the page's, cop
   assert.equal(overview.verdict, null);
   assert.equal(overview.article, null);
   assert.equal(overview.inOneLine, "A weeknight stew built on charred leeks.");
+});
+
+test("a recipe page's note keeps its questions to ask next", async () => {
+  const questions = ["Could I make this stew without the wine?"];
+  assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, questions);
 });
 
 test("a recipe is never thin, however little the page says around it: there is no claim to judge (OV-179)", async () => {

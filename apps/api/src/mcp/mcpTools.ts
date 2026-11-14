@@ -202,7 +202,7 @@ const getOverview = mcpTool({
   name: "get_overview",
   title: "Read one overview",
   description:
-    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, and chapters. Every chapter links to its moment in the video, for citing.",
+    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, chapters, and questions to ask next, written for this reader, which you can offer them. Every chapter links to its moment in the video, for citing.",
   input: z.object({ id: z.string().describe("The overview's id") }),
   run: async ({ id }, { sql, accountId }) => {
     const library = await readLibrary(sql, accountId);

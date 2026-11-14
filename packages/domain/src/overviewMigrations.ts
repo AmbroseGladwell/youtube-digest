@@ -191,6 +191,18 @@ const fillSourceStepsAddedAfterTheFirstNotes: RecordMigration = {
 // (docs/features/article-resources.md).
 const allowArticleResources: RecordMigration = { newSchemaVersion: 18 };
 
+// Not derivable: an older note was written without questions, and shows none
+// (docs/features/follow-up-questions.md).
+const fillFollowUpQuestionsAddedAfterTheFirstNotes: RecordMigration = {
+  newSchemaVersion: 19,
+  alterRecord: (record) => {
+    if (typeof record !== "object" || record === null) {
+      return record;
+    }
+    return "followUpQuestions" in record ? record : { ...record, followUpQuestions: null };
+  },
+};
+
 export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   fillVideoFieldsAddedAfterTheFirstNotes,
   renameSavedNoteToCaptureReason,
@@ -209,6 +221,7 @@ export const OVERVIEW_MIGRATIONS: readonly RecordMigration[] = [
   allowTenKeyPoints,
   fillSourceStepsAddedAfterTheFirstNotes,
   allowArticleResources,
+  fillFollowUpQuestionsAddedAfterTheFirstNotes,
 ];
 
 export const CURRENT_OVERVIEW_SCHEMA_VERSION = currentSchemaVersion(OVERVIEW_MIGRATIONS);

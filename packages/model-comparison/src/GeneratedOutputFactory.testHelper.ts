@@ -4,6 +4,7 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
   return {
     inOneLine: "A thrift channel tests a grocery budget for three months.",
     bigPicture: "",
+    followUpQuestions: [],
     coreClaim: "Planning meals cut the grocery bill from $1,200 to 960 a month.",
     thin: false,
     keyPoints: [

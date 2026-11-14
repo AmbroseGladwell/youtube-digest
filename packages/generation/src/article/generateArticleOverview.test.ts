@@ -49,6 +49,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
 const output = (overrides: Record<string, unknown> = {}) => ({
   inOneLine: "A reported piece on one town's repair bill.",
   bigPicture: "",
+  followUpQuestions: [],
   coreClaim: "The repair bill doubled because a survey was never checked.",
   thin: false,
   keyPoints: [
@@ -94,6 +95,15 @@ test("the prompt never talks about a video, and asks the read-anyway question wi
   const { systemPrompt } = composeArticlePrompt(input());
   assert.doesNotMatch(systemPrompt, /video|transcript|channel|creator/i);
   assert.match(systemPrompt, /## Read it anyway\?\nYes, no, or partial, plus a reason\. Default to no\./);
+});
+
+test("an article's note keeps its questions to ask next, asked about the article", async () => {
+  const questions = ["Would a ward-level heat plan work where I live?"];
+  assert.match(
+    composeArticlePrompt(input()).systemPrompt,
+    /## Questions to ask next\n3 questions I could take to an assistant to go further with this article\./,
+  );
+  assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, questions);
 });
 
 test("paragraphs are numbered across the article, with its headings kept for context", () => {

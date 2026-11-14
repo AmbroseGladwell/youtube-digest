@@ -153,6 +153,12 @@ const version18 = {
   schemaVersion: 18,
 };
 
+const version19 = {
+  ...version18,
+  followUpQuestions: null,
+  schemaVersion: 19,
+};
+
 // One curated record per version, exercising every field at that version — which an
 // arbitrary real record does not guarantee, and which is why these are written rather
 // than harvested from a dev profile (docs/features/record-migrations.md).
@@ -175,4 +181,5 @@ export const OVERVIEW_CORPUS: ReadonlyMap<number, unknown> = new Map<number, unk
   [16, version16],
   [17, version17],
   [18, version18],
+  [19, version19],
 ]);

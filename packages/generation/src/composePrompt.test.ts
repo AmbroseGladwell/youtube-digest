@@ -91,7 +91,7 @@ test("structural fields are always in the schema, regardless of toggles", () => 
     sectionsEnabled: { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false, resources: false },
   });
   const keys = Object.keys(schema.shape);
-  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags"]) {
+  for (const structural of ["inOneLine", "coreClaim", "thin", "keyPoints", "chapters", "matchedTopicNames", "tags", "followUpQuestions"]) {
     assert.ok(keys.includes(structural), `expected ${structural} in schema`);
   }
 });
@@ -99,7 +99,7 @@ test("structural fields are always in the schema, regardless of toggles", () => 
 test("the default note's schema carries no recipe, and a recipe note's carries nothing argument-shaped", () => {
   assert.equal("recipe" in composePrompt(baseInput).schema.shape, false);
   const recipeKeys = Object.keys(composePrompt(baseInput, "recipe").schema.shape).sort();
-  assert.deepEqual(recipeKeys, ["chapters", "inOneLine", "matchedTopicNames", "recipe", "suggestedTopic", "tags"]);
+  assert.deepEqual(recipeKeys, ["chapters", "followUpQuestions", "inOneLine", "matchedTopicNames", "recipe", "suggestedTopic", "tags"]);
 });
 
 test("a recipe note ignores the reader's section toggles, since it has none of those sections", () => {

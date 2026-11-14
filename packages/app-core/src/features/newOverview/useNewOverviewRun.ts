@@ -286,6 +286,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 ...noteBudgetProps(saved, sourceWords, sourceHeadings),
                 articleLinks,
                 articleResources: articleLinks === undefined ? undefined : (saved.article?.resources?.length ?? 0),
+                followUpQuestions: saved.followUpQuestions?.length ?? 0,
                 ...madeWithProps(attempt),
               });
               setRun((current) => (current === null ? null : { ...current, overview: saved, finishedAt: Date.now() }));

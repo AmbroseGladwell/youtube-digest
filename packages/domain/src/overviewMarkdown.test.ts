@@ -65,6 +65,7 @@ const FULL = makeOverview({
     { title: "The hinge", summary: "Why the swing starts at the hips.", startMs: 0, endMs: 95_500 },
     { title: "Three faults", summary: "What goes wrong and how to see it.", startMs: 95_500, endMs: 754_000 },
   ],
+  followUpQuestions: ["Would a lighter bell fix my hip hinge, or hide the fault?", "How often should a beginner film a set?"],
 });
 
 test("writes every section of a full note in the reader's order", () => {
@@ -84,7 +85,21 @@ test("writes every section of a full note in the reader's order", () => {
     "## What it sells",
     "## Watch it anyway?",
     "## Chapters",
+    "## Questions to ask next",
   ]);
+});
+
+test("ends on the questions to ask next, one to a line", () => {
+  assert.ok(
+    overviewMarkdown(FULL).endsWith(
+      "## Questions to ask next\n\n- Would a lighter bell fix my hip hinge, or hide the fault?\n- How often should a beginner film a set?\n",
+    ),
+  );
+});
+
+test("a note written before questions, or with none, has no questions section", () => {
+  assert.ok(!overviewMarkdown({ ...FULL, followUpQuestions: null }).includes("Questions to ask next"));
+  assert.ok(!overviewMarkdown({ ...FULL, followUpQuestions: [] }).includes("Questions to ask next"));
 });
 
 test("gives an assistant the premise and the big picture both, the label and the ground", () => {

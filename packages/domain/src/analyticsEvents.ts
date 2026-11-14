@@ -783,7 +783,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, how many questions to ask next it kept, and the kind of note it got; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -812,6 +812,9 @@ export const analyticsEvents = {
           // and how many the note names as resources (OV-203). Absent for a video.
           articleLinks: z.number().int().nonnegative().optional(),
           articleResources: z.number().int().nonnegative().optional(),
+          // How many questions to ask next the note kept, never their text: fewer than three when
+          // some came back blank or too long (OV-266).
+          followUpQuestions: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).

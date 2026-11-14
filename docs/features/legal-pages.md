@@ -147,6 +147,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-14 | privacy | OV-266 | About you and what we have learned also shape the questions to ask next; an assistant you connect reads them with the overview, and a shared link never carries them. |
 | 2026-11-14 | privacy | OV-296 | Podcast episodes: the side panel beside an Apple Podcasts or Spotify episode sends that tab's address to our server as soon as it is in front of the panel, so the episode is named before Create; nothing about other tabs, or a show's page there. |
 | 2026-11-14 | privacy | OV-295 | Transcripts and articles: the shared transcript cache, its two-account agreement and the year-long record of who fetched what are gone; the words behind an overview are each account's own copy, kept on the device and under the account, never shown to another reader or carried by a shared link, and fetched for a device that lacks them. Shared links no longer hold the transcript. Retention and account deletion lose the shared-cache rows. |
 | 2026-11-14 | terms | OV-295 | What you may not do drops uploading a false transcript (none is served to others now). Your content: captions, episodes' and articles' text are fetched for you and kept as your own copy, never shared. Sharing a link: no transcript. |

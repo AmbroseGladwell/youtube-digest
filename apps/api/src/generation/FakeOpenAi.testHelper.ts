@@ -3,6 +3,7 @@ import { DEFAULT_SECTIONS_ENABLED, OurKeyGenerationRequest } from "@overview/dom
 export const validAnswer = {
   inOneLine: "A short description.",
   bigPicture: "",
+  followUpQuestions: [],
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: [

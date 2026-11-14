@@ -48,6 +48,13 @@ export function overviewMarkdown(overview: Overview): string {
     }
   };
 
+  const finished = () => {
+    if (overview.followUpQuestions !== null && overview.followUpQuestions.length > 0) {
+      section("Questions to ask next", bullets(overview.followUpQuestions));
+    }
+    return `${sections.join("\n\n")}\n`;
+  };
+
   if (overview.captureReason !== null && overview.captureReason.trim() !== "") {
     section("Why I saved it", overview.captureReason.trim());
   }
@@ -77,7 +84,7 @@ export function overviewMarkdown(overview: Overview): string {
             .join("\n\n"),
     );
     chaptersSection();
-    return `${sections.join("\n\n")}\n`;
+    return finished();
   }
 
   section("Premise", overview.inOneLine);
@@ -166,5 +173,5 @@ export function overviewMarkdown(overview: Overview): string {
   }
   chaptersSection();
 
-  return `${sections.join("\n\n")}\n`;
+  return finished();
 }

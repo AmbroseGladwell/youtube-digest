@@ -9,6 +9,7 @@ import { offeredLinks } from "./offeredLinks.js";
 import { articleChaptersSection, type ArticleChapterShape } from "./sections/articleChaptersSection.js";
 import { articleCoreSection } from "./sections/articleCoreSection.js";
 import { articleFilingSection } from "./sections/articleFilingSection.js";
+import { articleFollowUpQuestionsSection } from "./sections/articleFollowUpQuestionsSection.js";
 import { articleHowToApplySection } from "./sections/articleHowToApplySection.js";
 import { articleResourcesSection } from "./sections/articleResourcesSection.js";
 import { articleSellingSection } from "./sections/articleSellingSection.js";
@@ -26,6 +27,7 @@ const REGISTRY: ArticlePromptSection[] = [
   articleHowToApplySection,
   readAnywaySection,
   articleResourcesSection,
+  articleFollowUpQuestionsSection,
 ];
 
 const ARTICLE_TAG = /<(\/?)(article|title|site|author|published|paragraphs|links?)\b/gi;
