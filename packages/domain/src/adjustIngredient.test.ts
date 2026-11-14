@@ -142,6 +142,48 @@ test("a tidied line from a page that wraps its notes twice still scales", () => 
   assert.equal(adjustIngredient("1 onion, plus 2 more to serve", 2, "asWritten").kind, "unreadable");
 });
 
+test("a counted measure scales and agrees, and the ingredient keeps its name", () => {
+  assert.equal(doubled("1 pint milk"), "2 pints milk");
+  assert.equal(doubled("1 stick butter"), "2 sticks butter");
+  assert.equal(doubled("1 dash Worcestershire sauce"), "2 dashes Worcestershire sauce");
+  assert.equal(doubled("1 pinch of salt"), "2 pinches of salt");
+  assert.equal(doubled("1 clove garlic, crushed"), "2 cloves garlic, crushed");
+  assert.equal(doubled("2 garlic cloves, crushed"), "4 garlic cloves, crushed");
+  assert.equal(doubled("1 sprig rosemary"), "2 sprigs rosemary");
+  assert.equal(doubled("1 handful spinach"), "2 handfuls spinach");
+  assert.equal(doubled("1 bunch coriander, chopped"), "2 bunches coriander, chopped");
+  assert.equal(adjustedText(adjustIngredient("2 pinches chilli flakes", 0.5, "asWritten")), "1 pinch chilli flakes");
+  assert.equal(adjustedText(adjustIngredient("4 rashers smoked bacon", 0.5, "asWritten")), "2 rashers smoked bacon");
+});
+
+test("quarts and gallons convert, a pint never does, and Metric weighs a stick of butter", () => {
+  assert.equal(adjustedText(adjustIngredient("1 quart chicken stock", 1, "metric")), "945ml chicken stock");
+  assert.equal(adjustedText(adjustIngredient("1 gallon water", 1, "metric")), "3.79 litres water");
+  assert.equal(adjustedText(adjustIngredient("1 quart stock", 2, "us")), "2 quarts stock");
+  assert.equal(adjustIngredient("1 pint milk", 1, "metric").kind, "same");
+  assert.equal(adjustedText(adjustIngredient("1 pint milk", 2, "metric")), "2 pints milk");
+  assert.equal(adjustedText(adjustIngredient("1 stick unsalted butter, softened", 1, "metric")), "115g unsalted butter, softened");
+  assert.equal(adjustedText(adjustIngredient("2 sticks butter", 1, "metric")), "225g butter");
+  assert.equal(adjustIngredient("1 stick celery", 1, "metric").kind, "same");
+});
+
+test("an amount written as a word scales as its number does", () => {
+  assert.equal(doubled("two eggs"), "4 eggs");
+  assert.equal(doubled("Three large carrots, peeled"), "6 large carrots, peeled");
+  assert.equal(doubled("one onion, diced"), "2 onions, diced");
+  assert.equal(doubled("half a lemon, juiced"), "1 lemon, juiced");
+  assert.equal(doubled("half an onion"), "1 onion");
+  assert.equal(doubled("a dozen eggs"), "24 eggs");
+  assert.equal(doubled("Juice of one lemon"), "Juice of 2 lemons");
+  assert.equal(doubled("two cups plain flour"), "4 cups plain flour");
+  assert.equal(adjustedText(adjustIngredient("four eggs", 0.25, "asWritten")), "1 egg");
+  assert.equal(adjustIngredient("two eggs", 1, "metric").kind, "same");
+  assert.equal(adjustIngredient("onions", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("A handful of parsley", 2, "asWritten").kind, "unreadable");
+  const adjusted = adjustIngredient("two eggs", 2, "asWritten");
+  assert.equal(adjusted.kind === "adjusted" && adjusted.written, "two");
+});
+
 test("a bracketed note whose numbers point at a note, a cut or one item scales with the line", () => {
   assert.equal(
     doubled("1 cup plain / all purpose flour ((cake flour OK too, Note 1))"),

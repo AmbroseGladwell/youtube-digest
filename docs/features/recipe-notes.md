@@ -160,7 +160,16 @@ guess:
   a fixed table of grams per US cup (`gramsPerCup`, King Arthur's weight chart): plain, bread,
   cake, self-raising and wholemeal flour, cornflour, ground almonds, cocoa, the sugars, butter, oats
   and chocolate chips. Anything the table doesn't name stays in millilitres, and US never turns
-  grams into cups.
+  grams into cups. A stick of butter is sold at 113g, so Metric weighs that too.
+- Quarts and gallons are US-only and convert like cups. A pint never converts: a US pint is 473ml
+  and a British one 568ml, and a line doesn't say which (OV-300).
+- A counted measure straight after the amount (pint, stick, dash, pinch, sprig, clove, slice,
+  knob, rasher, stalk, sheet, piece, handful, bunch, head, splash, drop) scales and agrees, and the
+  ingredient keeps its name: "1 clove garlic" doubled is "2 cloves garlic", not "2 clove garlics"
+  (OV-300).
+- An amount written as a word, one to twelve, "a dozen", or "half a"/"half an", scales as its
+  number does: "two eggs" doubled is "4 eggs", and "half a lemon" is "1 lemon". "A handful" and
+  "a pinch" stay as written.
 - A tin's size stays as sold ("4 × 400g tins"), and says so. A line that starts with a pack size
   scales by how many packs instead (OV-231): "400g can chopped tomatoes" doubled is "2 × 400g cans
   chopped tomatoes", and halved is "½ × 400g can", read aloud as "half a 400 gram can". Changing
