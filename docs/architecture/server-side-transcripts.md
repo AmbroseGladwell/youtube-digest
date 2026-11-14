@@ -39,16 +39,17 @@ bounds, and they are the position:**
   traffic. If proxied fetches pass a few thousand a day, or YouTube or anyone else
   objects, get a lawyer's view before raising the cap.
 
-**Podcasts widen "captions only" (OV-106, decided with the owner 13 Nov 2026).** Finding a
-podcast episode on its show's YouTube channel reads more than a player response: a channel search,
-a channel's Videos pages and up to five player responses, at most 14 requests
-(`docs/features/podcast-on-youtube.md`). The same bounds hold. The reader's extension searches
-first, on their own address, and our server is asked to search only when there is no extension or
-YouTube turned it away. Checking the video an extension found is one player request. Which video
-is the episode is kept under the episode's key, so an episode is matched once, ever; its captions
-are fetched again for each reader and never kept for everyone (OV-297). It is `metered`, so never in
-the background. And it runs only with the service switched on, through the same proxy budget. It
-still never downloads audio or video, never signs in and never touches comments or accounts. The
+**Podcasts and "captions only" (OV-106, decided with the owner 13 Nov 2026; OV-294).** Finding a
+podcast episode on its show's YouTube channel reads more than a player response. The reader's
+extension searches first, on their own address, through YouTube's screens. Our server is asked only
+when there is no extension or YouTube turned it away, and since OV-294 it searches and checks through
+the YouTube Data API on our key, not YouTube's screens and not through the proxy
+(`docs/features/podcast-on-youtube.md`, "Our server's search"). So on our server this rung is still
+captions only: the episode's video's captions, fetched as any caption fetch is. Which video is the
+episode is kept under the episode's key and checked again every 30 days; its captions are fetched
+again for each reader and never kept for everyone (OV-297). It is `metered`, so never in the
+background, and the captions come only with the service switched on. It still never downloads audio
+or video, never signs in and never touches comments or accounts. The
 extension's requests omit the reader's cookies (`fetchYouTubeInWorker.ts`), so a signed-in reader's
 Google account is never attached.
 

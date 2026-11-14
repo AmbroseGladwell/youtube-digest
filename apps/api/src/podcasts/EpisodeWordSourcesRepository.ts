@@ -6,8 +6,13 @@ import type { SqlClient } from "../db/SqlClient.js";
 // never the words, which each reader fetches for themselves (docs/features/podcast-transcripts.md).
 export type EpisodeWordSource = { via: "tag"; url: string; type: string } | { via: "youtube"; videoId: string };
 
+export interface KnownWordSource {
+  source: EpisodeWordSource;
+  foundAt: Date;
+}
+
 export interface EpisodeWordSources {
-  get(key: SourceKey): Promise<EpisodeWordSource | null>;
+  get(key: SourceKey): Promise<KnownWordSource | null>;
   put(key: SourceKey, source: EpisodeWordSource, at: Date): Promise<void>;
   forget(key: SourceKey): Promise<void>;
 }
@@ -19,14 +24,16 @@ export class EpisodeWordSourcesRepository implements EpisodeWordSources {
     this.#sql = sql;
   }
 
-  async get(key: SourceKey): Promise<EpisodeWordSource | null> {
-    const [row] = await this.#sql.query<{ via: string; url: string | null; type: string | null; video_id: string | null }>(
-      "select via, url, type, video_id from podcast_transcript_sources where episode_key = $1",
+  async get(key: SourceKey): Promise<KnownWordSource | null> {
+    const [row] = await this.#sql.query<{ via: string; url: string | null; type: string | null; video_id: string | null; found_at: Date }>(
+      "select via, url, type, video_id, found_at from podcast_transcript_sources where episode_key = $1",
       [key],
     );
     if (row === undefined) return null;
-    if (row.via === "tag" && row.url !== null && row.type !== null) return { via: "tag", url: row.url, type: row.type };
-    if (row.via === "youtube" && row.video_id !== null) return { via: "youtube", videoId: row.video_id };
+    const foundAt = new Date(row.found_at);
+    if (row.via === "tag" && row.url !== null && row.type !== null)
+      return { source: { via: "tag", url: row.url, type: row.type }, foundAt };
+    if (row.via === "youtube" && row.video_id !== null) return { source: { via: "youtube", videoId: row.video_id }, foundAt };
     return null;
   }
 

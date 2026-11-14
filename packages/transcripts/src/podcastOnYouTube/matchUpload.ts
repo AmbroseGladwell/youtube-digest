@@ -19,6 +19,8 @@ export const DESCRIPTION_WORDS_SHARED = 0.4;
 export const DESCRIPTION_LEAD = 0.1;
 export const FEWEST_KEYWORDS = 8;
 export const MOST_DAYS_APART = 3;
+export const MOST_DESCRIPTIONS_READ = 5;
+const CHANNEL_NAME_WORDS_SHARED = 0.6;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -42,7 +44,7 @@ const numbersDisagree = (a: readonly string[], b: readonly string[]): boolean =>
 
 // The episode's title, nearly word for word, on an upload of nearly its length. A clip has the
 // title and not the length, so it is never taken for the episode.
-export function titleMatch(episode: EpisodeToFind, uploads: readonly ListedUpload[]): ListedUpload | null {
+export function titleMatch<Upload extends ListedUpload>(episode: EpisodeToFind, uploads: readonly Upload[]): Upload | null {
   const words = titleWords(episode.title);
   if (words.length < 2) return null;
   return (
@@ -82,4 +84,17 @@ export function retitledCandidates(episode: EpisodeToFind, uploads: readonly Lis
 export const descriptionShare = (keywords: readonly string[], description: string): number => {
   const words = noteWords(description);
   return keywords.length === 0 ? 0 : keywords.filter((word) => words.has(word)).length / keywords.length;
+};
+
+const nameWords = (name: string): string[] =>
+  name
+    .toLowerCase()
+    .split(":")[0]!
+    .match(/[a-z0-9]+/g) ?? [];
+
+// The channel is the show's own: most of the show's name, before any subtitle, in the channel's.
+export const namesTheShow = (channelTitle: string, showName: string): boolean => {
+  const show = nameWords(showName);
+  const channelWords = new Set(nameWords(channelTitle));
+  return show.length > 0 && show.filter((word) => channelWords.has(word)).length / show.length >= CHANNEL_NAME_WORDS_SHARED;
 };

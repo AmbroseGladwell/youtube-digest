@@ -33,6 +33,12 @@ export interface DirectoryEpisode {
   durationSeconds: number | null;
 }
 
+// What a Spotify link needs of a directory: the show by its name, and its newest episodes.
+export interface ShowDirectory {
+  searchShows(name: string): Promise<DirectoryShow[]>;
+  showWithEpisodes(showId: string): Promise<{ show: DirectoryShow; episodes: DirectoryEpisode[] } | null>;
+}
+
 export type FetchJson = (url: string) => Promise<unknown>;
 
 const LOOKUP = "https://itunes.apple.com/lookup";

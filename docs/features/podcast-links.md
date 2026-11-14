@@ -38,12 +38,12 @@ was tried.
 
 **Spotify.** No API key and no account: an episode's public page carries the tags every link
 preview reads, `og:title`, the show in its description ("Listen to this episode from … on
-Spotify."), `music:release_date` and `music:duration`. Apple's directory is searched for a show of
-exactly that name, at most three are tried, and the episode is matched by title, date and length
-among each one's newest 200, or in its feed when it is older. A short `spotify.link` is followed to
-the episode it names first.
+Spotify."), `music:release_date` and `music:duration`. Podcast Index, then Apple's directory, is
+searched for a show of exactly that name ("The directories" below), at most three are tried, and
+the episode is matched by title, date and length among each one's newest 200, or in its feed when
+it is older. A short `spotify.link` is followed to the episode it names first.
 
-- **No show of that name in Apple's directory** is `no-public-feed`, with the show's name: most
+- **No show of that name in either directory** is `no-public-feed`, with the show's name: most
   likely a Spotify exclusive, and the reader is told so plainly.
 - **A public show whose feed lacks the episode** is `not-found`, with the show's name. Some shows
   keep bonus episodes on Spotify alone. It is never matched to a different episode instead.
@@ -89,13 +89,38 @@ artwork (else the show's), its notes as plain text (at most 20,000 characters), 
 `<podcast:transcript>` with its type and language, and `<podcast:chapters>`. In the same sample
 no feed carried chapters and 6% carried transcripts, but Omny's shows carry both SRT and VTT.
 
+## The directories
+
+Since OV-294 (14 Nov 2026), a Spotify link's show is looked up in **Podcast Index** first, and in
+**Apple's directory** where Podcast Index fails, is busy or doesn't know it. Podcast Index is the
+open directory built for podcast apps, free with a key, and it has the same two things Apple's
+lookup gives: a show's feed by its name, and its newest episodes with their guids, dates and
+lengths (`podcastIndexDirectory.ts`). It is asked only where it can do Apple's job:
+
+- **An Apple link** still goes to Apple alone, since its episode id is Apple's own and only Apple's
+  directory maps it to the feed's episode.
+- **A show's own page that names no feed** is still searched in Apple's directory, by the episode's
+  title. Podcast Index's term search finds shows, not episodes.
+
+Without `PODCAST_INDEX_API_KEY` and `PODCAST_INDEX_API_SECRET`, Apple's directory is asked alone, and
+startup says which directories are on.
+
+**Their limits.** Each directory sees our server's address, not each reader's, so every call this
+process makes to one shares a budget (`callBudget.ts`). Apple's is 15 a minute, under its "approximately
+20", waiting up to 15 seconds past it, with lookups kept an hour and searches a day. Podcast Index
+publishes no number, so its budget is a polite 20 a minute, and a call that would wait more than two
+seconds goes to Apple instead. Its terms allow keeping an answer only as long as its cache header says,
+so nothing of its is kept.
+
 ## What the server will fetch
 
 Every request, to Apple, to Spotify or to a feed, goes through `createPublicWebFetch`: public
 addresses only, checked when connecting, redirects followed by hand and each checked again, no
 cookies or credentials, 20 seconds. These are `pasted-article-links.md`'s rules, moved out of the
 article fetcher so both use the same code rather than two copies. Feed hosts sit behind
-measurement redirects (Podtrac, Chartable and others), which those rules already allow.
+measurement redirects (Podtrac, Chartable and others), which those rules already allow. Podcast
+Index is the exception: one fixed address of ours, not a reader's link, signed with our key, so it
+is asked directly, within 10 seconds and 5 MB.
 
 ## The route
 
@@ -113,14 +138,34 @@ review"), and acted on in OV-297:
 
 - **Apple's Search API** says little about use like ours. It is "limited to approximately 20 calls
   per minute" and asks large users to cache. Apple sees our server's address, not each reader's, so
-  every Apple call shares one budget of 15 a minute, waiting briefly past it, and answers are kept
-  (lookups an hour, searches a day) (`appleCallBudget.ts`).
+  every Apple call shares one budget ("Their limits" above).
 - **Apple's web pages** fall under its website terms' bar on scraping, so they aren't read. An Apple
   link to an episode older than the newest 200 its directory lists can't be matched, and says so
   (`not-listed`), pointing to the Spotify link or the show's own page.
 - **Spotify's public episode page** is read once per pasted link, with an honest User-Agent, for
   four meta tags, and not kept. Its user guidelines bar scraping on a literal reading; the risk is
-  low, and an official route is OV-294.
+  low, and the official route doesn't fit (below).
+
+### Official routes, checked 14 Nov 2026 (OV-294)
+
+- **Podcast Index API: fits, and is used** ("The directories"). Its terms (v1.1, March 2021) were
+  read from its own repository, since its site refuses automated fetches. They name no bar on
+  commercial use. They ask that answers not be kept "longer than permitted by the cache header",
+  that credentials not be "embedded in open source projects" (ours are references in the secret
+  manager, `docs/conventions/secrets.md`), and that we "display all attribution(s) required … as
+  described in the documentation". No attribution requirement was found in the API's docs; the
+  owner checks its site when registering the key.
+- **Spotify Web API: doesn't fit.** Client credentials could read an episode's title, show, date and
+  length, but the Developer Policy (15 May 2025) says "commercial uses are not permitted" beyond
+  selling access to an app that streams nothing, the Developer Terms' licence is for "private
+  personal use", and both bar putting Spotify content into "a machine learning or AI model". An app
+  in development mode is meant for up to five allowlisted users, and since 15 May 2025 extended
+  quota goes only to organisations with a launched service and about 250,000 monthly users. So the
+  page's four meta
+  tags stay, the same tags any link preview reads. Its oEmbed endpoint gives only the episode's
+  title, not its show, date or length, so it can't stand in either.
+- **YouTube Data API: fits, and is used** for finding the episode on its show's channel
+  (`podcast-on-youtube.md`, "Our server's search").
 - **Links back** read "Listen on Spotify" and "Listen on Apple Podcasts", as both companies'
   guidelines ask, and the terms carry their trademark lines.
 - **Transcripts** are each reader's own (`podcast-transcripts.md`, "Each reader's own copy").
