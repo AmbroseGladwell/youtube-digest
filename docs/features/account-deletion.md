@@ -65,9 +65,9 @@ test does the same: it reads `information_schema.columns` for every `account_id`
 - **Deleted by hand, with no foreign key:** `magic_links` for the address, which hold the
   address, the first name and the anonymous id; `service_transcript_usage` rows whose caller is
   `account:<id>`; `audio_renders where requested_by = account`, and their files in R2.
-- **Kept on purpose:** `transcript_contributions` and `shared_transcripts`, the documented
-  exception (`shared-transcript-cache.md`): a year, so a copy the account vouched for can still
-  be removed. `trial_*` and `our_key_usage`, which never carried the account. And the audit
+- **Kept on purpose:** `podcast_transcript_sources`, where an episode's words were found, which
+  never named an account. `trial_*` and `our_key_usage`, which never carried the account. (The
+  shared transcript cache and its year-long contributions are gone since OV-295.) And the audit
   row, below. The in-memory rate-limit counters expire within a day on their own.
 - **PostHog's copy of the cost reports** drops the account at its next daily full refresh, since
   the `cost_reports` views read the cascaded tables (`unit-economics.md`).

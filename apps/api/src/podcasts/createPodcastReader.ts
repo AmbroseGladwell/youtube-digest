@@ -3,6 +3,7 @@ import { episodeKeywords } from "@overview/transcripts";
 import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import { readBodyText } from "../publicWeb/createPublicWebFetch.js";
 import { appleDirectory, type DirectoryShow } from "./appleDirectory.js";
+import { appleCallBudget, type AppleCallBudgetOptions } from "./appleCallBudget.js";
 import { pageMeta, type PageMeta } from "./pageMeta.js";
 import { feedItemGuid, fetchFeedEpisode, MOST_FEED_BYTES, type FeedRead } from "./fetchFeedEpisode.js";
 import type { FeedItem } from "./readFeedEpisode.js";
@@ -14,6 +15,9 @@ type FetchPublicWeb = ReturnType<typeof createPublicWebFetch>;
 export interface PodcastReaderOptions {
   fetchPublicWeb: FetchPublicWeb;
   mostFeedBytes?: number;
+  // Every Apple call shares one budget and its answers are kept (appleCallBudget.ts); without it,
+  // as in tests, each call goes straight to Apple.
+  appleBudget?: AppleCallBudgetOptions;
 }
 
 const HTML = "text/html,application/xhtml+xml";
@@ -40,7 +44,7 @@ const samePage = (a: string | null, b: string | null): boolean => {
 };
 
 // docs/features/podcast-links.md
-export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_BYTES }: PodcastReaderOptions) {
+export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_BYTES, appleBudget }: PodcastReaderOptions) {
   const fetchPage = async (link: string): Promise<{ url: string; html: string; isFeed: boolean } | { failure: PodcastReadFailure }> => {
     const answer = await fetchPublicWeb(link, { accept: HTML });
     if (answer.status === "failed") return { failure: answer.reason === "no-answer" ? "no-answer" : "not-found" };
@@ -61,7 +65,7 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
     return JSON.parse(text);
   };
 
-  const directory = appleDirectory(fetchJson);
+  const directory = appleDirectory(appleBudget === undefined ? fetchJson : appleCallBudget(fetchJson, appleBudget));
 
   const readFeed = (feedUrl: string, isWanted: (item: FeedItem) => boolean): Promise<FeedRead> =>
     fetchFeedEpisode(fetchPublicWeb, feedUrl, isWanted, mostFeedBytes);
@@ -101,17 +105,16 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
     return episodeFrom(show.feedUrl, read, linkFrom, show.showName);
   };
 
-  const fromApple = async (link: string, showId: string, episodeId: string): Promise<PodcastRead> => {
+  // Apple's link names its own episode id, which only its directory maps to the feed's episode,
+  // and only for the show's newest 200. Apple's web pages aren't read, so an older episode from an
+  // Apple link says so and points to another link (OV-297, the terms review).
+  const fromApple = async (showId: string, episodeId: string): Promise<PodcastRead> => {
     const listing = await directory.showWithEpisodes(showId);
     if (listing === null) return failed("not-found");
     if (listing.show.feedUrl === null) return failed("no-public-feed", listing.show.showName);
     const listed = listing.episodes.find((episode) => episode.episodeId === episodeId);
-    if (listed !== undefined) return fromFeed(listing.show, listed, listed.guid, "apple");
-    const page = await fetchPage(link);
-    if ("failure" in page) return failed(page.failure, listing.show.showName);
-    const title = pageMeta(page.html, page.url).meta.get("og:title") ?? null;
-    if (title === null) return failed("not-found", listing.show.showName);
-    return fromFeed(listing.show, { title, publishedAt: null, durationSeconds: null }, null, "apple");
+    if (listed === undefined) return failed("not-listed", listing.show.showName);
+    return fromFeed(listing.show, listed, listed.guid, "apple");
   };
 
   const fromSpotify = async (episodeId: string): Promise<PodcastRead> => {
@@ -180,7 +183,7 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
       }
       switch (parsed?.platform) {
         case "apple":
-          return await fromApple(link, parsed.showId, parsed.episodeId);
+          return await fromApple(parsed.showId, parsed.episodeId);
         case "spotify":
           return await fromSpotify(parsed.episodeId);
         case "page":

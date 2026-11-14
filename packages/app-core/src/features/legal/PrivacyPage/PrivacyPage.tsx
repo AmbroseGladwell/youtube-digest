@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-13";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-14";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -126,17 +126,14 @@ const sections: readonly LegalSection[] = [
           run by Decodo. The proxy sees a request for the video's page and nothing about you.
         </p>
         <p>
-          <strong>The shared transcript cache.</strong> A video's captions are the same for everyone, so when you make an overview of a
-          video the captions behind it are sent to our server and may be served to the next reader of the same video, once a second account
-          has fetched the same words. The stored copy carries no account. Separately, we keep a record that your account fetched that
-          video's captions, which is what lets us count agreement between accounts and remove a bad copy. That record is kept for one year
-          and then deleted, and it stays for that year even if you delete your account, because a copy you vouched for may still need
-          removing.
+          <strong>Your own copy.</strong> The words behind each of your overviews, a video's captions or an episode's transcript, are your
+          copy. Your device keeps them, and with an account they are stored on our server under your account, so your other devices read the
+          same words. They are never shown to another reader, and a shared link doesn't carry them. When you open an overview on a device
+          that doesn't have its words yet, our server fetches them for you and keeps them as your copy.
         </p>
         <p>
-          Captions the extension fetched only because a video was open in YouTube stay on your device and are never sent to us. Pressing
-          Create asks our server whether it already holds a video's captions, so from that moment we know which video you are summarising;
-          we log that a lookup happened, never the video.
+          Captions the extension fetched only because a video was open in YouTube stay on your device and are never sent to us unless you
+          make an overview of that video.
         </p>
         <p>
           <strong>Articles.</strong> When you paste a link to an article on the web app, or regenerate an article's overview without the
@@ -149,15 +146,16 @@ const sections: readonly LegalSection[] = [
         <p>
           <strong>Podcast episodes.</strong> When you paste a link to a podcast episode, our server reads the page it points to, looks the
           show up in Apple's podcast directory where it needs to, and reads the show's public feed to find the episode. It then looks for
-          the episode's words: in our shared transcript cache, in a transcript the show publishes, or in the same episode on the show's
-          YouTube channel. With the extension, that YouTube search runs in your own browser and our server checks the one video it found;
-          without it, our server searches. Words found this way are public and the same for everyone, so they are kept in the shared
-          transcript cache under the episode, with no account on them. Neither the link nor the episode ever appears in our logs. An episode
-          whose words can't be found makes no overview.
+          the episode's words: in a transcript the show publishes, or in the same episode on the show's YouTube channel. With the extension,
+          that YouTube search runs in your own browser and our server checks the one video it found; without it, our server searches. The
+          words are fetched for you and kept as your own copy, as above, never shown to anyone else. What our server keeps for every reader,
+          with no account on it, is where they were found (the address of the show's transcript, or which YouTube video is the episode), so
+          the search isn't repeated for the next reader, who fetches the words for themselves. We don't record the link or the episode in
+          our logs. An episode whose words can't be found makes no overview.
         </p>
         <p>
-          <strong>Basis:</strong> performance of our contract with you for your own transcripts, and our legitimate interest in serving
-          every reader of a public video from one copy, and in tracing a wrong copy to the accounts that sent it, for the shared cache.
+          <strong>Basis:</strong> performance of our contract with you for your own copy of the words, and our legitimate interest in not
+          repeating the search for an episode, for where its words were found.
         </p>
       </>
     ),
@@ -269,9 +267,9 @@ const sections: readonly LegalSection[] = [
       <>
         <p>
           Sharing an overview makes a public copy of it, readable by anyone who has the link, with no account. The copy holds the overview,
-          the video's details, its transcript and its narration. It never holds your name, your reason for saving it, your topics, or your
-          read and favourite marks. Search engines are asked not to index it. We count how many times the page is opened and nothing else
-          about who opened it.
+          the video's or episode's details and its narration. It never holds the transcript, your name, your reason for saving it, your
+          topics, or your read and favourite marks. Search engines are asked not to index it. We count how many times the page is opened and
+          nothing else about who opened it.
         </p>
         <p>
           Stop a link from the overview's menu or Settings › Shared links, and the page stops at once; a stopped link stays stopped, and
@@ -433,8 +431,8 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           Playing a podcast episode inside its overview loads the episode's audio in your browser, from the address in the show's public
-          feed. The show's host, and any service it uses to add adverts, sees that request and your network address, under its own policy,
-          as it would in a podcast app. We add nothing about you.
+          feed. Your browser asks the show's host directly, so the host, and any service it uses to add adverts, sees your network address,
+          your browser's details and that the request came from our site, under its own policy, as it would in a podcast app.
         </p>
         <p>
           A provider you bring your own key for (Anthropic, OpenAI, Google, DeepSeek, xAI or Mistral) is not our processor. Your device
@@ -489,9 +487,8 @@ const sections: readonly LegalSection[] = [
             "while an overview uses it; every file your account asked for goes with the account, and is made again for a reader who shared it the next time they play it",
           ],
           ["Shared links", "until you stop them; the copy goes with the account"],
-          ["Transcripts linked to your account", "while a note of yours uses the video"],
-          ["A shared cache copy, with no account on it", "until it is removed as wrong"],
-          ["The record that your account fetched a video's captions", "one year, even after the account is deleted"],
+          ["Your own copy of the words behind your overviews", "while a note of yours uses the video or episode; gone with the account"],
+          ["Where a podcast episode's words were found, with no account on it", "until that source stops answering"],
           ["Monthly and daily usage counts, and the daily cost tally, for an account", "with the account"],
           [
             "The record of a deletion: the account's opaque id, the random analytics id joined to it, the narration files asked for, and how each erasure ended",
@@ -523,11 +520,10 @@ const sections: readonly LegalSection[] = [
           account asked for. Then we ask PostHog to delete the person records under your account's id and the random id joined to it at
           sign-up, with every event and error report under them; PostHog removes the person within minutes and the events in a later
           scheduled run, not instantly. If asking fails, we keep a record of the deletion saying so and ask again by hand. What stays is
-          what the table above says outlives an account: the record that your account fetched a video's captions, for the rest of its year;
-          the anonymous copies in the shared cache; and the record of the deletion itself, which holds no address. Server logs expire on
-          their own within fourteen days. The device you deleted from removes its copy of your library; copies on other devices stay on
-          those devices, signed out, until you clear the site's data there. Signing in with the same address afterwards finds no account;
-          creating one with it starts a new, empty account.
+          what the table above says outlives an account: where an episode's words were found, which names no account; and the record of the
+          deletion itself, which holds no address. Server logs expire on their own within fourteen days. The device you deleted from removes
+          its copy of your library; copies on other devices stay on those devices, signed out, until you clear the site's data there.
+          Signing in with the same address afterwards finds no account; creating one with it starts a new, empty account.
         </p>
         <p>
           <strong>Without an account.</strong> Turning analytics off in Settings › Privacy deletes the random id from your device and stops

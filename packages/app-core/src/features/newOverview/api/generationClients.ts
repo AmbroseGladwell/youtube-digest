@@ -1,10 +1,9 @@
 import { createGenerationClient as createProviderClient, type GenerationClient } from "@overview/generation";
 import type { Provider } from "@overview/domain";
-import { createFetchServiceTranscriptApi, createFetchSharedTranscriptApi } from "@overview/sync";
+import { createFetchServiceTranscriptApi } from "@overview/sync";
 import type { YouTubeFetch } from "@overview/transcripts";
 import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTranscriptSource.js";
 import { serviceTranscriptSource } from "../../transcripts/api/serviceTranscriptSource.js";
-import { sharedCacheTranscriptSource } from "../../transcripts/api/sharedCacheTranscriptSource.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 
 // BYO-key, called straight from the browser holding the key
@@ -16,8 +15,6 @@ export function createGenerationClient(provider: Provider, apiKey: string, model
 }
 
 export interface TranscriptSourceOptions {
-  // Where the shared cache is asked. Null keeps the video id on this device.
-  sharedCacheApiUrl: string | null;
   youTubeFetch: YouTubeFetch | null;
   // Where our own server is asked to fetch, last, and the session it counts against: none
   // counts against the reader's address, and signed out the trial's token, when the device
@@ -26,12 +23,10 @@ export interface TranscriptSourceOptions {
 }
 
 // The rungs this surface can actually reach, in the order they are asked: the free ones
-// first, our own server last (docs/features/transcript-retrieval.md).
+// first, our own server last (docs/features/transcript-retrieval.md). There is no shared cache to
+// ask: each reader fetches their own words (OV-295).
 export function createTranscriptSources(options: TranscriptSourceOptions): TranscriptSource[] {
   return [
-    ...(options.sharedCacheApiUrl === null
-      ? []
-      : [sharedCacheTranscriptSource(createFetchSharedTranscriptApi({ baseUrl: options.sharedCacheApiUrl }))]),
     ...(options.youTubeFetch === null ? [] : [innerTubeTranscriptSource(options.youTubeFetch)]),
     ...(options.service === null
       ? []

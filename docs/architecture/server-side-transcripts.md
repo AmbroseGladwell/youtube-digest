@@ -21,10 +21,13 @@ bounds, and they are the position:**
 - **Last, never first.** Every rung above it fetches nothing from our address. The
   shared cache answers from a row, and the extension fetches from the reader's own
   address. The server is asked only when both have failed.
-- **Once per video, ever.** What the server fetches goes into the shared cache as
-  confirmed, so the next reader of that video is answered from the row. The bill and
-  the exposure both track the rate at which new videos enter the corpus, not readers
-  times videos.
+- **Once per reader without the extension (since OV-295).** What the server fetches is
+  that reader's own copy; nothing is kept for the next reader, since a source's words
+  aren't ours to hand on. The bill and the exposure now track readers without the
+  extension times videos, not new videos alone. That is the cost of the terms review's
+  finding, and the reason the extension, which fetches free on the reader's own address,
+  stays the first rung. Readers asking for the same video at the same moment still share
+  the one fetch in flight.
 - **Never in the background.** The rung's cost is `metered`, so `freeTranscriptSources`
   keeps it from the background prefetch. Only a reader pressing Create can reach it. That
   makes it a property of what the prefetch is handed, not a rule anyone has to remember.
@@ -41,10 +44,21 @@ podcast episode on its show's YouTube channel reads more than a player response:
 a channel's Videos pages and up to five player responses, at most 14 requests
 (`docs/features/podcast-on-youtube.md`). The same bounds hold. The reader's extension searches
 first, on their own address, and our server is asked to search only when there is no extension or
-YouTube turned it away. Checking the video an extension found is one player request. The answer is
-kept under the episode's key, so an episode is matched once, ever. It is `metered`, so never in the
-background. And it runs only with the service switched on, through the same proxy budget. It
-still never downloads audio or video, never signs in and never touches comments or accounts.
+YouTube turned it away. Checking the video an extension found is one player request. Which video
+is the episode is kept under the episode's key, so an episode is matched once, ever; its captions
+are fetched again for each reader and never kept for everyone (OV-297). It is `metered`, so never in
+the background. And it runs only with the service switched on, through the same proxy budget. It
+still never downloads audio or video, never signs in and never touches comments or accounts. The
+extension's requests omit the reader's cookies (`fetchYouTubeInWorker.ts`), so a signed-in reader's
+Google account is never attached.
+
+**Two known deviations, named by the terms review (13 Nov 2026).** YouTube's `robots.txt`
+disallows `/youtubei/` (InnerTube) and `/results`, the endpoints the search and player requests use.
+And the residential proxy is used when YouTube refuses our datacentre address, which is getting
+round a block YouTube applied. Both are accepted here, on the bounds above, and both are the first
+things to drop if YouTube objects. Finding an episode could move to the official Data API, which
+lists a channel's uploads within its free quota; captions can't, since the API gives a video's
+captions only to its owner (OV-294).
 
 What this does not claim: that the rung is within YouTube's terms. It is not. The claim
 is that the exposure is small, bounded and reversible, and that the ladder exists to keep

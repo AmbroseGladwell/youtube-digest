@@ -188,11 +188,10 @@ export const apiLogLines = coded("api", {
     toolFailed: line("error", "mcp tool failed", "A tool threw rather than returning an error to the assistant."),
   },
   transcripts: {
-    served: line("info", "transcript served", "A cached transcript was handed back. Never the video id or a word of it."),
-    stored: line("info", "transcript stored", "A client's transcript went into the shared cache."),
-    notKept: line("warn", "transcript not kept", "A client's transcript was taken but not cached."),
+    served: line("info", "transcript served", "An account's own transcript was handed back to it. Never the video id or a word of it."),
+    stored: line("info", "transcript stored", "A client's transcript was kept as its account's own copy."),
+    notKept: line("warn", "transcript not kept", "A client's transcript was taken but not kept: no note of the account's uses it."),
     refused: line("warn", "transcript refused", "A transcript failed its checks; `fault` says which."),
-    sharedRead: line("info", "shared transcript read", "The shared cache was asked for a transcript; `hit` says whether it had one."),
     forgotten: line("info", "transcripts forgotten", "Transcripts were dropped with the overview they belonged to."),
   },
   serviceTranscripts: {
@@ -211,7 +210,6 @@ export const apiLogLines = coded("api", {
       "A signed-out device asked after its onboarding overview on our key was made.",
     ),
     proxySpend: line("info", "transcript proxy spend", "Bytes billed to the residential proxy, and the day's running total."),
-    answeredFromCache: line("info", "service transcript answered from the shared cache", "No fetch was needed; the cache already had it."),
   },
   costs: {
     notRecorded: line(
@@ -356,7 +354,7 @@ export const apiLogLines = coded("api", {
     transcript: line(
       "info",
       "podcast transcript resolved",
-      "A podcast episode's transcript was asked for; `via` is the rung that answered (cache, tag) and `format` the tag's, or `failure` why none could. Never the feed or the episode.",
+      "A podcast episode's transcript was asked for; `via` is the rung that answered (remembered, tag, youtube), `from` where a remembered source was, and `format` the tag's, or `failure` why none could. Never the feed or the episode, and the words are never kept.",
     ),
   },
   playlists: {

@@ -13,8 +13,6 @@ export * from "./ShareApi.js";
 export * from "./fetchShareApi.js";
 export * from "./SampleApi.js";
 export * from "./fetchSampleApi.js";
-export * from "./SharedTranscriptApi.js";
-export * from "./fetchSharedTranscriptApi.js";
 export * from "./ServiceTranscriptApi.js";
 export * from "./fetchServiceTranscriptApi.js";
 export * from "./GenerationApi.js";

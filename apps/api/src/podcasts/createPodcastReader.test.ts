@@ -76,13 +76,14 @@ test("an Apple link finds its episode's guid in Apple's directory, then the epis
   assert.equal(episode.transcripts.length, 2);
 });
 
-test("an Apple episode too old for the directory's newest 200 is found by the title on its page", async () => {
-  const { read } = readerOver({
+test("an Apple episode too old for the directory's newest 200 says so, and Apple's own page is never read", async () => {
+  const { read, asked } = readerOver({
     [LOOKUP]: json({ results: [appleShow(), appleEpisode(1002, "newest-guid", "Episode 2", "2026-11-12T10:00:00Z")] }),
     [APPLE_EPISODE]: html(`<html><head><meta property="og:title" content="Episode 1: The “Start”"></head></html>`),
     [FEED_URL]: xml(feedOf(FEED_ITEM_NEWEST, FEED_ITEM_OLDER)),
   });
-  assert.equal(episodeOf(await read(APPLE_EPISODE)).guid, "older-guid");
+  assert.deepEqual(await read(APPLE_EPISODE), { status: "failed", reason: "not-listed", showName: "A Show & Friends" });
+  assert.ok(!asked.includes(APPLE_EPISODE));
 });
 
 test("an Apple show with no public feed says so, by name", async () => {

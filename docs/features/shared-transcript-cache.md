@@ -1,5 +1,14 @@
 # The shared transcript cache
 
+> **Retired, 14 Nov 2026 (OV-295).** The terms review of 13 Nov 2026 (the owner's doc "Podcast
+> support: terms and privacy review") found that keeping a source's whole words in a cache shared
+> between readers, and serving them to other readers, is copying and communicating the work with no
+> UK exception that fits. So nothing is kept for every reader now: each account keeps its own copy
+> (`transcript-storage.md`, "Each account's own copy"), migration `V0033` folded the shared table
+> back into each account's row and dropped it with the contributions, `/shared-transcripts` answers
+> nothing, and no shared link carries a transcript. What follows is how the cache worked, kept for
+> the history of the decisions.
+
 The first rung of the ladder in `docs/features/transcript-retrieval.md`. A video's captions
 are the same for every reader, so once two accounts have each fetched the same words,
 nobody needs to fetch them again. A hit costs one row read, and nobody contacts YouTube. So a video's third reader onward benefits, and its first two never do.

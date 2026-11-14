@@ -11,6 +11,7 @@ import { StoredTranscript } from "./StoredTranscript.js";
 // assembled (docs/features/sharing.md).
 export const ShareRequest = z.object({
   overview: z.preprocess(moveVideoToSource, Overview),
+  // Older clients still send the transcript; it is accepted and never kept (OV-295).
   transcript: StoredTranscript.nullable().default(null),
   narration: SharedNarration.nullable().default(null),
 });

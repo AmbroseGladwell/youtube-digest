@@ -121,6 +121,7 @@ export function podcastRoutes(
         request.log.info(
           apiLogLines.podcasts.transcript({
             via: answer.via,
+            from: answer.via === "remembered" ? answer.from : null,
             format: answer.via === "tag" ? answer.format : null,
             matchedBy: answer.via === "youtube" ? answer.matchedBy : null,
             searchedBy: answer.via === "youtube" ? answer.searchedBy : null,

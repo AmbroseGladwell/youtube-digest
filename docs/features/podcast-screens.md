@@ -149,12 +149,13 @@ above the field for another link. Onboarding's bar says "Finding the episode" th
 the design's separate "Looking for a transcript" stage, since it has one fetching stage for every
 kind.
 
-## Before it merges
+## The terms review
 
-The owner checks the terms `podcast-links.md` lists ("Terms, still to check"): Apple's search and
-lookup API used this way, reading Spotify's public episode pages, keeping a show's transcript in the
-shared cache, and searching YouTube from our server (`podcast-on-youtube.md`). `/privacy` describes
-all of it since this PR.
+The owner had the terms checked on 13 Nov 2026, before real readers, and the fixes are OV-297:
+each reader's own transcript, Apple's call budget, no Apple page reads, "Listen on" links, the
+YouTube position rewritten, and the privacy wording (`podcast-links.md`, "Terms";
+`podcast-transcripts.md`, "Each reader's own copy"). The way out reads "Listen on Spotify" or
+"Listen on Apple Podcasts" where this doc says "Open in".
 
 ## Not in these PRs
 

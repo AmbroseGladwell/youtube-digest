@@ -105,7 +105,9 @@ export class IndexedDbOverviewStore implements OverviewStore {
       change: { op: "replace", record },
     });
     const key = sourceKey(overview.source);
-    if (journaled && key !== null && overview.source.kind === "youtube") {
+    // A page has no transcript; a video's captions and an episode's words go to the account as its
+    // own copy, so its other devices read the same words (docs/features/transcript-storage.md).
+    if (journaled && key !== null && overview.source.kind !== "web") {
       await appendPendingWrite(transaction, {
         kind: "transcript",
         id: key,

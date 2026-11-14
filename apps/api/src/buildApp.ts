@@ -55,6 +55,8 @@ import { podcastRoutes } from "./routes/podcastRoutes.js";
 import { accountPlan } from "./auth/accountPlan.js";
 import { createPodcastReader } from "./podcasts/createPodcastReader.js";
 import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
+import { APPLE_BUDGET } from "./podcasts/appleCallBudget.js";
+import { EpisodeWordSourcesRepository } from "./podcasts/EpisodeWordSourcesRepository.js";
 import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
@@ -186,7 +188,7 @@ export async function buildApp({
   slowQueryMs = SLOW_QUERY_MS,
   fetchArticlePage = createArticlePageFetcher(),
   podcastWeb = createPublicWebFetch(),
-  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb }),
+  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET }),
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -285,7 +287,6 @@ export async function buildApp({
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
-      transcriptRoutes(api, transcripts, clock);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
       overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
       generationRoutes(api, {
@@ -297,11 +298,29 @@ export async function buildApp({
       const youTubeService =
         transcriptService === null
           ? null
-          : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), transcripts, costs, clock });
+          : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), costs, clock });
+      const podcastTranscripts = createPodcastTranscripts({
+        fetchPublicWeb: podcastWeb,
+        sources: new EpisodeWordSourcesRepository(sql),
+        youTubeService,
+        clock,
+      });
+      transcriptRoutes(api, {
+        transcripts,
+        episodeWords: async (key, accountId, log) =>
+          podcastTranscripts.remembered(key, { accountId, plan: await accountPlan(sql, accountId) }, log),
+        videoWords: async (videoId, accountId, log) =>
+          youTubeService === null
+            ? null
+            : youTubeService
+                .resolve(videoId, { accountId, plan: await accountPlan(sql, accountId) }, log)
+                .then((answer) => answer.transcript)
+                .catch(() => null),
+      });
       serviceTranscriptRoutes(api, { usage: overviewUsage, trials, service: youTubeService, sql, clock });
       podcastRoutes(api, {
         readEpisode: readPodcastEpisode,
-        resolveTranscript: createPodcastTranscripts({ fetchPublicWeb: podcastWeb, transcripts, youTubeService, clock }),
+        resolveTranscript: podcastTranscripts.resolve,
         planOf: (accountId) => accountPlan(sql, accountId),
         trials,
         clock,

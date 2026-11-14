@@ -63,7 +63,6 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
         url,
         {
           sources: createTranscriptSources({
-            sharedCacheApiUrl: knownApiUrl,
             youTubeFetch,
             service:
               knownApiUrl === null

@@ -22,8 +22,8 @@ test("an episode's note leads with the show and its Podcast chip, and goes back 
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyEpisodeHead({ show: "The Diary Of A CEO", wayOut: "Open in Spotify", href: SPOTIFY });
-  await reader.verifyWayOutItem("Open in Spotify", SPOTIFY);
+  await reader.verifyEpisodeHead({ show: "The Diary Of A CEO", wayOut: "Listen on Spotify", href: SPOTIFY });
+  await reader.verifyWayOutItem("Listen on Spotify", SPOTIFY);
   await reader.verifyCopyLinkItemReads("Copy episode link");
 });
 
@@ -32,7 +32,7 @@ test("an episode shared from Apple Podcasts goes back there", async ({ launcher,
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
 
-  await reader.verifyWayOutItem("Open in Apple Podcasts", APPLE);
+  await reader.verifyWayOutItem("Listen on Apple Podcasts", APPLE);
 });
 
 test("the episode plays in its note, and only a time in the note says a jump may land a little early", async ({

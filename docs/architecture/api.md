@@ -28,7 +28,7 @@ endpoints behave is `docs/features/sync-api.md`; how it is tested is
 | Each account's transcripts, outside the records feed | `migrations/V0004__transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md` |
 | An account's plan, and the OAuth 2.1 authorization server MCP clients connect through, outside `/api` | `migrations/V0008__account_plans_and_connections.sql`, `src/oauth/`; `docs/features/mcp-connector.md` |
 | The MCP endpoint, `/mcp`, and its read-only tools over a reader's overviews and transcripts | `src/mcp/`; `docs/features/mcp-connector.md` |
-| Shared transcripts, read by anyone, added to by accounts, served once two agree; the script that removes a bad one | `migrations/V0009__shared_transcripts.sql`, `src/transcripts/`, `src/scripts/forgetSharedTranscript.ts`; `docs/features/shared-transcript-cache.md` |
+| Each account's own transcripts, fetched for an account with a note but no copy; the shared cache that came before, retired by OV-295 | `migrations/V0009__shared_transcripts.sql`, `migrations/V0033__per_account_transcripts.sql`, `src/transcripts/`, `src/routes/transcriptRoutes.ts`; `docs/features/transcript-storage.md`, `docs/features/shared-transcript-cache.md` |
 | Our own server fetching a transcript, the ladder's last rung: direct, then through the residential proxy, under daily quotas and a proxy budget; the check through the real proxy | `migrations/V0012__service_transcript_usage.sql`, `src/transcripts/`, `src/routes/serviceTranscriptRoutes.ts`, `src/scripts/proxySanityCheck.ts`; `docs/architecture/server-side-transcripts.md` |
 | A shared copy of an overview behind an unguessable link, and the public document and card image it serves at `/s/<token>`, outside `/api` | `migrations/V0010__shares.sql`, `src/shares/`, `src/routes/shareRoutes.ts`, `apps/api/assets/fonts/`; `docs/features/sharing.md` |
 | The app's analytics at `POST /api/events`, from a session or under the anonymous id a reader without an account agreed to, checked against the catalogue, logged, and passed on to PostHog when there is a key | `packages/domain`: `analyticsEvents.ts`, `AnalyticsEventBatch.ts`; `src/events/`; `docs/architecture/analytics.md` |
@@ -79,7 +79,8 @@ event sink that record, and `server.ts` is the only place the environment is rea
 `v1-architecture-decisions.md` gives, and nothing here changes it. Every `/api` route needs
 a session unless it says otherwise; nine do: `GET /api/live` and `GET /api/health`, `GET /api/handshake`, the
 four `/api/auth` routes that exist to make a session, `GET /api/shared-transcripts/:videoId`,
-which only reads what accounts have added (`docs/features/shared-transcript-cache.md`),
+which since OV-295 always answers that nothing is kept for every reader, for older clients
+(`docs/features/shared-transcript-cache.md`, retired),
 `GET /api/playlists/:id`, which reads a public or unlisted playlist for anyone following
 one (`docs/features/playlists.md`),
 and anything outside `/api`: the web app's files, the OAuth routes MCP clients call,
@@ -315,7 +316,6 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `oauthRegisterAddress` | 20 | hour, per address | `POST /oauth/register` |
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
-| `sharedTranscriptAddress` | 300 | hour, per address | `GET /api/shared-transcripts/:videoId` |
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
 | `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token makes one overview, onboarding's, and costs nothing until it does; the 3 a day per address in Postgres counts those (`tiers.md`, "Counting") |
 | `smallPassAccount` | 30 | day, per account | `POST /api/generations/profile`, `/how-to-apply`, `/topics` and `/topic-suggestions`: none counts as an overview, so this is what bounds them (`docs/features/personalisation.md`; `/topics` sorts a sample, `docs/features/onboarding.md`) |
@@ -355,14 +355,7 @@ it further out of reach.
   a question calls a tool every few seconds, and paging a large topic is a burst of a few
   dozen. Two a second held for a minute is well past that, and every call reads the
   reader's whole library, so it is kept lower than the sync limit.
-- **The shared transcript cache is limited per address** because it is read without a
-  session, so the account limit never applies to it. Each read is one note being made or
-  one transcript being refilled, so 300 an hour is far past a household's use and turns
-  copying the cache out one video at a time into a slow job. It is not meant to stop a
-  determined scraper with many addresses: what it guards is public captions, and
-  `docs/features/shared-transcript-cache.md` says why that is enough.
-- **The shared page is limited per address** for the same reason as the shared transcript
-  cache: it has no session, so the account limit never reaches it. An account is also held
+- **The shared page is limited per address** because it has no session, so the account limit never reaches it. An account is also held
   to fifty live links at once, which is about this not becoming somewhere to host a
   library rather than about the rate of anything (`docs/features/sharing.md`).
 - **A refused request does not count.** A caller hammering past the limit is let back in

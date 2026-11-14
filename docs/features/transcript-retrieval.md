@@ -28,7 +28,6 @@ A source is asked only if the one before it could not answer.
 
 | Tier | Cost to us | Who contacts YouTube |
 |---|---|---|
-| the shared cache | a row read | nobody |
 | the user's own extension | nothing | the user, from their own IP |
 | our own service | a residential proxy | us |
 
@@ -36,11 +35,12 @@ Two properties follow, and both are the point:
 
 - **Every rung above the last is a fetch that never happens from our IP.** The ladder is
   the exposure control, not only a cost optimisation.
-- **A cold fetch happens once per video, ever.** Extension users warm the cache for web
-  users who will never contribute to it, so the bill tracks the rate at which new videos
-  enter the corpus rather than users times videos.
+- **Each reader fetches their own words (OV-295).** There is no shared cache any more: a
+  source's words are each reader's own, so the extension fetches for its reader free, and
+  our server fetches for a reader without one. The server's bill now tracks readers without
+  the extension times videos, not new videos alone (`shared-transcript-cache.md`, retired).
 
-The shared cache (`docs/features/shared-transcript-cache.md`), the extension's own
+The extension's own
 InnerTube fetch and our own service (`docs/architecture/server-side-transcripts.md`)
 are built. The web app asking the extension is not, and the shape of the interface is what
 makes it additive rather than a rewrite.

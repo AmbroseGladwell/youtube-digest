@@ -17,7 +17,7 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
   const describe = (share: ShareRow) => ({ ...share, url: shareUrl(appUrl, share.token) });
 
   app.post("/shares", { bodyLimit: SHARE_BODY_LIMIT_BYTES }, async (request, reply) => {
-    const { overview, transcript, narration } = parseOrThrow(ShareRequest, request.body, "The share request");
+    const { overview, narration } = parseOrThrow(ShareRequest, request.body, "The share request");
     const accountId = request.session!.accountId;
 
     const existing = await shares.listLive(accountId);
@@ -28,14 +28,14 @@ export function shareRoutes(app: FastifyInstance, shares: SharesRepository, appU
       });
     }
 
-    const snapshot = shareSnapshot({ overview, transcript, narration });
+    const snapshot = shareSnapshot({ overview, narration });
     const share = await shares.put({
       accountId,
       overviewId: overview.id,
       snapshot,
       contentHash: await shareContentHash(snapshot.note),
     });
-    request.log.info(apiLogLines.shares.created({ replacing, hasTranscript: transcript !== null, hasNarration: narration !== null }));
+    request.log.info(apiLogLines.shares.created({ replacing, hasNarration: narration !== null }));
     return reply.status(replacing ? 200 : 201).send(describe(share));
   });
 

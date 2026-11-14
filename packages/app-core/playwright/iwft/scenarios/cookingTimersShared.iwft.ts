@@ -28,7 +28,7 @@ test.describe("on a shared page", () => {
       state: "shared",
       token: TOKEN,
       sharedAt: "2026-11-03T11:00:00.000Z",
-      snapshot: shareSnapshot({ overview: loaf(), transcript: null, narration: null }),
+      snapshot: shareSnapshot({ overview: loaf(), narration: null }),
     });
     await launcher.openPage(Routes.sharedOverview(TOKEN));
     await launcher.sharedOverviewPage.verifyIsShown();

@@ -32,8 +32,9 @@ link is the episode's own, never the Apple or Spotify page it was shared from.
 **Apple.** The link carries the show's id and the episode's (`?i=`). Apple's free lookup, asked
 for the show with `entity=podcastEpisode`, returns the feed address and the newest 200 episodes
 with their guids. The episode's id is found among them, and its guid in the feed. An older episode
-isn't in the 200, so its title is read from the Apple page's `og:title` and matched in the feed by
-title. Apple's lookup won't answer for an episode's id on its own, which was tried.
+isn't in the 200 and reads as `not-listed`: Apple's page isn't read for its title since the terms
+review (OV-297; "Terms" below). Apple's lookup won't answer for an episode's id on its own, which
+was tried.
 
 **Spotify.** No API key and no account: an episode's public page carries the tags every link
 preview reads, `og:title`, the show in its description ("Listen to this episode from … on
@@ -105,14 +106,24 @@ counting; signed out, onboarding's trial token reads it as one of its reads (`on
 an hour per address, like article reads. The log line says which platform the link came from, how
 it went, how many transcript tags the episode has and how long it took. It never logs the link.
 
-## Terms, still to check
+## Terms
 
-Before readers can use this, check: Apple's terms for its search and lookup API used this way;
-reading Spotify's public episode pages (tags any link preview reads, but still Spotify's pages);
-and writing a transcript of an episode and keeping it in the shared cache, which is a different use
-from playing the episode and needs its own answer. `/privacy` names them since the screens' slice
-that lets a reader paste a podcast link (`legal-pages.md`, 13 Nov 2026); the terms checks above are
-the owner's, and still open until that slice merges (`podcast-screens.md`, "Before it merges").
+Checked by the terms review, 13 Nov 2026 (the owner's doc "Podcast support: terms and privacy
+review"), and acted on in OV-297:
+
+- **Apple's Search API** says little about use like ours. It is "limited to approximately 20 calls
+  per minute" and asks large users to cache. Apple sees our server's address, not each reader's, so
+  every Apple call shares one budget of 15 a minute, waiting briefly past it, and answers are kept
+  (lookups an hour, searches a day) (`appleCallBudget.ts`).
+- **Apple's web pages** fall under its website terms' bar on scraping, so they aren't read. An Apple
+  link to an episode older than the newest 200 its directory lists can't be matched, and says so
+  (`not-listed`), pointing to the Spotify link or the show's own page.
+- **Spotify's public episode page** is read once per pasted link, with an honest User-Agent, for
+  four meta tags, and not kept. Its user guidelines bar scraping on a literal reading; the risk is
+  low, and an official route is OV-294.
+- **Links back** read "Listen on Spotify" and "Listen on Apple Podcasts", as both companies'
+  guidelines ask, and the terms carry their trademark lines.
+- **Transcripts** are each reader's own (`podcast-transcripts.md`, "Each reader's own copy").
 
 ## What comes next
 

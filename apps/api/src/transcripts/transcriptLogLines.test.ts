@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION_HEADER, type StoredTranscript, youTubeSource } from "@overview/domain";
+import { type StoredTranscript, youTubeSource } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
-import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
+import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 
@@ -17,9 +17,6 @@ const noteOn = (account: TestAccount, transcript: StoredTranscript) =>
 const upload = (account: TestAccount, transcript: StoredTranscript) =>
   account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript });
 
-const readShared = (testApp: TestApp, videoId: string) =>
-  testApp.app.inject({ method: "GET", url: `/api/shared-transcripts/${videoId}`, headers: { [CLIENT_VERSION_HEADER]: "1" } });
-
 const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
 
 const assertNoVideoOrWords = (lines: LogLine[], transcript: StoredTranscript) => {
@@ -28,7 +25,7 @@ const assertNoVideoOrWords = (lines: LogLine[], transcript: StoredTranscript) =>
   assert.doesNotMatch(logged, new RegExp(transcript.videoId));
 };
 
-test("an upload is logged at info with how it counted towards the shared copy, and never with its words or video", async () => {
+test("an upload is logged at info as kept for its own account, and never with its words or video", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
   const [first, second] = [await makeAccount(testApp), await makeAccount(testApp)];
@@ -41,10 +38,10 @@ test("an upload is logged at info with how it counted towards the shared copy, a
 
   const stored = saying(lines, "transcript stored");
   assert.deepEqual(
-    stored.map(({ level, contribution, segments, accountId }) => ({ level, contribution, segments, accountId })),
+    stored.map(({ level, kept, segments, accountId }) => ({ level, kept, segments, accountId })),
     [
-      { level: LOG_LEVELS.info, contribution: "pending", segments: 1, accountId: first.accountId },
-      { level: LOG_LEVELS.info, contribution: "confirmed", segments: 1, accountId: second.accountId },
+      { level: LOG_LEVELS.info, kept: "kept", segments: 1, accountId: first.accountId },
+      { level: LOG_LEVELS.info, kept: "kept", segments: 1, accountId: second.accountId },
     ],
   );
   assertNoVideoOrWords(lines, transcript);
@@ -59,7 +56,7 @@ test("an upload with no live note is logged at warn as not kept", async () => {
   await upload(account, spoken());
 
   const [notKept] = saying(lines, "transcript not kept");
-  assert.deepEqual({ level: notKept!.level, contribution: notKept!.contribution }, { level: LOG_LEVELS.warn, contribution: "not-noted" });
+  assert.deepEqual({ level: notKept!.level, kept: notKept!.kept }, { level: LOG_LEVELS.warn, kept: "not-noted" });
   assert.equal(saying(lines, "transcript stored").length, 0);
   await testApp.close();
 });
@@ -81,7 +78,7 @@ test("a faulted upload is logged at warn with its fault", async () => {
   await testApp.close();
 });
 
-test("an account's own copy read back, and the shared cache's hits and misses, are logged at info", async () => {
+test("an account's own copy read back is logged at info, never with its words or video", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await createTestApp({}, { logger });
   const account = await makeAccount(testApp);
@@ -90,11 +87,8 @@ test("an account's own copy read back, and the shared cache's hits and misses, a
   await upload(account, transcript);
 
   await account.inject({ method: "GET", url: `/api/transcripts/${transcript.videoId}` });
-  await readShared(testApp, transcript.videoId);
 
   assert.equal(saying(lines, "transcript served")[0]!.level, LOG_LEVELS.info);
-  const [read] = saying(lines, "shared transcript read");
-  assert.deepEqual({ level: read!.level, hit: read!.hit }, { level: LOG_LEVELS.info, hit: false });
   assertNoVideoOrWords(lines, transcript);
   await testApp.close();
 });

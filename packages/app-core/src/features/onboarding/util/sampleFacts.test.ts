@@ -3,7 +3,7 @@ import { shareSnapshot, type Overview } from "@overview/domain";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { sampleFacts } from "./sampleFacts.js";
 
-const noteOf = (overview: Overview) => shareSnapshot({ overview, transcript: null, narration: null }).note;
+const noteOf = (overview: Overview) => shareSnapshot({ overview, narration: null }).note;
 
 describe("sampleFacts", () => {
   it("names a video by its title, kind and running time, and puts Watch Less in the headline", () => {

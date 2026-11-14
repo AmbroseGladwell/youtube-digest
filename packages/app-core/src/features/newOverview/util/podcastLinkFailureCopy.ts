@@ -36,6 +36,13 @@ export function podcastLinkFailureCopy(reason: PodcastReadFailure, showName: str
         way: "tryAnother",
         wayLabel: "Use a different link",
       };
+    case "not-listed":
+      return {
+        title: showName === null ? "We couldn’t find this older episode" : `We couldn’t find this older episode of ${showName}`,
+        body: `Apple’s directory lists a show’s newest episodes, and this one is older. Its Spotify link, or the show’s own page for it, will work. ${NOTHING_USED}`,
+        way: "tryAnother",
+        wayLabel: "Use a different link",
+      };
     case "no-answer":
       return {
         title: "We didn’t hear back in time",

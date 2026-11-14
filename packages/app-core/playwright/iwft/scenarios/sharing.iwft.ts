@@ -189,11 +189,9 @@ test("Settings says plainly when nothing is shared", async ({ launcher, backendS
   await panel.verifySaysNothingIsShared();
 });
 
-// The whole point of sharing a transcript is that the recipient gets the one the sharer
-// was looking at. The reader reads its own store first and the account's copy after, so
-// the copy has to be built the same way — a share built from the local store alone leaves
-// the tab empty for every reader whose device never fetched it (docs/features/sharing.md).
-test("the transcript the reader is looking at travels with the copy", async ({ launcher, backendSimulator }) => {
+// A shared link carries the overview, never the source's words: those are each reader's own
+// (OV-295, docs/features/sharing.md).
+test("a transcript the reader holds never travels with the copy", async ({ launcher, backendSimulator }) => {
   const overview = titled();
   backendSimulator.overviews.seed(overview);
   backendSimulator.sync.seedTranscript(makeStoredTranscript({ videoId: overview.source.id! }));
@@ -205,8 +203,7 @@ test("the transcript the reader is looking at travels with the copy", async ({ l
   await dialog.verifyStatusReads("0 views");
 
   const [made] = backendSimulator.shares.live();
-  const snapshot = backendSimulator.shares.snapshot(made!.token);
-  test.expect(snapshot?.transcript?.segments?.length ?? 0).toBeGreaterThan(0);
+  test.expect(backendSimulator.shares.snapshot(made!.token)?.transcript ?? null).toBeNull();
 });
 
 test("an overview whose transcript nobody holds is shared without one, rather than refused", async ({ launcher, backendSimulator }) => {

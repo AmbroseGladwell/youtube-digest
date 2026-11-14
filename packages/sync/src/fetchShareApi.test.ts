@@ -48,16 +48,17 @@ test("the reader's live links are listed, with the session they were made under"
   assert.equal(sent[0]!.headers.authorization, "Bearer a-bearer");
 });
 
-test("sharing sends the whole overview, so the server builds the copy rather than trusting one", async () => {
+test("sharing sends the whole overview and never a transcript, so the server builds the copy rather than trusting one", async () => {
   const overview = makeOverview({ captureReason: "Read before Thursday." });
   const { sent, fetch } = answering(201, aShare());
   const api = createFetchShareApi({ baseUrl: "https://overview.example", fetch });
 
-  await api.share({ overview, transcript: null, narration: null });
+  await api.share({ overview, narration: null });
 
   assert.equal(sent[0]!.method, "POST");
   assert.equal(sent[0]!.url, "https://overview.example/api/shares");
   assert.deepEqual((sent[0]!.body as { overview: unknown }).overview, JSON.parse(JSON.stringify(overview)));
+  assert.ok(!("transcript" in (sent[0]!.body as object)));
 });
 
 test("stopping a link names it in the path", async () => {

@@ -4,7 +4,7 @@ import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { sharePreview } from "./sharePreview.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 
-const noteOf = (overview = makeOverview()) => shareSnapshot({ overview, transcript: null, narration: null }).note;
+const noteOf = (overview = makeOverview()) => shareSnapshot({ overview, narration: null }).note;
 
 test("the preview leads with the lengths and then the premise", () => {
   const overview = makeOverview({

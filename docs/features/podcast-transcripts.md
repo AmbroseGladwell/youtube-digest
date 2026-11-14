@@ -10,7 +10,9 @@ yet.
 
 | The decision | Where it lives |
 |---|---|
-| The rungs, and keeping what they find | `apps/api/src/podcasts/createPodcastTranscripts.ts` |
+| The rungs, and remembering where they found the words | `apps/api/src/podcasts/createPodcastTranscripts.ts` |
+| Where an episode's words are, shared | `EpisodeWordSourcesRepository.ts`, table `podcast_transcript_sources` |
+| A reader's other device, by the key | `GET /api/transcripts/:key`, `src/routes/transcriptRoutes.ts` |
 | Reading each transcript format | `parsePodcastTranscript.ts` |
 | Reading the episode again from its feed | `fetchFeedEpisode.ts`, shared with `podcast-links.md`'s reader |
 | An episode's key | `podcastSourceKey`: `podcast:` and `podcastSourceId`, the hash of feed and guid |
@@ -30,17 +32,36 @@ comments.
 | **Every free route** | **about 47%** | |
 | Speech to text on the audio | the rest | after the owner's call |
 
+## Each reader's own copy
+
+Decided with the owner after the terms review, 13 Nov 2026 (OV-297). A show's transcript is its
+own work: keeping the whole text on our server and serving it to other readers is copying and
+communicating it, which no UK exception covers. So **the words are never kept for everyone**. Each
+reader's words are fetched from their source for that reader, sent to their device and kept there,
+and since OV-295 also under their account, as their own copy (`transcript-storage.md`, "Each
+account's own copy"), so the same words reach their other devices even if the source goes.
+
+What is shared is **where the words are**: the feed's transcript URL and type, or the YouTube video
+the episode was matched to, under the episode's key. That's a fact about the episode, not the show's
+expression, and it saves the next reader the search. A reader's other device, holding only the
+episode's key, asks `GET /api/transcripts/:key`, which answers with the account's copy, or for an
+account with a note on the episode but no copy yet, fetches the words afresh from that source and
+keeps them. A source that no longer answers is forgotten and the rungs run again.
+
+Podcast words already in the shared cache were deleted by migration `V0032`, and
+`/shared-transcripts/:key` has no podcast words to serve.
+
 ## The rungs
 
-1. **The shared cache:** a row read, under the episode's key. An episode is fetched once, ever,
-   and every later reader of it costs nothing.
+1. **Where the words were found before:** fetched afresh from there, the feed or YouTube not
+   searched again.
 2. **The feed's `<podcast:transcript>`:** the episode is read **again from its own feed** by its
    guid (or, for an item without one, its audio address, as `podcast-links.md`'s reader names it).
    Its transcript tags are tried in order of how well they are timed, and the first that reads
    cleanly answers.
 
-Each answer is checked by the same `transcriptFault` an upload is, kept in the shared cache as our
-own fetch (`putServiceFetched`, confirmed at once, since no account touched it), and returned.
+Each answer is checked by the same `transcriptFault` an upload is and returned; where it was found
+is remembered.
 `generated` is true: a host's transcript is almost always machine-made, and the label says so rather
 than presenting it as the show's own words.
 
@@ -56,11 +77,10 @@ existing copy applies:
 ### Why the caller sends only the feed and the guid
 
 The route takes `{ feedUrl, guid }`, not the episode the reader route returned, and reads the feed
-itself. The shared cache is shared between accounts, so nothing a caller sends may decide what is
-kept under an episode's key. With only those two, the worst a caller can do is name a feed it
-controls, and that feed's episodes have keys of their own. For the same reason `PUT
-/transcripts/:key` refuses every key holding a colon (`source-identity.md`): no account can file a
-podcast transcript, and what the cache holds for an episode came from our fetch of its feed.
+itself. Where an episode's words are is shared between accounts, so nothing a caller sends may
+decide it. With only those two, the worst a caller can do is name a feed it controls, and that feed's
+episodes have keys of their own. `PUT /transcripts/:key` refuses every key holding a colon
+(`source-identity.md`): no account files a podcast transcript, and our server keeps none.
 
 ## The formats
 
@@ -85,23 +105,22 @@ Captivate's JSON, SRT and HTML for one episode each give the same 5,218 words.
 ### Times that run backwards
 
 Omny's VTT for one episode runs 8 seconds backwards about 30 minutes in, where an ad was spliced in.
-The shared cache refuses a transcript out of order, and the whole format was being lost to a few
+`transcriptFault` refuses a transcript out of order, and the whole format was being lost to a few
 seconds of it. So the parser drops the cues that run backwards, and keeps the rest, unless they are
 over 2% of the file, when it trusts none of it and the next format is tried.
 
 ### Checked against real episodes, 13 Nov 2026
 
 Behind the Bastards (72 min) and Stuff You Should Know (44 min), from their Omny pages: VTT,
-1,477 and 834 cues, reaching the last minute of each, in 0.5–0.7 seconds, then 3–4 ms from the
-cache. The Daily offers no tag and reads as `no-captions` in 65 ms.
+1,477 and 834 cues, reaching the last minute of each, in 0.5–0.7 seconds. The Daily offers no tag and reads as `no-captions` in 65 ms.
 
 ## Logs
 
-`podcast transcript resolved`, at `info`, with the rung that answered (`cache`, `tag`), the
-format, the number of segments and the time, or the failure. Never the feed or the episode.
+`podcast transcript resolved`, at `info`, with the rung that answered (`remembered` with `from`,
+`tag`, `youtube`), the format, the number of segments and the time, or the failure. Never the feed or
+the episode.
 
 ## Terms
 
-Keeping a host's transcript in the shared cache is the use `podcast-links.md`, "Terms, still to
-check", names. `/privacy` says so since the screens' slice that lets a reader paste a link; the
-terms check is the owner's, before that slice merges (`podcast-screens.md`, "Before it merges").
+The terms review (13 Nov 2026) found keeping a host's transcript in a shared cache high risk, which
+is why the words are now each reader's own (above, OV-297). `/privacy` says so.

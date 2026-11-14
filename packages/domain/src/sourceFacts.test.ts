@@ -87,9 +87,9 @@ test("an episode is named by its show, a Podcast chip and its length in hours an
 
 test("an episode's way out is the link the reader shared, never the feed's audio", () => {
   assert.equal(sourceUrl(episode), "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk");
-  assert.equal(openPodcastLabel(episode.sharedFrom), "Open in Spotify");
-  assert.equal(openPodcastLabel("https://spotify.link/abc123"), "Open in Spotify");
-  assert.equal(openPodcastLabel("https://podcasts.apple.com/gb/podcast/x/id1291423644?i=1000735123456"), "Open in Apple Podcasts");
+  assert.equal(openPodcastLabel(episode.sharedFrom), "Listen on Spotify");
+  assert.equal(openPodcastLabel("https://spotify.link/abc123"), "Listen on Spotify");
+  assert.equal(openPodcastLabel("https://podcasts.apple.com/gb/podcast/x/id1291423644?i=1000735123456"), "Listen on Apple Podcasts");
   assert.equal(openPodcastLabel("https://www.thediary.example/episodes/241"), "Open the show’s page");
 });
 

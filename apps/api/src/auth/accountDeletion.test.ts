@@ -60,18 +60,12 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     hex64(`code-${email}`),
     now,
   ]);
-  await sql.query(
-    "insert into shared_transcripts (video_id, words_hash, body, stored_at) values ($1, $2, $3::jsonb, $4::timestamptz) on conflict do nothing",
-    [VIDEO, "words", JSON.stringify({ videoId: VIDEO, blocks: [] }), now],
-  );
-  await sql.query(
-    "insert into account_transcripts (account_id, video_id, stored_at, words_hash) values ($1, $2, $3::timestamptz, 'words')",
-    [accountId, VIDEO, now],
-  );
-  await sql.query(
-    "insert into transcript_contributions (video_id, account_id, words_hash, contributed_at) values ($1, $2, 'words', $3::timestamptz)",
-    [VIDEO, accountId, now],
-  );
+  await sql.query("insert into account_transcripts (account_id, video_id, stored_at, body) values ($1, $2, $3::timestamptz, $4::jsonb)", [
+    accountId,
+    VIDEO,
+    now,
+    JSON.stringify({ videoId: VIDEO, segments: [] }),
+  ]);
   await sql.query(
     `insert into audio_renders (key, voice, render_version, lines, status, priority, not_before, requested_at, requested_by, line_starts, duration_seconds)
      values ($1, 'af_heart', 1, '["hello"]'::jsonb, 'ready', 1, $2::timestamptz, $2::timestamptz, $3, '[0]'::jsonb, 1)`,
@@ -180,7 +174,7 @@ test("asking for a code with no purpose is the email change's, as before", async
   await testApp.close();
 });
 
-test("a fresh session deletes everything under the account, leaves the shared cache's record, and ends every other session", async () => {
+test("a fresh session deletes everything under the account, its transcripts included, and ends every other session", async () => {
   const testApp = await createTestApp();
   const { lines, logger } = recordingLogger();
   const loggedApp = await createTestApp({}, { logger });
@@ -205,8 +199,7 @@ test("a fresh session deletes everything under the account, leaves the shared ca
   const kept = Object.entries(after)
     .filter(([, count]) => count > 0)
     .map(([table]) => table);
-  assert.deepEqual(kept.sort(), ["account_deletions", "transcript_contributions"]);
-  assert.equal((await loggedApp.sql.query("select 1 from shared_transcripts where video_id = $1", [VIDEO])).length, 1);
+  assert.deepEqual(kept.sort(), ["account_deletions"]);
   assert.equal((await loggedApp.sql.query("select 1 from magic_links where email = $1", [EMAIL])).length, 0);
   assert.equal(
     (await loggedApp.sql.query("select 1 from service_transcript_usage where caller = $1", [`account:${session.accountId}`])).length,

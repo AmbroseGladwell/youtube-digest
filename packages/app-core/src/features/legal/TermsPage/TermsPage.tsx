@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-12";
+export const TERMS_UPDATED_ON = "2026-11-14";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -112,10 +112,6 @@ const sections: readonly LegalSection[] = [
           Interfere with the service: probe it, overload it, work around a rate limit or a quota, automate sign-in, or send our server
           anything it didn't ask for.
         </li>
-        <li>
-          Upload a transcript that isn't the video's own captions. Transcripts you contribute may be served to other readers, and a false
-          one would mislead everyone who reads that video next.
-        </li>
         <li>Use a shared link to pass off someone else's video, or an overview of it, as your own work.</li>
         <li>Resell the service, or scrape or copy it for another product.</li>
       </ul>
@@ -130,13 +126,12 @@ const sections: readonly LegalSection[] = [
           Your overviews, the reasons you save them, your topics and tags, your settings and the About you sentence are yours. We claim no
           ownership of them. So that the service can work, you give us permission to store them, sync them between your devices, render them
           as audio, serve them to an assistant you connect, and, when you share a link, serve the shared copy to anyone who holds it. That
-          permission lasts as long as the content is on the service, and ends when you delete it or your account, except as the privacy
-          policy says about shared transcripts.
+          permission lasts as long as the content is on the service, and ends when you delete it or your account.
         </p>
         <p>
-          A video's captions and an article's text belong to whoever made them. The service reads them to write an overview, and shares a
-          video's captions with other readers of the same video, on the footing that they are the public text of a public video. You are
-          responsible for only summarising what you are allowed to read.
+          A video's captions, an episode's transcript and an article's text belong to whoever made them. The service fetches them for you to
+          write your overview and keeps them as your own copy, never showing them to another reader or on a shared link. You are responsible
+          for only summarising what you are allowed to read.
         </p>
         <p>
           The app, its design, its prompts and its name are ours, and these terms don't give you any right to them beyond using the service.
@@ -149,9 +144,10 @@ const sections: readonly LegalSection[] = [
     heading: "Sharing a link",
     body: (
       <p>
-        A shared link gives anyone who holds it a copy of your overview, with the video's details, its transcript and its narration, and
-        without your name. It shares the overview, not the video. You choose what to share and who to send it to; we don't list shared pages
-        anywhere and ask search engines not to index them. You can stop a link at any time, and a stopped link stays stopped.
+        A shared link gives anyone who holds it a copy of your overview, with the video's or episode's details and its narration, without
+        the transcript and without your name. It shares the overview, not the video. You choose what to share and who to send it to; we
+        don't list shared pages anywhere and ask search engines not to index them. You can stop a link at any time, and a stopped link stays
+        stopped.
       </p>
     ),
   },
@@ -170,11 +166,18 @@ const sections: readonly LegalSection[] = [
     id: "third-parties",
     heading: "YouTube and other third parties",
     body: (
-      <p>
-        {service} is not affiliated with YouTube or Google, or with any provider you bring a key for. Watching a video, following a playlist
-        and reading a page happen under those sites' own terms. If a site withdraws something, or stops the service reading it, the service
-        may stop working for that content, and that is not a failure on our part.
-      </p>
+      <>
+        <p>
+          {service} is not affiliated with YouTube or Google, Apple, Spotify, any podcast or its host, or any provider you bring a key for.
+          Watching a video, following a playlist, reading a page and listening to an episode happen under those sites' own terms. If a site
+          withdraws something, or stops the service reading it, the service may stop working for that content, and that is not a failure on
+          our part.
+        </p>
+        <p>
+          Apple Podcasts and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries and regions. Spotify is
+          a trademark of Spotify AB.
+        </p>
+      </>
     ),
   },
   {
