@@ -53,6 +53,14 @@ test("a time or a yield the page didn't state in a form code can read stays empt
   assert.equal(recipe?.yield, null);
 });
 
+test("an ingredient whose note the page wraps in a second pair of brackets arrives with one", () => {
+  const recipeIngredient = ["1 cup plain flour ((cake flour OK too, Note 1))", "1/2 cup milk (, full fat (Note 5))"];
+  assert.deepEqual(recipeIn(recipePage(recipeWith({ recipeIngredient })))?.ingredients, [
+    "1 cup plain flour (cake flour OK too, Note 1)",
+    "1/2 cup milk, full fat (Note 5)",
+  ]);
+});
+
 test("a numeric yield is kept, and the legacy ingredients key is read", () => {
   const recipe = recipeIn(recipePage(recipeWith({ recipeYield: 6, recipeIngredient: undefined, ingredients: ["1 lemon"] })));
   assert.equal(recipe?.yield, "6");

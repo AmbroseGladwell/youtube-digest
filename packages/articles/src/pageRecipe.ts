@@ -1,4 +1,4 @@
-import type { Recipe, RecipeStep } from "@overview/domain";
+import { tidyIngredient, type Recipe, type RecipeStep } from "@overview/domain";
 import { isObject, linkedData, typesOf, type JsonObject } from "./linkedData.js";
 import { markupRecipe } from "./markupRecipe.js";
 
@@ -33,7 +33,7 @@ const ingredientsOf = (document: Document, node: JsonObject): string[] => {
   const listed = node.recipeIngredient ?? node.ingredients;
   return (Array.isArray(listed) ? listed : [listed])
     .filter((entry): entry is string => typeof entry === "string")
-    .map((entry) => plainText(document, entry))
+    .map((entry) => tidyIngredient(plainText(document, entry)))
     .filter((entry) => entry !== "");
 };
 

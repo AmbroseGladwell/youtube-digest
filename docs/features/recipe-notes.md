@@ -154,8 +154,13 @@ guess:
 - A changed amount sits on the stone tint, and only the amount and its unit.
 - A line with no amount, or with two ("1 tbsp sugar & 1 tsp salt"), stays exactly as written, says
   so, and is counted in the status line, which offers the way back.
-- Units move within their kind only: weight to weight, volume to volume. Grams of flour never become
-  cups, which would need a density we'd be guessing. Spoons stay spoons in both systems.
+- Units move within their kind only: weight to weight, volume to volume. Spoons stay spoons in both
+  systems. One exception (owner, 14 Nov 2026): in Metric, cups of a common dry ingredient are
+  weighed, because no metric cook measures flour in millilitres. "1 cup plain flour" is "120g", from
+  a fixed table of grams per US cup (`gramsPerCup`, King Arthur's weight chart): plain, bread,
+  cake, self-raising and wholemeal flour, cornflour, ground almonds, cocoa, the sugars, butter, oats
+  and chocolate chips. Anything the table doesn't name stays in millilitres, and US never turns
+  grams into cups.
 - A tin's size stays as sold ("4 × 400g tins"), and says so. A line that starts with a pack size
   scales by how many packs instead (OV-231): "400g can chopped tomatoes" doubled is "2 × 400g cans
   chopped tomatoes", and halved is "½ × 400g can", read aloud as "half a 400 gram can". Changing
@@ -168,12 +173,24 @@ guess:
   half where it is already the unit US would choose ("14oz") or a spoon, and otherwise converts the
   metric half like any metric line: British fl oz become cups ("1⅔ cups"), and ounces past a pound
   become pounds ("1¾ lb").
-  Both halves must be the same kind, one of them metric. A length ("2cm/¾in") has no unit to read,
-  so it stays as written.
+  One half must be metric. Halves of different kinds ("60g / 1/4 cup butter") are a weight the
+  author has already given as a volume, so no density is guessed (owner, 14 Nov 2026): As written
+  scales both, Metric keeps the metric half, and US keeps the page's own US half, scaled but never
+  converted. A length ("2cm/¾in") has no unit to read, so it stays as written.
+- A bracket whose only numbers point at a note ("(Note 3)"), size a cut ("cut into 1.5cm / 1/2”
+  cubes") or weigh one item ("(50 - 55g / 2 oz each)") is a note, not a second amount, and the
+  line scales around it. The same notes after a comma need no bracket (", cut into 1.5cm cubes"),
+  nor does a size after "into" ("cut into 2cm pieces"). A bracket with any other number ("(about
+  300g)", "(or 2 small ones)") still keeps the line as written.
+- Some recipe plugins wrap a note that already has brackets in a second pair ("flour ((cake flour
+  OK too, Note 1))", "butter (, cut into cubes)"). `tidyIngredient` drops the outer pair when a page
+  is read, and in the reader for recipes saved before.
 - One becoming several takes the plural of its noun: "1 small garlic clove" doubled is "2 small
   garlic cloves". The noun is the last word before a comma or bracket, or before how it's
   prepared where there's no comma ("1 onion finely chopped" is "2 onions finely chopped", OV-242).
-  A noun that can't be found stays singular rather than a word being guessed at.
+  A noun that can't be found stays singular rather than a word being guessed at. Several becoming
+  one or less takes the singular again ("2 large eggs" halved is "1 large egg"), and a word that
+  only looks plural ("asparagus") stays as it is.
 - "1-1/2 cups", the US way of writing 1½, is one amount, not a range, on screen and aloud (OV-242).
   "Heaped" or "level" before a spoon leaves it a spoon.
 - The method keeps the author's words, and its amounts follow the ingredients only where they

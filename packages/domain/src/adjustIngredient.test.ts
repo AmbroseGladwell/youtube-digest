@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { tidyIngredient } from "./tidyIngredient.js";
 import { adjustIngredient, adjustedText, servingsLabel, yieldCount, type AdjustedIngredient } from "./adjustIngredient.js";
 
 const doubled = (line: string) => adjustedText(adjustIngredient(line, 2, "asWritten"));
@@ -93,17 +94,89 @@ test("a second amount anywhere else still keeps a line as written", () => {
   assert.equal(adjustIngredient("400g can tomatoes, plus 1 tbsp purée", 2, "asWritten").kind, "unreadable");
 });
 
+test("several becoming one, or less, takes the singular of its noun", () => {
+  const halved = (line: string) => adjustedText(adjustIngredient(line, 0.5, "asWritten"));
+  assert.equal(
+    halved("2 large eggs ((50 - 55g / 2 oz each), at room temp (Note 3))"),
+    "1 large egg ((50 - 55g / 2 oz each), at room temp (Note 3))",
+  );
+  assert.equal(halved("2 garlic cloves, crushed"), "1 garlic clove, crushed");
+  assert.equal(halved("2 bay leaves"), "1 bay leaf");
+  assert.equal(halved("2 red chillies, finely chopped"), "1 red chilli, finely chopped");
+  assert.equal(halved("2 large tomatoes"), "1 large tomato");
+  assert.equal(halved("2 anchovies"), "1 anchovy");
+  assert.equal(halved("2 radishes"), "1 radish");
+  assert.equal(adjustedText(adjustIngredient("4 asparagus", 0.25, "asWritten")), "1 asparagus");
+  assert.equal(adjustedText(adjustIngredient("3 large eggs", 1 / 3, "asWritten")), "1 large egg");
+  assert.equal(adjustedText(adjustIngredient("1 large egg", 0.5, "asWritten")), "½ large egg");
+  assert.equal(adjustedText(adjustIngredient("3 large eggs", 0.5, "asWritten")), "1½ large eggs");
+});
+
+test("in Metric a cup of a dry ingredient the table knows is weighed, and anything else is measured", () => {
+  const metric = (line: string, factor = 1) => adjustedText(adjustIngredient(line, factor, "metric"));
+  assert.equal(
+    metric("1 cup plain / all purpose flour (cake flour OK too, Note 1)"),
+    "120g plain / all purpose flour (cake flour OK too, Note 1)",
+  );
+  assert.equal(metric("3/4 cup caster / superfine sugar", 2), "285g caster / superfine sugar");
+  assert.equal(metric("1/2 cup butter, softened"), "115g butter, softened");
+  assert.equal(metric("10 cups plain flour"), "1.2kg plain flour");
+  assert.equal(metric("1/2 cup milk, full fat (Note 5)"), "120ml milk, full fat (Note 5)");
+  assert.equal(metric("1 cup rice flour"), "235ml rice flour");
+  assert.equal(metric("2 tbsp plain flour"), "2 tbsp plain flour");
+  assert.equal(adjustedText(adjustIngredient("1 cup plain flour", 2, "us")), "2 cups plain flour");
+  assert.equal(adjustedText(adjustIngredient("150g plain flour", 1, "us")), "5¼ oz plain flour");
+});
+
+test("a tidied line from a page that wraps its notes twice still scales", () => {
+  assert.equal(
+    doubled(tidyIngredient("60g / 1/4 cup unsalted butter (, cut into 1.5cm / 1/2” cubes)")),
+    "120g / ½ cup unsalted butter, cut into 1.5cm / 1/2” cubes",
+  );
+  assert.equal(
+    doubled(tidyIngredient("2 large eggs ((50 - 55g / 2 oz each), at room temp (Note 3))")),
+    "4 large eggs (50 - 55g / 2 oz each), at room temp (Note 3)",
+  );
+  assert.equal(doubled("600g chicken breast fillets cut into 2cm pieces"), "1200g chicken breast fillets cut into 2cm pieces");
+  assert.equal(adjustIngredient("2cm/¾in fresh root ginger", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("1 onion, plus 2 more to serve", 2, "asWritten").kind, "unreadable");
+});
+
+test("a bracketed note whose numbers point at a note, a cut or one item scales with the line", () => {
+  assert.equal(
+    doubled("1 cup plain / all purpose flour ((cake flour OK too, Note 1))"),
+    "2 cups plain / all purpose flour ((cake flour OK too, Note 1))",
+  );
+  assert.equal(doubled("1 1/4 tsp baking powder ((NOT baking soda, Note 2))"), "2½ tsp baking powder ((NOT baking soda, Note 2))");
+  assert.equal(
+    doubled("2 large eggs ((50 - 55g / 2 oz each), at room temp (Note 3))"),
+    "4 large eggs ((50 - 55g / 2 oz each), at room temp (Note 3))",
+  );
+  assert.equal(doubled("60g unsalted butter (, cut into 1.5cm / 1/2” cubes)"), "120g unsalted butter (, cut into 1.5cm / 1/2” cubes)");
+  assert.equal(doubled("200ml/7fl oz stock (Note 4)"), "400ml/14fl oz stock (Note 4)");
+  assert.equal(adjustedText(adjustIngredient("1/2 cup milk (, full fat (Note 5))", 1, "metric")), "120ml milk (, full fat (Note 5))");
+  assert.equal(doubled("1 onion, diced (see notes 2 and 3)"), "2 onions, diced (see notes 2 and 3)");
+});
+
+test("a bracket holding another amount still keeps a line as written", () => {
+  assert.equal(adjustIngredient("2 onions (about 300g)", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("1 onion (or 2 small ones), diced", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("1 cup milk (Note 2, or 250ml cream)", 2, "asWritten").kind, "unreadable");
+  assert.equal(adjustIngredient("60g / 1/4 cup butter (plus 1 tbsp for the tin)", 2, "asWritten").kind, "unreadable");
+});
+
 test("lines with no amount, or more than one, stay as written", () => {
   assert.equal(adjustIngredient("A handful of parsley", 2, "asWritten").kind, "unreadable");
   assert.equal(adjustIngredient("Salt and black pepper", 2, "us").kind, "unreadable");
   assert.equal(adjustIngredient("1 tbsp sugar & 1 tsp salt", 2, "asWritten").kind, "unreadable");
 });
 
-test("units convert within their kind only", () => {
+test("units convert within their kind, apart from a cup the weight table knows", () => {
   assert.equal(adjustedText(adjustIngredient("500ml vegetable stock", 2, "us")), "4¼ cups vegetable stock");
   assert.equal(adjustedText(adjustIngredient("50g parmesan, finely grated", 2, "us")), "3½ oz parmesan, finely grated");
   assert.equal(adjustedText(adjustIngredient("8 oz cheddar", 1, "metric")), "225g cheddar");
-  assert.equal(adjustedText(adjustIngredient("2 cups flour", 1, "metric")), "475ml flour");
+  assert.equal(adjustedText(adjustIngredient("2 cups flour", 1, "metric")), "240g flour");
+  assert.equal(adjustedText(adjustIngredient("2 cups chicken stock", 1, "metric")), "475ml chicken stock");
   assert.equal(adjustedText(adjustIngredient("2.2kg lamb shoulder", 1, "us")), "4¾ lb lamb shoulder");
 });
 
@@ -144,9 +217,17 @@ test("in Metric a line in both systems drops the other half even unscaled", () =
   assert.equal(adjustedText(adjustIngredient("3 tbsp/45ml olive oil", 1, "metric")), "45ml olive oil");
 });
 
+test("a weight the author also gives as a volume scales both halves, and never converts between them", () => {
+  const butter = "60g / 1/4 cup unsalted butter (, cut into 1.5cm / 1/2” cubes)";
+  assert.equal(adjustedText(adjustIngredient(butter, 2, "asWritten")), "120g / ½ cup unsalted butter (, cut into 1.5cm / 1/2” cubes)");
+  assert.equal(adjustedText(adjustIngredient(butter, 2, "metric")), "120g unsalted butter (, cut into 1.5cm / 1/2” cubes)");
+  assert.equal(adjustedText(adjustIngredient(butter, 2, "us")), "½ cup unsalted butter (, cut into 1.5cm / 1/2” cubes)");
+  assert.equal(adjustedText(adjustIngredient("200g/7fl oz yoghurt", 3, "us")), "21fl oz yoghurt");
+  assert.equal(adjustedText(adjustIngredient("15g/1 tbsp butter", 2, "us")), "2 tbsp butter");
+});
+
 test("a slash that isn't one amount in both systems keeps the line as written", () => {
   assert.equal(adjustIngredient("2cm/¾in fresh root ginger", 2, "asWritten").kind, "unreadable");
-  assert.equal(adjustIngredient("200g/7fl oz yoghurt", 2, "asWritten").kind, "unreadable");
   assert.equal(adjustIngredient("200g/250g butter", 2, "asWritten").kind, "unreadable");
   assert.equal(adjustIngredient("200ml/7fl oz stock, plus 2 tbsp", 2, "asWritten").kind, "unreadable");
 });

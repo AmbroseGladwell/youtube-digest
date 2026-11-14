@@ -4,6 +4,7 @@ import {
   pluralise,
   recipeYield,
   servingsLabel,
+  tidyIngredient,
   yieldCount,
   type AdjustedIngredient,
   type MethodAmount,
@@ -50,7 +51,8 @@ const factorOf = (scale: RecipeScale): number => (scale.kind === "servings" ? sc
 
 export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, scale: RecipeScale, units: RecipeUnits): RecipeAdjustment {
   const factor = factorOf(scale);
-  const lines = recipe.ingredients.map((line) => adjustIngredient(line, factor, units));
+  const ingredients = recipe.ingredients.map(tidyIngredient);
+  const lines = ingredients.map((line) => adjustIngredient(line, factor, units));
   const servings = scale.kind === "servings" && recipe.yield !== null ? servingsLabel(recipe.yield, scale.count) : null;
   if (factor === 1 && units === "asWritten") {
     return {
@@ -90,7 +92,7 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
     adjusted: true,
     status,
     copyNote: `${what.slice(0, -1)}, from ${asWritten}.`,
-    methodAmounts: methodAmounts(recipe.ingredients, lines),
+    methodAmounts: methodAmounts(ingredients, lines),
     methodNote: `Amounts the method repeats from the ingredients are ${done.charAt(0).toLowerCase()}${done.slice(1)}, and marked.${units === "us" ? " Oven temperatures are in °F." : ""} Everything else is as the recipe gives it.`,
     actionNote: done,
     cookingNote: `${done}, and so is the method.${unreadNote}`,
