@@ -18,10 +18,14 @@ It's a guess, not evidence. The measure is whether testers tap them (OV-223).
 
 - **Three questions, on every kind of overview**: video, process, recipe video, podcast
   episode, article and recipe page.
-- **Personalised.** Each question is fitted to the reader, from the same About you and learned
-  items How to apply uses (`personalisation.md`), under the same rule (OV-236): fit what they
-  already do, never invent a project or role for them. A reader with no profile gets questions
-  about the source alone.
+- **For learning, not fact-checking** (the owner, prompted by Recall's chat prompts on a Katie
+  Dill interview). Each question takes one specific idea, term or technique from the source
+  and asks why it matters, how it works, or what goes wrong without it. Three different ideas,
+  the ones most worth understanding.
+- **Partly shaped by the reader.** The profile How to apply uses (`personalisation.md`) picks
+  which ideas the questions take, and at least one question links an idea to something the
+  reader already does, under How to apply's rule (OV-236): never invent a project or role for
+  them. A reader with no profile gets questions about the source alone.
 - **Never on a shared link.** They're written for the reader, so the share snapshot leaves them
   out (`PRIVATE_OVERVIEW_FIELDS`, `sharing.md`).
 - **A Settings switch hides them**, as Resources has (OV-203). The questions are still written
@@ -31,10 +35,13 @@ It's a guess, not evidence. The measure is whether testers tap them (OV-223).
 ## Generation
 
 One more structural section at the end of every prompt (`followUpQuestionsSection.ts`, and
-`articleFollowUpQuestionsSection.ts` for articles and recipe pages). It asks for questions the
-source raises but leaves open, ones that test whether it holds up, or ones about how it would
-work in the reader's life. It never asks what the note already answers, never asks a generic
-question, and each question names its idea, since the question is read away from the note.
+`articleFollowUpQuestionsSection.ts` for articles and recipe pages). Each question is anchored
+on an idea the note names, in its key points or chapters. Without a connection the assistant
+gets the overview and not the transcript, so a question about a detail only the transcript
+holds would leave it guessing. A connected assistant can still read the transcript through
+`get_transcript`. The prompt rules out questions the note already answers in full and generic
+ones, and each question names its idea, because it's read away from the note. A recipe's
+questions are about technique ("why does frying the paste deepen the flavour?").
 
 **A target, never a count to hit** (`docs/prototype/constraints.md`; OV-252). The prompt asks
 for about 15 words. The record allows up to 25. Code drops a blank question or one over 25

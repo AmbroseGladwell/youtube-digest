@@ -11,14 +11,19 @@ import type { PromptSection } from "../PromptSection.js";
 export type QuestionedSource = "video" | "article" | "recipe";
 
 const GOOD: Record<QuestionedSource, string> = {
-  video: `"Is the keeper test a good idea, or does it leave a team working in fear?"`,
-  article: `"Is the keeper test a good idea, or does it leave a team working in fear?"`,
-  recipe: `"Could I make this with chickpeas instead of chicken, and what would change?"`,
+  video: `"Why does the keeper test ask who a manager would fight to keep, rather than who to let go?"
+"What goes wrong when a team treats a shipped feature as a finished one?"`,
+  article: `"Why does the keeper test ask who a manager would fight to keep, rather than who to let go?"
+"What goes wrong when a team treats a shipped feature as a finished one?"`,
+  recipe: `"Why does frying the tomato paste until it darkens deepen the flavour of the rice?"
+"How does washing the rice first change the texture of the finished dish?"`,
 };
 
-const FIT = `Fit them to what the reader already does and the limits they live with,
-the way someone who knows them would ask. Never give them a new project,
-role or occasion just to hang a question on.`;
+const FIT = `Let the reader shape the questions. Choose the ideas that bear most on
+their work, interests and what they are trying to do, and ask at least one
+question from where they stand, linking an idea to something they already
+do. Never give them a new project, role or occasion just to hang a
+question on.`;
 
 const readerFit = (readerContext: string | null, describedAbove: boolean): string => {
   if (readerContext === null) return "";
@@ -29,13 +34,19 @@ const readerFit = (readerContext: string | null, describedAbove: boolean): strin
 
 export const followUpQuestionsInstructions = (source: QuestionedSource, readerContext: string | null, describedAbove: boolean) => `
 ## Questions to ask next
-${FOLLOW_UP_QUESTIONS} questions I could take to an assistant to go further with this ${source}.
-Each is one sentence, about ${FOLLOW_UP_QUESTION_TARGET_WORDS} words. Ask what the ${source} raises
-but leaves open, what would test whether it holds up, or how it would
-work in my own life. Never ask what the note already answers, and never a
-generic question such as "Tell me more" or "What are the main takeaways?".
-Each question is read on its own, away from the note, so name the idea it
-is about rather than saying "this" or "the ${source}".
+${FOLLOW_UP_QUESTIONS} questions I could ask an assistant to understand this ${source} better.
+Each takes one specific idea, term or technique from the ${source} and asks
+why it matters, how it works, or what goes wrong without it. These are
+for learning, not for checking whether the ${source} is right. Take three
+different ideas, the ones most worth understanding, and take each from
+the note's key points or chapters, so the question can be answered from
+the note.
+
+Each is one sentence, about ${FOLLOW_UP_QUESTION_TARGET_WORDS} words. Never ask what the note
+already answers in full, and never a generic question such as "Tell me
+more" or "What are the main takeaways?". Each question is read on its
+own, away from the note, so name the idea it is about rather than saying
+"this" or "the ${source}".
 Good: ${GOOD[source]}
 Bad: "What else does it say?"${readerFit(readerContext, describedAbove)}`;
 

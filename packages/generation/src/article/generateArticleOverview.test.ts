@@ -101,7 +101,7 @@ test("an article's note keeps its questions to ask next, asked about the article
   const questions = ["Would a ward-level heat plan work where I live?"];
   assert.match(
     composeArticlePrompt(input()).systemPrompt,
-    /## Questions to ask next\n3 questions I could take to an assistant to go further with this article\./,
+    /## Questions to ask next\n3 questions I could ask an assistant to understand this article better\./,
   );
   assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, questions);
 });
