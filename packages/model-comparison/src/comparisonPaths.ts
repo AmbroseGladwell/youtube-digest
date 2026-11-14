@@ -25,6 +25,7 @@ export const comparisonPaths = {
   bigPictureJudgments: (name: string) => join(dataDirectory, "big-picture-judgments", name),
   coverageTranscripts: join(dataDirectory, "coverage", "transcripts"),
   coverageArticles: join(dataDirectory, "coverage", "articles"),
+  listen: (name: string) => join(dataDirectory, "listens", name),
 };
 
 export async function loadTranscripts(set: TranscriptSetName = "main"): Promise<FetchedTranscript[]> {
