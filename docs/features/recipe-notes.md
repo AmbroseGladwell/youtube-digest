@@ -200,6 +200,14 @@ guess:
   A noun that can't be found stays singular rather than a word being guessed at. Several becoming
   one or less takes the singular again ("2 large eggs" halved is "1 large egg"), and a word that
   only looks plural ("asparagus") stays as it is.
+- A scaled or converted cup or spoon is said in sizes a kitchen has (OV-298, owner 14 Nov 2026):
+  cups in quarters and thirds, tablespoons whole or halved, teaspoons down to an eighth, never a
+  third of a spoon. One size within 5% of the exact amount is enough ("1½ cups"). Otherwise the
+  amount is a size plus spoons, the way US recipes write it: "¾ cup" halved is "¼ cup + 2 tbsp", "1¼
+  tsp" halved is "½ tsp + ⅛ tsp", and 250ml in US is "1 cup + 1 tbsp". Under ¼ cup is said in
+  tablespoons ("2 tbsp"), under 1 tbsp in teaspoons ("1½ tsp"), and under ⅛ tsp is "1 pinch".
+  Among splits within 5%, the bigger spoon wins, then whole tablespoons, then the closer. Aloud,
+  "+" is "plus". A line at 1× in its own units, and a range, are left as the page wrote them.
 - "1-1/2 cups", the US way of writing 1½, is one amount, not a range, on screen and aloud (OV-242).
   "Heaped" or "level" before a spoon leaves it a spoon.
 - The method keeps the author's words, and its amounts follow the ingredients only where they

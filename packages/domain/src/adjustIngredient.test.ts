@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { tidyIngredient } from "./tidyIngredient.js";
+import { spokenMeasures } from "./spokenMeasures.js";
+import { methodAmounts } from "./methodAmounts.js";
 import { adjustIngredient, adjustedText, servingsLabel, yieldCount, type AdjustedIngredient } from "./adjustIngredient.js";
 
 const doubled = (line: string) => adjustedText(adjustIngredient(line, 2, "asWritten"));
@@ -184,6 +186,37 @@ test("an amount written as a word scales as its number does", () => {
   assert.equal(adjusted.kind === "adjusted" && adjusted.written, "two");
 });
 
+test("a scaled cup or spoon is said in sizes a kitchen has, within 5%", () => {
+  const halved = (line: string) => adjustedText(adjustIngredient(line, 0.5, "asWritten"));
+  assert.equal(halved("3/4 cup caster / superfine sugar"), "¼ cup + 2 tbsp caster / superfine sugar");
+  assert.equal(halved("1 1/4 tsp baking powder"), "½ tsp + ⅛ tsp baking powder");
+  assert.equal(halved("1 1/4 teaspoons vanilla extract"), "½ teaspoon + ⅛ teaspoon vanilla extract");
+  assert.equal(halved("1/4 cup unsalted butter"), "2 tbsp unsalted butter");
+  assert.equal(halved("1/3 cup oil"), "2 tbsp + 2 tsp oil");
+  assert.equal(halved("1 tbsp olive oil"), "1½ tsp olive oil");
+  assert.equal(halved("3/4 tsp salt"), "¼ tsp + ⅛ tsp salt");
+  assert.equal(halved("1/8 tsp salt"), "1 pinch salt");
+  assert.equal(adjustedText(adjustIngredient("3/4 cup plain flour", 1.5, "asWritten")), "1 cup + 2 tbsp plain flour");
+  assert.equal(adjustedText(adjustIngredient("250ml milk", 1, "us")), "1 cup + 1 tbsp milk");
+  assert.equal(adjustedText(adjustIngredient("60g / 1/4 cup unsalted butter", 0.5, "us")), "2 tbsp unsalted butter");
+});
+
+test("an amount already a kitchen size, or not scaled, reads as before", () => {
+  assert.equal(adjustedText(adjustIngredient("1/2 cup milk", 3, "asWritten")), "1½ cups milk");
+  assert.equal(adjustedText(adjustIngredient("2/3 cup milk", 0.5, "asWritten")), "⅓ cup milk");
+  assert.equal(adjustedText(adjustIngredient("1 1/2 tsp oil", 0.5, "asWritten")), "¾ tsp oil");
+  assert.equal(adjustedText(adjustIngredient("1/8 tsp salt", 2, "asWritten")), "¼ tsp salt");
+  assert.equal(adjustIngredient("1/3 tsp cumin", 1, "us").kind, "same");
+  assert.equal(adjustedText(adjustIngredient("2–3 tbsp cold water", 0.5, "asWritten")), "1–1½ tbsp cold water");
+});
+
+test("a size and a spoon read aloud with plus, and the method follows them", () => {
+  const sugar = adjustIngredient("3/4 cup caster sugar", 0.5, "asWritten");
+  assert.equal(spokenMeasures(adjustedText(sugar)), "quarter cup plus 2 tablespoons caster sugar");
+  const [followed] = methodAmounts(["3/4 cup caster sugar"], [sugar]);
+  assert.equal(followed?.adjusted, "¼ cup + 2 tbsp");
+});
+
 test("a bracketed note whose numbers point at a note, a cut or one item scales with the line", () => {
   assert.equal(
     doubled("1 cup plain / all purpose flour ((cake flour OK too, Note 1))"),
@@ -250,7 +283,7 @@ test("US keeps the page's own half where it is already in US units, and converts
   const inUs = (line: string, factor: number) => adjustedText(adjustIngredient(line, factor, "us"));
   assert.equal(inUs("400g/14oz beef mince", 1), "14oz beef mince");
   assert.equal(inUs("400g/14oz beef mince", 2), "1¾ lb beef mince");
-  assert.equal(inUs("200ml/7fl oz chicken stock", 1), "¾ cup chicken stock");
+  assert.equal(inUs("200ml/7fl oz chicken stock", 1), "⅔ cup + 3 tbsp chicken stock");
   assert.equal(inUs("3 tbsp/45ml olive oil", 2), "6 tbsp olive oil");
 });
 
