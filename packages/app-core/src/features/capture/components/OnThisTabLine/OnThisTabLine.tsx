@@ -39,8 +39,9 @@ export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
       return;
     }
     // Chrome refuses a grant asked for outside the click, so the article run starts here
-    // and home renders the progress the shell is already tracking.
-    if (tab.page !== null) startArticleRun(tab.page, { from: "panel", willAsk: true });
+    // and home renders the progress the shell is already tracking. An episode needs no grant:
+    // home reads it from the tab's address and offers it there.
+    if (tab.kind === "page" && tab.page !== null) startArticleRun(tab.page, { from: "panel", willAsk: true });
     else if (tab.videoUrl !== null) onStartVideo(tab.videoUrl);
     void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
   };
@@ -48,7 +49,7 @@ export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
   return (
     <div className={styles.root} role="region" aria-label="On this tab" data-testid={onThisTabLineTestIds.root}>
       <span className={styles.icon} aria-hidden="true">
-        <StrokeIcon name={tab.kind === "video" ? "video" : "scrollText"} size={14} />
+        <StrokeIcon name={tab.kind === "video" ? "video" : tab.kind === "episode" ? "mic" : "scrollText"} size={14} />
       </span>
       <span className={styles.message} data-testid={onThisTabLineTestIds.message}>
         Another {tab.kind} on this tab

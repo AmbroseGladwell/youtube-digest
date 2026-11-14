@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useMatch } from "react-router";
-import { canonicalArticleUrl, sourceKey, type Overview } from "@overview/domain";
+import { canonicalArticleUrl, keptSharedLink, sourceKey, type Overview } from "@overview/domain";
 import { RouteParams, Routes } from "../../app/Routes.js";
 import { useActiveVideoUrl } from "../../app/ActiveVideoContext.js";
 import { useActivePage, type ActivePage } from "../../app/ArticlePagesContext.js";
 import { isOfferedPage } from "../../app/isOfferedPage.js";
 import { useIsPanel } from "../../app/LayoutContext.js";
+import { isPlatformPodcastLink, isPodcastShowLink } from "../newOverview/usePodcastLink.js";
 import { extractYouTubeVideoId } from "../newOverview/util/parseYouTubeUrl.js";
 import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
 import { overviewForPageUrl, overviewForVideoUrl } from "../overviews/util/overviewForVideoUrl.js";
 import { readableEntries } from "../overviews/types/LibraryEntry.js";
 
 export interface OnThisTab {
-  kind: "video" | "page";
+  kind: "video" | "page" | "episode";
   // The note the library already holds for what the tab has moved on to, if it holds one.
   held: Overview | null;
   videoUrl: string | null;
@@ -60,6 +61,12 @@ export function useOnThisTab(): OnThisTab | null {
     };
   }
   if (offeredPage === null) return null;
+  // A Spotify or Apple tab is read on home, where its offer says what the address holds (106k).
+  if (isPlatformPodcastLink(offeredPage.url)) {
+    if (isPodcastShowLink(offeredPage.url)) return null;
+    if (open.source.kind === "podcast" && keptSharedLink(open.source.sharedFrom) === keptSharedLink(offeredPage.url)) return null;
+    return { kind: "episode", held: null, videoUrl: null, page: offeredPage, dismiss: () => setDismissedFor(latestSubject.current) };
+  }
   if (open.source.kind === "web" && open.source.url === canonicalArticleUrl(offeredPage.url, null)) {
     return null;
   }

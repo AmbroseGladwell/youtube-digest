@@ -170,7 +170,8 @@ nothing for the tab to have moved away from, and home is already the offer. What
 "moved on" is matched on the video's own id rather than the URL, the same rule "Already in
 the library" above gives.
 
-Its copy is generic — "Another video on this tab", "Another page on this tab" — and never
+Its copy is generic — "Another video on this tab", "Another page on this tab", "Another
+episode on this tab" for a Spotify or Apple episode (`podcast-screens.md`) — and never
 names what is there. The reader can see the tab beside the panel, so naming it would only
 cost the line its one line, and at 400px there is one line. The offer is `Read overview`
 where the library already holds it and `Make an overview` where it does not; making starts

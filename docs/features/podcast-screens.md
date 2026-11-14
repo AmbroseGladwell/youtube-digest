@@ -10,7 +10,7 @@ They ship as stacked PRs, like the rest of the card:
 2. **Making one** (below): pasting a link, the steps while it's made, the failures, no transcript,
    and `/privacy`.
 3. **Onboarding**: the trial reaching the podcast routes, and its entry in onboarding's table.
-4. **The panel beside a Spotify or Apple episode tab** (106k).
+4. **The panel beside a Spotify or Apple episode tab** (106k, below).
 
 **What is built, and where:**
 
@@ -148,6 +148,48 @@ episode with no transcript stops at the confirm step (106i) with "Transcribing i
 above the field for another link. Onboarding's bar says "Finding the episode" throughout rather than
 the design's separate "Looking for a transcript" stage, since it has one fetching stage for every
 kind.
+
+## The panel beside an episode tab
+
+The fourth PR, Trello OV-296 (106k, 106j). On an `open.spotify.com` or `podcasts.apple.com`
+episode tab, the panel's home offers the episode as it offers an article (205a): text only, no
+art from the tab.
+
+| The decision | Where it lives |
+|---|---|
+| Which tab is an episode, a show's page, or neither | `useEpisodeTab` (`isPlatformPodcastLink`, `isPodcastShowLink`) |
+| The card: finding, found, a show's page | `EpisodeOffer` |
+| No transcript, in place of Create | `EpisodeNoTranscript` |
+| The line on a note when the tab is another episode | `useOnThisTab`'s `episode` kind |
+
+**Only the address is needed,** so Chrome is never asked for the site. Our server reads it through
+`usePodcastLink`, as a pasted link is read, so the card says "Finding the episode…" for a moment and
+then "{show} · Podcast · on Spotify", the title and "1 hr 56 min · 10 Nov 2026". Create waits for
+the episode. One already in the library offers "Read overview" and "Already in your library". A
+Spotify or Apple tab is never offered as an article, even where our server can't be reached.
+
+**A show's page is known from its address** (`apple-show`, `spotify-show`) and isn't sent to our
+server: "This is the show's page. Open one of its episodes, and you can make an overview of it
+here." Its kicker is "Podcast · on Spotify", without the show's name, which only the tab's title
+gives and in each app's own format. An episode our server answers "not an episode" for reads the
+same.
+
+**Our server's other reasons** use the pasted link's copy (`podcastLinkFailureCopy`) with "Use a
+different link" dropped, since the tab is the link; "We didn't hear back in time" keeps Try again.
+
+**No transcript** (106j) keeps the offer and puts 106h's words, shorter, where Create was, with
+"Transcribing is coming soon". It stays until the tab moves on, which dismisses the run; nothing was
+reserved or kept. Coming back offers Create again.
+
+**The line on a note** (205e) says "Another episode on this tab" for another Spotify or Apple
+episode, and none for a show's page or the note's own episode (its kept link matches). Making an
+overview from it goes to home, where the episode is read and offered, rather than starting a run
+straight away as an article does: an episode needs no grant asked inside the click.
+
+**The address leaves the device sooner than an article's does.** An article is read only when
+Create is pressed. Beside an episode, the tab's address goes to our server as soon as it is in front
+of the panel, so the card can name it. That is the design's choice (106k), and `/privacy` says so
+(OV-296 in `legal-pages.md`'s log).
 
 ## The terms review
 
