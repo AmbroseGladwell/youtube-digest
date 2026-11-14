@@ -1,3 +1,5 @@
+import { gramsPerCup } from "./gramsPerCup.js";
+
 export type RecipeUnits = "asWritten" | "metric" | "us";
 
 export interface IngredientPiece {
@@ -15,7 +17,8 @@ export type AdjustedIngredient =
   // No amount we can read, or more than one, so it stays exactly as the page wrote it.
   | { kind: "unreadable"; line: string };
 
-type Kind = "weight" | "volume";
+// A count is a measure that scales and agrees but never converts: "2 cloves garlic", "3 pints".
+type Kind = "weight" | "volume" | "count";
 
 interface Unit {
   kind: Kind;
@@ -25,6 +28,30 @@ interface Unit {
   singular: string;
   plural: string;
 }
+
+const IRREGULAR: Record<string, string> = { leaf: "leaves", loaf: "loaves", half: "halves", knife: "knives", chilli: "chillies" };
+
+const plural = (word: string): string => {
+  const lower = word.toLowerCase();
+  if (IRREGULAR[lower]) return IRREGULAR[lower]!;
+  if (/s$/i.test(word)) return word;
+  if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
+  if (/(?:ch|sh|x|z|tomato|potato|mango)$/i.test(word)) return `${word}es`;
+  return `${word}s`;
+};
+
+const SINGULAR: Record<string, string> = Object.fromEntries(Object.entries(IRREGULAR).map(([one, many]) => [many, one]));
+
+// "2 large eggs" halved is "1 large egg". A word that ends in s but isn't a plural
+// ("asparagus", "watercress") stays as it is.
+const singular = (word: string): string => {
+  const lower = word.toLowerCase();
+  if (SINGULAR[lower]) return SINGULAR[lower]!;
+  if (!/s$/i.test(word) || /(?:ss|us|is)$/i.test(word)) return word;
+  if (/[^aeiou]ies$/i.test(word)) return `${word.slice(0, -3)}y`;
+  if (/(?:ches|shes|xes|zes|tomatoes|potatoes|mangoes)$/i.test(word)) return word.slice(0, -2);
+  return word.slice(0, -1);
+};
 
 const UNITS: Record<string, Unit> = {
   mg: { kind: "weight", size: 0.001, system: "metric", singular: "mg", plural: "mg" },
@@ -38,6 +65,30 @@ const UNITS: Record<string, Unit> = {
   tbsp: { kind: "volume", size: 14.7868, system: "both", singular: "tbsp", plural: "tbsp" },
   floz: { kind: "volume", size: 29.5735, system: "us", singular: "fl oz", plural: "fl oz" },
   cup: { kind: "volume", size: 236.588, system: "us", singular: "cup", plural: "cups" },
+  quart: { kind: "volume", size: 946.353, system: "us", singular: "quart", plural: "quarts" },
+  gallon: { kind: "volume", size: 3785.41, system: "us", singular: "gallon", plural: "gallons" },
+  // A US pint is 473ml and a British one 568ml, and a line doesn't say which, so it never converts.
+  ...Object.fromEntries(
+    [
+      "pint",
+      "stick",
+      "dash",
+      "pinch",
+      "sprig",
+      "clove",
+      "slice",
+      "knob",
+      "rasher",
+      "stalk",
+      "sheet",
+      "piece",
+      "handful",
+      "bunch",
+      "head",
+      "splash",
+      "drop",
+    ].map((word) => [word, { kind: "count", size: 1, system: "both", singular: word, plural: plural(word) } satisfies Unit]),
+  ),
 };
 
 const UNIT_WORDS: Array<[RegExp, keyof typeof UNITS]> = [
@@ -52,6 +103,25 @@ const UNIT_WORDS: Array<[RegExp, keyof typeof UNITS]> = [
   [/^(?:tbsps?|tbs|tablespoons?)\b/i, "tbsp"],
   [/^(?:fl\.? ?oz|fluid ounces?)\b/i, "floz"],
   [/^(?:cups?)\b/i, "cup"],
+  [/^(?:quarts?|qts?)\b/i, "quart"],
+  [/^(?:gallons?|gal)\b/i, "gallon"],
+  [/^(?:pints?|pts?)\b/i, "pint"],
+  [/^sticks?\b/i, "stick"],
+  [/^dash(?:es)?\b/i, "dash"],
+  [/^pinch(?:es)?\b/i, "pinch"],
+  [/^sprigs?\b/i, "sprig"],
+  [/^cloves?\b/i, "clove"],
+  [/^slices?\b/i, "slice"],
+  [/^knobs?\b/i, "knob"],
+  [/^rashers?\b/i, "rasher"],
+  [/^stalks?\b/i, "stalk"],
+  [/^sheets?\b/i, "sheet"],
+  [/^pieces?\b/i, "piece"],
+  [/^handfuls?\b/i, "handful"],
+  [/^bunch(?:es)?\b/i, "bunch"],
+  [/^heads?\b/i, "head"],
+  [/^splash(?:es)?\b/i, "splash"],
+  [/^drops?\b/i, "drop"],
 ];
 
 const VULGAR: Record<string, number> = { "¼": 0.25, "½": 0.5, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3, "⅛": 0.125 };
@@ -65,6 +135,27 @@ const PACK_WORD = new RegExp(`^\\s*(?:${PACK_WORDS})\\b`, "i");
 const LEADING_PACK_WORD = new RegExp(`^(\\s*)(${PACK_WORDS})\\b`, "i");
 // "1 small tub (200g)": the bracket is the tub's size as sold, not a second amount.
 const PACK_SIZE = new RegExp(`\\b(?:${PACK_WORDS})\\s*\\(\\s*${NUMBER}\\s*[a-z]*\\s*\\)`, "i");
+// "(Note 3)", "(cut into 1.5cm / 1/2” cubes)", "(50 - 55g / 2 oz each)": a bracket whose only
+// numbers point at a note, size a cut or weigh one of the items is a note, and doesn't scale.
+// After a comma (", cut into 1.5cm cubes"), or after "into", the same notes need no bracket.
+const NOTE_REFERENCE = /\bnotes?\s*#?\s*\d+(?:\s*(?:,|&|and)\s*\d+)*/gi;
+const CUT_SIZE = new RegExp(`${NUMBER}\\s*(?:cm|mm|in|inch|inches|"|”|″)(?![a-z])`, "gi");
+const PER_ITEM = /\beach\s*$/i;
+const CUT_INTO = new RegExp(`\\s+into\\s+${CUT_SIZE.source}`, "gi");
+const BRACKET = /\(([^()]*)\)/;
+
+const withoutNotes = (text: string): string => {
+  let rest = text;
+  for (let group = rest.match(BRACKET); group !== null; group = rest.match(BRACKET)) {
+    const inside = group[1]!;
+    if (!PER_ITEM.test(inside) && ANY_NUMBER.test(inside.replace(NOTE_REFERENCE, "").replace(CUT_SIZE, ""))) return rest;
+    rest = `${rest.slice(0, group.index)}${rest.slice(group.index! + group[0].length)}`;
+  }
+  const cut = rest.replace(CUT_INTO, " into");
+  const comma = cut.indexOf(",");
+  return comma === -1 ? cut : `${cut.slice(0, comma)}${cut.slice(comma).replace(NOTE_REFERENCE, "").replace(CUT_SIZE, "")}`;
+};
+
 const LEAD_IN = /^((?:the\s+)?(?:juice|zest|zest and juice|juice and zest|seeds|leaves)\s+of\s+)/i;
 
 const parseNumber = (text: string): number => {
@@ -120,24 +211,13 @@ const unitNamed = (text: string): { unit: keyof typeof UNITS; length: number } |
   return null;
 };
 
-const IRREGULAR: Record<string, string> = { leaf: "leaves", loaf: "loaves", half: "halves", knife: "knives", chilli: "chillies" };
-
-const plural = (word: string): string => {
-  const lower = word.toLowerCase();
-  if (IRREGULAR[lower]) return IRREGULAR[lower]!;
-  if (/s$/i.test(word)) return word;
-  if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
-  if (/(?:ch|sh|x|z|tomato|potato|mango)$/i.test(word)) return `${word}es`;
-  return `${word}s`;
-};
-
 const PREPARED_HOW = /^(?:finely|roughly|thinly|thickly|coarsely|lightly|freshly|very|well)$/i;
 const PREPARED = /^[a-z]{3,}ed$/i;
 
 // "1 small garlic clove, grated" doubled is "2 small garlic cloves, grated": the noun is the
 // last word before the first comma or bracket, or before how it's prepared where there's no
-// comma ("1 onion finely chopped"). A noun we can't find stays singular rather than a guess.
-const pluralised = (rest: string): string => {
+// comma ("1 onion finely chopped"). A noun we can't find stays as written rather than a guess.
+const withNoun = (rest: string, agree: (word: string) => string): string => {
   const end = rest.search(/[,(;]/);
   const head = end === -1 ? rest : rest.slice(0, end);
   const words = [...head.matchAll(/\S+/g)];
@@ -149,17 +229,43 @@ const pluralised = (rest: string): string => {
   const noun = words[prepared === -1 ? words.length - 1 : prepared - 1];
   if (noun === undefined || !/^[a-z]+$/i.test(noun[0])) return rest;
   const at = noun.index!;
-  return `${rest.slice(0, at)}${plural(noun[0])}${rest.slice(at + noun[0].length)}`;
+  return `${rest.slice(0, at)}${agree(noun[0])}${rest.slice(at + noun[0].length)}`;
 };
 
 // "1½ cups", "1 cup": a unit written as a word agrees with its new amount; "tbsp" and "g" don't change.
 const agreeing = (unitText: string, many: boolean): string => {
   const word = unitText.match(/[a-z]+$/i)?.[0] ?? "";
-  if (!/^[a-z]{3,}$/i.test(word) || /^(?:tsps?|tbsps?|tbs|lbs?|kg)$/i.test(word)) return unitText;
+  if (!/^[a-z]{3,}$/i.test(word) || /^(?:tsps?|tbsps?|tbs|lbs?|kg|qts?|pts?|gal)$/i.test(word)) return unitText;
   const space = unitText.slice(0, unitText.length - word.length);
   if (many) return space + plural(word);
-  return space + (/s$/i.test(word) ? word.slice(0, -1) : word);
+  return space + singular(word);
 };
+
+const SPELLED: Record<string, string> = {
+  one: "1",
+  two: "2",
+  three: "3",
+  four: "4",
+  five: "5",
+  six: "6",
+  seven: "7",
+  eight: "8",
+  nine: "9",
+  ten: "10",
+  eleven: "11",
+  twelve: "12",
+  "a dozen": "12",
+  dozen: "12",
+  "half a": "½",
+  "half an": "½",
+};
+const SPELLED_AMOUNT = new RegExp(`^(${Object.keys(SPELLED).join("|")})(?=\\s)`, "i");
+
+// "two eggs" reads as "2 eggs", and "half a lemon" as "½ lemon", so they scale as digits do.
+const inDigits = (text: string): string => text.replace(SPELLED_AMOUNT, (word) => SPELLED[word.toLowerCase()]!);
+
+// A stick of butter is sold at 113g, so Metric can weigh it as it weighs a cup.
+const STICK_OF_BUTTER = /^\s*(?:of\s+)?(?:(?:unsalted|salted|softened|cold|melted)\s+)*butter\b/i;
 
 const target = (unit: Unit, grams: number, units: RecipeUnits): Unit => {
   if (units === "asWritten" || unit.system === "both" || unit.system === units) return unit;
@@ -179,7 +285,7 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   if (factor === 1 && units === "asWritten") return { kind: "asWritten", line };
 
   const lead = line.match(LEAD_IN)?.[1] ?? "";
-  const body = line.slice(lead.length);
+  const body = inDigits(line.slice(lead.length));
   const amount = body.match(AMOUNT);
   if (amount === null) return { kind: "unreadable", line };
   const both = inBothSystems(line, lead, body, factor, units);
@@ -206,11 +312,27 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
       : { kind: "unreadable", line };
   }
   const packSized = named === null && pack === null && PACK_SIZE.test(afterUnit);
-  if (ANY_NUMBER.test(packSized ? afterUnit.replace(PACK_SIZE, "") : afterUnit)) return { kind: "unreadable", line };
+  if (ANY_NUMBER.test(withoutNotes(packSized ? afterUnit.replace(PACK_SIZE, "") : afterUnit))) return { kind: "unreadable", line };
 
   const from = named === null ? null : UNITS[named.unit]!;
-  const to = from === null ? null : target(from, low * factor * from.size, units);
-  const convert = (value: number) => (from === null || to === null ? value * factor : (value * factor * from.size) / to.size);
+  const gramsEach =
+    units !== "metric"
+      ? null
+      : from === UNITS.cup
+        ? gramsPerCup(afterUnit)
+        : from === UNITS.stick && STICK_OF_BUTTER.test(afterUnit)
+          ? 113
+          : null;
+  const to =
+    from === null
+      ? null
+      : gramsEach !== null
+        ? low * factor * gramsEach >= 1000
+          ? UNITS.kg!
+          : UNITS.g!
+        : target(from, low * factor * from.size, units);
+  const convert = (value: number) =>
+    from === null || to === null ? value * factor : (value * factor * (gramsEach ?? from.size)) / to.size;
   const newLow = convert(low);
   const newHigh = high === null ? null : convert(high);
   const amountText = `${formatNumber(newLow, to)}${newHigh === null ? "" : `–${formatNumber(newHigh, to)}`}`;
@@ -225,14 +347,21 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   const moved = Math.abs(newLow - low) > 1e-9 || !unitUnchanged || (high !== null && Math.abs((newHigh ?? 0) - high) > 1e-9);
   if (!moved) return { kind: "same", line };
 
-  const tail = from === null && pack === null && low <= 1 && newLow > 1 && high === null ? pluralised(afterUnit) : afterUnit;
+  const counted = from === null && pack === null && high === null;
+  const tail =
+    counted && low <= 1 && newLow > 1
+      ? withNoun(afterUnit, plural)
+      : counted && low > 1 && newLow <= 1
+        ? withNoun(afterUnit, singular)
+        : afterUnit;
   const pieces: IngredientPiece[] = [
     { text: lead, changed: false },
     { text: `${amountText}${unitShown}`, changed: true },
     { text: packText, changed: false },
     { text: tail, changed: false },
   ].filter(({ text }) => text !== "");
-  const written = `${amount[0]}${named === null ? "" : rest.slice(0, spaced.length + named.length)}`;
+  const spelled = line.slice(lead.length).match(SPELLED_AMOUNT)?.[0];
+  const written = `${spelled ?? amount[0]}${named === null ? "" : rest.slice(0, spaced.length + named.length)}`;
   return { kind: "adjusted", pieces, packAsSold: pack !== null || packSized, written, plural: pluralTaken(afterUnit, tail) };
 }
 
@@ -274,7 +403,8 @@ const measureAt = (text: string): Measure | null => {
 // "200ml/7fl oz stock" is one amount written in both systems (OV-241). As written scales both
 // halves and Metric keeps the metric half. US keeps the page's other half where it is already in
 // the unit US would choose, or a spoon; British fl oz, or ounces past a pound, are converted from
-// the metric half as any metric line is, into cups or pounds (owner, 12 Nov 2026).
+// the metric half as any metric line is, into cups or pounds (owner, 12 Nov 2026). "60g / 1/4 cup
+// butter" is a weight the author has already put as a volume, so US keeps the cup (owner, 14 Nov 2026).
 function inBothSystems(line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null {
   const first = measureAt(body);
   const slash = first === null ? null : body.slice(first.text.length).match(/^\s*\/\s*/);
@@ -283,7 +413,7 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
   if (second === null) return null;
   const tail = body.slice(first.text.length + slash[0].length + second.text.length);
   const metric = [first, second].filter(({ unit }) => unit.system === "metric");
-  if (first.unit.kind !== second.unit.kind || metric.length !== 1 || ANY_NUMBER.test(tail) || PACK_WORD.test(tail)) {
+  if (metric.length !== 1 || ANY_NUMBER.test(withoutNotes(tail)) || PACK_WORD.test(tail)) {
     return { kind: "unreadable", line };
   }
   const scaled = ({ low, high, unit, unitText }: Measure) =>
@@ -292,7 +422,7 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
   const other = first === grams ? second : first;
   const usUnit = target(grams.unit, grams.low * factor * grams.unit.size, "us");
   const inUs = () => {
-    if (other.unit.system === "both" || other.unit === usUnit) return scaled(other);
+    if (other.unit.system === "both" || other.unit === usUnit || other.unit.kind !== grams.unit.kind) return scaled(other);
     const value = (amount: number) => formatNumber((amount * factor * grams.unit.size) / usUnit.size, usUnit);
     const many = (grams.low * factor * grams.unit.size) / usUnit.size > 1 || grams.high !== null;
     return `${value(grams.low)}${grams.high === null ? "" : `–${value(grams.high)}`} ${many ? usUnit.plural : usUnit.singular}`;
@@ -317,7 +447,7 @@ const pluralTaken = (before: string, after: string): { from: string; to: string 
 // "400g can chopped tomatoes" doubled is "2 × 400g cans chopped tomatoes": the can is sold at
 // its size, so what scales is how many of them, written the way "2 × 400g tins" already is.
 function packsOf(line: string, lead: string, size: string, afterSize: string, factor: number): AdjustedIngredient {
-  if (ANY_NUMBER.test(afterSize)) return { kind: "unreadable", line };
+  if (ANY_NUMBER.test(withoutNotes(afterSize))) return { kind: "unreadable", line };
   if (factor === 1) return { kind: "same", line };
   const word = afterSize.match(LEADING_PACK_WORD)!;
   const tail = afterSize.slice(word[0].length);
