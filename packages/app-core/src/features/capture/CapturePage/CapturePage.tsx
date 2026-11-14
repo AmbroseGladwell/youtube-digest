@@ -33,6 +33,10 @@ import { useCaptureQueueController } from "../../captureQueue/CaptureQueueContex
 import { CaptureQueueStripView } from "../../captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
 import { ArticleFailureNotice } from "../components/ArticleFailureNotice/ArticleFailureNotice.js";
 import { SourceOffer } from "../components/SourceOffer/SourceOffer.js";
+import { EpisodeOffer } from "../components/EpisodeOffer/EpisodeOffer.js";
+import { EpisodeNoTranscript } from "../components/EpisodeNoTranscript/EpisodeNoTranscript.js";
+import { isPlatformPodcastLink } from "../../newOverview/usePodcastLink.js";
+import { useEpisodeTab } from "../useEpisodeTab.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
@@ -63,7 +67,9 @@ export function CapturePage() {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
   const pages = useArticlePages();
-  const offeredPage = activeVideoUrl === null && isOfferedPage(activePage) ? activePage : null;
+  // A Spotify or Apple tab is an episode or a show, never an article (design 106k).
+  const offeredPage = activeVideoUrl === null && isOfferedPage(activePage) && !isPlatformPodcastLink(activePage.url) ? activePage : null;
+  const episodeTab = useEpisodeTab();
   const pageAccess = usePageAccess(offeredPage?.url ?? null);
   const startArticleRun = useStartArticleRun();
   const controller = useNewOverviewRunController();
@@ -115,10 +121,19 @@ export function CapturePage() {
     if (failedOn !== null && activePage !== null && activePage.url !== failedOn) dismiss();
   }, [failedOn, activePage, dismiss]);
 
+  // Design 106j: an episode with no words stays on its tab's offer, in place of Create, until the
+  // tab moves on; nothing was made or kept, so there is nothing to clear but the run.
+  const episodeWithoutWords =
+    episodeTab !== null && run !== null && run.podcast !== null && run.error?.kind === "podcastNoTranscript" && run.url === episodeTab.url;
+  const noWordsOn = run?.podcast != null && run.error?.kind === "podcastNoTranscript" ? run.url : null;
+  useEffect(() => {
+    if (noWordsOn !== null && activePage !== null && activePage.url !== noWordsOn) dismiss();
+  }, [noWordsOn, activePage, dismiss]);
+
   const analytics = useAnalytics();
-  const readOverview = (overview: Overview) => {
-    analytics.capture.panel.readChosen({ overviewId: overview.id });
-    void navigate(Routes.overview(overview.id), { viewTransition: shouldAnimateNavigation() });
+  const readOverview = (overviewId: Overview["id"]) => {
+    analytics.capture.panel.readChosen({ overviewId });
+    void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
   };
 
   // Only ever a first overview. Writing a second over one already held was offered here and
@@ -133,6 +148,10 @@ export function CapturePage() {
     if (offeredPage !== null) {
       analytics.capture.panel.createChosen({ again: false });
       startArticleRun(offeredPage, { from: "panel", willAsk: pageAccess !== true });
+    }
+    if (episodeTab?.status === "found") {
+      analytics.capture.panel.createChosen({ again: false });
+      controller.startPodcast({ episode: episodeTab.episode, sharedFrom: episodeTab.url, from: "panel" });
     }
   };
 
@@ -170,7 +189,7 @@ export function CapturePage() {
     );
   }
 
-  if (run !== null && run.overview === null) {
+  if (run !== null && run.overview === null && !episodeWithoutWords) {
     return (
       <div className={styles.root} data-testid={capturePageTestIds.root}>
         <RunInProgress
@@ -195,7 +214,12 @@ export function CapturePage() {
     offeredPage === null
       ? overviewForVideoUrl(overviewsQuery.data ?? [], activeVideoUrl)
       : overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url);
-  const nothingToTake = activeVideoUrl === null && offeredPage === null;
+  const heldId = episodeTab?.status === "held" ? episodeTab.overviewId : (alreadyHeld?.id ?? null);
+  const nothingToTake = activeVideoUrl === null && offeredPage === null && episodeTab === null;
+  // A show's page, an episode we can't use, or one with no words has nothing to make here.
+  const episodeStopped =
+    episodeTab !== null &&
+    (episodeWithoutWords || episodeTab.status === "show" || episodeTab.status === "failed" || episodeTab.status === "unreachable");
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
   // Known before Create because noticing the video fetches its captions anyway
   // (docs/features/watching-detection.md); with no free rung there is no card to draw.
@@ -220,7 +244,29 @@ export function CapturePage() {
         <LibraryMoveNotice panel />
       ) : null}
       <div className={styles.opening} data-testid={capturePageTestIds.opening}>
-        {offeredPage !== null ? (
+        {episodeTab !== null ? (
+          episodeTab.status === "failed" ? (
+            <ArticleFailureNotice copy={episodeTab.copy} onWay={episodeTab.retry} />
+          ) : episodeTab.status === "unreachable" ? (
+            <p className={styles.note} role="alert" data-testid={capturePageTestIds.episodeUnreachable}>
+              We couldn’t check this episode just now.{" "}
+              <button type="button" className={styles.retry} onClick={episodeTab.retry}>
+                Try again
+              </button>
+            </p>
+          ) : (
+            <EpisodeOffer
+              on={episodeTab.on}
+              offer={
+                episodeTab.status === "found" || episodeTab.status === "held"
+                  ? { status: "found", episode: episodeTab.episode }
+                  : episodeTab.status === "reading"
+                    ? { status: "reading", host: episodeTab.host }
+                    : { status: "show" }
+              }
+            />
+          )
+        ) : offeredPage !== null ? (
           <SourceOffer source={domainOf(offeredPage.url)} title={offeredPage.title} />
         ) : watchedVideo !== null ? (
           <SourceOffer source={watchedVideo.channel} title={watchedVideo.title} video />
@@ -237,12 +283,12 @@ export function CapturePage() {
           </div>
         )}
 
-        {alreadyHeld ? (
+        {heldId !== null ? (
           <>
             <button
               type="button"
               className={styles.primary}
-              onClick={() => readOverview(alreadyHeld)}
+              onClick={() => readOverview(heldId)}
               data-testid={capturePageTestIds.readOverviewButton}
             >
               Read overview
@@ -251,7 +297,9 @@ export function CapturePage() {
               Already in your library
             </p>
           </>
-        ) : limit !== null ? (
+        ) : episodeWithoutWords ? (
+          <EpisodeNoTranscript />
+        ) : episodeStopped ? null : limit !== null ? (
           <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />
         ) : (
           !nothingToTake && (
@@ -259,7 +307,7 @@ export function CapturePage() {
               type="button"
               className={styles.primary}
               onClick={() => createOverview()}
-              disabled={!keysReady}
+              disabled={!keysReady || episodeTab?.status === "reading"}
               data-testid={capturePageTestIds.createButton}
             >
               Create overview
@@ -267,16 +315,16 @@ export function CapturePage() {
           )
         )}
 
-        {keysReady && limit === null && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
+        {keysReady && limit === null && !episodeStopped && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
 
-        {offeredPage !== null && alreadyHeld === null && keysReady && limit === null && pageAccess === false && (
+        {offeredPage !== null && heldId === null && keysReady && limit === null && pageAccess === false && (
           <p className={styles.note} data-testid={capturePageTestIds.firstTimeNote}>
             First time on {domainOf(offeredPage.url)}. Chrome will ask once whether we can read this site. We only read a page when you
             press Create.
           </p>
         )}
 
-        {activeVideoUrl !== null && alreadyHeld === null && keysReady && limit === null && (
+        {activeVideoUrl !== null && heldId === null && keysReady && limit === null && (
           <p className={styles.note} data-testid={capturePageTestIds.captionsNote}>
             {watchedTranscript.isFetching
               ? "Fetching its captions now."

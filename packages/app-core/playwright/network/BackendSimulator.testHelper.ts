@@ -202,6 +202,7 @@ export class BackendSimulator {
   #podcastAnswer: PodcastRead = { status: "failed", reason: "not-an-episode" };
   #podcastWords: StoredTranscript | null = null;
   #podcastReads: string[] = [];
+  #podcastReadsHeld: Array<() => void> | null = null;
   #podcastTranscriptAsks: Array<{ feedUrl: string; guid: string }> = [];
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
@@ -898,8 +899,10 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
     });
 
-    await this.#page.route("**/api/podcasts/read", (route) => {
+    await this.#page.route("**/api/podcasts/read", async (route) => {
       this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
+      const held = this.#podcastReadsHeld;
+      if (held !== null) await new Promise<void>((answer) => held.push(answer));
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastAnswer) });
     });
 
@@ -1405,6 +1408,15 @@ export class BackendSimulator {
     // The words our server finds for the episode; without them, it found none.
     wordsAre: (transcript: StoredTranscript): void => {
       this.#podcastWords = transcript;
+    },
+    // Reads wait, unanswered, until let go: what the reader sees while our server looks.
+    holdReads: (): void => {
+      this.#podcastReadsHeld = [];
+    },
+    letReadsGo: (): void => {
+      const held = this.#podcastReadsHeld ?? [];
+      this.#podcastReadsHeld = null;
+      for (const answer of held) answer();
     },
     reads: (): string[] => [...this.#podcastReads],
     transcriptAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastTranscriptAsks],

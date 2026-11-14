@@ -21,7 +21,7 @@ export type PodcastLink =
   | { status: "none" }
   | { status: "reading" }
   | { status: "found"; episode: PodcastEpisode }
-  | { status: "held"; overviewId: OverviewId; savedAt: string | null }
+  | { status: "held"; episode: PodcastEpisode; overviewId: OverviewId; savedAt: string | null }
   | { status: "failed"; reason: PodcastReadFailure; showName: string | null }
   | { status: "unreachable" };
 
@@ -32,6 +32,12 @@ const KEPT_MS = 5 * 60 * 1000;
 export const isPlatformPodcastLink = (link: string): boolean => {
   const platform = parsePodcastLink(link)?.platform;
   return platform !== undefined && platform !== "page";
+};
+
+// A show's own page on Spotify or Apple Podcasts, which holds no one episode.
+export const isPodcastShowLink = (link: string): boolean => {
+  const platform = parsePodcastLink(link)?.platform;
+  return platform === "apple-show" || platform === "spotify-show";
 };
 
 // Any other web page may be a show's own episode page, so it is read as one beside being read as
@@ -79,6 +85,7 @@ export function usePodcastLink(url: string) {
       const overviews = await overviewStore.listOverviews();
       return {
         status: "held",
+        episode: read.episode,
         overviewId: OverviewId.parse(held.id),
         savedAt: overviews.find(({ id }) => id === held.id)?.savedAt ?? null,
       };

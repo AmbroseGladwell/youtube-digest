@@ -10,6 +10,7 @@ export const capturePageTestIds = {
   runError: runErrorMessageTestIds("CapturePage"),
   root: "CapturePage.root",
   opening: "CapturePage.opening",
+  episodeUnreachable: "CapturePage.episodeUnreachable",
   createButton: "CapturePage.createButton",
   readOverviewButton: "CapturePage.readOverviewButton",
   alreadyInLibraryNote: "CapturePage.alreadyInLibraryNote",
