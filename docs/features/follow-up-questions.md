@@ -1,8 +1,8 @@
 # Questions to ask next
 
-Three questions at the foot of every new overview that a reader can take to their own
-assistant to go further. Trello OV-266, raised 10 November 2026 after the owner looked at
-YouLearn's quick prompts; decided with the owner 14 November 2026.
+Questions at the foot of every new overview that a reader can take to their own assistant
+to go further: up to nine, shown three at a time. Trello OV-266, raised 10 November 2026
+after the owner looked at YouLearn's quick prompts; decided with the owner 14 November 2026.
 
 ## Why
 
@@ -16,15 +16,19 @@ It's a guess, not evidence. The measure is whether testers tap them (OV-223).
 
 ## What the owner decided
 
-- **Three questions, on every kind of overview**: video, process, recipe video, podcast
-  episode, article and recipe page.
+- **On every kind of overview**: video, process, recipe video, podcast episode, article and
+  recipe page.
+- **Up to nine, shown three at a time**, so the reader can ask for different questions
+  without another call (the owner). The extra questions are a fraction of a cent of output.
+  They're ordered best first, the three in each turn take three different ideas, and a source
+  with too few ideas gets fewer rather than padding.
 - **For learning, not fact-checking** (the owner, prompted by Recall's chat prompts on a Katie
   Dill interview). Each question takes one specific idea, term or technique from the source
   and asks why it matters, how it works, or what goes wrong without it. Three different ideas,
   the ones most worth understanding.
 - **Partly shaped by the reader.** The profile How to apply uses (`personalisation.md`) picks
-  which ideas the questions take, and at least one question links an idea to something the
-  reader already does, under How to apply's rule (OV-236): never invent a project or role for
+  which ideas the questions take, and one question in each three links an idea to something
+  the reader already does, under How to apply's rule (OV-236): never invent a project or role for
   them. A reader with no profile gets questions about the source alone.
 - **Never on a shared link.** They're written for the reader, so the share snapshot leaves them
   out (`PRIVATE_OVERVIEW_FIELDS`, `sharing.md`).
@@ -45,7 +49,7 @@ questions are about technique ("why does frying the paste deepen the flavour?").
 
 **A target, never a count to hit** (`docs/prototype/constraints.md`; OV-252). The prompt asks
 for about 15 words. The record allows up to 25. Code drops a blank question or one over 25
-words and keeps the first three (`resolvedFollowUpQuestions`), so a long question costs that
+words and keeps the first nine (`resolvedFollowUpQuestions`), so a long question costs that
 question, never the overview or a retry. The schema sent to the model is a plain array of
 strings, non-nullable, with no bounds.
 
@@ -58,16 +62,17 @@ questions say "episode".
 
 ## Record and readers
 
-- `Overview.followUpQuestions`: up to three strings, or null on an older record. Overview
+- `Overview.followUpQuestions`: up to nine strings, best first, or null on an older record. Overview
   schema 19, client 21 (`record-migrations.md`). Older clients hold these records back.
 - **Markdown** (`overviewMarkdown`) ends on "Questions to ask next" when there are any, so a
   connected assistant reads them through `get_overview` and can offer them.
 - **Analytics:** `capture.newOverview.finished` carries how many questions the note kept,
-  never their text. Fewer than three means some came back blank or too long.
+  never their text. Fewer than nine means a source with few ideas, or some came back blank or
+  too long.
 
 ## Not built yet
 
-- The chips, the assistant links, the synced "Ask follow-up questions in" setting, the
+- The chips and "Different questions", the assistant links, the synced "Ask follow-up questions in" setting, the
   Settings switch, and their events (`overview.followUps.*`). These follow a Claude Design round
   briefed with real questions from the harness.
 - The sharing dialog's "Kept private" list doesn't name the questions yet, because they aren't

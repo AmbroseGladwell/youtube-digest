@@ -812,8 +812,8 @@ export const analyticsEvents = {
           // and how many the note names as resources (OV-203). Absent for a video.
           articleLinks: z.number().int().nonnegative().optional(),
           articleResources: z.number().int().nonnegative().optional(),
-          // How many questions to ask next the note kept, never their text: fewer than three when
-          // some came back blank or too long (OV-266).
+          // How many questions to ask next the note kept, never their text: up to nine, fewer for a
+          // source with few ideas or when some came back blank or too long (OV-266).
           followUpQuestions: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),

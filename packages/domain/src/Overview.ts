@@ -75,8 +75,8 @@ export const Overview = z
     // fields, which stay empty (docs/features/recipe-notes.md).
     recipe: RecipeNote.nullable(),
     keyPoints: z.array(KeyPoint).max(MOST_KEY_POINTS),
-    // Null on a record written before they existed, which shows no questions; possibly fewer
-    // than three when some came back too long (docs/features/follow-up-questions.md).
+    // Null on a record written before they existed, which shows no questions. Up to nine, best
+    // first, shown three at a time (docs/features/follow-up-questions.md).
     followUpQuestions: FollowUpQuestions.nullable(),
   })
   .superRefine((overview, ctx) => {
