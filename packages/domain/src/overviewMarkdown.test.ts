@@ -65,7 +65,10 @@ const FULL = makeOverview({
     { title: "The hinge", summary: "Why the swing starts at the hips.", startMs: 0, endMs: 95_500 },
     { title: "Three faults", summary: "What goes wrong and how to see it.", startMs: 95_500, endMs: 754_000 },
   ],
-  followUpQuestions: ["Would a lighter bell fix my hip hinge, or hide the fault?", "How often should a beginner film a set?"],
+  followUpQuestions: [
+    { question: "Would a lighter bell fix my hip hinge, or hide the fault?", forReader: true },
+    { question: "How often should a beginner film a set?", forReader: false },
+  ],
 });
 
 test("writes every section of a full note in the reader's order", () => {

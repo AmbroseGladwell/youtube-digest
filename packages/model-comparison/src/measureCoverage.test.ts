@@ -145,6 +145,7 @@ const articleOutput = (paragraphs: (number | null)[]): GeneratedArticleOutput =>
   sourceSteps: [],
   bigPicture: "",
   followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "",
   thin: false,
   keyPoints: paragraphs.map((paragraphIndex) => ({ text: "", paragraphIndex })),

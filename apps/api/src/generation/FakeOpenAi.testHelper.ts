@@ -4,6 +4,7 @@ export const validAnswer = {
   inOneLine: "A short description.",
   bigPicture: "",
   followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: [

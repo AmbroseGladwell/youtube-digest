@@ -45,6 +45,7 @@ export interface GeneratedArticleOutput {
   // Absent when the page links to nothing.
   resources?: Array<{ link: number; why: string }>;
   followUpQuestions: string[];
+  readerQuestions: string[];
 }
 
 const chapterHolding = (paragraphIndex: number, chapters: ArticleChapterShape[]): number =>
@@ -123,7 +124,7 @@ export function assembleArticleOverview(
     watchAnyway: null,
     chapters: null,
     recipe: null,
-    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions),
+    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions, output.readerQuestions),
     article: {
       chapters,
       keyPointChapters: output.keyPoints.map(({ paragraphIndex }) =>

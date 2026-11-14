@@ -40,6 +40,7 @@ const answer = (inOneLine: string) => ({
   inOneLine,
   bigPicture: "",
   followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: [

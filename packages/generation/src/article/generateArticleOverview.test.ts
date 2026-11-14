@@ -50,6 +50,7 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   inOneLine: "A reported piece on one town's repair bill.",
   bigPicture: "",
   followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The repair bill doubled because a survey was never checked.",
   thin: false,
   keyPoints: [
@@ -101,9 +102,11 @@ test("an article's note keeps its questions to ask next, asked about the article
   const questions = ["Would a ward-level heat plan work where I live?"];
   assert.match(
     composeArticlePrompt(input()).systemPrompt,
-    /## Questions to ask next\nUp to 9 questions I could ask an assistant to understand this article\nbetter\./,
+    /## Questions to ask next\nUp to 9 questions I could ask an assistant to understand this article\nbetter, each one genuinely worth asking\./,
   );
-  assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, questions);
+  assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, [
+    { question: "Would a ward-level heat plan work where I live?", forReader: false },
+  ]);
 });
 
 test("paragraphs are numbered across the article, with its headings kept for context", () => {

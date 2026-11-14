@@ -8,6 +8,7 @@ export interface GeneratedRecipeOutput {
   matchedTopicNames: string[];
   tags: string[];
   followUpQuestions: string[];
+  readerQuestions: string[];
 }
 
 // Everything in the recipe is the page's, copied by code; only the summary and the line come
@@ -27,7 +28,7 @@ export function assembleRecipeOverview(
     madeOn: null,
     inOneLine: output.inOneLine,
     bigPicture: null,
-    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions),
+    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions, output.readerQuestions),
     sourceSteps: null,
     coreClaim: "",
     thin: false,

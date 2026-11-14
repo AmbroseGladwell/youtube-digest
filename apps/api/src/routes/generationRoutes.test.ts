@@ -65,6 +65,7 @@ test("an article is made on our key from what the reader's browser read, and cou
     inOneLine: "A reported piece on one town's repair bill.",
     bigPicture: "",
     followUpQuestions: [],
+    readerQuestions: [],
     coreClaim: "The repair bill doubled because a survey was never checked.",
     thin: false,
     keyPoints: [

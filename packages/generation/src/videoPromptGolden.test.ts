@@ -53,6 +53,6 @@ test("the video prompts are exactly as they were", () => {
       recipe: fingerprint(input(20, 120_000), "recipe"),
       long: fingerprint(input(700, 4_200_000), "default"),
     },
-    { short: "14a94e7da5fd15a8", process: "ba213e9f75bcb2e9", recipe: "2b2c8b0bc9d6587a", long: "97101eba4c80217c" },
+    { short: "cdb272b1b28b7ed3", process: "4a26ab32589fbdb7", recipe: "8af13fd180d30c68", long: "2ba9cddfdda41f18" },
   );
 });

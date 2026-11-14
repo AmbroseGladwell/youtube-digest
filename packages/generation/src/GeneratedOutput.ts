@@ -41,11 +41,12 @@ export interface GeneratedOutput {
     reason: string;
   };
   followUpQuestions: string[];
+  readerQuestions: string[];
 }
 
 export type GeneratedRecipeVideoOutput = Pick<
   GeneratedOutput,
-  "inOneLine" | "chapters" | "matchedTopicNames" | "suggestedTopic" | "tags" | "followUpQuestions"
+  "inOneLine" | "chapters" | "matchedTopicNames" | "suggestedTopic" | "tags" | "followUpQuestions" | "readerQuestions"
 > & {
   recipe: GeneratedRecipe | null;
 };

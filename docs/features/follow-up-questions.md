@@ -26,10 +26,15 @@ It's a guess, not evidence. The measure is whether testers tap them (OV-223).
   Dill interview). Each question takes one specific idea, term or technique from the source
   and asks why it matters, how it works, or what goes wrong without it. Three different ideas,
   the ones most worth understanding.
-- **Partly shaped by the reader.** The profile How to apply uses (`personalisation.md`) picks
-  which ideas the questions take, and one question in each three links an idea to something
-  the reader already does, under How to apply's rule (OV-236): never invent a project or role for
-  them. A reader with no profile gets questions about the source alone.
+- **Partly shaped by the reader, never forced** (the owner, after the first harness run). The
+  profile How to apply uses (`personalisation.md`) picks which ideas the questions take. A
+  question that links an idea to something the reader already does is written only where the
+  connection is real and the answer would tell them something asking about the source alone
+  wouldn't; "for me" bolted onto a general question is forced, and none is often right. Never
+  invent a project or role for them (OV-236). A reader with no profile gets questions about the
+  source alone.
+- **Genuinely insightful** (the owner): questions a thoughtful reader would want answered after
+  reading the note, which open up the reasoning behind an idea rather than restate it.
 - **Never on a shared link.** They're written for the reader, so the share snapshot leaves them
   out (`PRIVATE_OVERVIEW_FIELDS`, `sharing.md`).
 - **A Settings switch hides them**, as Resources has (OV-203). The questions are still written
@@ -47,9 +52,16 @@ holds would leave it guessing. A connected assistant can still read the transcri
 ones, and each question names its idea, because it's read away from the note. A recipe's
 questions are about technique ("why does frying the paste deepen the flavour?").
 
+**Two lists, placed by code.** The model writes `followUpQuestions`, about the source, and
+`readerQuestions`, up to three, often none. Asked for one list with "one in each three for the
+reader", Sonnet ranked the source questions first and left its one reader question seventh of
+nine, so it was rarely seen. `resolvedFollowUpQuestions` now builds the sets: each three gets
+at most one reader question, second, and the rest are about the source. A set is never made of
+reader questions alone, and the record refuses two in one three.
+
 **A target, never a count to hit** (`docs/prototype/constraints.md`; OV-252). The prompt asks
 for about 15 words. The record allows up to 25. Code drops a blank question or one over 25
-words and keeps the first nine (`resolvedFollowUpQuestions`), so a long question costs that
+words and keeps nine at most (`resolvedFollowUpQuestions`), so a long question costs that
 question, never the overview or a retry. The schema sent to the model is a plain array of
 strings, non-nullable, with no bounds.
 
@@ -62,12 +74,15 @@ questions say "episode".
 
 ## Record and readers
 
-- `Overview.followUpQuestions`: up to nine strings, best first, or null on an older record. Overview
+- `Overview.followUpQuestions`: up to nine `{ question, forReader }`, in the order they're shown,
+  or null on an older record. `forReader` lets analytics compare taps and lets the design mark
+  them if it wants. Overview
   schema 19, client 21 (`record-migrations.md`). Older clients hold these records back.
 - **Markdown** (`overviewMarkdown`) ends on "Questions to ask next" when there are any, so a
   connected assistant reads them through `get_overview` and can offer them.
 - **Analytics:** `capture.newOverview.finished` carries how many questions the note kept,
-  never their text. Fewer than nine means a source with few ideas, or some came back blank or
+  never their text, and how many are for the reader (`readerQuestions`), which shows how often the
+model finds a real connection. Fewer than nine means a source with few ideas, or some came back blank or
   too long.
 
 ## Not built yet

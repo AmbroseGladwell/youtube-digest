@@ -815,6 +815,9 @@ export const analyticsEvents = {
           // How many questions to ask next the note kept, never their text: up to nine, fewer for a
           // source with few ideas or when some came back blank or too long (OV-266).
           followUpQuestions: z.number().int().nonnegative().optional(),
+          // How many of those link an idea to the reader: up to one in each three, and none when the
+          // model finds no real connection or the reader has no profile (OV-266).
+          readerQuestions: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).

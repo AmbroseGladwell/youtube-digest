@@ -44,7 +44,7 @@ function commonFields(input: GenerationInput, output: GeneratedRecipeVideoOutput
     }),
     chapters: resolveChapters(input, output.chapters),
     article: null,
-    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions),
+    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions, output.readerQuestions),
   };
 }
 

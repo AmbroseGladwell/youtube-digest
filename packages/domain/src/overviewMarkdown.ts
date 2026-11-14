@@ -50,7 +50,7 @@ export function overviewMarkdown(overview: Overview): string {
 
   const finished = () => {
     if (overview.followUpQuestions !== null && overview.followUpQuestions.length > 0) {
-      section("Questions to ask next", bullets(overview.followUpQuestions));
+      section("Questions to ask next", bullets(overview.followUpQuestions.map((followUp) => followUp.question)));
     }
     return `${sections.join("\n\n")}\n`;
   };
