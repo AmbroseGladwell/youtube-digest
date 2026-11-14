@@ -1004,6 +1004,50 @@ none missing) and "Is Meta dying?" got none (`ov-250-kind-spot`).
 
 OV-250 spent about $9.65 on these runs.
 
+## Blind listen (OV-228)
+
+Every check above reads text. Listening is the realistic use (`README.md`), and a note can read
+well yet listen like a form being filled in. So the owner listens to two notes on the same
+source, one from each prompt, in the app's own voice, without knowing which is which, and picks
+one with a sentence of why.
+
+`npm run blind-listen` takes two runs over the coverage set's videos. It renders every note
+through the local TTS service (`task run:tts`), exactly as the app speaks it: `spokenScript`,
+the default voice, the same render version. Then it serves a page with the two players, sides
+drawn at random each time, and the notes as text behind a fold for after listening. Spoken
+lengths are the rendered audio's own, not an estimate. Rendering is cached, so a restart picks up
+where it stopped. A long note takes several minutes to render on a laptop.
+
+```sh
+# the two runs, made with the coverage command on each prompt's commit
+task secrets:evals -- npm run coverage --workspace packages/model-comparison -- --run listen-new --kind video
+npm run blind-listen --workspace packages/model-comparison -- --name ov-228 --old listen-old --new listen-new
+# the report again, from the picks already saved
+npm run blind-listen --workspace packages/model-comparison -- --name ov-228 --old listen-old --new listen-new --report-only
+```
+
+Picks and audio land in `.local/listens/<name>/`, and the report in its `listen.md`.
+
+### Result, 14 Nov 2026: new 7, old 0
+
+The old run is the prompt at `0557766e` (the merge of PR #249). The new run is `main` at `46dfaf06`. Both ran on the seven coverage videos, with the same transcripts,
+one note each. The owner picked blind and gave no reasons.
+
+| Source | Old, spoken | New, spoken | Preferred |
+|---|---|---|---|
+| my wife said this about my arms | 2:03 | 2:32 | new |
+| Why Europe Wants the UK to Rejoin the EU | 3:05 | 3:22 | new |
+| We Were Wrong About Compound Interest | 3:34 | 4:22 | new |
+| AI App Animations is Hard Until You Learn This | 3:53 | 7:21 | new |
+| Shopify CEO: This Is Your Edge Against AI | 4:12 | 9:13 | new |
+| James Talarico: Here Is How They Designed The System To Keep You Poor! | 4:18 | 6:28 | new |
+| The use of Artificial Intelligence and EdTech in Education | 4:41 | 7:18 | new |
+
+Every new note is longer: about a tenth longer on short clips, and more than twice as long on the
+hour-long talk. It was still the one preferred every time. Generating a note on the new prompt
+cost about half as much again, from one sample per video. The judged run was skipped, because a
+7–0 blind pick already settles what the listen asked. The decision is in `overview-quality.md`.
+
 ## Results: first full run, 12 Oct 2026
 
 Run `2026-10-12`: 8 models on all 20 videos, every run settled, **$7.91** in all. The

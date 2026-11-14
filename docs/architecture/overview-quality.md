@@ -616,6 +616,13 @@ linking words cycle through five middles, so a ten-point note thins out but does
 **If a ten-point note on a two-hour source listens like an inventory, OV-228's blind listen is
 where that shows up**, and grouping can come back as a card with evidence behind it.
 
+**Listened 14 Nov 2026: keep it, grouping stays out.** In OV-228's blind listen, the owner picked
+the current prompt's note over the older prompt's (at `0557766e`) in all seven pairs (results in
+`model-comparison.md`). That includes a 9:13 note on an hour-long talk, against the old 4:12.
+None of them listened like an inventory, so nothing has to change. One thing to watch is length on
+long sources. Nine minutes is near what a listener will sit through, so if readers start skipping
+long notes, look at the length budget (OV-87's rows) first, before grouping.
+
 #### Which sections scale
 
 Nothing in the budget says this today, and it is the missing half of OV-87's dials.
