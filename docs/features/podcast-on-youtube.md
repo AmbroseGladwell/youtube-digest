@@ -7,25 +7,30 @@ episode, never its captions (`podcast-transcripts.md`, "Each reader's own copy")
 
 **Decided by the owner, 13 Nov 2026:** the matching runs **in the extension**, on the reader's own
 connection, as the free YouTube captions already do (`transcript-retrieval.md`). Only when that
-can't answer does our server do it, directly and then through the residential proxy within a daily
-budget, as server-side captions do (`server-side-transcripts.md`). The matching is one function over
-a `YouTubeFetch`, so the same code runs in both places.
+can't answer does our server do it. **Changed 14 Nov 2026 (OV-294):** our server finds and checks
+the episode through the **YouTube Data API** on our key, not YouTube's own screens ("Our server's
+search"); only the captions are still fetched the way server-side captions are. Both searches decide
+by the same rules (`matchUpload.ts`), so an episode one finds, the other would.
 
 **What is built, and where:**
 
 | The decision | Where it lives |
 |---|---|
-| Finding the episode | `findEpisodeOnYouTube` in `packages/transcripts/src/podcastOnYouTube/` |
-| When an upload is the episode | `titleMatch`, `retitledCandidates`, `descriptionShare` in `matchUpload.ts` |
-| What is read from YouTube's pages | `channelsIn`, `uploadsIn`, `ageInDays` in `youTubeListings.ts` |
+| Finding the episode, in the extension | `findEpisodeOnYouTube` in `packages/transcripts/src/podcastOnYouTube/` |
+| Finding and checking it, on our server | `youTubeDataApiEpisodes` in `apps/api/src/podcasts/` |
+| When an upload is the episode | `titleMatch`, `retitledCandidates`, `descriptionShare`, `namesTheShow` in `matchUpload.ts` |
+| What the extension reads from YouTube's pages | `channelsIn`, `uploadsIn`, `ageInDays` in `youTubeListings.ts` |
 | An episode's own words | `episodeKeywords`, `noteWords` in `noteWords.ts`; `PodcastEpisode.notesKeywords` |
 | The notes of the episodes beside it | `neighbourNotes` from `readFeedEpisode` in `apps/api` |
-| Checking a video someone else found | `confirmEpisodeOnYouTube` in `packages/transcripts` |
+| Checking a video someone else found | `youTubeDataApiEpisodes`'s `confirm` |
 | The reader's part of the rung | `podcastTranscript` in `packages/app-core/src/features/podcasts/api/` |
 | Our server's part | the YouTube step in `apps/api/src/podcasts/createPodcastTranscripts.ts` |
-| Any YouTube request through our address, then the proxy | `throughService`, `ServiceTranscripts.onYouTube` |
+| A Data API call, its key in a header | `youTubeDataApiGet`, shared with playlists |
 
 ## How it finds the episode
+
+This is the extension's search, on YouTube's own screens; our server's follows the same steps through
+the Data API ("Our server's search").
 
 1. **The show's channels:** YouTube's search, filtered to channels, for the show's name. The first
    three are tried.
@@ -46,6 +51,26 @@ a `YouTubeFetch`, so the same code runs in both places.
 At most 14 requests to YouTube: one search, three first pages, five more pages, five player
 responses. A failure YouTube answers with (429, a block, a shape we don't know) is the same named
 `TranscriptFetchFailure` the caption rungs use, so the ladder above decides what to try next.
+
+## Our server's search
+
+Through the YouTube Data API v3, with `YOUTUBE_API_KEY`, the key playlists already use:
+
+1. `search.list` for channels by the show's name, the first three (`type=channel`).
+2. `channels.list` for their uploads playlists, one call for all three.
+3. For each, `playlistItems.list` for a page of 50 uploads and `videos.list` for their titles,
+   lengths, descriptions and exact dates, 50 at a time. The title rule is tried on each first page,
+   then up to five more pages of the show's own channel.
+4. The description rule over those uploads, with no further calls: `videos.list` already gave every
+   description and exact date, which the extension needs a player response for.
+
+A search costs 1 search call and 3 quota units when the episode is on the first channel's first
+page, and at most 1 search call and 17 units. The default allowance is 10,000 units a day, shared
+with playlists, and **100 searches a day**, in search's own smaller allowance, so our server can
+search for at most about 100 episodes a day. That covers readers without the extension, and the
+extension's own search, on the reader's connection, costs us nothing. A refusal from the API, as when
+either allowance is spent, is `source-unavailable` for that episode; nothing is matched wrongly.
+The log line `podcast episode searched on youtube` records each search's units.
 
 ## An episode's own words
 
@@ -73,7 +98,7 @@ the description is only asked when no title matched.
 
 ## What is read from YouTube
 
-The web client's own screens, not an API: `youtubei/v1/search` with the channel filter,
+By the extension, on the reader's own connection: the web client's own screens, not an API: `youtubei/v1/search` with the channel filter,
 `youtubei/v1/browse` on a channel's Videos tab and its continuation pages, and
 `youtubei/v1/player`. They are read loosely: an upload is a `lockupViewModel` (or an older
 `videoRenderer`), its length is the thumbnail's clock badge, its age the "… ago" text, and anything
@@ -134,13 +159,14 @@ answers `no-captions`:
 
 ### Checking a match
 
-`confirmEpisodeOnYouTube` decides from **one** player response, against the episode as our server
+Our server decides from **one** `videos.list` answer, one quota unit, against the episode as it
 read it from the feed itself, never as the caller describes it: the title and length rule above,
 or the description holding 40% of the episode's own words, its exact date within three days, and a
 length within 3% or 90 seconds. There is no runner-up to lead, so the search's lead is the one rule
 taken on trust from whoever searched.
 
-Checked against real videos, 13 Nov 2026:
+Checked against real videos, 13 Nov 2026, when the check read the same fields from a player response
+(OV-294 moved it to the Data API's answer, and these weren't measured again):
 
 | Case | Confirmed |
 |---|---|
@@ -151,9 +177,8 @@ Checked against real videos, 13 Nov 2026:
 ### Our server's part
 
 After the feed's own transcript, the ladder takes what the caller asked for: a video to check, a
-search, or nothing (then `no-captions`). Either way, every request goes the way server-side
-captions do: our own address first, then the residential proxy within the day's budget, with its
-bytes recorded against the account (`throughService`, `ServiceTranscripts.onYouTube`). The video's
+search, or nothing (then `no-captions`). The check and the search are Data API calls on our key,
+so they cost no proxy bytes and nothing against the account. The video's
 captions come from `ServiceTranscripts.resolve`, so they are the YouTube shared cache's when it has
 them, and fetched once under the video's own key otherwise, counted against the caller's daily
 cap like any server-side caption fetch. The video is remembered under the episode's key; its captions
@@ -161,8 +186,17 @@ are not kept there.
 
 A video that doesn't pass is answered `422` with `failure: "no-captions"` and `match:
 "unconfirmed"`. The daily cap is a `429`, and a spent proxy budget a `422` with `budget-exhausted`, as
-`/service-transcripts` answers them. With server-side YouTube fetching switched off, the YouTube
-step answers `no-captions`.
+`/service-transcripts` answers them. Without server-side caption fetching or without
+`YOUTUBE_API_KEY`, the YouTube step answers `no-captions`.
+
+### Keeping a match
+
+The Data API's policies have what it answered refreshed or deleted within 30 days, and a remembered
+video was checked through it, so a match older than 30 days is checked again before it is used: one
+`videos.list` call against the episode from its feed. Still the episode, it is used and kept another
+30 days; no longer, it is forgotten and the ladder goes on as if it had never been found. A reader's
+other device asks by the episode's key alone, without the feed, so it is given a match only within
+its 30 days.
 
 The log line says `via: "youtube"`, `matchedBy` (title or description) and `searchedBy`
 (extension or server), or the failure, whether the video was unconfirmed and what was asked.
@@ -174,5 +208,17 @@ The log line says `via: "youtube"`, `matchedBy` (title or description) and `sear
 - **The screens,** after a design round, which call `podcastTranscript` with the extension's
   `YouTubeFetch` in the panel and `null` on the web.
 - **The YouTube terms position** in `server-side-transcripts.md` covers fetching a video's captions
-  on a reader's behalf. Searching YouTube and reading a channel's pages from our server is new, and
-  is checked with the privacy policy before a reader can reach it.
+  on a reader's behalf, which no API offers (only a video's owner can download its captions), and
+  stays the declared deviation.
+
+## The Data API, checked 14 Nov 2026 (OV-294)
+
+**Fits, and is used** for our server's search and check. We already held a Data API key for
+playlists, so we were already bound by the YouTube API Services Terms and Developer Policies, and
+this adds no new agreement. It moves our server's search off YouTube's screens, which those policies
+bar ("must not … scrape YouTube Applications"), and leaves the caption fetch as the one deviation.
+What the policies ask of this use: stored API data refreshed or deleted within 30 days ("Keeping a
+match"), attribution under YouTube's branding guidelines and a link to YouTube's terms, which the
+reader already gets beside every YouTube source, and staying within the quota. Quota beyond the
+default needs YouTube's compliance audit. The extension's search is unchanged: it runs on the
+reader's own connection, as the extension's caption fetching does.

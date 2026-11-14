@@ -20,6 +20,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     transcriptService: null,
     ourKey: null,
     youTubeApiKey: null,
+    podcastIndex: null,
     sampleShareTokens: [],
     supportEmail: "hello@theoverviewapp.com",
     analytics: { environment: "development", postHog: null, erasure: null },
@@ -37,6 +38,15 @@ test("samples are the share tokens listed, in order, and a token that isn't one 
 
 test("playlists are read only with a YouTube Data API key", () => {
   assert.equal(loadConfig({ DATABASE_URL, YOUTUBE_API_KEY: "AIza-test" }).youTubeApiKey, "AIza-test");
+});
+
+test("a Spotify link's show is looked up in Podcast Index only with both its key and its secret", () => {
+  assert.deepEqual(loadConfig({ DATABASE_URL, PODCAST_INDEX_API_KEY: "key", PODCAST_INDEX_API_SECRET: "secret" }).podcastIndex, {
+    apiKey: "key",
+    apiSecret: "secret",
+  });
+  assert.throws(() => loadConfig({ DATABASE_URL, PODCAST_INDEX_API_KEY: "key" }), ConfigError);
+  assert.throws(() => loadConfig({ DATABASE_URL, PODCAST_INDEX_API_SECRET: "secret" }), ConfigError);
 });
 
 test("our own server fetches transcripts only when switched on, through the proxy only when one is named", () => {

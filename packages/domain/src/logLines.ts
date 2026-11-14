@@ -81,6 +81,11 @@ export const apiLogLines = coded("api", {
     transcriptService: line("info", "transcript service", "Whether the server fetches transcripts itself, and through which proxy."),
     ourKey: line("info", "our key", "Whether overviews can be made on our key, on which model, and the global daily cap."),
     playlists: line("info", "playlists", "Whether a YouTube key is set, so playlists can be followed."),
+    podcastLookups: line(
+      "info",
+      "podcast lookups",
+      "Which directory a Spotify link's show is looked up in first, and whether our server can search YouTube for an episode.",
+    ),
     analytics: line("info", "analytics", "Where events and errors are passed on to, or that they are only logged."),
     accountErasure: line("info", "account erasure", "Whether a deleted account's events and errors can be erased at PostHog, or why not."),
     webApp: line("info", "web app", "Whether this process serves the web app as well as the API."),
@@ -355,6 +360,11 @@ export const apiLogLines = coded("api", {
       "info",
       "podcast transcript resolved",
       "A podcast episode's transcript was asked for; `via` is the rung that answered (remembered, tag, youtube), `from` where a remembered source was, and `format` the tag's, or `failure` why none could. Never the feed or the episode, and the words are never kept.",
+    ),
+    youTubeSearched: line(
+      "info",
+      "podcast episode searched on youtube",
+      "Our server looked for an episode on its show's YouTube channel through the Data API; `units` is what it cost in the daily quota, `searches` the calls from search's own smaller allowance, and `found` whether it matched. Never the show or the episode.",
     ),
   },
   playlists: {

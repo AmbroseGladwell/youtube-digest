@@ -2,8 +2,8 @@ import { parsePodcastLink, PodcastEpisode, type PodcastLinkFrom, type PodcastRea
 import { episodeKeywords } from "@overview/transcripts";
 import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import { readBodyText } from "../publicWeb/createPublicWebFetch.js";
-import { appleDirectory, type DirectoryShow } from "./appleDirectory.js";
-import { appleCallBudget, type AppleCallBudgetOptions } from "./appleCallBudget.js";
+import { appleDirectory, type DirectoryShow, type ShowDirectory } from "./appleDirectory.js";
+import { callBudget, type CallBudgetOptions } from "./callBudget.js";
 import { pageMeta, type PageMeta } from "./pageMeta.js";
 import { feedItemGuid, fetchFeedEpisode, MOST_FEED_BYTES, type FeedRead } from "./fetchFeedEpisode.js";
 import type { FeedItem } from "./readFeedEpisode.js";
@@ -15,9 +15,11 @@ type FetchPublicWeb = ReturnType<typeof createPublicWebFetch>;
 export interface PodcastReaderOptions {
   fetchPublicWeb: FetchPublicWeb;
   mostFeedBytes?: number;
-  // Every Apple call shares one budget and its answers are kept (appleCallBudget.ts); without it,
+  // Every Apple call shares one budget and its answers are kept (callBudget.ts); without it,
   // as in tests, each call goes straight to Apple.
-  appleBudget?: AppleCallBudgetOptions;
+  appleBudget?: CallBudgetOptions;
+  // The open directory asked before Apple's on a Spotify link, or null to ask only Apple's.
+  podcastIndex?: ShowDirectory | null;
 }
 
 const HTML = "text/html,application/xhtml+xml";
@@ -44,7 +46,12 @@ const samePage = (a: string | null, b: string | null): boolean => {
 };
 
 // docs/features/podcast-links.md
-export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_BYTES, appleBudget }: PodcastReaderOptions) {
+export function createPodcastReader({
+  fetchPublicWeb,
+  mostFeedBytes = MOST_FEED_BYTES,
+  appleBudget,
+  podcastIndex = null,
+}: PodcastReaderOptions) {
   const fetchPage = async (link: string): Promise<{ url: string; html: string; isFeed: boolean } | { failure: PodcastReadFailure }> => {
     const answer = await fetchPublicWeb(link, { accept: HTML });
     if (answer.status === "failed") return { failure: answer.reason === "no-answer" ? "no-answer" : "not-found" };
@@ -65,7 +72,7 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
     return JSON.parse(text);
   };
 
-  const directory = appleDirectory(appleBudget === undefined ? fetchJson : appleCallBudget(fetchJson, appleBudget));
+  const directory = appleDirectory(appleBudget === undefined ? fetchJson : callBudget(fetchJson, appleBudget));
 
   const readFeed = (feedUrl: string, isWanted: (item: FeedItem) => boolean): Promise<FeedRead> =>
     fetchFeedEpisode(fetchPublicWeb, feedUrl, isWanted, mostFeedBytes);
@@ -117,6 +124,9 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
     return fromFeed(listing.show, listed, listed.guid, "apple");
   };
 
+  // The show by the name Spotify's page gives, in each directory in turn until one knows it: an
+  // exact name only, and at most three of them, each read from its own feed. A directory that
+  // fails or doesn't know the show hands on to the next (docs/features/podcast-links.md).
   const fromSpotify = async (episodeId: string): Promise<PodcastRead> => {
     const page = await fetchPage(`https://open.spotify.com/episode/${episodeId}`);
     if ("failure" in page) return failed(page.failure);
@@ -124,17 +134,31 @@ export function createPodcastReader({ fetchPublicWeb, mostFeedBytes = MOST_FEED_
     if (facts === null) return failed("not-found");
     if (facts.showName === null) return failed("no-public-feed");
     const showKey = episodeTitleKey(facts.showName);
-    const shows = (await directory.searchShows(facts.showName))
-      .filter((show) => episodeTitleKey(show.showName) === showKey)
-      .slice(0, MOST_SHOWS_TRIED);
-    if (shows.length === 0) return failed("no-public-feed", facts.showName);
-    for (const show of shows) {
-      const listing = await directory.showWithEpisodes(show.showId);
-      const listed = listing === null ? null : pickEpisode(facts, listing.episodes);
-      const read = await fromFeed(listing?.show ?? show, facts, listed?.guid ?? null, "spotify");
-      if (read.status === "read" || read.reason === "no-answer") return read;
+    const showDirectories: ShowDirectory[] = podcastIndex === null ? [directory] : [podcastIndex, directory];
+    for (const [index, showDirectory] of showDirectories.entries()) {
+      const isLast = index === showDirectories.length - 1;
+      let shows: DirectoryShow[];
+      try {
+        shows = (await showDirectory.searchShows(facts.showName))
+          .filter((show) => episodeTitleKey(show.showName) === showKey)
+          .slice(0, MOST_SHOWS_TRIED);
+      } catch (error) {
+        if (isLast) throw error;
+        continue;
+      }
+      if (shows.length === 0) continue;
+      for (const show of shows) {
+        const listing = await showDirectory.showWithEpisodes(show.showId).catch((error: unknown) => {
+          if (isLast) throw error;
+          return null;
+        });
+        const listed = listing === null ? null : pickEpisode(facts, listing.episodes);
+        const read = await fromFeed(listing?.show ?? show, facts, listed?.guid ?? null, "spotify");
+        if (read.status === "read" || read.reason === "no-answer") return read;
+      }
+      return failed("not-found", facts.showName);
     }
-    return failed("not-found", facts.showName);
+    return failed("no-public-feed", facts.showName);
   };
 
   // A page that names no feed: its title, searched in Apple's directory, accepted only where an

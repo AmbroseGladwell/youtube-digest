@@ -10,6 +10,8 @@ import {
   DESCRIPTION_WORDS_SHARED,
   FEWEST_KEYWORDS,
   MOST_DAYS_APART,
+  MOST_DESCRIPTIONS_READ,
+  namesTheShow,
   retitledCandidates,
   titleMatch,
   type EpisodeToFind,
@@ -32,20 +34,6 @@ const CHANNELS_FILTER = "EgIQAg==";
 const VIDEOS_TAB = "EgZ2aWRlb3PyBgQKAjoA";
 const CHANNELS_TRIED = 3;
 const MORE_PAGES = 5;
-const MOST_DESCRIPTIONS_READ = 5;
-const CHANNEL_NAME_WORDS_SHARED = 0.6;
-
-const nameWords = (name: string): string[] =>
-  name
-    .toLowerCase()
-    .split(":")[0]!
-    .match(/[a-z0-9]+/g) ?? [];
-
-const namesTheShow = (channel: ListedChannel, showName: string): boolean => {
-  const show = nameWords(showName);
-  const channelWords = new Set(nameWords(channel.title));
-  return show.length > 0 && show.filter((word) => channelWords.has(word)).length / show.length >= CHANNEL_NAME_WORDS_SHARED;
-};
 
 // The same episode on the show's own YouTube channel, whose captions cost nothing: by its title
 // and length, or, where the upload was retitled, by its description and date. Null when the
@@ -98,7 +86,7 @@ export async function findEpisodeOnYouTube(
     firstPages.push({ channel, ...page });
   }
 
-  const showChannel = firstPages.find(({ channel }) => namesTheShow(channel, episode.showName));
+  const showChannel = firstPages.find(({ channel }) => namesTheShow(channel.title, episode.showName));
   if (showChannel === undefined) return null;
   const uploads = [...showChannel.uploads];
   let continuation = showChannel.continuation;

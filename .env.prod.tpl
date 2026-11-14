@@ -13,8 +13,12 @@ POSTHOG_PERSONAL_API_KEY=${POSTHOG_PERSONAL_API_KEY}
 # The residential proxy our server fetches transcripts through, {session} left in for the code
 # to fill (docs/architecture/server-side-transcripts.md).
 TRANSCRIPT_PROXY_URL=${TRANSCRIPT_PROXY_URL}
-# The YouTube Data API key followed playlists are read with (docs/features/playlists.md).
+# The YouTube Data API key followed playlists are read with, and podcast episodes found on their
+# shows' channels (docs/features/playlists.md, docs/features/podcast-on-youtube.md).
 YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+# Podcast Index's key and secret, which sign every request (docs/features/podcast-links.md).
+PODCAST_INDEX_API_KEY=${PODCAST_INDEX_API_KEY}
+PODCAST_INDEX_API_SECRET=${PODCAST_INDEX_API_SECRET}
 # Our own OpenAI key, restricted to chat completions, that overviews on our key are made with
 # (docs/architecture/tiers.md, "Generating on our key").
 OPENAI_API_KEY=${OPENAI_API_KEY}

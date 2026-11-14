@@ -147,6 +147,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-14 | privacy | OV-294 | Podcast episodes: the show is looked up in Podcast Index, then Apple's directory, sent only the show's name or Apple's ids; our server's YouTube search goes through YouTube's API; neither is sent anything about the reader. Retention: a YouTube video matched to an episode is checked again every 30 days. Google's privacy policy is linked. |
+| 2026-11-14 | terms | OV-294 | Third parties: following a playlist and finding a podcast episode on YouTube use YouTube API Services, so using them binds the reader to YouTube's Terms of Service, linked, with Google's privacy policy, as YouTube's developer policies require. |
 | 2026-11-14 | privacy | OV-296 | Podcast episodes: the side panel beside an Apple Podcasts or Spotify episode sends that tab's address to our server as soon as it is in front of the panel, so the episode is named before Create; nothing about other tabs, or a show's page there. |
 | 2026-11-14 | privacy | OV-295 | Transcripts and articles: the shared transcript cache, its two-account agreement and the year-long record of who fetched what are gone; the words behind an overview are each account's own copy, kept on the device and under the account, never shown to another reader or carried by a shared link, and fetched for a device that lacks them. Shared links no longer hold the transcript. Retention and account deletion lose the shared-cache rows. |
 | 2026-11-14 | terms | OV-295 | What you may not do drops uploading a false transcript (none is served to others now). Your content: captions, episodes' and articles' text are fetched for you and kept as your own copy, never shared. Sharing a link: no transcript. |

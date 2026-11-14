@@ -18,6 +18,9 @@ import { ourKeyModel } from "./generation/ourKeyModel.js";
 import { createOpenAiEmbedder } from "./meaning/createOpenAiEmbedder.js";
 import { undiciYouTubeFetch } from "./transcripts/undiciYouTubeFetch.js";
 import { youTubeDataApiPlaylistReader } from "./playlists/youTubeDataApiPlaylistReader.js";
+import { callBudget, PODCAST_INDEX_BUDGET } from "./podcasts/callBudget.js";
+import { fetchPodcastIndexJson, podcastIndexDirectory } from "./podcasts/podcastIndexDirectory.js";
+import { youTubeDataApiEpisodes } from "./podcasts/youTubeDataApiEpisodes.js";
 
 let config;
 try {
@@ -83,6 +86,12 @@ const app = await buildApp({
     config.youTubeApiKey === null
       ? null
       : youTubeDataApiPlaylistReader({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
+  youTubeEpisodes:
+    config.youTubeApiKey === null ? null : youTubeDataApiEpisodes({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
+  podcastIndex:
+    config.podcastIndex === null
+      ? null
+      : podcastIndexDirectory(config.podcastIndex, callBudget(fetchPodcastIndexJson, PODCAST_INDEX_BUDGET)),
   eventSink,
   errorSink,
   personEraser,
@@ -128,6 +137,12 @@ app.log.info(
   apiLogLines.startup.playlists(
     config.youTubeApiKey === null ? { enabled: false, why: "YOUTUBE_API_KEY is not set" } : { enabled: true, source: "YouTube Data API" },
   ),
+);
+app.log.info(
+  apiLogLines.startup.podcastLookups({
+    showDirectories: config.podcastIndex === null ? ["Apple"] : ["Podcast Index", "Apple"],
+    youTubeSearch: config.youTubeApiKey === null ? "off: YOUTUBE_API_KEY is not set" : "YouTube Data API",
+  }),
 );
 app.log.info(
   apiLogLines.startup.analytics(

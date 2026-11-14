@@ -55,7 +55,9 @@ import { podcastRoutes } from "./routes/podcastRoutes.js";
 import { accountPlan } from "./auth/accountPlan.js";
 import { createPodcastReader } from "./podcasts/createPodcastReader.js";
 import { createPodcastTranscripts } from "./podcasts/createPodcastTranscripts.js";
-import { APPLE_BUDGET } from "./podcasts/appleCallBudget.js";
+import { APPLE_BUDGET } from "./podcasts/callBudget.js";
+import type { ShowDirectory } from "./podcasts/appleDirectory.js";
+import type { YouTubeEpisodes } from "./podcasts/youTubeDataApiEpisodes.js";
 import { EpisodeWordSourcesRepository } from "./podcasts/EpisodeWordSourcesRepository.js";
 import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
@@ -140,6 +142,8 @@ export interface BuildAppOptions {
   readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
   // What every podcast fetch goes through; a test hands in a scripted web.
   podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
+  podcastIndex?: ShowDirectory | null;
+  youTubeEpisodes?: YouTubeEpisodes | null;
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
@@ -188,7 +192,9 @@ export async function buildApp({
   slowQueryMs = SLOW_QUERY_MS,
   fetchArticlePage = createArticlePageFetcher(),
   podcastWeb = createPublicWebFetch(),
-  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET }),
+  podcastIndex = null,
+  youTubeEpisodes = null,
+  readPodcastEpisode = createPodcastReader({ fetchPublicWeb: podcastWeb, appleBudget: APPLE_BUDGET, podcastIndex }),
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     ...(logger === null ? { logger: false } : { loggerInstance: logger }),
@@ -303,6 +309,7 @@ export async function buildApp({
         fetchPublicWeb: podcastWeb,
         sources: new EpisodeWordSourcesRepository(sql),
         youTubeService,
+        youTubeEpisodes,
         clock,
       });
       transcriptRoutes(api, {

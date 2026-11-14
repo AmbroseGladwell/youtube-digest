@@ -15,7 +15,8 @@ import {
   type YouTubeAsk,
 } from "./createPodcastTranscripts.js";
 import { feedOf } from "./podcastFeedFixtures.testHelper.js";
-import type { EpisodeWordSource } from "./EpisodeWordSourcesRepository.js";
+import type { EpisodeWordSource, KnownWordSource } from "./EpisodeWordSourcesRepository.js";
+import type { YouTubeEpisodes } from "./youTubeDataApiEpisodes.js";
 
 const FEED_URL = "https://feeds.example/show.xml";
 const EPISODE = { feedUrl: FEED_URL, guid: "ep-guid" };
@@ -39,14 +40,19 @@ const itemWith = (transcriptTags: string, guid = "ep-guid") => `
 
 type Answer = { body: string; type: string } | "down";
 
+const NOW = new Date("2026-11-13T09:00:00.000Z");
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 function ladderOver(
   web: Record<string, Answer>,
   known: EpisodeWordSource | null = null,
-  youTubeService: PodcastTranscriptsOptions["youTubeService"] = null,
+  youTube: { service: PodcastTranscriptsOptions["youTubeService"]; episodes: YouTubeEpisodes } | null = null,
+  knownSince: Date = NOW,
 ) {
   const asked: string[] = [];
-  const sources = new Map<string, EpisodeWordSource>();
-  const kept = () => [...sources.values()];
+  const sources = new Map<string, KnownWordSource>();
+  const kept = () => [...sources.values()].map(({ source }) => source);
+  const keptSince = () => [...sources.values()].map(({ foundAt }) => foundAt.toISOString());
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
     const answer = web[link];
@@ -55,27 +61,32 @@ function ladderOver(
     return { status: "answered", url: link, response: new Response(answer.body, { headers: { "content-type": answer.type } }) };
   };
   const ready = podcastSourceKey(EPISODE).then((key) => {
-    if (known !== null) sources.set(key, known);
+    if (known !== null) sources.set(key, { source: known, foundAt: knownSince });
   });
   const podcastTranscripts = createPodcastTranscripts({
     fetchPublicWeb,
     sources: {
       get: async (key) => sources.get(key) ?? null,
-      put: async (key, source) => {
-        sources.set(key, source);
+      put: async (key, source, at) => {
+        sources.set(key, { source, foundAt: at });
       },
       forget: async (key) => {
         sources.delete(key);
       },
     },
-    youTubeService,
-    clock: () => new Date("2026-11-13T09:00:00.000Z"),
+    youTubeService: youTube?.service ?? null,
+    youTubeEpisodes: youTube?.episodes ?? null,
+    clock: () => NOW,
   });
   const resolve = async (request: PodcastTranscriptRequest) => {
     await ready;
     return podcastTranscripts.resolve(request);
   };
-  return { resolve, remembered: podcastTranscripts.remembered, asked, kept };
+  const remembered: typeof podcastTranscripts.remembered = async (...args) => {
+    await ready;
+    return podcastTranscripts.remembered(...args);
+  };
+  return { resolve, remembered, asked, kept, keptSince };
 }
 
 const failureOf = async (promise: Promise<unknown>) => {
@@ -211,69 +222,117 @@ const CAPTIONS: StoredTranscript = {
   fetchedAt: "2026-11-12T00:00:00.000Z",
 };
 
-function youTubeServiceOver(player: { title: string; lengthSeconds: string }) {
+// Our server's YouTube, scripted: what the Data API's check says of a video, what its search
+// finds, and the captions any video has. The matching rules themselves are
+// youTubeDataApiEpisodes.test.ts's.
+function youTubeOver({ confirms = null, finds = null }: { confirms?: "title" | "description" | null; finds?: string | null }) {
   const calls: string[] = [];
+  const episodes: YouTubeEpisodes = {
+    confirm: async (_episode, videoId) => {
+      calls.push(`confirm:${videoId}`);
+      return confirms;
+    },
+    find: async () => {
+      calls.push("search");
+      return { found: finds === null ? null : { videoId: finds, channelTitle: "The Show", via: "title" }, units: 3, searches: 1 };
+    },
+  };
   const service: NonNullable<PodcastTranscriptsOptions["youTubeService"]> = {
-    onYouTube: async (operation) =>
-      operation(async (request) => {
-        const { videoId } = JSON.parse(request.body ?? "{}") as { videoId?: string };
-        calls.push(`youtube:${request.url.split("/").at(-1)}${videoId === undefined ? "" : `:${videoId}`}`);
-        return {
-          status: 200,
-          body: JSON.stringify({
-            videoDetails: { videoId, title: player.title, lengthSeconds: player.lengthSeconds, shortDescription: "" },
-            microformat: { playerMicroformatRenderer: { publishDate: "2026-11-10" } },
-          }),
-        };
-      }),
     resolve: async (videoId) => {
       calls.push(`captions:${videoId}`);
       return { transcript: { ...CAPTIONS, videoId }, via: "direct" };
     },
   };
-  return { service, calls };
+  return { youTube: { service, episodes }, calls };
 }
 
 const feedWithoutTags = { [FEED_URL]: { body: feedOf(NOTES_ITEM), type: "application/rss+xml" } };
 
 test("a video the reader's extension found is checked by our server, its captions answer under the episode's own key, and the video is remembered", async () => {
-  const youTube = youTubeServiceOver({ title: "Susie Wiles Out, Stephen Miller In: What Happens Now?", lengthSeconds: "2170" });
-  const { resolve, kept } = ladderOver(feedWithoutTags, null, youTube.service);
+  const { youTube, calls } = youTubeOver({ confirms: "title" });
+  const { resolve, kept, keptSince } = ladderOver(feedWithoutTags, null, youTube);
   const { transcript, answer } = await resolve(asking(EPISODE, { videoId: "VIDEO000001" }));
   assert.deepEqual(answer, { via: "youtube", matchedBy: "title", searchedBy: "extension" });
   assert.equal(transcript.videoId, await podcastSourceKey(EPISODE));
   assert.deepEqual(transcript.segments, CAPTIONS.segments);
   assert.deepEqual(kept(), [{ via: "youtube", videoId: "VIDEO000001" }]);
-  assert.deepEqual(youTube.calls, ["youtube:player:VIDEO000001", "captions:VIDEO000001"]);
+  assert.deepEqual(keptSince(), [NOW.toISOString()]);
+  assert.deepEqual(calls, ["confirm:VIDEO000001", "captions:VIDEO000001"]);
 });
 
 test("a remembered video gives its captions without the episode being looked for again", async () => {
-  const youTube = youTubeServiceOver({ title: "unused", lengthSeconds: "1" });
-  const { resolve, asked } = ladderOver({}, { via: "youtube", videoId: "VIDEO000001" }, youTube.service);
+  const { youTube, calls } = youTubeOver({});
+  const { resolve, asked } = ladderOver({}, { via: "youtube", videoId: "VIDEO000001" }, youTube, new Date(NOW.getTime() - 29 * DAY_MS));
   const { transcript, answer } = await resolve(asking(EPISODE, { search: true }));
   assert.deepEqual(answer, { via: "remembered", from: "youtube" });
   assert.deepEqual(transcript.segments, CAPTIONS.segments);
-  assert.deepEqual(youTube.calls, ["captions:VIDEO000001"]);
+  assert.deepEqual(calls, ["captions:VIDEO000001"]);
   assert.deepEqual(asked, []);
 });
 
-test("a video that isn't the episode by our server's check keeps nothing, and says so", async () => {
-  const youTube = youTubeServiceOver({ title: "Something else entirely", lengthSeconds: "300" });
-  const { resolve, kept } = ladderOver(feedWithoutTags, null, youTube.service);
-  await assert.rejects(resolve(asking(EPISODE, { videoId: "VIDEO000001" })), (error) => error instanceof MatchUnconfirmedError);
-  assert.deepEqual(kept(), []);
-  assert.deepEqual(youTube.calls, ["youtube:player:VIDEO000001"]);
+test("a video remembered past 30 days is checked against the episode again, and kept another 30 if it still is", async () => {
+  const { youTube, calls } = youTubeOver({ confirms: "title" });
+  const { resolve, keptSince } = ladderOver(
+    feedWithoutTags,
+    { via: "youtube", videoId: "VIDEO000001" },
+    youTube,
+    new Date(NOW.getTime() - 31 * DAY_MS),
+  );
+  const { answer } = await resolve(asking(EPISODE));
+  assert.deepEqual(answer, { via: "remembered", from: "youtube" });
+  assert.deepEqual(calls, ["confirm:VIDEO000001", "captions:VIDEO000001"]);
+  assert.deepEqual(keptSince(), [NOW.toISOString()]);
 });
 
-test("asked to search, our server looks for the episode itself", async () => {
-  const youTube = youTubeServiceOver({ title: "x", lengthSeconds: "1" });
-  const { resolve } = ladderOver(feedWithoutTags, null, youTube.service);
+test("a video remembered past 30 days that no longer checks out is forgotten, and the episode is searched for afresh", async () => {
+  const { youTube, calls } = youTubeOver({ confirms: null, finds: "VIDEO000002" });
+  const { resolve, kept } = ladderOver(
+    feedWithoutTags,
+    { via: "youtube", videoId: "VIDEO000001" },
+    youTube,
+    new Date(NOW.getTime() - 31 * DAY_MS),
+  );
+  const { answer } = await resolve(asking(EPISODE, { search: true }));
+  assert.deepEqual(answer, { via: "youtube", matchedBy: "title", searchedBy: "server" });
+  assert.deepEqual(calls, ["confirm:VIDEO000001", "search", "captions:VIDEO000002"]);
+  assert.deepEqual(kept(), [{ via: "youtube", videoId: "VIDEO000002" }]);
+});
+
+test("a reader's other device gets a remembered video only within its 30 days, since checking it again needs the feed", async () => {
+  const { youTube } = youTubeOver({});
+  const key = await podcastSourceKey(EPISODE);
+  const fresh = ladderOver({}, { via: "youtube", videoId: "VIDEO000001" }, youTube, new Date(NOW.getTime() - 29 * DAY_MS));
+  assert.notEqual(await fresh.remembered(key, asking(EPISODE).caller, log), null);
+  const stale = ladderOver({}, { via: "youtube", videoId: "VIDEO000001" }, youTube, new Date(NOW.getTime() - 31 * DAY_MS));
+  assert.equal(await stale.remembered(key, asking(EPISODE).caller, log), null);
+});
+
+test("a video that isn't the episode by our server's check keeps nothing, and says so", async () => {
+  const { youTube, calls } = youTubeOver({ confirms: null });
+  const { resolve, kept } = ladderOver(feedWithoutTags, null, youTube);
+  await assert.rejects(resolve(asking(EPISODE, { videoId: "VIDEO000001" })), (error) => error instanceof MatchUnconfirmedError);
+  assert.deepEqual(kept(), []);
+  assert.deepEqual(calls, ["confirm:VIDEO000001"]);
+});
+
+test("asked to search, our server looks for the episode itself, and finding nothing says there are no captions", async () => {
+  const { youTube, calls } = youTubeOver({ finds: null });
+  const { resolve } = ladderOver(feedWithoutTags, null, youTube);
   assert.equal(await failureOf(resolve(asking(EPISODE, { search: true }))), "no-captions");
-  assert.equal(youTube.calls[0], "youtube:search");
+  assert.deepEqual(calls, ["search"]);
+});
+
+test("a Data API that refuses, as when the day's quota is spent, is a source that couldn't answer", async () => {
+  const { youTube } = youTubeOver({});
+  youTube.episodes.find = async () => {
+    throw new Error("The YouTube Data API answered 403 to search");
+  };
+  const { resolve } = ladderOver(feedWithoutTags, null, youTube);
+  assert.equal(await failureOf(resolve(asking(EPISODE, { search: true }))), "source-unavailable");
 });
 
 test("a feed's own transcript wins, and YouTube isn't asked; nor is it when the caller didn't ask", async () => {
-  const youTube = youTubeServiceOver({ title: "Susie Wiles Out, Stephen Miller In: What Happens Now?", lengthSeconds: "2170" });
+  const { youTube, calls } = youTubeOver({ confirms: "title" });
   const tagged = ladderOver(
     {
       [FEED_URL]: {
@@ -283,13 +342,13 @@ test("a feed's own transcript wins, and YouTube isn't asked; nor is it when the 
       "https://t.example/ep.vtt": { body: VTT, type: "text/vtt" },
     },
     null,
-    youTube.service,
+    youTube,
   );
   assert.equal((await tagged.resolve(asking(EPISODE, { videoId: "VIDEO000001" }))).answer.via, "tag");
-  assert.equal(await failureOf(ladderOver(feedWithoutTags, null, youTube.service).resolve(asking(EPISODE))), "no-captions");
-  assert.deepEqual(youTube.calls, []);
+  assert.equal(await failureOf(ladderOver(feedWithoutTags, null, youTube).resolve(asking(EPISODE))), "no-captions");
+  assert.deepEqual(calls, []);
 });
 
-test("without our server's YouTube fetching, the YouTube rung says there are no captions", async () => {
+test("without our server's YouTube, the YouTube rung says there are no captions", async () => {
   assert.equal(await failureOf(ladderOver(feedWithoutTags).resolve(asking(EPISODE, { videoId: "VIDEO000001" }))), "no-captions");
 });
