@@ -65,7 +65,7 @@ Five folders, five different questions.
   the YouTube-ToS position, why there is a residential proxy and which one (Decodo, behind
   one URL), direct first and the proxy only on a bot check, transcripts as part of an
   overview behind a per-caller daily safety cap that counts only what was stored, the global
-  proxy budget, both kept in Postgres, a server fetch going into the shared cache confirmed,
+  proxy budget, both kept in Postgres, a server fetch kept only as the reader's own copy,
   the client rung and readiness, logs and spend, and turning it on.
 - `deploy.md` — the API serving the web app, the one image, the one Fly machine beside
   Neon, secrets piped from Bitwarden, what a deploy does and what to check after, the TTS
@@ -259,10 +259,9 @@ Five folders, five different questions.
   unvalidated: two version numbers doing two jobs, why migration happens on read rather than
   in the upgrade transaction, and why an unreadable record is quarantined rather than dropped.
   Built, apart from the screens that need a server to fire them.
-- `shared-transcript-cache.md` — the first rung of transcript retrieval: read by anyone,
-  added to only by accounts through their notes, served only once two accounts fetched
-  the same words, who-fetched-what kept apart for a year, why the background prefetch
-  never asks it, and how a bad copy is removed.
+- `shared-transcript-cache.md` — retired by OV-295 (each account keeps its own copy); kept for
+  how the cache worked: read by anyone, served once two accounts fetched the same words, and
+  why it was taken out after the terms review.
 - `sync-api.md` — the server half of the sync engine: one table over every kind, the four
   numbers on a row and who owns each, why a merge migrates first, tombstones, and the feed.
 - `sync-client.md` — the client half: the outbox written in the same transaction as each

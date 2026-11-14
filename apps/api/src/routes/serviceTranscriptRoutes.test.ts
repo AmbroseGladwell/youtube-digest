@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, VideoId } from "@overview/domain";
+import { makeOverview } from "@overview/store-conformance";
+import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { FIXTURE_VIDEO_ID } from "@overview/transcripts/testing";
 import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
@@ -35,7 +37,7 @@ const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.ms
 const askAnonymously = (testApp: TestApp, videoId: string, remoteAddress = "203.0.113.7") =>
   testApp.app.inject({ method: "POST", url: `/api/service-transcripts/${videoId}`, headers: HEADERS, remoteAddress });
 
-test("a signed-out reader gets a transcript our server fetched, and the next reader gets it from the shared cache", async () => {
+test("a signed-out reader gets a transcript our server fetched, and nothing is kept for the next reader", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
 
@@ -44,26 +46,21 @@ test("a signed-out reader gets a transcript our server fetched, and the next rea
 
   assert.equal(fetched.statusCode, 200);
   assert.equal(fetched.json().videoId, FIXTURE_VIDEO_ID);
-  assert.equal(fetched.json().video.url, `https://www.youtube.com/watch?v=${FIXTURE_VIDEO_ID}`);
-  assert.equal(shared.statusCode, 200);
-  assert.deepEqual(shared.json().segments, fetched.json().segments);
+  assert.equal(shared.statusCode, 404);
   assert.equal(youTube.requests.filter((request) => request.route === "proxy").length, 0);
   await testApp.close();
 });
 
-test("a video already in the shared cache is answered without contacting YouTube or counting against the reader", async () => {
+test("the next reader of the same video is fetched for afresh, on their own cap", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
   await askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.1");
   const before = youTube.requests.length;
 
-  const answers = [];
-  for (let ask = 0; ask < serviceTranscriptQuotas.address + 1; ask += 1) {
-    answers.push((await askAnonymously(testApp, FIXTURE_VIDEO_ID)).statusCode);
-  }
+  const next = await askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.2");
 
-  assert.deepEqual(new Set(answers), new Set([200]));
-  assert.equal(youTube.requests.length, before);
+  assert.equal(next.statusCode, 200);
+  assert.ok(youTube.requests.length > before);
   await testApp.close();
 });
 
@@ -416,5 +413,28 @@ test("signed out, our server fetches only while the trial has an overview left o
   assert.equal(before.statusCode, 200);
   assert.equal(after.statusCode, 429);
   assert.equal(after.json().error.details.quota, "trial");
+  await testApp.close();
+});
+
+test("an account with a note on a video but no copy of its words has them fetched, kept as its own, and read back", async () => {
+  const youTube = makeFakeYouTube();
+  const testApp = await serviceApp(youTube);
+  const account = await makeAccount(testApp);
+  const notNoted = await account.inject({ method: "GET", url: `/api/transcripts/${FIXTURE_VIDEO_ID}` });
+  await account.inject({
+    method: "POST",
+    url: "/api/overviews",
+    body: storedOverview({ source: { ...makeOverview().source, id: VideoId.parse(FIXTURE_VIDEO_ID) } }),
+  });
+
+  const fetched = await account.inject({ method: "GET", url: `/api/transcripts/${FIXTURE_VIDEO_ID}` });
+  const asked = youTube.requests.length;
+  const again = await account.inject({ method: "GET", url: `/api/transcripts/${FIXTURE_VIDEO_ID}` });
+
+  assert.equal(notNoted.statusCode, 404);
+  assert.equal(fetched.statusCode, 200);
+  assert.equal(fetched.json().videoId, FIXTURE_VIDEO_ID);
+  assert.deepEqual(again.json().segments, fetched.json().segments);
+  assert.equal(youTube.requests.length, asked);
   await testApp.close();
 });

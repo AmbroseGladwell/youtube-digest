@@ -16,7 +16,7 @@ const answering = (body: unknown) => {
 };
 
 test("Start's samples are listed signed out, by their notes", async () => {
-  const snapshot = shareSnapshot({ overview: makeOverview(), transcript: null, narration: null });
+  const snapshot = shareSnapshot({ overview: makeOverview(), narration: null });
   const { urls, fetch } = answering({ samples: [{ token: TOKEN, note: snapshot.note }] });
   const api = createFetchSampleApi({ baseUrl: "https://overview.example", fetch });
 
@@ -25,7 +25,7 @@ test("Start's samples are listed signed out, by their notes", async () => {
 });
 
 test("a chosen sample is fetched whole, by its token", async () => {
-  const snapshot = shareSnapshot({ overview: makeOverview(), transcript: null, narration: null });
+  const snapshot = shareSnapshot({ overview: makeOverview(), narration: null });
   const { urls, fetch } = answering(snapshot);
   const api = createFetchSampleApi({ baseUrl: "https://overview.example", fetch });
 

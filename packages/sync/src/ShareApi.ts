@@ -1,8 +1,7 @@
-import type { Overview, Share, SharedNarration, StoredTranscript } from "@overview/domain";
+import type { Overview, Share, SharedNarration } from "@overview/domain";
 
 export interface ShareOverviewInput {
   overview: Overview;
-  transcript: StoredTranscript | null;
   narration: SharedNarration | null;
 }
 

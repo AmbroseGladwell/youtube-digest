@@ -179,7 +179,7 @@ test("recipes don't count towards time saved", () => {
 
 test("a shared copy carries the whole recipe, method included", () => {
   const overview = makeRecipeOverview();
-  const { note } = shareSnapshot({ overview, transcript: null, narration: null });
+  const { note } = shareSnapshot({ overview, narration: null });
   assert.deepEqual(note.recipe?.steps, overview.recipe?.steps);
   assert.equal(note.recipe?.stepCount, 3);
   assert.equal(note.recipe?.ingredients.length, 3);
@@ -187,7 +187,7 @@ test("a shared copy carries the whole recipe, method included", () => {
 });
 
 test("a shared copy of anything else carries no recipe key, so its hash doesn't move", () => {
-  const { note } = shareSnapshot({ overview: makeOverview(), transcript: null, narration: null });
+  const { note } = shareSnapshot({ overview: makeOverview(), narration: null });
   assert.equal("recipe" in note, false);
 });
 

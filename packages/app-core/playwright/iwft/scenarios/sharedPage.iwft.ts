@@ -1,5 +1,4 @@
 import { DEFAULT_NARRATION_VOICE, ShareToken, shareSnapshot, spokenScript, type Overview, type SharePayload } from "@overview/domain";
-import { makeStoredTranscript } from "@overview/store-conformance";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
@@ -45,7 +44,6 @@ const sharedPayload = (overview = shared()): SharePayload => ({
   sharedAt: "2026-09-30T11:00:00.000Z",
   snapshot: shareSnapshot({
     overview,
-    transcript: makeStoredTranscript({ videoId: overview.source.id! }),
     narration: null,
   }),
 });
@@ -85,7 +83,7 @@ test("the sharer's own reason is nowhere on the page", async ({ launcher }) => {
   await page.verifyDoesNotMention(REASON);
 });
 
-test("the transcript that travelled with the copy reads without a store to hold it", async ({ launcher }) => {
+test("a shared link carries no transcript: its tab offers the visitor their own copy instead", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());
   await launcher.openPage(Routes.sharedOverview(TOKEN));
@@ -93,7 +91,7 @@ test("the transcript that travelled with the copy reads without a store to hold 
 
   await page.clickTab("Transcript");
 
-  await page.verifyTranscriptReads("Here is the one claim this video makes.");
+  await page.verifyTranscriptOffersOwnCopy("Save to my overviews");
 });
 
 test("a link the sharer turned off says so, and says nothing about what was there", async ({ launcher }) => {
@@ -336,7 +334,7 @@ const sharedRecipe = async (launcher: Launcher, overview: ReturnType<typeof make
     state: "shared",
     token: TOKEN,
     sharedAt: "2026-11-03T11:00:00.000Z",
-    snapshot: shareSnapshot({ overview, transcript: null, narration: null }),
+    snapshot: shareSnapshot({ overview, narration: null }),
   });
   await launcher.openPage(Routes.sharedOverview(TOKEN));
   await launcher.sharedOverviewPage.verifyIsShown();
@@ -379,7 +377,6 @@ const sharedRecipeNarrated = (overview: ReturnType<typeof makeRecipeOverview>): 
     sharedAt: "2026-11-03T11:00:00.000Z",
     snapshot: shareSnapshot({
       overview,
-      transcript: null,
       narration: {
         key: "a".repeat(64),
         voice: DEFAULT_NARRATION_VOICE,

@@ -6,7 +6,6 @@ import { sharedMetaParts } from "./sharedMetaParts.js";
 const noteOf = (publishedAt: string | null, durationMs: number | null) =>
   shareSnapshot({
     overview: makeOverview({ source: { ...makeOverview().source, publishedAt, durationMs } }),
-    transcript: null,
     narration: null,
   }).note;
 

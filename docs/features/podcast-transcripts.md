@@ -37,13 +37,16 @@ comments.
 Decided with the owner after the terms review, 13 Nov 2026 (OV-297). A show's transcript is its
 own work: keeping the whole text on our server and serving it to other readers is copying and
 communicating it, which no UK exception covers. So **the words are never kept for everyone**. Each
-reader's words are fetched from their source for that reader, sent to their device and kept there.
+reader's words are fetched from their source for that reader, sent to their device and kept there,
+and since OV-295 also under their account, as their own copy (`transcript-storage.md`, "Each
+account's own copy"), so the same words reach their other devices even if the source goes.
 
 What is shared is **where the words are**: the feed's transcript URL and type, or the YouTube video
 the episode was matched to, under the episode's key. That's a fact about the episode, not the show's
 expression, and it saves the next reader the search. A reader's other device, holding only the
-episode's key, asks `GET /api/transcripts/:key`, which fetches the words afresh from that source. A
-source that no longer answers is forgotten and the rungs run again.
+episode's key, asks `GET /api/transcripts/:key`, which answers with the account's copy, or for an
+account with a note on the episode but no copy yet, fetches the words afresh from that source and
+keeps them. A source that no longer answers is forgotten and the rungs run again.
 
 Podcast words already in the shared cache were deleted by migration `V0032`, and
 `/shared-transcripts/:key` has no podcast words to serve.

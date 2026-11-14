@@ -59,7 +59,7 @@ test("a sample that isn't a live share is left out, not offered broken", async (
   await app.close();
 });
 
-test("a chosen sample is the whole copy, transcript included, and counts no visit", async () => {
+test("a chosen sample is the whole copy, without a transcript, and counts no visit", async () => {
   const app = await createTestApp({ sampleShareTokens: [VIDEO] });
   const house = await makeAccount(app);
   await shareAs(app, house, VIDEO, "A video sample");
@@ -68,7 +68,7 @@ test("a chosen sample is the whole copy, transcript included, and counts no visi
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.json().note.source.title, "A video sample");
-  assert.notEqual(response.json().transcript, null);
+  assert.equal(response.json().transcript, null);
   const [listed] = (await house.inject({ method: "GET", url: "/api/shares" })).json().shares as Share[];
   assert.equal(listed!.views, 0);
   await app.close();

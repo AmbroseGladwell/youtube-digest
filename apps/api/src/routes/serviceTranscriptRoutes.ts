@@ -79,7 +79,6 @@ export function serviceTranscriptRoutes(
       }
       try {
         const answer = await service.resolve(videoId, caller, request.log);
-        if (answer.via === "cache") request.log.info(apiLogLines.serviceTranscripts.answeredFromCache());
         return answer.transcript;
       } catch (error) {
         if (error instanceof QuotaSpentError) {

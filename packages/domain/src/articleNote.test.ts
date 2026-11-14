@@ -80,11 +80,11 @@ test("one chapter has nowhere to link to, so nothing links", () => {
 test("a video's note has no read it anyway section, and its copy stays byte for byte", () => {
   const video = makeOverview();
   assert.ok(!overviewNoteLines(video).some((line) => line.section === READ_ANYWAY_SECTION));
-  assert.ok(!("article" in shareSnapshot({ overview: video, transcript: null, narration: null }).note));
+  assert.ok(!("article" in shareSnapshot({ overview: video, narration: null }).note));
 });
 
 test("a shared article keeps its chapters", () => {
-  const { note } = shareSnapshot({ overview: article(), transcript: null, narration: null });
+  const { note } = shareSnapshot({ overview: article(), narration: null });
   assert.equal(note.article?.chapters.length, 2);
 });
 
@@ -146,9 +146,6 @@ test("an assistant reads each resource with why and the chapter it was shared in
 });
 
 test("a shared article keeps its resources, and one without them shares exactly as before", () => {
-  assert.deepEqual(
-    shareSnapshot({ overview: article({ resources }), transcript: null, narration: null }).note.article?.resources,
-    resources,
-  );
-  assert.ok(!("resources" in shareSnapshot({ overview: article(), transcript: null, narration: null }).note.article!));
+  assert.deepEqual(shareSnapshot({ overview: article({ resources }), narration: null }).note.article?.resources, resources);
+  assert.ok(!("resources" in shareSnapshot({ overview: article(), narration: null }).note.article!));
 });

@@ -1,18 +1,17 @@
 import type { Overview } from "./Overview.js";
 import type { SharedNarration, SharedOverview } from "./SharedOverview.js";
 import type { SharedNote } from "./SharedNote.js";
-import type { StoredTranscript } from "./StoredTranscript.js";
 
 export interface ShareSnapshotInput {
   overview: Overview;
-  transcript: StoredTranscript | null;
   narration: SharedNarration | null;
 }
 
 // The one place a shared copy is built. The server runs it over the overview the reader
 // posted rather than trusting a snapshot the client assembled, so a private field cannot
-// reach a share by any route (docs/features/sharing.md).
-export function shareSnapshot({ overview, transcript, narration }: ShareSnapshotInput): SharedOverview {
+// reach a share by any route (docs/features/sharing.md). A shared copy never carries the
+// transcript: the source's words are each reader's own, not ours to publish on a link (OV-295).
+export function shareSnapshot({ overview, narration }: ShareSnapshotInput): SharedOverview {
   const note: SharedNote = {
     id: overview.id,
     source: overview.source,
@@ -34,5 +33,5 @@ export function shareSnapshot({ overview, transcript, narration }: ShareSnapshot
     ...(overview.article === null ? {} : { article: overview.article }),
     ...(overview.recipe === null ? {} : { recipe: overview.recipe }),
   };
-  return { note, transcript, narration };
+  return { note, transcript: null, narration };
 }

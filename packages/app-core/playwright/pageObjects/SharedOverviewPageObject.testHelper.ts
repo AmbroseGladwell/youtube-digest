@@ -7,6 +7,7 @@ import { sharedOverviewPageTestIds } from "../../src/features/sharedPage/SharedO
 import { readerTabsTestIds } from "../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { HeadImagePageObject } from "./HeadImagePageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { sharedTranscriptPromptTestIds } from "../../src/features/sharedPage/components/SharedTranscriptPrompt/SharedTranscriptPromptTestIds.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 import { ArticleResourcesPageObject } from "./ArticleResourcesPageObject.testHelper.js";
 
@@ -138,6 +139,14 @@ export class SharedOverviewPageObject extends PageObject {
   verifyDoesNotMention = (text: string) =>
     this.step(`verifyDoesNotMention ${text}`, async () => {
       expect(await this.page.content()).not.toContain(text);
+    });
+
+  // OV-295: a shared link carries the overview, not the source's words.
+  verifyTranscriptOffersOwnCopy = (label: string) =>
+    this.step(`verifyTranscriptOffersOwnCopy ${label}`, async () => {
+      await this.expectToBeVisible(sharedTranscriptPromptTestIds.root);
+      await expect(this.get(sharedTranscriptPromptTestIds.save)).toContainText(label);
+      await expect(this.page.getByText("Here is the one claim this video makes.")).toHaveCount(0);
     });
 
   verifyTranscriptReads = (text: string) =>

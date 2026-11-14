@@ -253,11 +253,17 @@ sits **outside the records feed** on purpose:
   costs one refetch, not a quarantine. Deploying the API first, as
   `docs/architecture/api.md` asks, keeps it from ever dropping a field a newer client wrote.
 
-The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route. Since
-the shared cache (`docs/features/shared-transcript-cache.md`), what an account keeps is a
-link, `(account, video)`, to the copy it sent, which sits in the shared table beside other
-accounts' copies of the same video. A read joins through the link, so an account reads
-back exactly what it sent.
+The route raises Fastify's default 1 MiB body limit to 8 MiB for this one route.
+
+**Each account's own copy (OV-295, 14 Nov 2026).** What an account keeps is its own copy of the
+words, `(account, video) → body`, read only by that account's devices. Nothing is kept for every
+reader, and no shared link carries a transcript: the terms review found serving one reader's copy
+of a source's words to others had no UK exception to stand on (`shared-transcript-cache.md`, now
+retired). An episode's transcript goes up under its `podcast:` key the same way. When an account
+asks for words it has a note on but no copy of (a copy saved from a shared link, or a device that
+never uploaded one), `GET /transcripts/:key` fetches them for it: a video's through our server's
+caption fetching (`server-side-transcripts.md`), an episode's from where its words were found
+(`podcast-transcripts.md`), and keeps them as the account's copy.
 
 **Only the transcripts behind a note go up.** The transcript store also holds captions
 fetched only because a video was open in the extension, so they are ready if the reader
@@ -307,10 +313,8 @@ shared copy the link points at is not the account's and outlives it:
 
 On the client, `SyncStorage.transcriptToPush`
 returns nothing once no note on the device uses the video, so a note deleted before it
-synced sends no transcript at all. What is lost is small: a deleted note's transcript
-never seeds the shared cache, and the next note on that video fetches it again. A note
-deleted after it synced drops only the account's link. A confirmed shared copy stays, with
-no account on it.
+synced sends no transcript at all, and the next note on that video fetches it again. A note
+deleted after it synced drops the account's copy.
 
 **Down, on a miss.** `useTranscriptQuery` reads the local store first. When that misses and
 the device is signed in, it asks `SyncEngine.fetchTranscript`. That does `GET

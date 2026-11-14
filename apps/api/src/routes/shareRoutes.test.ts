@@ -88,7 +88,7 @@ test("one account cannot stop another account's link, or see it listed", async (
   await app.close();
 });
 
-test("a transcript and a narration key travel with the copy", async () => {
+test("a narration key travels with the copy, and a transcript a client sends is never kept on it", async () => {
   const app = await createTestApp();
   const account = await makeAccount(app);
   const overview = makeOverview();
@@ -107,7 +107,13 @@ test("a transcript and a narration key travel with the copy", async () => {
   assert.equal(response.statusCode, 201);
   const page = await app.app.inject({ method: "GET", url: `/s/${response.json().token}` });
   assert.equal(page.statusCode, 200);
-  assert.match(page.body, /Here is the one claim this video makes\./);
+  assert.doesNotMatch(page.body, /Here is the one claim this video makes\./);
+  const [kept] = await app.sql.query<{ no_transcript: boolean; narrated: boolean }>(
+    `select snapshot -> 'transcript' = 'null'::jsonb as no_transcript, snapshot -> 'narration' <> 'null'::jsonb as narrated
+     from shares where token = $1`,
+    [response.json().token],
+  );
+  assert.deepEqual(kept, { no_transcript: true, narrated: true });
   await app.close();
 });
 

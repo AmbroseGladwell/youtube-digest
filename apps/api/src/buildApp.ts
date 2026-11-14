@@ -298,7 +298,7 @@ export async function buildApp({
       const youTubeService =
         transcriptService === null
           ? null
-          : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), transcripts, costs, clock });
+          : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), costs, clock });
       const podcastTranscripts = createPodcastTranscripts({
         fetchPublicWeb: podcastWeb,
         sources: new EpisodeWordSourcesRepository(sql),
@@ -309,7 +309,13 @@ export async function buildApp({
         transcripts,
         episodeWords: async (key, accountId, log) =>
           podcastTranscripts.remembered(key, { accountId, plan: await accountPlan(sql, accountId) }, log),
-        clock,
+        videoWords: async (videoId, accountId, log) =>
+          youTubeService === null
+            ? null
+            : youTubeService
+                .resolve(videoId, { accountId, plan: await accountPlan(sql, accountId) }, log)
+                .then((answer) => answer.transcript)
+                .catch(() => null),
       });
       serviceTranscriptRoutes(api, { usage: overviewUsage, trials, service: youTubeService, sql, clock });
       podcastRoutes(api, {
