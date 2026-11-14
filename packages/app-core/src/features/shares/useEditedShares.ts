@@ -18,7 +18,7 @@ export function useEditedShares(shares: Share[]): ReadonlySet<string> {
       shares.map(async (share) => {
         const overview = held.get(share.overviewId);
         if (overview === undefined) return null;
-        const { note } = shareSnapshot({ overview, transcript: null, narration: null });
+        const { note } = shareSnapshot({ overview, narration: null });
         return (await shareContentHash(note)) === share.contentHash ? null : share.token;
       }),
     ).then((tokens) => {

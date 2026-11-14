@@ -228,7 +228,7 @@ function youTubeServiceOver(player: { title: string; lengthSeconds: string }) {
       }),
     resolve: async (videoId) => {
       calls.push(`captions:${videoId}`);
-      return { transcript: { ...CAPTIONS, videoId }, via: "cache" };
+      return { transcript: { ...CAPTIONS, videoId }, via: "direct" };
     },
   };
   return { service, calls };

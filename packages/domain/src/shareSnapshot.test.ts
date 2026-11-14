@@ -23,7 +23,7 @@ const privateOverview = () =>
     },
   });
 
-const snapshotOf = (overview = privateOverview()) => shareSnapshot({ overview, transcript: null, narration: null });
+const snapshotOf = (overview = privateOverview()) => shareSnapshot({ overview, narration: null });
 
 test("none of the reader's own fields reach the shared copy", () => {
   const { note } = snapshotOf();

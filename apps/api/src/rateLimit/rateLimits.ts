@@ -20,7 +20,6 @@ export const rateLimits = {
   oauthRegisterPerAddress: { name: "oauthRegisterAddress", limit: 20, windowMs: HOUR_MS },
   oauthTokenPerAddress: { name: "oauthTokenAddress", limit: 60, windowMs: MINUTE_MS },
   mcpPerAccount: { name: "mcpAccount", limit: 120, windowMs: MINUTE_MS },
-  sharedTranscriptPerAddress: { name: "sharedTranscriptAddress", limit: 300, windowMs: HOUR_MS },
   serviceTranscriptPerAddress: { name: "serviceTranscriptAddress", limit: 60, windowMs: HOUR_MS },
   smallPassPerAccount: { name: "smallPassAccount", limit: 30, windowMs: DAY_MS },
   topicSuggestionPerTrial: { name: "topicSuggestionTrial", limit: 5, windowMs: DAY_MS },

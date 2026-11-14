@@ -4,7 +4,7 @@ import { makeOverview } from "./OverviewFactory.testHelper.js";
 import { shareContentHash } from "./shareContentHash.js";
 import { shareSnapshot } from "./shareSnapshot.js";
 
-const noteOf = (overview = makeOverview()) => shareSnapshot({ overview, transcript: null, narration: null }).note;
+const noteOf = (overview = makeOverview()) => shareSnapshot({ overview, narration: null }).note;
 
 test("the same note hashes the same however its keys were ordered", async () => {
   const note = noteOf();

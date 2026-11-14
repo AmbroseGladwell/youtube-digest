@@ -10,8 +10,7 @@ export function createFetchShareApi(options: FetchShareApiOptions): ShareApi {
 
   return {
     list: async () => (await answered(request("GET", "/shares", Shares))).shares,
-    share: ({ overview, transcript, narration }) =>
-      answered(request("POST", "/shares", Share, { body: { overview, transcript, narration } })),
+    share: ({ overview, narration }) => answered(request("POST", "/shares", Share, { body: { overview, narration } })),
     // A link already stopped is not an error to the reader, who asked for it to be off and
     // is getting what they asked for.
     stop: async (token) => {

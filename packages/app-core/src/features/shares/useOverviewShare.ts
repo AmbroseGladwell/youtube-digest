@@ -42,7 +42,7 @@ export function useOverviewShare(overview: Overview | null): OverviewShare {
       return;
     }
     let current = true;
-    const snapshot = shareSnapshot({ overview, transcript: null, narration: null });
+    const snapshot = shareSnapshot({ overview, narration: null });
     void shareContentHash(snapshot.note).then((computed) => {
       if (current) setHash(computed);
     });

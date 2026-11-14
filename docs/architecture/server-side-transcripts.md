@@ -21,10 +21,13 @@ bounds, and they are the position:**
 - **Last, never first.** Every rung above it fetches nothing from our address. The
   shared cache answers from a row, and the extension fetches from the reader's own
   address. The server is asked only when both have failed.
-- **Once per video, ever.** What the server fetches goes into the shared cache as
-  confirmed, so the next reader of that video is answered from the row. The bill and
-  the exposure both track the rate at which new videos enter the corpus, not readers
-  times videos.
+- **Once per reader without the extension (since OV-295).** What the server fetches is
+  that reader's own copy; nothing is kept for the next reader, since a source's words
+  aren't ours to hand on. The bill and the exposure now track readers without the
+  extension times videos, not new videos alone. That is the cost of the terms review's
+  finding, and the reason the extension, which fetches free on the reader's own address,
+  stays the first rung. Readers asking for the same video at the same moment still share
+  the one fetch in flight.
 - **Never in the background.** The rung's cost is `metered`, so `freeTranscriptSources`
   keeps it from the background prefetch. Only a reader pressing Create can reach it. That
   makes it a property of what the prefetch is handed, not a rule anyone has to remember.

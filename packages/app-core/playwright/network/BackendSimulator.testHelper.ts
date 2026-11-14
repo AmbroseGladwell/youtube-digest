@@ -743,7 +743,6 @@ export class BackendSimulator {
               },
             };
           }
-          this.#sharedTranscripts.set(videoId, fetched);
           return { status: 200, body: fetched };
         },
         onError: () => ({
@@ -1097,7 +1096,7 @@ export class BackendSimulator {
     // The whole copy is kept, not just the note: a simulator that dropped what was posted
     // could not tell a share that carries its transcript from one that does not, which is
     // how a real one shipped without (docs/features/sharing.md).
-    const snapshot = shareSnapshot({ overview, transcript: transcript ?? null, narration: narration ?? null });
+    const snapshot = shareSnapshot({ overview, narration: narration ?? null });
     const { note } = snapshot;
     const share: Share = {
       token: ShareToken.parse(token),
@@ -1326,7 +1325,7 @@ export class BackendSimulator {
     offer: (...overviews: Overview[]): ShareToken[] => {
       this.#startSamples = overviews.map((overview, index) => {
         const token = ShareToken.parse(`iwftSample${index}`.padEnd(16, "0"));
-        this.#shareSnapshots.set(token, shareSnapshot({ overview, transcript: null, narration: null }));
+        this.#shareSnapshots.set(token, shareSnapshot({ overview, narration: null }));
         return token;
       });
       return [...this.#startSamples];
@@ -1549,10 +1548,6 @@ export class BackendSimulator {
     seed: (transcript: StoredTranscript): void => {
       this.#seedTranscripts.push(transcript);
     },
-    // In the cross-account cache, as though another account had stored it.
-    seedShared: (transcript: StoredTranscript): void => {
-      this.#sharedTranscripts.set(transcript.videoId, transcript);
-    },
     // What our own server answers with for this transcript's video
     // (docs/architecture/server-side-transcripts.md).
     seedService: (transcript: StoredTranscript): void => {
@@ -1575,7 +1570,6 @@ export class BackendSimulator {
     serviceAnswersAgain: (): void => {
       this.#serviceRefusal = null;
     },
-    isShared: (videoId: VideoId): boolean => this.#sharedTranscripts.has(videoId),
   };
 
   // What the server's embeddings would find for a search, closest first.

@@ -1,6 +1,5 @@
 import { ShareToken, shareSnapshot, type Overview, type SharePayload, type TranscriptSegment } from "@overview/domain";
 import { VideoId } from "@overview/domain";
-import { makeStoredTranscript as makeSharedTranscript } from "@overview/store-conformance";
 import { test } from "../../support/fixtures.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
@@ -74,7 +73,6 @@ const sharedPayload = (overview: Overview): SharePayload => ({
   sharedAt: "2026-09-30T11:00:00.000Z",
   snapshot: shareSnapshot({
     overview,
-    transcript: makeSharedTranscript({ videoId: overview.source.id! }),
     narration: null,
   }),
 });

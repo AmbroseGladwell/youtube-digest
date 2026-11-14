@@ -49,6 +49,7 @@ import { useNarrationApi } from "../../player/NarrationApiContext.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { sharedNarrationApi } from "../util/sharedNarrationApi.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
+import { SharedTranscriptPrompt } from "../components/SharedTranscriptPrompt/SharedTranscriptPrompt.js";
 import { ARTICLE_TABS, READER_TABS, UNCHAPTERED_RECIPE_VIDEO_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
 import { useCookingMode } from "../../reader/ReaderPage/useCookingMode.js";
@@ -532,7 +533,10 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
                 <RelatedByTag tags={note.tags} related={[]} tagsLink={false} />
               </div>
             )}
-            {tab === "Transcript" && video !== null && (
+            {tab === "Transcript" && video !== null && transcript === null && (
+              <SharedTranscriptPrompt label={saveAction.label} saving={saving} onSave={chooseSave} />
+            )}
+            {tab === "Transcript" && video !== null && transcript !== null && (
               <TranscriptPanel
                 video={video}
                 held={transcript}

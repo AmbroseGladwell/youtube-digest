@@ -186,7 +186,6 @@ test("how the capture's time split is reported beside its events, step by step, 
     outcome: "finished",
     steps: [
       { step: "stored", outcome: "no-answer", ms: expect.any(Number) },
-      { step: "shared-cache", outcome: "no-answer", ms: expect.any(Number) },
       { step: "service", outcome: "answered", ms: expect.any(Number) },
       { step: "model", outcome: "answered", ms: expect.any(Number) },
       { step: "save", outcome: "answered", ms: expect.any(Number) },

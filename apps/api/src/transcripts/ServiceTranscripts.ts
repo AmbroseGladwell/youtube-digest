@@ -14,7 +14,6 @@ import {
 import { secondsToNextUsageDay, type FetchReservation, type ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { transcriptFault } from "./transcriptFault.js";
-import type { TranscriptsRepository } from "./TranscriptsRepository.js";
 
 const MISSING_TTL_MS = 6 * 60 * 60 * 1000;
 
@@ -26,8 +25,8 @@ export const PROXY_PRICE = {
 const BYTES_PER_GB = 1e9;
 
 // A daily safety cap per caller on cold fetches, well above normal use: it protects our
-// address's standing with YouTube, not our money. A shared-cache hit costs nothing and is
-// never counted (docs/architecture/server-side-transcripts.md, "Limits").
+// address's standing with YouTube, not our money (docs/architecture/server-side-transcripts.md,
+// "Limits").
 export const serviceTranscriptQuotas = { address: 5, free: 50, "byo-plus": 100, plus: 100 } as const satisfies Record<
   "address" | Plan,
   number
@@ -38,7 +37,6 @@ export type ServiceCaller = { accountId: AccountId; plan: Plan } | { address: st
 export interface ServiceTranscriptsOptions {
   fetches: ServiceFetches;
   usage: ServiceUsageRepository;
-  transcripts: TranscriptsRepository;
   costs: AccountCostsRepository;
   proxyDailyFetches: number;
   clock: () => Date;
@@ -53,7 +51,7 @@ export class QuotaSpentError extends Error {
   }
 }
 
-export type ServiceAnswer = { transcript: StoredTranscript; via: "cache" | ServiceFetchResult["via"] };
+export type ServiceAnswer = { transcript: StoredTranscript; via: ServiceFetchResult["via"] };
 
 const callerKey = (caller: ServiceCaller): string =>
   "accountId" in caller ? `account:${caller.accountId}` : `address:${hashedAddress(caller.address)}`;
@@ -66,10 +64,10 @@ const callerLogged = (caller: ServiceCaller) =>
     ? { caller: "account" as const, plan: caller.plan, accountId: caller.accountId }
     : { caller: "address" as const, plan: null };
 
-// The last rung: asked only once every rung a client holds has failed, it answers from the
-// shared cache when it can, fetches once per video however many readers ask at the same
-// moment, and adds what it fetched to the cache as confirmed, since nobody but us touched
-// it (docs/architecture/server-side-transcripts.md).
+// The last rung: asked only once every rung a client holds has failed. It fetches the captions
+// for the reader who asked and keeps nothing for anyone else: their device keeps them, and
+// uploads them to their own account (OV-295). Readers asking for the same video at the same
+// moment share the one fetch in flight (docs/architecture/server-side-transcripts.md).
 export class ServiceTranscripts {
   #options: ServiceTranscriptsOptions;
   #inFlight = new Map<VideoId, Promise<ServiceAnswer>>();
@@ -80,15 +78,13 @@ export class ServiceTranscripts {
   }
 
   async resolve(videoId: VideoId, caller: ServiceCaller, log: FastifyBaseLogger): Promise<ServiceAnswer> {
-    const { transcripts, usage, clock } = this.#options;
-    const shared = StoredTranscript.safeParse(await transcripts.getShared(videoId));
-    if (shared.success && shared.data.video !== undefined) return { transcript: shared.data, via: "cache" };
+    const { usage, clock } = this.#options;
 
     const now = clock();
     const missing = this.#missing.get(videoId);
     if (missing !== undefined && missing.until > now.getTime()) throw missing.error;
 
-    // A fetch already under way for this video is the cache a moment early: joined for free,
+    // A fetch already under way for this video is joined for free, never kept afterwards,
     // and only the caller who started it holds a slot. Its cap is its own, so a joiner it
     // refused asks again for itself.
     const running = this.#inFlight.get(videoId);
@@ -156,7 +152,7 @@ export class ServiceTranscripts {
   }
 
   async #fetch(videoId: VideoId, payer: CostPayer, log: FastifyBaseLogger, reservation: FetchReservation): Promise<ServiceAnswer> {
-    const { fetches, transcripts, clock } = this.#options;
+    const { fetches, clock } = this.#options;
     const startedAt = clock().getTime();
     let proxyBytes = 0;
     let result: ServiceFetchResult;
@@ -195,7 +191,6 @@ export class ServiceTranscripts {
         sourceId: "service",
       });
     }
-    await transcripts.putServiceFetched(transcript);
     log.info(
       apiLogLines.serviceTranscripts.fetched({
         via: result.via,

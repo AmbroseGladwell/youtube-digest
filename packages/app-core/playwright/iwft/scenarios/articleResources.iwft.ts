@@ -136,7 +136,7 @@ test("a shared article carries its resources, closed to start", async ({ launche
     state: "shared",
     token,
     sharedAt: "2026-11-12T11:00:00.000Z",
-    snapshot: shareSnapshot({ overview, transcript: null, narration: null }),
+    snapshot: shareSnapshot({ overview, narration: null }),
   });
   await launcher.openPage(Routes.sharedOverview(token));
 

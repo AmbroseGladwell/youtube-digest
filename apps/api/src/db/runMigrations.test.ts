@@ -76,10 +76,8 @@ test("the tables the migrations create are there to be used", async () => {
       "service_transcript_usage",
       "session_verifications",
       "sessions",
-      "shared_transcripts",
       "shares",
       "signed_out_costs",
-      "transcript_contributions",
       "trial_address_usage",
       "trial_overviews",
       "trial_tokens",
@@ -89,7 +87,7 @@ test("the tables the migrations create are there to be used", async () => {
   await sql.close();
 });
 
-test("each account keeps the transcripts it stored before the shared cache, and none of them is served", async () => {
+test("each account keeps its own transcript through the shared cache's coming and going", async () => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(9) });
   const [first, second] = ["a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"];
@@ -116,18 +114,12 @@ test("each account keeps the transcripts it stored before the shared cache, and 
   await runMigrations(sql);
 
   const kept = await sql.query<{ account_id: string; generated: boolean }>(
-    `select a.account_id, (s.body ->> 'generated')::boolean as generated
-     from account_transcripts a join shared_transcripts s using (video_id, words_hash) order by a.account_id`,
-  );
-  const [counts] = await sql.query<{ confirmed: number; contributions: number }>(
-    `select (select count(*)::int from shared_transcripts where confirmed_at is not null) as confirmed,
-            (select count(*)::int from transcript_contributions) as contributions`,
+    `select account_id, (body ->> 'generated')::boolean as generated from account_transcripts order by account_id`,
   );
   assert.deepEqual(kept, [
     { account_id: first, generated: true },
     { account_id: second, generated: false },
   ]);
-  assert.deepEqual(counts, { confirmed: 0, contributions: 0 });
   await sql.close();
 });
 

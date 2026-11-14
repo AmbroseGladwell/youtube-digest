@@ -169,7 +169,7 @@ test("the shared page's own link field is a link field", async ({ launcher }) =>
     state: "shared",
     token: ShareToken.parse("k7Qm2x9RfTabcdef"),
     sharedAt: "2026-09-30T11:00:00.000Z",
-    snapshot: shareSnapshot({ overview, transcript: null, narration: null }),
+    snapshot: shareSnapshot({ overview, narration: null }),
   });
   await launcher.openPage(Routes.sharedOverview(ShareToken.parse("k7Qm2x9RfTabcdef")));
 

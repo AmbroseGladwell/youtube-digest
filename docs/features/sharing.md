@@ -38,12 +38,15 @@ would have given for free:
 | A recipe's whole recipe, method included (OV-159, `recipe-notes.md`) | |
 | | The verdict's "similar to" list |
 
-**The transcript is in, which is a departure from the Trello card.** The card said the
-transcript would never be shared; the design lists "Transcript and chapters" in the
-dialog's own "Shared" column, and the shared page draws the Transcript tab with search
-working. The design is the later decision and it wins. What is being shared is a video's
-public captions, which `docs/features/shared-transcript-cache.md` already argues is not the
-reader's to keep private.
+**The transcript is not in (OV-295, 14 Nov 2026).** It was, for a while, on the argument that a
+video's captions are public. The terms review of 13 Nov 2026 found publicly reachable isn't free to
+reuse, and a shared link is the most public place the words could go. So `shareSnapshot` never
+carries one, whatever a client sends; migration `V0033` cleared it from every existing share; and
+the shared page's Transcript tab offers the visitor their own copy instead: "The full transcript
+comes with your own copy", with Save to my overviews (`SharedTranscriptPrompt`). Saving fetches
+the saver's own words (`transcript-storage.md`, "Each account's own copy"). The overview, its
+narration and its chapters are unchanged: the overview is our own writing. The paragraph below
+describes the time when it was carried.
 
 **The transcript that is shared is the one the reader can see.** The reader reads its own
 store first and the account's copy on the server after, so a copy built from the local
