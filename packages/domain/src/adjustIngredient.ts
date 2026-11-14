@@ -200,6 +200,81 @@ const formatNumber = (value: number, unit: Unit | null): string => {
   return `${total === 0 ? "" : total}${best[1]}`;
 };
 
+// The sizes a kitchen has: cups in quarters and thirds, tablespoons whole or halved, teaspoons
+// down to an eighth. Never a third of a spoon (OV-298).
+const MEASURES: Array<[Unit, number[]]> = [
+  [UNITS.cup!, [0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4]],
+  [UNITS.tbsp!, [0, 1 / 2]],
+  [UNITS.tsp!, [0, 1 / 8, 1 / 4, 1 / 2, 3 / 4]],
+];
+const NEAR_ENOUGH = 0.05;
+
+interface Part {
+  amount: number;
+  unit: Unit;
+}
+
+const isMeasured = (unit: Unit | null): unit is Unit => MEASURES.some(([measure]) => measure === unit);
+const stepsOf = (unit: Unit): number[] => MEASURES.find(([measure]) => measure === unit)![1];
+const sizesNear = (value: number, unit: Unit): number[] =>
+  [Math.floor(value), Math.floor(value) + 1].flatMap((whole) => stepsOf(unit).map((step) => whole + step)).filter((size) => size > 0);
+const nearest = (value: number, unit: Unit): number =>
+  sizesNear(value, unit).reduce((best, size) => (Math.abs(size - value) < Math.abs(best - value) ? size : best));
+const offBy = (parts: Part[], ml: number): number =>
+  Math.abs(parts.reduce((sum, { amount, unit }) => sum + amount * unit.size, 0) - ml) / ml;
+
+// "⅜ cup" is "¼ cup + 2 tbsp", "⅝ tsp" is "½ tsp + ⅛ tsp" and "⅛ cup" is "2 tbsp": a scaled
+// amount said in sizes a cook can measure (OV-298), and less than ⅛ tsp is a pinch, which is
+// ¹⁄₁₆ tsp. One size within 5% is enough. Otherwise a
+// size and a spoon: within 5% first, then in the bigger spoon, in whole tablespoons, the closer,
+// the bigger size.
+function measured(value: number, unit: Unit): Part[] {
+  const ml = value * unit.size;
+  if (unit === UNITS.cup && value < 1 / 4 - 1e-9) return measured(ml / UNITS.tbsp!.size, UNITS.tbsp!);
+  if (unit === UNITS.tbsp && value < 1 - 1e-9) return measured(ml / UNITS.tsp!.size, UNITS.tsp!);
+  if (unit === UNITS.tsp && value < 1 / 8 - 1e-9) return [{ amount: 1, unit: UNITS.pinch! }];
+  const single: Part[] = [{ amount: nearest(value, unit), unit }];
+  if (offBy(single, ml) <= NEAR_ENOUGH) return single;
+  const spoons = unit === UNITS.cup ? [UNITS.tbsp!, UNITS.tsp!] : [UNITS.tsp!];
+  const firsts = sizesNear(value, unit).filter((size) => size < value && (unit !== UNITS.tbsp || Number.isInteger(size)));
+  const pairs = firsts.flatMap((first) => {
+    const leftMl = (value - first) * unit.size;
+    if (unit === UNITS.cup && leftMl >= UNITS.cup.size / 4) return [];
+    return spoons.flatMap((spoon) => {
+      const left = leftMl / spoon.size;
+      const amounts = new Set(spoon === UNITS.tbsp ? [Math.floor(left), Math.ceil(left), nearest(left, spoon)] : [nearest(left, spoon)]);
+      return [...amounts]
+        .filter((amount) => amount > 0 && (unit !== UNITS.cup || amount * spoon.size < UNITS.cup.size / 4 - 1e-9))
+        .map((amount) => [
+          { amount: first, unit },
+          { amount, unit: spoon },
+        ]);
+    });
+  });
+  const rank = (parts: Part[]): number[] => [
+    offBy(parts, ml) <= NEAR_ENOUGH ? 0 : 1,
+    -parts.at(-1)!.unit.size,
+    parts.length === 2 && parts[1]!.unit === UNITS.tbsp && !Number.isInteger(parts[1]!.amount) ? 1 : 0,
+    Math.round(offBy(parts, ml) * 1000),
+    -parts[0]!.amount,
+  ];
+  const before = (a: number[], b: number[]) => {
+    const at = a.findIndex((value, index) => Math.abs(value - b[index]!) > 1e-9);
+    return at !== -1 && a[at]! < b[at]!;
+  };
+  return [single, ...pairs].reduce((best, parts) => (before(rank(parts), rank(best)) ? parts : best));
+}
+
+// A part in the page's own unit keeps the page's word for it ("teaspoons").
+const partsText = (parts: Part[], pageUnit: Unit | null, pageUnitText: string): string =>
+  parts
+    .map(({ amount, unit }, index) => {
+      const many = amount > 1;
+      const word = unit === pageUnit ? agreeing(pageUnitText, many) : ` ${many ? unit.plural : unit.singular}`;
+      return `${formatNumber(amount, unit)}${word}`;
+    })
+    .join(" + ");
+
 const SPOON_MEASURE = /^(?:heaped|level|rounded)\s+/i;
 
 const unitNamed = (text: string): { unit: keyof typeof UNITS; length: number } | null => {
@@ -338,12 +413,15 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   const amountText = `${formatNumber(newLow, to)}${newHigh === null ? "" : `–${formatNumber(newHigh, to)}`}`;
   const unitUnchanged = from === to;
   const many = newLow > 1 || newHigh !== null;
+  const pageUnitText = named === null ? "" : rest.slice(0, spaced.length + named.length);
+  const inKitchenSizes = high === null && isMeasured(to) && (factor !== 1 || !unitUnchanged);
   const unitShown =
-    named === null || to === null
+    named === null || to === null || inKitchenSizes
       ? ""
       : unitUnchanged
-        ? agreeing(rest.slice(0, spaced.length + named.length), many)
+        ? agreeing(pageUnitText, many)
         : `${to.system === "metric" && to !== UNITS.l ? "" : " "}${many ? to.plural : to.singular}`;
+  const shown = inKitchenSizes ? partsText(measured(newLow, to), from, pageUnitText) : `${amountText}${unitShown}`;
   const moved = Math.abs(newLow - low) > 1e-9 || !unitUnchanged || (high !== null && Math.abs((newHigh ?? 0) - high) > 1e-9);
   if (!moved) return { kind: "same", line };
 
@@ -356,7 +434,7 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
         : afterUnit;
   const pieces: IngredientPiece[] = [
     { text: lead, changed: false },
-    { text: `${amountText}${unitShown}`, changed: true },
+    { text: shown, changed: true },
     { text: packText, changed: false },
     { text: tail, changed: false },
   ].filter(({ text }) => text !== "");
@@ -417,12 +495,16 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
     return { kind: "unreadable", line };
   }
   const scaled = ({ low, high, unit, unitText }: Measure) =>
-    `${formatNumber(low * factor, unit)}${high === null ? "" : `–${formatNumber(high * factor, unit)}`}${agreeing(unitText, low * factor > 1 || high !== null)}`;
+    high === null && isMeasured(unit) && factor !== 1
+      ? partsText(measured(low * factor, unit), unit, unitText)
+      : `${formatNumber(low * factor, unit)}${high === null ? "" : `–${formatNumber(high * factor, unit)}`}${agreeing(unitText, low * factor > 1 || high !== null)}`;
   const grams = metric[0]!;
   const other = first === grams ? second : first;
   const usUnit = target(grams.unit, grams.low * factor * grams.unit.size, "us");
   const inUs = () => {
     if (other.unit.system === "both" || other.unit === usUnit || other.unit.kind !== grams.unit.kind) return scaled(other);
+    if (grams.high === null && isMeasured(usUnit))
+      return partsText(measured((grams.low * factor * grams.unit.size) / usUnit.size, usUnit), null, "");
     const value = (amount: number) => formatNumber((amount * factor * grams.unit.size) / usUnit.size, usUnit);
     const many = (grams.low * factor * grams.unit.size) / usUnit.size > 1 || grams.high !== null;
     return `${value(grams.low)}${grams.high === null ? "" : `–${value(grams.high)}`} ${many ? usUnit.plural : usUnit.singular}`;
