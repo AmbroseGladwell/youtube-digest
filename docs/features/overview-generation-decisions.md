@@ -732,8 +732,8 @@ hears. Seven points of 40 words was 4 minutes of speech for two hours of talk.
 **Why ten and not more.** A two-hour source could afford twelve to fifteen points inside nine
 minutes (`overview-quality.md`, "What scales and what does not"), but past ten a list read
 aloud stops explaining and starts listing. Grouping points into themes was dropped: a new
-output shape for a problem nobody has shown at ten. OV-228's blind listen is where it would
-show up. `MOST_KEY_POINTS` holds the ten in the record, the share and the generation schema.
+output shape for a problem nobody has shown at ten. OV-228's blind listen (14 Nov 2026) found
+no such problem: the new note won all seven pairs, so grouping stays out. `MOST_KEY_POINTS` holds the ten in the record, the share and the generation schema.
 
 **Long sources only, for the rest too.** Above 6,000 words the prompt says the points must
 represent the whole source through to its end, and that a point left out is lost to anyone
