@@ -85,10 +85,43 @@ questions say "episode".
 model finds a real connection. Fewer than nine means a source with few ideas, or some came back blank or
   too long.
 
+## Taking a question to an assistant
+
+The app never answers a question. A tap opens the reader's own assistant in a new tab, its text
+box filled in where that works. Tested by the owner on 14 November 2026.
+
+| Assistant | How the question arrives (`FOLLOW_UP_ASSISTANTS`) |
+|---|---|
+| Claude | `claude.ai/new?q=`, filled in, under Claude's own caution banner, which we can't change |
+| ChatGPT | `chatgpt.com/?q=`, filled in |
+| Gemini | `gemini.google.com/app?q=` opens but stays empty, so the prompt is copied and Gemini opened for the reader to paste |
+
+**What it carries** (`followUpPrompt`):
+
+- **Connected to The Overview:** an instruction to read the overview with `get_overview`, and its
+  transcript with `get_transcript` rather than the web, citing its timestamps; then
+  `<question>…</question>` and `<overview>title (The Overview id …)</overview>`. Without the
+  instruction ChatGPT answered from the web and cited outside transcript sites.
+- **Not connected:** `<question>…</question>` and the whole note as Markdown inside
+  `<overview>…</overview>`.
+
+**Too long for a link** (`followUpHandOff`): a link longer than 10,700 characters, the longest the
+owner has seen fill in, is copied and the assistant opened instead, so a prompt never arrives cut
+short. A typical 20-minute talk's note comes to about 10,400, so longer notes are copied until a
+longer link is tested.
+
+**Which assistant** (`followUpAssistantFor`): the synced setting "Ask follow-up questions in"
+(`Settings.followUpAssistant`: Claude, ChatGPT or Gemini). Until the reader picks, a reader whose
+connections are all to one known assistant, by the name its client registered with
+(`connectionAssistant`), gets that one; anyone else is asked on their first tap. "Connected" is
+whether a connection is to the assistant in use.
+
+**Hiding them:** `SectionsEnabled.followUpQuestions`, on by default and for settings saved before it.
+
 ## Not built yet
 
-- The chips and "Different questions", the assistant links, the synced "Ask follow-up questions in" setting, the
-  Settings switch, and their events (`overview.followUps.*`). These follow a Claude Design round
-  briefed with real questions from the harness.
+- The chips and "Different questions", the assistant line and picker, the Settings rows, and their
+  events (`overview.followUps.shown`, `.opened`, `.copied`, `settings.followUpAssistantChanged`,
+  never the question text). These follow the Claude Design round on the card.
 - The sharing dialog's "Kept private" list doesn't name the questions yet, because they aren't
   shown anywhere. It names them when the chips ship.

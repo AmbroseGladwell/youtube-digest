@@ -96,7 +96,7 @@ describe("personalisationRowValue", () => {
     );
     expect(
       personalisationRowValue(
-        { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false, resources: false },
+        { verdict: false, selling: false, howToApply: false, watchAnyway: false, steps: false, resources: false, followUpQuestions: false },
         EMPTY_ABOUT_YOU,
       ),
     ).toBe("About you not set · Summary and key points only");

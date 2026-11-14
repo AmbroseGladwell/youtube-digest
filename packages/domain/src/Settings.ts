@@ -18,6 +18,7 @@ import { TagAliases } from "./TagAliases.js";
 import { LearnedItems } from "./LearnedItem.js";
 import { DEFAULT_PLAYLIST_ORDER, PlaylistOrder } from "./PlaylistOrder.js";
 import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
+import { FollowUpAssistant } from "./FollowUpAssistant.js";
 
 export const SectionsEnabled = z.object({
   verdict: z.boolean(),
@@ -29,6 +30,9 @@ export const SectionsEnabled = z.object({
   // Resources it points to (OV-203). Hides the block only: resources are still made and kept,
   // since no article text is kept to make them from later. On for settings saved before it.
   resources: z.boolean().catch(true),
+  // Questions to ask next (OV-266). Hides them only: they're still written and kept. On for
+  // settings saved before it.
+  followUpQuestions: z.boolean().catch(true),
 });
 export type SectionsEnabled = z.infer<typeof SectionsEnabled>;
 
@@ -39,6 +43,7 @@ export const DEFAULT_SECTIONS_ENABLED: SectionsEnabled = {
   watchAnyway: true,
   steps: true,
   resources: true,
+  followUpQuestions: true,
 };
 
 export const Settings = z.object({
@@ -97,6 +102,10 @@ export const Settings = z.object({
   theme: ThemeMode.catch(DEFAULT_THEME_MODE),
   accentColour: AccentColour.catch(DEFAULT_ACCENT_COLOUR),
   headImageSize: HeadImageSize.catch(DEFAULT_HEAD_IMAGE_SIZE),
+  // "Ask follow-up questions in": the assistant a question to ask next opens, on every device.
+  // Null until the reader picks one, when a single connected assistant stands in
+  // (docs/features/follow-up-questions.md).
+  followUpAssistant: FollowUpAssistant.nullable().catch(null),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -126,4 +135,5 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: DEFAULT_THEME_MODE,
   accentColour: DEFAULT_ACCENT_COLOUR,
   headImageSize: DEFAULT_HEAD_IMAGE_SIZE,
+  followUpAssistant: null,
 };
