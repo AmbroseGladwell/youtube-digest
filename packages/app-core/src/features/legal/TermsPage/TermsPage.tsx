@@ -174,6 +174,11 @@ const sections: readonly LegalSection[] = [
           our part.
         </p>
         <p>
+          Following a playlist and finding a podcast episode on its show's YouTube channel use YouTube API Services. By using them you agree
+          to be bound by <a href="https://www.youtube.com/t/terms">YouTube's Terms of Service</a>, and what YouTube receives is covered by{" "}
+          <a href="https://policies.google.com/privacy">Google's privacy policy</a>.
+        </p>
+        <p>
           Apple Podcasts and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries and regions. Spotify is
           a trademark of Spotify AB.
         </p>

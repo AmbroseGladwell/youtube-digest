@@ -27,6 +27,10 @@ R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
 # The YouTube Data API key followed playlists are read with; without it playlists cannot be followed
 # (docs/features/playlists.md, "Looking a playlist up").
 YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+# Podcast Index, the directory a Spotify link's show is looked up in before Apple's; the two go
+# together (docs/features/podcast-links.md, "The directories").
+PODCAST_INDEX_API_KEY=${PODCAST_INDEX_API_KEY}
+PODCAST_INDEX_API_SECRET=${PODCAST_INDEX_API_SECRET}
 
 # Overviews made on our key, through our server, with GPT-6.1 Sol; unset, the server makes none
 # (docs/architecture/tiers.md). OUR_KEY_DAILY_GENERATIONS is the global daily cap behind every plan.

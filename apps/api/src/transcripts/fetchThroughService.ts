@@ -47,8 +47,7 @@ export const budgetExhausted = () =>
   );
 
 // From our own address first, which costs nothing, and through the residential proxy only
-// when YouTube turned that away (docs/architecture/server-side-transcripts.md). Any YouTube
-// request goes this way, not only a caption fetch (docs/features/podcast-on-youtube.md).
+// when YouTube turned that away (docs/architecture/server-side-transcripts.md).
 export async function throughService<T>(
   fetches: ServiceFetches,
   budget: ProxyBudget,
