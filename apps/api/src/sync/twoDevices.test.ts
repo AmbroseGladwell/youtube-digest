@@ -47,6 +47,7 @@ test("what one device writes, another device on the same account reads back exac
     read: true,
     favourite: false,
     userTags: ["later"],
+    asked: [],
   });
   assert.deepEqual(await phone.overviews.listTopics(), [topic]);
   assert.deepEqual(await phone.settings.get(), { ...DEFAULT_SETTINGS, readerContext: "A cook." });
@@ -89,7 +90,7 @@ test("two devices editing different fields of one record both end up with both e
   await phone.sync();
   await laptop.sync();
 
-  const expected = { overviewId: overview.id, read: true, favourite: true, userTags: [] };
+  const expected = { overviewId: overview.id, read: true, favourite: true, userTags: [], asked: [] };
   assert.deepEqual(await laptop.overviews.getOverviewState(overview.id), expected);
   assert.deepEqual(await phone.overviews.getOverviewState(overview.id), expected);
   await testApp.close();
@@ -115,6 +116,7 @@ test("a device's own unpushed edit stays visible on it while the other device's 
     read: true,
     favourite: true,
     userTags: [],
+    asked: [],
   });
   await testApp.close();
 });
@@ -403,6 +405,7 @@ test("two devices that generate the same video offline end with one overview car
       read: true,
       favourite: true,
       userTags: ["later"],
+      asked: [],
     });
     assert.equal(await device.overviews.getOverview(onPhone.id), null);
     assert.deepEqual(await device.storage.listPending(), []);

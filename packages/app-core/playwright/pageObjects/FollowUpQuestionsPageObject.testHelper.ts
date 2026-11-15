@@ -98,6 +98,14 @@ export class FollowUpQuestionsPageObject extends PageObject {
   newTabs = (): Promise<URL[]> =>
     this.page.evaluate(() => (window as unknown as { openedTabs: string[] }).openedTabs).then((urls) => urls.map((url) => new URL(url)));
 
+  verifyReceiptsRead = (receipts: string[]) =>
+    this.step(`verifyReceiptsRead ${receipts.join(" | ")}`, () => expect(this.get(followUpQuestionsTestIds.receipt)).toHaveText(receipts));
+
+  verifyQuestionDescribed = (index: number, description: string) =>
+    this.step(`verifyQuestionDescribed ${index} ${description}`, () =>
+      expect(this.questions().nth(index)).toHaveAccessibleDescription(description),
+    );
+
   verifyQuestionIsFocused = (index: number) =>
     this.step(`verifyQuestionIsFocused ${index}`, () => expect(this.questions().nth(index)).toBeFocused());
 }

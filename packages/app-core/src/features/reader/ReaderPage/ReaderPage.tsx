@@ -642,6 +642,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   key={`follow-ups-${overviewId}`}
                   overview={overview}
                   questions={overview.followUpQuestions ?? []}
+                  asked={state.asked}
+                  onAsked={(asked) => setOverviewState.mutate({ overviewId, patch: { asked } })}
                   compact={isPanel || isPhone}
                   analytics={reader.followUps}
                 />

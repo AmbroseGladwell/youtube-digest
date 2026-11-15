@@ -1,5 +1,6 @@
 import {
   CURRENT_SCHEMA_VERSIONS,
+  AskedQuestions,
   DEFAULT_OVERVIEW_STATE,
   DEFAULT_SETTINGS,
   FOLLOWED_PLAYLIST_MIGRATIONS,
@@ -566,5 +567,6 @@ function stateOf(raw: unknown): FoldableState {
     read: migrated?.read === true,
     favourite: migrated?.favourite === true,
     userTags: migrated === null ? [] : strings(migrated.userTags),
+    asked: AskedQuestions.catch([]).parse(migrated?.asked),
   };
 }

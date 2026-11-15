@@ -4,6 +4,7 @@ export const followUpQuestionsTestIds = {
   change: "FollowUpQuestions.change",
   item: "FollowUpQuestions.item",
   question: "FollowUpQuestions.question",
+  receipt: "FollowUpQuestions.receipt",
   different: "FollowUpQuestions.different",
   count: "FollowUpQuestions.count",
   said: "FollowUpQuestions.said",

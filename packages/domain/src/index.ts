@@ -49,6 +49,7 @@ export * from "./TranscriptSegment.js";
 export * from "./StoredTranscript.js";
 export * from "./BigPicture.js";
 export * from "./FollowUpQuestions.js";
+export * from "./AskedQuestion.js";
 export * from "./FollowUpAssistant.js";
 export * from "./followUpAssistantFor.js";
 export * from "./followUpHandOff.js";

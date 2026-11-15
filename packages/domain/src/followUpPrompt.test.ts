@@ -7,6 +7,7 @@ import { makeOverview } from "./OverviewFactory.testHelper.js";
 const overview = makeOverview({
   id: OverviewId.parse("e2878f61-f856-4da1-958d-c102054ab82c"),
   coreClaim: "Taste is the differentiator once AI makes building cheap.",
+  followUpQuestions: [{ question: "How does an editor decide which of twenty ideas to keep?", forReader: false }],
 });
 overview.source.title = "How to scale intent, quality, and artistry with AI";
 const question = "Why is the editor role critical when using AI for product design?";
@@ -20,11 +21,12 @@ test("connected, the prompt names the overview for the assistant to read through
   assert.match(CONNECTED_FOLLOW_UP_INSTRUCTION, /get_overview.*get_transcript rather than searching the web/);
 });
 
-test("not connected, the prompt carries the question and the whole note", () => {
+test("not connected, the prompt carries the question and the whole note, without the note's own questions", () => {
   const prompt = followUpPrompt(question, overview, false);
 
   assert.ok(prompt.startsWith(`<question>${question}</question>\n\n<overview>\n# How to scale intent`));
   assert.match(prompt, /Taste is the differentiator once AI makes building cheap\./);
   assert.ok(prompt.endsWith("</overview>"));
   assert.doesNotMatch(prompt, /The Overview id|get_overview/);
+  assert.doesNotMatch(prompt, /Questions to ask next|twenty ideas/);
 });

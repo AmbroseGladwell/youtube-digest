@@ -147,6 +147,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-15 | privacy | OV-266 | Your library: taking a question to ask next to an assistant notes which question, which assistant and when, kept and synced with read and favourite; the settings list names which assistant questions open in. |
 | 2026-11-15 | privacy | OV-266 | Tapping a question to ask next opens the assistant the reader chooses with the question and, unless it's connected, the whole overview, in the link or copied to paste; it goes from the browser to that provider, not through us. |
 | 2026-11-15 | terms | OV-266 | Assistants: a question to ask next opens the chosen assistant with the question and the overview, sent from the browser; what happens there is between the reader and its provider. |
 | 2026-11-14 | privacy | OV-266 | About you and what we have learned also shape the questions to ask next; an assistant you connect reads them with the overview, and a shared link never carries them. |

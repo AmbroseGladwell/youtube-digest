@@ -78,6 +78,7 @@ $spring: cubic-bezier(0.34, 1.7, 0.64, 1);
 // Design 266j: a set settles 40ms apart, as Resources' items do, and leaves in 120ms. Arrival
 // (266an) is the same motion, once, when the block comes into view; rows hold their space.
 .item {
+  position: relative;
   display: flex;
   opacity: 1;
   transform: none;
@@ -85,6 +86,30 @@ $spring: cubic-bezier(0.34, 1.7, 0.64, 1);
     opacity 220ms,
     transform 260ms $settle;
   transition-delay: calc(var(--i) * 40ms);
+}
+
+// Design 266aj: "Asked in Claude · just now" under the tail, in the gap already there, so
+// nothing moves; fading in only after a tap here, and simply there on a later visit.
+.receipt {
+  position: absolute;
+  right: 4px;
+  bottom: -21px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.fresh {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: followUpReceiptIn 240ms 120ms both;
+  }
+}
+
+@keyframes followUpReceiptIn {
+  from {
+    opacity: 0;
+  }
 }
 
 .leaving .item {
@@ -209,6 +234,10 @@ $spring: cubic-bezier(0.34, 1.7, 0.64, 1);
 
 // Design 266ac, 266ad: full width, a size down, on a phone and in the panel.
 .compact {
+  .askedItem {
+    margin-bottom: 1.25rem;
+  }
+
   .bubble {
     min-height: 3rem;
   }

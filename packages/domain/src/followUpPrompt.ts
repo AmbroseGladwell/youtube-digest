@@ -8,10 +8,11 @@ export const CONNECTED_FOLLOW_UP_INSTRUCTION =
   "read its transcript with get_transcript rather than searching the web. Cite the overview's timestamps.";
 
 // What a question takes to the reader's assistant. Connected to The Overview, it names the
-// overview for the assistant to read; otherwise it carries the whole note.
+// overview for the assistant to read; otherwise it carries the whole note, less its own questions,
+// so the assistant answers the one asked rather than all nine (owner, 15 November 2026).
 export function followUpPrompt(question: string, overview: Overview, connected: boolean): string {
   const asked = `<question>${question}</question>`;
   return connected
     ? `${CONNECTED_FOLLOW_UP_INSTRUCTION}\n${asked}\n<overview>${overview.source.title} (The Overview id ${overview.id})</overview>`
-    : `${asked}\n\n<overview>\n${overviewMarkdown(overview)}</overview>`;
+    : `${asked}\n\n<overview>\n${overviewMarkdown({ ...overview, followUpQuestions: null })}</overview>`;
 }

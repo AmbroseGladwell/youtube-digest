@@ -163,7 +163,7 @@ test.describe("selecting on the web", () => {
     backendSimulator,
   }) => {
     seed(backendSimulator);
-    backendSimulator.overviews.seedState({ overviewId: sink.id, read: true, favourite: true, userTags: [] });
+    backendSimulator.overviews.seedState({ overviewId: sink.id, read: true, favourite: true, userTags: [], asked: [] });
     const library = await launcher.launchExpectingLibrary();
     await library.filterPanel.clickStatusChip("unread");
     await library.startSelecting();

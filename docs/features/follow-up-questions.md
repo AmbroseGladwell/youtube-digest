@@ -103,7 +103,8 @@ box filled in where that works. Tested by the owner on 14 November 2026.
   `<question>…</question>` and `<overview>title (The Overview id …)</overview>`. Without the
   instruction ChatGPT answered from the web and cited outside transcript sites.
 - **Not connected:** `<question>…</question>` and the whole note as Markdown inside
-  `<overview>…</overview>`.
+  `<overview>…</overview>`, less its own Questions to ask next (owner, 15 November 2026), so the
+  assistant answers the one asked rather than all nine. The Markdown export and MCP keep them.
 
 **Too long for a link** (`followUpHandOff`): Claude and ChatGPT filled in whole from links of up to
 about 51,000 characters in the owner's test, so a link longer than 50,000 is copied and the
@@ -152,6 +153,14 @@ Built in `FollowUpQuestions` and `FollowUpAssistantMenu`.
   refuses the copy it says so ("That couldn't be copied. Gemini is opening in a new tab.") rather
   than claiming it worked; the designs don't draw that case. A filled-in tab is announced only to
   the live region ("Opening Claude in a new tab"), since the new tab takes the reader's eye.
+- **"Asked in Claude · just now"** fades in under a question's tail after a tap that hands it off,
+  in the gap already there, and stays: a later visit reads "Asked in ChatGPT · 3 days ago" (266aj).
+  It's the question's accessible description too. Each ask is kept in the reader's own state
+  (`OverviewState.asked`: the question's words, the assistant and `askedAt`), synced with read and
+  favourite and never on a shared link. Keyed by the words, so a rewritten overview's new
+  questions start unasked; recording an ask drops asks of questions the overview no longer has,
+  and two copies of one overview fold to each question's latest ask. A patch replaces the whole
+  list, so two devices asking at the same moment can lose one ask, as with `userTags`.
 - **Not read aloud**, like Resources: the narration ends where it did. Nothing on the shared page,
   and the sharing dialog lists them under Kept private. Older overviews show nothing.
 - **Events** (`reader.followUps.*`, never the question): `asked` with the assistant, prefill or
@@ -161,9 +170,6 @@ Built in `FollowUpQuestions` and `FollowUpAssistantMenu`.
 
 ## Not built yet
 
-- **"Asked in Claude · just now"** under a question already taken further (266aj), kept on later
-  visits. It needs an `askedAt` and assistant per question in the reader's own synced state, never
-  on the shared page; it comes as its own change.
 - **Settings › Connections' chooser** (OV-301), which the designs make the one place the assistant
   is chosen outside the block, with the Personalisation line "Questions open in the assistant you
   choose in Connections." pointing to it. Until then the choice is made under the questions.

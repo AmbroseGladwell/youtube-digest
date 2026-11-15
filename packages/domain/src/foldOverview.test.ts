@@ -28,17 +28,17 @@ test("the tag union is capped at what a record may hold, keeping the winner's ta
 
 test("read and favourite are kept if either copy had them, and user tags are a union", () => {
   const folded = foldOverviewState(
-    { read: false, favourite: true, userTags: ["later"] },
-    { read: true, favourite: false, userTags: ["later", "work"] },
+    { read: false, favourite: true, userTags: ["later"], asked: [] },
+    { read: true, favourite: false, userTags: ["later", "work"], asked: [] },
   );
 
-  assert.deepEqual(folded, { read: true, favourite: true, userTags: ["later", "work"] });
+  assert.deepEqual(folded, { read: true, favourite: true, userTags: ["later", "work"], asked: [] });
 });
 
 test("only the fields a fold changed are reported, comparing lists by their items", () => {
-  const before = { read: false, favourite: false, userTags: ["a"] };
+  const before = { read: false, favourite: false, userTags: ["a"], asked: [] };
 
-  assert.deepEqual(changedFields(before, { read: true, favourite: false, userTags: ["a"] }), { read: true });
-  assert.deepEqual(changedFields(before, { read: false, favourite: false, userTags: ["a", "b"] }), { userTags: ["a", "b"] });
+  assert.deepEqual(changedFields(before, { ...before, read: true }), { read: true });
+  assert.deepEqual(changedFields(before, { ...before, userTags: ["a", "b"] }), { userTags: ["a", "b"] });
   assert.deepEqual(changedFields(before, { ...before }), {});
 });
