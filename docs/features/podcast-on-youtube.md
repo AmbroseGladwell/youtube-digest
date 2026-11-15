@@ -32,23 +32,29 @@ by the same rules (`matchUpload.ts`), so an episode one finds, the other would.
 This is the extension's search, on YouTube's own screens; our server's follows the same steps through
 the Data API ("Our server's search").
 
-1. **The show's channels:** YouTube's search, filtered to channels, for the show's name. The first
+1. **A video search for the episode's title,** with the show's name before it. A result is the
+   episode by its title and length (step 3's rule) when its channel names the show, and, on any other
+   channel, when it was also listed within three days of the episode's date. This finds a show
+   published on its publisher's channel: The Daily's episodes go up on "New York Times Podcasts",
+   which no search for "The Daily" reaches (OV-304, 15 Nov 2026). The date is what keeps another
+   show's video with a short, common title ("Mailbag") from being taken.
+2. **The show's channels:** YouTube's search, filtered to channels, for the show's name. The first
    three are tried.
-2. **By title, on each one's first page of uploads:** the episode's title nearly word for word
+3. **By title, on each one's first page of uploads:** the episode's title nearly word for word
    (80% of its words) on an upload within 10% or 3 minutes of its length. A clip has the title and
    not the length, so it is never taken for the episode. Titles whose numbers disagree are two
    episodes: "Part 2" is not "Part 1", though every other word matches. A number on one side only
    is fine, since shows drop the episode number on YouTube.
-3. **Further down the show's channel,** the first of the three whose name carries the show's
+4. **Further down the show's channel,** the first of the three whose name carries the show's
    (60% of its words), five more pages of 30, by title the same way.
-4. **By description, for an upload that was retitled:** shows often give the YouTube upload a
+5. **By description, for an upload that was retitled:** shows often give the YouTube upload a
    different title ("241. Susie Wiles Out, Stephen Miller In…" goes up as "It's Official: Trump's
    Grift…"). Candidates are uploads within 3% or 90 seconds of the episode's length, listed around
    its date. Each one's player response, at most five, gives its full description and exact date.
    An upload is the episode when the description holds at least 40% of the episode's own words, its
    date is within three days, and it leads the next candidate by at least 0.1.
 
-At most 14 requests to YouTube: one search, three first pages, five more pages, five player
+At most 15 requests to YouTube: two searches, three first pages, five more pages, five player
 responses. A failure YouTube answers with (429, a block, a shape we don't know) is the same named
 `TranscriptFetchFailure` the caption rungs use, so the ladder above decides what to try next.
 
@@ -56,20 +62,28 @@ responses. A failure YouTube answers with (429, a block, a shape we don't know) 
 
 Through the YouTube Data API v3, with `YOUTUBE_API_KEY`, the key playlists already use:
 
-1. `search.list` for channels by the show's name, the first three (`type=channel`).
-2. `channels.list` for their uploads playlists, one call for all three.
-3. For each, `playlistItems.list` for a page of 50 uploads and `videos.list` for their titles,
+One search, and the show's channel taken from its results rather than a second search, since
+searches are the scarce part of the quota:
+
+1. `search.list` for videos, the show's name and the episode's title, the first ten (`type=video`).
+2. `videos.list` for their lengths and exact dates, one call. The episode is a result by step 1's
+   rule above, with the exact date in place of YouTube's rounded one.
+3. Otherwise **the show's channels among the results**, those whose name carries the show's, at most
+   three. None is no match. `channels.list` for their uploads playlists, one call.
+4. For each, `playlistItems.list` for a page of 50 uploads and `videos.list` for their titles,
    lengths, descriptions and exact dates, 50 at a time. The title rule is tried on each first page,
-   then up to five more pages of the show's own channel.
-4. The description rule over those uploads, with no further calls: `videos.list` already gave every
+   then up to five more pages of the first channel.
+5. The description rule over those uploads, with no further calls: `videos.list` already gave every
    description and exact date, which the extension needs a player response for.
 
-A search costs 1 search call and 3 quota units when the episode is on the first channel's first
-page, and at most 1 search call and 17 units. The default allowance is 10,000 units a day, shared
-with playlists, and **100 searches a day**, in search's own smaller allowance, so our server can
-search for at most about 100 episodes a day. That covers readers without the extension, and the
-extension's own search, on the reader's connection, costs us nothing. A refusal from the API, as when
-either allowance is spent, is `source-unavailable` for that episode; nothing is matched wrongly.
+So the extension's second search, for channels by the show's name, isn't made: a show's channel that
+no result for its episode's title comes from isn't looked in. A search costs 1 search call and 1
+quota unit when a result is the episode, and at most 1 search call and 15 units. The default
+allowance is 10,000 units a day, shared with playlists, and **100 searches a day**, in search's own
+smaller allowance, so our server can search for at most about 100 episodes a day. That covers readers
+without the extension, and the extension's own search, on the reader's connection, costs us nothing.
+A refusal from the API, as when either allowance is spent, is `source-unavailable` for that episode;
+nothing is matched wrongly.
 The log line `podcast episode searched on youtube` records each search's units.
 
 ## An episode's own words

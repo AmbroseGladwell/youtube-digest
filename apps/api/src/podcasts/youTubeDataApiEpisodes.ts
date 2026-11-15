@@ -1,14 +1,14 @@
 import { z } from "zod";
 import {
-  daysAgo,
   descriptionShare,
   DESCRIPTION_LEAD,
   DESCRIPTION_WORDS_SHARED,
   FEWEST_KEYWORDS,
-  MOST_DAYS_APART,
   MOST_DESCRIPTIONS_READ,
   namesTheShow,
+  publishedNearItsDate,
   retitledLengthMatches,
+  searchedVideoMatch,
   titleMatch,
   type EpisodeOnYouTube,
   type EpisodeToFind,
@@ -17,7 +17,9 @@ import {
 import { youTubeDataApiGet } from "../youTubeDataApi/youTubeDataApiGet.js";
 
 const SearchResponse = z.object({
-  items: z.array(z.object({ id: z.object({ channelId: z.string().optional() }), snippet: z.object({ title: z.string() }) })),
+  items: z.array(
+    z.object({ id: z.object({ videoId: z.string().optional() }), snippet: z.object({ channelId: z.string(), channelTitle: z.string() }) }),
+  ),
 });
 
 const ChannelsResponse = z.object({
@@ -52,6 +54,11 @@ interface Upload {
   age: null;
 }
 
+interface SearchedVideo extends Upload {
+  channelId: string;
+  channelTitle: string;
+}
+
 interface Channel {
   title: string;
   uploadsId: string;
@@ -71,6 +78,7 @@ export interface YouTubeEpisodes {
 }
 
 const CHANNELS_TRIED = 3;
+const VIDEOS_SEARCHED = 10;
 const PAGE_SIZE = 50;
 const MORE_PAGES = 5;
 const ISO_DURATION = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
@@ -83,11 +91,12 @@ export function isoDurationSeconds(duration: string | undefined): number | null 
   return total > 0 ? total : null;
 }
 
-// The same episode on the show's own channel, found through the YouTube Data API on our key: the
-// show's channels by name, each one's uploads with their lengths, and the episode among them by
-// the rules the extension's search uses, its title and length or, retitled, its description and
-// date. Only its captions are read any other way, as no API offers them
-// (docs/features/podcast-on-youtube.md, "Our server's search"; OV-294).
+// The same episode on YouTube, found through the YouTube Data API on our key with one search: a
+// video search for its title, the episode among the results by its title, length and date on any
+// channel, then the show's own channel among the results, its uploads, and the episode there by
+// its title and length or, retitled, its description and date: the rules the extension's search
+// uses. Only its captions are read any other way, as no API offers them
+// (docs/features/podcast-on-youtube.md, "Our server's search"; OV-294, OV-304).
 export function youTubeDataApiEpisodes({
   apiKey,
   youTubeFetch,
@@ -124,10 +133,7 @@ export function youTubeDataApiEpisodes({
   };
 
   const sameByDescription = (episode: EpisodeToFind, upload: Upload, today: Date): boolean =>
-    episode.publishedAt !== null &&
-    upload.publishedAt !== null &&
-    Math.abs(daysAgo(upload.publishedAt, today) - daysAgo(episode.publishedAt, today)) <= MOST_DAYS_APART &&
-    retitledLengthMatches(episode, upload.lengthSeconds);
+    publishedNearItsDate(episode, upload.publishedAt, today) && retitledLengthMatches(episode, upload.lengthSeconds);
 
   return {
     async find(episode) {
@@ -147,21 +153,39 @@ export function youTubeDataApiEpisodes({
         const uploads = await videos((listed?.items ?? []).map((item) => item.contentDetails.videoId));
         return { uploads, next: listed?.nextPageToken ?? null };
       };
-      const found = (upload: Upload, channel: Channel, via: EpisodeOnYouTube["via"]): YouTubeEpisodeSearch => ({
-        found: { videoId: upload.videoId, channelTitle: channel.title, via },
+      const found = (upload: Upload, channelTitle: string, via: EpisodeOnYouTube["via"]): YouTubeEpisodeSearch => ({
+        found: { videoId: upload.videoId, channelTitle, via },
         units,
         searches: 1,
       });
       const none = (): YouTubeEpisodeSearch => ({ found: null, units, searches: 1 });
+      const today = now();
 
       const searched = await get(
         "search",
-        { part: "snippet", type: "channel", q: episode.showName, maxResults: String(CHANNELS_TRIED) },
+        { part: "snippet", type: "video", q: `${episode.showName} ${episode.title}`, maxResults: String(VIDEOS_SEARCHED) },
         SearchResponse,
       );
-      const named = (searched?.items ?? []).flatMap(({ id, snippet }) =>
-        id.channelId === undefined ? [] : [{ id: id.channelId, title: snippet.title }],
+      const results = (searched?.items ?? []).flatMap(({ id, snippet }) =>
+        id.videoId === undefined ? [] : [{ videoId: id.videoId, ...snippet }],
       );
+      if (results.length === 0) return none();
+      units += 1;
+      const channelOf = new Map(results.map((result) => [result.videoId, result]));
+      const listed: SearchedVideo[] = (await videos(results.map((result) => result.videoId))).flatMap((upload) => {
+        const result = channelOf.get(upload.videoId);
+        return result === undefined ? [] : [{ ...upload, channelId: result.channelId, channelTitle: result.channelTitle }];
+      });
+      const byVideo = searchedVideoMatch(episode, listed, (video) => publishedNearItsDate(episode, video.publishedAt, today));
+      if (byVideo !== null) return found(byVideo, byVideo.channelTitle, "title");
+
+      const named = [
+        ...new Map(
+          results
+            .filter((result) => namesTheShow(result.channelTitle, episode.showName))
+            .map((result) => [result.channelId, { id: result.channelId, title: result.channelTitle }]),
+        ).values(),
+      ].slice(0, CHANNELS_TRIED);
       if (named.length === 0) return none();
       units += 1;
       const details = await get("channels", { part: "contentDetails", id: named.map((channel) => channel.id).join(",") }, ChannelsResponse);
@@ -175,24 +199,23 @@ export function youTubeDataApiEpisodes({
       for (const channel of channels) {
         const first = await page(channel, null);
         const byTitle = titleMatch(episode, first.uploads);
-        if (byTitle !== null) return found(byTitle, channel, "title");
+        if (byTitle !== null) return found(byTitle, channel.title, "title");
         firstPages.push({ channel, ...first });
       }
 
-      const showChannel = firstPages.find(({ channel }) => namesTheShow(channel.title, episode.showName));
+      const [showChannel] = firstPages;
       if (showChannel === undefined) return none();
       const uploads = [...showChannel.uploads];
       let next = showChannel.next;
       for (let more = 0; more < MORE_PAGES && next !== null; more += 1) {
         const following = await page(showChannel.channel, next);
         const byTitle = titleMatch(episode, following.uploads);
-        if (byTitle !== null) return found(byTitle, showChannel.channel, "title");
+        if (byTitle !== null) return found(byTitle, showChannel.channel.title, "title");
         uploads.push(...following.uploads);
         next = following.next;
       }
 
       if (episode.keywords.length < FEWEST_KEYWORDS || episode.publishedAt === null) return none();
-      const today = now();
       const scored = uploads
         .filter((upload) => sameByDescription(episode, upload, today))
         .slice(0, MOST_DESCRIPTIONS_READ)
@@ -201,7 +224,7 @@ export function youTubeDataApiEpisodes({
       const [best, runnerUp] = scored;
       if (best === undefined || best.share < DESCRIPTION_WORDS_SHARED) return none();
       if (runnerUp !== undefined && runnerUp.share > best.share - DESCRIPTION_LEAD) return none();
-      return found(best.upload, showChannel.channel, "description");
+      return found(best.upload, showChannel.channel.title, "description");
     },
 
     // Whether one video is the episode, by the same rules, from its own details: one unit.

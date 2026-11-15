@@ -65,3 +65,35 @@ export const videosTabAnswer = (rows: readonly UploadRow[], continuation: string
 export const nextPageAnswer = (rows: readonly UploadRow[], continuation: string | null = null) => ({
   onResponseReceivedActions: [{ appendContinuationItemsAction: { continuationItems: [...rows.map(lockup), ...more(continuation)] } }],
 });
+
+export interface VideoRow extends UploadRow {
+  channelId: string;
+  channelTitle: string;
+}
+
+// A search filtered to videos: each result a videoRenderer with the channel it is on.
+export const videoSearchAnswer = (...videos: VideoRow[]) => ({
+  contents: {
+    twoColumnSearchResultsRenderer: {
+      primaryContents: {
+        sectionListRenderer: {
+          contents: [
+            {
+              itemSectionRenderer: {
+                contents: videos.map(({ videoId, title, length, age, channelId, channelTitle }) => ({
+                  videoRenderer: {
+                    videoId,
+                    title: { runs: [{ text: title }] },
+                    lengthText: { simpleText: length },
+                    publishedTimeText: { simpleText: age },
+                    ownerText: { runs: [{ text: channelTitle, navigationEndpoint: { browseEndpoint: { browseId: channelId } } }] },
+                  },
+                })),
+              },
+            },
+          ],
+        },
+      },
+    },
+  },
+});

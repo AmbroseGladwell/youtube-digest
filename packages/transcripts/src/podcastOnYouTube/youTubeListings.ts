@@ -70,6 +70,22 @@ function fromVideoRenderer(video: unknown): ListedUpload | null {
   return { videoId: video.videoId, title: text(video.title), lengthSeconds: clockSeconds(length), age: age === "" ? null : age };
 }
 
+export interface ListedVideo extends ListedUpload {
+  channelId: string | null;
+  channelTitle: string;
+}
+
+// A video search's results, with the channel each is on.
+export function videosIn(searchResponse: unknown): ListedVideo[] {
+  return everyValueAt(searchResponse, "videoRenderer").flatMap((video) => {
+    const upload = fromVideoRenderer(video);
+    if (upload === null || upload.title === "" || !isObject(video)) return [];
+    const owner = video.ownerText ?? video.longBylineText;
+    const [channelId] = everyValueAt(owner, "browseId");
+    return [{ ...upload, channelId: typeof channelId === "string" ? channelId : null, channelTitle: text(owner) }];
+  });
+}
+
 export function uploadsIn(browseResponse: unknown): { uploads: ListedUpload[]; continuation: string | null } {
   const uploads = [
     ...everyValueAt(browseResponse, "lockupViewModel").map(fromLockup),

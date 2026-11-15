@@ -21,8 +21,8 @@ interface FakeChannel {
 }
 
 // search, channels, playlistItems and videos, answered in the Data API's own shapes, and refused
-// without the key in its header.
-function dataApiOver(channels: FakeChannel[]) {
+// without the key in its header. The video search finds `searchFinds`, by default every video.
+function dataApiOver(channels: FakeChannel[], searchFinds?: readonly string[]) {
   const asked: string[] = [];
   const youTubeFetch: YouTubeFetch = async (request) => {
     const url = new URL(request.url);
@@ -32,10 +32,16 @@ function dataApiOver(channels: FakeChannel[]) {
     const json = (body: unknown) => ({ status: 200, body: JSON.stringify(body) });
     const every = channels.flatMap((channel) => channel.videos);
     if (path === "search") {
+      assert.equal(url.searchParams.get("type"), "video");
       return json({
         items: channels
-          .slice(0, 3)
-          .map((channel) => ({ id: { kind: "youtube#channel", channelId: channel.id }, snippet: { title: channel.title } })),
+          .flatMap((channel) => channel.videos.map((video) => ({ channel, video })))
+          .filter(({ video }) => searchFinds === undefined || searchFinds.includes(video.id))
+          .slice(0, 10)
+          .map(({ channel, video }) => ({
+            id: { kind: "youtube#video", videoId: video.id },
+            snippet: { channelId: channel.id, channelTitle: channel.title, title: video.title },
+          })),
       });
     }
     if (path === "channels") {
@@ -91,7 +97,7 @@ test("ISO 8601 lengths become seconds, and nothing readable is no length", () =>
   assert.equal(isoDurationSeconds(undefined), null);
 });
 
-test("the episode is found by its title and length among its show's uploads, for a handful of quota units", async () => {
+test("the episode is found by its title and length among a video search's results, for one quota unit", async () => {
   const { episodes, asked } = dataApiOver([
     {
       id: "rip",
@@ -105,27 +111,30 @@ test("the episode is found by its title and length among its show's uploads, for
   const search = await episodes.find(EPISODE);
   assert.deepEqual(search, {
     found: { videoId: "episode00001", channelTitle: "The Rest Is Politics: US", via: "title" },
-    units: 3,
+    units: 1,
     searches: 1,
   });
-  assert.deepEqual(asked, ["search", "channels", "playlistItems", "videos"]);
+  assert.deepEqual(asked, ["search", "videos"]);
 });
 
-test("an episode further back is looked for in more pages of the show's own channel only", async () => {
-  const { episodes } = dataApiOver([
-    { id: "other", title: "Politics Daily Clips", videos: filler(50, 1000) },
-    {
-      id: "rip",
-      title: "The Rest Is Politics: US",
-      videos: [
-        ...filler(120),
-        { id: "episode00001", title: "Susie Wiles Out, Stephen Miller In: What Happens Now?", duration: "PT36M10S" },
-      ],
-    },
-  ]);
+test("an episode the search didn't list is looked for in more pages of the show's own channel only", async () => {
+  const { episodes } = dataApiOver(
+    [
+      { id: "other", title: "Politics Daily Clips", videos: filler(50, 1000) },
+      {
+        id: "rip",
+        title: "The Rest Is Politics: US",
+        videos: [
+          ...filler(120),
+          { id: "episode00001", title: "Susie Wiles Out, Stephen Miller In: What Happens Now?", duration: "PT36M10S" },
+        ],
+      },
+    ],
+    ["filler1000", "filler0"],
+  );
   const search = await episodes.find(EPISODE);
   assert.equal(search.found?.videoId, "episode00001");
-  assert.equal(search.units, 1 + 2 * 4);
+  assert.equal(search.units, 1 + 1 + 2 * 3);
 });
 
 test("a retitled upload is found by its description and date, but not when a neighbour is as close", async () => {
@@ -136,21 +145,67 @@ test("a retitled upload is found by its description and date, but not when a nei
     publishedAt: "2026-11-10T08:00:00Z",
     description: "Wiles goes, Miller comes in as chief of staff at the White House: loyalty, deportation and the succession under Trump.",
   };
-  const found = await dataApiOver([{ id: "rip", title: "The Rest Is Politics: US", videos: [retitled, ...filler(3)] }]).episodes.find(
-    EPISODE,
-  );
+  const found = await dataApiOver(
+    [{ id: "rip", title: "The Rest Is Politics: US", videos: [retitled, ...filler(3)] }],
+    ["filler0"],
+  ).episodes.find(EPISODE);
   assert.equal(found.found?.videoId, "retitled0001");
   assert.equal(found.found?.via, "description");
 
   const twin = { ...retitled, id: "retitled0002", publishedAt: "2026-11-11T08:00:00Z" };
-  const tied = await dataApiOver([{ id: "rip", title: "The Rest Is Politics: US", videos: [retitled, twin] }]).episodes.find(EPISODE);
+  const tied = await dataApiOver(
+    [{ id: "rip", title: "The Rest Is Politics: US", videos: [retitled, twin] }],
+    ["retitled0001"],
+  ).episodes.find(EPISODE);
   assert.equal(tied.found, null);
 });
 
-test("no channel by the show's name is no match, after the one search", async () => {
+test("nothing found by the search is no match, after the one search", async () => {
   const { episodes, asked } = dataApiOver([]);
   assert.deepEqual(await episodes.find(EPISODE), { found: null, units: 0, searches: 1 });
   assert.deepEqual(asked, ["search"]);
+});
+
+const PUBLISHER = { id: "nytpods", title: "Politics Network Podcasts" };
+
+test("on a publisher's channel that doesn't name the show, the episode is found by its title, length and date", async () => {
+  const { episodes, asked } = dataApiOver([
+    {
+      ...PUBLISHER,
+      videos: [
+        {
+          id: "onPublisher1",
+          title: "Susie Wiles Out, Stephen Miller In: What Happens Now?",
+          duration: "PT36M30S",
+          publishedAt: "2026-11-10T16:30:00Z",
+        },
+      ],
+    },
+  ]);
+  assert.deepEqual(await episodes.find(EPISODE), {
+    found: { videoId: "onPublisher1", channelTitle: "Politics Network Podcasts", via: "title" },
+    units: 1,
+    searches: 1,
+  });
+  assert.deepEqual(asked, ["search", "videos"]);
+});
+
+test("the same title and length on another channel, a year apart, isn't the episode, and no channel naming the show is no deeper look", async () => {
+  const { episodes, asked } = dataApiOver([
+    {
+      ...PUBLISHER,
+      videos: [
+        {
+          id: "onPublisher1",
+          title: "Susie Wiles Out, Stephen Miller In: What Happens Now?",
+          duration: "PT36M30S",
+          publishedAt: "2025-11-10T16:30:00Z",
+        },
+      ],
+    },
+  ]);
+  assert.deepEqual(await episodes.find(EPISODE), { found: null, units: 1, searches: 1 });
+  assert.deepEqual(asked, ["search", "videos"]);
 });
 
 test("one video is checked against the episode from its own details, for one unit", async () => {

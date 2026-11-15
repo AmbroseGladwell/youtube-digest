@@ -66,20 +66,26 @@ export const retitledLengthMatches = (episode: EpisodeToFind, uploadSeconds: num
 
 export const daysAgo = (iso: string, now: Date): number => (now.getTime() - Date.parse(iso)) / DAY_MS;
 
-// Uploads that could be the episode under another title: its length, and listed around its date.
-export function retitledCandidates(episode: EpisodeToFind, uploads: readonly ListedUpload[], now: Date): ListedUpload[] {
-  if (episode.publishedAt === null) return [];
+// Listed around the episode's date, by YouTube's rounded "3 weeks ago".
+export function listedNearItsDate(episode: EpisodeToFind, upload: ListedUpload, now: Date): boolean {
+  const age = upload.age === null ? null : ageInDays(upload.age);
+  if (episode.publishedAt === null || age === null) return false;
   const episodeDaysAgo = daysAgo(episode.publishedAt, now);
-  return uploads.filter((upload) => {
-    const age = upload.age === null ? null : ageInDays(upload.age);
-    return (
-      age !== null &&
-      lengthWithin(episode.durationSeconds, upload.lengthSeconds, CANDIDATE_LENGTH_SLACK) &&
-      episodeDaysAgo >= age.fewest - CANDIDATE_DAYS_SLACK &&
-      episodeDaysAgo <= age.most + CANDIDATE_DAYS_SLACK
-    );
-  });
+  return episodeDaysAgo >= age.fewest - CANDIDATE_DAYS_SLACK && episodeDaysAgo <= age.most + CANDIDATE_DAYS_SLACK;
 }
+
+// Published within three days of the episode, by an exact date.
+export const publishedNearItsDate = (episode: EpisodeToFind, publishedAt: string | null, now: Date): boolean =>
+  episode.publishedAt !== null &&
+  publishedAt !== null &&
+  Math.abs(daysAgo(publishedAt, now) - daysAgo(episode.publishedAt, now)) <= MOST_DAYS_APART;
+
+// Uploads that could be the episode under another title: its length, and listed around its date.
+export const retitledCandidates = (episode: EpisodeToFind, uploads: readonly ListedUpload[], now: Date): ListedUpload[] =>
+  uploads.filter(
+    (upload) =>
+      lengthWithin(episode.durationSeconds, upload.lengthSeconds, CANDIDATE_LENGTH_SLACK) && listedNearItsDate(episode, upload, now),
+  );
 
 export const descriptionShare = (keywords: readonly string[], description: string): number => {
   const words = noteWords(description);
@@ -98,3 +104,18 @@ export const namesTheShow = (channelTitle: string, showName: string): boolean =>
   const channelWords = new Set(nameWords(channelTitle));
   return show.length > 0 && show.filter((word) => channelWords.has(word)).length / show.length >= CHANNEL_NAME_WORDS_SHARED;
 };
+
+// Among a video search's results, from any channel: the episode's title and length, and, off the
+// show's own channel, its date too, since a short title can recur on another show. This finds a
+// show published on its publisher's channel ("New York Times Podcasts" for The Daily), which the
+// channel route never reaches (docs/features/podcast-on-youtube.md, "How it finds the episode").
+export function searchedVideoMatch<Video extends ListedUpload & { channelTitle: string }>(
+  episode: EpisodeToFind,
+  videos: readonly Video[],
+  nearItsDate: (video: Video) => boolean,
+): Video | null {
+  return titleMatch(
+    episode,
+    videos.filter((video) => namesTheShow(video.channelTitle, episode.showName) || nearItsDate(video)),
+  );
+}

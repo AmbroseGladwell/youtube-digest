@@ -4,7 +4,7 @@ import type { YouTubeFetchRequest } from "../YouTubeFetch.js";
 import { findEpisodeOnYouTube } from "./findEpisodeOnYouTube.js";
 import type { EpisodeToFind } from "./matchUpload.js";
 import { episodeKeywords } from "./noteWords.js";
-import { nextPageAnswer, searchAnswer, videosTabAnswer, type UploadRow } from "./youTubeListingFixtures.testHelper.js";
+import { nextPageAnswer, searchAnswer, videoSearchAnswer, videosTabAnswer, type UploadRow } from "./youTubeListingFixtures.testHelper.js";
 
 const NOW = new Date("2026-11-13T12:00:00.000Z");
 const SHOW = { channelId: "UCshow", title: "The Rest Is Politics US" };
@@ -30,18 +30,20 @@ const filler = (count: number, from = 0): UploadRow[] =>
   }));
 
 interface Script {
+  videoSearch?: unknown;
   search?: unknown;
   browse?: Record<string, unknown>;
   players?: Record<string, { description: string; published: string }>;
 }
 
-function youTubeOver({ search = searchAnswer(SHOW), browse = {}, players = {} }: Script) {
+function youTubeOver({ videoSearch = videoSearchAnswer(), search = searchAnswer(SHOW), browse = {}, players = {} }: Script) {
   const asked: string[] = [];
   const youTubeFetch = async ({ url, body }: YouTubeFetchRequest) => {
-    const payload = JSON.parse(body ?? "{}") as { browseId?: string; continuation?: string; videoId?: string };
+    const payload = JSON.parse(body ?? "{}") as { browseId?: string; continuation?: string; videoId?: string; params?: string };
     if (url.endsWith("/search")) {
-      asked.push("search");
-      return { status: 200, body: JSON.stringify(search) };
+      const forVideos = payload.params === "EgIQAQ==";
+      asked.push(forVideos ? "search:videos" : "search");
+      return { status: 200, body: JSON.stringify(forVideos ? videoSearch : search) };
     }
     if (url.endsWith("/browse")) {
       const key = payload.continuation ?? payload.browseId ?? "";
@@ -85,7 +87,7 @@ test("the episode's title on an upload of its length, on the show's first page, 
     },
   });
   assert.deepEqual(await result, { videoId: "match", channelTitle: SHOW.title, via: "title" });
-  assert.deepEqual(asked, ["search", "browse:UCshow"]);
+  assert.deepEqual(asked, ["search:videos", "search", "browse:UCshow"]);
 });
 
 test("a clip with the episode's title isn't the episode", async () => {
@@ -112,7 +114,7 @@ test("an older episode is found further down the show's uploads, page by page", 
     },
   });
   assert.equal((await result)?.videoId, "match");
-  assert.deepEqual(asked, ["search", "browse:UCshow", "browse:UCother", "browse:page2", "browse:page3"]);
+  assert.deepEqual(asked, ["search:videos", "search", "browse:UCshow", "browse:UCother", "browse:page2", "browse:page3"]);
 });
 
 test("a retitled upload is the episode when its description carries the episode's own words, on its date", async () => {
@@ -177,4 +179,37 @@ test("no channel named for the show means the episode isn't looked for by descri
 test("YouTube turning the search away is reported as the named failure the ladder reads", async () => {
   const youTubeFetch = async () => ({ status: 429, body: "" });
   await assert.rejects(findEpisodeOnYouTube(youTubeFetch, episode), { failure: "rate-limited" });
+});
+
+const PUBLISHER = { channelId: "UCpublisher", channelTitle: "Politics Network Podcasts" };
+const THE_EPISODE = { videoId: "onPublisher", title: "Susie Wiles Out, Stephen Miller In: What Happens Now?", length: "36:30" };
+
+test("on a publisher's channel that doesn't name the show, the episode is found by a video search, by title, length and date", async () => {
+  const { result, asked } = find({ videoSearch: videoSearchAnswer({ ...THE_EPISODE, age: "2 days ago", ...PUBLISHER }) });
+  assert.deepEqual(await result, { videoId: "onPublisher", channelTitle: "Politics Network Podcasts", via: "title" });
+  assert.deepEqual(asked, ["search:videos"]);
+});
+
+test("the same title and length on another channel, from another month, isn't the episode", async () => {
+  const { result, asked } = find({
+    videoSearch: videoSearchAnswer({ ...THE_EPISODE, age: "1 year ago", ...PUBLISHER }),
+    browse: { UCshow: videosTabAnswer(filler(3)) },
+  });
+  assert.equal(await result, null);
+  assert.deepEqual(asked.slice(0, 2), ["search:videos", "search"]);
+});
+
+test("on the show's own channel, a video search result needs only its title and length", async () => {
+  const { result } = find({
+    videoSearch: videoSearchAnswer({ ...THE_EPISODE, age: "1 year ago", channelId: SHOW.channelId, channelTitle: SHOW.title }),
+  });
+  assert.equal((await result)?.videoId, "onPublisher");
+});
+
+test("a clip with the episode's title in the video search isn't the episode", async () => {
+  const { result } = find({
+    videoSearch: videoSearchAnswer({ ...THE_EPISODE, length: "4:12", age: "2 days ago", ...PUBLISHER }),
+    browse: { UCshow: videosTabAnswer(filler(3)) },
+  });
+  assert.equal(await result, null);
 });
