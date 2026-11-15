@@ -18,6 +18,17 @@
   @include consent.note;
 }
 
+// Design 301f.
+.fromQuestion {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border-radius: 16px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.84375rem;
+  line-height: 1.45;
+}
+
 .intro {
   margin: 0;
   max-width: 60ch;

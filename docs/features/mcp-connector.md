@@ -484,9 +484,34 @@ you: it's off in Personalisation" when the reader's switch is off, or "…until 
 reconnected" for a connection without `profile:read`. `GET /api/connections` carries
 `readsProfile` for that. `last_used_at` is touched at most once an hour, so the
 line says "Used in the last hour", "Used today" or "Last used 14 September", never minutes.
-Below is the connector address (`<server>/mcp`, with Copy where the clipboard can be
-written), three steps for Claude, and with nothing connected, three questions to try, one
-of them across overviews.
+Below, setup asks one question first (OV-301, design 301a–301g): "Which assistant do you use?",
+with Claude, ChatGPT, Gemini and Other as a radio group of pills. Nothing below it until one is
+picked, so no one reads steps for an assistant they don't use; the steps that appear are
+announced. The pick is the synced setting questions to ask next open in (`followUpAssistant`,
+which takes "other" too; questions treat Other as no choice), so a reader who chose under a
+question arrives with it picked. Each assistant's steps live in `connectorSteps`, beside
+OV-266's `FOLLOW_UP_ASSISTANTS`, since menus change without notice:
+
+- **Claude:** copy the address (`<server>/mcp`, with Copy where the clipboard can be written),
+  add a custom connector under Settings › Connectors, sign in and allow it.
+- **ChatGPT:** the form itself, field by field: the icon to download
+  (`<server>/connector-icon.png`, 256 px and under ChatGPT's 10 KB), the name and description
+  and address to copy, OAuth, then Advanced OAuth settings (Dynamic Client Registration, with
+  CIMD and OIDC shown unavailable as expected; all three default scopes; base scopes empty;
+  endpoints as found), the custom-server notice, and signing in. No plan warning: the owner
+  added a custom connector on a free plan (15 Nov 2026). OpenAI's help pages don't say which
+  plans can; community reports say a Business or Team admin can turn Developer mode off.
+- **Gemini:** a tinted line first says its custom apps are for Google AI Pro or Ultra, in the
+  US, for over-18s, and that we haven't tested it; then the address and Settings › Connected
+  apps › Add a custom app.
+- **Other:** that any assistant supporting remote MCP servers with OAuth and dynamic client
+  registration can connect, and the address.
+
+Arriving from a question's "Set up a connection" (OV-266), a tinted note above says what
+happens next: "Connect ChatGPT, then go back to your question. It'll open in ChatGPT,
+connected.", or "Pick your assistant and connect it…" with none picked. It goes once that
+assistant is connected. With nothing connected, three questions to try follow, one of them
+across overviews.
 
 **Revoke asks once.** It cannot be undone, so the row turns into a confirmation that says
 so. Revoke access removes the row at once, sends the delete, and moves focus to the
@@ -499,7 +524,9 @@ The design's events are in the analytics catalogue under the app's own naming
 (`docs/architecture/analytics.md`, "Naming"): `mcp.consentScreen.shown` once a request
 has loaded, `mcp.consentScreen.approved`, and `mcp.consentScreen.declined` with the plan the
 reader was on, both sent as the page is left so they outlive it, and
-`mcp.settingsConnections.revoked` once the server has taken the revoke. The two that counted
+`mcp.settingsConnections.revoked` once the server has taken the revoke. Setup counts
+`assistantChosen` (which assistant), `addressCopied`, `fieldCopied` (name, description or
+address on ChatGPT's form) and `iconDownloaded`, never anything the reader typed. The two that counted
 a reader being shown the Plus card went with the gate (OV-104). Only a
 signed-in reader is counted, so a request looked at before signing in is not; the server
 still logs every decision and revoke itself, as above.

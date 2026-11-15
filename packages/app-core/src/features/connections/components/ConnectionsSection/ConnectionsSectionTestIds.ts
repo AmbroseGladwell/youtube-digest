@@ -8,4 +8,5 @@ export const connectionsSectionTestIds = {
   connectedLabel: "connections-section-connected-label",
   tryAsking: "connections-section-try-asking",
   error: "connections-section-error",
+  fromQuestion: "connections-section-from-question",
 };

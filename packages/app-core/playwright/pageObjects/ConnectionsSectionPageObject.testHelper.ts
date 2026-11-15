@@ -44,11 +44,56 @@ export class ConnectionsSectionPageObject extends PageObject {
   verifyConnectedLabelIsFocused = () =>
     this.step("verifyConnectedLabelIsFocused", () => expect(this.get(connectionsSectionTestIds.connectedLabel)).toBeFocused());
 
-  verifyShowsSetup = (address: string) =>
-    this.step(`verifyShowsSetup ${address}`, async () => {
-      await expect(this.get(connectorSetupTestIds.address)).toHaveText(address);
-      await this.expectToHaveCount(connectorSetupTestIds.step, 3);
+  verifyAsksWhichAssistant = () =>
+    this.step("verifyAsksWhichAssistant", async () => {
+      await expect(this.page.getByRole("radiogroup", { name: "Your assistant" }).getByRole("radio")).toHaveText([
+        "Claude",
+        "ChatGPT",
+        "Gemini",
+        "Other",
+      ]);
+      await this.expectToHaveCount(connectorSetupTestIds.steps, 0);
     });
+
+  chooseAssistant = (assistant: string) =>
+    this.step(`chooseAssistant ${assistant}`, () => this.click(connectorSetupTestIds.assistant(assistant)));
+
+  verifyAssistantChosen = (assistant: string) =>
+    this.step(`verifyAssistantChosen ${assistant}`, () =>
+      expect(this.get(connectorSetupTestIds.assistant(assistant))).toHaveAttribute("aria-checked", "true"),
+    );
+
+  verifyStepsRead = (steps: string[]) =>
+    this.step(`verifyStepsRead ${steps.length}`, () =>
+      expect(this.get(connectorSetupTestIds.step)).toHaveText(steps.map((step) => new RegExp(`^\\d?${escape(step)}`))),
+    );
+
+  verifyAddressIs = (address: string) =>
+    this.step(`verifyAddressIs ${address}`, () => expect(this.get(connectorSetupTestIds.address)).toHaveText(address));
+
+  verifyLimitReads = (limit: string | null) =>
+    this.step(`verifyLimitReads ${limit}`, () =>
+      limit === null
+        ? this.expectToHaveCount(connectorSetupTestIds.limit, 0)
+        : expect(this.get(connectorSetupTestIds.limit)).toHaveText(limit),
+    );
+
+  verifyFieldsRead = (fields: string[]) =>
+    this.step(`verifyFieldsRead ${fields.length}`, () =>
+      expect(this.get(connectorSetupTestIds.field)).toHaveText(fields.map((field) => new RegExp(`^${escape(field)}`))),
+    );
+
+  verifyIconDownloadsFrom = (href: string) =>
+    this.step(`verifyIconDownloadsFrom ${href}`, () => expect(this.get(connectorSetupTestIds.downloadIcon)).toHaveAttribute("href", href));
+
+  copyField = (field: string) => this.step(`copyField ${field}`, () => this.click(connectorSetupTestIds.copyField(field)));
+
+  verifyArrivalNoteReads = (note: string | null) =>
+    this.step(`verifyArrivalNoteReads ${note}`, () =>
+      note === null
+        ? this.expectToHaveCount(connectionsSectionTestIds.fromQuestion, 0)
+        : expect(this.get(connectionsSectionTestIds.fromQuestion)).toHaveText(note),
+    );
 
   verifyOffersExamples = (offered: boolean) =>
     this.step(`verifyOffersExamples ${offered}`, () =>
@@ -72,3 +117,5 @@ export class ConnectionsSectionPageObject extends PageObject {
   tryAgain = () =>
     this.step("tryAgain", () => this.get(connectionsSectionTestIds.error).getByRole("button", { name: "Try again" }).click());
 }
+
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

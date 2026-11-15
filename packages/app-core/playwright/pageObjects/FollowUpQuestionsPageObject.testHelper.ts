@@ -80,6 +80,9 @@ export class FollowUpQuestionsPageObject extends PageObject {
 
   clickCopyQuestion = () => this.step("clickCopyQuestion", () => this.page.getByTestId(followUpAssistantMenuTestIds.copyQuestion).click());
 
+  followSetUpConnection = () =>
+    this.step("followSetUpConnection", () => this.page.getByTestId(followUpAssistantMenuTestIds.setUpLink).click());
+
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
   // A tab the app opens is noted rather than loaded, so a test never reaches a real assistant.

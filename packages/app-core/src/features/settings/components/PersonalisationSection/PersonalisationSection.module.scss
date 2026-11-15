@@ -106,3 +106,16 @@
   color: var(--muted);
   text-wrap: pretty;
 }
+
+// Design 266aa: the way to the assistant questions open in.
+.jump {
+  color: var(--label);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}

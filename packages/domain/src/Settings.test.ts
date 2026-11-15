@@ -30,6 +30,7 @@ test("settings saved before the questions switch read with the questions shown, 
 test("an assistant this client doesn't know reads as none chosen, rather than taking the settings with it", () => {
   assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, followUpAssistant: "copilot" }).followUpAssistant, null);
   assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, followUpAssistant: "chatgpt" }).followUpAssistant, "chatgpt");
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, followUpAssistant: "other" }).followUpAssistant, "other");
 });
 
 test("settings saved before the resources switch read with resources shown", () => {

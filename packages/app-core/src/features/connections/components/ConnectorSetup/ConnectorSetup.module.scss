@@ -51,8 +51,10 @@
 
 .copy {
   @include controls.surface-pill;
+  justify-self: end;
   padding: 0.5rem 0.875rem;
   font-size: 0.8125rem;
+  text-decoration: none;
 }
 
 .copied {
@@ -65,6 +67,157 @@
   color: var(--on-stone-tint);
   font-size: 0.8125rem;
   font-weight: 600;
+}
+
+// Design 301a: one question, four pills, nothing below until one is picked.
+.question {
+  margin: 0;
+  font-size: 0.90625rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sub {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  // Two by two at 390 (301g).
+  @media (max-width: 47.9375rem) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  i {
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 2px currentColor;
+    opacity: 0.7;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.pillOn {
+  background: var(--ink);
+  color: var(--ground);
+
+  i {
+    background: var(--ground);
+    box-shadow: inset 0 0 0 4px var(--ground);
+    opacity: 1;
+  }
+}
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.limit {
+  margin: 0;
+  padding: 0.625rem 0.8125rem;
+  border-radius: 14px;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.lead {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.stepBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+// Design 301c: each field ChatGPT asks for, what to put in it, and its Copy or Download.
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.84375rem;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 9.375rem) minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+
+  dt {
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+
+    small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78125rem;
+      font-weight: 400;
+    }
+  }
+
+  @media (max-width: 47.9375rem) {
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    dt {
+      grid-column: 1 / -1;
+      margin-bottom: -0.5rem;
+    }
+  }
+}
+
+.said {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .steps {
@@ -101,9 +254,4 @@
 
 .stepText {
   padding-top: 1px;
-}
-
-.note {
-  @include consent.note;
-  font-size: 0.78125rem;
 }

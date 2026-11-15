@@ -5,5 +5,7 @@ export const personalisationSectionTestIds = {
   stepsOffNote: "PersonalisationSection.stepsOffNote",
   resourcesOffNote: "PersonalisationSection.resourcesOffNote",
   followUpQuestionsOffNote: "PersonalisationSection.followUpQuestionsOffNote",
+  followUpAssistantNote: "PersonalisationSection.followUpAssistantNote",
+  connectionsLink: "PersonalisationSection.connectionsLink",
   switch: (section: keyof SectionsEnabled) => `PersonalisationSection.switch.${section}`,
 };

@@ -1,5 +1,7 @@
 import { useId } from "react";
 import { DEFAULT_SECTIONS_ENABLED, type SectionsEnabled } from "@overview/domain";
+import { Routes } from "../../../../app/Routes.js";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useUpdateSettingsMutation } from "../../mutations/useUpdateSettingsMutation.js";
 import { useSettingsQuery } from "../../queries/settingsQuery.js";
@@ -90,6 +92,19 @@ export function PersonalisationSection() {
         {!sectionsEnabled.resources && (
           <p className={styles.note} data-testid={personalisationSectionTestIds.resourcesOffNote}>
             Resources are hidden on every overview. They’re still kept, so turning this back on shows them again.
+          </p>
+        )}
+        {sectionsEnabled.followUpQuestions && (
+          <p className={styles.note} data-testid={personalisationSectionTestIds.followUpAssistantNote}>
+            Questions open in the assistant you choose in{" "}
+            <PageLink
+              to={Routes.settingsSection("connections")}
+              className={styles.jump}
+              data-testid={personalisationSectionTestIds.connectionsLink}
+            >
+              Connections
+            </PageLink>
+            .
           </p>
         )}
         {!sectionsEnabled.followUpQuestions && (

@@ -3,6 +3,11 @@ import { z } from "zod";
 export const FollowUpAssistant = z.enum(["claude", "chatgpt", "gemini"]);
 export type FollowUpAssistant = z.infer<typeof FollowUpAssistant>;
 
+// The assistant the reader says they use, in Settings › Connections (OV-301). "Other" connects
+// by address alone, and questions to ask next don't open in it.
+export const ChosenAssistant = z.enum([...FollowUpAssistant.options, "other"]);
+export type ChosenAssistant = z.infer<typeof ChosenAssistant>;
+
 export interface FollowUpAssistantLink {
   name: string;
   openUrl: string;
