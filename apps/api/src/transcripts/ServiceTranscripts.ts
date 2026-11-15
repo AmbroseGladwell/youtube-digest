@@ -1,16 +1,10 @@
 import type { FastifyBaseLogger } from "fastify";
 import { apiLogLines, StoredTranscript, type Plan, type VideoId } from "@overview/domain";
-import { TranscriptFetchError, TranscriptFetchFailure, type YouTubeFetch } from "@overview/transcripts";
+import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { AccountCostsRepository, CostPayer } from "../costs/AccountCostsRepository.js";
 import type { AccountId } from "../auth/AccountId.js";
 import { hashedAddress } from "../http/hashedAddress.js";
-import {
-  fetchThroughService,
-  throughService,
-  type ProxyBudget,
-  type ServiceFetches,
-  type ServiceFetchResult,
-} from "./fetchThroughService.js";
+import { fetchThroughService, type ProxyBudget, type ServiceFetches, type ServiceFetchResult } from "./fetchThroughService.js";
 import { secondsToNextUsageDay, type FetchReservation, type ServiceUsageRepository } from "./ServiceUsageRepository.js";
 import { shareableTranscript } from "./shareableTranscript.js";
 import { transcriptFault } from "./transcriptFault.js";
@@ -121,13 +115,6 @@ export class ServiceTranscripts {
     })().finally(() => this.#inFlight.delete(videoId));
     this.#inFlight.set(videoId, fetching);
     return fetching;
-  }
-
-  // Any YouTube request on our server's behalf, the same way a caption fetch goes: our own
-  // address first, then the proxy within today's budget, its bytes recorded against the payer
-  // (docs/features/podcast-on-youtube.md, "Our server's part").
-  async onYouTube<T>(operation: (youTubeFetch: YouTubeFetch) => Promise<T>, payer: CostPayer, log: FastifyBaseLogger): Promise<T> {
-    return (await throughService(this.#options.fetches, this.#budget(payer, log), operation)).value;
   }
 
   #budget(payer: CostPayer, log: FastifyBaseLogger, onSpent: (bytes: number) => void = () => undefined): ProxyBudget {

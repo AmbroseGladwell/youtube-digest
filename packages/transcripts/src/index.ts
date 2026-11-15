@@ -14,4 +14,3 @@ export * from "./podcastOnYouTube/noteWords.js";
 export * from "./podcastOnYouTube/youTubeListings.js";
 export * from "./podcastOnYouTube/matchUpload.js";
 export * from "./podcastOnYouTube/findEpisodeOnYouTube.js";
-export * from "./podcastOnYouTube/confirmEpisodeOnYouTube.js";

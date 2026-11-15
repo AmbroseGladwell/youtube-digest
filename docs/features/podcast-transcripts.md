@@ -46,7 +46,10 @@ the episode was matched to, under the episode's key. That's a fact about the epi
 expression, and it saves the next reader the search. A reader's other device, holding only the
 episode's key, asks `GET /api/transcripts/:key`, which answers with the account's copy, or for an
 account with a note on the episode but no copy yet, fetches the words afresh from that source and
-keeps them. A source that no longer answers is forgotten and the rungs run again.
+keeps them. A source that no longer answers is forgotten and the rungs run again. A YouTube match older
+than 30 days is checked against the episode again before it is used, as the Data API's policies ask
+(`podcast-on-youtube.md`, "Keeping a match"), so the other device is given one only within its 30
+days.
 
 Podcast words already in the shared cache were deleted by migration `V0032`, and
 `/shared-transcripts/:key` has no podcast words to serve.

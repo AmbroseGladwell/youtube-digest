@@ -71,6 +71,14 @@ written to a file, typed into a terminal or pasted into a dashboard
 `[env]`, in the repository. The TTS service is a second Fly app with its own template,
 `services/tts/.env.prod.tpl`, and its own task, `task deploy:tts:secrets`.
 
+**Quoting.** Every placeholder is written `NAME="${NAME}"`. Both readers cut an unquoted
+value at a `#`: `fly secrets import` treats the rest of the line as a comment, and so does
+Node's `--env-file`. A secret starting with `#` then arrives empty, which is how Podcast
+Index's did on 14 Nov 2026, failing two deploys at the config check before anyone could
+see why. Inside double quotes both keep a `#` and strip the quotes. The render refuses a
+placeholder outside double quotes, and a value holding a double quote, a backslash or a
+line break, since one reader or the other would change those.
+
 **What a runner needs lives in GitHub as well**, because GitHub's runners can read nothing
 else: there is no Bitwarden token in CI, by the decision at the end of this file. These are
 set with `gh secret set`, piped from the command that mints them so no value appears on
@@ -135,7 +143,7 @@ the same names from `overview-evals` with no change to its code.
 ## Adding a secret
 
 1. Create it in the right project in Bitwarden, keyed as the variable name.
-2. Add `NAME=${NAME}` to `.env.tpl`, or the name to `scripts/evals.env` if only the
+2. Add `NAME="${NAME}"` to `.env.tpl`, or the name to `scripts/evals.env` if only the
    harness reads it.
 3. `task secrets`. Commit the template. Nothing else moves.
 

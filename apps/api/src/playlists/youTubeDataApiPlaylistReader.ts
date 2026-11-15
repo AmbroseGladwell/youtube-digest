@@ -8,9 +8,9 @@ import {
   type PlaylistLookup,
 } from "@overview/domain";
 import type { YouTubeFetch } from "@overview/transcripts";
+import { youTubeDataApiGet } from "../youTubeDataApi/youTubeDataApiGet.js";
 import { PlaylistUnavailableError, type PlaylistReader } from "./PlaylistReader.js";
 
-const DATA_API = "https://www.googleapis.com/youtube/v3";
 const PAGE_SIZE = 50;
 // YouTube caps a playlist at 5,000 videos, so a hundred pages is every one of them.
 const MAX_PAGES = 100;
@@ -43,8 +43,6 @@ const PlaylistItemsResponse = z.object({
   ),
 });
 
-export class YouTubeDataApiError extends Error {}
-
 const query = (params: Record<string, string>) => new URLSearchParams(params).toString();
 
 // YouTube keeps a private or deleted video in the playlist with its title replaced, and
@@ -70,20 +68,7 @@ async function whyUnavailable(youTubeFetch: YouTubeFetch, playlistId: string): P
 }
 
 export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): PlaylistReader {
-  const get = async <T>(path: string, params: Record<string, string>, schema: z.ZodType<T>) => {
-    // In a header rather than the query, so the key is never part of a URL that a log, a
-    // proxy or an error message could carry (Google's API key best practices).
-    const response = await youTubeFetch({
-      url: `${DATA_API}/${path}?${query(params)}`,
-      method: "GET",
-      headers: { accept: "application/json", "x-goog-api-key": apiKey },
-    });
-    if (response.status === 404) return null;
-    if (response.status !== 200) {
-      throw new YouTubeDataApiError(`The YouTube Data API answered ${response.status} to ${path}`);
-    }
-    return schema.parse(JSON.parse(response.body));
-  };
+  const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   return {
     async read(playlistId, log) {

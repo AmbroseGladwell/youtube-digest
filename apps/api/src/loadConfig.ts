@@ -50,6 +50,8 @@ const ConfigEnv = z
       .optional(),
     TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
     YOUTUBE_API_KEY: z.string().min(1).optional(),
+    PODCAST_INDEX_API_KEY: z.string().min(1).optional(),
+    PODCAST_INDEX_API_SECRET: z.string().min(1).optional(),
     SUPPORT_EMAIL: z.email().default("hello@theoverviewapp.com"),
     SAMPLE_SHARE_TOKENS: z
       .string()
@@ -106,6 +108,10 @@ const ConfigEnv = z
     path: ["POSTHOG_PROJECT_ID"],
     message: "required when POSTHOG_PERSONAL_API_KEY is set: an erasure has to name the project it acts in",
   })
+  .refine((env) => (env.PODCAST_INDEX_API_KEY === undefined) === (env.PODCAST_INDEX_API_SECRET === undefined), {
+    path: ["PODCAST_INDEX_API_SECRET"],
+    message: "PODCAST_INDEX_API_KEY and PODCAST_INDEX_API_SECRET go together: every request is signed with both",
+  })
   .refine((env) => env.MAIL_TRANSPORT !== "brevo" || env.APP_URL.startsWith("https://"), {
     path: ["APP_URL"],
     message: "must be the https address readers will open, when real mail is being sent",
@@ -155,6 +161,9 @@ export interface Config {
   // The YouTube Data API key playlists are read with, or null to read none
   // (docs/features/playlists.md).
   youTubeApiKey: string | null;
+  // The Podcast Index key a Spotify link's show is looked up with before Apple's directory, or
+  // null to ask Apple's alone (docs/features/podcast-links.md, "The directories").
+  podcastIndex: PodcastIndexKey | null;
   // The house account's live shares Start offers as samples, in order, or none to offer none
   // (docs/features/onboarding.md, "Try a sample").
   sampleShareTokens: ShareToken[];
@@ -163,6 +172,11 @@ export interface Config {
   analytics: AnalyticsConfig;
   // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
   logs: OtlpLogsConfig | null;
+}
+
+export interface PodcastIndexKey {
+  apiKey: string;
+  apiSecret: string;
 }
 
 export class ConfigError extends Error {}
@@ -224,6 +238,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
             signedOutDailyGenerations: data.OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS,
           },
     youTubeApiKey: data.YOUTUBE_API_KEY ?? null,
+    podcastIndex:
+      data.PODCAST_INDEX_API_KEY === undefined || data.PODCAST_INDEX_API_SECRET === undefined
+        ? null
+        : { apiKey: data.PODCAST_INDEX_API_KEY, apiSecret: data.PODCAST_INDEX_API_SECRET },
     sampleShareTokens: data.SAMPLE_SHARE_TOKENS,
     supportEmail: data.SUPPORT_EMAIL,
     analytics: {

@@ -1,11 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { appleCallBudget, AppleBudgetSpentError } from "./appleCallBudget.js";
+import { callBudget, BudgetSpentError } from "./callBudget.js";
 
 const harness = (perMinute: number, mostWaitMs: number) => {
   let now = 0;
   const asked: string[] = [];
-  const call = appleCallBudget(
+  const call = callBudget(
     async (url) => {
       asked.push(url);
       return { url };
@@ -42,5 +42,5 @@ test("past the minute's budget a call waits for the oldest to leave the window",
 test("a call that would wait longer than allowed gives up rather than hold the reader", async () => {
   const { call } = harness(1, 5_000);
   await call("a");
-  await assert.rejects(call("b"), (error) => error instanceof AppleBudgetSpentError);
+  await assert.rejects(call("b"), (error) => error instanceof BudgetSpentError);
 });

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { Response } from "undici";
 import type { PodcastRead } from "@overview/domain";
 import type { PublicWebAnswer } from "../publicWeb/createPublicWebFetch.js";
+import type { ShowDirectory } from "./appleDirectory.js";
 import { createPodcastReader } from "./createPodcastReader.js";
 import { feedOf, FEED_ITEM_NEWEST, FEED_ITEM_OLDER } from "./podcastFeedFixtures.testHelper.js";
 
@@ -41,7 +42,7 @@ const spotifyPage = (title: string, released: string) =>
     <meta property="og:title" content="${title}">
   </head><body></body></html>`);
 
-function readerOver(web: Record<string, Answer>) {
+function readerOver(web: Record<string, Answer>, podcastIndex: ShowDirectory | null = null) {
   const asked: string[] = [];
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
@@ -54,7 +55,7 @@ function readerOver(web: Record<string, Answer>) {
       response: new Response(answer.body, { headers: { "content-type": answer.type } }),
     };
   };
-  return { read: createPodcastReader({ fetchPublicWeb }), asked };
+  return { read: createPodcastReader({ fetchPublicWeb, podcastIndex }), asked };
 }
 
 const episodeOf = (read: PodcastRead) => {
@@ -133,6 +134,66 @@ test("a Spotify episode missing from a public show's feed is not found, rather t
     reason: "not-found",
     showName: "A Show & Friends",
   });
+});
+
+// Podcast Index, scripted: its parsing is podcastIndexDirectory.test.ts's.
+function podcastIndexOver(answer: "knows the show" | "doesn't know it" | "fails") {
+  const asked: string[] = [];
+  const directory: ShowDirectory = {
+    searchShows: async (name) => {
+      asked.push(`search:${name}`);
+      if (answer === "fails") throw new Error("Podcast Index answered 503");
+      return answer === "knows the show" ? [{ showId: "920666", showName: "A Show & Friends", feedUrl: FEED_URL }] : [];
+    },
+    showWithEpisodes: async (showId) => {
+      asked.push(`episodes:${showId}`);
+      return {
+        show: { showId, showName: "A Show & Friends", feedUrl: FEED_URL },
+        episodes: [
+          {
+            episodeId: "1",
+            guid: "older-guid",
+            title: "Episode 1: The “Start”",
+            publishedAt: "2026-11-01T09:00:00.000Z",
+            durationSeconds: 3725,
+          },
+        ],
+      };
+    },
+  };
+  return { directory, asked };
+}
+
+const spotifyEpisodeWeb = {
+  [`https://open.spotify.com/episode/${SPOTIFY_EPISODE}`]: spotifyPage("Episode 1: The “Start”", "2026-11-01T09:00:00Z"),
+  [SEARCH]: json({ results: [appleShow()] }),
+  [LOOKUP]: json({ results: [appleShow(), appleEpisode(1001, "older-guid", "Episode 1: The “Start”", "2026-11-01T09:00:00Z")] }),
+  [FEED_URL]: xml(feedOf(FEED_ITEM_NEWEST, FEED_ITEM_OLDER)),
+};
+
+test("a Spotify link's show is looked up in Podcast Index first, and Apple's directory isn't asked when it knows it", async () => {
+  const podcastIndex = podcastIndexOver("knows the show");
+  const { read, asked } = readerOver(spotifyEpisodeWeb, podcastIndex.directory);
+  const episode = episodeOf(await read(`https://open.spotify.com/episode/${SPOTIFY_EPISODE}`));
+  assert.equal(episode.guid, "older-guid");
+  assert.deepEqual(podcastIndex.asked, ["search:A Show & Friends", "episodes:920666"]);
+  assert.ok(!asked.some((link) => link.startsWith("https://itunes.apple.com/")));
+});
+
+test("where Podcast Index fails or doesn't know the show, Apple's directory is asked instead", async () => {
+  for (const answer of ["fails", "doesn't know it"] as const) {
+    const podcastIndex = podcastIndexOver(answer);
+    const { read, asked } = readerOver(spotifyEpisodeWeb, podcastIndex.directory);
+    assert.equal(episodeOf(await read(`https://open.spotify.com/episode/${SPOTIFY_EPISODE}`)).guid, "older-guid", answer);
+    assert.ok(asked.includes(SEARCH), answer);
+  }
+});
+
+test("an Apple link never asks Podcast Index: only Apple's directory knows its episode ids", async () => {
+  const podcastIndex = podcastIndexOver("knows the show");
+  const { read } = readerOver(spotifyEpisodeWeb, podcastIndex.directory);
+  assert.equal(episodeOf(await read(APPLE_EPISODE)).guid, "older-guid");
+  assert.deepEqual(podcastIndex.asked, []);
 });
 
 test("a Spotify short link is followed to the episode it names", async () => {
