@@ -16,6 +16,7 @@ import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { PlaylistOrder } from "./PlaylistOrder.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
+import { FollowUpAssistant } from "./FollowUpAssistant.js";
 import { OnboardingStep } from "./OnboardingStep.js";
 
 // A property can only be a choice, a flag, a number, one of our own random ids or a
@@ -72,6 +73,8 @@ export const ReaderTabChoice = z.enum(["overview", "transcript", "chapters"]);
 export type ReaderTabChoice = z.infer<typeof ReaderTabChoice>;
 const Direction = z.enum(["previous", "next"]);
 const SkipDirection = z.enum(["back", "forward"]);
+const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
+const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
@@ -367,6 +370,29 @@ export const analyticsEvents = {
         from: OverviewControl,
       }),
       listenPressed: event("The reader presses Listen in the reader's head, to the state chosen", { listening: z.boolean() }),
+    },
+    // Never which question: it can name the reader's own life (docs/features/follow-up-questions.md).
+    followUps: {
+      asked: event(
+        "The reader takes a question to ask next to their assistant, which one, whether it was filled in or copied, whether it is connected, whether the question was asked from where the reader stands, and its place in the list",
+        {
+          assistant: FollowUpAssistant,
+          handOff: FollowUpHandOffKind,
+          connected: z.boolean(),
+          forReader: z.boolean(),
+          position: z.number().int().positive(),
+        },
+      ),
+      setChanged: event("The reader shows a different three questions to ask next, and which set it moved to", {
+        set: z.number().int().positive(),
+        sets: z.number().int().positive(),
+      }),
+      assistantChosen: event("The reader chooses which assistant questions open in, on a first tap or from Change", {
+        assistant: FollowUpAssistant,
+        from: FollowUpAssistantChosenFrom,
+      }),
+      questionCopied: event("The reader copies a question alone from the first-tap menu"),
+      connectionSetUpFollowed: event("The reader follows Set up a connection from the first-tap menu to Settings › Connections"),
     },
     dubiousReasons: {
       opened: event(

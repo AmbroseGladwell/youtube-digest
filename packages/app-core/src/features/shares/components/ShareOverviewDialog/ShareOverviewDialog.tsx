@@ -23,7 +23,7 @@ export interface ShareOverviewDialogProps {
 const HEADING_ID = "ShareOverviewDialog-heading";
 
 const SHARED = ["The whole overview, with its audio", "Transcript and chapters", "Video title, channel and link"];
-const PRIVATE = ["Your reason", "Your topics", "Read and favourite state"];
+const PRIVATE = ["Your reason", "Your topics", "Questions to ask next", "Read and favourite state"];
 
 export function ShareOverviewDialog({
   share,
