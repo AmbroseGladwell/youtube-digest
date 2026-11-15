@@ -40,7 +40,7 @@ test.describe("Settings › Connections", () => {
     await settings.connections.verifyListsConnections(["Claude", "No name given"]);
     await settings.connections.verifyUseLineReads(0, "Connected 12 September · Used in the last hour");
     await settings.connections.verifyUseLineReads(1, "Connected 3 September · Last used 14 September");
-    await settings.connections.verifyShowsSetup(`${SERVER}/mcp`);
+    await settings.connections.verifyAsksWhichAssistant();
     await settings.connections.verifyOffersExamples(false);
     await settings.verifySectionHeadingIsFocused("connections");
   });
@@ -124,9 +124,11 @@ test.describe("Settings › Connections", () => {
     const settings = await (await launcher.appShell.openSettings()).openSection("connections");
 
     await settings.connections.verifyListsConnections([]);
-    await settings.connections.verifyShowsSetup(`${SERVER}/mcp`);
+    await settings.connections.verifyAsksWhichAssistant();
     await settings.connections.verifyOffersExamples(true);
 
+    await settings.connections.chooseAssistant("claude");
+    await settings.connections.verifyAddressIs(`${SERVER}/mcp`);
     await settings.connections.copyAddress();
     await settings.connections.verifyCopied();
     test.expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${SERVER}/mcp`);
@@ -140,7 +142,7 @@ test.describe("Settings › Connections", () => {
     await settings.openSection("connections");
 
     await settings.connections.verifyListsConnections([]);
-    await settings.connections.verifyShowsSetup(`${SERVER}/mcp`);
+    await settings.connections.verifyAsksWhichAssistant();
   });
 
   test("signed out, it asks to sign in first", async ({ launcher }) => {

@@ -20,6 +20,16 @@ export class PersonalisationSectionPageObject extends PageObject {
         : expect(this.page.getByTestId(personalisationSectionTestIds.stepsOffNote)).toHaveCount(0),
     );
 
+  verifyFollowUpAssistantNoteReads = (note: string | null) =>
+    this.step(`verifyFollowUpAssistantNoteReads ${note}`, () =>
+      note === null
+        ? expect(this.page.getByTestId(personalisationSectionTestIds.followUpAssistantNote)).toHaveCount(0)
+        : expect(this.page.getByTestId(personalisationSectionTestIds.followUpAssistantNote)).toHaveText(note),
+    );
+
+  followConnectionsLink = () =>
+    this.step("followConnectionsLink", () => this.page.getByTestId(personalisationSectionTestIds.connectionsLink).click());
+
   verifyFollowUpQuestionsOffNoteIsShown = (shown: boolean) =>
     this.step(`verifyFollowUpQuestionsOffNoteIsShown ${shown}`, () =>
       shown

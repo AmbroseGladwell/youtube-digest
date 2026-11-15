@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import { useLocation } from "react-router";
+import { connectionAssistant, FOLLOW_UP_ASSISTANTS, type ChosenAssistant } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -10,6 +12,7 @@ import { useConnectionsQuery } from "../../queries/connectionsQuery.js";
 import { useSettingsQuery } from "../../../settings/queries/settingsQuery.js";
 import { ConnectionRow } from "../ConnectionRow/ConnectionRow.js";
 import { ConnectorSetup } from "../ConnectorSetup/ConnectorSetup.js";
+import { CONNECTOR_ICON_PATH } from "../../util/connectorSteps.js";
 import { ExampleQuestions } from "../ExampleQuestions/ExampleQuestions.js";
 import styles from "./ConnectionsSection.module.scss";
 import { connectionsSectionTestIds } from "./ConnectionsSectionTestIds.js";
@@ -18,6 +21,14 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export const CONNECTIONS_INTRO =
   "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, mark them read or favourite for you, and gather them into projects.";
+
+// Design 301f: arriving from a question's "Set up a connection", what happens next, until the
+// assistant questions open in is connected.
+function arrivalNote(chosen: ChosenAssistant | null): string {
+  if (chosen === null || chosen === "other") return "Pick your assistant and connect it, then go back to your question.";
+  const { name } = FOLLOW_UP_ASSISTANTS[chosen];
+  return `Connect ${name}, then go back to your question. It’ll open in ${name}, connected.`;
+}
 
 // Design 58i–58r. A connection belongs to an account rather than to a plan
 // (docs/architecture/tiers.md), so signed out is the only state that says what it would take
@@ -29,7 +40,9 @@ export function ConnectionsSection() {
   const session = useSessionQuery();
   const connections = useConnectionsQuery();
   const revoke = useRevokeConnectionMutation();
-  const sharingProfile = useSettingsQuery().data?.shareProfileWithAssistants ?? true;
+  const settings = useSettingsQuery().data;
+  const sharingProfile = settings?.shareProfileWithAssistants ?? true;
+  const fromQuestion = (useLocation().state as { fromQuestion?: boolean } | null)?.fromQuestion === true;
   const connectedLabel = useRef<HTMLParagraphElement>(null);
   const setupLabel = useRef<HTMLParagraphElement>(null);
   const now = new Date();
@@ -88,7 +101,11 @@ export function ConnectionsSection() {
     return <div className={styles.pending} aria-busy="true" data-testid={connectionsSectionTestIds.pending} />;
   }
 
-  const address = `${(connection.apiUrl ?? "").replace(/\/+$/, "")}/mcp`;
+  const server = (connection.apiUrl ?? "").replace(/\/+$/, "");
+  const address = `${server}/mcp`;
+  const iconUrl = `${server}${CONNECTOR_ICON_PATH}`;
+  const chosen = settings?.followUpAssistant ?? null;
+  const chosenConnected = chosen !== null && (connections.data ?? []).some((each) => connectionAssistant(each.clientName) === chosen);
   const listed = connections.data;
 
   const revokeOne = (connectionId: string) => {
@@ -102,6 +119,11 @@ export function ConnectionsSection() {
       <p className={styles.intro} data-testid={connectionsSectionTestIds.intro}>
         {CONNECTIONS_INTRO}
       </p>
+      {fromQuestion && !chosenConnected && (
+        <p className={styles.fromQuestion} role="status" data-testid={connectionsSectionTestIds.fromQuestion}>
+          {arrivalNote(chosen)}
+        </p>
+      )}
       {revoke.isError && (
         <p className={styles.error} role="alert" data-testid={connectionsSectionTestIds.error}>
           <StrokeIcon name="alertCircle" size={14} />
@@ -137,11 +159,11 @@ export function ConnectionsSection() {
               ))}
             </ul>
           </div>
-          <ConnectorSetup label="Connect another" address={address} ref={setupLabel} />
+          <ConnectorSetup label="Connect another" address={address} iconUrl={iconUrl} ref={setupLabel} />
         </>
       ) : (
         <>
-          <ConnectorSetup label="Connect an assistant" address={address} ref={setupLabel} />
+          <ConnectorSetup label="Connect an assistant" address={address} iconUrl={iconUrl} ref={setupLabel} />
           <div className={styles.card} data-testid={connectionsSectionTestIds.tryAsking}>
             <p className={styles.label}>Try asking</p>
             <ExampleQuestions />

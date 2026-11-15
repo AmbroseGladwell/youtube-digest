@@ -16,7 +16,7 @@ import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { PlaylistOrder } from "./PlaylistOrder.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
-import { FollowUpAssistant } from "./FollowUpAssistant.js";
+import { ChosenAssistant, FollowUpAssistant } from "./FollowUpAssistant.js";
 import { OnboardingStep } from "./OnboardingStep.js";
 
 // A property can only be a choice, a flag, a number, one of our own random ids or a
@@ -1245,6 +1245,13 @@ export const analyticsEvents = {
       revokeAsked: event("The reader asks to revoke an assistant's access, before confirming"),
       revokeKept: event("The reader keeps an assistant's access after asking to revoke it"),
       addressCopied: event("The reader copies the connector address to give their assistant"),
+      assistantChosen: event("The reader says which assistant they use in Settings › Connections, which shows only its steps", {
+        assistant: ChosenAssistant,
+      }),
+      fieldCopied: event("The reader copies one of the values ChatGPT's connector form asks for; never anything they typed", {
+        field: z.enum(["name", "description", "address"]),
+      }),
+      iconDownloaded: event("The reader downloads the icon ChatGPT's connector form asks for"),
       signInChosen: event("The reader follows Sign in from Settings › Connections"),
       createAccountChosen: event("The reader follows Create account from Settings › Connections"),
       retried: event("The reader tries loading their connections again"),

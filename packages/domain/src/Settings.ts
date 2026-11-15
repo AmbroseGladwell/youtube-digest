@@ -18,7 +18,7 @@ import { TagAliases } from "./TagAliases.js";
 import { LearnedItems } from "./LearnedItem.js";
 import { DEFAULT_PLAYLIST_ORDER, PlaylistOrder } from "./PlaylistOrder.js";
 import { DEFAULT_PLAYLIST_PACE, PlaylistPace } from "./PlaylistPace.js";
-import { FollowUpAssistant } from "./FollowUpAssistant.js";
+import { ChosenAssistant } from "./FollowUpAssistant.js";
 
 export const SectionsEnabled = z.object({
   verdict: z.boolean(),
@@ -105,7 +105,7 @@ export const Settings = z.object({
   // "Ask follow-up questions in": the assistant a question to ask next opens, on every device.
   // Null until the reader picks one, when a single connected assistant stands in
   // (docs/features/follow-up-questions.md).
-  followUpAssistant: FollowUpAssistant.nullable().catch(null),
+  followUpAssistant: ChosenAssistant.nullable().catch(null),
 });
 export type Settings = z.infer<typeof Settings>;
 

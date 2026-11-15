@@ -39,3 +39,8 @@ test("the reader's choice wins, and says whether that assistant is connected", (
   assert.deepEqual(followUpAssistantFor("gemini", [connection("Claude")]), { assistant: "gemini", connected: false });
   assert.deepEqual(followUpAssistantFor("claude", [connection("Claude"), connection("ChatGPT")]), { assistant: "claude", connected: true });
 });
+
+test("a reader who uses another assistant is asked on their first tap, unless one known connection answers it", () => {
+  assert.deepEqual(followUpAssistantFor("other", []), { assistant: null, connected: false });
+  assert.deepEqual(followUpAssistantFor("other", [connection("Claude")]), { assistant: "claude", connected: true });
+});

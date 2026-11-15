@@ -146,6 +146,7 @@ export function FollowUpAssistantMenu({
               <br />
               <PageLink
                 to={Routes.settingsSection("connections")}
+                state={{ fromQuestion: true }}
                 className={styles.setUpLink}
                 onClick={onSetUpFollowed}
                 data-testid={followUpAssistantMenuTestIds.setUpLink}

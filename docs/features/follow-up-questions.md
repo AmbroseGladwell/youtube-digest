@@ -112,7 +112,7 @@ assistant opened instead, and a prompt never arrives cut short. A typical 20-min
 comes to about 10,400, so nearly every note goes in the link.
 
 **Which assistant** (`followUpAssistantFor`): the synced setting "Ask follow-up questions in"
-(`Settings.followUpAssistant`: Claude, ChatGPT or Gemini). Until the reader picks, a reader whose
+(`Settings.followUpAssistant`: Claude, ChatGPT, Gemini, or Other from Settings › Connections). Until the reader picks, a reader whose
 connections are all to one known assistant, by the name its client registered with
 (`connectionAssistant`), gets that one; anyone else is asked on their first tap. "Connected" is
 whether a connection is to the assistant in use.
@@ -161,6 +161,11 @@ Built in `FollowUpQuestions` and `FollowUpAssistantMenu`.
   questions start unasked; recording an ask drops asks of questions the overview no longer has,
   and two copies of one overview fold to each question's latest ask. A patch replaces the whole
   list, so two devices asking at the same moment can lose one ask, as with `userTags`.
+- **Which assistant, in Settings:** Settings › Connections asks "Which assistant do you use?"
+  (OV-301, `mcp-connector.md`), the same setting, and Personalisation says "Questions open in the
+  assistant you choose in Connections." with a link. A reader who picked Other there is asked on
+  their first tap, unless one known connection answers it. "Set up a connection" lands there
+  with a note saying what happens next.
 - **Not read aloud**, like Resources: the narration ends where it did. Nothing on the shared page,
   and the sharing dialog lists them under Kept private. Older overviews show nothing.
 - **Events** (`reader.followUps.*`, never the question): `asked` with the assistant, prefill or
@@ -170,8 +175,4 @@ Built in `FollowUpQuestions` and `FollowUpAssistantMenu`.
 
 ## Not built yet
 
-- **Settings › Connections' chooser** (OV-301), which the designs make the one place the assistant
-  is chosen outside the block, with the Personalisation line "Questions open in the assistant you
-  choose in Connections." pointing to it. Until then the choice is made under the questions.
-- **Undrawn edges:** a blocked new tab, a revoked connection, an overview still being written, and
-  an "Other" assistant.
+- **Undrawn edges:** a blocked new tab, a revoked connection, and an overview still being written.
