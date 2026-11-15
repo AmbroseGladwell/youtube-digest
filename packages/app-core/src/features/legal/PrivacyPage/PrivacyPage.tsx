@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-14";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-15";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -147,15 +147,16 @@ const sections: readonly LegalSection[] = [
           <strong>Podcast episodes.</strong> When you paste a link to a podcast episode, or open the extension's side panel beside an
           episode in Apple Podcasts or Spotify on the web, our server reads the page it points to, looks the show up in a podcast directory
           where it needs to (Podcast Index, then Apple's, sent only the show's name or Apple's own ids for it), and reads the show's public
-          feed to find the episode. It then looks for the episode's words: in a transcript the show publishes, or in the same episode on the
-          show's YouTube channel. With the extension, that YouTube search runs in your own browser and our server checks the one video it
-          found; without it, our server searches, through YouTube's API. Neither the directories nor YouTube are sent anything about you.
-          The words are fetched for you and kept as your own copy, as above, never shown to anyone else. What our server keeps for every
-          reader, with no account on it, is where they were found (the address of the show's transcript, or which YouTube video is the
-          episode), so the search isn't repeated for the next reader, who fetches the words for themselves. We don't record the link or the
-          episode in our logs. Beside an episode, the side panel sends only that tab's address, as soon as it is in front of the panel, so
-          it can name the episode before you press Create; it sends nothing about other tabs, or about a show's own page there. An episode
-          whose words can't be found makes no overview.
+          feed to find the episode. It then looks for the episode's words: in a transcript the show publishes, or in the same episode on
+          YouTube, on the show's channel or its publisher's, searched for by the show's name and the episode's title. With the extension,
+          that YouTube search runs in your own browser and our server checks the one video it found; without it, our server searches,
+          through YouTube's API. Neither the directories nor YouTube are sent anything about you. The words are fetched for you and kept as
+          your own copy, as above, never shown to anyone else. What our server keeps for every reader, with no account on it, is where they
+          were found (the address of the show's transcript, or which YouTube video is the episode), so the search isn't repeated for the
+          next reader, who fetches the words for themselves. We don't record the link or the episode in our logs. Beside an episode, the
+          side panel sends only that tab's address, as soon as it is in front of the panel, so it can name the episode before you press
+          Create; it sends nothing about other tabs, or about a show's own page there. An episode whose words can't be found makes no
+          overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you for your own copy of the words, and our legitimate interest in not
