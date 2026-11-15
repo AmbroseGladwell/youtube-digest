@@ -326,24 +326,24 @@ Chat about one overview on Luna passes all three: one source, 24 of 24 unanswera
 declined, about three overviews' worth at 300 messages. Chat across the library fails the first.
 Chat on Sol fails the third.
 
-### Build cards, drafted
+### Build cards
 
-These are drafts for the owner to accept, trim or reorder before they go on the board:
+The owner said build on 15 Nov 2026. Cards 1 to 4 are on the board as OV-308 to OV-311, in this order:
 
-1. **Chat records:** the `chat` kind, its schema and record version, tombstoned with the
+1. **Chat records (OV-308):** the `chat` kind, its schema and record version, tombstoned with the
    overview, sync and the local store, and the privacy page and retention table.
-2. **The chat endpoint on our key:**
+2. **The chat endpoint on our key (OV-309):**
    - `POST /api/chats/:overviewId/messages`, Luna, the account's own transcript (or article text)
      in a cached system prompt, the passage-id citations turned into times by code, and streamed
      answers;
    - the monthly allowance, the daily caps and the per-conversation limit, counted in Postgres;
    - limits shown as waits;
    - analytics: messages and tokens per message, never the text.
-3. **Design, then the chat panel:** a Claude Design round for web, phone and the 400px panel,
+3. **Design, then the chat panel (OV-310):** a Claude Design round for web, phone and the 400px panel,
    with OV-266's chips as the way in. Then the UI, with streaming text announced politely and full
    keyboard use.
-4. **Chats over MCP:** `list_chats`, `get_chat`, and the line in `get_overview`.
-5. **Later, only if asked for:** chat on the reader's own key from the device; chat across a
+4. **Chats over MCP (OV-311):** `list_chats`, `get_chat`, and the line in `get_overview`.
+5. **Later, only if asked for, and not carded:** chat on the reader's own key from the device; chat across a
    project.
 6. **Before any chat across sources, an investigation (OV-307, already on the board):** does claim search pick the right
    sources? Measure, in code, how often OV-229's claim search puts the source that answers a
