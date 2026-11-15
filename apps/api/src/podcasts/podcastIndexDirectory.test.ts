@@ -30,7 +30,7 @@ function directoryOver(answers: Record<string, unknown>) {
 
 test("a show is searched for by its name, and each feed found becomes a show with its feed", async () => {
   const { directory, asked } = directoryOver({
-    "search/byterm": {
+    "search/bytitle": {
       status: "true",
       feeds: [
         { id: 920666, title: "A Show & Friends", url: "https://feeds.example/show.xml", itunesId: 42 },
@@ -43,7 +43,7 @@ test("a show is searched for by its name, and each feed found becomes a show wit
     { showId: "920666", showName: "A Show & Friends", feedUrl: "https://feeds.example/show.xml" },
     { showId: "7", showName: "No feed address", feedUrl: null },
   ]);
-  assert.equal(asked[0]?.url, "https://api.podcastindex.org/api/1.0/search/byterm?q=A+Show+%26+Friends&max=10");
+  assert.equal(asked[0]?.url, "https://api.podcastindex.org/api/1.0/search/bytitle?q=A+Show+%26+Friends&max=10");
   assert.equal(asked[0]?.headers["X-Auth-Key"], "KEY");
 });
 

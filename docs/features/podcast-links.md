@@ -100,7 +100,11 @@ lengths (`podcastIndexDirectory.ts`). It is asked only where it can do Apple's j
 - **An Apple link** still goes to Apple alone, since its episode id is Apple's own and only Apple's
   directory maps it to the feed's episode.
 - **A show's own page that names no feed** is still searched in Apple's directory, by the episode's
-  title. Podcast Index's term search finds shows, not episodes.
+  title. Podcast Index's search finds shows, not episodes.
+
+A show is looked up by its exact title (`search/bytitle`), not by term: checked live on 15 Nov 2026,
+term search for "The Daily" ranked ten sports and devotional shows first and missed the New York
+Times' show, while title search gave ten shows of exactly that name with the Times' first (OV-303).
 
 Without `PODCAST_INDEX_API_KEY` and `PODCAST_INDEX_API_SECRET`, Apple's directory is asked alone, and
 startup says which directories are on.
