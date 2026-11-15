@@ -254,6 +254,7 @@ test("a pulled record with a pending local write to it shows the local write on 
     read: true,
     favourite: true,
     userTags: [],
+    asked: [],
   });
 });
 
@@ -571,8 +572,15 @@ test("folding an overview into the account's copy re-files the copy field by fie
     read: true,
     favourite: true,
     userTags: ["later"],
+    asked: [],
   });
-  assert.deepEqual(await overviews.getOverviewState(mine.id), { overviewId: mine.id, read: false, favourite: false, userTags: [] });
+  assert.deepEqual(await overviews.getOverviewState(mine.id), {
+    overviewId: mine.id,
+    read: false,
+    favourite: false,
+    userTags: [],
+    asked: [],
+  });
   assert.deepEqual(
     (await readOutbox(db)).map(({ kind, id, change: pending }) => ({
       kind,

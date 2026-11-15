@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import {
   apiLogLines,
+  AskedQuestions,
   DEFAULT_OVERVIEW_STATE,
   Filing,
   FIRST_RESERVING_CLIENT_VERSION,
@@ -26,7 +27,11 @@ const Params = z.object({ id: OverviewId });
 const TopicsPatch = z.object({ topicIds: z.array(TopicId), updatedAt: UpdatedAt });
 const TagsPatch = z.object({ tags: Filing.shape.tags, updatedAt: UpdatedAt });
 const CaptureReasonPatch = z.object({ captureReason: z.string().nullable(), updatedAt: UpdatedAt });
-const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true }).partial().extend({ updatedAt: UpdatedAt });
+// The asks are named again without their default: a default here would write an empty list over
+// every read or favourite patch.
+const StatePatch = OverviewState.pick({ read: true, favourite: true, userTags: true })
+  .partial()
+  .extend({ asked: AskedQuestions.optional(), updatedAt: UpdatedAt });
 
 export function overviewRoutes(
   app: FastifyInstance,

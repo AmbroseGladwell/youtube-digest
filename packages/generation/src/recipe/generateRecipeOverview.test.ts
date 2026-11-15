@@ -39,7 +39,15 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
+  sectionsEnabled: {
+    verdict: true,
+    selling: true,
+    howToApply: true,
+    watchAnyway: true,
+    steps: true,
+    resources: true,
+    followUpQuestions: true,
+  },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],
@@ -53,6 +61,8 @@ const output = (overrides: Record<string, unknown> = {}) => ({
   matchedTopicNames: [],
   suggestedTopic: null,
   tags: ["stews", "weeknight", "leeks"],
+  followUpQuestions: [],
+  readerQuestions: [],
   ...overrides,
 });
 
@@ -75,6 +85,13 @@ test("a page with a recipe gets a recipe note, and the recipe is the page's, cop
   assert.equal(overview.verdict, null);
   assert.equal(overview.article, null);
   assert.equal(overview.inOneLine, "A weeknight stew built on charred leeks.");
+});
+
+test("a recipe page's note keeps its questions to ask next", async () => {
+  const questions = ["Could I make this stew without the wine?"];
+  assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, [
+    { question: "Could I make this stew without the wine?", forReader: false },
+  ]);
 });
 
 test("a recipe is never thin, however little the page says around it: there is no claim to judge (OV-179)", async () => {

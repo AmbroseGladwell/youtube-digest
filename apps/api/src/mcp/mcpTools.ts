@@ -202,7 +202,7 @@ const getOverview = mcpTool({
   name: "get_overview",
   title: "Read one overview",
   description:
-    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, and chapters. Every chapter links to its moment in the video, for citing.",
+    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, chapters, and questions to ask next, written for this reader, which you can offer them. Every chapter links to its moment in the video, for citing.",
   input: z.object({ id: z.string().describe("The overview's id") }),
   run: async ({ id }, { sql, accountId }) => {
     const library = await readLibrary(sql, accountId);
@@ -253,7 +253,7 @@ const getTranscript = mcpTool({
   name: "get_transcript",
   title: "Read a transcript",
   description:
-    "Read the transcript of the video behind one saved overview, each paragraph stamped with the time it was said. Transcripts are long: fetch one to check what the video actually said behind a claim, not to survey many videos.",
+    "Read the transcript behind one saved overview, the reader's own copy, each paragraph stamped with the time it was said. Use it for anything the overview doesn't cover or to check what was actually said, rather than finding a transcript on the web. Transcripts are long: read one at a time, not to survey many.",
   input: z.object({ id: z.string().describe("The overview's id") }),
   run: async ({ id }, { sql, accountId, transcripts }) => {
     const parsedId = OverviewId.safeParse(id);

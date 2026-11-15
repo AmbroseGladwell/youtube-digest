@@ -415,7 +415,7 @@ decided (approved or not, and whether the request held `profile:read`), and a co
 token, code or verifier is ever logged.
 
 Every tool call is logged as `mcp tool called` with the connection's id, the assistant
-(`claude`, `chatgpt` or `other`, from the name it registered with by `mcpAssistant`, never
+(`claude`, `chatgpt`, `gemini` or `other`, from the name it registered with by `mcpAssistant`, never
 the name itself), the tool's name, how many overviews it returned or marked (for the tools that
 do), whether it failed, and how long it took. A call that reads or makes one project
 (`get_project`, `create_project`) adds the project's id and whether it has a purpose

@@ -35,7 +35,7 @@ would have given for free:
 | The video's title, channel, link, duration, publish date and thumbnail | Topics — the reader's filing |
 | The transcript | Read and favourite state, which was never on this record anyway (`docs/prototype/decisions.md`) |
 | The narration: its key, voice, duration and line starts | The reader's name, anywhere on the page or in its head |
-| A recipe's whole recipe, method included (OV-159, `recipe-notes.md`) | |
+| A recipe's whole recipe, method included (OV-159, `recipe-notes.md`) | Questions to ask next, written for the reader and able to name their life (OV-266, `follow-up-questions.md`) |
 | | The verdict's "similar to" list |
 
 **The transcript is not in (OV-295, 14 Nov 2026).** It was, for a while, on the argument that a

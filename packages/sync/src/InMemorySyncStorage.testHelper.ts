@@ -1,4 +1,5 @@
 import {
+  AskedQuestions,
   DEFAULT_OVERVIEW_STATE,
   changedFields,
   foldFiling,
@@ -161,4 +162,5 @@ const stateOf = (record: Record<string, unknown> | undefined): FoldableState => 
   read: record?.read === true,
   favourite: record?.favourite === true,
   userTags: record === undefined ? [...DEFAULT_OVERVIEW_STATE.userTags] : strings(record.userTags),
+  asked: AskedQuestions.catch([]).parse(record?.asked),
 });

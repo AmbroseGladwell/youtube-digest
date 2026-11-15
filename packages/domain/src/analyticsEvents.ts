@@ -16,6 +16,7 @@ import { QueuedCaptureProblem } from "./QueuedCapture.js";
 import { PlaylistOrder } from "./PlaylistOrder.js";
 import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
+import { FollowUpAssistant } from "./FollowUpAssistant.js";
 import { OnboardingStep } from "./OnboardingStep.js";
 
 // A property can only be a choice, a flag, a number, one of our own random ids or a
@@ -72,6 +73,8 @@ export const ReaderTabChoice = z.enum(["overview", "transcript", "chapters"]);
 export type ReaderTabChoice = z.infer<typeof ReaderTabChoice>;
 const Direction = z.enum(["previous", "next"]);
 const SkipDirection = z.enum(["back", "forward"]);
+const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
+const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
@@ -367,6 +370,29 @@ export const analyticsEvents = {
         from: OverviewControl,
       }),
       listenPressed: event("The reader presses Listen in the reader's head, to the state chosen", { listening: z.boolean() }),
+    },
+    // Never which question: it can name the reader's own life (docs/features/follow-up-questions.md).
+    followUps: {
+      asked: event(
+        "The reader takes a question to ask next to their assistant, which one, whether it was filled in or copied, whether it is connected, whether the question was asked from where the reader stands, and its place in the list",
+        {
+          assistant: FollowUpAssistant,
+          handOff: FollowUpHandOffKind,
+          connected: z.boolean(),
+          forReader: z.boolean(),
+          position: z.number().int().positive(),
+        },
+      ),
+      setChanged: event("The reader shows a different three questions to ask next, and which set it moved to", {
+        set: z.number().int().positive(),
+        sets: z.number().int().positive(),
+      }),
+      assistantChosen: event("The reader chooses which assistant questions open in, on a first tap or from Change", {
+        assistant: FollowUpAssistant,
+        from: FollowUpAssistantChosenFrom,
+      }),
+      questionCopied: event("The reader copies a question alone from the first-tap menu"),
+      connectionSetUpFollowed: event("The reader follows Set up a connection from the first-tap menu to Settings › Connections"),
     },
     dubiousReasons: {
       opened: event(
@@ -783,7 +809,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, how many questions to ask next it kept, and the kind of note it got; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -812,6 +838,12 @@ export const analyticsEvents = {
           // and how many the note names as resources (OV-203). Absent for a video.
           articleLinks: z.number().int().nonnegative().optional(),
           articleResources: z.number().int().nonnegative().optional(),
+          // How many questions to ask next the note kept, never their text: up to nine, fewer for a
+          // source with few ideas or when some came back blank or too long (OV-266).
+          followUpQuestions: z.number().int().nonnegative().optional(),
+          // How many of those link an idea to the reader: up to one in each three, and none when the
+          // model finds no real connection or the reader has no profile (OV-266).
+          readerQuestions: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).

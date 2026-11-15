@@ -22,6 +22,7 @@ import { videoRecipe } from "./recipe/videoRecipe.js";
 import { sourceStepsOf } from "./sourceStepsOf.js";
 import { segmentRangeOf } from "./sections/segmentRangeFields.js";
 import { resolvedBigPicture } from "./sections/bigPicturePrompt.js";
+import { resolvedFollowUpQuestions } from "./sections/followUpQuestionsSection.js";
 import { transcriptBudget } from "./sections/transcriptBudget.js";
 
 type Meta = { id: OverviewId; savedAt: string };
@@ -43,6 +44,7 @@ function commonFields(input: GenerationInput, output: GeneratedRecipeVideoOutput
     }),
     chapters: resolveChapters(input, output.chapters),
     article: null,
+    followUpQuestions: resolvedFollowUpQuestions(output.followUpQuestions, output.readerQuestions),
   };
 }
 

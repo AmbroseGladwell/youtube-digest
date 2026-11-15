@@ -38,7 +38,15 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
+  sectionsEnabled: {
+    verdict: true,
+    selling: true,
+    howToApply: true,
+    watchAnyway: true,
+    steps: true,
+    resources: true,
+    followUpQuestions: true,
+  },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],
@@ -49,6 +57,8 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
 const output = (overrides: Record<string, unknown> = {}) => ({
   inOneLine: "A reported piece on one town's repair bill.",
   bigPicture: "",
+  followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The repair bill doubled because a survey was never checked.",
   thin: false,
   keyPoints: [
@@ -94,6 +104,17 @@ test("the prompt never talks about a video, and asks the read-anyway question wi
   const { systemPrompt } = composeArticlePrompt(input());
   assert.doesNotMatch(systemPrompt, /video|transcript|channel|creator/i);
   assert.match(systemPrompt, /## Read it anyway\?\nYes, no, or partial, plus a reason\. Default to no\./);
+});
+
+test("an article's note keeps its questions to ask next, asked about the article", async () => {
+  const questions = ["Would a ward-level heat plan work where I live?"];
+  assert.match(
+    composeArticlePrompt(input()).systemPrompt,
+    /## Questions to ask next\nUp to 9 questions I could ask an assistant to understand this article\nbetter, each one genuinely worth asking\./,
+  );
+  assert.deepEqual((await generate(answering(output({ followUpQuestions: questions })))).followUpQuestions, [
+    { question: "Would a ward-level heat plan work where I live?", forReader: false },
+  ]);
 });
 
 test("paragraphs are numbered across the article, with its headings kept for context", () => {
@@ -188,7 +209,17 @@ test("the page's text cannot close the block it sits in", () => {
 
 test("switching a section off leaves it out of the prompt and the output", () => {
   const prompt = composeArticlePrompt(
-    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true, resources: true } }),
+    input({
+      sectionsEnabled: {
+        verdict: true,
+        selling: true,
+        howToApply: true,
+        watchAnyway: false,
+        steps: true,
+        resources: true,
+        followUpQuestions: true,
+      },
+    }),
   );
   assert.doesNotMatch(prompt.systemPrompt, /Read it anyway/);
   assert.ok(!("readAnyway" in prompt.schema.shape));

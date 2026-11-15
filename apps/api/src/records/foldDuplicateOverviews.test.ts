@@ -106,7 +106,7 @@ test("per account and video the earliest-made overview is kept, the others' fili
     { topicIds: [TOPIC_A, TOPIC_B], tags: ["one", "two"], captureReason: "Why", rev: 2, updatedAt: "2026-09-02T00:00:00.000Z" },
   );
   const keptState = records.find((record) => record.kind === "overviewState" && record.id === earlier.id)!;
-  assert.deepEqual(keptState.body, { overviewId: earlier.id, read: true, favourite: true, userTags: ["keep", "later"] });
+  assert.deepEqual(keptState.body, { overviewId: earlier.id, read: true, favourite: true, userTags: ["keep", "later"], asked: [] });
   assert.equal(keptState.updatedAt, "2026-09-03T00:00:00.000Z");
   const gone = records.filter((record) => record.id === later.id);
   assert.deepEqual(

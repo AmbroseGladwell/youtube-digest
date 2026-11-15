@@ -147,6 +147,10 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-15 | privacy | OV-266 | Your library: taking a question to ask next to an assistant notes which question, which assistant and when, kept and synced with read and favourite; the settings list names which assistant questions open in. |
+| 2026-11-15 | privacy | OV-266 | Tapping a question to ask next opens the assistant the reader chooses with the question and, unless it's connected, the whole overview, in the link or copied to paste; it goes from the browser to that provider, not through us. |
+| 2026-11-15 | terms | OV-266 | Assistants: a question to ask next opens the chosen assistant with the question and the overview, sent from the browser; what happens there is between the reader and its provider. |
+| 2026-11-14 | privacy | OV-266 | About you and what we have learned also shape the questions to ask next; an assistant you connect reads them with the overview, and a shared link never carries them. |
 | 2026-11-14 | privacy | OV-294 | Podcast episodes: the show is looked up in Podcast Index, then Apple's directory, sent only the show's name or Apple's ids; our server's YouTube search goes through YouTube's API; neither is sent anything about the reader. Retention: a YouTube video matched to an episode is checked again every 30 days. Google's privacy policy is linked. |
 | 2026-11-14 | terms | OV-294 | Third parties: following a playlist and finding a podcast episode on YouTube use YouTube API Services, so using them binds the reader to YouTube's Terms of Service, linked, with Google's privacy policy, as YouTube's developer policies require. |
 | 2026-11-15 | privacy | OV-304 | Podcast episodes: the episode is looked for on YouTube on the show's channel or its publisher's, searched for by the show's name and the episode's title (it was the show's channel, by its name). Still nothing about the reader. |

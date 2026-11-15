@@ -155,6 +155,8 @@ Five folders, five different questions.
   positions as numbered paragraphs, and why no article text is kept.
 - `article-resources.md` — the links an article makes: which extraction keeps, how the model
   names up to five with why and code copies them, what is stored, and how the note shows them.
+- `follow-up-questions.md` — up to nine questions at the foot of every new overview, shown three
+  at a time and fitted to the reader, for their own assistant: how they're written, kept off shared links, and what's built.
 - `recipe-notes.md` — a recipe page's note: what code reads from the page, which pages count as a
   recipe, the summary, servings and units, copy and print, each list read aloud, and sharing.
 - `source-steps.md` — the steps a source gives, carried whole and from it alone: what counts as a

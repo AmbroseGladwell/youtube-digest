@@ -40,11 +40,13 @@ export interface GeneratedOutput {
     answer: WatchAnswer;
     reason: string;
   };
+  followUpQuestions: string[];
+  readerQuestions: string[];
 }
 
 export type GeneratedRecipeVideoOutput = Pick<
   GeneratedOutput,
-  "inOneLine" | "chapters" | "matchedTopicNames" | "suggestedTopic" | "tags"
+  "inOneLine" | "chapters" | "matchedTopicNames" | "suggestedTopic" | "tags" | "followUpQuestions" | "readerQuestions"
 > & {
   recipe: GeneratedRecipe | null;
 };

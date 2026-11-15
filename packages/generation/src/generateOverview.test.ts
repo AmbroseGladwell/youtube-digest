@@ -34,6 +34,8 @@ test("a well-formed response from the client assembles into a valid Overview", a
   const client: GenerationClient = async () => ({
     inOneLine: "A short description.",
     bigPicture: "",
+    followUpQuestions: [],
+    readerQuestions: [],
     coreClaim: "The core claim.",
     thin: false,
     keyPoints: [
@@ -69,6 +71,8 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
       return {
         inOneLine: Array(40).fill("word").join(" "),
         bigPicture: "",
+        followUpQuestions: [],
+        readerQuestions: [],
         coreClaim: "The core claim.",
         thin: false,
         keyPoints: [
@@ -89,6 +93,8 @@ test("a first attempt that violates a refinement (not just the JSON shape) gets 
     return {
       inOneLine: "A short description.",
       bigPicture: "",
+      followUpQuestions: [],
+      readerQuestions: [],
       coreClaim: "The core claim.",
       thin: false,
       keyPoints: [
@@ -134,6 +140,8 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
       return {
         inOneLine: "A long debate.",
         bigPicture: "",
+        followUpQuestions: [],
+        readerQuestions: [],
         coreClaim: "The core claim.",
         thin: false,
         keyPoints: ninePoints,
@@ -151,6 +159,8 @@ test("a key points list past the cap is sent back to be trimmed, with the attemp
     return {
       inOneLine: "A long debate.",
       bigPicture: "",
+      followUpQuestions: [],
+      readerQuestions: [],
       coreClaim: "The core claim.",
       thin: false,
       keyPoints: ninePoints.slice(0, 7),
@@ -177,6 +187,8 @@ const longTranscript = Array.from({ length: 90 }, (_, index) => ({
 const answer = (keyPointsAt: number[], chapterStarts = [0]) => ({
   inOneLine: "A long interview.",
   bigPicture: "",
+  followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: keyPointsAt.map((at) => ({ text: "A point.", startSegmentIndex: at, endSegmentIndex: at + 1 })),
@@ -231,6 +243,8 @@ const recipeAnswer = {
   matchedTopicNames: [],
   suggestedTopic: null,
   tags: ["one-tag", "two-tag", "three-tag"],
+  followUpQuestions: [],
+  readerQuestions: [],
   recipe: {
     summary: "A jollof built on well-washed rice.",
     ingredients: ["3 cups rice"],
@@ -241,6 +255,8 @@ const recipeAnswer = {
 const defaultAnswer = {
   inOneLine: "A short description.",
   bigPicture: "",
+  followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The core claim.",
   thin: false,
   keyPoints: ["one", "two", "three"].map((text) => ({ text, startSegmentIndex: -1, endSegmentIndex: -1 })),

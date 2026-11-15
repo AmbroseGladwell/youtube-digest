@@ -226,7 +226,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     return read.status === "read" ? read.record : { ...DEFAULT_OVERVIEW_STATE, overviewId };
   }
 
-  async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>) {
+  async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
     const raw = await this.#read(OVERVIEW_STATES_STORE, overviewId);
     const current =
       raw === undefined

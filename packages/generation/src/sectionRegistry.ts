@@ -9,6 +9,7 @@ import { sourceStepsSection } from "./sections/sourceStepsSection.js";
 import { watchAnywaySection } from "./sections/watchAnywaySection.js";
 import { recipeSection } from "./sections/recipeSection.js";
 import { recipeVideoCoreSection } from "./sections/recipeVideoCoreSection.js";
+import { followUpQuestionsSection, recipeFollowUpQuestionsSection } from "./sections/followUpQuestionsSection.js";
 import type { PromptSection } from "./PromptSection.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
@@ -16,7 +17,16 @@ import type { GenerationInput } from "./GenerationInput.js";
 // others can't drift apart from theirs (docs/features/overview-generation-decisions.md,
 // "The kind check").
 const REGISTRY: Record<NoteKind, PromptSection[]> = {
-  default: [coreSection, chaptersSection, filingSection, verdictSection, sellingSection, howToApplySection, watchAnywaySection],
+  default: [
+    coreSection,
+    chaptersSection,
+    filingSection,
+    verdictSection,
+    sellingSection,
+    howToApplySection,
+    watchAnywaySection,
+    followUpQuestionsSection,
+  ],
   process: [
     processCoreSection,
     chaptersSection,
@@ -26,8 +36,9 @@ const REGISTRY: Record<NoteKind, PromptSection[]> = {
     sourceStepsSection,
     processHowToApplySection,
     watchAnywaySection,
+    followUpQuestionsSection,
   ],
-  recipe: [recipeVideoCoreSection, chaptersSection, filingSection, recipeSection],
+  recipe: [recipeVideoCoreSection, chaptersSection, filingSection, recipeSection, recipeFollowUpQuestionsSection],
 };
 
 // With the steps switched off, a process note is written as a default one, so its key points

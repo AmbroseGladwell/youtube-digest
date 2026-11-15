@@ -13,6 +13,7 @@ const privateOverview = () =>
     captureReason: "Read before the Thursday review.",
     topicIds: [TopicId.parse("2f1c8e4a-9b76-4d35-8a21-6c0f5e3d7b94")],
     tags: ["energy-policy", "nuclear", "grids"],
+    followUpQuestions: [{ question: "Would a capacity market keep my small solar co-op solvent?", forReader: true }],
     verdict: {
       novelty: "common_knowledge",
       standsOut: null,

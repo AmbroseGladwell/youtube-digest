@@ -14,7 +14,22 @@ test("every section defaults to enabled, matching current behaviour", () => {
     watchAnyway: true,
     steps: true,
     resources: true,
+    followUpQuestions: true,
   });
+});
+
+test("settings saved before the questions switch read with the questions shown, and no assistant chosen", () => {
+  const { followUpQuestions: _, ...before } = DEFAULT_SECTIONS_ENABLED;
+  const { followUpAssistant: __, ...saved } = DEFAULT_SETTINGS;
+  const read = Settings.parse({ ...saved, sectionsEnabled: { ...before, selling: false } });
+
+  assert.deepEqual(read.sectionsEnabled, { ...DEFAULT_SECTIONS_ENABLED, selling: false });
+  assert.equal(read.followUpAssistant, null);
+});
+
+test("an assistant this client doesn't know reads as none chosen, rather than taking the settings with it", () => {
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, followUpAssistant: "copilot" }).followUpAssistant, null);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, followUpAssistant: "chatgpt" }).followUpAssistant, "chatgpt");
 });
 
 test("settings saved before the resources switch read with resources shown", () => {

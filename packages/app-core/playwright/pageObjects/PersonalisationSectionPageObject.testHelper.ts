@@ -20,6 +20,15 @@ export class PersonalisationSectionPageObject extends PageObject {
         : expect(this.page.getByTestId(personalisationSectionTestIds.stepsOffNote)).toHaveCount(0),
     );
 
+  verifyFollowUpQuestionsOffNoteIsShown = (shown: boolean) =>
+    this.step(`verifyFollowUpQuestionsOffNoteIsShown ${shown}`, () =>
+      shown
+        ? expect(this.page.getByTestId(personalisationSectionTestIds.followUpQuestionsOffNote)).toHaveText(
+            "Questions are hidden on every overview. They’re still written, so turning this back on shows them again.",
+          )
+        : expect(this.page.getByTestId(personalisationSectionTestIds.followUpQuestionsOffNote)).toHaveCount(0),
+    );
+
   verifyResourcesOffNoteIsShown = (shown: boolean) =>
     this.step(`verifyResourcesOffNoteIsShown ${shown}`, () =>
       shown

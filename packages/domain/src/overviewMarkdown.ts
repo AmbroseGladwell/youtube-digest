@@ -4,6 +4,7 @@ import { recipeFigures, recipeFiguresLine, recipeStepGroups } from "./recipeFact
 import { DUBIOUS_BASIS_LABEL } from "./dubiousBasisLabel.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
+import { FOLLOW_UP_QUESTIONS_SECTION } from "./FollowUpQuestions.js";
 import type { Overview } from "./Overview.js";
 import type { TimeRange } from "./WatchAnyway.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
@@ -48,6 +49,13 @@ export function overviewMarkdown(overview: Overview): string {
     }
   };
 
+  const finished = () => {
+    if (overview.followUpQuestions !== null && overview.followUpQuestions.length > 0) {
+      section(FOLLOW_UP_QUESTIONS_SECTION, bullets(overview.followUpQuestions.map((followUp) => followUp.question)));
+    }
+    return `${sections.join("\n\n")}\n`;
+  };
+
   if (overview.captureReason !== null && overview.captureReason.trim() !== "") {
     section("Why I saved it", overview.captureReason.trim());
   }
@@ -77,7 +85,7 @@ export function overviewMarkdown(overview: Overview): string {
             .join("\n\n"),
     );
     chaptersSection();
-    return `${sections.join("\n\n")}\n`;
+    return finished();
   }
 
   section("Premise", overview.inOneLine);
@@ -166,5 +174,5 @@ export function overviewMarkdown(overview: Overview): string {
   }
   chaptersSection();
 
-  return `${sections.join("\n\n")}\n`;
+  return finished();
 }

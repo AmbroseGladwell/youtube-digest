@@ -87,6 +87,7 @@ so the three cannot disagree:
 | `captureReason` | the winner's, or the loser's where the winner has none |
 | `read`, `favourite` | kept if either copy had them |
 | `userTags` | a union |
+| `asked` | each question once, at its latest ask (OV-266) |
 | the text | the winner's; the loser's is discarded |
 
 Discarding the loser's text is the card's decision: the first copy is a complete overview

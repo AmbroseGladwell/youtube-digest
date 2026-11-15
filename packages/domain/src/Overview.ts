@@ -3,6 +3,7 @@ import { OverviewId } from "./Brands.js";
 import { ArticleDetails } from "./ArticleDetails.js";
 import { Source } from "./Source.js";
 import { BigPicture } from "./BigPicture.js";
+import { FollowUpQuestions } from "./FollowUpQuestions.js";
 import { CoreFields, KeyPoint, MOST_KEY_POINTS } from "./CoreFields.js";
 import { RecipeNote } from "./RecipeNote.js";
 import { Filing } from "./Filing.js";
@@ -74,6 +75,9 @@ export const Overview = z
     // fields, which stay empty (docs/features/recipe-notes.md).
     recipe: RecipeNote.nullable(),
     keyPoints: z.array(KeyPoint).max(MOST_KEY_POINTS),
+    // Null on a record written before they existed, which shows no questions. Up to nine, best
+    // first, shown three at a time (docs/features/follow-up-questions.md).
+    followUpQuestions: FollowUpQuestions.nullable(),
   })
   .superRefine((overview, ctx) => {
     recipeShape(overview, ctx);

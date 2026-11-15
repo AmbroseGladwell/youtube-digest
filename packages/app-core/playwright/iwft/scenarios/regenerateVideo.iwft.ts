@@ -25,7 +25,7 @@ test("a video overview regenerates from its menu under the same id, keeping the 
 }) => {
   backendSimulator.overviews.seedTopic(TOPIC);
   backendSimulator.overviews.seed(OLD);
-  backendSimulator.overviews.seedState({ overviewId: OLD.id, read: false, favourite: true, userTags: [] });
+  backendSimulator.overviews.seedState({ overviewId: OLD.id, read: false, favourite: true, userTags: [], asked: [] });
   const library = await launcher.launchExpectingLibrary({ apiKeys: ANTHROPIC_KEY });
   await library.nthCard(0).openReader();
 

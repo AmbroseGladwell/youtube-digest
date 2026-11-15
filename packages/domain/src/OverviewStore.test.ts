@@ -85,7 +85,7 @@ class InMemoryOverviewStore implements OverviewStore {
     return this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE };
   }
 
-  async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags">>) {
+  async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
     const current = await this.getOverviewState(overviewId);
     this.#states.set(overviewId, { ...current, ...patch });
   }
@@ -117,6 +117,7 @@ const exampleOverview: Overview = {
   recipe: null,
   inOneLine: "A short description of the video.",
   bigPicture: null,
+  followUpQuestions: null,
   sourceSteps: null,
   coreClaim: "The single assertion this video makes.",
   thin: false,
@@ -177,7 +178,7 @@ test("a user-added tag survives regeneration, because it never lived on the over
   assert.deepEqual(state.userTags, ["re-watch"]);
 });
 
-test("getOverviewState defaults to unread, unfavourited, and no user tags for an overview nobody has touched", async () => {
+test("getOverviewState defaults to unread, unfavourited, no user tags and nothing asked for an overview nobody has touched", async () => {
   const store = new InMemoryOverviewStore();
   const state = await store.getOverviewState(NEVER_SEEN_OVERVIEW_ID);
   assert.deepEqual(state, {
@@ -185,6 +186,7 @@ test("getOverviewState defaults to unread, unfavourited, and no user tags for an
     read: false,
     favourite: false,
     userTags: [],
+    asked: [],
   });
 });
 

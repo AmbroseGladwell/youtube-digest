@@ -87,6 +87,8 @@ const WITHOUT_VERDICT = { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: 
 const answer = {
   inOneLine: "Two hosts on a political week.",
   bigPicture: "",
+  followUpQuestions: [],
+  readerQuestions: [],
   coreClaim: "The week changed less than it seemed.",
   thin: false,
   keyPoints: [

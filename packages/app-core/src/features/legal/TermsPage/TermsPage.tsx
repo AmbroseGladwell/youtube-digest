@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-14";
+export const TERMS_UPDATED_ON = "2026-11-15";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -158,7 +158,9 @@ const sections: readonly LegalSection[] = [
       <p>
         Connecting an assistant lets it read your library and what we know about you, and mark overviews and organise them into projects on
         your behalf. You can stop it reading what we know about you in Settings › Personalisation. What the assistant does with what it
-        reads is between you and the assistant's provider. You can revoke a connection at any time in Settings › Connections.
+        reads is between you and the assistant's provider. You can revoke a connection at any time in Settings › Connections. A question to
+        ask next opens the assistant you choose with the question and the overview, sent from your browser; what happens there is between
+        you and its provider too.
       </p>
     ),
   },

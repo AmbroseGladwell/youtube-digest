@@ -109,6 +109,8 @@ test("a recipe video's check and note are told apart, and the note's answers alo
     matchedTopicNames: [],
     suggestedTopic: null,
     tags: ["stew", "dinner", "one-pot"],
+    followUpQuestions: [],
+    readerQuestions: [],
     recipe: {
       summary: "A stew.",
       ingredients: ["salt"],
