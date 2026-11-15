@@ -199,6 +199,23 @@ honestly, on real library sources up to 89 minutes.
   hour of video per account, which is real Neon storage for no measured gain.
 - **Reopen this** if chat goes beyond one source, or if sources much longer than three hours become
   common. The code for both is in the spike.
+- **If chat goes beyond one source, start from search by meaning, not transcript vectors.**
+  OV-229 already embeds each overview's big picture, core claim, key points and recipe summary,
+  one vector per claim (`claimsOf`, `search-by-meaning.md`). That is enough to pick which sources
+  a question is about. The closest few overviews by claim then go in with their whole
+  transcripts. At about 12,000 tokens an hour of video, three or four hour-long sources fit, and
+  caching keeps follow-ups cheap. That needs no new embeddings, and within each source it is the
+  shape that won here.
+  - **The gap is a detail the overview left out.** A `transcriptOnly` question, such as an exact
+    dose said in the video but not in the note, may match no claim, so the right source is never
+    picked. One source hid this, because the whole transcript was always there.
+  - **Search has no clean cutoff.** OV-229 found no similarity that separates right matches from
+    wrong ones, so "the closest few" always returns something. Declining when the library has no
+    answer then rests on the model, which declined 24 of 24 here.
+  - **So measure before adding passage vectors.** Using this harness, ask the same questions against a
+    whole library and count, in code, how often claim search puts the right source in the closest
+    few, by question kind. Add per-passage vectors only if `transcriptOnly` questions miss often.
+    Drafted as card 6 below.
 - **Articles** are shorter than videos (the coverage set's longest takes 27 minutes to read), so
   the whole text goes in. The article paragraphs already have numbers (`articleParagraphs`), so
   they are the passage ids, and a citation points at a paragraph. **Podcast episodes** have timed
@@ -328,6 +345,11 @@ These are drafts for the owner to accept, trim or reorder before they go on the 
 4. **Chats over MCP:** `list_chats`, `get_chat`, and the line in `get_overview`.
 5. **Later, only if asked for:** chat on the reader's own key from the device; chat across a
    project.
+6. **Before any chat across sources, an investigation:** does claim search pick the right
+   sources? Measure, in code, how often OV-229's claim search puts the source that answers a
+   question in the closest few, by question kind, over a whole library. Then price and score
+   "closest overviews plus their whole transcripts" against passage vectors, using this harness.
+   Passage vectors are built only if `transcriptOnly` questions miss their source often.
 
 ## Running it again
 
