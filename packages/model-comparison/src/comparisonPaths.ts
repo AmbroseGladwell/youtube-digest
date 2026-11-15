@@ -26,6 +26,7 @@ export const comparisonPaths = {
   coverageTranscripts: join(dataDirectory, "coverage", "transcripts"),
   coverageArticles: join(dataDirectory, "coverage", "articles"),
   listen: (name: string) => join(dataDirectory, "listens", name),
+  chat: join(dataDirectory, "chat"),
 };
 
 export async function loadTranscripts(set: TranscriptSetName = "main"): Promise<FetchedTranscript[]> {

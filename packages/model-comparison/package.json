@@ -28,7 +28,11 @@
     "cost-model": "npm run build && node dist/cli/compareCostModel.js",
     "readers": "npm run build && node dist/cli/compareReaders.js",
     "coverage": "npm run build && node dist/cli/measureCoverage.js",
-    "blind-listen": "npm run build && node dist/cli/blindListen.js"
+    "blind-listen": "npm run build && node dist/cli/blindListen.js",
+    "chat-prepare": "npm run build && node dist/cli/prepareChatSources.js",
+    "chat-retrieval": "npm run build && node dist/cli/measureChatRetrieval.js",
+    "chat": "npm run build && node dist/cli/compareChat.js",
+    "chat-report": "npm run build && node dist/cli/reportChat.js"
   },
   "dependencies": {
     "@overview/articles": "*",
