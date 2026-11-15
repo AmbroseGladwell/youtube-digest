@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ProjectId } from "@overview/domain";
 import { ChecklistPicker } from "../../../../components/shared/ChecklistPicker/ChecklistPicker.js";
 import {
@@ -21,8 +22,15 @@ export interface ProjectPickerProps {
 
 const footLine = (count: number): string => (count === 0 ? "Not in a project yet" : count === 1 ? "In 1 project" : `In ${count} projects`);
 
+const inOrderAsOpened = (summaries: ProjectSummary[], openedOrder: ProjectId[]): ProjectSummary[] => {
+  const place = (id: ProjectId) => openedOrder.indexOf(id);
+  return [...summaries].sort((left, right) => place(left.project.id) - place(right.project.id));
+};
+
 export function ProjectPicker({ summaries, holding, of, onToggle, onNewProject, onClose }: ProjectPickerProps) {
-  const options = summaries.map(({ project, items }) => {
+  const [openedOrder] = useState(() => summaries.map(({ project }) => project.id));
+  const ordered = inOrderAsOpened(summaries, openedOrder);
+  const options = ordered.map(({ project, items }) => {
     const held = holding(project.id);
     return {
       id: project.id,
@@ -52,7 +60,7 @@ export function ProjectPicker({ summaries, holding, of, onToggle, onNewProject, 
         of === 1
           ? footLine(options.filter(({ state }) => state === "all").length)
           : sharedChecklistFoot(
-              options.map(({ name }, index) => ({ name, held: holding(summaries[index]!.project.id) })),
+              options.map(({ name }, index) => ({ name, held: holding(ordered[index]!.project.id) })),
               of,
               "None of them is in a project yet",
             )

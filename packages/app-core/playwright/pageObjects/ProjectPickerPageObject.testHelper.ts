@@ -17,6 +17,17 @@ export class ProjectPickerPageObject extends PageObject {
       expect(this.get(projectPickerTestIds.root).getByRole("checkbox")).toHaveCount(names.length),
     );
 
+  verifyOffersInOrder = (names: string[]) =>
+    this.step(`verifyOffersInOrder ${names.join(", ")}`, () =>
+      expect
+        .poll(() =>
+          this.get(projectPickerTestIds.root)
+            .locator(`[data-testid^="${projectPickerTestIds.option("")}"]`)
+            .evaluateAll((options) => options.map((option) => option.getAttribute("data-testid"))),
+        )
+        .toEqual(names.map(projectPickerTestIds.option)),
+    );
+
   verifyIsTicked = (name: string, ticked: boolean) =>
     this.step(`verifyIsTicked ${name} ${ticked}`, () =>
       expect(this.get(projectPickerTestIds.option(name)).getByRole("checkbox")).toBeChecked({ checked: ticked }),

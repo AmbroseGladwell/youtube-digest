@@ -321,6 +321,24 @@ test.describe("on an overview", () => {
     expect((await backendSimulator.projects.members()).map((member) => member.overviewId)).toEqual([layout.id]);
   });
 
+  test("Ticking and unticking leaves every project where it was in the list", async ({ launcher, backendSimulator }) => {
+    const garden = makeProject({ id: crypto.randomUUID() as never, name: "Garden", createdAt: "2026-11-01T09:00:00.000Z" });
+    backendSimulator.overviews.seed(layout);
+    backendSimulator.projects.seed(project);
+    backendSimulator.projects.seed(garden);
+    const library = await launcher.launchExpectingLibrary();
+    const reader = await library.cardWithTitle("The kitchen layout").openReader();
+
+    const picker = await reader.addToProject();
+    await picker.verifyOffersInOrder(["Kitchen renovation", "Garden"]);
+    await picker.tick("Garden");
+    await picker.verifyIsTicked("Garden", true);
+    await picker.verifyOffersInOrder(["Kitchen renovation", "Garden"]);
+    await picker.tick("Garden");
+    await picker.verifyIsTicked("Garden", false);
+    await picker.verifyOffersInOrder(["Kitchen renovation", "Garden"]);
+  });
+
   test("New project… from the picker says what it will add, and adds it", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(layout);
     const library = await launcher.launchExpectingLibrary();
