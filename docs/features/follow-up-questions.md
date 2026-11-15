@@ -103,7 +103,8 @@ box filled in where that works. Tested by the owner on 14 November 2026.
   `<question>…</question>` and `<overview>title (The Overview id …)</overview>`. Without the
   instruction ChatGPT answered from the web and cited outside transcript sites.
 - **Not connected:** `<question>…</question>` and the whole note as Markdown inside
-  `<overview>…</overview>`.
+  `<overview>…</overview>`, less its own Questions to ask next (owner, 15 November 2026), so the
+  assistant answers the one asked rather than all nine. The Markdown export and MCP keep them.
 
 **Too long for a link** (`followUpHandOff`): Claude and ChatGPT filled in whole from links of up to
 about 51,000 characters in the owner's test, so a link longer than 50,000 is copied and the

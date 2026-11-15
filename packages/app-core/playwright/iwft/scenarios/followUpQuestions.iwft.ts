@@ -106,7 +106,7 @@ test("with no assistant chosen, the first tap asks which, then asks there at onc
   const [tab] = await reader.followUps.newTabs();
   expect(tab?.origin).toBe("https://chatgpt.com");
   expect(tab?.searchParams.get("q")).toBe(
-    `<question>${QUESTIONS[0]!.question}</question>\n\n<overview>\n${overviewMarkdown(overview)}</overview>`,
+    `<question>${QUESTIONS[0]!.question}</question>\n\n<overview>\n${overviewMarkdown({ ...overview, followUpQuestions: null })}</overview>`,
   );
   await reader.followUps.verifyLineReads("Each opens ChatGPT in a new tab with this note filled in. Change");
   await expect
@@ -168,7 +168,7 @@ test("Gemini can't be filled in by a link, so a tap copies the prompt, opens Gem
   await reader.followUps.verifyToastReads("Copied. Gemini is opening in a new tab: paste it there.");
   expect((await reader.followUps.newTabs()).map(String)).toEqual(["https://gemini.google.com/app"]);
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    `<question>${QUESTIONS[0]!.question}</question>\n\n<overview>\n${overviewMarkdown(overview)}</overview>`,
+    `<question>${QUESTIONS[0]!.question}</question>\n\n<overview>\n${overviewMarkdown({ ...overview, followUpQuestions: null })}</overview>`,
   );
 });
 
