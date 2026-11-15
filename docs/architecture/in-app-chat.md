@@ -215,7 +215,7 @@ honestly, on real library sources up to 89 minutes.
   - **So measure before adding passage vectors.** Using this harness, ask the same questions against a
     whole library and count, in code, how often claim search puts the right source in the closest
     few, by question kind. Add per-passage vectors only if `transcriptOnly` questions miss often.
-    Drafted as card 6 below.
+    That is OV-307 (https://trello.com/c/7zrzBysy).
 - **Articles** are shorter than videos (the coverage set's longest takes 27 minutes to read), so
   the whole text goes in. The article paragraphs already have numbers (`articleParagraphs`), so
   they are the passage ids, and a citation points at a paragraph. **Podcast episodes** have timed
@@ -345,7 +345,7 @@ These are drafts for the owner to accept, trim or reorder before they go on the 
 4. **Chats over MCP:** `list_chats`, `get_chat`, and the line in `get_overview`.
 5. **Later, only if asked for:** chat on the reader's own key from the device; chat across a
    project.
-6. **Before any chat across sources, an investigation:** does claim search pick the right
+6. **Before any chat across sources, an investigation (OV-307, already on the board):** does claim search pick the right
    sources? Measure, in code, how often OV-229's claim search puts the source that answers a
    question in the closest few, by question kind, over a whole library. Then price and score
    "closest overviews plus their whole transcripts" against passage vectors, using this harness.
