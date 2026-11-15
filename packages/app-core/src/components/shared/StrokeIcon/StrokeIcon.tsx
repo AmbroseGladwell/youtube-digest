@@ -43,6 +43,7 @@ export type StrokeIconName =
   | "timer"
   | "bell"
   | "copy"
+  | "plug"
   | "scrollText"
   | "share"
   | "bookmark"
@@ -333,6 +334,14 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
     <>
       <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
       <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </>
+  ),
+  plug: (
+    <>
+      <path d="M12 22v-5" />
+      <path d="M9 8V2" />
+      <path d="M15 8V2" />
+      <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
     </>
   ),
   bookmark: (

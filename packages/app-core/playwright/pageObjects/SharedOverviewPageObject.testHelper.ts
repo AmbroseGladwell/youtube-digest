@@ -10,10 +10,15 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { sharedTranscriptPromptTestIds } from "../../src/features/sharedPage/components/SharedTranscriptPrompt/SharedTranscriptPromptTestIds.js";
 import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 import { ArticleResourcesPageObject } from "./ArticleResourcesPageObject.testHelper.js";
+import { FollowUpQuestionsPageObject } from "./FollowUpQuestionsPageObject.testHelper.js";
 
 export class SharedOverviewPageObject extends PageObject {
   get resources(): ArticleResourcesPageObject {
     return new ArticleResourcesPageObject(this.testContext);
+  }
+
+  get followUps(): FollowUpQuestionsPageObject {
+    return new FollowUpQuestionsPageObject(this.testContext);
   }
 
   get relatedByTag(): RelatedByTagPageObject {

@@ -92,6 +92,11 @@ export function PersonalisationSection() {
             Resources are hidden on every overview. They’re still kept, so turning this back on shows them again.
           </p>
         )}
+        {!sectionsEnabled.followUpQuestions && (
+          <p className={styles.note} data-testid={personalisationSectionTestIds.followUpQuestionsOffNote}>
+            Questions are hidden on every overview. They’re still written, so turning this back on shows them again.
+          </p>
+        )}
       </div>
     </div>
   );

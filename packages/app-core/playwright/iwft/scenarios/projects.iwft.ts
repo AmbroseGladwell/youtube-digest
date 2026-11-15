@@ -108,7 +108,7 @@ test.describe("a project's page", () => {
 
   const seed = (backendSimulator: Parameters<Parameters<typeof test>[2]>[0]["backendSimulator"]) => {
     for (const overview of [layout, sink, quartz, elsewhere]) backendSimulator.overviews.seed(overview);
-    backendSimulator.overviews.seedState({ overviewId: layout.id, read: true, favourite: false, userTags: [] });
+    backendSimulator.overviews.seedState({ overviewId: layout.id, read: true, favourite: false, userTags: [], asked: [] });
     backendSimulator.projects.seed(project);
     backendSimulator.projects.seedMember(makeProjectMember(project, layout.id));
     backendSimulator.projects.seedMember(makeProjectMember(project, sink.id, { addedBy: CLAUDE, addedAt: "2026-11-11T09:00:00.000Z" }));

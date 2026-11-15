@@ -407,7 +407,13 @@ test("an overview the account already holds is folded into the account's copy: p
   assert.deepEqual(api.callsTo("setOverviewCaptureReason")[0]!.args.slice(0, 2), ["theirs", "Why"]);
   assert.deepEqual(api.callsTo("setOverviewState")[0]!.args.slice(0, 2), ["theirs", { read: true, userTags: ["later"] }]);
   assert.equal(storage.records.has("overview/mine"), false);
-  assert.deepEqual(storage.records.get("overviewState/theirs"), { overviewId: "theirs", read: true, favourite: true, userTags: ["later"] });
+  assert.deepEqual(storage.records.get("overviewState/theirs"), {
+    overviewId: "theirs",
+    read: true,
+    favourite: true,
+    userTags: ["later"],
+    asked: [],
+  });
 });
 
 test("an overview held by a copy this device cannot read yet is parked with the reason rather than dropped", async () => {

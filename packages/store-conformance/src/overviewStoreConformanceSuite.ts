@@ -106,6 +106,7 @@ export function defineOverviewStoreConformanceSuite(
       read: false,
       favourite: false,
       userTags: [],
+      asked: [],
     });
   });
 
@@ -131,6 +132,7 @@ export function defineOverviewStoreConformanceSuite(
       read: false,
       favourite: false,
       userTags: [],
+      asked: [],
     });
   });
 

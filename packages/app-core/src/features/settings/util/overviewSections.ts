@@ -1,4 +1,5 @@
 import {
+  FOLLOW_UP_QUESTIONS_SECTION,
   HOW_TO_APPLY_SECTION,
   RESOURCES_SECTION,
   SOURCE_STEPS_SECTION,
@@ -28,5 +29,11 @@ export const OVERVIEW_SECTIONS: OverviewSection[] = [
     section: "resources",
     label: RESOURCES_SECTION,
     hint: "Links an article shares that are worth opening, each with why and where it was shared.",
+  },
+  // Design 266aa: last, after Resources, as the block is last in the note.
+  {
+    section: "followUpQuestions",
+    label: FOLLOW_UP_QUESTIONS_SECTION,
+    hint: "Questions about the ideas in each overview, to take to your assistant.",
   },
 ];

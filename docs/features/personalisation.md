@@ -116,12 +116,12 @@ line onto an empty sentence is taken up by the migration; a filled sentence is l
 
 The section sits after Narration voice (`settings.md`) and is shown on every surface,
 because every surface makes overviews. Its row leads with the first filled section, then says
-how many sections are on: "A dad · Every section", "About you not set · 4 of 5 sections", or
-"Summary and key points only" with all six off.
+how many sections are on: "A dad · Every section", "About you not set · 6 of 7 sections", or
+"Summary and key points only" with all seven off.
 
 It has one switch per optional section, named as the reader sees the section on a note
 ("Verdict", "What it sells", "The steps it gives", "How to apply", "Watch it anyway?",
-"Resources it points to"), each
+"Resources it points to", "Questions to ask next"), each
 with a line on what it holds. A switch takes effect from the next overview. Overviews already
 made keep the sections they have; nothing is regenerated.
 
@@ -133,6 +133,10 @@ The resources switch only hides. Off, it hides an article's resources on every o
 they are still made and kept, because no article text is kept to make them from later; turning
 it back on shows them again, and Settings says so (design 203u; `docs/features/article-resources.md`).
 It is on for settings saved before it.
+
+The questions switch only hides too: off, the block is gone from every overview, and the
+questions are still written and kept, so turning it back on shows them again (design 266ab;
+`docs/features/follow-up-questions.md`). It is on for settings saved before it.
 
 A section switched off is **left out of the prompt**, not written and then hidden, so the
 model spends nothing on it and the record holds `null` there, as a thin note's verdict does.

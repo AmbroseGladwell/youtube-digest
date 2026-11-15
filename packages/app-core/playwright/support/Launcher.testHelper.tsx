@@ -16,6 +16,7 @@ import {
   type NarrationVoice,
   type Plan,
   type SectionsEnabled,
+  type FollowUpAssistant,
   type Settings,
   type ThemeMode,
 } from "@overview/domain";
@@ -104,6 +105,7 @@ export interface LaunchOptions {
   keepLearning?: boolean;
   shareProfileWithAssistants?: boolean;
   sectionsEnabled?: SectionsEnabled;
+  followUpAssistant?: FollowUpAssistant;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -187,6 +189,7 @@ export class Launcher {
           ...(options.keepLearning === undefined ? {} : { keepLearning: options.keepLearning }),
           ...(options.shareProfileWithAssistants === undefined ? {} : { shareProfileWithAssistants: options.shareProfileWithAssistants }),
           ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
+          ...(options.followUpAssistant === undefined ? {} : { followUpAssistant: options.followUpAssistant }),
         },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,
