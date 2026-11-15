@@ -30,6 +30,8 @@ import {
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
 import {
+  CHATS_BY_OVERVIEW_INDEX,
+  CHATS_STORE,
   MEMBERS_BY_OVERVIEW_INDEX,
   OVERVIEWS_STORE,
   OVERVIEW_STATES_STORE,
@@ -171,16 +173,19 @@ export class IndexedDbOverviewStore implements OverviewStore {
   }
 
   // The state row goes with the overview, as it does on the server: ids are never reused,
-  // so a surviving state would be a permanent orphan (docs/features/sync-api.md).
+  // so a surviving state would be a permanent orphan (docs/features/sync-api.md). Its
+  // membership records and chats go too, and the server's delete takes them, so they are not journaled.
   async deleteOverview(id: OverviewId) {
     const transaction = this.#db.transaction(
-      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, ...JOURNALLED_STORES],
+      [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, ...JOURNALLED_STORES],
       "readwrite",
     );
     transaction.objectStore(OVERVIEWS_STORE).delete(id);
     transaction.objectStore(OVERVIEW_STATES_STORE).delete(id);
     const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
     for (const key of await promisifyRequest<IDBValidKey[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAllKeys(id))) members.delete(key);
+    const chats = transaction.objectStore(CHATS_STORE);
+    for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_OVERVIEW_INDEX).getAllKeys(id))) chats.delete(key);
     const journaled = await appendPendingWrite(transaction, {
       kind: "overview",
       id,

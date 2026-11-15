@@ -182,6 +182,9 @@ Five folders, five different questions.
   purpose line and a set of overviews; membership as one synced record per project and
   overview with a dated removal and a merge that commutes; deleting a project or an overview
   takes its members with it; the decisions taken on OV-168.
+- `chats.md` — chat about one overview, as records (OV-308): one synced `chat` record per
+  conversation, written by the server, with citations worked out by code; a reader deletes a
+  conversation; an overview's chats go with it and survive its regeneration.
 - `capture-queue.md` — the videos waiting on this device to become overviews: made one at a
   time, oldest first, while the app is open; the library's queue group, the queue page and
   the strip's seven states; what needs attention and why; waiting without a key; and

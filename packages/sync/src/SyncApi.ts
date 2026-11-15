@@ -22,6 +22,7 @@ export interface SyncApi {
   updateProject(id: string, patch: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
   deleteProject(id: string): Promise<WrittenRecord | null>;
   changeProjectMember(projectId: string, overviewId: string, change: Record<string, unknown>, updatedAt: string): Promise<WrittenRecord>;
+  deleteChat(overviewId: string, conversationId: string): Promise<WrittenRecord | null>;
   saveTranscript(transcript: StoredTranscript): Promise<void>;
   // Null when the account keeps no transcript for the video.
   getTranscript(videoId: string): Promise<StoredTranscript | null>;

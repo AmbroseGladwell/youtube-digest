@@ -1,4 +1,5 @@
 import { IndexedDbCaptureQueueStore } from "./IndexedDbCaptureQueueStore.js";
+import { IndexedDbChatStore } from "./IndexedDbChatStore.js";
 import { IndexedDbFollowedPlaylistStore } from "./IndexedDbFollowedPlaylistStore.js";
 import { IndexedDbOverviewStore } from "./IndexedDbOverviewStore.js";
 import { IndexedDbProjectStore } from "./IndexedDbProjectStore.js";
@@ -15,6 +16,7 @@ export interface LocalLibrary {
   followedPlaylistStore: IndexedDbFollowedPlaylistStore;
   captureQueueStore: IndexedDbCaptureQueueStore;
   projectStore: IndexedDbProjectStore;
+  chatStore: IndexedDbChatStore;
   syncStorage: IndexedDbSyncStorage;
   close: () => void;
 }
@@ -35,6 +37,7 @@ export async function openLocalLibrary({ accountId, ...options }: OpenLocalLibra
     followedPlaylistStore: new IndexedDbFollowedPlaylistStore(db, { onJournaled: syncStorage.notifyJournaled }),
     captureQueueStore: new IndexedDbCaptureQueueStore(db),
     projectStore: new IndexedDbProjectStore(db, { onJournaled: syncStorage.notifyJournaled }),
+    chatStore: new IndexedDbChatStore(db, { onJournaled: syncStorage.notifyJournaled }),
     syncStorage,
     close: () => db.close(),
   };
