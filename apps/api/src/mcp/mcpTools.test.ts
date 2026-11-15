@@ -318,7 +318,7 @@ test("mark_overviews marks overviews read, stamped by the server's clock, and th
   for (const overview of marked) {
     assert.ok(text.includes(`- **${overview.source.title}**`), overview.source.title);
     const change = await reader.change("overviewState", overview.id);
-    assert.deepEqual(change.body, { overviewId: overview.id, read: true, favourite: false, userTags: [] });
+    assert.deepEqual(change.body, { overviewId: overview.id, read: true, favourite: false, userTags: [], asked: [] });
     assert.equal(change.updatedAt, testApp.clock.now.toISOString());
   }
   const listed = await client.callTool("search_overviews", { read: true });
@@ -339,7 +339,7 @@ test("mark_overviews marks an overview unread and no longer a favourite, and lea
 
   assert.match(text, /^Marked 1 overview\(s\) unread and not a favourite:/);
   const change = await reader.change("overviewState", id);
-  assert.deepEqual(change.body, { overviewId: id, read: false, favourite: false, userTags: ["homeschool"] });
+  assert.deepEqual(change.body, { overviewId: id, read: false, favourite: false, userTags: ["homeschool"], asked: [] });
   assert.equal(change.rev, 2);
   await testApp.close();
 });

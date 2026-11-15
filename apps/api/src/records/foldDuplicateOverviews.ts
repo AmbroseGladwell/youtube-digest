@@ -1,5 +1,6 @@
 import {
   CURRENT_SCHEMA_VERSIONS,
+  AskedQuestions,
   DEFAULT_OVERVIEW_STATE,
   OVERVIEW_MIGRATIONS,
   OVERVIEW_STATE_MIGRATIONS,
@@ -172,7 +173,15 @@ async function statesOf(
       );
       return [
         record.id,
-        { record, state: { read: body.read === true, favourite: body.favourite === true, userTags: strings(body.userTags) } },
+        {
+          record,
+          state: {
+            read: body.read === true,
+            favourite: body.favourite === true,
+            userTags: strings(body.userTags),
+            asked: AskedQuestions.catch([]).parse(body.asked),
+          },
+        },
       ];
     }),
   );

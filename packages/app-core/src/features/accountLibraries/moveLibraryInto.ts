@@ -68,11 +68,12 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
     if (transcript !== null) await into.transcriptStore.saveTranscript(transcript);
     await into.overviewStore.saveOverview({ ...overview, topicIds });
 
-    const { read, favourite, userTags } = await from.overviewStore.getOverviewState(overview.id);
+    const { read, favourite, userTags, asked } = await from.overviewStore.getOverviewState(overview.id);
     const patch = {
       ...(read !== DEFAULT_OVERVIEW_STATE.read ? { read } : {}),
       ...(favourite !== DEFAULT_OVERVIEW_STATE.favourite ? { favourite } : {}),
       ...(userTags.length > 0 ? { userTags } : {}),
+      ...(asked.length > 0 ? { asked } : {}),
     };
     if (Object.keys(patch).length > 0) await into.overviewStore.setOverviewState(overview.id, patch);
   };

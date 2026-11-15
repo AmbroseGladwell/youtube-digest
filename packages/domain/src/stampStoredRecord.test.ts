@@ -71,7 +71,7 @@ test("both stamps come off again on read, because zod strips what the schema doe
 test("a state record stamped on write reads back without either key", () => {
   const state = { overviewId: randomUUID(), read: true, favourite: false, userTags: ["one-tag"] };
 
-  assert.deepEqual(OverviewState.parse(stampStoredRecord(state, 1, WRITTEN_AT)), state);
+  assert.deepEqual(OverviewState.parse(stampStoredRecord(state, 1, WRITTEN_AT)), { ...state, asked: [] });
 });
 
 test("a record with no updatedAt is undated rather than dated wrongly", () => {

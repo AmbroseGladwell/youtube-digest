@@ -6,6 +6,8 @@ import {
   FOLLOW_UP_QUESTIONS_SHOWN,
   followUpHandOff,
   followUpPrompt,
+  recordAskedQuestion,
+  type AskedQuestion,
   type FollowUpAssistant,
   type FollowUpQuestion,
   type Overview,
@@ -14,6 +16,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import type { ReaderAnalytics } from "../../../analytics/bindOverviewId.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import { useFollowUpAssistant } from "../../useFollowUpAssistant.js";
+import { askedLine } from "../../util/askedLine.js";
 import { copyText, handOffFollowUp } from "../../util/handOffFollowUp.js";
 import { FollowUpAssistantMenu } from "../FollowUpAssistantMenu/FollowUpAssistantMenu.js";
 import styles from "./FollowUpQuestions.module.scss";
@@ -24,6 +27,9 @@ export interface FollowUpQuestionsProps {
   questions: readonly FollowUpQuestion[];
   // A phone or the panel: bubbles run full width and the menu is a sheet (266u, 266ac).
   compact: boolean;
+  // The reader's own record of which questions they've taken further (266aj), never shared.
+  asked: readonly AskedQuestion[];
+  onAsked: (asked: AskedQuestion[]) => void;
   analytics: ReaderAnalytics["followUps"];
 }
 
@@ -92,7 +98,7 @@ function dropGhost(from: HTMLElement | null): Promise<void> {
 // Design 266a–266ao: the last block in the note, questions as speech bubbles to take to the
 // reader's own assistant, three at a time. The app never answers them itself
 // (docs/features/follow-up-questions.md).
-export function FollowUpQuestions({ overview, questions, compact, analytics }: FollowUpQuestionsProps) {
+export function FollowUpQuestions({ overview, questions, compact, asked, onAsked, analytics }: FollowUpQuestionsProps) {
   const { assistant, connectedTo, anyConnection, choose } = useFollowUpAssistant();
   const [set, setSet] = useState(0);
   const [motion, setMotion] = useState<Motion>(() => (prefersReducedMotion() ? "idle" : "arriving"));
@@ -100,6 +106,7 @@ export function FollowUpQuestions({ overview, questions, compact, analytics }: F
   const [pressed, setPressed] = useState<number | null>(null);
   const [said, setSaid] = useState("");
   const [toast, setToast] = useState<{ text: string; done: boolean; key: number } | null>(null);
+  const [justAsked, setJustAsked] = useState<readonly string[]>([]);
   const headingId = useId();
   const root = useRef<HTMLDivElement | null>(null);
   const list = useRef<HTMLUListElement | null>(null);
@@ -161,6 +168,14 @@ export function FollowUpQuestions({ overview, questions, compact, analytics }: F
     const name = FOLLOW_UP_ASSISTANTS[to].name;
     analytics.asked({ assistant: to, handOff: handOff.kind, connected: connectedTo(to), forReader, position: index + 1 });
     const copied = handOffFollowUp(handOff);
+    onAsked(
+      recordAskedQuestion(
+        asked,
+        { question, assistant: to, askedAt: new Date().toISOString() },
+        questions.map((each) => each.question),
+      ),
+    );
+    setJustAsked((current) => [...current, question]);
     if (handOff.kind === "prefill") {
       setSaid(`Opening ${name} in a new tab`);
       return;
@@ -283,11 +298,18 @@ export function FollowUpQuestions({ overview, questions, compact, analytics }: F
         {shown.map(({ question }, place) => {
           const index = set * FOLLOW_UP_QUESTIONS_SHOWN + place;
           const held = pressed === place || (menu?.firstTap === true && menu.index === index);
+          const receipt = asked.find((each) => each.question === question) ?? null;
+          const receiptId = `${headingId}-asked-${index}`;
           return (
-            <li key={index} className={styles.item} style={{ "--i": place } as CSSProperties} data-testid={followUpQuestionsTestIds.item}>
+            <li
+              key={index}
+              className={`${styles.item} ${receipt !== null ? styles.askedItem : ""}`}
+              style={{ "--i": place } as CSSProperties}
+              data-testid={followUpQuestionsTestIds.item}
+            >
               <div
                 className={`${styles.bubble} ${held ? styles.held : ""}`}
-                data-label={hoverLabel}
+                data-label={receipt === null ? hoverLabel : undefined}
                 ref={(element) => {
                   bubbles.current[place] = element;
                 }}
@@ -299,6 +321,7 @@ export function FollowUpQuestions({ overview, questions, compact, analytics }: F
                     questionButtons.current[place] = element;
                   }}
                   aria-label={nameOf(question)}
+                  aria-describedby={receipt === null ? undefined : receiptId}
                   aria-haspopup={assistant === null ? "dialog" : undefined}
                   aria-expanded={assistant === null ? menu?.firstTap === true && menu.index === index : undefined}
                   onClick={() => tap(index)}
@@ -312,6 +335,15 @@ export function FollowUpQuestions({ overview, questions, compact, analytics }: F
                   {question}
                 </button>
               </div>
+              {receipt !== null && (
+                <span
+                  id={receiptId}
+                  className={`${styles.receipt} ${justAsked.includes(question) ? styles.fresh : ""}`}
+                  data-testid={followUpQuestionsTestIds.receipt}
+                >
+                  {askedLine(receipt, new Date())}
+                </span>
+              )}
             </li>
           );
         })}

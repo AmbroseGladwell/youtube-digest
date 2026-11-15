@@ -11,7 +11,7 @@ import {
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
-import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -269,4 +269,40 @@ test("a shared copy never carries the questions", async ({ launcher }) => {
 
   const shared = await launcher.sharedOverviewPage.verifyIsShown();
   await shared.followUps.verifyIsNotShown();
+});
+
+test("a question taken to an assistant says so under it, and is kept in the reader's own state", async ({ launcher, backendSimulator }) => {
+  const overview = withQuestions(QUESTIONS.slice(0, 3));
+  backendSimulator.overviews.seed(overview);
+  const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
+  const reader = await library.nthCard(0).openReader();
+  await reader.followUps.verifyReceiptsRead([]);
+  await reader.followUps.catchNewTabs();
+
+  await reader.followUps.clickQuestion(1);
+
+  await reader.followUps.verifyReceiptsRead(["Asked in Claude · just now"]);
+  await reader.followUps.verifyQuestionDescribed(1, "Asked in Claude · just now");
+  await expect
+    .poll(async () =>
+      (await backendSimulator.overviews.getState(overview.id)).asked.map(({ question, assistant }) => [question, assistant]),
+    )
+    .toEqual([[QUESTIONS[1]!.question, "claude"]]);
+});
+
+test("on a later visit each question asked before says where and how long ago", async ({ launcher, backendSimulator }) => {
+  const overview = withQuestions(QUESTIONS.slice(0, 3));
+  backendSimulator.overviews.seed(overview);
+  backendSimulator.overviews.seedState(
+    makeOverviewState(overview.id, {
+      asked: [
+        { question: QUESTIONS[2]!.question, assistant: "chatgpt", askedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+      ],
+    }),
+  );
+  const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
+  const reader = await library.nthCard(0).openReader();
+
+  await reader.followUps.verifyReceiptsRead(["Asked in ChatGPT · 3 days ago"]);
+  await reader.followUps.verifyQuestionDescribed(2, "Asked in ChatGPT · 3 days ago");
 });

@@ -293,6 +293,22 @@ test("state is made from the defaults on first touch, and a later patch keeps a 
   await testApp.close();
 });
 
+test("questions asked are kept with the state, and a read or favourite patch leaves them alone", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const id = randomUUID();
+  const asked = [{ question: "Why does it matter?", assistant: "claude", askedAt: "2026-11-15T09:00:00.000Z" }];
+
+  const first = await account.inject({ method: "PUT", url: `/api/overviews/${id}/state`, body: { asked, updatedAt: UPDATED_AT } });
+  assert.equal(first.statusCode, 200);
+  await account.inject({ method: "PUT", url: `/api/overviews/${id}/state`, body: { read: true, updatedAt: UPDATED_AT } });
+
+  const { body } = await account.change("overviewState", id);
+  assert.equal(body!.read, true);
+  assert.deepEqual(body!.asked, asked);
+  await testApp.close();
+});
+
 test("a state patch that changes nothing is refused rather than moving the revision for no reason", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

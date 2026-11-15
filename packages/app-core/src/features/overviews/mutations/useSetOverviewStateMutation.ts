@@ -7,7 +7,7 @@ import { overviewKeys } from "../overviewKeys.js";
 
 export interface SetOverviewStateVariables {
   overviewId: OverviewId;
-  patch: Partial<Pick<OverviewState, "read" | "favourite">>;
+  patch: Partial<Pick<OverviewState, "read" | "favourite" | "asked">>;
 }
 
 interface SetOverviewStateContext {
