@@ -62,8 +62,8 @@ export const podcastIndexHeaders = ({ apiKey, apiSecret }: PodcastIndexKey, now:
   };
 };
 
-// The open podcast directory, asked before Apple's on a Spotify link: a show by its name, and its
-// newest episodes' guids (docs/features/podcast-links.md, "The directories"; OV-294).
+// The open podcast directory, asked before Apple's on a Spotify link: a show by its exact title,
+// and its newest episodes' guids (docs/features/podcast-links.md, "The directories"; OV-294, OV-303).
 export function podcastIndexDirectory(
   key: PodcastIndexKey,
   fetchSignedJson: FetchSignedJson,
@@ -74,7 +74,7 @@ export function podcastIndexDirectory(
 
   return {
     async searchShows(name) {
-      const { feeds } = Feeds.parse(await ask("search/byterm", { q: name, max: String(MOST_SHOWS) }));
+      const { feeds } = Feeds.parse(await ask("search/bytitle", { q: name, max: String(MOST_SHOWS) }));
       return parsed(Feed, feeds).map(toShow);
     },
     async showWithEpisodes(showId) {
