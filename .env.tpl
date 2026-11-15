@@ -14,7 +14,7 @@ CORS_ALLOWED_ORIGINS=chrome-extension://bcobfcijigdegfldefejaeicgcogienn
 APP_URL=http://localhost:5173
 # log prints each magic link to the API's output; brevo sends it and needs the two below and an https APP_URL.
 MAIL_TRANSPORT=log
-BREVO_API_KEY=${BREVO_API_KEY}
+BREVO_API_KEY="${BREVO_API_KEY}"
 MAIL_FROM=The Overview <hello@theoverviewapp.com>
 # The TTS service `task run:tts` starts, and the dev bucket its narration is kept in; the account id and
 # bucket are not secrets. Offline, drop the R2_ lines for AUDIO_DIR=../../.local/audio, relative to apps/api
@@ -22,17 +22,17 @@ MAIL_FROM=The Overview <hello@theoverviewapp.com>
 TTS_URL=http://localhost:8000
 R2_ACCOUNT_ID=781691f32a5cf03b132121e499f510a4
 R2_BUCKET=the-overview-audio-dev
-R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
-R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+R2_ACCESS_KEY_ID="${R2_ACCESS_KEY_ID}"
+R2_SECRET_ACCESS_KEY="${R2_SECRET_ACCESS_KEY}"
 # The YouTube Data API key followed playlists are read with; without it playlists cannot be followed
 # (docs/features/playlists.md, "Looking a playlist up").
-YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+YOUTUBE_API_KEY="${YOUTUBE_API_KEY}"
 # Podcast Index, the directory a Spotify link's show is looked up in before Apple's; the two go
 # together (docs/features/podcast-links.md, "The directories").
-PODCAST_INDEX_API_KEY=${PODCAST_INDEX_API_KEY}
-PODCAST_INDEX_API_SECRET=${PODCAST_INDEX_API_SECRET}
+PODCAST_INDEX_API_KEY="${PODCAST_INDEX_API_KEY}"
+PODCAST_INDEX_API_SECRET="${PODCAST_INDEX_API_SECRET}"
 
 # Overviews made on our key, through our server, with GPT-6.1 Sol; unset, the server makes none
 # (docs/architecture/tiers.md). OUR_KEY_DAILY_GENERATIONS is the global daily cap behind every plan.
-OPENAI_API_KEY=${OPENAI_API_KEY}
+OPENAI_API_KEY="${OPENAI_API_KEY}"
 OUR_KEY_DAILY_GENERATIONS=300
