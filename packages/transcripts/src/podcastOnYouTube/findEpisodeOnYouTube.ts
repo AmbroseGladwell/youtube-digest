@@ -4,19 +4,20 @@ import { DEFAULT_METADATA_CLIENT, type InnerTubeClientConfig } from "../innertub
 import { httpFailure, innerTubeError } from "../innertube/innerTubeFailure.js";
 import { requestPlayerResponse } from "../innertube/requestPlayerResponse.js";
 import {
-  daysAgo,
   descriptionShare,
   DESCRIPTION_LEAD,
   DESCRIPTION_WORDS_SHARED,
   FEWEST_KEYWORDS,
-  MOST_DAYS_APART,
   MOST_DESCRIPTIONS_READ,
+  listedNearItsDate,
   namesTheShow,
+  publishedNearItsDate,
   retitledCandidates,
+  searchedVideoMatch,
   titleMatch,
   type EpisodeToFind,
 } from "./matchUpload.js";
-import { channelsIn, uploadsIn, type ListedChannel, type ListedUpload } from "./youTubeListings.js";
+import { channelsIn, uploadsIn, videosIn, type ListedChannel, type ListedUpload } from "./youTubeListings.js";
 
 export interface EpisodeOnYouTube {
   videoId: string;
@@ -31,14 +32,16 @@ export interface FindOptions {
 
 const ENDPOINT = "https://www.youtube.com/youtubei/v1/";
 const CHANNELS_FILTER = "EgIQAg==";
+const VIDEOS_FILTER = "EgIQAQ==";
 const VIDEOS_TAB = "EgZ2aWRlb3PyBgQKAjoA";
 const CHANNELS_TRIED = 3;
 const MORE_PAGES = 5;
 
-// The same episode on the show's own YouTube channel, whose captions cost nothing: by its title
+// The same episode on YouTube, whose captions cost nothing: first among a video search for its
+// title, on any channel by its title, length and date; then on the show's own channel by its title
 // and length, or, where the upload was retitled, by its description and date. Null when the
 // episode isn't there or can't be told apart from its neighbours, since a confident wrong match
-// is worse than none (docs/features/podcast-on-youtube.md). At most 14 requests.
+// is worse than none (docs/features/podcast-on-youtube.md). At most 15 requests.
 export async function findEpisodeOnYouTube(
   youTubeFetch: YouTubeFetch,
   episode: EpisodeToFind,
@@ -77,6 +80,11 @@ export async function findEpisodeOnYouTube(
     via,
   });
 
+  const today = now();
+  const searched = videosIn(await ask("search", { query: `${episode.showName} ${episode.title}`, params: VIDEOS_FILTER }));
+  const byVideo = searchedVideoMatch(episode, searched, (video) => listedNearItsDate(episode, video, today));
+  if (byVideo !== null) return { videoId: byVideo.videoId, channelTitle: byVideo.channelTitle, via: "title" };
+
   const channels = channelsIn(await ask("search", { query: episode.showName, params: CHANNELS_FILTER })).slice(0, CHANNELS_TRIED);
   const firstPages: { channel: ListedChannel; uploads: ListedUpload[]; continuation: string | null }[] = [];
   for (const channel of channels) {
@@ -99,12 +107,11 @@ export async function findEpisodeOnYouTube(
   }
 
   if (episode.keywords.length < FEWEST_KEYWORDS || episode.publishedAt === null) return null;
-  const today = now();
   const scored: { upload: ListedUpload; share: number }[] = [];
   for (const upload of retitledCandidates(episode, uploads, today).slice(0, MOST_DESCRIPTIONS_READ)) {
     const player = await requestPlayerResponse(youTubeFetch, upload.videoId, client).catch(() => null);
     const published = player?.microformat?.playerMicroformatRenderer?.publishDate;
-    if (published === undefined || Math.abs(daysAgo(published, today) - daysAgo(episode.publishedAt, today)) > MOST_DAYS_APART) continue;
+    if (!publishedNearItsDate(episode, published ?? null, today)) continue;
     scored.push({ upload, share: descriptionShare(episode.keywords, player?.videoDetails?.shortDescription ?? "") });
   }
   scored.sort((a, b) => b.share - a.share);
