@@ -1,3 +1,4 @@
+import { foldAskedQuestions } from "./AskedQuestion.js";
 import { MAX_TAGS } from "./Filing.js";
 import type { OverviewState } from "./OverviewState.js";
 
@@ -25,12 +26,14 @@ export function foldFiling(winner: FoldableFiling, loser: FoldableFiling): Folda
   };
 }
 
-// Read and favourite are kept if either copy had them; user tags are a union.
+// Read and favourite are kept if either copy had them; user tags are a union, and each question
+// asked keeps its latest ask.
 export function foldOverviewState(winner: FoldableState, loser: FoldableState): FoldableState {
   return {
     read: winner.read || loser.read,
     favourite: winner.favourite || loser.favourite,
     userTags: union(winner.userTags, loser.userTags),
+    asked: foldAskedQuestions(winner.asked, loser.asked),
   };
 }
 

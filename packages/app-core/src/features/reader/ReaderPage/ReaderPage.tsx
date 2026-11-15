@@ -48,6 +48,7 @@ import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.j
 import { ArticleChaptersPanel } from "../components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLinks.js";
 import { ArticleResources } from "../components/ArticleResources/ArticleResources.js";
+import { FollowUpQuestions } from "../components/FollowUpQuestions/FollowUpQuestions.js";
 import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
@@ -197,6 +198,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const sectionsEnabled = useSettingsQuery().data?.sectionsEnabled;
   const stepsOn = sectionsEnabled?.steps ?? true;
   const resourcesOn = sectionsEnabled?.resources ?? true;
+  const followUpQuestionsOn = sectionsEnabled?.followUpQuestions ?? true;
   // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
   const lines = useMemo(
     () =>
@@ -634,6 +636,17 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     }}
                   />
                 </>
+              )}
+              {followUpQuestionsOn && (overview.followUpQuestions?.length ?? 0) > 0 && (
+                <FollowUpQuestions
+                  key={`follow-ups-${overviewId}`}
+                  overview={overview}
+                  questions={overview.followUpQuestions ?? []}
+                  asked={state.asked}
+                  onAsked={(asked) => setOverviewState.mutate({ overviewId, patch: { asked } })}
+                  compact={isPanel || isPhone}
+                  analytics={reader.followUps}
+                />
               )}
               {onetimeHost !== null && (
                 <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>

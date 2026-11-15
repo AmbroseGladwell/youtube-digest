@@ -449,7 +449,7 @@ Which gives the API three endpoints rather than a patch language:
 ```
 POST /overviews             whole record + schemaVersion
 PUT  /overviews/:id/topics  { topicIds }
-PUT  /overviews/:id/state   { read?, favourite?, userTags? }
+PUT  /overviews/:id/state   { read?, favourite?, userTags?, asked? }
 ```
 
 Two of those already exist as `OverviewStore` methods in that exact shape, which is what

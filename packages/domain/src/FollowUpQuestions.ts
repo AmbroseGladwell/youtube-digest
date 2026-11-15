@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { wordCount } from "./wordCount.js";
 
+export const FOLLOW_UP_QUESTIONS_SECTION = "Questions to ask next";
 export const MOST_FOLLOW_UP_QUESTIONS = 9;
 export const FOLLOW_UP_QUESTIONS_SHOWN = 3;
 export const MOST_READER_QUESTIONS = MOST_FOLLOW_UP_QUESTIONS / FOLLOW_UP_QUESTIONS_SHOWN;

@@ -151,6 +151,7 @@ test("marking an overview read dates the state record it wrote", async () => {
     read: true,
     favourite: false,
     userTags: [],
+    asked: [],
   });
 });
 

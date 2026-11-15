@@ -38,7 +38,15 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
   article,
   captureReason: null,
   readerContext: null,
-  sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: true, steps: true, resources: true },
+  sectionsEnabled: {
+    verdict: true,
+    selling: true,
+    howToApply: true,
+    watchAnyway: true,
+    steps: true,
+    resources: true,
+    followUpQuestions: true,
+  },
   existingTopics: [],
   pastClaims: [],
   existingTags: [],
@@ -201,7 +209,17 @@ test("the page's text cannot close the block it sits in", () => {
 
 test("switching a section off leaves it out of the prompt and the output", () => {
   const prompt = composeArticlePrompt(
-    input({ sectionsEnabled: { verdict: true, selling: true, howToApply: true, watchAnyway: false, steps: true, resources: true } }),
+    input({
+      sectionsEnabled: {
+        verdict: true,
+        selling: true,
+        howToApply: true,
+        watchAnyway: false,
+        steps: true,
+        resources: true,
+        followUpQuestions: true,
+      },
+    }),
   );
   assert.doesNotMatch(prompt.systemPrompt, /Read it anyway/);
   assert.ok(!("readAnyway" in prompt.schema.shape));

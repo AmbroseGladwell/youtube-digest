@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-14";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-15";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -91,11 +91,13 @@ const sections: readonly LegalSection[] = [
           and for an article up to five of the links the page makes, with their words and a line on why each is worth opening. For an
           episode it also keeps the address of its show's feed and audio, and the Apple Podcasts, Spotify or show page link you pasted, with
           the code Spotify adds to say who shared it removed; a shared link shows that link. Beside it you may add a reason you saved it,
-          file it under topics, put it in projects of your own, and mark it read or favourite. A project holds its name, a line on what it
-          is for, and for each overview in it whether you or a connected assistant put it there, and when. Your settings travel with the
-          account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent
-          colour, which sections an overview shows, the About you sentence that personalises overviews and what we have learned from your
-          overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
+          file it under topics, put it in projects of your own, and mark it read or favourite. When you take one of its questions to ask
+          next to an assistant, it notes which question, which assistant and when, so the overview can show it. A project holds its name, a
+          line on what it is for, and for each overview in it whether you or a connected assistant put it there, and when. Your settings
+          travel with the account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound,
+          theme and accent colour, which sections an overview shows, which assistant questions to ask next open in, the About you sentence
+          that personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and
+          the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -184,12 +186,14 @@ const sections: readonly LegalSection[] = [
         <p>
           Your About you sentence and what we have learned from your overviews shape only How to apply, the section that suggests what you
           might do with the video, and the questions to ask next at the foot of an overview. Both are part of the overview, so an assistant
-          you connect reads them with it. The questions never go with a shared link. When your first overview is shown to you in onboarding,
-          How to apply is also written once for anyone, so you can compare: the overview's title, channel, one-line premise, central claim
-          and key points go to the provider whose key made the overview, and if that was our key, through our server to OpenAI. No
-          transcript and nothing about you goes with them, and the result is kept only on your device. When a sample overview is saved into
-          your account, its title, channel or site, premise and key points go through our server to OpenAI with the names and descriptions
-          of your topics, to sort it into the ones it fits.
+          you connect reads them with it. The questions never go with a shared link. Tapping one opens the assistant you choose, Claude,
+          ChatGPT or Gemini, in a new tab with the question and, unless that assistant is connected to {service}, the whole overview, in the
+          link or copied for you to paste. That goes from your browser to the assistant's provider, not through us. When your first overview
+          is shown to you in onboarding, How to apply is also written once for anyone, so you can compare: the overview's title, channel,
+          one-line premise, central claim and key points go to the provider whose key made the overview, and if that was our key, through
+          our server to OpenAI. No transcript and nothing about you goes with them, and the result is kept only on your device. When a
+          sample overview is saved into your account, its title, channel or site, premise and key points go through our server to OpenAI
+          with the names and descriptions of your topics, to sort it into the ones it fits.
         </p>
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole description, which is where
