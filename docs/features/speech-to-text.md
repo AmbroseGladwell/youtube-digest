@@ -158,7 +158,8 @@ feed's tag by their presence, a video by the Data API's word (the extension's fi
 search, whose match is remembered so Create doesn't search again). The answer is `found`, `unknown`
 when a rung couldn't be asked (the feed, or the Data API refusing), or `none` with what transcribing
 would mean: `needed` or `not-enough` with the month's usage, `free` when transcribed in the last day
-or on its way, `too-long`, `no-audio`, or `unavailable` without `STT_URL`. `unknown` and a check that
+or on its way, `too-long` or `no-audio`. Without `STT_URL` it answers `unknown` at once, reading no
+feed and spending no YouTube search, since there is nothing to offer. `unknown` and a check that
 turns out wrong (a broken tag link, unreadable captions) fall back to the ask after Create (305c-2):
 `POST /api/podcasts/transcript`'s `transcript_unavailable` carries `transcribable: true`.
 

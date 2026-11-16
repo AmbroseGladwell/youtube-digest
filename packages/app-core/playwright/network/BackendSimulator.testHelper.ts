@@ -927,12 +927,10 @@ export class BackendSimulator {
         : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastWords) });
     });
 
-    // Without a scripted answer, the check says what Create will find: the words, or none and
-    // nothing this server can transcribe.
+    // Without a scripted answer, the check says what Create will find: the words, or, as a server
+    // that transcribes nothing does, that it can't tell.
     await this.#page.route("**/api/podcasts/transcript/check", (route) => {
-      const check: TranscriptCheck =
-        this.#podcastCheck ??
-        (this.#podcastWords === null ? { words: "none", transcription: { status: "unavailable" } } : { words: "found" });
+      const check: TranscriptCheck = this.#podcastCheck ?? (this.#podcastWords === null ? { words: "unknown" } : { words: "found" });
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(check) });
     });
 

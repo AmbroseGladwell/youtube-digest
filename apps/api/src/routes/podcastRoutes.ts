@@ -181,6 +181,9 @@ export function podcastRoutes(
     async (request): Promise<TranscriptCheck> => {
       const body = parseOrThrow(TranscriptBody, request.body, "The episode");
       const caller = await callerOf(request);
+      // Where nothing can be transcribed, the card has nothing to say, so the feed isn't read and
+      // no YouTube search is spent: Create looks for the words as it always has.
+      if (transcriptions === null) return { words: "unknown" };
       const startedAt = clock().getTime();
       const checked = await checkTranscript({ feedUrl: body.feedUrl, guid: body.guid, youTube: youTubeAskOf(body), log: request.log });
       const answer: TranscriptCheck =
@@ -188,7 +191,7 @@ export function podcastRoutes(
           ? { words: checked.words }
           : {
               words: "none",
-              transcription: transcriptions === null ? { status: "unavailable" } : await transcriptions.offer(checked.episode, caller),
+              transcription: await transcriptions.offer(checked.episode, caller),
             };
       request.log.info(
         apiLogLines.podcasts.checked({

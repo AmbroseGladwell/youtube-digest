@@ -209,6 +209,25 @@ test("the check finds a feed's own transcript without fetching it", async () => 
   await testApp.close();
 });
 
+test("where nothing can be transcribed, the check reads nothing and spends no search, and Create looks as before", async () => {
+  const fetched: string[] = [];
+  const without = await createTestApp(
+    {},
+    {
+      podcastWeb: async (link) => {
+        fetched.push(link);
+        return webOf(feed(item("ep1", 1800)))(link);
+      },
+    },
+  );
+
+  const checked = await check(await makeAccount(without), { ...EPISODE, searchYouTube: true });
+
+  assert.deepEqual(checked.json(), { words: "unknown" });
+  assert.deepEqual(fetched, []);
+  await without.close();
+});
+
 test("the check says when transcribing costs nothing, would take more than is left, or can't be done", async () => {
   const threeHours = makeScriptedTranscriber([
     { state: "running" },
