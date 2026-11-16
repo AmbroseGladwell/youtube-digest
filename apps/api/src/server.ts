@@ -14,6 +14,7 @@ import { createLogger } from "./logs/createLogger.js";
 import { OtlpLogExporter } from "./logs/OtlpLogExporter.js";
 import { createMailer } from "./mail/createMailer.js";
 import { createTranscriptServiceSetup } from "./transcripts/createTranscriptServiceSetup.js";
+import { createHttpTranscriber } from "./podcasts/httpTranscriber.js";
 import { ourKeyModel } from "./generation/ourKeyModel.js";
 import { createOpenAiEmbedder } from "./meaning/createOpenAiEmbedder.js";
 import { undiciYouTubeFetch } from "./transcripts/undiciYouTubeFetch.js";
@@ -77,6 +78,14 @@ const app = await buildApp({
   mailer: createMailer(config.mail, config.appUrl),
   audio,
   transcriptService,
+  speechToText:
+    config.speechToText === null
+      ? null
+      : {
+          transcriber: createHttpTranscriber(config.speechToText.url, config.speechToText.token),
+          concurrency: config.speechToText.concurrency,
+          runWorkers: true,
+        },
   ourKey: config.ourKey === null ? null : { ...config.ourKey, http: globalThis.fetch.bind(globalThis) },
   meaning:
     config.ourKey === null
@@ -119,6 +128,13 @@ app.log.info(
           proxy: config.transcriptService.proxyUrl === null ? null : new URL(config.transcriptService.proxyUrl).host,
           proxyDailyFetches: config.transcriptService.proxyDailyFetches,
         },
+  ),
+);
+app.log.info(
+  apiLogLines.startup.speechToText(
+    config.speechToText === null
+      ? { enabled: false, why: "STT_URL is not set" }
+      : { enabled: true, host: new URL(config.speechToText.url).host, concurrency: config.speechToText.concurrency },
   ),
 );
 app.log.info(

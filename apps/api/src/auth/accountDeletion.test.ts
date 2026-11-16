@@ -98,6 +98,15 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
   );
   await sql.query("insert into service_transcript_usage (day, caller, fetches) values ('2026-11-05', $1, 1)", [`account:${accountId}`]);
   await sql.query(
+    `insert into podcast_transcriptions (id, caller, account_id, source_key, audio_url, max_seconds, reserved_seconds, status, requested_at)
+     values (gen_random_uuid(), $1, $2, 'podcast:ep', 'https://media.example/ep.mp3', 15000, 1800, 'queued', $3::timestamptz)`,
+    [`account:${accountId}`, accountId, now],
+  );
+  await sql.query("insert into transcription_usage (month, caller, account_id, seconds) values ('2026-11-01', $1, $2, 1800)", [
+    `account:${accountId}`,
+    accountId,
+  ]);
+  await sql.query(
     "insert into account_costs (day, account_id, area, detail, calls, quantity, dollars) values ('2026-11-05', $1, 'generation', 'overview', 1, 3000, 0.01)",
     [accountId],
   );
