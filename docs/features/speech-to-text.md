@@ -1,6 +1,6 @@
 # Speech-to-text for podcast episodes
 
-Design note for OV-305. Status: provider chosen by measurement; the server rung is not built.
+Design note for OV-305. Status: provider chosen by measurement; the server rung built behind `STT_URL`, with no screens yet.
 
 ## The gap
 
@@ -139,17 +139,60 @@ The reader sees which of these is happening: "Transcribing the episode, about a 
 down to roughly 15–20 s for about the same cost, since billing is per second and each extra worker
 adds only its model load.
 
-## Still to build
+## The server rung
 
-- The server rung: a job table claimed with `for update skip locked` and retried, as
-  `audio_renders` is; the transcript saved as the account's own copy; the audio deleted after
-  transcription.
-- A slimmer production image carrying only Whisper Turbo, built from `main`, with its own keys in the
-  production secrets project.
-- `/privacy` naming Modal (and RunPod, if it stays), through the trigger list in `legal-pages.md`.
-- Plan limits, now that the cost is known.
-- A Design round for the "needs transcribing", waiting and limit-reached states.
-- Analytics: transcription requested, started, finished and failed, with seconds of audio and host.
+A reader is offered transcription only where it can happen: when every other rung has failed,
+`POST /api/podcasts/transcript`'s `transcript_unavailable` carries `transcribable: true`, and only on a
+server with `STT_URL` set. Nothing is transcribed unless the reader asks.
+
+| Piece | Where |
+|---|---|
+| The GPU worker and its HTTP front (`POST /jobs`, `GET /jobs/{call}`, `DELETE /jobs/{call}`) | `services/stt/modal_app.py`, deployed as Modal app `overview-stt` |
+| Asking, and asking after | `POST /api/podcasts/transcription` with `{ feedUrl, guid }`; `GET /api/podcasts/transcription/:id` |
+| Reading the episode, the allowance and the length cap | `createPodcastTranscriptions.ts` |
+| The jobs and the month's hours | `PodcastTranscriptionsRepository.ts`, tables `podcast_transcriptions` and `transcription_usage` (V0034) |
+| Sending, asking after and giving up | `TranscriptionQueue.ts`, through `Transcriber` (`httpTranscriber.ts`) |
+
+**The audio sent is the feed's own.** The episode is read again from its feed, and the GPU host gets
+the enclosure's address, never one a caller names. The worker downloads it to a temporary folder,
+capped at 700 MB, and deletes it in the same call.
+
+**What a reader sees while waiting.** The answer is `waiting` until the worker reports that it has
+started, then `transcribing`, then `ready` with the transcript, or `failed` with a reason
+(`no-transcriber`, `too-long`, `audio-unreachable`, `audio-unreadable`, `no-speech`, `failed`). The
+client polls every few seconds, under the address rate limit only. The worker writes its start into a
+Modal `Dict` before it loads anything, which is how "no card yet" is told apart from "transcribing".
+
+**Giving up.** With no start after 2 minutes the job is cancelled at the host and fails as
+`no-transcriber`. A started job may run for 15 minutes. A host that stops answering for six polls in a row
+fails the job too. A failed job costs the reader nothing, and asking again starts it afresh. The 15-second
+hedge to a second host waits for the RunPod measurement above.
+
+**Restarts.** A job is held under a one-minute lease that each poll renews. A job whose lease has
+lapsed is taken up by the next worker where it was, without sending it to the host a second time.
+
+**Allowances.** Hours of audio a month: a trial's address 4, Free 5, BYO Plus 15, Plus 30, with no
+episode over 4 hours by its feed (owner, 16 Nov 2026). The feed's length is held when the job is
+queued and settled to the audio's measured length once it finishes. An episode with no length in its
+feed holds an hour. Asking again for an episode already transcribed, or on its way, is free. Past the
+allowance the answer is `too_many_requests`, with `quota: "transcription"`, the seconds used and the
+limit, and the time until the month turns.
+
+**Never shared.** A job belongs to one caller: an account, or a trial's hashed address. The words are
+held for at most a day for that caller's device to collect. After that they are the reader's own copy
+through the usual upload (`transcript-storage.md`). Nothing is remembered in
+`podcast_transcript_sources`, so another reader's ask transcribes again.
+
+**Cost.** Each finished job records `transcripts` / `speech-to-text` in the account's cost tally:
+the worker's seconds at the list price of the GPU it ran on. An unknown card is costed at the
+dearest one in the app's list.
+
+**Switching it on.** The Modal app reads `STT_TOKEN` from a Modal secret named `overview-stt`. The API
+needs `STT_URL` (the app's web address) and the same `STT_TOKEN`, and refuses to start with only
+one of them.
+
+Still to come: the screens (a Design round for offering, waiting and the allowance), the client's
+polling, analytics events, and the second host's hedge.
 
 ## Running the harness
 

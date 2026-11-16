@@ -147,6 +147,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-16 | privacy | OV-305 | Podcast episodes: a reader can ask for an episode with no transcript to be transcribed; only then our server sends Modal the episode's audio address from the feed and nothing about the reader; Modal runs our speech-to-text model, the audio is deleted once transcribed, and the words are the reader's alone, held at most a day for their device to collect. Hours a month are counted per account or hashed address. Processors: Modal, United States. Retention: the waiting words (a day), the audio (not kept), hashed addresses for the transcription allowance (until the month ends). |
+| 2026-11-16 | terms | OV-305 | Overviews on our key, and limits: transcribing an episode has its own allowance, in hours of audio a month, on the same terms. |
 | 2026-11-15 | privacy | OV-266 | Your library: taking a question to ask next to an assistant notes which question, which assistant and when, kept and synced with read and favourite; the settings list names which assistant questions open in. |
 | 2026-11-15 | privacy | OV-266 | Tapping a question to ask next opens the assistant the reader chooses with the question and, unless it's connected, the whole overview, in the link or copied to paste; it goes from the browser to that provider, not through us. |
 | 2026-11-15 | terms | OV-266 | Assistants: a question to ask next opens the chosen assistant with the question and the overview, sent from the browser; what happens there is between the reader and its provider. |

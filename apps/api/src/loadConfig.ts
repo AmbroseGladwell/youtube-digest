@@ -49,6 +49,9 @@ const ConfigEnv = z
       .refine((value) => value.startsWith("http://") || value.startsWith("https://"), "must be an http(s) proxy")
       .optional(),
     TRANSCRIPT_PROXY_DAILY_FETCHES: z.coerce.number().int().min(0).default(1000),
+    STT_URL: z.url().optional(),
+    STT_TOKEN: z.string().min(32).optional(),
+    STT_CONCURRENCY: z.coerce.number().int().positive().default(10),
     YOUTUBE_API_KEY: z.string().min(1).optional(),
     PODCAST_INDEX_API_KEY: z.string().min(1).optional(),
     PODCAST_INDEX_API_SECRET: z.string().min(1).optional(),
@@ -104,6 +107,10 @@ const ConfigEnv = z
     path: ["R2_BUCKET"],
     message: "R2 or AUDIO_DIR is required when TTS_URL is set: rendered narration has to be kept somewhere",
   })
+  .refine((env) => (env.STT_URL === undefined) === (env.STT_TOKEN === undefined), {
+    path: ["STT_TOKEN"],
+    message: "STT_URL and STT_TOKEN go together: the transcriber refuses a call without its token",
+  })
   .refine((env) => env.POSTHOG_PERSONAL_API_KEY === undefined || env.POSTHOG_PROJECT_ID !== undefined, {
     path: ["POSTHOG_PROJECT_ID"],
     message: "required when POSTHOG_PERSONAL_API_KEY is set: an erasure has to name the project it acts in",
@@ -133,6 +140,10 @@ export type OurKeyConfig = { apiKey: string; dailyGenerations: number; signedOut
 
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
+// Episodes transcribed on our GPU host, on only when both its address and its token are set
+// (docs/features/speech-to-text.md).
+export type SpeechToTextConfig = { url: string; token: string; concurrency: number } | null;
+
 // Analytics are forwarded only when there is a PostHog project to forward them to;
 // otherwise /api/events logs them and stops (docs/architecture/analytics.md). Erasing a
 // deleted account's records there is on exactly when the personal key is set, so the project
@@ -157,6 +168,7 @@ export interface Config {
   clientIpHeader: string | null;
   audio: AudioConfig;
   transcriptService: TranscriptServiceConfig;
+  speechToText: SpeechToTextConfig;
   ourKey: OurKeyConfig;
   // The YouTube Data API key playlists are read with, or null to read none
   // (docs/features/playlists.md).
@@ -229,6 +241,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
       data.TRANSCRIPT_SERVICE === "off"
         ? null
         : { proxyUrl: data.TRANSCRIPT_PROXY_URL ?? null, proxyDailyFetches: data.TRANSCRIPT_PROXY_DAILY_FETCHES },
+    speechToText:
+      data.STT_URL === undefined || data.STT_TOKEN === undefined
+        ? null
+        : { url: data.STT_URL, token: data.STT_TOKEN, concurrency: data.STT_CONCURRENCY },
     ourKey:
       data.OPENAI_API_KEY === undefined
         ? null
