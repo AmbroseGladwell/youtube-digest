@@ -1276,6 +1276,8 @@ export class BackendSimulator {
     },
     get: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId), id),
     getState: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
+    failStateWritesFor: (id: OverviewId) =>
+      this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.failStateWritesFor(overviewId), id),
   };
 
   // The account as the sync server holds it: what a pull would bring down, and where the
