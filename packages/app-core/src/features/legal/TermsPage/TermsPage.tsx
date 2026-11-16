@@ -93,7 +93,8 @@ const sections: readonly LegalSection[] = [
         <p>
           Every account can make a number of overviews each month on our own key, and a larger number on a key of its own. The numbers, and
           the daily caps that keep the service safe, are shown in the app with the date they reset. They are allowances, not entitlements:
-          we may change them, and we may pause overviews on our key when a day's shared budget is spent.
+          we may change them, and we may pause overviews on our key when a day's shared budget is spent. Transcribing a podcast episode that
+          has no transcript of its own has an allowance of its own, in hours of audio a month, on the same terms.
         </p>
         <p>
           <strong>Asking about an overview.</strong> With an account you can ask questions about a video or podcast episode inside its

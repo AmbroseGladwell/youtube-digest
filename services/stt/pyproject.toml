@@ -1,0 +1,18 @@
+[project]
+name = "overview-stt"
+version = "0.0.0"
+description = "The private transcription service: a self-hosted speech-to-text model turns a podcast episode's audio into timed segments (docs/features/speech-to-text.md)."
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+benchmark = [
+    "faster-whisper>=1.2",
+    "onnx-asr[cpu,hub]>=0.7",
+    "jiwer>=4.0",
+    "numpy>=2.0",
+    "modal>=1.0",
+]
+
+[tool.uv]
+package = false

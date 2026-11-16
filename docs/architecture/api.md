@@ -304,6 +304,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `articleReadAddress` | 120 | hour, per address | `POST /api/articles/read`, which reads a link as it is pasted and counts nothing against the month; signed out, a trial's reads are counted on top (`tiers.md`) |
 | `podcastReadAddress` | 120 | hour, per address | `POST /api/podcasts/read`, which turns a podcast link into its episode and counts nothing against the month (`podcast-links.md`) |
 | `podcastTranscriptAddress` | 120 | hour, per address | `POST /api/podcasts/transcript`, which walks the podcast transcript rungs and counts nothing against the month (`podcast-transcripts.md`) |
+| `transcriptionAddress` | 20 | hour, per address | `POST /api/podcasts/transcription`, which starts a GPU transcribing an episode against the month's hours; asking after one (`GET`) is held only to `address` (`speech-to-text.md`) |
 | `magicLinkAddress` | 20 | hour, per address | `POST /api/auth/magic-link` |
 | `magicLinkEmail` | 10 | hour, per normalised email | `POST /api/auth/magic-link` |
 | `signInAddress` | 30 | hour, per address | `POST /api/auth/sign-in` |
