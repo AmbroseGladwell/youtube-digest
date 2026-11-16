@@ -47,7 +47,7 @@ export class QuotaSpentError extends Error {
 
 export type ServiceAnswer = { transcript: StoredTranscript; via: ServiceFetchResult["via"] };
 
-const callerKey = (caller: ServiceCaller): string =>
+export const callerKey = (caller: ServiceCaller): string =>
   "accountId" in caller ? `account:${caller.accountId}` : `address:${hashedAddress(caller.address)}`;
 
 const quotaOf = (caller: ServiceCaller): number =>

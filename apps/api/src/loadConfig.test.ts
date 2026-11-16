@@ -18,6 +18,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     clientIpHeader: null,
     audio: null,
     transcriptService: null,
+    speechToText: null,
     ourKey: null,
     youTubeApiKey: null,
     podcastIndex: null,
@@ -65,6 +66,18 @@ test("our own server fetches transcripts only when switched on, through the prox
   );
   assert.equal(loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "http://user:pass@gate.example.com:7000" }).transcriptService, null);
   assert.throws(() => loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "socks5://gate.example.com:7000" }), ConfigError);
+});
+
+test("episodes are transcribed only with both the GPU host's address and its token", () => {
+  const token = "t".repeat(64);
+  assert.deepEqual(loadConfig({ DATABASE_URL, STT_URL: "https://stt.example", STT_TOKEN: token }).speechToText, {
+    url: "https://stt.example",
+    token,
+    concurrency: 10,
+  });
+  assert.equal(loadConfig({ DATABASE_URL }).speechToText, null);
+  assert.throws(() => loadConfig({ DATABASE_URL, STT_URL: "https://stt.example" }), ConfigError);
+  assert.throws(() => loadConfig({ DATABASE_URL, STT_URL: "https://stt.example", STT_TOKEN: "short" }), ConfigError);
 });
 
 test("logs are shipped to PostHog under the analytics key, and a bad OTEL variable stops the server starting", () => {
