@@ -145,6 +145,9 @@ Five folders, five different questions.
   shared (OV-297).
 - `podcast-on-youtube.md` — finding a podcast episode on its show's YouTube channel: by title and
   length, by description when retitled, the episode's own words, and how sure a match is.
+- `speech-to-text.md` — transcribing an episode no transcript exists for: the harness that scores
+  models in code, why the host's transcript flattered Whisper, Whisper Turbo on Modal's serverless
+  GPUs at about a cent an hour of audio, and how long a reader waits for a card (OV-305).
 - `podcast-notes.md` — a podcast episode's note: the video note in a podcast's words, Listen to it
   anyway forked, no recipe note, videos held unchanged by a golden test, and why the kind joins
   `Source` only with the screens.
