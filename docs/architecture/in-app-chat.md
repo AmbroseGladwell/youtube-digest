@@ -263,6 +263,13 @@ honestly, on real library sources up to 89 minutes.
   conversation.
 - **A regenerated overview keeps its chats.** Their citations point at moments in the video,
   which don't move.
+- **Several chats per overview, and one can use another.** The owner asked for this on 16 Nov
+  2026. Each question also carries the overview's other live chats, cut to a budget measured by
+  code with the oldest dropped first, so a reader can build on an earlier decision without
+  repeating it. An answer that uses one cites the message, `{ chatId, message }`, which code
+  checks against a live chat of the same overview. An earlier answer is context, not evidence:
+  a fact about the source still cites the source, and an answer resting only on another chat is
+  not "in the source". The citation shape went into OV-308, so it needs no schema bump later.
 - **Notes**, the reader's own writing on an overview (a separate card the owner wants), should be
   the same shape: a per-overview reader record, synced, deleted with the overview, read by the
   same tools. Chats and notes sit side by side on the overview.
@@ -336,11 +343,14 @@ The owner said build on 15 Nov 2026. Cards 1 to 4 are on the board as OV-308 to 
    - `POST /api/chats/:overviewId/messages`, Luna, the account's own transcript (or article text)
      in a cached system prompt, the passage-id citations turned into times by code, and streamed
      answers;
+   - the overview's other live chats sent with each question, cut to a budget by code, and their
+     citations checked against real messages;
    - the monthly allowance, the daily caps and the per-conversation limit, counted in Postgres;
    - limits shown as waits;
    - analytics: messages and tokens per message, never the text.
 3. **Design, then the chat panel (OV-310):** a Claude Design round for web, phone and the 400px panel,
-   with OV-266's chips as the way in. Then the UI, with streaming text announced politely and full
+   with OV-266's chips as the way in, the list of an overview's chats, and a citation of another
+   chat shown as a link to its message. Then the UI, with streaming text announced politely and full
    keyboard use.
 4. **Chats over MCP (OV-311):** `list_chats`, `get_chat`, and the line in `get_overview`.
 5. **Later, only if asked for, and not carded:** chat on the reader's own key from the device; chat across a
