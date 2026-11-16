@@ -514,8 +514,11 @@ Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a su
   `chat-our-key-daily`), `retryAfterSeconds`, and for the month `resetsOn`.
 - **What it costs, fully used,** at OV-267's measured cost per message: about $0.03, $0.17
   and $0.34 a month for Free, BYO Plus and Plus; about $0.05, $0.27 and $0.53 if every
-  source is over an hour; about $0.10, $0.52 and $1.04 with no caching. Not yet measured:
-  30-question conversations, other chats in the prompt, sources of two hours or more.
+  source is over an hour; about $0.10, $0.52 and $1.04 with no caching. Measured through
+  the endpoint on a 169-minute source (`chats.md`, "Measured through the endpoint"): about
+  $0.0004 a question within a conversation, other chats included, but $0.004 for a
+  conversation's first, so a Plus month of one-question conversations on sources that long
+  would be about $4.40.
 - `GET /api/chat-usage` says what is used, the limit and the reset date.
 
 ## Options for saving cost, not built

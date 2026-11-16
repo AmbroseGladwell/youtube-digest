@@ -112,6 +112,43 @@ the provider billed still go into the cost tally, as `message-failed`.
 cost, `inSource`, the citations of the source and of other chats, how many other chats'
 messages went in, the month's count and the time; never the question or the answer.
 
+**Always on us.** Every plan asks on our key, whatever key it makes overviews with, and
+"Only ever use my key" doesn't change that (owner, 16 Nov 2026). Settings › API keys says so
+under that switch: the reader's key is only used to make overviews
+(`OWN_KEY_FOR_OVERVIEWS_ONLY`).
+
+## Measured through the endpoint
+
+`apps/api/src/scripts/chatHarnessCheck.ts` runs the real endpoint in process, on an in-memory
+Postgres, against OpenAI on our key, and reads its own log line for tokens and cost. Run on 16
+Nov 2026 with `modelPrices.ts` as checked on 9 Nov (Luna $0.10 in, $0.01 cached, $0.50 out per
+million). The overview in the prompt was a fixture, since the spike kept only the notes' text.
+Latency wasn't measured: the in-process clock doesn't move.
+
+**OV-267's question set** (6 sources of 10 to 89 minutes, 6 questions each, one conversation
+per source, twice): answered or declined rightly 72 of 72, declined all 24 the source doesn't
+cover, cited the right moment 46 of 48 (10 of 12 for questions needing two moments far apart),
+named the expected detail 48 of 48. That matches OV-267's `fullTranscript` arm. A message cost
+$0.00021 at the median, with 99% of its prompt read from the cache; the first of a conversation
+cost up to $0.0022.
+
+**The worst case:** the library has nothing over 89 minutes, so the two longest were joined end
+to end into a 169-minute source of about 33,000 tokens. Two 30-question conversations on it,
+the second carrying the first (all 60 of its messages fitted the budget):
+
+| | First question | Each later question (median) | 30 questions | Prompt tokens, first to last |
+|---|---|---|---|---|
+| Alone | $0.0042 | $0.00042 | $0.016 | 32,800 to 35,100 |
+| With the other conversation | $0.0045 | $0.00046 | $0.018 | 35,200 to 37,500 |
+
+So 30 questions of history and a full other conversation add about 10%. **What costs is a
+conversation's first question on a long source,** which reads nothing from the cache: the
+second conversation's first question paid full price although the transcript was the same, so
+OpenAI's cache did not carry across conversations here even with one `prompt_cache_key` per
+overview. On a source this long, a reader who opens a new conversation for every question pays
+about $0.004 each; a Plus month spent that way would be about $4.40, against about $0.60 for the
+same 1,000 questions in conversations of 30.
+
 ## No transcript, no chat
 
 The server answers only from what the account holds itself (`transcript-storage.md`). A video

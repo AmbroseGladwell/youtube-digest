@@ -102,7 +102,7 @@ test("a signed-in reader with no key of their own makes overviews on our key", a
   expect(backendSimulator.ourKey.generations()).toHaveLength(1);
 });
 
-test("Settings puts Only ever use my key beside the keys, saying where a fallback sends the transcript", async ({
+test("Settings puts Only ever use my key beside the keys, saying where a fallback sends the transcript and that questions are always on us", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -117,6 +117,7 @@ test("Settings puts Only ever use my key beside the keys, saying where a fallbac
 
   await keys.verifyOnlyMyKey(true);
   await keys.verifyOnlyMyKeyExplains(/nothing is sent to OpenAI/);
+  await keys.verifyOwnKeyForOverviewsOnly();
 });
 
 test("where our key can't be used, there is no fallback to switch off", async ({ launcher }) => {

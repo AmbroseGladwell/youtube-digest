@@ -183,8 +183,9 @@ const sections: readonly LegalSection[] = [
           <strong>On our key.</strong> When you have no key, or yours can't be used, the overview is written on our key: your device sends
           the transcript or article, your About you sentence and what we have learned from your overviews to our server, which sends them to
           OpenAI in the United States and returns the overview. The overview says when it was written this way. If you would rather your
-          transcripts never went through us, turn on "Only ever use my key" in Settings › API keys. During onboarding, your first overview
-          and the topic suggestions beside it are made on our key too, from the title, description and opening of the video or page.
+          overviews were never made through us, turn on "Only ever use my key" in Settings › API keys; questions you ask about an overview
+          still go through us, as below. During onboarding, your first overview and the topic suggestions beside it are made on our key too,
+          from the title, description and opening of the video or page.
         </p>
         <p>
           Your About you sentence and what we have learned from your overviews shape only How to apply, the section that suggests what you

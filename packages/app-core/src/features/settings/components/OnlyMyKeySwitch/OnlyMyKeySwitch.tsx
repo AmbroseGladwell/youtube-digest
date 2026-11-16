@@ -8,6 +8,10 @@ export const FALLBACK_ON =
   "When your key can’t make an overview, because it’s out of credit or its provider is down, we make it on us and say so on the overview. That sends the transcript and your reader context to OpenAI through our server.";
 export const FALLBACK_OFF =
   "When your key can’t make an overview, it fails, and nothing is sent to OpenAI. Turn this off to have us make it instead.";
+// Chat always runs on us, whatever this switch says (docs/features/chats.md), so a reader
+// who keeps their transcripts away from us isn't surprised by it.
+export const OWN_KEY_FOR_OVERVIEWS_ONLY =
+  "Your key is only used to make overviews. Questions you ask about an overview are always answered on us, within your plan’s allowance, whether or not this is on.";
 
 // Beside the keys, because it is about where they send things (docs/architecture/tiers.md,
 // "Which key an overview uses"). Off by default: the fallback is on until the reader says.
@@ -38,6 +42,9 @@ export function OnlyMyKeySwitch() {
       </div>
       <p className={styles.body} id={explanationId} data-testid={onlyMyKeySwitchTestIds.explanation}>
         {onlyMyKey ? FALLBACK_OFF : FALLBACK_ON}
+      </p>
+      <p className={styles.body} data-testid={onlyMyKeySwitchTestIds.overviewsOnly}>
+        {OWN_KEY_FOR_OVERVIEWS_ONLY}
       </p>
     </div>
   );
