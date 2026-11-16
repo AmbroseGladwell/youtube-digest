@@ -159,6 +159,7 @@ export class ChatAnswerer {
     const answer = async function* (this: ChatAnswerer): AsyncGenerator<ChatStreamEvent> {
       let raw = "";
       let sent = "";
+      let settled = false;
       try {
         for await (const piece of stream.pieces) {
           raw += piece;
@@ -182,6 +183,7 @@ export class ChatAnswerer {
           { overviewId, conversationId: question.conversationId, messages },
           clock(),
         );
+        settled = true;
         const cost = await this.#recordCost(accountId, stream.usage(), "message", log);
         log.info(
           apiLogLines.chat.answered({
@@ -197,6 +199,7 @@ export class ChatAnswerer {
         );
         yield { type: "answered", chatId: id, rev: written.rev, messages };
       } catch (error) {
+        settled = true;
         await release();
         const cost = await this.#recordCost(accountId, stream.usage(), "message-failed", log);
         log.warn(
@@ -209,6 +212,15 @@ export class ChatAnswerer {
           }),
         );
         yield { type: "failed", message: FAILED };
+      } finally {
+        // The reader stopped, or went, before the answer was stored: stop asking, store
+        // nothing, and give the question back. The provider reports tokens only at the end,
+        // so what it billed for the part already written can't be priced.
+        if (!settled) {
+          await stream.pieces.return(undefined);
+          await release();
+          log.info(apiLogLines.chat.stopped({ ...logged, ms: clock().getTime() - startedAt }));
+        }
       }
     };
     return answer.call(this);

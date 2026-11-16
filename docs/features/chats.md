@@ -107,6 +107,11 @@ seconds, or after 1 then 3 seconds, before anything streams. A third refusal, an
 failure, or a reply that can't be read gives the message back and stores nothing; the tokens
 the provider billed still go into the cost tally, as `message-failed`.
 
+**Stopped or abandoned.** When the reader stops an answer, or the connection goes, before
+the answer is stored, the server stops asking the provider, stores nothing and gives the
+question back (`api.chat.stopped`). The provider reports tokens only at the end, so what it
+billed for the part already written isn't priced.
+
 **Costs and logs.** Each answer's tokens and list-price cost go into `account_costs`, area
 `chat` (`unit-economics.md`). `api.chat.answered` logs the plan, model, tokens, cached share,
 cost, `inSource`, the citations of the source and of other chats, how many other chats'
