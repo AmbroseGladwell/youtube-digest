@@ -35,6 +35,16 @@ tasks:
     cmds:
       - BWS_PROJECT={{.PROD_PROJECT}} TEMPLATE=services/tts/.env.prod.tpl FLY_APP=the-overview-tts scripts/secrets.sh fly-import
 
+  deploy:stt:
+    desc: Deploy production's speech-to-text app on Modal, with overview-prod's STT_TOKEN as its secret, printing no value
+    preconditions:
+      - sh: test -n "${BWS_ACCESS_TOKEN:-}"
+        msg: 'No Bitwarden access token in the environment. Store one with: task secrets:login'
+      - sh: test -x services/stt/.venv/bin/modal
+        msg: 'The Modal CLI is missing. Run: cd services/stt && uv sync'
+    cmds:
+      - BWS_PROJECT={{.PROD_PROJECT}} scripts/secrets.sh run sh services/stt/deploy_prod.sh
+
   deploy:image:
     desc: Build the production image locally with Docker, as CI does, without deploying it
     preconditions:

@@ -208,9 +208,30 @@ through the usual upload (`transcript-storage.md`). Nothing is remembered in
 the worker's seconds at the list price of the GPU it ran on. An unknown card is costed at the
 dearest one in the app's list.
 
-**Switching it on.** The Modal app reads `STT_TOKEN` from a Modal secret named `overview-stt`. The API
-needs `STT_URL` (the app's web address) and the same `STT_TOKEN`, and refuses to start with only
-one of them.
+**Switching it on.** One Modal app per environment, each reading `STT_TOKEN` from a Modal secret of
+its own name, so dev runs never touch production's: `overview-stt` for dev, `overview-stt-prod` for
+production (`OVERVIEW_STT_APP` picks the name at deploy). The API needs `STT_URL` (the app's web
+address) and the same `STT_TOKEN`. It refuses to start with the address and no token; the token
+alone leaves transcribing off, so the secret can go into Fly before the address reaches `fly.toml`.
+
+| | Dev | Production |
+|---|---|---|
+| Modal app and secret | `overview-stt` | `overview-stt-prod`, by `task deploy:stt` |
+| `STT_URL` | `.env.tpl` | `fly.toml` `[env]` |
+| `STT_TOKEN` | `overview-dev` | `overview-prod`, into Fly by `task deploy:secrets` |
+| The Modal CLI's token | `overview-dev` | `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` in `overview-prod`, a token of its own |
+
+`task deploy:stt` runs `services/stt/deploy_prod.sh` under `overview-prod`: it sets the Modal secret,
+deploys, and checks a call without the token is refused, printing no value. Production's
+Bitwarden token can read `overview-prod`; the local one can't, by design.
+
+The order in production, each step safe on its own:
+
+1. `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` (a Modal API token made for production) and `STT_TOKEN`
+   in `overview-prod`.
+2. `task deploy:stt`: the Modal app, its secret, and the check that it refuses a call without the token.
+3. `task deploy:secrets`: `STT_TOKEN` into Fly. The running API restarts with transcribing still off.
+4. Merge the change that puts `STT_URL` in `fly.toml`; its deploy switches transcribing on.
 
 **Analytics.** `capture.episodeTranscription`: `asked` when Create's question shows (305c-2),
 `chosen` with how it came about (`chosen` on the card, `asked`, `retried`, `free`), `finished` with

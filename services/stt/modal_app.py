@@ -12,6 +12,10 @@ SAMPLE_RATE = 16000
 MOST_AUDIO_BYTES = 700 * 1024 * 1024
 DOWNLOAD_TIMEOUT_SECONDS = 30
 BATCH_SIZE = 32
+# One app per environment, each with its own token, so dev runs never touch production's:
+# `overview-stt` for dev, `overview-stt-prod` for production (docs/features/speech-to-text.md,
+# "Switching it on"). Baked into the image, so the containers name the same app's Dict.
+NAME = os.environ.get("OVERVIEW_STT_APP", "overview-stt")
 
 
 def fetch_model() -> None:
@@ -25,11 +29,12 @@ image = (
     .apt_install("ffmpeg")
     .pip_install("faster-whisper==1.2.1", "numpy>=2.0", "fastapi[standard]>=0.115")
     .run_function(fetch_model)
+    .env({"OVERVIEW_STT_APP": NAME})
 )
 
-app = modal.App("overview-stt", image=image)
-started = modal.Dict.from_name("overview-stt-started", create_if_missing=True)
-secret = modal.Secret.from_name("overview-stt")
+app = modal.App(NAME, image=image)
+started = modal.Dict.from_name(f"{NAME}-started", create_if_missing=True)
+secret = modal.Secret.from_name(NAME)
 
 
 class Refused(Exception):
