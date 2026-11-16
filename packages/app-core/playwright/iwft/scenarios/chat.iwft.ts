@@ -133,12 +133,14 @@ test.describe("Chat beside the note", () => {
     backendSimulator.simulateEndpointStalled(EndpointKey.CHAT_MESSAGES);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
-    await reader.chat.askInNote("How much lean mass?");
+    await reader.followUps.clickQuestion(0);
     await reader.chat.verifyWriting();
+    await reader.chat.verifySuggestionsRead([QUESTIONS[1]!.question, QUESTIONS[2]!.question]);
 
     await reader.chat.stop();
 
     await reader.chat.verifyStopped();
+    await reader.chat.verifySuggestionsRead([QUESTIONS[1]!.question, QUESTIONS[2]!.question]);
     await reader.chat.verifyAnnounced("Stopped");
     await expect
       .poll(() => chatEvents(backendSimulator.analytics.events()).map(({ name }) => name))
@@ -231,6 +233,42 @@ test.describe("Chat beside the note", () => {
 
     await reader.chat.verifyIsOpen(false);
     await reader.chat.verifyNoteFieldIs(true);
+  });
+
+  test("a question answered here says so under the note, and following that opens its conversation", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seed(creatine());
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.followUps.clickQuestion(0);
+    await reader.chat.verifyAnswersRead([ANSWER]);
+    await reader.followUps.verifyReceiptsRead(["Answered here · just now"]);
+    await reader.chat.newConversation();
+    await reader.chat.verifyTitleReads("New conversation");
+
+    await reader.followUps.clickReceipt(0);
+
+    await reader.chat.verifyTitleReads(QUESTIONS[0]!.question);
+    await reader.chat.close();
+    await reader.followUps.clickReceipt(0);
+    await reader.chat.verifyIsOpen(true);
+    await reader.chat.verifyTitleReads(QUESTIONS[0]!.question);
+  });
+
+  test("F6 moves between the note and the chat beside it", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(creatine());
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.openFromMenu();
+    await reader.chat.verifyFieldIsFocused();
+
+    await reader.chat.pressF6();
+
+    await reader.chat.verifyNoteIsFocused();
+    await reader.chat.pressF6();
+    await reader.chat.verifyFieldIsFocused();
   });
 
   test("Continue in Claude, connected, hands it the conversation to read", async ({ launcher, backendSimulator }) => {

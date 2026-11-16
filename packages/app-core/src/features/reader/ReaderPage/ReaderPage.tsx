@@ -26,6 +26,7 @@ import { EpisodePlayer } from "../components/EpisodePlayer/EpisodePlayer.js";
 import { PlaybackProvider } from "../../../app/PlaybackContext.js";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
+import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
 import { RouteParams, Routes } from "../../../app/Routes.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { oneTimeAccessHost, wasAlreadyMade, wasJustGenerated } from "../../newOverview/justGenerated.js";
@@ -59,6 +60,7 @@ import { NoteAskField } from "../../chats/components/NoteAskField/NoteAskField.j
 import { useChatPanel } from "../../chats/useChatPanel.js";
 import { chatOffered } from "../../chats/util/chatOffered.js";
 import { citedLineIndex } from "../../chats/util/citedLineIndex.js";
+import { bubbleTravel } from "../../chats/util/bubbleTravel.js";
 import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
@@ -128,6 +130,8 @@ export function ReaderPage() {
   }
   return <ReaderPageForOverview overviewId={parsedId.data} />;
 }
+
+const CHAT_OPEN_MS = 320;
 
 function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
@@ -358,6 +362,34 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [stepLine, reader]);
 
   const chat = useChatPanel(overviewId);
+  const noteMain = useRef<HTMLDivElement | null>(null);
+  const chatColumn = useRef<HTMLDivElement | null>(null);
+  const [chatLeaving, setChatLeaving] = useState(false);
+  const chatWasOpen = useRef(false);
+  // Closing plays the opening backwards (310a): the chat stays for its 320ms on the way out.
+  useEffect(() => {
+    const was = chatWasOpen.current;
+    chatWasOpen.current = chat.open;
+    if (!was || chat.open || prefersReducedMotion()) {
+      setChatLeaving(false);
+      return;
+    }
+    setChatLeaving(true);
+    const timer = setTimeout(() => setChatLeaving(false), CHAT_OPEN_MS);
+    return () => clearTimeout(timer);
+  }, [chat.open]);
+  // F6 moves between the note and the chat beside it, which isn't modal (310aq).
+  useEffect(() => {
+    if (!chat.open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "F6" || chatColumn.current === null) return;
+      event.preventDefault();
+      if (chatColumn.current.contains(document.activeElement)) noteMain.current?.focus();
+      else chat.field.current?.focus();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [chat.open, chat.field]);
   const [citedIndex, setCitedIndex] = useState<number | null>(null);
   const [sheetRest, setSheetRest] = useState<SheetRest>("raised");
   const [sheetLine, setSheetLine] = useState<string | null>(null);
@@ -496,6 +528,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const chatAvailable = chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false }) && !chat.noSource;
   const chatBeside = chatAvailable && !isPanel && !isPhone;
   const chatSheet = chatAvailable && (isPanel || isPhone);
+  // Beside the note, a question asked from it travels into the chat as it opens (310a-4).
+  const askFrom = (question: string, from: "question" | "typed", element: HTMLElement | null) => {
+    if (question === "") return;
+    chat.ask(question, from);
+    if (chatBeside && element !== null) bubbleTravel(element, question);
+  };
   const lowerSheet = (line: string) => {
     setSheetRest("lowered");
     setSheetLine(line);
@@ -580,7 +618,15 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} tabs={tabsShown} ref={tabsHeight.measured} />
           )}
 
-          <div key={tab} className={`${styles.main} ${styles.panel}`} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
+          <div
+            key={tab}
+            ref={noteMain}
+            tabIndex={-1}
+            className={`${styles.main} ${styles.panel}`}
+            role="tabpanel"
+            id={panelId(tab)}
+            aria-labelledby={tabId(tab)}
+          >
             {tab === "Overview" && (
               <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
                 {recipeNote !== null && <RecipeTimes recipe={recipeNote.recipe} source={recipeNote.source} />}
@@ -694,7 +740,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     onAsked={(asked) => setOverviewState.mutate({ overviewId, patch: { asked } })}
                     compact={isPanel || isPhone}
                     analytics={reader.followUps}
-                    onAskHere={chatAvailable ? (question) => chat.ask(question, "question") : undefined}
+                    onAskHere={chatAvailable ? (question, from) => askFrom(question, "question", from) : undefined}
+                    answeredHereOf={chatAvailable ? chat.answeredHere : undefined}
                   />
                 )}
                 {chatAvailable && (
@@ -702,7 +749,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     sourceWord={sourceWord}
                     chatOpen={chat.open}
                     conversations={chat.chats.length}
-                    onAsk={(question) => chat.ask(question, "typed")}
+                    onAsk={(question, from) => askFrom(question, "typed", from)}
                     onOpenConversations={chat.openList}
                   />
                 )}
@@ -896,8 +943,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             />
           )}
         </article>
-        {chatBeside && chat.open && (
-          <div className={styles.chatColumn}>
+        {chatBeside && (chat.open || chatLeaving) && (
+          <div ref={chatColumn} className={`${styles.chatColumn} ${chat.open ? "" : styles.chatColumnLeaving}`}>
             <ChatPanel
               ref={chat.field}
               panel={chat}

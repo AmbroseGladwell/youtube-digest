@@ -18,6 +18,7 @@ import { chatWaitCopy, type ShownWait } from "../../util/chatWaitCopy.js";
 import { ChatWaitBlock } from "../ChatWaitBlock/ChatWaitBlock.js";
 import type { AskState } from "../../useAskQuestion.js";
 import type { useChatPanel } from "../../useChatPanel.js";
+import { ARRIVING_ATTRIBUTE } from "../../util/bubbleTravel.js";
 import { chatSuggestions } from "../../util/chatSuggestions.js";
 import { conversationDate, firstQuestionOf, questionsIn } from "../../util/conversationLine.js";
 import { ChatAnswer } from "../ChatAnswer/ChatAnswer.js";
@@ -102,7 +103,10 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   const others = chats.filter((each) => each !== chat).length;
   const questions = overview.followUpQuestions ?? [];
   const sets = Math.ceil(questions.length / FOLLOW_UP_QUESTIONS_SHOWN);
-  const suggestions = draft.trim() !== "" || wait !== null ? [] : chatSuggestions(questions, set, messages);
+  const suggestions =
+    draft.trim() !== "" || wait !== null
+      ? []
+      : chatSuggestions(questions, set, messages).filter((question) => question !== pending?.question);
   const firstQuestion = messages.find((message) => message.from === "reader")?.text ?? pending?.question ?? null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const title = view === "list" ? "Conversations" : (firstQuestion ?? "New conversation");
@@ -282,7 +286,11 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
               )}
               {pending !== null && (
                 <>
-                  <li className={styles.question} data-testid={chatPanelTestIds.question}>
+                  <li
+                    className={styles.question}
+                    {...(pending.status === "answering" ? { [ARRIVING_ATTRIBUTE]: "" } : {})}
+                    data-testid={chatPanelTestIds.question}
+                  >
                     {pending.question}
                   </li>
                   <li data-testid={chatPanelTestIds.pending}>

@@ -77,7 +77,7 @@ const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
 const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // Where a question about the overview was asked from: one of its questions to ask next, or typed.
 const ChatAskedFrom = z.enum(["question", "typed"]);
-const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink"]);
+const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt"]);
 // Where a chat citation leads: a moment in the source, another conversation, or one deleted since.
 const ChatCitationTarget = z.enum(["source", "conversation", "deletedConversation"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
