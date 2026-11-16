@@ -182,6 +182,11 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   };
   useFocusTrap(filtersOpen, rail);
   useDismissOnOutside(filtersOpen, closeFilters, rail);
+  useEffect(() => {
+    if (selection.selecting || !refocusSelect.current) return;
+    refocusSelect.current = false;
+    selectButton.current?.focus();
+  }, [selection.selecting]);
 
   if (topicsQuery.isError) {
     return (
@@ -306,11 +311,6 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     if (done !== null) finishActing("addToTopic", done, writes, selected.length);
   };
 
-  useEffect(() => {
-    if (selection.selecting || !refocusSelect.current) return;
-    refocusSelect.current = false;
-    selectButton.current?.focus();
-  }, [selection.selecting]);
   // Only counts: with a tag set the chip under the search names it, so the line says it to a
   // screen reader alone ("OV-84 2 Library Filter" 84o).
   const countLine =
