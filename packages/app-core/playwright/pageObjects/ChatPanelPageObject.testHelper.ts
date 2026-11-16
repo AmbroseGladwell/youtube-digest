@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
+import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatCitationPillTestIds } from "../../src/features/chats/components/ChatCitationPill/ChatCitationPillTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { chatPanelTestIds } from "../../src/features/chats/components/ChatPanel/ChatPanelTestIds.js";
@@ -228,4 +229,34 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyBackReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.back)).toHaveText(text));
 
   goBack = () => this.step("goBack", () => this.click(this.panel().getByTestId(chatPanelTestIds.back)));
+
+  verifyWaitReads = (heading: string, body: string, action: string | null) =>
+    this.step(`verifyWaitReads ${heading}`, async () => {
+      const wait = this.panel().getByTestId(chatWaitBlockTestIds.root);
+      await expect(wait).toHaveRole("status");
+      await expect(wait.getByTestId(chatWaitBlockTestIds.heading)).toHaveText(heading);
+      await expect(wait.getByTestId(chatWaitBlockTestIds.body)).toHaveText(body);
+      if (action === null) await expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveCount(0);
+      else await expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveText(action);
+      await expect(this.field()).toHaveCount(0);
+      await expect(this.panel().getByTestId(chatPanelTestIds.suggestions)).toHaveCount(0);
+    });
+
+  verifyNoWait = () =>
+    this.step("verifyNoWait", async () => {
+      await expect(this.panel().getByTestId(chatWaitBlockTestIds.root)).toHaveCount(0);
+      await expect(this.field()).toBeVisible();
+    });
+
+  clickWaitAction = () => this.step("clickWaitAction", () => this.click(this.panel().getByTestId(chatWaitBlockTestIds.action)));
+
+  verifyLeftReads = (text: string | null) =>
+    this.step(`verifyLeftReads ${text}`, () =>
+      text === null
+        ? expect(this.panel().getByTestId(chatPanelTestIds.left)).toHaveCount(0)
+        : expect(this.panel().getByTestId(chatPanelTestIds.left)).toHaveText(text),
+    );
+
+  verifySlowReads = (text: string) =>
+    this.step(`verifySlowReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.slow)).toHaveText(text));
 }

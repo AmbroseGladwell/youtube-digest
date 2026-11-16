@@ -15,7 +15,7 @@ export function useChatUsageQuery() {
   return useQuery({
     queryKey: chatKeys.usage(accountId),
     queryFn: (): Promise<ChatUsage> => createFetchChatApi({ baseUrl: apiUrl!, token: connection.token }).usage(),
-    enabled: isConnected(connection) && accountId !== null && apiUrl !== null,
+    enabled: isConnected(connection) && apiUrl !== null,
     staleTime: 60 * 1000,
     retry: false,
   });

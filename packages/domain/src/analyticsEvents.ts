@@ -426,6 +426,7 @@ export const analyticsEvents = {
       closed: event("The reader closes chat"),
       stopped: event("The reader stops an answer while it is being written; it isn't stored or counted"),
       answerCopied: event("The reader copies an answer"),
+      plansFollowed: event("The reader follows a spent month's wait in chat to Settings › Plan"),
       continuedIn: event(
         "The reader takes the conversation to their assistant, which one, filled in or copied, and whether it is connected",
         {

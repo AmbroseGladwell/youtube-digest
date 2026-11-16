@@ -1,4 +1,4 @@
-import type { Plan } from "@overview/domain";
+import type { Plan } from "./Plan.js";
 
 // Chat messages a UTC month per account, all on our key, set on 16 Nov 2026; apart from
 // the overview quotas, so chatting never spends an overview (docs/architecture/tiers.md).
