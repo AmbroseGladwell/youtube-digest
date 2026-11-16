@@ -1,6 +1,6 @@
 # Speech-to-text for podcast episodes
 
-Design note for OV-305. Status: provider chosen by measurement; the server rung is not built.
+Design note for OV-305. Status: provider chosen by measurement; the server rung built behind `STT_URL`, with no screens yet.
 
 ## The gap
 
@@ -93,7 +93,8 @@ serverless hosts were measured, both billing by the second and costing nothing w
 | Whisper Turbo speed | ~75x realtime | ~100x realtime |
 | An hour-long episode, request to result | 58–70 s | 59–63 s |
 | Cost per hour of audio, from the host's billing | $0.010 | $0.0097 |
-| Cold start with a card free | 3–6 s, of which the model load is 2–4 s | not yet measured; see below |
+| Cold start with a card free | 3–6 s, of which the model load is 2–4 s | 3 s model load; the card is the wait, below |
+| Waiting for a card after 3 hours idle | | 118 s and 55 s |
 
 For scale, Groq lists Whisper Turbo at $0.04 an hour of audio and Cloudflare Workers AI at $0.03.
 At $0.01 an hour, a two-hour episode costs us about 2 cents, and Modal's $30 monthly credit covers
@@ -112,25 +113,32 @@ Neither host fails when it has no card: it waits.
 - **RunPod scales an endpoint with no requests down**: two workers at most after 3 days, none after
   7. A fallback that goes unused for a week would fail on the day it is needed.
 
-What a RunPod cold start costs in time after hours idle is being measured on 16 Nov 2026 (two
-probes, 3 hours apart); this section gets the result.
+**RunPod after hours idle**, measured on 16 Nov 2026: an endpoint with its image staged was left
+idle for 3 hours, sent an hour of Odd Lots, left 3 hours more, and sent it again.
+
+| | Probe 1 | Probe 2 |
+|---|---|---|
+| Waiting for a card | 118 s | 55 s |
+| Request to result | 186 s | 119 s |
+| Model load, once on a card | 2.5 s | 3.1 s |
+| Missed or wrong | 1.5% | 1.4% |
+
+Both times the staged worker's card was `THROTTLED` (its machine busy) just before the job
+arrived, so RunPod started a worker on another machine. The model loads in seconds; the wait is
+for a card, the same failure a fallback is meant to cover.
 
 ## The choice
 
-**Whisper large-v3-turbo, on Modal, with a list of card types.** RunPod is the fallback if its cold
-start after hours idle is under about 20 s; otherwise more Modal card types do that job.
+**Whisper large-v3-turbo, on Modal, with a list of card types.** RunPod was to be the fallback if its
+cold start after hours idle was under about 20 s. It waited 55 s and 118 s, so there is no second
+host: the list of card types is the fallback, and it gets longer if Modal is seen waiting.
 
 How long a reader waits for a card:
 
 1. The worker tells the API it has started, before it loads anything. That separates "no card yet"
    from "transcribing", which Modal cannot show from outside.
-2. **No start after 15 s** (about three times Modal's measured cold start): send the same job to the
-   fallback as well, without cancelling. Whichever starts first does it; the other is cancelled
-   before it does any work.
-3. **Neither started after 2 minutes**: the attempt fails visibly, and it does not count against the
+2. **No start after 2 minutes**: the attempt fails visibly, and it does not count against the
    reader's plan.
-4. A health-check job once a day, a few seconds of audio on each host, keeps the fallback from being
-   scaled to zero and records its cold start, for about $0.002 a day.
 
 The reader sees which of these is happening: "Transcribing the episode, about a minute", and
 "Waiting for a transcriber…" if the start is slow.
@@ -139,17 +147,59 @@ The reader sees which of these is happening: "Transcribing the episode, about a 
 down to roughly 15–20 s for about the same cost, since billing is per second and each extra worker
 adds only its model load.
 
-## Still to build
+## The server rung
 
-- The server rung: a job table claimed with `for update skip locked` and retried, as
-  `audio_renders` is; the transcript saved as the account's own copy; the audio deleted after
-  transcription.
-- A slimmer production image carrying only Whisper Turbo, built from `main`, with its own keys in the
-  production secrets project.
-- `/privacy` naming Modal (and RunPod, if it stays), through the trigger list in `legal-pages.md`.
-- Plan limits, now that the cost is known.
-- A Design round for the "needs transcribing", waiting and limit-reached states.
-- Analytics: transcription requested, started, finished and failed, with seconds of audio and host.
+A reader is offered transcription only where it can happen: when every other rung has failed,
+`POST /api/podcasts/transcript`'s `transcript_unavailable` carries `transcribable: true`, and only on a
+server with `STT_URL` set. Nothing is transcribed unless the reader asks.
+
+| Piece | Where |
+|---|---|
+| The GPU worker and its HTTP front (`POST /jobs`, `GET /jobs/{call}`, `DELETE /jobs/{call}`) | `services/stt/modal_app.py`, deployed as Modal app `overview-stt` |
+| Asking, and asking after | `POST /api/podcasts/transcription` with `{ feedUrl, guid }`; `GET /api/podcasts/transcription/:id` |
+| Reading the episode, the allowance and the length cap | `createPodcastTranscriptions.ts` |
+| The jobs and the month's hours | `PodcastTranscriptionsRepository.ts`, tables `podcast_transcriptions` and `transcription_usage` (V0034) |
+| Sending, asking after and giving up | `TranscriptionQueue.ts`, through `Transcriber` (`httpTranscriber.ts`) |
+
+**The audio sent is the feed's own.** The episode is read again from its feed, and the GPU host gets
+the enclosure's address, never one a caller names. The worker downloads it to a temporary folder,
+capped at 700 MB, and deletes it in the same call.
+
+**What a reader sees while waiting.** The answer is `waiting` until the worker reports that it has
+started, then `transcribing`, then `ready` with the transcript, or `failed` with a reason
+(`no-transcriber`, `too-long`, `audio-unreachable`, `audio-unreadable`, `no-speech`, `failed`). The
+client polls every few seconds, under the address rate limit only. The worker writes its start into a
+Modal `Dict` before it loads anything, which is how "no card yet" is told apart from "transcribing".
+
+**Giving up.** With no start after 2 minutes the job is cancelled at the host and fails as
+`no-transcriber`. A started job may run for 15 minutes. A host that stops answering for six polls in a row
+fails the job too. A failed job costs the reader nothing, and asking again starts it afresh.
+
+**Restarts.** A job is held under a one-minute lease that each poll renews. A job whose lease has
+lapsed is taken up by the next worker where it was, without sending it to the host a second time.
+
+**Allowances.** Hours of audio a month: a trial's address 4, Free 5, BYO Plus 15, Plus 30, with no
+episode over 4 hours by its feed (owner, 16 Nov 2026). The feed's length is held when the job is
+queued and settled to the audio's measured length once it finishes. An episode with no length in its
+feed holds an hour. Asking again for an episode already transcribed, or on its way, is free. Past the
+allowance the answer is `too_many_requests`, with `quota: "transcription"`, the seconds used and the
+limit, and the time until the month turns.
+
+**Never shared.** A job belongs to one caller: an account, or a trial's hashed address. The words are
+held for at most a day for that caller's device to collect. After that they are the reader's own copy
+through the usual upload (`transcript-storage.md`). Nothing is remembered in
+`podcast_transcript_sources`, so another reader's ask transcribes again.
+
+**Cost.** Each finished job records `transcripts` / `speech-to-text` in the account's cost tally:
+the worker's seconds at the list price of the GPU it ran on. An unknown card is costed at the
+dearest one in the app's list.
+
+**Switching it on.** The Modal app reads `STT_TOKEN` from a Modal secret named `overview-stt`. The API
+needs `STT_URL` (the app's web address) and the same `STT_TOKEN`, and refuses to start with only
+one of them.
+
+Still to come: the screens (a Design round for offering, waiting and the allowance), the client's
+polling, and analytics events.
 
 ## Running the harness
 

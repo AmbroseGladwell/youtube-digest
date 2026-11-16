@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-15";
+export const TERMS_UPDATED_ON = "2026-11-16";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -93,7 +93,8 @@ const sections: readonly LegalSection[] = [
         <p>
           Every account can make a number of overviews each month on our own key, and a larger number on a key of its own. The numbers, and
           the daily caps that keep the service safe, are shown in the app with the date they reset. They are allowances, not entitlements:
-          we may change them, and we may pause overviews on our key when a day's shared budget is spent.
+          we may change them, and we may pause overviews on our key when a day's shared budget is spent. Transcribing a podcast episode that
+          has no transcript of its own has an allowance of its own, in hours of audio a month, on the same terms.
         </p>
         <p>
           <strong>Paid plans.</strong> Nothing is charged for today. When paid plans are offered, the price, what it buys, how to cancel and

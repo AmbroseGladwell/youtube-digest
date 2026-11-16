@@ -79,6 +79,11 @@ export const apiLogLines = coded("api", {
     magicLinks: line("info", "magic links", "The mail transport sign-in links go through, and the app URL they open."),
     narration: line("info", "narration", "The TTS service and audio store in use, or why narration is unavailable."),
     transcriptService: line("info", "transcript service", "Whether the server fetches transcripts itself, and through which proxy."),
+    speechToText: line(
+      "info",
+      "speech to text",
+      "Whether episodes with no transcript can be transcribed on the GPU host, and at which host.",
+    ),
     ourKey: line("info", "our key", "Whether overviews can be made on our key, on which model, and the global daily cap."),
     playlists: line("info", "playlists", "Whether a YouTube key is set, so playlists can be followed."),
     podcastLookups: line(
@@ -366,6 +371,34 @@ export const apiLogLines = coded("api", {
       "podcast episode searched on youtube",
       "Our server looked for an episode on its show's YouTube channel through the Data API; `units` is what it cost in the daily quota, `searches` the calls from search's own smaller allowance, and `found` whether it matched. Never the show or the episode.",
     ),
+  },
+  transcription: {
+    requested: line(
+      "info",
+      "episode transcription requested",
+      "A reader asked for an episode with no transcript to be transcribed from its audio; `caller` is account or address, `episodeSeconds` the feed's length and `reservedSeconds` what was held against the month's allowance. Never the feed, the episode or the audio's address.",
+    ),
+    refused: line(
+      "info",
+      "episode transcription refused",
+      "A transcription wasn't started; `reason` is `allowance` (the month's hours are spent), `too-long` or `no-audio`, with `usedSeconds` and `limitSeconds` for the first.",
+    ),
+    started: line(
+      "info",
+      "episode transcription started",
+      "A GPU started on an episode; `waitedSeconds` is from the request to the worker's start, the time a reader spent waiting for a card.",
+    ),
+    finished: line(
+      "info",
+      "episode transcribed",
+      "An episode's words came back; `audioSeconds` measured, `workerSeconds` billed, `gpu`, `cold`, `language`, `dollars` at the host's list price and `requestToReadySeconds` end to end. The words are never logged.",
+    ),
+    failed: line(
+      "warn",
+      "episode transcription failed",
+      "A transcription ended without words; `reason` is the failure a reader is shown and `detail` the worker's own code. Its held seconds are given back.",
+    ),
+    workerStopped: line("error", "transcription worker stopped", "A transcription worker hit an error outside any one job and stopped."),
   },
   playlists: {
     read: line("info", "playlist read", "A followed playlist was read, and what it cost in YouTube quota units."),

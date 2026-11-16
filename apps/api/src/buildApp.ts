@@ -59,6 +59,10 @@ import { APPLE_BUDGET } from "./podcasts/callBudget.js";
 import type { ShowDirectory } from "./podcasts/appleDirectory.js";
 import type { YouTubeEpisodes } from "./podcasts/youTubeDataApiEpisodes.js";
 import { EpisodeWordSourcesRepository } from "./podcasts/EpisodeWordSourcesRepository.js";
+import { createPodcastTranscriptions } from "./podcasts/createPodcastTranscriptions.js";
+import { PodcastTranscriptionsRepository } from "./podcasts/PodcastTranscriptionsRepository.js";
+import { TranscriptionQueue } from "./podcasts/TranscriptionQueue.js";
+import type { Transcriber } from "./podcasts/Transcriber.js";
 import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
@@ -130,12 +134,23 @@ export interface MeaningSetup {
   runWorkers: boolean;
 }
 
+// Episodes transcribed on our GPU host; absent, no episode is offered transcription
+// (docs/features/speech-to-text.md).
+export interface SpeechToTextSetup {
+  transcriber: Transcriber;
+  concurrency: number;
+  // Off in tests, which drain the queue themselves; `sleep` replaces the wait between polls.
+  runWorkers: boolean;
+  sleep?: (ms: number) => Promise<void>;
+}
+
 export interface BuildAppOptions {
   config: AppConfig;
   sql: SqlClient;
   mailer: Mailer;
   audio?: AudioSetup | null;
   transcriptService?: TranscriptServiceSetup | null;
+  speechToText?: SpeechToTextSetup | null;
   ourKey?: OurKeySetup | null;
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
@@ -169,6 +184,7 @@ declare module "fastify" {
   interface FastifyInstance {
     audioQueue: AudioRenderQueue | null;
     embeddingQueue: EmbeddingQueue | null;
+    transcriptionQueue: TranscriptionQueue | null;
   }
 }
 
@@ -181,6 +197,7 @@ export async function buildApp({
   mailer,
   audio = null,
   transcriptService = null,
+  speechToText = null,
   ourKey = null,
   meaning = null,
   playlistReader = null,
@@ -227,6 +244,10 @@ export async function buildApp({
           runWorkers: meaning.runWorkers,
         });
   app.decorate("embeddingQueue", embeddingQueue);
+  const transcriptionJobs = new PodcastTranscriptionsRepository(sql);
+  const transcriptionQueue =
+    speechToText === null ? null : new TranscriptionQueue({ jobs: transcriptionJobs, costs, clock, log: app.log, ...speechToText });
+  app.decorate("transcriptionQueue", transcriptionQueue);
   const meaningSearch = meaning === null ? null : new MeaningSearch(claimEmbeddings, meaning.embedder, { costs, clock, log: app.log });
   const overviewsWritten = () => embeddingQueue?.kick();
 
@@ -330,6 +351,10 @@ export async function buildApp({
         resolveTranscript: podcastTranscripts.resolve,
         planOf: (accountId) => accountPlan(sql, accountId),
         trials,
+        transcriptions:
+          transcriptionQueue === null
+            ? null
+            : createPodcastTranscriptions({ fetchPublicWeb: podcastWeb, jobs: transcriptionJobs, queue: transcriptionQueue, clock }),
         clock,
       });
       shareRoutes(api, shares, config.appUrl);
@@ -384,6 +409,7 @@ export async function buildApp({
   app.addHook("onReady", async () => {
     audioQueue?.kick();
     embeddingQueue?.kick();
+    transcriptionQueue?.kick();
   });
 
   await app.register(
