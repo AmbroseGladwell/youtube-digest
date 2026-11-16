@@ -38,7 +38,9 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const captureQueueStore = new InMemoryCaptureQueueStore();
   const projectStore = new InMemoryProjectStore();
   const chatStore = new InMemoryChatStore();
-  const syncStorage = syncAvailable ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore) : null;
+  const syncStorage = syncAvailable
+    ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore, chatStore)
+    : null;
   return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore, chatStore, syncStorage };
 };
 

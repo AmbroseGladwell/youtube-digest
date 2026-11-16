@@ -426,11 +426,14 @@ export const analyticsEvents = {
       closed: event("The reader closes chat"),
       stopped: event("The reader stops an answer while it is being written; it isn't stored or counted"),
       answerCopied: event("The reader copies an answer"),
-      continuedIn: event("The reader takes the conversation to their assistant, which one, filled in or copied, and whether it is connected", {
-        assistant: FollowUpAssistant,
-        handOff: FollowUpHandOffKind,
-        connected: z.boolean(),
-      }),
+      continuedIn: event(
+        "The reader takes the conversation to their assistant, which one, filled in or copied, and whether it is connected",
+        {
+          assistant: FollowUpAssistant,
+          handOff: FollowUpHandOffKind,
+          connected: z.boolean(),
+        },
+      ),
       conversationOpened: event("The reader opens one of the overview's earlier conversations"),
       conversationDeleted: event("The reader deletes a conversation about the overview"),
     },

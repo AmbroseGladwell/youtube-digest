@@ -36,7 +36,8 @@ export const ChatField = forwardRef<HTMLTextAreaElement, ChatFieldProps>(functio
       <textarea
         ref={ref}
         id={id}
-        name="chatQuestion"
+        name="chat-question"
+        enterKeyHint="send"
         autoComplete="off"
         rows={1}
         className={styles.input}

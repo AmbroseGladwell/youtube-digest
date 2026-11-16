@@ -1,5 +1,12 @@
 import { useRef, useState } from "react";
-import { FOLLOW_UP_ASSISTANTS, chatHandOffPrompt, followUpHandOff, type Chat, type FollowUpAssistant, type Overview } from "@overview/domain";
+import {
+  FOLLOW_UP_ASSISTANTS,
+  chatHandOffPrompt,
+  followUpHandOff,
+  type Chat,
+  type FollowUpAssistant,
+  type Overview,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { FollowUpAssistantMenu } from "../../../reader/components/FollowUpAssistantMenu/FollowUpAssistantMenu.js";

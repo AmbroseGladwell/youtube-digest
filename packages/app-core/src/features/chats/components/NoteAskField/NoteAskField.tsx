@@ -19,7 +19,14 @@ export function NoteAskField({ sourceWord, chatOpen, onAsk }: NoteAskFieldProps)
   };
   return (
     <div className={`${styles.root} ${chatOpen ? styles.away : ""}`} inert={chatOpen} data-testid={noteAskFieldTestIds.root}>
-      <ChatField value={draft} placeholder={`Ask about this ${sourceWord}`} answering={false} onChange={setDraft} onSend={send} onStop={() => undefined} />
+      <ChatField
+        value={draft}
+        placeholder={`Ask about this ${sourceWord}`}
+        answering={false}
+        onChange={setDraft}
+        onSend={send}
+        onStop={() => undefined}
+      />
     </div>
   );
 }

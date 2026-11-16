@@ -1,5 +1,13 @@
 import { forwardRef, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { FOLLOW_UP_QUESTIONS_SHOWN, chatRecordId, type Chat, type ChatMessage, type Overview, type TimeRange, type VideoSource } from "@overview/domain";
+import {
+  FOLLOW_UP_QUESTIONS_SHOWN,
+  chatRecordId,
+  type Chat,
+  type ChatMessage,
+  type Overview,
+  type TimeRange,
+  type VideoSource,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { AskedFrom, AskState } from "../../useAskQuestion.js";
 import { chatSuggestions } from "../../util/chatSuggestions.js";
@@ -34,7 +42,8 @@ const WAIT_HEADINGS = {
   noSource: "",
 } as const;
 
-const citedMoments = (message: ChatMessage) => (message.from === "answer" ? message.citations.filter((each) => "startMs" in each).length : 0);
+const citedMoments = (message: ChatMessage) =>
+  message.from === "answer" ? message.citations.filter((each) => "startMs" in each).length : 0;
 
 function announcementOf(message: ChatMessage, sourceWord: string): string {
   if (message.from !== "answer") return "";

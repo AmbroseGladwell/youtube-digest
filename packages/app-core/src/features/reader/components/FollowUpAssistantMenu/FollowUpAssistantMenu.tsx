@@ -157,12 +157,19 @@ export function FollowUpAssistantMenu({
       {(firstTap || continueIn) && (
         <>
           <p className={styles.remembered}>
-            {continueIn ? "Remembered for next time. Change it in Settings › Connections." : "Remembered for next time. Change it under the questions."}
+            {continueIn
+              ? "Remembered for next time. Change it in Settings › Connections."
+              : "Remembered for next time. Change it under the questions."}
           </p>
           {!continueIn && (
             <>
               <hr className={styles.rule} />
-              <button type="button" className={styles.copy} onClick={onCopyQuestion} data-testid={followUpAssistantMenuTestIds.copyQuestion}>
+              <button
+                type="button"
+                className={styles.copy}
+                onClick={onCopyQuestion}
+                data-testid={followUpAssistantMenuTestIds.copyQuestion}
+              >
                 <StrokeIcon name="copy" size={17} />
                 Copy question
               </button>

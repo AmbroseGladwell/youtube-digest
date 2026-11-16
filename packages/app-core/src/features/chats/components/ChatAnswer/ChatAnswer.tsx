@@ -26,7 +26,16 @@ const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
 // Design 310k–310m: an answer is plain text on the panel, its stretches of the video as pills
 // under the whole of it, in time order. One the source doesn't cover says so, muted, with no
 // citations: an answer, not an error.
-export function ChatAnswer({ text, inSource, citations, sourceWord, video, onCitationFollowed, onOpenTranscriptAt, actions }: ChatAnswerProps) {
+export function ChatAnswer({
+  text,
+  inSource,
+  citations,
+  sourceWord,
+  video,
+  onCitationFollowed,
+  onOpenTranscriptAt,
+  actions,
+}: ChatAnswerProps) {
   const stretches = video === null ? [] : stretchesOf(citations);
   return (
     <div className={`${styles.root} ${inSource ? "" : styles.notInSource}`} data-testid={chatAnswerTestIds.root}>
