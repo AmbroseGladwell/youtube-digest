@@ -21,8 +21,11 @@ before"). Each record is one conversation about one overview:
 - **Citations are worked out by code** from the passages the model cited, never stated by it
   (`CLAUDE.md`, "Never let a model count, measure or time anything"):
   - `{ startMs, endMs }` for a stretch of a video or episode;
-  - `{ paragraph }` for an article.
-- **`inSource: false`** marks an answer saying the source doesn't cover the question.
+  - `{ paragraph }` for an article;
+  - `{ chatId, message }` for a message in another chat about the same overview, by its
+    place in that chat's `messages`.
+- **`inSource: false`** marks an answer saying the source doesn't cover the question. Another
+  chat is never the source: an answer resting only on one is not `inSource`.
 - At most `MAX_CHAT_QUESTIONS` (30) questions and their answers, and 10,000 characters a
   message. A conversation past its length is refused whole, so OV-309 checks the count first
   (`chatQuestionCount`) and offers a new conversation.
@@ -31,6 +34,22 @@ before"). Each record is one conversation about one overview:
 again, so anything kept on it would be wiped (`CLAUDE.md`, the read and favourite lesson). A
 regenerated overview keeps its chats: their citations point at moments in the source, which
 don't move.
+
+## Several chats, and one using another
+
+An overview can have any number of chats, and each can draw on the others: a reader can
+build on a decision or an answer from an earlier chat without repeating it. OV-309 sends
+the overview's other live chats with each question, cut to a budget measured by code, oldest
+first out. A deleted chat is never sent, so it can't come back through another one.
+
+An answer that uses another chat cites it with `{ chatId, message }`, which code checks
+points at a real message in a live chat of the same overview, as it checks times against the
+transcript. An earlier answer is context, not evidence: a fact about the source still cites
+the source. OV-310 shows the citation as a link to that message. Whether the reader can
+choose what to bring in, instead of every chat seeing the others, is for its design round.
+
+The citation is in the schema from the start, so adding it later needs no schema version
+bump.
 
 **Notes**, the reader's own writing on an overview, should take the same shape when they are
 built: a per-overview record, synced, deleted with its overview.

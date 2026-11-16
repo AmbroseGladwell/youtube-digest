@@ -5,11 +5,13 @@ export const MAX_CHAT_QUESTIONS = 30;
 export const MAX_CHAT_MESSAGE_LENGTH = 10_000;
 
 // Where an answer found what it says, worked out by code from the passages the model cited,
-// never stated by the model: a stretch of a video or episode, or a paragraph of an article
-// (docs/features/chats.md; CLAUDE.md, "Never let a model count, measure or time anything").
+// never stated by the model: a stretch of a video or episode, a paragraph of an article, or a
+// message in another chat about the same overview (docs/features/chats.md; CLAUDE.md, "Never
+// let a model count, measure or time anything").
 export const ChatCitation = z.union([
   z.object({ startMs: z.number().int().nonnegative(), endMs: z.number().int().nonnegative() }).strict(),
   z.object({ paragraph: z.number().int().nonnegative() }).strict(),
+  z.object({ chatId: z.string().min(1), message: z.number().int().nonnegative() }).strict(),
 ]);
 export type ChatCitation = z.infer<typeof ChatCitation>;
 
@@ -18,6 +20,7 @@ const MessageText = z.string().min(1).max(MAX_CHAT_MESSAGE_LENGTH);
 export const ChatMessage = z.discriminatedUnion("from", [
   z.object({ from: z.literal("reader"), text: MessageText, at: z.iso.datetime() }),
   // inSource is false when the source doesn't say, and the answer says so rather than guessing.
+  // Another chat is never the source: an answer resting only on one is not inSource.
   z.object({
     from: z.literal("answer"),
     text: MessageText,

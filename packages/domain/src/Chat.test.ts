@@ -18,8 +18,10 @@ test("a chat's id starts with its overview's, so an overview's chats share a pre
   assert.equal(chatRecordId(OVERVIEW, "c1"), `${OVERVIEW}:c1`);
 });
 
-test("an answer carries its citations, as times or as an article's paragraph, and whether the source said it", () => {
+test("an answer carries its citations, as times, an article's paragraph or another chat's message, and whether the source said it", () => {
   assert.ok(Chat.safeParse(chat([question, answer, question, { ...answer, citations: [{ paragraph: 4 }], inSource: false }])).success);
+  assert.ok(Chat.safeParse(chat([question, { ...answer, citations: [{ chatId: chatRecordId(OVERVIEW, "c0"), message: 3 }] }])).success);
+  assert.ok(!Chat.safeParse(chat([question, { ...answer, citations: [{ chatId: chatRecordId(OVERVIEW, "c0") }] }])).success);
   const { inSource: _inSource, ...unsure } = answer;
   assert.ok(!Chat.safeParse(chat([question, unsure])).success);
   assert.ok(!Chat.safeParse(chat([question, { ...answer, citations: [{ startMs: 1_000 }] }])).success);
