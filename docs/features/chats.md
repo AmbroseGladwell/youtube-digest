@@ -26,7 +26,7 @@ before"). Each record is one conversation about one overview:
     place in that chat's `messages`.
 - **`inSource: false`** marks an answer saying the source doesn't cover the question. Another
   chat is never the source: an answer resting only on one is not `inSource`.
-- At most `MAX_CHAT_QUESTIONS` (30) questions and their answers, and 10,000 characters a
+- At most `MAX_CHAT_QUESTIONS` (50) questions and their answers, and 10,000 characters a
   message. A conversation past its length is refused whole, so OV-309 checks the count first
   (`chatQuestionCount`) and offers a new conversation.
 
