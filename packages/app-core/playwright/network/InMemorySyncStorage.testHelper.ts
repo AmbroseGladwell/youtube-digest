@@ -1,4 +1,5 @@
 import {
+  Chat,
   FollowedPlaylist,
   Overview,
   OverviewState,
@@ -18,6 +19,7 @@ import {
 } from "@overview/domain";
 import type { InMemoryFollowedPlaylistStore } from "../../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import type { InMemoryOverviewStore } from "./InMemoryOverviewStore.testHelper.js";
+import type { InMemoryChatStore } from "../../src/features/chats/types/InMemoryChatStore.testHelper.js";
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
 
@@ -38,6 +40,7 @@ export class InMemorySyncStorage implements SyncStorage {
     private readonly settingsStore: InMemorySettingsStore,
     private readonly transcriptStore: InMemoryTranscriptStore,
     private readonly followedPlaylistStore: InMemoryFollowedPlaylistStore,
+    private readonly chatStore: InMemoryChatStore,
   ) {}
 
   async isEnrolled() {
@@ -115,6 +118,7 @@ export class InMemorySyncStorage implements SyncStorage {
       if (change.deleted || change.body === undefined) {
         if (change.kind === "overview") await this.overviewStore.deleteOverview(change.id as never);
         if (change.kind === "followedPlaylist") await this.followedPlaylistStore.unfollow(change.id as never);
+        if (change.kind === "chat") await this.chatStore.deleteChat(change.id);
         continue;
       }
       switch (change.kind) {
@@ -132,6 +136,9 @@ export class InMemorySyncStorage implements SyncStorage {
           break;
         case "followedPlaylist":
           this.followedPlaylistStore.seedFollowed(FollowedPlaylist.parse(change.body));
+          break;
+        case "chat":
+          this.chatStore.seedChat(Chat.parse({ id: change.id, ...(change.body as object) }));
           break;
       }
     }

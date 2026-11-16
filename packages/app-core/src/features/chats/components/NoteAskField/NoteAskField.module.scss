@@ -1,0 +1,23 @@
+.root {
+  width: 100%;
+  max-width: 31.25rem;
+  margin: 1rem auto 0;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 0s;
+}
+
+.away {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .away {
+    transition: none;
+  }
+}

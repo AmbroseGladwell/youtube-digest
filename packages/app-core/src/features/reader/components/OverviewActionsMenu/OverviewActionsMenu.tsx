@@ -29,6 +29,8 @@ export interface OverviewActionsMenuProps {
   // Null where there is no library to keep projects in; otherwise how many it's in (168r).
   projects: { count: number; onAdd: () => void } | null;
   onDelete: () => void;
+  // Where chat is offered on this surface (design 310e): reopens the latest conversation.
+  onChat?: (() => void) | null;
 }
 
 interface WayOut {
@@ -78,9 +80,11 @@ export function OverviewActionsMenu({
   onToggleRead,
   projects,
   onDelete,
+  onChat = null,
 }: OverviewActionsMenuProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
   const analytics = useReaderAnalytics();
   const sourceUrl = linkOf(source);
   const way = wayOut(source, recipe !== null);
@@ -102,6 +106,7 @@ export function OverviewActionsMenu({
     <div className={styles.root} ref={root} data-testid={overviewActionsMenuTestIds.root}>
       <button
         type="button"
+        ref={trigger}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
         onClick={() => {
           if (open) {
@@ -121,6 +126,20 @@ export function OverviewActionsMenu({
 
       {open && (
         <div className={styles.menu} role="menu" data-testid={overviewActionsMenuTestIds.menu}>
+          {onChat !== null && (
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.item}
+              onClick={choose("chat", () => {
+                trigger.current?.focus({ preventScroll: true });
+                onChat();
+              })}
+              data-testid={overviewActionsMenuTestIds.chatItem}
+            >
+              Chat
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"

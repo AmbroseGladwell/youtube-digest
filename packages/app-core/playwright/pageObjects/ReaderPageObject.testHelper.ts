@@ -26,6 +26,7 @@ import { RelatedByTagPageObject } from "./RelatedByTagPageObject.testHelper.js";
 import { SourceStepsPageObject } from "./SourceStepsPageObject.testHelper.js";
 import { ArticleResourcesPageObject } from "./ArticleResourcesPageObject.testHelper.js";
 import { FollowUpQuestionsPageObject } from "./FollowUpQuestionsPageObject.testHelper.js";
+import { ChatPanelPageObject } from "./ChatPanelPageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
 import { DeleteOverviewDialogPageObject } from "./DeleteOverviewDialogPageObject.testHelper.js";
 import { DubiousReasonsPanelPageObject } from "./DubiousReasonsPanelPageObject.testHelper.js";
@@ -54,6 +55,10 @@ export class ReaderPageObject extends PageObject {
 
   get followUps(): FollowUpQuestionsPageObject {
     return new FollowUpQuestionsPageObject(this.testContext);
+  }
+
+  get chat(): ChatPanelPageObject {
+    return new ChatPanelPageObject(this.testContext);
   }
 
   verifyIsShown = (): Promise<ReaderPageObject> =>

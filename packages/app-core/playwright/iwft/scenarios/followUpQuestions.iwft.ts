@@ -13,9 +13,11 @@ import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
+// Questions opening the reader's assistant, as OV-266 built them; answered here is chat.iwft.ts.
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+  questionsAnsweredHere: false,
 };
 
 const QUESTIONS: FollowUpQuestion[] = [
@@ -90,7 +92,7 @@ test("with no assistant chosen, the first tap asks which, then asks there at onc
 
   await reader.followUps.clickQuestion(0);
   await reader.followUps.verifyMenuIs("Ask in");
-  await reader.followUps.verifyOptionFocused("claude");
+  await reader.followUps.verifyOptionFocused("here");
   await reader.followUps.verifyMenuOffersCopy(true);
   await reader.followUps.verifyMenuOffersSetUp(true);
 
@@ -179,7 +181,7 @@ test("Change chooses where questions open, without asking anything", async ({ la
   await reader.followUps.catchNewTabs();
 
   await reader.followUps.clickChange();
-  await reader.followUps.verifyMenuIs("Ask follow-up questions in");
+  await reader.followUps.verifyMenuIs("Answer questions");
   await reader.followUps.verifyOptionFocused("claude");
   await reader.followUps.verifyMenuOffersCopy(false);
   await reader.followUps.chooseAssistant("gemini");

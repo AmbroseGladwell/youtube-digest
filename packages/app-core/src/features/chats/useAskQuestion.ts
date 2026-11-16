@@ -14,6 +14,7 @@ import { withAnswer } from "./util/withAnswer.js";
 export type AskState =
   | { status: "idle" }
   | { status: "answering"; conversationId: string; question: string; text: string }
+  | { status: "stopped"; conversationId: string; question: string; text: string }
   | { status: "failed"; conversationId: string; question: string }
   | { status: "waiting"; conversationId: string; question: string; wait: ChatWait };
 
@@ -75,7 +76,9 @@ export function useAskQuestion(overviewId: OverviewId, api?: ChatApi) {
         setState(IDLE);
       } catch (error) {
         if (controller.signal.aborted) {
-          setState(IDLE);
+          setState((current) =>
+            current.status === "answering" ? { status: "stopped", conversationId, question, text: current.text } : current,
+          );
           return;
         }
         const wait = chatWaitOf(error);
@@ -94,6 +97,7 @@ export function useAskQuestion(overviewId: OverviewId, api?: ChatApi) {
   );
 
   // Stops the answer: the server stops asking too, stores nothing and gives the question back.
+  // What was written stays on screen, saying it didn't count (design 310i).
   const stop = useCallback(() => inFlight.current?.abort(), []);
   const dismiss = useCallback(() => setState(IDLE), []);
 

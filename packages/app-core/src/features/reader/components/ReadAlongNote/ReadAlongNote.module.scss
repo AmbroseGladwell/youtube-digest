@@ -144,6 +144,13 @@
   color: var(--on-stone-tint);
 }
 
+.lineCited {
+  border-radius: 0.75rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  transition: background-color 200ms ease;
+}
+
 .linePlaying .stepNumber {
   background: var(--ground);
 }

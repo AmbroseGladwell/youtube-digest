@@ -214,10 +214,42 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   article and recipe page.
 - **Where a tapped question goes:** `Settings.questionsAnsweredHere`, answered here by default
   (`follow-up-questions.md`, "Answered here").
-- **Events**, `reader.chat.*`: asked (from a question or typed, new conversation or not),
-  answered (in the source, citations of each kind), answerFailed, waited (which wait),
-  citationFollowed, conversationOpened and conversationDeleted. The hand-off to an assistant
-  stays `reader.followUps.asked`. Never the question or the answer.
+- **Events**, `reader.chat.*`: opened (from a question, typed, or the menu), closed, asked (from
+  a question or typed, new conversation or not), answered (in the source, citations of each
+  kind), answerFailed, stopped, waited (which wait), citationFollowed, answerCopied, continuedIn
+  (assistant, filled in or copied, connected), conversationOpened and conversationDeleted. Never
+  the question or the answer.
+
+### Beside the note (design 310a, 310d–310p)
+
+On the web, chat is a column on the right (`ChatPanel`, `useChatPanel`): the note's column eases
+left as it opens (320ms, `.layout` in `ReaderPage.module.scss`), and the chat sits under the bar,
+sticky and fixed in height, 400px wide (360px under 1280px), so the note scrolls on its own beside
+it. Its field takes focus as it opens; Esc stops an answer being written, or else closes the chat
+and returns focus to what opened it. The phone's and the extension panel's sheet is a later step,
+so chat isn't offered there yet.
+
+- **Ways in:** a question under the note (answered here, `follow-up-questions.md`), the note's own
+  field "Ask about this video" (`NoteAskField`, which fades out while chat is open), and Chat in the
+  overview's menu. With chat closed, a question starts a new conversation; with it open, it asks
+  in the open one; the menu reopens the most recent, or a new one.
+- **A conversation:** the reader's question in OV-266's bubble, the answer as plain text under three
+  dots and then a caret while it streams, with Stop in Send's place. Stopping keeps what was
+  written, says "Stopped. This one didn't count." and stores nothing. A failure says so, with Try
+  again. The answer is announced once, when final ("Answer: … 1 moment cited.", or "Not in the
+  video: …").
+- **Citations:** each stretch of the source is a pill under the answer, from the record's times,
+  named "Play the video, 3:28 to 4:23". Following one tints the key point holding it
+  (`citedLineIndex`) and, where a player can seek (the video beside the extension's panel, an
+  episode's own audio), plays from there; on the web, which has no player for the video, it offers
+  the video at that time on YouTube or the transcript, as a note's moment does.
+- **Under the latest answer:** Copy, and "Continue in {assistant}" (`chatHandOffPrompt`): connected,
+  it names the overview and the conversation for the assistant to read with `get_chat`; otherwise
+  it carries the note and the conversation. With no assistant chosen it opens OV-266's menu as
+  "Continue in".
+- **Questions to ask next** sit above the field: the set of three before the first answer, with
+  Different questions, then up to two not yet asked (`chatSuggestions`); none while the reader
+  types.
 
 ## Over MCP
 

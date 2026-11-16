@@ -12,6 +12,7 @@ import { followUpAssistantMenuTestIds } from "./FollowUpAssistantMenuTestIds.js"
 export const ASK_IN_TITLE = "Ask in";
 export const CHANGE_TITLE = "Ask follow-up questions in";
 export const ANSWER_QUESTIONS_TITLE = "Answer questions";
+export const CONTINUE_IN_TITLE = "Continue in";
 export const HERE_DETAIL = "From the video, with the moments it’s from";
 export const HERE_FOOT = "Remembered on every overview. The box below always asks here.";
 export const SET_UP_NOTE =
@@ -20,6 +21,9 @@ export const SET_UP_NOTE =
 export interface FollowUpAssistantMenuProps {
   // The first tap asks as soon as one is picked, and offers Copy question; Change only chooses (266s, 266v).
   firstTap: boolean;
+  // A chat answer's "Continue in…" with no assistant chosen: hands the conversation on as soon as
+  // one is picked (design 310p).
+  continueIn?: boolean;
   chosen: FollowUpAssistant | null;
   // Where chat is offered, Here comes first and may be the choice (design 310f-2).
   offerHere: boolean;
@@ -60,6 +64,7 @@ function OptionDetail({ assistant, connected }: { assistant: FollowUpAssistant; 
 // outside closes it with nothing remembered.
 export function FollowUpAssistantMenu({
   firstTap,
+  continueIn = false,
   chosen,
   offerHere,
   hereChosen,
@@ -74,7 +79,7 @@ export function FollowUpAssistantMenu({
   onSetUpFollowed,
   onClose,
 }: FollowUpAssistantMenuProps) {
-  const title = firstTap ? ASK_IN_TITLE : offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
+  const title = continueIn ? CONTINUE_IN_TITLE : firstTap ? ASK_IN_TITLE : offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
   const choices: readonly Option[] = offerHere ? ["here", ...FollowUpAssistant.options] : FollowUpAssistant.options;
   const checked: Option | null = offerHere && hereChosen ? "here" : chosen;
   const titleId = useId();
@@ -149,14 +154,20 @@ export function FollowUpAssistantMenu({
           {HERE_FOOT}
         </p>
       )}
-      {firstTap && (
+      {(firstTap || continueIn) && (
         <>
-          <p className={styles.remembered}>Remembered for next time. Change it under the questions.</p>
-          <hr className={styles.rule} />
-          <button type="button" className={styles.copy} onClick={onCopyQuestion} data-testid={followUpAssistantMenuTestIds.copyQuestion}>
-            <StrokeIcon name="copy" size={17} />
-            Copy question
-          </button>
+          <p className={styles.remembered}>
+            {continueIn ? "Remembered for next time. Change it in Settings › Connections." : "Remembered for next time. Change it under the questions."}
+          </p>
+          {!continueIn && (
+            <>
+              <hr className={styles.rule} />
+              <button type="button" className={styles.copy} onClick={onCopyQuestion} data-testid={followUpAssistantMenuTestIds.copyQuestion}>
+                <StrokeIcon name="copy" size={17} />
+                Copy question
+              </button>
+            </>
+          )}
           {!anyConnection && (
             <div className={styles.setUp} data-testid={followUpAssistantMenuTestIds.setUpNote}>
               {SET_UP_NOTE}
