@@ -68,7 +68,7 @@ test("our own server fetches transcripts only when switched on, through the prox
   assert.throws(() => loadConfig({ DATABASE_URL, TRANSCRIPT_PROXY_URL: "socks5://gate.example.com:7000" }), ConfigError);
 });
 
-test("episodes are transcribed only with both the GPU host's address and its token", () => {
+test("episodes are transcribed only with both the GPU host's address and its token, and the token alone leaves it off", () => {
   const token = "t".repeat(64);
   assert.deepEqual(loadConfig({ DATABASE_URL, STT_URL: "https://stt.example", STT_TOKEN: token }).speechToText, {
     url: "https://stt.example",
@@ -76,6 +76,7 @@ test("episodes are transcribed only with both the GPU host's address and its tok
     concurrency: 10,
   });
   assert.equal(loadConfig({ DATABASE_URL }).speechToText, null);
+  assert.equal(loadConfig({ DATABASE_URL, STT_TOKEN: token }).speechToText, null);
   assert.throws(() => loadConfig({ DATABASE_URL, STT_URL: "https://stt.example" }), ConfigError);
   assert.throws(() => loadConfig({ DATABASE_URL, STT_URL: "https://stt.example", STT_TOKEN: "short" }), ConfigError);
 });

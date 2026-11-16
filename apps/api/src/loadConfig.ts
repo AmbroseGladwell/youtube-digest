@@ -107,9 +107,11 @@ const ConfigEnv = z
     path: ["R2_BUCKET"],
     message: "R2 or AUDIO_DIR is required when TTS_URL is set: rendered narration has to be kept somewhere",
   })
-  .refine((env) => (env.STT_URL === undefined) === (env.STT_TOKEN === undefined), {
+  // The token alone leaves transcribing off, so it can go into the deploy's secrets before the
+  // address does without stopping the server; the address alone can't work.
+  .refine((env) => env.STT_URL === undefined || env.STT_TOKEN !== undefined, {
     path: ["STT_TOKEN"],
-    message: "STT_URL and STT_TOKEN go together: the transcriber refuses a call without its token",
+    message: "STT_TOKEN is required when STT_URL is set: the transcriber refuses a call without its token",
   })
   .refine((env) => env.POSTHOG_PERSONAL_API_KEY === undefined || env.POSTHOG_PROJECT_ID !== undefined, {
     path: ["POSTHOG_PROJECT_ID"],
