@@ -68,7 +68,7 @@ these changes, the policy changes with it.
 | Logs: 14 days at PostHog, route and ids only, never an address or email; rate limits in memory for at most a day; the two daily caps keeping a hashed address 7 days | `errors-and-logs.md`, `api.md` ("Rate limits"), `server-side-transcripts.md` (`CALLER_RETENTION_DAYS`) |
 | Assistants: tokens not sessions, the read tools and `mark_overviews`, every call logged | `mcp-connector.md` |
 | Search by meaning: claims and searches to OpenAI for embeddings, kept beside the library, remade when an overview changes | `search-by-meaning.md`, `V0028` |
-| Asking about an overview: on our key whatever the reader's own key and "Only ever use my key"; the question, overview, own transcript, conversation and other conversations within a budget to OpenAI; no articles; kept as a synced conversation the device can only read or delete, deleted with the overview and account; daily counts, the cost tally, log lines without the words | `chats.md`, `tiers.md`, `ChatAnswerer.ts`, `chatModel.ts`, `V0034`, `V0035` |
+| Asking about an overview: on our key whatever the reader's own key and "Only ever use my key"; the question, overview, own transcript, conversation and other conversations within a budget to OpenAI; no articles; kept as a synced conversation the device can only read or delete, deleted with the overview and account; daily counts, the cost tally, log lines without the words | `chats.md`, `tiers.md`, `ChatAnswerer.ts`, `chatModel.ts`, `V0035`, `V0036` |
 | Processors | `deploy.md`, `analytics.md`, `sign-in.md`, `server-side-transcripts.md`, `playlists.md` |
 | On the device | `analytics-consent.md` ("The record"), `reading-position.md`, `playlists.md`, `tiers.md` (the trial token) |
 
