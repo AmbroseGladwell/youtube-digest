@@ -232,8 +232,9 @@ honestly, on real library sources up to 89 minutes.
   in Postgres as `overview_usage` is (`tiers.md`, "Counting"):
   - the allowance differs by plan, because plans sell volume, never features (`tiers.md`), so
     every plan has chat;
-  - suggested figures: Free 100 messages a month, BYO Plus 300, Plus 1,000. That's at most about
-    $0.05, $0.16 and $0.53 a month on long videos;
+  - Free 100 messages a month, BYO Plus 500, Plus 1,000 (the owner confirmed these on 16 Nov
+    2026). Fully used, that's about $0.03, $0.17 and $0.34 a month at this set's mix, $0.05,
+    $0.27 and $0.53 on long videos, and $0.10, $0.52 and $1.04 with no caching at all;
   - a daily cap per account behind it, and a share of the global daily cap on our key;
   - a limit per conversation, say 30 messages, to bound history;
   - never "unlimited".
