@@ -36,3 +36,26 @@ test("reads the recipe a page declares", () => {
   assert.equal(read.status, "read");
   assert.deepEqual(read.status === "read" && read.article.recipe?.ingredients, ["2 chicken breasts", "1 tbsp sesame seeds"]);
 });
+
+const markupRecipePage = (recipe: string) =>
+  `<!doctype html><html><head><title>Bean &amp; halloumi stew</title><meta property="og:type" content="article"></head><body><h1>Bean &amp; halloumi stew</h1>${recipe}</body></html>`;
+
+const INGREDIENTS = `<div class="ingredient-list"><h3>Ingredients</h3><ul><li>3 tbsp olive oil</li><li>400g can mixed beans, drained</li><li>½ x 250g block halloumi, sliced</li></ul></div>`;
+
+const METHOD = `<div class="method-list"><h3>Method</h3><ol><li><p>Simmer the beans in the tomatoes for 10 mins.</p></li><li><p>Fry the halloumi for 2 mins on each side until golden.</p></li></ol></div>`;
+
+test("reads the recipe a page lays out under its headings without declaring it", () => {
+  const read = parseArticlePage(markupRecipePage(INGREDIENTS + METHOD), "https://example.com/stew");
+  assert.equal(read.status, "read");
+  assert.deepEqual(read.status === "read" && read.article.recipe?.ingredients, [
+    "3 tbsp olive oil",
+    "400g can mixed beans, drained",
+    "½ x 250g block halloumi, sliced",
+  ]);
+  assert.equal(read.status === "read" && read.article.recipe?.steps.length, 2);
+});
+
+test("a method above its ingredients is not read as a recipe", () => {
+  const read = parseArticlePage(markupRecipePage(METHOD + INGREDIENTS), "https://example.com/stew");
+  assert.equal(read.status === "read" ? read.article.recipe : null, null);
+});
