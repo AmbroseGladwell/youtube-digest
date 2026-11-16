@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
+import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
 import { chatCitationPillTestIds } from "../../src/features/chats/components/ChatCitationPill/ChatCitationPillTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { chatPanelTestIds } from "../../src/features/chats/components/ChatPanel/ChatPanelTestIds.js";
@@ -153,4 +154,78 @@ export class ChatPanelPageObject extends PageObject {
   close = () => this.step("close", () => this.click(this.panel().getByTestId(chatPanelTestIds.close)));
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
+
+  verifyCountReads = (name: string | null) =>
+    this.step(`verifyCountReads ${name}`, () =>
+      name === null
+        ? expect(this.panel().getByTestId(chatPanelTestIds.count)).toHaveCount(0)
+        : expect(this.panel().getByTestId(chatPanelTestIds.count)).toHaveAccessibleName(name),
+    );
+
+  openList = () => this.step("openList", () => this.click(this.panel().getByTestId(chatPanelTestIds.count)));
+
+  openListFromNote = () => this.step("openListFromNote", () => this.click(noteAskFieldTestIds.conversations));
+
+  verifyNoteLinkReads = (text: string) =>
+    this.step(`verifyNoteLinkReads ${text}`, () => expect(this.get(noteAskFieldTestIds.conversations)).toHaveText(text));
+
+  verifyAboutReads = (text: string) =>
+    this.step(`verifyAboutReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.about)).toHaveText(text));
+
+  verifyConversationsRead = (rows: Array<{ title: string; meta: string }>) =>
+    this.step(`verifyConversationsRead ${rows.map(({ title }) => title).join(" | ")}`, async () => {
+      const list = this.panel().getByTestId(chatConversationListTestIds.row);
+      await expect(list).toHaveCount(rows.length);
+      for (const [index, { title, meta }] of rows.entries()) {
+        await expect(list.nth(index).getByTestId(chatConversationListTestIds.open)).toContainText(title);
+        await expect(list.nth(index).getByTestId(chatConversationListTestIds.meta)).toHaveText(meta);
+      }
+    });
+
+  openConversationRow = (index: number) =>
+    this.step(`openConversationRow ${index}`, () => this.click(this.panel().getByTestId(chatConversationListTestIds.open).nth(index)));
+
+  deleteConversationRow = (index: number, name: string) =>
+    this.step(`deleteConversationRow ${index}`, async () => {
+      const button = this.panel().getByTestId(chatConversationListTestIds.delete).nth(index);
+      await expect(button).toHaveAccessibleName(name);
+      await this.click(button);
+    });
+
+  verifyToastReads = (text: string | null) =>
+    this.step(`verifyToastReads ${text}`, () =>
+      text === null
+        ? expect(this.panel().getByTestId(chatPanelTestIds.toast)).toHaveCount(0)
+        : expect(this.panel().getByTestId(chatPanelTestIds.toast)).toHaveText(text),
+    );
+
+  undo = () => this.step("undo", () => this.click(this.panel().getByTestId(chatPanelTestIds.undo)));
+
+  verifyConversationCitation = (answer: number, name: string) =>
+    this.step(`verifyConversationCitation ${answer} ${name}`, () =>
+      expect(this.answers().nth(answer).getByTestId(chatAnswerTestIds.conversation)).toHaveAccessibleName(name),
+    );
+
+  followConversationCitation = (answer: number) =>
+    this.step(`followConversationCitation ${answer}`, () =>
+      this.click(this.answers().nth(answer).getByTestId(chatAnswerTestIds.conversation)),
+    );
+
+  verifyDeletedConversationCited = (answer: number) =>
+    this.step(`verifyDeletedConversationCited ${answer}`, async () => {
+      await expect(this.answers().nth(answer).getByTestId(chatAnswerTestIds.deletedConversation)).toHaveText(
+        "From a conversation you deleted",
+      );
+      await expect(this.answers().nth(answer).getByTestId(chatAnswerTestIds.conversation)).toHaveCount(0);
+    });
+
+  verifyQuestionFocused = (text: string) =>
+    this.step(`verifyQuestionFocused ${text}`, () =>
+      expect(this.panel().getByTestId(chatPanelTestIds.question).filter({ hasText: text })).toBeFocused(),
+    );
+
+  verifyBackReads = (text: string) =>
+    this.step(`verifyBackReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.back)).toHaveText(text));
+
+  goBack = () => this.step("goBack", () => this.click(this.panel().getByTestId(chatPanelTestIds.back)));
 }

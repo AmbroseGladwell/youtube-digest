@@ -1,6 +1,10 @@
 export const chatPanelTestIds = {
   root: "ChatPanel.root",
   title: "ChatPanel.title",
+  about: "ChatPanel.about",
+  count: "ChatPanel.count",
+  back: "ChatPanel.back",
+  undo: "ChatPanel.undo",
   newConversation: "ChatPanel.newConversation",
   close: "ChatPanel.close",
   body: "ChatPanel.body",

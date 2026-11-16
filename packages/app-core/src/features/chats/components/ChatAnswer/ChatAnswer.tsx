@@ -14,18 +14,27 @@ export interface ChatAnswerProps {
   video: VideoSource | null;
   onCitationFollowed: (range: TimeRange) => void;
   onOpenTranscriptAt: (positionMs: number) => void;
+  // Another conversation about the overview an answer drew on, or null once it is deleted.
+  conversationOf: (chatId: string) => { date: string; firstQuestion: string } | null;
+  onConversationFollowed: (chatId: string, message: number) => void;
   // Copy and Continue in, under the latest answer only (design 310k).
   actions?: ReactNode;
 }
 
 const paragraphsOf = (text: string) => text.split(/\n+/).filter((paragraph) => paragraph.trim() !== "");
 
+const conversationsOf = (citations: readonly ChatCitation[]) =>
+  citations
+    .flatMap((citation) => ("chatId" in citation ? [citation] : []))
+    .filter((citation, index, all) => all.findIndex((each) => each.chatId === citation.chatId) === index);
+
 const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
   citations.flatMap((citation) => ("startMs" in citation ? [citation] : [])).sort((a, b) => a.startMs - b.startMs);
 
-// Design 310k–310m: an answer is plain text on the panel, its stretches of the video as pills
-// under the whole of it, in time order. One the source doesn't cover says so, muted, with no
-// citations: an answer, not an error.
+// Design 310k–310m, 310w, 310y: an answer is plain text on the panel. Under the whole of it, the
+// other conversations it drew on are links that open words, then its stretches of the video are
+// pills that play, in time order. One the source doesn't cover says so, muted: an answer, not an
+// error.
 export function ChatAnswer({
   text,
   inSource,
@@ -34,6 +43,8 @@ export function ChatAnswer({
   video,
   onCitationFollowed,
   onOpenTranscriptAt,
+  conversationOf,
+  onConversationFollowed,
   actions,
 }: ChatAnswerProps) {
   const stretches = video === null ? [] : stretchesOf(citations);
@@ -50,6 +61,32 @@ export function ChatAnswer({
           <p key={index}>{paragraph}</p>
         ))}
       </div>
+      {conversationsOf(citations).map(({ chatId, message }) => {
+        const cited = conversationOf(chatId);
+        if (cited === null)
+          return (
+            <p key={chatId} className={styles.deletedConversation} data-testid={chatAnswerTestIds.deletedConversation}>
+              <StrokeIcon name="chat" size={14} />
+              From a conversation you deleted
+            </p>
+          );
+        return (
+          <button
+            key={chatId}
+            type="button"
+            className={styles.conversation}
+            aria-label={`Open your conversation from ${cited.date}: ${cited.firstQuestion}`}
+            onClick={() => onConversationFollowed(chatId, message)}
+            data-testid={chatAnswerTestIds.conversation}
+          >
+            <StrokeIcon name="chat" size={14} />
+            <span>
+              <span className={styles.conversationFrom}>From your conversation · {cited.date}</span>
+              <span className={styles.conversationQuestion}>“{cited.firstQuestion}”</span>
+            </span>
+          </button>
+        );
+      })}
       {video !== null && stretches.length > 0 && (
         <div className={styles.citations} data-testid={chatAnswerTestIds.citations}>
           {stretches.map((range) => (

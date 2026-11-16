@@ -673,7 +673,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                   />
                 )}
                 {chatBeside && (
-                  <NoteAskField sourceWord={sourceWord} chatOpen={chat.open} onAsk={(question) => chat.ask(question, "typed")} />
+                  <NoteAskField
+                    sourceWord={sourceWord}
+                    chatOpen={chat.open}
+                    conversations={chat.chats.length}
+                    onAsk={(question) => chat.ask(question, "typed")}
+                    onOpenConversations={chat.openList}
+                  />
                 )}
                 {onetimeHost !== null && (
                   <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>
@@ -869,16 +875,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
           <div className={styles.chatColumn}>
             <ChatPanel
               ref={chat.field}
+              panel={chat}
               overview={overview}
               video={video}
-              conversationId={chat.conversationId}
-              chats={chat.chats}
-              ask={chat.state}
               compact={false}
-              onAsk={chat.ask}
-              onStop={chat.stop}
-              onNewConversation={chat.newConversation}
-              onClose={chat.close}
               onCitationFollowed={followCitation}
               onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs)}
             />
