@@ -124,7 +124,7 @@ export class ChatAnswerer {
     const othersText = otherChatsPrompt(kind, othersInPrompt);
     const prompt: PromptMessage[] = [
       { role: "system", content: chatSystemPrompt(kind, overviewMarkdown(overview), passages) },
-      ...(othersText === null ? [] : [{ role: "system" as const, content: othersText }]),
+      ...(othersText === null ? [] : [{ role: "user" as const, content: othersText }]),
       ...(conversation?.messages ?? []).map((message): PromptMessage => ({
         role: message.from === "reader" ? "user" : "assistant",
         content: message.text,

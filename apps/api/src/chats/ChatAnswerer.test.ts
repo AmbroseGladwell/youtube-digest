@@ -140,6 +140,7 @@ test("a follow-up carries its conversation, another chat can be built on and cit
     citations: [{ chatId: chatRecordId(setup.overviewId, first), message: 1 }],
     inSource: false,
   });
+  assert.equal(setup.openAi.requests[1]?.messages[1]?.role, "user", "a second system message would break the transcript's cache");
   assert.match(setup.openAi.requests[1]?.messages[1]?.content ?? "", /\[c1\.m2 answer\] Take it after training\./);
 
   answered((await setup.ask(second, "And how much?")).body);

@@ -30,7 +30,9 @@ ${transcriptBlocks(passages)}`;
 
 const transcriptBlocks = (passages: readonly Passage[]): string => passages.map(passageBlock).join("\n");
 
-// After the transcript, so a new message in another chat leaves the transcript's cache whole.
+// After the transcript, so a new message in another chat leaves the transcript's cache whole,
+// and as a user message: a second system message is folded into the first, and the transcript
+// is then no longer the cached prefix a new conversation reads (OV-313's probe).
 export function otherChatsPrompt(kind: ChatSourceKind, others: OtherChatsInPrompt): string | null {
   if (others.conversations.length === 0) return null;
   return `# The reader's other conversations about this ${kind}

@@ -516,9 +516,10 @@ Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a su
   and $0.34 a month for Free, BYO Plus and Plus; about $0.05, $0.27 and $0.53 if every
   source is over an hour; about $0.10, $0.52 and $1.04 with no caching. Measured through
   the endpoint on a 169-minute source (`chats.md`, "Measured through the endpoint"): about
-  $0.0004 a question within a conversation, other chats included, but $0.004 for a
-  conversation's first, so a Plus month of one-question conversations on sources that long
-  would be about $4.40.
+  $0.0004 a question, other chats included, in any conversation about an overview asked
+  about in the last 30 minutes, and $0.004 for the first after that (OV-313). A Plus month of
+  1,000 questions each about a different 169-minute source would be about $4.40; the same
+  1,000 in conversations of 30 about $0.60.
 - `GET /api/chat-usage` says what is used, the limit and the reset date.
 
 ## Options for saving cost, not built

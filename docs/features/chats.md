@@ -141,13 +141,22 @@ the second carrying the first (all 60 of its messages fitted the budget):
 | Alone | $0.0042 | $0.00042 | $0.016 | 32,800 to 35,100 |
 | With the other conversation | $0.0045 | $0.00046 | $0.018 | 35,200 to 37,500 |
 
-So 30 questions of history and a full other conversation add about 10%. **What costs is a
-conversation's first question on a long source,** which reads nothing from the cache: the
-second conversation's first question paid full price although the transcript was the same, so
-OpenAI's cache did not carry across conversations here even with one `prompt_cache_key` per
-overview. On a source this long, a reader who opens a new conversation for every question pays
-about $0.004 each; a Plus month spent that way would be about $4.40, against about $0.60 for the
-same 1,000 questions in conversations of 30.
+So 30 questions of history and a full other conversation add about 10%.
+
+**A new conversation reads the transcript from the cache (OV-313).** In that run the second
+conversation's first question paid to cache the whole prompt again, at 1.25× input, although
+the transcript was the same. A probe of five calls on one transcript (`chatCacheProbe.ts`)
+found why: the other conversations went as a second `system` message, which OpenAI folds into
+the first, so the transcript was no longer the prefix it had cached. A different question
+after the transcript, the other chats inside the question, or the other chats as a `user`
+message each read all of it (16,922 of 16,933 tokens). They now go as a `user` message. Checked
+again through the endpoint on the 169-minute source: the second conversation's first question
+cost $0.00041, reading 99% of its prompt from the cache, where it had cost $0.0045.
+
+What still costs is the first question about an overview whose transcript hasn't been asked
+about in the last 30 minutes, the cache's lifetime on Chat Completions (`spend.md`): about $0.004
+on a source that long, $0.002 at 89 minutes. Every later question, in any conversation about it,
+is about a tenth of that.
 
 ## No transcript, no chat
 

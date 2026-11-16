@@ -13,7 +13,10 @@ import { storedOverview } from "../testing/storedRecords.testHelper.js";
 // below is the endpoint's own: its prompt, its citations, its log line
 // (docs/features/chats.md, "Measured through the endpoint").
 //
-//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json>
+//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions>]
+//
+// long-only skips the question set and asks each long conversation only its first few questions:
+// enough to see whether a second conversation reads the transcript from the cache.
 
 interface Question {
   id: string;
@@ -96,7 +99,8 @@ function longSource(first: Source, second: Source): Source {
 }
 
 async function main() {
-  const [dataDirectory, outFile] = process.argv.slice(2);
+  const [dataDirectory, outFile, mode, limit] = process.argv.slice(2);
+  const longOnly = mode === "long-only";
   const apiKey = process.env.OPENAI_API_KEY;
   if (dataDirectory === undefined || outFile === undefined || apiKey === undefined) {
     throw new Error("usage: chatHarnessCheck <OV-267 chat data dir> <out.json>, with OPENAI_API_KEY set");
@@ -205,7 +209,7 @@ async function main() {
     }
   };
 
-  for (const repeat of [1, 2]) {
+  for (const repeat of longOnly ? [] : [1, 2]) {
     for (const source of sources) {
       const { account, overviewId } = await withSource(source);
       await converse(source, account, overviewId, `set-${repeat}`);
@@ -214,7 +218,8 @@ async function main() {
   }
 
   const byLength = [...sources].sort((left, right) => (right.segments.at(-1)?.endMs ?? 0) - (left.segments.at(-1)?.endMs ?? 0));
-  const long = longSource(byLength[0]!, byLength[1]!);
+  const joined = longSource(byLength[0]!, byLength[1]!);
+  const long = longOnly ? { ...joined, questions: joined.questions.slice(0, Number(limit ?? 2)) } : joined;
   const { account, overviewId } = await withSource(long);
   await converse(long, account, overviewId, "long-first");
   await converse(long, account, overviewId, "long-second");
