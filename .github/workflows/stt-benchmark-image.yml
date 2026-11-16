@@ -1,0 +1,36 @@
+name: STT benchmark image
+
+# Builds the GPU speech-to-text worker RunPod pulls (services/stt/gpu.Dockerfile) and publishes
+# it to GitHub's container registry; Modal builds its own (docs/features/speech-to-text.md).
+on:
+  push:
+    paths:
+      - services/stt/**
+      - .github/workflows/stt-benchmark-image.yml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: image (stt gpu)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        run: |
+          image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/overview-stt-benchmark
+          docker build --file services/stt/gpu.Dockerfile \
+            --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
+            --tag "$image:${{ github.sha }}" services/stt
+          docker push "$image:${{ github.sha }}"

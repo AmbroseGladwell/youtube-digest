@@ -158,8 +158,16 @@ const sections: readonly LegalSection[] = [
           were found (the address of the show's transcript, or which YouTube video is the episode), so the search isn't repeated for the
           next reader, who fetches the words for themselves. We don't record the link or the episode in our logs. Beside an episode, the
           side panel sends only that tab's address, as soon as it is in front of the panel, so it can name the episode before you press
-          Create; it sends nothing about other tabs, or about a show's own page there. An episode whose words can't be found makes no
-          overview.
+          Create; it sends nothing about other tabs, or about a show's own page there.
+        </p>
+        <p>
+          <strong>Transcribing an episode.</strong> When an episode has no transcript and isn't on YouTube, you can ask us to transcribe it;
+          nothing is transcribed unless you ask. Our server then sends Modal the address of the episode's audio from the show's public feed,
+          and nothing about you. Modal runs our own speech-to-text model: it downloads the audio from the show's host, turns it into words
+          and sends them back, and the audio is deleted as soon as it has been transcribed. The words are yours alone, as above, and our
+          server holds them only until your device collects them, for at most a day. We count the hours of audio transcribed each month
+          against an allowance, for your account, or before you have one for a hashed form of your network address. An episode whose words
+          can't be found or transcribed makes no overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you for your own copy of the words, and our legitimate interest in not
@@ -461,6 +469,11 @@ const sections: readonly LegalSection[] = [
             ],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
             [
+              "Modal",
+              "runs our speech-to-text model when you ask for a podcast episode to be transcribed; sent only the address of the episode's audio",
+              "United States",
+            ],
+            [
               "YouTube (Google)",
               "answers our server's requests for a playlist's videos, and its searches for a podcast episode's video",
               "varies",
@@ -537,7 +550,13 @@ const sections: readonly LegalSection[] = [
             "Where a podcast episode's words were found, with no account on it",
             "until that source stops answering; a YouTube video matched to the episode is checked again every 30 days",
           ],
+          [
+            "A transcribed episode's words, waiting for your device to collect them",
+            "a day after they were made, at most; then your own copy, as above",
+          ],
+          ["An episode's audio, while it is transcribed", "not kept: deleted once it has been turned into words"],
           ["Monthly and daily usage counts, and the daily cost tally, for an account", "with the account"],
+          ["Hashed addresses for the monthly transcription allowance", "until the month ends"],
           [
             "The record of a deletion: the account's opaque id, the random analytics id joined to it, the narration files asked for, and how each erasure ended",
             "until every erasure it records is finished, and at most a year",
