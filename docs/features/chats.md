@@ -192,6 +192,29 @@ does. The panel hides itself on that refusal (degrade visibly).
 `listChats(overviewId)` oldest first, `getChat(id)`, and `deleteChat(id)`. Nothing shows them
 yet; OV-310 builds the panel.
 
+## In the app
+
+OV-310's plumbing, ahead of the panel the Design round draws:
+
+- **`ChatApi`** in `@overview/sync` (`createFetchChatApi`): `ask` posts the question and reads
+  the server-sent events, handing each piece of text to a callback and settling as `answered`
+  or `failed`; a refusal before the answer starts throws the API's own error. `usage` reads
+  `/api/chat-usage`.
+- **`chatStore`** joins `Stores`, so the panel reads an overview's conversations from the
+  device (`useChatsQuery`), and a sync pull refreshes them. `useDeleteChatMutation` takes one
+  out of the list at once and journals the delete.
+- **`useAskQuestion`** asks and follows the answer: `answering` with the text so far, then the
+  stored exchange goes straight into the conversation (`withAnswer`) and sync brings the record
+  down behind it; `failed`; or `waiting`, with the wait `chatWaitOf` read from the refusal (the
+  month with its reset date, the day, everyone's day, a full conversation, or nothing to answer
+  from, which hides the panel). Stop aborts it, and the server gives the question back.
+- **`chatOffered`** hides chat signed out, on someone else's shared overview, and for every
+  article and recipe page.
+- **Events**, `reader.chat.*`: asked (from a question or typed, new conversation or not),
+  answered (in the source, citations of each kind), answerFailed, waited (which wait),
+  citationFollowed, conversationOpened and conversationDeleted. The hand-off to an assistant
+  stays `reader.followUps.asked`. Never the question or the answer.
+
 ## Over MCP
 
 A connected assistant reads chats under `overviews:read` (OV-311; `mcp-connector.md`, "Chats"):
