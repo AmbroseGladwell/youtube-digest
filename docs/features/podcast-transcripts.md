@@ -30,7 +30,7 @@ comments.
 | The same episode on the show's YouTube channel, by title and length | 34% | `podcast-on-youtube.md` |
 | The same, confirmed by the YouTube description when the upload was retitled | +9% | `podcast-on-youtube.md` |
 | **Every free route** | **about 47%** | |
-| Speech to text on the audio | the rest | after the owner's call |
+| Speech to text on the audio, when the reader asks | the rest | `speech-to-text.md` (OV-305) |
 
 ## Each reader's own copy
 

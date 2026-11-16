@@ -12,6 +12,7 @@ import { seedVoiceSamples, type SeededVoiceSamples } from "../audio/seedVoiceSam
 import { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { buildApp, type AppConfig, type BuildAppOptions, type OurKeySetup, type TranscriptServiceSetup } from "../buildApp.js";
 import type { PlaylistReader } from "../playlists/PlaylistReader.js";
+import type { Transcriber } from "../podcasts/Transcriber.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
@@ -44,6 +45,8 @@ export interface TestApp {
   audioStore: MemoryAudioStore;
   drainAudio(): Promise<void>;
   drainEmbeddings(): Promise<void>;
+  // Runs every queued transcription to its end; each wait between polls moves the clock on.
+  drainTranscriptions(): Promise<void>;
   // The deploy's release step, at the test's clock.
   seedVoiceSamples(): Promise<SeededVoiceSamples>;
   close(): Promise<void>;
@@ -61,6 +64,8 @@ export interface TestAppOptions {
   // Search by meaning on this embedder, with its queue drained by the test.
   embedder?: Embedder;
   playlistReader?: PlaylistReader;
+  // Speech-to-text through this GPU host, its queue drained by the test.
+  transcriber?: Transcriber;
   // The database left at an earlier migration, so a test can seed what a later one cleans up
   // and then run it with runMigrations.
   migrationsUpTo?: number;
@@ -81,6 +86,7 @@ export async function createTestApp(
     ourKey,
     embedder,
     playlistReader,
+    transcriber,
     migrationsUpTo,
     fetchArticlePage,
     readPodcastEpisode,
@@ -118,6 +124,8 @@ export async function createTestApp(
     audio: narration ? { narrator, store: audioStore, concurrency: 1, runWorkers: false } : null,
     transcriptService: transcriptService ?? null,
     ourKey: ourKey ?? null,
+    speechToText:
+      transcriber === undefined ? null : { transcriber, concurrency: 1, runWorkers: false, sleep: async (ms) => clock.advance(ms) },
     meaning: embedder === undefined ? null : { embedder, runWorkers: false },
     ...(fetchArticlePage === undefined ? {} : { fetchArticlePage }),
     ...(readPodcastEpisode === undefined ? {} : { readPodcastEpisode }),
@@ -146,6 +154,9 @@ export async function createTestApp(
     },
     drainEmbeddings: async () => {
       await app.embeddingQueue?.drain();
+    },
+    drainTranscriptions: async () => {
+      await app.transcriptionQueue?.drain();
     },
     seedVoiceSamples: () =>
       seedVoiceSamples({
