@@ -31,6 +31,10 @@ YOUTUBE_API_KEY="${YOUTUBE_API_KEY}"
 # together (docs/features/podcast-links.md, "The directories").
 PODCAST_INDEX_API_KEY="${PODCAST_INDEX_API_KEY}"
 PODCAST_INDEX_API_SECRET="${PODCAST_INDEX_API_SECRET}"
+# Speech-to-text for episodes with no transcript anywhere: the Modal app `overview-stt` and the token it
+# checks; the two go together, and unset, no episode is offered transcription (docs/features/speech-to-text.md).
+STT_URL=https://theoverviewapp--overview-stt-jobs.us-east.modal.run
+STT_TOKEN="${STT_TOKEN}"
 
 # Overviews made on our key, through our server, with GPT-6.1 Sol; unset, the server makes none
 # (docs/architecture/tiers.md). OUR_KEY_DAILY_GENERATIONS is the global daily cap behind every plan.

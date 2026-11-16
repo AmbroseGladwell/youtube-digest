@@ -27,6 +27,7 @@ export const rateLimits = {
   articleReadPerAddress: { name: "articleReadAddress", limit: 120, windowMs: HOUR_MS },
   podcastReadPerAddress: { name: "podcastReadAddress", limit: 120, windowMs: HOUR_MS },
   podcastTranscriptPerAddress: { name: "podcastTranscriptAddress", limit: 120, windowMs: HOUR_MS },
+  transcriptionPerAddress: { name: "transcriptionAddress", limit: 20, windowMs: HOUR_MS },
   trialPerAddress: { name: "trialAddress", limit: 10, windowMs: HOUR_MS },
   playlistPerAddress: { name: "playlistAddress", limit: 120, windowMs: HOUR_MS },
   eventsPerAccount: { name: "eventsAccount", limit: 60, windowMs: MINUTE_MS },
