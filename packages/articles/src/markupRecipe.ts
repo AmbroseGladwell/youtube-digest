@@ -95,7 +95,7 @@ export function markupRecipe(document: Document): Recipe | null {
   const ingredients = theOnly(sections.filter(({ part }) => part === "ingredients"));
   const method = theOnly(sections.filter(({ part }) => part === "method"));
   if (ingredients === null || method === null) return null;
-  if (!(ingredients.heading.compareDocumentPosition(method.heading) & method.heading.DOCUMENT_POSITION_FOLLOWING)) return null;
+  if (sections.indexOf(method) < sections.indexOf(ingredients)) return null;
   return {
     ingredients: ingredients.items.map(({ text }) => text),
     steps: method.items,
