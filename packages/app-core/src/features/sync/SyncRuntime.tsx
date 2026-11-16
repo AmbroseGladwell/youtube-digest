@@ -18,6 +18,7 @@ import { signOutOutcomeOf } from "./util/signOutOutcomeOf.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 import { playlistKeys } from "../playlists/playlistKeys.js";
 import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
+import { chatKeys } from "../chats/chatKeys.js";
 import { projectKeys } from "../projects/projectKeys.js";
 
 // How long sign-out waits for its last cycle before going anyway: it always completes.
@@ -69,6 +70,7 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
         void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
         void queryClient.invalidateQueries({ queryKey: projectKeys.all });
+        void queryClient.invalidateQueries({ queryKey: chatKeys.all });
       },
       onFolded: (fold) => {
         setFolds((current) => [...current, fold]);

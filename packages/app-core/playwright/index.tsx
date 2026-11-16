@@ -27,6 +27,7 @@ import { InMemorySyncStorage } from "./network/InMemorySyncStorage.testHelper.js
 import { InMemoryFollowedPlaylistStore } from "../src/features/playlists/types/InMemoryFollowedPlaylistStore.testHelper.js";
 import { InMemoryCaptureQueueStore } from "../src/features/captureQueue/types/InMemoryCaptureQueueStore.testHelper.js";
 import { InMemoryProjectStore } from "../src/features/projects/types/InMemoryProjectStore.testHelper.js";
+import { InMemoryChatStore } from "../src/features/chats/types/InMemoryChatStore.testHelper.js";
 import type {} from "./network/iwftWindow.testHelper.js";
 
 const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
@@ -36,8 +37,9 @@ const makeStores = (syncAvailable: boolean): Window["__iwftStores__"] => {
   const followedPlaylistStore = new InMemoryFollowedPlaylistStore();
   const captureQueueStore = new InMemoryCaptureQueueStore();
   const projectStore = new InMemoryProjectStore();
+  const chatStore = new InMemoryChatStore();
   const syncStorage = syncAvailable ? new InMemorySyncStorage(overviewStore, settingsStore, transcriptStore, followedPlaylistStore) : null;
-  return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore, syncStorage };
+  return { overviewStore, settingsStore, transcriptStore, followedPlaylistStore, captureQueueStore, projectStore, chatStore, syncStorage };
 };
 
 beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {

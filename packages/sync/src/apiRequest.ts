@@ -39,9 +39,16 @@ export interface ApiRequesterOptions {
 
 export type ApiRequester = <T>(method: ApiMethod, path: string, schema: z.ZodType<T>, options?: ApiRequestOptions) => Promise<T | null>;
 
-// One request against /api: the headers every call carries, the envelope every failure
-// wears, and the schema every answer is parsed with (docs/architecture/api.md).
-export function createApiRequester({
+export interface ApiCall {
+  url: string;
+  init: RequestInit;
+  requestId: string;
+  fetch: typeof fetch;
+}
+
+// What every call to /api carries (docs/architecture/api.md), for a requester that parses
+// the answer whole and for one that reads it as it streams.
+export function createApiCaller({
   baseUrl,
   token = null,
   trialToken = null,
@@ -49,19 +56,15 @@ export function createApiRequester({
   surface,
   fetch: fetchImpl = globalThis.fetch,
   newRequestId = () => globalThis.crypto.randomUUID(),
-}: ApiRequesterOptions): ApiRequester {
+}: ApiRequesterOptions): (method: ApiMethod, path: string, options?: ApiRequestOptions & { signal?: AbortSignal }) => ApiCall {
   const root = baseUrl.replace(/\/+$/, "");
-
-  return async <T>(
-    method: ApiMethod,
-    path: string,
-    schema: z.ZodType<T>,
-    { body, ifMatch, keepalive = false }: ApiRequestOptions = {},
-  ): Promise<T | null> => {
+  return (method, path, { body, ifMatch, keepalive = false, signal } = {}) => {
     const requestId = newRequestId();
-    let response: Response;
-    try {
-      response = await fetchImpl(`${root}/api${path}`, {
+    return {
+      url: `${root}/api${path}`,
+      requestId,
+      fetch: fetchImpl,
+      init: {
         method,
         headers: {
           ...(token === null ? {} : { authorization: `Bearer ${token}` }),
@@ -74,15 +77,57 @@ export function createApiRequester({
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         ...(keepalive ? { keepalive } : {}),
-      });
-    } catch (error) {
-      throw new SyncTransportError("The sync server could not be reached", { cause: error, requestId });
-    }
+        ...(signal === undefined ? {} : { signal }),
+      },
+    };
+  };
+}
 
+export async function sendApiCall({ url, init, requestId, fetch: fetchImpl }: ApiCall): Promise<Response> {
+  try {
+    return await fetchImpl(url, init);
+  } catch (error) {
+    throw new SyncTransportError("The sync server could not be reached", { cause: error, requestId });
+  }
+}
+
+// A failed answer, as the error every caller catches: the API's own refusal when it wears
+// the envelope, a transport error when it doesn't.
+export async function refusalOf(response: Response, requestId: string): Promise<Error> {
+  let json: unknown;
+  try {
+    json = await response.json();
+  } catch (error) {
+    return new SyncTransportError(`The sync server answered ${response.status} without a readable body`, { cause: error, requestId });
+  }
+  const envelope = ApiErrorEnvelope.safeParse(json);
+  if (!envelope.success) {
+    return new SyncTransportError(`The sync server answered ${response.status} with something other than an API error`, { requestId });
+  }
+  const { code, message, details } = envelope.data.error;
+  return new SyncRequestError(
+    code in API_ERROR_CODES ? (code as ApiErrorCode) : "internal_error",
+    response.status,
+    message,
+    details,
+    requestId,
+  );
+}
+
+// One request against /api: the headers every call carries, the envelope every failure
+// wears, and the schema every answer is parsed with (docs/architecture/api.md).
+export function createApiRequester(options: ApiRequesterOptions): ApiRequester {
+  const call = createApiCaller(options);
+  return async <T>(method: ApiMethod, path: string, schema: z.ZodType<T>, requestOptions: ApiRequestOptions = {}): Promise<T | null> => {
+    const prepared = call(method, path, requestOptions);
+    const { requestId } = prepared;
+    const response = await sendApiCall(prepared);
     if (response.status === 204) {
       return null;
     }
-
+    if (!response.ok) {
+      throw await refusalOf(response, requestId);
+    }
     let json: unknown;
     try {
       json = await response.json();
@@ -92,24 +137,6 @@ export function createApiRequester({
         requestId,
       });
     }
-
-    if (!response.ok) {
-      const envelope = ApiErrorEnvelope.safeParse(json);
-      if (!envelope.success) {
-        throw new SyncTransportError(`The sync server answered ${response.status} with something other than an API error`, {
-          requestId,
-        });
-      }
-      const { code, message, details } = envelope.data.error;
-      throw new SyncRequestError(
-        code in API_ERROR_CODES ? (code as ApiErrorCode) : "internal_error",
-        response.status,
-        message,
-        details,
-        requestId,
-      );
-    }
-
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
       throw new SyncTransportError(`The sync server's answer to ${method} ${path} did not have the expected shape`, {
