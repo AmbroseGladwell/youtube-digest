@@ -93,7 +93,8 @@ serverless hosts were measured, both billing by the second and costing nothing w
 | Whisper Turbo speed | ~75x realtime | ~100x realtime |
 | An hour-long episode, request to result | 58–70 s | 59–63 s |
 | Cost per hour of audio, from the host's billing | $0.010 | $0.0097 |
-| Cold start with a card free | 3–6 s, of which the model load is 2–4 s | not yet measured; see below |
+| Cold start with a card free | 3–6 s, of which the model load is 2–4 s | 3 s model load; the card is the wait, below |
+| Waiting for a card after 3 hours idle | | 118 s and 55 s |
 
 For scale, Groq lists Whisper Turbo at $0.04 an hour of audio and Cloudflare Workers AI at $0.03.
 At $0.01 an hour, a two-hour episode costs us about 2 cents, and Modal's $30 monthly credit covers
@@ -112,25 +113,32 @@ Neither host fails when it has no card: it waits.
 - **RunPod scales an endpoint with no requests down**: two workers at most after 3 days, none after
   7. A fallback that goes unused for a week would fail on the day it is needed.
 
-What a RunPod cold start costs in time after hours idle is being measured on 16 Nov 2026 (two
-probes, 3 hours apart); this section gets the result.
+**RunPod after hours idle**, measured on 16 Nov 2026: an endpoint with its image staged was left
+idle for 3 hours, sent an hour of Odd Lots, left 3 hours more, and sent it again.
+
+| | Probe 1 | Probe 2 |
+|---|---|---|
+| Waiting for a card | 118 s | 55 s |
+| Request to result | 186 s | 119 s |
+| Model load, once on a card | 2.5 s | 3.1 s |
+| Missed or wrong | 1.5% | 1.4% |
+
+Both times the staged worker's card was `THROTTLED` (its machine busy) just before the job
+arrived, so RunPod started a worker on another machine. The model loads in seconds; the wait is
+for a card, the same failure a fallback is meant to cover.
 
 ## The choice
 
-**Whisper large-v3-turbo, on Modal, with a list of card types.** RunPod is the fallback if its cold
-start after hours idle is under about 20 s; otherwise more Modal card types do that job.
+**Whisper large-v3-turbo, on Modal, with a list of card types.** RunPod was to be the fallback if its
+cold start after hours idle was under about 20 s. It waited 55 s and 118 s, so there is no second
+host: the list of card types is the fallback, and it gets longer if Modal is seen waiting.
 
 How long a reader waits for a card:
 
 1. The worker tells the API it has started, before it loads anything. That separates "no card yet"
    from "transcribing", which Modal cannot show from outside.
-2. **No start after 15 s** (about three times Modal's measured cold start): send the same job to the
-   fallback as well, without cancelling. Whichever starts first does it; the other is cancelled
-   before it does any work.
-3. **Neither started after 2 minutes**: the attempt fails visibly, and it does not count against the
+2. **No start after 2 minutes**: the attempt fails visibly, and it does not count against the
    reader's plan.
-4. A health-check job once a day, a few seconds of audio on each host, keeps the fallback from being
-   scaled to zero and records its cold start, for about $0.002 a day.
 
 The reader sees which of these is happening: "Transcribing the episode, about a minute", and
 "Waiting for a transcriber…" if the start is slow.
@@ -165,8 +173,7 @@ Modal `Dict` before it loads anything, which is how "no card yet" is told apart 
 
 **Giving up.** With no start after 2 minutes the job is cancelled at the host and fails as
 `no-transcriber`. A started job may run for 15 minutes. A host that stops answering for six polls in a row
-fails the job too. A failed job costs the reader nothing, and asking again starts it afresh. The 15-second
-hedge to a second host waits for the RunPod measurement above.
+fails the job too. A failed job costs the reader nothing, and asking again starts it afresh.
 
 **Restarts.** A job is held under a one-minute lease that each poll renews. A job whose lease has
 lapsed is taken up by the next worker where it was, without sending it to the host a second time.
@@ -192,7 +199,7 @@ needs `STT_URL` (the app's web address) and the same `STT_TOKEN`, and refuses to
 one of them.
 
 Still to come: the screens (a Design round for offering, waiting and the allowance), the client's
-polling, analytics events, and the second host's hedge.
+polling, and analytics events.
 
 ## Running the harness
 
