@@ -7,9 +7,10 @@ import {
   TRIAL_TOKEN_HEADER,
   type Plan,
   type PodcastRead,
+  type PodcastTranscription,
   type StoredTranscript,
 } from "@overview/domain";
-import { TranscriptFetchError } from "@overview/transcripts";
+import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import type { AccountId } from "../auth/AccountId.js";
@@ -19,6 +20,7 @@ import {
   type PodcastTranscriptRequest,
   type YouTubeAsk,
 } from "../podcasts/createPodcastTranscripts.js";
+import type { createPodcastTranscriptions } from "../podcasts/createPodcastTranscriptions.js";
 import { QuotaSpentError } from "../transcripts/ServiceTranscripts.js";
 import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
@@ -39,6 +41,9 @@ const TranscriptBody = z
   })
   .refine((body) => body.youTubeVideoId === undefined || body.searchYouTube !== true, "Name a video or ask for a search, not both");
 
+const TranscriptionBody = z.object({ feedUrl: z.url().max(2048), guid: z.string().min(1).max(2048) });
+const TranscriptionParams = z.object({ id: z.uuid() });
+
 type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }>;
 
 // An account, or signed out a trial token making onboarding's overview, and never the link, the
@@ -52,10 +57,13 @@ export function podcastRoutes(
     resolveTranscript,
     planOf,
     trials,
+    transcriptions,
     clock,
   }: {
     readEpisode: (link: string) => Promise<PodcastRead>;
     resolveTranscript: ResolveTranscript;
+    // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
+    transcriptions: ReturnType<typeof createPodcastTranscriptions> | null;
     planOf: (accountId: AccountId) => Promise<Plan>;
     trials: TrialsRepository;
     clock: () => Date;
@@ -148,8 +156,68 @@ export function podcastRoutes(
         throw new ApiError("transcript_unavailable", error.message, {
           failure: error.failure,
           ...(unconfirmed ? { match: "unconfirmed" } : {}),
+          ...(transcriptions !== null && error.failure === TranscriptFetchFailure.NO_CAPTIONS ? { transcribable: true } : {}),
         });
       }
     },
   );
+
+  // Only when the reader asks: never started for them in the background (docs/features/speech-to-text.md).
+  app.post(
+    "/podcasts/transcription",
+    {
+      config: { optionalSession: true },
+      preHandler: rateLimitHook(rateLimits.transcriptionPerAddress, (request) => request.clientAddress, clock),
+    },
+    async (request, reply): Promise<PodcastTranscription> => {
+      if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
+      const { feedUrl, guid } = parseOrThrow(TranscriptionBody, request.body, "The episode");
+      const caller = await callerOf(request);
+      const started = await transcriptions.start(feedUrl, guid, caller, request.log);
+      switch (started.status) {
+        case "started":
+          return started.transcription;
+        case "over-allowance":
+          reply.header("retry-after", String(started.retryAfterSeconds));
+          throw new ApiError("too_many_requests", "You've transcribed as many hours of episodes as you can this month", {
+            quota: "transcription",
+            usedSeconds: started.usedSeconds,
+            limitSeconds: started.limitSeconds,
+            retryAfterSeconds: started.retryAfterSeconds,
+          });
+        case "too-long":
+          throw new ApiError("transcript_unavailable", "The episode is too long to transcribe", {
+            transcription: "too-long",
+            episodeSeconds: started.episodeSeconds,
+          });
+        case "no-audio":
+          throw new ApiError("transcript_unavailable", "The episode's feed offers no audio to transcribe", { transcription: "no-audio" });
+        case "feed-unreadable":
+          throw new ApiError("transcript_unavailable", "The show's feed couldn't be read", {
+            failure: TranscriptFetchFailure.SOURCE_UNAVAILABLE,
+          });
+        case "not-in-feed":
+          throw new ApiError("transcript_unavailable", "The episode isn't in its show's feed", {
+            failure: TranscriptFetchFailure.VIDEO_UNAVAILABLE,
+          });
+      }
+    },
+  );
+
+  // Asked after every few seconds while the reader waits, so held only to the address limit. A
+  // trial that has since made its overview can still collect the words it asked for.
+  app.get("/podcasts/transcription/:id", { config: { optionalSession: true } }, async (request): Promise<PodcastTranscription> => {
+    if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
+    const { id } = parseOrThrow(TranscriptionParams, request.params, "The transcription");
+    const caller: ServiceCaller | null =
+      request.session !== null
+        ? { accountId: request.session.accountId, plan: await planOf(request.session.accountId) }
+        : typeof request.headers[TRIAL_TOKEN_HEADER] === "string"
+          ? { address: request.clientAddress }
+          : null;
+    if (caller === null) throw new ApiError("unauthenticated", "Sign in, or start a trial, to make an overview");
+    const transcription = await transcriptions.status(id, caller);
+    if (transcription === null) throw new ApiError("not_found", "No such transcription");
+    return transcription;
+  });
 }

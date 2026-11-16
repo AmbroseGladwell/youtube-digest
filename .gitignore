@@ -15,5 +15,6 @@ Taskfiles/Taskfile-local.yml
 apps/extension/release/
 services/tts/models/
 services/tts/.venv/
+services/stt/.venv/
 __pycache__/
 .pytest_cache/

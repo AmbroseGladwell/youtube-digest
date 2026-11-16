@@ -1,0 +1,26 @@
+[
+  {
+    "name": "doac-neurologist",
+    "why": "British host and a guest, nearly two hours",
+    "feedUrl": "https://rss2.flightcast.com/xmsftuzjjykcmqwolaqn6mdn",
+    "titleStartsWith": "Top Neurologist: If You Drink Even Once A Week"
+  },
+  {
+    "name": "odd-lots-law-firm",
+    "why": "two hosts and a guest talking over each other",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/8a94442e-5a74-4fa2-8b8d-ae27003a8d6b/982f5071-765c-403d-969d-ae27003a8d83/podcast.rss",
+    "titleStartsWith": "Why a $2 Billion Law Firm Suddenly Collapsed"
+  },
+  {
+    "name": "darknet-diaries-conti",
+    "why": "narration, interviews and music beds",
+    "feedUrl": "https://podcast.darknetdiaries.com",
+    "titleStartsWith": "180: Conti"
+  },
+  {
+    "name": "revisionist-history-live",
+    "why": "recorded live, with a room and an audience",
+    "feedUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/0e563f45-9d14-4ce8-8ef0-ae32006cd7e7/0d4cc74d-fff7-4b89-8818-ae32006cd7f0/podcast.rss",
+    "titleStartsWith": "Pals, Allies, and Companions"
+  }
+]
