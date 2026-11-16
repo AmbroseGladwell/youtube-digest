@@ -96,6 +96,17 @@ export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
 // the page closed, or hidden while the listen was paused.
 export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left"]);
 export type ListenEnd = z.infer<typeof ListenEnd>;
+export const SelectionAction = z.enum([
+  "addToProject",
+  "addToTopic",
+  "markRead",
+  "markUnread",
+  "favourite",
+  "unfavourite",
+  "removeFromProject",
+  "delete",
+]);
+export type SelectionAction = z.infer<typeof SelectionAction>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
 const BackSource = z.enum(["head", "bar"]);
@@ -1064,12 +1075,18 @@ export const analyticsEvents = {
     // Counts only: never which overviews (OV-168, "OV-168 5" 168az).
     selection: {
       started: event("The reader starts selecting overviews in the library or a project"),
-      stopped: event("The reader stops selecting overviews, with how many were selected", {
+      stopped: event("Selecting ends, with how many were selected: the reader stopped it, or an action finished it (OV-317)", {
         selected: z.number().int().nonnegative(),
+        reason: z.enum(["reader", "acted"]),
       }),
       acted: event("The reader acts on the overviews they selected, from the bar", {
-        action: z.enum(["addToProject", "addToTopic", "markRead", "markUnread", "favourite", "unfavourite", "removeFromProject", "delete"]),
+        action: SelectionAction,
         overviews: z.number().int().positive(),
+      }),
+      failed: event("Some of the writes an action on the selected overviews made failed, and the toast said so (OV-317)", {
+        action: SelectionAction,
+        failed: z.number().int().positive(),
+        writes: z.number().int().positive(),
       }),
       topicChanged: event("The reader gives a topic to every selected overview, or takes it from them", {
         topicId: TopicId,

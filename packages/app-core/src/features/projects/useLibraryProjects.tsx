@@ -22,6 +22,15 @@ import { useProjectSummaries } from "./useProjectSummaries.js";
 import { projectNudged } from "./util/projectNudge.js";
 import { projectShortDate } from "./util/projectDates.js";
 import { activeSummaries, archivedSummaries } from "./util/projectSummaries.js";
+import type { BulkAction } from "../library/util/bulkActionToast.js";
+import { pickerAction, type PickerChange } from "../library/util/pickerAction.js";
+
+interface Filing {
+  overviews: OverviewWithState[];
+  changes: Map<ProjectId, PickerChange>;
+  writes: Promise<unknown>[];
+  onFiled: (action: BulkAction | null, writes: Promise<unknown>[]) => void;
+}
 
 export interface AddedByLine {
   name: string;
@@ -44,7 +53,7 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
   const newProject = useNewProject(summaries.map(({ project }) => project.name));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [keptNow, setKeptNow] = useState<ReadonlySet<string>>(new Set());
-  const [filing, setFiling] = useState<OverviewWithState[] | null>(null);
+  const [filing, setFiling] = useState<Filing | null>(null);
   const now = new Date();
 
   const active = activeSummaries(summaries);
@@ -143,20 +152,33 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     };
   };
 
-  const removeFromCurrent = (overviewIds: OverviewId[]) => {
-    if (current === null) return;
+  const removeFromCurrent = (overviewIds: OverviewId[]): Promise<unknown>[] => {
+    if (current === null) return [];
+    const writes: Promise<unknown>[] = [];
     for (const overviewId of overviewIds) {
       const item = current.items.find((each) => each.overview.id === overviewId);
       if (item === undefined) continue;
       analytics.projects.membership.removed({ projectId: current.project.id, overviewId, addedBy: item.addedBy.by, from: "selection" });
-      setMember.mutate({ projectId: current.project.id, overviewId, inProject: false });
+      writes.push(setMember.mutateAsync({ projectId: current.project.id, overviewId, inProject: false }));
     }
+    return writes;
+  };
+
+  const holding = (projectId: ProjectId, overviews: OverviewWithState[]) => {
+    const summary = summaries.find(({ project }) => project.id === projectId);
+    return overviews.filter(({ overview }) => summary?.items.some((item) => item.overview.id === overview.id)).length;
   };
 
   const fileSelection = (projectId: ProjectId, inProject: boolean) => {
     const summary = summaries.find(({ project }) => project.id === projectId);
     if (filing === null || summary === undefined) return;
-    for (const { overview } of filing) {
+    const change = filing.changes.get(projectId);
+    if (change === undefined) {
+      filing.changes.set(projectId, { place: summary.project.name, heldBefore: holding(projectId, filing.overviews), given: inProject });
+    } else {
+      change.given = inProject;
+    }
+    for (const { overview } of filing.overviews) {
       const item = summary.items.find((each) => each.overview.id === overview.id);
       if (inProject === (item !== undefined)) continue;
       if (inProject) {
@@ -164,29 +186,33 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
       } else {
         analytics.projects.membership.removed({ projectId, overviewId: overview.id, addedBy: item!.addedBy.by, from: "selection" });
       }
-      setMember.mutate({ projectId, overviewId: overview.id, inProject });
+      filing.writes.push(setMember.mutateAsync({ projectId, overviewId: overview.id, inProject }));
     }
   };
+
+  const finishFiling = (session: Filing, created: PickerChange[] = []) =>
+    session.onFiled(pickerAction([...session.changes.values(), ...created], session.overviews.length, "project"), session.writes);
 
   const dialogs = (
     <>
       {filing !== null && (
         <ProjectPicker
           summaries={active}
-          holding={(projectId) => {
-            const summary = summaries.find(({ project }) => project.id === projectId);
-            return filing.filter(({ overview }) => summary?.items.some((item) => item.overview.id === overview.id)).length;
-          }}
-          of={filing.length}
+          holding={(projectId) => holding(projectId, filing.overviews)}
+          of={filing.overviews.length}
           onToggle={fileSelection}
           onNewProject={() => {
             setFiling(null);
             newProject.open(
               "selection",
-              filing.map(({ overview }) => ({ id: overview.id, title: overview.source.title })),
+              filing.overviews.map(({ overview }) => ({ id: overview.id, title: overview.source.title })),
+              (created) => finishFiling(filing, created === null ? [] : [{ place: created.name, heldBefore: 0, given: true }]),
             );
           }}
-          onClose={() => setFiling(null)}
+          onClose={() => {
+            setFiling(null);
+            finishFiling(filing);
+          }}
         />
       )}
       {newProject.dialog}
@@ -220,7 +246,8 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     head,
     empty,
     addedByFor,
-    fileSelection: (overviews: OverviewWithState[]) => setFiling(overviews),
+    fileSelection: (overviews: OverviewWithState[], onFiled: Filing["onFiled"]) =>
+      setFiling({ overviews, changes: new Map(), writes: [], onFiled }),
     removeFromCurrent,
     dialogs,
   };
