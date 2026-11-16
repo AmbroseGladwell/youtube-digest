@@ -509,7 +509,7 @@ Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a su
   asked and given back if the answer fails, so it counts once, when it is answered.
 - **Behind it:** 200 a day per account (`CHAT_MESSAGES_PER_ACCOUNT_DAILY`), and a global
   daily cap on our key, `OUR_KEY_DAILY_CHAT_MESSAGES` (20,000 by default), kept beside
-  overviews' in `our_key_usage.chat_messages`. A conversation holds at most 30 questions.
+  overviews' in `our_key_usage.chat_messages`. A conversation holds at most 50 questions.
 - **At a limit the reader waits:** a 429 with `quota` (`chat-month`, `chat-day` or
   `chat-our-key-daily`), `retryAfterSeconds`, and for the month `resetsOn`.
 - **What it costs, fully used,** at OV-267's measured cost per message: about $0.03, $0.17
