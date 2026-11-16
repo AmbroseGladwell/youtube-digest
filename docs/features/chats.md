@@ -4,8 +4,8 @@ OV-308, the first of four build cards for chat about one overview (OV-308 to OV-
 investigation behind them is OV-267, `docs/architecture/in-app-chat.md` (PR #343): GPT-6 Luna with the
 whole transcript costs about $0.0003 a message, and answered only from the source.
 
-OV-308 built the record and OV-309 the endpoint that answers and writes it. The panel inside
-the overview is OV-310, and reading chats over MCP is OV-311.
+OV-308 built the record, OV-309 the endpoint that answers and writes it, and OV-311 reading
+chats over MCP. The panel inside the overview is OV-310.
 
 ## One record per conversation
 
@@ -186,6 +186,13 @@ does. The panel hides itself on that refusal (degrade visibly).
 `IndexedDbChatStore` reads the `chats` object store (database version 7), indexed by overview:
 `listChats(overviewId)` oldest first, `getChat(id)`, and `deleteChat(id)`. Nothing shows them
 yet; OV-310 builds the panel.
+
+## Over MCP
+
+A connected assistant reads chats under `overviews:read` (OV-311; `mcp-connector.md`, "Chats"):
+`list_chats` by overview, by project or across the library, `get_chat` with each citation as a
+timestamp link, and a line at the end of `get_overview` naming its conversations. Nothing an
+assistant can call writes to a chat.
 
 ## Privacy
 

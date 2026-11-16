@@ -233,7 +233,7 @@ again rather than seeing a protocol fault.
 
 ## The tools
 
-Nine read, and are marked `readOnlyHint`; three write, and are marked as not read-only and
+Eleven read, and are marked `readOnlyHint`; three write, and are marked as not read-only and
 not destructive. Every tool but `create_project` is marked idempotent: a second identical
 `create_project` is refused, since the name is taken, rather than leaving things as the first
 left them. Each reads the account's live records afresh, so what an
@@ -244,9 +244,11 @@ assistant sees is what has reached the server through sync.
 | `search_overviews` | a light listing, word matches newest saved first, then up to 5 by meaning: title, channel, verdict, topics, saved date, id, and the one-line premise to choose by. 50 a page |
 | `list_topics` | every topic with how many overviews it holds, its id and description, and how many overviews are not filed |
 | `list_tags` | every tag, the video's own and the reader's, with how many overviews carry it, most used first (OV-84) |
-| `get_overview` | one note in full |
+| `get_overview` | one note in full, ending with the ids of the reader's conversations about it, if any |
 | `get_overviews` | many notes in full, chosen by `ids`, the search filters, or both. 10 a call |
 | `get_transcript` | one video's transcript, by its overview's id |
+| `list_chats` | the reader's conversations about their overviews in the app, newest first, by `overview`, by `project` or across the library: first question, overview, question count, last date, id. 50 a page (OV-311) |
+| `get_chat` | one conversation, `chatMarkdown`: each question and answer, each answer's citations as timestamp links (times alone for an episode) or the other conversation it built on, and a flag on an answer the source didn't cover. 20 messages a page (OV-311) |
 | `get_profile` | what is known about the reader, with each learned item's source; profile scope only, and only while the reader shares it (OV-221) |
 | `list_projects` | the reader's projects, most recently changed first: purpose, overview and unread counts, verdict spread, last changed, who made it. Active only unless `archived`. 50 a page (OV-168) |
 | `get_project` | one project as a brief, `projectMarkdown`: purpose, counts, its overviews freshest verdict first, and every How to apply step gathered. 25 overviews a page (OV-168) |
@@ -337,6 +339,16 @@ The **`compare_topic` prompt** asks the assistant to read everything under one t
 other, and stand alone, citing each point to its moment. It is there so the use the
 connector exists for can be found in a client that lists prompts.
 
+### Chats
+
+The conversations a reader has about an overview in the app (`chats.md`) are theirs, so their
+assistant reads them too, under `overviews:read` with no new scope: a chat belongs to its
+overview, and a new scope would leave every existing connection unable to read chats until it
+reconnected. `list_chats` and `get_chat` read them, `get_overview` ends by naming them, and the
+instructions say they exist. No tool writes to one: a chat is the reader's conversation, and an
+assistant that wants to discuss the overview has its own. A deleted conversation never appears.
+`readChats` reads them apart from `readLibrary`, so only these calls pay for it.
+
 ## Search
 
 **Filtering happens in memory, after each record is migrated and parsed.** A filter can
@@ -406,6 +418,10 @@ Re-measure once real notes with chapters exist. Transcripts are never included.
 each, by the schema). A full page built from the five sample notes, which carry two or three
 steps each, measures 22.8 KB, about 4,050 words, so roughly 5.5k tokens: about half the
 warning. The steps are most of it.
+
+`get_chat` pages at **20 messages**: a question holds up to 2,000 characters and an answer,
+capped at 1,000 output tokens, about 4,000, so ten exchanges stay near 15k tokens at worst. A
+typical conversation of six questions is one page.
 
 ## Logging
 

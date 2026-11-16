@@ -66,7 +66,7 @@ these changes, the policy changes with it.
 | Analytics: the three tiers, events held in memory before an answer, the random id and its renewal at sign-out, linking at sign-up, the catalogue, the server-side path to PostHog EU, the address cut to a network then discarded, postcode and coordinates removed, a year's retention | `analytics.md`, `analytics-consent.md` |
 | Errors: always sent, what a report carries, redaction, no id when signed out | `errors-and-logs.md` |
 | Logs: 14 days at PostHog, route and ids only, never an address or email; rate limits in memory for at most a day; the two daily caps keeping a hashed address 7 days | `errors-and-logs.md`, `api.md` ("Rate limits"), `server-side-transcripts.md` (`CALLER_RETENTION_DAYS`) |
-| Assistants: tokens not sessions, the read tools and `mark_overviews`, every call logged | `mcp-connector.md` |
+| Assistants: tokens not sessions, the read tools (conversations included, OV-311) and `mark_overviews`, every call logged | `mcp-connector.md` |
 | Search by meaning: claims and searches to OpenAI for embeddings, kept beside the library, remade when an overview changes | `search-by-meaning.md`, `V0028` |
 | Asking about an overview: on our key whatever the reader's own key and "Only ever use my key"; the question, overview, own transcript, conversation and other conversations within a budget to OpenAI; no articles; kept as a synced conversation the device can only read or delete, deleted with the overview and account; daily counts, the cost tally, log lines without the words | `chats.md`, `tiers.md`, `ChatAnswerer.ts`, `chatModel.ts`, `V0034`, `V0035` |
 | Processors | `deploy.md`, `analytics.md`, `sign-in.md`, `server-side-transcripts.md`, `playlists.md` |
@@ -148,6 +148,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-16 | privacy | OV-311 | Assistants you connect can read the conversations you had about your overviews in the app, and their calls never log them. |
 | 2026-11-16 | privacy | OV-309 | A new section, Asking questions about an overview: always on our key, even with "Only ever use my key"; the question, the overview, the reader's own transcript, the conversation and as much of their other conversations about it as fits go through our server to OpenAI; no articles; kept as a synced conversation devices can read or delete; daily counts, the cost tally and log lines without the words. Your library names conversations; OpenAI's row, the cost tally, the retention table and account deletion cover them. Writing an overview says "Only ever use my key" keeps overviews, not questions, from going through us. |
 | 2026-11-16 | terms | OV-309 | Overviews on our key, and limits: questions about an overview are answered on our key within a monthly allowance of their own and a daily cap, shown in the app; answers come from the source and can still be wrong. |
 | 2026-11-15 | privacy | OV-266 | Your library: taking a question to ask next to an assistant notes which question, which assistant and when, kept and synced with read and favourite; the settings list names which assistant questions open in. |
