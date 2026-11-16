@@ -401,7 +401,13 @@ test("signed out, our server fetches only while the trial has an overview left o
     {},
     {
       transcriptService: { fetches: youTube.fetches, proxyDailyFetches: 1000 },
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+      ourKey: {
+        apiKey: "sk-test-ours",
+        dailyGenerations: 300,
+        signedOutDailyGenerations: 50,
+        dailyChatMessages: 20_000,
+        http: makeFakeOpenAi().http,
+      },
     },
   );
   const device = await makeTrialDevice(testApp);

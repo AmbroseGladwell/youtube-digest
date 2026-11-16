@@ -130,6 +130,7 @@ app.log.info(
           model: ourKeyModel.model,
           dailyGenerations: config.ourKey.dailyGenerations,
           signedOutDailyGenerations: config.ourKey.signedOutDailyGenerations,
+          dailyChatMessages: config.ourKey.dailyChatMessages,
         },
   ),
 );

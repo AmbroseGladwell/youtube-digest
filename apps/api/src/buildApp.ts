@@ -79,6 +79,8 @@ import { OverviewReservationsRepository } from "./usage/OverviewReservationsRepo
 import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
 import { TrialsRepository } from "./usage/TrialsRepository.js";
 import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
+import { ChatAnswerer } from "./chats/ChatAnswerer.js";
+import { ChatUsageRepository } from "./usage/ChatUsageRepository.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
 import { handshakeRoutes } from "./versions/handshakeRoutes.js";
@@ -120,7 +122,10 @@ export interface OurKeySetup {
   apiKey: string;
   dailyGenerations: number;
   signedOutDailyGenerations: number;
+  dailyChatMessages: number;
   http: typeof fetch;
+  // A test hands in its own, so a provider's retry waits take no time.
+  sleep?: (ms: number) => Promise<void>;
 }
 
 // Search by meaning; absent, a search matches by word only and says so
@@ -291,12 +296,32 @@ export async function buildApp({
       meaningSearchRoutes(api, meaningSearch);
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
-      chatRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
       overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
       overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
+      const chatUsage = new ChatUsageRepository(sql);
+      chatRoutes(api, {
+        records,
+        answerer:
+          ourKey === null
+            ? null
+            : new ChatAnswerer({
+                apiKey: ourKey.apiKey,
+                http: ourKey.http,
+                dailyMessages: ourKey.dailyChatMessages,
+                records,
+                transcripts,
+                usage: chatUsage,
+                costs,
+                clock,
+                ...(ourKey.sleep === undefined ? {} : { sleep: ourKey.sleep }),
+              }),
+        usage: chatUsage,
+        sql,
+        clock,
+      });
       generationRoutes(api, {
         generator: ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, costs, clock }),
         trials,

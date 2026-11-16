@@ -33,6 +33,7 @@ read.
 | `embeddings` | `overview` | tokens of the claims newly embedded | $0.02 per million (`EMBEDDING_PRICE`, checked 9 Nov 2026) | `EmbeddingQueue` |
 | `embeddings` | `search` | tokens of a query not already cached | the same | `MeaningSearch` |
 | `transcripts` | `proxy` | bytes through the residential proxy | $4 per GB, a GB being 10⁹ bytes as Decodo counts it (`PROXY_PRICE`, checked 10 Nov 2026) | `ServiceTranscripts` |
+| `chat` | `message`, `message-failed` | prompt and output tokens of a question answered in an overview (OV-309) | list price | `ChatAnswerer` |
 
 - **Every metered area carries list-price dollars.** Decodo is pay as you go, so a byte
   through the proxy has a price like a token does. Its prepaid top-up is what the spend

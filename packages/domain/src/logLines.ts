@@ -263,6 +263,33 @@ export const apiLogLines = coded("api", {
     ),
     keyRefused: line("error", "our key refused", "The provider refused our own key. Every generation on our key fails until it is fixed."),
   },
+  chat: {
+    answered: line(
+      "info",
+      "chat answered",
+      "A chat question answered on our key: plan, model, tokens (input counts cache reads), the cached share, cost in dollars, whether the source covered it, how many citations of the source and of other chats, how many other chats' messages went with it, the month's count and how long it took. Never the question or the answer.",
+    ),
+    failed: line(
+      "warn",
+      "chat answer failed",
+      "A chat question on our key failed and its allowance was given back; `reason` says why, with the tokens and cost the provider still billed.",
+    ),
+    retried: line(
+      "info",
+      "chat provider retried",
+      "The provider refused a chat question for now (`status`) and it was asked again after a wait.",
+    ),
+    allowanceSpent: line(
+      "info",
+      "chat allowance spent",
+      "An account asked a chat question with this month's or today's allowance used (`quota`).",
+    ),
+    dailyCapSpent: line(
+      "warn",
+      "chat daily cap spent",
+      "The global daily cap on chat messages on our key refused a question for every plan.",
+    ),
+  },
   trials: {
     issued: line("info", "trial token issued", "A signed-out device was given a trial token before its onboarding overview on our key."),
     topicSuggestionsUnknownTrial: line(

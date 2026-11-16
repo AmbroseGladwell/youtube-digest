@@ -226,7 +226,13 @@ test("signed out, onboarding's trial reads a podcast link, and the read counts a
     {},
     {
       readPodcastEpisode: async () => ({ status: "read", episode: EPISODE }),
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+      ourKey: {
+        apiKey: "sk-test-ours",
+        dailyGenerations: 300,
+        signedOutDailyGenerations: 50,
+        dailyChatMessages: 20_000,
+        http: makeFakeOpenAi().http,
+      },
     },
   );
   const device = await makeTrialDevice(testApp);
@@ -249,7 +255,13 @@ test("signed out, a trial finds an episode's words until it has made its one ove
     {},
     {
       podcastWeb: web.podcastWeb,
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+      ourKey: {
+        apiKey: "sk-test-ours",
+        dailyGenerations: 300,
+        signedOutDailyGenerations: 50,
+        dailyChatMessages: 20_000,
+        http: makeFakeOpenAi().http,
+      },
     },
   );
   const device = await makeTrialDevice(testApp);

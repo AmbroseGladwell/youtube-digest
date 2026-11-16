@@ -27,7 +27,7 @@ async function ourKeyApp(
   return createTestApp(
     {},
     {
-      ourKey: { apiKey: OUR_KEY, dailyGenerations, signedOutDailyGenerations, http: openAi.http },
+      ourKey: { apiKey: OUR_KEY, dailyGenerations, signedOutDailyGenerations, dailyChatMessages: 20_000, http: openAi.http },
       ...(logger === undefined ? {} : { logger }),
     },
   );
