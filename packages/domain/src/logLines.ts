@@ -274,6 +274,11 @@ export const apiLogLines = coded("api", {
       "chat answer failed",
       "A chat question on our key failed and its allowance was given back; `reason` says why, with the tokens and cost the provider still billed.",
     ),
+    stopped: line(
+      "info",
+      "chat answer stopped",
+      "The reader stopped an answer, or left, before it was stored: nothing was stored and the question was given back. The tokens already billed aren't known, since the provider reports them only at the end.",
+    ),
     retried: line(
       "info",
       "chat provider retried",

@@ -3,11 +3,16 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { chatRecordId, MAX_CHAT_QUESTIONS, VideoId, youTubeSource, type ChatMessage, type ChatStreamEvent } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
+import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
+import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
+import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
+import { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { appendChatMessages } from "./appendChatMessages.js";
+import { ChatAnswerer } from "./ChatAnswerer.js";
 import { makeFakeChatOpenAi, type FakeChatAnswer, type FakeChatOpenAi } from "./FakeChatOpenAi.testHelper.js";
 
 const SEGMENTS = [
@@ -301,4 +306,35 @@ test("a server without our key says chat is unavailable", async (t) => {
   });
 
   assert.equal(response.statusCode, 503);
+});
+
+test("a reader who stops an answer, or leaves, before it is stored gets the question back, and nothing is stored", async (t) => {
+  const setup = await setUp(t, [answer("Three to five grams a day, with training, and judged by reps.")]);
+  const conversationId = randomUUID();
+  const { testApp, account } = setup;
+  const answerer = new ChatAnswerer({
+    apiKey: "sk-test-ours",
+    http: setup.openAi.http,
+    dailyMessages: 20_000,
+    records: new RecordsRepository(testApp.sql, () => testApp.clock.now),
+    transcripts: new TranscriptsRepository(testApp.sql, () => testApp.clock.now),
+    usage: new ChatUsageRepository(testApp.sql),
+    costs: new AccountCostsRepository(testApp.sql),
+    clock: () => testApp.clock.now,
+  });
+  const { logger, lines } = recordingLogger();
+
+  const events = await answerer.ask(
+    { accountId: account.accountId, plan: "free" },
+    setup.overviewId,
+    { conversationId, text: "How much?" },
+    logger,
+  );
+  const first = await events.next();
+  await events.return(undefined);
+
+  assert.equal((first.value as ChatStreamEvent).type, "text");
+  assert.equal(await usedThisMonth(setup), 0);
+  assert.ok(!(await setup.account.changes()).changes.some((change) => change.kind === "chat"));
+  assert.ok(lines.some((line) => line.logCode === "api.chat.stopped"));
 });
