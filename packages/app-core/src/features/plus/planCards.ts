@@ -12,6 +12,8 @@ export interface PlanCard {
   name: string;
   ourKey: string;
   ownKey: string;
+  // Hours of audio a month, shown where the server transcribes episodes (design 305m).
+  transcribing: string;
   note: string;
 }
 
@@ -20,18 +22,21 @@ export const PLAN_CARDS: PlanCard[] = [
     name: "Free",
     ourKey: "5 a month",
     ownKey: "10 a month",
+    transcribing: "5 hr a month",
     note: "Comes with every account.",
   },
   {
     name: "BYO Plus",
     ourKey: "10 a month",
     ownKey: "200 a month",
+    transcribing: "15 hr a month",
     note: "Cheaper, for a reader who already pays an AI provider.",
   },
   {
     name: "Plus",
     ourKey: "50 a month",
     ownKey: "200 a month",
+    transcribing: "30 hr a month",
     note: "For a reader who would rather not hold a key at all.",
   },
 ];

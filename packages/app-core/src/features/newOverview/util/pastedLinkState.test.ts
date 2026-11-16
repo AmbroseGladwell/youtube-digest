@@ -10,6 +10,7 @@ describe("pastedLinkState", () => {
       podcastShown: true,
       reading: true,
       generateOffered: true,
+      episodeAction: null,
     });
   });
 
@@ -17,7 +18,10 @@ describe("pastedLinkState", () => {
     const pending = pastedLinkState({ status: "reading" }, { link: { status: "reading" }, platformLink: false });
     expect(pending.podcastShown).toBe(false);
     expect(pending.reading).toBe(true);
-    const found = pastedLinkState({ status: "reading" }, { link: { status: "found", episode }, platformLink: false });
+    const found = pastedLinkState(
+      { status: "reading" },
+      { link: { status: "found", episode, words: { state: "found" } }, platformLink: false },
+    );
     expect(found.podcastShown).toBe(true);
     expect(found.reading).toBe(false);
   });
@@ -27,5 +31,30 @@ describe("pastedLinkState", () => {
       pastedLinkState({ status: "none" }, { link: { status: "failed", reason: "not-found", showName: null }, platformLink: true })
         .generateOffered,
     ).toBe(false);
+  });
+
+  it("waits while the episode's words are checked for, and offers nothing to make when it can't be transcribed", () => {
+    const usage = { usedSeconds: 4 * 3600, limitSeconds: 5 * 3600, episodes: 2 };
+    const checking = pastedLinkState(
+      { status: "none" },
+      { link: { status: "found", episode, words: { state: "checking" } }, platformLink: true },
+    );
+    const stopped = pastedLinkState(
+      { status: "none" },
+      {
+        link: { status: "found", episode, words: { state: "none", transcription: { status: "not-enough", episodeSeconds: 6960, usage } } },
+        platformLink: true,
+      },
+    );
+    const transcribes = pastedLinkState(
+      { status: "none" },
+      {
+        link: { status: "found", episode, words: { state: "none", transcription: { status: "needed", episodeSeconds: 1800, usage } } },
+        platformLink: true,
+      },
+    );
+    expect(checking).toMatchObject({ reading: true, generateOffered: true, episodeAction: { kind: "waiting" } });
+    expect(stopped).toMatchObject({ reading: false, generateOffered: false, episodeAction: { kind: "stop" } });
+    expect(transcribes).toMatchObject({ reading: false, generateOffered: true, episodeAction: { kind: "transcribe" } });
   });
 });

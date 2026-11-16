@@ -10,6 +10,7 @@ import { isArticleLink, useArticleLink } from "./useArticleLink.js";
 import { useStartArticleFromLink } from "./useStartArticleFromLink.js";
 import { isPlatformPodcastLink, usePodcastLink } from "./usePodcastLink.js";
 import { pastedLinkState } from "./util/pastedLinkState.js";
+import { transcribeChoiceOf } from "../podcasts/util/episodeActionOf.js";
 
 // A pasted link handed to the shell's run, which opens the dialog on the progress it makes:
 // one pipeline, wherever the field sits (docs/features/stone-theme.md, "First run").
@@ -46,9 +47,14 @@ export function useStartFromLink() {
       return;
     }
     if (pasted.podcastShown) {
-      if (podcast.link.status === "found") {
+      if (podcast.link.status === "found" && pasted.generateOffered && !pasted.reading) {
         setValidationError(null);
-        controller.startPodcast({ episode: podcast.link.episode, sharedFrom: url.trim(), from: "home" });
+        controller.startPodcast({
+          episode: podcast.link.episode,
+          sharedFrom: url.trim(),
+          from: "home",
+          transcribe: transcribeChoiceOf(pasted.episodeAction),
+        });
         controller.open();
         setUrl("");
       }

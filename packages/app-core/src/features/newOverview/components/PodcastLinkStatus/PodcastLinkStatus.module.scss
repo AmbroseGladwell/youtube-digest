@@ -80,6 +80,26 @@
   font-variant-numeric: tabular-nums;
 }
 
+// Designs 305c: "Checking for a transcript…" while the check runs, then the accent notice. Empty
+// otherwise, and kept as a live region so the change is announced.
+.checking,
+.needs {
+  font-size: 0.8125rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.checking {
+  color: var(--muted);
+}
+
+.needs {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .line {
   margin: 0.5rem 0 0 0.25rem;
   color: var(--muted);

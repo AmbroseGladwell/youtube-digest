@@ -366,6 +366,11 @@ export const apiLogLines = coded("api", {
       "podcast transcript resolved",
       "A podcast episode's transcript was asked for; `via` is the rung that answered (remembered, tag, youtube), `from` where a remembered source was, and `format` the tag's, or `failure` why none could. Never the feed or the episode, and the words are never kept.",
     ),
+    checked: line(
+      "info",
+      "podcast transcript checked",
+      "Whether an episode's words could be found was asked before Create, fetching none; `words` is found, none or unknown, `via` the rung that said so, `offer` what transcribing would mean, and `ms` how long it took. Never the feed or the episode.",
+    ),
     youTubeSearched: line(
       "info",
       "podcast episode searched on youtube",

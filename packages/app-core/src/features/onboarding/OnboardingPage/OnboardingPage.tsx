@@ -119,7 +119,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const settings = useSettingsQuery().data;
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const topics = useTopicsQuery().data ?? [];
-  const { run, attempt, retry } = useOnboardingRunState();
+  const { run, attempt, retry, transcribe } = useOnboardingRunState();
   const [asking, setAsking] = useState<AuthIntent | null>(null);
   const [savingTopics, setSavingTopics] = useState(false);
   const [picking, setPicking] = useState<readonly string[] | null>(null);
@@ -426,6 +426,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
               copy={onboardingFailureCopy(readFailure, progress.link, surface === "extension" ? "extension" : phone ? "phone" : "computer")}
               link={progress.link}
               onTryAgain={() => tryAgain("readFailure")}
+              onTranscribe={transcribe}
               onAnotherLink={anotherLink}
             />
           );

@@ -43,6 +43,7 @@ export function PlusPlanPanel() {
   }
 
   const onTrial = usage?.signedIn === false;
+  const transcribes = usage?.signedIn === true && usage.usage.status === "known" && usage.usage.data.transcription !== undefined;
   const planName = onTrial ? "Trial" : PLAN_LABEL[plan];
 
   return (
@@ -64,7 +65,7 @@ export function PlusPlanPanel() {
         ))}
       </ul>
 
-      <p className={styles.note}>What a plan buys is how many overviews you can make.</p>
+      <p className={styles.note}>What a plan buys is {transcribes ? "how much" : "how many overviews"} you can make.</p>
       <ul className={styles.plans}>
         {PLAN_CARDS.map((card) => {
           const yours = card.name === planName;
@@ -83,6 +84,12 @@ export function PlusPlanPanel() {
                   <dt>On your own key</dt>
                   <dd>{card.ownKey}</dd>
                 </div>
+                {transcribes && (
+                  <div>
+                    <dt>Transcribing episodes</dt>
+                    <dd>{card.transcribing}</dd>
+                  </div>
+                )}
               </dl>
               <p className={styles.planNote}>{card.note}</p>
             </li>

@@ -166,7 +166,7 @@ export class SettingsPageObject extends PageObject {
   verifyPlanUsagePeriodReads = (text: string) =>
     this.step(`verifyPlanUsagePeriodReads ${text}`, () => expect(this.get(planUsageTestIds.period)).toHaveText(text));
 
-  verifyPlanUsageCellReads = (quota: "ours" | "own" | "trial", lines: string[]) =>
+  verifyPlanUsageCellReads = (quota: "ours" | "own" | "trial" | "transcribing", lines: string[]) =>
     this.step(`verifyPlanUsageCellReads ${quota} ${lines.join(" ")}`, () =>
       expect(this.get(planUsageTestIds.cell(quota)).locator("dd")).toHaveText(lines),
     );

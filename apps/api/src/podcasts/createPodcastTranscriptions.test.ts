@@ -147,7 +147,7 @@ test("a free account transcribes up to five hours a month, and is told when they
   await testApp.close();
 });
 
-test("signed out, a trial can transcribe an episode, and no one else can read what it asked for", async () => {
+test("signed out, a trial can transcribe onboarding's episode, and no one else can read what it asked for", async () => {
   const testApp = await createTestApp(
     {},
     {
@@ -159,12 +159,96 @@ test("signed out, a trial can transcribe an episode, and no one else can read wh
   const device = await makeTrialDevice(testApp);
   const account = await makeAccount(testApp);
 
+  const checked = await device.checkTranscript(EPISODE);
   const asked = await device.transcribe(EPISODE);
   await testApp.drainTranscriptions();
 
+  assert.deepEqual(checked.json().transcription.usage, { usedSeconds: 0, limitSeconds: 4 * 3600, episodes: 0 });
   assert.equal((await device.transcription(asked.json().id)).json().status, "ready");
   assert.equal((await account.inject({ method: "GET", url: `/api/podcasts/transcription/${asked.json().id}` })).statusCode, 404);
   await testApp.close();
+});
+
+const check = (account: Awaited<ReturnType<typeof makeAccount>>, body: object = EPISODE) =>
+  account.inject({ method: "POST", url: "/api/podcasts/transcript/check", body });
+
+test("before Create, the check says an episode needs transcribing and what it would use of the month", async () => {
+  const testApp = await appWith(makeScriptedTranscriber(), feed(item("ep1", 6960)));
+  const account = await makeAccount(testApp);
+
+  const checked = await check(account);
+
+  assert.equal(checked.statusCode, 200);
+  assert.deepEqual(checked.json(), {
+    words: "none",
+    transcription: { status: "needed", episodeSeconds: 6960, usage: { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 } },
+  });
+  assert.equal(await usedSeconds(testApp), 0);
+  await testApp.close();
+});
+
+test("the check finds a feed's own transcript without fetching it", async () => {
+  const tagged = `<?xml version="1.0"?><rss xmlns:podcast="https://podcastindex.org/namespace/1.0"><channel><title>A Show</title>
+<item><title>Episode ep1</title><guid>ep1</guid><podcast:transcript url="https://media.example/ep1.vtt" type="text/vtt"/>
+<enclosure url="https://media.example/ep1.mp3" type="audio/mpeg"/></item></channel></rss>`;
+  const fetched: string[] = [];
+  const testApp = await createTestApp(
+    {},
+    {
+      podcastWeb: async (link) => {
+        fetched.push(link);
+        return webOf(tagged)(link);
+      },
+      transcriber: makeScriptedTranscriber(),
+    },
+  );
+  const account = await makeAccount(testApp);
+
+  assert.deepEqual((await check(account)).json(), { words: "found" });
+  assert.deepEqual(fetched, [FEED_URL]);
+  await testApp.close();
+});
+
+test("the check says when transcribing costs nothing, would take more than is left, or can't be done", async () => {
+  const threeHours = makeScriptedTranscriber([
+    { state: "running" },
+    { state: "done", result: transcribedAudio({ audioSeconds: 3 * 3600 }) },
+  ]);
+  const testApp = await appWith(threeHours, feed(item("ep1", 3 * 3600), item("long", 5 * 3600), item("big", 2.5 * 3600)));
+  const account = await makeAccount(testApp);
+  await account.inject({ method: "POST", url: "/api/podcasts/transcription", body: EPISODE });
+
+  const onItsWay = await check(account);
+  await testApp.drainTranscriptions();
+  const transcribed = await check(account);
+  const notEnough = await check(account, { feedUrl: FEED_URL, guid: "big" });
+  const tooLong = await check(account, { feedUrl: FEED_URL, guid: "long" });
+
+  assert.deepEqual(onItsWay.json().transcription, { status: "free", why: "on-its-way" });
+  assert.deepEqual(transcribed.json().transcription, { status: "free", why: "transcribed" });
+  assert.deepEqual(notEnough.json().transcription, {
+    status: "not-enough",
+    episodeSeconds: 2.5 * 3600,
+    usage: { usedSeconds: 3 * 3600, limitSeconds: 5 * 3600, episodes: 1 },
+  });
+  assert.deepEqual(tooLong.json().transcription, { status: "too-long", episodeSeconds: 5 * 3600 });
+  await testApp.close();
+});
+
+test("the month's transcribing is on the reader's usage beside their overviews, only where episodes are transcribed", async () => {
+  const testApp = await appWith(makeScriptedTranscriber());
+  const without = await createTestApp({}, { podcastWeb: webOf(feed(item("ep1", 1800))) });
+  const account = await makeAccount(testApp);
+  await account.inject({ method: "POST", url: "/api/podcasts/transcription", body: EPISODE });
+  await testApp.drainTranscriptions();
+
+  const usage = await account.inject({ method: "GET", url: "/api/overview-usage" });
+  const usageWithout = await (await makeAccount(without)).inject({ method: "GET", url: "/api/overview-usage" });
+
+  assert.deepEqual(usage.json().transcription, { usedSeconds: 1791, limitSeconds: 5 * 3600, episodes: 1 });
+  assert.equal(usageWithout.json().transcription, undefined);
+  await testApp.close();
+  await without.close();
 });
 
 test("an episode with no transcript says it can be transcribed only where a transcriber is set up", async () => {

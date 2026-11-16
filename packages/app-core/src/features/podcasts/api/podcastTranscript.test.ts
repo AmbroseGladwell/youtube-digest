@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { VideoId, type PodcastEpisode, type StoredTranscript } from "@overview/domain";
 import { SyncRequestError, type PodcastTranscriptAsk } from "@overview/sync";
 import { TranscriptFetchError, type YouTubeFetch } from "@overview/transcripts";
+import { EpisodeNeedsTranscribingError } from "./EpisodeNeedsTranscribingError.js";
 import { podcastTranscript } from "./podcastTranscript.js";
 
 const episode: PodcastEpisode = {
@@ -120,5 +121,14 @@ describe("podcastTranscript", () => {
     const { api } = apiAnswering(() => unavailable({ failure: "source-unavailable" }));
     const error = await podcastTranscript(api, episode, null).catch((caught: unknown) => caught);
     expect((error as TranscriptFetchError).failure).toBe("source-unavailable");
+  });
+
+  it("says the episode needs transcribing when no rung found it and our server would transcribe it, still as no captions", async () => {
+    const { api } = apiAnswering(() => unavailable({ failure: "no-captions", transcribable: true }));
+    const viaExtension = await podcastTranscript(api, episode, youTubeFinding("Something else", "5:00")).catch((caught: unknown) => caught);
+    const viaSearch = await podcastTranscript(api, episode, null).catch((caught: unknown) => caught);
+    expect(viaExtension).toBeInstanceOf(EpisodeNeedsTranscribingError);
+    expect(viaSearch).toBeInstanceOf(EpisodeNeedsTranscribingError);
+    expect((viaSearch as TranscriptFetchError).failure).toBe("no-captions");
   });
 });

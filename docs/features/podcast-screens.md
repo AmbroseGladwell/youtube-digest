@@ -126,8 +126,9 @@ then Writing the overview. They never say where the words came from. Recording t
 a step here, as it isn't for any kind: narration renders after.
 
 **No transcript** (106h) is drawn as an everyday outcome: what happened, that it's common, that no
-overview was used, "Transcribing is coming soon" where Transcribe it will go, and a pointer to paste
-the episode's YouTube link instead. Nothing is left in the library (owner, 13 Nov 2026). Nothing is
+overview was used, and a pointer to paste the episode's YouTube link instead. It shows only where our
+server doesn't transcribe; where it does, the episode is offered for transcribing before Create
+(`speech-to-text.md`, "The screens"; OV-305 replaced "Transcribing is coming soon"). Nothing is left in the library (owner, 13 Nov 2026). Nothing is
 reserved until the words are found, so nothing is used.
 
 **The run** finds the words through `podcastTranscript` (the free routes: our cache and the feed's
@@ -177,8 +178,7 @@ same.
 **Our server's other reasons** use the pasted link's copy (`podcastLinkFailureCopy`) with "Use a
 different link" dropped, since the tab is the link; "We didn't hear back in time" keeps Try again.
 
-**No transcript** (106j) keeps the offer and puts 106h's words, shorter, where Create was, with
-"Transcribing is coming soon". It stays until the tab moves on, which dismisses the run; nothing was
+**No transcript** (106j) keeps the offer and puts 106h's words, shorter, where Create was. It stays until the tab moves on, which dismisses the run; nothing was
 reserved or kept. Coming back offers Create again.
 
 **The line on a note** (205e) says "Another episode on this tab" for another Spotify or Apple

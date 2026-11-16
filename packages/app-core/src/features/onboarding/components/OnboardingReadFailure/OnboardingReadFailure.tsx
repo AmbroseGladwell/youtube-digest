@@ -10,6 +10,8 @@ export interface OnboardingReadFailureProps {
   copy: OnboardingFailureCopy;
   link: string;
   onTryAgain: () => void;
+  // Transcribes the episode's audio instead, where the copy offers it (design 305c-2).
+  onTranscribe?: () => void;
   // Says whether the link was taken.
   onAnotherLink: (link: string) => boolean;
 }
@@ -17,7 +19,7 @@ export interface OnboardingReadFailureProps {
 // Designs 154l–154n, pattern 19 at the confirm step: a short bar, what happened, the link that
 // was pasted, and a field for another. The free overview is what's untouched, so the foot says
 // that rather than that nothing counted.
-export function OnboardingReadFailure({ copy, link, onTryAgain, onAnotherLink }: OnboardingReadFailureProps) {
+export function OnboardingReadFailure({ copy, link, onTryAgain, onTranscribe, onAnotherLink }: OnboardingReadFailureProps) {
   const [another, setAnother] = useState("");
   const [refused, setRefused] = useState(false);
   const fieldId = useId();
@@ -47,11 +49,11 @@ export function OnboardingReadFailure({ copy, link, onTryAgain, onAnotherLink }:
         </button>
       )}
 
-      {copy.comingSoon && (
-        <p className={styles.comingSoon} data-testid={onboardingReadFailureTestIds.comingSoon}>
-          <StrokeIcon name="mic" size={14} />
-          Transcribing is coming soon
-        </p>
+      {copy.transcribe !== null && onTranscribe !== undefined && (
+        <button type="button" className={styles.transcribe} onClick={onTranscribe} data-testid={onboardingReadFailureTestIds.transcribe}>
+          <StrokeIcon name="mic" size={15} />
+          {copy.transcribe}
+        </button>
       )}
 
       <form id={`${fieldId}-form`} className={styles.form} onSubmit={submit}>

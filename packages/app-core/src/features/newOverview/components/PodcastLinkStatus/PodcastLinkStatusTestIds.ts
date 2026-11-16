@@ -7,4 +7,7 @@ export const podcastLinkStatusTestIds = {
   held: "PodcastLinkStatus.held",
   openHeld: "PodcastLinkStatus.openHeld",
   unreachable: "PodcastLinkStatus.unreachable",
+  words: "PodcastLinkStatus.words",
+  uses: "PodcastLinkStatus.uses",
+  free: "PodcastLinkStatus.free",
 };
