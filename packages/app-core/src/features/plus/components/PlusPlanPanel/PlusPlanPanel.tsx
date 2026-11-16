@@ -66,7 +66,7 @@ export function PlusPlanPanel() {
         ))}
       </ul>
 
-      <p className={styles.note}>What a plan buys is how many overviews you can make.</p>
+      <p className={styles.note}>What a plan buys is how many overviews you can make, and how many questions you can ask about them.</p>
       <ul className={styles.plans}>
         {PLAN_CARDS.map((card) => {
           const yours = card.name === planName;
@@ -84,6 +84,10 @@ export function PlusPlanPanel() {
                 <div>
                   <dt>On your own key</dt>
                   <dd>{card.ownKey}</dd>
+                </div>
+                <div>
+                  <dt>Questions, on us</dt>
+                  <dd>{card.questions}</dd>
                 </div>
               </dl>
               <p className={styles.planNote}>{card.note}</p>

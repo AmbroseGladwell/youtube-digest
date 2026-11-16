@@ -7,13 +7,14 @@ replaced that: **the paid plans sell volume, never features.** Sync, narration w
 voice and the MCP connection all belong to the free account, because they are what makes
 signing up worth doing. What a reader runs out of is overviews.
 
-So there are two paid plans, and both are a number of overviews a month:
+So there are two paid plans, and both are a number of overviews a month, and since OV-310 a
+number of questions about them (always on us; set on 16 Nov 2026, `tiers.md`):
 
-| | Overviews on our key | Overviews on your own key |
-|---|---|---|
-| Free account | 5 a month | 10 a month |
-| BYO Plus | 10 a month | 200 a month |
-| Plus | 50 a month | 200 a month |
+| | Overviews on our key | Overviews on your own key | Questions, on us |
+|---|---|---|---|
+| Free account | 5 a month | 10 a month | 100 a month |
+| BYO Plus | 10 a month | 200 a month | 500 a month |
+| Plus | 50 a month | 200 a month | 1,000 a month |
 
 **No plan ever says "unlimited"**, and every number is shown with its reset date. The
 figures were set on 18 Oct 2026 from what OV-92 measured an overview to cost, and Free's own-key
@@ -21,7 +22,8 @@ quota was cut from 30 to 10 on 20 Oct 2026 to make the upgrade worth having (`ti
 
 `PLAN_CARDS` and `EVERY_ACCOUNT_INCLUDES` in `planCards.ts` are that table, written once,
 and the panel and the IWFT scenarios both read them. The server counts against its own copy,
-`overviewQuotas` in the API (OV-102), so a change to one is a change to both.
+`overviewQuotas` in the API (OV-102), so a change to one is a change to both. The questions
+column is read from `chatAllowances` in `@overview/domain`, the server's own figures.
 
 Design turn 16 asked where a free user should be told any of this. It offers three places
 and says they are not exclusive — 16c should exist regardless, and one of 16a/16b is the
