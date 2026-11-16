@@ -397,6 +397,12 @@ export const analyticsEvents = {
         assistant: FollowUpAssistant,
         from: FollowUpAssistantChosenFrom,
       }),
+      answerPlaceChosen: event(
+        "Where chat is offered, the reader chooses whether a tapped question is answered here or opens their assistant",
+        {
+          here: z.boolean(),
+        },
+      ),
       questionCopied: event("The reader copies a question alone from the first-tap menu"),
       connectionSetUpFollowed: event("The reader follows Set up a connection from the first-tap menu to Settings › Connections"),
     },
@@ -1271,6 +1277,12 @@ export const analyticsEvents = {
       assistantChosen: event("The reader says which assistant they use in Settings › Connections, which shows only its steps", {
         assistant: ChosenAssistant,
       }),
+      questionsPlaceChosen: event(
+        "The reader chooses in Settings › Connections whether questions to ask next are answered here or open their assistant",
+        {
+          here: z.boolean(),
+        },
+      ),
       fieldCopied: event("The reader copies one of the values ChatGPT's connector form asks for; never anything they typed", {
         field: z.enum(["name", "description", "address"]),
       }),

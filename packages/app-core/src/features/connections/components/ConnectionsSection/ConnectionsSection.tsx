@@ -14,6 +14,7 @@ import { ConnectionRow } from "../ConnectionRow/ConnectionRow.js";
 import { ConnectorSetup } from "../ConnectorSetup/ConnectorSetup.js";
 import { CONNECTOR_ICON_PATH } from "../../util/connectorSteps.js";
 import { ExampleQuestions } from "../ExampleQuestions/ExampleQuestions.js";
+import { QuestionsPlacePicker } from "../QuestionsPlacePicker/QuestionsPlacePicker.js";
 import styles from "./ConnectionsSection.module.scss";
 import { connectionsSectionTestIds } from "./ConnectionsSectionTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -160,6 +161,7 @@ export function ConnectionsSection() {
             </ul>
           </div>
           <ConnectorSetup label="Connect another" address={address} iconUrl={iconUrl} ref={setupLabel} />
+          <QuestionsPlacePicker />
         </>
       ) : (
         <>
@@ -168,6 +170,7 @@ export function ConnectionsSection() {
             <p className={styles.label}>Try asking</p>
             <ExampleQuestions />
           </div>
+          <QuestionsPlacePicker />
         </>
       )}
     </>

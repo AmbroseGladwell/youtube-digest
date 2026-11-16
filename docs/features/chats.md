@@ -212,6 +212,8 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   from, which hides the panel). Stop aborts it, and the server gives the question back.
 - **`chatOffered`** hides chat signed out, on someone else's shared overview, and for every
   article and recipe page.
+- **Where a tapped question goes:** `Settings.questionsAnsweredHere`, answered here by default
+  (`follow-up-questions.md`, "Answered here").
 - **Events**, `reader.chat.*`: asked (from a question or typed, new conversation or not),
   answered (in the source, citations of each kind), answerFailed, waited (which wait),
   citationFollowed, conversationOpened and conversationDeleted. The hand-off to an assistant

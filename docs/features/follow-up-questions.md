@@ -117,6 +117,15 @@ connections are all to one known assistant, by the name its client registered wi
 (`connectionAssistant`), gets that one; anyone else is asked on their first tap. "Connected" is
 whether a connection is to the assistant in use.
 
+**Answered here (OV-310, design 310f):** where chat is offered (`chatOffered`), a tapped question
+is answered in the app by default. `Settings.questionsAnsweredHere`, true for settings saved
+before it, is "Questions to ask next: Answered here / Open in {assistant}", in Settings ›
+Connections (`QuestionsPlacePicker`) and as Here at the top of Change's menu, titled "Answer
+questions". The line reads "Tap one and it’s answered here, from the video. Change", and each
+bubble is "Ask here: …". Picking an assistant there turns the block back into the one described
+here; picking an assistant on an article or a recipe, where chat is hidden, leaves Here alone.
+The block answers here only when the reader page gives it `onAskHere`.
+
 **Hiding them:** `SectionsEnabled.followUpQuestions`, on by default and for settings saved before it.
 
 ## On the note
@@ -170,7 +179,9 @@ Built in `FollowUpQuestions` and `FollowUpAssistantMenu`.
   and the sharing dialog lists them under Kept private. Older overviews show nothing.
 - **Events** (`reader.followUps.*`, never the question): `asked` with the assistant, prefill or
   copy, connected, whether it was a reader question and its place; `setChanged`;
-  `assistantChosen` from the first tap or Change; `questionCopied`; `connectionSetUpFollowed`.
+  `assistantChosen` from the first tap or Change; `answerPlaceChosen` when Change moves questions
+  between here and an assistant; `questionCopied`; `connectionSetUpFollowed`. Settings ›
+  Connections' picker is `mcp.settingsConnections.questionsPlaceChosen`.
   Turning the block off is `settings.personalisation.sectionSwitched`.
 
 ## Not built yet

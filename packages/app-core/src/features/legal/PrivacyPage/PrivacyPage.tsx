@@ -97,8 +97,9 @@ const sections: readonly LegalSection[] = [
           conversations about it, that each answer drew on. A project holds its name, a line on what it is for, and for each overview in it
           whether you or a connected assistant put it there, and when. Your settings travel with the account too: the narration voice,
           whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an overview
-          shows, which assistant questions to ask next open in, the About you sentence that personalises overviews and what we have learned
-          from your overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
+          shows, whether questions to ask next are answered here or open in an assistant and which one, the About you sentence that
+          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and the
+          running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,

@@ -11,6 +11,9 @@ import { followUpAssistantMenuTestIds } from "./FollowUpAssistantMenuTestIds.js"
 
 export const ASK_IN_TITLE = "Ask in";
 export const CHANGE_TITLE = "Ask follow-up questions in";
+export const ANSWER_QUESTIONS_TITLE = "Answer questions";
+export const HERE_DETAIL = "From the video, with the moments it’s from";
+export const HERE_FOOT = "Remembered on every overview. The box below always asks here.";
 export const SET_UP_NOTE =
   "Connect your assistant to The Overview and it can read the whole transcript, search your library, save to projects and more.";
 
@@ -18,6 +21,9 @@ export interface FollowUpAssistantMenuProps {
   // The first tap asks as soon as one is picked, and offers Copy question; Change only chooses (266s, 266v).
   firstTap: boolean;
   chosen: FollowUpAssistant | null;
+  // Where chat is offered, Here comes first and may be the choice (design 310f-2).
+  offerHere: boolean;
+  hereChosen: boolean;
   connectedTo: (assistant: FollowUpAssistant) => boolean;
   anyConnection: boolean;
   asSheet: boolean;
@@ -25,12 +31,13 @@ export interface FollowUpAssistantMenuProps {
   top: number;
   inside: RefObject<HTMLElement | null>;
   onChoose: (assistant: FollowUpAssistant) => void;
+  onChooseHere: () => void;
   onCopyQuestion: () => void;
   onSetUpFollowed: () => void;
   onClose: () => void;
 }
 
-const ASSISTANTS = FollowUpAssistant.options;
+type Option = "here" | FollowUpAssistant;
 
 function OptionDetail({ assistant, connected }: { assistant: FollowUpAssistant; connected: boolean }) {
   if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null)
@@ -54,22 +61,27 @@ function OptionDetail({ assistant, connected }: { assistant: FollowUpAssistant; 
 export function FollowUpAssistantMenu({
   firstTap,
   chosen,
+  offerHere,
+  hereChosen,
   connectedTo,
   anyConnection,
   asSheet,
   top,
   inside,
   onChoose,
+  onChooseHere,
   onCopyQuestion,
   onSetUpFollowed,
   onClose,
 }: FollowUpAssistantMenuProps) {
-  const title = firstTap ? ASK_IN_TITLE : CHANGE_TITLE;
+  const title = firstTap ? ASK_IN_TITLE : offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
+  const choices: readonly Option[] = offerHere ? ["here", ...FollowUpAssistant.options] : FollowUpAssistant.options;
+  const checked: Option | null = offerHere && hereChosen ? "here" : chosen;
   const titleId = useId();
   const menu = useRef<HTMLDivElement | null>(null);
   const sheet = useRef<HTMLDialogElement | null>(null);
   const options = useRef<(HTMLButtonElement | null)[]>([]);
-  const focusedAt = Math.max(0, chosen === null ? 0 : ASSISTANTS.indexOf(chosen));
+  const focusedAt = Math.max(0, checked === null ? 0 : choices.indexOf(checked));
 
   useDismissOnOutside(!asSheet, onClose, menu, inside);
 
@@ -82,7 +94,7 @@ export function FollowUpAssistantMenu({
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = options.current.indexOf(document.activeElement as HTMLButtonElement);
     if (current === -1) return;
-    const last = ASSISTANTS.length - 1;
+    const last = choices.length - 1;
     const target = {
       ArrowDown: current === last ? 0 : current + 1,
       ArrowRight: current === last ? 0 : current + 1,
@@ -109,29 +121,34 @@ export function FollowUpAssistantMenu({
       <p className={styles.title} id={titleId}>
         {title}
       </p>
-      <div role="radiogroup" aria-label="Assistant" onKeyDown={moveFocus}>
-        {ASSISTANTS.map((assistant, index) => (
+      <div role="radiogroup" aria-label={offerHere ? "Where questions are answered" : "Assistant"} onKeyDown={moveFocus}>
+        {choices.map((option, index) => (
           <button
-            key={assistant}
+            key={option}
             type="button"
             role="radio"
-            aria-checked={assistant === chosen}
+            aria-checked={option === checked}
             tabIndex={index === focusedAt ? 0 : -1}
             ref={(element) => {
               options.current[index] = element;
             }}
             className={styles.option}
-            onClick={() => onChoose(assistant)}
-            data-testid={followUpAssistantMenuTestIds.option(assistant)}
+            onClick={() => (option === "here" ? onChooseHere() : onChoose(option))}
+            data-testid={followUpAssistantMenuTestIds.option(option)}
           >
-            <span className={`${styles.dot} ${assistant === chosen ? styles.dotOn : ""}`} aria-hidden="true" />
-            <b className={styles.name}>{FOLLOW_UP_ASSISTANTS[assistant].name}</b>
+            <span className={`${styles.dot} ${option === checked ? styles.dotOn : ""}`} aria-hidden="true" />
+            <b className={styles.name}>{option === "here" ? "Here" : FOLLOW_UP_ASSISTANTS[option].name}</b>
             <small className={styles.detail}>
-              <OptionDetail assistant={assistant} connected={connectedTo(assistant)} />
+              {option === "here" ? HERE_DETAIL : <OptionDetail assistant={option} connected={connectedTo(option)} />}
             </small>
           </button>
         ))}
       </div>
+      {offerHere && !firstTap && (
+        <p className={styles.remembered} data-testid={followUpAssistantMenuTestIds.hereFoot}>
+          {HERE_FOOT}
+        </p>
+      )}
       {firstTap && (
         <>
           <p className={styles.remembered}>Remembered for next time. Change it under the questions.</p>
