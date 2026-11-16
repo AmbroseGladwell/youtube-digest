@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 
-export const MAX_CHAT_QUESTIONS = 30;
+export const MAX_CHAT_QUESTIONS = 50;
 export const MAX_CHAT_MESSAGE_LENGTH = 10_000;
 
 // Where an answer found what it says, worked out by code from the passages the model cited,

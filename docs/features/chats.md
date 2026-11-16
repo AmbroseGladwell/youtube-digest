@@ -26,7 +26,7 @@ before"). Each record is one conversation about one overview:
     place in that chat's `messages`.
 - **`inSource: false`** marks an answer saying the source doesn't cover the question. Another
   chat is never the source: an answer resting only on one is not `inSource`.
-- At most `MAX_CHAT_QUESTIONS` (30) questions and their answers, and 10,000 characters a
+- At most `MAX_CHAT_QUESTIONS` (50) questions and their answers, and 10,000 characters a
   message. A conversation past its length is refused whole, so OV-309 checks the count first
   (`chatQuestionCount`) and offers a new conversation.
 
@@ -146,7 +146,9 @@ the second carrying the first (all 60 of its messages fitted the budget):
 | Alone | $0.0042 | $0.00042 | $0.016 | 32,800 to 35,100 |
 | With the other conversation | $0.0045 | $0.00046 | $0.018 | 35,200 to 37,500 |
 
-So 30 questions of history and a full other conversation add about 10%.
+So 30 questions of history and a full other conversation add about 10%. The cap was raised
+to 50 on 16 Nov 2026, after this run, because a reader deep in a conversation shouldn't be cut
+off; 50 questions has not been measured. The extra history is read from the cache like the rest.
 
 **A new conversation reads the transcript from the cache (OV-313).** In that run the second
 conversation's first question paid to cache the whole prompt again, at 1.25× input, although
