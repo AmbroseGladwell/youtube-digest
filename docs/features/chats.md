@@ -76,14 +76,14 @@ a new conversation is a new uuid, a follow-up repeats its conversation's. Signed
 our key, on GPT-6 Luna (`chatModel.ts`) for every plan. `ChatAnswerer` settles everything that
 can refuse before the answer starts, so a refusal is an ordinary JSON error:
 
-| Refusal | Status | Details |
-|---|---|---|
-| The overview isn't held, or the conversation was deleted | 404 `not_found` | |
-| No transcript kept for it, or an article | 422 `transcript_unavailable` | `chat: "no-source"` |
-| The conversation has `MAX_CHAT_QUESTIONS` questions | 400 `invalid_request` | `conversation: "full"` |
-| The month's, the day's or the global day's allowance spent | 429 `too_many_requests` | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
-| No key on this server | 503 `unavailable` | |
-| The provider failed before answering | 502 `generation_failed` | |
+| Refusal                                                    | Status                       | Details                                                                                            |
+| ---------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| The overview isn't held, or the conversation was deleted   | 404 `not_found`              |                                                                                                    |
+| No transcript kept for it, or an article                   | 422 `transcript_unavailable` | `chat: "no-source"`                                                                                |
+| The conversation has `MAX_CHAT_QUESTIONS` questions        | 400 `invalid_request`        | `conversation: "full"`                                                                             |
+| The month's, the day's or the global day's allowance spent | 429 `too_many_requests`      | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
+| No key on this server                                      | 503 `unavailable`            |                                                                                                    |
+| The provider failed before answering                       | 502 `generation_failed`      |                                                                                                    |
 
 **The answer streams** as server-sent events (`ChatStreamEvent`): `text` events carry the
 answer as it arrives, then one `answered` event carries both messages as stored and the
@@ -141,10 +141,10 @@ cost up to $0.0022.
 to end into a 169-minute source of about 33,000 tokens. Two 30-question conversations on it,
 the second carrying the first (all 60 of its messages fitted the budget):
 
-| | First question | Each later question (median) | 30 questions | Prompt tokens, first to last |
-|---|---|---|---|---|
-| Alone | $0.0042 | $0.00042 | $0.016 | 32,800 to 35,100 |
-| With the other conversation | $0.0045 | $0.00046 | $0.018 | 35,200 to 37,500 |
+|                             | First question | Each later question (median) | 30 questions | Prompt tokens, first to last |
+| --------------------------- | -------------- | ---------------------------- | ------------ | ---------------------------- |
+| Alone                       | $0.0042        | $0.00042                     | $0.016       | 32,800 to 35,100             |
+| With the other conversation | $0.0045        | $0.00046                     | $0.018       | 35,200 to 37,500             |
 
 So 30 questions of history and a full other conversation add about 10%. The cap was raised
 to 50 on 16 Nov 2026, after this run, because a reader deep in a conversation shouldn't be cut
@@ -226,9 +226,17 @@ On the web, chat is a column on the right (`ChatPanel`, `useChatPanel`): the not
 left as it opens (320ms, `.layout` in `ReaderPage.module.scss`), and the chat sits under the bar,
 sticky and fixed in height, 400px wide (360px under 1280px), so the note scrolls on its own beside
 it. Its field takes focus as it opens; Esc stops an answer being written, or else closes the chat
-and returns focus to what opened it. The phone's and the extension panel's sheet is a later step,
-so chat isn't offered there yet.
+and returns focus to what opened it. On a phone and in the extension's panel it is a sheet instead
+(`ChatSheet`, design 310g, 310h, 310o).
 
+- **The sheet:** 64px from the top on a phone, under the masthead in the panel. Raised it is a
+  modal dialog holding focus, over a scrim. Its handle (a button, "Lower chat" / "Raise chat") or
+  its header drags it, following the finger with resistance past either rest (`sheetDrag`); let
+  go, it springs (420ms) to the nearer rest, or where it was flicked faster than 0.5px/ms.
+  Lowered, it shows only the conversation's title and a line, and the read-aloud bar moves up
+  above it. A citation that plays (the video beside the panel, an episode's audio) lowers it to
+  "Playing 3:28–4:23 from the answer"; reading a cited stretch in the transcript lowers it to say
+  so; "Back to the conversation" raises it.
 - **Ways in:** a question under the note (answered here, `follow-up-questions.md`), the note's own
   field "Ask about this video" (`NoteAskField`, which fades out while chat is open), and Chat in the
   overview's menu. With chat closed, a question starts a new conversation; with it open, it asks

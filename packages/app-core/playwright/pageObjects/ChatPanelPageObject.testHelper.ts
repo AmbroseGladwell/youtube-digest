@@ -3,6 +3,7 @@ import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswe
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
 import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
+import { chatSheetTestIds } from "../../src/features/chats/components/ChatSheet/ChatSheetTestIds.js";
 import { chatCitationPillTestIds } from "../../src/features/chats/components/ChatCitationPill/ChatCitationPillTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { chatPanelTestIds } from "../../src/features/chats/components/ChatPanel/ChatPanelTestIds.js";
@@ -259,4 +260,42 @@ export class ChatPanelPageObject extends PageObject {
 
   verifySlowReads = (text: string) =>
     this.step(`verifySlowReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.slow)).toHaveText(text));
+
+  verifySheetIs = (rest: "raised" | "lowered") =>
+    this.step(`verifySheetIs ${rest}`, async () => {
+      const sheet = this.page.getByTestId(chatSheetTestIds.root);
+      await expect(sheet).toHaveAttribute("data-rest", rest);
+      await expect(sheet).toHaveAttribute("aria-modal", rest === "raised" ? "true" : "false");
+      await expect(this.page.getByTestId(chatSheetTestIds.grab)).toHaveAccessibleName(rest === "raised" ? "Lower chat" : "Raise chat");
+    });
+
+  clickHandle = () => this.step("clickHandle", () => this.click(chatSheetTestIds.grab));
+
+  dragHandle = (byPx: number, steps: number) =>
+    this.step(`dragHandle ${byPx}`, async () => {
+      const grab = this.page.getByTestId(chatSheetTestIds.grab);
+      let box = (await grab.boundingBox())!;
+      for (let tries = 0; tries < 20; tries += 1) {
+        await this.page.waitForTimeout(100);
+        const settled = (await grab.boundingBox())!;
+        if (settled.y === box.y) break;
+        box = settled;
+      }
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      await this.page.mouse.move(x, y);
+      await this.page.mouse.down();
+      await this.page.mouse.move(x, y + byPx, { steps });
+      await this.page.mouse.up();
+    });
+
+  verifyLoweredReads = (title: string, line: string, raiseName: string) =>
+    this.step(`verifyLoweredReads ${line}`, async () => {
+      const lowered = this.page.getByTestId(chatSheetTestIds.lowered);
+      await expect(lowered).toContainText(title);
+      await expect(this.page.getByTestId(chatSheetTestIds.loweredLine)).toHaveText(line);
+      await expect(this.page.getByTestId(chatSheetTestIds.raise)).toHaveAccessibleName(raiseName);
+    });
+
+  raiseFromLowered = () => this.step("raiseFromLowered", () => this.click(chatSheetTestIds.raise));
 }

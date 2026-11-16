@@ -172,13 +172,13 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
 
   return (
     <section
-      className={styles.root}
-      role="complementary"
-      aria-label={`Ask about this ${sourceWord}`}
+      className={`${styles.root} ${compact ? styles.inSheet : ""}`}
+      role={compact ? undefined : "complementary"}
+      aria-label={compact ? undefined : `Ask about this ${sourceWord}`}
       onKeyDown={keyDown}
       data-testid={chatPanelTestIds.root}
     >
-      <header className={styles.header}>
+      <header className={styles.header} data-sheet-drag>
         <div className={styles.titles}>
           <p className={styles.title} data-testid={chatPanelTestIds.title}>
             {title}

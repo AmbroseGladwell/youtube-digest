@@ -251,18 +251,4 @@ test.describe("Chat beside the note", () => {
       `${CONNECTED_CHAT_INSTRUCTION}\n<overview>Creatine, debunked (The Overview id ${overview.id})</overview>\n<conversation>${chatRecordId(overview.id, conversationId)}</conversation>`,
     );
   });
-
-  test("signed out, or on a phone, there is no chat: the questions open an assistant as before", async ({
-    launcher,
-    backendSimulator,
-    page,
-  }) => {
-    backendSimulator.overviews.seed(creatine());
-    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
-    await page.setViewportSize({ width: 390, height: 800 });
-    const reader = await library.nthCard(0).openReader();
-
-    await reader.chat.verifyNoteFieldIsAbsent();
-    await reader.followUps.verifyLineReads("Each opens your assistant. You’ll choose which on your first tap.");
-  });
 });
