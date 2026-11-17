@@ -49,7 +49,7 @@ test("connected to Claude alone, the questions open in it, named in the line, an
   backendSimulator,
 }) => {
   const overview = withQuestions(QUESTIONS);
-  backendSimulator.overviews.seed(overview);
+  backendSimulator.overviews.seedSynced(overview);
   backendSimulator.connections.seed(connection("Claude"));
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
@@ -83,7 +83,7 @@ test("with no assistant chosen, the first tap asks which, then asks there at onc
   backendSimulator,
 }) => {
   const overview = withQuestions(QUESTIONS.slice(0, 3));
-  backendSimulator.overviews.seed(overview);
+  backendSimulator.overviews.seedSynced(overview);
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
 
@@ -117,7 +117,7 @@ test("with no assistant chosen, the first tap asks which, then asks there at onc
 });
 
 test("connected to an assistant, the first-tap menu doesn't suggest setting one up", async ({ launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(withQuestions(QUESTIONS.slice(0, 3)));
+  backendSimulator.overviews.seedSynced(withQuestions(QUESTIONS.slice(0, 3)));
   backendSimulator.connections.seed(connection("Claude"));
   backendSimulator.connections.seed(connection("ChatGPT"));
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -135,7 +135,7 @@ test("Copy question in the first-tap menu copies the question alone, and remembe
   page,
 }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-  backendSimulator.overviews.seed(withQuestions(QUESTIONS.slice(0, 3)));
+  backendSimulator.overviews.seedSynced(withQuestions(QUESTIONS.slice(0, 3)));
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
 
@@ -154,7 +154,7 @@ test("Gemini can't be filled in by a link, so a tap copies the prompt, opens Gem
 }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   const overview = withQuestions(QUESTIONS.slice(0, 3));
-  backendSimulator.overviews.seed(overview);
+  backendSimulator.overviews.seedSynced(overview);
   const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "gemini" });
   const reader = await library.nthCard(0).openReader();
 
@@ -175,7 +175,7 @@ test("Gemini can't be filled in by a link, so a tap copies the prompt, opens Gem
 });
 
 test("Change chooses where questions open, without asking anything", async ({ launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(withQuestions(QUESTIONS.slice(0, 3)));
+  backendSimulator.overviews.seedSynced(withQuestions(QUESTIONS.slice(0, 3)));
   const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
   const reader = await library.nthCard(0).openReader();
   await reader.followUps.catchNewTabs();
@@ -195,7 +195,7 @@ test("Different questions steps through the sets of three and back to the first,
   launcher,
   backendSimulator,
 }) => {
-  backendSimulator.overviews.seed(withQuestions(QUESTIONS));
+  backendSimulator.overviews.seedSynced(withQuestions(QUESTIONS));
   const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
   const reader = await library.nthCard(0).openReader();
 
@@ -224,7 +224,7 @@ test("Different questions steps through the sets of three and back to the first,
 });
 
 test("three questions or fewer have no Different questions", async ({ launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(withQuestions(QUESTIONS.slice(0, 2)));
+  backendSimulator.overviews.seedSynced(withQuestions(QUESTIONS.slice(0, 2)));
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
 
@@ -233,7 +233,7 @@ test("three questions or fewer have no Different questions", async ({ launcher, 
 });
 
 test("an overview made before questions shows no block", async ({ launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(makeOverview({ followUpQuestions: null }));
+  backendSimulator.overviews.seedSynced(makeOverview({ followUpQuestions: null }));
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
 
@@ -244,7 +244,7 @@ test("switched off in Settings, questions are hidden, and the switch says they'r
   launcher,
   backendSimulator,
 }) => {
-  backendSimulator.overviews.seed(withQuestions(QUESTIONS));
+  backendSimulator.overviews.seedSynced(withQuestions(QUESTIONS));
   const library = await launcher.launchExpectingLibrary({
     ...SIGNED_IN,
     sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, followUpQuestions: false },
@@ -275,7 +275,7 @@ test("a shared copy never carries the questions", async ({ launcher }) => {
 
 test("a question taken to an assistant says so under it, and is kept in the reader's own state", async ({ launcher, backendSimulator }) => {
   const overview = withQuestions(QUESTIONS.slice(0, 3));
-  backendSimulator.overviews.seed(overview);
+  backendSimulator.overviews.seedSynced(overview);
   const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
   const reader = await library.nthCard(0).openReader();
   await reader.followUps.verifyReceiptsRead([]);
@@ -294,7 +294,7 @@ test("a question taken to an assistant says so under it, and is kept in the read
 
 test("on a later visit each question asked before says where and how long ago", async ({ launcher, backendSimulator }) => {
   const overview = withQuestions(QUESTIONS.slice(0, 3));
-  backendSimulator.overviews.seed(overview);
+  backendSimulator.overviews.seedSynced(overview);
   backendSimulator.overviews.seedState(
     makeOverviewState(overview.id, {
       asked: [

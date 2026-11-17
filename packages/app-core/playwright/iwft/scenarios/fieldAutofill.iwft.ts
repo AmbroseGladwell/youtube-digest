@@ -151,7 +151,7 @@ test("the reader's topic, reason and transcript fields name themselves", async (
 });
 
 test("the question fields under a note and in chat beside it name themselves", async ({ launcher, backendSimulator }) => {
-  backendSimulator.overviews.seed(makeOverview());
+  backendSimulator.overviews.seedSynced(makeOverview());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   const reader = await library.nthCard(0).openReader();
   await reader.verifyFieldsIdentifyThemselves();

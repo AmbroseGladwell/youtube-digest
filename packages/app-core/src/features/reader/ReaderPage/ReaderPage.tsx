@@ -97,6 +97,7 @@ import { useSavedOnRead } from "./useSavedOnRead.js";
 import { usePlayer } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { playerBarView } from "../../player/util/playerBarView.js";
+import { useOverviewSyncedQuery } from "../../sync/queries/overviewSyncedQuery.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useOverviewInWebApp } from "../../sync/useOverviewInWebApp.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
@@ -294,6 +295,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [recipeCopied]);
   const endPrinting = useCallback(() => setPrintingRecipe(false), []);
   const sync = useSync();
+  const synced = useOverviewSyncedQuery(overviewId, sync.connected);
   const webApp = useOverviewInWebApp(overviewId);
   const { connection } = useSyncConnection();
   const accountNeeded = useAccountNeeded();
@@ -525,7 +527,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   // Chat sits beside the note on the web (design 310a), and is a sheet on a phone and in the
   // extension's panel (310g, 310h).
-  const chatAvailable = chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false }) && !chat.noSource;
+  const chatAvailable =
+    chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false, synced: synced.data === true }) && !chat.noSource;
   const chatBeside = chatAvailable && !isPanel && !isPhone;
   const chatSheet = chatAvailable && (isPanel || isPhone);
   // Beside the note, a question asked from it travels into the chat as it opens (310a-4).

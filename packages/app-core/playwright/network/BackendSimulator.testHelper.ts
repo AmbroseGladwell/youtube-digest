@@ -1371,6 +1371,20 @@ export class BackendSimulator {
     seed: (overview: Overview): void => {
       this.#seedOverviews.push(overview);
     },
+    // On the device and held by the server too, as anything chat asks about must be.
+    seedSynced: (overview: Overview): void => {
+      this.#seedOverviews.push(overview);
+      this.#feed.push({
+        kind: "overview",
+        id: overview.id,
+        schemaVersion: CURRENT_SCHEMA_VERSIONS.overview,
+        rev: 1,
+        seq: this.#nextSeq(),
+        updatedAt: new Date().toISOString(),
+        deleted: false,
+        body: overview,
+      });
+    },
     seedState: (state: OverviewState): void => {
       this.#seedStates.push(state);
     },

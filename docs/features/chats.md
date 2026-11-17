@@ -210,8 +210,12 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   down behind it; `failed`; or `waiting`, with the wait `chatWaitOf` read from the refusal (the
   month with its reset date, the day, everyone's day, a full conversation, or nothing to answer
   from, which hides the panel). Stop aborts it, and the server gives the question back.
-- **`chatOffered`** hides chat signed out, on someone else's shared overview, and for every
-  article and recipe page.
+- **`chatOffered`** hides chat signed out, on someone else's shared overview, for every
+  article and recipe page, and on an overview the server doesn't hold yet
+  (`useOverviewSyncedQuery`, as "Open in web app" does). The server answers from its own copy,
+  so one still on the device alone, like onboarding's overview kept back by a spent month
+  (`tiers.md`, "Counting"), could only be refused "No such overview". Chat shows once the
+  overview syncs (OV-321).
 - **Where a tapped question goes:** `Settings.questionsAnsweredHere`, answered here by default
   (`follow-up-questions.md`, "Answered here").
 - **Events**, `reader.chat.*`: opened (from a question, typed, or the menu), closed, asked (from

@@ -37,7 +37,7 @@ test.describe("An overview's conversations", () => {
 
   test("the header's count opens them, newest first, and one opens where it was left", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.seed(conversation(overview, "older", "2026-11-10T09:00:00.000Z", [WORKOUT]));
     backendSimulator.chats.seed(conversation(overview, "newer", "2026-11-12T09:00:00.000Z", [DOSE, "So the standard dose is enough?"]));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -66,7 +66,7 @@ test.describe("An overview's conversations", () => {
 
   test("the note's link opens the list", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.seed(conversation(overview, "only", "2026-11-12T09:00:00.000Z", [DOSE]));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -80,7 +80,7 @@ test.describe("An overview's conversations", () => {
 
   test("deleting is at once, Undo brings it back, and six seconds on the delete is made", async ({ launcher, backendSimulator, page }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.seed(conversation(overview, "older", "2026-11-10T09:00:00.000Z", [WORKOUT]));
     backendSimulator.chats.seed(conversation(overview, "newer", "2026-11-12T09:00:00.000Z", [DOSE]));
     await page.clock.install({ time: NOW });
@@ -113,7 +113,7 @@ test.describe("An overview's conversations", () => {
 
   test("leaving the overview before Undo's time is up still deletes the conversation", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.seed(conversation(overview, "only", "2026-11-12T09:00:00.000Z", [DOSE]));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -130,7 +130,7 @@ test.describe("An overview's conversations", () => {
     backendSimulator,
   }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     const earlier = conversation(overview, "earlier", "2026-11-12T09:00:00.000Z", [DOSE]);
     backendSimulator.chats.seed(earlier);
     backendSimulator.chats.answerWith({
@@ -162,7 +162,7 @@ test.describe("An overview's conversations", () => {
 
   test("a citation of a conversation since deleted says so, and is not a link", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.answerWith({
       text: "You asked about the dose before, but that conversation has been deleted.",
       citations: [{ chatId: chatRecordId(overview.id, "gone"), message: 1 }],
