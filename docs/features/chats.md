@@ -247,6 +247,18 @@ so chat isn't offered there yet.
   it names the overview and the conversation for the assistant to read with `get_chat`; otherwise
   it carries the note and the conversation. With no assistant chosen it opens OV-266's menu as
   "Continue in".
+- **An overview's conversations** (design 310q–310u) sit behind the header's count, and the note's
+  "3 conversations about this video" opens them: newest first, the open one tinted, New
+  conversation at the top. A new conversation is nothing until its first question. Deleting is at
+  once, with Undo in a toast for six seconds; the delete is made when the toast goes, or at once if
+  the reader leaves the overview first (`useChatPanel`).
+- **Another conversation cited** (design 310w–310y): a link with a speech mark, "From your
+  conversation · 12 Nov" over its first question, before the answer's pills, since a pill plays
+  and a link opens words. Following it opens that conversation at the cited message, outlined for
+  a moment with focus on it, and the header says when it was and how many questions it holds; a
+  link at the top goes back to the citation. One since deleted reads "From a conversation you
+  deleted", muted, not a link. That a new conversation can see the others is said once, in its
+  empty state, and otherwise only by these citations.
 - **Questions to ask next** sit above the field: the set of three before the first answer, with
   Different questions, then up to two not yet asked (`chatSuggestions`); none while the reader
   types.

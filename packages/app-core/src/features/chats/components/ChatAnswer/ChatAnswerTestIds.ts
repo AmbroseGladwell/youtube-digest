@@ -3,4 +3,6 @@ export const chatAnswerTestIds = {
   notInSource: "ChatAnswer.notInSource",
   text: "ChatAnswer.text",
   citations: "ChatAnswer.citations",
+  conversation: "ChatAnswer.conversation",
+  deletedConversation: "ChatAnswer.deletedConversation",
 };
