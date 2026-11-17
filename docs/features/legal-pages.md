@@ -148,6 +148,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-17 | privacy | OV-318 slice 2 | Searching by meaning says a project's name and what it is for go to OpenAI when its page looks for saved overviews that might fit; a project keeps which overviews were taken out or turned down, so they aren't offered again. |
 | 2026-11-17 | privacy | OV-318 | A new overview is sent with the names of the reader's active projects and what each is for, to be filed into those it fits, unless switched off in Personalisation; topic names and descriptions go too, now said; a project member can be filing's; the filing setting syncs; the made event counts projects filed. |
 | 2026-11-16 | privacy | OV-310 | Continue in, under an answer, opens the reader's assistant from their browser with the overview and the conversation, or only which to read when connected; not through us. |
 | 2026-11-16 | terms | OV-310 | Continue in under an answer opens the reader's assistant with the conversation too, sent from their browser. |

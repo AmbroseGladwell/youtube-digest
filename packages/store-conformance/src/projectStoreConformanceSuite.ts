@@ -132,6 +132,53 @@ export function defineProjectStoreConformanceSuite(label: string, createStore: (
     assert.deepEqual(await store.listMembers(), []);
   });
 
+  test(behaviour("an overview taken out is listed as taken out, and one put back is not"), async () => {
+    const store = await createStore();
+    const project = makeProject();
+    const [out, back] = [anOverviewId(), anOverviewId()];
+    await store.createProject(project);
+    for (const overviewId of [out, back]) {
+      await store.addToProject(project.id, overviewId);
+      await store.removeFromProject(project.id, overviewId);
+    }
+    await store.addToProject(project.id, back);
+    assert.deepEqual(
+      (await store.listTakenOut()).map(({ overviewId }) => overviewId),
+      [out],
+    );
+  });
+
+  test(behaviour("turning an overview down for a project lists it as taken out, never as a member, and filing leaves it out"), async () => {
+    const store = await createStore();
+    const project = makeProject();
+    const overviewId = anOverviewId();
+    await store.createProject(project);
+    await store.turnDownForProject(project.id, overviewId);
+    await store.fileIntoProject(project.id, overviewId);
+    assert.deepEqual(await store.listMembers(), []);
+    assert.deepEqual(
+      (await store.listTakenOut()).map(({ projectId, overviewId: id }) => ({ projectId, id })),
+      [{ projectId: project.id, id: overviewId }],
+    );
+  });
+
+  test(behaviour("turning down an overview that is already in the project leaves it in"), async () => {
+    const store = await createStore();
+    const project = makeProject();
+    const overviewId = anOverviewId();
+    await store.createProject(project);
+    await store.addToProject(project.id, overviewId);
+    await store.turnDownForProject(project.id, overviewId);
+    assert.equal((await store.listMembers()).length, 1);
+    assert.deepEqual(await store.listTakenOut(), []);
+  });
+
+  test(behaviour("turning down for a project that isn't there does nothing"), async () => {
+    const store = await createStore();
+    await store.turnDownForProject(makeProject().id, anOverviewId());
+    assert.deepEqual(await store.listTakenOut(), []);
+  });
+
   test(behaviour("adding to a project that isn't there does nothing"), async () => {
     const store = await createStore();
     await store.addToProject(ProjectId.parse(randomUUID()), anOverviewId());
