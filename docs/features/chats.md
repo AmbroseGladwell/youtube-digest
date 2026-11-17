@@ -83,7 +83,7 @@ can refuse before the answer starts, so a refusal is an ordinary JSON error:
 | Refusal                                                    | Status                       | Details                                                                                            |
 | ---------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------- |
 | The overview isn't held, or the conversation was deleted   | 404 `not_found`              |                                                                                                    |
-| No transcript kept for it, or an article                   | 422 `transcript_unavailable` | `chat: "no-source"`                                                                                |
+| A video or episode with no transcript kept                 | 422 `transcript_unavailable` | `chat: "no-source"`                                                                                |
 | The conversation has `MAX_CHAT_QUESTIONS` questions        | 400 `invalid_request`        | `conversation: "full"`                                                                             |
 | The month's, the day's or the global day's allowance spent | 429 `too_many_requests`      | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
 | No key on this server                                      | 503 `unavailable`            |                                                                                                    |
@@ -184,8 +184,9 @@ the prompt: the verdict (`verdict`), why it is dubious (`dubious1`), key points 
 steps it gives (`step1`), How to apply (`apply1`), what it sells (`sells`), Watch it anyway
 (`anyway`), chapters (`ch1`), and a recipe's ingredients (`ing1`) and method (`method1`). The
 premise, big picture and core claim have none: they are cited from the transcript. A test
-holds the ids in the prompt to exactly the parts `citationsOf` accepts. An article's own parts
-wait for chat on articles (OV-320).
+holds the ids in the prompt to exactly the parts `citationsOf` accepts. An article's chapters
+are `chapter` parts and its Read it anyway? is `watchAnyway`, so chat on articles (OV-320)
+needed no new kind of citation and no schema change.
 
 **What the prompt asks.** Cite the item an answer rests on, and the transcript as well where
 it backs the same point. The verdict, the dubious reasons, what it sells and Watch it anyway
@@ -249,9 +250,49 @@ and the 170-minute worst case:
 ## No transcript, no chat
 
 The server answers only from what the account holds itself (`transcript-storage.md`). A video
-or episode without a stored transcript is refused with `chat: "no-source"`, and so is every
-article: the server keeps no article's text (OV-295), so `{ paragraph }` citations wait until it
-does. The panel hides itself on that refusal (degrade visibly).
+or episode without a stored transcript is refused with `chat: "no-source"`. The panel hides
+itself on that refusal (degrade visibly). An article or a recipe page is never refused this
+way: it is answered from its overview alone (below).
+
+## Articles and recipe pages
+
+OV-320. The server keeps no text from a web page (OV-295), so `{ paragraph }` citations still
+wait, but the overview is kept, and for many questions it is enough: an article's key points,
+its chapters and Read it anyway?, a recipe page's ingredients and method.
+
+- **What a chat is about.** `chatSourceKind` says `video`, `episode`, `article` or `recipe`
+  (a web overview with a recipe). `answeredFromOverviewAlone` is true for the last two.
+- **The prompt** for them (`overviewOnlyPrompt` in `chatPrompt.ts`) has the overview and no
+  transcript. It asks the answer to cite the items it rests on, never to set `inSource`, to
+  name the section rather than speak of the overview, and to say plainly when "the overview of
+  this article doesn't cover it" or "the recipe doesn't cover it", which includes anything only
+  the full page would say.
+- **Amounts stay code's job** (`docs/prototype/constraints.md`). Wherever the overview holds a
+  recipe, a page's or a video's, the prompt forbids scaling a quantity, changing the servings
+  or converting a unit or temperature, and points to the servings control above the
+  ingredients, which scales them in code (OV-231).
+- **`inSource` is always false** for them: `citationsOf` only counts transcript passages. An
+  answer that cites the overview is `answeredFromOverview`; one that cites nothing is a decline.
+- **Logs and analytics:** `api.chat.answered` and `api.chat.failed` carry `about`, and so do
+  `reader.chat.answered` and `reader.chat.waited`.
+- **Over MCP**, `get_chat` says an article's answers come from its overview, not the page, and
+  notes only a decline; a cited Read it anyway? is named as such.
+- **Measured through the endpoint** on 17 Nov 2026 (`chatHarnessCheck.ts`, which takes a source
+  with no `transcript.json` as a web page, read back from its saved Markdown): three articles
+  (Paul Graham, The Pragmatic Engineer, The Age) and three recipe pages (RecipeTin Eats, Good
+  Food, BBC Food) from the library, 38 questions asked twice.
+  - **Cited the right part 56 of 56**, and named the expected detail 56 of 56: steps, How to
+    apply, Read it anyway, the verdict, what it sells, chapters, ingredients and method steps.
+  - **Declined with nothing cited 16 of 20.** The other four said plainly that the detail wasn't
+    there and cited the item that comes nearest: the method step that says "frosting of
+    choice", and Read it anyway, which says the full quote is left out. They show a pill, not
+    the muted label.
+  - **No amount worked out by the model.** Every answer is checked in code for numbers neither
+    the overview nor the question holds, and none had one. "Make 24 instead of 12", "halve it"
+    and "feed 8" each gave the recipe's own amount and pointed to the servings control.
+  - **Wording:** 4 of 76 answers spoke of "the overview", two of them while declining.
+  - **Cost:** about 1,900 prompt tokens, so a message cost $0.00009 at the median and $0.0003
+    at most, 97% read from the cache.
 
 ## Deleting
 
@@ -291,8 +332,8 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   down behind it; `failed`; or `waiting`, with the wait `chatWaitOf` read from the refusal (the
   month with its reset date, the day, everyone's day, a full conversation, or nothing to answer
   from, which hides the panel). Stop aborts it, and the server gives the question back.
-- **`chatOffered`** hides chat signed out, on someone else's shared overview, for every
-  article and recipe page, and on an overview the server doesn't hold yet
+- **`chatOffered`** hides chat signed out, on someone else's shared overview, and on an
+  overview the server doesn't hold yet
   (`useOverviewSyncedQuery`, as "Open in web app" does). The server answers from its own copy,
   so one still on the device alone, like onboarding's overview kept back by a spent month
   (`tiers.md`, "Counting"), could only be refused "No such overview". Chat shows once the
@@ -405,4 +446,6 @@ assistant can call writes to a chat.
 
 `/privacy` has a section, "Asking questions about an overview", added with OV-309, which first
 writes chats: what goes to OpenAI, that it is always on our key, how conversations are kept and
-deleted, what is counted and logged. `/terms` names the allowance (`legal-pages.md`).
+deleted, what is counted and logged. OV-320 added articles and recipe pages: their overview, and
+a recipe page's recipe, go to OpenAI, never text from the page. `/terms` names the allowance and
+who can ask (`legal-pages.md`).

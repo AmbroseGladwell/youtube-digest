@@ -2,6 +2,7 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import {
+  overviewMarkdown,
   VideoId,
   youTubeSource,
   type ChatStreamEvent,
@@ -9,6 +10,7 @@ import {
   type OverviewPart,
   type TranscriptSegment,
   type VideoSource,
+  type WebSource,
 } from "@overview/domain";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
@@ -30,6 +32,10 @@ import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 // Since OV-319 each source's overview.md goes in the prompt as its real overview, and
 // overview-questions.json, where present, adds questions answered from the overview's own items,
 // each scored on whether the answer cites one of the parts it lists.
+//
+// A source with no transcript.json is a web page (OV-320): an article or a recipe page, answered
+// from its overview alone. Every answer is also checked for numbers the overview doesn't hold,
+// since amounts are code's job; the long-source part needs two sources with transcripts.
 
 interface Question {
   id: string;
@@ -42,6 +48,8 @@ interface Question {
 
 interface Source {
   name: string;
+  // A web page's address and title; null for a video.
+  page: { url: string; title: string } | null;
   video: VideoSource;
   segments: TranscriptSegment[];
   overview: Partial<Overview>;
@@ -60,6 +68,7 @@ interface Turn {
   citedRightPart: boolean | null;
   partsCited: string[];
   speaksOfOverview: boolean;
+  inventedNumbers: string[];
   answer: string;
   inputTokens: number;
   cachedShare: number | null;
@@ -92,16 +101,26 @@ function locateQuote(segments: readonly TranscriptSegment[], quote: string): num
 }
 
 async function loadSource(directory: string): Promise<Source> {
-  const transcript = JSON.parse(await readFile(join(directory, "transcript.json"), "utf-8")) as {
-    video: VideoSource;
-    transcript: TranscriptSegment[];
-  };
   const read = (file: string) => readFile(join(directory, file), "utf-8").catch(() => null);
+  const transcriptText = await read("transcript.json");
+  const markdownText = (await read("overview.md")) ?? "";
+  const transcript =
+    transcriptText === null
+      ? { video: storedOverview().source as VideoSource, transcript: [] as TranscriptSegment[] }
+      : (JSON.parse(transcriptText) as { video: VideoSource; transcript: TranscriptSegment[] });
+  const page =
+    transcriptText === null
+      ? {
+          url: /^https?:\/\/\S+$/m.exec(markdownText)?.[0] ?? "https://pages.example/",
+          title: /^# (.*)$/m.exec(markdownText)?.[1] ?? "A page",
+        }
+      : null;
   const questions = (JSON.parse((await read("questions.json"))!) as { questions: Question[] }).questions;
   const overviewQuestions = await read("overview-questions.json");
   const markdown = await read("overview.md");
   return {
     name: directory.split("/").at(-1)!.slice(0, 8),
+    page,
     video: transcript.video,
     segments: transcript.transcript,
     overview: markdown === null ? {} : overviewFromMarkdown(markdown),
@@ -130,12 +149,16 @@ function longSource(first: Source, whole: Source): Source {
   const questions = [...first.questions, ...second.questions.map((question) => ({ ...question, id: `b${question.id}` })), ...fillers];
   return {
     name: `${first.name}+${second.name}`,
+    page: null,
     video: { ...first.video, durationMs: endMs },
     segments,
     overview: first.overview,
     questions,
   };
 }
+
+// Every number in a text, as written: an answer's numbers should all be the overview's.
+const numbersOf = (text: string): string[] => [...text.matchAll(/\d+(?:[.,/]\d+)?/g)].map(([number]) => number);
 
 async function main() {
   const [dataDirectory, outFile, mode, limit] = process.argv.slice(2);
@@ -161,15 +184,33 @@ async function main() {
   const sourcesDirectory = join(dataDirectory, "sources");
   const sources = await Promise.all((await readdir(sourcesDirectory)).sort().map((name) => loadSource(join(sourcesDirectory, name))));
   const turns: Turn[] = [];
+  const numbersIn = new Map<string, string[]>();
 
   const withSource = async (source: Source): Promise<{ account: TestAccount; overviewId: string }> => {
     const account = await makeAccount(testApp);
     await testApp.sql.query("update accounts set plan = 'plus' where id = $1", [account.accountId]);
     const videoId = VideoId.parse(randomUUID().slice(0, 11));
     const video = { ...source.video, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` };
-    const overview = storedOverview({ ...source.overview, source: youTubeSource(video) });
+    const web: WebSource | null =
+      source.page === null
+        ? null
+        : {
+            kind: "web",
+            id: randomUUID().replaceAll("-", "") as WebSource["id"],
+            url: source.page.url,
+            title: source.page.title,
+            siteName: null,
+            author: null,
+            publishedAt: null,
+            language: "en",
+            imageUrl: null,
+            wordCount: 2000,
+          };
+    const overview = storedOverview({ ...source.overview, source: web ?? youTubeSource(video) });
     const posted = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
     if (posted.statusCode !== 201) throw new Error(`overview: ${posted.statusCode} ${posted.body}`);
+    numbersIn.set(overview.id, numbersOf(overviewMarkdown(overview)));
+    if (web !== null) return { account, overviewId: overview.id };
     const stored = {
       videoId,
       segments: source.segments,
@@ -211,6 +252,7 @@ async function main() {
           citedRightPart: null,
           partsCited: [],
           speaksOfOverview: false,
+          inventedNumbers: [],
           answer: "",
           inputTokens: 0,
           cachedShare: null,
@@ -232,7 +274,13 @@ async function main() {
         questionId: question.id,
         kind: question.kind,
         failed: false,
-        rightOnSource: question.kind === "filler" || question.kind === "overviewPart" ? null : answer.inSource === answerable,
+        // A web page has no transcript: a decline is right when it cites nothing at all.
+        rightOnSource:
+          question.kind === "filler" || question.kind === "overviewPart"
+            ? null
+            : source.page !== null
+              ? answerable === parts.length > 0
+              : answer.inSource === answerable,
         citedRightMoment:
           answerable && moments.length > 0
             ? moments.every(
@@ -250,7 +298,12 @@ async function main() {
                 question.parts!.some(({ part, index }) => cited.part === part && (index === null || cited.index === index)),
               ),
         partsCited: parts.map(({ part, index }) => `${part}${index}`),
-        speaksOfOverview: /\bthe overview\b|\b(I|we) (suggest|recommend|think)\b/i.test(answer.text),
+        // The decline the overview-only prompt asks for names the overview; that isn't a third party.
+        speaksOfOverview: /\bthe overview\b(?! of this article doesn[’']t cover)|\b(I|we) (suggest|recommend|think)\b/i.test(answer.text),
+        // A number the reader asked about is theirs, not one the answer worked out.
+        inventedNumbers: numbersOf(answer.text).filter(
+          (number) => !numbersIn.get(overviewId)!.includes(number) && !numbersOf(question.question).includes(number),
+        ),
         answer: answer.text,
         inputTokens: Number(logged.inputTokens ?? 0),
         cachedShare: logged.cachedShare ?? null,
@@ -270,6 +323,11 @@ async function main() {
     }
   }
 
+  if (sources.filter(({ segments }) => segments.length > 0).length < 2) {
+    await writeFile(outFile, JSON.stringify({ ranOn: new Date().toISOString().slice(0, 10), turns }, null, 2));
+    await testApp.close();
+    return;
+  }
   const byLength = [...sources].sort((left, right) => (right.segments.at(-1)?.endMs ?? 0) - (left.segments.at(-1)?.endMs ?? 0));
   const joined = longSource(byLength[0]!, byLength[1]!);
   const long = longOnly ? { ...joined, questions: joined.questions.slice(0, Number(limit ?? 2)) } : joined;

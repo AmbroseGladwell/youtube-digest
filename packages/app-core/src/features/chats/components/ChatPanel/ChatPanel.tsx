@@ -3,6 +3,7 @@ import {
   FOLLOW_UP_QUESTIONS_SHOWN,
   MAX_CHAT_QUESTIONS,
   chatRecordId,
+  chatSourceKind,
   type ChatMessage,
   type Overview,
   type TimeRange,
@@ -20,8 +21,9 @@ import type { AskState } from "../../useAskQuestion.js";
 import type { useChatPanel } from "../../useChatPanel.js";
 import { ARRIVING_ATTRIBUTE } from "../../util/bubbleTravel.js";
 import { chatSuggestions } from "../../util/chatSuggestions.js";
+import { chatWords, type ChatWords } from "../../util/chatWords.js";
 import { conversationDate, firstQuestionOf, questionsIn } from "../../util/conversationLine.js";
-import { ChatAnswer, type ChatAnswerProps } from "../ChatAnswer/ChatAnswer.js";
+import { ChatAnswer, type ChatAnswerProps, type ChatPage } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerActions } from "../ChatAnswerActions/ChatAnswerActions.js";
 import { ChatConversationList } from "../ChatConversationList/ChatConversationList.js";
 import { ChatField } from "../ChatField/ChatField.js";
@@ -32,6 +34,8 @@ export interface ChatPanelProps {
   panel: ReturnType<typeof useChatPanel>;
   overview: Overview;
   video: VideoSource | null;
+  // An article's or a recipe page's own page, for its links (OV-320); null for a video or episode.
+  page: ChatPage | null;
   compact: boolean;
   onCitationFollowed: (range: TimeRange) => void;
   onOverviewPartFollowed: ChatAnswerProps["onOverviewPartFollowed"];
@@ -44,27 +48,34 @@ const OUTLINE_MS = 1600;
 // The line under the field shows only when this few are left (design 310ab).
 const FEW_LEFT = 10;
 
-const citedMoments = (message: ChatMessage) =>
-  message.from === "answer" ? message.citations.filter((each) => "startMs" in each).length : 0;
+const plural = (count: number, one: string) => `${count} ${count === 1 ? one : `${one}s`}`;
 
-function announcementOf(message: ChatMessage, sourceWord: string): string {
+const cited = (message: ChatMessage, kind: "startMs" | "part") =>
+  message.from === "answer" ? message.citations.filter((each) => kind in each).length : 0;
+
+// Said once an answer is final. One that cites the overview isn't a decline, though the source
+// didn't cover it (319k), and on an article or a recipe page that is every answer (OV-320).
+function announcementOf(message: ChatMessage, words: ChatWords): string {
   if (message.from !== "answer") return "";
-  if (!message.inSource) return `Not in the ${sourceWord}: ${message.text}`;
-  const moments = citedMoments(message);
-  return `Answer: ${message.text}${moments === 0 ? "" : ` ${moments} ${moments === 1 ? "moment" : "moments"} cited.`}`;
+  const moments = cited(message, "startMs");
+  const parts = cited(message, "part");
+  if (!message.inSource && parts === 0) return `${words.notCovered}: ${message.text}`;
+  const citedLine = [
+    moments === 0 ? null : plural(moments, "moment"),
+    parts === 0 ? null : `${plural(parts, "part")} of the overview`,
+  ].filter((line) => line !== null);
+  return `Answer: ${message.text}${citedLine.length === 0 ? "" : ` ${citedLine.join(" and ")} cited.`}`;
 }
 
 // The reader's question a cited message belongs to: itself, or the question its answer answered.
 const questionAt = (messages: readonly ChatMessage[], message: number) => (messages[message]?.from === "answer" ? message - 1 : message);
-
-const plural = (count: number, one: string) => `${count} ${count === 1 ? one : `${one}s`}`;
 
 // Design 310a, 310i–310x: chat about one overview, beside its note. The conversation scrolls on
 // its own above the field; the overview's questions sit just above the field until the reader
 // types; an answer streams in under three dots, then a caret, and is announced once, when final.
 // The header's count opens the overview's conversations.
 export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(function ChatPanel(
-  { panel, overview, video, compact, onCitationFollowed, onOverviewPartFollowed, onOpenTranscriptAt },
+  { panel, overview, video, page, compact, onCitationFollowed, onOverviewPartFollowed, onOpenTranscriptAt },
   fieldRef,
 ) {
   const { conversationId, chats, view, cameFrom, focusedMessage, deleting } = panel;
@@ -81,7 +92,8 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   const usage = useChatUsageQuery().data ?? null;
   const analytics = useAnalytics();
 
-  const sourceWord = overview.source.kind === "podcast" ? "episode" : "video";
+  const kind = chatSourceKind(overview);
+  const words = chatWords(kind);
   const chatId = chatRecordId(overview.id, conversationId);
   const chat = chats.find((each) => each.id === chatId) ?? null;
   const messages = chat?.messages ?? [];
@@ -125,9 +137,9 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
     if (ask.status === "stopped") setAnnouncement("Stopped");
     if (was.status === "answering" && ask.status === "idle" && was.conversationId === conversationId) {
       const answer = messages[latestAnswerAt];
-      if (answer !== undefined) setAnnouncement(announcementOf(answer, sourceWord));
+      if (answer !== undefined) setAnnouncement(announcementOf(answer, chatWords(kind)));
     }
-  }, [ask, conversationId, messages, latestAnswerAt, sourceWord]);
+  }, [ask, conversationId, messages, latestAnswerAt, kind]);
 
   // Each conversation opens scrolled to its latest answer, or to the message a citation named,
   // outlined for a moment with focus on it (design 310x).
@@ -176,7 +188,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
     <section
       className={`${styles.root} ${compact ? styles.inSheet : ""}`}
       role={compact ? undefined : "complementary"}
-      aria-label={compact ? undefined : `Ask about this ${sourceWord}`}
+      aria-label={compact ? undefined : `Ask about this ${words.noun}`}
       onKeyDown={keyDown}
       data-testid={chatPanelTestIds.root}
     >
@@ -227,9 +239,9 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
           />
         ) : messages.length === 0 && pending === null ? (
           <div className={styles.empty} data-testid={chatPanelTestIds.empty}>
-            <p className={styles.emptyHeading}>What would you like to know about this {sourceWord}?</p>
+            <p className={styles.emptyHeading}>What would you like to know about this {words.noun}?</p>
             <p className={styles.emptyLine}>
-              Answers come from the {sourceWord}, with the moments they’re from.
+              {words.answersFrom}
               {others > 0 && ` It can see your ${plural(others, "other conversation")} about it.`}
             </p>
           </div>
@@ -259,7 +271,8 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                       text={message.text}
                       inSource={message.inSource}
                       citations={message.citations}
-                      sourceWord={sourceWord}
+                      about={kind}
+                      page={page}
                       video={video}
                       overview={overview}
                       onCitationFollowed={onCitationFollowed}
@@ -400,7 +413,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
             <ChatField
               ref={fieldRef}
               value={draft}
-              placeholder={`Ask about this ${sourceWord}`}
+              placeholder={`Ask about this ${words.noun}`}
               answering={answering}
               onChange={setDraft}
               onSend={() => send(draft, "typed")}

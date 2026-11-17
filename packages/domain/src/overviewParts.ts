@@ -40,7 +40,8 @@ export const overviewPartId = (part: OverviewPart, index: number): string =>
 
 // The items of an overview a chat answer can cite, each as overviewMarkdown shows it with
 // `partIds`, so the ids the model sees are exactly these (docs/features/chats.md, "Citing the
-// overview"). An article's own parts wait for chat on articles (OV-320).
+// overview"). An article's chapters are its chapters, and its Read it anyway? its watchAnyway, so
+// a chat about an article needs no new kind of citation (OV-320).
 export function overviewParts(overview: Overview): OverviewPartItem[] {
   const items: OverviewPartItem[] = [];
   const add = (part: OverviewPart, texts: readonly string[]) => texts.forEach((text, index) => items.push({ part, index, text }));
@@ -64,8 +65,12 @@ export function overviewParts(overview: Overview): OverviewPartItem[] {
     add("howToApply", overview.howToApply?.items ?? []);
     if (overview.selling !== null && overview.selling.type !== "none") add("selling", [overview.selling.detail]);
     if (overview.watchAnyway !== null) add("watchAnyway", [overview.watchAnyway.reason]);
+    if (overview.article?.readAnyway) add("watchAnyway", [overview.article.readAnyway.reason]);
   }
-  add("chapter", overview.chapters?.map(({ title }) => title) ?? []);
+  add(
+    "chapter",
+    (overview.article?.chapters ?? overview.chapters ?? []).map(({ title }) => title),
+  );
   return items;
 }
 

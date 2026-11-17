@@ -3,6 +3,7 @@ import {
   HOW_TO_APPLY_SECTION,
   KEY_POINTS_SECTION,
   SOURCE_STEPS_SECTION,
+  READ_ANYWAY_SECTION,
   WATCH_ANYWAY_SECTION,
   formatTimestamp,
   type NoteLine,
@@ -75,6 +76,8 @@ const SECTION_PART: Record<string, OverviewPart> = {
   [HOW_TO_APPLY_SECTION]: "howToApply",
   "What it sells": "selling",
   [WATCH_ANYWAY_SECTION]: "watchAnyway",
+  // An article's answer to the same question (OV-320).
+  [READ_ANYWAY_SECTION]: "watchAnyway",
 };
 
 const linePlaces = (lines: NoteLine[]): Array<number | "section"> => {

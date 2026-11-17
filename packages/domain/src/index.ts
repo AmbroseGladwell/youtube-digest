@@ -81,6 +81,7 @@ export * from "./ChatQuestionRequest.js";
 export * from "./ChatStreamEvent.js";
 export * from "./ChatUsage.js";
 export * from "./chatMarkdown.js";
+export * from "./chatSourceKind.js";
 export * from "./chatHandOffPrompt.js";
 export * from "./chatAllowances.js";
 export * from "./chatMigrations.js";

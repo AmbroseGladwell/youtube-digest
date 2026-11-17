@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { overviewMarkdown } from "./overviewMarkdown.js";
-import { makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.js";
 import { citedOverviewPart, overviewPartHash, overviewPartId, overviewParts, type OverviewPartItem } from "./overviewParts.js";
 import type { Overview } from "./Overview.js";
+import { chatSourceKind } from "./chatSourceKind.js";
 
 const full = makeOverview({
   verdict: {
@@ -54,6 +55,26 @@ test("a recipe's parts are its ingredients, its method and its chapters", () => 
   assert.ok(parts.every(({ part }) => part === "ingredient" || part === "method" || part === "chapter"));
   assert.equal(parts.filter(({ part }) => part === "ingredient").length, recipe.recipe!.ingredients.length);
   assert.deepEqual(idsInMarkdown(overviewMarkdown(recipe, { partIds: true })), ids(parts));
+});
+
+test("an article's chapters and Read it anyway? are its chapter and watchAnyway parts, with ids in the prompt", () => {
+  const article = makeArticleOverview();
+  const parts = overviewParts(article);
+  assert.deepEqual(
+    parts.filter(({ part }) => part === "chapter").map(({ text }) => text),
+    article.article!.chapters.map(({ title }) => title),
+  );
+  assert.deepEqual(
+    parts.filter(({ part }) => part === "watchAnyway").map(({ text }) => text),
+    [article.article!.readAnyway!.reason],
+  );
+  assert.deepEqual(idsInMarkdown(overviewMarkdown(article, { partIds: true })), ids(parts));
+});
+
+test("a chat is about a video, an episode, an article or a recipe page", () => {
+  assert.equal(chatSourceKind(makeOverview()), "video");
+  assert.equal(chatSourceKind(makeArticleOverview()), "article");
+  assert.equal(chatSourceKind(makeRecipeOverview()), "recipe");
 });
 
 test("the overview outside the app carries no ids", () => {
