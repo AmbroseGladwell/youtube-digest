@@ -54,6 +54,9 @@ export class SyncEngine {
   #listeners = new Set<(status: SyncStatus) => void>();
   #running: Promise<SyncStatus> | null = null;
   #askedAgain = false;
+  // A new overview the account has no room for yet, by when the month that refused it resets.
+  // Asking again before then is refused again, so it waits (docs/features/sync-client.md).
+  #waitingUntil = new Map<string, number>();
 
   constructor({
     api,
@@ -95,6 +98,14 @@ export class SyncEngine {
     const transcript = await this.#api.getTranscript(videoId);
     if (transcript !== null) await this.#storage.keepTranscript(transcript);
     return transcript;
+  }
+
+  // Something that could make room happened, such as a new plan: every waiting overview is
+  // asked about again at once.
+  retryWaiting(): void {
+    if (this.#waitingUntil.size === 0) return;
+    this.#waitingUntil.clear();
+    void this.sync();
   }
 
   sync(): Promise<SyncStatus> {
@@ -206,6 +217,10 @@ export class SyncEngine {
       if (blocked.has(key) || this.#waitsBehindParkedNote(entry, blocked)) {
         continue;
       }
+      if (this.#stillWaiting(key)) {
+        blocked.add(key);
+        continue;
+      }
       const outcome = await pushPendingWrite(this.#api, entry, await this.#storage.revisionOf(entry.kind, entry.id), this.#storage);
       switch (outcome.result) {
         case "written":
@@ -228,14 +243,25 @@ export class SyncEngine {
           await this.#storage.park(entry.key, outcome.failure);
           blocked.add(key);
           break;
-        case "waiting":
+        case "waiting": {
+          const until = Date.parse(outcome.until);
+          if (Number.isFinite(until)) this.#waitingUntil.set(key, until);
           blocked.add(key);
           break;
+        }
         case "stopped":
           return { reason: outcome.reason, detail: outcome.detail };
       }
     }
     return null;
+  }
+
+  #stillWaiting(key: string): boolean {
+    const until = this.#waitingUntil.get(key);
+    if (until === undefined) return false;
+    if (until > this.#now().getTime()) return true;
+    this.#waitingUntil.delete(key);
+    return false;
   }
 
   // The account's copy wins. It is pulled first, so the union of the two filings can be

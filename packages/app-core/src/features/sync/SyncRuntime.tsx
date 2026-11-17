@@ -20,6 +20,7 @@ import { playlistKeys } from "../playlists/playlistKeys.js";
 import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
 import { chatKeys } from "../chats/chatKeys.js";
 import { projectKeys } from "../projects/projectKeys.js";
+import { useOverviewUsageQuery } from "../newOverview/queries/overviewUsageQuery.js";
 
 // How long sign-out waits for its last cycle before going anyway: it always completes.
 const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
@@ -45,6 +46,8 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   const [foldNotice, setFoldNotice] = useState<OverviewFold | null>(null);
   const wasConnected = useRef(connected);
   const surface = useClientSurface();
+  const plan = useOverviewUsageQuery().data?.plan ?? null;
+  const lastPlan = useRef(plan);
 
   useEffect(() => {
     const signedIn = connected && !wasConnected.current;
@@ -90,6 +93,13 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
       engine.current = null;
     };
   }, [syncStorage, apiUrl, token, surface, queryClient]);
+
+  // A new plan can make room for an overview the last month refused (tiers.md, "Counting").
+  useEffect(() => {
+    const changed = lastPlan.current !== null && plan !== null && plan !== lastPlan.current;
+    if (plan !== null) lastPlan.current = plan;
+    if (changed) engine.current?.engine.retryWaiting();
+  }, [plan]);
 
   const value = useMemo(
     () => ({

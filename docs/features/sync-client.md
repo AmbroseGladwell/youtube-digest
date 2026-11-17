@@ -142,7 +142,13 @@ server holds no reservation for, `428 not_reserved`, reserves a slot on the acco
 own-key month and goes again: that is an overview moved in on sign-in, or one queued before
 this client reserved (`docs/architecture/tiers.md`, "Reserving on the reader's own key").
 With the month spent it **waits**: neither parked nor sent, it stays pending, its transcript
-waits behind it, and it goes on the first cycle after the month turns.
+waits behind it, and it goes on the first cycle after the month turns. Until then the
+engine doesn't ask again: it keeps the reset date the refusal carried and skips the overview
+on every cycle before it, rather than pushing and being refused twice a minute (OV-322). The
+date is held in memory, so a reload asks once more. A new plan clears it at once
+(`SyncRuntime` calls `retryWaiting` when the usage query's plan changes), since a bigger
+month may have room. A key doesn't: a moved-in onboarding overview counts on our key, and
+the own-key quota counts overviews, not keys.
 
 ### Whole-record writes and the revision
 
