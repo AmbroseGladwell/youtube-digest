@@ -298,4 +298,8 @@ export class ChatPanelPageObject extends PageObject {
     });
 
   raiseFromLowered = () => this.step("raiseFromLowered", () => this.click(chatSheetTestIds.raise));
+
+  pressF6 = () => this.step("pressF6", () => this.page.keyboard.press("F6"));
+
+  verifyNoteIsFocused = () => this.step("verifyNoteIsFocused", () => expect(this.page.getByRole("tabpanel")).toBeFocused());
 }

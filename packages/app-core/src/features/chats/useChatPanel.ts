@@ -6,7 +6,7 @@ import { useChatsQuery } from "./queries/chatsQuery.js";
 import { useAskQuestion, type AskedFrom } from "./useAskQuestion.js";
 import { firstQuestionOf, lastActive } from "./util/conversationLine.js";
 
-type OpenedFrom = AskedFrom | "menu" | "conversationsLink";
+type OpenedFrom = AskedFrom | "menu" | "conversationsLink" | "receipt";
 
 export type ChatView = "conversation" | "list";
 
@@ -115,7 +115,20 @@ export function useChatPanel(overviewId: OverviewId) {
   const openConversation = (chat: Chat) => {
     analytics.reader.chat.conversationOpened({ overviewId });
     goTo(idOf(chat));
+    if (!open) show("receipt");
     focusField();
+  };
+
+  // The latest conversation a question was asked in, for its receipt under the note (310d).
+  const answeredHere = (question: string): { at: string; onOpen: () => void } | null => {
+    let found: { at: string; chat: Chat } | null = null;
+    for (const chat of chats)
+      for (const message of chat.messages)
+        if (message.from === "reader" && message.text === question && (found === null || message.at > found.at))
+          found = { at: message.at, chat };
+    if (found === null) return null;
+    const { at, chat } = found;
+    return { at, onOpen: () => openConversation(chat) };
   };
 
   // Following an answer's citation of another conversation: that one opens at the message it
@@ -186,6 +199,7 @@ export function useChatPanel(overviewId: OverviewId) {
     openLatest,
     openList,
     openConversation,
+    answeredHere,
     followConversation,
     goBack,
     close,

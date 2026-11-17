@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { ChatField } from "../ChatField/ChatField.js";
 import styles from "./NoteAskField.module.scss";
@@ -9,7 +9,7 @@ export interface NoteAskFieldProps {
   // While chat is open beside the note, the note's own field fades out and keeps its space (310a).
   chatOpen: boolean;
   conversations: number;
-  onAsk: (question: string) => void;
+  onAsk: (question: string, from: HTMLElement | null) => void;
   onOpenConversations: () => void;
 }
 
@@ -17,13 +17,14 @@ export interface NoteAskFieldProps {
 // way into the overview's conversations. Sending opens chat with the question.
 export function NoteAskField({ sourceWord, chatOpen, conversations, onAsk, onOpenConversations }: NoteAskFieldProps) {
   const [draft, setDraft] = useState("");
+  const field = useRef<HTMLDivElement | null>(null);
   const send = () => {
-    onAsk(draft.trim());
+    onAsk(draft.trim(), field.current);
     setDraft("");
   };
   return (
     <div className={styles.root}>
-      <div className={`${styles.field} ${chatOpen ? styles.away : ""}`} inert={chatOpen} data-testid={noteAskFieldTestIds.root}>
+      <div ref={field} className={`${styles.field} ${chatOpen ? styles.away : ""}`} inert={chatOpen} data-testid={noteAskFieldTestIds.root}>
         <ChatField
           value={draft}
           placeholder={`Ask about this ${sourceWord}`}

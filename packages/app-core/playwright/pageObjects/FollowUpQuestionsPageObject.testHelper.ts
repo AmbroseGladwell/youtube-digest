@@ -102,6 +102,9 @@ export class FollowUpQuestionsPageObject extends PageObject {
   newTabs = (): Promise<URL[]> =>
     this.page.evaluate(() => (window as unknown as { openedTabs: string[] }).openedTabs).then((urls) => urls.map((url) => new URL(url)));
 
+  clickReceipt = (index: number) =>
+    this.step(`clickReceipt ${index}`, () => this.click(this.get(followUpQuestionsTestIds.receipt).nth(index)));
+
   verifyReceiptsRead = (receipts: string[]) =>
     this.step(`verifyReceiptsRead ${receipts.join(" | ")}`, () => expect(this.get(followUpQuestionsTestIds.receipt)).toHaveText(receipts));
 

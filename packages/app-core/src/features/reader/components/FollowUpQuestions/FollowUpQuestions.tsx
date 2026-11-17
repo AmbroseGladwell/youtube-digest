@@ -17,7 +17,7 @@ import { useToast } from "../../../../components/shared/Toast/useToast.js";
 import type { ReaderAnalytics } from "../../../analytics/bindOverviewId.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import { useFollowUpAssistant } from "../../useFollowUpAssistant.js";
-import { askedLine } from "../../util/askedLine.js";
+import { answeredHereLine, askedLine } from "../../util/askedLine.js";
 import { copyText, handOffFollowUp } from "../../util/handOffFollowUp.js";
 import { FollowUpAssistantMenu } from "../FollowUpAssistantMenu/FollowUpAssistantMenu.js";
 import styles from "./FollowUpQuestions.module.scss";
@@ -34,7 +34,9 @@ export interface FollowUpQuestionsProps {
   analytics: ReaderAnalytics["followUps"];
   // Present where chat is offered: a tapped question is answered in the app unless the reader
   // chose their assistant (design 310f). Absent, the block is OV-266's as built.
-  onAskHere?: ((question: string) => void) | undefined;
+  onAskHere?: ((question: string, from: HTMLElement | null) => void) | undefined;
+  // Where questions are answered here: the last time this one was, and its conversation (310d).
+  answeredHereOf?: ((question: string) => { at: string; onOpen: () => void } | null) | undefined;
 }
 
 type Motion = "arriving" | "idle" | "leaving" | "entering";
@@ -103,7 +105,16 @@ function dropGhost(from: HTMLElement | null): Promise<void> {
 // Design 266a–266ao: the last block in the note, questions as speech bubbles, three at a time,
 // taken to the reader's own assistant, or answered in the app where chat is offered (310f;
 // docs/features/follow-up-questions.md, docs/features/chats.md).
-export function FollowUpQuestions({ overview, questions, compact, asked, onAsked, analytics, onAskHere }: FollowUpQuestionsProps) {
+export function FollowUpQuestions({
+  overview,
+  questions,
+  compact,
+  asked,
+  onAsked,
+  analytics,
+  onAskHere,
+  answeredHereOf,
+}: FollowUpQuestionsProps) {
   const { assistant, answeredHere, connectedTo, anyConnection, choose, chooseHere } = useFollowUpAssistant();
   const offerHere = onAskHere !== undefined;
   const here = offerHere && answeredHere;
@@ -199,7 +210,7 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
 
   const tap = (index: number) => {
     if (here && onAskHere !== undefined) {
-      onAskHere(questions[index]!.question);
+      onAskHere(questions[index]!.question, bubbles.current[index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null);
       return;
     }
     if (assistant !== null) {
@@ -227,7 +238,7 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
     if (!here) analytics.answerPlaceChosen({ here: true });
     chooseHere();
     closeMenu();
-    if (menu.firstTap) onAskHere(questions[menu.index]!.question);
+    if (menu.firstTap) onAskHere(questions[menu.index]!.question, bubbles.current[menu.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null);
   };
 
   const copyQuestion = () => {
@@ -316,12 +327,13 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
         {shown.map(({ question }, place) => {
           const index = set * FOLLOW_UP_QUESTIONS_SHOWN + place;
           const held = pressed === place || (menu?.firstTap === true && menu.index === index);
-          const receipt = asked.find((each) => each.question === question) ?? null;
+          const hereReceipt = here ? (answeredHereOf?.(question) ?? null) : null;
+          const receipt = hereReceipt === null ? (asked.find((each) => each.question === question) ?? null) : null;
           const receiptId = `${headingId}-asked-${index}`;
           return (
             <li
               key={index}
-              className={`${styles.item} ${receipt !== null ? styles.askedItem : ""}`}
+              className={`${styles.item} ${receipt !== null || hereReceipt !== null ? styles.askedItem : ""}`}
               style={{ "--i": place } as CSSProperties}
               data-testid={followUpQuestionsTestIds.item}
             >
@@ -339,7 +351,7 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
                     questionButtons.current[place] = element;
                   }}
                   aria-label={nameOf(question)}
-                  aria-describedby={receipt === null ? undefined : receiptId}
+                  aria-describedby={receipt === null && hereReceipt === null ? undefined : receiptId}
                   aria-haspopup={!here && assistant === null ? "dialog" : undefined}
                   aria-expanded={!here && assistant === null ? menu?.firstTap === true && menu.index === index : undefined}
                   onClick={() => tap(index)}
@@ -353,6 +365,17 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
                   {question}
                 </button>
               </div>
+              {hereReceipt !== null && (
+                <button
+                  type="button"
+                  id={receiptId}
+                  className={`${styles.receipt} ${styles.receiptLink}`}
+                  onClick={hereReceipt.onOpen}
+                  data-testid={followUpQuestionsTestIds.receipt}
+                >
+                  {answeredHereLine(hereReceipt.at, new Date())}
+                </button>
+              )}
               {receipt !== null && (
                 <span
                   id={receiptId}

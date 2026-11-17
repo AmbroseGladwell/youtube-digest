@@ -229,6 +229,12 @@ it. Its field takes focus as it opens; Esc stops an answer being written, or els
 and returns focus to what opened it. On a phone and in the extension's panel it is a sheet instead
 (`ChatSheet`, design 310g, 310h, 310o).
 
+- **Motion and focus beside the note** (design 310a-4–310a-6, 310aq): a question tapped under the
+  note, or typed in its field, travels into the chat as its question, 520ms ease-out, following
+  the chat as it slides in (`bubbleTravel`); none with reduced motion. Closing plays the opening
+  backwards. F6 moves between the note and the chat, which isn't modal. A question answered here
+  shows "Answered here · just now" under its bubble, read from the synced conversations, and that
+  opens its conversation (`useChatPanel.answeredHere`).
 - **The sheet:** 64px from the top on a phone, under the masthead in the panel. Raised it is a
   modal dialog holding focus, over a scrim. Its handle (a button, "Lower chat" / "Raise chat") or
   its header drags it, following the finger with resistance past either rest (`sheetDrag`); let
