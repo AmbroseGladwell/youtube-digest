@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { chatRecordId, CLIENT_VERSION, MAX_CHAT_QUESTIONS, type ChatMessage } from "@overview/domain";
+import { chatRecordId, MAX_CHAT_QUESTIONS, type ChatMessage } from "@overview/domain";
 import { appendChatMessages } from "../chats/appendChatMessages.js";
 import { isApiError } from "../http/ApiError.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
@@ -157,9 +157,27 @@ test("a client built before chats is never sent one", async (t) => {
   const overview = await withOverview(account);
   await chatting(testApp, account)(overview.id, randomUUID(), exchange("creatine"));
 
-  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: CLIENT_VERSION - 1 });
+  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: 21 });
 
   const kinds = (response.json() as { changes: Array<{ kind: string }> }).changes.map((change) => change.kind);
   assert.ok(kinds.includes("overview"));
   assert.ok(!kinds.includes("chat"));
+});
+
+test("a client built before overview citations is sent a chat all the same, at the version it can't read, to hold back", async (t) => {
+  const testApp = await createTestApp();
+  t.after(() => testApp.close());
+  const account = await makeAccount(testApp);
+  const overview = await withOverview(account);
+  await chatting(testApp, account)(overview.id, randomUUID(), exchange("creatine"));
+
+  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: 22 });
+
+  const chats = (response.json() as { changes: Array<{ kind: string; schemaVersion: number }> }).changes.filter(
+    (change) => change.kind === "chat",
+  );
+  assert.deepEqual(
+    chats.map((change) => change.schemaVersion),
+    [2],
+  );
 });

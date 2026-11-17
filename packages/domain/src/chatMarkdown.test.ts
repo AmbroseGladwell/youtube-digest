@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { chatMarkdown } from "./chatMarkdown.js";
-import type { Chat } from "./Chat.js";
+import type { Chat, ChatCitation } from "./Chat.js";
 import { makeOverview } from "./OverviewFactory.testHelper.js";
+import { overviewPartHash } from "./overviewParts.js";
 
 const AT = "2026-11-15T10:00:00.000Z";
 const chatAbout = (overviewId: Chat["overviewId"]): Chat => ({
@@ -44,4 +45,34 @@ test("an episode's cited times are plain text, never a link into its audio", () 
 test("a video's cited times link to their moment", () => {
   const overview = makeOverview();
   assert.match(chatMarkdown(chatAbout(overview.id), overview), /Cites: \[1:01–1:10\]\(https:\/\/.+[?&]t=61\)\./);
+});
+
+const answeredWith = (overviewId: Chat["overviewId"], citations: ChatCitation[], inSource: boolean): Chat => ({
+  id: `${overviewId}:c1`,
+  overviewId,
+  startedAt: AT,
+  messages: [
+    { from: "reader", text: "What first?", at: AT },
+    { from: "answer", text: "Step 2.", at: AT, citations, inSource },
+  ],
+});
+
+test("an answer from the overview names the part it cites and says it isn't the video's own words", () => {
+  const overview = makeOverview({ howToApply: { items: ["Start small", "Keep going"] } });
+  const markdown = chatMarkdown(
+    answeredWith(overview.id, [{ part: "howToApply", index: 1, textHash: overviewPartHash("Keep going") }], false),
+    overview,
+  );
+  assert.match(markdown, /Cites: item 2 of the overview's "How to apply"\./);
+  assert.match(markdown, /Answered from the overview, not from what the video says\./);
+  assert.doesNotMatch(markdown, /doesn't cover this/);
+});
+
+test("a cited item the overview has since rewritten points at its section", () => {
+  const overview = makeOverview({ howToApply: { items: ["Something new"] } });
+  const markdown = chatMarkdown(
+    answeredWith(overview.id, [{ part: "howToApply", index: 1, textHash: overviewPartHash("Keep going") }], false),
+    overview,
+  );
+  assert.match(markdown, /the overview's "How to apply", an item since changed/);
 });

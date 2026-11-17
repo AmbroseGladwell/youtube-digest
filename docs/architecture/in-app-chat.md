@@ -263,9 +263,11 @@ honestly, on real library sources up to 89 minutes.
   cost, because `records` already cascades (`account-deletion.md`). A reader can delete a single
   conversation.
 - **A regenerated overview keeps its chats.** Their citations point at moments in the video,
-  which don't move.
-- **Several chats per overview, and one can use another.** The owner asked for this on 16 Nov
-  2026. Each question also carries the overview's other live chats, cut to a budget measured by
+  which don't move. Since OV-319 an answer can also cite the overview's own items (a step, How
+  to apply, a dubious reason, the verdict, a chapter), and those can move when it is made again:
+  each keeps its place and a hash of its text, so a moved item is followed and a rewritten one
+  falls back to its section (`chats.md`, "Citing the overview").
+- **Several chats per overview, and one can use another.** The owner asked for this on 16 Nov 2026. Each question also carries the overview's other live chats, cut to a budget measured by
   code with the oldest dropped first, so a reader can build on an earlier decision without
   repeating it. An answer that uses one cites the message, `{ chatId, message }`, which code
   checks against a live chat of the same overview. An earlier answer is context, not evidence:

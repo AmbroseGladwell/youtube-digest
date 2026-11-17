@@ -10,6 +10,7 @@ import {
   Overview,
   OVERVIEW_MIGRATIONS,
   overviewMarkdown,
+  overviewParts,
   readStoredRecord,
   sourceKey,
   stampSchemaVersion,
@@ -123,7 +124,7 @@ export class ChatAnswerer {
     const othersInPrompt = otherChatsInPrompt(others);
     const othersText = otherChatsPrompt(kind, othersInPrompt);
     const prompt: PromptMessage[] = [
-      { role: "system", content: chatSystemPrompt(kind, overviewMarkdown(overview), passages) },
+      { role: "system", content: chatSystemPrompt(kind, overviewMarkdown(overview, { partIds: true }), passages) },
       ...(othersText === null ? [] : [{ role: "user" as const, content: othersText }]),
       ...(conversation?.messages ?? []).map((message): PromptMessage => ({
         role: message.from === "reader" ? "user" : "assistant",
@@ -172,7 +173,7 @@ export class ChatAnswerer {
         const reply = ChatReply.parse(JSON.parse(raw));
         const text = reply.answer.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH);
         if (text.length === 0) throw new Error("the reply had no answer");
-        const cited = citationsOf(reply, passages, othersInPrompt.labels);
+        const cited = citationsOf(reply, passages, overviewParts(overview), othersInPrompt.labels);
         const messages: ChatMessage[] = [
           { from: "reader", text: question.text, at: askedAt.toISOString() },
           { from: "answer", text, at: clock().toISOString(), citations: cited.citations, inSource: cited.inSource },
@@ -191,6 +192,7 @@ export class ChatAnswerer {
             ...cost,
             inSource: cited.inSource,
             sourceCitations: cited.sourceCitations,
+            overviewCitations: cited.overviewCitations,
             chatCitations: cited.chatCitations,
             used: reservation.used,
             limit: reservation.limit,

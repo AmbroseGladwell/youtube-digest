@@ -6,6 +6,7 @@ import { formatTimestamp } from "./formatTimestamp.js";
 import { NOVELTY_BASIS, NOVELTY_LABEL, STANDS_OUT_LABEL } from "./noveltyLabel.js";
 import { FOLLOW_UP_QUESTIONS_SECTION } from "./FollowUpQuestions.js";
 import type { Overview } from "./Overview.js";
+import { overviewPartId, type OverviewPart } from "./overviewParts.js";
 import type { TimeRange } from "./WatchAnyway.js";
 import { SELLING_LABEL } from "./sellingLabel.js";
 import type { DubiousClaim } from "./Verdict.js";
@@ -25,8 +26,10 @@ const stretch = (videoUrl: string | null, range: TimeRange) =>
 const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n");
 
 // The note as it reads outside the app: every section the reader sees, with each moment
-// a link into the video, and never the spoken script (docs/features/mcp-connector.md).
-export function overviewMarkdown(overview: Overview): string {
+// a link into the video, and never the spoken script (docs/features/mcp-connector.md). With
+// partIds, each item a chat answer can cite starts with its id, as overviewParts lists them.
+export function overviewMarkdown(overview: Overview, { partIds = false } = {}): string {
+  const id = (part: OverviewPart, index = 0) => (partIds ? `[${overviewPartId(part, index)}] ` : "");
   const { source: video } = overview;
   const link = sourceUrl(video);
   const timed = video.kind === "podcast" ? null : link;
@@ -44,7 +47,11 @@ export function overviewMarkdown(overview: Overview): string {
     if (overview.chapters !== null && overview.chapters.length > 0) {
       section(
         "Chapters",
-        bullets(overview.chapters.map((chapter) => `${moment(timed, chapter.startMs)} **${chapter.title}**: ${chapter.summary}`)),
+        bullets(
+          overview.chapters.map(
+            (chapter, index) => `${id("chapter", index)}${moment(timed, chapter.startMs)} **${chapter.title}**: ${chapter.summary}`,
+          ),
+        ),
       );
     }
   };
@@ -63,7 +70,7 @@ export function overviewMarkdown(overview: Overview): string {
   if (recipe !== null) {
     const figures = recipeFigures(recipe);
     section("Summary", figures.length === 0 ? recipe.summary : `${recipeFiguresLine(figures)}\n\n${recipe.summary}`);
-    section("Ingredients", bullets(recipe.ingredients));
+    section("Ingredients", bullets(recipe.ingredients.map((ingredient, index) => `${id("ingredient", index)}${ingredient}`)));
     section(
       "Method",
       recipe.steps.length === 0
@@ -75,7 +82,7 @@ export function overviewMarkdown(overview: Overview): string {
                 steps
                   .map((step, index) => {
                     const range = recipe.steps[start + index - 1]?.range;
-                    return `${start + index}. ${step}${range === undefined ? "" : ` (${moment(timed, range.startMs)})`}`;
+                    return `${start + index}. ${id("method", start + index - 1)}${step}${range === undefined ? "" : ` (${moment(timed, range.startMs)})`}`;
                   })
                   .join("\n"),
               ]
@@ -96,7 +103,7 @@ export function overviewMarkdown(overview: Overview): string {
 
   if (overview.verdict !== null) {
     const { novelty, standsOut, dubious, dubiousClaims, reasoning, similarTo } = overview.verdict;
-    const lines = [`${NOVELTY_LABEL[novelty]}${dubious ? ", and dubious" : ""}. ${reasoning}`];
+    const lines = [`${id("verdict")}${NOVELTY_LABEL[novelty]}${dubious ? ", and dubious" : ""}. ${reasoning}`];
     if (standsOut !== null) {
       const at = standsOut.range === null ? "" : ` (${stretch(timed, standsOut.range)})`;
       lines.push(`${STANDS_OUT_LABEL}${at}: ${standsOut.text}`);
@@ -105,8 +112,9 @@ export function overviewMarkdown(overview: Overview): string {
       lines.push("Why it is dubious: no reason was saved with this overview.");
     }
     if (dubiousClaims !== null && dubiousClaims.length > 0) {
-      const claimLine = (dubiousClaim: DubiousClaim) =>
+      const claimLine = (dubiousClaim: DubiousClaim, index: number) =>
         [
+          partIds ? `[${overviewPartId("dubiousClaim", index)}]` : null,
           dubiousClaim.startMs === null ? null : moment(timed, dubiousClaim.startMs),
           `“${dubiousClaim.claim}”: ${DUBIOUS_BASIS_LABEL[dubiousClaim.basis]}. ${dubiousClaim.reason}`,
         ]
@@ -123,7 +131,11 @@ export function overviewMarkdown(overview: Overview): string {
 
   section(
     "Key points",
-    bullets(overview.keyPoints.map(({ text, range }) => (range === null ? text : `${text} (${stretch(timed, range)})`))),
+    bullets(
+      overview.keyPoints.map(
+        ({ text, range }, index) => `${id("keyPoint", index)}${text}${range === null ? "" : ` (${stretch(timed, range)})`}`,
+      ),
+    ),
   );
   if (overview.sourceSteps !== null) {
     section(
@@ -131,23 +143,23 @@ export function overviewMarkdown(overview: Overview): string {
       overview.sourceSteps.items
         .map(
           ({ text, range, dubiousReason }, index) =>
-            `${index + 1}. ${text}${dubiousReason === null ? "" : ` _(dubious: ${dubiousReason})_`}${range === null ? "" : ` (${moment(timed, range.startMs)})`}`,
+            `${index + 1}. ${id("step", index)}${text}${dubiousReason === null ? "" : ` _(dubious: ${dubiousReason})_`}${range === null ? "" : ` (${moment(timed, range.startMs)})`}`,
         )
         .join("\n"),
     );
   }
   if (overview.howToApply !== null && overview.howToApply.items.length > 0) {
-    section("How to apply", bullets(overview.howToApply.items));
+    section("How to apply", bullets(overview.howToApply.items.map((item, index) => `${id("howToApply", index)}${item}`)));
   }
   if (overview.selling !== null && overview.selling.type !== "none") {
-    section("What it sells", `${SELLING_LABEL[overview.selling.type]}. ${overview.selling.detail}`.trim());
+    section("What it sells", `${id("selling")}${SELLING_LABEL[overview.selling.type]}. ${overview.selling.detail}`.trim());
   }
   if (overview.watchAnyway !== null) {
     const { answer, reason, range } = overview.watchAnyway;
     const where = range === null ? "" : ` ${stretch(timed, range)}`;
     section(
       video.kind === "podcast" ? "Listen to it anyway?" : "Watch it anyway?",
-      `${(video.kind === "podcast" ? LISTEN_ANYWAY_LABEL : WATCH_ANYWAY_LABEL)[answer]}. ${reason}${where}`.trim(),
+      `${id("watchAnyway")}${(video.kind === "podcast" ? LISTEN_ANYWAY_LABEL : WATCH_ANYWAY_LABEL)[answer]}. ${reason}${where}`.trim(),
     );
   }
   const article = overview.article;
