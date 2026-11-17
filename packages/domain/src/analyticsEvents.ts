@@ -1287,7 +1287,7 @@ export const analyticsEvents = {
       added: event("The reader puts an overview in a project", {
         projectId: ProjectId,
         overviewId: OverviewId,
-        from: z.enum(["picker", "newProject", "selection"]),
+        from: z.enum(["picker", "newProject", "selection", "suggestion"]),
       }),
       // The measure: how often the reader takes out what an assistant put in.
       removed: event("The reader takes an overview out of a project, and whether they or an assistant had put it there", {
@@ -1296,6 +1296,34 @@ export const analyticsEvents = {
         addedBy: z.enum(["reader", "assistant", "filing"]),
         from: z.enum(["row", "picker", "selection"]),
       }),
+    },
+    // Counts only: how many were offered and taken, never which overviews or the project's words (OV-318).
+    suggestions: {
+      shown: event("A project's page offers saved overviews that might fit it, with how many and whether the project was empty", {
+        projectId: ProjectId,
+        count: z.number().int().positive(),
+        empty: z.boolean(),
+      }),
+      opened: event("The reader opens the overviews that might fit a project from the line in its head", {
+        projectId: ProjectId,
+        count: z.number().int().positive(),
+      }),
+      added: event("The reader adds overviews that might fit a project, one by one or all at once, and whether the project was empty", {
+        projectId: ProjectId,
+        count: z.number().int().positive(),
+        how: z.enum(["one", "all"]),
+        empty: z.boolean(),
+      }),
+      turnedDown: event("The reader says an overview offered is not for a project, and whether the project was empty", {
+        projectId: ProjectId,
+        empty: z.boolean(),
+      }),
+      undone: event("The reader undoes adding an overview offered, or saying it is not for the project", {
+        projectId: ProjectId,
+        action: z.enum(["add", "turnDown"]),
+        count: z.number().int().positive(),
+      }),
+      overviewOpened: event("The reader opens an overview offered on a project's page", { projectId: ProjectId }),
     },
     picker: {
       opened: event("The reader opens the list of projects to put an overview in", {

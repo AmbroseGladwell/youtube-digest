@@ -4,6 +4,7 @@ import { projectEmptyTestIds } from "../../src/features/projects/components/Proj
 import { projectHeadTestIds } from "../../src/features/projects/components/ProjectHead/ProjectHeadTestIds.js";
 import { DeleteProjectDialogPageObject } from "./DeleteProjectDialogPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ProjectSuggestionsPageObject } from "./ProjectSuggestionsPageObject.testHelper.js";
 import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js";
 
 export class ProjectHeadPageObject extends PageObject {
@@ -112,4 +113,27 @@ export class ProjectHeadPageObject extends PageObject {
         ? this.expectToBeVisible(projectEmptyTestIds.connectionsLink)
         : expect(this.get(projectEmptyTestIds.prompt)).toHaveText(prompt),
     );
+
+  get suggestions(): ProjectSuggestionsPageObject {
+    return new ProjectSuggestionsPageObject(this.testContext);
+  }
+
+  verifySuggestionsLineReads = (text: string | null) =>
+    this.step(`verifySuggestionsLineReads ${text}`, () =>
+      text === null
+        ? this.expectNotToBeVisible(projectHeadTestIds.suggestionsLine)
+        : expect(this.get(projectHeadTestIds.suggestionsLine)).toHaveText(text),
+    );
+
+  clickSuggestionsLine = (): Promise<ProjectSuggestionsPageObject> =>
+    this.step("clickSuggestionsLine", async () => {
+      await this.click(projectHeadTestIds.suggestionsLine);
+      return this.suggestions;
+    });
+
+  verifyPurposeEditorIsOpen = () =>
+    this.step("verifyPurposeEditorIsOpen", () => expect(this.get(projectHeadTestIds.purposeInput)).toBeFocused());
+
+  verifyEmptyFurtherReads = (text: RegExp) =>
+    this.step("verifyEmptyFurtherReads", () => expect(this.get(projectEmptyTestIds.root)).toHaveText(text));
 }

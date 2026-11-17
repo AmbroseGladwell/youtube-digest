@@ -18,6 +18,7 @@ import { useUpdateProjectMutation } from "./mutations/useUpdateProjectMutation.j
 import { readProjectNudgeKept, writeProjectNudgeKept } from "./projectNudgeStorage.js";
 import { useAssistantConnections } from "./useAssistantConnections.js";
 import { useNewProject } from "./useNewProject.js";
+import { useProjectSuggestions } from "./useProjectSuggestions.js";
 import { useProjectSummaries } from "./useProjectSummaries.js";
 import { projectNudged } from "./util/projectNudge.js";
 import { projectShortDate } from "./util/projectDates.js";
@@ -32,6 +33,12 @@ interface Filing {
   onFiled: (action: BulkAction | null, writes: Promise<unknown>[]) => void;
 }
 
+export interface LibraryProjectsHost {
+  say: (text: string, undo: () => void) => void;
+  focusList: () => void;
+  selecting: boolean;
+}
+
 export interface AddedByLine {
   label: string;
   on: string;
@@ -41,7 +48,7 @@ export interface AddedByLine {
 
 // Everything projects bring to the library: the rail's group, and, on a project's page, its
 // head, which overviews are in it and what an empty one says (docs/features/projects.md).
-export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithState[]) {
+export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithState[], host: LibraryProjectsHost) {
   const { summaries, loaded } = useProjectSummaries(overviews);
   const assistants = useAssistantConnections();
   const analytics = useAnalytics();
@@ -60,6 +67,12 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
   const archived = archivedSummaries(summaries);
   const currentId: ProjectId | null = place.kind === "project" ? place.projectId : null;
   const current = currentId === null ? null : (summaries.find(({ project }) => project.id === currentId) ?? null);
+  const [purposeAsked, setPurposeAsked] = useState(0);
+  const suggestions = useProjectSuggestions(current, overviews, {
+    say: host.say,
+    focusList: host.focusList,
+    editPurpose: () => setPurposeAsked((asked) => asked + 1),
+  });
 
   const restore = (projectId: ProjectId, from: "page" | "index") => {
     analytics.projects.page.restored({ projectId, from });
@@ -124,6 +137,8 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
           setConfirmingDelete(true);
         }}
         onCopied={() => analytics.projects.page.markdownCopied({ projectId: current.project.id, overviews: current.items.length })}
+        suggestionsLine={host.selecting ? null : suggestions.line}
+        purposeAsked={purposeAsked}
       />
     );
 
@@ -132,6 +147,8 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
       <ProjectEmpty
         name={current.project.name}
         assistantWrites={assistants.writes}
+        writerName={assistants.writerName}
+        afterSuggestions={suggestions.offering}
         onPromptCopied={() => analytics.projects.page.promptCopied({ projectId: current.project.id })}
       />
     );
@@ -245,6 +262,7 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     railGroup,
     index,
     head,
+    suggestions: host.selecting ? null : suggestions.group,
     empty,
     addedByFor,
     fileSelection: (overviews: OverviewWithState[], onFiled: Filing["onFiled"]) =>

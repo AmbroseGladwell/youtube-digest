@@ -62,6 +62,13 @@ export class ProjectsRailGroupPageObject extends PageObject {
       return new ProjectHeadPageObject(this.testContext).verifyIsShown();
     });
 
+  // Choosing the open project again goes back to the whole library.
+  leaveProject = (name: string) =>
+    this.step(`leaveProject ${name}`, async () => {
+      await this.click(projectsRailGroupTestIds.project(name));
+      await expect(this.get(projectsRailGroupTestIds.project(name))).not.toHaveAttribute("aria-current", "page");
+    });
+
   openAllProjects = (): Promise<ProjectsIndexPageObject> =>
     this.step("openAllProjects", async () => {
       await this.click(projectsRailGroupTestIds.allProjectsLink);

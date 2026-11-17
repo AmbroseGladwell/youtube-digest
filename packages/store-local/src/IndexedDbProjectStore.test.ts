@@ -78,6 +78,25 @@ test("adding and removing an overview journal each change to its membership reco
   assert.equal((await readRaw(db, PROJECT_MEMBERS_STORE, id)).removedAt, removed?.removedAt);
 });
 
+test("turning an overview down for a project journals it put in and then taken out, as the server takes only a removal it has seen added", async () => {
+  const db = await openEnrolledDatabase();
+  let journaled = 0;
+  const store = new IndexedDbProjectStore(db, { onJournaled: () => (journaled += 1) });
+  const project = makeProject();
+  const overviewId = OverviewId.parse(randomUUID());
+  await store.createProject(project);
+  journaled = 0;
+
+  await store.turnDownForProject(project.id, overviewId);
+
+  const id = projectMemberId(project.id, overviewId);
+  const [added, removed] = (await readRecordOutbox(db)).slice(1).map(({ change }) => (change.op === "member" ? change.change : {}));
+  assert.deepEqual(added?.addedBy, { by: "reader" });
+  assert.ok(typeof removed?.removedAt === "string" && removed.removedAt > String(added?.addedAt));
+  assert.equal((await readRaw(db, PROJECT_MEMBERS_STORE, id)).removedAt, removed?.removedAt);
+  assert.equal(journaled, 1);
+});
+
 test("deleting a project journals one delete and takes its membership records off this device without journaling them", async () => {
   const db = await openEnrolledDatabase();
   const store = new IndexedDbProjectStore(db);

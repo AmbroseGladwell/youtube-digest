@@ -27,6 +27,9 @@ import { promisifyTransaction } from "./promisifyTransaction.js";
 
 type MemberChange = (at: string) => Record<string, unknown>;
 
+const PUT_IN: MemberChange = (at) => ({ addedAt: at, addedBy: BY_READER });
+const TAKEN_OUT: MemberChange = (at) => ({ removedAt: at });
+
 // Which membership records a change may write: any, only one already here, or only one this
 // device has never had, so filing never undoes the reader's removal.
 type Writes = "any" | "existing" | "new";
@@ -119,19 +122,31 @@ export class IndexedDbProjectStore implements ProjectStore {
       .flatMap((read) => (read.status === "read" && isInProject(read.record) ? [read.record] : []));
   }
 
+  async listTakenOut(): Promise<ProjectMember[]> {
+    const raws = await this.#readAll(PROJECT_MEMBERS_STORE);
+    return raws
+      .map((raw) => readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS))
+      .flatMap((read) => (read.status === "read" && !isInProject(read.record) ? [read.record] : []));
+  }
+
   async addToProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
-    await this.#changeMember(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }), "any");
+    await this.#changeMember(projectId, overviewId, [PUT_IN], "any");
   }
 
   async fileIntoProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
-    await this.#changeMember(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_FILING }), "new");
+    await this.#changeMember(projectId, overviewId, [(at) => ({ addedAt: at, addedBy: BY_FILING })], "new");
   }
 
   async removeFromProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
-    await this.#changeMember(projectId, overviewId, (at) => ({ removedAt: at }), "existing");
+    await this.#changeMember(projectId, overviewId, [TAKEN_OUT], "existing");
   }
 
-  async #changeMember(projectId: ProjectId, overviewId: OverviewId, change: MemberChange, writes: Writes): Promise<void> {
+  // Two changes rather than one, since the server takes out only an overview it has seen put in.
+  async turnDownForProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
+    await this.#changeMember(projectId, overviewId, [PUT_IN, TAKEN_OUT], "new");
+  }
+
+  async #changeMember(projectId: ProjectId, overviewId: OverviewId, changes: MemberChange[], writes: Writes): Promise<void> {
     const now = new Date();
     const id = projectMemberId(projectId, overviewId);
     const transaction = this.#db.transaction([PROJECTS_STORE, PROJECT_MEMBERS_STORE, ...JOURNALLED_STORES], "readwrite");
@@ -147,15 +162,19 @@ export class IndexedDbProjectStore implements ProjectStore {
       await promisifyTransaction(transaction);
       return;
     }
-    const applied = change(memberChangeTime(existing, now));
-    const base = existing ?? { id, projectId, overviewId, removedAt: null };
-    members.put(stampStoredRecord(mergeProjectMember(base, applied), CURRENT_PROJECT_MEMBER_SCHEMA_VERSION, now));
-    const journaled = await appendPendingWrite(transaction, {
-      kind: "projectMember",
-      id,
-      updatedAt: now.toISOString(),
-      change: { op: "member", change: applied },
-    });
+    let record: Record<string, unknown> = existing ?? { id, projectId, overviewId, removedAt: null };
+    let journaled = false;
+    for (const change of changes) {
+      const applied = change(memberChangeTime(record, now));
+      record = mergeProjectMember(record, applied);
+      journaled = await appendPendingWrite(transaction, {
+        kind: "projectMember",
+        id,
+        updatedAt: now.toISOString(),
+        change: { op: "member", change: applied },
+      });
+    }
+    members.put(stampStoredRecord(record, CURRENT_PROJECT_MEMBER_SCHEMA_VERSION, now));
     await this.#finish(transaction, journaled);
   }
 

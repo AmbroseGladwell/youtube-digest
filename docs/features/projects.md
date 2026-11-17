@@ -168,6 +168,42 @@ nothing else; any other author named is refused, as before. The row says "Added 
 offered; `projects.membership.removed` carries `addedBy: "filing"`, which says how often filing
 gets it wrong.
 
+## Offering what's already saved
+
+OV-318 slice 2, from the Claude Design round "OV-318 1–4" (folder
+`design_handoff_ov318_suggestions/`), decided with the owner on 17 Nov 2026. Filing only
+reaches overviews made after a project exists; a project's page offers the ones saved before.
+
+- **Found by meaning, picked in code.** The page searches by meaning (`search-by-meaning.md`)
+  with the project's name, and what it's for when it says (`projectSuggestionQuery`), then
+  keeps the closest five that aren't in the project and were never taken out of it
+  (`projectSuggestions`). There is no closeness cut-off beyond the server's floor, since
+  OV-229 found none that holds, so the copy only ever says they "might fit". The route takes
+  up to 400 characters so a name and a full purpose fit.
+- **Hidden when there is nothing to offer**: signed out or without an account (only an
+  account has embeddings), when meaning can't be searched, when nothing is left to offer, and
+  on an archived project. The page is then exactly as before.
+- **An empty project** shows the group in the list's place, open. Under it, with an assistant
+  that can write, "Or have Claude look for you" and the prompt; without one, the by-hand line
+  and "connect an assistant". With nothing to offer it is 168aa / 168ab as before.
+- **A project with overviews** says "3 overviews might fit" at the end of its counts. It is a
+  disclosure, closed whenever the page opens; pressed, the group shows between the head and
+  the search row, and focus moves to its heading. While selecting, both are hidden.
+- **Add** puts the overview in as the reader's own add, so it carries no mark; **Add all**
+  does each. The row fades and slides out, its space closes, the overview fades into the list,
+  and focus moves to the next Add or the list's first row. The toast says "Added to {project}"
+  or "Added 3 to {project}" with Undo, which takes them out and offers them again on this page.
+  Taken out, they are not offered after the page is opened again, like any overview taken out.
+- **× "Not for this project"** is a membership record put in by the reader and taken out a
+  millisecond later (`turnDownForProject`), journaled as the two changes, because the server
+  takes out only an overview it has seen put in. It is written only for an overview never in
+  the project, so it never undoes the reader's own add, and filing never puts it back. The
+  record is held for the six seconds the toast can undo it, and written at once if the page
+  closes first.
+- **Analytics** (`projects.suggestions.*`) count what was shown, opened, added (one by one or
+  all), turned down and undone, and whether the project was empty, never which overviews.
+  Adding also sends `projects.membership.added` with `from: "suggestion"`.
+
 ## Over MCP
 
 `mcp-connector.md`, "Projects", has the tools, the scope and the prompt. Two things belong here.

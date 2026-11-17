@@ -30,6 +30,10 @@ export interface ProjectHeadProps {
   onKeep: () => void;
   onDelete: () => void;
   onCopied: () => void;
+  // "4 overviews might fit", which opens them under the head ("OV-318 2" 318g).
+  suggestionsLine?: { count: number; open: boolean; controls: string; onToggle: () => void } | null;
+  // Bumped to open What it's for from outside the head, as the suggestions' nudge does.
+  purposeAsked?: number;
 }
 
 const SPREAD: Novelty[] = ["original", "fresh_angle", "common_knowledge"];
@@ -51,6 +55,8 @@ export function ProjectHead({
   onKeep,
   onDelete,
   onCopied,
+  suggestionsLine = null,
+  purposeAsked = 0,
 }: ProjectHeadProps) {
   const { project, items, unread, updatedAt } = summary;
   const [renaming, setRenaming] = useState(false);
@@ -82,6 +88,10 @@ export function ProjectHead({
     returnTo.current = from;
     setEditingPurpose(true);
   };
+
+  useEffect(() => {
+    if (purposeAsked > 0) startPurpose(editButton);
+  }, [purposeAsked]);
 
   return (
     <div className={styles.root} data-testid={projectHeadTestIds.root}>
@@ -198,6 +208,20 @@ export function ProjectHead({
           <b>{unread}</b> unread
         </span>
         <span>Updated {projectShortDate(updatedAt, now)}</span>
+        {suggestionsLine !== null && (
+          <button
+            type="button"
+            className={styles.suggestionsLine}
+            onClick={suggestionsLine.onToggle}
+            aria-expanded={suggestionsLine.open}
+            aria-controls={suggestionsLine.open ? suggestionsLine.controls : undefined}
+            data-testid={projectHeadTestIds.suggestionsLine}
+          >
+            <StrokeIcon name="sparkle" size={14} />
+            {suggestionsLine.count} {suggestionsLine.count === 1 ? "overview" : "overviews"} might fit
+            <StrokeIcon name={suggestionsLine.open ? "chevronUp" : "chevronDown"} size={14} />
+          </button>
+        )}
       </p>
       {items.length > 0 && (
         <p className={styles.spread} data-testid={projectHeadTestIds.spread}>

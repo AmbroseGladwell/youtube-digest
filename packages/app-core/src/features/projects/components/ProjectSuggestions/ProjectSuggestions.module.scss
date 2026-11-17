@@ -1,0 +1,250 @@
+@use "../../../../theme/controls.scss" as controls;
+
+$settle: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+// The group and each row shrink to nothing as they go, by their grid track, so what is
+// below closes the gap rather than jumping ("OV-318 3" 318q). The global reduced-motion
+// rule in theme/global.scss turns every one of these into an instant change.
+.collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 220ms $settle;
+
+  &[data-closing] {
+    grid-template-rows: 0fr;
+  }
+
+  > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+.root {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1rem 0.375rem;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1.5px var(--surface);
+}
+
+.collapse[data-closing] .root {
+  margin-bottom: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 0.875rem;
+  margin: 0 0 0.25rem;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+
+  svg {
+    color: var(--label);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.subline {
+  max-width: 62ch;
+  margin: 0 0 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.inlineLink {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rowCollapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  border-top: 1px solid var(--surface);
+  transition:
+    grid-template-rows 220ms $settle,
+    border-top-width 220ms $settle;
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  &[data-phase="closing"] {
+    grid-template-rows: 0fr;
+    border-top-width: 0;
+  }
+}
+
+.rowClip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) auto;
+  gap: 0.875rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  transition:
+    opacity 180ms,
+    transform 180ms;
+
+  .rowCollapse:not([data-phase="shown"]) & {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+
+  &:has(> .body:first-child) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  @media (max-width: 47.9375rem) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.625rem;
+  }
+}
+
+.thumbnail {
+  width: 6rem;
+  height: 3.375rem;
+  border-radius: 8px;
+
+  @media (max-width: 47.9375rem) {
+    display: none;
+  }
+}
+
+.body {
+  min-width: 0;
+}
+
+.kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0 0 0.1875rem;
+  font-size: 0.75rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.topic {
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.verdict {
+  @include controls.chip;
+}
+
+.title {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  text-decoration: none;
+  text-wrap: pretty;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.line {
+  margin: 0.125rem 0 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.source {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pill {
+  @include controls.surface-pill;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.turnDown {
+  @include controls.ghost-control;
+  @include controls.circle(2.25rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--ink);
+  }
+}
+
+.pill,
+.turnDown,
+.title,
+.inlineLink {
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}

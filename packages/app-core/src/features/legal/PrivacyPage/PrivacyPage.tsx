@@ -95,11 +95,12 @@ const sections: readonly LegalSection[] = [
           next to an assistant, it notes which question, which assistant and when, so the overview can show it. When you ask questions about
           it, each conversation keeps your questions and the answers, with the moments in the video or episode, or in another of your
           conversations about it, that each answer drew on. A project holds its name, a line on what it is for, and for each overview in it
-          whether you, a connected assistant or filing as the overview was made put it there, and when. Your settings travel with the
-          account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent
-          colour, which sections an overview shows, whether new overviews are put in your projects, whether questions to ask next are
-          answered here or open in an assistant and which one, the About you sentence that personalises overviews and what we have learned
-          from your overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
+          whether you, a connected assistant or filing as the overview was made put it there, and when, and which overviews were taken out
+          of it or that you said aren't for it, so they aren't offered to it again. Your settings travel with the account too: the narration
+          voice, whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an
+          overview shows, whether new overviews are put in your projects, whether questions to ask next are answered here or open in an
+          assistant and which one, the About you sentence that personalises overviews and what we have learned from your overviews, the tags
+          you have merged, the playlists you follow, and the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -110,8 +111,9 @@ const sections: readonly LegalSection[] = [
           <strong>Searching by meaning.</strong> With an account, we send each overview's big picture, claim and key points to OpenAI in the
           United States, once, to turn them into embeddings: lists of numbers that let a search find an overview by what it is about rather
           than by the words it uses. What you type into search, in the app or through an assistant you connected, goes to OpenAI the same
-          way when it is searched by meaning. The embeddings are kept beside your library, are only ever compared with your own searches,
-          and are made again when the overview changes. This happens whichever key wrote the overview.
+          way when it is searched by meaning, and so do a project's name and what it is for when its page looks for saved overviews that
+          might fit it. The embeddings are kept beside your library, are only ever compared with your own searches, and are made again when
+          the overview changes. This happens whichever key wrote the overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. <strong>Kept:</strong> until you delete the overview or the account.

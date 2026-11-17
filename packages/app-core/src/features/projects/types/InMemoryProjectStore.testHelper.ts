@@ -52,6 +52,10 @@ export class InMemoryProjectStore implements ProjectStore {
     return [...this.#members.values()].filter(isInProject);
   }
 
+  async listTakenOut() {
+    return [...this.#members.values()].filter((member) => !isInProject(member));
+  }
+
   async addToProject(projectId: ProjectId, overviewId: OverviewId) {
     this.#change(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }));
   }
@@ -63,6 +67,12 @@ export class InMemoryProjectStore implements ProjectStore {
 
   async removeFromProject(projectId: ProjectId, overviewId: OverviewId) {
     if (this.#members.has(projectMemberId(projectId, overviewId))) this.#change(projectId, overviewId, (at) => ({ removedAt: at }));
+  }
+
+  async turnDownForProject(projectId: ProjectId, overviewId: OverviewId) {
+    if (this.#members.has(projectMemberId(projectId, overviewId))) return;
+    this.#change(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }));
+    this.#change(projectId, overviewId, (at) => ({ removedAt: at }));
   }
 
   #change(projectId: ProjectId, overviewId: OverviewId, change: (at: string) => Record<string, unknown>) {
