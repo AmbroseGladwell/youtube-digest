@@ -130,6 +130,27 @@ export class ChatPanelPageObject extends PageObject {
       for (const [at, name] of names.entries()) await expect(pills.nth(at)).toHaveAccessibleName(name);
     });
 
+  // An article's key point or chapter pill has a link to its place on the page beside it (OV-320).
+  verifyShowOnPageLinks = (index: number, hrefs: string[]) =>
+    this.step(`verifyShowOnPageLinks ${index} ${hrefs.join(" | ")}`, async () => {
+      const links = this.answers().nth(index).getByTestId(chatAnswerTestIds.showOnPage);
+      await expect(links).toHaveCount(hrefs.length);
+      for (const [at, href] of hrefs.entries()) await expect(links.nth(at)).toHaveAttribute("href", href);
+    });
+
+  // A decline on an article or a recipe page offers the page itself.
+  verifyReadOnPageLinksTo = (index: number, href: string | null) =>
+    this.step(`verifyReadOnPageLinksTo ${index} ${href}`, () =>
+      href === null
+        ? expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.readOnPage)).toHaveCount(0)
+        : expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.readOnPage)).toHaveAttribute("href", href),
+    );
+
+  verifyNoteFieldAsks = (placeholder: string) =>
+    this.step(`verifyNoteFieldAsks ${placeholder}`, () =>
+      expect(this.get(noteAskFieldTestIds.root).getByTestId(chatFieldTestIds.input)).toHaveAttribute("placeholder", placeholder),
+    );
+
   verifyNoNotInSource = (index: number) =>
     this.step(`verifyNoNotInSource ${index}`, () =>
       expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.notInSource)).toHaveCount(0),

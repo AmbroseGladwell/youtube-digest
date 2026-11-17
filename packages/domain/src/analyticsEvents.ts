@@ -97,6 +97,8 @@ const ChatAskedFrom = z.enum(["question", "typed"]);
 const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt"]);
 // Where a chat citation leads: a moment in the source, a part of the overview, another
 // conversation, or one deleted since.
+// A video, an episode, an article or a recipe page: what a chat is about (OV-320).
+const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
 const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
@@ -443,14 +445,15 @@ export const analyticsEvents = {
         from: ChatAskedFrom,
         newConversation: z.boolean(),
       }),
-      answered: event("An answer to the reader's question settled, whether the source covered it, and what it cited", {
+      answered: event("An answer to the reader's question settled, what it was about, whether the source covered it, and what it cited", {
+        about: ChatAbout,
         inSource: z.boolean(),
         sourceCitations: z.number().int().nonnegative(),
         overviewCitations: z.number().int().nonnegative(),
         conversationCitations: z.number().int().nonnegative(),
       }),
       answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),
-      waited: event("A question was turned away by a wait, and which", { wait: ChatWait }),
+      waited: event("A question was turned away by a wait, and which, and what it was about", { wait: ChatWait, about: ChatAbout }),
       citationFollowed: event(
         "The reader follows an answer's citation, and to what; to the overview, which part and, unless it changed since, which item, never its text",
         {

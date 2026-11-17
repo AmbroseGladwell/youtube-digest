@@ -85,3 +85,32 @@ export const makeRecipeOverview = (recipe: Partial<RecipeNote> = {}, overrides: 
     },
     ...overrides,
   });
+
+export const ARTICLE_SOURCE: WebSource = {
+  kind: "web",
+  id: SourceKey.parse("fedcba9876543210fedcba9876543210"),
+  url: "https://news.example.com/bridge",
+  title: "Bridge repairs",
+  siteName: "Example News",
+  author: "Asha Rao",
+  publishedAt: "2026-11-01T09:00:00.000Z",
+  language: "en",
+  imageUrl: null,
+  wordCount: 2300,
+};
+
+// An article's overview: key points from two chapters, and Read it anyway? saying no.
+export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview =>
+  makeOverview({
+    source: ARTICLE_SOURCE,
+    chapters: null,
+    article: {
+      chapters: [
+        { title: "The closure", summary: "Why it shut.", place: { anchor: null, quote: "The bridge" }, wordCount: 1150 },
+        { title: "Who pays", summary: "How it splits.", place: { anchor: "who-pays", quote: "The county" }, wordCount: 1150 },
+      ],
+      keyPointChapters: [0, 1, null],
+      readAnyway: { answer: "no", reason: "Nothing here needs the page.", leftOut: "It leaves out the interviews.", chapterIndexes: [] },
+    },
+    ...overrides,
+  });

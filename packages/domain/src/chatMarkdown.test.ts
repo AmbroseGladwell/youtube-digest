@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { chatMarkdown } from "./chatMarkdown.js";
 import type { Chat, ChatCitation } from "./Chat.js";
-import { makeOverview } from "./OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makeRecipeOverview } from "./OverviewFactory.testHelper.js";
 import { overviewPartHash } from "./overviewParts.js";
 
 const AT = "2026-11-15T10:00:00.000Z";
@@ -75,4 +75,27 @@ test("a cited item the overview has since rewritten points at its section", () =
     overview,
   );
   assert.match(markdown, /the overview's "How to apply", an item since changed/);
+});
+
+test("an article is answered from its overview alone: a cited chapter reads as one, and only a decline is noted", () => {
+  const article = makeArticleOverview();
+  const cited = chatMarkdown(
+    answeredWith(article.id, [{ part: "chapter", index: 1, textHash: overviewPartHash("Who pays") }], false),
+    article,
+  );
+  assert.match(cited, /from the overview of this article, not from the page itself/);
+  assert.match(cited, /Cites: item 2 of the overview's "Chapters"\./);
+  assert.doesNotMatch(cited, /Answered from the overview|doesn't cover this/);
+  const readAnyway = chatMarkdown(
+    answeredWith(article.id, [{ part: "watchAnyway", index: 0, textHash: overviewPartHash("Nothing here needs the page.") }], false),
+    article,
+  );
+  assert.match(readAnyway, /Cites: the overview's "Read it anyway\?"\./);
+  const declined = chatMarkdown(answeredWith(article.id, [], false), article);
+  assert.match(declined, /The overview of this article doesn't cover this/);
+});
+
+test("a recipe page's decline says the recipe doesn't cover it", () => {
+  const recipe = makeRecipeOverview();
+  assert.match(chatMarkdown(answeredWith(recipe.id, [], false), recipe), /The recipe doesn't cover this/);
 });
