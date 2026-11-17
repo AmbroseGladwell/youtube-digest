@@ -109,6 +109,9 @@ import { bindOverviewId } from "../../analytics/bindOverviewId.js";
 import { OverviewAnalyticsProvider } from "../../analytics/OverviewAnalyticsContext.js";
 import { useShouldAnimateNavigation } from "../../../util/viewTransitions.js";
 import { useHowToApplySlot } from "./useHowToApplySlot.js";
+import { CITED_PART_SELECTOR, CitedOverviewPartContext, type CitedOverviewPart } from "../../chats/CitedOverviewPartContext.js";
+import type { OverviewCitationView } from "../../chats/util/overviewCitationView.js";
+import type { StrokeIconName } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
@@ -132,6 +135,9 @@ export function ReaderPage() {
 }
 
 const CHAT_OPEN_MS = 320;
+// How long following a citation waits for its part to appear: a tab switch, the folded steps or
+// the dubious reasons opening. Past it, the part's section, if any, is brought into view.
+const MAX_FRAMES_TO_FIND = 20;
 
 function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
@@ -392,12 +398,68 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [chat.open, chat.field]);
   const [citedIndex, setCitedIndex] = useState<number | null>(null);
   const [sheetRest, setSheetRest] = useState<SheetRest>("raised");
-  const [sheetLine, setSheetLine] = useState<string | null>(null);
+  const [sheetLine, setSheetLine] = useState<{ text: string; icon: StrokeIconName | null } | null>(null);
   useEffect(() => {
     if (!chat.open) return;
     setSheetRest("raised");
     setSheetLine(null);
   }, [chat.open]);
+  // A part of the overview an answer's citation was followed to stays tinted until another
+  // citation is followed or chat closes (designs 319n–319v).
+  const [citedPart, setCitedPart] = useState<CitedOverviewPart | null>(null);
+  const [citedSaid, setCitedSaid] = useState("");
+  const citedPill = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (chat.open) return;
+    setCitedPart(null);
+    setCitedSaid("");
+  }, [chat.open]);
+  const citedFollowed = citedPart?.followed ?? null;
+  const citedPartName = citedPart?.part ?? null;
+  // The part is found once the note has switched tab, opened its folded steps or the reasons
+  // it's dubious, and brought to just below the top with focus, the tint its only mark.
+  useEffect(() => {
+    if (citedFollowed === null) return;
+    let frames = 0;
+    let frame = 0;
+    const bring = () => {
+      const target =
+        document.querySelector<HTMLElement>(CITED_PART_SELECTOR) ??
+        (frames >= MAX_FRAMES_TO_FIND ? document.querySelector<HTMLElement>(`[data-overview-part="${citedPartName}"]`) : null);
+      if (target === null) {
+        if (frames < MAX_FRAMES_TO_FIND) {
+          frames += 1;
+          frame = requestAnimationFrame(bring);
+        }
+        return;
+      }
+      target.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+      target.focus({ preventScroll: true });
+    };
+    frame = requestAnimationFrame(bring);
+    return () => cancelAnimationFrame(frame);
+  }, [citedFollowed, citedPartName]);
+  // Escape on the part returns to the pill that led there, raising the sheet first on a phone
+  // or in the panel; a second Escape, in chat, closes it (319w).
+  const backToAnswer = () => {
+    const pill = citedPill.current;
+    setSheetRest("raised");
+    setSheetLine(null);
+    if (pill !== null && pill.isConnected) requestAnimationFrame(() => pill.focus());
+  };
+  useEffect(() => {
+    if (citedFollowed === null) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const focused = document.activeElement;
+      if (event.key !== "Escape" || !(focused instanceof HTMLElement) || focused.closest(CITED_PART_SELECTOR) === null) return;
+      if (citedPill.current === null || !citedPill.current.isConnected) return;
+      event.preventDefault();
+      event.stopPropagation();
+      backToAnswer();
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [citedFollowed]);
 
   if (overviewQuery.isPending) {
     return (
@@ -534,9 +596,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     chat.ask(question, from);
     if (chatBeside && element !== null) bubbleTravel(element, question);
   };
-  const lowerSheet = (line: string) => {
+  const lowerSheet = (text: string, icon: StrokeIconName | null = null) => {
     setSheetRest("lowered");
-    setSheetLine(line);
+    setSheetLine({ text, icon });
   };
   const chatTranscriptAt = (positionMs: number) => {
     openTranscriptAt(positionMs);
@@ -545,13 +607,30 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const sourceWord = overview.source.kind === "podcast" ? "episode" : "video";
   const followCitation = (range: TimeRange) => {
     reader.chat.citationFollowed({ to: "source" });
+    setCitedPart(null);
     if (tab !== "Overview") changeTab("Overview");
     setCitedIndex(citedLineIndex(summaryLines, range.startMs));
     if (chatSheet && seekVideo !== null) lowerSheet(`Playing ${formatTimeRange(range.startMs, range.endMs)} from the answer`);
   };
 
+  const followOverviewPart = (view: Exclude<OverviewCitationView, { kind: "gone" }>, pill: HTMLButtonElement) => {
+    const index = view.kind === "item" ? view.index : null;
+    reader.chat.citationFollowed({ to: "overview", part: view.part, ...(index === null ? {} : { index }) });
+    setCitedIndex(null);
+    const onTab: ReaderTab = view.part === "chapter" ? "Chapters" : "Overview";
+    if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
+    citedPill.current = pill;
+    setCitedPart({ part: view.part, index, followed: (citedPart?.followed ?? 0) + 1 });
+    setCitedSaid(`Showing ${view.label} in the overview. Escape returns to the answer.`);
+    if (chatSheet) lowerSheet(`Showing ${view.label} from the answer`, "fileText");
+  };
+
   // An episode's note moves its own player: every time in it plays the episode (design 106p).
-  const withEpisode = (page: ReactNode) => (episode === null ? page : <PlaybackProvider value={episode.playback}>{page}</PlaybackProvider>);
+  // A part of the overview a chat answer led to is tinted wherever it is drawn (OV-319).
+  const withEpisode = (page: ReactNode) => {
+    const cited = <CitedOverviewPartContext.Provider value={citedPart}>{page}</CitedOverviewPartContext.Provider>;
+    return episode === null ? cited : <PlaybackProvider value={episode.playback}>{cited}</PlaybackProvider>;
+  };
 
   return withEpisode(
     <OverviewAnalyticsProvider value={overviewAnalytics}>
@@ -952,6 +1031,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               video={video}
               compact={false}
               onCitationFollowed={followCitation}
+              onOverviewPartFollowed={followOverviewPart}
               onOpenTranscriptAt={chatTranscriptAt}
             />
           </div>
@@ -961,10 +1041,12 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             rest={sheetRest}
             label={`Ask about this ${sourceWord}`}
             loweredTitle={chat.title}
-            loweredLine={sheetLine ?? `About ${overview.source.title}`}
+            loweredLine={sheetLine?.text ?? `About ${overview.source.title}`}
+            loweredIcon={sheetLine?.icon ?? null}
             playing={sheetLine !== null}
             underMasthead={isPanel}
             onRestChange={(rest) => {
+              if (rest === "raised" && sheetLine?.icon === "fileText") backToAnswer();
               setSheetRest(rest);
               if (rest === "raised") setSheetLine(null);
             }}
@@ -976,10 +1058,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               video={video}
               compact={true}
               onCitationFollowed={followCitation}
+              onOverviewPartFollowed={followOverviewPart}
               onOpenTranscriptAt={chatTranscriptAt}
             />
           </ChatSheet>
         )}
+        <p className={styles.citedSaid} role="status" data-testid={readerPageTestIds.citedSaid}>
+          {citedSaid}
+        </p>
       </div>
     </OverviewAnalyticsProvider>,
   );

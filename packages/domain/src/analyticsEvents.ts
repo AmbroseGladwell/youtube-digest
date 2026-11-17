@@ -18,6 +18,7 @@ import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
 import { ChosenAssistant, FollowUpAssistant } from "./FollowUpAssistant.js";
 import { OnboardingStep } from "./OnboardingStep.js";
+import { OVERVIEW_PARTS } from "./overviewParts.js";
 
 // A property can only be a choice, a flag, a number, one of our own random ids or a
 // provider's model id: nothing that could carry a URL, a video id or a sentence the reader
@@ -94,8 +95,9 @@ const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // Where a question about the overview was asked from: one of its questions to ask next, or typed.
 const ChatAskedFrom = z.enum(["question", "typed"]);
 const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt"]);
-// Where a chat citation leads: a moment in the source, another conversation, or one deleted since.
-const ChatCitationTarget = z.enum(["source", "conversation", "deletedConversation"]);
+// Where a chat citation leads: a moment in the source, a part of the overview, another
+// conversation, or one deleted since.
+const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
 const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
@@ -449,7 +451,14 @@ export const analyticsEvents = {
       }),
       answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),
       waited: event("A question was turned away by a wait, and which", { wait: ChatWait }),
-      citationFollowed: event("The reader follows an answer's citation, and to what", { to: ChatCitationTarget }),
+      citationFollowed: event(
+        "The reader follows an answer's citation, and to what; to the overview, which part and, unless it changed since, which item, never its text",
+        {
+          to: ChatCitationTarget,
+          part: z.enum(OVERVIEW_PARTS).optional(),
+          index: z.number().int().nonnegative().optional(),
+        },
+      ),
       opened: event("The reader opens chat beside the note, and from where", { from: ChatOpenedFrom }),
       closed: event("The reader closes chat"),
       stopped: event("The reader stops an answer while it is being written; it isn't stored or counted"),
@@ -1399,7 +1408,16 @@ export type AnalyticsEventName = {
   }[keyof AnalyticsCatalogue[Feature]];
 }[keyof AnalyticsCatalogue];
 
-export type AnalyticsEventPropsOf<D> = D extends AnalyticsEventDefinition<infer P> ? { [Key in keyof P]: z.infer<P[Key]> } : never;
+type Flatten<T> = { [Key in keyof T]: T[Key] };
+// An optional prop may be left out, not only passed as undefined.
+export type AnalyticsEventPropsOf<D> =
+  D extends AnalyticsEventDefinition<infer P>
+    ? Flatten<
+        { [Key in keyof P as P[Key] extends z.ZodOptional ? never : Key]: z.infer<P[Key]> } & {
+          [Key in keyof P as P[Key] extends z.ZodOptional ? Key : never]?: z.infer<P[Key]>;
+        }
+      >
+    : never;
 
 const flattenCatalogue = (catalogue: AnalyticsCatalogueShape): Map<string, AnalyticsEventDefinition> =>
   new Map(

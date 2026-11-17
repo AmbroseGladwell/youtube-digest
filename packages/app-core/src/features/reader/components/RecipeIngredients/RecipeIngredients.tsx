@@ -7,6 +7,7 @@ import { RecipeReadAloud, type RecipeListVoice } from "../RecipeMethod/RecipeRea
 import { useSpokenLineInView } from "../RecipeMethod/useSpokenLineInView.js";
 import styles from "./RecipeIngredients.module.scss";
 import { recipeIngredientsTestIds } from "./RecipeIngredientsTestIds.js";
+import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 
 const UNIT_CHOICES: readonly RecipeUnits[] = ["asWritten", "metric", "us"];
 
@@ -87,13 +88,14 @@ export function RecipeIngredients({
   onReset,
 }: RecipeIngredientsProps) {
   const headingId = useId();
+  const cited = useCitedOverviewPart();
   const groupName = useId();
   const { lines } = adjustment;
   const spokenLine = useSpokenLineInView<HTMLLIElement>(voice?.speaking ?? false, voice?.activeIndex ?? null);
   return (
     <section className={styles.root} aria-labelledby={headingId} data-testid={recipeIngredientsTestIds.root}>
       <div className={styles.head}>
-        <h3 className={styles.heading} id={headingId}>
+        <h3 className={styles.heading} id={headingId} {...citedPartProps(cited, "ingredient", "section")}>
           Ingredients <span className={styles.count}>· {lines.length}</span>
         </h3>
         {voice !== null && <RecipeReadAloud voice={voice} label="them" testId={recipeIngredientsTestIds.readAloud} />}
@@ -176,6 +178,7 @@ export function RecipeIngredients({
               className={`${styles.line} ${voice === null ? "" : styles.lineChoosable} ${active ? styles.lineActive : ""}`}
               aria-current={(voice === null && active) || undefined}
               onClick={voice === null ? undefined : () => voice.onSelect(index)}
+              {...citedPartProps(cited, "ingredient", index)}
               data-testid={active ? recipeIngredientsTestIds.activeLine : recipeIngredientsTestIds.line}
             >
               {voice === null ? (

@@ -21,7 +21,7 @@ import type { useChatPanel } from "../../useChatPanel.js";
 import { ARRIVING_ATTRIBUTE } from "../../util/bubbleTravel.js";
 import { chatSuggestions } from "../../util/chatSuggestions.js";
 import { conversationDate, firstQuestionOf, questionsIn } from "../../util/conversationLine.js";
-import { ChatAnswer } from "../ChatAnswer/ChatAnswer.js";
+import { ChatAnswer, type ChatAnswerProps } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerActions } from "../ChatAnswerActions/ChatAnswerActions.js";
 import { ChatConversationList } from "../ChatConversationList/ChatConversationList.js";
 import { ChatField } from "../ChatField/ChatField.js";
@@ -34,6 +34,7 @@ export interface ChatPanelProps {
   video: VideoSource | null;
   compact: boolean;
   onCitationFollowed: (range: TimeRange) => void;
+  onOverviewPartFollowed: ChatAnswerProps["onOverviewPartFollowed"];
   onOpenTranscriptAt: (positionMs: number) => void;
 }
 
@@ -63,7 +64,7 @@ const plural = (count: number, one: string) => `${count} ${count === 1 ? one : `
 // types; an answer streams in under three dots, then a caret, and is announced once, when final.
 // The header's count opens the overview's conversations.
 export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(function ChatPanel(
-  { panel, overview, video, compact, onCitationFollowed, onOpenTranscriptAt },
+  { panel, overview, video, compact, onCitationFollowed, onOverviewPartFollowed, onOpenTranscriptAt },
   fieldRef,
 ) {
   const { conversationId, chats, view, cameFrom, focusedMessage, deleting } = panel;
@@ -263,7 +264,9 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                       citations={message.citations}
                       sourceWord={sourceWord}
                       video={video}
+                      overview={overview}
                       onCitationFollowed={onCitationFollowed}
+                      onOverviewPartFollowed={onOverviewPartFollowed}
                       onOpenTranscriptAt={onOpenTranscriptAt}
                       conversationOf={conversationOf}
                       onConversationFollowed={(cited, at) =>

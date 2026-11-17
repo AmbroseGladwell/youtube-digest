@@ -7,6 +7,7 @@ import { useReaderAnalytics } from "../../../analytics/OverviewAnalyticsContext.
 import styles from "./DubiousReasonsPanel.module.scss";
 import { dubiousReasonsPanelTestIds } from "./DubiousReasonsPanelTestIds.js";
 import { timedNoun } from "../../util/timedSource.js";
+import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 
 export const DUBIOUS_REASONS_PANEL_ID = "DubiousReasonsPanel";
 const HEADING_ID = "DubiousReasonsPanel-heading";
@@ -24,6 +25,7 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
   const thanks = useRef<HTMLSpanElement | null>(null);
   const seek = useSeekPlayback(video.id);
   const analytics = useReaderAnalytics();
+  const cited = useCitedOverviewPart();
   const [markedWrong, setMarkedWrong] = useState(false);
 
   useEffect(() => {
@@ -52,7 +54,14 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
       <div className={styles.panel}>
         <div className={styles.top}>
           <div className={styles.titles}>
-            <h2 className={styles.heading} id={HEADING_ID} ref={heading} tabIndex={-1} data-testid={dubiousReasonsPanelTestIds.heading}>
+            <h2
+              {...citedPartProps(cited, "dubiousClaim", "section")}
+              className={styles.heading}
+              id={HEADING_ID}
+              ref={heading}
+              tabIndex={-1}
+              data-testid={dubiousReasonsPanelTestIds.heading}
+            >
               Why it’s flagged
             </h2>
             {dubiousClaims !== null && dubiousClaims.length > 1 && (
@@ -79,7 +88,12 @@ export function DubiousReasonsPanel({ dubiousClaims, video, onClose }: DubiousRe
         ) : (
           <ol className={styles.items}>
             {dubiousClaims.map((dubiousClaim, index) => (
-              <li key={index} className={styles.item} data-testid={dubiousReasonsPanelTestIds.reason}>
+              <li
+                key={index}
+                className={styles.item}
+                {...citedPartProps(cited, "dubiousClaim", index)}
+                data-testid={dubiousReasonsPanelTestIds.reason}
+              >
                 <p className={styles.basis} data-testid={dubiousReasonsPanelTestIds.basis}>
                   {DUBIOUS_BASIS_LABEL[dubiousClaim.basis]}
                 </p>

@@ -4,6 +4,8 @@ import { chatAnswerActionsTestIds } from "../../src/features/chats/components/Ch
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
 import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatSheetTestIds } from "../../src/features/chats/components/ChatSheet/ChatSheetTestIds.js";
+import { chatOverviewCitationTestIds } from "../../src/features/chats/components/ChatOverviewCitation/ChatOverviewCitationTestIds.js";
+import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
 import { chatCitationPillTestIds } from "../../src/features/chats/components/ChatCitationPill/ChatCitationPillTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { chatPanelTestIds } from "../../src/features/chats/components/ChatPanel/ChatPanelTestIds.js";
@@ -114,6 +116,54 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`followCitation ${answer} ${citation}`, () =>
       this.click(this.answers().nth(answer).getByTestId(chatCitationPillTestIds.pill).nth(citation)),
     );
+
+  // The whole row under an answer, overview pills then video pills, by their visible words (319c).
+  verifyCitationRowReads = (index: number, texts: string[]) =>
+    this.step(`verifyCitationRowReads ${index} ${texts.join(" | ")}`, () =>
+      expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.citations).locator(":scope > *")).toHaveText(texts),
+    );
+
+  verifyOverviewCitationsNamed = (index: number, names: string[]) =>
+    this.step(`verifyOverviewCitationsNamed ${index} ${names.join(" | ")}`, async () => {
+      const pills = this.answers().nth(index).getByTestId(chatOverviewCitationTestIds.pill);
+      await expect(pills).toHaveCount(names.length);
+      for (const [at, name] of names.entries()) await expect(pills.nth(at)).toHaveAccessibleName(name);
+    });
+
+  verifyNoNotInSource = (index: number) =>
+    this.step(`verifyNoNotInSource ${index}`, () =>
+      expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.notInSource)).toHaveCount(0),
+    );
+
+  followOverviewCitation = (answer: number, citation: number) =>
+    this.step(`followOverviewCitation ${answer} ${citation}`, () =>
+      this.click(this.answers().nth(answer).getByTestId(chatOverviewCitationTestIds.pill).nth(citation)),
+    );
+
+  verifyOverviewCitationIsFocused = (answer: number, citation: number) =>
+    this.step(`verifyOverviewCitationIsFocused ${answer} ${citation}`, () =>
+      expect(this.answers().nth(answer).getByTestId(chatOverviewCitationTestIds.pill).nth(citation)).toBeFocused(),
+    );
+
+  verifyGoneCitationReads = (answer: number, text: string) =>
+    this.step(`verifyGoneCitationReads ${answer} ${text}`, async () => {
+      const gone = this.answers().nth(answer).getByTestId(chatOverviewCitationTestIds.gone);
+      await expect(gone).toHaveText(text);
+      await expect(gone.getByRole("button")).toHaveCount(0);
+    });
+
+  // The part of the note a citation led to: tinted, focused, and the only one (319n).
+  verifyOverviewPartCited = (text: string) =>
+    this.step(`verifyOverviewPartCited ${text}`, async () => {
+      const cited = this.page.locator('[data-cited-part="true"]');
+      await expect(cited.first()).toContainText(text);
+      await expect(cited.first()).toBeFocused();
+      await expect(cited.first()).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await expect(this.page.getByTestId(readerPageTestIds.citedSaid)).not.toBeEmpty();
+    });
+
+  verifyCitedSaid = (text: string) =>
+    this.step(`verifyCitedSaid ${text}`, () => expect(this.page.getByTestId(readerPageTestIds.citedSaid)).toHaveText(text));
 
   verifyCitationMenuOffers = (watchName: string) =>
     this.step(`verifyCitationMenuOffers ${watchName}`, async () => {

@@ -265,7 +265,8 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   (`follow-up-questions.md`, "Answered here").
 - **Events**, `reader.chat.*`: opened (from a question, typed, or the menu), closed, asked (from
   a question or typed, new conversation or not), answered (in the source, citations of each
-  kind), answerFailed, stopped, waited (which wait), citationFollowed, answerCopied, continuedIn
+  kind), answerFailed, stopped, waited (which wait), citationFollowed (to what; for the overview,
+  the part and, unless it changed since, the item's place, never its text), answerCopied, continuedIn
   (assistant, filled in or copied, connected), conversationOpened and conversationDeleted. Never
   the question or the answer.
 
@@ -306,6 +307,24 @@ and returns focus to what opened it. On a phone and in the extension's panel it 
   (`citedLineIndex`) and, where a player can seek (the video beside the extension's panel, an
   episode's own audio), plays from there; on the web, which has no player for the video, it offers
   the video at that time on YouTube or the transcript, as a note's moment does.
+- **The overview cited** (OV-319, design 319a–319ac; handoff `design_handoff_ov319_citing/`): each
+  part of the overview an answer rests on is an outlined pill with the note's mark
+  (`ChatOverviewCitation`), named by the note's own heading: Step 2, Key point 3, How to apply,
+  Verdict, What it's selling, Watch it anyway?, "Chapter: Dosing", "Ingredient: …", Method step 4,
+  and "Why it's dubious" for a dubious reason. A section the note doesn't number is numbered only
+  when one answer cites two of its items ("How to apply, 1"). Its accessible name adds the item's
+  opening words. They come first in the answer's one row of pills, in the note's order, then the
+  video's in time order (`overviewCitationViews`). An answer from the overview alone has no label:
+  "Not in the video" is only for one that cites neither. Following one keeps chat open, switches
+  to Chapters for a chapter, opens folded steps or the dubious reasons when it has to, brings the
+  part to about 90px below the top, tints it and gives it focus (`CitedOverviewPartContext`, the
+  global `[data-cited-part]` rule); the verdict, What it's selling and Watch it anyway are tinted
+  whole. A polite status says "Showing Step 2 in the overview. Escape returns to the answer." and
+  Escape does, a second closing chat. On a phone and in the panel the sheet lowers to "Showing
+  Step 2 from the answer", and raising it returns focus to the pill. One tint at a time, until
+  another citation is followed or chat closes. An item rewritten since reads "Step 2 · since
+  changed" and leads to its section's heading; a section no longer in the overview is muted text,
+  "What it's selling · no longer in the overview", not a link.
 - **Under the latest answer:** Copy, and "Continue in {assistant}" (`chatHandOffPrompt`): connected,
   it names the overview and the conversation for the assistant to read with `get_chat`; otherwise
   it carries the note and the conversation. With no assistant chosen it opens OV-266's menu as

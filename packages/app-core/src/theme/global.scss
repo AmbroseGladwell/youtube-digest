@@ -130,3 +130,19 @@ a:hover {
     animation: none !important;
   }
 }
+
+// A part of the overview a chat answer's citation was followed to: tinted until another
+// citation is followed or chat closes, and brought to just below the top (designs 319n–319s).
+// Focus lands on it with no outline: the tint is the mark.
+[data-overview-part] {
+  scroll-margin-top: 90px;
+}
+
+// Raised above a component's own line and hover backgrounds, which load after this sheet.
+html [data-overview-part][data-cited-part="true"] {
+  border-radius: 0.75rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  outline: none;
+  transition: background-color 200ms ease;
+}
