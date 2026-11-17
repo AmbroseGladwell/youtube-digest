@@ -34,7 +34,7 @@ export interface FollowUpQuestionsProps {
   analytics: ReaderAnalytics["followUps"];
   // Present where chat is offered: a tapped question is answered in the app unless the reader
   // chose their assistant (design 310f). Absent, the block is OV-266's as built.
-  onAskHere?: (question: string) => void;
+  onAskHere?: ((question: string) => void) | undefined;
 }
 
 type Motion = "arriving" | "idle" | "leaving" | "entering";

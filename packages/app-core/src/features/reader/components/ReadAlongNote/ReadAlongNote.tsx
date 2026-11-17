@@ -3,6 +3,7 @@ import { SOURCE_STEPS_SECTION, formatTimestamp, type NoteLine, type TimeRange } 
 import { DubiousStepFlag } from "../DubiousStepFlag/DubiousStepFlag.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { sectionHeadingAt } from "../../../player/util/playerBarView.js";
+import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import { useFollowTheVoice } from "./useFollowTheVoice.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
@@ -29,6 +30,8 @@ export interface ReadAlongNoteProps {
   renderLineEnd?: (line: NoteLine) => ReactNode;
   // The line whose stretch holds the playhead of the video beside the panel (design 250e).
   playingIndex?: number | null;
+  // The line holding a moment a chat answer cited, tinted and brought into view (design 310n).
+  citedIndex?: number | null;
 }
 
 // Design 250m: past eight steps, the first five and a way to show the rest. Most lists are six
@@ -63,6 +66,7 @@ export function ReadAlongNote({
   renderRange,
   renderLineEnd,
   playingIndex = null,
+  citedIndex = null,
 }: ReadAlongNoteProps) {
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
@@ -92,6 +96,13 @@ export function ReadAlongNote({
     element?.addEventListener("beforematch", open);
     return () => element?.removeEventListener("beforematch", open);
   }, []);
+
+  useEffect(() => {
+    if (citedIndex === null) return;
+    root.current
+      ?.querySelector<HTMLElement>(`[data-line-index="${citedIndex}"]`)
+      ?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  }, [citedIndex]);
 
   const showAllSteps = () => {
     analytics.sourceSteps.allShown({ steps: stepIndexes.length });
@@ -130,11 +141,12 @@ export function ReadAlongNote({
                 line.bullet ? styles.bulletLine : ""
               } ${line.heading && (slot || line.aside) ? styles.headingWithSlot : ""} ${active ? styles.lineActive : ""} ${
                 step ? styles.stepLine : ""
-              } ${playing ? styles.linePlaying : ""}`}
+              } ${playing ? styles.linePlaying : ""} ${index === citedIndex ? styles.lineCited : ""}`}
               onClick={() => select(index)}
               aria-current={playing ? "step" : undefined}
               data-read-along-line
               data-line-index={index}
+              data-cited={index === citedIndex ? "true" : undefined}
               data-collapsed={collapsed.has(index) ? "true" : undefined}
               data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
             >

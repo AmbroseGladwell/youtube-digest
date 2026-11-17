@@ -11,6 +11,7 @@ import {
   sourceName,
   sourceUrl,
   type RecipeUnits,
+  type TimeRange,
   isUnreadableRecordError,
   overviewMetaParts,
   overviewNoteCaptions,
@@ -49,6 +50,11 @@ import { ArticleChaptersPanel } from "../components/ArticleChaptersPanel/Article
 import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLinks.js";
 import { ArticleResources } from "../components/ArticleResources/ArticleResources.js";
 import { FollowUpQuestions } from "../components/FollowUpQuestions/FollowUpQuestions.js";
+import { ChatPanel } from "../../chats/components/ChatPanel/ChatPanel.js";
+import { NoteAskField } from "../../chats/components/NoteAskField/NoteAskField.js";
+import { useChatPanel } from "../../chats/useChatPanel.js";
+import { chatOffered } from "../../chats/util/chatOffered.js";
+import { citedLineIndex } from "../../chats/util/citedLineIndex.js";
 import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
@@ -88,6 +94,7 @@ import { playerBarView } from "../../player/util/playerBarView.js";
 import { useSync } from "../../sync/SyncContext.js";
 import { useOverviewInWebApp } from "../../sync/useOverviewInWebApp.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
+import { isConnected } from "../../sync/types/SyncConnection.js";
 import { useAccountNeeded } from "../../accountLibraries/useAccountNeeded.js";
 import { useOverviewProjects } from "../../projects/useOverviewProjects.js";
 import { useMeasuredHeight } from "../../../util/useMeasuredHeight.js";
@@ -346,6 +353,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [stepLine, reader]);
 
+  const chat = useChatPanel(overviewId);
+  const [citedIndex, setCitedIndex] = useState<number | null>(null);
+
   if (overviewQuery.isPending) {
     return (
       <div className={styles.state} data-testid={readerPageTestIds.skeleton}>
@@ -470,374 +480,411 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     void navigate(Routes.home(), { replace: true, viewTransition: animateNavigation });
   };
 
+  // Chat sits beside the note on the web (design 310a); the phone's and the panel's sheet is still to come.
+  const chatBeside =
+    chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false }) && !chat.noSource && !isPanel && !isPhone;
+  const sourceWord = overview.source.kind === "podcast" ? "episode" : "video";
+  const followCitation = (range: TimeRange) => {
+    reader.chat.citationFollowed({ to: "source" });
+    if (tab !== "Overview") changeTab("Overview");
+    setCitedIndex(citedLineIndex(summaryLines, range.startMs));
+  };
+
   // An episode's note moves its own player: every time in it plays the episode (design 106p).
   const withEpisode = (page: ReactNode) => (episode === null ? page : <PlaybackProvider value={episode.playback}>{page}</PlaybackProvider>);
 
   return withEpisode(
     <OverviewAnalyticsProvider value={overviewAnalytics}>
-      <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
-        <ReaderMasthead
-          overview={overview}
-          metaParts={overviewMetaParts(overview)}
-          savedChip={readAtNoteEnd ? null : savedChip}
-          read={state.read}
-          favourite={state.favourite}
-          playing={notePlayer.playing}
-          editingTopics={editingTopics}
-          compact={isPanel}
-          webApp={webApp}
-          listening={playerDocked}
-          onToggleRead={toggleRead}
-          onToggleFavourite={() => toggleFavourite("masthead")}
-          onTogglePlaying={() => {
-            reader.overview.listenPressed({ listening: !notePlayer.playing });
-            recipeVoice?.release();
-            notePlayer.main("masthead");
-          }}
-          onListen={listen}
-          onEditingTopicsChange={setEditingTopics}
-          onEditReason={editReason}
-          onShare={
-            overviewShare.available
-              ? () => {
-                  overviewShare.refresh();
-                  setSharing(true);
-                }
-              : null
-          }
-          regenerate={regenerate}
-          recipeActions={recipeActions}
-          onDelete={() => setConfirmingDelete(true)}
-          projects={accountNeeded ? null : projects}
-        />
+      <div className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}>
+        <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
+          <ReaderMasthead
+            overview={overview}
+            metaParts={overviewMetaParts(overview)}
+            savedChip={readAtNoteEnd ? null : savedChip}
+            read={state.read}
+            favourite={state.favourite}
+            playing={notePlayer.playing}
+            editingTopics={editingTopics}
+            compact={isPanel}
+            webApp={webApp}
+            listening={playerDocked}
+            onToggleRead={toggleRead}
+            onToggleFavourite={() => toggleFavourite("masthead")}
+            onTogglePlaying={() => {
+              reader.overview.listenPressed({ listening: !notePlayer.playing });
+              recipeVoice?.release();
+              notePlayer.main("masthead");
+            }}
+            onListen={listen}
+            onEditingTopicsChange={setEditingTopics}
+            onEditReason={editReason}
+            onShare={
+              overviewShare.available
+                ? () => {
+                    overviewShare.refresh();
+                    setSharing(true);
+                  }
+                : null
+            }
+            regenerate={regenerate}
+            recipeActions={recipeActions}
+            onDelete={() => setConfirmingDelete(true)}
+            onChat={chatBeside ? chat.openLatest : null}
+            projects={accountNeeded ? null : projects}
+          />
 
-        {episode !== null && overview.source.kind === "podcast" && (
-          <div className={styles.episode}>
-            <EpisodePlayer engine={episode} source={overview.source} />
-          </div>
-        )}
+          {episode !== null && overview.source.kind === "podcast" && (
+            <div className={styles.episode}>
+              <EpisodePlayer engine={episode} source={overview.source} />
+            </div>
+          )}
 
-        {wasAlreadyMade(location.state) && <ReaderNotice>You made an overview of this on {madeOn(overview.savedAt)}.</ReaderNotice>}
+          {wasAlreadyMade(location.state) && <ReaderNotice>You made an overview of this on {madeOn(overview.savedAt)}.</ReaderNotice>}
 
-        {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
+          {savedLocallyNote.shown && <SavedLocallyNote onDismiss={savedLocallyNote.dismiss} />}
 
-        {recipeCopied && recipeNote !== null && (
-          <ReaderNotice>
-            <span role="status">
-              Recipe copied, with a link to {recipeNote.source.kind === "youtube" ? "the video" : sourceName(recipeNote.source)}
-            </span>
-          </ReaderNotice>
-        )}
+          {recipeCopied && recipeNote !== null && (
+            <ReaderNotice>
+              <span role="status">
+                Recipe copied, with a link to {recipeNote.source.kind === "youtube" ? "the video" : sourceName(recipeNote.source)}
+              </span>
+            </ReaderNotice>
+          )}
 
-        {tabsShown.length > 1 && (
-          <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} tabs={tabsShown} ref={tabsHeight.measured} />
-        )}
+          {tabsShown.length > 1 && (
+            <ReaderTabs active={tab} tabId={tabId} panelId={panelId} onChange={changeTab} tabs={tabsShown} ref={tabsHeight.measured} />
+          )}
 
-        <div key={tab} className={`${styles.main} ${styles.panel}`} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
-          {tab === "Overview" && (
-            <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
-              {recipeNote !== null && <RecipeTimes recipe={recipeNote.recipe} source={recipeNote.source} />}
-              <CaptureReasonLine overview={overview} editing={editingReason} compact={isPanel} onEditingChange={setEditingReason} />
-              {recipeCooking !== null && (
-                <RecipeCookButton
-                  placeStep={recipeCooking.placeStep}
-                  onStart={() => cooking.start("summary", 0)}
-                  onCarryOn={recipeCooking.onCarryOn}
-                />
-              )}
-              <ReadAlongNote
-                key={overviewId}
-                lines={summaryLines}
-                captions={captions}
-                sectionSlot={howToApplySlot}
-                activeIndex={notePlayer.activeIndex}
-                speaking={notePlayer.playing}
-                onSelectLine={notePlayer.selectLine}
-                playingIndex={playingSourceStep === null ? null : (sourceStepLines[playingSourceStep]?.index ?? null)}
-                renderRange={(line, range, active) => {
-                  const step = noteLineRange(line, lines);
-                  const playing = step.step !== undefined && playingSourceStep === step.step - 1;
-                  return (
-                    video !== null && (
-                      <LineRangeTag
-                        {...step}
-                        playing={playing}
-                        range={range}
-                        video={video}
-                        active={active}
-                        asSheet={isPhone && !isPanel}
-                        canReadTranscript={true}
-                        onOpenTranscriptAt={openTranscriptAt}
-                        direct={episode !== null}
-                      />
+          <div key={tab} className={`${styles.main} ${styles.panel}`} role="tabpanel" id={panelId(tab)} aria-labelledby={tabId(tab)}>
+            {tab === "Overview" && (
+              <div className={styles.note} data-testid={readerPageTestIds.overviewPanel}>
+                {recipeNote !== null && <RecipeTimes recipe={recipeNote.recipe} source={recipeNote.source} />}
+                <CaptureReasonLine overview={overview} editing={editingReason} compact={isPanel} onEditingChange={setEditingReason} />
+                {recipeCooking !== null && (
+                  <RecipeCookButton
+                    placeStep={recipeCooking.placeStep}
+                    onStart={() => cooking.start("summary", 0)}
+                    onCarryOn={recipeCooking.onCarryOn}
+                  />
+                )}
+                <ReadAlongNote
+                  key={overviewId}
+                  lines={summaryLines}
+                  captions={captions}
+                  sectionSlot={howToApplySlot}
+                  activeIndex={notePlayer.activeIndex}
+                  speaking={notePlayer.playing}
+                  onSelectLine={notePlayer.selectLine}
+                  citedIndex={citedIndex}
+                  playingIndex={playingSourceStep === null ? null : (sourceStepLines[playingSourceStep]?.index ?? null)}
+                  renderRange={(line, range, active) => {
+                    const step = noteLineRange(line, lines);
+                    const playing = step.step !== undefined && playingSourceStep === step.step - 1;
+                    return (
+                      video !== null && (
+                        <LineRangeTag
+                          {...step}
+                          playing={playing}
+                          range={range}
+                          video={video}
+                          active={active}
+                          asSheet={isPhone && !isPanel}
+                          canReadTranscript={true}
+                          onOpenTranscriptAt={openTranscriptAt}
+                          direct={episode !== null}
+                        />
+                      )
+                    );
+                  }}
+                  renderLineEnd={(line) =>
+                    webArticle !== null ? (
+                      <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />
+                    ) : (
+                      recipeNote !== null &&
+                      line.section === SUMMARY_SECTION &&
+                      !line.heading && <RecipePageLink source={recipeNote.source} onPage={onPage} />
                     )
-                  );
-                }}
-                renderLineEnd={(line) =>
-                  webArticle !== null ? (
-                    <ArticleLineLinks line={line} {...webArticle} onPage={onPage} />
-                  ) : (
-                    recipeNote !== null &&
-                    line.section === SUMMARY_SECTION &&
-                    !line.heading && <RecipePageLink source={recipeNote.source} onPage={onPage} />
-                  )
-                }
+                  }
+                />
+                {webArticle !== null && resourcesOn && (
+                  <ArticleResources key={`resources-${overviewId}`} {...webArticle} onPage={onPage} compact={isPanel || isPhone} />
+                )}
+                {recipeNote !== null && adjustment !== null && scale !== null && (
+                  <>
+                    <RecipeIngredients
+                      adjustment={adjustment}
+                      scale={scale}
+                      units={recipeUnits}
+                      columns={!isPanel && !isPhone}
+                      adjustable={true}
+                      voice={recipeVoice?.ingredients ?? null}
+                      said={recipe?.ingredientsSaid ?? null}
+                      onScaleChange={setRecipeScale}
+                      onUnitsChange={chooseUnits}
+                      onReset={() => {
+                        setRecipeScale(null);
+                        chooseUnits("asWritten");
+                      }}
+                    />
+                    <RecipeMethod
+                      recipe={recipeNote.recipe}
+                      actions={methodActions}
+                      source={recipeNote.source}
+                      note={adjustment.methodNote}
+                      voice={recipeVoice?.method ?? null}
+                      cooking={recipeCooking}
+                      stacked={isPhone && !isPanel}
+                      usTemperatures={recipeUnits === "us"}
+                      methodAmounts={adjustment.methodAmounts}
+                      playingStep={playingStep}
+                      renderMoment={(step) => {
+                        const range = recipeNote.recipe.steps[step]?.range;
+                        return (
+                          video !== null &&
+                          range !== undefined && (
+                            <LineRangeTag
+                              kind="recipeStep"
+                              about={recipeNote.recipe.steps[step]!.text}
+                              step={step + 1}
+                              playing={playingStep === step}
+                              range={range}
+                              video={video}
+                              active={false}
+                              asSheet={isPhone && !isPanel}
+                              canReadTranscript={true}
+                              onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs, step + 1)}
+                            />
+                          )
+                        );
+                      }}
+                    />
+                  </>
+                )}
+                {followUpQuestionsOn && (overview.followUpQuestions?.length ?? 0) > 0 && (
+                  <FollowUpQuestions
+                    key={`follow-ups-${overviewId}`}
+                    overview={overview}
+                    questions={overview.followUpQuestions ?? []}
+                    asked={state.asked}
+                    onAsked={(asked) => setOverviewState.mutate({ overviewId, patch: { asked } })}
+                    compact={isPanel || isPhone}
+                    analytics={reader.followUps}
+                    onAskHere={chatBeside ? (question) => chat.ask(question, "question") : undefined}
+                  />
+                )}
+                {chatBeside && (
+                  <NoteAskField sourceWord={sourceWord} chatOpen={chat.open} onAsk={(question) => chat.ask(question, "typed")} />
+                )}
+                {onetimeHost !== null && (
+                  <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>
+                )}
+                <NoteEndActions
+                  read={state.read}
+                  favourite={state.favourite}
+                  savedChip={readAtNoteEnd ? savedChip : null}
+                  onToggleRead={() => toggleRead("noteEnd")}
+                  onToggleFavourite={() => toggleFavourite("noteEnd")}
+                />
+                <OnboardingNextSteps overviewId={overview.id} />
+                <RelatedByTag
+                  tags={overviewTags(overviewQuery.data)}
+                  related={relatedByTag(overviewQuery.data, readableEntries(libraryQuery.data ?? []))}
+                  tagsLink={!isPanel}
+                  onTagFollowed={() => reader.relatedByTag.tagFollowed()}
+                  onOverviewOpened={(sharedTags) => reader.relatedByTag.overviewOpened({ sharedTags })}
+                  onMoreShown={(shown) => reader.relatedByTag.moreShown({ shown })}
+                />
+              </div>
+            )}
+            {tab === "Transcript" && video !== null && (
+              <TranscriptPanel
+                key={video.id}
+                video={video}
+                openAtMs={transcriptOpenAtMs}
+                openedFrom={openedFrom}
+                openedFromStep={transcriptStep}
+                onBackToChapters={() => changeTab("Chapters")}
               />
-              {webArticle !== null && resourcesOn && (
-                <ArticleResources key={`resources-${overviewId}`} {...webArticle} onPage={onPage} compact={isPanel || isPhone} />
+            )}
+            {tab === "Chapters" && video !== null && (
+              <ChaptersPanel chapters={overview.chapters} video={video} onOpenTranscriptAt={openTranscriptAt} steps={recipe?.steps ?? []} />
+            )}
+            {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} onPage={onPage} />}
+          </div>
+
+          {/* Where the library's order takes you next. At the foot rather than on the bar:
+            the next note is a thing to want once this one is read (design 4a has no
+            stepper, and the panel has no list to step through). */}
+          {!isPanel && neighbours.position !== null && (
+            <nav className={styles.foot} aria-label="Neighbouring overviews">
+              {neighbours.previousId ? (
+                <PageLink
+                  className={styles.stepLink}
+                  to={Routes.overview(neighbours.previousId)}
+                  state={steppingState}
+                  onClick={() => reader.page.neighbourFollowed({ direction: "previous" })}
+                  data-testid={readerPageTestIds.previousLink}
+                >
+                  <StrokeIcon name="arrowLeft" />
+                  Previous
+                </PageLink>
+              ) : (
+                <span />
               )}
-              {recipeNote !== null && adjustment !== null && scale !== null && (
+              <span className={styles.position} data-testid={readerPageTestIds.position}>
+                {neighbours.position} of {neighbours.total}
+              </span>
+              {neighbours.nextId ? (
+                <PageLink
+                  className={styles.stepLink}
+                  to={Routes.overview(neighbours.nextId)}
+                  state={steppingState}
+                  onClick={() => reader.page.neighbourFollowed({ direction: "next" })}
+                  data-testid={readerPageTestIds.nextLink}
+                >
+                  Next
+                  <StrokeIcon name="arrowRight" />
+                </PageLink>
+              ) : (
+                <span />
+              )}
+            </nav>
+          )}
+
+          {!accountNeeded && projects.dialogs}
+
+          {confirmingDelete && (
+            <DeleteOverviewDialog
+              title={overview.source.title}
+              onDelete={confirmDelete}
+              onClose={() => {
+                reader.deleteDialog.cancelled();
+                setConfirmingDelete(false);
+              }}
+            />
+          )}
+
+          {explainingRegenerate && webPage !== null && (
+            <RegenerateArticleDialog url={webPage.url} onClose={() => setExplainingRegenerate(false)} />
+          )}
+
+          {printingRecipe && recipeNote !== null && (
+            <RecipePrintSheet
+              source={recipeNote.source}
+              from={recipeFrom(recipeNote.source)}
+              recipe={recipeNote.recipe}
+              lines={adjustment?.lines ?? []}
+              methodAmounts={adjustment?.methodAmounts ?? []}
+              adjusted={adjustment?.copyNote ?? null}
+              onDone={endPrinting}
+            />
+          )}
+
+          {cookable && adjustment !== null && scale !== null && (
+            <CookingMode
+              mode={cooking}
+              title={recipeNote.source.title}
+              from={sourceName(recipeNote.source)}
+              steps={recipeNote.recipe.steps}
+              actions={methodActions}
+              actionNote={adjustment.actionNote}
+              surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
+              usTemperatures={recipeUnits === "us"}
+              methodAmounts={adjustment.methodAmounts}
+              videoId={video?.id ?? null}
+              seekVideo={seekVideo}
+              ingredients={
                 <>
+                  {adjustment.cookingNote !== null && <p className={styles.cookingAdjusted}>{adjustment.cookingNote}</p>}
                   <RecipeIngredients
                     adjustment={adjustment}
                     scale={scale}
                     units={recipeUnits}
-                    columns={!isPanel && !isPhone}
-                    adjustable={true}
-                    voice={recipeVoice?.ingredients ?? null}
+                    columns={false}
+                    adjustable={false}
+                    voice={null}
                     said={recipe?.ingredientsSaid ?? null}
                     onScaleChange={setRecipeScale}
                     onUnitsChange={chooseUnits}
-                    onReset={() => {
-                      setRecipeScale(null);
-                      chooseUnits("asWritten");
-                    }}
-                  />
-                  <RecipeMethod
-                    recipe={recipeNote.recipe}
-                    actions={methodActions}
-                    source={recipeNote.source}
-                    note={adjustment.methodNote}
-                    voice={recipeVoice?.method ?? null}
-                    cooking={recipeCooking}
-                    stacked={isPhone && !isPanel}
-                    usTemperatures={recipeUnits === "us"}
-                    methodAmounts={adjustment.methodAmounts}
-                    playingStep={playingStep}
-                    renderMoment={(step) => {
-                      const range = recipeNote.recipe.steps[step]?.range;
-                      return (
-                        video !== null &&
-                        range !== undefined && (
-                          <LineRangeTag
-                            kind="recipeStep"
-                            about={recipeNote.recipe.steps[step]!.text}
-                            step={step + 1}
-                            playing={playingStep === step}
-                            range={range}
-                            video={video}
-                            active={false}
-                            asSheet={isPhone && !isPanel}
-                            canReadTranscript={true}
-                            onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs, step + 1)}
-                          />
-                        )
-                      );
-                    }}
+                    onReset={() => undefined}
                   />
                 </>
-              )}
-              {followUpQuestionsOn && (overview.followUpQuestions?.length ?? 0) > 0 && (
-                <FollowUpQuestions
-                  key={`follow-ups-${overviewId}`}
-                  overview={overview}
-                  questions={overview.followUpQuestions ?? []}
-                  asked={state.asked}
-                  onAsked={(asked) => setOverviewState.mutate({ overviewId, patch: { asked } })}
-                  compact={isPanel || isPhone}
-                  analytics={reader.followUps}
-                />
-              )}
-              {onetimeHost !== null && (
-                <ReaderNotice>Read with one-time access. The Create button on {onetimeHost} will ask Chrome once.</ReaderNotice>
-              )}
-              <NoteEndActions
-                read={state.read}
-                favourite={state.favourite}
-                savedChip={readAtNoteEnd ? savedChip : null}
-                onToggleRead={() => toggleRead("noteEnd")}
-                onToggleFavourite={() => toggleFavourite("noteEnd")}
-              />
-              <OnboardingNextSteps overviewId={overview.id} />
-              <RelatedByTag
-                tags={overviewTags(overviewQuery.data)}
-                related={relatedByTag(overviewQuery.data, readableEntries(libraryQuery.data ?? []))}
-                tagsLink={!isPanel}
-                onTagFollowed={() => reader.relatedByTag.tagFollowed()}
-                onOverviewOpened={(sharedTags) => reader.relatedByTag.overviewOpened({ sharedTags })}
-                onMoreShown={(shown) => reader.relatedByTag.moreShown({ shown })}
-              />
-            </div>
-          )}
-          {tab === "Transcript" && video !== null && (
-            <TranscriptPanel
-              key={video.id}
-              video={video}
-              openAtMs={transcriptOpenAtMs}
-              openedFrom={openedFrom}
-              openedFromStep={transcriptStep}
-              onBackToChapters={() => changeTab("Chapters")}
+              }
             />
           )}
-          {tab === "Chapters" && video !== null && (
-            <ChaptersPanel chapters={overview.chapters} video={video} onOpenTranscriptAt={openTranscriptAt} steps={recipe?.steps ?? []} />
+
+          {sharing && (
+            <ShareOverviewDialog
+              share={overviewShare.share}
+              edited={overviewShare.edited}
+              audioMissing={overviewShare.audioMissing}
+              signedIn={sync.connected}
+              busy={shareOverview.isPending || stopSharing.isPending}
+              failed={shareOverview.isError || stopSharing.isError}
+              onCreate={() => shareOverview.mutate({ overview })}
+              onStop={() => {
+                if (overviewShare.share !== null) {
+                  stopSharing.mutate({ token: overviewShare.share.token });
+                }
+              }}
+              onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
+              onClose={() => setSharing(false)}
+            />
           )}
-          {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} onPage={onPage} />}
-        </div>
 
-        {/* Where the library's order takes you next. At the foot rather than on the bar:
-            the next note is a thing to want once this one is read (design 4a has no
-            stepper, and the panel has no list to step through). */}
-        {!isPanel && neighbours.position !== null && (
-          <nav className={styles.foot} aria-label="Neighbouring overviews">
-            {neighbours.previousId ? (
-              <PageLink
-                className={styles.stepLink}
-                to={Routes.overview(neighbours.previousId)}
-                state={steppingState}
-                onClick={() => reader.page.neighbourFollowed({ direction: "previous" })}
-                data-testid={readerPageTestIds.previousLink}
-              >
-                <StrokeIcon name="arrowLeft" />
-                Previous
-              </PageLink>
-            ) : (
-              <span />
-            )}
-            <span className={styles.position} data-testid={readerPageTestIds.position}>
-              {neighbours.position} of {neighbours.total}
-            </span>
-            {neighbours.nextId ? (
-              <PageLink
-                className={styles.stepLink}
-                to={Routes.overview(neighbours.nextId)}
-                state={steppingState}
-                onClick={() => reader.page.neighbourFollowed({ direction: "next" })}
-                data-testid={readerPageTestIds.nextLink}
-              >
-                Next
-                <StrokeIcon name="arrowRight" />
-              </PageLink>
-            ) : (
-              <span />
-            )}
-          </nav>
+          {(!isPanel || playerDocked) && (
+            <ReaderPlayerBar
+              view={barView}
+              status={notePlayer.snapshot.status}
+              time={notePlayer.time}
+              lines={lines}
+              lineStarts={notePlayer.snapshot.timings.lineStarts}
+              durationSeconds={notePlayer.snapshot.timings.durationSeconds}
+              favourite={isPanel ? { on: state.favourite, onToggle: () => toggleFavourite("playerBar") } : null}
+              canSignIn={sync.available}
+              onMain={() => {
+                recipeVoice?.release();
+                notePlayer.main("playerBar");
+              }}
+              onSkip={(delta) => player.skip(delta)}
+              onSeek={(seconds) => player.seek(seconds)}
+              onCycleRate={() => player.cycleRate()}
+              onAction={(action) => {
+                if (action === "markRead") {
+                  setReadAtNoteEnd(false);
+                  reader.overview.readSwitched({ read: true, from: "playerBar" });
+                  setOverviewState.mutate({ overviewId, patch: { read: true } });
+                } else if (action === "tryAgain") {
+                  notePlayer.play("playerBar");
+                } else {
+                  player.readAlong();
+                }
+              }}
+              onReRecord={() => player.reRecord()}
+              onCookFromHere={cookFromHere}
+            />
+          )}
+        </article>
+        {chatBeside && chat.open && (
+          <div className={styles.chatColumn}>
+            <ChatPanel
+              ref={chat.field}
+              overview={overview}
+              video={video}
+              conversationId={chat.conversationId}
+              chats={chat.chats}
+              ask={chat.state}
+              compact={false}
+              onAsk={chat.ask}
+              onStop={chat.stop}
+              onNewConversation={chat.newConversation}
+              onClose={chat.close}
+              onCitationFollowed={followCitation}
+              onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs)}
+            />
+          </div>
         )}
-
-        {!accountNeeded && projects.dialogs}
-
-        {confirmingDelete && (
-          <DeleteOverviewDialog
-            title={overview.source.title}
-            onDelete={confirmDelete}
-            onClose={() => {
-              reader.deleteDialog.cancelled();
-              setConfirmingDelete(false);
-            }}
-          />
-        )}
-
-        {explainingRegenerate && webPage !== null && (
-          <RegenerateArticleDialog url={webPage.url} onClose={() => setExplainingRegenerate(false)} />
-        )}
-
-        {printingRecipe && recipeNote !== null && (
-          <RecipePrintSheet
-            source={recipeNote.source}
-            from={recipeFrom(recipeNote.source)}
-            recipe={recipeNote.recipe}
-            lines={adjustment?.lines ?? []}
-            methodAmounts={adjustment?.methodAmounts ?? []}
-            adjusted={adjustment?.copyNote ?? null}
-            onDone={endPrinting}
-          />
-        )}
-
-        {cookable && adjustment !== null && scale !== null && (
-          <CookingMode
-            mode={cooking}
-            title={recipeNote.source.title}
-            from={sourceName(recipeNote.source)}
-            steps={recipeNote.recipe.steps}
-            actions={methodActions}
-            actionNote={adjustment.actionNote}
-            surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
-            usTemperatures={recipeUnits === "us"}
-            methodAmounts={adjustment.methodAmounts}
-            videoId={video?.id ?? null}
-            seekVideo={seekVideo}
-            ingredients={
-              <>
-                {adjustment.cookingNote !== null && <p className={styles.cookingAdjusted}>{adjustment.cookingNote}</p>}
-                <RecipeIngredients
-                  adjustment={adjustment}
-                  scale={scale}
-                  units={recipeUnits}
-                  columns={false}
-                  adjustable={false}
-                  voice={null}
-                  said={recipe?.ingredientsSaid ?? null}
-                  onScaleChange={setRecipeScale}
-                  onUnitsChange={chooseUnits}
-                  onReset={() => undefined}
-                />
-              </>
-            }
-          />
-        )}
-
-        {sharing && (
-          <ShareOverviewDialog
-            share={overviewShare.share}
-            edited={overviewShare.edited}
-            audioMissing={overviewShare.audioMissing}
-            signedIn={sync.connected}
-            busy={shareOverview.isPending || stopSharing.isPending}
-            failed={shareOverview.isError || stopSharing.isError}
-            onCreate={() => shareOverview.mutate({ overview })}
-            onStop={() => {
-              if (overviewShare.share !== null) {
-                stopSharing.mutate({ token: overviewShare.share.token });
-              }
-            }}
-            onSignIn={() => void navigate(Routes.signIn(), { viewTransition: animateNavigation })}
-            onClose={() => setSharing(false)}
-          />
-        )}
-
-        {(!isPanel || playerDocked) && (
-          <ReaderPlayerBar
-            view={barView}
-            status={notePlayer.snapshot.status}
-            time={notePlayer.time}
-            lines={lines}
-            lineStarts={notePlayer.snapshot.timings.lineStarts}
-            durationSeconds={notePlayer.snapshot.timings.durationSeconds}
-            favourite={isPanel ? { on: state.favourite, onToggle: () => toggleFavourite("playerBar") } : null}
-            canSignIn={sync.available}
-            onMain={() => {
-              recipeVoice?.release();
-              notePlayer.main("playerBar");
-            }}
-            onSkip={(delta) => player.skip(delta)}
-            onSeek={(seconds) => player.seek(seconds)}
-            onCycleRate={() => player.cycleRate()}
-            onAction={(action) => {
-              if (action === "markRead") {
-                setReadAtNoteEnd(false);
-                reader.overview.readSwitched({ read: true, from: "playerBar" });
-                setOverviewState.mutate({ overviewId, patch: { read: true } });
-              } else if (action === "tryAgain") {
-                notePlayer.play("playerBar");
-              } else {
-                player.readAlong();
-              }
-            }}
-            onReRecord={() => player.reRecord()}
-            onCookFromHere={cookFromHere}
-          />
-        )}
-      </article>
+      </div>
     </OverviewAnalyticsProvider>,
   );
 }

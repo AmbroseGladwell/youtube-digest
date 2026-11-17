@@ -50,6 +50,7 @@ export interface ReaderMastheadProps {
   regenerate: OverviewActionsMenuProps["regenerate"];
   recipeActions: OverviewActionsMenuProps["recipe"];
   onDelete: () => void;
+  onChat?: (() => void) | null;
   // Null where there is no library to keep projects in (signed out).
   projects: { line: ReactNode; count: number; openPicker: (from: "menu") => void } | null;
   ref?: Ref<HTMLElement> | undefined;
@@ -95,6 +96,7 @@ export function ReaderMasthead({
   regenerate,
   recipeActions,
   onDelete,
+  onChat = null,
   projects,
   ref,
 }: ReaderMastheadProps) {
@@ -200,6 +202,7 @@ export function ReaderMasthead({
           onToggleRead={() => onToggleRead("actionsMenu")}
           projects={projects === null ? null : { count: projects.count, onAdd: () => projects.openPicker("menu") }}
           onDelete={onDelete}
+          onChat={onChat}
         />
       </div>
 

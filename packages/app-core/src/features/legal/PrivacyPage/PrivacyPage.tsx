@@ -202,12 +202,14 @@ const sections: readonly LegalSection[] = [
           might do with the video, and the questions to ask next at the foot of an overview. Both are part of the overview, so an assistant
           you connect reads them with it. The questions never go with a shared link. Tapping one opens the assistant you choose, Claude,
           ChatGPT or Gemini, in a new tab with the question and, unless that assistant is connected to {service}, the whole overview, in the
-          link or copied for you to paste. That goes from your browser to the assistant's provider, not through us. When your first overview
-          is shown to you in onboarding, How to apply is also written once for anyone, so you can compare: the overview's title, channel,
-          one-line premise, central claim and key points go to the provider whose key made the overview, and if that was our key, through
-          our server to OpenAI. No transcript and nothing about you goes with them, and the result is kept only on your device. When a
-          sample overview is saved into your account, its title, channel or site, premise and key points go through our server to OpenAI
-          with the names and descriptions of your topics, to sort it into the ones it fits.
+          link or copied for you to paste. Continue in, under an answer to a question you asked about an overview, does the same with that
+          conversation: the overview and the conversation so far, or, when the assistant is connected, only which overview and conversation
+          to read. That goes from your browser to the assistant's provider, not through us. When your first overview is shown to you in
+          onboarding, How to apply is also written once for anyone, so you can compare: the overview's title, channel, one-line premise,
+          central claim and key points go to the provider whose key made the overview, and if that was our key, through our server to
+          OpenAI. No transcript and nothing about you goes with them, and the result is kept only on your device. When a sample overview is
+          saved into your account, its title, channel or site, premise and key points go through our server to OpenAI with the names and
+          descriptions of your topics, to sort it into the ones it fits.
         </p>
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole description, which is where

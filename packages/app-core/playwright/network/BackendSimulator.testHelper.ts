@@ -2,6 +2,12 @@ import { createHash } from "node:crypto";
 import type { Page, Route } from "@playwright/test";
 import {
   CLIENT_VERSION,
+  CURRENT_SCHEMA_VERSIONS,
+  chatRecordId,
+  type Chat,
+  type ChatCitation,
+  type ChatMessage,
+  type ChatUsage,
   DEFAULT_NARRATION_VOICE,
   NarrationVoice,
   narrationKeySource,
@@ -123,6 +129,50 @@ const silentWav = (seconds: number): Buffer => {
   return wav;
 };
 
+type SimulatedResponse = { status: number; body?: unknown; stream?: unknown[] };
+
+// A streamed answer is server-sent events, one per piece; everything else is JSON.
+const fulfil = (route: Route, { status, body, stream }: SimulatedResponse): Promise<void> =>
+  stream === undefined
+    ? route.fulfill({ status, contentType: "application/json", body: status === 204 ? "" : JSON.stringify(body) })
+    : route.fulfill({
+        status,
+        contentType: "text/event-stream",
+        body: stream.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""),
+      });
+
+export interface ChatAnswerReply {
+  text: string;
+  citations?: ChatCitation[];
+  inSource?: boolean;
+}
+
+type ChatReply =
+  | ({ kind: "answer" } & ChatAnswerReply)
+  | { kind: "failed" }
+  | { kind: "refused"; status: number; error: { code: string; message?: string; details?: Record<string, unknown> } };
+
+const DEFAULT_CHAT_REPLY: ChatReply = {
+  kind: "answer",
+  text: "People who took creatine while strength training gained more lean mass than people who trained without it.",
+  citations: [{ startMs: 208_000, endMs: 263_000 }],
+  inSource: true,
+};
+
+const chatChange = ({ id, ...body }: Chat & { rev?: number }, rev: number, seq: number): RecordChange => {
+  const { rev: _, ...stored } = body as typeof body & { rev?: number };
+  return {
+    kind: "chat",
+    id,
+    schemaVersion: CURRENT_SCHEMA_VERSIONS.chat,
+    rev,
+    seq,
+    updatedAt: new Date().toISOString(),
+    deleted: false,
+    body: stored,
+  };
+};
+
 export class BackendSimulator {
   #page: Page;
   #seedOverviews: Overview[] = [];
@@ -142,8 +192,14 @@ export class BackendSimulator {
   #stalled: Array<{
     endpoint: EndpointKey;
     route: Route;
-    onDefault: () => { status: number; body: unknown };
+    onDefault: () => SimulatedResponse;
   }> = [];
+  // The answers the chat endpoint gives, in turn, then its default; a refusal waits its turn too
+  // (docs/features/chats.md, "Asking").
+  #chatReplies: ChatReply[] = [];
+  #chatQuestions: Array<{ overviewId: string; conversationId: string; text: string }> = [];
+  #chatRecords = new Map<string, Chat & { rev: number }>();
+  #chatUsage: ChatUsage = { plan: "free", resetsOn: "2026-10-01", used: 0, limit: 100 };
   #generatedOutputOverrides: Record<string, unknown> = {};
   #feed: RecordChange[] = [];
   #accountTranscripts = new Map<string, StoredTranscript>();
@@ -266,10 +322,7 @@ export class BackendSimulator {
     const held = this.#stalled.filter((entry) => entry.endpoint === endpoint);
     this.#stalled = this.#stalled.filter((entry) => entry.endpoint !== endpoint);
     this.simulateEndpointDefault(endpoint);
-    for (const { route, onDefault } of held) {
-      const { status, body } = onDefault();
-      await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
-    }
+    for (const { route, onDefault } of held) await fulfil(route, onDefault());
   };
 
   setGeneratedOutputOverrides = (overrides: Record<string, unknown>): void => {
@@ -1041,6 +1094,24 @@ export class BackendSimulator {
       }),
     );
 
+    await this.#page.route("**/api/chats/*/messages", (route) =>
+      this.#respond(route, EndpointKey.CHAT_MESSAGES, {
+        onDefault: () => {
+          const overviewId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-2) ?? "");
+          const { conversationId, text } = route.request().postDataJSON() as { conversationId: string; text: string };
+          return this.#answerChat({ overviewId, conversationId, text });
+        },
+        onError: () => ({ status: 502, body: { error: { code: "generation_failed", message: "Simulated: the provider failed" } } }),
+      }),
+    );
+
+    await this.#page.route("**/api/chat-usage", (route) =>
+      this.#respond(route, EndpointKey.CHAT_USAGE, {
+        onDefault: () => ({ status: 200, body: this.#chatUsage }),
+        onError: unauthenticated,
+      }),
+    );
+
     await this.#page.route("**/api/overview-usage", (route) =>
       this.#respond(route, EndpointKey.OVERVIEW_USAGE, {
         onDefault: () => ({ status: 200, body: usage() }),
@@ -1271,8 +1342,8 @@ export class BackendSimulator {
     route: Route,
     endpoint: EndpointKey,
     handlers: {
-      onDefault: () => { status: number; body: unknown };
-      onError: () => { status: number; body: unknown };
+      onDefault: () => SimulatedResponse;
+      onError: () => SimulatedResponse;
     },
   ): Promise<void> => {
     this.#callCounts.set(endpoint, this.getCallCount(endpoint) + 1);
@@ -1284,8 +1355,7 @@ export class BackendSimulator {
       return;
     }
 
-    const { status, body } = behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault();
-    await route.fulfill({ status, contentType: "application/json", body: status === 204 ? "" : JSON.stringify(body) });
+    await fulfil(route, behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault());
   };
 
   // Seeding and inspection, grouped per domain (frontend-testing-guide.md 4.4). Seeding
@@ -1312,6 +1382,57 @@ export class BackendSimulator {
 
   // The account as the sync server holds it: what a pull would bring down, and where the
   // server puts its write floor (docs/features/sync-client.md).
+  // Chat about an overview (docs/features/chats.md). An answer is stored as the server stores it,
+  // and its record joins the change feed so sync brings it down behind the stream.
+  chats = {
+    answerWith: (reply: ChatAnswerReply): void => {
+      this.#chatReplies.push({ kind: "answer", ...reply });
+    },
+    failWith: (): void => {
+      this.#chatReplies.push({ kind: "failed" });
+    },
+    refuseWith: (status: number, error: { code: string; message?: string; details?: Record<string, unknown> }): void => {
+      this.#chatReplies.push({ kind: "refused", status, error });
+    },
+    seed: (chat: Chat): void => {
+      this.#chatRecords.set(chat.id, { ...chat, rev: 1 });
+      this.#feed.push(chatChange(chat, 1, this.#nextSeq()));
+    },
+    setUsage: (usage: Partial<ChatUsage>): void => {
+      this.#chatUsage = { ...this.#chatUsage, ...usage };
+    },
+    questions: () => this.#chatQuestions,
+    list: (overviewId: OverviewId) => this.#page.evaluate((id) => window.__iwftStores__.chatStore.listChats(id), overviewId),
+  };
+
+  #nextSeq = (): number => Math.max(0, ...this.#feed.map((change) => change.seq)) + 1;
+
+  #answerChat = (request: { overviewId: string; conversationId: string; text: string }): SimulatedResponse => {
+    this.#chatQuestions.push(request);
+    const reply = this.#chatReplies.shift() ?? DEFAULT_CHAT_REPLY;
+    if (reply.kind === "refused") return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
+    if (reply.kind === "failed") return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
+    const at = new Date().toISOString();
+    const messages: ChatMessage[] = [
+      { from: "reader", text: request.text, at },
+      { from: "answer", text: reply.text, at, citations: reply.citations ?? [], inSource: reply.inSource ?? true },
+    ];
+    const chatId = chatRecordId(request.overviewId, request.conversationId);
+    const known = this.#chatRecords.get(chatId);
+    const record =
+      known === undefined
+        ? { id: chatId, overviewId: request.overviewId as OverviewId, startedAt: at, messages, rev: 1 }
+        : { ...known, messages: [...known.messages, ...messages], rev: known.rev + 1 };
+    this.#chatRecords.set(chatId, record);
+    this.#feed.push(chatChange(record, record.rev, this.#nextSeq()));
+    this.#chatUsage = { ...this.#chatUsage, used: this.#chatUsage.used + 1 };
+    const pieces = reply.text.match(/\S+\s*/g) ?? [reply.text];
+    return {
+      status: 200,
+      stream: [...pieces.map((text) => ({ type: "text", text })), { type: "answered", chatId, rev: record.rev, messages }],
+    };
+  };
+
   sync = {
     seedChange: (change: RecordChange): void => {
       this.#feed.push(change);

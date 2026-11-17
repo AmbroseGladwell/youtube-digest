@@ -14,12 +14,61 @@
   min-width: 0;
 }
 
+// Design 310a: chat opens on the right and the note's column eases left to make room. The chat
+// sits in the page under the bar, inset by the page's margin, sticky and fixed in height, so the
+// note scrolls on its own beside it.
+.layout {
+  --chat-width: 25rem;
+
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0;
+  min-width: 0;
+  transition: grid-template-columns 320ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.layoutWithChat {
+  grid-template-columns: minmax(0, 1fr) calc(var(--chat-width) + 1.5rem);
+}
+
+.chatColumn {
+  position: sticky;
+  top: var(--masthead-height, 0px);
+  align-self: start;
+  height: calc(100dvh - var(--masthead-height, 0px) - 1.25rem - var(--mini-player-clearance, 0px));
+  padding: 0 1.25rem 0 0.25rem;
+  min-width: 0;
+  animation: chatIn 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes chatIn {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@media (max-width: 79.9375rem) {
+  .layout {
+    --chat-width: 22.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout {
+    transition: none;
+  }
+
+  .chatColumn {
+    animation: none;
+  }
+}
+
 .panelRoot {
   --note-size: 0.90625rem;
   --reader-column: 100rem;
   --reader-gutter: 1.125rem;
 }
-
 
 .main {
   width: 100%;

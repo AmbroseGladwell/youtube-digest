@@ -150,6 +150,18 @@ test("the reader's topic, reason and transcript fields name themselves", async (
   await reader.verifyFieldAttributes("transcript-search", { autocomplete: "off", enterkeyhint: "search" });
 });
 
+test("the question fields under a note and in chat beside it name themselves", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview());
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.verifyFieldsIdentifyThemselves();
+
+  await reader.chat.openFromMenu();
+
+  await reader.verifyFieldsIdentifyThemselves();
+  await reader.verifyFieldAttributes("chat-question", { autocomplete: "off", enterkeyhint: "send" });
+});
+
 test("the share link names itself", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);

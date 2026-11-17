@@ -93,6 +93,7 @@ const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
 const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // Where a question about the overview was asked from: one of its questions to ask next, or typed.
 const ChatAskedFrom = z.enum(["question", "typed"]);
+const ChatOpenedFrom = z.enum(["question", "typed", "menu"]);
 // Where a chat citation leads: a moment in the source, another conversation, or one deleted since.
 const ChatCitationTarget = z.enum(["source", "conversation", "deletedConversation"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
@@ -234,6 +235,7 @@ export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
   "toggleRead",
+  "chat",
   "share",
   "watchOnYouTube",
   "copyYouTubeLink",
@@ -447,6 +449,18 @@ export const analyticsEvents = {
       answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),
       waited: event("A question was turned away by a wait, and which", { wait: ChatWait }),
       citationFollowed: event("The reader follows an answer's citation, and to what", { to: ChatCitationTarget }),
+      opened: event("The reader opens chat beside the note, and from where", { from: ChatOpenedFrom }),
+      closed: event("The reader closes chat"),
+      stopped: event("The reader stops an answer while it is being written; it isn't stored or counted"),
+      answerCopied: event("The reader copies an answer"),
+      continuedIn: event(
+        "The reader takes the conversation to their assistant, which one, filled in or copied, and whether it is connected",
+        {
+          assistant: FollowUpAssistant,
+          handOff: FollowUpHandOffKind,
+          connected: z.boolean(),
+        },
+      ),
       conversationOpened: event("The reader opens one of the overview's earlier conversations"),
       conversationDeleted: event("The reader deletes a conversation about the overview"),
     },
