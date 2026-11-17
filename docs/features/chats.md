@@ -277,6 +277,22 @@ its chapters and Read it anyway?, a recipe page's ingredients and method.
   `reader.chat.answered` and `reader.chat.waited`.
 - **Over MCP**, `get_chat` says an article's answers come from its overview, not the page, and
   notes only a decline; a cited Read it anyway? is named as such.
+- **Measured through the endpoint** on 17 Nov 2026 (`chatHarnessCheck.ts`, which takes a source
+  with no `transcript.json` as a web page, read back from its saved Markdown): three articles
+  (Paul Graham, The Pragmatic Engineer, The Age) and three recipe pages (RecipeTin Eats, Good
+  Food, BBC Food) from the library, 38 questions asked twice.
+  - **Cited the right part 56 of 56**, and named the expected detail 56 of 56: steps, How to
+    apply, Read it anyway, the verdict, what it sells, chapters, ingredients and method steps.
+  - **Declined with nothing cited 16 of 20.** The other four said plainly that the detail wasn't
+    there and cited the item that comes nearest: the method step that says "frosting of
+    choice", and Read it anyway, which says the full quote is left out. They show a pill, not
+    the muted label.
+  - **No amount worked out by the model.** Every answer is checked in code for numbers neither
+    the overview nor the question holds, and none had one. "Make 24 instead of 12", "halve it"
+    and "feed 8" each gave the recipe's own amount and pointed to the servings control.
+  - **Wording:** 4 of 76 answers spoke of "the overview", two of them while declining.
+  - **Cost:** about 1,900 prompt tokens, so a message cost $0.00009 at the median and $0.0003
+    at most, 97% read from the cache.
 
 ## Deleting
 
