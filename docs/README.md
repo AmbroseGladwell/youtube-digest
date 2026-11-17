@@ -39,6 +39,12 @@ Five folders, five different questions.
   half-decided the library-against-context-engine question, the profile that already learns
   and reaches one prompt section, why `similarTo` is not the connection primitive it looks
   like, and what is on the board for this already.
+- `in-app-chat.md`: OV-267's measured case for chat about one overview: cost and quality per
+  message for the full transcript, retrieved passages, and the overview plus passages, on GPT-6
+  Luna and GPT-6.1 Sol, with caching. It covers per reader-month costs, why there is no retrieval
+  and no shared chunk vectors (OV-295), our key on Luna with a message allowance per plan, chats as
+  synced records, `list_chats`/`get_chat` under `overviews:read`, the proposed change to OV-235's
+  exception test, and the build cards.
 - `positioning.md`: how the owner explains the product, as raw material for marketing. It covers
   the question that comes up most (why not paste a transcript into Claude or ChatGPT?), the
   one-liner, the owner's answer in their own words, what to take from it for copy, who it's for

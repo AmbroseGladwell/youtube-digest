@@ -365,7 +365,9 @@ attached. OV-235 is the card that writes this down as a decision.
   answers. They work with no assistant connected, which is the risk OV-235 names.
 - **In-app chat, priced before it is decided** (OV-267, an investigation). It reopens the
   position on purpose, with measured cost and quality per message, and decides build, defer or
-  stay.
+  stay. **Reported 15 Nov 2026** (`in-app-chat.md`): about $0.0003 a message on GPT-6 Luna with
+  the whole transcript cached, as good as Sol on its set. It recommends building chat about one
+  overview, with OV-266's questions as the way in, and proposes OV-235's exception test.
 - **Explore further** (OV-233) is probably answered by the two above. Fold it in or close it once
   OV-267 reports.
 
@@ -400,7 +402,9 @@ changes in writing first, with the reason, and the build cards follow from it.
 
 **Open:**
 
-- Whether chunks are built at all (OV-267's answer).
+- Whether chunks are built at all. OV-267's answer: not for chat about one source, where the whole
+  transcript costs the same once cached; and never shared, since OV-295 retired the shared
+  transcript cache (`in-app-chat.md`, "Retrieval: none for now").
 - Whether How to apply is embedded, to connect actions across sources. Test it once connections
   exist.
 - The privacy page lines if transcript text goes to an embedding provider (`legal-pages.md`'s
