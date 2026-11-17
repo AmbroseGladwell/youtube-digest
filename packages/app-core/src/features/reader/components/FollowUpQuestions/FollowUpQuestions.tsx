@@ -1,5 +1,4 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import {
   FOLLOW_UP_ASSISTANTS,
   FOLLOW_UP_QUESTIONS_SECTION,
@@ -13,6 +12,8 @@ import {
   type Overview,
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { Toast } from "../../../../components/shared/Toast/Toast.js";
+import { useToast } from "../../../../components/shared/Toast/useToast.js";
 import type { ReaderAnalytics } from "../../../analytics/bindOverviewId.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import { useFollowUpAssistant } from "../../useFollowUpAssistant.js";
@@ -42,7 +43,6 @@ type Menu = { firstTap: true; index: number; top: number } | { firstTap: false; 
 export const ANSWERED_HERE_LINE = "Tap one and it’s answered here, from the video.";
 
 const LEAVE_MS = 130;
-const TOAST_MS = 4000;
 const ARRIVAL_THRESHOLD = 0.4;
 
 function setAnnouncement(from: number, to: number, of: number): string {
@@ -112,7 +112,7 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
   const [menu, setMenu] = useState<Menu | null>(null);
   const [pressed, setPressed] = useState<number | null>(null);
   const [said, setSaid] = useState("");
-  const [toast, setToast] = useState<{ text: string; done: boolean; key: number } | null>(null);
+  const { toast, show: showToast } = useToast();
   const [justAsked, setJustAsked] = useState<readonly string[]>([]);
   const headingId = useId();
   const root = useRef<HTMLDivElement | null>(null);
@@ -152,12 +152,6 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
     setMotion("idle");
   }, [motion]);
 
-  useEffect(() => {
-    if (toast === null) return;
-    const timer = setTimeout(() => setToast(null), TOAST_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
   useEffect(
     () => () => {
       if (leaveTimer.current !== null) clearTimeout(leaveTimer.current);
@@ -166,8 +160,6 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
   );
 
   if (questions.length === 0) return null;
-
-  const showToast = (text: string, done: boolean) => setToast({ text, done, key: Date.now() });
 
   const ask = (index: number, to: FollowUpAssistant) => {
     const { question, forReader } = questions[index]!;
@@ -412,14 +404,7 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
       <p className={styles.said} aria-live="polite" data-testid={followUpQuestionsTestIds.said}>
         {said}
       </p>
-      {toast !== null &&
-        createPortal(
-          <div key={toast.key} className={styles.toast} role="status" data-testid={followUpQuestionsTestIds.toast}>
-            <StrokeIcon name={toast.done ? "check" : "alertCircle"} size={17} />
-            {toast.text}
-          </div>,
-          document.body,
-        )}
+      <Toast toast={toast} />
     </div>
   );
 }

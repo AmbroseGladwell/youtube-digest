@@ -20,6 +20,7 @@ export type InMemoryStoreRead = "overviews" | "topics";
 
 export class InMemoryOverviewStore implements OverviewStore {
   #failing = new Set<InMemoryStoreRead>();
+  #failingStateWrites = new Set<OverviewId>();
   #overviews = new Map<OverviewId, Overview>();
   #topics = new Map<TopicId, Topic>();
   #states = new Map<OverviewId, OverviewState>();
@@ -106,6 +107,7 @@ export class InMemoryOverviewStore implements OverviewStore {
   }
 
   async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
+    if (this.#failingStateWrites.has(overviewId)) throw new Error(`the state write for ${overviewId} was told to fail`);
     const current = await this.getOverviewState(overviewId);
     this.#states.set(overviewId, { ...current, ...patch });
   }
@@ -121,6 +123,10 @@ export class InMemoryOverviewStore implements OverviewStore {
 
   recoverRead(read: InMemoryStoreRead): void {
     this.#failing.delete(read);
+  }
+
+  failStateWritesFor(overviewId: OverviewId): void {
+    this.#failingStateWrites.add(overviewId);
   }
 
   seedOverview(overview: Overview): void {

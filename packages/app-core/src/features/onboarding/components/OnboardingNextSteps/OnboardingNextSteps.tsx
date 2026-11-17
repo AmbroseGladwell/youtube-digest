@@ -4,6 +4,7 @@ import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { createLabelOf } from "../../../podcasts/util/episodeActionOf.js";
 import { PastedLinkStatus } from "../../../newOverview/components/PastedLinkStatus/PastedLinkStatus.js";
 import { useStartFromLink } from "../../../newOverview/useStartFromLink.js";
 import { readNextSteps, writeNextSteps, type NextStep } from "../../nextStepsStorage.js";
@@ -130,7 +131,7 @@ function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
           disabled={url.trim() === "" || pasted.reading}
           data-testid={onboardingNextStepsTestIds.action("own")}
         >
-          Make an overview
+          {pasted.episodeAction === null ? "Make an overview" : createLabelOf(pasted.episodeAction, "Make an overview")}
         </button>
       </form>
       <PastedLinkStatus article={article} podcast={podcast} url={url.trim()} onClear={() => setUrl("")} />

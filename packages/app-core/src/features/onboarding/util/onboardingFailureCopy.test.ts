@@ -64,9 +64,18 @@ describe("onboardingFailureCopy for an episode", () => {
     );
   });
 
-  it("says an episode with no words is common, and where transcribing will go", () => {
+  it("says an episode with no words is common, where our server can't transcribe it", () => {
     const copy = onboardingFailureCopy({ kind: "podcastNoTranscript" }, SPOTIFY, "phone");
     expect(copy.body).toContain("Many episodes don’t have one yet.");
-    expect(copy.comingSoon).toBe(true);
+    expect(copy.transcribe).toBeNull();
+  });
+
+  it("offers to transcribe an episode with no words where our server can, and to try again only where that may help", () => {
+    const ask = onboardingFailureCopy({ kind: "podcastNeedsTranscribing", episodeSeconds: 6960 }, SPOTIFY, "phone");
+    expect(ask.title).toBe("This episode needs transcribing");
+    expect(ask.body).toBe("We couldn’t find a transcript for this episode, so we’ll make one from its audio. It takes about 2 minutes.");
+    expect(ask.transcribe).toBe("Transcribe and create");
+    expect(onboardingFailureCopy({ kind: "transcriptionFailed", reason: "no-transcriber" }, SPOTIFY, "phone").transcribe).toBe("Try again");
+    expect(onboardingFailureCopy({ kind: "transcriptionFailed", reason: "audio-unreachable" }, SPOTIFY, "phone").transcribe).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { TranscribeChoice } from "@overview/domain";
 import type { Overview } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
@@ -44,6 +45,7 @@ export function useOnboardingRun({
   tabId,
   mayWrite,
   attempt,
+  transcribe,
   onFound,
   onMade,
 }: {
@@ -52,6 +54,8 @@ export function useOnboardingRun({
   tabId: number | null;
   mayWrite: boolean;
   attempt: number;
+  // An episode with no words is transcribed from its audio, as the reader chose (design 305c-2).
+  transcribe?: TranscribeChoice | undefined;
   onFound: (found: OnboardingFound) => void;
   onMade: (overview: Overview) => void;
 }): OnboardingRun {
@@ -96,6 +100,8 @@ export function useOnboardingRun({
     shownAccountId,
     openLibrary,
   });
+  const transcribeNow = useRef(transcribe);
+  transcribeNow.current = transcribe;
   latest.current = {
     source,
     runVideo,
@@ -149,6 +155,7 @@ export function useOnboardingRun({
         kind.make(target, makers(stores), {
           isCancelled: () => cancelled,
           waitToWrite: () => writing,
+          transcribe: transcribeNow.current,
           onFound: (found) => {
             if (cancelled) return;
             latest.current.onFound(found);

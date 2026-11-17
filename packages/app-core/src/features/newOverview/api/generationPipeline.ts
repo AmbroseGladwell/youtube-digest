@@ -1,4 +1,6 @@
 import {
+  type CaptureEntry,
+  type TranscribeChoice,
   composeReaderContext,
   articleSourceId,
   heldOverviewOf,
@@ -30,6 +32,7 @@ import { ArticleReadError } from "./ArticleReadError.js";
 import { CaptureStopwatch } from "./CaptureStopwatch.js";
 import { GenerationCancelledError } from "./GenerationCancelledError.js";
 import type { OverviewMeta } from "./makeOverviewOnKeys.js";
+import type { TranscriptionProgress } from "../../podcasts/api/transcribeEpisode.js";
 
 // What the run has produced so far, so the progress list can report a receipt rather than
 // that it is thinking (docs/features/overview-redesign.md, "The receipts").
@@ -58,10 +61,14 @@ export interface GenerationPipelineDeps {
 }
 
 export interface RunOverviewGenerationOptions {
+  // Where the reader asked, for the events a run sends of its own (an episode's transcription).
+  from?: CaptureEntry | undefined;
   onProgress?: ((progress: GenerationProgress) => void) | undefined;
   onArticleRead?: ((article: ExtractedArticle) => void) | undefined;
   // An episode's words were found, so the steps can say so (design 106g).
   onEpisodeWords?: ((words: number) => void) | undefined;
+  // Transcribing the episode's audio is waiting for a card, then under way (design 305e).
+  onTranscription?: ((progress: TranscriptionProgress) => void) | undefined;
   isCancelled?: (() => boolean) | undefined;
   // Regenerating an unreadable record writes under its own id, so the separate state row
   // — read, favourite, user tags — stays attached rather than being orphaned under a new
@@ -148,6 +155,9 @@ export interface PodcastRunRequest {
   episode: PodcastEpisode;
   // The link the reader pasted, kept as the overview's way out.
   sharedFrom: string;
+  // The episode's audio is transcribed rather than its words looked for, and how that came about
+  // (designs 305c, 305c-2, 305d, 305k).
+  transcribe?: TranscribeChoice | undefined;
 }
 
 // An episode is read before Create is pressed, so the run starts at its words: the free routes,
@@ -155,7 +165,7 @@ export interface PodcastRunRequest {
 // nothing (docs/features/podcast-screens.md).
 export async function runPodcastOverviewGeneration(
   { episode, sharedFrom }: PodcastRunRequest,
-  findWords: (episode: PodcastEpisode) => Promise<PodcastTranscript>,
+  findWords: (episode: PodcastEpisode, options: RunOverviewGenerationOptions) => Promise<Pick<PodcastTranscript, "transcript">>,
   deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore">,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> {
@@ -165,7 +175,7 @@ export async function runPodcastOverviewGeneration(
     const held = await heldOverviewOf(deps.overviewStore, key);
     if (held !== null) throw new ArticleAlreadyHeldError(held);
   }
-  const { transcript } = await findWords(episode);
+  const { transcript } = await findWords(episode, options);
   stopIfCancelled(options);
   await deps.transcriptStore.saveTranscript({ ...transcript, videoId: key });
   options.onEpisodeWords?.(transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0));

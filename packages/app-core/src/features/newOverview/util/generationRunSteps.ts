@@ -1,4 +1,5 @@
 import { recipeMinutes } from "@overview/domain";
+import { transcriptionCopy } from "../../podcasts/util/transcriptionCopy.js";
 import type { NewOverviewRun } from "../types/NewOverviewRun.js";
 import { overviewReadMinutes } from "./overviewReadMinutes.js";
 import { recipeCounts } from "./recipeCounts.js";
@@ -12,7 +13,7 @@ export interface GenerationStep {
   state: GenerationStepState;
 }
 
-export function generationRunSteps(run: NewOverviewRun): GenerationStep[] {
+export function generationRunSteps(run: NewOverviewRun, now: number = Date.now()): GenerationStep[] {
   const transcriptDone = run.transcriptWords !== null;
   const overviewDone = run.overview !== null;
 
@@ -21,21 +22,45 @@ export function generationRunSteps(run: NewOverviewRun): GenerationStep[] {
   // the words came from.
   if (run.podcast !== null) {
     const wordsFound = run.podcast.words !== null;
+    const { transcription, durationSeconds } = run.podcast;
+    const finding: GenerationStep = {
+      number: "01",
+      label: "Finding the episode",
+      detail: durationSeconds === null ? "Found" : recipeMinutes(Math.round(durationSeconds / 60)),
+      state: "done",
+    };
+    // Design 305e: transcribing is a step of its own, between looking and writing, only when it's
+    // needed; its estimate counts down in whole minutes from the audio's length.
+    const looking: GenerationStep[] =
+      transcription === null
+        ? [
+            {
+              number: "02",
+              label: "Looking for a transcript",
+              detail: wordsFound ? `Found · ${run.podcast.words!.toLocaleString("en-GB")} words` : "This can take a few seconds",
+              state: wordsFound ? "done" : "running",
+            },
+          ]
+        : [
+            { number: "02", label: "Looking for a transcript", detail: "None, so we’re making one", state: "done" },
+            {
+              number: "03",
+              label: wordsFound ? "Transcribing the episode" : "Transcribing the episode…",
+              detail: wordsFound
+                ? `Transcribed · ${run.podcast.words!.toLocaleString("en-GB")} words`
+                : transcriptionCopy.progress(
+                    transcription.state,
+                    durationSeconds,
+                    transcription.state === "transcribing" ? now - transcription.since : 0,
+                  ),
+              state: wordsFound ? "done" : "running",
+            },
+          ];
     return [
+      finding,
+      ...looking,
       {
-        number: "01",
-        label: "Finding the episode",
-        detail: run.podcast.durationSeconds === null ? "Found" : recipeMinutes(Math.round(run.podcast.durationSeconds / 60)),
-        state: "done",
-      },
-      {
-        number: "02",
-        label: "Looking for a transcript",
-        detail: wordsFound ? `Found · ${run.podcast.words!.toLocaleString("en-GB")} words` : "This can take a few seconds",
-        state: wordsFound ? "done" : "running",
-      },
-      {
-        number: "03",
+        number: transcription === null ? "03" : "04",
         label: "Writing the overview",
         detail: overviewDone
           ? `Overview written · ${overviewReadMinutes(run.overview!)} min read`

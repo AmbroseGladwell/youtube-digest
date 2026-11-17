@@ -12,6 +12,7 @@ export type NewProjectFrom = "rail" | "index" | "picker" | "selection";
 interface Adding {
   from: NewProjectFrom;
   overviews: { id: OverviewId; title: string }[];
+  onDone: ((created: { name: string } | null) => void) | null;
 }
 
 // The create dialog and what follows it: from the rail or the index it opens the new
@@ -23,9 +24,9 @@ export function useNewProject(takenNames: string[]) {
   const assistants = useAssistantConnections();
   const navigate = useNavigate();
 
-  const open = (from: NewProjectFrom, overviews: Adding["overviews"] = []) => {
+  const open = (from: NewProjectFrom, overviews: Adding["overviews"] = [], onDone: Adding["onDone"] = null) => {
     analytics.projects.newProjectDialog.opened({ from });
-    setAdding({ from, overviews });
+    setAdding({ from, overviews, onDone });
   };
 
   const dialog =
@@ -51,6 +52,7 @@ export function useNewProject(takenNames: string[]) {
                   analytics.projects.membership.added({ projectId: project.id, overviewId: id, from: "newProject" });
                 }
                 setAdding(null);
+                adding.onDone?.({ name: project.name });
                 if (adding.from === "rail" || adding.from === "index") void navigate(Routes.project(project.id));
               },
             },
@@ -59,6 +61,7 @@ export function useNewProject(takenNames: string[]) {
         onClose={() => {
           analytics.projects.newProjectDialog.cancelled();
           setAdding(null);
+          adding.onDone?.(null);
         }}
       />
     );

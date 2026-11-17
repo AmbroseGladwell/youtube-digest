@@ -10,11 +10,19 @@ export interface OnboardingRunState {
   attempt: number;
   // Runs it again, here: a tab that was only mirroring takes the run over first.
   retry: () => void;
+  // Runs it again transcribing the episode's audio, which the reader chose (design 305c-2).
+  transcribe: () => void;
 }
 
 const IDLE: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null };
 
-const OnboardingRunContext = createContext<OnboardingRunState>({ run: IDLE, mine: false, attempt: 0, retry: () => undefined });
+const OnboardingRunContext = createContext<OnboardingRunState>({
+  run: IDLE,
+  mine: false,
+  attempt: 0,
+  retry: () => undefined,
+  transcribe: () => undefined,
+});
 
 export const OnboardingRunProvider = OnboardingRunContext.Provider;
 

@@ -1,0 +1,38 @@
+$settle: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+.toast {
+  position: fixed;
+  bottom: calc(1.5rem + var(--mini-player-clearance, 0px) + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5625rem;
+  box-sizing: border-box;
+  max-width: calc(100% - 2rem);
+  padding: 0.625rem 1.125rem 0.625rem 0.875rem;
+  border-radius: var(--radius-badge);
+  background: var(--ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  color: var(--ground);
+  font-family: var(--font-body);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  transform: translateX(-50%);
+
+  svg {
+    flex: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: toastIn 200ms $settle both;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}

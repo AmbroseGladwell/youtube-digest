@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyBaseLogger } from "fastify";
-import { apiLogLines, type Plan, type PodcastTranscription } from "@overview/domain";
+import { apiLogLines, type Plan, type PodcastTranscription, type TranscriptionOffer, type TranscriptionUsage } from "@overview/domain";
 import type { createPublicWebFetch } from "../publicWeb/createPublicWebFetch.js";
 import { callerKey, type ServiceCaller } from "../transcripts/ServiceTranscripts.js";
 import { secondsToNextUsageMonth } from "../usage/usageMonth.js";
@@ -12,7 +12,8 @@ import type { TranscriptionQueue } from "./TranscriptionQueue.js";
 const HOUR = 3600;
 
 // Hours of audio transcribed a month: a guard against misuse more than a cost, at about a cent an
-// hour. A trial's address has room for one of the longest episodes (OV-305, 16 Nov 2026).
+// hour. A trial's address, making onboarding's one overview, has room for one of the longest
+// episodes (OV-305, 16 Nov 2026).
 export const transcriptionHours = { address: 4, free: 5, "byo-plus": 15, plus: 30 } as const satisfies Record<"address" | Plan, number>;
 export const LONGEST_EPISODE_SECONDS = 4 * HOUR;
 // A feed's length is the publisher's word, so the audio itself may run a little past it.
@@ -28,6 +29,13 @@ export type TranscriptionStart =
   | { status: "feed-unreadable" }
   | { status: "not-in-feed" };
 
+// What the episode's feed says, as read for the transcript check.
+export interface EpisodeAudio {
+  sourceKey: string;
+  durationSeconds: number | null;
+  audioUrl: string | null;
+}
+
 export interface PodcastTranscriptionsOptions {
   fetchPublicWeb: ReturnType<typeof createPublicWebFetch>;
   jobs: PodcastTranscriptionsRepository;
@@ -35,8 +43,8 @@ export interface PodcastTranscriptionsOptions {
   clock: () => Date;
 }
 
-const limitHoursOf = (caller: ServiceCaller): number =>
-  "accountId" in caller ? transcriptionHours[caller.plan] : transcriptionHours.address;
+const limitSecondsOf = (caller: ServiceCaller): number =>
+  ("accountId" in caller ? transcriptionHours[caller.plan] : transcriptionHours.address) * HOUR;
 
 const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): PodcastTranscription => {
   if (job.status === "ready") return { status: "ready", id: job.id, transcript: job.transcript! };
@@ -49,6 +57,23 @@ const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): Pod
 // so the audio sent to the GPU host is the feed's own, never one a caller names
 // (docs/features/speech-to-text.md, "The server rung").
 export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock }: PodcastTranscriptionsOptions) {
+  const usage = async (now: Date, caller: ServiceCaller): Promise<TranscriptionUsage> => ({
+    ...(await jobs.usage(now, callerKey(caller))),
+    limitSeconds: limitSecondsOf(caller),
+  });
+
+  // Said before the reader chooses, from the feed already read for the check; nothing is held.
+  const offer = async (episode: EpisodeAudio, caller: ServiceCaller): Promise<TranscriptionOffer> => {
+    if (episode.audioUrl === null) return { status: "no-audio" };
+    const episodeSeconds = episode.durationSeconds;
+    if (episodeSeconds !== null && episodeSeconds > LONGEST_EPISODE_SECONDS) return { status: "too-long", episodeSeconds };
+    const existing = await jobs.find(callerKey(caller), episode.sourceKey);
+    if (existing !== null && existing !== "failed") return { status: "free", why: existing === "ready" ? "transcribed" : "on-its-way" };
+    const month = await usage(clock(), caller);
+    const needs = Math.min(episodeSeconds ?? 1, LONGEST_EPISODE_SECONDS);
+    return { status: month.usedSeconds + needs <= month.limitSeconds ? "needed" : "not-enough", episodeSeconds, usage: month };
+  };
+
   const start = async (feedUrl: string, guid: string, caller: ServiceCaller, log: FastifyBaseLogger): Promise<TranscriptionStart> => {
     const read = await fetchFeedEpisode(fetchPublicWeb, feedUrl, (item) => feedItemGuid(item) === guid);
     if (read.status === "failed") return { status: "feed-unreadable" };
@@ -65,7 +90,7 @@ export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock
     }
     const now = clock();
     const key = callerKey(caller);
-    const limitSeconds = limitHoursOf(caller) * HOUR;
+    const limitSeconds = limitSecondsOf(caller);
     const reserveSeconds = Math.min(episodeSeconds ?? UNKNOWN_LENGTH_SECONDS, LONGEST_EPISODE_SECONDS);
     const asked = await jobs.request({
       id: randomUUID(),
@@ -101,5 +126,5 @@ export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock
     return job === null ? null : shown(job, null);
   };
 
-  return { start, status };
+  return { start, status, offer, usage };
 }

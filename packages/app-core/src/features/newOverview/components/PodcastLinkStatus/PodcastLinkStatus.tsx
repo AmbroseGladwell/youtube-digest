@@ -4,7 +4,11 @@ import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
 import { ArticleFailureNotice } from "../../../capture/components/ArticleFailureNotice/ArticleFailureNotice.js";
-import type { PodcastLink } from "../../usePodcastLink.js";
+import { TranscriptionNotice } from "../../../podcasts/components/TranscriptionNotice/TranscriptionNotice.js";
+import { episodeActionOf } from "../../../podcasts/util/episodeActionOf.js";
+import { transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
+import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
+import type { EpisodeWords, PodcastLink } from "../../usePodcastLink.js";
 import { podcastLinkFailureCopy } from "../../util/podcastLinkFailureCopy.js";
 import styles from "./PodcastLinkStatus.module.scss";
 import { podcastLinkStatusTestIds } from "./PodcastLinkStatusTestIds.js";
@@ -48,7 +52,12 @@ export function PodcastLinkStatus({ link, url, onRetry, onClear, onOpened }: Pod
         </div>
       );
     case "found":
-      return <EpisodeCard episode={link.episode} from={FROM[podcastPlatform(url)]} />;
+      return (
+        <>
+          <EpisodeCard episode={link.episode} from={FROM[podcastPlatform(url)]} words={link.words} />
+          <EpisodeWordsNote words={link.words} episodeSeconds={link.episode.durationSeconds} onFollowed={onOpened} />
+        </>
+      );
     case "held":
       return (
         <div className={styles.held} data-testid={podcastLinkStatusTestIds.held}>
@@ -82,7 +91,50 @@ export function PodcastLinkStatus({ link, url, onRetry, onClear, onOpened }: Pod
   }
 }
 
-function EpisodeCard({ episode, from }: { episode: PodcastEpisode; from: string }) {
+// Designs 305c, 305d, 305h and 305j: under the card, what Create will spend, why it spends nothing,
+// or the stop in its place. Nothing while the check runs, or when it found the words.
+export function EpisodeWordsNote({
+  words,
+  episodeSeconds,
+  onFollowed,
+}: {
+  words: EpisodeWords;
+  episodeSeconds: number | null;
+  onFollowed?: (() => void) | undefined;
+}) {
+  const usage = useOverviewUsageQuery().data ?? null;
+  const action = episodeActionOf(words);
+  switch (action.kind) {
+    case "transcribe":
+      return (
+        <p className={styles.line} data-testid={podcastLinkStatusTestIds.uses}>
+          {transcriptionCopy.uses(episodeSeconds, action.offer.usage)}
+        </p>
+      );
+    case "free":
+      return (
+        <p className={styles.line} data-testid={podcastLinkStatusTestIds.free}>
+          {transcriptionCopy.free(action.offer.why)}
+        </p>
+      );
+    case "stop": {
+      const stop = transcriptionCopy.stop(action.offer, usage?.plan ?? "free", usage?.resetsOn ?? null);
+      return <TranscriptionNotice notice={stop} route={stop.route} onFollowed={onFollowed} />;
+    }
+    default:
+      return null;
+  }
+}
+
+// The line under the episode's facts: checking for its words, then whether it needs transcribing.
+const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string | null => {
+  if (words.state === "checking") return "Checking for a transcript…";
+  const action = episodeActionOf(words);
+  return action.kind === "transcribe" ? transcriptionCopy.needs(episodeSeconds) : null;
+};
+
+function EpisodeCard({ episode, from, words }: { episode: PodcastEpisode; from: string; words: EpisodeWords }) {
+  const line = wordsLine(words, episode.durationSeconds);
   const [failed, setFailed] = useState(false);
   return (
     <div className={styles.card} data-testid={podcastLinkStatusTestIds.found}>
@@ -102,6 +154,13 @@ function EpisodeCard({ episode, from }: { episode: PodcastEpisode; from: string 
         </span>
         <span className={styles.facts} data-testid={podcastLinkStatusTestIds.facts}>
           {episodeFacts(episode)}
+        </span>
+        <span
+          className={words.state === "checking" ? styles.checking : styles.needs}
+          role="status"
+          data-testid={podcastLinkStatusTestIds.words}
+        >
+          {line}
         </span>
       </span>
     </div>
