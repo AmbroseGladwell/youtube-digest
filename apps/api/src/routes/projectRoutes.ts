@@ -1,6 +1,15 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, BY_READER, mergeProjectMember, OverviewId, ProjectId, ProjectPatch, projectMemberId } from "@overview/domain";
+import {
+  apiLogLines,
+  BY_FILING,
+  BY_READER,
+  mergeProjectMember,
+  OverviewId,
+  ProjectId,
+  ProjectPatch,
+  projectMemberId,
+} from "@overview/domain";
 import { ApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
 import { StoredRecordBody } from "../http/StoredRecordBody.js";
@@ -15,8 +24,19 @@ import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 const Params = z.object({ id: ProjectId });
 const MemberParams = z.object({ projectId: ProjectId, overviewId: OverviewId });
 const Patch = ProjectPatch.extend({ updatedAt: UpdatedAt });
+// The reader's add, or the device filing a new overview it made (docs/features/projects.md,
+// "Filing as an overview is made"). Never an assistant's, which only the connector marks.
 const MemberChange = z.union([
-  z.object({ addedAt: UpdatedAt, updatedAt: UpdatedAt }).strict(),
+  z
+    .object({
+      addedAt: UpdatedAt,
+      addedBy: z
+        .object({ by: z.literal("filing") })
+        .strict()
+        .optional(),
+      updatedAt: UpdatedAt,
+    })
+    .strict(),
   z.object({ removedAt: UpdatedAt, updatedAt: UpdatedAt }).strict(),
 ]);
 
@@ -96,7 +116,8 @@ export function projectRoutes(app: FastifyInstance, records: RecordsRepository):
             "projectMember",
             current,
             {
-              patch: "addedAt" in change ? { addedAt: change.addedAt, addedBy: BY_READER } : change,
+              patch:
+                "addedAt" in change ? { addedAt: change.addedAt, addedBy: change.addedBy === undefined ? BY_READER : BY_FILING } : change,
               updatedAt,
               ifMatch: null,
               defaults: adding ? { id, projectId, overviewId, removedAt: null } : null,

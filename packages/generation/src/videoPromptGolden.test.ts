@@ -29,6 +29,7 @@ const input = (segments: number, durationMs: number | null): GenerationInput => 
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},

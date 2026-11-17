@@ -33,6 +33,7 @@ const baseInput: GenerationInput = {
     { id: fitnessId, name: "fitness", description: null, createdAt: new Date().toISOString() },
     { id: financeId, name: "finance", description: null, createdAt: new Date().toISOString() },
   ],
+  existingProjects: [],
   existingTags: [],
   tagAliases: {},
   pastClaims: [{ overviewId: OverviewId.parse(randomUUID()), title: "An older video", claim: "Do the thing." }],

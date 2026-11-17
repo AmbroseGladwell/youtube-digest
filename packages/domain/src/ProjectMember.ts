@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { OverviewId, ProjectId } from "./Brands.js";
-import { ProjectAuthor } from "./ProjectAuthor.js";
+import { MemberAuthor } from "./ProjectAuthor.js";
 
 // A membership record: one overview in one project. Never a list on either, so two writes
 // to different membership records always both land. Removal is dated rather than deleted,
@@ -10,13 +10,13 @@ export const ProjectMember = z.object({
   projectId: ProjectId,
   overviewId: OverviewId,
   addedAt: z.iso.datetime(),
-  addedBy: ProjectAuthor,
+  addedBy: MemberAuthor,
   removedAt: z.iso.datetime().nullable(),
 });
 export type ProjectMember = z.infer<typeof ProjectMember>;
 
 export const ProjectMemberChange = z.union([
-  z.object({ addedAt: z.iso.datetime(), addedBy: ProjectAuthor }).strict(),
+  z.object({ addedAt: z.iso.datetime(), addedBy: MemberAuthor }).strict(),
   z.object({ removedAt: z.iso.datetime() }).strict(),
 ]);
 export type ProjectMemberChange = z.infer<typeof ProjectMemberChange>;

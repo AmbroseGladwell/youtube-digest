@@ -1,4 +1,5 @@
 import {
+  BY_FILING,
   BY_READER,
   CURRENT_PROJECT_MEMBER_SCHEMA_VERSION,
   CURRENT_PROJECT_SCHEMA_VERSION,
@@ -25,6 +26,10 @@ import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 
 type MemberChange = (at: string) => Record<string, unknown>;
+
+// Which membership records a change may write: any, only one already here, or only one this
+// device has never had, so filing never undoes the reader's removal.
+type Writes = "any" | "existing" | "new";
 
 export class IndexedDbProjectStore implements ProjectStore {
   #db: IDBDatabase;
@@ -115,14 +120,18 @@ export class IndexedDbProjectStore implements ProjectStore {
   }
 
   async addToProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
-    await this.#changeMember(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }), true);
+    await this.#changeMember(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }), "any");
+  }
+
+  async fileIntoProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
+    await this.#changeMember(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_FILING }), "new");
   }
 
   async removeFromProject(projectId: ProjectId, overviewId: OverviewId): Promise<void> {
-    await this.#changeMember(projectId, overviewId, (at) => ({ removedAt: at }), false);
+    await this.#changeMember(projectId, overviewId, (at) => ({ removedAt: at }), "existing");
   }
 
-  async #changeMember(projectId: ProjectId, overviewId: OverviewId, change: MemberChange, createsMembership: boolean): Promise<void> {
+  async #changeMember(projectId: ProjectId, overviewId: OverviewId, change: MemberChange, writes: Writes): Promise<void> {
     const now = new Date();
     const id = projectMemberId(projectId, overviewId);
     const transaction = this.#db.transaction([PROJECTS_STORE, PROJECT_MEMBERS_STORE, ...JOURNALLED_STORES], "readwrite");
@@ -133,7 +142,8 @@ export class IndexedDbProjectStore implements ProjectStore {
     ]);
     const migrated = raw === undefined ? null : migrateStoredRecord(raw, PROJECT_MEMBER_MIGRATIONS);
     const existing = migrated?.status === "migrated" ? migrated.record : undefined;
-    if (project === undefined || (existing === undefined && !createsMembership) || (raw !== undefined && existing === undefined)) {
+    const refused = (writes === "existing" && existing === undefined) || (writes === "new" && raw !== undefined);
+    if (project === undefined || refused || (raw !== undefined && existing === undefined)) {
       await promisifyTransaction(transaction);
       return;
     }

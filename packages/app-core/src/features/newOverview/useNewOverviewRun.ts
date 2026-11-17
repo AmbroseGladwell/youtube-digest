@@ -141,6 +141,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       let articleLinks: number | undefined;
       let tagging = { reused: 0, added: 0 };
       let personalised = false;
+      let projectsFiled: number | undefined;
       let attempt: GenerationAttempt | null = null;
       // A video capture's duration is the timing's own, so the two agree; an article's is
       // measured here, as it is not timed (docs/architecture/errors-and-logs.md, "Client timings").
@@ -280,6 +281,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
           onAttempt: (tried) => {
             attempt = tried;
           },
+          onProjectsFiled: (count) => {
+            projectsFiled = count;
+          },
         },
         {
           onSuccess: (overview) => {
@@ -308,6 +312,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 articleResources: articleLinks === undefined ? undefined : (saved.article?.resources?.length ?? 0),
                 followUpQuestions: saved.followUpQuestions?.length ?? 0,
                 readerQuestions: saved.followUpQuestions?.filter((followUp) => followUp.forReader).length ?? 0,
+                projectsFiled,
                 ...madeWithProps(attempt),
               });
               setRun((current) => (current === null ? null : { ...current, overview: saved, finishedAt: Date.now() }));

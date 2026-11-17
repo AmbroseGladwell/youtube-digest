@@ -142,6 +142,23 @@ test("adding an overview makes one membership record, marked as the reader's wha
   await testApp.close();
 });
 
+test("a device filing the overview it made is marked as filing, and the reader's later removal keeps it out", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const project = await withProject(account);
+  const overview = await withOverview(account);
+
+  const filed = await member(account, project.id, overview.id, { addedAt: "2026-11-17T09:00:00.000Z", addedBy: { by: "filing" } });
+  const filedBody = (await account.change("projectMember", projectMemberId(project.id, overview.id))).body;
+  await member(account, project.id, overview.id, { removedAt: "2026-11-17T09:05:00.000Z" });
+
+  assert.equal(filed.statusCode, 200);
+  assert.deepEqual(filedBody?.addedBy, { by: "filing" });
+  const { body } = await account.change("projectMember", projectMemberId(project.id, overview.id));
+  assert.equal(body!.removedAt, "2026-11-17T09:05:00.000Z");
+  await testApp.close();
+});
+
 test("a removal made before an add but arriving after it does not take the overview out", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);

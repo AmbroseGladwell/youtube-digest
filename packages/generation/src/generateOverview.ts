@@ -1,4 +1,4 @@
-import type { NoteKind, Overview, OverviewId } from "@overview/domain";
+import type { NoteKind, Overview, OverviewId, ProjectId } from "@overview/domain";
 import type { z } from "zod";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput, GeneratedRecipeVideoOutput } from "./GeneratedOutput.js";
@@ -7,6 +7,7 @@ import { assembleOverview, assembleRecipeVideoOverview } from "./assembleOvervie
 import { checkNoteKind } from "./noteKind/checkNoteKind.js";
 import { kindSampleOfVideo } from "./noteKind/kindSampleOfVideo.js";
 import { SchemaFailureError } from "./GenerationError.js";
+import { filedProjectIds } from "./sections/projectInstructions.js";
 
 export type GenerationClient = (request: {
   systemPrompt: string;
@@ -56,6 +57,9 @@ export async function requestGeneratedOutput<Output>(client: GenerationClient, p
 // its own (docs/architecture/unit-economics.md).
 export interface GenerationObserver {
   kindChecked?(kind: NoteKind): void;
+  // Which of the reader's projects the overview was filed into. Beside the overview rather than
+  // on it, since an overview never lists its projects (docs/features/projects.md).
+  projectsFiled?(projectIds: ProjectId[]): void;
 }
 
 // The kind is decided first, so the note's schema carries only that kind's sections; a
@@ -73,8 +77,13 @@ export async function generateOverview(
   if (kind === "recipe") {
     const output = await requestGeneratedOutput<GeneratedRecipeVideoOutput>(client, composePrompt(input, "recipe"));
     const overview = assembleRecipeVideoOverview(input, output, meta);
-    if (overview !== null) return overview;
+    if (overview !== null) {
+      observer.projectsFiled?.(filedProjectIds(input.existingProjects, output.matchedProjectNames));
+      return overview;
+    }
   }
   const noteKind = kind === "process" ? "process" : "default";
-  return assembleOverview(input, await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input, noteKind)), meta);
+  const output = await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input, noteKind));
+  observer.projectsFiled?.(filedProjectIds(input.existingProjects, output.matchedProjectNames));
+  return assembleOverview(input, output, meta);
 }

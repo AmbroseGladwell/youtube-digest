@@ -129,6 +129,45 @@ it, as the transcript cleanup already does.
 - IndexedDB version 6 adds the `projects` and `projectMembers` stores, the latter indexed by
   project and by overview for the cascades.
 
+## Filing as an overview is made
+
+OV-318 (https://trello.com/c/tCHtBodx), decided with the owner on 17 Nov 2026: on by default,
+straight in rather than suggested, and a project with only a name matched on its name.
+
+**Matching rides the call that writes the overview**, as topics do. The filing section lists
+the reader's projects that aren't archived, each with its purpose or "(only a name)", asks
+which the source clearly serves, and the schema allows only those names
+(`projectInstructions.ts`). It is strict on purpose: a project is the brief an assistant acts
+on, so a wrong overview in it misleads, where a wrong topic only clutters a filter. With no
+projects, or with `fileIntoProjects` off (`personalisation.md`, "Filing into projects"),
+neither the prompt nor the schema mentions projects, so the prompt is byte for byte what it was.
+This is matching against what the reader made, never naming, describing or making a project,
+so the rented-intelligence position holds.
+
+**The matches travel beside the overview, never on it.** An overview never lists its projects,
+so the ids go out through `GenerationObserver.projectsFiled`; our key's server returns them as
+`filedProjectIds` beside the overview (`OurKeyGenerationResult`), which a client from before
+drops and a server from before never sends. The request carries `existingProjects`, empty from a
+client from before.
+
+**The device writes the membership records**, after the overview is saved, with
+`fileIntoProject`. It writes only a membership record this device has never had for that
+overview and project, so a removal stands and a reader's own add isn't taken over, and the
+merge keeps a removal made after the filing whichever reaches the server first. A regeneration
+is never filed, since it keeps where the reader filed it.
+
+**A third author, `{ by: "filing" }`**, a `MemberAuthor` alongside a `ProjectAuthor`: filing puts
+overviews in projects and never makes one, so `Project` is unchanged. The membership record moved
+to schema 2 with a no-op migration and client version 23, so a client from before holds filed
+records back rather than meeting an author it has never heard of
+(`record-migrations.md`). The member route takes `addedBy: { by: "filing" }` from a device and
+nothing else; any other author named is refused, as before. The row says "Added automatically ·
+12 Nov · Remove", and `get_project` says "added automatically".
+
+**Measures.** `capture.newOverview.finished` carries `projectsFiled`, a count, when anything was
+offered; `projects.membership.removed` carries `addedBy: "filing"`, which says how often filing
+gets it wrong.
+
 ## Over MCP
 
 `mcp-connector.md`, "Projects", has the tools, the scope and the prompt. Two things belong here.

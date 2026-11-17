@@ -25,7 +25,7 @@ export interface LibraryOverviewCardProps {
   readerState: LibraryViewState;
   // On a project's page, a row an assistant put there says so, with a way to take it out
   // ("OV-168 2 The Project Page" 168f).
-  addedBy?: { name: string; on: string; projectName: string; onRemove: () => void } | null;
+  addedBy?: { label: string; on: string; projectName: string; onRemove: () => void } | null;
   // While the library is selecting, the whole row is one checkbox and nothing in it opens
   // ("OV-168 5" 168ax, 168az).
   selection?: { selected: boolean; onToggle: () => void; order: number } | null;
@@ -156,7 +156,7 @@ export function LibraryOverviewCard({
           {addedBy !== null && (
             <p className={styles.added} data-testid={libraryOverviewCardTestIds.addedBy}>
               <span>
-                Added by {addedBy.name} · {addedBy.on}
+                {addedBy.label} · {addedBy.on}
               </span>
               <span aria-hidden="true">·</span>
               <button

@@ -1,7 +1,8 @@
-import { DEFAULT_SECTIONS_ENABLED } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, ProjectId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { makeProject } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
 
 // Overviews made on us, so the simulator holds the input each one was made from.
 const SIGNED_IN_WITHOUT_A_KEY = {
@@ -109,4 +110,60 @@ test("the sentence reopens in Settings as it was left, and an old line can be se
   await settings.personalisation.closeAboutYou();
 
   await settings.personalisation.verifyAboutYouReads("I'm a dad, and I spend my time on healthcare.");
+});
+
+test.describe("filing into projects", () => {
+  const kitchen = makeProject();
+  const launch = makeProject({ id: ProjectId.parse("5c0f1b7e-2a4d-4c3e-8f61-9b2d7e4a1c30"), name: "Launch", purpose: null });
+  const shed = makeProject({
+    id: ProjectId.parse("1e9a4c2b-7d3f-4a51-9c8e-6f0b2d5a7e14"),
+    name: "Old shed",
+    archivedAt: "2026-11-15T09:00:00.000Z",
+  });
+
+  test("a new overview is offered the active projects and filed into those our key matched", async ({ launcher, backendSimulator }) => {
+    backendSimulator.ourKey.isAvailable();
+    backendSimulator.ourKey.filesInto(["Kitchen renovation"]);
+    for (const project of [kitchen, launch, shed]) backendSimulator.projects.seed(project);
+    await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+    const dialog = await launcher.appShell.openNewOverview();
+
+    await dialog.form.submitUrl(VALID_URL);
+    await dialog.clickReadOverview();
+
+    await launcher.readerPage.verifyIsShown();
+    expect(backendSimulator.ourKey.generations()[0]?.input.existingProjects).toEqual([
+      { id: kitchen.id, name: kitchen.name, purpose: kitchen.purpose },
+      { id: launch.id, name: "Launch", purpose: null },
+    ]);
+    await expect
+      .poll(async () => (await backendSimulator.projects.members()).map(({ projectId, addedBy }) => ({ projectId, addedBy })))
+      .toEqual([{ projectId: kitchen.id, addedBy: { by: "filing" } }]);
+  });
+
+  test("turning filing off in Settings › Personalisation sends no projects with the next overview, and is counted", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.ourKey.isAvailable();
+    backendSimulator.ourKey.filesInto(["Kitchen renovation"]);
+    backendSimulator.projects.seed(kitchen);
+    await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+    const settings = await (await launcher.appShell.openSettings()).openSection("personalisation");
+    await settings.personalisation.verifySwitchIs("File new overviews into projects", true);
+
+    await settings.personalisation.clickProjectFilingSwitch();
+
+    await settings.personalisation.verifySwitchIs("File new overviews into projects", false);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("settings.personalisation.")))
+      .toEqual([{ name: "settings.personalisation.projectFilingSwitched", props: { on: false } }]);
+    const dialog = await launcher.appShell.openNewOverview();
+    await dialog.form.submitUrl(VALID_URL);
+    await dialog.clickReadOverview();
+
+    await launcher.readerPage.verifyIsShown();
+    expect(backendSimulator.ourKey.generations()[0]?.input.existingProjects).toEqual([]);
+    expect(await backendSimulator.projects.members()).toEqual([]);
+  });
 });

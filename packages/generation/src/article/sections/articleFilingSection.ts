@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { GeneratedTags, SuggestedTopicShape, TAG_VOCABULARY_CAP } from "../../sections/filingSection.js";
 import type { ArticlePromptSection } from "../ArticlePromptSection.js";
+import { projectInstructions, projectSchemaShape } from "../../sections/projectInstructions.js";
 
 export const articleFilingSection: ArticlePromptSection = {
   key: "structural",
@@ -23,7 +24,7 @@ empty match set is a normal, honest outcome, not a failure. If the match
 set is empty or doesn't fully cover what the article is about, you may
 additionally suggest one new topic name (plus a short description) for
 the reader to create. Never invent a topic and file the article under it
-yourself.
+yourself.${projectInstructions(input.existingProjects, "article")}
 
 ## Tags
 3 to 6 lowercase, hyphenated tags naming what the article is about, so the
@@ -40,6 +41,7 @@ existing one covers that subject.`;
         ? z.array(z.string()).max(0)
         : z.array(z.enum(input.existingTopics.map((topic) => topic.name) as [string, ...string[]])),
     suggestedTopic: SuggestedTopicShape.nullable(),
+    ...projectSchemaShape(input.existingProjects),
     tags: GeneratedTags,
   }),
 };

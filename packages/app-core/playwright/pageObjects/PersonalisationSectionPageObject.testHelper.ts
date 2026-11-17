@@ -108,4 +108,7 @@ export class PersonalisationSectionPageObject extends PageObject {
 
   clickSwitch = (section: keyof SectionsEnabled) =>
     this.step(`clickSwitch ${section}`, () => this.click(personalisationSectionTestIds.switch(section)));
+
+  clickProjectFilingSwitch = () =>
+    this.step("clickProjectFilingSwitch", () => this.click(personalisationSectionTestIds.projectFilingSwitch));
 }

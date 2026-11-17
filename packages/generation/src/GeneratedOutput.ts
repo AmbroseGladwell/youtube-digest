@@ -17,6 +17,8 @@ export interface GeneratedOutput {
   keyPoints: GeneratedTimedText[];
   chapters: ChapterShape[];
   matchedTopicNames: string[];
+  // Absent when the reader had no projects to match against.
+  matchedProjectNames?: string[];
   suggestedTopic: SuggestedTopicShape | null;
   tags: string[];
   verdict?: {
@@ -46,7 +48,14 @@ export interface GeneratedOutput {
 
 export type GeneratedRecipeVideoOutput = Pick<
   GeneratedOutput,
-  "inOneLine" | "chapters" | "matchedTopicNames" | "suggestedTopic" | "tags" | "followUpQuestions" | "readerQuestions"
+  | "inOneLine"
+  | "chapters"
+  | "matchedTopicNames"
+  | "matchedProjectNames"
+  | "suggestedTopic"
+  | "tags"
+  | "followUpQuestions"
+  | "readerQuestions"
 > & {
   recipe: GeneratedRecipe | null;
 };
