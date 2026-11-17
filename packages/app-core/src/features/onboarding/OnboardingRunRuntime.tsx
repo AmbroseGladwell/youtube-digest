@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-import { sourceKey } from "@overview/domain";
+import { sourceKey, type TranscribeChoice } from "@overview/domain";
 import { useLibraryMove } from "../accountLibraries/LibraryMoveContext.js";
 import { OnboardingRunProvider, type OnboardingRunState } from "./OnboardingRunContext.js";
 import { onboardingSourceOf } from "./onboardingSources.js";
@@ -17,6 +17,8 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
   const [progress, update] = useOnboardingProgress();
   const libraryMove = useLibraryMove();
   const [attempt, setAttempt] = useState(0);
+  // The link the reader chose to transcribe, and whether this is a try again; another link asks again.
+  const [transcribing, setTranscribing] = useState<{ link: string; choice: TranscribeChoice } | null>(null);
   const kind = useMemo(() => (progress === null ? null : (onboardingSourceOf(progress.link)?.source ?? null)), [progress]);
   const link = progress?.link ?? null;
   const wanted = progress !== null && progress.share === null && progress.overviewId === null && kind !== null;
@@ -31,6 +33,7 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
     tabId: progress?.tabId ?? null,
     mayWrite: progress?.mayWrite ?? false,
     attempt,
+    transcribe: link !== null && transcribing?.link === link ? transcribing.choice : undefined,
     onFound: (found) => {
       if (progress?.sourceKey === null) update({ sourceKey: sourceKey(found.source) });
     },
@@ -51,8 +54,13 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
         if (!mine) claim();
         setAttempt((current) => current + 1);
       },
+      transcribe: () => {
+        if (!mine) claim();
+        if (link !== null) setTranscribing({ link, choice: transcribing?.link === link ? "retried" : "asked" });
+        setAttempt((current) => current + 1);
+      },
     };
-  }, [run, mine, held, attempt, claim]);
+  }, [run, mine, held, attempt, claim, link, transcribing]);
 
   return <OnboardingRunProvider value={value}>{children}</OnboardingRunProvider>;
 }

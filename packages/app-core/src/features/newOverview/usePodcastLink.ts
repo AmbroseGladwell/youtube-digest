@@ -8,8 +8,11 @@ import {
   sourceKey,
   type PodcastEpisode,
   type PodcastReadFailure,
+  type TranscriptionOffer,
 } from "@overview/domain";
 import { createFetchPodcastApi } from "@overview/sync";
+import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
+import { checkEpisodeWords } from "../podcasts/api/checkEpisodeWords.js";
 import { useStores } from "../../stores/StoresContext.js";
 import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
@@ -17,10 +20,18 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { generationKeys } from "./generationKeys.js";
 import { isYouTubeUrl, youTubeLink } from "./util/parseYouTubeUrl.js";
 
+// Whether a found episode's words are there, asked before Create (design 305c): `unknown` when the
+// check couldn't tell, so Create looks again and asks after if it must (305c-2).
+export type EpisodeWords =
+  | { state: "checking" }
+  | { state: "found" }
+  | { state: "unknown" }
+  | { state: "none"; transcription: TranscriptionOffer };
+
 export type PodcastLink =
   | { status: "none" }
   | { status: "reading" }
-  | { status: "found"; episode: PodcastEpisode }
+  | { status: "found"; episode: PodcastEpisode; words: EpisodeWords }
   | { status: "held"; episode: PodcastEpisode; overviewId: OverviewId; savedAt: string | null }
   | { status: "failed"; reason: PodcastReadFailure; showName: string | null }
   | { status: "unreachable" };
@@ -81,7 +92,7 @@ export function usePodcastLink(url: string) {
       }
       const key = sourceKey({ kind: "podcast", id: await podcastSourceId(read.episode) })!;
       const held = await heldOverviewOf(overviewStore, key);
-      if (held === null) return { status: "found", episode: read.episode };
+      if (held === null) return { status: "found", episode: read.episode, words: { state: "checking" } };
       const overviews = await overviewStore.listOverviews();
       return {
         status: "held",
@@ -92,13 +103,34 @@ export function usePodcastLink(url: string) {
     },
   });
 
+  // Asked once the episode is found, and only then: nothing is fetched or counted, so a check that
+  // fails is only "can't tell", and Create looks again.
+  const found = query.data?.status === "found" ? query.data.episode : null;
+  const youTubeFetch = useYouTubeFetch();
+  const check = useQuery({
+    queryKey: [...generationKeys.all, "episodeWords", found?.feedUrl ?? null, found?.guid ?? null],
+    enabled: found !== null && !query.isFetching,
+    retry: false,
+    staleTime: KEPT_MS,
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<EpisodeWords> => {
+      const checked = await checkEpisodeWords(createFetchPodcastApi({ baseUrl: apiUrl!, token: connection.token }), found!, youTubeFetch);
+      return checked.words === "none" ? { state: "none", transcription: checked.transcription } : { state: checked.words };
+    },
+  });
+  const words: EpisodeWords = useMemo(
+    () => (check.isError ? { state: "unknown" } : check.isFetching ? { state: "checking" } : (check.data ?? { state: "checking" })),
+    [check.isError, check.isFetching, check.data],
+  );
+
   const podcastLink: PodcastLink = useMemo(() => {
     if (!offered) return { status: "none" };
     if (settled !== link || query.isFetching) return { status: "reading" };
     // A page we couldn't ask about is left to the article; a platform link has nowhere else to go.
     if (query.isError) return platformLink ? { status: "unreachable" } : { status: "none" };
+    if (query.data?.status === "found") return { ...query.data, words };
     return query.data ?? { status: "reading" };
-  }, [offered, settled, link, query.isFetching, query.isError, query.data, platformLink]);
+  }, [offered, settled, link, query.isFetching, query.isError, query.data, platformLink, words]);
 
   return { available, link: podcastLink, platformLink, retry: () => void query.refetch() };
 }

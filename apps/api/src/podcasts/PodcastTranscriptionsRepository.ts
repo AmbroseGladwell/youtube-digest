@@ -86,11 +86,25 @@ export class PodcastTranscriptionsRepository {
   }
 
   async usedSeconds(now: Date, caller: string): Promise<number> {
-    const rows = await this.#sql.query<{ seconds: number }>(
-      "select seconds from transcription_usage where month = $1::date and caller = $2",
+    return (await this.usage(now, caller)).usedSeconds;
+  }
+
+  // The month's seconds held or spent, and the episodes they went on.
+  async usage(now: Date, caller: string): Promise<{ usedSeconds: number; episodes: number }> {
+    const rows = await this.#sql.query<{ seconds: number; episodes: number }>(
+      "select seconds, episodes from transcription_usage where month = $1::date and caller = $2",
       [usageMonth(now), caller],
     );
-    return rows[0]?.seconds ?? 0;
+    return { usedSeconds: rows[0]?.seconds ?? 0, episodes: rows[0]?.episodes ?? 0 };
+  }
+
+  // Where a caller's transcription of an episode stands, while it is kept.
+  async find(caller: string, sourceKey: string): Promise<TranscriptionStatus | null> {
+    const rows = await this.#sql.query<{ status: TranscriptionStatus }>(
+      "select status from podcast_transcriptions where caller = $1 and source_key = $2",
+      [caller, sourceKey],
+    );
+    return rows[0]?.status ?? null;
   }
 
   async request(ask: TranscriptionAsk): Promise<TranscriptionAsked> {
@@ -173,11 +187,15 @@ export class PodcastTranscriptionsRepository {
     ]);
   }
 
-  // The words, and the month's held seconds settled to what the audio measured.
+  // The words, the month's held seconds settled to what the audio measured, and one more episode.
   async markReady(job: PodcastTranscriptionJob, transcript: StoredTranscript, audioSeconds: number, now: Date): Promise<void> {
     const measured = Math.ceil(audioSeconds);
     await this.#sql.transaction(async (tx) => {
       await this.#give(tx, job.requestedAt, job.caller, job.reservedSeconds - measured);
+      await tx.query("update transcription_usage set episodes = episodes + 1 where month = $1::date and caller = $2", [
+        usageMonth(job.requestedAt),
+        job.caller,
+      ]);
       await tx.query(
         `update podcast_transcriptions set status = 'ready', transcript = $2::jsonb, reserved_seconds = $3,
            finished_at = $4::timestamptz, claimed_until = null

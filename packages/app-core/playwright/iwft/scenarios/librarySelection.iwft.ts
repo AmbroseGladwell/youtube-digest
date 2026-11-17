@@ -109,6 +109,23 @@ test.describe("selecting on the web", () => {
     await picker.tick("Kitchen renovation");
     await picker.verifyFootReads("None of them is in a project yet");
     await expect.poll(async () => (await backendSimulator.projects.members()).length).toBe(0);
+
+    await picker.clickDone();
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("Removed 3 from Kitchen renovation");
+  });
+
+  test("a picker closed with nothing changed keeps the selection", async ({ launcher, backendSimulator }) => {
+    seed(backendSimulator);
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    await library.startSelecting();
+    await pickAll(library, ["What moving a sink", "How to read a builder"]);
+
+    await (await library.selectionBar.addToProject()).clickDone();
+    await (await library.selectionBar.addToTopic()).clickDone();
+
+    await library.selectionBar.verifyCountReads("2 selected");
+    await library.toast.verifyIsNotShown();
   });
 
   test("New project… from the bar makes one with every selected overview in it", async ({ launcher, backendSimulator }) => {
@@ -124,6 +141,8 @@ test.describe("selecting on the web", () => {
     await dialog.clickCreate();
 
     await library.verifyIsShown();
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("Added 2 to Bathroom");
     await library.projectsRail.verifyListsProjects(["Bathroom", "Kitchen renovation"]);
     await expect
       .poll(async () => (await backendSimulator.projects.members()).filter((member) => member.projectId !== kitchen.id).length)
@@ -156,31 +175,82 @@ test.describe("selecting on the web", () => {
     await picker.makeTopic("Renovation");
     await picker.verifyOptionState("Renovation", "all");
     await picker.verifyFootReads("Money on 1 · Renovation on all 3");
+
+    await picker.clickDone();
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("Updated 2 topics");
   });
 
-  test("Mark read turns to Mark unread once all are read, and the heart fills once all are favourites", async ({
+  test("a topic given to all from the picker says where they went", async ({ launcher, backendSimulator }) => {
+    seed(backendSimulator);
+    const library = await launcher.launchExpectingLibrary();
+    await library.startSelecting();
+    await pickAll(library, ["What moving a sink", "Stop studying Spanish"]);
+
+    const picker = await library.selectionBar.addToTopic();
+    await picker.tick("Money");
+    await picker.clickDone();
+
+    await library.toast.verifyReads("Added 2 to Money");
+    await library.verifySelectButtonIsFocused();
+  });
+
+  test("Mark read and Favourite end selecting, say what they did, and hand focus back to Select", async ({
     launcher,
     backendSimulator,
   }) => {
     seed(backendSimulator);
     backendSimulator.overviews.seedState({ overviewId: sink.id, read: true, favourite: true, userTags: [], asked: [] });
-    const library = await launcher.launchExpectingLibrary();
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     await library.filterPanel.clickStatusChip("unread");
     await library.startSelecting();
     await pickAll(library, ["What moving a sink", "How to read a builder"]);
 
     await library.selectionBar.verifyReadReads("Mark read");
-    await library.selectionBar.verifyFavouriteIsPressed(false);
     await library.selectionBar.toggleRead();
+
+    await library.selectionBar.verifyIsShown(false);
+    await library.verifySelectButtonReads("Select");
+    await library.verifySelectButtonIsFocused();
+    await library.toast.verifyReads("2 marked read");
+    await expect.poll(async () => (await backendSimulator.overviews.getState(quote.id))?.read).toBe(true);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter((event) => event.name === "library.selection.stopped"))
+      .toEqual([{ name: "library.selection.stopped", props: { selected: 2, reason: "acted" } }]);
+
+    await library.startSelecting();
+    await pickAll(library, ["What moving a sink", "How to read a builder"]);
+    await library.selectionBar.verifyReadReads("Mark unread");
+    await library.selectionBar.verifyFavouriteIsPressed(false);
     await library.selectionBar.toggleFavourite();
 
-    await library.selectionBar.verifyReadReads("Mark unread");
-    await library.selectionBar.verifyFavouriteIsPressed(true);
-    await expect.poll(async () => (await backendSimulator.overviews.getState(quote.id))?.read).toBe(true);
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("2 added to favourites");
     await expect.poll(async () => (await backendSimulator.overviews.getState(quote.id))?.favourite).toBe(true);
 
+    await library.startSelecting();
+    await pickAll(library, ["What moving a sink", "How to read a builder"]);
+    await library.selectionBar.verifyFavouriteIsPressed(true);
     await library.selectionBar.toggleRead();
+    await library.toast.verifyReads("2 marked unread");
     await expect.poll(async () => (await backendSimulator.overviews.getState(sink.id))?.read).toBe(false);
+  });
+
+  test("a write that fails says so instead of saying it was done", async ({ launcher, backendSimulator }) => {
+    seed(backendSimulator);
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    await backendSimulator.overviews.failStateWritesFor(quote.id);
+    await library.startSelecting();
+    await pickAll(library, ["What moving a sink", "How to read a builder"]);
+
+    await library.selectionBar.toggleRead();
+
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("Couldn’t mark 1 of 2 read");
+    await expect.poll(async () => (await backendSimulator.overviews.getState(sink.id))?.read).toBe(true);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter((event) => event.name === "library.selection.failed"))
+      .toEqual([{ name: "library.selection.failed", props: { action: "markRead", failed: 1, writes: 2 } }]);
   });
 
   test("Delete… asks with the count and Cancel focused, then takes them from the library and their projects", async ({
@@ -201,11 +271,13 @@ test.describe("selecting on the web", () => {
     await dialog.verifyDeleteReads("Delete 2 overviews");
     await dialog.cancel();
     await library.expectCardCountToBe(4);
+    await library.selectionBar.verifyCountReads("2 selected");
 
     await (await library.selectionBar.delete()).confirm();
 
     await library.expectCardCountToBe(2);
-    await library.verifyCountReads("Click to select");
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("2 deleted");
     await library.projectsRail.verifyRowReads("Kitchen renovation", "Kitchen renovation0");
     await expect
       .poll(() => backendSimulator.analytics.events().filter((event) => event.name === "library.selection.deleted"))
@@ -235,7 +307,8 @@ test.describe("selecting in a project", () => {
     await library.selectionBar.removeFromProject();
 
     await library.verifyCardOrder(["The kitchen layout"]);
-    await library.verifySelectionLineReads("Click to select");
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("Removed 1 from Kitchen renovation");
     await expect.poll(async () => (await backendSimulator.projects.members()).map((member) => member.overviewId)).toEqual([layout.id]);
   });
 });
@@ -279,5 +352,9 @@ test.describe("on a phone", () => {
 
     await library.verifyCountReads("1 selected");
     await library.selectionBar.verifyActionsAreNamed(["Add to project", "Add to topic", "Mark read", "Favourite", "Delete"]);
+
+    await library.selectionBar.toggleFavourite();
+    await library.selectionBar.verifyIsShown(false);
+    await library.toast.verifyReads("1 added to favourites");
   });
 });

@@ -108,5 +108,7 @@ export function aboutRowValue(build: AppBuild): string {
   return `Version ${build.version}`;
 }
 
-// Design 95d: the plan, then what's left of the quota the next overview will use.
-export const planRowValue = (plan: string, count: string | null): string => (count === null ? plan : `${plan} · ${count}`);
+// Design 95d: the plan, then what's left of the quota the next overview will use; then, once some
+// were used this month, the transcribing left (design 305o).
+export const planRowValue = (plan: string, count: string | null, transcribingLeft: string | null = null): string =>
+  [plan, count, transcribingLeft === null ? null : `${transcribingLeft} transcribing`].filter((part) => part !== null).join(" · ");

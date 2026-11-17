@@ -9,6 +9,7 @@ import {
   type PodcastRead,
   type PodcastTranscription,
   type StoredTranscript,
+  type TranscriptCheck,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { ApiError } from "../http/ApiError.js";
@@ -16,6 +17,8 @@ import { parseOrThrow } from "../http/parseOrThrow.js";
 import type { AccountId } from "../auth/AccountId.js";
 import {
   MatchUnconfirmedError,
+  type PodcastTranscriptCheck,
+  type PodcastTranscriptCheckRequest,
   type PodcastTranscriptAnswer,
   type PodcastTranscriptRequest,
   type YouTubeAsk,
@@ -44,6 +47,9 @@ const TranscriptBody = z
 const TranscriptionBody = z.object({ feedUrl: z.url().max(2048), guid: z.string().min(1).max(2048) });
 const TranscriptionParams = z.object({ id: z.uuid() });
 
+const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof TranscriptBody>): YouTubeAsk =>
+  youTubeVideoId !== undefined ? { videoId: youTubeVideoId } : searchYouTube === true ? { search: true } : null;
+
 type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }>;
 
 // An account, or signed out a trial token making onboarding's overview, and never the link, the
@@ -55,6 +61,7 @@ export function podcastRoutes(
   {
     readEpisode,
     resolveTranscript,
+    checkTranscript,
     planOf,
     trials,
     transcriptions,
@@ -62,6 +69,7 @@ export function podcastRoutes(
   }: {
     readEpisode: (link: string) => Promise<PodcastRead>;
     resolveTranscript: ResolveTranscript;
+    checkTranscript: (request: PodcastTranscriptCheckRequest) => Promise<PodcastTranscriptCheck>;
     // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
     transcriptions: ReturnType<typeof createPodcastTranscriptions> | null;
     planOf: (accountId: AccountId) => Promise<Plan>;
@@ -113,10 +121,10 @@ export function podcastRoutes(
       preHandler: rateLimitHook(rateLimits.podcastTranscriptPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply): Promise<StoredTranscript> => {
-      const { feedUrl, guid, youTubeVideoId, searchYouTube } = parseOrThrow(TranscriptBody, request.body, "The episode");
+      const body = parseOrThrow(TranscriptBody, request.body, "The episode");
+      const { feedUrl, guid } = body;
       const caller = await callerOf(request);
-      const youTube: YouTubeAsk =
-        youTubeVideoId !== undefined ? { videoId: youTubeVideoId } : searchYouTube === true ? { search: true } : null;
+      const youTube = youTubeAskOf(body);
       const startedAt = clock().getTime();
       try {
         const { transcript, answer } = await resolveTranscript({
@@ -159,6 +167,41 @@ export function podcastRoutes(
           ...(transcriptions !== null && error.failure === TranscriptFetchFailure.NO_CAPTIONS ? { transcribable: true } : {}),
         });
       }
+    },
+  );
+
+  // Whether an episode's words can be found, asked as its link is read so the card can say it needs
+  // transcribing before Create; no words are fetched and nothing is counted (designs 305c, 305c-2).
+  app.post(
+    "/podcasts/transcript/check",
+    {
+      config: { optionalSession: true },
+      preHandler: rateLimitHook(rateLimits.podcastTranscriptPerAddress, (request) => request.clientAddress, clock),
+    },
+    async (request): Promise<TranscriptCheck> => {
+      const body = parseOrThrow(TranscriptBody, request.body, "The episode");
+      const caller = await callerOf(request);
+      // Where nothing can be transcribed, the card has nothing to say, so the feed isn't read and
+      // no YouTube search is spent: Create looks for the words as it always has.
+      if (transcriptions === null) return { words: "unknown" };
+      const startedAt = clock().getTime();
+      const checked = await checkTranscript({ feedUrl: body.feedUrl, guid: body.guid, youTube: youTubeAskOf(body), log: request.log });
+      const answer: TranscriptCheck =
+        checked.words !== "none"
+          ? { words: checked.words }
+          : {
+              words: "none",
+              transcription: await transcriptions.offer(checked.episode, caller),
+            };
+      request.log.info(
+        apiLogLines.podcasts.checked({
+          words: answer.words,
+          via: "via" in checked ? checked.via : null,
+          offer: answer.words === "none" ? answer.transcription.status : null,
+          ms: clock().getTime() - startedAt,
+        }),
+      );
+      return answer;
     },
   );
 

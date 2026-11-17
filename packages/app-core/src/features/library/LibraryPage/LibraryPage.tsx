@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type TopicId } from "@overview/domain";
+import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
@@ -8,6 +8,11 @@ import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOve
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { ClearFieldButton } from "../../../components/shared/ClearFieldButton/ClearFieldButton.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { Toast } from "../../../components/shared/Toast/Toast.js";
+import { useToast } from "../../../components/shared/Toast/useToast.js";
+import { bulkActionToast, type BulkAction } from "../util/bulkActionToast.js";
+import { countFailed } from "../util/countFailed.js";
+import { pickerAction, type PickerChange } from "../util/pickerAction.js";
 import { useTopicsQuery } from "../../overviews/queries/topicsQuery.js";
 import { libraryEntryId, readableEntries, type LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { topicCounts, unsortedOverviews } from "../../overviews/util/topicCounts.js";
@@ -105,6 +110,10 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const deleteOverview = useDeleteOverviewMutation();
   const selection = useOverviewSelection(place.kind === "project" ? place.projectId : place.kind);
   const [choosingTopics, setChoosingTopics] = useState(false);
+  const topicSession = useRef<{ changes: Map<string, PickerChange>; writes: Promise<unknown>[] }>({ changes: new Map(), writes: [] });
+  const selectButton = useRef<HTMLButtonElement | null>(null);
+  const refocusSelect = useRef(false);
+  const toast = useToast();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInput = useRef<HTMLInputElement | null>(null);
@@ -173,6 +182,11 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   };
   useFocusTrap(filtersOpen, rail);
   useDismissOnOutside(filtersOpen, closeFilters, rail);
+  useEffect(() => {
+    if (selection.selecting || !refocusSelect.current) return;
+    refocusSelect.current = false;
+    selectButton.current?.focus();
+  }, [selection.selecting]);
 
   if (topicsQuery.isError) {
     return (
@@ -232,30 +246,71 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const allFavourite = selected.length > 0 && selected.every((entry) => entry.state.favourite);
   const selectionLine = selected.length > 0 ? `${selected.length} selected` : coarsePointer ? "Tap to select" : "Click to select";
   const stopSelecting = () => {
-    analytics.library.selection.stopped({ selected: selected.length });
+    analytics.library.selection.stopped({ selected: selected.length, reason: "reader" });
     selection.stop();
   };
-  const acted = (action: Parameters<typeof analytics.library.selection.acted>[0]["action"]) =>
-    analytics.library.selection.acted({ action, overviews: selected.length });
-  const setSelectedState = (patch: { read: boolean } | { favourite: boolean }) => {
+  const acted = (action: SelectionAction) => analytics.library.selection.acted({ action, overviews: selected.length });
+  const finishActing = (action: SelectionAction, done: BulkAction, writes: Promise<unknown>[], overviews: number) => {
+    analytics.library.selection.stopped({ selected: overviews, reason: "acted" });
+    refocusSelect.current = true;
+    selection.stop();
+    void countFailed(writes).then((failed) => {
+      if (failed > 0) analytics.library.selection.failed({ action, failed, writes: writes.length });
+      const { text, done: succeeded } = bulkActionToast(done, { writes: writes.length, failed });
+      toast.show(text, succeeded);
+    });
+  };
+  const setSelectedState = (patch: { read: boolean } | { favourite: boolean }): Promise<unknown>[] => {
+    const writes: Promise<unknown>[] = [];
     for (const entry of selected) {
       const [key, value] = Object.entries(patch)[0] as ["read" | "favourite", boolean];
       if (entry.state[key] === value) continue;
       keepInPlace(entry.overview.id);
-      setOverviewState.mutate({ overviewId: entry.overview.id, patch });
+      writes.push(setOverviewState.mutateAsync({ overviewId: entry.overview.id, patch }));
     }
+    return writes;
   };
   const changeSelectedTopic = (topicId: TopicId, give: boolean) => {
     analytics.library.selection.topicChanged({ topicId, given: give, overviews: selected.length });
+    const { changes, writes } = topicSession.current;
+    const change = changes.get(topicId);
+    if (change === undefined) {
+      const place = topics.find((topic) => topic.id === topicId)?.name ?? "";
+      changes.set(topicId, {
+        place,
+        heldBefore: selected.filter(({ overview }) => overview.topicIds.includes(topicId)).length,
+        given: give,
+      });
+    } else {
+      change.given = give;
+    }
     for (const { overview } of selected) {
       if (overview.topicIds.includes(topicId) === give) continue;
       keepInPlace(overview.id);
-      setOverviewTopics.mutate({
-        overview,
-        topicIds: (give ? filedUnderTopic(overview, topicId) : unfiledFromTopic(overview, topicId)).topicIds,
-      });
+      writes.push(
+        setOverviewTopics.mutateAsync({
+          overview,
+          topicIds: (give ? filedUnderTopic(overview, topicId) : unfiledFromTopic(overview, topicId)).topicIds,
+        }),
+      );
     }
   };
+  const createSelectedTopic = (name: string) => {
+    const write = createTopic.mutateAsync({ name, overviews: selected.map(({ overview }) => overview) });
+    void write.then(
+      (topic) => analytics.library.selection.topicChanged({ topicId: topic.id, given: true, overviews: selected.length }),
+      () => undefined,
+    );
+    topicSession.current.changes.set(`new:${name}`, { place: name, heldBefore: 0, given: true });
+    topicSession.current.writes.push(write);
+  };
+  const finishChoosingTopics = () => {
+    setChoosingTopics(false);
+    const { changes, writes } = topicSession.current;
+    const done = pickerAction(changes.values(), selected.length, "topic");
+    if (done !== null) finishActing("addToTopic", done, writes, selected.length);
+  };
+
   // Only counts: with a tag set the chip under the search names it, so the line says it to a
   // screen reader alone ("OV-84 2 Library Filter" 84o).
   const countLine =
@@ -534,6 +589,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                       </button>
                       {selectable && (
                         <button
+                          ref={selectButton}
                           type="button"
                           className={styles.selectButton}
                           onClick={() => {
@@ -665,25 +721,34 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                   projectName={projects.current?.project.name ?? null}
                   onAddToProject={() => {
                     acted("addToProject");
-                    projects.fileSelection(selected);
+                    const overviews = selected.length;
+                    projects.fileSelection(selected, (done, writes) => {
+                      if (done !== null) finishActing("addToProject", done, writes, overviews);
+                    });
                   }}
                   onAddToTopic={() => {
                     acted("addToTopic");
+                    topicSession.current = { changes: new Map(), writes: [] };
                     setChoosingTopics(true);
                   }}
                   onToggleRead={() => {
-                    acted(allRead ? "markUnread" : "markRead");
-                    setSelectedState({ read: !allRead });
+                    const action = allRead ? "markUnread" : "markRead";
+                    acted(action);
+                    const writes = setSelectedState({ read: !allRead });
+                    finishActing(action, { kind: allRead ? "unread" : "read", overviews: selected.length }, writes, selected.length);
                   }}
                   onToggleFavourite={() => {
-                    acted(allFavourite ? "unfavourite" : "favourite");
-                    setSelectedState({ favourite: !allFavourite });
+                    const action = allFavourite ? "unfavourite" : "favourite";
+                    acted(action);
+                    const writes = setSelectedState({ favourite: !allFavourite });
+                    finishActing(action, { kind: action, overviews: selected.length }, writes, selected.length);
                   }}
                   onRemoveFromProject={() => {
                     acted("removeFromProject");
                     const ids = selected.map(({ overview }) => overview.id);
-                    projects.removeFromCurrent(ids);
-                    selection.drop(ids);
+                    const writes = projects.removeFromCurrent(ids);
+                    const place = projects.current?.project.name ?? "";
+                    finishActing("removeFromProject", { kind: "removed", overviews: ids.length, place }, writes, ids.length);
                   }}
                   onDelete={() => {
                     acted("delete");
@@ -741,16 +806,8 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           overviews={selected}
           countByTopic={topicCounts(readableEntries(allEntries).map((entry) => entry.overview))}
           onToggle={changeSelectedTopic}
-          onCreate={(name) =>
-            createTopic.mutate(
-              { name, overviews: selected.map(({ overview }) => overview) },
-              {
-                onSuccess: (topic) =>
-                  analytics.library.selection.topicChanged({ topicId: topic.id, given: true, overviews: selected.length }),
-              },
-            )
-          }
-          onClose={() => setChoosingTopics(false)}
+          onCreate={createSelectedTopic}
+          onClose={finishChoosingTopics}
         />
       )}
 
@@ -760,9 +817,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           onDelete={() => {
             analytics.library.selection.deleted({ overviews: selected.length });
             const ids = selected.map(({ overview }) => overview.id);
-            for (const overviewId of ids) deleteOverview.mutate({ overviewId });
-            selection.drop(ids);
+            const writes = ids.map((overviewId) => deleteOverview.mutateAsync({ overviewId }));
             setConfirmingDelete(false);
+            finishActing("delete", { kind: "deleted", overviews: ids.length }, writes, ids.length);
           }}
           onClose={() => {
             analytics.library.selection.deleteKept();
@@ -770,6 +827,8 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
           }}
         />
       )}
+
+      <Toast toast={toast.toast} />
     </div>
   );
 }

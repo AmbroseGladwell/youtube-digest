@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { followUpQuestionsTestIds } from "../../src/features/reader/components/FollowUpQuestions/FollowUpQuestionsTestIds.js";
+import { toastTestIds } from "../../src/components/shared/Toast/ToastTestIds.js";
 import { followUpAssistantMenuTestIds } from "../../src/features/reader/components/FollowUpAssistantMenu/FollowUpAssistantMenuTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
@@ -46,7 +47,7 @@ export class FollowUpQuestionsPageObject extends PageObject {
     this.step(`verifyAnnounced ${said}`, () => expect(this.get(followUpQuestionsTestIds.said)).toHaveText(said));
 
   verifyToastReads = (text: string) =>
-    this.step(`verifyToastReads ${text}`, () => expect(this.page.getByTestId(followUpQuestionsTestIds.toast)).toHaveText(text));
+    this.step(`verifyToastReads ${text}`, () => expect(this.page.getByTestId(toastTestIds.root)).toHaveText(text));
 
   clickChange = () => this.step("clickChange", () => this.click(followUpQuestionsTestIds.change));
 
