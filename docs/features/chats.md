@@ -390,9 +390,9 @@ and returns focus to what opened it. On a phone and in the extension's panel it 
   asking says "Still working on it…"; words stopping for six say the connection is slow
   (`useSlowAnswer`). Each plan's allowance lives in `chatAllowances` in `@overview/domain`, which
   the server and the app both read.
-- **Questions to ask next** sit above the field: the set of three before the first answer, with
-  Different questions, then up to two not yet asked (`chatSuggestions`); none while the reader
-  types.
+- **Questions to ask next** sit above the field in an empty conversation: the set of three, with
+  Different questions (`chatSuggestions`). They go once the first question is sent, as it is
+  being answered and for the rest of that conversation (OV-323), and while the reader types.
 
 ## Over MCP
 

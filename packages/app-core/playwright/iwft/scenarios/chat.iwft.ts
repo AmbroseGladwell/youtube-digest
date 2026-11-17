@@ -66,7 +66,7 @@ test.describe("Chat beside the note", () => {
     await reader.chat.verifyAnnounced(`Answer: ${ANSWER} 1 moment cited.`);
     await reader.chat.verifyFieldIsFocused();
     await reader.chat.verifyNoteFieldIs(false);
-    await reader.chat.verifySuggestionsRead([QUESTIONS[1]!.question, QUESTIONS[2]!.question]);
+    await reader.chat.verifySuggestionsRead([]);
     expect(backendSimulator.chats.questions().map(({ overviewId, text }) => ({ overviewId, text }))).toEqual([
       { overviewId: overview.id, text: QUESTIONS[0]!.question },
     ]);
@@ -138,12 +138,12 @@ test.describe("Chat beside the note", () => {
     const reader = await library.nthCard(0).openReader();
     await reader.followUps.clickQuestion(0);
     await reader.chat.verifyWriting();
-    await reader.chat.verifySuggestionsRead([QUESTIONS[1]!.question, QUESTIONS[2]!.question]);
+    await reader.chat.verifySuggestionsRead([]);
 
     await reader.chat.stop();
 
     await reader.chat.verifyStopped();
-    await reader.chat.verifySuggestionsRead([QUESTIONS[1]!.question, QUESTIONS[2]!.question]);
+    await reader.chat.verifySuggestionsRead([]);
     await reader.chat.verifyAnnounced("Stopped");
     await expect
       .poll(() => chatEvents(backendSimulator.analytics.events()).map(({ name }) => name))
