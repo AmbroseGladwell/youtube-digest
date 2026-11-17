@@ -22,3 +22,6 @@ PODCAST_INDEX_API_SECRET="${PODCAST_INDEX_API_SECRET}"
 # Our own OpenAI key, restricted to chat completions, that overviews on our key are made with
 # (docs/architecture/tiers.md, "Generating on our key").
 OPENAI_API_KEY="${OPENAI_API_KEY}"
+# The token production's speech-to-text app on Modal checks; STT_URL is in fly.toml, and the two go
+# together (docs/features/speech-to-text.md, "Switching it on").
+STT_TOKEN="${STT_TOKEN}"

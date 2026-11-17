@@ -12,6 +12,7 @@ why; this is how they fit together and what a deploy actually does.
 | One image: build everything, then run only the API and its runtime dependencies | `Dockerfile`, `.dockerignore` |
 | One machine in London that stops when idle, checked on `/api/live` | `fly.toml` |
 | Secrets from the `overview-prod` Bitwarden project straight into Fly, touching no file | `.env.prod.tpl`, `scripts/secrets.sh fly-import`, `task deploy:secrets` |
+| Speech-to-text on Modal, its own app for production with its own token, deployed by hand | `services/stt/modal_app.py`, `services/stt/deploy_prod.sh`, `task deploy:stt`, `STT_URL` in `fly.toml` (`speech-to-text.md`, "Switching it on") |
 | The menu | `Taskfiles/Taskfile-deploy.yml` |
 | CI proves the image builds on every push | the `image` job in `.github/workflows/ci.yml` |
 | The extension's id fixed by the store's key, and its origin derived from it | `key` in `apps/extension/manifest.json`, `scripts/extensionId.mjs`, `task deploy:extension:id` |
