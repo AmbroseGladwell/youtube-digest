@@ -10,6 +10,7 @@ import {
   Overview,
   OVERVIEW_MIGRATIONS,
   overviewMarkdown,
+  overviewParts,
   readStoredRecord,
   sourceKey,
   stampSchemaVersion,
@@ -30,6 +31,7 @@ import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { secondsToNextUsageMonth, nextUsageMonth } from "../usage/usageMonth.js";
 import { answerSoFar } from "./answerSoFar.js";
+import { withoutCitationMarks } from "./withoutCitationMarks.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatReply } from "./ChatReply.js";
 import { chatModel } from "./chatModel.js";
@@ -123,7 +125,7 @@ export class ChatAnswerer {
     const othersInPrompt = otherChatsInPrompt(others);
     const othersText = otherChatsPrompt(kind, othersInPrompt);
     const prompt: PromptMessage[] = [
-      { role: "system", content: chatSystemPrompt(kind, overviewMarkdown(overview), passages) },
+      { role: "system", content: chatSystemPrompt(kind, overviewMarkdown(overview, { partIds: true }), passages) },
       ...(othersText === null ? [] : [{ role: "user" as const, content: othersText }]),
       ...(conversation?.messages ?? []).map((message): PromptMessage => ({
         role: message.from === "reader" ? "user" : "assistant",
@@ -163,16 +165,16 @@ export class ChatAnswerer {
       try {
         for await (const piece of stream.pieces) {
           raw += piece;
-          const text = answerSoFar(raw);
-          if (text.length > sent.length) {
+          const text = withoutCitationMarks(answerSoFar(raw), { arriving: true });
+          if (text.length > sent.length && text.startsWith(sent)) {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;
           }
         }
         const reply = ChatReply.parse(JSON.parse(raw));
-        const text = reply.answer.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH);
+        const text = withoutCitationMarks(reply.answer).slice(0, MAX_CHAT_MESSAGE_LENGTH);
         if (text.length === 0) throw new Error("the reply had no answer");
-        const cited = citationsOf(reply, passages, othersInPrompt.labels);
+        const cited = citationsOf(reply, passages, overviewParts(overview), othersInPrompt.labels);
         const messages: ChatMessage[] = [
           { from: "reader", text: question.text, at: askedAt.toISOString() },
           { from: "answer", text, at: clock().toISOString(), citations: cited.citations, inSource: cited.inSource },
@@ -191,6 +193,7 @@ export class ChatAnswerer {
             ...cost,
             inSource: cited.inSource,
             sourceCitations: cited.sourceCitations,
+            overviewCitations: cited.overviewCitations,
             chatCitations: cited.chatCitations,
             used: reservation.used,
             limit: reservation.limit,

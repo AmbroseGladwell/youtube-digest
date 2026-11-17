@@ -76,7 +76,10 @@ test.describe("Chat beside the note", () => {
       .toEqual([
         { name: "reader.chat.opened", props: expect.objectContaining({ from: "question" }) },
         { name: "reader.chat.asked", props: expect.objectContaining({ from: "question", newConversation: true }) },
-        { name: "reader.chat.answered", props: expect.objectContaining({ inSource: true, sourceCitations: 1, conversationCitations: 0 }) },
+        {
+          name: "reader.chat.answered",
+          props: expect.objectContaining({ inSource: true, sourceCitations: 1, overviewCitations: 0, conversationCitations: 0 }),
+        },
       ]);
   });
 

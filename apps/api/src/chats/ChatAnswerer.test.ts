@@ -1,7 +1,15 @@
 import test, { type TestContext } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { chatRecordId, MAX_CHAT_QUESTIONS, VideoId, youTubeSource, type ChatMessage, type ChatStreamEvent } from "@overview/domain";
+import {
+  answeredFromOverview,
+  chatRecordId,
+  MAX_CHAT_QUESTIONS,
+  VideoId,
+  youTubeSource,
+  type ChatMessage,
+  type ChatStreamEvent,
+} from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
@@ -20,8 +28,8 @@ const SEGMENTS = [
   { text: "Take three to five grams a day.", startMs: 61_000, endMs: 70_000 },
 ];
 
-const answer = (text: string, passages: string[] = ["p2"], chatMessages: string[] = [], inSource = true) => ({
-  reply: { answer: text, passages, chatMessages, inSource },
+const answer = (text: string, passages: string[] = ["p2"], chatMessages: string[] = [], inSource = true, overviewParts: string[] = []) => ({
+  reply: { answer: text, passages, overviewParts, chatMessages, inSource },
 });
 
 interface Setup {
@@ -174,6 +182,38 @@ test("a question the transcript doesn't answer is declined, with no citation of 
     citations: [],
     inSource: false,
   });
+});
+
+test("a question about the overview itself is answered from its items, cited by place in code, and not counted as the source", async (t) => {
+  const setup = await setUp(t, [answer("The overview's second key point says so.", [], [], false, ["kp2", "kp9"])]);
+
+  const done = answered((await setup.ask(randomUUID(), "What's the second point?")).body);
+
+  const prompt = setup.openAi.requests[0]?.messages[0]?.content ?? "";
+  assert.match(prompt, /^- \[kp2\] /m, "the overview's items carry ids in the cached first message");
+  assert.match(prompt, /\[p2 1:01\] Take three to five grams a day\./);
+  const message = done.messages[1];
+  assert.ok(message?.from === "answer");
+  assert.equal(message.inSource, false);
+  assert.deepEqual(
+    message.citations.map((citation) => ("part" in citation ? { part: citation.part, index: citation.index } : citation)),
+    [{ part: "keyPoint", index: 1 }],
+    "an id the model wasn't given is dropped",
+  );
+  assert.equal(answeredFromOverview(message), true);
+});
+
+test("ids the model wrote into its answer are left out of what streams and what is stored, and still cited", async (t) => {
+  const setup = await setUp(t, [answer("Three to five grams a day [p2]. Step 2 (kp2) covers it.", ["p2"], [], true, ["kp2"])]);
+
+  const response = await setup.ask(randomUUID(), "How much creatine?");
+
+  const streamed = eventsOf(response.body).flatMap((event) => (event.type === "text" ? [event.text] : []));
+  assert.equal(streamed.join(""), "Three to five grams a day. Step 2 covers it.");
+  const message = answered(response.body).messages[1];
+  assert.ok(message?.from === "answer");
+  assert.equal(message.text, "Three to five grams a day. Step 2 covers it.");
+  assert.equal(message.citations.length, 2);
 });
 
 test("the month's allowance, the day's, and the global day refuse before the provider is asked, and say when they reset", async (t) => {

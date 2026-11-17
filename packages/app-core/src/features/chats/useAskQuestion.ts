@@ -67,7 +67,8 @@ export function useAskQuestion(overviewId: OverviewId, api?: ChatApi) {
           analytics.reader.chat.answered({
             overviewId,
             inSource: answer.inSource,
-            sourceCitations: answer.citations.filter((citation) => !("chatId" in citation)).length,
+            sourceCitations: answer.citations.filter((citation) => "startMs" in citation || "paragraph" in citation).length,
+            overviewCitations: answer.citations.filter((citation) => "part" in citation).length,
             conversationCitations: answer.citations.filter((citation) => "chatId" in citation).length,
           });
         }

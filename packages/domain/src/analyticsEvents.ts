@@ -444,6 +444,7 @@ export const analyticsEvents = {
       answered: event("An answer to the reader's question settled, whether the source covered it, and what it cited", {
         inSource: z.boolean(),
         sourceCitations: z.number().int().nonnegative(),
+        overviewCitations: z.number().int().nonnegative(),
         conversationCitations: z.number().int().nonnegative(),
       }),
       answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),

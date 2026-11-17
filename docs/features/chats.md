@@ -23,9 +23,13 @@ before"). Each record is one conversation about one overview:
   - `{ startMs, endMs }` for a stretch of a video or episode;
   - `{ paragraph }` for an article;
   - `{ chatId, message }` for a message in another chat about the same overview, by its
-    place in that chat's `messages`.
-- **`inSource: false`** marks an answer saying the source doesn't cover the question. Another
-  chat is never the source: an answer resting only on one is not `inSource`.
+    place in that chat's `messages`;
+  - `{ part, index, textHash }` for an item of the overview itself, since chat schema version
+    2 (OV-319, "Citing the overview" below).
+- **`inSource: false`** marks an answer the source doesn't back. Another chat and the
+  overview are never the source: an answer resting only on them is not `inSource`. One that
+  is not `inSource` but cites the overview is "From the overview" (`answeredFromOverview`);
+  one that cites neither says the source doesn't cover the question.
 - At most `MAX_CHAT_QUESTIONS` (50) questions and their answers, and 10,000 characters a
   message. A conversation past its length is refused whole, so OV-309 checks the count first
   (`chatQuestionCount`) and offers a new conversation.
@@ -89,18 +93,20 @@ can refuse before the answer starts, so a refusal is an ordinary JSON error:
 answer as it arrives, then one `answered` event carries both messages as stored and the
 record's rev, or one `failed` event says nothing was stored. The model replies in JSON,
 `{ answer, passages, chatMessages, inSource }`, answer first, and `answerSoFar` reads the
-answer's text out of the reply while the rest is still arriving.
+answer's text out of the reply while the rest is still arriving. Since OV-319 the reply also
+carries `overviewParts`, the ids of the overview's items it rests on.
 
-**The prompt** is OV-267's `fullTranscript` shape, with the overview added for context
-(`chatPrompt.ts`): the instructions, the overview and the whole transcript in one-minute
+**The prompt** is OV-267's `fullTranscript` shape, with the overview added (`chatPrompt.ts`):
+the instructions, the overview with an id on each item an answer can cite, and the whole transcript in one-minute
 passages with ids (`transcriptPassages.ts`), as the first message, which never changes, so
 follow-ups and the overview's other conversations read it from the cache
 (`prompt_cache_key` is per overview). Then the other conversations, then this conversation's
 history, then the question.
 
-**Citations are code's.** `citationsOf` turns passage ids into `{ startMs, endMs }` and other
-chats' message ids into `{ chatId, message }`, drops any id the model wasn't given, and sets
-`inSource` only when the answer cites the transcript.
+**Citations are code's.** `citationsOf` turns passage ids into `{ startMs, endMs }`, the
+overview's item ids into `{ part, index, textHash }` and other chats' message ids into
+`{ chatId, message }`, drops any id the model wasn't given, and sets `inSource` only when the
+answer cites the transcript.
 
 **A provider refusing for now** (429 or 5xx) is asked again after its `retry-after`, at most 5
 seconds, or after 1 then 3 seconds, before anything streams. A third refusal, any other
@@ -164,6 +170,81 @@ What still costs is the first question about an overview whose transcript hasn't
 about in the last 30 minutes, the cache's lifetime on Chat Completions (`spend.md`): about $0.004
 on a source that long, $0.002 at 89 minutes. Every later question, in any conversation about it,
 is about a tenth of that.
+
+## Citing the overview
+
+OV-319. An answer can rest on the overview's own items, not only on the transcript: "Why is
+this marked dubious?" is answered by the overview's reason, "What should I do first?" by its
+first step, and "How do I apply this?" by How to apply, which may go beyond the source on
+purpose.
+
+**The items, and their ids.** `overviewParts` lists the items an answer can cite, in the
+note's order, and `overviewMarkdown(overview, { partIds: true })` writes each with its id in
+the prompt: the verdict (`verdict`), why it is dubious (`dubious1`), key points (`kp1`), the
+steps it gives (`step1`), How to apply (`apply1`), what it sells (`sells`), Watch it anyway
+(`anyway`), chapters (`ch1`), and a recipe's ingredients (`ing1`) and method (`method1`). The
+premise, big picture and core claim have none: they are cited from the transcript. A test
+holds the ids in the prompt to exactly the parts `citationsOf` accepts. An article's own parts
+wait for chat on articles (OV-320).
+
+**What the prompt asks.** Cite the item an answer rests on, and the transcript as well where
+it backs the same point. The verdict, the dubious reasons, what it sells and Watch it anyway
+are the overview's judgement, not the source's words, so a question about them is answered
+from the item, citing the moment it refers to where there is one. An answer never speaks of the
+overview as a third party ("the overview suggests") or in the first person: it gives the answer
+and marks a line only against the source, naming the section when the question is about one
+("Watch it anyway says…"). An answer from How to apply adds that it goes beyond the source when
+it does (design 319k). `inSource` stays about the transcript alone.
+
+**A regenerated overview** keeps its id, its chats and their citations, but its items can move
+or change. A citation keeps the item's place and a hash of its text (`overviewPartHash`,
+FNV-1a, so the server and every client compute it alike without an async digest).
+`citedOverviewPart` follows the text to wherever it moved within its part, falls back to the
+part's section when no item still holds it, and to nothing when the section is gone.
+
+**Over MCP**, `get_chat` writes an overview citation as `item 2 of the overview's "The steps
+it gives"`, or as the section and "an item since changed", and an answer from the overview alone as "Answered from
+the overview, not from what the video says".
+
+**Clients before it.** The new citation moved the `chat` schema to version 2, at client
+version 24 (23 was OV-318's project filing, released first, so a client at 23 reads
+project members at 2 and chats at 1). A chat written since is held back by an older client, which counts it towards the
+stale-client banner, rather than failing to parse (`record-migrations.md`). Nothing new goes to
+the model: the overview already did.
+
+**Logs and analytics.** `api.chat.answered` and `reader.chat.answered` count overview
+citations (`overviewCitations`) beside those of the source and of other chats.
+
+**Ids out of the answer's text.** The model sometimes writes the ids it cites into the answer
+too: "[p28–p30]", "(p24)", "[kp4] [apply1]". It did before OV-319, in production. Citations
+carry them already, so `withoutCitationMarks` drops every bracketed run of passage, overview
+and chat-message ids from the text, both as it streams and as it is stored. While the reply
+arrives it holds back a half-written mark and the space before it, so the streamed text only
+ever grows. Brackets that are prose, "(perhaps 3g)", stay.
+
+**Measured through the endpoint.** `chatHarnessCheck.ts` now puts each source's real overview
+in the prompt (read back from its saved Markdown by `overviewFromMarkdown`), and
+`overview-questions.json` adds 17 questions answered from the overview's own items: steps,
+How to apply, why it's dubious, Watch it anyway and the verdict, each scored by code on whether
+the answer cites one of the parts it lists. Run on 17 Nov 2026, the same six sources twice
+and the 170-minute worst case:
+
+- **Cited the right part 33 of 34.** The miss gave the right step without citing anything; the
+  same question cited it on the other run. Named the expected detail 32 of 34: both misses are
+  one question about a conflict of interest, answered from the right reason in other words.
+- **OV-267's questions held up** with the overview's items in the prompt: answered or declined
+  rightly 71 of 72, cited the right moment 47 of 48, named the expected detail 48 of 48. The
+  one wrong flag was a decline that also cited How to apply and set `inSource`. 8 of the 72
+  cited an item as well as the transcript.
+- **On the long source** every overview question cited its part (6 of 6), and the source flag
+  was right 24 of 24.
+- **Wording:** no answer said "the overview suggests" or spoke in the first person. Two echoed
+  Watch it anyway's own reason, "the overview and transcript carry the substance".
+- **Cost:** a message cost $0.00024 at the median, 99% of its prompt from the cache. On the long
+  source the first question cost $0.0044 and each later one $0.00044, about what it cost
+  without the overview's ids (above).
+- **Ids in the text:** 67 of 166 answers had written ids into their text, passage ids mostly.
+  `withoutCitationMarks` removes all of them and nothing else.
 
 ## No transcript, no chat
 
