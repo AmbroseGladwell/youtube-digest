@@ -19,6 +19,7 @@ export const projectHeadTestIds = {
   saveButton: "ProjectHead.saveButton",
   cancelButton: "ProjectHead.cancelButton",
   facts: "ProjectHead.facts",
+  suggestionsLine: "ProjectHead.suggestionsLine",
   spread: "ProjectHead.spread",
   nudge: "ProjectHead.nudge",
   keepButton: "ProjectHead.keepButton",

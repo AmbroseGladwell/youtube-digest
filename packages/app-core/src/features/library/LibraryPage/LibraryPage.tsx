@@ -21,6 +21,7 @@ import { NewTopicDialog } from "../components/NewTopicDialog/NewTopicDialog.js";
 import { ManageTagsDialog } from "../../tags/components/ManageTagsDialog/ManageTagsDialog.js";
 import { SortPill } from "../components/SortPill/SortPill.js";
 import { LibraryOverviewCard } from "../components/LibraryOverviewCard/LibraryOverviewCard.js";
+import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
@@ -89,11 +90,17 @@ const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
 export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
-  const projects = useLibraryProjects(place, readableEntries(allEntries));
+  const selection = useOverviewSelection(place.kind === "project" ? place.projectId : place.kind);
+  const toast = useToast();
+  const main = useRef<HTMLElement | null>(null);
+  const projects = useLibraryProjects(place, readableEntries(allEntries), {
+    say: (text, undo) => toast.show(text, true, undo),
+    focusList: () => main.current?.querySelector<HTMLElement>(`[data-testid="${libraryOverviewCardTestIds.titleLink}"]`)?.focus(),
+    selecting: selection.selecting,
+  });
   const entries = projects.inScope === null ? allEntries : allEntries.filter((entry) => projects.inScope!.has(libraryEntryId(entry)));
   const defaultView = place.kind === "library" ? DEFAULT_LIBRARY_VIEW : PROJECT_VIEW;
   const [keptIds, setKeptIds] = useState<ReadonlySet<string>>(new Set());
-  const main = useRef<HTMLElement | null>(null);
   const glide = useLibraryGlide(main, searchParams.toString());
   // Typing in the search narrows the list in place; every other change to the view glides
   // (useLibraryGlide).
@@ -108,12 +115,10 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const setOverviewState = useSetOverviewStateMutation();
   const setOverviewTopics = useSetOverviewTopicsMutation();
   const deleteOverview = useDeleteOverviewMutation();
-  const selection = useOverviewSelection(place.kind === "project" ? place.projectId : place.kind);
   const [choosingTopics, setChoosingTopics] = useState(false);
   const topicSession = useRef<{ changes: Map<string, PickerChange>; writes: Promise<unknown>[] }>({ changes: new Map(), writes: [] });
   const selectButton = useRef<HTMLButtonElement | null>(null);
   const refocusSelect = useRef(false);
-  const toast = useToast();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInput = useRef<HTMLInputElement | null>(null);
@@ -517,6 +522,8 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                 </div>
               )}
 
+              {projects.suggestions}
+
               {projects.empty === null && (
                 <>
                   <div className={styles.searchRow} data-search={phoneSearch}>
@@ -828,7 +835,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         />
       )}
 
-      <Toast toast={toast.toast} />
+      <Toast toast={toast.toast} onDismiss={toast.dismiss} />
     </div>
   );
 }

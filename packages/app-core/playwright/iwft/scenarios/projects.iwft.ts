@@ -1,7 +1,9 @@
 import type { Connection, Overview } from "@overview/domain";
 import { ProjectId, projectMarkdown } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
-import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { projectSuggestionQuery } from "../../../src/features/projects/util/projectSuggestions.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../../src/features/overviews/types/TopicFactory.testHelper.js";
 import { makeProject, makeProjectMember } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
@@ -314,6 +316,143 @@ test.describe("a project's page", () => {
 
     await head.verifyEmptyOffersPrompt(null);
     await head.verifyAssistantHintIsShown(true);
+  });
+});
+
+// Saved overviews that might fit, found by meaning (docs/features/projects.md, "Offering what's already saved").
+test.describe("overviews that might fit a project", () => {
+  const WITH_ACCOUNT = { sync: true, syncConnection: { ...SIGNED_IN.syncConnection, accountId: SIMULATED_ACCOUNT_ID } };
+  const project = makeProject();
+  const layout = titled("The kitchen layout mistakes I see every week");
+  const sink = titled("What moving a sink really costs");
+  const quartz = titled("Quartz or granite: the honest answer");
+  const tiles = titled("Large tiles in a small room");
+
+  const seed = (backendSimulator: Parameters<Parameters<typeof test>[2]>[0]["backendSimulator"], inIt: Overview[] = []) => {
+    for (const overview of [layout, sink, quartz, tiles]) backendSimulator.overviews.seed(overview);
+    backendSimulator.projects.seed(project);
+    for (const overview of inIt) backendSimulator.projects.seedMember(makeProjectMember(project, overview.id));
+    backendSimulator.meaning.seed(projectSuggestionQuery(project), [sink.id, quartz.id, tiles.id, layout.id]);
+  };
+  const suggestionEvents = (backendSimulator: Parameters<Parameters<typeof test>[2]>[0]["backendSimulator"]) =>
+    backendSimulator.analytics.events().filter(({ name }) => name.startsWith("projects.suggestions."));
+
+  test("an empty project offers the closest first, then the assistant; Add puts one in and Undo offers it again", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seed(backendSimulator);
+    backendSimulator.connections.seed(connection());
+    const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
+    const head = await library.projectsRail.openProject("Kitchen renovation");
+
+    await head.suggestions.verifyOffers([sink, quartz, tiles, layout].map(({ source }) => source.title));
+    await head.suggestions.verifySublineReads("Found by meaning, from the project’s name and what it’s for.");
+    await head.verifyEmptyFurtherReads(
+      /^Or have Claude look for youClaude can search your whole library and help organise it\. Try asking:/,
+    );
+
+    await head.suggestions.clickAdd("Quartz or granite");
+
+    await library.toast.verifyReads("Added to Kitchen renovationUndo");
+    await library.verifyCardOrder(["Quartz or granite"]);
+    await head.suggestions.verifyOffers([sink, tiles, layout].map(({ source }) => source.title));
+    await head.suggestions.verifyAddIsFocused("Large tiles in a small room");
+
+    await library.toast.clickUndo();
+
+    await head.suggestions.verifyOffers([sink, quartz, tiles, layout].map(({ source }) => source.title));
+    await expect
+      .poll(() => suggestionEvents(backendSimulator))
+      .toEqual([
+        { name: "projects.suggestions.shown", props: { projectId: project.id, count: 4, empty: true } },
+        { name: "projects.suggestions.added", props: { projectId: project.id, count: 1, how: "one", empty: true } },
+        { name: "projects.suggestions.undone", props: { projectId: project.id, action: "add", count: 1 } },
+      ]);
+  });
+
+  test("without an assistant that can write, the empty project says how to add by hand and where to connect one", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seed(backendSimulator);
+    const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
+    const head = await library.projectsRail.openProject("Kitchen renovation");
+
+    await head.verifyEmptyFurtherReads(
+      /^Or add them yourself: Select in the library, or Add to project… on any overview\.Or connect an assistant like Claude/,
+    );
+  });
+
+  test("a project with overviews says in its head how many might fit, and the line opens them, leaving out what's in it", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seed(backendSimulator, [layout]);
+    const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
+    const head = await library.projectsRail.openProject("Kitchen renovation");
+
+    await head.suggestions.verifyIsNotShown();
+    await head.verifySuggestionsLineReads("3 overviews might fit");
+
+    await head.clickSuggestionsLine();
+
+    await head.suggestions.verifyHeadingIsFocused();
+    await head.suggestions.verifyOffers([sink, quartz, tiles].map(({ source }) => source.title));
+
+    await head.suggestions.clickAddAll();
+
+    await library.toast.verifyReads("Added 3 to Kitchen renovationUndo");
+    await library.expectCardCountToBe(4);
+    await head.verifySuggestionsLineReads(null);
+    await head.suggestions.verifyIsNotShown();
+  });
+
+  test("Not for this project takes it away for good, and Undo before then keeps it offered", async ({ launcher, backendSimulator }) => {
+    seed(backendSimulator, [layout]);
+    const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
+    const head = await library.projectsRail.openProject("Kitchen renovation");
+    await head.clickSuggestionsLine();
+
+    await head.suggestions.clickNotForThisProject("What moving a sink");
+    await library.toast.verifyReads("It won’t be suggested here againUndo");
+    await head.suggestions.verifyOffers([quartz, tiles].map(({ source }) => source.title));
+    await library.toast.clickUndo();
+    await head.suggestions.verifyOffers([sink, quartz, tiles].map(({ source }) => source.title));
+
+    await head.suggestions.clickNotForThisProject("What moving a sink");
+    await head.suggestions.verifyOffers([quartz, tiles].map(({ source }) => source.title));
+    await library.projectsRail.leaveProject("Kitchen renovation");
+    const again = await library.projectsRail.openProject("Kitchen renovation");
+
+    await again.verifySuggestionsLineReads("2 overviews might fit");
+    await expect.poll(async () => (await backendSimulator.projects.members()).map(({ overviewId }) => overviewId)).toEqual([layout.id]);
+  });
+
+  test("a project with only a name says so, and Saying what it's for opens the editor", async ({ launcher, backendSimulator }) => {
+    const pension = makeProject({ name: "Pension", purpose: null, purposeBy: null });
+    backendSimulator.overviews.seed(sink);
+    backendSimulator.projects.seed(pension);
+    backendSimulator.meaning.seed("Pension", [sink.id]);
+    const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
+    const head = await library.projectsRail.openProject("Pension");
+
+    await head.suggestions.verifySublineReads(
+      "Found by meaning from the project’s name. Saying what it’s for makes suggestions more accurate.",
+    );
+    await head.suggestions.clickSayWhatItsFor();
+
+    await head.verifyPurposeEditorIsOpen();
+  });
+
+  test("when meaning can't be searched, an empty project is as it was", async ({ launcher, backendSimulator }) => {
+    seed(backendSimulator);
+    backendSimulator.simulateEndpointError(EndpointKey.MEANING_SEARCH);
+    const library = await launcher.launchExpectingLibrary(WITH_ACCOUNT);
+    const head = await library.projectsRail.openProject("Kitchen renovation");
+
+    await head.suggestions.verifyIsNotShown();
+    await head.verifyEmptyFurtherReads(/^Nothing here yet/);
   });
 });
 

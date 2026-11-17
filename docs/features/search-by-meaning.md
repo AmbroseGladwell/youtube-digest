@@ -102,7 +102,7 @@ considered and turned down for exactly that reason.
 
 ## The route
 
-`GET /api/search/meaning?query=` (signed in, 1–200 characters) answers
+`GET /api/search/meaning?query=` (signed in, 1–400 characters, which holds a project's name and what it's for, `projects.md`, "Offering what's already saved") answers
 `{ available: true, matches: [{ overviewId, similarity }] }`, closest first and above the
 floor, or `{ available: false }` when no embedder is configured or it failed. The app runs its
 own word match on the device and drops any meaning match it already shows. A query's vector is
