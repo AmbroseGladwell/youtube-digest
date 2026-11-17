@@ -9,6 +9,7 @@ import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsCo
 import styles from "./ChaptersPanel.module.scss";
 import { chaptersPanelTestIds } from "./ChaptersPanelTestIds.js";
 import { timedNoun } from "../../util/timedSource.js";
+import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 
 const NOT_MADE = "Chapters weren't made for this note. Generating it again adds them.";
 const NOTHING_TO_SPLIT = "This video's transcript had nothing to split into chapters.";
@@ -47,6 +48,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
   const seek = useSeekPlayback(video.id);
   const position = usePlaybackPosition(video.id);
   const analytics = useOverviewPageAnalytics();
+  const cited = useCitedOverviewPart();
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
   const hasTranscript = (transcript?.segments.length ?? 0) > 0;
@@ -72,7 +74,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
 
   return (
     <div className={styles.root} data-testid={chaptersPanelTestIds.root}>
-      <p className={styles.head}>
+      <p className={styles.head} {...citedPartProps(cited, "chapter", "section")}>
         {position !== null ? (
           <span className={styles.following} data-testid={chaptersPanelTestIds.followingNote}>
             <span className={styles.followingMark} aria-hidden="true" />
@@ -93,6 +95,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
               key={chapter.startMs}
               className={`${styles.row} ${current ? styles.rowCurrent : ""} ${past ? styles.rowPast : ""}`}
               data-current={current}
+              {...citedPartProps(cited, "chapter", index)}
               data-testid={chaptersPanelTestIds.row}
             >
               <span className={styles.meta}>

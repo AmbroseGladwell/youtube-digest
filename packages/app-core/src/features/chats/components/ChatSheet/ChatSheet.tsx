@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import { useFocusTrap } from "../../../../util/useFocusTrap.js";
 import { LOWERED_SHOWS_PX, resistedOffset, restAfterDrag, type SheetRest } from "../../util/sheetDrag.js";
@@ -13,6 +13,8 @@ export interface ChatSheetProps {
   // What the lowered sheet says: the conversation, and what's playing from it if anything (310o).
   loweredTitle: string;
   loweredLine: string;
+  // A part of the overview being shown carries the note's mark (319t).
+  loweredIcon?: StrokeIconName | null;
   playing: boolean;
   // In the extension's panel the sheet starts under its masthead; on a phone 64px down.
   underMasthead: boolean;
@@ -37,7 +39,17 @@ interface Drag {
 // rest; let go, it springs to the nearer, or where it was flicked. Raised it is a modal dialog
 // holding focus; lowered to its header it leaves the page usable, and a citation followed lowers
 // it to say what's playing.
-export function ChatSheet({ rest, label, loweredTitle, loweredLine, playing, underMasthead, onRestChange, children }: ChatSheetProps) {
+export function ChatSheet({
+  rest,
+  label,
+  loweredTitle,
+  loweredLine,
+  loweredIcon = null,
+  playing,
+  underMasthead,
+  onRestChange,
+  children,
+}: ChatSheetProps) {
   const sheet = useRef<HTMLDivElement | null>(null);
   const anchor = useRef<HTMLSpanElement | null>(null);
   const [mastheadTop, setMastheadTop] = useState<string | null>(null);
@@ -162,6 +174,7 @@ export function ChatSheet({ rest, label, loweredTitle, loweredLine, playing, und
                 <div className={styles.loweredText}>
                   <p className={styles.loweredTitle}>{loweredTitle}</p>
                   <p className={styles.loweredLine} data-testid={chatSheetTestIds.loweredLine}>
+                    {loweredIcon !== null && <StrokeIcon name={loweredIcon} size={14} />}
                     {loweredLine}
                   </p>
                 </div>

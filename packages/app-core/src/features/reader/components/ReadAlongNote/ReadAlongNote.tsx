@@ -1,5 +1,15 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { SOURCE_STEPS_SECTION, formatTimestamp, type NoteLine, type TimeRange } from "@overview/domain";
+import {
+  HOW_TO_APPLY_SECTION,
+  KEY_POINTS_SECTION,
+  SOURCE_STEPS_SECTION,
+  WATCH_ANYWAY_SECTION,
+  formatTimestamp,
+  type NoteLine,
+  type OverviewPart,
+  type TimeRange,
+} from "@overview/domain";
+import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 import { DubiousStepFlag } from "../DubiousStepFlag/DubiousStepFlag.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import { sectionHeadingAt } from "../../../player/util/playerBarView.js";
@@ -56,6 +66,28 @@ const numberListLines = (lines: NoteLine[]): Array<number | null> => {
   });
 };
 
+// The part of the overview each section's lines are, so a chat answer citing one can lead to it
+// (OV-319). The premise, big picture and core claim are never cited.
+const SECTION_PART: Record<string, OverviewPart> = {
+  Verdict: "verdict",
+  [KEY_POINTS_SECTION]: "keyPoint",
+  [SOURCE_STEPS_SECTION]: "step",
+  [HOW_TO_APPLY_SECTION]: "howToApply",
+  "What it sells": "selling",
+  [WATCH_ANYWAY_SECTION]: "watchAnyway",
+};
+
+const linePlaces = (lines: NoteLine[]): Array<number | "section"> => {
+  let place = 0;
+  return lines.map((line) => {
+    if (line.heading) {
+      place = 0;
+      return "section";
+    }
+    return place++;
+  });
+};
+
 export function ReadAlongNote({
   lines,
   activeIndex,
@@ -70,6 +102,8 @@ export function ReadAlongNote({
 }: ReadAlongNoteProps) {
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
+  const places = linePlaces(lines);
+  const cited = useCitedOverviewPart();
   const follow = useFollowTheVoice(speaking);
   const root = useRef<HTMLDivElement | null>(null);
 
@@ -78,7 +112,11 @@ export function ReadAlongNote({
   const stepIndexes = lines.flatMap((line, index) => (line.section === SOURCE_STEPS_SECTION && !line.heading ? [index] : []));
   const beyondFirst = stepIndexes.length > MOST_STEPS_SHOWN_WHOLE ? stepIndexes.slice(STEPS_SHOWN_FIRST) : [];
   const [stepsShown, setStepsShown] = useState(false);
-  const reached = beyondFirst.includes(activeIndex) || (playingIndex !== null && beyondFirst.includes(playingIndex));
+  const citedBeyond = cited?.part === "step" && cited.index !== null && cited.index >= STEPS_SHOWN_FIRST;
+  const reached =
+    beyondFirst.includes(activeIndex) ||
+    (playingIndex !== null && beyondFirst.includes(playingIndex)) ||
+    (citedBeyond && beyondFirst.length > 0);
   const collapsed = new Set(stepsShown || reached ? [] : beyondFirst);
   const firstCollapsed = beyondFirst[0];
   const lastStepIndex = stepIndexes.at(-1);
@@ -132,6 +170,7 @@ export function ReadAlongNote({
         const step = line.section === SOURCE_STEPS_SECTION && !line.heading;
         const caption = lines[index + 1]?.section === line.section ? undefined : captions[line.section];
         const slot = sectionSlot?.section === line.section ? sectionSlot : null;
+        const part = SECTION_PART[line.section];
         if (slot?.replacement && !line.heading) return null;
         return (
           <Fragment key={`${line.section}-${index}`}>
@@ -148,6 +187,7 @@ export function ReadAlongNote({
               data-line-index={index}
               data-cited={index === citedIndex ? "true" : undefined}
               data-collapsed={collapsed.has(index) ? "true" : undefined}
+              {...(part === undefined ? {} : citedPartProps(cited, part, places[index]!))}
               data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
             >
               {line.bullet &&

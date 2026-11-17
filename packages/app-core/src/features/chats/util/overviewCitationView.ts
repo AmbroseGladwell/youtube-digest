@@ -1,0 +1,92 @@
+import {
+  citedOverviewPart,
+  LISTEN_ANYWAY_HEADING,
+  OVERVIEW_PARTS,
+  overviewParts,
+  WATCH_ANYWAY_SECTION,
+  type ChatCitation,
+  type Overview,
+  type OverviewPart,
+  type OverviewPartCitation,
+} from "@overview/domain";
+
+// What an answer's citation of the overview shows: the part it lands on now, a section whose
+// item has since changed, or a section no longer in the overview (designs 319b, 319x, 319z).
+export type OverviewCitationView =
+  | { kind: "item"; part: OverviewPart; index: number; label: string; opening: string }
+  | { kind: "changed"; part: OverviewPart; label: string }
+  | { kind: "gone"; part: OverviewPart; section: string };
+
+const OPENING_WORDS = 6;
+
+const sectionOf = (part: OverviewPart, overview: Overview): string =>
+  ({
+    verdict: "Verdict",
+    dubiousClaim: "Why it's dubious",
+    keyPoint: "Key points",
+    step: "The steps it gives",
+    howToApply: "How to apply",
+    selling: "What it's selling",
+    watchAnyway: overview.source.kind === "podcast" ? LISTEN_ANYWAY_HEADING : WATCH_ANYWAY_SECTION,
+    chapter: "Chapters",
+    ingredient: "Ingredients",
+    method: "Method",
+  })[part];
+
+// The note's own heading for the part, numbered where the note numbers it. A section the note
+// doesn't number is numbered only when one answer cites two of its items (319b).
+const labelOf = (part: OverviewPart, index: number, text: string | null, overview: Overview, twice: boolean): string => {
+  const numbered = (name: string) => `${name} ${index + 1}`;
+  switch (part) {
+    case "keyPoint":
+      return numbered("Key point");
+    case "step":
+      return numbered("Step");
+    case "method":
+      return numbered("Method step");
+    case "chapter":
+      return text === null ? sectionOf(part, overview) : `Chapter: ${text}`;
+    case "ingredient":
+      return text === null ? sectionOf(part, overview) : `Ingredient: ${text}`;
+    case "howToApply":
+    case "dubiousClaim":
+      return twice ? `${sectionOf(part, overview)}, ${index + 1}` : sectionOf(part, overview);
+    default:
+      return sectionOf(part, overview);
+  }
+};
+
+const openingOf = (text: string): string => {
+  const words = text.trim().split(/\s+/);
+  return words.length > OPENING_WORDS ? `${words.slice(0, OPENING_WORDS).join(" ")}…` : words.join(" ");
+};
+
+const isOverviewCitation = (citation: ChatCitation): citation is Extract<ChatCitation, OverviewPartCitation> => "part" in citation;
+
+// An answer's citations of the overview, in the note's order.
+export function overviewCitationViews(overview: Overview, citations: readonly ChatCitation[]): OverviewCitationView[] {
+  const cited = citations
+    .filter(isOverviewCitation)
+    .sort((a, b) => OVERVIEW_PARTS.indexOf(a.part) - OVERVIEW_PARTS.indexOf(b.part) || a.index - b.index);
+  const items = overviewParts(overview);
+  const citedTwice = (part: OverviewPart) => cited.filter((citation) => citation.part === part).length > 1;
+  return cited.map((citation): OverviewCitationView => {
+    const landed = citedOverviewPart(overview, citation);
+    if (landed === null) return { kind: "gone", part: citation.part, section: sectionOf(citation.part, overview) };
+    if (landed.index === null) {
+      return {
+        kind: "changed",
+        part: citation.part,
+        label: labelOf(citation.part, citation.index, null, overview, citedTwice(citation.part)),
+      };
+    }
+    const text = items.find(({ part, index }) => part === landed.part && index === landed.index)?.text ?? "";
+    return {
+      kind: "item",
+      part: landed.part,
+      index: landed.index,
+      label: labelOf(landed.part, landed.index, text, overview, citedTwice(landed.part)),
+      opening: openingOf(text),
+    };
+  });
+}

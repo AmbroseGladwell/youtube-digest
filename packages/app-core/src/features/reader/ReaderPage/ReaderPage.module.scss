@@ -189,3 +189,14 @@
   padding: 1rem var(--reader-gutter) 0.25rem;
   box-sizing: border-box;
 }
+
+// Said, not shown: where following an answer's citation has led (319n).
+.citedSaid {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

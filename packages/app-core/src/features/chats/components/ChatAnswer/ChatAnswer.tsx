@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
-import type { ChatCitation, TimeRange, VideoSource } from "@overview/domain";
+import type { ChatCitation, Overview, TimeRange, VideoSource } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
+import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
+import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
 
@@ -12,7 +14,9 @@ export interface ChatAnswerProps {
   // "video" or "episode", for "Not in the video".
   sourceWord: string;
   video: VideoSource | null;
+  overview: Overview;
   onCitationFollowed: (range: TimeRange) => void;
+  onOverviewPartFollowed: ChatOverviewCitationProps["onFollowed"];
   onOpenTranscriptAt: (positionMs: number) => void;
   // Another conversation about the overview an answer drew on, or null once it is deleted.
   conversationOf: (chatId: string) => { date: string; firstQuestion: string } | null;
@@ -32,25 +36,30 @@ const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
   citations.flatMap((citation) => ("startMs" in citation ? [citation] : [])).sort((a, b) => a.startMs - b.startMs);
 
 // Design 310k–310m, 310w, 310y: an answer is plain text on the panel. Under the whole of it, the
-// other conversations it drew on are links that open words, then its stretches of the video are
-// pills that play, in time order. One the source doesn't cover says so, muted: an answer, not an
-// error.
+// other conversations it drew on are links that open words, then one row of pills: the parts of
+// the overview it rests on in the note's order, then its stretches of the video in time order
+// (319c). One the source doesn't cover says so, muted: an answer, not an error. One from the
+// overview has no label: its pills and its wording say so (319k).
 export function ChatAnswer({
   text,
   inSource,
   citations,
   sourceWord,
   video,
+  overview,
   onCitationFollowed,
+  onOverviewPartFollowed,
   onOpenTranscriptAt,
   conversationOf,
   onConversationFollowed,
   actions,
 }: ChatAnswerProps) {
   const stretches = video === null ? [] : stretchesOf(citations);
+  const parts = overviewCitationViews(overview, citations);
+  const notCovered = !inSource && !citations.some((citation) => "part" in citation);
   return (
-    <div className={`${styles.root} ${inSource ? "" : styles.notInSource}`} data-testid={chatAnswerTestIds.root}>
-      {!inSource && (
+    <div className={`${styles.root} ${notCovered ? styles.notInSource : ""}`} data-testid={chatAnswerTestIds.root}>
+      {notCovered && (
         <p className={styles.notInSourceLabel} data-testid={chatAnswerTestIds.notInSource}>
           <StrokeIcon name="ban" size={14} />
           Not in the {sourceWord}
@@ -87,17 +96,21 @@ export function ChatAnswer({
           </button>
         );
       })}
-      {video !== null && stretches.length > 0 && (
+      {parts.length + stretches.length > 0 && (
         <div className={styles.citations} data-testid={chatAnswerTestIds.citations}>
-          {stretches.map((range) => (
-            <ChatCitationPill
-              key={`${range.startMs}-${range.endMs}`}
-              range={range}
-              video={video}
-              onFollowed={onCitationFollowed}
-              onOpenTranscriptAt={onOpenTranscriptAt}
-            />
+          {parts.map((view, index) => (
+            <ChatOverviewCitation key={`${view.part}-${index}`} view={view} onFollowed={onOverviewPartFollowed} />
           ))}
+          {video !== null &&
+            stretches.map((range) => (
+              <ChatCitationPill
+                key={`${range.startMs}-${range.endMs}`}
+                range={range}
+                video={video}
+                onFollowed={onCitationFollowed}
+                onOpenTranscriptAt={onOpenTranscriptAt}
+              />
+            ))}
         </div>
       )}
       {actions}

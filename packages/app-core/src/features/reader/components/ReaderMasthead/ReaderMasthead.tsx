@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode, type Ref } from "react";
+import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import { NOVELTY_LABEL, type Overview, sourceName, sourceUrl, articleReadMinutes, type WebSource } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { formatPublishedDate } from "../../../../util/formatPublishedDate.js";
@@ -9,6 +9,7 @@ import { useBackTo } from "../../../../app/useBackTo.js";
 import { useLentBackLink } from "../../../../app/useLentBackLink.js";
 import { useHomeName } from "../../../../app/useHomeName.js";
 import type { OverviewInWebApp } from "../../../sync/useOverviewInWebApp.js";
+import { useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 import { DUBIOUS_REASONS_PANEL_ID, DubiousReasonsPanel } from "../DubiousReasonsPanel/DubiousReasonsPanel.js";
 import { OverviewActionsMenu, type OverviewActionsMenuProps } from "../OverviewActionsMenu/OverviewActionsMenu.js";
 import { MadeOnLine } from "../MadeOnLine/MadeOnLine.js";
@@ -116,6 +117,12 @@ export function ReaderMasthead({
   });
   const dubiousFlag = useRef<HTMLButtonElement | null>(null);
   const [explainingDubious, setExplainingDubious] = useState(false);
+  // A chat answer citing why it's dubious opens the reasons to it (design 319q).
+  const cited = useCitedOverviewPart();
+  const citedDubious = cited?.part === "dubiousClaim" ? cited.followed : null;
+  useEffect(() => {
+    if (citedDubious !== null) setExplainingDubious(true);
+  }, [citedDubious]);
   const dubiousClaimCount = overview.verdict?.dubiousClaims?.length ?? 0;
   const dubiousLabel = dubiousClaimCount > 1 ? `${dubiousClaimCount} dubious claims` : "Dubious claim";
 

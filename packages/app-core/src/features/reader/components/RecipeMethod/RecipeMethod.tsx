@@ -15,6 +15,7 @@ import { RecipeReadAloud, type RecipeListVoice } from "./RecipeReadAloud.js";
 import { useSpokenLineInView } from "./useSpokenLineInView.js";
 import styles from "./RecipeMethod.module.scss";
 import { recipeMethodTestIds } from "./RecipeMethodTestIds.js";
+import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 
 export interface RecipeMethodProps {
   recipe: RecipeNote;
@@ -61,6 +62,7 @@ export function RecipeMethod({
   playingStep = null,
 }: RecipeMethodProps) {
   const headingId = useId();
+  const cited = useCitedOverviewPart();
   const from = sourceName(source);
   const author = source.kind === "web" ? source.author : null;
   const spokenLine = useSpokenLineInView<HTMLLIElement>(voice?.speaking ?? false, voice?.activeIndex ?? null);
@@ -82,7 +84,7 @@ export function RecipeMethod({
   return (
     <section className={styles.root} aria-labelledby={headingId} data-testid={recipeMethodTestIds.root}>
       <div className={styles.head}>
-        <h3 className={styles.heading} id={headingId}>
+        <h3 className={styles.heading} id={headingId} {...citedPartProps(cited, "method", "section")}>
           Method{" "}
           <span className={styles.count}>
             · {recipe.stepCount} {recipe.stepCount === 1 ? "step" : "steps"}
@@ -180,6 +182,7 @@ export function RecipeMethod({
                       ref={active ? spokenLine : reached ? reachedLine : undefined}
                       className={`${styles.step} ${voice === null ? "" : styles.stepChoosable} ${active ? styles.stepActive : ""} ${reached ? styles.stepReached : ""} ${playing ? styles.stepPlaying : ""}`}
                       aria-current={playing ? "step" : (voice === null && active) || undefined}
+                      {...citedPartProps(cited, "method", number - 1)}
                       onClick={voice === null ? undefined : () => choose(number - 1)}
                       data-testid={
                         reached ? recipeMethodTestIds.reachedStep : active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step
