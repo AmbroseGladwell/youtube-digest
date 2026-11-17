@@ -434,6 +434,48 @@ test("an overview held by a copy this device cannot read yet is parked with the 
   );
 });
 
+const waitingOnTheMonth = () => {
+  const api = new ScriptedSyncApi();
+  const storage = new InMemorySyncStorage();
+  storage.enrolled = true;
+  api.failOnce("createOverview", { code: "not_reserved" });
+  api.failOnce("reserveOverview", { code: "too_many_requests", details: { quota: "ours", resetsOn: "2026-10-01" } });
+  storage.journal({ kind: "overview", id: "a", updatedAt: AT, change: { op: "replace", record: { id: "a" } } });
+  const clock = { now: NOW };
+  const engine = new SyncEngine({ api, storage, now: () => clock.now });
+  const pushes = () => api.calls.filter((call) => call.method === "createOverview" || call.method === "reserveOverview").length;
+  return { api, storage, clock, engine, pushes };
+};
+
+test("an overview refused for a spent month isn't pushed again until the month turns, then goes", async () => {
+  const { storage, clock, engine, pushes } = waitingOnTheMonth();
+
+  await engine.sync();
+  await engine.sync();
+  clock.now = new Date("2026-09-30T23:59:59.000Z");
+  await engine.sync();
+
+  assert.equal(pushes(), 2);
+  assert.equal(storage.outbox.length, 1);
+
+  clock.now = new Date("2026-10-01T00:00:00.000Z");
+  const status = await engine.sync();
+
+  assert.equal(pushes(), 3);
+  assert.deepEqual([status.pending, status.stuck], [0, 0]);
+});
+
+test("a waiting overview is asked about again at once when something could have made room", async () => {
+  const { engine, pushes } = waitingOnTheMonth();
+  await engine.sync();
+
+  engine.retryWaiting();
+  const status = await engine.sync();
+
+  assert.equal(pushes(), 3);
+  assert.equal(status.pending, 0);
+});
+
 test("an overview waiting for the month to turn stays pending, its transcript waits behind it, and other records still go", async () => {
   const api = new ScriptedSyncApi();
   const storage = new InMemorySyncStorage();
