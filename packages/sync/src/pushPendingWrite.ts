@@ -79,8 +79,9 @@ async function send(
       return written(await api.updateProject(entry.id, change.patch, entry.updatedAt));
     case "member": {
       const [projectId = "", overviewId = ""] = entry.id.split(":");
-      const { addedBy: _addedBy, ...sent } = change.change;
-      return written(await api.changeProjectMember(projectId, overviewId, sent, entry.updatedAt));
+      const { addedBy, ...sent } = change.change;
+      const filed = (addedBy as { by?: unknown } | undefined)?.by === "filing";
+      return written(await api.changeProjectMember(projectId, overviewId, filed ? { ...sent, addedBy } : sent, entry.updatedAt));
     }
     case "delete": {
       await deleteFor(api, entry);

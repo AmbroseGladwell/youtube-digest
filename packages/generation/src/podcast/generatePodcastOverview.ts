@@ -5,6 +5,7 @@ import { requestGeneratedOutput, type GenerationClient, type GenerationObserver 
 import { checkNoteKind } from "../noteKind/checkNoteKind.js";
 import { kindSampleOfVideo } from "../noteKind/kindSampleOfVideo.js";
 import { composePodcastPrompt } from "./composePodcastPrompt.js";
+import { filedProjectIds } from "../sections/projectInstructions.js";
 import type { PodcastGenerationInput } from "./PodcastGenerationInput.js";
 
 // The kind is checked as for a video. A recipe episode gets the default note, since a recipe note
@@ -22,5 +23,6 @@ export async function generatePodcastOverview(
     client,
     composePodcastPrompt(input, kind === "process" ? "process" : "default"),
   );
+  observer.projectsFiled?.(filedProjectIds(input.existingProjects, output.matchedProjectNames));
   return { ...assembleOverview(input, output, meta), source: input.podcast };
 }

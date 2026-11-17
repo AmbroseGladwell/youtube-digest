@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { DEFAULT_SECTIONS_ENABLED, type SectionsEnabled } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, DEFAULT_SETTINGS, type SectionsEnabled } from "@overview/domain";
 import { Routes } from "../../../../app/Routes.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -13,14 +13,14 @@ import { personalisationSectionTestIds } from "./PersonalisationSectionTestIds.j
 export const PERSONALISATION_STANDFIRST =
   "Turns each overview's How to apply into steps that fit your life. Overviews you already have stay as they are.";
 
-function SectionSwitch({
-  section,
+function SettingSwitch({
+  testId,
   label,
   hint,
   on,
   onSwitch,
 }: {
-  section: keyof SectionsEnabled;
+  testId: string;
   label: string;
   hint: string;
   on: boolean;
@@ -47,7 +47,7 @@ function SectionSwitch({
         aria-labelledby={labelId}
         aria-describedby={hintId}
         onClick={onSwitch}
-        data-testid={personalisationSectionTestIds.switch(section)}
+        data-testid={testId}
       >
         <span className={styles.knob} />
       </button>
@@ -55,10 +55,12 @@ function SectionSwitch({
   );
 }
 
-// What we know about you, then the sections an overview can leave out (design 141k;
+// What we know about you, the sections an overview can leave out, then filing into projects (design 141k;
 // docs/features/personalisation.md).
 export function PersonalisationSection() {
-  const sectionsEnabled = useSettingsQuery().data?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED;
+  const settings = useSettingsQuery().data;
+  const sectionsEnabled = settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED;
+  const fileIntoProjects = settings?.fileIntoProjects ?? DEFAULT_SETTINGS.fileIntoProjects;
   const updateSettings = useUpdateSettingsMutation();
   const analytics = useAnalytics();
 
@@ -68,15 +70,21 @@ export function PersonalisationSection() {
     updateSettings.mutate({ sectionsEnabled: { ...sectionsEnabled, [section]: on } });
   };
 
+  const switchFiling = () => {
+    const on = !fileIntoProjects;
+    analytics.settings.personalisation.projectFilingSwitched({ on });
+    updateSettings.mutate({ fileIntoProjects: on });
+  };
+
   return (
     <div className={styles.root}>
       <WhatWeKnowCard />
       <div className={styles.card} data-testid={personalisationSectionTestIds.root}>
         <span className={styles.cardTitle}>Sections</span>
         {OVERVIEW_SECTIONS.map(({ section, label, hint }) => (
-          <SectionSwitch
+          <SettingSwitch
             key={section}
-            section={section}
+            testId={personalisationSectionTestIds.switch(section)}
             label={label}
             hint={hint}
             on={sectionsEnabled[section]}
@@ -112,6 +120,16 @@ export function PersonalisationSection() {
             Questions are hidden on every overview. They’re still written, so turning this back on shows them again.
           </p>
         )}
+      </div>
+      <div className={styles.card} data-testid={personalisationSectionTestIds.projectFilingCard}>
+        <span className={styles.cardTitle}>Projects</span>
+        <SettingSwitch
+          testId={personalisationSectionTestIds.projectFilingSwitch}
+          label="File new overviews into projects"
+          hint="Puts each new overview into any of your projects it clearly helps with. You can take one out, and it stays out."
+          on={fileIntoProjects}
+          onSwitch={switchFiling}
+        />
       </div>
     </div>
   );

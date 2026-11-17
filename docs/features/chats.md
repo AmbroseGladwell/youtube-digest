@@ -207,7 +207,8 @@ it gives"`, or as the section and "an item since changed", and an answer from th
 the overview, not from what the video says".
 
 **Clients before it.** The new citation moved the `chat` schema to version 2, at client
-version 23. A chat written since is held back by an older client, which counts it towards the
+version 24 (23 was OV-318's project filing, released first, so a client at 23 reads
+project members at 2 and chats at 1). A chat written since is held back by an older client, which counts it towards the
 stale-client banner, rather than failing to parse (`record-migrations.md`). Nothing new goes to
 the model: the overview already did.
 

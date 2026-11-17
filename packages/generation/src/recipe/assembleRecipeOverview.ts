@@ -6,6 +6,7 @@ export interface GeneratedRecipeOutput {
   inOneLine: string;
   summary: string;
   matchedTopicNames: string[];
+  matchedProjectNames?: string[];
   tags: string[];
   followUpQuestions: string[];
   readerQuestions: string[];

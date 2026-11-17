@@ -31,6 +31,7 @@ const input: GenerationInput = {
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
 };
 

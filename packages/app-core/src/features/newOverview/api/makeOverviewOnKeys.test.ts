@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { API_ERROR_CODES, DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId, type ApiErrorCode } from "@overview/domain";
+import { API_ERROR_CODES, DEFAULT_SECTIONS_ENABLED, OverviewId, ProjectId, VideoId, type ApiErrorCode } from "@overview/domain";
 import {
   generateOverviewOf,
   ModelRefusedError,
@@ -29,6 +29,7 @@ const input: GenerationInput = {
   readerContext: null,
   sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},
@@ -81,7 +82,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     generate: async ({ input: sent }) => {
       calls.push("generate");
       if (generate !== undefined) throw generate;
-      return generateOverviewOf(async () => answer("Made on our key."), sent, meta);
+      return { ...(await generateOverviewOf(async () => answer("Made on our key."), sent, meta)), filedProjectIds: [] };
     },
     reserve: async () => {
       calls.push("reserve");
@@ -127,6 +128,22 @@ describe("makeOverviewOnKeys", () => {
     expect(overview.inOneLine).toBe("Made on our key.");
     expect(overview.madeOn).toEqual({ key: "ours", fallback: { from: "own", provider: "anthropic", cause: "out-of-credit" } });
     expect(calls).toEqual(["reserve", "release", "generate"]);
+  });
+
+  it("tells which projects our key filed it into, and keeps them off the overview", async () => {
+    const { api } = fakeServer();
+    const kitchen = ProjectId.parse("7a1d3c1e-5d0a-4b8e-9d55-0d1f6a0f2b11");
+    const generate = api.generate;
+    api.generate = async (request) => ({ ...(await generate(request)), filedProjectIds: [kitchen] });
+    const filed: ProjectId[][] = [];
+
+    const overview = await makeOverviewOnKeys({ order: ["ours"], own: null, api }, input, {
+      ...meta,
+      onProjectsFiled: (ids) => filed.push(ids),
+    });
+
+    expect(filed).toEqual([[kitchen]]);
+    expect(overview).not.toHaveProperty("filedProjectIds");
   });
 
   it("moves to our key when the own-key month is spent, without generating on the reader's key", async () => {

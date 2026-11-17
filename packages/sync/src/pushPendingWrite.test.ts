@@ -351,6 +351,22 @@ test("a change to a membership record goes to its project and overview, and neve
   assert.deepEqual(api.calls, [{ method: "changeProjectMember", args: [PROJECT, OVERVIEW, { addedAt: AT }, AT] }]);
 });
 
+test("a membership record filed as its overview was made says so, the one author a device may name", async () => {
+  const api = new ScriptedSyncApi();
+  const id = `${PROJECT}:${OVERVIEW}`;
+
+  await pushPendingWrite(
+    api,
+    entry({ kind: "projectMember", id, change: { op: "member", change: { addedAt: AT, addedBy: { by: "filing" } } } }),
+    null,
+    storage,
+  );
+
+  assert.deepEqual(api.calls, [
+    { method: "changeProjectMember", args: [PROJECT, OVERVIEW, { addedAt: AT, addedBy: { by: "filing" } }, AT] },
+  ]);
+});
+
 test("a change to a membership record whose project the server no longer has is done with", async () => {
   const api = new ScriptedSyncApi();
   api.failOnce("changeProjectMember", { code: "not_found" });

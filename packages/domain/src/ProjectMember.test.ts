@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isInProject, memberChangeTime, mergeProjectMember, projectMemberId } from "./ProjectMember.js";
+import { isInProject, memberChangeTime, mergeProjectMember, ProjectMember, projectMemberId } from "./ProjectMember.js";
+import { ProjectAuthor } from "./ProjectAuthor.js";
+import { CURRENT_PROJECT_MEMBER_SCHEMA_VERSION, PROJECT_MEMBER_MIGRATIONS } from "./projectMemberMigrations.js";
+import { migrateStoredRecord } from "./migrateStoredRecord.js";
 
 const PROJECT = "7a1d3c1e-5d0a-4b8e-9d55-0d1f6a0f2b11";
 const OVERVIEW = "0b8f5f5a-3c2e-4f51-8a43-6a1d7c2e9f10";
@@ -69,4 +72,23 @@ test("a change is stamped after the last one known, even when the clock has not 
 
 test("a change to a membership record never seen is stamped now", () => {
   assert.equal(memberChangeTime(undefined, new Date("2026-11-12T12:00:00.000Z")), "2026-11-12T12:00:00.000Z");
+});
+
+test("a membership record filed as the overview was made parses, and a project can't be made by filing", () => {
+  const filed = { ...base, addedAt: "2026-11-17T10:00:00.000Z", addedBy: { by: "filing" }, removedAt: null };
+  assert.ok(ProjectMember.safeParse(filed).success);
+  assert.equal(ProjectAuthor.safeParse({ by: "filing" }).success, false);
+});
+
+test("a reader's removal made after filing keeps the overview out, whichever arrives first", () => {
+  const changes = [add("2026-11-17T10:00:00.000Z", { by: "filing" }), remove("2026-11-17T10:05:00.000Z")];
+  assert.deepEqual(applyAll(changes), applyAll([...changes].reverse()));
+  assert.equal(membership(applyAll(changes)), false);
+});
+
+test("a membership record from before filing reads unchanged at the version that allows it", () => {
+  const before = { ...base, addedAt: "2026-11-12T10:00:00.000Z", addedBy: claude, removedAt: null, schemaVersion: 1 };
+  const migrated = migrateStoredRecord(before, PROJECT_MEMBER_MIGRATIONS);
+  assert.equal(migrated.status, "migrated");
+  assert.equal(CURRENT_PROJECT_MEMBER_SCHEMA_VERSION, 2);
 });

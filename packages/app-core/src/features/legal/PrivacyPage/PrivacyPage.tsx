@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-16";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-17";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -95,11 +95,11 @@ const sections: readonly LegalSection[] = [
           next to an assistant, it notes which question, which assistant and when, so the overview can show it. When you ask questions about
           it, each conversation keeps your questions and the answers, with the moments in the video or episode, or in another of your
           conversations about it, that each answer drew on. A project holds its name, a line on what it is for, and for each overview in it
-          whether you or a connected assistant put it there, and when. Your settings travel with the account too: the narration voice,
-          whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an overview
-          shows, whether questions to ask next are answered here or open in an assistant and which one, the About you sentence that
-          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and the
-          running total of time saved with its milestones.
+          whether you, a connected assistant or filing as the overview was made put it there, and when. Your settings travel with the
+          account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent
+          colour, which sections an overview shows, whether new overviews are put in your projects, whether questions to ask next are
+          answered here or open in an assistant and which one, the About you sentence that personalises overviews and what we have learned
+          from your overviews, the tags you have merged, the playlists you follow, and the running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -214,6 +214,11 @@ const sections: readonly LegalSection[] = [
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole description, which is where
           a recipe video usually lists its ingredients. These are what YouTube shows anyone who opens the video.
+        </p>
+        <p>
+          Either way, the names and descriptions of your topics go with it, and so do the names of your projects that aren't archived, each
+          with its line on what it is for, so the new overview can be put in the ones it clearly helps with. Turn off "File new overviews
+          into projects" in Settings › Personalisation and your projects are left out.
         </p>
         <p>
           We count how many overviews each account makes in a month on each kind of key, and how many a device makes before it has an
@@ -342,8 +347,8 @@ const sections: readonly LegalSection[] = [
           We count what is used so we know what to build and fix next. An event is a thing you did in the app, such as opening an overview,
           choosing a sort order or playing narration, with the choice you made, a count, or a random id of our own for the overview, topic
           or project. When an overview is made, or can’t be made, the event says whether it was on your key or ours, and names the provider
-          and the model. An event can never carry a link, a video, a title, an overview's words or anything you typed, because there is no
-          field shaped to hold them.
+          and the model; a new overview's also says how many of your projects it was put in, never which. An event can never carry a link, a
+          video, a title, an overview's words or anything you typed, because there is no field shaped to hold them.
         </p>
         <h3>Three situations</h3>
         <ul>

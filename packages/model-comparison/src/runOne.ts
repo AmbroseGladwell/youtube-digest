@@ -34,6 +34,7 @@ export const comparisonInput = (fetched: FetchedTranscript): GenerationInput => 
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},

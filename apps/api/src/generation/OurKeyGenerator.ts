@@ -4,11 +4,12 @@ import {
   TRIAL_OVERVIEWS,
   type ForAnyoneInput,
   type NoteKind,
-  type Overview,
   type OurKeyGenerationRequest,
+  type OurKeyGenerationResult,
   type Plan,
   type ProfilePassInput,
   type ProfilePassItem,
+  type ProjectId,
   type TopicMatchInput,
   type TopicSuggestionInput,
   type TopicSuggestionResult,
@@ -147,7 +148,11 @@ export class OurKeyGenerator {
     this.#options = options;
   }
 
-  async generate(caller: OurKeyCaller, { overviewId, input }: OurKeyGenerationRequest, log: FastifyBaseLogger): Promise<Overview> {
+  async generate(
+    caller: OurKeyCaller,
+    { overviewId, input }: OurKeyGenerationRequest,
+    log: FastifyBaseLogger,
+  ): Promise<OurKeyGenerationResult> {
     const { apiKey, dailyGenerations, signedOutDailyGenerations, usage, reservations, trials, http, clock } = this.#options;
     const now = clock();
     const day = usageDay(now);
@@ -174,10 +179,14 @@ export class OurKeyGenerator {
     // (docs/architecture/unit-economics.md); an article has no check.
     let noteKind: NoteKind | null = null;
     let checkCalls = 0;
+    let filedProjectIds: ProjectId[] = [];
     const observer = {
       kindChecked: (kind: NoteKind) => {
         noteKind = kind;
         checkCalls = metered.calls.length;
+      },
+      projectsFiled: (ids: ProjectId[]) => {
+        filedProjectIds = ids;
       },
     };
     const recordCosts = async (failed: boolean) => {
@@ -208,7 +217,7 @@ export class OurKeyGenerator {
           ms: clock().getTime() - startedAt,
         }),
       );
-      return overview;
+      return { ...overview, filedProjectIds };
     } catch (error) {
       await held.release();
       await usage.releaseOurKeyDay(day, signedOut);

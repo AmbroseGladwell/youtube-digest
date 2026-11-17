@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { MAX_TAGS, Tag, type TagCount } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
+import { projectInstructions, projectSchemaShape } from "./projectInstructions.js";
 
 export const SuggestedTopicShape = z.object({
   name: z.string(),
@@ -47,7 +48,7 @@ empty match set is a normal, honest outcome, not a failure. If the match
 set is empty or doesn't fully cover what the video is about, you may
 additionally suggest one new topic name (plus a short description) for
 the reader to create — never invent a topic and file the video under it
-yourself.
+yourself.${projectInstructions(input.existingProjects, "video")}
 
 ${tagInstructions(input.existingTags)}`;
   },
@@ -57,6 +58,7 @@ ${tagInstructions(input.existingTags)}`;
         ? z.array(z.string()).max(0)
         : z.array(z.enum(input.existingTopics.map((topic) => topic.name) as [string, ...string[]])),
     suggestedTopic: SuggestedTopicShape.nullable(),
+    ...projectSchemaShape(input.existingProjects),
     tags: GeneratedTags,
   }),
 };

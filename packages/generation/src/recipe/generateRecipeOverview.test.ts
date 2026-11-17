@@ -49,6 +49,7 @@ const input = (overrides: Partial<ArticleGenerationInput> = {}): ArticleGenerati
     followUpQuestions: true,
   },
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},
