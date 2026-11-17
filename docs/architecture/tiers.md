@@ -39,6 +39,7 @@ rather than replacing it.
 | Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
 | Overviews on our key | Onboarding's first, which counts towards the plan picked | 5 a month | 10 a month | 50 a month |
 | Overviews on your own key | — | 10 a month | 200 a month | 200 a month |
+| Questions about an overview, on our key (OV-309, 16 Nov 2026) | — (needs an account) | 100 a month | 500 a month | 1,000 a month |
 | Seeing an overview | — (needs an account) | Yes | Yes | Yes |
 | Transcripts from our server | Part of the first overview | Part of an overview | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
@@ -495,6 +496,31 @@ See plans or See BYO Plus where a plan would, and See this month's usage where n
 The title and body are a polite live region, and the dialog moves focus to the first action
 as it opens. Each message shown is `capture.limitMessage.shown` (quota, plan, surface) and
 each way taken `capture.limitMessage.wayChosen`.
+
+## Questions about an overview
+
+Chat inside an overview (`chats.md`, OV-309) has its own monthly allowance, in
+`chatAllowances.ts`, counted apart from overviews so asking never spends one. Every plan
+asks on our key, on GPT-6 Luna, whatever key it uses for overviews: Free 100 a month, BYO
+Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a suggested 300).
+
+- **Counted in Postgres**, one `chat_usage` row per account and UTC day; the month is the
+  sum of its days. A message is reserved under the account's row lock before the provider is
+  asked and given back if the answer fails, so it counts once, when it is answered.
+- **Behind it:** 200 a day per account (`CHAT_MESSAGES_PER_ACCOUNT_DAILY`), and a global
+  daily cap on our key, `OUR_KEY_DAILY_CHAT_MESSAGES` (20,000 by default), kept beside
+  overviews' in `our_key_usage.chat_messages`. A conversation holds at most 50 questions.
+- **At a limit the reader waits:** a 429 with `quota` (`chat-month`, `chat-day` or
+  `chat-our-key-daily`), `retryAfterSeconds`, and for the month `resetsOn`.
+- **What it costs, fully used,** at OV-267's measured cost per message: about $0.03, $0.17
+  and $0.34 a month for Free, BYO Plus and Plus; about $0.05, $0.27 and $0.53 if every
+  source is over an hour; about $0.10, $0.52 and $1.04 with no caching. Measured through
+  the endpoint on a 169-minute source (`chats.md`, "Measured through the endpoint"): about
+  $0.0004 a question, other chats included, in any conversation about an overview asked
+  about in the last 30 minutes, and $0.004 for the first after that (OV-313). A Plus month of
+  1,000 questions each about a different 169-minute source would be about $4.40; the same
+  1,000 in conversations of 30 about $0.60.
+- `GET /api/chat-usage` says what is used, the limit and the reset date.
 
 ## Options for saving cost, not built
 

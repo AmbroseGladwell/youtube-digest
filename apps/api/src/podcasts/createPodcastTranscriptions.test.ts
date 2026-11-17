@@ -153,7 +153,13 @@ test("signed out, a trial can transcribe an episode, and no one else can read wh
     {
       podcastWeb: webOf(feed(item("ep1", 1800))),
       transcriber: makeScriptedTranscriber(),
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+      ourKey: {
+        apiKey: "sk-test-ours",
+        dailyGenerations: 300,
+        signedOutDailyGenerations: 50,
+        dailyChatMessages: 300,
+        http: makeFakeOpenAi().http,
+      },
     },
   );
   const device = await makeTrialDevice(testApp);

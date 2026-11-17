@@ -88,6 +88,7 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     [accountId, overviewId, now],
   );
   await sql.query("insert into narration_render_usage (day, account_id, renders) values ('2026-11-05', $1, 1)", [accountId]);
+  await sql.query("insert into chat_usage (day, account_id, messages) values ('2026-11-05', $1, 1)", [accountId]);
   await sql.query(
     "insert into overview_embeddings (account_id, overview_id, embedded_rev, model, attempted_rev, updated_at) values ($1, $2, 1, 'test', 1, $3::timestamptz)",
     [accountId, overviewId, now],

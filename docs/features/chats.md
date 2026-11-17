@@ -4,8 +4,8 @@ OV-308, the first of four build cards for chat about one overview (OV-308 to OV-
 investigation behind them is OV-267, `docs/architecture/in-app-chat.md` (PR #343): GPT-6 Luna with the
 whole transcript costs about $0.0003 a message, and answered only from the source.
 
-This card is the record only. The endpoint that writes chats is OV-309, the panel inside the
-overview is OV-310, and reading chats over MCP is OV-311.
+OV-308 built the record and OV-309 the endpoint that answers and writes it. The panel inside
+the overview is OV-310, and reading chats over MCP is OV-311.
 
 ## One record per conversation
 
@@ -38,9 +38,10 @@ don't move.
 ## Several chats, and one using another
 
 An overview can have any number of chats, and each can draw on the others: a reader can
-build on a decision or an answer from an earlier chat without repeating it. OV-309 sends
-the overview's other live chats with each question, cut to a budget measured by code, oldest
-first out. A deleted chat is never sent, so it can't come back through another one.
+build on a decision or an answer from an earlier chat without repeating it. Each question
+carries the overview's other live chats (`otherChatsInPrompt.ts`), cut to 24,000 characters
+counted by code: the newest messages are kept first, then laid out oldest first, each with an
+id such as `c1.m3`. A deleted chat is never sent, so it can't come back through another one.
 
 An answer that uses another chat cites it with `{ chatId, message }`, which code checks
 points at a real message in a live chat of the same overview, as it checks times against the
@@ -68,6 +69,109 @@ messages and appends the rest:
 
 No route lets a device write a chat.
 
+## Asking
+
+`POST /api/chats/:overviewId/messages` with `{ conversationId, text }` (`ChatQuestionRequest`):
+a new conversation is a new uuid, a follow-up repeats its conversation's. Signed in only, on
+our key, on GPT-6 Luna (`chatModel.ts`) for every plan. `ChatAnswerer` settles everything that
+can refuse before the answer starts, so a refusal is an ordinary JSON error:
+
+| Refusal | Status | Details |
+|---|---|---|
+| The overview isn't held, or the conversation was deleted | 404 `not_found` | |
+| No transcript kept for it, or an article | 422 `transcript_unavailable` | `chat: "no-source"` |
+| The conversation has `MAX_CHAT_QUESTIONS` questions | 400 `invalid_request` | `conversation: "full"` |
+| The month's, the day's or the global day's allowance spent | 429 `too_many_requests` | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
+| No key on this server | 503 `unavailable` | |
+| The provider failed before answering | 502 `generation_failed` | |
+
+**The answer streams** as server-sent events (`ChatStreamEvent`): `text` events carry the
+answer as it arrives, then one `answered` event carries both messages as stored and the
+record's rev, or one `failed` event says nothing was stored. The model replies in JSON,
+`{ answer, passages, chatMessages, inSource }`, answer first, and `answerSoFar` reads the
+answer's text out of the reply while the rest is still arriving.
+
+**The prompt** is OV-267's `fullTranscript` shape, with the overview added for context
+(`chatPrompt.ts`): the instructions, the overview and the whole transcript in one-minute
+passages with ids (`transcriptPassages.ts`), as the first message, which never changes, so
+follow-ups and the overview's other conversations read it from the cache
+(`prompt_cache_key` is per overview). Then the other conversations, then this conversation's
+history, then the question.
+
+**Citations are code's.** `citationsOf` turns passage ids into `{ startMs, endMs }` and other
+chats' message ids into `{ chatId, message }`, drops any id the model wasn't given, and sets
+`inSource` only when the answer cites the transcript.
+
+**A provider refusing for now** (429 or 5xx) is asked again after its `retry-after`, at most 5
+seconds, or after 1 then 3 seconds, before anything streams. A third refusal, any other
+failure, or a reply that can't be read gives the message back and stores nothing; the tokens
+the provider billed still go into the cost tally, as `message-failed`.
+
+**Stopped or abandoned.** When the reader stops an answer, or the connection goes, before
+the answer is stored, the server stops asking the provider, stores nothing and gives the
+question back (`api.chat.stopped`). The provider reports tokens only at the end, so what it
+billed for the part already written isn't priced.
+
+**Costs and logs.** Each answer's tokens and list-price cost go into `account_costs`, area
+`chat` (`unit-economics.md`). `api.chat.answered` logs the plan, model, tokens, cached share,
+cost, `inSource`, the citations of the source and of other chats, how many other chats'
+messages went in, the month's count and the time; never the question or the answer.
+
+**Always on us.** Every plan asks on our key, whatever key it makes overviews with, and
+"Only ever use my key" doesn't change that (owner, 16 Nov 2026). Settings › API keys says so
+under that switch: the reader's key is only used to make overviews
+(`OWN_KEY_FOR_OVERVIEWS_ONLY`).
+
+## Measured through the endpoint
+
+`apps/api/src/scripts/chatHarnessCheck.ts` runs the real endpoint in process, on an in-memory
+Postgres, against OpenAI on our key, and reads its own log line for tokens and cost. Run on 16
+Nov 2026 with `modelPrices.ts` as checked on 9 Nov (Luna $0.10 in, $0.01 cached, $0.50 out per
+million). The overview in the prompt was a fixture, since the spike kept only the notes' text.
+Latency wasn't measured: the in-process clock doesn't move.
+
+**OV-267's question set** (6 sources of 10 to 89 minutes, 6 questions each, one conversation
+per source, twice): answered or declined rightly 72 of 72, declined all 24 the source doesn't
+cover, cited the right moment 46 of 48 (10 of 12 for questions needing two moments far apart),
+named the expected detail 48 of 48. That matches OV-267's `fullTranscript` arm. A message cost
+$0.00021 at the median, with 99% of its prompt read from the cache; the first of a conversation
+cost up to $0.0022.
+
+**The worst case:** the library has nothing over 89 minutes, so the two longest were joined end
+to end into a 169-minute source of about 33,000 tokens. Two 30-question conversations on it,
+the second carrying the first (all 60 of its messages fitted the budget):
+
+| | First question | Each later question (median) | 30 questions | Prompt tokens, first to last |
+|---|---|---|---|---|
+| Alone | $0.0042 | $0.00042 | $0.016 | 32,800 to 35,100 |
+| With the other conversation | $0.0045 | $0.00046 | $0.018 | 35,200 to 37,500 |
+
+So 30 questions of history and a full other conversation add about 10%. The cap was raised
+to 50 on 16 Nov 2026, after this run, because a reader deep in a conversation shouldn't be cut
+off; 50 questions has not been measured. The extra history is read from the cache like the rest.
+
+**A new conversation reads the transcript from the cache (OV-313).** In that run the second
+conversation's first question paid to cache the whole prompt again, at 1.25× input, although
+the transcript was the same. A probe of five calls on one transcript (`chatCacheProbe.ts`)
+found why: the other conversations went as a second `system` message, which OpenAI folds into
+the first, so the transcript was no longer the prefix it had cached. A different question
+after the transcript, the other chats inside the question, or the other chats as a `user`
+message each read all of it (16,922 of 16,933 tokens). They now go as a `user` message. Checked
+again through the endpoint on the 169-minute source: the second conversation's first question
+cost $0.00041, reading 99% of its prompt from the cache, where it had cost $0.0045.
+
+What still costs is the first question about an overview whose transcript hasn't been asked
+about in the last 30 minutes, the cache's lifetime on Chat Completions (`spend.md`): about $0.004
+on a source that long, $0.002 at 89 minutes. Every later question, in any conversation about it,
+is about a tenth of that.
+
+## No transcript, no chat
+
+The server answers only from what the account holds itself (`transcript-storage.md`). A video
+or episode without a stored transcript is refused with `chat: "no-source"`, and so is every
+article: the server keeps no article's text (OV-295), so `{ paragraph }` citations wait until it
+does. The panel hides itself on that refusal (degrade visibly).
+
 ## Deleting
 
 - **One conversation:** `DELETE /api/chats/:overviewId/:conversationId` tombstones it. A retry of
@@ -92,7 +196,6 @@ yet; OV-310 builds the panel.
 
 ## Privacy
 
-This card adds where a chat is kept, how it syncs and how it is deleted, but nothing writes
-one until OV-309's endpoint. `/privacy` describes what the software does, so it changes when
-chats are first written: in OV-309's PR, which also sends the transcript and question to
-OpenAI.
+`/privacy` has a section, "Asking questions about an overview", added with OV-309, which first
+writes chats: what goes to OpenAI, that it is always on our key, how conversations are kept and
+deleted, what is counted and logged. `/terms` names the allowance (`legal-pages.md`).

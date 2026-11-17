@@ -97,6 +97,13 @@ const sections: readonly LegalSection[] = [
           has no transcript of its own has an allowance of its own, in hours of audio a month, on the same terms.
         </p>
         <p>
+          <strong>Asking about an overview.</strong> With an account you can ask questions about a video or podcast episode inside its
+          overview. Questions are always answered on our key, within a monthly allowance of their own that never uses up your overviews, and
+          a daily cap; the app shows what is left and when it resets. The same terms apply: they are allowances, not entitlements. An answer
+          comes from the video's or episode's own words, and says so when they don't cover the question, but it can still be wrong, so check
+          anything that matters at the moment it cites.
+        </p>
+        <p>
           <strong>Paid plans.</strong> Nothing is charged for today. When paid plans are offered, the price, what it buys, how to cancel and
           how refunds work will be set out here and in the app before anything is charged, and these terms will be updated.
         </p>

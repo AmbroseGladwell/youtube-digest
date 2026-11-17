@@ -203,6 +203,7 @@ test("overviews are made on our key only once there is a key, under a global dai
     apiKey: "sk-test",
     dailyGenerations: 300,
     signedOutDailyGenerations: 50,
+    dailyChatMessages: 20_000,
   });
   assert.equal(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_DAILY_GENERATIONS: "40" }).ourKey?.dailyGenerations, 40);
   assert.equal(

@@ -20,7 +20,13 @@ const appServing = (page: FetchedPage, logger?: ReturnType<typeof recordingLogge
     {},
     {
       fetchArticlePage: async () => page,
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http },
+      ourKey: {
+        apiKey: "sk-test-ours",
+        dailyGenerations: 300,
+        signedOutDailyGenerations: 50,
+        dailyChatMessages: 20_000,
+        http: makeFakeOpenAi().http,
+      },
       ...(logger === undefined ? {} : { logger }),
     },
   );

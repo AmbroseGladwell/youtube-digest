@@ -68,6 +68,7 @@ these changes, the policy changes with it.
 | Logs: 14 days at PostHog, route and ids only, never an address or email; rate limits in memory for at most a day; the two daily caps keeping a hashed address 7 days | `errors-and-logs.md`, `api.md` ("Rate limits"), `server-side-transcripts.md` (`CALLER_RETENTION_DAYS`) |
 | Assistants: tokens not sessions, the read tools and `mark_overviews`, every call logged | `mcp-connector.md` |
 | Search by meaning: claims and searches to OpenAI for embeddings, kept beside the library, remade when an overview changes | `search-by-meaning.md`, `V0028` |
+| Asking about an overview: on our key whatever the reader's own key and "Only ever use my key"; the question, overview, own transcript, conversation and other conversations within a budget to OpenAI; no articles; kept as a synced conversation the device can only read or delete, deleted with the overview and account; daily counts, the cost tally, log lines without the words | `chats.md`, `tiers.md`, `ChatAnswerer.ts`, `chatModel.ts`, `V0035`, `V0036` |
 | Processors | `deploy.md`, `analytics.md`, `sign-in.md`, `server-side-transcripts.md`, `playlists.md` |
 | On the device | `analytics-consent.md` ("The record"), `reading-position.md`, `playlists.md`, `tiers.md` (the trial token) |
 
@@ -87,7 +88,7 @@ Allow, gone on No thanks or on leaving. Whether that is enough is for the legal 
 What the service is and that it is provided as is; that overviews are written by a model and
 can be wrong; the account rules (minimum age, one per person, deletion by email, suspension);
 own keys under the provider's terms and at the reader's cost; allowances on our key as
-allowances, with paid plans a placeholder until OV-18; acceptable use, including the shared
+allowances, with paid plans a placeholder until OV-18; questions about an overview on our key within their own allowance, and that answers can be wrong; acceptable use, including the shared
 cache's reason for refusing a false transcript; the reader's content and the permission the
 service needs to sync, render, serve assistants and shared links; sharing; assistants; YouTube
 and other third parties; changes to the service; liability; changes to the terms, with
@@ -147,6 +148,8 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-16 | privacy | OV-309 | A new section, Asking questions about an overview: always on our key, even with "Only ever use my key"; the question, the overview, the reader's own transcript, the conversation and as much of their other conversations about it as fits go through our server to OpenAI; no articles; kept as a synced conversation devices can read or delete; daily counts, the cost tally and log lines without the words. Your library names conversations; OpenAI's row, the cost tally, the retention table and account deletion cover them. Writing an overview says "Only ever use my key" keeps overviews, not questions, from going through us. |
+| 2026-11-16 | terms | OV-309 | Overviews on our key, and limits: questions about an overview are answered on our key within a monthly allowance of their own and a daily cap, shown in the app; answers come from the source and can still be wrong. |
 | 2026-11-16 | privacy | OV-305 | Podcast episodes: a reader can ask for an episode with no transcript to be transcribed; only then our server sends Modal the episode's audio address from the feed and nothing about the reader; Modal runs our speech-to-text model, the audio is deleted once transcribed, and the words are the reader's alone, held at most a day for their device to collect. Hours a month are counted per account or hashed address. Processors: Modal, United States. Retention: the waiting words (a day), the audio (not kept), hashed addresses for the transcription allowance (until the month ends). |
 | 2026-11-16 | terms | OV-305 | Overviews on our key, and limits: transcribing an episode has its own allowance, in hours of audio a month, on the same terms. |
 | 2026-11-15 | privacy | OV-266 | Your library: taking a question to ask next to an assistant notes which question, which assistant and when, kept and synced with read and favourite; the settings list names which assistant questions open in. |
