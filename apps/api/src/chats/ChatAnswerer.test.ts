@@ -203,6 +203,19 @@ test("a question about the overview itself is answered from its items, cited by 
   assert.equal(answeredFromOverview(message), true);
 });
 
+test("ids the model wrote into its answer are left out of what streams and what is stored, and still cited", async (t) => {
+  const setup = await setUp(t, [answer("Three to five grams a day [p2]. Step 2 (kp2) covers it.", ["p2"], [], true, ["kp2"])]);
+
+  const response = await setup.ask(randomUUID(), "How much creatine?");
+
+  const streamed = eventsOf(response.body).flatMap((event) => (event.type === "text" ? [event.text] : []));
+  assert.equal(streamed.join(""), "Three to five grams a day. Step 2 covers it.");
+  const message = answered(response.body).messages[1];
+  assert.ok(message?.from === "answer");
+  assert.equal(message.text, "Three to five grams a day. Step 2 covers it.");
+  assert.equal(message.citations.length, 2);
+});
+
 test("the month's allowance, the day's, and the global day refuse before the provider is asked, and say when they reset", async (t) => {
   const setup = await setUp(t, [answer("Fine.")], { dailyChatMessages: 1 });
   const { sql, clock } = setup.testApp;

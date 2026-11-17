@@ -214,6 +214,37 @@ the model: the overview already did.
 **Logs and analytics.** `api.chat.answered` and `reader.chat.answered` count overview
 citations (`overviewCitations`) beside those of the source and of other chats.
 
+**Ids out of the answer's text.** The model sometimes writes the ids it cites into the answer
+too: "[p28–p30]", "(p24)", "[kp4] [apply1]". It did before OV-319, in production. Citations
+carry them already, so `withoutCitationMarks` drops every bracketed run of passage, overview
+and chat-message ids from the text, both as it streams and as it is stored. While the reply
+arrives it holds back a half-written mark and the space before it, so the streamed text only
+ever grows. Brackets that are prose, "(perhaps 3g)", stay.
+
+**Measured through the endpoint.** `chatHarnessCheck.ts` now puts each source's real overview
+in the prompt (read back from its saved Markdown by `overviewFromMarkdown`), and
+`overview-questions.json` adds 17 questions answered from the overview's own items: steps,
+How to apply, why it's dubious, Watch it anyway and the verdict, each scored by code on whether
+the answer cites one of the parts it lists. Run on 17 Nov 2026, the same six sources twice
+and the 170-minute worst case:
+
+- **Cited the right part 33 of 34.** The miss gave the right step without citing anything; the
+  same question cited it on the other run. Named the expected detail 32 of 34: both misses are
+  one question about a conflict of interest, answered from the right reason in other words.
+- **OV-267's questions held up** with the overview's items in the prompt: answered or declined
+  rightly 71 of 72, cited the right moment 47 of 48, named the expected detail 48 of 48. The
+  one wrong flag was a decline that also cited How to apply and set `inSource`. 8 of the 72
+  cited an item as well as the transcript.
+- **On the long source** every overview question cited its part (6 of 6), and the source flag
+  was right 24 of 24.
+- **Wording:** no answer said "the overview suggests" or spoke in the first person. Two echoed
+  Watch it anyway's own reason, "the overview and transcript carry the substance".
+- **Cost:** a message cost $0.00024 at the median, 99% of its prompt from the cache. On the long
+  source the first question cost $0.0044 and each later one $0.00044, about what it cost
+  without the overview's ids (above).
+- **Ids in the text:** 67 of 166 answers had written ids into their text, passage ids mostly.
+  `withoutCitationMarks` removes all of them and nothing else.
+
 ## No transcript, no chat
 
 The server answers only from what the account holds itself (`transcript-storage.md`). A video
