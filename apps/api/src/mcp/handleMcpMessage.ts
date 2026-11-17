@@ -47,7 +47,8 @@ const READING_INSTRUCTIONS =
   "These tools read the reader's own library of saved overviews of videos, articles and podcast episodes: short, blunt notes on what each one claims and whether it holds up. " +
   "Find overviews with search_overviews or list_topics, then read them in full with get_overview, or many at once with get_overviews to compare or combine what several videos say. " +
   "When a question needs more than an overview says, read its transcript with get_transcript: it is the reader's own copy of what was said, so use it rather than looking for a transcript on the web. Transcripts are long, so read one at a time. Cite the title and the timestamp links the notes carry. " +
-  "When the reader talks about something they are working on, list_projects shows their projects, each with a purpose in their own words, and get_project reads one as a brief.";
+  "When the reader talks about something they are working on, list_projects shows their projects, each with a purpose in their own words, and get_project reads one as a brief. " +
+  "The reader may also have asked questions about an overview in the app: list_chats and get_chat read those conversations, so you know what they already asked, decided or were told.";
 const MARKING_INSTRUCTIONS =
   "When the reader asks, mark_overviews marks overviews read, unread or favourite by id, create_project makes a project, and change_project_members puts overviews in a project or takes them out.";
 const READ_ONLY_INSTRUCTIONS =

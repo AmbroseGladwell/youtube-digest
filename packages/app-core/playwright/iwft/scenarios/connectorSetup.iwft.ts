@@ -100,7 +100,7 @@ test.describe("Settings › Connections: which assistant (OV-301)", () => {
     backendSimulator,
   }) => {
     backendSimulator.overviews.seed(makeOverview({ followUpQuestions: QUESTIONS }));
-    const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "gemini" });
+    const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "gemini", questionsAnsweredHere: false });
     const settings = await (await launcher.appShell.openSettings()).openSection("connections");
     await settings.connections.verifyAssistantChosen("gemini");
 
@@ -116,7 +116,7 @@ test.describe("Settings › Connections: which assistant (OV-301)", () => {
     backendSimulator,
   }) => {
     backendSimulator.overviews.seed(makeOverview({ followUpQuestions: QUESTIONS }));
-    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, questionsAnsweredHere: false });
     const reader = await library.nthCard(0).openReader();
     await reader.followUps.clickQuestion(0);
 

@@ -51,6 +51,11 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     [accountId, overviewId, "2026-11-05T10:00:00.000Z", JSON.stringify({ id: overviewId, video: { id: VIDEO } })],
   );
   await sql.query(
+    `insert into records (account_id, kind, id, schema_version, rev, seq, updated_at, body)
+     values ($1, 'chat', $2, 1, 1, 2, $3, '{}'::jsonb)`,
+    [accountId, `${overviewId}:${randomUUID()}`, "2026-11-05T10:00:00.000Z"],
+  );
+  await sql.query(
     `insert into magic_links (email, surface, token_hash, expires_at, intent, anonymous_id, consumed_at)
      values ($1, 'web', $2, $3::timestamptz, 'createAccount', $4, $3::timestamptz)`,
     [email, hex64(`link-${email}`), now, ANONYMOUS_ID],
@@ -83,6 +88,7 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     [accountId, overviewId, now],
   );
   await sql.query("insert into narration_render_usage (day, account_id, renders) values ('2026-11-05', $1, 1)", [accountId]);
+  await sql.query("insert into chat_usage (day, account_id, messages) values ('2026-11-05', $1, 1)", [accountId]);
   await sql.query(
     "insert into overview_embeddings (account_id, overview_id, embedded_rev, model, attempted_rev, updated_at) values ($1, $2, 1, 'test', 1, $3::timestamptz)",
     [accountId, overviewId, now],

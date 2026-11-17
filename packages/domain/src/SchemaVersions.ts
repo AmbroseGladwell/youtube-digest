@@ -5,6 +5,7 @@ import { CURRENT_TOPIC_SCHEMA_VERSION } from "./topicMigrations.js";
 import { CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION } from "./followedPlaylistMigrations.js";
 import { CURRENT_PROJECT_SCHEMA_VERSION } from "./projectMigrations.js";
 import { CURRENT_PROJECT_MEMBER_SCHEMA_VERSION } from "./projectMemberMigrations.js";
+import { CURRENT_CHAT_SCHEMA_VERSION } from "./chatMigrations.js";
 import type { UnreadableRecordKind } from "./UnreadableRecord.js";
 
 export type SyncedRecordKind = UnreadableRecordKind;
@@ -17,6 +18,7 @@ export const SYNCED_RECORD_KINDS: readonly SyncedRecordKind[] = [
   "followedPlaylist",
   "project",
   "projectMember",
+  "chat",
 ];
 
 // Zero for a kind the client was built before, so the server never sends it one
@@ -33,4 +35,5 @@ export const CURRENT_SCHEMA_VERSIONS: SchemaVersions = {
   followedPlaylist: CURRENT_FOLLOWED_PLAYLIST_SCHEMA_VERSION,
   project: CURRENT_PROJECT_SCHEMA_VERSION,
   projectMember: CURRENT_PROJECT_MEMBER_SCHEMA_VERSION,
+  chat: CURRENT_CHAT_SCHEMA_VERSION,
 };

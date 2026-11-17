@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { IDBFactory } from "fake-indexeddb";
 import { CLIENT_VERSION, type OverviewFold } from "@overview/domain";
 import {
+  IndexedDbChatStore,
   IndexedDbOverviewStore,
   IndexedDbProjectStore,
   IndexedDbSettingsStore,
@@ -41,6 +42,7 @@ export interface SyncedDevice {
   settings: IndexedDbSettingsStore;
   transcripts: IndexedDbTranscriptStore;
   projects: IndexedDbProjectStore;
+  chats: IndexedDbChatStore;
   storage: IndexedDbSyncStorage;
   engine: SyncEngine;
   sync(): Promise<SyncStatus>;
@@ -73,6 +75,7 @@ export async function makeDevice(
   const settings = new IndexedDbSettingsStore(db, { onJournaled: storage.notifyJournaled });
   const transcripts = new IndexedDbTranscriptStore(db);
   const projects = new IndexedDbProjectStore(db, { onJournaled: storage.notifyJournaled });
+  const chats = new IndexedDbChatStore(db, { onJournaled: storage.notifyJournaled });
   await before?.({ overviews, settings, transcripts });
   const engine = new SyncEngine({
     api: createFetchSyncApi({ baseUrl: "http://api.test", token, clientVersion, fetch: injectingFetch(testApp.app) }),
@@ -82,5 +85,5 @@ export async function makeDevice(
     now: () => testApp.clock.now,
     onFolded,
   });
-  return { overviews, settings, transcripts, projects, storage, engine, sync: () => engine.sync() };
+  return { overviews, settings, transcripts, projects, chats, storage, engine, sync: () => engine.sync() };
 }

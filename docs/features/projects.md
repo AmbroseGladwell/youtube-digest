@@ -227,8 +227,20 @@ owner on 13 Nov 2026.
 - **The bar** rides at the foot of the list, above the floating player: Add to project… (the
   one orange), Add to topic…, Mark read (Mark unread when every one is read), the heart
   (filled when every one is a favourite, and then it takes them out), Delete… in warning ink.
-  A project's page adds Remove from {project} before Delete; removing is silent, like the
-  row's own Remove. On a phone every action is an icon named for a screen reader.
+  A project's page adds Remove from {project} before Delete; it doesn't ask, like the row's
+  own Remove. On a phone every action is an icon named for a screen reader.
+- **Every action ends selecting and says what it did** (OV-317, 16 Nov 2026). Before, the
+  selection stayed after an action and nothing confirmed it, so it felt as if nothing had
+  happened, and after Delete or Remove the bar sat empty and disabled. Now Mark read,
+  the heart and Remove end it straight away; Delete ends it once confirmed, and Cancel keeps
+  the selection; a picker ends it when it closes, if anything changed (a tick undone back to
+  where it began counts as no change), and keeps the selection if not. Focus goes back to
+  the select button. The shared `Toast` (Design 266am, the follow-up questions' hand-off
+  toast) then names the count and the place: "2 marked read", "2 added to favourites",
+  "Added 3 to Kitchen renovation", "Removed 1 from Kitchen renovation", "2 deleted", and
+  "Updated 2 topics" when a picker changed more than one. It speaks only once every write
+  has settled; if any failed it says "Couldn’t mark 1 of 2 read" with the alert icon
+  instead. There is no Undo yet.
 - **Both pickers are one checklist** (`ChecklistPicker`), the one an overview's own Add to
   project… opens. With several overviews a project or topic only some of them have shows a
   dash and "1 of 3 in it" / "1 of 3 have it"; ticking it gives it to all, unticking one they
@@ -244,7 +256,9 @@ owner on 13 Nov 2026.
   Filters (while the rail is a sheet) and select after it; on a wide screen sort has moved
   from beside the title into this row.
 - **Analytics** (`library.selection.*`) carry the action and how many overviews, a topic's id
-  when one is given or taken, and never which overviews. Membership changes made from the bar
+  when one is given or taken, and never which overviews. `stopped` says whether the reader
+  stopped (`reader`) or an action finished it (`acted`); `failed` counts the writes that
+  failed out of how many. Membership changes made from the bar
   are `projects.membership.*` with `from: "selection"`.
 
 ## Measures

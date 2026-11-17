@@ -55,6 +55,11 @@ export class ApiKeysPanelPageObject extends PageObject {
   verifyOnlyMyKeyExplains = (pattern: RegExp) =>
     this.step(`verifyOnlyMyKeyExplains ${pattern}`, () => expect(this.get(onlyMyKeySwitchTestIds.explanation)).toHaveText(pattern));
 
+  verifyOwnKeyForOverviewsOnly = () =>
+    this.step("verifyOwnKeyForOverviewsOnly", () =>
+      expect(this.get(onlyMyKeySwitchTestIds.overviewsOnly)).toHaveText(/only used to make overviews.*always answered on us/),
+    );
+
   toggleOnlyMyKey = () => this.step("toggleOnlyMyKey", () => this.click(onlyMyKeySwitchTestIds.switch));
 
   removeKey = (provider: Provider) =>

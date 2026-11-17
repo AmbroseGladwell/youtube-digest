@@ -170,6 +170,10 @@ function deleteFor(api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | nu
       return api.deleteFollowedPlaylist(entry.id);
     case "project":
       return api.deleteProject(entry.id);
+    case "chat": {
+      const [overviewId = "", conversationId = ""] = entry.id.split(":");
+      return api.deleteChat(overviewId, conversationId);
+    }
     default:
       return api.deleteOverview(entry.id);
   }

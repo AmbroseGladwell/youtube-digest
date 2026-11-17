@@ -106,6 +106,7 @@ export interface LaunchOptions {
   shareProfileWithAssistants?: boolean;
   sectionsEnabled?: SectionsEnabled;
   followUpAssistant?: FollowUpAssistant;
+  questionsAnsweredHere?: boolean;
   runBridge?: boolean;
   youTubeFetch?: boolean;
   failingReads?: InMemoryStoreRead[];
@@ -190,6 +191,7 @@ export class Launcher {
           ...(options.shareProfileWithAssistants === undefined ? {} : { shareProfileWithAssistants: options.shareProfileWithAssistants }),
           ...(options.sectionsEnabled === undefined ? {} : { sectionsEnabled: options.sectionsEnabled }),
           ...(options.followUpAssistant === undefined ? {} : { followUpAssistant: options.followUpAssistant }),
+          ...(options.questionsAnsweredHere === undefined ? {} : { questionsAnsweredHere: options.questionsAnsweredHere }),
         },
         apiKeys: options.apiKeys,
         syncAvailable: options.sync,

@@ -1,0 +1,92 @@
+.root {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.3125rem 0.3125rem 0.3125rem 1rem;
+  border-radius: 1.5rem;
+  background: var(--chat-raised, var(--surface));
+}
+
+.label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.input {
+  flex: 1;
+  align-self: center;
+  min-width: 0;
+  max-height: 9rem;
+  padding: 0.5rem 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 0.90625rem/1.4 var(--font-body);
+  resize: none;
+  field-sizing: content;
+
+  &::placeholder {
+    color: var(--muted);
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.root:has(.input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+  cursor: default;
+}
+
+.sendReady {
+  background: var(--action);
+  color: var(--on-action);
+  box-shadow: none;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--action-hover);
+  }
+}
+
+.stop {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  height: 2.375rem;
+  padding: 0 0.875rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--ground);
+  font: 600 0.8125rem/1 var(--font-body);
+  cursor: pointer;
+}
+
+.stopMark {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.1875rem;
+  background: currentColor;
+}

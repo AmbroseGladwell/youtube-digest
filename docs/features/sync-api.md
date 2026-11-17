@@ -27,7 +27,7 @@ here departs from one there, it says so.
 records (account_id, kind, id, schema_version, rev, seq, updated_at, stored_at, deleted, body)
   primary key (account_id, kind, id)
   unique (account_id, seq)
-  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist', 'project', 'projectMember')
+  kind in ('overview', 'overviewState', 'topic', 'settings', 'followedPlaylist', 'project', 'projectMember', 'chat')
   updated_at matches the fixed-width Z form, and is null only on a tombstone
   deleted = (body is null)
 ```
@@ -191,6 +191,10 @@ as an overview is, and unfollowed by `DELETE /api/followed-playlists/:id`, a tom
 `/api/projects`. A member is one record per project and overview, with a dated removal and a
 merge that commutes, and deleting a project or an overview tombstones its members
 (`projects.md`).
+
+`chat`, added at client version 22, is written only by the server. A device deletes a
+conversation with `DELETE /api/chats/:overviewId/:conversationId`, and deleting an overview
+tombstones its chats (`chats.md`).
 
 ## Rejected alternatives
 

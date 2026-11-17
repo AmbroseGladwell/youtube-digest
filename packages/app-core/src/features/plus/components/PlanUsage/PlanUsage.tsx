@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { OverviewUsage, TranscriptionUsage } from "@overview/domain";
+import type { ChatUsage, OverviewUsage, TranscriptionUsage } from "@overview/domain";
 import { audioLength } from "../../../podcasts/util/transcriptionCopy.js";
 import { Routes } from "../../../../app/Routes.js";
 import { PLAN_CARDS } from "../../planCards.js";
@@ -10,10 +10,10 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 type Usage = { status: "checking" | "unreachable" } | { status: "known"; data: OverviewUsage };
 
-export type PlanUsageProps = { signedIn: true; usage: Usage; hasOwnKey: boolean } | { signedIn: false };
+export type PlanUsageProps = { signedIn: true; usage: Usage; hasOwnKey: boolean; chatUsage?: ChatUsage | null } | { signedIn: false };
 
 interface Cell {
-  id: "ours" | "own" | "transcribing";
+  id: "ours" | "own" | "questions" | "transcribing";
   label: string;
   count: string;
   aside?: ReactNode;
@@ -40,7 +40,8 @@ export function PlanUsage(props: PlanUsageProps) {
     );
   }
 
-  const { usage, hasOwnKey } = props;
+  const { usage, hasOwnKey, chatUsage = null } = props;
+  const questionsLeft = chatUsage === null ? null : Math.max(0, chatUsage.limit - chatUsage.used);
   const countOf = (key: "ours" | "own"): Pick<Cell, "count" | "aside"> => {
     if (usage.status !== "known") return { count: usage.status === "checking" ? CHECKING : "Couldn't check" };
     const { used, limit } = usage.data[key];
@@ -73,6 +74,16 @@ export function PlanUsage(props: PlanUsageProps) {
         cells={[
           { id: "ours", label: "On us", ...countOf("ours") },
           { id: "own", label: "On your own key", ...countOf("own") },
+          ...(chatUsage === null || questionsLeft === null
+            ? []
+            : [
+                {
+                  id: "questions" as const,
+                  label: "Questions about overviews, on us",
+                  count: leftOf(questionsLeft, chatUsage.limit),
+                  ...(questionsLeft === 0 ? { aside: `None left. More on ${resetDate(chatUsage.resetsOn)}.` } : {}),
+                },
+              ]),
           ...(usage.status === "known" && usage.data.transcription !== undefined
             ? [transcribingCell(usage.data.transcription, usage.data.resetsOn)]
             : []),

@@ -9,10 +9,7 @@
 // The sticky chrome above and the player bar below are what a line scrolled to has to
 // clear; the 33vh is design 1a's top third, and the larger of the two wins.
 .line {
-  scroll-margin-top: max(
-    calc(var(--masthead-height) + var(--reader-tabs-height) + 1rem),
-    33vh
-  );
+  scroll-margin-top: max(calc(var(--masthead-height) + var(--reader-tabs-height) + 1rem), 33vh);
   scroll-margin-bottom: 6rem;
   border: 0;
   border-radius: var(--radius-panel);
@@ -142,6 +139,13 @@
 .linePlaying {
   background: var(--stone-tint);
   color: var(--on-stone-tint);
+}
+
+.lineCited {
+  border-radius: 0.75rem;
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  transition: background-color 200ms ease;
 }
 
 .linePlaying .stepNumber {

@@ -3,7 +3,7 @@ import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 
-export type CostArea = "generation" | "embeddings" | "transcripts";
+export type CostArea = "generation" | "embeddings" | "transcripts" | "chat";
 
 // Who a cost lands on: an account, or no one yet, for a trial or a signed-out caller.
 export type CostPayer = { accountId: AccountId } | "signed-out";

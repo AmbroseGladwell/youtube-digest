@@ -424,6 +424,7 @@ of the repository, is `docs/conventions/secrets.md`:
 | `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev` and `overview-prod`, a different key in each, and neither is the harness's (`overview-evals`); the prod key is restricted to chat completions |
 | `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |
 | `OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS` | 50 | the share of that day a signed-out trial may spend, so proxies rotating addresses can't turn accounts away: about £2 (`tiers.md`, "Counting") |
+| `OUR_KEY_DAILY_CHAT_MESSAGES` | 20000 | chat questions answered on our key in a UTC day, across every account (`tiers.md`, "Questions about an overview") |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |
 | `ANALYTICS_ENVIRONMENT` | `development` | `development` or `production`, on every event passed on, because the free plan has one project for both |

@@ -18,6 +18,8 @@ export * from "./fetchServiceTranscriptApi.js";
 export * from "./GenerationApi.js";
 export * from "./fetchArticleApi.js";
 export * from "./fetchGenerationApi.js";
+export * from "./ChatApi.js";
+export * from "./fetchChatApi.js";
 export * from "./MeaningSearchApi.js";
 export * from "./fetchMeaningSearchApi.js";
 export * from "./PlaylistApi.js";

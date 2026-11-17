@@ -92,12 +92,14 @@ const sections: readonly LegalSection[] = [
           episode it also keeps the address of its show's feed and audio, and the Apple Podcasts, Spotify or show page link you pasted, with
           the code Spotify adds to say who shared it removed; a shared link shows that link. Beside it you may add a reason you saved it,
           file it under topics, put it in projects of your own, and mark it read or favourite. When you take one of its questions to ask
-          next to an assistant, it notes which question, which assistant and when, so the overview can show it. A project holds its name, a
-          line on what it is for, and for each overview in it whether you or a connected assistant put it there, and when. Your settings
-          travel with the account too: the narration voice, whether cooking step by step reads the steps aloud, the cooking timer sound,
-          theme and accent colour, which sections an overview shows, which assistant questions to ask next open in, the About you sentence
-          that personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and
-          the running total of time saved with its milestones.
+          next to an assistant, it notes which question, which assistant and when, so the overview can show it. When you ask questions about
+          it, each conversation keeps your questions and the answers, with the moments in the video or episode, or in another of your
+          conversations about it, that each answer drew on. A project holds its name, a line on what it is for, and for each overview in it
+          whether you or a connected assistant put it there, and when. Your settings travel with the account too: the narration voice,
+          whether cooking step by step reads the steps aloud, the cooking timer sound, theme and accent colour, which sections an overview
+          shows, whether questions to ask next are answered here or open in an assistant and which one, the About you sentence that
+          personalises overviews and what we have learned from your overviews, the tags you have merged, the playlists you follow, and the
+          running total of time saved with its milestones.
         </p>
         <p>
           Without an account all of this stays on the device. With an account it is synced to our server, in a database on Neon in London,
@@ -191,20 +193,23 @@ const sections: readonly LegalSection[] = [
           <strong>On our key.</strong> When you have no key, or yours can't be used, the overview is written on our key: your device sends
           the transcript or article, your About you sentence and what we have learned from your overviews to our server, which sends them to
           OpenAI in the United States and returns the overview. The overview says when it was written this way. If you would rather your
-          transcripts never went through us, turn on "Only ever use my key" in Settings › API keys. During onboarding, your first overview
-          and the topic suggestions beside it are made on our key too, from the title, description and opening of the video or page.
+          overviews were never made through us, turn on "Only ever use my key" in Settings › API keys; questions you ask about an overview
+          still go through us, as below. During onboarding, your first overview and the topic suggestions beside it are made on our key too,
+          from the title, description and opening of the video or page.
         </p>
         <p>
           Your About you sentence and what we have learned from your overviews shape only How to apply, the section that suggests what you
           might do with the video, and the questions to ask next at the foot of an overview. Both are part of the overview, so an assistant
           you connect reads them with it. The questions never go with a shared link. Tapping one opens the assistant you choose, Claude,
           ChatGPT or Gemini, in a new tab with the question and, unless that assistant is connected to {service}, the whole overview, in the
-          link or copied for you to paste. That goes from your browser to the assistant's provider, not through us. When your first overview
-          is shown to you in onboarding, How to apply is also written once for anyone, so you can compare: the overview's title, channel,
-          one-line premise, central claim and key points go to the provider whose key made the overview, and if that was our key, through
-          our server to OpenAI. No transcript and nothing about you goes with them, and the result is kept only on your device. When a
-          sample overview is saved into your account, its title, channel or site, premise and key points go through our server to OpenAI
-          with the names and descriptions of your topics, to sort it into the ones it fits.
+          link or copied for you to paste. Continue in, under an answer to a question you asked about an overview, does the same with that
+          conversation: the overview and the conversation so far, or, when the assistant is connected, only which overview and conversation
+          to read. That goes from your browser to the assistant's provider, not through us. When your first overview is shown to you in
+          onboarding, How to apply is also written once for anyone, so you can compare: the overview's title, channel, one-line premise,
+          central claim and key points go to the provider whose key made the overview, and if that was our key, through our server to
+          OpenAI. No transcript and nothing about you goes with them, and the result is kept only on your device. When a sample overview is
+          saved into your account, its title, channel or site, premise and key points go through our server to OpenAI with the names and
+          descriptions of your topics, to sort it into the ones it fits.
         </p>
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole description, which is where
@@ -217,16 +222,46 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           We also keep a daily tally of what serving each account costs us, so we can price the plans fairly: for overviews and the smaller
-          passes made on our key, the tokens used and their cost at OpenAI's list price, including attempts that failed; the tokens used to
-          make your library and your searches searchable by meaning, and their cost; and the bytes fetched through our transcript proxy for
-          you. It holds amounts only, never what was sent or found. What a device without an account costs is tallied with no device or
-          account on it. Once a day PostHog copies a monthly summary of the tally for our cost dashboard: the month, your plan, what you
-          cost and how many overviews and narrations you made, under a coded id that is neither your account's id nor the one analytics
-          uses. When an account is deleted, the next day's copy leaves it out.
+          passes made on our key, and questions you ask about an overview, the tokens used and their cost at OpenAI's list price, including
+          attempts that failed; the tokens used to make your library and your searches searchable by meaning, and their cost; and the bytes
+          fetched through our transcript proxy for you. It holds amounts only, never what was sent or found. What a device without an
+          account costs is tallied with no device or account on it. Once a day PostHog copies a monthly summary of the tally for our cost
+          dashboard: the month, your plan, what you cost and how many overviews and narrations you made, under a coded id that is neither
+          your account's id nor the one analytics uses. When an account is deleted, the next day's copy leaves it out.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
           the service affordable and fair.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "asking",
+    heading: "Asking questions about an overview",
+    body: (
+      <>
+        <p>
+          With an account, you can ask questions about a video or podcast episode inside its overview. Each question is answered on our key,
+          whichever key you use for overviews, and "Only ever use my key" doesn't change that. Your device sends the question to our server,
+          which sends it to OpenAI in the United States with the overview, your own copy of the video's or episode's words, the conversation
+          so far, and as much of your other conversations about the same overview as fits, newest first, so an answer can build on what you
+          asked or decided there. The answer comes back to you as it is written. An article's overview has no questions, because we don't
+          keep an article's text.
+        </p>
+        <p>
+          The question and the answer are kept as a conversation in your library, under your account, and synced to your devices; your
+          devices can read and delete a conversation but never change one. Deleting a conversation removes it from every device. Deleting
+          the overview, or your account, deletes its conversations.
+        </p>
+        <p>
+          We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
+          OpenAI's list price go into the daily cost tally above. We log that a question was answered, with the tokens, the cost, how long
+          it took, whether the video or episode covered it and how many places the answer cited; never the question or the answer.
+        </p>
+        <p>
+          <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
+          the service affordable and fair. <strong>Kept:</strong> until you delete the conversation, the overview or the account.
         </p>
       </>
     ),
@@ -402,14 +437,15 @@ const sections: readonly LegalSection[] = [
     body: (
       <p>
         You can connect Claude or another assistant to your library. The assistant gets its own tokens, never your session, and they let it
-        list and search your overviews, by word and by meaning, read them and their transcripts, and mark them read or favourite. It can
-        also read your projects, make a project, and put overviews in a project or take them out; what it makes or puts in is marked with
-        its name, and it cannot rename, archive or delete a project. A connection whose consent screen said so can also read what we know
-        about you: your About you sentence, and what we have learned from your overviews with where each came from, never anything you
-        removed or have not yet been shown. That is on until you turn off "Share with your assistants" in Settings › Personalisation, which
-        stops every connection reading it at once. Every connection is listed in Settings › Connections, where you can revoke it. We log
-        each call an assistant makes, with the tool it used and how long it took, never the overview's contents or what we know about you.
-        The assistant's own provider handles what it then does with what it reads under its own policy.
+        list and search your overviews, by word and by meaning, read them and their transcripts, read the conversations you had about them
+        in the app, and mark them read or favourite. It can also read your projects, make a project, and put overviews in a project or take
+        them out; what it makes or puts in is marked with its name, and it cannot rename, archive or delete a project. A connection whose
+        consent screen said so can also read what we know about you: your About you sentence, and what we have learned from your overviews
+        with where each came from, never anything you removed or have not yet been shown. That is on until you turn off "Share with your
+        assistants" in Settings › Personalisation, which stops every connection reading it at once. Every connection is listed in Settings ›
+        Connections, where you can revoke it. We log each call an assistant makes, with the tool it used and how long it took, never the
+        overview's contents, your conversations or what we know about you. The assistant's own provider handles what it then does with what
+        it reads under its own policy.
       </p>
     ),
   },
@@ -433,7 +469,7 @@ const sections: readonly LegalSection[] = [
             ["Brevo", "sends sign-in emails", "European Union"],
             [
               "OpenAI",
-              "writes overviews, topic suggestions and what we learn from your overviews when made on our key, and turns your overviews' claims and your searches into embeddings for search",
+              "writes overviews, topic suggestions and what we learn from your overviews when made on our key, answers the questions you ask about an overview, and turns your overviews' claims and your searches into embeddings for search",
               "United States",
             ],
             ["Decodo", "a proxy our server fetches captions through when YouTube refuses it directly", "varies"],
@@ -506,6 +542,7 @@ const sections: readonly LegalSection[] = [
             "the codes 15 minutes, as hashes; the change itself with the account",
           ],
           ["Your library and settings", "until you delete the overview or the account"],
+          ["Your conversations about an overview", "until you delete the conversation, the overview or the account"],
           ["What we learn from your overviews, and the items you removed", "with your settings, until you delete the account"],
           ["Embeddings of your overviews, for search", "until the overview changes or is deleted, or the account is"],
           [
@@ -551,14 +588,14 @@ const sections: readonly LegalSection[] = [
           <strong>Deleting your account.</strong> Settings › Account & sync has Delete account. After a code to your address confirms it is
           you, skipped if you signed in within the last fifteen minutes, it deletes straight away and in one step: the account, its email
           and name, any email change in progress and the record of each change, every session and connected assistant, your library and
-          settings, your shared links, the monthly and daily counts, the sign-in links held for your address, and every narration file your
-          account asked for. Then we ask PostHog to delete the person records under your account's id and the random id joined to it at
-          sign-up, with every event and error report under them; PostHog removes the person within minutes and the events in a later
-          scheduled run, not instantly. If asking fails, we keep a record of the deletion saying so and ask again by hand. What stays is
-          what the table above says outlives an account: where an episode's words were found, which names no account; and the record of the
-          deletion itself, which holds no address. Server logs expire on their own within fourteen days. The device you deleted from removes
-          its copy of your library; copies on other devices stay on those devices, signed out, until you clear the site's data there.
-          Signing in with the same address afterwards finds no account; creating one with it starts a new, empty account.
+          settings and conversations, your shared links, the monthly and daily counts, the sign-in links held for your address, and every
+          narration file your account asked for. Then we ask PostHog to delete the person records under your account's id and the random id
+          joined to it at sign-up, with every event and error report under them; PostHog removes the person within minutes and the events in
+          a later scheduled run, not instantly. If asking fails, we keep a record of the deletion saying so and ask again by hand. What
+          stays is what the table above says outlives an account: where an episode's words were found, which names no account; and the
+          record of the deletion itself, which holds no address. Server logs expire on their own within fourteen days. The device you
+          deleted from removes its copy of your library; copies on other devices stay on those devices, signed out, until you clear the
+          site's data there. Signing in with the same address afterwards finds no account; creating one with it starts a new, empty account.
         </p>
         <p>
           <strong>Without an account.</strong> Turning analytics off in Settings › Privacy deletes the random id from your device and stops

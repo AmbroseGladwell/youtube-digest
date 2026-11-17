@@ -106,6 +106,9 @@ export const Settings = z.object({
   // Null until the reader picks one, when a single connected assistant stands in
   // (docs/features/follow-up-questions.md).
   followUpAssistant: ChosenAssistant.nullable().catch(null),
+  // "Questions to ask next: Answered here / Open in {assistant}". Where chat is offered, a tapped
+  // question is answered in the app unless the reader chose their assistant (docs/features/chats.md).
+  questionsAnsweredHere: z.boolean().catch(true),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -136,4 +139,5 @@ export const DEFAULT_SETTINGS: Settings = {
   accentColour: DEFAULT_ACCENT_COLOUR,
   headImageSize: DEFAULT_HEAD_IMAGE_SIZE,
   followUpAssistant: null,
+  questionsAnsweredHere: true,
 };

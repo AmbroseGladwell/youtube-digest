@@ -1,5 +1,4 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import {
   FOLLOW_UP_ASSISTANTS,
   FOLLOW_UP_QUESTIONS_SECTION,
@@ -13,10 +12,12 @@ import {
   type Overview,
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { Toast } from "../../../../components/shared/Toast/Toast.js";
+import { useToast } from "../../../../components/shared/Toast/useToast.js";
 import type { ReaderAnalytics } from "../../../analytics/bindOverviewId.js";
 import { prefersReducedMotion } from "../../../../util/prefersReducedMotion.js";
 import { useFollowUpAssistant } from "../../useFollowUpAssistant.js";
-import { askedLine } from "../../util/askedLine.js";
+import { answeredHereLine, askedLine } from "../../util/askedLine.js";
 import { copyText, handOffFollowUp } from "../../util/handOffFollowUp.js";
 import { FollowUpAssistantMenu } from "../FollowUpAssistantMenu/FollowUpAssistantMenu.js";
 import styles from "./FollowUpQuestions.module.scss";
@@ -31,13 +32,19 @@ export interface FollowUpQuestionsProps {
   asked: readonly AskedQuestion[];
   onAsked: (asked: AskedQuestion[]) => void;
   analytics: ReaderAnalytics["followUps"];
+  // Present where chat is offered: a tapped question is answered in the app unless the reader
+  // chose their assistant (design 310f). Absent, the block is OV-266's as built.
+  onAskHere?: ((question: string, from: HTMLElement | null) => void) | undefined;
+  // Where questions are answered here: the last time this one was, and its conversation (310d).
+  answeredHereOf?: ((question: string) => { at: string; onOpen: () => void } | null) | undefined;
 }
 
 type Motion = "arriving" | "idle" | "leaving" | "entering";
 type Menu = { firstTap: true; index: number; top: number } | { firstTap: false; top: number };
 
+export const ANSWERED_HERE_LINE = "Tap one and it’s answered here, from the video.";
+
 const LEAVE_MS = 130;
-const TOAST_MS = 4000;
 const ARRIVAL_THRESHOLD = 0.4;
 
 function setAnnouncement(from: number, to: number, of: number): string {
@@ -95,17 +102,28 @@ function dropGhost(from: HTMLElement | null): Promise<void> {
     .then(() => ghost.remove());
 }
 
-// Design 266a–266ao: the last block in the note, questions as speech bubbles to take to the
-// reader's own assistant, three at a time. The app never answers them itself
-// (docs/features/follow-up-questions.md).
-export function FollowUpQuestions({ overview, questions, compact, asked, onAsked, analytics }: FollowUpQuestionsProps) {
-  const { assistant, connectedTo, anyConnection, choose } = useFollowUpAssistant();
+// Design 266a–266ao: the last block in the note, questions as speech bubbles, three at a time,
+// taken to the reader's own assistant, or answered in the app where chat is offered (310f;
+// docs/features/follow-up-questions.md, docs/features/chats.md).
+export function FollowUpQuestions({
+  overview,
+  questions,
+  compact,
+  asked,
+  onAsked,
+  analytics,
+  onAskHere,
+  answeredHereOf,
+}: FollowUpQuestionsProps) {
+  const { assistant, answeredHere, connectedTo, anyConnection, choose, chooseHere } = useFollowUpAssistant();
+  const offerHere = onAskHere !== undefined;
+  const here = offerHere && answeredHere;
   const [set, setSet] = useState(0);
   const [motion, setMotion] = useState<Motion>(() => (prefersReducedMotion() ? "idle" : "arriving"));
   const [menu, setMenu] = useState<Menu | null>(null);
   const [pressed, setPressed] = useState<number | null>(null);
   const [said, setSaid] = useState("");
-  const [toast, setToast] = useState<{ text: string; done: boolean; key: number } | null>(null);
+  const { toast, show: showToast } = useToast();
   const [justAsked, setJustAsked] = useState<readonly string[]>([]);
   const headingId = useId();
   const root = useRef<HTMLDivElement | null>(null);
@@ -145,12 +163,6 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
     setMotion("idle");
   }, [motion]);
 
-  useEffect(() => {
-    if (toast === null) return;
-    const timer = setTimeout(() => setToast(null), TOAST_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
   useEffect(
     () => () => {
       if (leaveTimer.current !== null) clearTimeout(leaveTimer.current);
@@ -159,8 +171,6 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
   );
 
   if (questions.length === 0) return null;
-
-  const showToast = (text: string, done: boolean) => setToast({ text, done, key: Date.now() });
 
   const ask = (index: number, to: FollowUpAssistant) => {
     const { question, forReader } = questions[index]!;
@@ -199,6 +209,10 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
   };
 
   const tap = (index: number) => {
+    if (here && onAskHere !== undefined) {
+      onAskHere(questions[index]!.question, bubbles.current[index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null);
+      return;
+    }
     if (assistant !== null) {
       ask(index, assistant);
       return;
@@ -213,9 +227,18 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
   const chooseFromMenu = (to: FollowUpAssistant) => {
     if (menu === null) return;
     analytics.assistantChosen({ assistant: to, from: menu.firstTap ? "firstTap" : "change" });
-    choose(to);
+    if (here) analytics.answerPlaceChosen({ here: false });
+    choose(to, offerHere);
     closeMenu();
     if (menu.firstTap) ask(menu.index, to);
+  };
+
+  const chooseHereFromMenu = () => {
+    if (menu === null || onAskHere === undefined) return;
+    if (!here) analytics.answerPlaceChosen({ here: true });
+    chooseHere();
+    closeMenu();
+    if (menu.firstTap) onAskHere(questions[menu.index]!.question, bubbles.current[menu.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null);
   };
 
   const copyQuestion = () => {
@@ -251,19 +274,25 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
   };
 
   const nameOf = (question: string): string => {
+    if (here) return `Ask here: ${question}`;
     if (assistant === null) return `${question}: choose an assistant to ask`;
     const name = FOLLOW_UP_ASSISTANTS[assistant].name;
     return copies
       ? `Copy and open ${name}: ${question} Copies the question and this note, then opens ${name} in a new tab for you to paste`
       : `Ask ${name}: ${question} (opens in a new tab)`;
   };
-  const hoverLabel = assistant === null || compact ? undefined : `Ask ${FOLLOW_UP_ASSISTANTS[assistant].name} ↗`;
+  const hoverLabel = here || assistant === null || compact ? undefined : `Ask ${FOLLOW_UP_ASSISTANTS[assistant].name} ↗`;
 
   let line: ReactNode = "Each opens your assistant. You’ll choose which on your first tap.";
-  if (assistant !== null)
+  const lead = here ? (
+    ANSWERED_HERE_LINE
+  ) : assistant === null ? null : (
+    <AssistantLine assistant={assistant} connected={connectedTo(assistant)} copies={copies} />
+  );
+  if (lead !== null)
     line = (
       <>
-        <AssistantLine assistant={assistant} connected={connectedTo(assistant)} copies={copies} />{" "}
+        {lead}{" "}
         <button
           type="button"
           ref={changeButton}
@@ -298,12 +327,13 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
         {shown.map(({ question }, place) => {
           const index = set * FOLLOW_UP_QUESTIONS_SHOWN + place;
           const held = pressed === place || (menu?.firstTap === true && menu.index === index);
-          const receipt = asked.find((each) => each.question === question) ?? null;
+          const hereReceipt = here ? (answeredHereOf?.(question) ?? null) : null;
+          const receipt = hereReceipt === null ? (asked.find((each) => each.question === question) ?? null) : null;
           const receiptId = `${headingId}-asked-${index}`;
           return (
             <li
               key={index}
-              className={`${styles.item} ${receipt !== null ? styles.askedItem : ""}`}
+              className={`${styles.item} ${receipt !== null || hereReceipt !== null ? styles.askedItem : ""}`}
               style={{ "--i": place } as CSSProperties}
               data-testid={followUpQuestionsTestIds.item}
             >
@@ -321,9 +351,9 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
                     questionButtons.current[place] = element;
                   }}
                   aria-label={nameOf(question)}
-                  aria-describedby={receipt === null ? undefined : receiptId}
-                  aria-haspopup={assistant === null ? "dialog" : undefined}
-                  aria-expanded={assistant === null ? menu?.firstTap === true && menu.index === index : undefined}
+                  aria-describedby={receipt === null && hereReceipt === null ? undefined : receiptId}
+                  aria-haspopup={!here && assistant === null ? "dialog" : undefined}
+                  aria-expanded={!here && assistant === null ? menu?.firstTap === true && menu.index === index : undefined}
                   onClick={() => tap(index)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") setPressed(place);
@@ -335,6 +365,17 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
                   {question}
                 </button>
               </div>
+              {hereReceipt !== null && (
+                <button
+                  type="button"
+                  id={receiptId}
+                  className={`${styles.receipt} ${styles.receiptLink}`}
+                  onClick={hereReceipt.onOpen}
+                  data-testid={followUpQuestionsTestIds.receipt}
+                >
+                  {answeredHereLine(hereReceipt.at, new Date())}
+                </button>
+              )}
               {receipt !== null && (
                 <span
                   id={receiptId}
@@ -369,12 +410,15 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
         <FollowUpAssistantMenu
           firstTap={menu.firstTap}
           chosen={assistant}
+          offerHere={offerHere}
+          hereChosen={here}
           connectedTo={connectedTo}
           anyConnection={anyConnection}
           asSheet={compact}
           top={menu.top}
           inside={menu.firstTap ? { current: bubbles.current[menu.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null } : changeButton}
           onChoose={chooseFromMenu}
+          onChooseHere={chooseHereFromMenu}
           onCopyQuestion={copyQuestion}
           onSetUpFollowed={() => analytics.connectionSetUpFollowed()}
           onClose={closeMenu}
@@ -383,14 +427,7 @@ export function FollowUpQuestions({ overview, questions, compact, asked, onAsked
       <p className={styles.said} aria-live="polite" data-testid={followUpQuestionsTestIds.said}>
         {said}
       </p>
-      {toast !== null &&
-        createPortal(
-          <div key={toast.key} className={styles.toast} role="status" data-testid={followUpQuestionsTestIds.toast}>
-            <StrokeIcon name={toast.done ? "check" : "alertCircle"} size={17} />
-            {toast.text}
-          </div>,
-          document.body,
-        )}
+      <Toast toast={toast} />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import {
   DATABASE_NAME,
   DATABASE_VERSION,
   FOLLOWED_PLAYLISTS_STORE,
+  CHATS_BY_OVERVIEW_INDEX,
+  CHATS_STORE,
   MEMBERS_BY_OVERVIEW_INDEX,
   MEMBERS_BY_PROJECT_INDEX,
   PROJECTS_STORE,
@@ -81,6 +83,9 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
         const members = db.createObjectStore(PROJECT_MEMBERS_STORE, { keyPath: "id" });
         members.createIndex(MEMBERS_BY_PROJECT_INDEX, "projectId");
         members.createIndex(MEMBERS_BY_OVERVIEW_INDEX, "overviewId");
+      }
+      if (!db.objectStoreNames.contains(CHATS_STORE)) {
+        db.createObjectStore(CHATS_STORE, { keyPath: "id" }).createIndex(CHATS_BY_OVERVIEW_INDEX, "overviewId");
       }
     };
 

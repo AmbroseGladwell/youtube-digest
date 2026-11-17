@@ -34,20 +34,21 @@ rather than replacing it.
 
 ## The tiers
 
-| | Signed out | Free account | BYO Plus | Plus |
-|---|---|---|---|---|
-| Price a month (launch, 18 Oct 2026) | free | free | £4.99 | £7.99 |
-| Overviews on our key | Onboarding's first, which counts towards the plan picked | 5 a month | 10 a month | 50 a month |
-| Overviews on your own key | — | 10 a month | 200 a month | 200 a month |
-| Seeing an overview | — (needs an account) | Yes | Yes | Yes |
-| Transcripts from our server | Part of the first overview | Part of an overview | Part of an overview | Part of an overview |
-| Daily safety cap on those fetches (not shown to readers) | 5 per address | 50 | 100 | 100 |
-| Library | — | Synced to every device | Synced | Synced |
-| Narration, every voice | — (needs an account) | Yes | Yes | Yes |
-| Sharing an overview | — (needs an account) | Yes | Yes | Yes |
-| MCP connection | — (needs an account) | Yes | Yes | Yes |
-| Chapters, transcript tab, personalisation | — | Yes | Yes | Yes |
-| Extension, playlists | Only to start onboarding | Yes | Yes | Yes |
+|                                                               | Signed out                                               | Free account           | BYO Plus            | Plus                |
+| ------------------------------------------------------------- | -------------------------------------------------------- | ---------------------- | ------------------- | ------------------- |
+| Price a month (launch, 18 Oct 2026)                           | free                                                     | free                   | £4.99               | £7.99               |
+| Overviews on our key                                          | Onboarding's first, which counts towards the plan picked | 5 a month              | 10 a month          | 50 a month          |
+| Overviews on your own key                                     | —                                                        | 10 a month             | 200 a month         | 200 a month         |
+| Questions about an overview, on our key (OV-309, 16 Nov 2026) | — (needs an account)                                     | 100 a month            | 500 a month         | 1,000 a month       |
+| Seeing an overview                                            | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
+| Transcripts from our server                                   | Part of the first overview                               | Part of an overview    | Part of an overview | Part of an overview |
+| Daily safety cap on those fetches (not shown to readers)      | 5 per address                                            | 50                     | 100                 | 100                 |
+| Library                                                       | —                                                        | Synced to every device | Synced              | Synced              |
+| Narration, every voice                                        | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
+| Sharing an overview                                           | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
+| MCP connection                                                | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
+| Chapters, transcript tab, personalisation                     | —                                                        | Yes                    | Yes                 | Yes                 |
+| Extension, playlists                                          | Only to start onboarding                                 | Yes                    | Yes                 | Yes                 |
 
 **The paid plans sell volume, never features.** A free account has every feature, so a
 free reader sees the whole value of the product, including their library in Claude and
@@ -62,13 +63,13 @@ plan has a number, and the app shows it with its reset date.
 
 Measured, not estimated, in the docs each line cites:
 
-| Cost | Figure | Source |
-|---|---|---|
-| Rendering narration | about $0.002 to $0.003 a render, and each voice is its own render | `tts-pre-rendered-speech.md` |
-| Storing the audio | about 0.7 MB an overview on R2, kept for as long as the overview | `tts-pre-rendered-speech.md` |
-| A transcript through the proxy | about $0.0004 a fetch, and only when every earlier rung failed | `server-side-transcripts.md` |
-| The overview record | a few KB in Postgres | |
-| The YouTube Data API | not money: a shared daily allowance across every reader | `playlists.md` |
+| Cost                           | Figure                                                            | Source                       |
+| ------------------------------ | ----------------------------------------------------------------- | ---------------------------- |
+| Rendering narration            | about $0.002 to $0.003 a render, and each voice is its own render | `tts-pre-rendered-speech.md` |
+| Storing the audio              | about 0.7 MB an overview on R2, kept for as long as the overview  | `tts-pre-rendered-speech.md` |
+| A transcript through the proxy | about $0.0004 a fetch, and only when every earlier rung failed    | `server-side-transcripts.md` |
+| The overview record            | a few KB in Postgres                                              |                              |
+| The YouTube Data API           | not money: a shared daily allowance across every reader           | `playlists.md`               |
 
 That is about half a cent an overview at worst, so 200 a month costs us at most about $1.
 **Narration for an own-key overview renders only when it is first played,** never in
@@ -82,11 +83,11 @@ are still narrated ahead, as soon as they are made. The transcript proxy's globa
 chose GPT-6.1 Sol, at a mean of $0.038 an overview over its 20 real videos (about $0.033
 per 20 minutes of video, `model-comparison.md`). At that price:
 
-| | On our key | Generation if every one is used |
-|---|---|---|
-| Free | 5 a month, down from 10 | $0.19 |
-| BYO Plus | 10 a month | $0.38 |
-| Plus | 50 a month | $1.90 |
+|          | On our key              | Generation if every one is used |
+| -------- | ----------------------- | ------------------------------- |
+| Free     | 5 a month, down from 10 | $0.19                           |
+| BYO Plus | 10 a month              | $0.38                           |
+| Plus     | 50 a month              | $1.90                           |
 
 **Free went from 10 to 5** because the allowance barely changes what a typical free reader
 costs, about 4 overviews a month, but it halves what the heaviest free readers can cost. In
@@ -123,10 +124,10 @@ customers onto Stripe Managed Payments; Creem and Dodo are smaller and save penn
 
 **What a subscriber brings in a month,** against what they cost if every allowance is used:
 
-| | Price | Stripe Managed Payments | Paddle | Stripe, not registered | Cost at the cap |
-|---|---|---|---|---|---|
-| BYO Plus | £4.99 | **£3.67** | £3.53 | £4.68 | about £0.70 |
-| Plus | £7.99 | **£6.00** | £5.88 | £7.61 | about £1.95 |
+|          | Price | Stripe Managed Payments | Paddle | Stripe, not registered | Cost at the cap |
+| -------- | ----- | ----------------------- | ------ | ---------------------- | --------------- |
+| BYO Plus | £4.99 | **£3.67**               | £3.53  | £4.68                  | about £0.70     |
+| Plus     | £7.99 | **£6.00**               | £5.88  | £7.61                  | about £1.95     |
 
 Costs are billed in dollars and converted at $1.33 to the pound (September 2026). These fees
 come from the providers' published rates, and get confirmed on their own pricing pages when
@@ -134,6 +135,7 @@ OV-18 signs up.
 
 **Where it breaks even, through Stripe Managed Payments.** In the tier economics model, at
 1,000 accounts with typical use:
+
 - With 5% on Plus and 2% on BYO Plus, the tiers make about £160 a month. Each Plus
   subscriber covers nearly 30 free accounts and each BYO Plus about 20, and a free account
   costs about £0.17 a month, its share of the servers included.
@@ -215,12 +217,12 @@ for the account, and signing in moves it in as it moved a signed-out library bef
 Decided on 15 Oct 2026. A reader with a key of their own has two keys behind each
 overview, and the order is set by what each plan sells:
 
-| | First | Then |
-|---|---|---|
-| Free, BYO Plus | the reader's own key | ours |
-| **Plus** | **ours** | the reader's own key |
-| No key of their own | ours | — |
-| Signed out (onboarding) | ours | — |
+|                         | First                | Then                 |
+| ----------------------- | -------------------- | -------------------- |
+| Free, BYO Plus          | the reader's own key | ours                 |
+| **Plus**                | **ours**             | the reader's own key |
+| No key of their own     | ours                 | —                    |
+| Signed out (onboarding) | ours                 | —                    |
 
 **Own key first, ours last,** for everyone but Plus. It spends the reader's credit before
 ours, and our allowance (5 or 10 a month) becomes the reader's safety net rather than a quota they spend
@@ -228,6 +230,7 @@ first. **Plus is the other way round** because Plus is what a reader pays for ov
 our key. With their own key first, a Plus reader would rarely use what they paid for.
 
 **An overview moves to the next key when the first can't make it:**
+
 - that key's quota for the month is spent;
 - the provider is down, overloaded or rate-limiting (5xx, 429), or the reader's account
   is out of credit. Providers report this differently, so the adapters classify it;
@@ -289,9 +292,9 @@ is saved, so its push is let in uncounted.
 ## What the reader is told is left
 
 **Readers never read "our key"** (decided 27 Oct 2026, OV-131). The overviews we pay for are
-*on us*, as Settings › Plan's "On us" cell already said: *7 of 10 left on us this month*,
-*this one is on us*, *On us: your Anthropic key was out of credit*. "Our key" stays the
-name for it in code, logs and these docs. The reader's own is still *your own key*.
+_on us_, as Settings › Plan's "On us" cell already said: _7 of 10 left on us this month_,
+_this one is on us_, _On us: your Anthropic key was out of credit_. "Our key" stays the
+name for it in code, logs and these docs. The reader's own is still _your own key_.
 
 Built in OV-131, from designs 95a–95h with the key order flipped for everyone but Plus. Every
 number is the server's (`GET /api/overview-usage`), worked out in code, never by a model.
@@ -302,19 +305,19 @@ Signed out there is no line: nothing is made there but onboarding's overview.
 any left. The line (`UsageLine`, under Generate in the dialog, under the hero, and under
 Create on the panel's capture screen) reads:
 
-| State | Line |
-|---|---|
-| First key in the order | *7 of 10 left on your own key this month · Resets 1 November · Plan* |
-| First key spent, falling back | *This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans* |
-| Counts not loaded | *Overviews left this month: Checking… · Plan* |
-| Couldn't ask | *Couldn't check what's left · Plan*, and Generate stays: the server enforces the limit anyway |
+| State                         | Line                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| First key in the order        | _7 of 10 left on your own key this month · Resets 1 November · Plan_                                                      |
+| First key spent, falling back | _This month's 10 on your own key are made, so this one is on us: 4 of 5 left. · Get more overviews with Plus · See plans_ |
+| Counts not loaded             | _Overviews left this month: Checking… · Plan_                                                                             |
+| Couldn't ask                  | _Couldn't check what's left · Plan_, and Generate stays: the server enforces the limit anyway                             |
 
 Falling back to our key on Free or BYO Plus, the line mentions Plus once (95m), because an
 upsell names only a plan that makes more on the key this overview uses (decided on OV-131):
 Plus for our key. A reader on our key is never offered BYO Plus, and a Plus reader falling
 back to their own key is offered nothing, since no plan makes more. On the panel the line
-drops "this month" and Plan and shortens the date (*Resets 1 Nov*), but keeps Plan when it
-mentions Plus (*… Get more overviews with Plus · Plan*).
+drops "this month" and Plan and shortens the date (_Resets 1 Nov_), but keeps Plan when it
+mentions Plus (_… Get more overviews with Plus · Plan_).
 Settings › Plan counts both quotas (`docs/features/plus-upsell.md`, "16c"). No count ever
 reads 0 before it is known, and none reads "unlimited". The counts are asked for again
 after every run, made or failed, on any surface or the capture queue.
@@ -466,35 +469,60 @@ ways around it. Nothing they already have stops working.
 
 - **Signed out** there is no limit to meet: nothing is seen or made but onboarding's
   overview ("Signed out", above).
-- **Free with no key, after 5 on our key this month:** *You've made this month's 5. More
-  on 1 November.* Plus makes more, or add your own key.
+- **Free with no key, after 5 on our key this month:** _You've made this month's 5. More
+  on 1 November._ Plus makes more, or add your own key.
 - **Free or BYO Plus with a key, after the month's own-key quota (10 or 200):** the
-  allowance on our key (5 or 10) carries on as the fallback, then *More on 1 November.* The upgrade is BYO Plus's 200 from
+  allowance on our key (5 or 10) carries on as the fallback, then _More on 1 November._ The upgrade is BYO Plus's 200 from
   Free, and Plus's allowance on our key from BYO Plus.
 - **Free or BYO Plus, after the allowance on our key has gone on fallbacks:** the own key carries on, with
   no fallback behind it until the month turns.
 - **Plus, after its allowance on our key:** the own key carries on.
-- **Plus, after both:** *More on 1 November.* There is no upgrade to offer, and the
+- **Plus, after both:** _More on 1 November._ There is no upgrade to offer, and the
   message doesn't pretend there is.
 - Reading, listening, sync, sharing and the MCP connection keep working at every limit.
 - **Queued captures** (playlists, the capture queue) wait at the limit and say why. They
   don't fail. They resume when the month turns, or when the reader adds a key or upgrades.
   The same waiting state, with a different reason and resume time, is what the queue shows
   at our server's daily safety cap (`docs/features/capture-queue.md`, "Waiting at a limit"
-  and "At the month's limit"). The playlist preview and the queue's *Choose* say what the
+  and "At the month's limit"). The playlist preview and the queue's _Choose_ say what the
   allowance left means before anything runs.
 
 **Built in OV-131.** `limitMessageOf` turns the next quota into the message, and
 `LimitMessageNote` puts it where Generate or Create would be: in the dialog, under the hero,
 and on the panel's capture screen. The pasted link stays in the field. The title names what
-ran out and when it's back, both quotas in the order they were spent when both are (*You've
-made this month's 10 on your own key and 5 on us. More on 1 November.*), and every state
-ends *Everything you've already made keeps working.* The ways round go only to Settings ›
+ran out and when it's back, both quotas in the order they were spent when both are (_You've
+made this month's 10 on your own key and 5 on us. More on 1 November._), and every state
+ends _Everything you've already made keeps working._ The ways round go only to Settings ›
 API keys, Settings › Plan or Create account: Add your own key where a key would give more,
 See plans or See BYO Plus where a plan would, and See this month's usage where none would.
 The title and body are a polite live region, and the dialog moves focus to the first action
 as it opens. Each message shown is `capture.limitMessage.shown` (quota, plan, surface) and
 each way taken `capture.limitMessage.wayChosen`.
+
+## Questions about an overview
+
+Chat inside an overview (`chats.md`, OV-309) has its own monthly allowance, in
+`chatAllowances.ts` in `@overview/domain`, counted apart from overviews so asking never spends one. Every plan
+asks on our key, on GPT-6 Luna, whatever key it uses for overviews: Free 100 a month, BYO
+Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a suggested 300).
+
+- **Counted in Postgres**, one `chat_usage` row per account and UTC day; the month is the
+  sum of its days. A message is reserved under the account's row lock before the provider is
+  asked and given back if the answer fails, so it counts once, when it is answered.
+- **Behind it:** 200 a day per account (`CHAT_MESSAGES_PER_ACCOUNT_DAILY`), and a global
+  daily cap on our key, `OUR_KEY_DAILY_CHAT_MESSAGES` (20,000 by default), kept beside
+  overviews' in `our_key_usage.chat_messages`. A conversation holds at most 50 questions.
+- **At a limit the reader waits:** a 429 with `quota` (`chat-month`, `chat-day` or
+  `chat-our-key-daily`), `retryAfterSeconds`, and for the month `resetsOn`.
+- **What it costs, fully used,** at OV-267's measured cost per message: about $0.03, $0.17
+  and $0.34 a month for Free, BYO Plus and Plus; about $0.05, $0.27 and $0.53 if every
+  source is over an hour; about $0.10, $0.52 and $1.04 with no caching. Measured through
+  the endpoint on a 169-minute source (`chats.md`, "Measured through the endpoint"): about
+  $0.0004 a question, other chats included, in any conversation about an overview asked
+  about in the last 30 minutes, and $0.004 for the first after that (OV-313). A Plus month of
+  1,000 questions each about a different 169-minute source would be about $4.40; the same
+  1,000 in conversations of 30 about $0.60.
+- `GET /api/chat-usage` says what is used, the limit and the reset date.
 
 ## Options for saving cost, not built
 

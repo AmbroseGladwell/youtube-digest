@@ -91,6 +91,13 @@ const Direction = z.enum(["previous", "next"]);
 const SkipDirection = z.enum(["back", "forward"]);
 const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
 const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
+// Where a question about the overview was asked from: one of its questions to ask next, or typed.
+const ChatAskedFrom = z.enum(["question", "typed"]);
+const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt"]);
+// Where a chat citation leads: a moment in the source, another conversation, or one deleted since.
+const ChatCitationTarget = z.enum(["source", "conversation", "deletedConversation"]);
+// Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
+const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
@@ -112,6 +119,17 @@ export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
 // the page closed, or hidden while the listen was paused.
 export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left"]);
 export type ListenEnd = z.infer<typeof ListenEnd>;
+export const SelectionAction = z.enum([
+  "addToProject",
+  "addToTopic",
+  "markRead",
+  "markUnread",
+  "favourite",
+  "unfavourite",
+  "removeFromProject",
+  "delete",
+]);
+export type SelectionAction = z.infer<typeof SelectionAction>;
 const PlayerBarAction = z.enum(["tryAgain", "readAlongInstead", "readAlong", "readAlongMeanwhile", "markRead", "signIn"]);
 const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd"]);
 const BackSource = z.enum(["head", "bar"]);
@@ -217,6 +235,7 @@ export const OverviewMenuItem = z.enum([
   "editTopics",
   "editReason",
   "toggleRead",
+  "chat",
   "share",
   "watchOnYouTube",
   "copyYouTubeLink",
@@ -407,8 +426,44 @@ export const analyticsEvents = {
         assistant: FollowUpAssistant,
         from: FollowUpAssistantChosenFrom,
       }),
+      answerPlaceChosen: event(
+        "Where chat is offered, the reader chooses whether a tapped question is answered here or opens their assistant",
+        {
+          here: z.boolean(),
+        },
+      ),
       questionCopied: event("The reader copies a question alone from the first-tap menu"),
       connectionSetUpFollowed: event("The reader follows Set up a connection from the first-tap menu to Settings › Connections"),
+    },
+    // Never the question or the answer (docs/features/chats.md).
+    chat: {
+      asked: event("The reader asks a question about the overview, where from, and whether it starts a new conversation", {
+        from: ChatAskedFrom,
+        newConversation: z.boolean(),
+      }),
+      answered: event("An answer to the reader's question settled, whether the source covered it, and what it cited", {
+        inSource: z.boolean(),
+        sourceCitations: z.number().int().nonnegative(),
+        conversationCitations: z.number().int().nonnegative(),
+      }),
+      answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),
+      waited: event("A question was turned away by a wait, and which", { wait: ChatWait }),
+      citationFollowed: event("The reader follows an answer's citation, and to what", { to: ChatCitationTarget }),
+      opened: event("The reader opens chat beside the note, and from where", { from: ChatOpenedFrom }),
+      closed: event("The reader closes chat"),
+      stopped: event("The reader stops an answer while it is being written; it isn't stored or counted"),
+      answerCopied: event("The reader copies an answer"),
+      plansFollowed: event("The reader follows a spent month's wait in chat to Settings › Plan"),
+      continuedIn: event(
+        "The reader takes the conversation to their assistant, which one, filled in or copied, and whether it is connected",
+        {
+          assistant: FollowUpAssistant,
+          handOff: FollowUpHandOffKind,
+          connected: z.boolean(),
+        },
+      ),
+      conversationOpened: event("The reader opens one of the overview's earlier conversations"),
+      conversationDeleted: event("The reader deletes a conversation about the overview"),
     },
     dubiousReasons: {
       opened: event(
@@ -1100,12 +1155,18 @@ export const analyticsEvents = {
     // Counts only: never which overviews (OV-168, "OV-168 5" 168az).
     selection: {
       started: event("The reader starts selecting overviews in the library or a project"),
-      stopped: event("The reader stops selecting overviews, with how many were selected", {
+      stopped: event("Selecting ends, with how many were selected: the reader stopped it, or an action finished it (OV-317)", {
         selected: z.number().int().nonnegative(),
+        reason: z.enum(["reader", "acted"]),
       }),
       acted: event("The reader acts on the overviews they selected, from the bar", {
-        action: z.enum(["addToProject", "addToTopic", "markRead", "markUnread", "favourite", "unfavourite", "removeFromProject", "delete"]),
+        action: SelectionAction,
         overviews: z.number().int().positive(),
+      }),
+      failed: event("Some of the writes an action on the selected overviews made failed, and the toast said so (OV-317)", {
+        action: SelectionAction,
+        failed: z.number().int().positive(),
+        writes: z.number().int().positive(),
       }),
       topicChanged: event("The reader gives a topic to every selected overview, or takes it from them", {
         topicId: TopicId,
@@ -1284,6 +1345,12 @@ export const analyticsEvents = {
       assistantChosen: event("The reader says which assistant they use in Settings › Connections, which shows only its steps", {
         assistant: ChosenAssistant,
       }),
+      questionsPlaceChosen: event(
+        "The reader chooses in Settings › Connections whether questions to ask next are answered here or open their assistant",
+        {
+          here: z.boolean(),
+        },
+      ),
       fieldCopied: event("The reader copies one of the values ChatGPT's connector form asks for; never anything they typed", {
         field: z.enum(["name", "description", "address"]),
       }),

@@ -1,4 +1,5 @@
 import {
+  CHAT_MIGRATIONS,
   CURRENT_SCHEMA_VERSIONS,
   AskedQuestions,
   DEFAULT_OVERVIEW_STATE,
@@ -43,6 +44,8 @@ import {
 } from "@overview/domain";
 import {
   CAPTURE_QUEUE_STORE,
+  CHATS_BY_OVERVIEW_INDEX,
+  CHATS_STORE,
   FOLLOWED_PLAYLISTS_STORE,
   MEMBERS_BY_OVERVIEW_INDEX,
   MEMBERS_BY_PROJECT_INDEX,
@@ -75,6 +78,7 @@ const RECORD_STORES: Record<SyncedRecordKind, string> = {
   followedPlaylist: FOLLOWED_PLAYLISTS_STORE,
   project: PROJECTS_STORE,
   projectMember: PROJECT_MEMBERS_STORE,
+  chat: CHATS_STORE,
 };
 
 const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
@@ -85,6 +89,7 @@ const KEY_PATHS: Record<SyncedRecordKind, string | null> = {
   followedPlaylist: "id",
   project: "id",
   projectMember: "id",
+  chat: "id",
 };
 
 const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
@@ -95,6 +100,7 @@ const MIGRATIONS: Record<SyncedRecordKind, readonly RecordMigration[]> = {
   followedPlaylist: FOLLOWED_PLAYLIST_MIGRATIONS,
   project: PROJECT_MIGRATIONS,
   projectMember: PROJECT_MEMBER_MIGRATIONS,
+  chat: CHAT_MIGRATIONS,
 };
 
 // What every library that pulled before the cursor's kinds were kept was pulled with.
@@ -388,6 +394,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
         if (change.kind === "overview") transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
         if (change.kind === "followedPlaylist") await forgetFollowing(transaction, change.id);
         if (change.kind === "overview") await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
+        if (change.kind === "overview") await forgetChats(transaction, change.id);
         if (change.kind === "project") await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
         revisions.delete([change.kind, change.id]);
         continue;
@@ -479,6 +486,12 @@ function memberWrite(raw: unknown, now: Date): PendingWrite[] {
       change: { op: "member", change: { addedAt, addedBy } },
     },
   ];
+}
+
+// The server tombstones them too, but not in the overview's own write, so they may come down later.
+async function forgetChats(transaction: IDBTransaction, overviewId: string): Promise<void> {
+  const chats = transaction.objectStore(CHATS_STORE);
+  for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_OVERVIEW_INDEX).getAllKeys(overviewId))) chats.delete(key);
 }
 
 async function forgetMembers(transaction: IDBTransaction, index: string, parentId: string): Promise<void> {

@@ -3,6 +3,7 @@ import { EVERY_ACCOUNT_INCLUDES, PLAN_CARDS } from "../../planCards.js";
 import { usePlan } from "../../usePlan.js";
 import { usePlanUsage } from "../../usePlanUsage.js";
 import { PlanUsage } from "../PlanUsage/PlanUsage.js";
+import { useChatUsageQuery } from "../../../chats/queries/chatUsageQuery.js";
 import styles from "./PlusPlanPanel.module.scss";
 import { plusPlanPanelTestIds } from "./PlusPlanPanelTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -13,6 +14,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 export function PlusPlanPanel() {
   const { plan, status, recheck } = usePlan();
   const usage = usePlanUsage();
+  const chatUsage = useChatUsageQuery().data ?? null;
   const analytics = useAnalytics();
 
   if (status !== "known") {
@@ -52,7 +54,7 @@ export function PlusPlanPanel() {
       <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
         {planName}
       </p>
-      {usage !== null && <PlanUsage {...usage} />}
+      {usage !== null && (usage.signedIn ? <PlanUsage {...usage} chatUsage={chatUsage} /> : <PlanUsage {...usage} />)}
 
       <p className={styles.note} data-testid={plusPlanPanelTestIds.includedNote}>
         Every account gets all of it:
@@ -65,7 +67,11 @@ export function PlusPlanPanel() {
         ))}
       </ul>
 
-      <p className={styles.note}>What a plan buys is {transcribes ? "how much" : "how many overviews"} you can make.</p>
+      <p className={styles.note}>
+        {transcribes
+          ? "What a plan buys is how much you can make, and how many questions you can ask about it."
+          : "What a plan buys is how many overviews you can make, and how many questions you can ask about them."}
+      </p>
       <ul className={styles.plans}>
         {PLAN_CARDS.map((card) => {
           const yours = card.name === planName;
@@ -83,6 +89,10 @@ export function PlusPlanPanel() {
                 <div>
                   <dt>On your own key</dt>
                   <dd>{card.ownKey}</dd>
+                </div>
+                <div>
+                  <dt>Questions, on us</dt>
+                  <dd>{card.questions}</dd>
                 </div>
                 {transcribes && (
                   <div>

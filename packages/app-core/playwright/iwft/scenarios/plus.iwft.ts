@@ -30,7 +30,7 @@ test("Settings names the plan, gives every account the features, and sells both 
 
   await settings.verifyPlanReads("Free");
   await settings.verifyEveryAccountIncludes(EVERY_ACCOUNT_INCLUDES);
-  await settings.verifyPlanCardsRead(PLAN_CARDS.map((card) => [card.name, card.ourKey, card.ownKey, card.note]));
+  await settings.verifyPlanCardsRead(PLAN_CARDS.map((card) => [card.name, card.ourKey, card.ownKey, card.questions, card.note]));
   await settings.verifyPlanMarkedAsYours("Free");
   await settings.verifyPlansAreNotOnSale("isn't built yet");
 });

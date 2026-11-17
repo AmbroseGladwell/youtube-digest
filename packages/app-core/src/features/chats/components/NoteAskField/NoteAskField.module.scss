@@ -1,0 +1,44 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.field {
+  width: 100%;
+  max-width: 31.25rem;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 0s;
+}
+
+.away {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms ease,
+    visibility 0s linear 200ms;
+}
+
+.conversations {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--label);
+  font: 500 0.8125rem/1.4 var(--font-body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field,
+  .away {
+    transition: none;
+  }
+}

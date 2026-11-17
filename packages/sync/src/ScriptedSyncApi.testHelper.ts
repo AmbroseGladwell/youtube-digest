@@ -121,6 +121,10 @@ export class ScriptedSyncApi implements SyncApi {
     );
   }
 
+  async deleteChat(overviewId: string, conversationId: string) {
+    return this.#answer("deleteChat", [overviewId, conversationId], () => null);
+  }
+
   async saveTranscript(transcript: StoredTranscript) {
     return this.#answer("saveTranscript", [transcript], () => {
       this.transcripts.set(transcript.videoId, transcript);

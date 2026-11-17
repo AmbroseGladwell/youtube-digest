@@ -39,11 +39,5 @@ export function useOverviewSelection(placeKey: string) {
         else next.add(id);
         return next;
       }),
-    drop: (ids: string[]) =>
-      setPicked((current) => {
-        const next = new Set(current);
-        for (const id of ids) next.delete(id);
-        return next;
-      }),
   };
 }

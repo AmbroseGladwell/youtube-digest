@@ -12,7 +12,13 @@ import { storedOverview, withVideo } from "../testing/storedRecords.testHelper.j
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 
 const RESERVING = CLIENT_VERSION;
-const OUR_KEY = { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, http: makeFakeOpenAi().http };
+const OUR_KEY = {
+  apiKey: "sk-test-ours",
+  dailyGenerations: 300,
+  signedOutDailyGenerations: 50,
+  dailyChatMessages: 20_000,
+  http: makeFakeOpenAi().http,
+};
 const BEFORE_RESERVING = FIRST_RESERVING_CLIENT_VERSION - 1;
 
 const fromBeforeReserving = () => ({ ...withVideo(storedOverview()), schemaVersion: schemaVersionsForClient(BEFORE_RESERVING).overview });
