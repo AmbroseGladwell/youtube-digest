@@ -313,7 +313,8 @@ left as it opens (320ms, `.layout` in `ReaderPage.module.scss`), and the chat si
 sticky and fixed in height, 400px wide (360px under 1280px), so the note scrolls on its own beside
 it. Its field takes focus as it opens; Esc stops an answer being written, or else closes the chat
 and returns focus to what opened it. On a phone and in the extension's panel it is a sheet instead
-(`ChatSheet`, design 310g, 310h, 310o).
+(`ChatSheet`, design 310g, 310h, 310o). Beside the note the panel is on `--card`, the sheet's colour, with
+what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat`; design 324al, 324am).
 
 - **Motion and focus beside the note** (design 310a-4–310a-6, 310aq): a question tapped under the
   note, or typed in its field, travels into the chat as its question, 520ms ease-out, following
@@ -361,11 +362,19 @@ and returns focus to what opened it. On a phone and in the extension's panel it 
   another citation is followed or chat closes. An item rewritten since reads "Step 2 · since
   changed" and leads to its section's heading; a section no longer in the overview is muted text,
   "What it's selling · no longer in the overview", not a link.
-- **Under the latest answer:** Copy, and "Continue in {assistant}" (`chatHandOffPrompt`): connected,
-  it names the overview and the conversation for the assistant to read with `get_chat`; otherwise
-  it carries the note and the conversation. With no assistant chosen it opens OV-266's menu as
-  "Continue in".
-- **An overview's conversations** (design 310q–310u) sit behind the header's count, and the note's
+- **Copy under each answer** (OV-324, design 324x, 324ae, 324af): the latest answer's always shows;
+  an earlier one's on hover, focus or tap, in a slot kept so nothing moves (`ChatAnswerActions`).
+- **The header** is the title, New conversation, ⋯ and Close (OV-324, design 324x–324ag). ⋯
+  (`ChatConversationMenu`) is a menu under the header on the web and an action sheet on a phone and
+  in the panel. It holds Conversations, with the count, when there are others about this overview,
+  and, once there is a final answer, "Continue in {assistant}" (`chatHandOffPrompt`): connected, it
+  names the overview and the conversation for the assistant to read with `get_chat`; otherwise it
+  carries the note and the conversation, filled in or copied. Its second line says which, or "Sends
+  the finished answers" while a later answer is written. With no assistant chosen it reads
+  "Continue in…" and opens OV-266's menu as "Continue in" in its place. ⋯ hides while it would hold
+  nothing: a lone conversation before its first answer. After a hand-off, focus returns to ⋯ and
+  the toast above the field says what happened.
+- **An overview's conversations** (design 310q–310u) sit behind the header's ⋯, and the note's
   "3 conversations about this video" opens them: newest first, the open one tinted, New
   conversation at the top. A new conversation is nothing until its first question. Deleting is at
   once, with Undo in a toast for six seconds; the delete is made when the toast goes, or at once if

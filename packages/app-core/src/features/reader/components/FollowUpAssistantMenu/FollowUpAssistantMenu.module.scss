@@ -20,6 +20,12 @@ $sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 
   scroll-margin-bottom: 7rem;
 }
 
+.alignEnd {
+  left: auto;
+  right: 0.625rem;
+  transform: none;
+}
+
 // Design 266u: the same menu as a sheet on a phone and in the panel.
 .inSheet {
   position: static;

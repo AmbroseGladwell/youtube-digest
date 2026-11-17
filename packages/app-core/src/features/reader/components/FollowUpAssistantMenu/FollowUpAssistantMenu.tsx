@@ -31,6 +31,8 @@ export interface FollowUpAssistantMenuProps {
   connectedTo: (assistant: FollowUpAssistant) => boolean;
   anyConnection: boolean;
   asSheet: boolean;
+  // On the web the menu centres under what opened it, or sits at the end of a header (design 324z-2).
+  align?: "centre" | "end";
   // Where the menu stands, from the top of the block, when it floats on the web.
   top: number;
   inside: RefObject<HTMLElement | null>;
@@ -43,7 +45,7 @@ export interface FollowUpAssistantMenuProps {
 
 type Option = "here" | FollowUpAssistant;
 
-function OptionDetail({ assistant, connected }: { assistant: FollowUpAssistant; connected: boolean }) {
+function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowUpAssistant; connected: boolean; continueIn: boolean }) {
   if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null)
     return (
       <>
@@ -54,6 +56,10 @@ function OptionDetail({ assistant, connected }: { assistant: FollowUpAssistant; 
         · reads this note and its transcript
       </>
     );
+  if (continueIn)
+    return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
+      ? "Copies this conversation; you paste it in"
+      : "Opens with this conversation filled in";
   return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
     ? "Copies the question and this note; you paste it in"
     : "Gets this note in the link";
@@ -65,6 +71,7 @@ function OptionDetail({ assistant, connected }: { assistant: FollowUpAssistant; 
 export function FollowUpAssistantMenu({
   firstTap,
   continueIn = false,
+  align = "centre",
   chosen,
   offerHere,
   hereChosen,
@@ -115,7 +122,7 @@ export function FollowUpAssistantMenu({
 
   const body = (
     <div
-      className={`${styles.menu} ${asSheet ? styles.inSheet : ""}`}
+      className={`${styles.menu} ${asSheet ? styles.inSheet : align === "end" ? styles.alignEnd : ""}`}
       ref={menu}
       role={asSheet ? undefined : "dialog"}
       aria-labelledby={titleId}
@@ -144,7 +151,11 @@ export function FollowUpAssistantMenu({
             <span className={`${styles.dot} ${option === checked ? styles.dotOn : ""}`} aria-hidden="true" />
             <b className={styles.name}>{option === "here" ? "Here" : FOLLOW_UP_ASSISTANTS[option].name}</b>
             <small className={styles.detail}>
-              {option === "here" ? HERE_DETAIL : <OptionDetail assistant={option} connected={connectedTo(option)} />}
+              {option === "here" ? (
+                HERE_DETAIL
+              ) : (
+                <OptionDetail assistant={option} connected={connectedTo(option)} continueIn={continueIn} />
+              )}
             </small>
           </button>
         ))}

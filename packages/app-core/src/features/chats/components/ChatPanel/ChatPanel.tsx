@@ -24,6 +24,7 @@ import { conversationDate, firstQuestionOf, questionsIn } from "../../util/conve
 import { ChatAnswer, type ChatAnswerProps } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerActions } from "../ChatAnswerActions/ChatAnswerActions.js";
 import { ChatConversationList } from "../ChatConversationList/ChatConversationList.js";
+import { ChatConversationMenu } from "../ChatConversationMenu/ChatConversationMenu.js";
 import { ChatField } from "../ChatField/ChatField.js";
 import styles from "./ChatPanel.module.scss";
 import { chatPanelTestIds } from "./ChatPanelTestIds.js";
@@ -62,7 +63,7 @@ const plural = (count: number, one: string) => `${count} ${count === 1 ? one : `
 // Design 310a, 310i–310x: chat about one overview, beside its note. The conversation scrolls on
 // its own above the field; the overview's questions sit just above the field until the reader
 // types; an answer streams in under three dots, then a caret, and is announced once, when final.
-// The header's count opens the overview's conversations.
+// The header's ⋯ holds the overview's other conversations and Continue in (design 324x).
 export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(function ChatPanel(
   { panel, overview, video, compact, onCitationFollowed, onOverviewPartFollowed, onOpenTranscriptAt },
   fieldRef,
@@ -74,6 +75,8 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   const [announcement, setAnnouncement] = useState("");
   const [said, setSaid] = useState<{ text: string; done: boolean; key: number } | null>(null);
   const [outlined, setOutlined] = useState<number | null>(null);
+  const [revealed, setRevealed] = useState<number | null>(null);
+  const header = useRef<HTMLElement | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
   const previous = useRef<AskState>({ status: "idle" });
   const now = new Date();
@@ -160,6 +163,24 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
     setSet(0);
   }, [conversationId]);
 
+  const say = (text: string, done: boolean) => setSaid({ text, done, key: Date.now() });
+
+  const toast =
+    deleting !== null ? (
+      <div key={deleting.id} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
+        <StrokeIcon name="check" size={17} />
+        Conversation deleted
+        <button type="button" className={styles.undo} onClick={panel.undoDelete} data-testid={chatPanelTestIds.undo}>
+          Undo
+        </button>
+      </div>
+    ) : said !== null ? (
+      <div key={said.key} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
+        <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
+        {said.text}
+      </div>
+    ) : null;
+
   const send = (question: string, from: "question" | "typed") => {
     panel.ask(question.trim(), from);
     if (from === "typed") setDraft("");
@@ -180,7 +201,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
       onKeyDown={keyDown}
       data-testid={chatPanelTestIds.root}
     >
-      <header className={styles.header} data-sheet-drag>
+      <header className={styles.header} ref={header} data-sheet-drag>
         <div className={styles.titles}>
           <p className={styles.title} data-testid={chatPanelTestIds.title}>
             {title}
@@ -189,18 +210,6 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
             {about}
           </p>
         </div>
-        {view === "conversation" && chats.length > 0 && (
-          <button
-            type="button"
-            className={styles.count}
-            aria-label={`Conversations, ${chats.length}`}
-            onClick={panel.openList}
-            data-testid={chatPanelTestIds.count}
-          >
-            <StrokeIcon name="chat" size={16} />
-            {chats.length}
-          </button>
-        )}
         <button
           type="button"
           className={styles.iconButton}
@@ -210,6 +219,18 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
         >
           <StrokeIcon name="pencil" size={16} />
         </button>
+        {view === "conversation" && (
+          <ChatConversationMenu
+            chat={chat}
+            overview={overview}
+            conversations={chats.length}
+            writing={answering}
+            compact={compact}
+            header={header}
+            onOpenList={panel.openList}
+            onSaid={say}
+          />
+        )}
         <button type="button" className={styles.iconButton} aria-label="Close" onClick={panel.close} data-testid={chatPanelTestIds.close}>
           <StrokeIcon name="close" size={16} />
         </button>
@@ -254,7 +275,13 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                     {message.text}
                   </li>
                 ) : (
-                  <li key={index} data-message={index}>
+                  <li
+                    key={index}
+                    data-message={index}
+                    data-answer=""
+                    {...(revealed === index ? { "data-revealed": "" } : {})}
+                    onClick={() => setRevealed(index)}
+                  >
                     <ChatAnswer
                       text={message.text}
                       inSource={message.inSource}
@@ -270,15 +297,12 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                         panel.followConversation(cited, at, { title: firstQuestion ?? "", message: index })
                       }
                       actions={
-                        index === latestAnswerAt && pending === null && chat !== null ? (
-                          <ChatAnswerActions
-                            chat={chat}
-                            overview={overview}
-                            answer={message.text}
-                            compact={compact}
-                            onSaid={(text, done) => setSaid({ text, done, key: Date.now() })}
-                          />
-                        ) : undefined
+                        <ChatAnswerActions
+                          overviewId={overview.id}
+                          answer={message.text}
+                          latest={index === latestAnswerAt && pending === null}
+                          onSaid={say}
+                        />
                       }
                     />
                   </li>
@@ -355,6 +379,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
       )}
       {view === "conversation" && (
         <div className={styles.foot}>
+          {toast !== null && <div className={styles.toastSpot}>{toast}</div>}
           {suggestions.length > 0 && (
             <div className={styles.suggestions} data-testid={chatPanelTestIds.suggestions}>
               <div className={styles.suggestionsHead}>
@@ -418,22 +443,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
       <p className={styles.live} aria-live="polite" data-testid={chatPanelTestIds.announcement}>
         {announcement}
       </p>
-      {deleting !== null ? (
-        <div key={deleting.id} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
-          <StrokeIcon name="check" size={17} />
-          Conversation deleted
-          <button type="button" className={styles.undo} onClick={panel.undoDelete} data-testid={chatPanelTestIds.undo}>
-            Undo
-          </button>
-        </div>
-      ) : (
-        said !== null && (
-          <div key={said.key} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
-            <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
-            {said.text}
-          </div>
-        )
-      )}
+      {view === "list" && toast}
     </section>
   );
 });

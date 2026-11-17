@@ -100,14 +100,14 @@ test.describe("Chat beside the note", () => {
 
     await reader.chat.verifyNotInSource(0, "Not in the video");
     await reader.chat.verifyAnnounced("Not in the video: The video doesn’t say whether to take creatine before or after a workout.");
-    await reader.chat.verifyActionsUnderAnswer(0, "Continue in…");
+    await reader.chat.verifyCopyUnderAnswers(1);
 
     await reader.chat.ask("How much lean mass?");
 
     await reader.chat.verifyTitleReads(QUESTIONS[3]!.question);
     await reader.chat.verifyQuestionsRead([QUESTIONS[3]!.question, "How much lean mass?"]);
     await reader.chat.verifyAnswersRead(["The video doesn’t say whether to take creatine before or after a workout.", ANSWER]);
-    await reader.chat.verifyActionsUnderAnswer(1, "Continue in…");
+    await reader.chat.verifyCopyUnderAnswers(2);
     const [first, second] = backendSimulator.chats.questions();
     expect(second?.conversationId).toBe(first?.conversationId);
   });
@@ -293,15 +293,99 @@ test.describe("Chat beside the note", () => {
     const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
     const reader = await library.nthCard(0).openReader();
     await reader.chat.askInNote("How much lean mass?");
-    await reader.chat.verifyActionsUnderAnswer(0, "Continue in Claude");
+    await reader.chat.verifyCopyUnderAnswers(1);
+    await reader.chat.openMenu();
+    await reader.chat.verifyMenuOffers(["Continue in Claude (opens in a new tab)"]);
+    await reader.chat.verifyContinueDetailReads("Connected · reads this conversation");
     await reader.followUps.catchNewTabs();
 
     await reader.chat.continueIn();
+
+    await reader.chat.verifyMenuIsClosed();
+    await reader.chat.verifyToastReads("Opening Claude in a new tab");
 
     const conversationId = backendSimulator.chats.questions()[0]!.conversationId;
     const [tab] = await reader.followUps.newTabs();
     expect(tab?.searchParams.get("q")).toBe(
       `${CONNECTED_CHAT_INSTRUCTION}\n<overview>Creatine, debunked (The Overview id ${overview.id})</overview>\n<conversation>${chatRecordId(overview.id, conversationId)}</conversation>`,
     );
+  });
+});
+
+test.describe("The chat header's ⋯", () => {
+  test("waits for a lone conversation's first answer, then offers Continue in, which asks which assistant and hands the conversation on", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    backendSimulator.simulateEndpointStalled(EndpointKey.CHAT_MESSAGES);
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyWriting();
+    await reader.chat.verifyMenuIsOffered(false);
+
+    await backendSimulator.releaseEndpoint(EndpointKey.CHAT_MESSAGES);
+
+    await reader.chat.verifyAnswersRead([ANSWER]);
+    await reader.chat.openMenu();
+    await reader.chat.verifyMenuOffers(["Continue in…"]);
+    await reader.followUps.catchNewTabs();
+
+    await reader.chat.continueIn();
+
+    await reader.followUps.verifyMenuIs("Continue in");
+
+    await reader.followUps.chooseAssistant("chatgpt");
+
+    const [tab] = await reader.followUps.newTabs();
+    expect(tab?.host).toBe("chatgpt.com");
+    expect(tab?.searchParams.get("q")).toContain("How much lean mass?");
+    await reader.chat.verifyMenuIsClosed();
+    await reader.chat.verifyToastReads("Opening ChatGPT in a new tab");
+    await reader.chat.openMenu();
+    await reader.chat.verifyMenuOffers(["Continue in ChatGPT (opens in a new tab)"]);
+    await reader.chat.verifyContinueDetailReads("Opens with this conversation filled in");
+  });
+
+  test("while a later answer is written, Continue in sends the finished answers; Escape closes the menu, not the chat", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "chatgpt" });
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+    backendSimulator.simulateEndpointStalled(EndpointKey.CHAT_MESSAGES);
+    await reader.chat.ask("And the dose?");
+    await reader.chat.verifyWriting();
+
+    await reader.chat.openMenu();
+
+    await reader.chat.verifyMenuOffers(["Continue in ChatGPT (opens in a new tab)"]);
+    await reader.chat.verifyContinueDetailReads("Sends the finished answers");
+
+    await reader.chat.pressEscape();
+
+    await reader.chat.verifyMenuIsClosed();
+    await reader.chat.verifyIsOpen(true);
+    await reader.chat.verifyWriting();
+  });
+
+  test("the latest answer shows its Copy; an earlier one's shows on hover", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How much lean mass?");
+    await reader.chat.verifyAnswersRead([ANSWER]);
+    await reader.chat.ask("And the dose?");
+    await reader.chat.verifyAnswersRead([ANSWER, ANSWER]);
+    await reader.chat.verifyCopyIsShown(1, true);
+    await reader.chat.verifyCopyIsShown(0, false);
+
+    await reader.chat.hoverAnswer(0);
+
+    await reader.chat.verifyCopyIsShown(0, true);
   });
 });
