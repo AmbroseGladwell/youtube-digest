@@ -14,6 +14,20 @@
   overflow: hidden;
 }
 
+// In the sheet the panel sits on the page's card, so what is raised in it takes the surface.
+.inSheet {
+  --chat-raised: var(--surface);
+
+  flex: 1;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+
+  .header {
+    border-bottom-color: var(--surface);
+  }
+}
+
 .header {
   display: flex;
   align-items: center;

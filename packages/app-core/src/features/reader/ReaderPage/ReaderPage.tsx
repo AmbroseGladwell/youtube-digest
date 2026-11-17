@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate, useParams } from "react-router";
 import {
   KEY_POINTS_SECTION,
@@ -12,6 +12,7 @@ import {
   sourceUrl,
   type RecipeUnits,
   type TimeRange,
+  formatTimestamp,
   isUnreadableRecordError,
   overviewMetaParts,
   overviewNoteCaptions,
@@ -51,6 +52,9 @@ import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLink
 import { ArticleResources } from "../components/ArticleResources/ArticleResources.js";
 import { FollowUpQuestions } from "../components/FollowUpQuestions/FollowUpQuestions.js";
 import { ChatPanel } from "../../chats/components/ChatPanel/ChatPanel.js";
+import { ChatSheet } from "../../chats/components/ChatSheet/ChatSheet.js";
+import { LOWERED_SHOWS_PX, type SheetRest } from "../../chats/util/sheetDrag.js";
+import { formatTimeRange } from "../../overviews/util/formatTimeRange.js";
 import { NoteAskField } from "../../chats/components/NoteAskField/NoteAskField.js";
 import { useChatPanel } from "../../chats/useChatPanel.js";
 import { chatOffered } from "../../chats/util/chatOffered.js";
@@ -355,6 +359,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   const chat = useChatPanel(overviewId);
   const [citedIndex, setCitedIndex] = useState<number | null>(null);
+  const [sheetRest, setSheetRest] = useState<SheetRest>("raised");
+  const [sheetLine, setSheetLine] = useState<string | null>(null);
+  useEffect(() => {
+    if (!chat.open) return;
+    setSheetRest("raised");
+    setSheetLine(null);
+  }, [chat.open]);
 
   if (overviewQuery.isPending) {
     return (
@@ -480,14 +491,25 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     void navigate(Routes.home(), { replace: true, viewTransition: animateNavigation });
   };
 
-  // Chat sits beside the note on the web (design 310a); the phone's and the panel's sheet is still to come.
-  const chatBeside =
-    chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false }) && !chat.noSource && !isPanel && !isPhone;
+  // Chat sits beside the note on the web (design 310a), and is a sheet on a phone and in the
+  // extension's panel (310g, 310h).
+  const chatAvailable = chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false }) && !chat.noSource;
+  const chatBeside = chatAvailable && !isPanel && !isPhone;
+  const chatSheet = chatAvailable && (isPanel || isPhone);
+  const lowerSheet = (line: string) => {
+    setSheetRest("lowered");
+    setSheetLine(line);
+  };
+  const chatTranscriptAt = (positionMs: number) => {
+    openTranscriptAt(positionMs);
+    if (chatSheet) lowerSheet(`Reading the transcript from ${formatTimestamp(positionMs)}`);
+  };
   const sourceWord = overview.source.kind === "podcast" ? "episode" : "video";
   const followCitation = (range: TimeRange) => {
     reader.chat.citationFollowed({ to: "source" });
     if (tab !== "Overview") changeTab("Overview");
     setCitedIndex(citedLineIndex(summaryLines, range.startMs));
+    if (chatSheet && seekVideo !== null) lowerSheet(`Playing ${formatTimeRange(range.startMs, range.endMs)} from the answer`);
   };
 
   // An episode's note moves its own player: every time in it plays the episode (design 106p).
@@ -495,7 +517,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
 
   return withEpisode(
     <OverviewAnalyticsProvider value={overviewAnalytics}>
-      <div className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}>
+      <div
+        className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}
+        style={chatSheet && chat.open ? ({ "--chat-sheet-clearance": `${LOWERED_SHOWS_PX}px` } as CSSProperties) : undefined}
+      >
         <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
           <ReaderMasthead
             overview={overview}
@@ -529,7 +554,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             regenerate={regenerate}
             recipeActions={recipeActions}
             onDelete={() => setConfirmingDelete(true)}
-            onChat={chatBeside ? chat.openLatest : null}
+            onChat={chatAvailable ? chat.openLatest : null}
             projects={accountNeeded ? null : projects}
           />
 
@@ -669,10 +694,10 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
                     onAsked={(asked) => setOverviewState.mutate({ overviewId, patch: { asked } })}
                     compact={isPanel || isPhone}
                     analytics={reader.followUps}
-                    onAskHere={chatBeside ? (question) => chat.ask(question, "question") : undefined}
+                    onAskHere={chatAvailable ? (question) => chat.ask(question, "question") : undefined}
                   />
                 )}
-                {chatBeside && (
+                {chatAvailable && (
                   <NoteAskField
                     sourceWord={sourceWord}
                     chatOpen={chat.open}
@@ -880,9 +905,33 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               video={video}
               compact={false}
               onCitationFollowed={followCitation}
-              onOpenTranscriptAt={(positionMs) => openTranscriptAt(positionMs)}
+              onOpenTranscriptAt={chatTranscriptAt}
             />
           </div>
+        )}
+        {chatSheet && chat.open && (
+          <ChatSheet
+            rest={sheetRest}
+            label={`Ask about this ${sourceWord}`}
+            loweredTitle={chat.title}
+            loweredLine={sheetLine ?? `About ${overview.source.title}`}
+            playing={sheetLine !== null}
+            underMasthead={isPanel}
+            onRestChange={(rest) => {
+              setSheetRest(rest);
+              if (rest === "raised") setSheetLine(null);
+            }}
+          >
+            <ChatPanel
+              ref={chat.field}
+              panel={chat}
+              overview={overview}
+              video={video}
+              compact={true}
+              onCitationFollowed={followCitation}
+              onOpenTranscriptAt={chatTranscriptAt}
+            />
+          </ChatSheet>
         )}
       </div>
     </OverviewAnalyticsProvider>,

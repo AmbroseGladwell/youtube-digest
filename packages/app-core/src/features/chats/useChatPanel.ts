@@ -4,7 +4,7 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
 import { useChatsQuery } from "./queries/chatsQuery.js";
 import { useAskQuestion, type AskedFrom } from "./useAskQuestion.js";
-import { lastActive } from "./util/conversationLine.js";
+import { firstQuestionOf, lastActive } from "./util/conversationLine.js";
 
 type OpenedFrom = AskedFrom | "menu" | "conversationsLink";
 
@@ -163,6 +163,10 @@ export function useChatPanel(overviewId: OverviewId) {
     asking.stop();
   };
 
+  const current = chats.find((chat) => idOf(chat) === conversationId);
+  const askingHere = asking.state.status !== "idle" && asking.state.conversationId === conversationId ? asking.state.question : null;
+  const title = view === "list" ? "Conversations" : current !== undefined ? firstQuestionOf(current) : (askingHere ?? "New conversation");
+
   // The server keeps no text for this overview: chat hides rather than offering what can't work.
   const noSource = asking.state.status === "waiting" && asking.state.wait.kind === "noSource";
 
@@ -170,6 +174,7 @@ export function useChatPanel(overviewId: OverviewId) {
     open,
     view,
     conversationId,
+    title,
     chats,
     deleting,
     cameFrom,

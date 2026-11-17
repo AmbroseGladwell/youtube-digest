@@ -6,7 +6,7 @@
 // docked beneath it (docs/features/audio-player.md).
 .root {
   position: sticky;
-  bottom: calc(1rem + var(--mini-player-clearance, 0px));
+  bottom: calc(1rem + var(--mini-player-clearance, 0px) + var(--chat-sheet-clearance, 0px));
   z-index: 2;
   display: flex;
   align-items: center;
@@ -223,7 +223,7 @@
       "actions actions actions";
     gap: 0.375rem 0.75rem;
     margin: 0;
-    bottom: var(--mini-player-clearance, 0px);
+    bottom: calc(var(--mini-player-clearance, 0px) + var(--chat-sheet-clearance, 0px));
     border-radius: 20px 20px 0 0;
     padding: 0.75rem 1.125rem 0.875rem;
   }
