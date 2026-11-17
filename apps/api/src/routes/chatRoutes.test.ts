@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { chatRecordId, CLIENT_VERSION, MAX_CHAT_QUESTIONS, type ChatMessage } from "@overview/domain";
+import { chatRecordId, CLIENT_SCHEMA_VERSIONS, MAX_CHAT_QUESTIONS, type ChatMessage } from "@overview/domain";
 import { appendChatMessages } from "../chats/appendChatMessages.js";
 import { isApiError } from "../http/ApiError.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
@@ -157,7 +157,8 @@ test("a client built before chats is never sent one", async (t) => {
   const overview = await withOverview(account);
   await chatting(testApp, account)(overview.id, randomUUID(), exchange("creatine"));
 
-  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: CLIENT_VERSION - 1 });
+  const beforeChats = CLIENT_SCHEMA_VERSIONS.find(({ schemaVersions }) => schemaVersions.chat > 0)!.clientVersion - 1;
+  const response = await account.inject({ method: "GET", url: "/api/changes?since=0&limit=200", clientVersion: beforeChats });
 
   const kinds = (response.json() as { changes: Array<{ kind: string }> }).changes.map((change) => change.kind);
   assert.ok(kinds.includes("overview"));

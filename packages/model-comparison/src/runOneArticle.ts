@@ -18,6 +18,7 @@ export const articleComparisonInput = (article: ExtractedArticle): ArticleGenera
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},

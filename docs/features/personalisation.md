@@ -149,11 +149,21 @@ section whatever the reader has switched off and hides the ones they don't want.
 isn't built. When it is, a reader's switches decide what is shown rather than what is
 written.
 
+### Filing into projects
+
+OV-318. A second card under Sections, Projects, holds one switch: "File new overviews into
+projects", on by default and synced as `fileIntoProjects`. On, a new overview is offered the
+reader's projects that aren't archived and put into those it clearly helps with
+(`projects.md`, "Filing as an overview is made"). Off, the projects are left out of the prompt,
+as a switched-off section is, and nothing is filed. It changes only overviews made from then on.
+The Personalisation row's value is about sections and About you, and doesn't mention it.
+
 ## Analytics
 
 `settings.personalisation.sectionSwitched` with the section and whether it is now on,
 `settings.personalisation.aboutYouSaved` with whether it is now set, and
-`settings.personalisation.profileSharingSwitched` with whether assistants may now read it. Onboarding counts the
+`settings.personalisation.profileSharingSwitched` with whether assistants may now read it,
+`settings.personalisation.projectFilingSwitched` with whether filing into projects is now on. Onboarding counts the
 entries in each section and how many were typed. The text is never logged.
 
 ### Is How to apply any good?

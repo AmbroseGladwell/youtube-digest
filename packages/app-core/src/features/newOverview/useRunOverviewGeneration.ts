@@ -42,7 +42,7 @@ import { generationKeys } from "./generationKeys.js";
 export const missingKeyMessage = (provider: keyof typeof PROVIDER_SHORT_LABEL): string =>
   `Add your ${PROVIDER_SHORT_LABEL[provider]} API key first.`;
 
-type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptStore">;
+type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptStore"> & Partial<Pick<Stores, "projectStore">>;
 
 // One generation with everything this shell has to make it: the transcript rungs it can
 // ask, the reader's own key and model for the provider they chose, our key, in the order
@@ -77,6 +77,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
+          projectStore: stores.projectStore,
           warn: (warning) => reporter.warn(warning),
           timed: (timing) => reporter.time(timing),
         },
@@ -96,7 +97,12 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
     async (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
       runArticleOverviewGeneration(
         read,
-        { makeOverview: makeWith(), overviewStore: stores.overviewStore, settingsStore: stores.settingsStore },
+        {
+          makeOverview: makeWith(),
+          overviewStore: stores.overviewStore,
+          settingsStore: stores.settingsStore,
+          projectStore: stores.projectStore,
+        },
         options,
       )
         .then((overview) => learnFrom(overview, stores))
@@ -169,6 +175,7 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
           transcriptStore: stores.transcriptStore,
+          projectStore: stores.projectStore,
         },
         options,
       )

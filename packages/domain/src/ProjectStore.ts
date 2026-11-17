@@ -14,5 +14,8 @@ export interface ProjectStore {
   // Only the membership records of overviews that are in their project now.
   listMembers(): Promise<ProjectMember[]>;
   addToProject(projectId: ProjectId, overviewId: OverviewId): Promise<void>;
+  // Puts an overview in a project as filing, and does nothing when this overview has ever been in
+  // it, so the reader's removal stands (docs/features/projects.md, "Filing as an overview is made").
+  fileIntoProject(projectId: ProjectId, overviewId: OverviewId): Promise<void>;
   removeFromProject(projectId: ProjectId, overviewId: OverviewId): Promise<void>;
 }

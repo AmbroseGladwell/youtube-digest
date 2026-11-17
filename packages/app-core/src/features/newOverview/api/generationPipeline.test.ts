@@ -16,12 +16,15 @@ import {
   type LearnedItems,
   type PodcastEpisode,
   podcastSourceId,
+  ProjectId,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
 import type { GenerationInput } from "@overview/generation";
 import { makeArticleOverview, makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
+import { InMemoryProjectStore } from "../../projects/types/InMemoryProjectStore.testHelper.js";
+import { makeProject } from "../../projects/types/ProjectFactory.testHelper.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 import { ArticleAlreadyHeldError } from "./ArticleAlreadyHeldError.js";
 import { ArticleReadError } from "./ArticleReadError.js";
@@ -464,5 +467,71 @@ describe("runPodcastOverviewGeneration", () => {
       runPodcastOverviewGeneration({ episode, sharedFrom: "https://open.spotify.com/episode/x" }, async () => words("k"), deps),
     ).rejects.toBeInstanceOf(ArticleAlreadyHeldError);
     expect(made).toHaveLength(0);
+  });
+});
+
+describe("filing into projects", () => {
+  const kitchen = makeProject();
+  const launch = makeProject({ id: ProjectId.parse("5c0f1b7e-2a4d-4c3e-8f61-9b2d7e4a1c30"), name: "Launch", purpose: null });
+  const shed = makeProject({
+    id: ProjectId.parse("1e9a4c2b-7d3f-4a51-9c8e-6f0b2d5a7e14"),
+    name: "Old shed",
+    archivedAt: "2026-11-15T09:00:00.000Z",
+  });
+
+  const filingDeps = async (settings: Partial<Settings> = {}) => {
+    const { deps, inputs, saved, hold } = makeDeps();
+    const projectStore = new InMemoryProjectStore();
+    for (const project of [kitchen, launch, shed]) await projectStore.createProject(project);
+    let counted: number | undefined;
+    const filing: GenerationPipelineDeps = {
+      ...deps,
+      settingsStore: { get: async () => ({ ...DEFAULT_SETTINGS, ...settings }) },
+      projectStore,
+      makeOverview: async (input, meta) => {
+        inputs.push(input as GenerationInput);
+        meta.onProjectsFiled?.(input.existingProjects.filter((project) => project.name === "Kitchen renovation").map(({ id }) => id));
+        return makeOverview({ id: meta.id });
+      },
+    };
+    const options = { onProjectsFiled: (count: number) => (counted = count) };
+    return { deps: filing, inputs, saved, hold, projectStore, options, counted: () => counted };
+  };
+
+  it("offers the active projects by name and purpose only, and files the new overview into those matched, as filing", async () => {
+    const { deps, inputs, saved, projectStore, options, counted } = await filingDeps();
+
+    await runOverviewGeneration(VIDEO.url, deps, options);
+
+    expect(inputs[0]!.existingProjects).toEqual([
+      { id: kitchen.id, name: kitchen.name, purpose: kitchen.purpose },
+      { id: launch.id, name: "Launch", purpose: null },
+    ]);
+    const members = await projectStore.listMembers();
+    expect(members.map(({ projectId, overviewId, addedBy }) => ({ projectId, overviewId, addedBy }))).toEqual([
+      { projectId: kitchen.id, overviewId: saved[0]!.id, addedBy: { by: "filing" } },
+    ]);
+    expect(counted()).toBe(1);
+  });
+
+  it("switched off, sends no projects and files nothing", async () => {
+    const { deps, inputs, projectStore, options, counted } = await filingDeps({ fileIntoProjects: false });
+
+    await runOverviewGeneration(VIDEO.url, deps, options);
+
+    expect(inputs[0]!.existingProjects).toEqual([]);
+    expect(await projectStore.listMembers()).toEqual([]);
+    expect(counted()).toBeUndefined();
+  });
+
+  it("never files a regeneration, which keeps where the reader filed it", async () => {
+    const { deps, inputs, hold, projectStore, options } = await filingDeps();
+    const previous = makeOverview();
+    hold(previous);
+
+    await runOverviewGeneration(VIDEO.url, deps, { ...options, overviewId: previous.id });
+
+    expect(inputs[0]!.existingProjects).toEqual([]);
+    expect(await projectStore.listMembers()).toEqual([]);
   });
 });

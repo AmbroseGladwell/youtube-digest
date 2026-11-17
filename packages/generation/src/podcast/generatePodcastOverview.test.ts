@@ -39,6 +39,7 @@ const inputOf = (segments: number, overrides: Partial<PodcastGenerationInput> = 
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},

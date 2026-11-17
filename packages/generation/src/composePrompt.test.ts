@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { DEFAULT_SECTIONS_ENABLED, MOST_SOURCE_STEPS, SOURCE_STEP_REASON_MAX_WORDS, TopicId, VideoId } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, MOST_SOURCE_STEPS, ProjectId, SOURCE_STEP_REASON_MAX_WORDS, TopicId, VideoId } from "@overview/domain";
 import { composePrompt } from "./composePrompt.js";
 import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 import { TAG_VOCABULARY_CAP } from "./sections/filingSection.js";
@@ -30,6 +30,7 @@ const baseInput: GenerationInput = {
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},
@@ -198,6 +199,24 @@ test("with no existing topics, the match field can only ever come back empty", (
   const picked = z.object({ matchedTopicNames: schema.shape.matchedTopicNames! });
   assert.doesNotThrow(() => picked.parse({ matchedTopicNames: [] }));
   assert.throws(() => picked.parse({ matchedTopicNames: ["anything"] }));
+});
+
+const kitchen = { id: ProjectId.parse(randomUUID()), name: "Kitchen renovation", purpose: "Redoing the kitchen on a £20k budget" };
+const launch = { id: ProjectId.parse(randomUUID()), name: "Launch", purpose: null };
+
+test("the project-match field is constrained to the reader's own project names", () => {
+  const { schema, systemPrompt } = composePrompt({ ...baseInput, existingProjects: [kitchen, launch] });
+  const picked = z.object({ matchedProjectNames: schema.shape.matchedProjectNames! });
+  assert.doesNotThrow(() => picked.parse({ matchedProjectNames: ["Kitchen renovation"] }));
+  assert.throws(() => picked.parse({ matchedProjectNames: ["Garden"] }));
+  assert.ok(systemPrompt.includes('- "Kitchen renovation": Redoing the kitchen on a £20k budget'));
+  assert.ok(systemPrompt.includes('- "Launch" (only a name)'));
+});
+
+test("with no projects, neither the prompt nor the schema mentions them", () => {
+  const { schema, systemPrompt } = composePrompt(baseInput);
+  assert.equal(schema.shape.matchedProjectNames, undefined);
+  assert.ok(!systemPrompt.includes("## Projects"));
 });
 
 test("watch-it-anyway's range is a segment-index pair, never a raw timestamp the model would have to invent", () => {

@@ -38,6 +38,7 @@ export const generationRequest = (overviewId: string): OurKeyGenerationRequest =
       readerContext: null,
       sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
       existingTopics: [],
+      existingProjects: [],
       pastClaims: [],
       existingTags: [],
       tagAliases: {},

@@ -1,14 +1,14 @@
 import { NOVELTY_LABEL } from "./noveltyLabel.js";
 import type { Overview } from "./Overview.js";
 import type { Project } from "./Project.js";
-import type { ProjectAuthor } from "./ProjectAuthor.js";
+import type { MemberAuthor, ProjectAuthor } from "./ProjectAuthor.js";
 import { sourceName } from "./sourceFacts.js";
 import type { Novelty } from "./Verdict.js";
 
 export interface ProjectOverview {
   overview: Overview;
   read: boolean;
-  addedBy: ProjectAuthor;
+  addedBy: MemberAuthor;
 }
 
 export interface VerdictSpread {
@@ -66,7 +66,7 @@ function overviewLine({ overview, read, addedBy }: ProjectOverview): string {
     sourceName(overview.source),
     overview.verdict === null ? null : `${NOVELTY_LABEL[overview.verdict.novelty]}${overview.verdict.dubious ? ", dubious" : ""}`,
     read ? null : "unread",
-    addedBy.by === "assistant" ? `added by ${addedBy.name}` : null,
+    addedBy.by === "assistant" ? `added by ${addedBy.name}` : addedBy.by === "filing" ? "added automatically" : null,
     `saved ${overview.savedAt.slice(0, 10)}`,
     `id ${overview.id}`,
   ].filter((fact) => fact !== null);

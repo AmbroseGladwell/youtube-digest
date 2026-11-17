@@ -25,3 +25,8 @@ export type Project = z.infer<typeof Project>;
 // its author (docs/features/projects.md).
 export const ProjectPatch = Project.pick({ name: true, purpose: true, purposeBy: true, archivedAt: true }).partial();
 export type ProjectPatch = z.infer<typeof ProjectPatch>;
+
+// What generation is told about a project to file an overview under it: never who made it or
+// when (docs/features/projects.md, "Filing as an overview is made").
+export const FilingProject = Project.pick({ id: true, name: true, purpose: true });
+export type FilingProject = z.infer<typeof FilingProject>;

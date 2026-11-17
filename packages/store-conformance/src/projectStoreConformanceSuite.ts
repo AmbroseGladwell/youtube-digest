@@ -57,6 +57,40 @@ export function defineProjectStoreConformanceSuite(label: string, createStore: (
     assert.deepEqual(member?.addedBy, { by: "reader" });
   });
 
+  test(behaviour("an overview filed into a project is listed as filing's"), async () => {
+    const store = await createStore();
+    const project = makeProject();
+    const overviewId = anOverviewId();
+    await store.createProject(project);
+    await store.fileIntoProject(project.id, overviewId);
+    const [member] = await store.listMembers();
+    assert.deepEqual(member?.addedBy, { by: "filing" });
+  });
+
+  test(behaviour("filing never puts back an overview the reader took out, nor takes over the reader's own add"), async () => {
+    const store = await createStore();
+    const [removed, added] = [makeProject(), makeProject({ name: "Launching my app" })];
+    const overviewId = anOverviewId();
+    await store.createProject(removed);
+    await store.createProject(added);
+    await store.fileIntoProject(removed.id, overviewId);
+    await store.removeFromProject(removed.id, overviewId);
+    await store.addToProject(added.id, overviewId);
+    await store.fileIntoProject(removed.id, overviewId);
+    await store.fileIntoProject(added.id, overviewId);
+    const members = await store.listMembers();
+    assert.deepEqual(
+      members.map(({ projectId, addedBy }) => ({ projectId, addedBy })),
+      [{ projectId: added.id, addedBy: { by: "reader" } }],
+    );
+  });
+
+  test(behaviour("filing into a project that isn't there does nothing"), async () => {
+    const store = await createStore();
+    await store.fileIntoProject(makeProject().id, anOverviewId());
+    assert.deepEqual(await store.listMembers(), []);
+  });
+
   test(behaviour("adding the same overview twice lists it once"), async () => {
     const store = await createStore();
     const project = makeProject();
