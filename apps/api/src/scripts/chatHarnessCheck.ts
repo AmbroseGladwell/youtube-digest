@@ -1,11 +1,20 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { VideoId, youTubeSource, type ChatStreamEvent, type TranscriptSegment, type VideoSource } from "@overview/domain";
+import {
+  VideoId,
+  youTubeSource,
+  type ChatStreamEvent,
+  type Overview,
+  type OverviewPart,
+  type TranscriptSegment,
+  type VideoSource,
+} from "@overview/domain";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
+import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 
 // OV-309's check of the real chat endpoint against OV-267's question set, and a worst case:
 // 30-question conversations on a source over two hours with another conversation sent. The
@@ -17,19 +26,25 @@ import { storedOverview } from "../testing/storedRecords.testHelper.js";
 //
 // long-only skips the question set and asks each long conversation only its first few questions:
 // enough to see whether a second conversation reads the transcript from the cache.
+//
+// Since OV-319 each source's overview.md goes in the prompt as its real overview, and
+// overview-questions.json, where present, adds questions answered from the overview's own items,
+// each scored on whether the answer cites one of the parts it lists.
 
 interface Question {
   id: string;
-  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "filler";
+  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "filler" | "overviewPart";
   question: string;
   quotes: string[];
   mentions: string[];
+  parts?: Array<{ part: OverviewPart; index: number | null }>;
 }
 
 interface Source {
   name: string;
   video: VideoSource;
   segments: TranscriptSegment[];
+  overview: Partial<Overview>;
   questions: Question[];
 }
 
@@ -42,6 +57,10 @@ interface Turn {
   rightOnSource: boolean | null;
   citedRightMoment: boolean | null;
   mentioned: boolean | null;
+  citedRightPart: boolean | null;
+  partsCited: string[];
+  speaksOfOverview: boolean;
+  answer: string;
   inputTokens: number;
   cachedShare: number | null;
   outputTokens: number;
@@ -77,13 +96,27 @@ async function loadSource(directory: string): Promise<Source> {
     video: VideoSource;
     transcript: TranscriptSegment[];
   };
-  const questions = (JSON.parse(await readFile(join(directory, "questions.json"), "utf-8")) as { questions: Question[] }).questions;
-  return { name: directory.split("/").at(-1)!.slice(0, 8), video: transcript.video, segments: transcript.transcript, questions };
+  const read = (file: string) => readFile(join(directory, file), "utf-8").catch(() => null);
+  const questions = (JSON.parse((await read("questions.json"))!) as { questions: Question[] }).questions;
+  const overviewQuestions = await read("overview-questions.json");
+  const markdown = await read("overview.md");
+  return {
+    name: directory.split("/").at(-1)!.slice(0, 8),
+    video: transcript.video,
+    segments: transcript.transcript,
+    overview: markdown === null ? {} : overviewFromMarkdown(markdown),
+    questions: [
+      ...questions,
+      ...(overviewQuestions === null ? [] : (JSON.parse(overviewQuestions) as { questions: Question[] }).questions),
+    ],
+  };
 }
 
 // Two of the library's longest, end to end: the library has nothing over 89 minutes. Questions
-// on both, and code-placed fillers through the whole, to fill a 30-question conversation.
-function longSource(first: Source, second: Source): Source {
+// on both, and code-placed fillers through the whole, to fill a 30-question conversation. The
+// first's overview goes in the prompt, so the second's questions about its overview are left out.
+function longSource(first: Source, whole: Source): Source {
+  const second = { ...whole, questions: whole.questions.filter((question) => question.kind !== "overviewPart") };
   const offset = (first.segments.at(-1)?.endMs ?? 0) + 1_000;
   const segments = [
     ...first.segments,
@@ -95,7 +128,13 @@ function longSource(first: Source, second: Source): Source {
     return { id: `f${index + 1}`, kind: "filler", question: `What is being discussed around minute ${minute}?`, quotes: [], mentions: [] };
   });
   const questions = [...first.questions, ...second.questions.map((question) => ({ ...question, id: `b${question.id}` })), ...fillers];
-  return { name: `${first.name}+${second.name}`, video: { ...first.video, durationMs: endMs }, segments, questions };
+  return {
+    name: `${first.name}+${second.name}`,
+    video: { ...first.video, durationMs: endMs },
+    segments,
+    overview: first.overview,
+    questions,
+  };
 }
 
 async function main() {
@@ -128,7 +167,7 @@ async function main() {
     await testApp.sql.query("update accounts set plan = 'plus' where id = $1", [account.accountId]);
     const videoId = VideoId.parse(randomUUID().slice(0, 11));
     const video = { ...source.video, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` };
-    const overview = storedOverview({ source: youTubeSource(video) });
+    const overview = storedOverview({ ...source.overview, source: youTubeSource(video) });
     const posted = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
     if (posted.statusCode !== 201) throw new Error(`overview: ${posted.statusCode} ${posted.body}`);
     const stored = {
@@ -169,6 +208,10 @@ async function main() {
           rightOnSource: null,
           citedRightMoment: null,
           mentioned: null,
+          citedRightPart: null,
+          partsCited: [],
+          speaksOfOverview: false,
+          answer: "",
           inputTokens: 0,
           cachedShare: null,
           outputTokens: 0,
@@ -180,6 +223,7 @@ async function main() {
         continue;
       }
       const answerable = question.kind !== "notInSource" && question.kind !== "filler";
+      const parts = answer.citations.flatMap((citation) => ("part" in citation ? [citation] : []));
       const moments = question.quotes.map((quote) => locateQuote(source.segments, quote));
       const cited = answer.citations.flatMap((citation) => ("startMs" in citation ? [citation] : []));
       turns.push({
@@ -188,7 +232,7 @@ async function main() {
         questionId: question.id,
         kind: question.kind,
         failed: false,
-        rightOnSource: question.kind === "filler" ? null : answer.inSource === answerable,
+        rightOnSource: question.kind === "filler" || question.kind === "overviewPart" ? null : answer.inSource === answerable,
         citedRightMoment:
           answerable && moments.length > 0
             ? moments.every(
@@ -199,6 +243,15 @@ async function main() {
           answerable && question.mentions.length > 0
             ? question.mentions.some((term) => answer.text.toLowerCase().includes(term.toLowerCase()))
             : null,
+        citedRightPart:
+          question.parts === undefined
+            ? null
+            : parts.some((cited) =>
+                question.parts!.some(({ part, index }) => cited.part === part && (index === null || cited.index === index)),
+              ),
+        partsCited: parts.map(({ part, index }) => `${part}${index}`),
+        speaksOfOverview: /\bthe overview\b|\b(I|we) (suggest|recommend|think)\b/i.test(answer.text),
+        answer: answer.text,
         inputTokens: Number(logged.inputTokens ?? 0),
         cachedShare: logged.cachedShare ?? null,
         outputTokens: Number(logged.outputTokens ?? 0),

@@ -31,6 +31,7 @@ import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { secondsToNextUsageMonth, nextUsageMonth } from "../usage/usageMonth.js";
 import { answerSoFar } from "./answerSoFar.js";
+import { withoutCitationMarks } from "./withoutCitationMarks.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatReply } from "./ChatReply.js";
 import { chatModel } from "./chatModel.js";
@@ -164,14 +165,14 @@ export class ChatAnswerer {
       try {
         for await (const piece of stream.pieces) {
           raw += piece;
-          const text = answerSoFar(raw);
-          if (text.length > sent.length) {
+          const text = withoutCitationMarks(answerSoFar(raw), { arriving: true });
+          if (text.length > sent.length && text.startsWith(sent)) {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;
           }
         }
         const reply = ChatReply.parse(JSON.parse(raw));
-        const text = reply.answer.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH);
+        const text = withoutCitationMarks(reply.answer).slice(0, MAX_CHAT_MESSAGE_LENGTH);
         if (text.length === 0) throw new Error("the reply had no answer");
         const cited = citationsOf(reply, passages, overviewParts(overview), othersInPrompt.labels);
         const messages: ChatMessage[] = [
