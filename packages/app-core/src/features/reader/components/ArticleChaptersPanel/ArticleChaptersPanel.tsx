@@ -1,5 +1,6 @@
 import { articlePlaceUrl, articleReadMinutes, sourceName, type ArticleDetails, type WebSource } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 import type { ShowOnPage } from "../../useShowOnPage.js";
 import styles from "./ArticleChaptersPanel.module.scss";
 import { articleChaptersPanelTestIds } from "./ArticleChaptersPanelTestIds.js";
@@ -17,9 +18,10 @@ const chapterNumber = (index: number) => String(index + 1).padStart(2, "0");
 // can, so there it's said in the row instead (designs 77x, 77y).
 export function ArticleChaptersPanel({ source, article, onPage }: ArticleChaptersPanelProps) {
   const worthReading = new Set(article.readAnyway?.chapterIndexes ?? []);
+  const cited = useCitedOverviewPart();
   return (
     <div className={styles.root} data-testid={articleChaptersPanelTestIds.root}>
-      <p className={styles.count} data-testid={articleChaptersPanelTestIds.count}>
+      <p className={styles.count} {...citedPartProps(cited, "chapter", "section")} data-testid={articleChaptersPanelTestIds.count}>
         {article.chapters.length} {article.chapters.length === 1 ? "chapter" : "chapters"}
       </p>
       {onPage === null && (
@@ -31,7 +33,12 @@ export function ArticleChaptersPanel({ source, article, onPage }: ArticleChapter
       {article.chapters.map((chapter, index) => {
         const status = onPage?.statusOf(chapter.place) ?? null;
         return (
-          <div key={chapter.title} className={styles.row} data-testid={articleChaptersPanelTestIds.row}>
+          <div
+            key={chapter.title}
+            className={styles.row}
+            {...citedPartProps(cited, "chapter", index)}
+            data-testid={articleChaptersPanelTestIds.row}
+          >
             <div className={styles.meta}>
               <span>
                 {chapterNumber(index)} · {articleReadMinutes(chapter.wordCount)} min read

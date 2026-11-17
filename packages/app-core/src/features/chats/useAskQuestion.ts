@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { chatRecordId, type Chat, type OverviewId } from "@overview/domain";
+import { chatRecordId, type Chat, type ChatSourceKind, type OverviewId } from "@overview/domain";
 import { createFetchChatApi, type ChatApi } from "@overview/sync";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useSync } from "../sync/SyncContext.js";
@@ -25,7 +25,7 @@ const IDLE: AskState = { status: "idle" };
 // Asks a question about one overview and follows its answer as it streams. The stored answer
 // goes into the conversation at once, and sync brings the record down behind it; a wait comes
 // back as a state to show, never as a failure (docs/features/chats.md, "Asking").
-export function useAskQuestion(overviewId: OverviewId, api?: ChatApi) {
+export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, api?: ChatApi) {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { syncNow } = useSync();
@@ -66,6 +66,7 @@ export function useAskQuestion(overviewId: OverviewId, api?: ChatApi) {
         if (answer !== undefined && answer.from === "answer") {
           analytics.reader.chat.answered({
             overviewId,
+            about,
             inSource: answer.inSource,
             sourceCitations: answer.citations.filter((citation) => "startMs" in citation || "paragraph" in citation).length,
             overviewCitations: answer.citations.filter((citation) => "part" in citation).length,
@@ -88,13 +89,13 @@ export function useAskQuestion(overviewId: OverviewId, api?: ChatApi) {
           setState({ status: "failed", conversationId, question });
           return;
         }
-        if (wait.kind !== "noSource") analytics.reader.chat.waited({ overviewId, wait: wait.kind });
+        if (wait.kind !== "noSource") analytics.reader.chat.waited({ overviewId, about, wait: wait.kind });
         setState({ status: "waiting", conversationId, question, wait });
       } finally {
         if (inFlight.current === controller) inFlight.current = null;
       }
     },
-    [api, apiUrl, connection.token, overviewId, queryClient, analytics, accountId, syncNow],
+    [api, apiUrl, connection.token, overviewId, about, queryClient, analytics, accountId, syncNow],
   );
 
   // Stops the answer: the server stops asking too, stores nothing and gives the question back.

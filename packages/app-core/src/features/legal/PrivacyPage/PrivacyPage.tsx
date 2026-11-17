@@ -249,12 +249,12 @@ const sections: readonly LegalSection[] = [
     body: (
       <>
         <p>
-          With an account, you can ask questions about a video or podcast episode inside its overview. Each question is answered on our key,
-          whichever key you use for overviews, and "Only ever use my key" doesn't change that. Your device sends the question to our server,
-          which sends it to OpenAI in the United States with the overview, your own copy of the video's or episode's words, the conversation
-          so far, and as much of your other conversations about the same overview as fits, newest first, so an answer can build on what you
-          asked or decided there. The answer comes back to you as it is written. An article's overview has no questions, because we don't
-          keep an article's text.
+          With an account, you can ask questions about a video, podcast episode, article or recipe page inside its overview. Each question
+          is answered on our key, whichever key you use for overviews, and "Only ever use my key" doesn't change that. Your device sends the
+          question to our server, which sends it to OpenAI in the United States with the overview, your own copy of the video's or episode's
+          words, the conversation so far, and as much of your other conversations about the same overview as fits, newest first, so an
+          answer can build on what you asked or decided there. For an article or a recipe page it sends the overview, and a recipe page's
+          recipe, but no text from the page, because we don't keep it. The answer comes back to you as it is written.
         </p>
         <p>
           The question and the answer are kept as a conversation in your library, under your account, and synced to your devices; your
@@ -264,7 +264,8 @@ const sections: readonly LegalSection[] = [
         <p>
           We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
           OpenAI's list price go into the daily cost tally above. We log that a question was answered, with the tokens, the cost, how long
-          it took, whether the video or episode covered it and how many places the answer cited; never the question or the answer.
+          it took, whether it was about a video, an episode, an article or a recipe page, whether the video or episode covered it and how
+          many places the answer cited; never the question or the answer.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping

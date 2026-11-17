@@ -1,8 +1,18 @@
-import type { ReactNode } from "react";
-import type { ChatCitation, Overview, TimeRange, VideoSource } from "@overview/domain";
+import { Fragment, type ReactNode } from "react";
+import {
+  articlePlaceUrl,
+  type ArticlePlace,
+  type ChatCitation,
+  type ChatSourceKind,
+  type Overview,
+  type TimeRange,
+  type VideoSource,
+} from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
 import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
+import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
+import { chatWords } from "../../util/chatWords.js";
 import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
@@ -11,8 +21,10 @@ export interface ChatAnswerProps {
   text: string;
   inSource: boolean;
   citations: readonly ChatCitation[];
-  // "video" or "episode", for "Not in the video".
-  sourceWord: string;
+  about: ChatSourceKind;
+  // An article's or a recipe page's own page: a decline offers it, and a cited key point or
+  // chapter can be shown on it, beside the article in the extension (OV-320).
+  page: ChatPage | null;
   video: VideoSource | null;
   overview: Overview;
   onCitationFollowed: (range: TimeRange) => void;
@@ -23,6 +35,11 @@ export interface ChatAnswerProps {
   onConversationFollowed: (chatId: string, message: number) => void;
   // Copy, under each answer (design 324x).
   actions?: ReactNode;
+}
+
+export interface ChatPage {
+  url: string;
+  onPage: ShowOnPage | null;
 }
 
 const paragraphsOf = (text: string) => text.split(/\n+/).filter((paragraph) => paragraph.trim() !== "");
@@ -44,7 +61,8 @@ export function ChatAnswer({
   text,
   inSource,
   citations,
-  sourceWord,
+  about,
+  page,
   video,
   overview,
   onCitationFollowed,
@@ -62,7 +80,7 @@ export function ChatAnswer({
       {notCovered && (
         <p className={styles.notInSourceLabel} data-testid={chatAnswerTestIds.notInSource}>
           <StrokeIcon name="ban" size={14} />
-          Not in the {sourceWord}
+          {chatWords(about).notCovered}
         </p>
       )}
       <div className={styles.text} data-testid={chatAnswerTestIds.text}>
@@ -70,6 +88,12 @@ export function ChatAnswer({
           <p key={index}>{paragraph}</p>
         ))}
       </div>
+      {notCovered && page !== null && page.onPage === null && (
+        <a className={styles.onPage} href={page.url} target="_blank" rel="noopener" data-testid={chatAnswerTestIds.readOnPage}>
+          Read it on the page
+          <StrokeIcon name="openOut" size={13} />
+        </a>
+      )}
       {conversationsOf(citations).map(({ chatId, message }) => {
         const cited = conversationOf(chatId);
         if (cited === null)
@@ -99,7 +123,10 @@ export function ChatAnswer({
       {parts.length + stretches.length > 0 && (
         <div className={styles.citations} data-testid={chatAnswerTestIds.citations}>
           {parts.map((view, index) => (
-            <ChatOverviewCitation key={`${view.part}-${index}`} view={view} onFollowed={onOverviewPartFollowed} />
+            <Fragment key={`${view.part}-${index}`}>
+              <ChatOverviewCitation view={view} onFollowed={onOverviewPartFollowed} />
+              {page !== null && view.kind === "item" && view.place !== undefined && <ShowOnPageLink page={page} place={view.place} />}
+            </Fragment>
           ))}
           {video !== null &&
             stretches.map((range) => (
@@ -115,5 +142,31 @@ export function ChatAnswer({
       )}
       {actions}
     </div>
+  );
+}
+
+// Design 319 for OV-320: a plain link beside an article's key point or chapter. Beside the
+// article it moves the page; anywhere else it opens the page at that place in a new tab.
+function ShowOnPageLink({ page, place }: { page: ChatPage; place: ArticlePlace }) {
+  if (page.onPage !== null) {
+    const { onPage } = page;
+    if (onPage.statusOf(place) === "missing") return null;
+    return (
+      <button type="button" className={styles.onPage} onClick={() => onPage.show(place)} data-testid={chatAnswerTestIds.showOnPage}>
+        Show on the page
+      </button>
+    );
+  }
+  return (
+    <a
+      className={styles.onPage}
+      href={articlePlaceUrl(page.url, place)}
+      target="_blank"
+      rel="noopener"
+      data-testid={chatAnswerTestIds.showOnPage}
+    >
+      Show on the page
+      <StrokeIcon name="openOut" size={13} />
+    </a>
   );
 }

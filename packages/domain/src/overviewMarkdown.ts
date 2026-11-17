@@ -165,7 +165,7 @@ export function overviewMarkdown(overview: Overview, { partIds = false } = {}): 
   const article = overview.article;
   if (article?.readAnyway) {
     const { answer, reason, leftOut } = article.readAnyway;
-    section("Read it anyway?", `${READ_ANYWAY_ANSWER[answer]}. ${reason} ${leftOut}`.trim());
+    section("Read it anyway?", `${id("watchAnyway")}${READ_ANYWAY_ANSWER[answer]}. ${reason} ${leftOut}`.trim());
   }
   if (article?.resources) {
     section(
@@ -181,7 +181,11 @@ export function overviewMarkdown(overview: Overview, { partIds = false } = {}): 
   if (article !== null) {
     section(
       "Chapters",
-      bullets(article.chapters.map(({ title, summary, place }) => `[${title}](${articlePlaceUrl(link, place)}): ${summary}`)),
+      bullets(
+        article.chapters.map(
+          ({ title, summary, place }, index) => `${id("chapter", index)}[${title}](${articlePlaceUrl(link, place)}): ${summary}`,
+        ),
+      ),
     );
   }
   chaptersSection();

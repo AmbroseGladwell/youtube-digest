@@ -59,7 +59,7 @@ test.describe("Chat citing the overview", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.answerWith({
       text: "Start with Step 1 and skip loading. Add it to your morning shake.",
       inSource: true,
@@ -93,7 +93,7 @@ test.describe("Chat citing the overview", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.answerWith({
       text: "Watch it anyway says no: the note covers the dosing and the evidence.",
       inSource: false,
@@ -111,7 +111,7 @@ test.describe("Chat citing the overview", () => {
   });
 
   test("a chapter opens the Chapters tab, and why it's dubious opens the reasons, each tinted", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.answerWith({
       text: "It's marked dubious because one small study found it. The chapter on hair loss covers it.",
       inSource: true,
@@ -137,7 +137,7 @@ test.describe("Chat citing the overview", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.answerWith({
       text: "Skip loading, and it's sold by a supplement brand.",
       inSource: true,
@@ -160,7 +160,7 @@ test.describe("Chat citing the overview", () => {
 
   test("a step past the fold opens the folded list to it", async ({ launcher, backendSimulator }) => {
     const steps = Array.from({ length: 10 }, (_, index) => ({ text: `Do thing number ${index + 1}`, range: null, dubiousReason: null }));
-    backendSimulator.overviews.seed({ ...creatine(), sourceSteps: { items: steps } });
+    backendSimulator.overviews.seedSynced({ ...creatine(), sourceSteps: { items: steps } });
     backendSimulator.chats.answerWith({ text: "Step 9 says so.", inSource: true, citations: [cite("step", 8, "Do thing number 9")] });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -176,7 +176,7 @@ test.describe("Chat citing the overview", () => {
     backendSimulator,
     page,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.answerWith({
       text: "Skip loading.",
       inSource: true,

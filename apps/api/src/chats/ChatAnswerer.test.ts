@@ -9,6 +9,8 @@ import {
   VideoId,
   youTubeSource,
   type ChatMessage,
+  type Overview,
+  type WebSource,
   type ChatStreamEvent,
 } from "@overview/domain";
 import { makeStoredTranscript } from "@overview/store-conformance";
@@ -295,6 +297,99 @@ test("a provider that keeps failing, or a reply that can't be read, stores nothi
   assert.deepEqual(
     costs.map(({ detail }) => detail),
     ["message-failed"],
+  );
+});
+
+const webPage = (title: string): WebSource => {
+  const id = randomUUID().replaceAll("-", "");
+  return {
+    kind: "web",
+    id: id as WebSource["id"],
+    url: `https://pages.example/${id}`,
+    title,
+    siteName: "Pages",
+    author: null,
+    publishedAt: null,
+    language: "en",
+    imageUrl: null,
+    wordCount: 2300,
+  };
+};
+
+const ARTICLE: Partial<Overview> = {
+  source: webPage("Bridge repairs"),
+  chapters: null,
+  article: {
+    chapters: [
+      { title: "The closure", summary: "Why it shut.", place: { anchor: null, quote: "The bridge" }, wordCount: 1150 },
+      { title: "Who pays", summary: "How it splits.", place: { anchor: "who-pays", quote: "The county" }, wordCount: 1150 },
+    ],
+    keyPointChapters: [0, 1, null],
+    readAnyway: { answer: "no", reason: "Nothing here needs the page.", leftOut: "It leaves out the interviews.", chapterIndexes: [] },
+  },
+};
+
+const RECIPE_PAGE: Partial<Overview> = {
+  source: webPage("Leek stew"),
+  keyPoints: [],
+  recipe: {
+    summary: "A weeknight stew.",
+    ingredients: ["3 large leeks", "2 tins cannellini beans"],
+    steps: [
+      { text: "Roast the leeks for 20 minutes.", group: null },
+      { text: "Simmer the beans.", group: null },
+    ],
+    stepCount: 2,
+    prepMinutes: 15,
+    cookMinutes: 40,
+    totalMinutes: 55,
+    yield: "4 servings",
+  },
+};
+
+const askAbout = async (setup: Setup, overrides: Partial<Overview>, text: string) => {
+  const overview = storedOverview(overrides);
+  assert.equal((await setup.account.inject({ method: "POST", url: "/api/overviews", body: overview })).statusCode, 201);
+  return setup.ask(randomUUID(), text, overview.id);
+};
+
+test("an article is answered from its overview alone: no transcript is needed, its chapters are cited, and it is never the source", async (t) => {
+  const setup = await setUp(t, [answer("The chapter on who pays covers it.", ["p2"], [], true, ["ch2", "anyway"])]);
+
+  const response = await askAbout(setup, ARTICLE, "Who pays for it?");
+
+  assert.equal(response.statusCode, 200, response.body);
+  const prompt = setup.openAi.requests[0]?.messages[0]?.content ?? "";
+  assert.match(prompt, /one article they saved/);
+  assert.match(prompt, /\[ch2\] \[Who pays\]/);
+  assert.match(prompt, /\[anyway\] No\. Nothing here needs the page\./);
+  assert.doesNotMatch(prompt, /# The transcript/);
+  const message = answered(response.body).messages[1];
+  assert.ok(message?.from === "answer");
+  assert.equal(message.inSource, false, "an article has no transcript to be in");
+  assert.deepEqual(
+    message.citations.map((citation) => ("part" in citation ? `${citation.part}${citation.index}` : "other")),
+    ["watchAnyway0", "chapter1"],
+  );
+  assert.equal(answeredFromOverview(message), true);
+});
+
+test("a recipe page is answered from its recipe, and the prompt keeps amounts to the recipe's own scaler", async (t) => {
+  const setup = await setUp(t, [answer("Roast the leeks for 20 minutes.", [], [], false, ["method1"])]);
+
+  const response = await askAbout(setup, RECIPE_PAGE, "How long do the leeks roast?");
+
+  assert.equal(response.statusCode, 200, response.body);
+  const prompt = setup.openAi.requests[0]?.messages[0]?.content ?? "";
+  assert.match(prompt, /one recipe page they saved/);
+  assert.match(prompt, /\[ing1\] 3 large leeks/);
+  assert.match(prompt, /Never work out an amount yourself/);
+  assert.match(prompt, /the recipe doesn't cover it/);
+  const message = answered(response.body).messages[1];
+  assert.ok(message?.from === "answer");
+  assert.deepEqual(
+    message.citations.map((citation) => ("part" in citation ? `${citation.part}${citation.index}` : "other")),
+    ["method0"],
   );
 });
 
