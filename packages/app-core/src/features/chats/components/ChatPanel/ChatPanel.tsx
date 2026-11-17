@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
   FOLLOW_UP_QUESTIONS_SHOWN,
+  MAX_CHAT_QUESTIONS,
   chatRecordId,
   type ChatMessage,
   type Overview,
@@ -8,6 +9,13 @@ import {
   type VideoSource,
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { useOnline } from "../../../../util/useOnline.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { resetDate } from "../../../newOverview/util/usageLine.js";
+import { useChatUsageQuery } from "../../queries/chatUsageQuery.js";
+import { useSlowAnswer } from "../../useSlowAnswer.js";
+import { chatWaitCopy, type ShownWait } from "../../util/chatWaitCopy.js";
+import { ChatWaitBlock } from "../ChatWaitBlock/ChatWaitBlock.js";
 import type { AskState } from "../../useAskQuestion.js";
 import type { useChatPanel } from "../../useChatPanel.js";
 import { chatSuggestions } from "../../util/chatSuggestions.js";
@@ -31,13 +39,8 @@ export interface ChatPanelProps {
 const SAID_MS = 4000;
 const OUTLINE_MS = 1600;
 
-const WAIT_HEADINGS = {
-  month: "You’ve asked this month’s questions on us",
-  day: "That’s the most questions for one day",
-  everyone: "Questions are paused for everyone today",
-  conversationFull: "This conversation has 50 questions, the most one can hold.",
-  noSource: "",
-} as const;
+// The line under the field shows only when this few are left (design 310ab).
+const FEW_LEFT = 10;
 
 const citedMoments = (message: ChatMessage) =>
   message.from === "answer" ? message.citations.filter((each) => "startMs" in each).length : 0;
@@ -72,24 +75,41 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   const body = useRef<HTMLDivElement | null>(null);
   const previous = useRef<AskState>({ status: "idle" });
   const now = new Date();
+  const online = useOnline();
+  const usage = useChatUsageQuery().data ?? null;
+  const analytics = useAnalytics();
 
   const sourceWord = overview.source.kind === "podcast" ? "episode" : "video";
   const chatId = chatRecordId(overview.id, conversationId);
   const chat = chats.find((each) => each.id === chatId) ?? null;
   const messages = chat?.messages ?? [];
-  const pending = ask.status !== "idle" && ask.conversationId === conversationId ? ask : null;
+  const pending = ask.status !== "idle" && ask.status !== "waiting" && ask.conversationId === conversationId ? ask : null;
   const answering = pending?.status === "answering";
+  const slowness = useSlowAnswer(answering, pending?.status === "answering" ? pending.text : "");
+  const asked = messages.filter((message) => message.from === "reader").length;
+  const full = asked >= MAX_CHAT_QUESTIONS;
+  const left = usage === null ? null : Math.max(0, usage.limit - usage.used);
+  const refused = ask.status === "waiting" && ask.wait.kind !== "noSource" ? ask.wait : null;
+  const wait: ShownWait | null = !online
+    ? { kind: "offline" }
+    : full
+      ? { kind: "conversationFull" }
+      : refused !== null && (refused.kind !== "conversationFull" || pending !== null)
+        ? refused
+        : left === 0 && usage !== null
+          ? { kind: "month", resetsOn: usage.resetsOn }
+          : null;
   const others = chats.filter((each) => each !== chat).length;
   const questions = overview.followUpQuestions ?? [];
   const sets = Math.ceil(questions.length / FOLLOW_UP_QUESTIONS_SHOWN);
-  const suggestions = draft.trim() !== "" || pending?.status === "waiting" ? [] : chatSuggestions(questions, set, messages);
+  const suggestions = draft.trim() !== "" || wait !== null ? [] : chatSuggestions(questions, set, messages);
   const firstQuestion = messages.find((message) => message.from === "reader")?.text ?? pending?.question ?? null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const title = view === "list" ? "Conversations" : (firstQuestion ?? "New conversation");
   const about =
     view === "conversation" && cameFrom !== null && chat !== null
       ? `${conversationDate(chat.startedAt, now)} · ${plural(questionsIn(chat), "question")}`
-      : `About ${overview.source.title}`;
+      : `About ${overview.source.title}${full ? ` · ${asked} questions` : ""}`;
 
   const conversationOf = (cited: string) => {
     const found = chats.find((each) => each.id === cited);
@@ -280,6 +300,17 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                             {pending.status === "answering" && <span className={styles.caret} aria-hidden="true" />}
                           </p>
                         )}
+                        {slowness === "noWordsYet" && (
+                          <p className={styles.status} data-testid={chatPanelTestIds.slow}>
+                            Still working on it…
+                          </p>
+                        )}
+                        {slowness === "stalled" && (
+                          <p className={styles.status} data-testid={chatPanelTestIds.slow}>
+                            <StrokeIcon name="wifiOff" size={14} />
+                            Connection is slow. It’ll carry on when it catches up.
+                          </p>
+                        )}
                         {pending.status === "stopped" && (
                           <p className={styles.status} data-testid={chatPanelTestIds.stopped}>
                             Stopped. This one didn’t count.
@@ -309,6 +340,11 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
         )}
       </div>
 
+      {view === "list" && usage !== null && left !== null && (
+        <p className={`${styles.left} ${styles.listFoot}`} data-testid={chatPanelTestIds.left}>
+          {left} of {usage.limit.toLocaleString("en-GB")} questions left this month, on us. More on {resetDate(usage.resetsOn)}.
+        </p>
+      )}
       {view === "conversation" && (
         <div className={styles.foot}>
           {suggestions.length > 0 && (
@@ -346,11 +382,12 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
               </ul>
             </div>
           )}
-          {pending?.status === "waiting" ? (
-            <div className={styles.wait} role="status" data-testid={chatPanelTestIds.wait}>
-              <StrokeIcon name="clock" size={18} />
-              {WAIT_HEADINGS[pending.wait.kind]}
-            </div>
+          {wait !== null ? (
+            <ChatWaitBlock
+              copy={chatWaitCopy(wait, usage?.plan ?? "free", usage?.resetsOn ?? null)}
+              onNewConversation={panel.newConversation}
+              onPlansFollowed={() => analytics.reader.chat.plansFollowed({ overviewId: overview.id })}
+            />
           ) : (
             <ChatField
               ref={fieldRef}
@@ -361,6 +398,11 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
               onSend={() => send(draft, "typed")}
               onStop={panel.stop}
             />
+          )}
+          {wait === null && left !== null && left > 0 && left <= FEW_LEFT && (
+            <p className={styles.left} data-testid={chatPanelTestIds.left}>
+              <b>{left}</b> {left === 1 ? "question" : "questions"} left this month, on us
+            </p>
           )}
         </div>
       )}

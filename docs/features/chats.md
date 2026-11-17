@@ -259,6 +259,19 @@ so chat isn't offered there yet.
   link at the top goes back to the citation. One since deleted reads "From a conversation you
   deleted", muted, not a link. That a new conversation can see the others is said once, in its
   empty state, and otherwise only by these citations.
+- **What's left and the waits** (design 310ab–310ai): nothing shows while more than ten questions are
+  left this month; at ten or fewer a muted line under the field says how many, "on us". The list's
+  foot always says "84 of 100 questions left this month, on us. More on 1 December.", and Settings ›
+  Plan has a cell for it beside the overviews. A wait takes the field's place (`ChatWaitBlock`,
+  copy in `chatWaitCopy`), with the questions above it hidden: a spent month names when it's back
+  and offers only plans that give more (Free: See plans; BYO Plus: See Plus; Plus: nothing); the
+  day's limit and everyone's day say tomorrow and offer nothing. A month already spent shows its
+  wait as chat opens, from `/api/chat-usage`. At 50 questions a conversation offers New
+  conversation in the field's place, and its header adds "· 50 questions". Offline, the field
+  gives way to "You're offline"; past conversations stay readable. No words four seconds after
+  asking says "Still working on it…"; words stopping for six say the connection is slow
+  (`useSlowAnswer`). Each plan's allowance lives in `chatAllowances` in `@overview/domain`, which
+  the server and the app both read.
 - **Questions to ask next** sit above the field: the set of three before the first answer, with
   Different questions, then up to two not yet asked (`chatSuggestions`); none while the reader
   types.

@@ -360,14 +360,21 @@
   }
 }
 
-.wait {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.875rem 1rem;
-  border-radius: 1.125rem;
-  background: var(--chat-raised);
-  font: 600 0.90625rem/1.35 var(--font-body);
+.left {
+  margin: 0.5rem 0.125rem 0;
+  font: 500 0.75rem/1.4 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+
+  b {
+    font-weight: 600;
+    color: var(--ink);
+  }
+}
+
+.listFoot {
+  margin: 0;
+  padding: 0 1.125rem 1rem;
 }
 
 .live {

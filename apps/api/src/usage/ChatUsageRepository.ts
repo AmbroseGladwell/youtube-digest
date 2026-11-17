@@ -1,8 +1,7 @@
-import type { ChatUsage, Plan } from "@overview/domain";
+import { CHAT_MESSAGES_PER_ACCOUNT_DAILY, chatAllowances, type ChatUsage, type Plan } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
-import { CHAT_MESSAGES_PER_ACCOUNT_DAILY, chatAllowances } from "./chatAllowances.js";
 import { nextUsageMonth, usageMonth } from "./usageMonth.js";
 
 export type ChatReservation =
