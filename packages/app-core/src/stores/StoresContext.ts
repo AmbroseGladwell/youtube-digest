@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type {
   CaptureQueueStore,
+  ChatStore,
   FollowedPlaylistStore,
   OverviewStore,
   ProjectStore,
@@ -16,6 +17,7 @@ export interface Stores {
   followedPlaylistStore: FollowedPlaylistStore;
   captureQueueStore: CaptureQueueStore;
   projectStore: ProjectStore;
+  chatStore: ChatStore;
   // Null is a shell whose library cannot sync at all, and every sync control hides itself
   // rather than offering something that cannot work (docs/features/sync-client.md).
   syncStorage: SyncStorage | null;

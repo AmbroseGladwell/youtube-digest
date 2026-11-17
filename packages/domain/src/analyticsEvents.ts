@@ -91,6 +91,12 @@ const Direction = z.enum(["previous", "next"]);
 const SkipDirection = z.enum(["back", "forward"]);
 const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
 const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
+// Where a question about the overview was asked from: one of its questions to ask next, or typed.
+const ChatAskedFrom = z.enum(["question", "typed"]);
+// Where a chat citation leads: a moment in the source, another conversation, or one deleted since.
+const ChatCitationTarget = z.enum(["source", "conversation", "deletedConversation"]);
+// Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
+const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
@@ -420,6 +426,23 @@ export const analyticsEvents = {
       }),
       questionCopied: event("The reader copies a question alone from the first-tap menu"),
       connectionSetUpFollowed: event("The reader follows Set up a connection from the first-tap menu to Settings › Connections"),
+    },
+    // Never the question or the answer (docs/features/chats.md).
+    chat: {
+      asked: event("The reader asks a question about the overview, where from, and whether it starts a new conversation", {
+        from: ChatAskedFrom,
+        newConversation: z.boolean(),
+      }),
+      answered: event("An answer to the reader's question settled, whether the source covered it, and what it cited", {
+        inSource: z.boolean(),
+        sourceCitations: z.number().int().nonnegative(),
+        conversationCitations: z.number().int().nonnegative(),
+      }),
+      answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),
+      waited: event("A question was turned away by a wait, and which", { wait: ChatWait }),
+      citationFollowed: event("The reader follows an answer's citation, and to what", { to: ChatCitationTarget }),
+      conversationOpened: event("The reader opens one of the overview's earlier conversations"),
+      conversationDeleted: event("The reader deletes a conversation about the overview"),
     },
     dubiousReasons: {
       opened: event(
