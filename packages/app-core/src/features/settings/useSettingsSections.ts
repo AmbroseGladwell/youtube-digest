@@ -1,3 +1,6 @@
+import type { TranscriptionUsage } from "@overview/domain";
+import { useOverviewUsageQuery } from "../newOverview/queries/overviewUsageQuery.js";
+import { audioLength } from "../podcasts/util/transcriptionCopy.js";
 import {
   DEFAULT_NARRATION_VOICE,
   DEFAULT_PROVIDER,
@@ -63,6 +66,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
   const { apiKeys } = useApiKeys();
   const { plan, status: planStatus } = usePlan();
   const nextQuota = useNextQuota();
+  const usage = useOverviewUsageQuery();
   const connections = useConnectionsQuery();
   const session = useSessionQuery();
   const sessionEnded = isSyncRequestError(session.error) && session.error.code === "unauthenticated";
@@ -90,7 +94,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
       title: "Plan",
       value:
         planStatus === "known"
-          ? planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota))
+          ? planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota), transcribingLeftOf(usage.data?.transcription))
           : planStatus === "checking"
             ? CHECKING_ROW_VALUE
             : UNREACHABLE_ROW_VALUE,
@@ -157,3 +161,9 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];
 }
+
+// Design 305o: the Plan row names transcribing only once some was used this month.
+const transcribingLeftOf = (transcription: TranscriptionUsage | undefined): string | null =>
+  transcription === undefined || transcription.usedSeconds === 0
+    ? null
+    : audioLength(Math.max(0, transcription.limitSeconds - transcription.usedSeconds));

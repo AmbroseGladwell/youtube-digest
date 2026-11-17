@@ -35,6 +35,8 @@ import { ArticleFailureNotice } from "../components/ArticleFailureNotice/Article
 import { SourceOffer } from "../components/SourceOffer/SourceOffer.js";
 import { EpisodeOffer } from "../components/EpisodeOffer/EpisodeOffer.js";
 import { EpisodeNoTranscript } from "../components/EpisodeNoTranscript/EpisodeNoTranscript.js";
+import { EpisodeWordsNote } from "../../newOverview/components/PodcastLinkStatus/PodcastLinkStatus.js";
+import { createLabelOf, episodeActionOf, transcribeChoiceOf } from "../../podcasts/util/episodeActionOf.js";
 import { isPlatformPodcastLink } from "../../newOverview/usePodcastLink.js";
 import { useEpisodeTab } from "../useEpisodeTab.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
@@ -131,6 +133,8 @@ export function CapturePage() {
   }, [noWordsOn, activePage, dismiss]);
 
   const analytics = useAnalytics();
+  // Design 305c: what Create does for the tab's episode once its words are checked for.
+  const episodeAction = episodeTab?.status === "found" ? episodeActionOf(episodeTab.words) : null;
   const readOverview = (overviewId: Overview["id"]) => {
     analytics.capture.panel.readChosen({ overviewId });
     void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
@@ -149,9 +153,14 @@ export function CapturePage() {
       analytics.capture.panel.createChosen({ again: false });
       startArticleRun(offeredPage, { from: "panel", willAsk: pageAccess !== true });
     }
-    if (episodeTab?.status === "found") {
+    if (episodeTab?.status === "found" && episodeAction?.kind !== "stop" && episodeAction?.kind !== "waiting") {
       analytics.capture.panel.createChosen({ again: false });
-      controller.startPodcast({ episode: episodeTab.episode, sharedFrom: episodeTab.url, from: "panel" });
+      controller.startPodcast({
+        episode: episodeTab.episode,
+        sharedFrom: episodeTab.url,
+        from: "panel",
+        transcribe: transcribeChoiceOf(episodeAction),
+      });
     }
   };
 
@@ -197,6 +206,7 @@ export function CapturePage() {
           onDismiss={dismiss}
           onCaptureReasonChange={controller.setCaptureReason}
           onCaptureReasonCommit={controller.commitCaptureReason}
+          onTranscribe={controller.transcribePodcast}
         />
       </div>
     );
@@ -258,11 +268,13 @@ export function CapturePage() {
             <EpisodeOffer
               on={episodeTab.on}
               offer={
-                episodeTab.status === "found" || episodeTab.status === "held"
-                  ? { status: "found", episode: episodeTab.episode }
-                  : episodeTab.status === "reading"
-                    ? { status: "reading", host: episodeTab.host }
-                    : { status: "show" }
+                episodeTab.status === "found"
+                  ? { status: "found", episode: episodeTab.episode, words: episodeTab.words }
+                  : episodeTab.status === "held"
+                    ? { status: "found", episode: episodeTab.episode, words: null }
+                    : episodeTab.status === "reading"
+                      ? { status: "reading", host: episodeTab.host }
+                      : { status: "show" }
               }
             />
           )
@@ -299,7 +311,9 @@ export function CapturePage() {
           </>
         ) : episodeWithoutWords ? (
           <EpisodeNoTranscript />
-        ) : episodeStopped ? null : limit !== null ? (
+        ) : episodeStopped ? null : episodeTab?.status === "found" && episodeAction?.kind === "stop" ? (
+          <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />
+        ) : limit !== null ? (
           <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />
         ) : (
           !nothingToTake && (
@@ -307,12 +321,16 @@ export function CapturePage() {
               type="button"
               className={styles.primary}
               onClick={() => createOverview()}
-              disabled={!keysReady || episodeTab?.status === "reading"}
+              disabled={!keysReady || episodeTab?.status === "reading" || episodeAction?.kind === "waiting"}
               data-testid={capturePageTestIds.createButton}
             >
-              Create overview
+              {episodeAction === null ? "Create overview" : createLabelOf(episodeAction, "Create overview")}
             </button>
           )
+        )}
+
+        {episodeTab?.status === "found" && limit === null && episodeAction?.kind !== "stop" && (
+          <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />
         )}
 
         {keysReady && limit === null && !episodeStopped && <UsageLine testIds={capturePageTestIds.usageLine} narrow />}
@@ -355,9 +373,10 @@ interface RunInProgressProps {
   onDismiss: () => void;
   onCaptureReasonChange: (captureReason: string) => void;
   onCaptureReasonCommit: () => void;
+  onTranscribe: () => void;
 }
 
-function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonCommit }: RunInProgressProps) {
+function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonCommit, onTranscribe }: RunInProgressProps) {
   const analytics = useAnalytics();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const failed = run.error !== null;
@@ -397,6 +416,9 @@ function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
           className={styles.error}
           testId={capturePageTestIds.error}
           testIds={capturePageTestIds.runError}
+          episodeSeconds={run.podcast?.durationSeconds ?? null}
+          onTranscribe={onTranscribe}
+          onNotNow={onDismiss}
         />
       )}
 

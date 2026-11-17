@@ -65,6 +65,9 @@ export interface NewOverviewRunController {
   start: (url: string, options: StartOverviewRunOptions) => void;
   startArticle: (request: ArticleRunRequest) => void;
   startPodcast: (request: PodcastRunRequest & StartOverviewRunOptions) => void;
+  // The last episode's run again, transcribing its audio: the reader chose it after Create, or
+  // tries a failed transcription again (designs 305c-2, 305k).
+  transcribePodcast: () => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
   commitCaptureReason: () => void;
@@ -180,6 +183,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 durationSeconds: podcastRequest.episode.durationSeconds,
                 imageUrl: podcastRequest.episode.imageUrl,
                 words: null,
+                transcription: podcastRequest.transcribe !== undefined ? { state: "starting" } : null,
               },
         transcriptWords: null,
         overview: null,
@@ -203,6 +207,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       mutate(
         {
           ...what,
+          from,
           overviewId: options.overviewId,
           captureReason: () => draftRef.current,
           onProgress: (progress) => {
@@ -218,6 +223,21 @@ export function useNewOverviewRun(): NewOverviewRunController {
             if (isCurrent()) {
               setRun((current) =>
                 current?.podcast == null ? current : { ...current, transcriptWords: words, podcast: { ...current.podcast, words } },
+              );
+            }
+          },
+          onTranscription: (progress) => {
+            if (isCurrent()) {
+              setRun((current) =>
+                current?.podcast == null
+                  ? current
+                  : {
+                      ...current,
+                      podcast: {
+                        ...current.podcast,
+                        transcription: progress === "transcribing" ? { state: "transcribing", since: Date.now() } : { state: "starting" },
+                      },
+                    },
               );
             }
           },
@@ -364,14 +384,26 @@ export function useNewOverviewRun(): NewOverviewRunController {
     [generate],
   );
 
+  const lastPodcast = useRef<(PodcastRunRequest & StartOverviewRunOptions) | null>(null);
   const startPodcast = useCallback(
     (request: PodcastRunRequest & StartOverviewRunOptions) => {
+      lastPodcast.current = request;
       const runId = (runIdRef.current += 1);
       setHeld(null);
-      generate(request.sharedFrom, request, runId, null, { episode: request.episode, sharedFrom: request.sharedFrom });
+      generate(request.sharedFrom, request, runId, null, {
+        episode: request.episode,
+        sharedFrom: request.sharedFrom,
+        transcribe: request.transcribe,
+      });
     },
     [generate],
   );
+
+  const transcribePodcast = useCallback(() => {
+    if (lastPodcast.current === null) return;
+    const asked = latestRun.current?.error?.kind === "podcastNeedsTranscribing";
+    startPodcast({ ...lastPodcast.current, transcribe: asked ? "asked" : "retried" });
+  }, [startPodcast]);
 
   const setCaptureReason = useCallback((captureReason: string) => {
     draftRef.current = captureReason;
@@ -420,6 +452,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
     start,
     startArticle,
     startPodcast,
+    transcribePodcast,
     dismiss,
     setCaptureReason,
     commitCaptureReason,

@@ -8,6 +8,7 @@ import { keyPromptDetail } from "../../transcripts/transcriptSourceNote.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { KeyPromptNote } from "../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
+import { createLabelOf } from "../../podcasts/util/episodeActionOf.js";
 import { PastedLinkStatus } from "../../newOverview/components/PastedLinkStatus/PastedLinkStatus.js";
 import { useStartFromLink } from "../../newOverview/useStartFromLink.js";
 import { useOverviewsWithStateQuery } from "../../overviews/queries/overviewsWithStateQuery.js";
@@ -179,7 +180,7 @@ function FirstRunHero() {
             disabled={!ready || pasted.reading}
             data-testid={homePageTestIds.generateButton}
           >
-            Generate overview
+            {pasted.episodeAction === null ? "Generate overview" : createLabelOf(pasted.episodeAction, "Generate overview")}
           </button>
         )}
       </form>

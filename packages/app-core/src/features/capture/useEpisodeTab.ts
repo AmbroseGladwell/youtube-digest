@@ -1,13 +1,13 @@
 import { domainOf, podcastPlatform, type OverviewId, type PodcastEpisode } from "@overview/domain";
 import { useActiveVideoUrl } from "../../app/ActiveVideoContext.js";
 import { useActivePage } from "../../app/ArticlePagesContext.js";
-import { isPlatformPodcastLink, isPodcastShowLink, usePodcastLink } from "../newOverview/usePodcastLink.js";
+import { isPlatformPodcastLink, isPodcastShowLink, usePodcastLink, type EpisodeWords } from "../newOverview/usePodcastLink.js";
 import type { ArticleFailureCopy } from "../newOverview/util/articleFailureCopy.js";
 import { podcastLinkFailureCopy } from "../newOverview/util/podcastLinkFailureCopy.js";
 
 export type EpisodeTabState =
   | { status: "reading"; host: string }
-  | { status: "found"; episode: PodcastEpisode }
+  | { status: "found"; episode: PodcastEpisode; words: EpisodeWords }
   | { status: "held"; episode: PodcastEpisode; overviewId: OverviewId }
   | { status: "show" }
   | { status: "failed"; copy: ArticleFailureCopy }
@@ -40,7 +40,7 @@ export function useEpisodeTab(): EpisodeTab | null {
     case "reading":
       return { ...tab, status: "reading", host: domainOf(url) };
     case "found":
-      return { ...tab, status: "found", episode: link.episode };
+      return { ...tab, status: "found", episode: link.episode, words: link.words };
     case "held":
       return { ...tab, status: "held", episode: link.episode, overviewId: link.overviewId };
     case "unreachable":

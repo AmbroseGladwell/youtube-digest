@@ -60,7 +60,7 @@ test("an Apple Podcasts link is read on the device's trial, confirmed as the rig
   expect(backendSimulator.articles.reads()).toEqual([]);
 });
 
-test("an episode with no transcript stops at the confirm step, says so, and leaves the free overview unused", async ({
+test("an episode with no transcript, where our server doesn't transcribe, stops at the confirm step and leaves the free overview unused", async ({
   page,
   launcher,
   backendSimulator,
@@ -73,9 +73,43 @@ test("an episode with no transcript stops at the confirm step, says so, and leav
   await launcher.onboardingPage.verifyIsShown();
 
   await expect(page.getByRole("heading", { name: "There’s no transcript for this episode yet" })).toBeVisible();
-  await expect(page.getByTestId(onboardingReadFailureTestIds.comingSoon)).toHaveText("Transcribing is coming soon");
+  await expect(page.getByTestId(onboardingReadFailureTestIds.transcribe)).toHaveCount(0);
+  await expect(page.getByText("Transcribing is coming soon")).toHaveCount(0);
   await expect(page.getByText("Your free overview hasn't been used.", { exact: false })).toBeVisible();
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+});
+
+test("an episode with no transcript asks to transcribe it on the trial, and choosing it makes the free overview from the audio", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const id = "0b6f1a4e-6a43-4c39-9a3e-1d2f0f6d2a11";
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.answerWith({ status: "read", episode: EPISODE });
+  backendSimulator.podcasts.offersTranscribing();
+  backendSimulator.podcasts.transcribesAs({
+    status: "ready",
+    id,
+    transcript: {
+      videoId: "podcast:episode" as never,
+      segments: [{ startMs: 0, endMs: 4_000, text: "Most decline starts a decade before anyone notices it." }],
+      generated: true,
+      fetchedAt: "2026-11-16T09:00:00.000Z",
+    },
+  });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(LINK);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await expect(page.getByRole("heading", { name: "This episode needs transcribing" })).toBeVisible();
+  await expect(page.getByText("so we’ll make one from its audio. It takes about 2 minutes.", { exact: false })).toBeVisible();
+  expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([]);
+  await page.getByTestId(onboardingReadFailureTestIds.transcribe).click();
+
+  await onboarding.verifyOnScreen("video", "Is this the right episode?");
+  await onboarding.verifyVideoTitle(EPISODE.title);
+  expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([{ feedUrl: EPISODE.feedUrl, guid: EPISODE.guid }]);
 });
 
 test("a Spotify exclusive is named as one at the confirm step, with a field for another link", async ({

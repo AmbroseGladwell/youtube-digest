@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
 import { generationRunSteps } from "../../util/generationRunSteps.js";
@@ -12,9 +13,10 @@ export interface GenerationStepsProps {
 // own working screen so both report the same thing the same way
 // (docs/features/extension-panel.md).
 export function GenerationSteps({ run }: GenerationStepsProps) {
+  const now = useMinuteClock(run.podcast?.transcription?.state === "transcribing" && run.podcast.words === null);
   return (
     <ol className={styles.root} aria-live="polite" data-testid={generationStepsTestIds.root}>
-      {generationRunSteps(run).map((step) => (
+      {generationRunSteps(run, now).map((step) => (
         <li key={step.number} className={styles.step} data-testid={generationStepsTestIds.step(step.number)} data-state={step.state}>
           <span className={styles.stepNumber} aria-hidden="true">
             {step.number}
@@ -35,4 +37,17 @@ export function GenerationSteps({ run }: GenerationStepsProps) {
       ))}
     </ol>
   );
+}
+
+// While an episode transcribes, its estimate counts down in whole minutes, so the steps are drawn
+// again often enough to change on the minute, and its words change at most once a minute.
+function useMinuteClock(ticking: boolean): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!ticking) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 15_000);
+    return () => clearInterval(timer);
+  }, [ticking]);
+  return now;
 }

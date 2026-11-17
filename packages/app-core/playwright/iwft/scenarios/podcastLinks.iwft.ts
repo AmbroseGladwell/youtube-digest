@@ -60,7 +60,7 @@ test("a pasted Spotify episode is named before Generate, then found, written, an
   expect(backendSimulator.articles.reads()).toEqual([]);
 });
 
-test("an episode with no transcript yet says so calmly, that nothing was used, and that transcribing is coming", async ({
+test("an episode with no transcript, where our server doesn't transcribe, says so calmly and that nothing was used", async ({
   page,
   launcher,
   backendSimulator,
@@ -76,7 +76,7 @@ test("an episode with no transcript yet says so calmly, that nothing was used, a
 
   await expect(page.getByRole("heading", { name: "There’s no transcript for this episode yet" })).toBeVisible();
   await expect(page.getByText("No overview was used.", { exact: false })).toBeVisible();
-  await expect(page.getByText("Transcribing is coming soon")).toBeVisible();
+  await expect(page.getByText("Transcribing is coming soon")).toHaveCount(0);
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
 });
 

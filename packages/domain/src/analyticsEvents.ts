@@ -35,6 +35,22 @@ export interface AnalyticsEventDefinition<P extends AnalyticsProps = AnalyticsPr
 
 export type AnalyticsCatalogueShape = Record<string, Record<string, Record<string, AnalyticsEventDefinition>>>;
 
+// How a transcription came to start (OV-305): on the card before Create, at Create's question
+// after it, as a try again after a failure, or for free.
+export const TranscribeChoice = z.enum(["chosen", "asked", "retried", "free"]);
+export type TranscribeChoice = z.infer<typeof TranscribeChoice>;
+// Why a transcription made no words: the server's reasons, a feed with no audio, or a refusal.
+const TranscriptionStop = z.enum([
+  "no-transcriber",
+  "too-long",
+  "audio-unreachable",
+  "audio-unreadable",
+  "no-speech",
+  "failed",
+  "no-audio",
+  "not-enough",
+]);
+
 // Why a typed code or a change was turned away, as the page said it.
 const CodeRefusal = z.enum(["wrong", "expired", "limited"]);
 const EmailChangeRefusal = z.enum(["sameAddress", "wrong", "expired", "taken", "limited"]);
@@ -817,6 +833,26 @@ export const analyticsEvents = {
     },
   },
   capture: {
+    // OV-305: an episode with no transcript anywhere, transcribed from its audio as the reader
+    // chose. Lengths are whole minutes of audio from the feed, absent where it gives none.
+    episodeTranscription: {
+      asked: event("After Create, no words were found and the reader is asked whether to transcribe the episode (design 305c-2)", {
+        from: CaptureEntry,
+        episodeMinutes: z.number().optional(),
+      }),
+      chosen: event(
+        "A transcription starts: chosen on the card before Create, after Create's question, as a try again, or free because the reader transcribed it in the last day or it's on its way",
+        { from: CaptureEntry, when: TranscribeChoice, episodeMinutes: z.number().optional() },
+      ),
+      finished: event(
+        "An episode's words came back from transcribing; how long the reader waited for a transcriber to start and then for the words, measured by the app",
+        { from: CaptureEntry, waitedMs: z.number(), transcribingMs: z.number(), episodeMinutes: z.number().optional() },
+      ),
+      failed: event("A transcription ended without words, or our server wouldn't start it, and why; nothing was counted", {
+        from: CaptureEntry,
+        reason: TranscriptionStop,
+      }),
+    },
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(

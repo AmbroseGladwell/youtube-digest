@@ -24,6 +24,7 @@ import { PastedLinkStatus } from "../PastedLinkStatus/PastedLinkStatus.js";
 import { isPlatformPodcastLink, usePodcastLink } from "../../usePodcastLink.js";
 import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { pastedLinkState } from "../../util/pastedLinkState.js";
+import { createLabelOf, transcribeChoiceOf } from "../../../podcasts/util/episodeActionOf.js";
 
 export interface GenerateOverviewFormProps {
   url: string;
@@ -79,8 +80,8 @@ export function GenerateOverviewForm({
   const article = useArticleLink(url, "dialog");
   const startArticle = useStartArticleFromLink();
   const podcast = usePodcastLink(url);
-  const { startPodcast } = useNewOverviewRunController();
-  const { podcastShown, reading, generateOffered } = pastedLinkState(article.link, podcast);
+  const { startPodcast, transcribePodcast, run } = useNewOverviewRunController();
+  const { podcastShown, reading, generateOffered, episodeAction } = pastedLinkState(article.link, podcast);
   const settleTyping = useTypingSettled(url, () =>
     analytics.capture.newOverviewForm.linkEntered({
       recognised: isYouTubeUrl(url) || (article.available && (isArticleLink(url) || isPlatformPodcastLink(url))),
@@ -101,9 +102,14 @@ export function GenerateOverviewForm({
       return;
     }
     if (podcastShown) {
-      if (podcast.link.status === "found") {
+      if (podcast.link.status === "found" && generateOffered && !reading) {
         setValidationError(null);
-        startPodcast({ episode: podcast.link.episode, sharedFrom: url.trim(), from: "dialog" });
+        startPodcast({
+          episode: podcast.link.episode,
+          sharedFrom: url.trim(),
+          from: "dialog",
+          transcribe: transcribeChoiceOf(episodeAction),
+        });
       }
       return;
     }
@@ -249,6 +255,9 @@ export function GenerateOverviewForm({
           testId={generateOverviewFormTestIds.generationError}
           testIds={generateOverviewFormTestIds.runError}
           onFollowed={onCancel}
+          episodeSeconds={run?.podcast?.durationSeconds ?? null}
+          onTranscribe={transcribePodcast}
+          onNotNow={onCancel}
         />
       )}
 
@@ -273,7 +282,7 @@ export function GenerateOverviewForm({
             disabled={!keysReady || reading}
             data-testid={generateOverviewFormTestIds.generateButton}
           >
-            Generate
+            {episodeAction === null ? "Generate" : createLabelOf(episodeAction, "Generate")}
           </button>
         )}
       </div>

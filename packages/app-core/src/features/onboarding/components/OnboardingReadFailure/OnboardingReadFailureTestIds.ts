@@ -1,5 +1,5 @@
 export const onboardingReadFailureTestIds = {
-  comingSoon: "OnboardingReadFailure.comingSoon",
+  transcribe: "OnboardingReadFailure.transcribe",
   root: "onboarding-read-failure",
   link: "onboarding-read-failure-link",
   tryAgain: "onboarding-read-failure-try-again",

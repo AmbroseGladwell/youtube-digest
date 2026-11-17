@@ -15,6 +15,7 @@ export interface TrialDevice {
   podcastTranscript(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
   transcribe(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
   transcription(id: string): Promise<LightMyRequestResponse>;
+  checkTranscript(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
   suggestTopics(title?: string): Promise<LightMyRequestResponse>;
 }
 
@@ -38,6 +39,8 @@ export async function makeTrialDevice({ app }: TestApp, address = TRIAL_ADDRESS)
     transcribe: (episode) =>
       app.inject({ method: "POST", url: "/api/podcasts/transcription", headers, payload: episode, remoteAddress: address }),
     transcription: (id) => app.inject({ method: "GET", url: `/api/podcasts/transcription/${id}`, headers, remoteAddress: address }),
+    checkTranscript: (episode) =>
+      app.inject({ method: "POST", url: "/api/podcasts/transcript/check", headers, payload: episode, remoteAddress: address }),
     suggestTopics: (title = "Knife Skills in Ten Minutes") =>
       app.inject({
         method: "POST",

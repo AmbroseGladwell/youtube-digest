@@ -165,9 +165,10 @@ const sections: readonly LegalSection[] = [
           nothing is transcribed unless you ask. Our server then sends Modal the address of the episode's audio from the show's public feed,
           and nothing about you. Modal runs our own speech-to-text model: it downloads the audio from the show's host, turns it into words
           and sends them back, and the audio is deleted as soon as it has been transcribed. The words are yours alone, as above, and our
-          server holds them only until your device collects them, for at most a day. We count the hours of audio transcribed each month
-          against an allowance, for your account, or before you have one for a hashed form of your network address. An episode whose words
-          can't be found or transcribed makes no overview.
+          server holds them only until your device collects them, for at most a day. We count the hours of audio transcribed each month, and
+          the episodes they went on, against an allowance, for your account, or before you have one for a hashed form of your network
+          address. Before you choose, our server checks whether the episode's words can be found without transcribing, the same way it finds
+          them once you press Create, and fetches none. An episode whose words can't be found or transcribed makes no overview.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you for your own copy of the words, and our legitimate interest in not

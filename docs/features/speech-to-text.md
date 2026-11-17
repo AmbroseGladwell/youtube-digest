@@ -1,6 +1,6 @@
 # Speech-to-text for podcast episodes
 
-Design note for OV-305. Status: provider chosen by measurement; the server rung built behind `STT_URL`, with no screens yet.
+Design note for OV-305. Status: provider chosen by measurement; the server rung and the screens built behind `STT_URL`.
 
 ## The gap
 
@@ -149,9 +149,19 @@ adds only its model load.
 
 ## The server rung
 
-A reader is offered transcription only where it can happen: when every other rung has failed,
-`POST /api/podcasts/transcript`'s `transcript_unavailable` carries `transcribable: true`, and only on a
-server with `STT_URL` set. Nothing is transcribed unless the reader asks.
+A reader is offered transcription only where it can happen: on a server with `STT_URL` set, to an
+account or to onboarding's trial. Nothing is transcribed unless the reader asks.
+
+**Known before Create** (design 305c). `POST /api/podcasts/transcript/check`, asked as a pasted
+episode is read, says whether the words can be found and fetches none: a remembered source or a
+feed's tag by their presence, a video by the Data API's word (the extension's find, or our server's
+search, whose match is remembered so Create doesn't search again). The answer is `found`, `unknown`
+when a rung couldn't be asked (the feed, or the Data API refusing), or `none` with what transcribing
+would mean: `needed` or `not-enough` with the month's usage, `free` when transcribed in the last day
+or on its way, `too-long` or `no-audio`. Without `STT_URL` it answers `unknown` at once, reading no
+feed and spending no YouTube search, since there is nothing to offer. `unknown` and a check that
+turns out wrong (a broken tag link, unreadable captions) fall back to the ask after Create (305c-2):
+`POST /api/podcasts/transcript`'s `transcript_unavailable` carries `transcribable: true`.
 
 | Piece | Where |
 |---|---|
@@ -179,7 +189,11 @@ fails the job too. A failed job costs the reader nothing, and asking again start
 lapsed is taken up by the next worker where it was, without sending it to the host a second time.
 
 **Allowances.** Hours of audio a month: a trial's address 4, Free 5, BYO Plus 15, Plus 30, with no
-episode over 4 hours by its feed (owner, 16 Nov 2026). The feed's length is held when the job is
+episode over 4 hours by its feed (owner, 16 Nov 2026). The trial is onboarding's one overview, made
+before there is an account, and it may be an episode that needs transcribing (owner, 16 Nov 2026,
+after the design round's "no trial"). `GET /api/overview-usage`
+carries `transcription` (seconds used, the limit, and the episodes it went on, counted as each is
+transcribed) where the server transcribes. The feed's length is held when the job is
 queued and settled to the audio's measured length once it finishes. An episode with no length in its
 feed holds an hour. Asking again for an episode already transcribed, or on its way, is free. Past the
 allowance the answer is `too_many_requests`, with `quota: "transcription"`, the seconds used and the
@@ -198,8 +212,37 @@ dearest one in the app's list.
 needs `STT_URL` (the app's web address) and the same `STT_TOKEN`, and refuses to start with only
 one of them.
 
-Still to come: the screens (a Design round for offering, waiting and the allowance), the client's
-polling, and analytics events.
+**Analytics.** `capture.episodeTranscription`: `asked` when Create's question shows (305c-2),
+`chosen` with how it came about (`chosen` on the card, `asked`, `retried`, `free`), `finished` with
+how long the reader waited for a transcriber and then for the words, and `failed` with why. Each
+carries where it was asked from, onboarding included, and the episode's length in minutes. All are
+sent from `useRunPodcastGeneration`, which every surface's run goes through.
+
+## The screens
+
+Designs 305a–305o (OV-305 1–4 in the Claude Design project, agreed with the owner 16 Nov 2026).
+
+| Moment | Design | Where |
+|---|---|---|
+| The card says it needs transcribing before Create, "Transcribe and create", the hours it uses | 305c | `usePodcastLink` (the check), `PodcastLinkStatus`, `EpisodeOffer` in the panel, `episodeActionOf` |
+| Free to ask for again: transcribed in the last day, or on its way | 305d | the same, with a line under the card |
+| Not enough left, or over 4 hours: the stop takes Create's place | 305h, 305j | `TranscriptionNotice`, `transcriptionCopy.stop` |
+| Asked after Create when the check couldn't tell | 305c-2 | `podcastTranscript` throws `EpisodeNeedsTranscribingError`; `RunErrorMessage`; `transcribePodcast` on the run controller |
+| Transcribing as a step, "Starting…", "About N min left", "Almost done" | 305e | `transcribeEpisode` polls every 3 s; `generationRunSteps` |
+| Couldn't start, stopped partway, the audio unavailable; nothing counted | 305k | `transcriptionCopy.failed` |
+| Settings › Plan: transcribing's own row, plan cards list hours, the Plan row once some is used | 305m, 305o | `PlanUsage`, `PlusPlanPanel`, `planRowValue` |
+
+The check runs once the episode is read, while the card shows "Checking for a transcript…" and Create
+waits; it is typically 1–3 s. With the extension, our server answers for the remembered source and the
+tag, then the extension looks on YouTube on the reader's connection; without one, our server searches,
+spending one of about 100 searches a day for the whole app (owner, 16 Nov 2026). If searches run
+short, that path should move to checking after Create only.
+
+The estimate is about a minute for each hour of audio, rounded up to whole minutes, from the feed's
+length; it is a status updated at most once a minute and never a percentage. Not drawn: what a
+transcription that heard no speech says ("We couldn't hear any words in it", written for this build),
+and onboarding's ask, which uses 305c-2's words on its no-transcript screen in place of "Transcribing
+is coming soon".
 
 ## Running the harness
 
