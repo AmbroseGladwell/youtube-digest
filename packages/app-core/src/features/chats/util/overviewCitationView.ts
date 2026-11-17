@@ -3,7 +3,9 @@ import {
   LISTEN_ANYWAY_HEADING,
   OVERVIEW_PARTS,
   overviewParts,
+  READ_ANYWAY_SECTION,
   WATCH_ANYWAY_SECTION,
+  type ArticlePlace,
   type ChatCitation,
   type Overview,
   type OverviewPart,
@@ -12,8 +14,9 @@ import {
 
 // What an answer's citation of the overview shows: the part it lands on now, a section whose
 // item has since changed, or a section no longer in the overview (designs 319b, 319x, 319z).
+// An article's key point or chapter also carries its place on the page (OV-320).
 export type OverviewCitationView =
-  | { kind: "item"; part: OverviewPart; index: number; label: string; opening: string }
+  | { kind: "item"; part: OverviewPart; index: number; label: string; opening: string; place?: ArticlePlace }
   | { kind: "changed"; part: OverviewPart; label: string }
   | { kind: "gone"; part: OverviewPart; section: string };
 
@@ -27,7 +30,12 @@ const sectionOf = (part: OverviewPart, overview: Overview): string =>
     step: "The steps it gives",
     howToApply: "How to apply",
     selling: "What it's selling",
-    watchAnyway: overview.source.kind === "podcast" ? LISTEN_ANYWAY_HEADING : WATCH_ANYWAY_SECTION,
+    watchAnyway:
+      overview.source.kind === "podcast"
+        ? LISTEN_ANYWAY_HEADING
+        : overview.source.kind === "web"
+          ? READ_ANYWAY_SECTION
+          : WATCH_ANYWAY_SECTION,
     chapter: "Chapters",
     ingredient: "Ingredients",
     method: "Method",
@@ -61,6 +69,13 @@ const openingOf = (text: string): string => {
   return words.length > OPENING_WORDS ? `${words.slice(0, OPENING_WORDS).join(" ")}…` : words.join(" ");
 };
 
+const placeOf = (overview: Overview, part: OverviewPart, index: number): ArticlePlace | undefined => {
+  const article = overview.article;
+  if (article === null) return undefined;
+  const chapter = part === "chapter" ? index : part === "keyPoint" ? article.keyPointChapters[index] : null;
+  return chapter === null || chapter === undefined ? undefined : article.chapters[chapter]?.place;
+};
+
 const isOverviewCitation = (citation: ChatCitation): citation is Extract<ChatCitation, OverviewPartCitation> => "part" in citation;
 
 // An answer's citations of the overview, in the note's order.
@@ -81,12 +96,14 @@ export function overviewCitationViews(overview: Overview, citations: readonly Ch
       };
     }
     const text = items.find(({ part, index }) => part === landed.part && index === landed.index)?.text ?? "";
+    const place = placeOf(overview, landed.part, landed.index);
     return {
       kind: "item",
       part: landed.part,
       index: landed.index,
       label: labelOf(landed.part, landed.index, text, overview, citedTwice(landed.part)),
       opening: openingOf(text),
+      ...(place === undefined ? {} : { place }),
     };
   });
 }

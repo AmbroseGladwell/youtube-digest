@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Chat, OverviewId } from "@overview/domain";
+import type { Chat, ChatSourceKind, OverviewId } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
 import { useChatsQuery } from "./queries/chatsQuery.js";
@@ -25,9 +25,9 @@ const newConversationId = (): string => crypto.randomUUID();
 // in a new conversation when the panel is closed and in the open one when it is; the menu's
 // Chat reopens the latest. The list of conversations sits behind the header's count, and a
 // conversation deleted there can be undone for six seconds before the delete is made.
-export function useChatPanel(overviewId: OverviewId) {
+export function useChatPanel(overviewId: OverviewId, about: ChatSourceKind) {
   const stored = useChatsQuery(overviewId).data ?? [];
-  const asking = useAskQuestion(overviewId);
+  const asking = useAskQuestion(overviewId, about);
   const deleteChat = useDeleteChatMutation();
   const analytics = useAnalytics();
   const [open, setOpen] = useState(false);

@@ -6,6 +6,7 @@ import {
   SOURCE_STEPS_SECTION,
   SUMMARY_SECTION,
   adjustedText,
+  chatSourceKind,
   recipeFrom,
   recipeText,
   sourceName,
@@ -48,6 +49,7 @@ import { NoteEndActions } from "../components/NoteEndActions/NoteEndActions.js";
 import { ReadAlongNote } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { ReaderMasthead } from "../components/ReaderMasthead/ReaderMasthead.js";
 import { ReaderPlayerBar } from "../components/ReaderPlayerBar/ReaderPlayerBar.js";
+import { chatWords } from "../../chats/util/chatWords.js";
 import { ArticleChaptersPanel } from "../components/ArticleChaptersPanel/ArticleChaptersPanel.js";
 import { ArticleLineLinks } from "../components/ArticleLineLinks/ArticleLineLinks.js";
 import { ArticleResources } from "../components/ArticleResources/ArticleResources.js";
@@ -369,7 +371,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [stepLine, reader]);
 
-  const chat = useChatPanel(overviewId);
+  const chat = useChatPanel(overviewId, overview === null ? "video" : chatSourceKind(overview));
   const noteMain = useRef<HTMLDivElement | null>(null);
   const chatColumn = useRef<HTMLDivElement | null>(null);
   const [chatLeaving, setChatLeaving] = useState(false);
@@ -590,7 +592,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // Chat sits beside the note on the web (design 310a), and is a sheet on a phone and in the
   // extension's panel (310g, 310h).
   const chatAvailable =
-    chatOffered(overview, { signedIn: isConnected(connection), sharedUnsaved: false, synced: synced.data === true }) && !chat.noSource;
+    chatOffered({ signedIn: isConnected(connection), sharedUnsaved: false, synced: synced.data === true }) && !chat.noSource;
   const chatBeside = chatAvailable && !isPanel && !isPhone;
   const chatSheet = chatAvailable && (isPanel || isPhone);
   // Beside the note, a question asked from it travels into the chat as it opens (310a-4).
@@ -607,7 +609,8 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     openTranscriptAt(positionMs);
     if (chatSheet) lowerSheet(`Reading the transcript from ${formatTimestamp(positionMs)}`);
   };
-  const sourceWord = overview.source.kind === "podcast" ? "episode" : "video";
+  const sourceWord = chatWords(chatSourceKind(overview)).noun;
+  const chatPage = overview.source.kind === "web" ? { url: overview.source.url, onPage } : null;
   const followCitation = (range: TimeRange) => {
     reader.chat.citationFollowed({ to: "source" });
     setCitedPart(null);
@@ -1032,6 +1035,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               panel={chat}
               overview={overview}
               video={video}
+              page={chatPage}
               compact={false}
               onCitationFollowed={followCitation}
               onOverviewPartFollowed={followOverviewPart}
@@ -1059,6 +1063,7 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
               panel={chat}
               overview={overview}
               video={video}
+              page={chatPage}
               compact={true}
               onCitationFollowed={followCitation}
               onOverviewPartFollowed={followOverviewPart}

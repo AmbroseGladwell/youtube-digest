@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { overviewMarkdown, type Overview } from "@overview/domain";
+import { overviewMarkdown, type Overview, type WebSource } from "@overview/domain";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 
@@ -48,4 +48,67 @@ test("reads back every item the chat prompt gives an id", () => {
     read.chapters?.map(({ title, summary, startMs }) => ({ title, summary, startMs })),
     overview.chapters?.map(({ title, summary, startMs }) => ({ title, summary, startMs })),
   );
+});
+
+const page = (title: string): WebSource => ({
+  kind: "web",
+  id: "0123456789abcdef0123456789abcdef" as WebSource["id"],
+  url: "https://pages.example/a",
+  title,
+  siteName: "Pages",
+  author: null,
+  publishedAt: null,
+  language: "en",
+  imageUrl: null,
+  wordCount: 2300,
+});
+
+// The prompt is the Markdown, so reading one back must write the same Markdown again.
+const rewritten = (overview: Overview) => {
+  const markdown = overviewMarkdown(overview, { partIds: true });
+  const again = overviewMarkdown({ ...overview, ...overviewFromMarkdown(overviewMarkdown(overview)) } as Overview, { partIds: true });
+  return { markdown, again };
+};
+
+test("an article reads back to the same Markdown, chapters and Read it anyway? included", () => {
+  const { markdown, again } = rewritten(
+    storedOverview({
+      source: page("Bridge repairs"),
+      chapters: null,
+      howToApply: { items: ["Ask the council"] },
+      article: {
+        chapters: [
+          { title: "The closure", summary: "Why it shut.", place: { anchor: null, quote: "The bridge, closed" }, wordCount: 1150 },
+          { title: "Who pays", summary: "How it splits.", place: { anchor: "who-pays", quote: "The county" }, wordCount: 1150 },
+        ],
+        keyPointChapters: [0, 1, null],
+        readAnyway: { answer: "partial", reason: "The costs chapter is worth it.", leftOut: "", chapterIndexes: [] },
+      },
+    } as Partial<Overview>),
+  );
+  assert.equal(again, markdown);
+});
+
+test("a recipe page reads back to the same Markdown, figures and method groups included", () => {
+  const { markdown, again } = rewritten(
+    storedOverview({
+      source: page("Leek stew"),
+      keyPoints: [],
+      coreClaim: "",
+      recipe: {
+        summary: "A weeknight stew.",
+        ingredients: ["3 large leeks", "2 tins cannellini beans"],
+        steps: [
+          { text: "Roast the leeks for 20 minutes.", group: null },
+          { text: "Simmer the beans.", group: "For the beans:" },
+        ],
+        stepCount: 2,
+        prepMinutes: 15,
+        cookMinutes: 70,
+        totalMinutes: null,
+        yield: "Serves 4",
+      },
+    } as Partial<Overview>),
+  );
+  assert.equal(again, markdown);
 });

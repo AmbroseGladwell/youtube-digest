@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { overviewPartHash, type ChatCitation, type Overview } from "@overview/domain";
-import { makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
 import { overviewCitationViews } from "./overviewCitationView.js";
 
 const overview = makeOverview({
@@ -71,5 +71,21 @@ describe("overviewCitationViews", () => {
         { chatId: "c", message: 0 },
       ]),
     ).toEqual([]);
+  });
+
+  it("names an article's Read it anyway?, and gives its key points and chapters their place on the page", () => {
+    const article = makeArticleOverview();
+    const { chapters, readAnyway, keyPointChapters } = article.article!;
+    const views = overviewCitationViews(article, [
+      cite("watchAnyway", 0, readAnyway!.reason),
+      cite("chapter", 1, chapters[1]!.title),
+      cite("keyPoint", 0, article.keyPoints[0]!.text),
+    ]);
+    expect(views).toEqual([
+      expect.objectContaining({ part: "keyPoint", label: "Key point 1", place: chapters[keyPointChapters[0]!]!.place }),
+      expect.objectContaining({ part: "watchAnyway", label: "Read it anyway?" }),
+      expect.objectContaining({ part: "chapter", label: `Chapter: ${chapters[1]!.title}`, place: chapters[1]!.place }),
+    ]);
+    expect(views[1]).not.toHaveProperty("place");
   });
 });

@@ -18,6 +18,13 @@
 
 .row {
   padding: 0 0 1.625rem;
+
+  // A chapter a chat answer led to: the tint sits a little outside the text (OV-320).
+  &[data-cited-part="true"] {
+    margin-inline: -0.75rem;
+    padding: 0.625rem 0.75rem;
+    margin-bottom: 1rem;
+  }
 }
 
 .meta {

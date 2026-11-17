@@ -1,7 +1,9 @@
 import type { FastifyBaseLogger } from "fastify";
 import {
+  answeredFromOverviewAlone,
   apiLogLines,
   Chat,
+  chatSourceKind,
   CHAT_MIGRATIONS,
   chatQuestionCount,
   chatRecordId,
@@ -17,6 +19,7 @@ import {
   StoredTranscript,
   type ChatMessage,
   type ChatQuestionRequest,
+  type ChatSourceKind,
   type ChatStreamEvent,
   type Plan,
 } from "@overview/domain";
@@ -35,7 +38,7 @@ import { withoutCitationMarks } from "./withoutCitationMarks.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatReply } from "./ChatReply.js";
 import { chatModel } from "./chatModel.js";
-import { chatSystemPrompt, otherChatsPrompt, type ChatSourceKind } from "./chatPrompt.js";
+import { chatSystemPrompt, otherChatsPrompt } from "./chatPrompt.js";
 import { citationsOf } from "./citationsOf.js";
 import { otherChatsInPrompt } from "./otherChatsInPrompt.js";
 import { ChatProviderError, streamChatCompletion, type ChatCompletionStream, type PromptMessage } from "./streamChatCompletion.js";
@@ -125,7 +128,10 @@ export class ChatAnswerer {
     const othersInPrompt = otherChatsInPrompt(others);
     const othersText = otherChatsPrompt(kind, othersInPrompt);
     const prompt: PromptMessage[] = [
-      { role: "system", content: chatSystemPrompt(kind, overviewMarkdown(overview, { partIds: true }), passages) },
+      {
+        role: "system",
+        content: chatSystemPrompt(kind, overviewMarkdown(overview, { partIds: true }), passages, { recipe: overview.recipe !== null }),
+      },
       ...(othersText === null ? [] : [{ role: "user" as const, content: othersText }]),
       ...(conversation?.messages ?? []).map((message): PromptMessage => ({
         role: message.from === "reader" ? "user" : "assistant",
@@ -133,7 +139,7 @@ export class ChatAnswerer {
       })),
       { role: "user", content: question.text },
     ];
-    const logged = { plan, model: chatModel.model, otherChatMessages: othersInPrompt.messages };
+    const logged = { plan, about: kind, model: chatModel.model, otherChatMessages: othersInPrompt.messages };
     const startedAt = askedAt.getTime();
     const release = () => usage.release(reservation.day, accountId);
 
@@ -244,13 +250,16 @@ export class ChatAnswerer {
     overview: Overview,
   ): Promise<{ kind: ChatSourceKind; passages: ReturnType<typeof transcriptPassages> }> {
     const { source } = overview;
-    const key = source.kind === "web" ? null : sourceKey(source);
+    const kind = chatSourceKind(overview);
+    // An article or a recipe page is answered from its overview alone: no page text is kept (OV-320).
+    if (answeredFromOverviewAlone(kind) || source.kind === "web") return { kind, passages: [] };
+    const key = sourceKey(source);
     const stored = key === null ? null : StoredTranscript.safeParse(await this.#options.transcripts.get(accountId, key));
     const passages = stored?.success === true ? transcriptPassages(stored.data.segments) : [];
     if (passages.length === 0) {
       throw new ApiError("transcript_unavailable", "There's no transcript kept for this overview to answer from", { chat: "no-source" });
     }
-    return { kind: source.kind === "podcast" ? "episode" : "video", passages };
+    return { kind, passages };
   }
 
   async #recordCost(

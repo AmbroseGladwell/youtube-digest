@@ -5,4 +5,6 @@ export const chatAnswerTestIds = {
   citations: "ChatAnswer.citations",
   conversation: "ChatAnswer.conversation",
   deletedConversation: "ChatAnswer.deletedConversation",
+  readOnPage: "ChatAnswer.readOnPage",
+  showOnPage: "ChatAnswer.showOnPage",
 };
