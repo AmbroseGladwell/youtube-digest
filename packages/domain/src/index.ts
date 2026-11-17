@@ -80,6 +80,7 @@ export * from "./Chat.js";
 export * from "./ChatQuestionRequest.js";
 export * from "./ChatStreamEvent.js";
 export * from "./ChatUsage.js";
+export * from "./chatMarkdown.js";
 export * from "./chatMigrations.js";
 export * from "./ChatStore.js";
 export * from "./PlaylistLookup.js";

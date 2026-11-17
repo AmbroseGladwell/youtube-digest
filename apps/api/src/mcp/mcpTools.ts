@@ -17,13 +17,16 @@ import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
 import { changeProjectMembers } from "./changeProjectMembers.js";
 import { createProject } from "./createProject.js";
+import { getChat } from "./getChat.js";
 import { getProfile } from "./getProfile.js";
 import { getProject } from "./getProject.js";
+import { listChats } from "./listChats.js";
 import { listProjects } from "./listProjects.js";
 import { markOverviews } from "./markOverviews.js";
 import { mcpTool, toolError, type McpTool, type McpToolContext, type McpToolOutcome } from "./McpTool.js";
 import { pageOf, type Page } from "./pageOf.js";
 import { projectOverviews } from "./projectOverviews.js";
+import { readChats } from "./readChats.js";
 import { readLibrary } from "./readLibrary.js";
 import { isProject, resolveProject } from "./resolveProject.js";
 import { searchWithMeaning, type LibrarySearch, type ResolvedFilters } from "./searchLibrary.js";
@@ -202,7 +205,7 @@ const getOverview = mcpTool({
   name: "get_overview",
   title: "Read one overview",
   description:
-    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, chapters, and questions to ask next, written for this reader, which you can offer them. Every chapter links to its moment in the video, for citing.",
+    "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, chapters, and questions to ask next, written for this reader, which you can offer them. Every chapter links to its moment in the video, for citing. Ends by naming the reader's conversations about it in the app, if any, for get_chat.",
   input: z.object({ id: z.string().describe("The overview's id") }),
   run: async ({ id }, { sql, accountId }) => {
     const library = await readLibrary(sql, accountId);
@@ -210,7 +213,12 @@ const getOverview = mcpTool({
     if (entry === undefined) {
       return toolError(`There is no overview with id ${id} in this library.`);
     }
-    return { text: overviewText(library, entry, false), overviews: 1 };
+    const chats = (await readChats(sql, accountId, [id])).sort((left, right) => left.startedAt.localeCompare(right.startedAt));
+    const conversations =
+      chats.length === 0
+        ? ""
+        : `\n\nThe reader has ${chats.length} conversation(s) about this overview in the app; read one with get_chat: ${chats.map((chat) => chat.id).join(", ")}.`;
+    return { text: `${overviewText(library, entry, false)}${conversations}`, overviews: 1 };
   },
 });
 
@@ -293,6 +301,8 @@ export const mcpTools: readonly McpTool[] = [
   getOverview,
   getOverviews,
   getTranscript,
+  listChats,
+  getChat,
   listProjects,
   getProject,
   getProfile,

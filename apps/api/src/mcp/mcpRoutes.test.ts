@@ -83,6 +83,8 @@ test("tools/list offers every tool, only the writing ones not marked read-only, 
       "get_overview",
       "get_overviews",
       "get_transcript",
+      "list_chats",
+      "get_chat",
       "list_projects",
       "get_project",
       "get_profile",
@@ -103,13 +105,13 @@ test("tools/list offers every tool, only the writing ones not marked read-only, 
   await testApp.close();
 });
 
-test("tools/list offers a connection approved to read only the eight reading tools", async () => {
+test("tools/list offers a connection approved to read only the ten reading tools", async () => {
   const testApp = await createTestApp();
   const client = await connectMcpClient(testApp, await makeAccount(testApp), "overviews:read");
 
   const { tools } = (await client.request("tools/list")) as { tools: Array<{ name: string; annotations: { readOnlyHint: boolean } }> };
 
-  assert.equal(tools.length, 8);
+  assert.equal(tools.length, 10);
   assert.ok(tools.every((tool) => tool.annotations.readOnlyHint));
   await testApp.close();
 });
