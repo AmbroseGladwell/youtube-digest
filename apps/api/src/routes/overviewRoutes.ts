@@ -20,6 +20,7 @@ import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
+import { tombstoneChats } from "../records/tombstoneChats.js";
 import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 import { ApiError } from "../http/ApiError.js";
 
@@ -139,7 +140,8 @@ export function overviewRoutes(
   });
 
   // The state row goes with the overview: ids are never reused, so a surviving state
-  // would be a permanent orphan on every device (docs/features/sync-api.md).
+  // would be a permanent orphan on every device (docs/features/sync-api.md). Its membership
+  // records and chats go too.
   app.delete("/overviews/:id", async (request, reply) => {
     const { id } = parseOrThrow(Params, request.params, "The overview's id");
     const ifMatch = ifMatchOf(request);
@@ -150,6 +152,7 @@ export function overviewRoutes(
     ]);
     // On every delete, the retry of one already done included, so a failure here heals.
     await tombstoneProjectMembers(records, accountId, { overviewId: id });
+    await tombstoneChats(records, accountId, id);
     const forgotten = await transcripts.forgetUnnoted(accountId);
     if (forgotten > 0) {
       request.log.info(apiLogLines.transcripts.forgotten({ count: forgotten }));

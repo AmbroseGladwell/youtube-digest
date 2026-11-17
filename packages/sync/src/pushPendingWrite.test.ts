@@ -364,3 +364,18 @@ test("a change to a membership record whose project the server no longer has is 
 
   assert.deepEqual(outcome, { result: "gone" });
 });
+
+test("deleting a chat deletes that conversation, by its overview and its own id", async () => {
+  const api = new ScriptedSyncApi();
+  const conversation = "5c2f7a1e-0d3b-4e8a-9b61-2f4d8c7e1a90";
+
+  const outcome = await pushPendingWrite(
+    api,
+    entry({ kind: "chat", id: `${OVERVIEW}:${conversation}`, change: { op: "delete" } }),
+    1,
+    storage,
+  );
+
+  assert.deepEqual(outcome, { result: "gone" });
+  assert.deepEqual(api.calls, [{ method: "deleteChat", args: [OVERVIEW, conversation] }]);
+});

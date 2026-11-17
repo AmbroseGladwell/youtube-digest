@@ -35,6 +35,7 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
     deleteProject: (id) => request("DELETE", `/projects/${id}`, WrittenRecord),
     changeProjectMember: (projectId, overviewId, change, updatedAt) =>
       written(request("PUT", `/projects/${projectId}/members/${overviewId}`, WrittenRecord, { body: { ...change, updatedAt } })),
+    deleteChat: (overviewId, conversationId) => request("DELETE", `/chats/${overviewId}/${conversationId}`, WrittenRecord),
     saveTranscript: async (transcript) => {
       await request("PUT", `/transcripts/${encodeURIComponent(transcript.videoId)}`, z.unknown(), { body: transcript });
     },

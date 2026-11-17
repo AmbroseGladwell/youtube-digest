@@ -1,5 +1,7 @@
 import type { z } from "zod";
 import {
+  CHAT_MIGRATIONS,
+  Chat,
   FOLLOWED_PLAYLIST_MIGRATIONS,
   FollowedPlaylist,
   OVERVIEW_MIGRATIONS,
@@ -33,4 +35,5 @@ export const RECORD_KINDS: Record<RecordKind, RecordKindConfig> = {
   followedPlaylist: { schema: FollowedPlaylist, migrations: FOLLOWED_PLAYLIST_MIGRATIONS },
   project: { schema: Project, migrations: PROJECT_MIGRATIONS },
   projectMember: { schema: ProjectMember, migrations: PROJECT_MEMBER_MIGRATIONS },
+  chat: { schema: Chat, migrations: CHAT_MIGRATIONS },
 };

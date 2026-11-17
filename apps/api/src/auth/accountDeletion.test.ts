@@ -51,6 +51,11 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     [accountId, overviewId, "2026-11-05T10:00:00.000Z", JSON.stringify({ id: overviewId, video: { id: VIDEO } })],
   );
   await sql.query(
+    `insert into records (account_id, kind, id, schema_version, rev, seq, updated_at, body)
+     values ($1, 'chat', $2, 1, 1, 2, $3, '{}'::jsonb)`,
+    [accountId, `${overviewId}:${randomUUID()}`, "2026-11-05T10:00:00.000Z"],
+  );
+  await sql.query(
     `insert into magic_links (email, surface, token_hash, expires_at, intent, anonymous_id, consumed_at)
      values ($1, 'web', $2, $3::timestamptz, 'createAccount', $4, $3::timestamptz)`,
     [email, hex64(`link-${email}`), now, ANONYMOUS_ID],

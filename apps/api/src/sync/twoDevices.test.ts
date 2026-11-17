@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import {
+  chatRecordId,
   CLIENT_VERSION,
   CURRENT_SCHEMA_VERSIONS,
   DEFAULT_SETTINGS,
@@ -11,7 +12,9 @@ import {
   youTubeSource,
 } from "@overview/domain";
 import { makeOverview, makeProject, makeStoredTranscript } from "@overview/store-conformance";
+import { appendChatMessages } from "../chats/appendChatMessages.js";
 import { migrationSteps } from "../db/migrationSteps.js";
+import { RecordsRepository } from "../records/RecordsRepository.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { distinctVideo, LAST_SCHEMA_VERSION_WITH_VIDEO, storedOverview, withVideo } from "../testing/storedRecords.testHelper.js";
@@ -559,6 +562,58 @@ test("a project deleted on one device leaves the other with neither the project 
 
   assert.deepEqual(await phone.projects.listProjects(), []);
   assert.deepEqual(await phone.projects.listMembers(), []);
+  assert.equal((await laptop.sync()).pending, 0);
+  await testApp.close();
+});
+
+test("a chat the server writes reaches both devices; deleted on one, it goes from the other, and so do the rest with their overview", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const overview = makeOverview();
+  await laptop.overviews.saveOverview(overview);
+  await laptop.sync();
+  const records = new RecordsRepository(testApp.sql, () => testApp.clock.now);
+  const at = testApp.clock.now.toISOString();
+  const [kept, deleted] = [randomUUID(), randomUUID()];
+  for (const conversation of [kept, deleted]) {
+    await appendChatMessages(
+      records,
+      account.accountId,
+      {
+        overviewId: overview.id,
+        conversationId: conversation,
+        messages: [
+          { from: "reader", text: "How much creatine?", at },
+          { from: "answer", text: "Three to five grams.", at, citations: [{ startMs: 61_000, endMs: 70_000 }], inSource: true },
+        ],
+      },
+      testApp.clock.now,
+    );
+  }
+
+  await laptop.sync();
+  await phone.sync();
+  assert.equal((await phone.chats.listChats(overview.id)).length, 2);
+  assert.deepEqual(
+    (await phone.chats.getChat(chatRecordId(overview.id, kept)))?.messages.map((message) => message.text),
+    ["How much creatine?", "Three to five grams."],
+  );
+
+  await laptop.chats.deleteChat(chatRecordId(overview.id, deleted));
+  await laptop.sync();
+  await phone.sync();
+  assert.deepEqual(
+    (await phone.chats.listChats(overview.id)).map(({ id }) => id),
+    [chatRecordId(overview.id, kept)],
+  );
+
+  await phone.overviews.deleteOverview(overview.id);
+  await phone.sync();
+  await laptop.sync();
+  assert.deepEqual(await laptop.chats.listChats(overview.id), []);
+  assert.equal((await account.change("chat", chatRecordId(overview.id, kept))).deleted, true);
   assert.equal((await laptop.sync()).pending, 0);
   await testApp.close();
 });

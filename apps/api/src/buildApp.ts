@@ -72,6 +72,7 @@ import { shareRoutes } from "./routes/shareRoutes.js";
 import { sampleRoutes } from "./routes/sampleRoutes.js";
 import { topicRoutes } from "./routes/topicRoutes.js";
 import { projectRoutes } from "./routes/projectRoutes.js";
+import { chatRoutes } from "./routes/chatRoutes.js";
 import { transcriptRoutes } from "./routes/transcriptRoutes.js";
 import { sharePagePlugin } from "./shares/sharePagePlugin.js";
 import { SharesRepository } from "./shares/SharesRepository.js";
@@ -311,6 +312,7 @@ export async function buildApp({
       meaningSearchRoutes(api, meaningSearch);
       followedPlaylistRoutes(api, records);
       projectRoutes(api, records);
+      chatRoutes(api, records);
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
