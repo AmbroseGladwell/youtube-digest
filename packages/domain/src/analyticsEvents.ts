@@ -835,6 +835,9 @@ export const analyticsEvents = {
         section: SectionsEnabled.keyof(),
         on: z.boolean(),
       }),
+      projectFilingSwitched: event("The reader turns filing new overviews into their projects on or off in Settings › Personalisation", {
+        on: z.boolean(),
+      }),
     },
     appearance: {
       themeChosen: event("The reader chooses System, Light or Dark in Settings › Appearance", { theme: ThemeMode }),
@@ -900,7 +903,7 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, how many questions to ask next it kept, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, how many questions to ask next it kept, how many of the reader's projects it was filed into, and the kind of note it got; its duration measured by the app",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
@@ -935,6 +938,9 @@ export const analyticsEvents = {
           // How many of those link an idea to the reader: up to one in each three, and none when the
           // model finds no real connection or the reader has no profile (OV-266).
           readerQuestions: z.number().int().nonnegative().optional(),
+          // How many of the reader's projects it was put into as it was made, never which; absent
+          // when filing was switched off, when there were no projects or for a regeneration (OV-318).
+          projectsFiled: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
           // The key that made it, after any fallback, and its provider and model (OV-255).
@@ -1277,7 +1283,7 @@ export const analyticsEvents = {
       removed: event("The reader takes an overview out of a project, and whether they or an assistant had put it there", {
         projectId: ProjectId,
         overviewId: OverviewId,
-        addedBy: z.enum(["reader", "assistant"]),
+        addedBy: z.enum(["reader", "assistant", "filing"]),
         from: z.enum(["row", "picker", "selection"]),
       }),
     },

@@ -8,4 +8,6 @@ export const personalisationSectionTestIds = {
   followUpAssistantNote: "PersonalisationSection.followUpAssistantNote",
   connectionsLink: "PersonalisationSection.connectionsLink",
   switch: (section: keyof SectionsEnabled) => `PersonalisationSection.switch.${section}`,
+  projectFilingCard: "PersonalisationSection.projectFilingCard",
+  projectFilingSwitch: "PersonalisationSection.projectFilingSwitch",
 };

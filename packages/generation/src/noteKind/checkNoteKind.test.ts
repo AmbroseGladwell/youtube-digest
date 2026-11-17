@@ -21,6 +21,7 @@ const input = (transcript: GenerationInput["transcript"], description: string | 
   readerContext: null,
   sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},

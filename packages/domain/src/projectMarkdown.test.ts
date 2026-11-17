@@ -68,6 +68,14 @@ test("the brief opens with the purpose, counts the whole project, flags dubious,
   assert.ok(!text.includes(`(id ${plain.id})`));
 });
 
+test("an overview filed as it was made says it was added automatically", () => {
+  const filed = judged("original");
+
+  const text = projectMarkdown(project, [item(filed, { addedBy: { by: "filing" } })]);
+
+  assert.match(text, new RegExp(`Original · added automatically · saved \\S+ · id ${filed.id}`));
+});
+
 test("a project without a purpose tells the assistant to ask what it is for", () => {
   const text = projectMarkdown({ ...project, purpose: null }, []);
 

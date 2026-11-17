@@ -2,8 +2,8 @@ import type {
   ForAnyoneInput,
   ForAnyoneResult,
   OurKeyGenerationRequest,
+  OurKeyGenerationResult,
   OurKeyGenerationStatus,
-  Overview,
   OverviewUsage,
   ProfilePassInput,
   ProfilePassResult,
@@ -19,7 +19,7 @@ import type {
 export interface GenerationApi {
   status(): Promise<OurKeyGenerationStatus>;
   usage(): Promise<OverviewUsage>;
-  generate(request: OurKeyGenerationRequest): Promise<Overview>;
+  generate(request: OurKeyGenerationRequest): Promise<OurKeyGenerationResult>;
   // Never counted against the plan (docs/features/personalisation.md).
   profilePass(input: ProfilePassInput): Promise<ProfilePassResult>;
   forAnyone(input: ForAnyoneInput): Promise<ForAnyoneResult>;

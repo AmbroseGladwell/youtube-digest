@@ -18,5 +18,7 @@ export const generateOverviewOf = (
   if (isPodcastInput(input)) return generatePodcastOverview(client, input, meta, observer);
   if (!("article" in input)) return generateOverview(client, input, meta, observer);
   const { recipe } = input.article;
-  return recipe === null ? generateArticleOverview(client, input, meta) : generateRecipeOverview(client, input, recipe, meta);
+  return recipe === null
+    ? generateArticleOverview(client, input, meta, observer)
+    : generateRecipeOverview(client, input, recipe, meta, observer);
 };

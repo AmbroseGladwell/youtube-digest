@@ -33,7 +33,7 @@ interface Filing {
 }
 
 export interface AddedByLine {
-  name: string;
+  label: string;
   on: string;
   projectName: string;
   onRemove: () => void;
@@ -139,14 +139,15 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
   const addedByFor = (overviewId: OverviewId): AddedByLine | null => {
     if (current === null) return null;
     const item = current.items.find((each) => each.overview.id === overviewId);
-    if (item === undefined || item.addedBy.by !== "assistant") return null;
+    if (item === undefined || item.addedBy.by === "reader") return null;
     const { project } = current;
+    const { addedBy } = item;
     return {
-      name: item.addedBy.name,
+      label: addedBy.by === "assistant" ? `Added by ${addedBy.name}` : "Added automatically",
       on: projectShortDate(item.addedAt, now),
       projectName: project.name,
       onRemove: () => {
-        analytics.projects.membership.removed({ projectId: project.id, overviewId, addedBy: "assistant", from: "row" });
+        analytics.projects.membership.removed({ projectId: project.id, overviewId, addedBy: addedBy.by, from: "row" });
         setMember.mutate({ projectId: project.id, overviewId, inProject: false });
       },
     };

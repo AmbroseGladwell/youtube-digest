@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { DEFAULT_SECTIONS_ENABLED, OverviewId, VideoId } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, OverviewId, ProjectId, VideoId } from "@overview/domain";
 import { generateOverview, type GenerationClient } from "./generateOverview.js";
 import { GenerationError, SchemaFailureError } from "./GenerationError.js";
 import type { GenerationInput } from "./GenerationInput.js";
@@ -23,6 +23,7 @@ const input: GenerationInput = {
   readerContext: null,
   sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },
   existingTopics: [],
+  existingProjects: [],
   pastClaims: [],
   existingTags: [],
   tagAliases: {},
@@ -54,6 +55,39 @@ test("a well-formed response from the client assembles into a valid Overview", a
   const overview = await generateOverview(answeringKindCheck(client), input, meta);
   assert.equal(overview.id, meta.id);
   assert.equal(overview.howToApply?.items[0], "do this");
+});
+
+test("the projects the model matched are reported by id beside the overview, never on it", async () => {
+  const kitchen = { id: ProjectId.parse(randomUUID()), name: "Kitchen", purpose: null };
+  const garden = { id: ProjectId.parse(randomUUID()), name: "Garden", purpose: "A vegetable patch" };
+  const client: GenerationClient = async () => ({
+    inOneLine: "A short description.",
+    bigPicture: "",
+    followUpQuestions: [],
+    readerQuestions: [],
+    coreClaim: "The core claim.",
+    thin: false,
+    keyPoints: [
+      { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
+      { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
+    ],
+    chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
+    matchedTopicNames: [],
+    matchedProjectNames: ["Garden"],
+    suggestedTopic: null,
+    tags: ["one-tag", "two-tag", "three-tag"],
+    sourceSteps: [],
+    howToApply: { items: ["do this"] },
+  });
+  const filed: ProjectId[][] = [];
+
+  const overview = await generateOverview(answeringKindCheck(client), { ...input, existingProjects: [kitchen, garden] }, meta, {
+    projectsFiled: (ids) => filed.push(ids),
+  });
+
+  assert.deepEqual(filed, [[garden.id]]);
+  assert.ok(!("projectIds" in overview) && !("matchedProjectNames" in overview));
 });
 
 test("a response that doesn't match the composed schema is a GenerationError, not a crash deep in assembly", async () => {

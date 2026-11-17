@@ -6,6 +6,7 @@ import {
   type ModelId,
   type Overview,
   type OverviewId,
+  type ProjectId,
   type Provider,
 } from "@overview/domain";
 import { fallbackReasonOf, generateOverviewOf, type GenerationClient, type OverviewInput } from "@overview/generation";
@@ -39,6 +40,8 @@ export interface OverviewMeta {
   id: OverviewId;
   savedAt: string;
   onAttempt?: ((attempt: GenerationAttempt) => void) | undefined;
+  // Which of the reader's projects the key that made it filed it into.
+  onProjectsFiled?: ((projectIds: ProjectId[]) => void) | undefined;
 }
 
 const SPENT_QUOTAS = new Set(["ours", "own", "trial", "trial-address"]);
@@ -79,8 +82,7 @@ export async function makeOverviewOnKeys(
         : { key: api === null ? "trial" : "ours", provider: ourModel?.provider, model: ourModel?.model },
     );
     try {
-      const overview =
-        key === "own" ? await onOwnKey(own!, api, input, meta) : await (api ?? trial)!.generate({ overviewId: meta.id, input });
+      const overview = key === "own" ? await onOwnKey(own!, api, input, meta) : await onOurKey((api ?? trial)!, input, meta);
       return { ...overview, madeOn: { key, fallback: passedOver } };
     } catch (error) {
       const cause = fallbackCauseOf(error);
@@ -91,6 +93,12 @@ export async function makeOverviewOnKeys(
     }
   }
   throw new Error("There is no key to make this overview with.");
+}
+
+async function onOurKey(api: Pick<GenerationApi, "generate">, input: OverviewInput, meta: OverviewMeta): Promise<Overview> {
+  const { filedProjectIds, ...overview } = await api.generate({ overviewId: meta.id, input });
+  meta.onProjectsFiled?.(filedProjectIds);
+  return overview;
 }
 
 async function onOwnKey(
@@ -107,7 +115,7 @@ async function onOwnKey(
     if (fallbackCauseOf(error) === "quota-spent") throw error;
   }
   try {
-    return await generateOverviewOf(own.client, input, meta);
+    return await generateOverviewOf(own.client, input, meta, meta.onProjectsFiled ? { projectsFiled: meta.onProjectsFiled } : {});
   } catch (error) {
     await api?.release(meta.id).catch(() => undefined);
     throw error;

@@ -150,6 +150,28 @@ test.describe("a project's page", () => {
       ]);
   });
 
+  test("what filing put there says it was added automatically, and taking it out is counted as filing's", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    seed(backendSimulator);
+    backendSimulator.projects.seedMember(
+      makeProjectMember(project, elsewhere.id, { addedBy: { by: "filing" }, addedAt: "2026-11-12T09:00:00.000Z" }),
+    );
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    await library.projectsRail.openProject("Kitchen renovation");
+
+    await library.cardWithTitle("Stop studying Spanish").verifyAddedByReads("Added automatically · 12 Nov·Remove");
+    await library.cardWithTitle("Stop studying Spanish").clickRemoveFromProject();
+
+    await library.verifyCardOrder(["Quartz or granite", "What moving a sink", "The kitchen layout"]);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter((event) => event.name === "projects.membership.removed"))
+      .toEqual([
+        { name: "projects.membership.removed", props: { projectId: project.id, overviewId: elsewhere.id, addedBy: "filing", from: "row" } },
+      ]);
+  });
+
   test("renames in place, and Escape leaves the name as it was", async ({ launcher, backendSimulator }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();

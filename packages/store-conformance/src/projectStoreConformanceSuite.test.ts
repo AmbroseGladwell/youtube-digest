@@ -1,4 +1,5 @@
 import {
+  BY_FILING,
   BY_READER,
   isInProject,
   memberChangeTime,
@@ -46,6 +47,11 @@ class InMemoryProjectStore implements ProjectStore {
 
   async addToProject(projectId: ProjectId, overviewId: OverviewId) {
     this.#change(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }));
+  }
+
+  async fileIntoProject(projectId: ProjectId, overviewId: OverviewId) {
+    if (!this.#members.has(projectMemberId(projectId, overviewId)))
+      this.#change(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_FILING }));
   }
 
   async removeFromProject(projectId: ProjectId, overviewId: OverviewId) {

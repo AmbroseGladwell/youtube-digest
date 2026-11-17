@@ -17,6 +17,8 @@ import {
   type OverviewStore,
   type PodcastEpisode,
   type PlaylistOrigin,
+  type ProjectId,
+  type ProjectStore,
   type SettingsStore,
   type TranscriptStore,
   type VideoSource,
@@ -58,6 +60,8 @@ export interface GenerationPipelineDeps {
   overviewStore: OverviewStore;
   settingsStore: Pick<SettingsStore, "get">;
   transcriptStore: TranscriptStore;
+  // Absent, nothing is filed into projects (docs/features/projects.md, "Filing as an overview is made").
+  projectStore?: Pick<ProjectStore, "listProjects" | "fileIntoProject"> | undefined;
 }
 
 export interface RunOverviewGenerationOptions {
@@ -94,6 +98,9 @@ export interface RunOverviewGenerationOptions {
   onTimed?: ((timing: ClientTimingReport) => void) | undefined;
   // Each key as it is tried, so analytics names the one that made or failed the overview.
   onAttempt?: OverviewMeta["onAttempt"];
+  // How many projects a new overview was filed into, once each is written. Not called when
+  // nothing was offered for filing: switched off, no projects, or a regeneration.
+  onProjectsFiled?: ((count: number) => void) | undefined;
 }
 
 export async function runOverviewGeneration(
@@ -135,7 +142,7 @@ export async function runOverviewGeneration(
 // can't be read costs the reader nothing.
 export async function runArticleOverviewGeneration(
   read: () => Promise<ArticleRead>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> {
   const result = await read();
@@ -166,7 +173,7 @@ export interface PodcastRunRequest {
 export async function runPodcastOverviewGeneration(
   { episode, sharedFrom }: PodcastRunRequest,
   findWords: (episode: PodcastEpisode, options: RunOverviewGenerationOptions) => Promise<Pick<PodcastTranscript, "transcript">>,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> {
   const id = await podcastSourceId(episode);
@@ -213,18 +220,25 @@ type WhatToWrite =
 
 async function writeOverview(
   what: WhatToWrite,
-  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore">,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
   options: RunOverviewGenerationOptions,
   stopwatch: CaptureStopwatch | null = null,
 ): Promise<Overview> {
-  const [existingTopics, claims, library, settings, previous] = await Promise.all([
+  const [existingTopics, claims, library, settings, previous, projects] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),
     deps.overviewStore.listOverviews(),
     deps.settingsStore.get(),
     // An unreadable record has nothing left to keep, and is regenerated whole.
     options.overviewId === undefined ? null : deps.overviewStore.getOverview(options.overviewId).catch(() => null),
+    deps.projectStore?.listProjects() ?? [],
   ]);
+  // A regeneration keeps where the reader filed it, so only a new overview is filed.
+  const existingProjects =
+    settings.fileIntoProjects && options.overviewId === undefined
+      ? projects.filter((project) => project.archivedAt === null).map(({ id, name, purpose }) => ({ id, name, purpose }))
+      : [];
+  let filedProjectIds: ProjectId[] = [];
   const pastClaims = claims.filter((claim) => claim.overviewId !== options.overviewId);
   const existingTags = tagUsage(library.map((overview) => overview.tags));
   const readerContext = composeReaderContext(settings.aboutYou, settings.learned);
@@ -236,6 +250,7 @@ async function writeOverview(
         readerContext,
         sectionsEnabled: settings.sectionsEnabled,
         existingTopics,
+        existingProjects,
         pastClaims,
         existingTags,
         tagAliases: settings.tagAliases,
@@ -244,6 +259,9 @@ async function writeOverview(
         id: options.overviewId ?? OverviewId.parse(crypto.randomUUID()),
         savedAt: new Date().toISOString(),
         onAttempt: options.onAttempt,
+        onProjectsFiled: (ids) => {
+          filedProjectIds = ids;
+        },
       },
     );
   const overview = await (stopwatch ? stopwatch.time("model", make) : make());
@@ -261,6 +279,10 @@ async function writeOverview(
   };
   const save = () => deps.overviewStore.saveOverview(saved);
   await (stopwatch ? stopwatch.time("save", save) : save());
+  if (existingProjects.length > 0) {
+    for (const projectId of filedProjectIds) await deps.projectStore!.fileIntoProject(projectId, saved.id);
+    options.onProjectsFiled?.(filedProjectIds.length);
+  }
 
   return saved;
 }

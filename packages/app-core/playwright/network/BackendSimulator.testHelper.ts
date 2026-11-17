@@ -247,6 +247,7 @@ export class BackendSimulator {
   #profilePassItems: ProfilePassItem[] = [];
   #profilePasses: ProfilePassInput[] = [];
   #ourKeyHowToApply: string[] | null = null;
+  #ourKeyFilesInto: string[] = [];
   #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
   #topicMatches: string[] = [];
   #topicPasses: TopicMatchInput[] = [];
@@ -1020,10 +1021,13 @@ export class BackendSimulator {
               }
               this.#ourKeyRequests.push(request);
               this.#trialTokensSent.push(route.request().headers()[TRIAL_TOKEN_HEADER] ?? null);
+              const filedProjectIds = (request.input.existingProjects ?? [])
+                .filter((project) => this.#ourKeyFilesInto.includes(project.name))
+                .map((project) => project.id);
               return {
                 status: 200,
-                body:
-                  "podcast" in request.input
+                body: {
+                  ...("podcast" in request.input
                     ? makeOverview({ id: request.overviewId, source: request.input.podcast, inOneLine: "Made from the episode." })
                     : "article" in request.input
                       ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
@@ -1032,7 +1036,9 @@ export class BackendSimulator {
                           source: youTubeSource(request.input.video),
                           inOneLine: "Made on our key.",
                           ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
-                        }),
+                        })),
+                  filedProjectIds,
+                },
               };
             },
             onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: our key refused" } } }),
@@ -1622,6 +1628,10 @@ export class BackendSimulator {
     generations: (): OurKeyGenerationRequest[] => [...this.#ourKeyRequests],
     writesHowToApply: (items: string[]): void => {
       this.#ourKeyHowToApply = items;
+    },
+    // Which of the projects it is offered, by name, our key files the overview into.
+    filesInto: (projectNames: string[]): void => {
+      this.#ourKeyFilesInto = projectNames;
     },
     profilePassFinds: (items: ProfilePassItem[]): void => {
       this.#profilePassItems = items;

@@ -6,7 +6,7 @@ import type { GenerationInput } from "@overview/generation";
 
 export type ReaderProfile = Pick<
   GenerationInput,
-  "captureReason" | "readerContext" | "existingTopics" | "pastClaims" | "existingTags" | "tagAliases"
+  "captureReason" | "readerContext" | "existingTopics" | "existingProjects" | "pastClaims" | "existingTags" | "tagAliases"
 >;
 
 interface SampleRecord {
@@ -34,6 +34,7 @@ export function readerProfileOf(records: readonly SampleRecord[]): ReaderProfile
       description: null,
       createdAt: "2026-10-19T00:00:00.000Z",
     })),
+    existingProjects: [],
     pastClaims: records.map((record, index) => ({
       overviewId: OverviewId.parse(`00000000-0000-4000-9000-${String(index).padStart(12, "0")}`),
       title: record.title,

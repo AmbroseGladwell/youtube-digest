@@ -29,6 +29,7 @@ export interface GeneratedArticleOutput {
   keyPoints: Array<{ text: string; paragraphIndex: number | null }>;
   chapters: ArticleChapterShape[];
   matchedTopicNames: string[];
+  matchedProjectNames?: string[];
   tags: string[];
   verdict?: {
     novelty: Novelty;

@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { OverviewId } from "./Brands.js";
+import { OverviewId, ProjectId } from "./Brands.js";
 import { ExtractedArticle } from "./ExtractedArticle.js";
 import { Tag } from "./Filing.js";
 import { ModelId } from "./ModelId.js";
+import { Overview } from "./Overview.js";
+import { FilingProject } from "./Project.js";
 import { Provider } from "./Provider.js";
 import { SectionsEnabled } from "./Settings.js";
 import { TagAliases } from "./TagAliases.js";
@@ -16,6 +18,8 @@ const readerContext = {
   readerContext: z.string().nullable(),
   sectionsEnabled: SectionsEnabled,
   existingTopics: z.array(Topic),
+  // Empty from a client before filing into projects, and when the reader has switched it off.
+  existingProjects: z.array(FilingProject).default([]),
   pastClaims: z.array(z.object({ overviewId: OverviewId, title: z.string(), claim: z.string() })),
   existingTags: z.array(z.object({ tag: Tag, count: z.number().int().min(1) })),
   tagAliases: TagAliases,
@@ -35,6 +39,12 @@ export const OurKeyGenerationRequest = z.object({
   ]),
 });
 export type OurKeyGenerationRequest = z.infer<typeof OurKeyGenerationRequest>;
+
+// The overview, with the projects it was filed into beside it rather than on it, since an
+// overview never lists its projects (docs/features/projects.md). A client from before reads the
+// overview and drops the rest; a server from before sends none.
+export const OurKeyGenerationResult = z.intersection(Overview, z.object({ filedProjectIds: z.array(ProjectId).default([]) }));
+export type OurKeyGenerationResult = z.infer<typeof OurKeyGenerationResult>;
 
 // Whether this server makes overviews on our key at all, asked before it is offered, and
 // with which provider and model, so the app's analytics can name them (OV-255). Optional

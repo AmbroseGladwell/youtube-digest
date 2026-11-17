@@ -109,6 +109,9 @@ export const Settings = z.object({
   // "Questions to ask next: Answered here / Open in {assistant}". Where chat is offered, a tapped
   // question is answered in the app unless the reader chose their assistant (docs/features/chats.md).
   questionsAnsweredHere: z.boolean().catch(true),
+  // On, a new overview is put into the reader's projects it clearly serves; off, projects are
+  // left out of the prompt. On by default (docs/features/personalisation.md, "Filing into projects").
+  fileIntoProjects: z.boolean().catch(true),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -140,4 +143,5 @@ export const DEFAULT_SETTINGS: Settings = {
   headImageSize: DEFAULT_HEAD_IMAGE_SIZE,
   followUpAssistant: null,
   questionsAnsweredHere: true,
+  fileIntoProjects: true,
 };
