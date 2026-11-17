@@ -77,3 +77,23 @@
     opacity: 0.5;
   }
 }
+
+// Design 305c: the check's line under the facts, empty once there's nothing to say.
+.checking,
+.needs {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.checking {
+  color: var(--muted);
+}
+
+.needs {
+  color: var(--accent);
+  font-weight: 600;
+}

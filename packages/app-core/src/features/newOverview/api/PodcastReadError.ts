@@ -13,10 +13,16 @@ export class PodcastReadError extends Error {
   }
 }
 
-// The episode was found, but no words for it were, so nothing could be written (design 106h).
+// The episode was found, but no words for it were, so nothing could be written (design 106h);
+// `transcribable` where our server would transcribe it, if the reader chooses (design 305c-2).
 export class PodcastNoTranscriptError extends Error {
-  constructor() {
+  readonly transcribable: boolean;
+  readonly episodeSeconds: number | null;
+
+  constructor(transcribable = false, episodeSeconds: number | null = null) {
     super("There's no transcript for this episode yet");
     this.name = "PodcastNoTranscriptError";
+    this.transcribable = transcribable;
+    this.episodeSeconds = episodeSeconds;
   }
 }

@@ -4,6 +4,7 @@ import { DEFAULT_SECTIONS_ENABLED, EMPTY_ABOUT_YOU, type Provider } from "@overv
 import { DEFAULT_API_KEYS } from "../../apiKeys/ApiKeys.js";
 import { DEFAULT_SYNC_CONNECTION } from "../../sync/types/SyncConnection.js";
 import {
+  planRowValue,
   NOT_SIGNED_IN_ROW_VALUE,
   aboutRowValue,
   accountRowValue,
@@ -135,5 +136,13 @@ describe("cookingRowValue", () => {
   it("says whether the voice reads the steps, then names the timer sound (design 289i)", () => {
     expect(cookingRowValue(true, "ready")).toBe("Voice on · Ready");
     expect(cookingRowValue(false, "lowTone")).toBe("Voice off · Low tone");
+  });
+});
+
+describe("planRowValue", () => {
+  it("names the plan and what's left, then the transcribing left once some was used (305o)", () => {
+    expect(planRowValue("Free", "4 of 5 left")).toBe("Free · 4 of 5 left");
+    expect(planRowValue("Free", "4 of 5 left", "3 hr 4 min")).toBe("Free · 4 of 5 left · 3 hr 4 min transcribing");
+    expect(planRowValue("Free", null)).toBe("Free");
   });
 });

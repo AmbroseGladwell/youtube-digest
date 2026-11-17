@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import type { ChatUsage, OverviewUsage } from "@overview/domain";
+import type { ChatUsage, OverviewUsage, TranscriptionUsage } from "@overview/domain";
+import { audioLength } from "../../../podcasts/util/transcriptionCopy.js";
 import { Routes } from "../../../../app/Routes.js";
 import { PLAN_CARDS } from "../../planCards.js";
 import { CHECKING, leftOf, resetDate } from "../../../newOverview/util/usageLine.js";
@@ -12,10 +13,13 @@ type Usage = { status: "checking" | "unreachable" } | { status: "known"; data: O
 export type PlanUsageProps = { signedIn: true; usage: Usage; hasOwnKey: boolean; chatUsage?: ChatUsage | null } | { signedIn: false };
 
 interface Cell {
-  id: "ours" | "own" | "questions";
+  id: "ours" | "own" | "questions" | "transcribing";
   label: string;
   count: string;
   aside?: ReactNode;
+  // Beside the label, as the transcribing row's episodes are (design 305m).
+  tally?: string;
+  wide?: boolean;
 }
 
 const FREE = PLAN_CARDS[0]!;
@@ -80,18 +84,45 @@ export function PlanUsage(props: PlanUsageProps) {
                   ...(questionsLeft === 0 ? { aside: `None left. More on ${resetDate(chatUsage.resetsOn)}.` } : {}),
                 },
               ]),
+          ...(usage.status === "known" && usage.data.transcription !== undefined
+            ? [transcribingCell(usage.data.transcription, usage.data.resetsOn)]
+            : []),
         ]}
       />
     </div>
   );
 }
 
+// Design 305m: transcribing as its own full-width row under the overviews, counted in hours and
+// minutes of audio, with the episodes it went on and a line on what it's for.
+const transcribingCell = (transcription: TranscriptionUsage, resetsOn: string): Cell => {
+  const left = Math.max(0, transcription.limitSeconds - transcription.usedSeconds);
+  return {
+    id: "transcribing",
+    label: "Transcribing",
+    count: `${audioLength(left)} of ${audioLength(transcription.limitSeconds)} left`,
+    tally: transcription.episodes === 1 ? "1 episode" : `${transcription.episodes} episodes`,
+    aside:
+      left === 0
+        ? `None left. More on ${resetDate(resetsOn)}.`
+        : "Episodes with no transcript are made from their audio. Ones you’ve transcribed before are free.",
+    wide: true,
+  };
+};
+
 function Cells({ cells }: { cells: Cell[] }) {
   return (
     <dl className={styles.cells}>
       {cells.map((cell) => (
-        <div className={styles.cell} key={cell.id} data-testid={planUsageTestIds.cell(cell.id)}>
-          <dt>{cell.label}</dt>
+        <div
+          className={cell.wide === true ? `${styles.cell} ${styles.wide}` : styles.cell}
+          key={cell.id}
+          data-testid={planUsageTestIds.cell(cell.id)}
+        >
+          <dt className={styles.label}>
+            {cell.label}
+            {cell.tally !== undefined && <span className={styles.tally}>{cell.tally}</span>}
+          </dt>
           <dd className={styles.count}>{cell.count}</dd>
           {cell.aside !== undefined && <dd className={styles.aside}>{cell.aside}</dd>}
         </div>

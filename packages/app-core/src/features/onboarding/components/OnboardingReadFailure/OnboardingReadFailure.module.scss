@@ -109,12 +109,8 @@
   color: var(--muted);
 }
 
-.comingSoon {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--label);
+// Design 305c-2: transcribing the episode is the way on, so it leads.
+.transcribe {
+  @include onboarding.primary;
+  gap: 0.375rem;
 }

@@ -2,6 +2,7 @@ import { domainOf, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY } from "@overview/
 import type { ReaderPlace } from "../../newOverview/util/pastedLinkFailureCopy.js";
 import type { OnboardingFailure } from "./onboardingFailureOf.js";
 import { podcastLinkFailureCopy } from "../../newOverview/util/podcastLinkFailureCopy.js";
+import { transcriptionCopy } from "../../podcasts/util/transcriptionCopy.js";
 
 export interface OnboardingFailureCopy {
   title: string;
@@ -10,8 +11,8 @@ export interface OnboardingFailureCopy {
   // Out of reads, only a video link is worth asking for: it uses none.
   videoOnly: boolean;
   extension: string | null;
-  // Where Transcribe it will go once speech-to-text exists (design 106i).
-  comingSoon: boolean;
+  // The episode's audio can be transcribed instead, and the button that does it (design 305c-2).
+  transcribe: string | null;
 }
 
 const failed = (title: string, body: string, more: Partial<OnboardingFailureCopy> = {}): OnboardingFailureCopy => ({
@@ -20,7 +21,7 @@ const failed = (title: string, body: string, more: Partial<OnboardingFailureCopy
   tryAgain: false,
   videoOnly: false,
   extension: null,
-  comingSoon: false,
+  transcribe: null,
   ...more,
 });
 
@@ -62,8 +63,25 @@ export function onboardingFailureCopy(failure: OnboardingFailure, link: string, 
       return failed(
         "There’s no transcript for this episode yet",
         "We found the episode, but we couldn’t find a transcript for it, and an overview is written from the words. Many episodes don’t have one yet. Have it on YouTube? Paste that link instead.",
-        { comingSoon: true },
       );
+    // Design 305c-2's ask, in onboarding: the trial transcribes its one overview's episode.
+    case "podcastNeedsTranscribing": {
+      const ask = transcriptionCopy.ask(failure.episodeSeconds);
+      return failed(ask.heading, ask.body, { transcribe: "Transcribe and create" });
+    }
+    case "transcriptionFailed": {
+      const copy = transcriptionCopy.failed(failure.reason);
+      return failed(copy.heading, copy.body.replace(/ Nothing was counted: no transcribing time and no overview\.$/, ""), {
+        transcribe: copy.retry ? "Try again" : null,
+      });
+    }
+    case "transcriptionRefused":
+      return failure.refusal === "too-long"
+        ? failed("Episodes over 4 hours can’t be transcribed", "If the show has it on YouTube, that link makes an overview of it instead.")
+        : failed(
+            "There isn’t enough transcribing left on this device",
+            "A free account transcribes 5 hours a month. Have it on YouTube? Paste that link instead.",
+          );
     case "read":
       break;
   }

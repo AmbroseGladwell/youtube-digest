@@ -1,0 +1,58 @@
+@use "../../../../theme/controls.scss" as controls;
+
+// Designs 305c-2, 305h, 305j and 305k: the at-limit pattern (95i), taking the action's place.
+.root {
+  margin-top: 1rem;
+}
+
+.root::before {
+  content: "";
+  display: block;
+  width: 1.75rem;
+  height: 0.25rem;
+  border-radius: 2px;
+  background: var(--accent);
+  margin: 0 0 0.875rem;
+}
+
+.heading {
+  margin: 0 0 0.625rem;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.5625rem;
+  line-height: 1.15;
+  text-wrap: pretty;
+}
+
+.body {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-md;
+
+  text-decoration: none;
+}
+
+.secondary {
+  @include controls.surface-pill;
+  @include controls.pill-md;
+}
+
+.foot {
+  margin: 0.625rem 0 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}

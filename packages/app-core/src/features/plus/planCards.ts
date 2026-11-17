@@ -16,6 +16,8 @@ export interface PlanCard {
   ownKey: string;
   // Questions about an overview a month, always on us (OV-310).
   questions: string;
+  // Hours of audio a month, shown where the server transcribes episodes (design 305m).
+  transcribing: string;
   note: string;
 }
 
@@ -25,6 +27,7 @@ export const PLAN_CARDS: PlanCard[] = [
     ourKey: "5 a month",
     ownKey: "10 a month",
     questions: `${chatAllowances.free.toLocaleString("en-GB")} a month`,
+    transcribing: "5 hr a month",
     note: "Comes with every account.",
   },
   {
@@ -32,6 +35,7 @@ export const PLAN_CARDS: PlanCard[] = [
     ourKey: "10 a month",
     ownKey: "200 a month",
     questions: `${chatAllowances["byo-plus"].toLocaleString("en-GB")} a month`,
+    transcribing: "15 hr a month",
     note: "Cheaper, for a reader who already pays an AI provider.",
   },
   {
@@ -39,6 +43,7 @@ export const PLAN_CARDS: PlanCard[] = [
     ourKey: "50 a month",
     ownKey: "200 a month",
     questions: `${chatAllowances.plus.toLocaleString("en-GB")} a month`,
+    transcribing: "30 hr a month",
     note: "For a reader who would rather not hold a key at all.",
   },
 ];

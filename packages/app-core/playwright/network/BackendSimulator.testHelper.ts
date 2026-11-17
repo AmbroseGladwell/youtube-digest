@@ -34,6 +34,9 @@ import {
   type MagicLinkRequest,
   type ArticleRead,
   type PodcastRead,
+  type PodcastTranscription,
+  type TranscriptCheck,
+  type TranscriptionUsage,
   type OurKeyGenerationRequest,
   type ProfilePassInput,
   type ProfilePassItem,
@@ -260,6 +263,11 @@ export class BackendSimulator {
   #podcastReads: string[] = [];
   #podcastReadsHeld: Array<() => void> | null = null;
   #podcastTranscriptAsks: Array<{ feedUrl: string; guid: string }> = [];
+  #podcastCheck: TranscriptCheck | null = null;
+  #podcastTranscribable = false;
+  #transcriptionScript: PodcastTranscription[] = [];
+  #transcriptionAsks: Array<{ feedUrl: string; guid: string }> = [];
+  #transcriptionUsage: TranscriptionUsage | undefined = undefined;
   #trialTokensIssued = 0;
   #trialTokensSent: Array<string | null> = [];
   #reservations: Array<{ overviewId: string; shareToken?: string }> = [];
@@ -934,6 +942,7 @@ export class BackendSimulator {
         resetsOn: "2026-11-01",
         ours: { used: this.#madeEarlierThisMonth.ours + this.#ourKeyRequests.length, limit: limits.ours },
         own: { used: this.#ownMonthSpent ? limits.own : ownUsed, limit: limits.own },
+        ...(this.#transcriptionUsage === undefined ? {} : { transcription: this.#transcriptionUsage }),
       };
     };
 
@@ -961,15 +970,36 @@ export class BackendSimulator {
 
     await this.#page.route("**/api/podcasts/transcript", (route) => {
       this.#podcastTranscriptAsks.push(route.request().postDataJSON() as { feedUrl: string; guid: string });
+      const details = { failure: "no-captions", ...(this.#podcastTranscribable ? { transcribable: true } : {}) };
       return this.#podcastWords === null
         ? route.fulfill({
             status: 422,
             contentType: "application/json",
-            body: JSON.stringify({
-              error: { code: "transcript_unavailable", message: "Simulated: no transcript", details: { failure: "no-captions" } },
-            }),
+            body: JSON.stringify({ error: { code: "transcript_unavailable", message: "Simulated: no transcript", details } }),
           })
         : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastWords) });
+    });
+
+    // Without a scripted answer, the check says what Create will find: the words, or, as a server
+    // that transcribes nothing does, that it can't tell.
+    await this.#page.route("**/api/podcasts/transcript/check", (route) => {
+      const check: TranscriptCheck = this.#podcastCheck ?? (this.#podcastWords === null ? { words: "unknown" } : { words: "found" });
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(check) });
+    });
+
+    // Asked for, then asked after: each answer is the next line of the script, the last repeating.
+    await this.#page.route("**/api/podcasts/transcription**", (route) => {
+      if (route.request().method() === "POST")
+        this.#transcriptionAsks.push(route.request().postDataJSON() as { feedUrl: string; guid: string });
+      const next = this.#transcriptionScript.length > 1 ? this.#transcriptionScript.shift()! : this.#transcriptionScript[0];
+      if (next === undefined) {
+        return route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ error: { code: "unavailable", message: "Simulated: no transcriber" } }),
+        });
+      }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(next) });
     });
 
     await this.#page.route("**/api/generations", (route) =>
@@ -1346,6 +1376,8 @@ export class BackendSimulator {
     },
     get: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverview(overviewId), id),
     getState: (id: OverviewId) => this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.getOverviewState(overviewId), id),
+    failStateWritesFor: (id: OverviewId) =>
+      this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.failStateWritesFor(overviewId), id),
   };
 
   // The account as the sync server holds it: what a pull would bring down, and where the
@@ -1541,6 +1573,23 @@ export class BackendSimulator {
     },
     reads: (): string[] => [...this.#podcastReads],
     transcriptAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastTranscriptAsks],
+    // What the check before Create says of the episode's words (design 305c).
+    checkSays: (check: TranscriptCheck): void => {
+      this.#podcastCheck = check;
+    },
+    // Create finds no words, and says this server would transcribe the episode (design 305c-2).
+    offersTranscribing: (): void => {
+      this.#podcastTranscribable = true;
+    },
+    // The transcription's states, asked for and then asked after, in order.
+    transcribesAs: (...states: PodcastTranscription[]): void => {
+      this.#transcriptionScript = states;
+    },
+    transcriptionAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#transcriptionAsks],
+    // The month's transcribing on the reader's usage (design 305m).
+    transcribingUsed: (usage: TranscriptionUsage): void => {
+      this.#transcriptionUsage = usage;
+    },
   };
 
   // Our key as our server offers it, and the reservations the reader's own key takes

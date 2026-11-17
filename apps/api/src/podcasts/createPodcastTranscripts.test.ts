@@ -86,7 +86,11 @@ function ladderOver(
     await ready;
     return podcastTranscripts.remembered(...args);
   };
-  return { resolve, remembered, asked, kept, keptSince };
+  const check: typeof podcastTranscripts.check = async (request) => {
+    await ready;
+    return podcastTranscripts.check(request);
+  };
+  return { resolve, remembered, check, asked, kept, keptSince };
 }
 
 const failureOf = async (promise: Promise<unknown>) => {
@@ -351,4 +355,32 @@ test("a feed's own transcript wins, and YouTube isn't asked; nor is it when the 
 
 test("without our server's YouTube, the YouTube rung says there are no captions", async () => {
   assert.equal(await failureOf(ladderOver(feedWithoutTags).resolve(asking(EPISODE, { videoId: "VIDEO000001" }))), "no-captions");
+});
+
+test("the check finds a video by our server's search without fetching its captions, and remembers it so Create needn't search again", async () => {
+  const { youTube, calls } = youTubeOver({ finds: "VIDEO000001", confirms: "title" });
+  const { check, resolve, kept } = ladderOver(feedWithoutTags, null, youTube);
+
+  assert.deepEqual(await check(asking(EPISODE, { search: true })), { words: "found", via: "youtube" });
+  assert.deepEqual(kept(), [{ via: "youtube", videoId: "VIDEO000001" }]);
+  assert.deepEqual(calls, ["search"]);
+
+  const { answer } = await resolve(asking(EPISODE, { search: true }));
+  assert.deepEqual(answer, { via: "remembered", from: "youtube" });
+  assert.deepEqual(calls, ["search", "captions:VIDEO000001"]);
+});
+
+test("the check says no words with the feed's audio and length, and can't tell when the Data API or the feed doesn't answer", async () => {
+  const { youTube } = youTubeOver({ finds: null });
+  const { check } = ladderOver(feedWithoutTags, null, youTube);
+  assert.deepEqual(await check(asking(EPISODE, { search: true })), {
+    words: "none",
+    episode: { sourceKey: await podcastSourceKey(EPISODE), durationSeconds: 2184, audioUrl: "https://media.example/ep.mp3" },
+  });
+
+  youTube.episodes.find = async () => {
+    throw new Error("The YouTube Data API answered 403 to search");
+  };
+  assert.deepEqual(await check(asking(EPISODE, { search: true })), { words: "unknown", via: "youtube" });
+  assert.deepEqual(await ladderOver({ [FEED_URL]: "down" }).check(asking(EPISODE)), { words: "unknown", via: "feed" });
 });

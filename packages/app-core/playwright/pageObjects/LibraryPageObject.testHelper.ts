@@ -3,6 +3,7 @@ import { libraryPageTestIds } from "../../src/features/library/LibraryPage/Libra
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { libraryUnreadableCardTestIds } from "../../src/features/library/components/LibraryUnreadableCard/LibraryUnreadableCardTestIds.js";
+import { ToastPageObject } from "./ToastPageObject.testHelper.js";
 import { SelectionBarPageObject } from "./SelectionBarPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 import { libraryFilterChipsTestIds } from "../../src/features/library/components/LibraryFilterChips/LibraryFilterChipsTestIds.js";
@@ -158,6 +159,13 @@ export class LibraryPageObject extends PageObject {
   get selectionBar(): SelectionBarPageObject {
     return new SelectionBarPageObject(this.testContext);
   }
+
+  get toast(): ToastPageObject {
+    return new ToastPageObject(this.testContext);
+  }
+
+  verifySelectButtonIsFocused = () =>
+    this.step("verifySelectButtonIsFocused", () => expect(this.get(libraryPageTestIds.selectButton)).toBeFocused());
 
   clearTheSearch = () => this.step("clearTheSearch", () => this.click(libraryPageTestIds.clearSearchButton));
 

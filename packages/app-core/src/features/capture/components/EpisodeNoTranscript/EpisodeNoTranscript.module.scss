@@ -11,10 +11,6 @@
 
 .heading,
 .body,
-.comingSoon {
-  margin: 0;
-}
-
 .heading {
   font-size: 0.875rem;
   font-weight: 600;
@@ -24,13 +20,4 @@
   color: var(--muted);
   font-size: 0.8125rem;
   line-height: 1.5;
-}
-
-.comingSoon {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--label);
-  font-size: 0.8125rem;
-  font-weight: 600;
 }

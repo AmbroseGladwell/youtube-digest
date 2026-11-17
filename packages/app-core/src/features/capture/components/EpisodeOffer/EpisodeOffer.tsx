@@ -1,9 +1,15 @@
 import type { PodcastEpisode } from "@overview/domain";
 import { episodeFacts } from "../../../newOverview/components/PodcastLinkStatus/PodcastLinkStatus.js";
+import type { EpisodeWords } from "../../../newOverview/usePodcastLink.js";
+import { episodeActionOf } from "../../../podcasts/util/episodeActionOf.js";
+import { transcriptionCopy } from "../../../podcasts/util/transcriptionCopy.js";
 import styles from "./EpisodeOffer.module.scss";
 import { episodeOfferTestIds } from "./EpisodeOfferTestIds.js";
 
-export type EpisodeOfferState = { status: "reading"; host: string } | { status: "found"; episode: PodcastEpisode } | { status: "show" };
+export type EpisodeOfferState =
+  | { status: "reading"; host: string }
+  | { status: "found"; episode: PodcastEpisode; words: EpisodeWords | null }
+  | { status: "show" };
 
 export interface EpisodeOfferProps {
   offer: EpisodeOfferState;
@@ -40,6 +46,15 @@ export function EpisodeOffer({ offer, on }: EpisodeOfferProps) {
     );
   }
   const facts = episodeFacts(offer.episode);
+  // Design 305c, in the panel: checking for its words, then whether it needs transcribing.
+  const words =
+    offer.words === null
+      ? null
+      : offer.words.state === "checking"
+        ? "Checking for a transcript…"
+        : episodeActionOf(offer.words).kind === "transcribe"
+          ? transcriptionCopy.needs(offer.episode.durationSeconds)
+          : null;
   return (
     <section className={styles.card} aria-label="On this tab" data-testid={episodeOfferTestIds.card}>
       <p className={styles.kicker} data-testid={episodeOfferTestIds.kicker}>
@@ -53,6 +68,13 @@ export function EpisodeOffer({ offer, on }: EpisodeOfferProps) {
           {facts}
         </p>
       )}
+      <p
+        className={offer.words?.state === "checking" ? styles.checking : styles.needs}
+        role="status"
+        data-testid={episodeOfferTestIds.words}
+      >
+        {words}
+      </p>
     </section>
   );
 }

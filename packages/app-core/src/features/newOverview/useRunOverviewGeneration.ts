@@ -4,6 +4,10 @@ import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, type ArticleRead, typ
 import type { OverviewInput } from "@overview/generation";
 import { createFetchGenerationApi, createFetchPodcastApi } from "@overview/sync";
 import { podcastTranscript } from "../podcasts/api/podcastTranscript.js";
+import { transcribeEpisode, type TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
+import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
+import { TranscriptionFailedError } from "../podcasts/api/TranscriptionFailedError.js";
+import { TranscriptionRefusedError } from "../podcasts/api/TranscriptionRefusedError.js";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useStores, type Stores } from "../../stores/StoresContext.js";
 import type { ApiKeys } from "../apiKeys/ApiKeys.js";
@@ -103,9 +107,11 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
 
 // An episode's words come through our server, on the account or signed out on the trial; the reader's
 // extension searches YouTube for the episode on their own connection when it can
-// (docs/features/podcast-on-youtube.md).
+// (docs/features/podcast-on-youtube.md). Or its audio is transcribed, as the reader chose, with the
+// events of that measured here, wherever the run was started (docs/features/speech-to-text.md).
 export function useRunPodcastGeneration(apiKeys: ApiKeys) {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const analytics = useAnalytics();
   const shown = useStores();
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
@@ -118,9 +124,46 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
       const api = signedIn
         ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token })
         : createTrialPodcastApi({ baseUrl: knownApiUrl });
+      const from = options.from ?? "dialog";
+      const episodeMinutes = {
+        episodeMinutes: request.episode.durationSeconds === null ? undefined : Math.round(request.episode.durationSeconds / 60),
+      };
+      const transcribe = async (episode: typeof request.episode, onTranscription: RunOverviewGenerationOptions["onTranscription"]) => {
+        const askedAt = Date.now();
+        let startedAt: number | null = null;
+        analytics.capture.episodeTranscription.chosen({ from, when: request.transcribe!, ...episodeMinutes });
+        try {
+          const words = await transcribeEpisode(api, episode, {
+            isCancelled: options.isCancelled,
+            onProgress: (progress: TranscriptionProgress) => {
+              if (progress === "transcribing" && startedAt === null) startedAt = Date.now();
+              onTranscription?.(progress);
+            },
+          });
+          const doneAt = Date.now();
+          analytics.capture.episodeTranscription.finished({
+            from,
+            waitedMs: (startedAt ?? doneAt) - askedAt,
+            transcribingMs: startedAt === null ? 0 : doneAt - startedAt,
+            ...episodeMinutes,
+          });
+          return words;
+        } catch (error) {
+          if (error instanceof TranscriptionFailedError) analytics.capture.episodeTranscription.failed({ from, reason: error.reason });
+          if (error instanceof TranscriptionRefusedError) analytics.capture.episodeTranscription.failed({ from, reason: error.refusal });
+          throw error;
+        }
+      };
       return runPodcastOverviewGeneration(
         request,
-        (episode) => podcastTranscript(api, episode, youTubeFetch),
+        (episode, { onTranscription }) =>
+          request.transcribe !== undefined
+            ? transcribe(episode, onTranscription)
+            : podcastTranscript(api, episode, youTubeFetch).catch((error: unknown) => {
+                if (error instanceof EpisodeNeedsTranscribingError)
+                  analytics.capture.episodeTranscription.asked({ from, ...episodeMinutes });
+                throw error;
+              }),
         {
           makeOverview: makeWith(),
           overviewStore: stores.overviewStore,
@@ -132,7 +175,7 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled);
     },
-    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, signedIn],
+    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, signedIn, analytics],
   );
 }
 

@@ -8,5 +8,4 @@ export const followUpQuestionsTestIds = {
   different: "FollowUpQuestions.different",
   count: "FollowUpQuestions.count",
   said: "FollowUpQuestions.said",
-  toast: "FollowUpQuestions.toast",
 };

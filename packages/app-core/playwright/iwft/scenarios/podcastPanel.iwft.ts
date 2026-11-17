@@ -9,6 +9,7 @@ import { episodeOfferTestIds } from "../../../src/features/capture/components/Ep
 import { episodeNoTranscriptTestIds } from "../../../src/features/capture/components/EpisodeNoTranscript/EpisodeNoTranscriptTestIds.js";
 import { onThisTabLineTestIds } from "../../../src/features/capture/components/OnThisTabLine/OnThisTabLineTestIds.js";
 import { capturePageTestIds } from "../../../src/features/capture/CapturePage/CapturePageTestIds.js";
+import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
 
 const SIGNED_IN = {
   sync: true,
@@ -141,7 +142,7 @@ test("an episode with no transcript says so calmly in place of Create, and movin
 
   await expect(page.getByTestId(episodeNoTranscriptTestIds.root)).toContainText("No transcript for this one yet");
   await expect(page.getByTestId(episodeNoTranscriptTestIds.root)).toContainText("No overview was used.");
-  await expect(page.getByText("Transcribing is coming soon")).toBeVisible();
+  await expect(page.getByText("Transcribing is coming soon")).toHaveCount(0);
   await expect(page.getByTestId(episodeOfferTestIds.title)).toHaveText(EPISODE.title);
   await expect(page.getByTestId(capturePageTestIds.createButton)).toHaveCount(0);
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
@@ -163,4 +164,35 @@ test("an episode our server can't use says why, with nothing to make and no othe
   await expect(page.getByTestId(articleFailureNoticeTestIds.title)).toHaveText("Night Shift Stories looks like a Spotify exclusive");
   await expect(page.getByTestId(articleFailureNoticeTestIds.way)).toHaveCount(0);
   await expect(page.getByTestId(capturePageTestIds.createButton)).toHaveCount(0);
+});
+
+test("beside an episode with no transcript, the panel says it needs transcribing before Create, and transcribes it when chosen", async ({
+  page,
+  launcher,
+  backendSimulator,
+}) => {
+  const id = "0b6f1a4e-6a43-4c39-9a3e-1d2f0f6d2a11";
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.answerWith({ status: "read", episode: EPISODE });
+  backendSimulator.podcasts.checkSays({
+    words: "none",
+    transcription: {
+      status: "needed",
+      episodeSeconds: EPISODE.durationSeconds,
+      usage: { usedSeconds: 0, limitSeconds: 18_000, episodes: 0 },
+    },
+  });
+  backendSimulator.podcasts.transcribesAs({ status: "transcribing", id, episodeSeconds: null }, { status: "ready", id, transcript: WORDS });
+  await launcher.launchPanel({ ...SIGNED_IN, activeVideoUrl: null, articlePages: beside(EPISODE_TAB) });
+
+  await expect(page.getByTestId(episodeOfferTestIds.words)).toHaveText("Needs transcribing · about 2 min");
+  await expect(page.getByTestId(podcastLinkStatusTestIds.uses)).toHaveText(
+    "Uses 1 hr 56 min of your 5 hr transcribing left, and one overview",
+  );
+  await expect(page.getByTestId(capturePageTestIds.createButton)).toHaveText("Transcribe and create");
+  await page.getByTestId(capturePageTestIds.createButton).click();
+
+  const reader = await launcher.readerPage.verifyIsShown();
+  await reader.verifyTitle(EPISODE.title);
+  expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([{ feedUrl: EPISODE.feedUrl, guid: EPISODE.guid }]);
 });

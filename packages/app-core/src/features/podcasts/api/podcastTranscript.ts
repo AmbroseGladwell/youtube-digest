@@ -7,6 +7,7 @@ import {
   TranscriptFetchFailure,
   type YouTubeFetch,
 } from "@overview/transcripts";
+import { EpisodeNeedsTranscribingError } from "./EpisodeNeedsTranscribingError.js";
 
 export interface PodcastTranscript {
   transcript: StoredTranscript;
@@ -48,12 +49,14 @@ const asTranscriptError = (error: unknown): TranscriptFetchError => {
 };
 
 const isNoCaptions = (error: unknown) => isSyncRequestError(error) && error.details?.failure === TranscriptFetchFailure.NO_CAPTIONS;
+const isTranscribable = (error: unknown) => isSyncRequestError(error) && error.details?.transcribable === true;
 const isUnconfirmed = (error: unknown) => isSyncRequestError(error) && error.details?.match === "unconfirmed";
 
 // An episode's transcript, free routes first: our server's cache and the feed's own transcript,
 // then the episode on its show's YouTube channel, found by the reader's extension on their own
 // connection and checked by our server before it is kept for everyone. Without an extension, our
-// server searches itself (docs/features/podcast-on-youtube.md, "The reader's part").
+// server searches itself (docs/features/podcast-on-youtube.md, "The reader's part"). Where no rung
+// answers and our server would transcribe the episode for this reader, it says so (design 305c-2).
 export async function podcastTranscript(
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,
@@ -64,8 +67,24 @@ export async function podcastTranscript(
     return { transcript: await api.transcript(ask), keptForEveryone: true };
   } catch (error) {
     if (!isNoCaptions(error)) throw asTranscriptError(error);
+    if (!isTranscribable(error)) return fromYouTube(api, episode, youTubeFetch, ask);
   }
+  try {
+    return await fromYouTube(api, episode, youTubeFetch, ask);
+  } catch (error) {
+    if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
+      throw new EpisodeNeedsTranscribingError(error);
+    }
+    throw error;
+  }
+}
 
+async function fromYouTube(
+  api: Pick<PodcastApi, "transcript">,
+  episode: PodcastEpisode,
+  youTubeFetch: YouTubeFetch | null,
+  ask: { feedUrl: string; guid: string },
+): Promise<PodcastTranscript> {
   let videoId: string | null = null;
   if (youTubeFetch !== null) {
     try {

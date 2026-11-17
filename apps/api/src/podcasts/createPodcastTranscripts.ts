@@ -41,6 +41,15 @@ export interface PodcastTranscriptRequest {
   log: FastifyBaseLogger;
 }
 
+// Whether the words can be found, and the rung that said so, fetching none: `unknown` when a rung
+// couldn't be asked, so Create looks again. `episode` is the feed's, for what transcribing would take.
+export type PodcastTranscriptCheck =
+  | { words: "found"; via: "remembered" | "tag" | "youtube" }
+  | { words: "none"; episode: { sourceKey: SourceKey; durationSeconds: number | null; audioUrl: string | null } }
+  | { words: "unknown"; via: "feed" | "youtube" };
+
+export type PodcastTranscriptCheckRequest = Omit<PodcastTranscriptRequest, "caller">;
+
 export interface PodcastTranscriptsOptions {
   fetchPublicWeb: ReturnType<typeof createPublicWebFetch>;
   sources: EpisodeWordSources;
@@ -226,5 +235,52 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
     return { transcript: answered.transcript, answer: answered.answer };
   };
 
-  return { resolve, remembered };
+  // The ladder's rungs asked only far enough to say whether words are there, before the reader
+  // chooses: a remembered source and a feed's tag by their presence, a video by the Data API's word
+  // that it is the episode. A video found by our server's search is remembered, so Create doesn't
+  // spend a second search on it; its captions are fetched only then (designs 305c, 305c-2).
+  const check = async (request: PodcastTranscriptCheckRequest): Promise<PodcastTranscriptCheck> => {
+    const key = await podcastSourceKey(request);
+    const known = await sources.get(key);
+    if (known !== null && isFresh(known)) return { words: "found", via: "remembered" };
+
+    const read = await fetchFeedEpisode(fetchPublicWeb, request.feedUrl, (item) => feedItemGuid(item) === request.guid);
+    if (read.status === "failed" || read.feed.item === null) return { words: "unknown", via: "feed" };
+    const { item, show, neighbourNotes } = read.feed;
+    if (byPreference(item.transcripts).length > 0) return { words: "found", via: "tag" };
+    const none = {
+      words: "none" as const,
+      episode: { sourceKey: key, durationSeconds: item.durationSeconds, audioUrl: item.audioUrl },
+    };
+    if (item.title === null || show.title === null || youTubeEpisodes === null || youTubeService === null) return none;
+    const episode: EpisodeToFind = {
+      showName: show.title,
+      title: item.title,
+      durationSeconds: item.durationSeconds,
+      publishedAt: item.publishedAt,
+      keywords: episodeKeywords(item.notes, neighbourNotes),
+    };
+    try {
+      const stale = known !== null && known.source.via === "youtube" ? known.source.videoId : null;
+      if (stale !== null && (await youTubeEpisodes.confirm(episode, stale)) !== null) {
+        await sources.put(key, { via: "youtube", videoId: stale }, clock());
+        return { words: "found", via: "youtube" };
+      }
+      if (request.youTube === null) return none;
+      // A video the reader's extension found is theirs to fetch captions from even when our server
+      // can't confirm it, as Create does (podcastTranscript on the client).
+      if ("videoId" in request.youTube) return { words: "found", via: "youtube" };
+      const search = await youTubeEpisodes.find(episode);
+      request.log.info(
+        apiLogLines.podcasts.youTubeSearched({ units: search.units, searches: search.searches, found: search.found !== null }),
+      );
+      if (search.found === null) return none;
+      await sources.put(key, { via: "youtube", videoId: search.found.videoId }, clock());
+      return { words: "found", via: "youtube" };
+    } catch {
+      return { words: "unknown", via: "youtube" };
+    }
+  };
+
+  return { resolve, remembered, check };
 }

@@ -83,6 +83,7 @@ describe("an episode's steps", () => {
     durationSeconds: 6948,
     imageUrl: null,
     words: null,
+    transcription: null,
   };
 
   it("has looking for a transcript as a stage of its own, after the episode is found", () => {
@@ -99,5 +100,29 @@ describe("an episode's steps", () => {
     const steps = generationRunSteps(makeNewOverviewRun({ podcast: { ...podcast, words: 21_480 }, transcriptWords: 21_480 }));
     expect(steps[1]).toMatchObject({ state: "done", detail: "Found · 21,480 words" });
     expect(steps[2]!.state).toBe("running");
+  });
+
+  it("adds transcribing as a step of its own when the episode needs it, starting, then counting down in whole minutes", () => {
+    const since = 1_000_000;
+    const starting = generationRunSteps(makeNewOverviewRun({ podcast: { ...podcast, transcription: { state: "starting" } } }), since);
+    const underWay = generationRunSteps(
+      makeNewOverviewRun({ podcast: { ...podcast, transcription: { state: "transcribing", since } } }),
+      since + 30_000,
+    );
+    const nearlyThere = generationRunSteps(
+      makeNewOverviewRun({ podcast: { ...podcast, transcription: { state: "transcribing", since } } }),
+      since + 70_000,
+    );
+
+    expect(starting.map(({ label, state }) => [label, state])).toEqual([
+      ["Finding the episode", "done"],
+      ["Looking for a transcript", "done"],
+      ["Transcribing the episode…", "running"],
+      ["Writing the overview", "waiting"],
+    ]);
+    expect(starting[1]!.detail).toBe("None, so we’re making one");
+    expect(starting[2]!.detail).toBe("Starting…");
+    expect(underWay[2]!.detail).toBe("About 2 min left");
+    expect(nearlyThere[2]!.detail).toBe("Almost done");
   });
 });

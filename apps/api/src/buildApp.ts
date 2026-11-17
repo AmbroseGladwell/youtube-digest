@@ -320,7 +320,11 @@ export async function buildApp({
       playlistRoutes(api, { reader: playlistReader, clock });
       articleRoutes(api, { fetchPage: fetchArticlePage, trials, clock });
       settingsRoutes(api, records);
-      overviewUsageRoutes(api, { usage: overviewUsage, sql, clock });
+      const transcriptions =
+        transcriptionQueue === null
+          ? null
+          : createPodcastTranscriptions({ fetchPublicWeb: podcastWeb, jobs: transcriptionJobs, queue: transcriptionQueue, clock });
+      overviewUsageRoutes(api, { usage: overviewUsage, transcriptions, sql, clock });
       overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
       const chatUsage = new ChatUsageRepository(sql);
       chatRoutes(api, {
@@ -376,12 +380,10 @@ export async function buildApp({
       podcastRoutes(api, {
         readEpisode: readPodcastEpisode,
         resolveTranscript: podcastTranscripts.resolve,
+        checkTranscript: podcastTranscripts.check,
         planOf: (accountId) => accountPlan(sql, accountId),
         trials,
-        transcriptions:
-          transcriptionQueue === null
-            ? null
-            : createPodcastTranscriptions({ fetchPublicWeb: podcastWeb, jobs: transcriptionJobs, queue: transcriptionQueue, clock }),
+        transcriptions,
         clock,
       });
       shareRoutes(api, shares, config.appUrl);

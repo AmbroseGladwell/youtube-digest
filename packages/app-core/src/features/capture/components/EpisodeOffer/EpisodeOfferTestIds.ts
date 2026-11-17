@@ -5,4 +5,5 @@ export const episodeOfferTestIds = {
   facts: "EpisodeOffer.facts",
   finding: "EpisodeOffer.finding",
   showPage: "EpisodeOffer.showPage",
+  words: "EpisodeOffer.words",
 };

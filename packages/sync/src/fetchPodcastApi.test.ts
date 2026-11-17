@@ -41,3 +41,25 @@ test("a match our server couldn't confirm rejects with the failure and says so",
     return true;
   });
 });
+
+test("the check, a transcription asked for and asked after each go to their own address and are parsed", async () => {
+  const ask = { feedUrl: "https://feeds.example/show.xml", guid: "ep-guid", searchYouTube: true };
+  const checked = answering(200, {
+    words: "none",
+    transcription: { status: "needed", episodeSeconds: 6960, usage: { usedSeconds: 0, limitSeconds: 18000, episodes: 0 } },
+  });
+  const waiting = { status: "waiting", id: "0b6f1a4e-6a43-4c39-9a3e-1d2f0f6d2a11", episodeSeconds: 6960 };
+  const started = answering(200, waiting);
+
+  const check = await createFetchPodcastApi({ baseUrl: "https://overview.example", fetch: checked.fetch }).checkTranscript(ask);
+  const api = createFetchPodcastApi({ baseUrl: "https://overview.example", fetch: started.fetch });
+  await api.transcribe({ feedUrl: ask.feedUrl, guid: ask.guid });
+  await api.transcription(waiting.id);
+
+  assert.equal(check.words, "none");
+  assert.deepEqual(checked.sent, [{ url: "https://overview.example/api/podcasts/transcript/check", body: ask }]);
+  assert.deepEqual(
+    started.sent.map(({ url }) => url),
+    ["https://overview.example/api/podcasts/transcription", `https://overview.example/api/podcasts/transcription/${waiting.id}`],
+  );
+});
