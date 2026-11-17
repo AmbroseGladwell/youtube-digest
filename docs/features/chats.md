@@ -190,8 +190,11 @@ wait for chat on articles (OV-320).
 **What the prompt asks.** Cite the item an answer rests on, and the transcript as well where
 it backs the same point. The verdict, the dubious reasons, what it sells and Watch it anyway
 are the overview's judgement, not the source's words, so a question about them is answered
-from the item, citing the moment it refers to where there is one. An answer from How to apply
-says it is the overview's suggestion. `inSource` stays about the transcript alone.
+from the item, citing the moment it refers to where there is one. An answer never speaks of the
+overview as a third party ("the overview suggests") or in the first person: it gives the answer
+and marks a line only against the source, naming the section when the question is about one
+("Watch it anyway says…"). An answer from How to apply adds that it goes beyond the source when
+it does (design 319k). `inSource` stays about the transcript alone.
 
 **A regenerated overview** keeps its id, its chats and their citations, but its items can move
 or change. A citation keeps the item's place and a hash of its text (`overviewPartHash`,
