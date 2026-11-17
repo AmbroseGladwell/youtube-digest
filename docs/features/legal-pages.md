@@ -148,6 +148,7 @@ match the pages' `*_UPDATED_ON`.
 
 | Date | Page | Card | What changed |
 |---|---|---|---|
+| 2026-11-16 | privacy | OV-310 | Synced settings include whether questions to ask next are answered here or open in an assistant. |
 | 2026-11-16 | privacy | OV-311 | Assistants you connect can read the conversations you had about your overviews in the app, and their calls never log them. |
 | 2026-11-16 | privacy | OV-309 | A new section, Asking questions about an overview: always on our key, even with "Only ever use my key"; the question, the overview, the reader's own transcript, the conversation and as much of their other conversations about it as fits go through our server to OpenAI; no articles; kept as a synced conversation devices can read or delete; daily counts, the cost tally and log lines without the words. Your library names conversations; OpenAI's row, the cost tally, the retention table and account deletion cover them. Writing an overview says "Only ever use my key" keeps overviews, not questions, from going through us. |
 | 2026-11-16 | terms | OV-309 | Overviews on our key, and limits: questions about an overview are answered on our key within a monthly allowance of their own and a daily cap, shown in the app; answers come from the source and can still be wrong. |

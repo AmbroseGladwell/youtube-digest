@@ -1,5 +1,5 @@
 import type { Connection } from "@overview/domain";
-import { test } from "../../support/fixtures.testHelper.js";
+import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
@@ -23,6 +23,31 @@ const connection = (overrides: Partial<Connection> = {}): Connection => ({
 });
 
 test.describe("Settings › Connections", () => {
+  test("questions to ask next are answered here until the reader chooses their assistant, and back", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.connections.seed(connection());
+    await launcher.launch({ ...PLUS, followUpAssistant: "claude" });
+    const settings = await (await launcher.appShell.openSettings()).openSection("connections");
+    await settings.connections.verifyQuestionsPlaceReads("Answered here");
+
+    await settings.connections.chooseQuestionsPlace("Open in Claude");
+
+    await settings.connections.verifyQuestionsPlaceReads("Open in Claude");
+    await expect.poll(async () => (await backendSimulator.settingsStore.get()).questionsAnsweredHere).toBe(false);
+
+    await settings.connections.chooseQuestionsPlace("Answered here");
+
+    await expect.poll(async () => (await backendSimulator.settingsStore.get()).questionsAnsweredHere).toBe(true);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "mcp.settingsConnections.questionsPlaceChosen"))
+      .toEqual([
+        { name: "mcp.settingsConnections.questionsPlaceChosen", props: { here: false } },
+        { name: "mcp.settingsConnections.questionsPlaceChosen", props: { here: true } },
+      ]);
+  });
+
   test("lists the assistants connected, when each connected and was last used, and how to add another", async ({
     launcher,
     backendSimulator,

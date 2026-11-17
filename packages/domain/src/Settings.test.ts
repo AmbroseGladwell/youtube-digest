@@ -33,6 +33,14 @@ test("an assistant this client doesn't know reads as none chosen, rather than ta
   assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, followUpAssistant: "other" }).followUpAssistant, "other");
 });
 
+test("settings saved before chat read with questions answered here, and keep a reader's choice of their assistant", () => {
+  const { questionsAnsweredHere: _, ...saved } = DEFAULT_SETTINGS;
+
+  assert.equal(Settings.parse(saved).questionsAnsweredHere, true);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, questionsAnsweredHere: false }).questionsAnsweredHere, false);
+  assert.equal(Settings.parse({ ...DEFAULT_SETTINGS, questionsAnsweredHere: "yes" }).questionsAnsweredHere, true);
+});
+
 test("settings saved before the resources switch read with resources shown", () => {
   const { resources: _, ...before } = DEFAULT_SECTIONS_ENABLED;
   const read = Settings.parse({ ...DEFAULT_SETTINGS, sectionsEnabled: { ...before, selling: false } });

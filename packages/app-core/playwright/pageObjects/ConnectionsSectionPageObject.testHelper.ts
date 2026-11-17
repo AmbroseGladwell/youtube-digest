@@ -55,6 +55,22 @@ export class ConnectionsSectionPageObject extends PageObject {
       await this.expectToHaveCount(connectorSetupTestIds.steps, 0);
     });
 
+  verifyQuestionsPlaceReads = (place: string) =>
+    this.step(`verifyQuestionsPlaceReads ${place}`, () =>
+      expect(this.page.getByRole("button", { name: /^Questions to ask next for every overview: / })).toHaveAccessibleName(
+        `Questions to ask next for every overview: ${place}`,
+      ),
+    );
+
+  chooseQuestionsPlace = (place: string) =>
+    this.step(`chooseQuestionsPlace ${place}`, async () => {
+      await this.page.getByRole("button", { name: /^Questions to ask next for every overview: / }).click();
+      await this.page
+        .getByRole("menu", { name: "Questions to ask next for every overview" })
+        .getByRole("menuitemradio", { name: new RegExp(`^${place}`) })
+        .click();
+    });
+
   chooseAssistant = (assistant: string) =>
     this.step(`chooseAssistant ${assistant}`, () => this.click(connectorSetupTestIds.assistant(assistant)));
 
