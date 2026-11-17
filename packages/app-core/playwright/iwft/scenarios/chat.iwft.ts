@@ -49,7 +49,7 @@ test.describe("Chat beside the note", () => {
     backendSimulator,
   }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.followUps.verifyLineReads("Tap one and it’s answered here, from the video. Change");
@@ -88,7 +88,7 @@ test.describe("Chat beside the note", () => {
     backendSimulator,
   }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.answerWith({
       text: "The video doesn’t say whether to take creatine before or after a workout.",
       inSource: false,
@@ -116,7 +116,7 @@ test.describe("Chat beside the note", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.followUps.clickQuestion(0);
@@ -132,7 +132,7 @@ test.describe("Chat beside the note", () => {
   });
 
   test("Stop while an answer is being written keeps nothing and says it didn't count", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.simulateEndpointStalled(EndpointKey.CHAT_MESSAGES);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -151,7 +151,7 @@ test.describe("Chat beside the note", () => {
   });
 
   test("an answer that fails says so and Try again asks it again in place", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.failWith();
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -168,7 +168,7 @@ test.describe("Chat beside the note", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude", questionsAnsweredHere: false });
     const reader = await library.nthCard(0).openReader();
     await reader.followUps.verifyLineReads("Each opens Claude in a new tab with this note filled in. Change");
@@ -185,7 +185,7 @@ test.describe("Chat beside the note", () => {
   });
 
   test("signed out there is no chat, and the questions open an assistant as before", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary({});
     const reader = await library.nthCard(0).openReader();
 
@@ -194,12 +194,24 @@ test.describe("Chat beside the note", () => {
     await reader.followUps.verifyLineReads("Each opens your assistant. You’ll choose which on your first tap.");
   });
 
+  test("an overview still waiting to sync offers no chat, since the server can't answer about it", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seed(creatine());
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.verifyNoteFieldIsAbsent();
+    await reader.chat.verifyMenuOffersChat(false);
+  });
+
   test("Chat in the overview's menu reopens the latest conversation; Esc closes it and a new one says it can see the others", async ({
     launcher,
     backendSimulator,
   }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.seed({
       id: chatRecordId(overview.id, "earlier"),
       overviewId: overview.id,
@@ -242,7 +254,7 @@ test.describe("Chat beside the note", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.followUps.clickQuestion(0);
@@ -261,7 +273,7 @@ test.describe("Chat beside the note", () => {
   });
 
   test("F6 moves between the note and the chat beside it", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.chat.openFromMenu();
@@ -276,7 +288,7 @@ test.describe("Chat beside the note", () => {
 
   test("Continue in Claude, connected, hands it the conversation to read", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.connections.seed(claude);
     const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
     const reader = await library.nthCard(0).openReader();

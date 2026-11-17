@@ -612,6 +612,7 @@ for it, `request completed` included:
 | `accountId` | `sessionPlugin`, `connectionAccessPlugin` | the opaque account id, the one error tracking and events already carry |
 | `sessionId` | `sessionPlugin` | the session's row id, never its token or the token's hash. Each device signs in separately, so this tells one reader's devices apart |
 | `connectionId` | `connectionAccessPlugin` | the assistant connection an `/mcp` call came through |
+| `overviewId` | `chatRoutes` | the overview a chat question or delete was about, a random UUID, never the video's id. A refused question ties to the note it was asked on (OV-321) |
 
 Signing in logs `session created` with the new `accountId`, `sessionId` and `surface`, and
 signing out logs `signed out` under the same two. A

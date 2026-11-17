@@ -1,5 +1,6 @@
 import test, { type TestContext } from "node:test";
 import assert from "node:assert/strict";
+import type { FastifyBaseLogger } from "fastify";
 import { randomUUID } from "node:crypto";
 import {
   answeredFromOverview,
@@ -41,7 +42,15 @@ interface Setup {
   ask(conversationId: string, text: string, overviewId?: string): ReturnType<TestAccount["inject"]>;
 }
 
-async function setUp(t: TestContext, answers: FakeChatAnswer[], { dailyChatMessages = 20_000, transcript = true } = {}): Promise<Setup> {
+async function setUp(
+  t: TestContext,
+  answers: FakeChatAnswer[],
+  {
+    dailyChatMessages = 20_000,
+    transcript = true,
+    logger,
+  }: { dailyChatMessages?: number; transcript?: boolean; logger?: FastifyBaseLogger } = {},
+): Promise<Setup> {
   const openAi = makeFakeChatOpenAi(...answers);
   const waits: number[] = [];
   const testApp = await createTestApp(
@@ -57,6 +66,7 @@ async function setUp(t: TestContext, answers: FakeChatAnswer[], { dailyChatMessa
           waits.push(ms);
         },
       },
+      ...(logger === undefined ? {} : { logger }),
     },
   );
   t.after(() => testApp.close());
@@ -332,6 +342,25 @@ test("a full conversation, a deleted one, and an overview the account doesn't ho
   assert.equal((await setup.ask(randomUUID(), "Anyone?", randomUUID())).statusCode, 404);
   assert.equal(setup.openAi.requests.length, 0);
   assert.equal(await usedThisMonth(setup), 0);
+});
+
+test("every line for a chat question names its overview, so a refusal can be tied to the note it was about", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [], { logger });
+  const missing = randomUUID();
+
+  const response = await setup.ask(randomUUID(), "Anyone?", missing);
+
+  assert.equal(response.statusCode, 404);
+  const reqId = lines.find((line) => line.logCode === "api.http.requestRefused")?.reqId;
+  const forRequest = lines.filter((line) => line.reqId === reqId && line.logCode !== "api.http.requestReceived");
+  assert.deepEqual(
+    forRequest.map((line) => [line.logCode, line.overviewId]),
+    [
+      ["api.http.requestRefused", missing],
+      ["api.http.requestCompleted", missing],
+    ],
+  );
 });
 
 test("a server without our key says chat is unavailable", async (t) => {

@@ -30,7 +30,7 @@ test.describe("Chat's waits and what's left", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.refuseWith(429, limit("chat-month", { resetsOn: "2026-12-01" }));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -53,7 +53,7 @@ test.describe("Chat's waits and what's left", () => {
   });
 
   test("with BYO Plus's month spent before asking, chat opens on the wait, offering Plus", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.setUsage({ plan: "byo-plus", used: 500, limit: 500, resetsOn: "2026-12-01" });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -68,7 +68,7 @@ test.describe("Chat's waits and what's left", () => {
   });
 
   test("the day's limit and everyone's say tomorrow, with nothing to buy", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.refuseWith(429, limit("chat-day"));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -83,7 +83,7 @@ test.describe("Chat's waits and what's left", () => {
   });
 
   test("everyone's day spent says so, without blame or a plan", async ({ launcher, backendSimulator }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.chats.refuseWith(429, limit("chat-our-key-daily"));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -102,7 +102,7 @@ test.describe("Chat's waits and what's left", () => {
     backendSimulator,
   }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     backendSimulator.chats.setUsage({ used: 89, limit: 100, resetsOn: "2026-12-01" });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -118,7 +118,7 @@ test.describe("Chat's waits and what's left", () => {
 
   test("a conversation at 50 questions offers a new one in the field's place, which can see it", async ({ launcher, backendSimulator }) => {
     const overview = creatine();
-    backendSimulator.overviews.seed(overview);
+    backendSimulator.overviews.seedSynced(overview);
     const at = "2026-11-12T09:00:00.000Z";
     const full: Chat = {
       id: chatRecordId(overview.id, "full"),
@@ -147,7 +147,7 @@ test.describe("Chat's waits and what's left", () => {
   });
 
   test("offline, the field gives way to saying so, and comes back with the connection", async ({ launcher, backendSimulator, context }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.chat.openFromMenu();
@@ -160,7 +160,7 @@ test.describe("Chat's waits and what's left", () => {
   });
 
   test("no words four seconds after asking says it's still working, and Stop still works", async ({ launcher, backendSimulator, page }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     backendSimulator.simulateEndpointStalled(EndpointKey.CHAT_MESSAGES);
     await page.clock.install();
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);

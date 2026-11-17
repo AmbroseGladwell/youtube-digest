@@ -26,7 +26,7 @@ test.describe("Chat as a sheet", () => {
     backendSimulator,
     page,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     await page.setViewportSize(PHONE);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -53,7 +53,7 @@ test.describe("Chat as a sheet", () => {
     backendSimulator,
     page,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     await page.setViewportSize(PHONE);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -69,7 +69,7 @@ test.describe("Chat as a sheet", () => {
   });
 
   test("on a phone, reading a cited stretch in the transcript lowers the sheet to say so", async ({ launcher, backendSimulator, page }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     await page.setViewportSize(PHONE);
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
@@ -86,7 +86,7 @@ test.describe("Chat as a sheet", () => {
     launcher,
     backendSimulator,
   }) => {
-    backendSimulator.overviews.seed(creatine());
+    backendSimulator.overviews.seedSynced(creatine());
     const capture = await launcher.launchPanel({
       ...SIGNED_IN,
       activeVideoUrl: VIDEO_URL,

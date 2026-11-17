@@ -7,6 +7,7 @@ import type { ChatAnswerer } from "../chats/ChatAnswerer.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError, isApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
+import { bindLogContext } from "../logs/bindLogContext.js";
 import { sendWritten } from "../http/writeHeaders.js";
 import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
@@ -33,6 +34,7 @@ export function chatRoutes(
 ): void {
   app.post("/chats/:overviewId/messages", async (request, reply) => {
     const { overviewId } = parseOrThrow(OverviewParams, request.params, "The overview");
+    bindLogContext(request, reply, { overviewId });
     const question = parseOrThrow(ChatQuestionRequest, request.body, "The question");
     if (answerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
     const { accountId } = request.session!;
@@ -56,6 +58,7 @@ export function chatRoutes(
 
   app.delete("/chats/:overviewId/:conversationId", async (request, reply) => {
     const { overviewId, conversationId } = parseOrThrow(Params, request.params, "The conversation");
+    bindLogContext(request, reply, { overviewId });
     const id = chatRecordId(overviewId, conversationId);
     const [written] = await records.write(request.session!.accountId, [
       { kind: "chat", id, decide: (current) => decideTombstone("chat", current, null, request.client!) },
