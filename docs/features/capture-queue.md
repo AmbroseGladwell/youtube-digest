@@ -41,8 +41,11 @@ Each video goes through the same pipeline as a run the reader starts
 The one difference: a queued overview does not ask for its narration straight away, so a
 large backfill doesn't queue as many renders on the server.
 
-Just before making a video, the queue checks the library for it. One that another device
-made and synced, or that the reader made by hand, is taken out of the queue unmade.
+A video that reaches the library while it waits, made on another device and synced or made
+by the reader by hand, is taken out of the queue unmade as soon as the library shows it
+(`madeAlready`), so it is never shown or counted as waiting. Before this, the check ran only
+just before making a video, so one waiting on a pace or for the reader to choose it sat in
+the count until chosen. The queue still checks once more just before making each video.
 
 Pausing stops the video being made at its next step and leaves it unmade at the top of
 the queue. Whatever it had spent on that video is spent, as with Cancel on a run.

@@ -37,6 +37,7 @@ import type { CaptureQueueStrip } from "./types/CaptureQueueStrip.js";
 import type { QueueHold } from "./types/QueueHold.js";
 import { captureQueueStrip, type QueueNotice } from "./util/captureQueueStrip.js";
 import { inQueueOrder } from "./util/inQueueOrder.js";
+import { madeAlready } from "./util/madeAlready.js";
 import { localDayKey, madeTodayByPlaylist, nextLocalMidnight } from "./util/madeTodayByPlaylist.js";
 import { makingStep } from "./util/makingStep.js";
 import { pacedQueue } from "./util/pacedQueue.js";
@@ -131,7 +132,18 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
 
   useEffect(() => setPreferences(readCaptureQueuePreferences(accountId)), [accountId]);
 
-  const items = queue.data ?? [];
+  // A video made while it waited, by hand or on another device, is not waiting for anything,
+  // so it is neither shown nor counted, and leaves the queue (docs/features/capture-queue.md).
+  const made = useMemo(() => madeAlready(queue.data ?? [], overviews.data ?? []), [queue.data, overviews.data]);
+  const items = useMemo(() => (queue.data ?? []).filter((capture) => !made.has(capture.videoId)), [queue.data, made]);
+  const madeKey = [...made].join(" ");
+  useEffect(() => {
+    if (madeKey === "") return;
+    void (async () => {
+      for (const videoId of madeKey.split(" ") as VideoId[]) await captureQueueStore.removeQueued(videoId);
+      await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
+    })();
+  }, [madeKey, captureQueueStore, queryClient]);
   const attention = items.filter((capture) => capture.status !== "waiting");
   const counted = nextQuota?.kind === "spent" ? nextQuota.resetsOn : null;
   const monthHold = useMemo<QueueHold | null>(
@@ -163,10 +175,10 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
   const waiting = useMemo(
     () =>
       inQueueOrder(
-        (queue.data ?? []).filter((capture) => capture.status === "waiting"),
+        items.filter((capture) => capture.status === "waiting"),
         orderOf,
       ),
-    [queue.data, orderOf],
+    [items, orderOf],
   );
   const madeTodayCounts = useMemo(
     () =>

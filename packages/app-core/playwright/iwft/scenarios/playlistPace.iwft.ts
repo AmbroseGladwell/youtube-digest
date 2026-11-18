@@ -197,6 +197,28 @@ test("a playlist made only when chosen waits for the reader, who can choose seve
     ]);
 });
 
+test("a video waiting for the reader that the library already has is neither shown nor counted, and leaves the queue", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  followingAt(backendSimulator, "whenChosen");
+  backendSimulator.overviews.seed(
+    makeOverview({ source: { ...makeOverview().source, id: VideoId.parse(VIDEOS[0].id), title: VIDEOS[0].title } }),
+  );
+  seedQueuedWithTranscripts(backendSimulator, [queued(0), queued(1), queued(2)]);
+
+  await launcher.launch(SIGNED_IN);
+
+  await launcher.appShell.queueStrip.verifyReads("Queue done · 2 waiting for you", "From Psychology, made when you choose them");
+  await launcher.appShell.queueStrip.openQueue();
+  const queuePage = await launcher.appShell.queuePage.verifyIsShown();
+  await queuePage.verifyWaitingForYou("Waiting for you · 2", [VIDEOS[1].title, VIDEOS[2].title]);
+  await expect
+    .poll(async () => (await backendSimulator.playlists.listQueue()).map((capture) => capture.videoId))
+    .toEqual([VIDEOS[1].id, VIDEOS[2].id]);
+  expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
+});
+
 test("Settings shows each playlist's pace and changes it, saying what the change did to what waits", async ({
   launcher,
   backendSimulator,
