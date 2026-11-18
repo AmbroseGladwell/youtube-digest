@@ -8,7 +8,7 @@ import { formatTimeRange } from "../../../overviews/util/formatTimeRange.js";
 import { useOverviewPageAnalytics } from "../../../analytics/OverviewAnalyticsContext.js";
 import styles from "./ChaptersPanel.module.scss";
 import { chaptersPanelTestIds } from "./ChaptersPanelTestIds.js";
-import { timedNoun } from "../../util/timedSource.js";
+import { playingLabel, timedNoun } from "../../util/timedSource.js";
 import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 
 const NOT_MADE = "Chapters weren't made for this note. Generating it again adds them.";
@@ -78,7 +78,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
         {position !== null ? (
           <span className={styles.following} data-testid={chaptersPanelTestIds.followingNote}>
             <span className={styles.followingMark} aria-hidden="true" />
-            Following the video
+            Following the {timedNoun(video)}
           </span>
         ) : (
           <span className={styles.label} data-testid={chaptersPanelTestIds.count}>
@@ -110,7 +110,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
                   {current && (
                     <span className={styles.playingBadge} data-testid={chaptersPanelTestIds.playingBadge}>
                       <span className={styles.playingMark} aria-hidden="true" />
-                      Playing on YouTube
+                      {playingLabel(timedNoun(video))}
                     </span>
                   )}
                   <button

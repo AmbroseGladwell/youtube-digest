@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeArticleOverview, makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
-import { timedSource } from "./timedSource.js";
+import { machineTranscribedLabel, playingLabel, timedSource } from "./timedSource.js";
 
 describe("timedSource", () => {
   it("reads a video as it is", () => {
@@ -20,5 +20,17 @@ describe("timedSource", () => {
 
   it("gives a page no times", () => {
     expect(timedSource(makeArticleOverview().source)).toBeNull();
+  });
+});
+
+describe("labels", () => {
+  it("names YouTube's own words for a video", () => {
+    expect(playingLabel("video")).toBe("Playing on YouTube");
+    expect(machineTranscribedLabel("video")).toBe("Auto-generated");
+  });
+
+  it("borrows none of YouTube's words for an episode, which plays in the page", () => {
+    expect(playingLabel("episode")).toBe("Playing");
+    expect(machineTranscribedLabel("episode")).toBe("Machine-transcribed");
   });
 });

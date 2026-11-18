@@ -282,13 +282,13 @@ const getTranscript = mcpTool({
     const stored = key === null ? null : await transcripts.get(accountId, key);
     const transcript = StoredTranscript.safeParse(stored);
     if (!transcript.success) {
-      return toolError("No transcript is kept for this video.");
+      return toolError(`No transcript is kept for this ${source.kind === "podcast" ? "episode" : "video"}.`);
     }
     const head = source.kind === "podcast" ? { title: source.title, channel: source.showName, url: source.sharedFrom } : source;
     const text = transcriptPlainText(head, transcriptBlocks(transcript.data.segments));
     return {
       text: transcript.data.generated
-        ? `Machine-transcribed: the video had no captions of its own, so some words may be misheard.\n\n${text}`
+        ? `${source.kind === "podcast" ? "Machine-transcribed" : "Machine-transcribed: the video had no captions of its own"}, so some words may be misheard.\n\n${text}`
         : text,
     };
   },
