@@ -143,9 +143,10 @@ export class PodcastTranscriptionsRepository {
     });
   }
 
-  // The oldest job no worker holds: queued, or one whose worker went quiet past its lease, which
-  // is picked up where it was, its call to the host included. Finished jobs past keepUntil go,
-  // and their words with them.
+  // The oldest unfinished job no worker holds. A queued job is held from its claim, before it
+  // reaches the host, so workers asking at once can't each send it. One whose worker went quiet
+  // past its lease is picked up where it was, its call to the host included. Finished jobs past
+  // keepUntil go, and their words with them.
   async claimNext(now: Date, leaseUntil: Date, finishedBefore: Date): Promise<PodcastTranscriptionJob | null> {
     await this.#sql.query("delete from podcast_transcriptions where status in ('ready', 'failed') and finished_at < $1::timestamptz", [
       finishedBefore.toISOString(),
@@ -154,8 +155,8 @@ export class PodcastTranscriptionsRepository {
       `update podcast_transcriptions set claimed_until = $2::timestamptz
        where id = (
          select id from podcast_transcriptions
-         where status = 'queued'
-            or (status in ('waiting', 'transcribing') and claimed_until < $1::timestamptz)
+         where status in ('queued', 'waiting', 'transcribing')
+           and (claimed_until is null or claimed_until < $1::timestamptz)
          order by requested_at
          limit 1
          for update skip locked
@@ -188,33 +189,40 @@ export class PodcastTranscriptionsRepository {
   }
 
   // The words, the month's held seconds settled to what the audio measured, and one more episode.
-  async markReady(job: PodcastTranscriptionJob, transcript: StoredTranscript, audioSeconds: number, now: Date): Promise<void> {
+  // Only the first to finish a job settles it, so a job run twice is still counted once.
+  async markReady(job: PodcastTranscriptionJob, transcript: StoredTranscript, audioSeconds: number, now: Date): Promise<boolean> {
     const measured = Math.ceil(audioSeconds);
-    await this.#sql.transaction(async (tx) => {
+    return this.#sql.transaction(async (tx) => {
+      const settled = await tx.query(
+        `update podcast_transcriptions set status = 'ready', transcript = $2::jsonb, reserved_seconds = $3,
+           finished_at = $4::timestamptz, claimed_until = null
+         where id = $1 and status in ('queued', 'waiting', 'transcribing')
+         returning id`,
+        [job.id, JSON.stringify(transcript), measured, now.toISOString()],
+      );
+      if (settled.length === 0) return false;
       await this.#give(tx, job.requestedAt, job.caller, job.reservedSeconds - measured);
       await tx.query("update transcription_usage set episodes = episodes + 1 where month = $1::date and caller = $2", [
         usageMonth(job.requestedAt),
         job.caller,
       ]);
-      await tx.query(
-        `update podcast_transcriptions set status = 'ready', transcript = $2::jsonb, reserved_seconds = $3,
-           finished_at = $4::timestamptz, claimed_until = null
-         where id = $1`,
-        [job.id, JSON.stringify(transcript), measured, now.toISOString()],
-      );
+      return true;
     });
   }
 
   // A transcription that made no words costs the caller nothing.
-  async markFailed(job: PodcastTranscriptionJob, failure: TranscriptionFailure, now: Date): Promise<void> {
-    await this.#sql.transaction(async (tx) => {
-      await this.#give(tx, job.requestedAt, job.caller, job.reservedSeconds);
-      await tx.query(
+  async markFailed(job: PodcastTranscriptionJob, failure: TranscriptionFailure, now: Date): Promise<boolean> {
+    return this.#sql.transaction(async (tx) => {
+      const settled = await tx.query(
         `update podcast_transcriptions set status = 'failed', failure = $2, reserved_seconds = 0,
            finished_at = $3::timestamptz, claimed_until = null
-         where id = $1`,
+         where id = $1 and status in ('queued', 'waiting', 'transcribing')
+         returning id`,
         [job.id, failure, now.toISOString()],
       );
+      if (settled.length === 0) return false;
+      await this.#give(tx, job.requestedAt, job.caller, job.reservedSeconds);
+      return true;
     });
   }
 
