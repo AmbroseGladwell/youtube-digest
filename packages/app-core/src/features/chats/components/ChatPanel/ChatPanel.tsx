@@ -116,10 +116,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   const others = chats.filter((each) => each !== chat).length;
   const questions = overview.followUpQuestions ?? [];
   const sets = Math.ceil(questions.length / FOLLOW_UP_QUESTIONS_SHOWN);
-  const suggestions =
-    draft.trim() !== "" || wait !== null
-      ? []
-      : chatSuggestions(questions, set, messages).filter((question) => question !== pending?.question);
+  const suggestions = draft.trim() !== "" || wait !== null || pending !== null ? [] : chatSuggestions(questions, set, messages);
   const firstQuestion = messages.find((message) => message.from === "reader")?.text ?? pending?.question ?? null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const title = view === "list" ? "Conversations" : (firstQuestion ?? "New conversation");
@@ -375,7 +372,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
             <div className={styles.suggestions} data-testid={chatPanelTestIds.suggestions}>
               <div className={styles.suggestionsHead}>
                 <p className={styles.suggestionsLabel}>Questions to ask next</p>
-                {sets > 1 && !messages.some((message) => message.from === "answer") && (
+                {sets > 1 && (
                   <button
                     type="button"
                     className={styles.different}
