@@ -212,19 +212,25 @@ test("an overview made on our key in a signed-out trial and moved in on sign-in 
   await testApp.close();
 });
 
-test("a moved trial overview with the month on our key spent waits for the month, as an own-key one does", async () => {
+test("a moved trial overview is let in with the month on our key spent, and counted on the next month", async () => {
   const testApp = await createTestApp({}, { ourKey: OUR_KEY });
   const account = await makeAccount(testApp);
   for (let made = 0; made < overviewQuotas.free.ours; made += 1) {
     await account.inject({ method: "POST", url: "/api/generations", body: generationRequest(randomUUID()) });
   }
   const overviewId = randomUUID();
-  await (await makeTrialDevice(testApp)).generate(overviewId);
+  const made = await (await makeTrialDevice(testApp)).generate(overviewId);
 
-  const waiting = await reserve(account, overviewId);
+  const reserved = await reserve(account, overviewId);
+  const pushed = await push(account, { ...storedOverview(), ...made.json() });
 
-  assert.equal(waiting.statusCode, 429);
-  assert.deepEqual([waiting.json().error.details.quota, waiting.json().error.details.resetsOn], ["ours", "2026-10-01"]);
+  testApp.clock.now = new Date(reserved.json().resetsOn);
+  const nextMonth = await account.inject({ method: "GET", url: "/api/overview-usage" });
+
+  assert.equal(reserved.statusCode, 200);
+  assert.deepEqual(reserved.json().ours, { used: overviewQuotas.free.ours, limit: overviewQuotas.free.ours });
+  assert.equal(pushed.statusCode, 201);
+  assert.equal(nextMonth.json().ours.used, 1);
   await testApp.close();
 });
 

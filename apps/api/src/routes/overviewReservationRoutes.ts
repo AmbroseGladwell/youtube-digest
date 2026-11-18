@@ -47,19 +47,10 @@ export function overviewReservationRoutes(
       return usage.usage(now, accountId, plan);
     }
     if (await trials.madeInTrial(overviewId)) {
-      const moved = await reservations.movedFromTrial(now, accountId, overviewId, overviewQuotas[plan].ours);
-      if (!moved.reserved) {
-        const retryAfterSeconds = secondsToNextUsageMonth(now);
-        request.log.info(apiLogLines.ourKey.quotaSpent({ plan, used: moved.used, limit: moved.limit }));
-        reply.header("retry-after", String(retryAfterSeconds));
-        throw new ApiError("too_many_requests", "You've made this month's overviews on us", {
-          quota: "ours",
-          resetsOn: nextUsageMonth(now),
-          retryAfterSeconds,
-        });
-      }
+      const limit = overviewQuotas[plan].ours;
+      const { used, carried } = await reservations.movedFromTrial(now, accountId, overviewId, limit);
       await trials.forget(overviewId);
-      request.log.info(apiLogLines.reservations.movedFromTrial({ plan, used: moved.used, limit: moved.limit }));
+      request.log.info(apiLogLines.reservations.movedFromTrial({ plan, used, limit, carried }));
       return usage.usage(now, accountId, plan);
     }
     const reservation = await reservations.reserveOwn(now, accountId, overviewId, overviewQuotas[plan].own);

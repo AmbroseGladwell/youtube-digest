@@ -359,8 +359,14 @@ after every run, made or failed, on any surface or the capture queue.
   "signing in doesn't carry a trial's count over"). It moves in on sign-in with the
   no-account library (OV-47), and moving in counts it against the month on the key that
   made it, which is ours (decided 20 Oct 2026, reversing the first rule that moved overviews
-  were free). A reader already at the cap keeps it on the device, and it syncs when the month
-  resets. The server can't tell a moved overview from a new one, so there is no "this was
+  were free). **It is never refused** (decided 18 Nov 2026, OV-325, replacing "a reader already
+  at the cap keeps it on the device until the month resets"): it is already made and paid
+  for, so refusing it only stranded it on one device, out of chat and every other device. A
+  month already full passes it to the next: it counts on the first later month with room,
+  so this month stays at 50 of 50 and the next starts at 1 (`OverviewUsageRepository.count`,
+  logged with `carried`). The overspend is deducted, not forgiven, so the trial is no
+  back door around the month. Only an existing reader going through onboarding again
+  reaches this. The server can't tell a moved overview from a new one, so there is no "this was
   moved" for a modified client to claim.
 - **A global daily cap on our key** sits behind every tier, the way
   `TRANSCRIPT_PROXY_DAILY_FETCHES` sits behind the proxy. When it is spent, generation on our
@@ -450,8 +456,8 @@ it has been pushed is a regeneration, and counts again. `DELETE
   still held for the same id.
 - **An overview made on our key in a signed-out trial counts on our key when it moves in.**
   Its reservation takes a slot on the account's month on our key rather than the reader's
-  own, and past that month's quota it waits for the turn like an own-key one does
-  (`429` with `details.quota: "ours"`). The server knows it by its id, so there is nothing for
+  own, and is granted even past that month's quota, counting on the next month with room
+  instead (OV-325). The server knows it by its id, so there is nothing for
   a modified client to claim.
 - **Saving a shared overview isn't counted.** The device sends the share's token with the
   overview's id. The server lets it in only while the link is live and the share is of that

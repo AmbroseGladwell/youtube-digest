@@ -319,7 +319,7 @@ export const apiLogLines = coded("api", {
     movedFromTrial: line(
       "info",
       "trial overview moved in on our key",
-      "An overview made on our key in a signed-out trial was moved into an account, and counted on its month on our key.",
+      "An overview made on our key in a signed-out trial was moved into an account, and counted on our key: plan, the count and limit of the month it went on, and whether it was carried to a later month because this one was full.",
     ),
     shareSaved: line("info", "shared overview saved", "A reader saved a shared overview into their library. It is not counted."),
     pushRefused: line(

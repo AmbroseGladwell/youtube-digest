@@ -147,8 +147,9 @@ engine doesn't ask again: it keeps the reset date the refusal carried and skips 
 on every cycle before it, rather than pushing and being refused twice a minute (OV-322). The
 date is held in memory, so a reload asks once more. A new plan clears it at once
 (`SyncRuntime` calls `retryWaiting` when the usage query's plan changes), since a bigger
-month may have room. A key doesn't: a moved-in onboarding overview counts on our key, and
-the own-key quota counts overviews, not keys.
+month may have room. A key doesn't, since the own-key quota counts overviews, not keys. A
+moved-in onboarding overview never waits: its reservation is granted past a spent month
+(`tiers.md`, "Counting", OV-325).
 
 ### Whole-record writes and the revision
 
