@@ -575,6 +575,16 @@ move.
 This is the one place a note keeps the page's text, which OV-77 decided against for articles: the
 owner's own note carries the method, because the design puts it there.
 
+## Chat
+
+A recipe page can be asked about from the reader (OV-320, `chats.md`, "Articles and recipe
+pages"). Answers come from the note alone, citing its ingredients and method steps; when the note
+doesn't hold the answer, they say "the recipe doesn't cover it" and offer "Read it on the page".
+Amounts stay code's job: the model never scales a quantity, changes the servings or converts a unit
+or temperature, and points to the servings control instead (see Servings and units). This holds
+for recipe videos too. Asking to halve a recipe or feed 8 was measured, and every answer gave the
+recipe's own amount.
+
 ## Time saved
 
 Recipes aren't counted, the design's recommendation while the owner decides: reading time is the

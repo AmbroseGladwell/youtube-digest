@@ -133,6 +133,16 @@ the author, date and read time under it, no Transcript tab, and key points endin
 where a video shows a timestamp. One chapter drops the tabs and the links, since a link could only go
 to the top. Time saved uses 230 words a minute in place of a video's length.
 
+## Chat
+
+An article can be asked about from the reader (OV-320, `chats.md`, "Articles and recipe pages").
+No article text is kept, so answers come from the note alone: its key points, How to apply, Read
+it anyway? and chapters, each cited as a pill that scrolls to that part of the note. A key point or
+chapter that carries a place has a "Show on the page" link beside its pill, which moves the page
+when it is open beside the note and otherwise opens it at that place in a new tab. When the note
+doesn't cover a question, the answer says "the overview of this article doesn't cover it" and
+offers "Read it on the page".
+
 ## Not built
 
 The panel's Create button and right-click item, regenerating, reading the page from the panel, pasted
