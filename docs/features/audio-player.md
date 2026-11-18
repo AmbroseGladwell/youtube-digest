@@ -24,6 +24,10 @@ The card left five questions open, and the design answered them before drawing a
   mini-player; the reader's Listen and the panel's Listen play without navigating.
 - **Signed out, Listen still does something:** it starts the pacer, tagged, with a
   "Sign in for audio" link. Nothing is blocked.
+- **Signing out stops the player** (OV-334). Signed out sees no overviews, so nothing of the
+  account's notes stays in the mini-player, the bar or the lock screen. The listen ends as
+  `signedOut` before the session does, so it is counted under the account; any other end to
+  the session clears the player too.
 - **The Plus prompt on the panel's Listen (16a) is retired.** Audio needs an account, not a
   plan. See "What changed about Plus" below.
 
@@ -306,7 +310,7 @@ The clock is injected (`now`), so the unit tests measure an exact number on fake
 `player.playback.started` and `player.playback.ended` (OV-73) bracket a **listen**: from the
 first sound after a note is loaded, or played again after its end or a stop, to whichever
 comes first of the note's end (`finished`), the mini-player's × (`stopped`), another note
-loaded over it (`switchedNote`) or the page going away (`left`). Pausing is not an end, and
+loaded over it (`switchedNote`), the page going away (`left`) or signing out (`signedOut`). Pausing is not an end, and
 a play carried on from paused is the same listen; so one `started` and one `ended` per
 listen, and `firstSound` between them when the listen was begun by a press. All three
 carry the overview's id and `source`, which `ended` reports as it was at the end: a listen

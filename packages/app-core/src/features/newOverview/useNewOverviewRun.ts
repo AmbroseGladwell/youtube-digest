@@ -147,6 +147,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
       // measured here, as it is not timed (docs/architecture/errors-and-logs.md, "Client timings").
       let timing: ClientTimingReport | null = null;
       const durationMs = () => timing?.totalMs ?? Date.now() - startedAt;
+      let writingAt: number | null = null;
       analytics.capture.newOverview.started({ from });
       const updateArticle = (change: Partial<ArticleRun>) => {
         if (isCurrent()) {
@@ -278,6 +279,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
           onTimed: (timed) => {
             timing = timed;
           },
+          onWriting: () => {
+            writingAt = Date.now();
+          },
           onAttempt: (tried) => {
             attempt = tried;
           },
@@ -296,6 +300,7 @@ export function useNewOverviewRun(): NewOverviewRunController {
                 from,
                 transcriptSource: transcriptSource ?? "stored",
                 durationMs: durationMs(),
+                ...(writingAt === null ? {} : { writingMs: Date.now() - writingAt }),
                 reasonGiven: saved.captureReason !== null,
                 novelty: saved.verdict?.novelty ?? "none",
                 standsOut: saved.verdict?.standsOut != null,

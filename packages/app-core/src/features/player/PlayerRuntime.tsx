@@ -60,6 +60,9 @@ export function PlayerRuntime({ children }: { children: ReactNode }) {
     };
   }, [engine]);
 
+  useEffect(() => {
+    if (!connected) engine.endSession();
+  }, [engine, connected]);
   useEffect(() => engine.setApi(api), [engine, api]);
   useEffect(() => engine.setVoice(voice), [engine, voice]);
   useEffect(() => bindMediaSession(engine), [engine]);

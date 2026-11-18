@@ -185,8 +185,12 @@ Modal `Dict` before it loads anything, which is how "no card yet" is told apart 
 `no-transcriber`. A started job may run for 15 minutes. A host that stops answering for six polls in a row
 fails the job too. A failed job costs the reader nothing, and asking again starts it afresh.
 
-**Restarts.** A job is held under a one-minute lease that each poll renews. A job whose lease has
-lapsed is taken up by the next worker where it was, without sending it to the host a second time.
+**Restarts.** A job is held under a one-minute lease from the moment a worker claims it, before it is
+sent to the host, and each poll renews it. A job whose lease has lapsed is taken up by the next worker
+where it was, without sending it to the host a second time. Only the first finish of a job settles the
+month's seconds and episodes. Until OV-337 a queued job carried no lease, so every worker the queue
+woke claimed it at once and each sent it to the host: the first two transcriptions ran six and five
+times.
 
 **Allowances.** Hours of audio a month: a trial's address 4, Free 5, BYO Plus 15, Plus 30, with no
 episode over 4 hours by its feed (owner, 16 Nov 2026). The trial is onboarding's one overview, made
@@ -237,7 +241,14 @@ The order in production, each step safe on its own:
 `chosen` with how it came about (`chosen` on the card, `asked`, `retried`, `free`), `finished` with
 how long the reader waited for a transcriber and then for the words, and `failed` with why. Each
 carries where it was asked from, onboarding included, and the episode's length in minutes. All are
-sent from `useRunPodcastGeneration`, which every surface's run goes through.
+sent from `useRunPodcastGeneration`, which every surface's run goes through. The wait's last stage,
+writing, is `capture.newOverview.finished`'s `writingMs` (Create only), from the words in hand to
+the overview saved, so its estimate can be fitted to the source's length and the model once there is
+enough of it (OV-326).
+
+**Onboarding's Transcribe** carries on from the episode already read rather than reading the link
+again (`rememberEpisodeRead`), and the run says where the transcribing is (`OnboardingRun.transcription`,
+as Create's run does) for the screens OV-327 designs.
 
 ## The screens
 

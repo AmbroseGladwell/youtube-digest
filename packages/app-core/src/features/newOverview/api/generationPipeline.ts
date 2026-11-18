@@ -73,6 +73,8 @@ export interface RunOverviewGenerationOptions {
   onEpisodeWords?: ((words: number) => void) | undefined;
   // Transcribing the episode's audio is waiting for a card, then under way (design 305e).
   onTranscription?: ((progress: TranscriptionProgress) => void) | undefined;
+  // The source's words are in hand and nothing waits on the reader, so writing starts now.
+  onWriting?: (() => void) | undefined;
   isCancelled?: (() => boolean) | undefined;
   // Regenerating an unreadable record writes under its own id, so the separate state row
   // — read, favourite, user tags — stays attached rather than being orphaned under a new
@@ -224,6 +226,7 @@ async function writeOverview(
   options: RunOverviewGenerationOptions,
   stopwatch: CaptureStopwatch | null = null,
 ): Promise<Overview> {
+  options.onWriting?.();
   const [existingTopics, claims, library, settings, previous, projects] = await Promise.all([
     deps.overviewStore.listTopics(),
     deps.overviewStore.listClaims(),

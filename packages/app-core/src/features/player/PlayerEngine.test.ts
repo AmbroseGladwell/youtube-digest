@@ -1060,6 +1060,21 @@ describe("PlayerEngine", () => {
       expect(engine.getSnapshot().docked).toBe(true);
     });
 
+    it("signing out ends the listen as signed out, once, and puts the note away", async () => {
+      const { engine, ended } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+
+      engine.play("playerBar");
+      media.reachTime(2);
+      engine.endSession();
+      engine.endSession();
+
+      expect(ended).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ reason: "signedOut", percentHeard: 20 }));
+      expect(engine.getSnapshot().track).toBeNull();
+      expect(engine.getSnapshot().status).toBe("ready");
+    });
+
     it("loading another note ends the listen as switched, and the other note's listen is its own", async () => {
       const { engine, started, ended } = counted(ready(READY));
       engine.load(TRACK);

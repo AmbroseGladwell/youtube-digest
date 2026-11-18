@@ -121,7 +121,7 @@ export type PlaybackSource = z.infer<typeof PlaybackSource>;
 export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
 // Why a listen ended: the note's end, the mini-player's ×, another note loaded over it, or
 // the page closed, or hidden while the listen was paused.
-export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left"]);
+export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left", "signedOut"]);
 export type ListenEnd = z.infer<typeof ListenEnd>;
 export const SelectionAction = z.enum([
   "addToProject",
@@ -916,12 +916,15 @@ export const analyticsEvents = {
     newOverview: {
       started: event("The reader asks for an overview of a video, and where they asked from", { from: CaptureEntry }),
       finished: event(
-        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, how many questions to ask next it kept, how many of the reader's projects it was filed into, and the kind of note it got; its duration measured by the app",
+        "An overview the reader asked for is made and saved, on which key, provider and model, with the novelty it came out at, whether it named what stands out, how many of its tags were already in the library, whether How to apply was written and how many actions it holds, whether anything about the reader was sent, and for a recipe video how many ingredients it gave and how many of them the video said, and the source's measured length with how many key points and chapters the note holds against the most key points its length allowed, for an article how many links it offered and how many the note names as resources, how many questions to ask next it kept, how many of the reader's projects it was filed into, and the kind of note it got; its duration measured by the app, and how much of it was writing, from the source's words in hand to the overview saved",
         {
           overviewId: OverviewId,
           from: CaptureEntry,
           transcriptSource: CaptureTranscriptSource,
           durationMs: z.number().int().nonnegative(),
+          // The writing alone, so a wait's last stage can be estimated from the source's length
+          // and the model (OV-326). Absent where writing never began, such as a held overview.
+          writingMs: z.number().int().nonnegative().optional(),
           reasonGiven: z.boolean(),
           novelty: z.enum([...Novelty.options, "none"]),
           standsOut: z.boolean(),

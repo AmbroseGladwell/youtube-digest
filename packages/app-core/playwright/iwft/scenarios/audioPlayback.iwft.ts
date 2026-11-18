@@ -304,6 +304,44 @@ test("a note left paused out of sight gives way to the next note opened", async 
   await launcher.miniPlayer.verifyIsShown(false);
 });
 
+test("signing out with a note playing puts the player away, and counts the listen under the account", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  await library.nthCard(0).clickListen();
+  await launcher.miniPlayer.verifyPlayButtonReads("Pause");
+  await expect.poll(() => listens(backendSimulator)).toHaveLength(1);
+
+  const menu = await launcher.appShell.accountMenu.open();
+  await menu.chooseSignOut();
+
+  await launcher.homePage.verifyShowsStart();
+  await launcher.miniPlayer.verifyIsShown(false);
+  await expect
+    .poll(() => listens(backendSimulator).map(({ name, props }) => (name === "player.playback.ended" ? props.reason : name)))
+    .toEqual(["player.playback.started", "signedOut"]);
+});
+
+test("signing out from the note that is playing leaves no player to follow the reader home", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+
+  const menu = await launcher.appShell.accountMenu.open();
+  await menu.chooseSignOut();
+
+  await launcher.signedOutGate.verifyIsShown();
+  await launcher.appShell.clickBrand();
+  await launcher.homePage.verifyShowsStart();
+  await launcher.miniPlayer.verifyIsShown(false);
+});
+
 test("a note made on our key asks for its narration in the background, and has it by the time it is opened", async ({
   launcher,
   backendSimulator,
