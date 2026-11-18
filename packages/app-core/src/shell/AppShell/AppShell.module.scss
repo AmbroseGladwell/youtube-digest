@@ -21,6 +21,10 @@
   view-transition-name: masthead;
 }
 
+.masthead[data-sticky-fade]::after {
+  right: var(--masthead-fade-right, 0);
+}
+
 // No rule under the bar: the stone theme separates with surfaces, never with lines
 // (docs/features/stone-theme.md).
 .bar {

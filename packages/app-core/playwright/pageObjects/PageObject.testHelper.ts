@@ -62,6 +62,18 @@ export abstract class PageObject {
       expect(fade.hangsBelow).toBeLessThan(1);
     });
 
+  verifyFadeStopsShortOf = (testId: string) =>
+    this.step(`verifyFadeStopsShortOf ${testId}`, async () => {
+      const startsAt = await this.get(testId).evaluate((element) => element.getBoundingClientRect().left);
+      const fadeEndsAt = await this.page.evaluate(() => {
+        const band = [...document.querySelectorAll("[data-sticky-fade]")].find(
+          (each) => getComputedStyle(each, "::after").content !== "none",
+        )!;
+        return band.getBoundingClientRect().right - parseFloat(getComputedStyle(band, "::after").right);
+      });
+      expect(fadeEndsAt).toBeLessThanOrEqual(startsAt);
+    });
+
   verifyStickyBandsAre = (testIds: string[]) =>
     this.step(`verifyStickyBandsAre ${testIds.join(", ")}`, async () => {
       expect((await this.stickyFades()).map((band) => band.band)).toEqual(testIds);

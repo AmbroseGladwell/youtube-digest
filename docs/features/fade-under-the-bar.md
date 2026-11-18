@@ -61,6 +61,11 @@ Where that lands, surface by surface:
 On the library the fade runs the full width, so the filter rail — whose body sticks beside
 the list and scrolls on its own — dissolves at its top edge too.
 
+A page with only one tab, such as a recipe page or an article without chapters, has no tab
+strip, so the bar is its lowest band. With chat open beside the note, the bar's fade stops where
+the chat column starts (OV-328). The chat is a raised tile with its own edge, and a fade
+running across its top read as the chat being blurred.
+
 **The player bar gets no mirrored fade, in any layout.** Docked on a phone and in the panel
 it is a raised tile with rounded top corners and `--shadow-float`, so its edge is already
 drawn and a ground fade above it would only muddy that shadow. On the web it floats inset
