@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { VideoId, type StoredTranscript } from "@overview/domain";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { PodcastTranscriptionsRepository } from "./PodcastTranscriptionsRepository.js";
 import { makeScriptedTranscriber, transcribedAudio } from "./ScriptedTranscriber.testHelper.js";
@@ -60,5 +61,40 @@ test("words a reader never collected are gone a day after they were made", async
   await testApp.drainTranscriptions();
 
   assert.equal(await jobs.get(ASK.id, ASK.caller), null);
+  await testApp.close();
+});
+
+test("several workers asking at once send a queued job to the host once, and it is counted once", async () => {
+  const transcriber = makeScriptedTranscriber([{ state: "done", result: transcribedAudio() }]);
+  const testApp = await createTestApp({}, { transcriber });
+  const jobs = new PodcastTranscriptionsRepository(testApp.sql);
+  await jobs.request({ ...ASK, now: testApp.clock.now });
+
+  await Promise.all(Array.from({ length: 6 }, () => testApp.drainTranscriptions()));
+
+  assert.equal(transcriber.submitted.length, 1);
+  assert.deepEqual(await jobs.usage(testApp.clock.now, ASK.caller), { usedSeconds: 1791, episodes: 1 });
+  await testApp.close();
+});
+
+test("a job finished a second time leaves the month's count as the first finish settled it", async () => {
+  const testApp = await createTestApp({}, { transcriber: makeScriptedTranscriber() });
+  const jobs = new PodcastTranscriptionsRepository(testApp.sql);
+  const now = testApp.clock.now;
+  await jobs.request({ ...ASK, now });
+  const claimed = (await jobs.claimNext(now, new Date(now.getTime() + 60_000), now))!;
+  const transcript: StoredTranscript = {
+    videoId: VideoId.parse(claimed.sourceKey),
+    segments: transcribedAudio().segments,
+    generated: true,
+    fetchedAt: now.toISOString(),
+  };
+
+  assert.equal(await jobs.markReady(claimed, transcript, 1790.4, now), true);
+  assert.equal(await jobs.markReady(claimed, transcript, 1790.4, now), false);
+  assert.equal(await jobs.markFailed(claimed, "failed", now), false);
+
+  assert.equal((await jobs.get(ASK.id, ASK.caller))?.status, "ready");
+  assert.deepEqual(await jobs.usage(now, ASK.caller), { usedSeconds: 1791, episodes: 1 });
   await testApp.close();
 });

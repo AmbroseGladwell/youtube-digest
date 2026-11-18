@@ -185,8 +185,12 @@ Modal `Dict` before it loads anything, which is how "no card yet" is told apart 
 `no-transcriber`. A started job may run for 15 minutes. A host that stops answering for six polls in a row
 fails the job too. A failed job costs the reader nothing, and asking again starts it afresh.
 
-**Restarts.** A job is held under a one-minute lease that each poll renews. A job whose lease has
-lapsed is taken up by the next worker where it was, without sending it to the host a second time.
+**Restarts.** A job is held under a one-minute lease from the moment a worker claims it, before it is
+sent to the host, and each poll renews it. A job whose lease has lapsed is taken up by the next worker
+where it was, without sending it to the host a second time. Only the first finish of a job settles the
+month's seconds and episodes. Until OV-337 a queued job carried no lease, so every worker the queue
+woke claimed it at once and each sent it to the host: the first two transcriptions ran six and five
+times.
 
 **Allowances.** Hours of audio a month: a trial's address 4, Free 5, BYO Plus 15, Plus 30, with no
 episode over 4 hours by its feed (owner, 16 Nov 2026). The trial is onboarding's one overview, made
