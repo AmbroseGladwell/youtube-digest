@@ -112,7 +112,8 @@ test.describe("Chat's waits and what's left", () => {
     await reader.chat.ask("How much lean mass?");
 
     await reader.chat.verifyLeftReads("10 questions left this month, on us");
-    await reader.chat.openList();
+    await reader.chat.close();
+    await reader.chat.openListFromNote();
     await reader.chat.verifyLeftReads("10 of 100 questions left this month, on us. More on 1 December.");
   });
 

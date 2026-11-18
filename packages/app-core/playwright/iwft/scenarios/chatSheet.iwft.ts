@@ -103,4 +103,28 @@ test.describe("Chat as a sheet", () => {
     await reader.chat.verifyLoweredReads("How much lean mass?", "Playing 3:28–4:23 from the answer", "Back to the conversation");
     await reader.chat.verifyNoteLineCited("Taken with strength training");
   });
+
+  test("on a phone, the header's ⋯ opens as an action sheet, and Escape returns to the chat", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    backendSimulator.overviews.seedSynced(creatine());
+    await page.setViewportSize(PHONE);
+    const library = await launcher.launchExpectingLibrary({ ...SIGNED_IN, followUpAssistant: "claude" });
+    const reader = await library.nthCard(0).openReader();
+    await reader.followUps.clickQuestion(0);
+    await reader.chat.verifySheetIs("raised");
+    await reader.chat.verifyCopyUnderAnswers(1);
+
+    await reader.chat.openMenu();
+
+    await reader.chat.verifyMenuIsInASheet();
+    await reader.chat.verifyMenuOffers(["Continue in Claude (opens in a new tab)"]);
+
+    await reader.chat.pressEscape();
+
+    await reader.chat.verifyMenuIsClosed();
+    await reader.chat.verifySheetIs("raised");
+  });
 });

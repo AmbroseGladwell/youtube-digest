@@ -2,6 +2,7 @@ import { expect } from "@playwright/experimental-ct-react";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
+import { chatConversationMenuTestIds } from "../../src/features/chats/components/ChatConversationMenu/ChatConversationMenuTestIds.js";
 import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatSheetTestIds } from "../../src/features/chats/components/ChatSheet/ChatSheetTestIds.js";
 import { chatOverviewCitationTestIds } from "../../src/features/chats/components/ChatOverviewCitation/ChatOverviewCitationTestIds.js";
@@ -204,15 +205,58 @@ export class ChatPanelPageObject extends PageObject {
       await expect(cited).toContainText(text);
     });
 
-  verifyActionsUnderAnswer = (index: number, continueIn: string) =>
-    this.step(`verifyActionsUnderAnswer ${index} ${continueIn}`, async () => {
-      await expect(this.panel().getByTestId(chatAnswerActionsTestIds.root)).toHaveCount(1);
-      const actions = this.answers().nth(index).getByTestId(chatAnswerActionsTestIds.root);
-      await expect(actions.getByTestId(chatAnswerActionsTestIds.copy)).toHaveAccessibleName("Copy answer");
-      await expect(actions.getByTestId(chatAnswerActionsTestIds.continueIn)).toHaveText(continueIn);
+  verifyCopyUnderAnswers = (count: number) =>
+    this.step(`verifyCopyUnderAnswers ${count}`, async () => {
+      await expect(this.answers()).toHaveCount(count);
+      for (let index = 0; index < count; index++)
+        await expect(this.answers().nth(index).getByTestId(chatAnswerActionsTestIds.copy)).toHaveAccessibleName("Copy answer");
     });
 
-  continueIn = () => this.step("continueIn", () => this.click(this.panel().getByTestId(chatAnswerActionsTestIds.continueIn)));
+  verifyCopyIsShown = (index: number, shown: boolean) =>
+    this.step(`verifyCopyIsShown ${index} ${shown}`, () =>
+      expect(this.answers().nth(index).getByTestId(chatAnswerActionsTestIds.root)).toHaveCSS("opacity", shown ? "1" : "0"),
+    );
+
+  hoverAnswer = (index: number) => this.step(`hoverAnswer ${index}`, () => this.answers().nth(index).hover());
+
+  verifyMenuIsOffered = (offered: boolean) =>
+    this.step(`verifyMenuIsOffered ${offered}`, () =>
+      expect(this.panel().getByTestId(chatConversationMenuTestIds.trigger)).toHaveCount(offered ? 1 : 0),
+    );
+
+  private openMenuIfClosed = async () => {
+    if ((await this.page.getByTestId(chatConversationMenuTestIds.menu).count()) === 0)
+      await this.click(this.panel().getByTestId(chatConversationMenuTestIds.trigger));
+  };
+
+  openMenu = () => this.step("openMenu", () => this.click(this.panel().getByTestId(chatConversationMenuTestIds.trigger)));
+
+  verifyMenuOffers = (items: string[]) =>
+    this.step(`verifyMenuOffers ${items.join(" | ")}`, async () => {
+      const offered = this.page.getByTestId(chatConversationMenuTestIds.menu).getByRole("menuitem");
+      await expect(offered).toHaveCount(items.length);
+      for (const [index, name] of items.entries()) await expect(offered.nth(index)).toHaveAccessibleName(name);
+    });
+
+  verifyContinueDetailReads = (detail: string) =>
+    this.step(`verifyContinueDetailReads ${detail}`, () =>
+      expect(this.page.getByTestId(chatConversationMenuTestIds.continueDetail)).toHaveText(detail),
+    );
+
+  verifyMenuIsInASheet = () =>
+    this.step("verifyMenuIsInASheet", () => expect(this.page.getByTestId(chatConversationMenuTestIds.sheet)).toBeVisible());
+
+  verifyMenuIsClosed = () =>
+    this.step("verifyMenuIsClosed", async () => {
+      await expect(this.page.getByTestId(chatConversationMenuTestIds.menu)).toHaveCount(0);
+      await expect(this.panel().getByTestId(chatConversationMenuTestIds.trigger)).toBeFocused();
+    });
+
+  continueIn = () =>
+    this.step("continueIn", async () => {
+      await this.openMenuIfClosed();
+      await this.click(this.page.getByTestId(chatConversationMenuTestIds.continueIn));
+    });
 
   verifyAnnounced = (text: string) =>
     this.step(`verifyAnnounced ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.announcement)).toHaveText(text));
@@ -228,14 +272,11 @@ export class ChatPanelPageObject extends PageObject {
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
-  verifyCountReads = (name: string | null) =>
-    this.step(`verifyCountReads ${name}`, () =>
-      name === null
-        ? expect(this.panel().getByTestId(chatPanelTestIds.count)).toHaveCount(0)
-        : expect(this.panel().getByTestId(chatPanelTestIds.count)).toHaveAccessibleName(name),
-    );
-
-  openList = () => this.step("openList", () => this.click(this.panel().getByTestId(chatPanelTestIds.count)));
+  openList = () =>
+    this.step("openList", async () => {
+      await this.openMenuIfClosed();
+      await this.click(this.page.getByTestId(chatConversationMenuTestIds.conversations));
+    });
 
   openListFromNote = () => this.step("openListFromNote", () => this.click(noteAskFieldTestIds.conversations));
 

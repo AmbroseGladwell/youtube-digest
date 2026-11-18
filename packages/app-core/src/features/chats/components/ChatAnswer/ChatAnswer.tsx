@@ -33,7 +33,7 @@ export interface ChatAnswerProps {
   // Another conversation about the overview an answer drew on, or null once it is deleted.
   conversationOf: (chatId: string) => { date: string; firstQuestion: string } | null;
   onConversationFollowed: (chatId: string, message: number) => void;
-  // Copy and Continue in, under the latest answer only (design 310k).
+  // Copy, under each answer (design 324x).
   actions?: ReactNode;
 }
 

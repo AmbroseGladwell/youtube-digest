@@ -45,12 +45,13 @@ test.describe("An overview's conversations", () => {
     await reader.chat.verifyNoteLinkReads("2 conversations about this video");
     await reader.chat.openFromMenu();
     await reader.chat.verifyTitleReads(DOSE);
-    await reader.chat.verifyCountReads("Conversations, 2");
+    await reader.chat.openMenu();
+    await reader.chat.verifyMenuOffers(["Conversations, 2", "Continue in…"]);
 
     await reader.chat.openList();
 
     await reader.chat.verifyTitleReads("Conversations");
-    await reader.chat.verifyCountReads(null);
+    await reader.chat.verifyMenuIsOffered(false);
     await reader.chat.verifyConversationsRead([
       { title: DOSE, meta: "12 Nov · 2 questions" },
       { title: WORKOUT, meta: "10 Nov · 1 question" },
