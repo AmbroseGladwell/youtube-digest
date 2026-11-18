@@ -11,6 +11,14 @@ export type OverviewReservation =
   | { reserved: true; month: string; used: number; limit: number }
   | { reserved: false; used: number; limit: number };
 
+export interface CountedOverview {
+  month: string;
+  used: number;
+  carried: boolean;
+}
+
+const MONTHS_TO_CARRY = 12;
+
 export type OurKeyDayReservation = "reserved" | "spent" | "signed-out-share-spent";
 
 // One row per UTC month, account and key. A slot is reserved before generation and released
@@ -38,15 +46,28 @@ export class OverviewUsageRepository {
     return { reserved: false, used: await this.#usedIn(month, accountId, keySource), limit };
   }
 
-  // An overview already made, counted on the month whatever its limit, so the count can pass it.
-  async count(now: Date, accountId: AccountId, keySource: KeySource): Promise<number> {
+  // An overview already made, so never refused: it counts on the first month from this one
+  // with room, and a month already full passes it to the next.
+  async count(now: Date, accountId: AccountId, keySource: KeySource, limit: number): Promise<CountedOverview> {
+    const thisMonth = usageMonth(now);
+    for (let ahead = 0; limit > 0 && ahead < MONTHS_TO_CARRY; ahead += 1) {
+      const month = usageMonth(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + ahead, 1)));
+      const [row] = await this.#sql.query<{ overviews: number }>(
+        `insert into overview_usage (month, account_id, key_source, overviews) values ($1::date, $2, $3, 1)
+         on conflict (month, account_id, key_source) do update set overviews = overview_usage.overviews + 1
+         where overview_usage.overviews < $4
+         returning overviews`,
+        [month, accountId, keySource, limit],
+      );
+      if (row !== undefined) return { month, used: row.overviews, carried: month !== thisMonth };
+    }
     const [row] = await this.#sql.query<{ overviews: number }>(
       `insert into overview_usage (month, account_id, key_source, overviews) values ($1::date, $2, $3, 1)
        on conflict (month, account_id, key_source) do update set overviews = overview_usage.overviews + 1
        returning overviews`,
-      [usageMonth(now), accountId, keySource],
+      [thisMonth, accountId, keySource],
     );
-    return row?.overviews ?? 1;
+    return { month: thisMonth, used: row?.overviews ?? 1, carried: false };
   }
 
   async release(month: string, accountId: AccountId, keySource: KeySource): Promise<void> {

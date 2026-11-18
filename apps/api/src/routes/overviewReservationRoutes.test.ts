@@ -212,7 +212,7 @@ test("an overview made on our key in a signed-out trial and moved in on sign-in 
   await testApp.close();
 });
 
-test("a moved trial overview is let in with the month on our key spent, and counted past the limit", async () => {
+test("a moved trial overview is let in with the month on our key spent, and counted on the next month", async () => {
   const testApp = await createTestApp({}, { ourKey: OUR_KEY });
   const account = await makeAccount(testApp);
   for (let made = 0; made < overviewQuotas.free.ours; made += 1) {
@@ -224,9 +224,13 @@ test("a moved trial overview is let in with the month on our key spent, and coun
   const reserved = await reserve(account, overviewId);
   const pushed = await push(account, { ...storedOverview(), ...made.json() });
 
+  testApp.clock.now = new Date(reserved.json().resetsOn);
+  const nextMonth = await account.inject({ method: "GET", url: "/api/overview-usage" });
+
   assert.equal(reserved.statusCode, 200);
-  assert.deepEqual(reserved.json().ours, { used: overviewQuotas.free.ours + 1, limit: overviewQuotas.free.ours });
+  assert.deepEqual(reserved.json().ours, { used: overviewQuotas.free.ours, limit: overviewQuotas.free.ours });
   assert.equal(pushed.statusCode, 201);
+  assert.equal(nextMonth.json().ours.used, 1);
   await testApp.close();
 });
 

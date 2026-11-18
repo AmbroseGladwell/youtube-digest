@@ -165,7 +165,8 @@ before the first pull is left to the first move, which finds what's there.
 
 **A moved overview counts against the account's month,** on the key that made it, and
 reserves its slot like a new one before it is pushed (OV-102, `tiers.md`, "Counting"). A
-month already spent doesn't refuse it: it counts past the limit and syncs at once (OV-325).
+month already spent doesn't refuse it: it syncs at once and counts on the next month instead
+(OV-325).
 
 **State is copied only where it differs from the default.** The server refuses a patch that
 changes nothing (`sync-api.md`), and a refused write would sit parked forever.

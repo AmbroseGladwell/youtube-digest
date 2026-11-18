@@ -47,9 +47,10 @@ export function overviewReservationRoutes(
       return usage.usage(now, accountId, plan);
     }
     if (await trials.madeInTrial(overviewId)) {
-      const used = await reservations.movedFromTrial(now, accountId, overviewId);
+      const limit = overviewQuotas[plan].ours;
+      const { used, carried } = await reservations.movedFromTrial(now, accountId, overviewId, limit);
       await trials.forget(overviewId);
-      request.log.info(apiLogLines.reservations.movedFromTrial({ plan, used, limit: overviewQuotas[plan].ours }));
+      request.log.info(apiLogLines.reservations.movedFromTrial({ plan, used, limit, carried }));
       return usage.usage(now, accountId, plan);
     }
     const reservation = await reservations.reserveOwn(now, accountId, overviewId, overviewQuotas[plan].own);
