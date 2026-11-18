@@ -279,7 +279,7 @@ function StartHero() {
           </p>
         ) : null
       }
-      alignTop={samples.length > 0}
+      alignTop={samples.length > 0 && samples.length < DECK_LEAST}
       panel={isPanel}
       aside={
         samples.length >= DECK_LEAST ? (
@@ -354,7 +354,8 @@ interface HeroProps {
   verb?: ReactNode;
   note?: ReactNode;
   aside?: ReactNode;
-  // Start's deck grows when it's laid out as a list, so the text stays at the top (155b).
+  // Start's samples grow when there are too few for a deck and they're laid out as a list,
+  // so the text stays at the top (155b). The deck is a fixed card, so it stays centred.
   alignTop?: boolean;
   // The panel is one narrow column with no room for the extension's own aside, and the
   // extension is where it already is (205g).
