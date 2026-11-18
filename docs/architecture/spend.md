@@ -20,6 +20,7 @@ estimated, and no model works anything out (`docs/prototype/constraints.md`).
 | Gemini | evals | generation | entered by hand: Gemini's cost needs a Google Cloud billing export to BigQuery |
 | Decodo | prod | transcripts | cost entered by hand: the plan's fee. Usage from the traffic statistics API: proxy traffic in GB and requests, each day |
 | Fly.io | prod | servers (the API app), narration (the TTS app) | entered by hand: Fly.io has no cost API |
+| Modal | unsplit | transcripts (speech-to-text) | entered by hand: one workspace runs dev's and prod's apps, and its cost isn't read yet. Inside the monthly credit, entered as `waived` |
 | Cloudflare | unsplit (cost), prod and dev (usage) | storage, and any other service under its own name | cost from the billable usage API (alpha, FOCUS); usage from R2's analytics: storage in GB and requests per bucket, each day |
 
 A provider entered by hand shows as not tracked, with a reason saying what to enter, until
@@ -83,7 +84,7 @@ Europe with no jurisdiction: PostHog's R2 source refuses an EU-jurisdiction buck
 |---|---|
 | `date` | the UTC day the cost was incurred |
 | `provider` | `openai`, `neon`, … |
-| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for one bill covering every environment: OpenAI before 9 Nov 2026, and Cloudflare |
+| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for one bill covering every environment: OpenAI before 9 Nov 2026, Cloudflare, and Modal |
 | `area` | `generation`, `embeddings`, `database`, `servers`, `narration`, `transcripts`, `storage` |
 | `dollars` | to six places, **blank when not tracked**, never zero for a figure nobody read |
 | `source` | `bill`, `manual`, `waived` for a cost the provider let off, `not_tracked`, or `usage` for a row that measures use rather than money |

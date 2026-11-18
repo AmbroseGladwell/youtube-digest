@@ -32,9 +32,16 @@ read.
 | `generation` | `profile`, `forAnyone`, `topics`, `topicSuggestions`, each also `-failed` | tokens | list price | `OurKeyGenerator`'s small passes |
 | `embeddings` | `overview` | tokens of the claims newly embedded | $0.02 per million (`EMBEDDING_PRICE`, checked 9 Nov 2026) | `EmbeddingQueue` |
 | `embeddings` | `search` | tokens of a query not already cached | the same | `MeaningSearch` |
+| `chat` | `message`, `message-failed` | prompt and output tokens of a question's answer | list price (`modelPrices.ts`, GPT-6 Luna) | `ChatAnswerer` |
+| `transcripts` | `speech-to-text` | seconds of audio transcribed | the worker's seconds at its GPU's list price (`GPU_DOLLARS_PER_HOUR`), an unknown card at the dearest | `TranscriptionQueue` |
 | `transcripts` | `proxy` | bytes through the residential proxy | $4 per GB, a GB being 10⁹ bytes as Decodo counts it (`PROXY_PRICE`, checked 10 Nov 2026) | `ServiceTranscripts` |
 | `chat` | `message`, `message-failed` | prompt and output tokens of a question answered in an overview (OV-309) | list price | `ChatAnswerer` |
 
+- **A transcription costs the account that asked,** or `signed-out` for a trial. A transcript
+  is never shared, so each reader's ask is its own job and its own cost. Modal bills one workspace for dev and prod,
+  so its bill is `unsplit` and isn't part of the fixed share: each job is metered.
+- **Chat runs on our OpenAI key,** and OpenAI bills it as generation, so the reconciliation
+  counts chat with generation.
 - **Every metered area carries list-price dollars.** Decodo is pay as you go, so a byte
   through the proxy has a price like a token does. Its prepaid top-up is what the spend
   dashboard shows as paid (`spend.md`); this is what each account used of it, so Decodo isn't
