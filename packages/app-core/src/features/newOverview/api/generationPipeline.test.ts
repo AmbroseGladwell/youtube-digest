@@ -452,6 +452,32 @@ describe("runPodcastOverviewGeneration", () => {
     expect(input.video.channel).toBe("The Diary Of A CEO");
   });
 
+  it("says writing has started once the words are kept and the reader has let it begin", async () => {
+    const { deps } = setUp();
+    const key = `podcast:${await podcastSourceId(episode)}`;
+    const order: string[] = [];
+    const making = deps.makeOverview;
+    await runPodcastOverviewGeneration(
+      { episode, sharedFrom: "https://open.spotify.com/episode/x" },
+      async () => words(key),
+      {
+        ...deps,
+        makeOverview: (async (input, options) => {
+          order.push("made");
+          return making(input, options);
+        }) satisfies GenerationPipelineDeps["makeOverview"],
+      },
+      {
+        onEpisodeWords: () => order.push("words"),
+        waitToWrite: async () => {
+          order.push("let begin");
+        },
+        onWriting: () => order.push("writing"),
+      },
+    );
+    expect(order).toEqual(["words", "let begin", "writing", "made"]);
+  });
+
   it("makes nothing when no words are found, so nothing is used", async () => {
     const { deps, made } = setUp();
     const none = new TranscriptFetchError("No transcript", { failure: TranscriptFetchFailure.NO_CAPTIONS, sourceId: "podcast" });

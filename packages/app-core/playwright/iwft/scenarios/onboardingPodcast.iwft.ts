@@ -110,6 +110,7 @@ test("an episode with no transcript asks to transcribe it on the trial, and choo
   await onboarding.verifyOnScreen("video", "Is this the right episode?");
   await onboarding.verifyVideoTitle(EPISODE.title);
   expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([{ feedUrl: EPISODE.feedUrl, guid: EPISODE.guid }]);
+  expect(backendSimulator.podcasts.reads()).toHaveLength(1);
 });
 
 test("a Spotify exclusive is named as one at the confirm step, with a field for another link", async ({

@@ -1,4 +1,5 @@
 import type { Overview, PodcastPlatform, VideoSource } from "@overview/domain";
+import type { EpisodeTranscription } from "../../podcasts/types/EpisodeTranscription.js";
 import type { ArticleFailure } from "../api/ArticleReadError.js";
 import type { RunError } from "./RunError.js";
 
@@ -27,9 +28,8 @@ export interface PodcastRun {
   durationSeconds: number | null;
   imageUrl: string | null;
   words: number | null;
-  // Set once the reader chose to transcribe it: waiting for a card, then under way since when
-  // (design 305e).
-  transcription: { state: "starting" } | { state: "transcribing"; since: number } | null;
+  // Set once the reader chose to transcribe it.
+  transcription: EpisodeTranscription | null;
 }
 
 // One generation, from the moment Generate is pressed until it is dismissed. It outlives

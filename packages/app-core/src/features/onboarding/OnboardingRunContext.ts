@@ -14,7 +14,7 @@ export interface OnboardingRunState {
   transcribe: () => void;
 }
 
-const IDLE: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null };
+const IDLE: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null, transcription: null };
 
 const OnboardingRunContext = createContext<OnboardingRunState>({
   run: IDLE,

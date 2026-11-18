@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { Source } from "@overview/domain";
+import { Source, type PodcastEpisode } from "@overview/domain";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
-import { foundIn, onboardingSourceOf, onboardingSources } from "./onboardingSources.js";
+import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingMakers } from "./onboardingSources.js";
+import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
 
 const kindsOfSource = Source.options.map((option) => option.shape.kind.value);
 
@@ -112,5 +113,31 @@ describe("onboardingSources", () => {
     expect(teaser.first.label).toBe("Summary");
     expect(teaser.locked).toBe("The ingredients and method open with an account.");
     expect(onboardingSources.web.teaser(makeArticleOverview()).byline).toMatch(/ · Article · \d+ min read$/);
+  });
+  it("transcribes the episode it read, and passes on how the transcribing is going", async () => {
+    const link = "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk";
+    const episode = { feedUrl: "https://feeds.example/diary.xml", guid: "episode-guid", title: "Ageing" } as PodcastEpisode;
+    const asked: { transcribe: unknown; episode: PodcastEpisode }[] = [];
+    const told: TranscriptionProgress[] = [];
+    const makers = {
+      readPodcast: async () => ({ status: "read", episode }),
+      podcast: async (request, options) => {
+        asked.push({ transcribe: request.transcribe, episode: request.episode });
+        options.onTranscription?.("starting");
+        options.onTranscription?.("transcribing");
+        return makeOverview();
+      },
+    } as Pick<OnboardingMakers, "readPodcast" | "podcast"> as OnboardingMakers;
+
+    await onboardingSources.podcast.make(link, makers, {
+      transcribe: "asked",
+      onFound: () => {},
+      onTranscription: (progress) => told.push(progress),
+      isCancelled: () => false,
+      waitToWrite: async () => {},
+    });
+
+    expect(asked).toEqual([{ transcribe: "asked", episode }]);
+    expect(told).toEqual(["starting", "transcribing"]);
   });
 });
