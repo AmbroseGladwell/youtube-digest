@@ -7,7 +7,9 @@ import { settingsSectionTestIds } from "../../../src/features/settings/component
 import { appShellTestIds } from "../../../src/shell/AppShell/AppShellTestIds.js";
 import { readerTabsTestIds } from "../../../src/features/reader/components/ReaderTabs/ReaderTabsTestIds.js";
 import { transcriptPanelTestIds } from "../../../src/features/reader/components/TranscriptPanel/TranscriptPanelTestIds.js";
-import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { chatPanelTestIds } from "../../../src/features/chats/components/ChatPanel/ChatPanelTestIds.js";
+import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeStoredTranscript } from "../../../src/features/transcripts/types/StoredTranscriptFactory.testHelper.js";
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
@@ -19,6 +21,10 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const VIDEO_ID = VideoId.parse("watchedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=watchedVideo1";
 const TOKEN = ShareToken.parse("k7Qm2x9RfTabcdef");
+const SIGNED_IN = {
+  sync: true,
+  syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+};
 
 // Long enough on every tab that there is something to scroll under the chrome.
 const SEGMENTS: TranscriptSegment[] = Array.from({ length: 30 }, (_, index) =>
@@ -156,4 +162,17 @@ test("settings fades under the bar alone, and a section's heading still clears i
 
   await settings.verifyFadeHangsFrom(appShellTestIds.masthead);
   await settings.verifyAnchorsClearTheFade(settingsSectionTestIds.heading("appearance"));
+});
+
+// OV-328: a recipe page has one tab and so no tab strip, leaving the bar as the lowest band.
+// With chat open beside the note, the bar's fade ends where the chat starts.
+test("on a page with no tab strip, the bar's fade stops short of an open chat", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seedSynced(makeRecipeOverview());
+  backendSimulator.chats.answerWith({ text: "Roast them first.", inSource: false, citations: [] });
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.chat.askInNote("What do I do first?");
+
+  await reader.verifyFadeHangsFrom(appShellTestIds.masthead);
+  await reader.verifyFadeStopsShortOf(chatPanelTestIds.root);
 });

@@ -17,8 +17,11 @@
 // Design 310a: chat opens on the right and the note's column eases left to make room. The chat
 // sits in the page under the bar, inset by the page's margin, sticky and fixed in height, so the
 // note scrolls on its own beside it.
+$chat-width: 25rem;
+$chat-width-narrow: 22.5rem;
+
 .layout {
-  --chat-width: 25rem;
+  --chat-width: #{$chat-width};
 
   flex: 1;
   display: grid;
@@ -29,6 +32,16 @@
 
 .layoutWithChat {
   grid-template-columns: minmax(0, 1fr) calc(var(--chat-width) + 1.5rem);
+}
+
+// OV-328: a page with one tab has no tab strip, so the bar itself is the lowest band and its
+// fade would run on over the chat. It stops where the chat column starts.
+:global(:root):has(.layoutWithChat) {
+  --masthead-fade-right: calc(#{$chat-width} + 1.5rem);
+
+  @media (max-width: 79.9375rem) {
+    --masthead-fade-right: calc(#{$chat-width-narrow} + 1.5rem);
+  }
 }
 
 .chatColumn {
@@ -66,7 +79,7 @@
 
 @media (max-width: 79.9375rem) {
   .layout {
-    --chat-width: 22.5rem;
+    --chat-width: #{$chat-width-narrow};
   }
 }
 
