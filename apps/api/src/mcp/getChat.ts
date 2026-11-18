@@ -13,7 +13,7 @@ export const CHAT_PAGE_MESSAGES = 20;
 export const getChat = mcpTool({
   name: "get_chat",
   title: "Read a conversation",
-  description: `Read one conversation the reader had in the app about an overview, as Markdown: each question, each answer, and where each answer found what it says, as timestamp links into the video (times alone for an episode) or another conversation it built on. An answer the source didn't cover is marked. Cite these the way you cite an overview's moments. ${CHAT_PAGE_MESSAGES} messages a page, with a cursor.`,
+  description: `Read one conversation the reader had in the app about an overview, as Markdown: each question, each answer, and where each answer found what it says, as timestamp links into the video (times alone for an episode) or another conversation it built on. An answer the source didn't cover is marked, and anything it adds is general knowledge, not from the source. Cite these the way you cite an overview's moments. ${CHAT_PAGE_MESSAGES} messages a page, with a cursor.`,
   input: z.object({
     id: z.string().describe("The conversation's id, as list_chats or get_overview gives it"),
     cursor: z.string().regex(/^\d+$/).optional().describe("Where to carry on from: the cursor the previous call ended with"),

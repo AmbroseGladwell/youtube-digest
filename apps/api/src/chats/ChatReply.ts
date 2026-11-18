@@ -6,6 +6,7 @@ export const ChatReply = z.object({
   overviewParts: z.array(z.string()),
   chatMessages: z.array(z.string()),
   inSource: z.boolean(),
+  generalKnowledge: z.boolean(),
 });
 export type ChatReply = z.infer<typeof ChatReply>;
 
@@ -13,12 +14,13 @@ export type ChatReply = z.infer<typeof ChatReply>;
 export const CHAT_REPLY_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["answer", "passages", "overviewParts", "chatMessages", "inSource"],
+  required: ["answer", "passages", "overviewParts", "chatMessages", "inSource", "generalKnowledge"],
   properties: {
     answer: { type: "string" },
     passages: { type: "array", items: { type: "string" } },
     overviewParts: { type: "array", items: { type: "string" } },
     chatMessages: { type: "array", items: { type: "string" } },
     inSource: { type: "boolean" },
+    generalKnowledge: { type: "boolean" },
   },
 } as const;

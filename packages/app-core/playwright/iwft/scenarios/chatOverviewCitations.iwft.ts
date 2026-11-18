@@ -89,7 +89,7 @@ test.describe("Chat citing the overview", () => {
     await reader.chat.verifyIsOpen(true);
   });
 
-  test("an answer from the overview alone has no Not in the video label, and Watch it anyway is tinted whole", async ({
+  test("an answer from the overview alone has no Not from the video label, and Watch it anyway is tinted whole", async ({
     launcher,
     backendSimulator,
   }) => {

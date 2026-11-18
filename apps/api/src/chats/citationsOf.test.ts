@@ -21,6 +21,7 @@ const reply = (fields: Partial<ChatReply>): ChatReply => ({
   overviewParts: [],
   chatMessages: [],
   inSource: true,
+  generalKnowledge: false,
   ...fields,
 });
 

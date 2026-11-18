@@ -157,7 +157,13 @@ export function overviewFromMarkdown(markdown: string): Partial<Overview> {
   const anyway = found.get("Watch it anyway?");
   if (anyway !== undefined) {
     const answer = (keyOf(WATCH_ANYWAY_LABEL, anyway) ?? "no") as WatchAnswer;
-    overview.watchAnyway = { answer, reason: anyway.slice(WATCH_ANYWAY_LABEL[answer].length).replace(/^\.\s*/, ""), range: null };
+    const reason = anyway.slice(WATCH_ANYWAY_LABEL[answer].length).replace(/^\.\s*/, "");
+    const where = new RegExp(` ${LINK.source}$`).exec(reason);
+    overview.watchAnyway = {
+      answer,
+      reason: where === null ? reason : reason.slice(0, where.index),
+      range: where === null ? null : { startMs: clockMs(where[1]!), endMs: clockMs(where[2] ?? where[1]!) },
+    };
   }
 
   const chapters = found.get("Chapters");

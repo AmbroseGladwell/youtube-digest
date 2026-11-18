@@ -52,11 +52,11 @@ const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" 
   if (answeredFromOverviewAlone(kind)) {
     return answeredFromOverview(message)
       ? null
-      : `${kind === "recipe" ? "The recipe" : "The overview of this article"} doesn't cover this; the answer says so rather than guessing.`;
+      : `${kind === "recipe" ? "The recipe" : "The overview of this article"} doesn't cover this; anything the answer adds is general knowledge, not from it.`;
   }
   return answeredFromOverview(message)
     ? `Answered from the overview, not from what the ${kind} says.`
-    : `The ${kind} doesn't cover this; the answer says so rather than guessing.`;
+    : `The ${kind} doesn't cover this; anything the answer adds is general knowledge, not from the ${kind}.`;
 };
 
 // A conversation as it reads outside the app: each question, each answer with where it found
@@ -79,8 +79,8 @@ export function chatMarkdown(chat: Chat, overview: Overview, { from = 0, count =
     `Conversation id: ${chat.id} · overview id ${overview.id} · started ${chat.startedAt.slice(0, 10)} · ${chat.messages.length} messages`,
     "",
     answeredFromOverviewAlone(kind)
-      ? `Answers come only from the overview of this ${kind === "recipe" ? "recipe page and its recipe" : "article"}, not from the page itself, whose text isn't kept; another conversation cited is context.`
-      : "Answers come only from the reader's own copy of the source and its overview; the overview and another conversation cited are context, never the source.",
+      ? `Answers come from the overview of this ${kind === "recipe" ? "recipe page and its recipe" : "article"}, not from the page itself, whose text isn't kept. Where it doesn't cover a question, an answer may add general knowledge, marked as not from it; another conversation cited is context.`
+      : "Answers come from the reader's own copy of the source and its overview. Where the source doesn't cover a question, an answer may add general knowledge, marked as not from the source; the overview and another conversation cited are context, never the source.",
     "",
     ...lines,
   ].join("\n");

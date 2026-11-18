@@ -198,6 +198,7 @@ export class ChatAnswerer {
             ...logged,
             ...cost,
             inSource: cited.inSource,
+            generalKnowledge: reply.generalKnowledge,
             sourceCitations: cited.sourceCitations,
             overviewCitations: cited.overviewCitations,
             chatCitations: cited.chatCitations,

@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-17";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-18";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -264,8 +264,8 @@ const sections: readonly LegalSection[] = [
         <p>
           We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
           OpenAI's list price go into the daily cost tally above. We log that a question was answered, with the tokens, the cost, how long
-          it took, whether it was about a video, an episode, an article or a recipe page, whether the video or episode covered it and how
-          many places the answer cited; never the question or the answer.
+          it took, whether it was about a video, an episode, an article or a recipe page, whether the video or episode covered it, whether
+          the answer added general knowledge beyond it, and how many places the answer cited; never the question or the answer.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping

@@ -31,8 +31,15 @@ const SEGMENTS = [
   { text: "Take three to five grams a day.", startMs: 61_000, endMs: 70_000 },
 ];
 
-const answer = (text: string, passages: string[] = ["p2"], chatMessages: string[] = [], inSource = true, overviewParts: string[] = []) => ({
-  reply: { answer: text, passages, overviewParts, chatMessages, inSource },
+const answer = (
+  text: string,
+  passages: string[] = ["p2"],
+  chatMessages: string[] = [],
+  inSource = true,
+  overviewParts: string[] = [],
+  generalKnowledge = false,
+) => ({
+  reply: { answer: text, passages, overviewParts, chatMessages, inSource, generalKnowledge },
 });
 
 interface Setup {
@@ -194,6 +201,33 @@ test("a question the transcript doesn't answer is declined, with no citation of 
     citations: [],
     inSource: false,
   });
+});
+
+test("a fair question the source doesn't cover is answered from general knowledge, stored as not from the source, and logged as such", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const general = "The video doesn't cover it. Creatine is usually made by fermentation, so most of it is vegan.";
+  const setup = await setUp(t, [answer(general, ["p1"], [], false, [], true), answer("The video doesn't say.", [], [], false)], {
+    logger,
+  });
+
+  const done = answered((await setup.ask(randomUUID(), "Is it vegan?")).body);
+  answered((await setup.ask(randomUUID(), "Where does it mention chickens?")).body);
+
+  assert.match(setup.openAi.requests[0]?.messages[0]?.content ?? "", /answer briefly from general knowledge/);
+  assert.deepEqual(done.messages[1], {
+    from: "answer",
+    text: general,
+    at: setup.testApp.clock.now.toISOString(),
+    citations: [],
+    inSource: false,
+  });
+  assert.deepEqual(
+    lines.filter((line) => line.logCode === "api.chat.answered").map((line) => [line.inSource, line.generalKnowledge]),
+    [
+      [false, true],
+      [false, false],
+    ],
+  );
 });
 
 test("a question about the overview itself is answered from its items, cited by place in code, and not counted as the source", async (t) => {

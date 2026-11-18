@@ -98,8 +98,8 @@ test.describe("Chat beside the note", () => {
 
     await reader.chat.askInNote(QUESTIONS[3]!.question);
 
-    await reader.chat.verifyNotInSource(0, "Not in the video");
-    await reader.chat.verifyAnnounced("Not in the video: The video doesn’t say whether to take creatine before or after a workout.");
+    await reader.chat.verifyNotInSource(0, "Not from the video");
+    await reader.chat.verifyAnnounced("Not from the video: The video doesn’t say whether to take creatine before or after a workout.");
     await reader.chat.verifyCopyUnderAnswers(1);
 
     await reader.chat.ask("How much lean mass?");

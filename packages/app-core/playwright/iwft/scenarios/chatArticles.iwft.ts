@@ -67,9 +67,9 @@ test.describe("Chat about an article or a recipe page", () => {
 
     await reader.chat.askInNote("What did the engineer's letter say?");
 
-    await reader.chat.verifyNotInSource(0, "Not in the overview of this article");
+    await reader.chat.verifyNotInSource(0, "Not from the overview of this article");
     await reader.chat.verifyReadOnPageLinksTo(0, pageUrl(article));
-    await reader.chat.verifyAnnounced("Not in the overview of this article: The overview of this article doesn't cover it.");
+    await reader.chat.verifyAnnounced("Not from the overview of this article: The overview of this article doesn't cover it.");
   });
 
   test("a recipe page's answer cites its method and leads to the step; a decline says the recipe doesn't cover it", async ({
@@ -95,7 +95,7 @@ test.describe("Chat about an article or a recipe page", () => {
     backendSimulator.chats.answerWith({ text: "The recipe doesn't cover it.", inSource: false, citations: [] });
     await reader.chat.ask("Can I use golden syrup instead?");
 
-    await reader.chat.verifyNotInSource(1, "Not in the recipe");
+    await reader.chat.verifyNotInSource(1, "Not from the recipe");
     await reader.chat.verifyReadOnPageLinksTo(1, pageUrl(recipePage));
   });
 });

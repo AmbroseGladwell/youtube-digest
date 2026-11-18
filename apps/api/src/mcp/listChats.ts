@@ -14,7 +14,7 @@ const FIRST_QUESTION_LENGTH = 160;
 export const listChats = mcpTool({
   name: "list_chats",
   title: "List the reader's conversations",
-  description: `List the conversations the reader had in the app about their overviews: questions they asked about a video, article or episode and the answers, which came only from the source. By overview, by project, or across the library; newest first, ${CHATS_PAGE_SIZE} a page. Each gives the conversation id, the overview, the first question, how many questions and when it was last added to. Read one with get_chat. Use them to know what the reader already asked, decided or was told before answering again.`,
+  description: `List the conversations the reader had in the app about their overviews: questions they asked about a video, article or episode and the answers, which come from the source, or say they don't and add general knowledge. By overview, by project, or across the library; newest first, ${CHATS_PAGE_SIZE} a page. Each gives the conversation id, the overview, the first question, how many questions and when it was last added to. Read one with get_chat. Use them to know what the reader already asked, decided or was told before answering again.`,
   input: z.object({
     overview: z.string().optional().describe("Only conversations about this overview, by its id"),
     project: z.string().optional().describe("Only conversations about overviews in this project, by its name or id"),
