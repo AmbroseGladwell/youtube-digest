@@ -272,7 +272,7 @@ export const apiLogLines = coded("api", {
     answered: line(
       "info",
       "chat answered",
-      "A chat question answered on our key: plan, model, tokens (input counts cache reads), the cached share, cost in dollars, whether the source covered it, how many citations of the source, of the overview and of other chats, how many other chats' messages went with it, the month's count and how long it took. Never the question or the answer.",
+      "A chat question answered on our key: plan, model, tokens (input counts cache reads), the cached share, cost in dollars, whether the source covered it, whether the answer added general knowledge beyond the source, how many citations of the source, of the overview and of other chats, how many other chats' messages went with it, the month's count and how long it took. Never the question or the answer.",
     ),
     failed: line(
       "warn",

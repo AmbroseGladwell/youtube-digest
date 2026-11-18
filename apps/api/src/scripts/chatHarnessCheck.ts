@@ -39,7 +39,7 @@ import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 
 interface Question {
   id: string;
-  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "filler" | "overviewPart";
+  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "offSubject" | "filler" | "overviewPart";
   question: string;
   quotes: string[];
   mentions: string[];
@@ -66,6 +66,8 @@ interface Turn {
   citedRightMoment: boolean | null;
   mentioned: boolean | null;
   citedRightPart: boolean | null;
+  generalKnowledge: boolean | null;
+  rightOnGeneral: boolean | null;
   partsCited: string[];
   speaksOfOverview: boolean;
   inventedNumbers: string[];
@@ -237,7 +239,9 @@ async function main() {
         .filter((block) => block.startsWith("data: "))
         .map((block) => JSON.parse(block.slice(6)) as ChatStreamEvent);
       const done = events.at(-1);
-      const logged = lines.slice(before).find((line) => line.logCode === "api.chat.answered") as Record<string, number | null> | undefined;
+      const logged = lines.slice(before).find((line) => line.logCode === "api.chat.answered") as
+        | Record<string, number | boolean | null>
+        | undefined;
       const answer = done?.type === "answered" ? done.messages[1] : undefined;
       if (answer === undefined || answer.from !== "answer" || logged === undefined) {
         turns.push({
@@ -250,6 +254,8 @@ async function main() {
           citedRightMoment: null,
           mentioned: null,
           citedRightPart: null,
+          generalKnowledge: null,
+          rightOnGeneral: null,
           partsCited: [],
           speaksOfOverview: false,
           inventedNumbers: [],
@@ -264,7 +270,8 @@ async function main() {
         process.stdout.write(`! ${source.name} ${label} ${question.id}: ${response.statusCode} ${response.body.slice(0, 200)}\n`);
         continue;
       }
-      const answerable = question.kind !== "notInSource" && question.kind !== "filler";
+      const answerable = question.kind !== "notInSource" && question.kind !== "offSubject" && question.kind !== "filler";
+      const generalKnowledge = typeof logged.generalKnowledge === "boolean" ? logged.generalKnowledge : null;
       const parts = answer.citations.flatMap((citation) => ("part" in citation ? [citation] : []));
       const moments = question.quotes.map((quote) => locateQuote(source.segments, quote));
       const cited = answer.citations.flatMap((citation) => ("startMs" in citation ? [citation] : []));
@@ -297,6 +304,10 @@ async function main() {
             : parts.some((cited) =>
                 question.parts!.some(({ part, index }) => cited.part === part && (index === null || cited.index === index)),
               ),
+        generalKnowledge,
+        // OV-329: a fair question the source doesn't answer gets general knowledge; one off its subject is declined.
+        rightOnGeneral:
+          question.kind === "notInSource" ? generalKnowledge === true : question.kind === "offSubject" ? generalKnowledge === false : null,
         partsCited: parts.map(({ part, index }) => `${part}${index}`),
         // The decline the overview-only prompt asks for names the overview; that isn't a third party.
         speaksOfOverview: /\bthe overview\b(?! of this article doesn[’']t cover)|\b(I|we) (suggest|recommend|think)\b/i.test(answer.text),
@@ -306,7 +317,7 @@ async function main() {
         ),
         answer: answer.text,
         inputTokens: Number(logged.inputTokens ?? 0),
-        cachedShare: logged.cachedShare ?? null,
+        cachedShare: typeof logged.cachedShare === "number" ? logged.cachedShare : null,
         outputTokens: Number(logged.outputTokens ?? 0),
         costDollars: Number(logged.costDollars ?? 0),
         otherChatMessages: Number(logged.otherChatMessages ?? 0),

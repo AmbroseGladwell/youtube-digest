@@ -111,7 +111,7 @@ test("get_chat reads a conversation with its citations as timestamp links, anoth
 
   assert.match(read, new RegExp(`Conversation id: ${second} · overview id ${overview.id}`));
   assert.match(read, /1\. \*\*The reader asked\*\* \(2026-09-26\): Remind me when\?/);
-  assert.match(read, /The video doesn't cover this; the answer says so rather than guessing\./);
+  assert.match(read, /The video doesn't cover this; anything the answer adds is general knowledge, not from the video\./);
   assert.ok(read.includes(`Cites: message 2 of conversation ${first}.`));
   assert.match(read, /Cites: \[1:01–1:10\]\(https:\/\/(www\.)?youtube\.com\/watch\?v=[^&)]+&t=61\)\./);
   assert.equal((await client.callTool("get_chat", { id: chatRecordId(overview.id, randomUUID()) })).isError, true);

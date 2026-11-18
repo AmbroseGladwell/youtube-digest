@@ -29,7 +29,8 @@ before"). Each record is one conversation about one overview:
 - **`inSource: false`** marks an answer the source doesn't back. Another chat and the
   overview are never the source: an answer resting only on them is not `inSource`. One that
   is not `inSource` but cites the overview is "From the overview" (`answeredFromOverview`);
-  one that cites neither says the source doesn't cover the question.
+  one that cites neither says the source doesn't cover the question, and may add general
+  knowledge ("Beyond the source" below).
 - At most `MAX_CHAT_QUESTIONS` (50) questions and their answers, and 10,000 characters a
   message. A conversation past its length is refused whole, so OV-309 checks the count first
   (`chatQuestionCount`) and offers a new conversation.
@@ -265,14 +266,16 @@ its chapters and Read it anyway?, a recipe page's ingredients and method.
 - **The prompt** for them (`overviewOnlyPrompt` in `chatPrompt.ts`) has the overview and no
   transcript. It asks the answer to cite the items it rests on, never to set `inSource`, to
   name the section rather than speak of the overview, and to say plainly when "the overview of
-  this article doesn't cover it" or "the recipe doesn't cover it", which includes anything only
-  the full page would say.
+  this article doesn't cover it" or "the recipe doesn't cover it". A fair question about the
+  subject then gets general knowledge too; one about what the full page says doesn't, since only
+  the page could answer it ("Beyond the source" below).
 - **Amounts stay code's job** (`docs/prototype/constraints.md`). Wherever the overview holds a
   recipe, a page's or a video's, the prompt forbids scaling a quantity, changing the servings
   or converting a unit or temperature, and points to the servings control above the
   ingredients, which scales them in code (OV-231).
 - **`inSource` is always false** for them: `citationsOf` only counts transcript passages. An
-  answer that cites the overview is `answeredFromOverview`; one that cites nothing is a decline.
+  answer that cites the overview is `answeredFromOverview`; one that cites nothing is a decline,
+  or general knowledge.
 - **Logs and analytics:** `api.chat.answered` and `api.chat.failed` carry `about`, and so do
   `reader.chat.answered` and `reader.chat.waited`.
 - **Over MCP**, `get_chat` says an article's answers come from its overview, not the page, and
@@ -293,6 +296,50 @@ its chapters and Read it anyway?, a recipe page's ingredients and method.
   - **Wording:** 4 of 76 answers spoke of "the overview", two of them while declining.
   - **Cost:** about 1,900 prompt tokens, so a message cost $0.00009 at the median and $0.0003
     at most, 97% read from the cache.
+
+## Beyond the source
+
+OV-329, from the first real chat data: 8 of 17 answers between 16 and 18 Nov 2026 were not
+`inSource`, and the questions behind them were mostly fair ones the model could answer ("why
+remove the chorizo skin?", "can I combine scalp massage with derma rolling?"), declined only
+because the prompt forbade general knowledge.
+
+- **The prompt** (`beyondSourceRules` in `chatPrompt.ts`, for every kind): a fair question about
+  the source's subject that neither the transcript nor the overview answers begins "The video
+  doesn't cover it." and then answers briefly from general knowledge. An answer the source
+  covers in part gives the source's part first, with its citations, then "Beyond the video, …".
+  It says how settled the knowledge is, and on health, medicine or safety keeps to what is well
+  established. A question about where or whether the source says something, or one off its
+  subject, is still declined with nothing added.
+- **The label is code's**, from the citations, as before: an answer that is not `inSource` and
+  cites no part of the overview says "Not from the video" (episode, recipe, "the overview of this
+  article"), whether it declines or adds general knowledge. No new field on the record, so no
+  schema bump. A mixed answer is `inSource`, and its wording marks the part beyond the source.
+- **`generalKnowledge`** in the model's reply tells a general answer from a decline, and goes
+  only into `api.chat.answered`, so how often readers go beyond the source can be read (the
+  signal for OV-315's web check). It is never stored or shown.
+- **Over MCP**, `get_chat` says a source doesn't cover a question and that anything the answer
+  adds is general knowledge, not from the source.
+- **Measured through the endpoint** on 18 Nov 2026 (`chatHarnessCheck.ts`, Luna on the evals
+  key): two videos (Vox on creatine, Hairguard on scalp massage) and a recipe page (chorizo
+  soup) from the owner's library, with the owner's real questions, each set twice, then a
+  30-question conversation over both videos joined, twice. 86 messages, none failed, $0.019 in
+  all, median $0.00018 a message.
+  - **Off-subject or "where does it say" questions** (chickens, wine, storing creatine,
+    the capital of Peru): declined with nothing added, 14 of 14.
+  - **Fair questions the source doesn't answer** (is creatine vegan, creatine with coffee,
+    derma rolling with massage, why remove the chorizo skin, why transplanted follicles resist
+    baldness): a general answer every time, hedged where the evidence is mixed, and "ask a
+    dermatologist" on derma rolling. Six of the 18 were mixed: the source's related part first,
+    cited, then "Beyond the video, …", so they are `inSource` (or cite the recipe's method
+    step) and the harness's `rightOnSource` counts them as misses. The transplanted-follicles
+    question rests on the overview's "Why it's dubious" item each time, which is right: the
+    overview says it, the video doesn't.
+  - **Questions the source answers** kept their citations: right moment 12 of 12, right part
+    of the overview 2 of 2, never `generalKnowledge`.
+  - One answer began "The overview notes", the wording slip OV-319 measured at 4 of 76.
+- **Not yet:** how such an answer looks (Claude Design, with OV-315's button). Until then it
+  keeps the decline's muted label, reworded.
 
 ## Deleting
 
@@ -378,7 +425,7 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
 - **A conversation:** the reader's question in OV-266's bubble, the answer as plain text under three
   dots and then a caret while it streams, with Stop in Send's place. Stopping keeps what was
   written, says "Stopped. This one didn't count." and stores nothing. A failure says so, with Try
-  again. The answer is announced once, when final ("Answer: … 1 moment cited.", or "Not in the
+  again. The answer is announced once, when final ("Answer: … 1 moment cited.", or "Not from the
   video: …").
 - **Citations:** each stretch of the source is a pill under the answer, from the record's times,
   named "Play the video, 3:28 to 4:23". Following one tints the key point holding it
@@ -393,7 +440,7 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
   when one answer cites two of its items ("How to apply, 1"). Its accessible name adds the item's
   opening words. They come first in the answer's one row of pills, in the note's order, then the
   video's in time order (`overviewCitationViews`). An answer from the overview alone has no label:
-  "Not in the video" is only for one that cites neither. Following one keeps chat open, switches
+  "Not from the video" is only for one that cites neither. Following one keeps chat open, switches
   to Chapters for a chapter, opens folded steps or the dubious reasons when it has to, brings the
   part to about 90px below the top, tints it and gives it focus (`CitedOverviewPartContext`, the
   global `[data-cited-part]` rule); the verdict, What it's selling and Watch it anyway are tinted
