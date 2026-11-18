@@ -61,20 +61,24 @@ read.
 
 ## What PostHog reads
 
-Three views in their own schema, `cost_reports` (`V0030__cost_reports.sql`), each a monthly
-rollup:
+Four views in their own schema, `cost_reports` (`V0030__cost_reports.sql`,
+`V0038__cost_days.sql`): three monthly rollups, and one daily total for checking a day against
+a bill:
 
 | View | One row per | Holds |
 |---|---|---|
 | `cost_lines` | month, account, area, detail | plan, calls, quantity, dollars; signed-out callers under plan `signed-out` with no account |
 | `account_months` | month, account with any activity | plan, month joined, overviews on each key, renders, metered dollars, proxy bytes, `active` |
 | `plan_accounts` | plan | accounts on it now |
+| `cost_days` | day, area, detail | calls, quantity, dollars over every caller, signed out included; no account or plan |
 
 - **An account appears only as `md5('cost-report:' || id)`.** It isn't the account id, and it
   isn't the distinct id analytics uses, so PostHog can't join cost to a person.
 - **The plan is the account's plan now,** not the plan it was on that month: plans have no
   history yet.
-- **`cost_reader` can read those three views and nothing else.** The migration creates it
+- **A day carries no account and no plan.** It is only for reconciling a day with a bill
+  (OV-260), and a day's line could otherwise be one reader's day.
+- **`cost_reader` can read those four views and nothing else.** The migration creates it
   without a login and with no role memberships; the tests check both. Views run with their
   owner's rights, so the reader needs nothing on the tables behind them.
 - **Turning on the login is done by hand, once, on prod,** so no password is ever in the repo:
