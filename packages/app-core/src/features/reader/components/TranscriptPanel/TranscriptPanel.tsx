@@ -17,7 +17,7 @@ import { useTranscriptSearch, type TranscriptSearch } from "./useTranscriptSearc
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
 import styles from "./TranscriptPanel.module.scss";
 import { transcriptPanelTestIds } from "./TranscriptPanelTestIds.js";
-import { timedNoun } from "../../util/timedSource.js";
+import { machineTranscribedLabel, playingLabel, timedNoun } from "../../util/timedSource.js";
 
 const SKELETON_ROWS = 4;
 const COPIED_MS = 2000;
@@ -171,7 +171,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
             ) : follow.following ? (
               <span className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
                 <span className={styles.followingMark} aria-hidden="true" />
-                Following the video
+                Following the {timedNoun(video)}
               </span>
             ) : follow.offered ? (
               <span className={styles.notFollowing} data-testid={transcriptPanelTestIds.notFollowingNote}>
@@ -182,7 +182,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
             )}
             {transcript?.generated === true && (
               <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
-                Auto-generated
+                {machineTranscribedLabel(timedNoun(video))}
               </span>
             )}
           </p>
@@ -350,7 +350,7 @@ function TranscriptRows({
               {current && (
                 <span className={styles.playingBadge} data-testid={transcriptPanelTestIds.playingBadge}>
                   <span className={styles.playingMark} aria-hidden="true" />
-                  Playing on YouTube
+                  {playingLabel(noun)}
                 </span>
               )}
               {opensRun && openedFrom !== null && (

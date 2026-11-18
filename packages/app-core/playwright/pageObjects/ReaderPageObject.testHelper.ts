@@ -744,6 +744,9 @@ export class ReaderPageObject extends PageObject {
         : this.expectNotToBeVisible(transcriptPanelTestIds.followingNote),
     );
 
+  verifyFollowingNoteReads = (text: string) =>
+    this.step(`verifyFollowingNoteReads ${text}`, () => expect(this.get(transcriptPanelTestIds.followingNote)).toHaveText(text));
+
   verifyCurrentTranscriptBlockReads = (text: string | RegExp) =>
     this.step(`verifyCurrentTranscriptBlockReads ${String(text)}`, () =>
       expect(
@@ -778,13 +781,13 @@ export class ReaderPageObject extends PageObject {
   verifyFollowButtonReads = (label: string) =>
     this.step(`verifyFollowButtonReads ${label}`, () => expect(this.get(transcriptPanelTestIds.followButton)).toHaveText(label));
 
-  verifyCurrentBlockSaysPlaying = () =>
-    this.step("verifyCurrentBlockSaysPlaying", () =>
+  verifyCurrentBlockSaysPlaying = (label = "Playing on YouTube") =>
+    this.step(`verifyCurrentBlockSaysPlaying ${label}`, () =>
       expect(
         this.get(transcriptPanelTestIds.row)
           .and(this.page.locator('[data-current="true"]'))
           .getByTestId(transcriptPanelTestIds.playingBadge),
-      ).toHaveText("Playing on YouTube"),
+      ).toHaveText(label),
     );
 
   verifyTargetBlockNamesChapter = (label: string) =>
@@ -901,7 +904,7 @@ export class ReaderPageObject extends PageObject {
   clickRetryTranscript = () => this.step("clickRetryTranscript", () => this.click(transcriptPanelTestIds.retryButton));
   // YouTube's own phrase for its speech-recognition track, not the developer's
   // (docs/features/transcript-storage.md).
-  verifyShowsMachineTranscribedNote = () => expect(this.get(transcriptPanelTestIds.sourceNote)).toHaveText("Auto-generated");
+  verifyShowsMachineTranscribedNote = (label = "Auto-generated") => expect(this.get(transcriptPanelTestIds.sourceNote)).toHaveText(label);
   verifyShowsNoMachineTranscribedNote = () => this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsChaptersPanel = () => this.expectToBeVisible(chaptersPanelTestIds.root);
 
