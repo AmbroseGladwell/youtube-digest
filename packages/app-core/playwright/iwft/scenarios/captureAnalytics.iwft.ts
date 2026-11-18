@@ -46,6 +46,7 @@ test("making an overview is counted from asking to reading it, with where it was
           from: "dialog",
           transcriptSource: "service",
           durationMs: expect.any(Number),
+          writingMs: expect.any(Number),
           reasonGiven: false,
           novelty: "original",
           standsOut: true,

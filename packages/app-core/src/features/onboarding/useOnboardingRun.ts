@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { TranscribeChoice } from "@overview/domain";
-import type { Overview } from "@overview/domain";
+import type { Overview, PodcastRead } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
@@ -16,9 +16,11 @@ import { useStores } from "../../stores/StoresContext.js";
 import type { Library } from "../../stores/Library.js";
 import { createTrialArticleApi } from "../signedOutTrial/api/createTrialArticleApi.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
+import type { EpisodeTranscription } from "../podcasts/types/EpisodeTranscription.js";
 import { foundIn, type OnboardingFound, type OnboardingMakers, type OnboardingSource } from "./onboardingSources.js";
 import { pageAccessFor } from "./pageAccess.js";
 import { onboardingFailureOf, type OnboardingFailure } from "./util/onboardingFailureOf.js";
+import { rememberEpisodeRead } from "./util/rememberEpisodeRead.js";
 
 export type OnboardingRunPhase = "fetching" | "waiting" | "writing" | "ready" | "failed";
 
@@ -27,9 +29,11 @@ export interface OnboardingRun {
   found: OnboardingFound | null;
   overview: Overview | null;
   failure: OnboardingFailure | null;
+  // An episode the reader chose to transcribe, until its words are in.
+  transcription: EpisodeTranscription | null;
 }
 
-const FETCHING: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null };
+const FETCHING: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null, transcription: null };
 
 // Onboarding's one overview, of whatever kind the link is: found straight away, written once
 // the reader may be written for, so it is made from their answers. Signed out it is read and
@@ -116,6 +120,7 @@ export function useOnboardingRun({
     shownAccountId,
     openLibrary,
   };
+  const episodeReads = useRef(new Map<string, Promise<PodcastRead>>());
   const mayWriteNow = useRef(mayWrite);
   const releaseWriting = useRef<(() => void) | null>(null);
 
@@ -147,7 +152,7 @@ export function useOnboardingRun({
       article: (read, options) => latest.current.runArticle(read, options, stores),
       readArticle: (url) => latest.current.readArticle(url),
       podcast: (request, options) => latest.current.runPodcast(request, options, stores),
-      readPodcast: (url) => latest.current.readPodcast(url),
+      readPodcast: (url) => rememberEpisodeRead(episodeReads.current, url, latest.current.readPodcast),
     });
 
     library()
@@ -156,12 +161,20 @@ export function useOnboardingRun({
           isCancelled: () => cancelled,
           waitToWrite: () => writing,
           transcribe: transcribeNow.current,
+          onTranscription: (progress) => {
+            if (cancelled) return;
+            setRun((current) => {
+              if (current.transcription?.state === "transcribing") return current;
+              if (progress === "transcribing") return { ...current, transcription: { state: "transcribing", since: Date.now() } };
+              return { ...current, transcription: { state: "starting" } };
+            });
+          },
           onFound: (found) => {
             if (cancelled) return;
             latest.current.onFound(found);
             setRun((current) =>
               current.phase === "fetching"
-                ? { phase: mayWriteNow.current ? "writing" : "waiting", found, overview: null, failure: null }
+                ? { phase: mayWriteNow.current ? "writing" : "waiting", found, overview: null, failure: null, transcription: null }
                 : current,
             );
           },
@@ -170,7 +183,7 @@ export function useOnboardingRun({
       .then((overview) => {
         if (cancelled) return;
         latest.current.onMade(overview);
-        setRun({ phase: "ready", found: foundIn(overview), overview, failure: null });
+        setRun({ phase: "ready", found: foundIn(overview), overview, failure: null, transcription: null });
       })
       .catch((error: unknown) => {
         if (cancelled || error instanceof GenerationCancelledError) return;

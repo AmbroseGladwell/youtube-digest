@@ -25,6 +25,7 @@ import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcri
 import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
+import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
 import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
@@ -55,6 +56,8 @@ export interface OnboardingMakeOptions {
   // An episode with no words is transcribed from its audio, as the reader chose (design 305c-2).
   transcribe?: TranscribeChoice | undefined;
   onFound: (found: OnboardingFound) => void;
+  // Transcribing the episode's audio is waiting for a card, then under way.
+  onTranscription?: ((progress: TranscriptionProgress) => void) | undefined;
   isCancelled: () => boolean;
   waitToWrite: () => Promise<void>;
 }
@@ -200,7 +203,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     linkKind: (link) => (isPlatformPodcastLink(link) ? "episode" : null),
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: async (target, makers, { onFound, isCancelled, waitToWrite, transcribe }) => {
+    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToWrite, transcribe }) => {
       const read = await makers.readPodcast(target);
       if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
       const id = await podcastSourceId(read.episode);
@@ -211,6 +214,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
             from: "onboarding",
             isCancelled,
             waitToWrite,
+            onTranscription,
             onEpisodeWords: () => onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes }),
           },
         )

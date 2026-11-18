@@ -237,7 +237,14 @@ The order in production, each step safe on its own:
 `chosen` with how it came about (`chosen` on the card, `asked`, `retried`, `free`), `finished` with
 how long the reader waited for a transcriber and then for the words, and `failed` with why. Each
 carries where it was asked from, onboarding included, and the episode's length in minutes. All are
-sent from `useRunPodcastGeneration`, which every surface's run goes through.
+sent from `useRunPodcastGeneration`, which every surface's run goes through. The wait's last stage,
+writing, is `capture.newOverview.finished`'s `writingMs` (Create only), from the words in hand to
+the overview saved, so its estimate can be fitted to the source's length and the model once there is
+enough of it (OV-326).
+
+**Onboarding's Transcribe** carries on from the episode already read rather than reading the link
+again (`rememberEpisodeRead`), and the run says where the transcribing is (`OnboardingRun.transcription`,
+as Create's run does) for the screens OV-327 designs.
 
 ## The screens
 
