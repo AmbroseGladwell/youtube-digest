@@ -13,6 +13,7 @@ export const EXPECTED_SPEND = [
   { provider: "fly", environment: "prod", area: "servers" },
   { provider: "fly", environment: "prod", area: "narration" },
   { provider: "cloudflare", environment: "unsplit", area: "storage" },
+  { provider: "modal", environment: "unsplit", area: "transcripts" },
 ];
 
 export const ENTERED_BY_HAND = {
@@ -21,6 +22,7 @@ export const ENTERED_BY_HAND = {
   decodo: "Decodo reports traffic, not cost: enter the plan's fee",
   neon: "the free plan has no cost API: enter the plan's fee",
   fly: "Fly.io has no cost API: enter a monthly figure",
+  modal: "Modal's cost isn't read yet: enter a monthly figure, waived while it is inside the monthly credit",
 };
 
 export const spendKey = ({ provider, environment, area }) => `${provider}/${environment}/${area}`;

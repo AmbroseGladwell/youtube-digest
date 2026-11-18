@@ -20,6 +20,7 @@ estimated, and no model works anything out (`docs/prototype/constraints.md`).
 | Gemini | evals | generation | entered by hand: Gemini's cost needs a Google Cloud billing export to BigQuery |
 | Decodo | prod | transcripts | cost entered by hand: the plan's fee. Usage from the traffic statistics API: proxy traffic in GB and requests, each day |
 | Fly.io | prod | servers (the API app), narration (the TTS app) | entered by hand: Fly.io has no cost API |
+| Modal | unsplit | transcripts (speech-to-text) | entered by hand: one workspace runs dev's and prod's apps, and its cost isn't read yet. Inside the monthly credit, entered as `waived` |
 | Cloudflare | unsplit (cost), prod and dev (usage) | storage, and any other service under its own name | cost from the billable usage API (alpha, FOCUS); usage from R2's analytics: storage in GB and requests per bucket, each day |
 
 A provider entered by hand shows as not tracked, with a reason saying what to enter, until
@@ -83,7 +84,7 @@ Europe with no jurisdiction: PostHog's R2 source refuses an EU-jurisdiction buck
 |---|---|
 | `date` | the UTC day the cost was incurred |
 | `provider` | `openai`, `neon`, … |
-| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for one bill covering every environment: OpenAI before 9 Nov 2026, and Cloudflare |
+| `environment` | `prod`, `dev`, `evals`, `unattributed`, or `unsplit` for one bill covering every environment: OpenAI before 9 Nov 2026, Cloudflare, and Modal |
 | `area` | `generation`, `embeddings`, `database`, `servers`, `narration`, `transcripts`, `storage` |
 | `dollars` | to six places, **blank when not tracked**, never zero for a figure nobody read |
 | `source` | `bill`, `manual`, `waived` for a cost the provider let off, `not_tracked`, or `usage` for a row that measures use rather than money |
@@ -164,7 +165,7 @@ and write token, so PostHog holding a key can never change or delete the history
 **The dashboard** is "Spend" (PostHog dashboard 1099534), six SQL tiles on that table: spend
 this month, daily spend by environment, monthly spend by environment, spend by provider,
 environment and area with the days each went untracked, what is not tracked on the latest
-day and why, and usage this month for every provider (month-to-date figures and storage as the latest value, daily traffic and requests totalled). Totals count `bill` and `manual` rows only, so a row
+day and why, and usage this month for every provider (month-to-date figures and storage as the latest value, daily traffic and requests totalled). Every tile reads the SQL variable "Spend environment" (`spend_environment`: `all`, `prod`, `dev`, `evals`, `unsplit` or `unattributed`, `all` by default), so one choice at the top narrows the whole dashboard; the daily alert runs on its default, `all`. Totals count `bill` and `manual` rows only, so a row
 not tracked adds nothing rather than zero and a waived one adds nothing paid, and the table and the not-tracked tile show where
 the gaps are.
 
