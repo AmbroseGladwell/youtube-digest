@@ -249,6 +249,11 @@ export class PlayerEngine {
     this.#emitTime();
   }
 
+  endSession(): void {
+    this.#endListen("signedOut");
+    this.stop();
+  }
+
   toggle(from: PlaybackFrom): void {
     const { status } = this.#snapshot;
     if (status === "playing" || status === "buffering") this.pause();

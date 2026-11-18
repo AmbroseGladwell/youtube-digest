@@ -121,7 +121,7 @@ export type PlaybackSource = z.infer<typeof PlaybackSource>;
 export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
 // Why a listen ended: the note's end, the mini-player's ×, another note loaded over it, or
 // the page closed, or hidden while the listen was paused.
-export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left"]);
+export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left", "signedOut"]);
 export type ListenEnd = z.infer<typeof ListenEnd>;
 export const SelectionAction = z.enum([
   "addToProject",
