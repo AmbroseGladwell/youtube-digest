@@ -12,6 +12,12 @@ The card left five questions open, and the design answered them before drawing a
 - **The player lives in the app shell.** Leaving a note keeps it playing, and a mini-player
   docks at the foot of every other page (3a). Listen on another note replaces what is
   playing; × stops.
+- **Only a note left playing docks** (OV-333, the owner, 18 Nov 2026). A note paused or
+  stopped on its own page and then left docks nothing: it stays loaded and paused out of
+  sight, and its bar is paused where it was when the note is opened again. Once docked, the
+  mini-player stays until ×, whether it is paused from the mini-player, the lock screen,
+  headphones or a ringing timer. A play started off the note's page (a library row's Listen)
+  docks it too.
 - **◀◀ and ▶▶ are ±15 s**, matching the lock screen and headphones. Line stepping moved to
   the text: tap a line, or press `[` and `]`.
 - **Listen plays in place everywhere.** The library row plays and brings up the
@@ -53,12 +59,18 @@ as before.
 The reader's bar is always about the note on screen, while the player holds at most one
 note. `useNotePlayer` reconciles the two:
 
-- **Nothing is playing:** opening a note loads it straight away, idle. That is what lets the
-  bar say whether its audio exists before anybody presses play (1a against 1b).
-- **Another note is playing, preparing or paused:** opening a note does not take the
-  player over, and the other note stays in the mini-player. This note's bar shows a preview
-  ("Listen · Heart voice", with an estimated length), and keeps its own reading mark.
-  Pressing play here loads this note from that mark, replacing the other.
+- **Nothing is playing, or another note waits paused out of sight:** opening a note loads it
+  straight away, idle. That is what lets the bar say whether its audio exists before anybody
+  presses play (1a against 1b). A note left paused gives way, since nothing on screen shows it.
+- **Another note is in the mini-player**, playing, preparing or paused: opening a note does
+  not take the player over, and the other note stays in the mini-player. This note's bar
+  shows a preview ("Listen · Heart voice", with an estimated length), and keeps its own
+  reading mark. Pressing play here loads this note from that mark, replacing the other.
+
+The engine knows which note's page is open (`notePageOpened`/`notePageClosed`, from
+`useNotePlayer`) and keeps `docked` on its snapshot: set when the track sounds while its
+page is not open, cleared when that page opens or the track stops. `MiniPlayer` shows only a
+docked track.
 
 The mini-player is absent on the playing note's own reader, whose bar says all of it. It
 publishes how much of the window's foot it covers as `--mini-player-clearance`, and the

@@ -35,4 +35,7 @@ export interface PlayerSnapshot {
   // (docs/features/narration-voice.md, "Old audio").
   voice: NarrationVoice;
   narratedVoice: NarrationVoice | null;
+  // Whether the mini-player holds the track: it has sounded while its note's page was not
+  // open, and stays held until it stops or that page opens (OV-333).
+  docked: boolean;
 }

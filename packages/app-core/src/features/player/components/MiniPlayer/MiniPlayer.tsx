@@ -18,15 +18,16 @@ import { useCookingTimerList } from "../../../cookingTimers/CookingTimersContext
 const DOCKED_STATUSES = new Set<PlayerSnapshot["status"]>(["preparing", "playing", "paused", "buffering"]);
 
 // Design 3a: leaving a note that is playing docks this at the foot of every page — title,
-// section and clock, the transport, and × to stop. It is absent on the playing note's own
-// reader, whose bar already says all of it (docs/features/audio-player.md). It sits in the
-// cooking timers' dock, under any timers (design 288g).
+// section and clock, the transport, and × to stop — until × is pressed. A note left paused
+// docks nothing (OV-333). It is absent on the playing note's own reader, whose bar already
+// says all of it (docs/features/audio-player.md). It sits in the cooking timers' dock, under
+// any timers (design 288g).
 export function MiniPlayer() {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
   const { pathname } = useLocation();
   const { track } = snapshot;
-  const shown = track !== null && DOCKED_STATUSES.has(snapshot.status) && pathname !== Routes.overview(track.overviewId);
+  const shown = track !== null && snapshot.docked && DOCKED_STATUSES.has(snapshot.status) && pathname !== Routes.overview(track.overviewId);
 
   if (!shown) return null;
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;

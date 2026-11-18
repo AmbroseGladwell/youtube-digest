@@ -102,7 +102,10 @@ const IDLE: PlayerSnapshot = {
   rate: 1,
   voice: DEFAULT_NARRATION_VOICE,
   narratedVoice: null,
+  docked: false,
 };
+
+const SOUNDING = new Set<PlayerStatus>(["preparing", "playing", "buffering"]);
 
 const scriptOf = (track: PlayerTrack) => spokenLines(track.lines, track.opening);
 
@@ -156,6 +159,7 @@ export class PlayerEngine {
   #press: Press | null = null;
   #listen: Listen | null = null;
   #listeners = new Set<() => void>();
+  #openNotes = new Map<OverviewId, number>();
   #timeListeners = new Set<() => void>();
 
   constructor({
@@ -247,6 +251,18 @@ export class PlayerEngine {
     this.#time = 0;
     this.#set({ ...IDLE, rate: this.#snapshot.rate, voice: this.#snapshot.voice });
     this.#emitTime();
+  }
+
+  notePageOpened(overviewId: OverviewId): void {
+    this.#openNotes.set(overviewId, (this.#openNotes.get(overviewId) ?? 0) + 1);
+    this.#set({});
+  }
+
+  notePageClosed(overviewId: OverviewId): void {
+    const open = (this.#openNotes.get(overviewId) ?? 1) - 1;
+    if (open > 0) this.#openNotes.set(overviewId, open);
+    else this.#openNotes.delete(overviewId);
+    this.#set({});
   }
 
   toggle(from: PlaybackFrom): void {
@@ -901,8 +917,15 @@ export class PlayerEngine {
   #set(patch: Partial<PlayerSnapshot>): void {
     const { status } = patch;
     if (status === "paused" || status === "ended" || status === "failed" || status === "busy") this.#press = null;
-    this.#snapshot = { ...this.#snapshot, ...patch };
+    const next = { ...this.#snapshot, ...patch };
+    this.#snapshot = { ...next, docked: this.#dockedAfter(next) };
     for (const listener of this.#listeners) listener();
+  }
+
+  #dockedAfter({ track, status }: PlayerSnapshot): boolean {
+    if (track === null || this.#openNotes.has(track.overviewId)) return false;
+    const sameTrack = this.#snapshot.track?.overviewId === track.overviewId;
+    return SOUNDING.has(status) || (sameTrack && this.#snapshot.docked);
   }
 
   #emitTime(): void {

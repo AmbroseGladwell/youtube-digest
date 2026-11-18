@@ -21,12 +21,14 @@ export interface NotePlayer {
   pause: () => void;
 }
 
-const isBusyElsewhere = (snapshot: PlayerSnapshot) => snapshot.track !== null && snapshot.status !== "ready" && snapshot.status !== "ended";
+const isBusyElsewhere = (snapshot: PlayerSnapshot) =>
+  snapshot.track !== null && snapshot.docked && snapshot.status !== "ready" && snapshot.status !== "ended";
 
 // One note's view of the app-wide player (docs/features/audio-player.md, "Which note the
 // bar is about"). A note opened while nothing is playing is loaded straight away, so its bar
-// can say whether its audio exists; one opened while another note plays keeps a reading mark
-// of its own, and takes the player over only when play is pressed on it.
+// can say whether its audio exists, and so is one opened while another note waits paused out
+// of sight; one opened while the mini-player holds another note keeps a reading mark of its
+// own, and takes the player over only when play is pressed on it.
 export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
@@ -36,6 +38,13 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
   const current = track !== null && snapshot.track?.overviewId === track.overviewId;
 
   useEffect(() => setRestingLine(0), [track?.overviewId]);
+
+  const overviewId = track?.overviewId ?? null;
+  useEffect(() => {
+    if (overviewId === null) return;
+    engine.notePageOpened(overviewId);
+    return () => engine.notePageClosed(overviewId);
+  }, [engine, overviewId]);
 
   useEffect(() => {
     if (track !== null && !isBusyElsewhere(engine.getSnapshot())) {

@@ -1020,6 +1020,46 @@ describe("PlayerEngine", () => {
       });
     });
 
+    it("a note left paused on its page is not docked, and one left playing is, until it stops", async () => {
+      const { engine } = counted(ready(READY));
+      engine.notePageOpened(TRACK.overviewId);
+      engine.load(TRACK);
+      await settle();
+      engine.play("playerBar");
+      expect(engine.getSnapshot().docked).toBe(false);
+
+      engine.pause();
+      engine.notePageClosed(TRACK.overviewId);
+      expect(engine.getSnapshot().docked).toBe(false);
+
+      engine.notePageOpened(TRACK.overviewId);
+      engine.play("playerBar");
+      engine.notePageClosed(TRACK.overviewId);
+      expect(engine.getSnapshot().docked).toBe(true);
+
+      engine.pause();
+      expect(engine.getSnapshot().docked).toBe(true);
+
+      engine.notePageOpened(TRACK.overviewId);
+      expect(engine.getSnapshot().docked).toBe(false);
+      engine.notePageClosed(TRACK.overviewId);
+      engine.play("playerBar");
+      engine.stop();
+      expect(engine.getSnapshot().docked).toBe(false);
+    });
+
+    it("a note played from off its page is docked, and another note's page leaves it docked", async () => {
+      const { engine } = counted(ready(READY));
+      engine.load(TRACK);
+      await settle();
+      engine.play("libraryRow");
+      expect(engine.getSnapshot().docked).toBe(true);
+
+      engine.notePageOpened(OTHER_TRACK.overviewId);
+      engine.pause();
+      expect(engine.getSnapshot().docked).toBe(true);
+    });
+
     it("loading another note ends the listen as switched, and the other note's listen is its own", async () => {
       const { engine, started, ended } = counted(ready(READY));
       engine.load(TRACK);
