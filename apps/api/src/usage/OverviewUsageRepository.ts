@@ -38,6 +38,17 @@ export class OverviewUsageRepository {
     return { reserved: false, used: await this.#usedIn(month, accountId, keySource), limit };
   }
 
+  // An overview already made, counted on the month whatever its limit, so the count can pass it.
+  async count(now: Date, accountId: AccountId, keySource: KeySource): Promise<number> {
+    const [row] = await this.#sql.query<{ overviews: number }>(
+      `insert into overview_usage (month, account_id, key_source, overviews) values ($1::date, $2, $3, 1)
+       on conflict (month, account_id, key_source) do update set overviews = overview_usage.overviews + 1
+       returning overviews`,
+      [usageMonth(now), accountId, keySource],
+    );
+    return row?.overviews ?? 1;
+  }
+
   async release(month: string, accountId: AccountId, keySource: KeySource): Promise<void> {
     await this.#sql.query(
       `update overview_usage set overviews = greatest(overviews - 1, 0)

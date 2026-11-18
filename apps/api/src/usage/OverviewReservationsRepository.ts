@@ -1,6 +1,6 @@
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
-import type { OverviewReservation, OverviewUsageRepository } from "./OverviewUsageRepository.js";
+import type { OverviewUsageRepository } from "./OverviewUsageRepository.js";
 
 export type OwnKeyReservation = { reserved: true } | { reserved: false; used: number; limit: number };
 
@@ -68,11 +68,13 @@ export class OverviewReservationsRepository {
   }
 
   // An overview made on our key in a signed-out trial and moved in on sign-in counts on the
-  // account's month on our key, the key that made it (docs/architecture/tiers.md, "Counting").
-  async movedFromTrial(now: Date, accountId: AccountId, overviewId: string, limit: number): Promise<OverviewReservation> {
-    const slot = await this.#usage.reserve(now, accountId, "ours", limit);
-    if (slot.reserved) await this.#grant(now, accountId, overviewId, "ours");
-    return slot;
+  // account's month on our key, the key that made it, even past the month's limit: it is
+  // already made, so refusing it would only strand it on the device
+  // (docs/architecture/tiers.md, "Counting").
+  async movedFromTrial(now: Date, accountId: AccountId, overviewId: string): Promise<number> {
+    const used = await this.#usage.count(now, accountId, "ours");
+    await this.#grant(now, accountId, overviewId, "ours");
+    return used;
   }
 
   async savedFromShare(now: Date, accountId: AccountId, overviewId: string): Promise<void> {
