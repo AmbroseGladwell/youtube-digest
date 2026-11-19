@@ -11,7 +11,6 @@ export const chatPanelTestIds = {
   question: "ChatPanel.question",
   pending: "ChatPanel.pending",
   dots: "ChatPanel.dots",
-  streamedText: "ChatPanel.streamedText",
   stopped: "ChatPanel.stopped",
   failure: "ChatPanel.failure",
   tryAgain: "ChatPanel.tryAgain",

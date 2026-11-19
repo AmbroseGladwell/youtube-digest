@@ -22,6 +22,7 @@ export interface ChatAnswerProps {
   inSource: boolean;
   citations: readonly ChatCitation[];
   about: ChatSourceKind;
+  arrived?: boolean;
   // An article's or a recipe page's own page: a decline offers it, and a cited key point or
   // chapter can be shown on it, beside the article in the extension (OV-320).
   page: ChatPage | null;
@@ -55,13 +56,15 @@ const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
 // Design 310k–310m, 310w, 310y: an answer is plain text on the panel. Under the whole of it, the
 // other conversations it drew on are links that open words, then one row of pills: the parts of
 // the overview it rests on in the note's order, then its stretches of the video in time order
-// (319c). One the source doesn't cover says so, muted: an answer, not an error. One from the
-// overview has no label: its pills and its wording say so (319k).
+// (319c). One the source doesn't cover says so in a label above it, its text as plain as any
+// other: an answer, not an error. One from the overview has no label: its pills and its wording
+// say so (319k). One that has just arrived fades in what streaming didn't show (OV-341).
 export function ChatAnswer({
   text,
   inSource,
   citations,
   about,
+  arrived = false,
   page,
   video,
   overview,
@@ -76,7 +79,7 @@ export function ChatAnswer({
   const parts = overviewCitationViews(overview, citations);
   const notCovered = !inSource && !citations.some((citation) => "part" in citation);
   return (
-    <div className={`${styles.root} ${notCovered ? styles.notInSource : ""}`} data-testid={chatAnswerTestIds.root}>
+    <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} data-testid={chatAnswerTestIds.root}>
       {notCovered && (
         <p className={styles.notInSourceLabel} data-testid={chatAnswerTestIds.notInSource}>
           <StrokeIcon name="ban" size={14} />

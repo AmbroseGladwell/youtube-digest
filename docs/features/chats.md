@@ -289,7 +289,7 @@ its chapters and Read it anyway?, a recipe page's ingredients and method.
   - **Declined with nothing cited 16 of 20.** The other four said plainly that the detail wasn't
     there and cited the item that comes nearest: the method step that says "frosting of
     choice", and Read it anyway, which says the full quote is left out. They show a pill, not
-    the muted label.
+    the "Not from" label.
   - **No amount worked out by the model.** Every answer is checked in code for numbers neither
     the overview nor the question holds, and none had one. "Make 24 instead of 12", "halve it"
     and "feed 8" each gave the recipe's own amount and pointed to the servings control.
@@ -422,8 +422,12 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
   field "Ask about this video" (`NoteAskField`, which fades out while chat is open), and Chat in the
   overview's menu. With chat closed, a question starts a new conversation; with it open, it asks
   in the open one; the menu reopens the most recent, or a new one.
-- **A conversation:** the reader's question in OV-266's bubble, the answer as plain text under three
-  dots and then a caret while it streams, with Stop in Send's place. Stopping keeps what was
+- **A conversation:** the reader's question in OV-266's bubble, then three dots until the answer's
+  first whole word, then the answer, each word fading in as it arrives, with Stop in Send's place
+  (OV-341). It streams in the final answer's paragraphs, holding back a word until it is whole, so
+  nothing moves when it lands; then its label, pills and Copy fade in. Reduced motion shows the
+  words without fading. A label "Not from the …" marks an answer the source didn't cover; its
+  text is as plain as any other, since the grey it once had read as disabled. Stopping keeps what was
   written, says "Stopped. This one didn't count." and stores nothing. A failure says so, with Try
   again. The answer is announced once, when final ("Answer: … 1 moment cited.", or "Not from the
   video: …").
