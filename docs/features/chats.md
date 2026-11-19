@@ -349,6 +349,48 @@ because the prompt forbade general knowledge.
 - **Not yet:** how such an answer looks (Claude Design, with OV-315's button). Until then it
   keeps the decline's muted label, reworded.
 
+## Knowing the product
+
+OV-342, from the owner's chats on 19 Nov 2026: asked to check a cereal's nutrition, chat offered
+to read a photo of the label, and asked whether an episode connected to the rest of the library,
+it doubted that the overview's similar overviews were in the reader's library at all. The prompt
+said what to answer from but nothing about the app it sits in, so the model filled the gaps as a
+general assistant would.
+
+- **The prompt** (`productBlock` in `chatPrompt.ts`, every kind) has a short `# The Overview`
+  section before the overview. Chat has only the reader's typed messages, the overview, the
+  transcript where there is one, and the other conversations it is shown; it can't see images
+  or files, open links, search the web, read the rest of the library or act outside the chat,
+  never offers to, and says what the reader can do instead (type a label's figures in). The
+  overview's similar overviews are the reader's own saved overviews, and How to apply is fitted
+  to them. What The Overview knows about the reader comes from About you, asked in onboarding and
+  in Settings › Personalisation, and from what it notices in their overviews; they change it, and
+  which sections an overview has, in Settings › Personalisation. A recipe, a page's or a video's,
+  has no verdict, so those two lines are left out.
+- **The Markdown says it too.** `overviewMarkdown` writes the verdict's `similarTo` as "Similar
+  overviews in the reader's library:" (was "Similar to:"), which every reader of the Markdown
+  gets: chat, `get_overview` over MCP, and the hand-off and follow-up prompts.
+- **Measured through the endpoint** on 19 Nov 2026 (`chatHarnessCheck.ts <dir> <out> product`,
+  Luna on the evals key, OV-267's six library videos, each twice; 48 messages, none failed,
+  $0.028). Code scores each answer (`productRight`):
+  - **"Can you check the label on the packet I've got at home?"** and **"I found another article
+    that disagrees with this. Can you compare them?"**: no offer of a photo, upload, link or web
+    search, 24 of 24. Every answer asked for the figures or the text to be typed or pasted in.
+  - **"Is this connected to anything else in my library?"**: the three videos with similar
+    overviews named them as "in your library", 6 of 6; the three without said chat can't see
+    the rest of the library, and claimed none, 6 of 6.
+  - **"Is what I told you during onboarding used here?"**: pointed to Settings › Personalisation,
+    12 of 12.
+  - **No regression** on OV-267's question set and the long conversations, run beside main's
+    prompt on the same data (132 messages each, $0.065 each): right moment 47/48 (main 46/48),
+    long 16/16 (15/16), right on the source 71/72 (71/72), no "the overview" wording either way.
+    On the long conversation one notInSource question cited the passage beside the point it
+    declined, twice, so it counted as `inSource`: the same decline as main's, worded the same.
+    The 12 of 24 notInSource questions answered from general knowledge were 12 of 24 on main too:
+    the declined ones ask for current facts or what someone thinks.
+- **Not yet:** the rest of the library (OV-307). Until then a question about it is answered from
+  the similar overviews' titles alone.
+
 ## Deleting
 
 - **One conversation:** `DELETE /api/chats/:overviewId/:conversationId` tombstones it. A retry of

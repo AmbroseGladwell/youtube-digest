@@ -123,7 +123,9 @@ export function overviewMarkdown(overview: Overview, { partIds = false } = {}): 
       lines.push(`Why it is dubious:\n\n${bullets(dubiousClaims.map(claimLine))}`);
     }
     if (similarTo.length > 0) {
-      lines.push(`Similar to: ${similarTo.map((similar) => `${similar.title} (${similar.overviewId})`).join("; ")}`);
+      lines.push(
+        `Similar overviews in the reader's library: ${similarTo.map((similar) => `${similar.title} (${similar.overviewId})`).join("; ")}`,
+      );
     }
     lines.push(`_${NOVELTY_BASIS}_`);
     section("Verdict", lines.join("\n\n"));

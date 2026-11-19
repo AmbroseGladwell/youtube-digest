@@ -141,11 +141,11 @@ test("links the part worth watching to where it starts", () => {
   );
 });
 
-test("says when a verdict is dubious, and names the similar overviews by title and id", () => {
+test("says when a verdict is dubious, and names the similar overviews as the reader's own, by title and id", () => {
   const markdown = overviewMarkdown(FULL);
 
   assert.ok(markdown.includes("Original, and dubious. The spinal claim is asserted rather than sourced."));
-  assert.ok(markdown.includes(`Similar to: Hinge before you load (${SIMILAR_ID})`));
+  assert.ok(markdown.includes(`Similar overviews in the reader's library: Hinge before you load (${SIMILAR_ID})`));
 });
 
 test("names what stands out", () => {

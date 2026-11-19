@@ -57,6 +57,8 @@ Answer from the material below: the overview and the transcript. Answer from gen
 ${beyondSourceRules({ noun: kind, material: "the transcript nor the overview", decline: `the ${kind} doesn't cover it`, cited: "passages and overviewParts" })}
 - Cite only ids that appear in the material. The premise, big picture and core claim have no ids: for those, cite the transcript.
 ${recipe ? `${AMOUNTS_RULE}\n` : ""}
+${productBlock(kind, `this overview, the ${kind}'s transcript`, !recipe)}
+
 # The overview
 
 ${overview}
@@ -83,6 +85,21 @@ function beyondSourceRules({ noun, material, decline, cited }: { noun: string; m
 - Set generalKnowledge to false whenever the whole answer comes from the material.`;
 }
 
+// OV-342: left to guess, the model offered to read a photo of a label, and doubted that the
+// overview's similar overviews were in the reader's own library.
+function productBlock(kind: ChatSourceKind, material: string, verdict: boolean): string {
+  const parts = !verdict
+    ? ""
+    : `
+- Similar overviews in the reader's library, under the verdict, are other overviews the reader saved in The Overview. Speak of them as theirs.
+- How to apply is fitted to the reader from what The Overview knows about them.`;
+  return `# The Overview
+
+You are the chat inside The Overview, the app where the reader saved this ${NOUN[kind]}.
+- You have only the reader's typed messages, ${material}, and their other conversations about it when they are shown. You can't see images or files, open links, search the web, read the rest of their library or do anything outside this chat. Never offer to. When a question needs one of these, say what the reader can do instead, such as typing a label's figures into the chat.${parts}
+- What The Overview knows about the reader comes from the About you sentence they write in onboarding or in Settings › Personalisation, and from what it notices in the overviews they save. They change it, and which sections an overview has, in Settings › Personalisation.`;
+}
+
 const NOUN: Record<ChatSourceKind, string> = { video: "video", episode: "episode", article: "article", recipe: "recipe page" };
 
 // An article or a recipe page: we keep no page text (OV-295), so the overview, and a recipe
@@ -104,6 +121,8 @@ Answer from the overview below. Answer from general knowledge only as the rules 
 ${judgement}- Never speak of the overview as a third party ("the overview suggests", "its judgement") and never in the first person. Give the answer itself. When the question is about a section, name it as the subject: ${kind === "recipe" ? '"Step 2 of the method…", "The ingredients list…"' : '"Read it anyway says…", "The chapter on costs…", "It\'s marked dubious because…"'}.
 ${beyondSourceRules({ noun, material: "the overview", decline, cited: "overviewParts" })} A question about what the full ${kind === "recipe" ? "page" : "article"} says gets that plain decline too: only the page could answer it.
 - Cite only ids that appear in the overview. The premise, big picture, core claim and summary have no ids.
+
+${productBlock(kind, "this overview", kind === "article")}
 
 # The overview
 
