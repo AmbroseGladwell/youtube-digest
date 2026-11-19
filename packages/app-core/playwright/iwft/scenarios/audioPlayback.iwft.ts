@@ -7,6 +7,7 @@ import {
   type BackendSimulator,
 } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import { VideoId } from "@overview/domain";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
@@ -247,6 +248,62 @@ test("pausing from the mini-player pauses the row too, and × stops and puts it 
   await launcher.miniPlayer.verifyIsShown(false);
 });
 
+test("a note left playing docks the mini-player, and pausing it there keeps it until ×", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+
+  await launcher.appShell.clickBrand();
+  await launcher.homePage.verifyShowsLibrary();
+  await launcher.miniPlayer.verifyIsShown(true);
+
+  await launcher.miniPlayer.clickPlayPause();
+  await launcher.miniPlayer.verifyPlayButtonReads("Play");
+  await launcher.miniPlayer.verifyIsShown(true);
+});
+
+test("a note left paused docks nothing, and is still paused when it is opened again", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Paused/);
+
+  await launcher.appShell.clickBrand();
+  const back = await launcher.homePage.verifyShowsLibrary();
+  await launcher.miniPlayer.verifyIsShown(false);
+
+  const again = await back.nthCard(0).openReader();
+  await again.verifyBarSays(/^Paused/);
+});
+
+test("a note left paused out of sight gives way to the next note opened", async ({ launcher, backendSimulator }) => {
+  const other = makeOverview({ source: { ...makeOverview().source, id: VideoId.parse("otherVideo1"), title: "Another note" } });
+  backendSimulator.overviews.seed({ ...other, savedAt: "2020-01-01T00:00:00.000Z" });
+  backendSimulator.overviews.seed(NOTE);
+  backendSimulator.narration.seedReady(NOTE);
+  backendSimulator.narration.seedReady(other);
+  const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+  const reader = await library.nthCard(0).openReader();
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Now playing/);
+  await reader.clickPlayPause();
+  await reader.verifyBarSays(/^Paused/);
+
+  await launcher.appShell.clickBrand();
+  const back = await launcher.homePage.verifyShowsLibrary();
+  const next = await back.nthCard(1).openReader();
+
+  await next.verifyBarSays("Narrated · Heart voice");
+  await launcher.miniPlayer.verifyIsShown(false);
+});
+
 test("signing out with a note playing puts the player away, and counts the listen under the account", async ({
   launcher,
   backendSimulator,
@@ -256,6 +313,7 @@ test("signing out with a note playing puts the player away, and counts the liste
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
   await library.nthCard(0).clickListen();
   await launcher.miniPlayer.verifyPlayButtonReads("Pause");
+  await expect.poll(() => listens(backendSimulator)).toHaveLength(1);
 
   const menu = await launcher.appShell.accountMenu.open();
   await menu.chooseSignOut();

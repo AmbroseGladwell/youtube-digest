@@ -30,6 +30,7 @@ const snapshot = (patch: Partial<PlayerSnapshot> = {}): PlayerSnapshot => ({
   rate: 1,
   voice: "af_heart",
   narratedVoice: "af_heart",
+  docked: false,
   ...patch,
 });
 
