@@ -188,7 +188,9 @@ export function WhatWeKnowCard() {
               testId={whatWeKnowCardTestIds.shareWithAssistants}
             />
           )}
-          <p className={styles.costNote}>When overviews are made on us, this goes through our server to OpenAI with each one.</p>
+          <p className={styles.costNote}>
+            It goes through our server to OpenAI with each overview made on us, and with each question you ask about one.
+          </p>
           <div className={styles.actions}>
             <button
               type="button"

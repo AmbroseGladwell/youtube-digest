@@ -60,6 +60,14 @@ bump.
 **Notes**, the reader's own writing on an overview, should take the same shape when they are
 built: a per-overview record, synced, deleted with its overview.
 
+## Fitted to the reader
+
+Each question carries what is known about the reader, as overview generation reads it
+(`personalisation.md`, "Chat reads it too", OV-343), at the end of the system message so the
+transcript stays the cached prefix. With nothing known, that block says so and points to Settings.
+Fitting an answer to the reader is never a citation and never
+makes an answer `inSource`.
+
 ## The server writes it
 
 The answer comes from our server, so the server writes the record and devices get it down the
