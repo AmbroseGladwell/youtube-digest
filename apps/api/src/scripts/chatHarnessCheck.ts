@@ -287,7 +287,10 @@ async function main() {
           personalised: false,
           ms: 0,
         });
-        process.stdout.write(`! ${source.name} ${label} ${question.id}: ${response.statusCode} ${response.body.slice(0, 200)}\n`);
+        const failed = lines.slice(before).find((line) => line.logCode === "api.chat.failed");
+        process.stdout.write(
+          `! ${source.name} ${label} ${question.id}: ${response.statusCode} ${String(failed?.reason)} ${String(failed?.status)} ${response.body.slice(0, 120)}\n`,
+        );
         continue;
       }
       const answerable = question.kind !== "notInSource" && question.kind !== "offSubject" && question.kind !== "filler";
