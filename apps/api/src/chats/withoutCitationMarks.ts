@@ -2,10 +2,12 @@
 // "(p24)" or "[kp4] [apply1]". Citations already carry them, so the text drops them: the ids
 // of transcript passages, of the overview's items (overviewParts) and of other chats' messages.
 const ID = String.raw`(?:(?:p|kp|step|apply|dubious|ch|ing|method)\d+|c\d+\.m\d+|verdict|sells|anyway)`;
-const SEPARATOR = String.raw`\s*(?:,|–|—|-|and)\s*`;
-const MARK = new RegExp(String.raw`\s*[\[(]\s*${ID}(?:${SEPARATOR}(?:${ID}|\d+))*\s*[\])]`, "g");
+const SEPARATOR = String.raw`(?:\s|[,;–—-]|\band\b)`;
+const IDS = String.raw`${ID}(?:${SEPARATOR}+(?:${ID}|\d+))*`;
+// A bracket of ids, or one left holding only separators once the ids were taken out, "(;)".
+const MARK = new RegExp(String.raw`\s*[\[(](?!\s*[\])])${SEPARATOR}*(?:${IDS})?${SEPARATOR}*[\])]`, "g");
 // While the reply arrives, a mark may be cut in half, and the space before it may belong to it.
-const CUT_MARK = /\s*[[(][\w.,–—\- ]{0,40}$|\s+$/;
+const CUT_MARK = /\s*[[(][\w.,;–—\- ]{0,40}$|\s+$/;
 
 export function withoutCitationMarks(text: string, { arriving = false } = {}): string {
   const whole = text.replace(MARK, "").replace(/ {2,}/g, " ");
