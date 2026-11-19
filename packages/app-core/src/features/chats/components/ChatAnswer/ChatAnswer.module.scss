@@ -16,9 +16,20 @@
   }
 }
 
-.notInSource .text {
-  font-size: 0.90625rem;
-  color: var(--muted);
+.arrived > :not(.text) {
+  animation: extrasIn 350ms ease-out both;
+}
+
+@keyframes extrasIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrived > * {
+    animation: none;
+  }
 }
 
 .notInSourceLabel {

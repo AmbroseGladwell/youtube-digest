@@ -178,29 +178,6 @@
   text-wrap: pretty;
 }
 
-.streamedText {
-  margin: 0;
-  font: 400 0.9375rem/1.6 var(--font-body);
-  white-space: pre-wrap;
-}
-
-.caret {
-  display: inline-block;
-  width: 7px;
-  height: 15px;
-  margin-left: 2px;
-  border-radius: 2px;
-  background: var(--muted);
-  vertical-align: -2px;
-  animation: blink 1s steps(2) infinite;
-}
-
-@keyframes blink {
-  to {
-    visibility: hidden;
-  }
-}
-
 .dots {
   display: inline-flex;
   align-items: center;
@@ -238,7 +215,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .caret,
   .dots span {
     animation: none;
   }

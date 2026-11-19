@@ -22,12 +22,14 @@ import type { useChatPanel } from "../../useChatPanel.js";
 import { ARRIVING_ATTRIBUTE } from "../../util/bubbleTravel.js";
 import { chatSuggestions } from "../../util/chatSuggestions.js";
 import { chatWords, type ChatWords } from "../../util/chatWords.js";
+import { streamedParagraphs } from "../../util/streamedParagraphs.js";
 import { conversationDate, firstQuestionOf, questionsIn } from "../../util/conversationLine.js";
 import { ChatAnswer, type ChatAnswerProps, type ChatPage } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerActions } from "../ChatAnswerActions/ChatAnswerActions.js";
 import { ChatConversationList } from "../ChatConversationList/ChatConversationList.js";
 import { ChatConversationMenu } from "../ChatConversationMenu/ChatConversationMenu.js";
 import { ChatField } from "../ChatField/ChatField.js";
+import { ChatStreamedText } from "../ChatStreamedText/ChatStreamedText.js";
 import styles from "./ChatPanel.module.scss";
 import { chatPanelTestIds } from "./ChatPanelTestIds.js";
 
@@ -73,7 +75,7 @@ const questionAt = (messages: readonly ChatMessage[], message: number) => (messa
 
 // Design 310a, 310i–310x: chat about one overview, beside its note. The conversation scrolls on
 // its own above the field; the overview's questions sit just above the field until the reader
-// types; an answer streams in under three dots, then a caret, and is announced once, when final.
+// types; an answer streams in under three dots, each word fading in, and is announced once, when final.
 // The header's ⋯ holds the overview's other conversations and Continue in (design 324x).
 export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(function ChatPanel(
   { panel, overview, video, page, compact, onCitationFollowed, onOverviewPartFollowed, onOpenTranscriptAt },
@@ -87,6 +89,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   const [said, setSaid] = useState<{ text: string; done: boolean; key: number } | null>(null);
   const [outlined, setOutlined] = useState<number | null>(null);
   const [revealed, setRevealed] = useState<number | null>(null);
+  const [arrivedAt, setArrivedAt] = useState<number | null>(null);
   const header = useRef<HTMLElement | null>(null);
   const body = useRef<HTMLDivElement | null>(null);
   const previous = useRef<AskState>({ status: "idle" });
@@ -136,11 +139,17 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   useEffect(() => {
     const was = previous.current;
     previous.current = ask;
-    if (ask.status === "answering" && was.status !== "answering") setAnnouncement("Writing an answer");
+    if (ask.status === "answering" && was.status !== "answering") {
+      setAnnouncement("Writing an answer");
+      setArrivedAt(null);
+    }
     if (ask.status === "stopped") setAnnouncement("Stopped");
     if (was.status === "answering" && ask.status === "idle" && was.conversationId === conversationId) {
       const answer = messages[latestAnswerAt];
-      if (answer !== undefined) setAnnouncement(announcementOf(answer, chatWords(kind)));
+      if (answer !== undefined) {
+        setAnnouncement(announcementOf(answer, chatWords(kind)));
+        setArrivedAt(latestAnswerAt);
+      }
     }
   }, [ask, conversationId, messages, latestAnswerAt, kind]);
 
@@ -173,6 +182,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
   useEffect(() => {
     setDraft("");
     setSet(0);
+    setArrivedAt(null);
   }, [conversationId]);
 
   const say = (text: string, done: boolean) => setSaid({ text, done, key: Date.now() });
@@ -299,6 +309,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                       inSource={message.inSource}
                       citations={message.citations}
                       about={kind}
+                      arrived={index === arrivedAt}
                       page={page}
                       video={video}
                       overview={overview}
@@ -333,17 +344,14 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                   <li data-testid={chatPanelTestIds.pending}>
                     {(pending.status === "answering" || pending.status === "stopped") && (
                       <div className={styles.streaming} aria-busy={pending.status === "answering"}>
-                        {pending.text === "" && pending.status === "answering" ? (
+                        {pending.status === "answering" && streamedParagraphs(pending.text, false).length === 0 ? (
                           <span className={styles.dots} aria-hidden="true" data-testid={chatPanelTestIds.dots}>
                             <span />
                             <span />
                             <span />
                           </span>
                         ) : (
-                          <p className={styles.streamedText} data-testid={chatPanelTestIds.streamedText}>
-                            {pending.text}
-                            {pending.status === "answering" && <span className={styles.caret} aria-hidden="true" />}
-                          </p>
+                          <ChatStreamedText text={pending.text} whole={pending.status === "stopped"} />
                         )}
                         {slowness === "noWordsYet" && (
                           <p className={styles.status} data-testid={chatPanelTestIds.slow}>
