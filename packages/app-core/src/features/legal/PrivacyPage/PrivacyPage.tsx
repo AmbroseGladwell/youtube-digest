@@ -234,8 +234,8 @@ const sections: readonly LegalSection[] = [
           fetched through our transcript proxy for you. It holds amounts only, never what was sent or found. What a device without an
           account costs is tallied with no device or account on it. Once a day PostHog copies a monthly summary of the tally for our cost
           dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions you made, under a
-          coded id that is neither your account's id nor the one analytics uses. When an account is deleted, the next day's copy leaves it
-          out.
+          coded id that is neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by
+          kind of work, with no account or plan on it. When an account is deleted, the next day's copy leaves it out.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
@@ -474,7 +474,7 @@ const sections: readonly LegalSection[] = [
             ["Fly.io", "runs our server and the narration service", "London"],
             ["Neon", "our database: accounts, libraries, transcripts, usage counts", "London"],
             ["Cloudflare", "stores narration audio (R2) and serves our domain's DNS", "Cloudflare's network"],
-            ["PostHog", "analytics, error reports, server logs and the monthly cost summary", "EU cloud"],
+            ["PostHog", "analytics, error reports, server logs, the monthly cost summary and daily cost totals", "EU cloud"],
             ["Brevo", "sends sign-in emails", "European Union"],
             [
               "OpenAI",

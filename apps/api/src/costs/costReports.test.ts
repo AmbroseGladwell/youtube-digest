@@ -92,12 +92,36 @@ test("cost lines keep each area and detail by month, and signed-out callers unde
   await sql.close();
 });
 
+test("each day adds up every caller's cost by area and detail, signed out included, with no account or plan on it", async () => {
+  const sql = await seeded();
+
+  const rows = await sql.query<Record<string, unknown>>(
+    `select day::text, area, detail, calls::int, quantity, round(dollars::numeric, 8)::float8 as dollars
+     from cost_reports.cost_days where day between '2026-11-01' and '2026-11-03' order by day, area, detail`,
+  );
+
+  assert.deepEqual(rows, [
+    { day: "2026-11-01", area: "generation", detail: "overview", calls: 2, quantity: 3000, dollars: 0.03 },
+    { day: "2026-11-02", area: "generation", detail: "overview", calls: 1, quantity: 900, dollars: 0.009 },
+    { day: "2026-11-03", area: "generation", detail: "overview", calls: 1, quantity: 1000, dollars: 0.01 },
+    { day: "2026-11-03", area: "generation", detail: "overview-failed", calls: 1, quantity: 500, dollars: 0.005 },
+    { day: "2026-11-03", area: "transcripts", detail: "proxy", calls: 1, quantity: 40000, dollars: 0 },
+  ]);
+  const [columns] = await sql.query<{ names: string }>(
+    `select string_agg(column_name, ',' order by ordinal_position) as names
+     from information_schema.columns where table_schema = 'cost_reports' and table_name = 'cost_days'`,
+  );
+  assert.equal(columns!.names, "day,area,detail,calls,quantity,dollars");
+  await sql.close();
+});
+
 test("no report names an account by its id or its email", async () => {
   const sql = await seeded();
 
   const reports = await sql.query<{ row: string }>(
     `select row_to_json(l)::text as row from cost_reports.cost_lines l
-     union all select row_to_json(m)::text from cost_reports.account_months m`,
+     union all select row_to_json(m)::text from cost_reports.account_months m
+     union all select row_to_json(d)::text from cost_reports.cost_days d`,
   );
 
   for (const { row } of reports) {
@@ -130,7 +154,12 @@ test("the reader role can read the reports and no table behind them", async () =
      order by 1`,
   );
   const readable = privileges.filter((relation) => relation.readable).map((relation) => relation.relation);
-  assert.deepEqual(readable, ["cost_reports.account_months", "cost_reports.cost_lines", "cost_reports.plan_accounts"]);
+  assert.deepEqual(readable, [
+    "cost_reports.account_months",
+    "cost_reports.cost_days",
+    "cost_reports.cost_lines",
+    "cost_reports.plan_accounts",
+  ]);
 
   const [role] = await sql.query<{ login: boolean; memberships: number }>(
     `select rolcanlogin as login, (select count(*)::int from pg_auth_members where member = r.oid) as memberships
