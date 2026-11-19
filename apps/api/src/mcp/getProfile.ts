@@ -1,31 +1,12 @@
 import { z } from "zod";
-import {
-  aboutYouSentence,
-  DEFAULT_SETTINGS,
-  noticedLearnedItems,
-  readStoredRecord,
-  SETTINGS_MIGRATIONS,
-  Settings,
-  stampSchemaVersion,
-} from "@overview/domain";
-import { SETTINGS_RECORD_ID } from "../records/RecordKind.js";
-import type { RecordsRepository } from "../records/RecordsRepository.js";
-import type { AccountId } from "../auth/AccountId.js";
+import { aboutYouSentence, noticedLearnedItems } from "@overview/domain";
+import { readSettings } from "../records/readSettings.js";
 import { mcpTool, toolError } from "./McpTool.js";
 
 export const SHARING_OFF =
   "The reader has turned off sharing what The Overview knows about them with assistants. They can turn it back on in Settings › Personalisation.";
 export const NOTHING_KNOWN =
   "The Overview knows nothing about this reader yet: they haven't written an About you sentence, and nothing has been learned from their overviews. Don't guess at one.";
-
-async function readSettings(records: RecordsRepository, accountId: AccountId): Promise<Settings | null> {
-  const stored = await records.read(accountId, "settings", SETTINGS_RECORD_ID);
-  if (stored === null || stored.deleted || stored.body === null) {
-    return DEFAULT_SETTINGS;
-  }
-  const read = readStoredRecord(stampSchemaVersion(stored.body, stored.schemaVersion), Settings, SETTINGS_MIGRATIONS);
-  return read.status === "read" ? read.record : null;
-}
 
 // What the reader wrote and what the profile pass learned, each learned item with what it rests
 // on. An item the reader hasn't been shown yet, or removed, is never handed over: nothing joins

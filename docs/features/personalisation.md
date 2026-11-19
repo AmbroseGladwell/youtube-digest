@@ -14,7 +14,7 @@ on the reader's key and on us alike (`runOverviewGeneration` reads them from Set
   steps fit. A rule follows it: fit what the reader already does and the limits they live
   with, and never invent a project, role or occasion for them (OV-236, measured in
   `model-comparison.md`). Articles carry the same rule
-  (`readerFit`, OV-238), applied without its own measurement. **It shapes How to apply and nothing else:** the right depth differs per video, so
+  (`readerFit`, OV-238), applied without its own measurement. **In an overview it shapes How to apply and nothing else** (chat reads it too, below): the right depth differs per video, so
   one stated level can't set it, and the verdict stays judged against the field.
 - **`sectionsEnabled`**, which of the four optional sections the overview has: the verdict,
   what it sells, how to apply, and watch it anyway. The premise, key points, chapters and
@@ -44,7 +44,7 @@ the panel over. An entry reaches the sentence on Done, or Escape, and focus retu
 section. A chosen entry flies to its section and the pill settles (141i); reduced motion fades it
 in instead. The sentence is repeated in a hidden polite status line.
 
-Both places say that on us it goes through our server to OpenAI with each overview.
+Both places say that it goes through our server to OpenAI with each overview made on us, and with each question asked about one (OV-343).
 
 ### A profile that learns
 
@@ -102,6 +102,21 @@ twice. While it's written the option spins and can't be chosen. If it fails the 
 good, and the section reads as it always has. It's hidden too with nothing known about the reader,
 or a note with no How to apply. The narration reads the note as written whichever side shows: For
 anyone stands in for the lines on the page without moving them in the list the voice follows.
+
+### Chat reads it too
+
+OV-343. A question asked about an overview carries the same reader context generation reads
+(`composeReaderContext`: the sentence, then the noticed learned items under the 600-character
+cap), so an answer fits the reader How to apply was written for, rather than disowning it. The
+server reads it from the account's settings with each question (`ChatAnswerer`), on every plan,
+like generation and unlike Share with your assistants, which only gates connected assistants.
+
+It goes last in the system message, after the transcript, so a changed profile leaves the
+transcript's cached prefix whole. Its rules: fit what the reader already does and never invent a
+project, role or occasion (OV-236's rule); never say the source says something because it fits
+them; asked what is known about them, say what's there and that Settings › Personalisation
+changes it. With nothing known, the prompt is the same byte for byte as before, and the log line's
+`personalised` says which it was.
 
 ### The old line
 

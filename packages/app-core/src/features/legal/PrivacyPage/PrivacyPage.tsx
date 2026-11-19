@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-18";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-19";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -201,17 +201,17 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           Your About you sentence and what we have learned from your overviews shape only How to apply, the section that suggests what you
-          might do with the video, and the questions to ask next at the foot of an overview. Both are part of the overview, so an assistant
-          you connect reads them with it. The questions never go with a shared link. Tapping one opens the assistant you choose, Claude,
-          ChatGPT or Gemini, in a new tab with the question and, unless that assistant is connected to {service}, the whole overview, in the
-          link or copied for you to paste. Continue in, under an answer to a question you asked about an overview, does the same with that
-          conversation: the overview and the conversation so far, or, when the assistant is connected, only which overview and conversation
-          to read. That goes from your browser to the assistant's provider, not through us. When your first overview is shown to you in
-          onboarding, How to apply is also written once for anyone, so you can compare: the overview's title, channel, one-line premise,
-          central claim and key points go to the provider whose key made the overview, and if that was our key, through our server to
-          OpenAI. No transcript and nothing about you goes with them, and the result is kept only on your device. When a sample overview is
-          saved into your account, its title, channel or site, premise and key points go through our server to OpenAI with the names and
-          descriptions of your topics, to sort it into the ones it fits.
+          might do with the video, the questions to ask next at the foot of an overview, and the answers to questions you ask about an
+          overview, as below. The first two are part of the overview, so an assistant you connect reads them with it. The questions never go
+          with a shared link. Tapping one opens the assistant you choose, Claude, ChatGPT or Gemini, in a new tab with the question and,
+          unless that assistant is connected to {service}, the whole overview, in the link or copied for you to paste. Continue in, under an
+          answer to a question you asked about an overview, does the same with that conversation: the overview and the conversation so far,
+          or, when the assistant is connected, only which overview and conversation to read. That goes from your browser to the assistant's
+          provider, not through us. When your first overview is shown to you in onboarding, How to apply is also written once for anyone, so
+          you can compare: the overview's title, channel, one-line premise, central claim and key points go to the provider whose key made
+          the overview, and if that was our key, through our server to OpenAI. No transcript and nothing about you goes with them, and the
+          result is kept only on your device. When a sample overview is saved into your account, its title, channel or site, premise and key
+          points go through our server to OpenAI with the names and descriptions of your topics, to sort it into the ones it fits.
         </p>
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole description, which is where
@@ -254,8 +254,10 @@ const sections: readonly LegalSection[] = [
           is answered on our key, whichever key you use for overviews, and "Only ever use my key" doesn't change that. Your device sends the
           question to our server, which sends it to OpenAI in the United States with the overview, your own copy of the video's or episode's
           words, the conversation so far, and as much of your other conversations about the same overview as fits, newest first, so an
-          answer can build on what you asked or decided there. For an article or a recipe page it sends the overview, and a recipe page's
-          recipe, but no text from the page, because we don't keep it. The answer comes back to you as it is written.
+          answer can build on what you asked or decided there. Your About you sentence and what we have learned from your overviews, once
+          you have been shown it, go with it too, so the answer fits you as How to apply does. For an article or a recipe page it sends the
+          overview, and a recipe page's recipe, but no text from the page, because we don't keep it. The answer comes back to you as it is
+          written.
         </p>
         <p>
           The question and the answer are kept as a conversation in your library, under your account, and synced to your devices; your
@@ -266,7 +268,8 @@ const sections: readonly LegalSection[] = [
           We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
           OpenAI's list price go into the daily cost tally above. We log that a question was answered, with the tokens, the cost, how long
           it took, whether it was about a video, an episode, an article or a recipe page, whether the video or episode covered it, whether
-          the answer added general knowledge beyond it, and how many places the answer cited; never the question or the answer.
+          the answer added general knowledge beyond it, whether what we know about you went with it, and how many places the answer cited;
+          never the question, the answer or what we know about you.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping

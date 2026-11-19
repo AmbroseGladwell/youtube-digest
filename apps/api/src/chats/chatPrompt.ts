@@ -9,8 +9,34 @@ const passageBlock = (passage: Passage): string => `[${passage.id} ${formatClock
 // can cite them too (OV-319). It is the first message and never changes within a
 // conversation, so every follow-up reads it from the cache (docs/architecture/in-app-chat.md).
 // The overview comes from overviewMarkdown with partIds.
-export function chatSystemPrompt(kind: ChatSourceKind, overview: string, passages: readonly Passage[], { recipe = false } = {}): string {
-  if (answeredFromOverviewAlone(kind)) return overviewOnlyPrompt(kind, overview);
+export function chatSystemPrompt(
+  kind: ChatSourceKind,
+  overview: string,
+  passages: readonly Passage[],
+  { recipe = false, reader = null }: { recipe?: boolean; reader?: string | null } = {},
+): string {
+  const prompt = answeredFromOverviewAlone(kind) ? overviewOnlyPrompt(kind, overview) : sourcePrompt(kind, overview, passages, recipe);
+  return reader === null ? prompt : `${prompt}\n\n${readerBlock(kind, reader)}`;
+}
+
+// OV-343: the reader context generation gives How to apply (composeReaderContext), so chat
+// fits answers to the same person the note was written for. Last in the system message, so a
+// changed profile leaves the transcript's cached prefix whole.
+function readerBlock(kind: ChatSourceKind, reader: string): string {
+  const noun = NOUN[kind];
+  return `# The reader
+
+What The Overview knows about the reader, from the About you sentence they wrote and what it has noticed in the overviews they save:
+
+${reader}
+
+- Use it to fit an answer to them: which part matters most to them, and how they might try something. How to apply was written for this reader too.
+- Fit what they already do and the limits they live with. Never give them a new project, role or occasion, and never assume more about them than this says.
+- Never let it change what the ${noun} says, and never say the ${noun} says something because it fits them. Fitting an answer to them is not citing anything.
+- When they ask what you know about them, say what is here in plain words, and that they can see, change or remove it in Settings › Personalisation.`;
+}
+
+function sourcePrompt(kind: ChatSourceKind, overview: string, passages: readonly Passage[], recipe: boolean): string {
   return `You answer a reader's questions about one ${kind} they saved in The Overview, and about the overview The Overview wrote of it.
 
 Answer from the material below: the overview and the transcript. Answer from general knowledge only as the rules below allow. Answer in two to five plain sentences.
@@ -49,7 +75,7 @@ function beyondSourceRules({ noun, material, decline, cited }: { noun: string; m
 - Set generalKnowledge to false whenever the whole answer comes from the material.`;
 }
 
-const NOUN: Record<"article" | "recipe", string> = { article: "article", recipe: "recipe page" };
+const NOUN: Record<ChatSourceKind, string> = { video: "video", episode: "episode", article: "article", recipe: "recipe page" };
 
 // An article or a recipe page: we keep no page text (OV-295), so the overview, and a recipe
 // page's recipe, are all an answer can come from (OV-320).

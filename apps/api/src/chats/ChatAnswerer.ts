@@ -5,6 +5,7 @@ import {
   Chat,
   chatSourceKind,
   CHAT_MIGRATIONS,
+  composeReaderContext,
   chatQuestionCount,
   chatRecordId,
   MAX_CHAT_MESSAGE_LENGTH,
@@ -27,6 +28,7 @@ import { costInDollars, priceOf, promptTokensOf, type TokenUsage } from "@overvi
 import type { AccountId } from "../auth/AccountId.js";
 import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { ApiError } from "../http/ApiError.js";
+import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -125,12 +127,17 @@ export class ChatAnswerer {
           });
     }
 
+    const settings = await readSettings(records, accountId);
+    const reader = settings === null ? null : composeReaderContext(settings.aboutYou, settings.learned);
     const othersInPrompt = otherChatsInPrompt(others);
     const othersText = otherChatsPrompt(kind, othersInPrompt);
     const prompt: PromptMessage[] = [
       {
         role: "system",
-        content: chatSystemPrompt(kind, overviewMarkdown(overview, { partIds: true }), passages, { recipe: overview.recipe !== null }),
+        content: chatSystemPrompt(kind, overviewMarkdown(overview, { partIds: true }), passages, {
+          recipe: overview.recipe !== null,
+          reader,
+        }),
       },
       ...(othersText === null ? [] : [{ role: "user" as const, content: othersText }]),
       ...(conversation?.messages ?? []).map((message): PromptMessage => ({
@@ -139,7 +146,7 @@ export class ChatAnswerer {
       })),
       { role: "user", content: question.text },
     ];
-    const logged = { plan, about: kind, model: chatModel.model, otherChatMessages: othersInPrompt.messages };
+    const logged = { plan, about: kind, model: chatModel.model, otherChatMessages: othersInPrompt.messages, personalised: reader !== null };
     const startedAt = askedAt.getTime();
     const release = () => usage.release(reservation.day, accountId);
 

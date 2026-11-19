@@ -154,6 +154,45 @@ test("a question is answered as a stream on Luna, cited by time from code, store
   assert.deepEqual({ ...cost }, { area: "chat", detail: "message", calls: 1 });
 });
 
+test("the reader's profile goes last in the system message, as generation reads it, and only items they've been shown", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [answer("Three to five grams a day.")], { logger });
+  const at = "2026-09-01T09:00:00.000Z";
+  const learned = (text: string, noticedAt: string | null) => ({
+    [text.toLowerCase()]: { text, source: "From 3 overviews on sleep", learnedAt: at, noticedAt, removedAt: null },
+  });
+  const settings = await setup.account.inject({
+    method: "PUT",
+    url: "/api/settings",
+    body: {
+      aboutYou: { who: ["dad"], time: [], focus: ["sleep"] },
+      learned: { ...learned("Training for a marathon", at), ...learned("Learning Rust", null) },
+      updatedAt: at,
+    },
+  });
+  assert.equal(settings.statusCode, 200, settings.body);
+
+  answered((await setup.ask(randomUUID(), "How much creatine?")).body);
+
+  const system = setup.openAi.requests[0]?.messages[0]?.content ?? "";
+  assert.equal(setup.openAi.requests[0]?.messages[0]?.role, "system");
+  const reader = system.slice(system.indexOf("# The reader"));
+  assert.ok(system.indexOf("# The transcript") < system.indexOf("# The reader"), "the transcript stays ahead of the profile");
+  assert.ok(reader.includes("I'm a dad, and right now I'm focusing on sleep. Also: Training for a marathon."), reader);
+  assert.ok(!system.includes("Rust"), "an item the reader hasn't been shown is never sent");
+  assert.equal(lines.find((line) => line.logCode === "api.chat.answered")?.personalised, true);
+});
+
+test("with nothing known about the reader, chat sends no profile and logs it as not personalised", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [answer("Three to five grams a day.")], { logger });
+
+  answered((await setup.ask(randomUUID(), "How much creatine?")).body);
+
+  assert.ok(!(setup.openAi.requests[0]?.messages[0]?.content ?? "").includes("# The reader"));
+  assert.equal(lines.find((line) => line.logCode === "api.chat.answered")?.personalised, false);
+});
+
 test("a follow-up carries its conversation, another chat can be built on and cited, and a deleted one is never sent", async (t) => {
   const setup = await setUp(t, [
     answer("Take it after training."),

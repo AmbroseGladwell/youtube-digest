@@ -24,7 +24,7 @@ import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 // below is the endpoint's own: its prompt, its citations, its log line
 // (docs/features/chats.md, "Measured through the endpoint").
 //
-//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions>]
+//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions> | profile]
 //
 // long-only skips the question set and asks each long conversation only its first few questions:
 // enough to see whether a second conversation reads the transcript from the cache.
@@ -36,10 +36,14 @@ import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 // A source with no transcript.json is a web page (OV-320): an article or a recipe page, answered
 // from its overview alone. Every answer is also checked for numbers the overview doesn't hold,
 // since amounts are code's job; the long-source part needs two sources with transcripts.
+//
+// profile (OV-343) asks every source's questions twice, once with nothing known about the reader
+// and once with READER's profile, plus two questions about the reader, and stops there. Answers
+// are kept side by side for reading; code scores the source rules and the "what do you know" one.
 
 interface Question {
   id: string;
-  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "offSubject" | "filler" | "overviewPart";
+  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "offSubject" | "filler" | "overviewPart" | "aboutReader";
   question: string;
   quotes: string[];
   mentions: string[];
@@ -77,8 +81,18 @@ interface Turn {
   outputTokens: number;
   costDollars: number;
   otherChatMessages: number;
+  personalised: boolean;
   ms: number;
 }
+
+// A reader unlike the library's usual one, so a fitted answer is easy to tell from a general one.
+const READER = { aboutYou: { who: ["nurse"], time: ["night shifts", "my two kids"], focus: ["sleeping better"] } };
+const READER_TERMS = ["nurse", "night shift", "kids", "sleep"];
+
+const ABOUT_READER: Question[] = [
+  { id: "r1", kind: "aboutReader", question: "What do you know about me?", quotes: [], mentions: [] },
+  { id: "r2", kind: "aboutReader", question: "How could I use this in my own week?", quotes: [], mentions: [] },
+];
 
 const TOLERANCE_MS = 10_000;
 const normalised = (text: string) =>
@@ -165,6 +179,7 @@ const numbersOf = (text: string): string[] => [...text.matchAll(/\d+(?:[.,/]\d+)
 async function main() {
   const [dataDirectory, outFile, mode, limit] = process.argv.slice(2);
   const longOnly = mode === "long-only";
+  const profile = mode === "profile";
   const apiKey = process.env.OPENAI_API_KEY;
   if (dataDirectory === undefined || outFile === undefined || apiKey === undefined) {
     throw new Error("usage: chatHarnessCheck <OV-267 chat data dir> <out.json>, with OPENAI_API_KEY set");
@@ -188,9 +203,13 @@ async function main() {
   const turns: Turn[] = [];
   const numbersIn = new Map<string, string[]>();
 
-  const withSource = async (source: Source): Promise<{ account: TestAccount; overviewId: string }> => {
+  const withSource = async (source: Source, { reader = false } = {}): Promise<{ account: TestAccount; overviewId: string }> => {
     const account = await makeAccount(testApp);
     await testApp.sql.query("update accounts set plan = 'plus' where id = $1", [account.accountId]);
+    if (reader) {
+      const put = await account.inject({ method: "PUT", url: "/api/settings", body: { ...READER, updatedAt: new Date().toISOString() } });
+      if (put.statusCode !== 200) throw new Error(`settings: ${put.statusCode} ${put.body}`);
+    }
     const videoId = VideoId.parse(randomUUID().slice(0, 11));
     const video = { ...source.video, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` };
     const web: WebSource | null =
@@ -265,6 +284,7 @@ async function main() {
           outputTokens: 0,
           costDollars: 0,
           otherChatMessages: 0,
+          personalised: false,
           ms: 0,
         });
         process.stdout.write(`! ${source.name} ${label} ${question.id}: ${response.statusCode} ${response.body.slice(0, 200)}\n`);
@@ -283,7 +303,7 @@ async function main() {
         failed: false,
         // A web page has no transcript: a decline is right when it cites nothing at all.
         rightOnSource:
-          question.kind === "filler" || question.kind === "overviewPart"
+          question.kind === "filler" || question.kind === "overviewPart" || question.kind === "aboutReader"
             ? null
             : source.page !== null
               ? answerable === parts.length > 0
@@ -294,10 +314,15 @@ async function main() {
                 (moment) => moment !== null && cited.some((c) => c.startMs - TOLERANCE_MS <= moment && moment <= c.endMs + TOLERANCE_MS),
               )
             : null,
+        // With a profile, "what do you know" names it and Settings; with none, it names nothing of it.
         mentioned:
-          answerable && question.mentions.length > 0
-            ? question.mentions.some((term) => answer.text.toLowerCase().includes(term.toLowerCase()))
-            : null,
+          question.id === "r1"
+            ? logged.personalised === true
+              ? READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
+              : !READER_TERMS.some((term) => answer.text.toLowerCase().includes(term))
+            : answerable && question.mentions.length > 0
+              ? question.mentions.some((term) => answer.text.toLowerCase().includes(term.toLowerCase()))
+              : null,
         citedRightPart:
           question.parts === undefined
             ? null
@@ -321,10 +346,25 @@ async function main() {
         outputTokens: Number(logged.outputTokens ?? 0),
         costDollars: Number(logged.costDollars ?? 0),
         otherChatMessages: Number(logged.otherChatMessages ?? 0),
+        personalised: logged.personalised === true,
         ms: Number(logged.ms ?? 0),
       });
     }
   };
+
+  if (profile) {
+    for (const source of sources) {
+      const asked = { ...source, questions: [...source.questions, ...ABOUT_READER] };
+      for (const reader of [false, true]) {
+        const { account, overviewId } = await withSource(asked, { reader });
+        await converse(asked, account, overviewId, reader ? "with-profile" : "no-profile");
+      }
+      process.stdout.write(`profile: ${source.name} done\n`);
+    }
+    await writeFile(outFile, JSON.stringify({ ranOn: new Date().toISOString().slice(0, 10), reader: READER, turns }, null, 2));
+    await testApp.close();
+    return;
+  }
 
   for (const repeat of longOnly ? [] : [1, 2]) {
     for (const source of sources) {
