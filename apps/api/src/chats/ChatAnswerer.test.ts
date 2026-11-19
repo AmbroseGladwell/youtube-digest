@@ -183,13 +183,13 @@ test("the reader's profile goes last in the system message, as generation reads 
   assert.equal(lines.find((line) => line.logCode === "api.chat.answered")?.personalised, true);
 });
 
-test("with nothing known about the reader, chat sends no profile and logs it as not personalised", async (t) => {
+test("with nothing known about the reader, chat says so and logs it as not personalised", async (t) => {
   const { lines, logger } = recordingLogger();
   const setup = await setUp(t, [answer("Three to five grams a day.")], { logger });
 
   answered((await setup.ask(randomUUID(), "How much creatine?")).body);
 
-  assert.ok(!(setup.openAi.requests[0]?.messages[0]?.content ?? "").includes("# The reader"));
+  assert.ok((setup.openAi.requests[0]?.messages[0]?.content ?? "").includes("# The reader\n\nNothing is known about the reader yet"));
   assert.equal(lines.find((line) => line.logCode === "api.chat.answered")?.personalised, false);
 });
 

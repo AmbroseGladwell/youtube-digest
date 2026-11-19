@@ -115,8 +115,9 @@ It goes last in the system message, after the transcript, so a changed profile l
 transcript's cached prefix whole. Its rules: fit what the reader already does and never invent a
 project, role or occasion (OV-236's rule); never say the source says something because it fits
 them; asked what is known about them, say what's there and that Settings › Personalisation
-changes it. With nothing known, the prompt is the same byte for byte as before, and the log line's
-`personalised` says which it was.
+changes it. With nothing known, the block says so instead: assume nothing, and asked what is
+known, say nothing yet and point to Settings › Personalisation. That block is the same for every
+reader, so it caches with the rest, and the log line's `personalised` says which it was.
 
 ### The old line
 

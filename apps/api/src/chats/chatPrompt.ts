@@ -16,8 +16,16 @@ export function chatSystemPrompt(
   { recipe = false, reader = null }: { recipe?: boolean; reader?: string | null } = {},
 ): string {
   const prompt = answeredFromOverviewAlone(kind) ? overviewOnlyPrompt(kind, overview) : sourcePrompt(kind, overview, passages, recipe);
-  return reader === null ? prompt : `${prompt}\n\n${readerBlock(kind, reader)}`;
+  return `${prompt}\n\n${reader === null ? NOTHING_KNOWN : readerBlock(kind, reader)}`;
 }
+
+// With nothing known the block is the same for every reader, so it caches with the rest.
+const NOTHING_KNOWN = `# The reader
+
+Nothing is known about the reader yet: they haven't written an About you sentence, and nothing has been noticed in the overviews they save.
+
+- Never assume anything about them.
+- When they ask what you know about them, say nothing yet, and that they can tell The Overview about themselves in Settings › Personalisation, so answers and How to apply fit them.`;
 
 // OV-343: the reader context generation gives How to apply (composeReaderContext), so chat
 // fits answers to the same person the note was written for. Last in the system message, so a

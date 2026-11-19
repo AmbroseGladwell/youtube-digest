@@ -317,12 +317,12 @@ async function main() {
                 (moment) => moment !== null && cited.some((c) => c.startMs - TOLERANCE_MS <= moment && moment <= c.endMs + TOLERANCE_MS),
               )
             : null,
-        // With a profile, "what do you know" names it and Settings; with none, it names nothing of it.
+        // With a profile, "what do you know" names it and Settings; with none, it says nothing yet and names Settings.
         mentioned:
           question.id === "r1"
             ? logged.personalised === true
               ? READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
-              : !READER_TERMS.some((term) => answer.text.toLowerCase().includes(term))
+              : !READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
             : answerable && question.mentions.length > 0
               ? question.mentions.some((term) => answer.text.toLowerCase().includes(term.toLowerCase()))
               : null,
