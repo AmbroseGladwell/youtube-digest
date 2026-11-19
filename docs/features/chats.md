@@ -228,7 +228,9 @@ citations (`overviewCitations`) beside those of the source and of other chats.
 **Ids out of the answer's text.** The model sometimes writes the ids it cites into the answer
 too: "[p28–p30]", "(p24)", "[kp4] [apply1]". It did before OV-319, in production. Citations
 carry them already, so `withoutCitationMarks` drops every bracketed run of passage, overview
-and chat-message ids from the text, both as it streams and as it is stored. While the reply
+and chat-message ids from the text, whatever separates them ("(p3; step1)"), both as it
+streams and as it is stored. A bracket left holding only separators, "(;)", goes too (OV-344:
+an answer ended with one in OV-343's harness run). While the reply
 arrives it holds back a half-written mark and the space before it, so the streamed text only
 ever grows. Brackets that are prose, "(perhaps 3g)", stay.
 

@@ -17,19 +17,51 @@ test("drops the ids an answer wrote into its text, in every form the harness run
   for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
 });
 
+test("drops a mark whatever separates its ids, and a bracket left holding only separators", () => {
+  const seen: Array<[string, string]> = [
+    ["Take 3–5 g a day. (p3; step1)", "Take 3–5 g a day."],
+    ["Take 3–5 g a day to saturate muscle stores. (;)", "Take 3–5 g a day to saturate muscle stores."],
+    ["Take 3–5 g a day. ( , )", "Take 3–5 g a day."],
+    ["Take 3–5 g a day (p3 and kp2), then stop.", "Take 3–5 g a day, then stop."],
+    ["Take 3–5 g a day. [p3;]", "Take 3–5 g a day."],
+  ];
+  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
+});
+
 test("leaves brackets that are prose alone", () => {
-  for (const prose of ["Take it (perhaps 3g) daily.", "The [sic] spelling.", "Step 2 (p. 4 of the guide)."]) {
+  for (const prose of [
+    "Take it (perhaps 3g) daily.",
+    "The [sic] spelling.",
+    "Step 2 (p. 4 of the guide).",
+    "Pages (2 and 3) cover it.",
+    "Doses (3; 5 at most) vary.",
+    "An empty () pair.",
+  ]) {
     assert.equal(withoutCitationMarks(prose), prose);
   }
 });
 
+function arriving(whole: string): string[] {
+  return Array.from({ length: whole.length + 1 }, (_, end) => withoutCitationMarks(whole.slice(0, end), { arriving: true }));
+}
+
+function onlyGrows(seen: string[]): boolean {
+  return seen.every((text, index) => index === 0 || text.startsWith(seen[index - 1]!));
+}
+
 test("while the reply arrives, the text only grows and never shows half a mark", () => {
   const whole = "It lasted 43 days [p28–p30], then (perhaps) more. [kp4]";
-  const seen = Array.from({ length: whole.length + 1 }, (_, end) => withoutCitationMarks(whole.slice(0, end), { arriving: true }));
-  assert.ok(
-    seen.every((text, index) => index === 0 || text.startsWith(seen[index - 1]!)),
-    "the text only ever grows",
-  );
+  const seen = arriving(whole);
+  assert.ok(onlyGrows(seen), "the text only ever grows");
   assert.ok(seen.every((text) => !/\[p|\[k/.test(text)));
   assert.equal(withoutCitationMarks(whole), "It lasted 43 days, then (perhaps) more.");
+});
+
+test("while the reply arrives, a mark of other separators or of separators alone never shows", () => {
+  const whole = "Take 3–5 g a day (p3; step1), then ( , ) less. (;)";
+  const seen = arriving(whole);
+  assert.ok(onlyGrows(seen), "the text only ever grows");
+  assert.ok(seen.every((text) => !/[[(]\s*[p;,]/.test(text)));
+  assert.equal(seen.at(-1), "Take 3–5 g a day, then less.");
+  assert.equal(withoutCitationMarks(whole), "Take 3–5 g a day, then less.");
 });
