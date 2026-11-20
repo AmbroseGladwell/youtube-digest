@@ -665,6 +665,54 @@ in brief, and cited them by label. On Dr Rupy it chose the lentil curry and the 
 six times as much. One question, Dr Rupy against Dessert Recipes, failed on every attempt in both
 shapes with an empty reply, and we didn't find out why. The build should log empty replies.
 
+### Structured answers, and reading the chosen overviews whole
+
+The owner shared one of Recall's library answers ("tell me something novel that connects my cards")
+and asked for answers in that shape. It has an intro, sections with headings, points that each
+carry their sources (one title shown, "+2" for the rest), and a takeaway. Recall's trace also
+shows a "synthesizing cards" step before the answer. We tried both on 17 synthesis and purpose
+questions: the six library-map questions, Recall's "something novel" question, and the project
+ones above. Each ran once, for about $0.05 in all.
+
+- **Structured, one pass:** the compact map (the library's or the project's) with a structured
+  schema: `intro`, `sections[{heading, points[{text, sources}]}]`, `takeaway`, capped at 2,000
+  tokens.
+- **Two passes:**
+  1. Given the same map, the model picks up to 5 overviews whose full notes it needs.
+  2. Code sends those overviews whole after the map, in the same cached conversation.
+  3. The model answers in the same structured shape and can cite items (`O12.kp3`).
+
+|                                                    | Structured, one pass | Two passes                         |
+| -------------------------------------------------- | -------------------- | ---------------------------------- |
+| Cost a question (median)                           | $0.0004              | $0.0019                            |
+| Core overviews found                               | 13/22                | 20/22                              |
+| Points                                             | 52                   | 85                                 |
+| Points with no valid source                        | 0                    | 0                                  |
+| Points that barely share words with what they cite | 9                    | 0                                  |
+| Ids that don't exist (dropped in code)             | 0                    | 3                                  |
+| Cut off                                            | 0                    | 0, once the picking cap was raised |
+| Latency (median)                                   | 6.6 s                | 12.4 s                             |
+
+- **The second pass is what makes answers specific.** On one pass, the jollof comparison and "where
+  do these disagree about software factories" found none of their core overviews (0/3 and 0/5),
+  because a map entry is too thin to compare. With two passes both found all of them. Answers
+  cited key points and steps, such as Linear's daily feedback briefing, rather than core claims.
+  On one pass, 9 points shared under a quarter of their words with what they cited. Most were
+  generic advice, and some were the model's own connections, which it labelled as such. With two
+  passes there were none.
+- **Pass 1 picked well:** the overviews it chose held 20 of 22 core overviews. The picking cap must
+  allow for Luna's reasoning. At 300 tokens, 4 of 17 broad questions were cut off while picking. At
+  1,000 none were.
+- **Points citing several overviews worked:** 50 of 85 points cited two or more, as Recall's
+  "+2" does. Recall's food-matrix point, citing Katie Dill and Dr Rupy, is that kind of point.
+- **It holds the house rules:** no answer gave a count. When the model connected overviews in a
+  way they don't, it said the connection was its own. Ids that don't exist are dropped in code,
+  so a point never shows a wrong source.
+- **Cost:** about $0.0019 a question against $0.0016 for today's plain map answer. That's
+  $0.0004 cached plus the five whole overviews, which change with each question. It's well inside
+  the monthly range in "What it does to a reader's month", since library and project chats are
+  5% of the mix.
+
 ### What it does to a reader's month
 
 Each plan's monthly allowance (Free 100, BYO Plus 500, Plus 1,000 messages) priced by code, for
@@ -752,10 +800,18 @@ A month with the whole allowance used, every conversation the same length:
    history, never into the earlier block, or each question pays for the history again (about five
    times the cost at 50 questions). Removing one shouldn't rewrite the prompt either: tell the
    model to set it aside, in a new message.
-2. **An empty chat over the library: the compact map.** It's its own entry point, the library or a
-   project, not an overview's chat. It needs a higher answer cap (about 2,000 tokens) or a rule for
-   shorter answers. "Never count overviews" stayed in the prompt (`constraints.md`), and no answer
-   gave a count.
+2. **An empty chat over the library: the compact map, read in two passes, answered in sections.**
+   It's its own entry point, the library or a project, not an overview's chat.
+   - The model picks up to 5 overviews from the map, with a picking cap of about 1,000 tokens.
+   - Code sends those whole.
+   - The answer comes back structured: intro, sections of points that each carry their sources,
+     and a takeaway, with a cap of about 2,000 tokens.
+   - Code turns ids into title chips (the first title plus "+n", as Recall shows them) and drops
+     unknown ids. The model never writes a title.
+   - The chips and sections need a Claude Design round, as OV-319's citations did. Today's
+     one-overview chat can keep its plain answer.
+   - Code can work out the stats line Recall shows first ("10 cards, 7 tags"). "Never count
+     overviews" stayed in the prompt (`constraints.md`), and no answer gave a count.
 3. **For details: keyword search over the kept transcripts, not passage vectors, for now.** Run
    beside claim search, it found every source passage vectors found, and its 8 best minutes
    answered 59 of 66 detail questions, against 63 of 65 for passage vectors and 54 of 68 for
@@ -817,6 +873,9 @@ node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
   `projects.json` against the export's projects. Its arms are `project-full`, `project-map`,
   `project-map-nopurpose`, `project-map+keyword8`, `at-project` (capped past 8) and
   `at-project-full`.
+- `twopass <data dir> <out.json> --arms structured-map,two-pass` runs the data dir's
+  `synthesis.json` questions and the project synthesis and purpose questions as structured
+  answers, in one pass or two.
 - Arms are `home`, `search3-overviews`, `search5-overviews`, `search3-full`, `search3+passages8`,
   `search3+keyword8`, `pinned1-overviews`, `pinned3-overviews`, `pinned8-overviews`, `pinned3-full`,
   `pinned1+search3-overviews`, `map-compact` and `map-keypoints`. A map arm writes beside the
