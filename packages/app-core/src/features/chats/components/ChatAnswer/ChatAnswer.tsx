@@ -12,6 +12,7 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
+import { ChatOtherOverviewCitation, type ChatOtherOverviewCitationProps } from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
 import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
 import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
 import { chatWords } from "../../util/chatWords.js";
@@ -36,6 +37,9 @@ export interface ChatAnswerProps {
   // Another conversation about the overview an answer drew on, or null once it is deleted.
   conversationOf: (chatId: string) => { date: string; firstQuestion: string } | null;
   onConversationFollowed: (chatId: string, message: number) => void;
+  // Another of the reader's overviews an answer drew on (OV-355): whether it is still in the library.
+  holdsOverview: (overviewId: string) => boolean;
+  onOtherOverviewFollowed: ChatOtherOverviewCitationProps["onFollowed"];
   // Copy, under each answer (design 324x).
   actions?: ReactNode;
 }
@@ -72,6 +76,9 @@ const conversationsOf = (citations: readonly ChatCitation[]) =>
     .flatMap((citation) => ("chatId" in citation ? [citation] : []))
     .filter((citation, index, all) => all.findIndex((each) => each.chatId === citation.chatId) === index);
 
+const otherOverviewsOf = (citations: readonly ChatCitation[]) =>
+  citations.flatMap((citation) => ("overviewId" in citation ? [citation] : []));
+
 const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
   citations.flatMap((citation) => ("startMs" in citation ? [citation] : [])).sort((a, b) => a.startMs - b.startMs);
 
@@ -95,11 +102,14 @@ export function ChatAnswer({
   onOpenTranscriptAt,
   conversationOf,
   onConversationFollowed,
+  holdsOverview,
+  onOtherOverviewFollowed,
   actions,
 }: ChatAnswerProps) {
   const stretches = video === null ? [] : stretchesOf(citations);
   const parts = overviewCitationViews(overview, citations);
-  const notCovered = !inSource && !citations.some((citation) => "part" in citation);
+  const others = otherOverviewsOf(citations);
+  const notCovered = !inSource && !citations.some((citation) => "part" in citation) && others.length === 0;
   return (
     <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} data-testid={chatAnswerTestIds.root}>
       {notCovered && (
@@ -145,7 +155,7 @@ export function ChatAnswer({
           </button>
         );
       })}
-      {parts.length + stretches.length > 0 && (
+      {parts.length + stretches.length + others.length > 0 && (
         <div className={styles.citations} data-testid={chatAnswerTestIds.citations}>
           {parts.map((view, index) => (
             <Fragment key={`${view.part}-${index}`}>
@@ -163,6 +173,14 @@ export function ChatAnswer({
                 onOpenTranscriptAt={onOpenTranscriptAt}
               />
             ))}
+          {others.map((citation, index) => (
+            <ChatOtherOverviewCitation
+              key={`${citation.overviewId}-${index}`}
+              citation={citation}
+              held={holdsOverview(citation.overviewId)}
+              onFollowed={onOtherOverviewFollowed}
+            />
+          ))}
         </div>
       )}
       {actions}

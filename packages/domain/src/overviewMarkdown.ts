@@ -28,8 +28,8 @@ const bullets = (items: string[]) => items.map((item) => `- ${item}`).join("\n")
 // The note as it reads outside the app: every section the reader sees, with each moment
 // a link into the video, and never the spoken script (docs/features/mcp-connector.md). With
 // partIds, each item a chat answer can cite starts with its id, as overviewParts lists them.
-export function overviewMarkdown(overview: Overview, { partIds = false } = {}): string {
-  const id = (part: OverviewPart, index = 0) => (partIds ? `[${overviewPartId(part, index)}] ` : "");
+export function overviewMarkdown(overview: Overview, { partIds = false, partIdPrefix = "" } = {}): string {
+  const id = (part: OverviewPart, index = 0) => (partIds ? `[${partIdPrefix}${overviewPartId(part, index)}] ` : "");
   const { source: video } = overview;
   const link = sourceUrl(video);
   const timed = video.kind === "podcast" ? null : link;

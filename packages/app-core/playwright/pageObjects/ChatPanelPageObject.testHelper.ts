@@ -5,6 +5,7 @@ import { chatConversationListTestIds } from "../../src/features/chats/components
 import { chatConversationMenuTestIds } from "../../src/features/chats/components/ChatConversationMenu/ChatConversationMenuTestIds.js";
 import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatSheetTestIds } from "../../src/features/chats/components/ChatSheet/ChatSheetTestIds.js";
+import { chatOtherOverviewCitationTestIds } from "../../src/features/chats/components/ChatOtherOverviewCitation/ChatOtherOverviewCitationTestIds.js";
 import { chatOverviewCitationTestIds } from "../../src/features/chats/components/ChatOverviewCitation/ChatOverviewCitationTestIds.js";
 import { readerPageTestIds } from "../../src/features/reader/ReaderPage/ReaderPageTestIds.js";
 import { chatCitationPillTestIds } from "../../src/features/chats/components/ChatCitationPill/ChatCitationPillTestIds.js";
@@ -173,6 +174,26 @@ export class ChatPanelPageObject extends PageObject {
     this.step(`verifyOverviewCitationIsFocused ${answer} ${citation}`, () =>
       expect(this.answers().nth(answer).getByTestId(chatOverviewCitationTestIds.pill).nth(citation)).toBeFocused(),
     );
+
+  // Another of the reader's overviews an answer drew on (OV-355).
+  verifyOtherOverviewCitationsNamed = (index: number, names: string[]) =>
+    this.step(`verifyOtherOverviewCitationsNamed ${index} ${names.join(" | ")}`, async () => {
+      const links = this.answers().nth(index).getByTestId(chatOtherOverviewCitationTestIds.link);
+      await expect(links).toHaveCount(names.length);
+      for (const [at, name] of names.entries()) await expect(links.nth(at)).toHaveAccessibleName(name);
+    });
+
+  followOtherOverviewCitation = (answer: number, citation: number) =>
+    this.step(`followOtherOverviewCitation ${answer} ${citation}`, () =>
+      this.click(this.answers().nth(answer).getByTestId(chatOtherOverviewCitationTestIds.link).nth(citation)),
+    );
+
+  verifyDeletedOtherOverviewReads = (answer: number, text: string) =>
+    this.step(`verifyDeletedOtherOverviewReads ${answer} ${text}`, async () => {
+      const gone = this.answers().nth(answer).getByTestId(chatOtherOverviewCitationTestIds.gone);
+      await expect(gone).toHaveText(text);
+      await expect(gone.getByRole("link")).toHaveCount(0);
+    });
 
   verifyGoneCitationReads = (answer: number, text: string) =>
     this.step(`verifyGoneCitationReads ${answer} ${text}`, async () => {

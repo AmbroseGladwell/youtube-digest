@@ -18,6 +18,7 @@ import {
   PROJECT_MEMBER_MIGRATIONS,
   PROJECT_MIGRATIONS,
   ProjectMember,
+  type OverviewId,
   type TranscriptSegment,
 } from "@overview/domain";
 import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage } from "@overview/generation";
@@ -25,6 +26,7 @@ import { AccountId } from "../auth/AccountId.js";
 import { ChatReply } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
 import { chatSystemPrompt } from "../chats/chatPrompt.js";
+import { otherSourcesInPrompt } from "../chats/otherSourcesInPrompt.js";
 import { streamChatCompletion, type PromptMessage } from "../chats/streamChatCompletion.js";
 import { transcriptPassages, type Passage } from "../chats/transcriptPassages.js";
 import { withoutCitationMarks } from "../chats/withoutCitationMarks.js";
@@ -541,6 +543,33 @@ interface OtherSource {
 
 const PART_ID = /\[((?:verdict|sells|anyway)|(?:dubious|kp|step|apply|ing|method|ch)\d+)\] /g;
 
+// Overviews only, pinned or found, as the shipped chat sends them (OV-355).
+function shippedSourcesBlock(library: Library, ids: string[], pinned: number): { text: string; sources: OtherSource[] } {
+  const chatSources = ids.map((id, index) => ({
+    label: `S${index + 1}`,
+    overviewId: id as OverviewId,
+    title: library.overviews.get(id)!.overview.source.title,
+    how: index < pinned ? ("pinned" as const) : ("found" as const),
+  }));
+  const overviews = new Map(ids.map((id) => [id, library.overviews.get(id)!.overview]));
+  const text = otherSourcesInPrompt([{ sources: chatSources, setAside: [] }], overviews, new Map()).blocks[0]!;
+  return { text, sources: chatSources.map((source) => otherSourceOf(library, source.overviewId, source.label)) };
+}
+
+const otherSourceOf = (library: Library, id: string, label: string): OtherSource => {
+  const entry = library.overviews.get(id)!;
+  return {
+    label,
+    overviewId: id,
+    title: entry.overview.source.title ?? id,
+    passages: [],
+    partIds: overviewParts(entry.overview).map(({ part, index }) => `${label}.${overviewPartId(part, index)}`),
+  };
+};
+
+const pinnedCount = (armName: string, others: string[]): number =>
+  armName.startsWith("pinned1+") ? 1 : armName.startsWith("pinned") ? others.length : 0;
+
 function otherSourcesBlock(
   library: Library,
   ids: string[],
@@ -690,7 +719,12 @@ async function answer(
         const system = chatSystemPrompt(kind, overviewMarkdown(home.overview, { partIds: true }), homePassages, {
           recipe: home.overview.recipe !== null,
         });
-        const block = others.length === 0 ? null : otherSourcesBlock(library, others, closest ?? arm.transcripts === true);
+        const block =
+          others.length === 0
+            ? null
+            : arm.transcripts === false
+              ? shippedSourcesBlock(library, others, pinnedCount(arm.name, others))
+              : otherSourcesBlock(library, others, closest ?? arm.transcripts === true);
         const messages: PromptMessage[] = [
           { role: "system", content: system },
           ...(block === null ? [] : [{ role: "user" as const, content: block.text }]),
@@ -1171,17 +1205,22 @@ function pinnedProjectBlock(
 ): { text: string; labelled: Map<string, string>; sources: OtherSource[] } {
   const others = members.filter((id) => id !== home);
   const whole = !capped || others.length <= PINNED_WHOLE ? others : closest.filter((id) => others.includes(id)).slice(0, BRIEF_FULL);
-  const brief = others.filter((id) => !whole.includes(id));
-  const block = otherSourcesBlock(library, whole, false);
-  const labelled = new Map(block.sources.map((source) => [source.label, source.overviewId]));
-  const lines = brief.map((id, index) => {
-    const label = `S${whole.length + index + 1}`;
-    labelled.set(label, id);
-    return briefLine(label, library.overviews.get(id)!);
-  });
-  const lead = `The reader pinned their project "${project.name}" to this conversation${project.purpose === null ? "" : `, which they keep for this: "${project.purpose}"`}. Its overviews follow.${brief.length === 0 ? "" : ` The ${whole.length === 1 ? "one" : "few"} closest to the question ${whole.length === 1 ? "is" : "are"} given in full; the rest of the project is listed in brief after them, by title, big picture and core claim. Cite one listed in brief by its label alone (such as S${whole.length + 1}) in overviewParts.`}`;
-  const text = `${lead}\n\n${block.text}${lines.length === 0 ? "" : `\n\n# The rest of the project, in brief\n\n${lines.join("\n\n")}`}`;
-  return { text, labelled, sources: block.sources };
+  const ordered = [...whole, ...others.filter((id) => !whole.includes(id))];
+  const chatSources = ordered.map((id, index) => ({
+    label: `S${index + 1}`,
+    overviewId: id as OverviewId,
+    title: library.overviews.get(id)!.overview.source.title,
+    how: "pinned" as const,
+    projectId: project.id,
+    ...(whole.includes(id) ? {} : { brief: true }),
+  }));
+  const overviews = new Map(ordered.map((id) => [id, library.overviews.get(id)!.overview]));
+  const text = otherSourcesInPrompt([{ sources: chatSources, setAside: [] }], overviews, new Map([[project.id, project]])).blocks[0]!;
+  return {
+    text,
+    labelled: new Map(chatSources.map((source) => [source.label, source.overviewId])),
+    sources: chatSources.filter((source) => source.brief !== true).map((source) => otherSourceOf(library, source.overviewId, source.label)),
+  };
 }
 
 async function projectChat(

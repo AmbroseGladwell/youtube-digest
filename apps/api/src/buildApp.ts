@@ -340,6 +340,7 @@ export async function buildApp({
                 transcripts,
                 usage: chatUsage,
                 costs,
+                meaningSearch,
                 clock,
                 ...(ourKey.sleep === undefined ? {} : { sleep: ourKey.sleep }),
               }),

@@ -12,6 +12,7 @@ import {
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOnline } from "../../../../util/useOnline.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
 import { resetDate } from "../../../newOverview/util/usageLine.js";
 import { useChatUsageQuery } from "../../queries/chatUsageQuery.js";
 import { useSlowAnswer } from "../../useSlowAnswer.js";
@@ -131,6 +132,9 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
       ? `${conversationDate(chat.startedAt, now)} · ${plural(questionsIn(chat), "question")}`
       : `About ${overview.source.title}${full ? ` · ${asked} questions` : ""}`;
 
+  const library = useOverviewsWithStateQuery().data;
+  const holdsOverview = (overviewId: string) =>
+    library === undefined || library.some((entry) => entry.kind === "overview" && entry.overview.id === overviewId);
   const conversationOf = (cited: string) => {
     const found = chats.find((each) => each.id === cited);
     return found === undefined ? null : { date: conversationDate(found.startedAt, now), firstQuestion: firstQuestionOf(found) };
@@ -319,6 +323,14 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                       conversationOf={conversationOf}
                       onConversationFollowed={(cited, at) =>
                         panel.followConversation(cited, at, { title: firstQuestion ?? "", message: index })
+                      }
+                      holdsOverview={holdsOverview}
+                      onOtherOverviewFollowed={(cited) =>
+                        analytics.reader.chat.citationFollowed({
+                          overviewId: overview.id,
+                          to: "otherOverview",
+                          ...(cited.item === null ? {} : { part: cited.item.part, index: cited.item.index }),
+                        })
                       }
                       actions={
                         <ChatAnswerActions

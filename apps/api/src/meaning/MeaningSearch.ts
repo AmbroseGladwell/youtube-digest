@@ -32,7 +32,7 @@ export class MeaningSearch {
     this.#log = log;
   }
 
-  async search(accountId: AccountId, query: string): Promise<MeaningResult> {
+  async search(accountId: AccountId, query: string, { within = null }: { within?: readonly string[] | null } = {}): Promise<MeaningResult> {
     const text = query.trim().toLowerCase();
     if (text === "") {
       return { available: true, matches: [] };
@@ -43,7 +43,7 @@ export class MeaningSearch {
     } catch {
       return { available: false };
     }
-    const matches = await this.#embeddings.closest(accountId, vector, this.#embedder.model, CANDIDATES);
+    const matches = await this.#embeddings.closest(accountId, vector, this.#embedder.model, CANDIDATES, within);
     return { available: true, matches: matches.filter((match) => match.similarity >= MEANING_FLOOR) };
   }
 

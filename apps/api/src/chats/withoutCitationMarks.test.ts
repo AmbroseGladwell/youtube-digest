@@ -65,3 +65,13 @@ test("while the reply arrives, a mark of other separators or of separators alone
   assert.equal(seen.at(-1), "Take 3–5 g a day, then less.");
   assert.equal(withoutCitationMarks(whole), "Take 3–5 g a day, then less.");
 });
+
+test("drops another overview's label and its items' ids (OV-355)", () => {
+  const seen: Array<[string, string]> = [
+    ["Swap the cream for yoghurt, as Dr Rupy suggests. [S2.kp1]", "Swap the cream for yoghurt, as Dr Rupy suggests."],
+    ["Both agree on fibre (S1.apply2; S3.kp4).", "Both agree on fibre."],
+    ["The lentil curry fits best [S7].", "The lentil curry fits best."],
+    ["Start with beans (S2.step1, p4), then greens.", "Start with beans, then greens."],
+  ];
+  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
+});

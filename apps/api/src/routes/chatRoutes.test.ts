@@ -164,3 +164,25 @@ test("a client built before chats is never sent one", async (t) => {
   assert.ok(kinds.includes("overview"));
   assert.ok(!kinds.includes("chat"));
 });
+
+test("a question's pins and set-aside overviews must be overview and project ids, a few at a time", async (t) => {
+  const testApp = await createTestApp();
+  t.after(() => testApp.close());
+  const account = await makeAccount(testApp);
+  const overview = await withOverview(account);
+  const ask = (extra: Record<string, unknown>) =>
+    account.inject({
+      method: "POST",
+      url: `/api/chats/${overview.id}/messages`,
+      body: { conversationId: randomUUID(), text: "Hi?", ...extra },
+    });
+
+  for (const extra of [
+    { pins: { overviews: ["not-an-id"] } },
+    { pins: { projects: [7] } },
+    { setAside: ["not-an-id"] },
+    { pins: { overviews: Array.from({ length: 21 }, () => randomUUID()) } },
+  ]) {
+    assert.equal((await ask(extra)).statusCode, 400, JSON.stringify(extra));
+  }
+});

@@ -5,6 +5,8 @@ import { randomUUID } from "node:crypto";
 import {
   answeredFromOverview,
   chatRecordId,
+  CURRENT_SCHEMA_VERSIONS,
+  overviewPartHash,
   MAX_CHAT_QUESTIONS,
   VideoId,
   youTubeSource,
@@ -13,7 +15,7 @@ import {
   type WebSource,
   type ChatStreamEvent,
 } from "@overview/domain";
-import { makeStoredTranscript } from "@overview/store-conformance";
+import { makeProject, makeStoredTranscript } from "@overview/store-conformance";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
@@ -21,10 +23,12 @@ import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
-import { storedOverview } from "../testing/storedRecords.testHelper.js";
+import { breadNote, conceptEmbedder, foundersNote, noteAbout } from "../testing/meaningFixtures.testHelper.js";
+import { storedOverview, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatAnswerer } from "./ChatAnswerer.js";
 import { makeFakeChatOpenAi, type FakeChatAnswer, type FakeChatOpenAi } from "./FakeChatOpenAi.testHelper.js";
+import type { Embedder } from "../meaning/Embedder.js";
 
 const SEGMENTS = [
   { text: "Creatine is a backup store of energy.", startMs: 0, endMs: 8_000 },
@@ -48,7 +52,7 @@ interface Setup {
   openAi: FakeChatOpenAi;
   overviewId: string;
   waits: number[];
-  ask(conversationId: string, text: string, overviewId?: string): ReturnType<TestAccount["inject"]>;
+  ask(conversationId: string, text: string, overviewId?: string, extra?: Record<string, unknown>): ReturnType<TestAccount["inject"]>;
 }
 
 async function setUp(
@@ -58,7 +62,8 @@ async function setUp(
     dailyChatMessages = 20_000,
     transcript = true,
     logger,
-  }: { dailyChatMessages?: number; transcript?: boolean; logger?: FastifyBaseLogger } = {},
+    embedder,
+  }: { dailyChatMessages?: number; transcript?: boolean; logger?: FastifyBaseLogger; embedder?: Embedder } = {},
 ): Promise<Setup> {
   const openAi = makeFakeChatOpenAi(...answers);
   const waits: number[] = [];
@@ -76,6 +81,7 @@ async function setUp(
         },
       },
       ...(logger === undefined ? {} : { logger }),
+      ...(embedder === undefined ? {} : { embedder }),
     },
   );
   t.after(() => testApp.close());
@@ -92,8 +98,8 @@ async function setUp(
     openAi,
     overviewId: overview.id,
     waits,
-    ask: (conversationId, text, overviewId = overview.id) =>
-      account.inject({ method: "POST", url: `/api/chats/${overviewId}/messages`, body: { conversationId, text } }),
+    ask: (conversationId, text, overviewId = overview.id, extra = {}) =>
+      account.inject({ method: "POST", url: `/api/chats/${overviewId}/messages`, body: { conversationId, text, ...extra } }),
   };
 }
 
@@ -557,14 +563,15 @@ test("a reader who stops an answer, or leaves, before it is stored gets the ques
     transcripts: new TranscriptsRepository(testApp.sql, () => testApp.clock.now),
     usage: new ChatUsageRepository(testApp.sql),
     costs: new AccountCostsRepository(testApp.sql),
+    meaningSearch: null,
     clock: () => testApp.clock.now,
   });
   const { logger, lines } = recordingLogger();
 
   const events = await answerer.ask(
-    { accountId: account.accountId, plan: "free" },
+    { accountId: account.accountId, plan: "free", acrossSources: true },
     setup.overviewId,
-    { conversationId, text: "How much?" },
+    { conversationId, text: "How much?", pins: { overviews: [], projects: [] }, setAside: [] },
     logger,
   );
   const first = await events.next();
@@ -574,4 +581,234 @@ test("a reader who stops an answer, or leaves, before it is stored gets the ques
   assert.equal(await usedThisMonth(setup), 0);
   assert.ok(!(await setup.account.changes()).changes.some((change) => change.kind === "chat"));
   assert.ok(lines.some((line) => line.logCode === "api.chat.stopped"));
+});
+
+const titled = <T extends Overview>(overview: T, title: string): T => ({ ...overview, source: { ...overview.source, title } });
+
+const otherAnswer = (text: string, overviewParts: string[]) => answer(text, [], [], false, overviewParts);
+
+async function saved(setup: Setup, ...overviews: Overview[]): Promise<void> {
+  for (const overview of overviews) {
+    const response = await setup.account.inject({ method: "POST", url: "/api/overviews", body: overview });
+    assert.equal(response.statusCode, 201, response.body);
+  }
+  await setup.testApp.drainEmbeddings();
+}
+
+async function projectOf(setup: Setup, overviews: Overview[], name = "Leadership"): Promise<string> {
+  const project = { ...makeProject({ name }), schemaVersion: CURRENT_SCHEMA_VERSIONS.project, updatedAt: UPDATED_AT };
+  assert.equal((await setup.account.inject({ method: "POST", url: "/api/projects", body: project })).statusCode, 201);
+  for (const [index, overview] of overviews.entries()) {
+    const added = await setup.account.inject({
+      method: "PUT",
+      url: `/api/projects/${project.id}/members/${overview.id}`,
+      body: { updatedAt: UPDATED_AT, addedAt: new Date(Date.UTC(2026, 10, 1, 9, index)).toISOString() },
+    });
+    assert.ok(added.statusCode < 300, added.body);
+  }
+  return project.id;
+}
+
+const readerMessages = async (setup: Setup, conversation: string) =>
+  ((await setup.account.change("chat", chatRecordId(setup.overviewId, conversation))).body as { messages: ChatMessage[] }).messages.filter(
+    (message) => message.from === "reader",
+  );
+
+test("search adds the closest other overviews, never the chat's own, as overviews only before the question, and an answer cites one by its label", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [otherAnswer("Boards rarely push back on founders who stay.", ["S1.kp2", "S1", "S9", "S1.kp99"])], {
+    embedder: conceptEmbedder(),
+    logger,
+  });
+  const founders = titled(foundersNote(), "Founders who stay too long");
+  await saved(setup, founders, breadNote());
+  const conversation = randomUUID();
+
+  const response = await setup.ask(conversation, "What happens when leaders overstay?");
+
+  const events = eventsOf(response.body);
+  assert.deepEqual(events[0], {
+    type: "sources",
+    pinned: [],
+    found: [{ label: "S1", overviewId: founders.id, title: "Founders who stay too long", how: "found" }],
+  });
+  const messages = setup.openAi.requests[0]!.messages;
+  assert.equal(messages.length, 3);
+  assert.equal(messages[1]?.role, "user");
+  assert.match(messages[1]?.content ?? "", /^# Other overviews from the reader's library/);
+  assert.match(messages[1]?.content ?? "", /## S1\n/);
+  assert.match(messages[1]?.content ?? "", /\[S1\.kp2\] Boards rarely push back/);
+  assert.doesNotMatch(messages[1]?.content ?? "", /sourdough|## S2/i);
+  assert.deepEqual(messages[2], { role: "user", content: "What happens when leaders overstay?" });
+
+  const done = answered(response.body);
+  assert.deepEqual(done.messages[0], {
+    from: "reader",
+    text: "What happens when leaders overstay?",
+    at: setup.testApp.clock.now.toISOString(),
+    sources: [{ label: "S1", overviewId: founders.id, title: "Founders who stay too long", how: "found" }],
+  });
+  const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  assert.deepEqual(reply.citations, [
+    {
+      overviewId: founders.id,
+      title: "Founders who stay too long",
+      item: { part: "keyPoint", index: 1, textHash: overviewPartHash("Boards rarely push back") },
+    },
+  ]);
+  assert.equal(reply.inSource, false);
+  const line = lines.find((each) => each.logCode === "api.chat.answered");
+  assert.equal(line?.["foundSources"], 1);
+  assert.equal(line?.["pinnedSources"], 0);
+  assert.equal(line?.["searched"], true);
+  assert.equal(line?.["otherOverviewCitations"], 1);
+});
+
+test("a follow-up adds what it finds after the history, sends nothing already there again, and leaves the earlier prompt as it was", async (t) => {
+  const setup = await setUp(t, [otherAnswer("They stay.", ["S1"])], { embedder: conceptEmbedder() });
+  const founders = foundersNote();
+  const bread = titled(breadNote(), "Sourdough");
+  await saved(setup, founders, bread);
+  const conversation = randomUUID();
+
+  answered((await setup.ask(conversation, "What happens when leaders overstay?")).body);
+  const again = await setup.ask(conversation, "And founders clinging on?");
+  answered(again.body);
+  assert.ok(!eventsOf(again.body).some((event) => event.type === "sources"));
+  const baking = await setup.ask(conversation, "How long should the dough prove?");
+  answered(baking.body);
+
+  const [first, second, third] = setup.openAi.requests.map((request) => request.messages);
+  assert.deepEqual(second!.slice(0, first!.length), first);
+  assert.equal(second!.length, first!.length + 2);
+  assert.deepEqual(third!.slice(0, second!.length), second);
+  const added = third!.at(-2)!;
+  assert.equal(added.role, "user");
+  assert.match(added.content, /^# More overviews from the reader's library/);
+  assert.match(added.content, /## S2\n/);
+  assert.doesNotMatch(added.content, /## S1\n/);
+  assert.deepEqual(
+    (await readerMessages(setup, conversation)).map((message) =>
+      message.from === "reader" ? message.sources?.map((source) => source.label) : null,
+    ),
+    [["S1"], undefined, ["S2"]],
+  );
+});
+
+test("pins go in whether or not search would find them, and with no search at all, but never the chat's own overview", async (t) => {
+  const setup = await setUp(t, [otherAnswer("Bake it in a lidded pot.", ["S1.kp3"])]);
+  const bread = titled(breadNote(), "Sourdough");
+  await saved(setup, bread);
+
+  const response = await setup.ask(randomUUID(), "What happens when leaders overstay?", setup.overviewId, {
+    pins: { overviews: [bread.id, setup.overviewId] },
+  });
+
+  assert.deepEqual(eventsOf(response.body)[0], {
+    type: "sources",
+    pinned: [{ label: "S1", overviewId: bread.id, title: "Sourdough", how: "pinned" }],
+    found: [],
+  });
+  const block = setup.openAi.requests[0]!.messages[1]!.content;
+  assert.match(block, /The reader pinned S1 to this conversation with "@"\./);
+  assert.doesNotMatch(block, /## S2/);
+  const reply = answered(response.body).messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  assert.deepEqual(
+    reply.citations.map((citation) => ("overviewId" in citation ? citation.item?.part : null)),
+    ["keyPoint"],
+  );
+});
+
+test("a pinned project goes in whole up to eight, and past that its five closest whole and the rest in brief", async (t) => {
+  const setup = await setUp(t, [otherAnswer("Boards rarely push back.", ["S1.kp2", "S7"])], { embedder: conceptEmbedder() });
+  const founders = titled(foundersNote(), "Founders who stay too long");
+  const small = [
+    founders,
+    ...Array.from({ length: 3 }, (_, index) =>
+      titled(noteAbout(`Claim ${index}`, ["A point", "Another point", "A third point"]), `Talk ${index}`),
+    ),
+  ];
+  const more = Array.from({ length: 6 }, (_, index) =>
+    titled(noteAbout(`Other claim ${index}`, ["A point", "Another point", "A third point"]), `Extra ${index}`),
+  );
+  await saved(setup, ...small, ...more);
+  const smallProject = await projectOf(setup, small, "Small");
+  const largeProject = await projectOf(setup, [...small, ...more], "Large");
+
+  answered(
+    (await setup.ask(randomUUID(), "What do leaders who overstay do?", setup.overviewId, { pins: { projects: [smallProject] } })).body,
+  );
+  const whole = setup.openAi.requests[0]!.messages[1]!.content;
+  assert.match(whole, /The reader pinned their project "Small" to this conversation/);
+  assert.equal(whole.match(/^## S\d+$/gm)?.length, 4);
+  assert.doesNotMatch(whole, /in brief/);
+
+  const response = await setup.ask(randomUUID(), "What do leaders who overstay do?", setup.overviewId, {
+    pins: { projects: [largeProject] },
+  });
+  const block = setup.openAi.requests[1]!.messages.at(-2)!.content;
+  assert.equal(block.match(/^## S\d+$/gm)?.length, 5);
+  assert.match(block, /## S1\n\n# Founders who stay too long/);
+  assert.match(block, /# The rest of "Large", in brief/);
+  assert.equal(block.match(/^## \[S\d+\] /gm)?.length, 5);
+  const done = answered(response.body);
+  const sources = (done.messages[0] as Extract<ChatMessage, { from: "reader" }>).sources ?? [];
+  assert.equal(sources.length, 10);
+  assert.equal(sources.filter((source) => source.brief === true).length, 5);
+  assert.ok(sources.every((source) => source.how === "pinned" && source.projectId === largeProject));
+  const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  const brief = sources.find((source) => source.label === "S7")!;
+  assert.deepEqual(
+    reply.citations.flatMap((citation) => ("overviewId" in citation ? [[citation.overviewId, citation.item === null]] : [])),
+    [
+      [founders.id, false],
+      [brief.overviewId, true],
+    ],
+  );
+});
+
+test("setting an overview aside says so in a new message, keeps the earlier prompt, and its label is no longer cited", async (t) => {
+  const setup = await setUp(t, [otherAnswer("Feed the starter.", ["S1.kp1"])]);
+  const bread = titled(breadNote(), "Sourdough");
+  await saved(setup, bread);
+  const conversation = randomUUID();
+
+  answered((await setup.ask(conversation, "What about bread?", setup.overviewId, { pins: { overviews: [bread.id] } })).body);
+  const response = await setup.ask(conversation, "Ignore that one. What now?", setup.overviewId, { setAside: [bread.id] });
+
+  const [first, second] = setup.openAi.requests.map((request) => request.messages);
+  assert.deepEqual(second!.slice(0, first!.length), first);
+  assert.deepEqual(second!.at(-2), {
+    role: "user",
+    content: "The reader set aside S1 (Sourdough) from this conversation. Don't use or cite it from here on.",
+  });
+  const done = answered(response.body);
+  assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).setAside, ["S1"]);
+  assert.deepEqual((done.messages[1] as Extract<ChatMessage, { from: "answer" }>).citations, []);
+});
+
+test("a client before cross-source chat is answered from its own overview alone, as before", async (t) => {
+  const setup = await setUp(t, [answer("Three to five grams a day.")], { embedder: conceptEmbedder() });
+  await saved(setup, foundersNote());
+
+  const response = await setup.account.inject({
+    method: "POST",
+    url: `/api/chats/${setup.overviewId}/messages`,
+    body: { conversationId: randomUUID(), text: "What happens when leaders overstay?", pins: { overviews: [] } },
+    clientVersion: 24,
+  });
+
+  assert.ok(!eventsOf(response.body).some((event) => event.type === "sources"));
+  assert.equal(setup.openAi.requests[0]!.messages.length, 2);
+  assert.equal((answered(response.body).messages[0] as Extract<ChatMessage, { from: "reader" }>).sources, undefined);
+});
+
+test("an empty reply is logged as one", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [answer("", [])], { logger });
+
+  const response = await setup.ask(randomUUID(), "How much?");
+
+  assert.equal(eventsOf(response.body).at(-1)?.type, "failed");
+  assert.equal(lines.find((line) => line.logCode === "api.chat.failed")?.["reason"], "EmptyAnswerError");
 });

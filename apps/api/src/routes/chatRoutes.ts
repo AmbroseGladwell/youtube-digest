@@ -1,7 +1,14 @@
 import { Readable } from "node:stream";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, chatRecordId, ChatQuestionRequest, OverviewId, type ChatStreamEvent } from "@overview/domain";
+import {
+  apiLogLines,
+  chatRecordId,
+  ChatQuestionRequest,
+  FIRST_ACROSS_SOURCES_CLIENT_VERSION,
+  OverviewId,
+  type ChatStreamEvent,
+} from "@overview/domain";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { ChatAnswerer } from "../chats/ChatAnswerer.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -39,7 +46,16 @@ export function chatRoutes(
     if (answerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
     const { accountId } = request.session!;
     try {
-      const events = await answerer.ask({ accountId, plan: await accountPlan(sql, accountId) }, overviewId, question, request.log);
+      const events = await answerer.ask(
+        {
+          accountId,
+          plan: await accountPlan(sql, accountId),
+          acrossSources: request.client!.version >= FIRST_ACROSS_SOURCES_CLIENT_VERSION,
+        },
+        overviewId,
+        question,
+        request.log,
+      );
       return reply
         .header("content-type", "text/event-stream; charset=utf-8")
         .header("cache-control", "no-store")
