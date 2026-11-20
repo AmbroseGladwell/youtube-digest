@@ -19,7 +19,10 @@ test("reads back every item the chat prompt gives an id", () => {
         { claim: "Buy our tub", basis: "conflictOfInterest", reason: "They sell it.", startMs: null },
       ],
       reasoning: "Covers the basics well. Then overreaches.",
-      similarTo: [],
+      similarTo: [
+        { overviewId: "05738801-9747-465b-a2ef-327e5b127533", title: "Context is now the product | Karri Saarinen" },
+        { overviewId: "9f81d73a-3c99-4d46-bbe6-1aedaea45e79", title: "Roles aren't converging (Atlassian CPO)" },
+      ],
     },
     sourceSteps: {
       items: [

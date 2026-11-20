@@ -16,6 +16,12 @@
   }
 }
 
+.settingsLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .arrived > :not(.text) {
   animation: extrasIn 350ms ease-out both;
 }

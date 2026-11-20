@@ -34,3 +34,31 @@ test("a page answered from its overview alone is fitted to the reader too", () =
   assert.ok(prompt.startsWith(without.slice(0, without.lastIndexOf("\n\n# The reader\n"))));
   assert.match(prompt, /never say the recipe page says something because it fits them/);
 });
+
+test("every prompt says what chat can't do, and where the reader changes what The Overview knows about them", () => {
+  for (const kind of ["video", "episode", "article", "recipe"] as const) {
+    const prompt = chatSystemPrompt(kind, "# Overview", PASSAGES);
+
+    assert.match(prompt, /You can't see images or files, open links, search the web, read the rest of their library/);
+    assert.match(prompt, /About you sentence they write in onboarding or in Settings › Personalisation/);
+    assert.ok(prompt.indexOf("\n# The Overview\n") < prompt.indexOf("\n# The overview\n"));
+  }
+});
+
+test("similar overviews are named as the reader's own, except on a recipe, which has no verdict", () => {
+  assert.match(
+    chatSystemPrompt("episode", "# Overview", PASSAGES),
+    /Similar overviews in the reader's library, under the verdict, are other overviews the reader saved/,
+  );
+  assert.match(chatSystemPrompt("article", "# Overview", []), /Similar overviews in the reader's library/);
+  assert.doesNotMatch(chatSystemPrompt("recipe", "# Overview", []), /Similar overviews/);
+  assert.doesNotMatch(chatSystemPrompt("video", "# Overview", PASSAGES, { recipe: true }), /Similar overviews|How to apply is fitted/);
+});
+
+test("only a source with a transcript mentions one among what chat has", () => {
+  assert.match(
+    chatSystemPrompt("video", "# Overview", PASSAGES),
+    /typed messages, this overview, the video's transcript, and their other conversations/,
+  );
+  assert.match(chatSystemPrompt("article", "# Overview", []), /typed messages, this overview, and their other conversations/);
+});

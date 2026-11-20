@@ -72,6 +72,22 @@ test.describe("Chat about an article or a recipe page", () => {
     await reader.chat.verifyAnnounced("Not from the overview of this article: The overview of this article doesn't cover it.");
   });
 
+  test("an answer that names Settings › Personalisation links straight to it", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(makeArticleOverview());
+    backendSimulator.chats.answerWith({
+      text: "Nothing is known about you yet. You can tell The Overview about yourself in Settings › Personalisation.",
+      inSource: false,
+      citations: [],
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.askInNote("What do you know about me?");
+    const settings = await reader.chat.followSettingsLink(0);
+
+    await settings.verifySectionIsShown("personalisation");
+  });
+
   test("a recipe page's answer cites its method and leads to the step; a decline says the recipe doesn't cover it", async ({
     launcher,
     backendSimulator,

@@ -24,7 +24,7 @@ import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 // below is the endpoint's own: its prompt, its citations, its log line
 // (docs/features/chats.md, "Measured through the endpoint").
 //
-//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions> | profile]
+//   node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions> | profile | product]
 //
 // long-only skips the question set and asks each long conversation only its first few questions:
 // enough to see whether a second conversation reads the transcript from the cache.
@@ -40,10 +40,24 @@ import { overviewFromMarkdown } from "./overviewFromMarkdown.js";
 // profile (OV-343) asks every source's questions twice, once with nothing known about the reader
 // and once with READER's profile, plus two questions about the reader, and stops there. Answers
 // are kept side by side for reading; code scores the source rules and the "what do you know" one.
+//
+// product (OV-342) asks every source PRODUCT's questions and stops there: questions a general
+// assistant would answer by offering a photo, a link or the web, one about the rest of the
+// library, which a source with similar overviews should answer as the reader's own, and one about
+// where onboarding's answers go. Code scores each in productRight.
 
 interface Question {
   id: string;
-  kind: "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "offSubject" | "filler" | "overviewPart" | "aboutReader";
+  kind:
+    | "inOverview"
+    | "transcriptOnly"
+    | "twoMoments"
+    | "notInSource"
+    | "offSubject"
+    | "filler"
+    | "overviewPart"
+    | "aboutReader"
+    | "product";
   question: string;
   quotes: string[];
   mentions: string[];
@@ -72,6 +86,7 @@ interface Turn {
   citedRightPart: boolean | null;
   generalKnowledge: boolean | null;
   rightOnGeneral: boolean | null;
+  rightOnProduct: boolean | null;
   partsCited: string[];
   speaksOfOverview: boolean;
   inventedNumbers: string[];
@@ -93,6 +108,34 @@ const ABOUT_READER: Question[] = [
   { id: "r1", kind: "aboutReader", question: "What do you know about me?", quotes: [], mentions: [] },
   { id: "r2", kind: "aboutReader", question: "How could I use this in my own week?", quotes: [], mentions: [] },
 ];
+
+const PRODUCT: Question[] = [
+  { id: "x1", kind: "product", question: "Can you check the label on the packet I've got at home?", quotes: [], mentions: [] },
+  {
+    id: "x2",
+    kind: "product",
+    question: "I found another article that disagrees with this. Can you compare them?",
+    quotes: [],
+    mentions: [],
+  },
+  { id: "x3", kind: "product", question: "Is this connected to anything else in my library?", quotes: [], mentions: [] },
+  { id: "x4", kind: "product", question: "Is what I told you during onboarding used here?", quotes: [], mentions: [] },
+];
+
+const OFFERS_WHAT_CHAT_CANNOT =
+  /\b(send|share|upload|attach|snap|take)\b[^.?!]{0,30}\b(photo|picture|image|screenshot|file|link|url)s?\b|\b(I|I'll|I can|let me)\b[^.?!]{0,20}\b(search|browse|look (it|that|them) up|check (online|the web))\b/i;
+const OWNED = /\byour (own )?(library|saved|overviews)\b|\byou(['’]ve| have)? saved\b/i;
+
+// x1/x2: no offer of what chat can't take. x3: with similar overviews, names one as the reader's own;
+// with none, doesn't claim any. x4: points to Settings › Personalisation.
+function productRight(question: Question, answer: string, similarTitles: readonly string[]): boolean {
+  if (question.id === "x1" || question.id === "x2") return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
+  if (question.id === "x3") {
+    const named = similarTitles.some((title) => normalised(answer).includes(normalised(title).split(" ").slice(0, 4).join(" ")));
+    return similarTitles.length === 0 ? !named : named && OWNED.test(answer);
+  }
+  return answer.includes("Settings") && answer.includes("Personalisation");
+}
 
 const TOLERANCE_MS = 10_000;
 const normalised = (text: string) =>
@@ -180,6 +223,7 @@ async function main() {
   const [dataDirectory, outFile, mode, limit] = process.argv.slice(2);
   const longOnly = mode === "long-only";
   const profile = mode === "profile";
+  const product = mode === "product";
   const apiKey = process.env.OPENAI_API_KEY;
   if (dataDirectory === undefined || outFile === undefined || apiKey === undefined) {
     throw new Error("usage: chatHarnessCheck <OV-267 chat data dir> <out.json>, with OPENAI_API_KEY set");
@@ -275,6 +319,7 @@ async function main() {
           citedRightPart: null,
           generalKnowledge: null,
           rightOnGeneral: null,
+          rightOnProduct: null,
           partsCited: [],
           speaksOfOverview: false,
           inventedNumbers: [],
@@ -306,7 +351,7 @@ async function main() {
         failed: false,
         // A web page has no transcript: a decline is right when it cites nothing at all.
         rightOnSource:
-          question.kind === "filler" || question.kind === "overviewPart" || question.kind === "aboutReader"
+          question.kind === "filler" || question.kind === "overviewPart" || question.kind === "aboutReader" || question.kind === "product"
             ? null
             : source.page !== null
               ? answerable === parts.length > 0
@@ -336,6 +381,10 @@ async function main() {
         // OV-329: a fair question the source doesn't answer gets general knowledge; one off its subject is declined.
         rightOnGeneral:
           question.kind === "notInSource" ? generalKnowledge === true : question.kind === "offSubject" ? generalKnowledge === false : null,
+        rightOnProduct:
+          question.kind === "product"
+            ? productRight(question, answer.text, source.overview.verdict?.similarTo.map(({ title }) => title) ?? [])
+            : null,
         partsCited: parts.map(({ part, index }) => `${part}${index}`),
         // The decline the overview-only prompt asks for names the overview; that isn't a third party.
         speaksOfOverview: /\bthe overview\b(?! of this article doesn[’']t cover)|\b(I|we) (suggest|recommend|think)\b/i.test(answer.text),
@@ -365,6 +414,20 @@ async function main() {
       process.stdout.write(`profile: ${source.name} done\n`);
     }
     await writeFile(outFile, JSON.stringify({ ranOn: new Date().toISOString().slice(0, 10), reader: READER, turns }, null, 2));
+    await testApp.close();
+    return;
+  }
+
+  if (product) {
+    for (const repeat of [1, 2]) {
+      for (const source of sources) {
+        const asked = { ...source, questions: PRODUCT };
+        const { account, overviewId } = await withSource(asked);
+        await converse(asked, account, overviewId, `product-${repeat}`);
+        process.stdout.write(`product ${repeat}: ${source.name} done\n`);
+      }
+    }
+    await writeFile(outFile, JSON.stringify({ ranOn: new Date().toISOString().slice(0, 10), turns }, null, 2));
     await testApp.close();
     return;
   }

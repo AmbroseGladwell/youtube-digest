@@ -2,6 +2,7 @@ import {
   ArticlePlace,
   DUBIOUS_BASIS_LABEL,
   NOVELTY_LABEL,
+  OverviewId,
   SELLING_LABEL,
   WATCH_ANYWAY_LABEL,
   type DubiousBasis,
@@ -127,7 +128,12 @@ export function overviewFromMarkdown(markdown: string): Partial<Overview> {
               startMs: at === null ? null : clockMs(at[1]!),
             };
           });
-    overview.verdict = { novelty, standsOut: null, dubious, dubiousClaims, reasoning, similarTo: [] };
+    const similarLine = /^Similar (?:to|overviews in the reader's library): (.*)$/m.exec(verdict)?.[1] ?? "";
+    const similarTo = [...similarLine.matchAll(/(.+?) \(([0-9a-f-]{36})\)(?:; |$)/g)].map(([, title, overviewId]) => ({
+      title: title!,
+      overviewId: OverviewId.parse(overviewId),
+    }));
+    overview.verdict = { novelty, standsOut: null, dubious, dubiousClaims, reasoning, similarTo };
   }
 
   const steps = found.get("The steps it gives");
