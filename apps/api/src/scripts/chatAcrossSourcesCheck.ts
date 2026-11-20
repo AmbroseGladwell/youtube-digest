@@ -23,9 +23,10 @@ import {
 } from "@overview/domain";
 import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage } from "@overview/generation";
 import { AccountId } from "../auth/AccountId.js";
-import { ChatReply } from "../chats/ChatReply.js";
+import { CHAT_REPLY_SCHEMA, ChatReply } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
 import { chatSystemPrompt } from "../chats/chatPrompt.js";
+import { libraryChatMaterial, PICK_SHAPE, pickedBlock, pickPrompt, SECTIONED_SHAPE } from "../chats/libraryChatPrompt.js";
 import { otherSourcesInPrompt } from "../chats/otherSourcesInPrompt.js";
 import { streamChatCompletion, type PromptMessage } from "../chats/streamChatCompletion.js";
 import { transcriptPassages, type Passage } from "../chats/transcriptPassages.js";
@@ -45,7 +46,7 @@ import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
 //
 //   node dist/scripts/chatAcrossSourcesCheck.js retrieval <data dir> <out.json>
 //   node dist/scripts/chatAcrossSourcesCheck.js answer <data dir> <retrieval.json> <out.json> --arms a,b --runs 2 --budget 3 [--dry-run]
-//   node dist/scripts/chatAcrossSourcesCheck.js twopass <data dir> <out.json> --arms structured-map,two-pass --runs 1 --budget 1 [--dry-run]
+//   node dist/scripts/chatAcrossSourcesCheck.js twopass <data dir> <out.json> --arms structured-map,two-pass,shipped --runs 1 --budget 1 [--dry-run]
 //   node dist/scripts/chatAcrossSourcesCheck.js project <data dir> <out.json> --arms a,b --runs 2 --budget 1 [--dry-run]
 //
 // retrieval spends only embeddings: the questions, and every transcript's minute passages for the
@@ -1352,9 +1353,15 @@ async function projectChat(
             { apiKey: apiKey!, http: fetch, sleep: (ms) => new Promise((r) => setTimeout(r, ms)), retried: () => {} },
             messages,
             `ov307-${armName}-${run}-${question.id}`,
+            // MAX_TOKENS raises the cap, to tell a reply cut off at it from one the model left empty.
+            process.env["MAX_TOKENS"] === undefined
+              ? undefined
+              : { name: "chat_reply", schema: CHAT_REPLY_SCHEMA, maxTokens: Number(process.env["MAX_TOKENS"]) },
           );
           let raw = "";
           for await (const piece of stream.pieces) raw += piece;
+          if (stream.finishReason() === "length")
+            throw new Error(`cut off at the cap, ${stream.usage()?.outputTokens ?? "?"} output tokens`);
           const reply = ChatReply.parse(JSON.parse(raw));
           const usage = stream.usage();
           const { cited, invalid } = citedOf(reply);
@@ -1605,6 +1612,22 @@ ${blocks.join("\n\n")}`;
   return { text, labels, order };
 }
 
+// The shipped material (OV-353): whole while it fits, else the map, with the production prompt.
+function shippedSystem(
+  library: Library,
+  scope: string,
+): { text: string; labels: Map<string, string>; order: string[]; mode: "whole" | "map" } {
+  const project = scope === "library" ? null : [...library.projects.values()].find((entry) => entry.project.id.startsWith(scope))!;
+  const ids = project === null ? [...library.overviews.keys()] : project.members;
+  const inOrder = ids.map((id) => library.overviews.get(id)!.overview);
+  // ORDER=export keeps the export's order, to tell the order apart from the prompt.
+  const overviews =
+    process.env["ORDER"] === "export" ? inOrder : [...inOrder].sort((left, right) => left.savedAt.localeCompare(right.savedAt));
+  const material = libraryChatMaterial(project === null ? { kind: "library" } : { kind: "project", project: project.project }, overviews);
+  const labels = new Map([...material.labels].map(([label, overview]) => [label, overview.id as string]));
+  return { text: material.system, labels, order: [...labels.values()], mode: material.mode };
+}
+
 async function twoPass(
   dataDir: string,
   outPath: string,
@@ -1629,12 +1652,13 @@ async function twoPass(
   let ceiling = 0;
 
   for (const armName of options.arms) {
-    if (armName !== "structured-map" && armName !== "two-pass") throw new Error(`no arm ${armName}`);
+    if (armName !== "structured-map" && armName !== "two-pass" && armName !== "shipped") throw new Error(`no arm ${armName}`);
     for (let run = 1; run <= options.runs; run += 1) {
       for (const question of questions) {
         if (options.only !== null && !new RegExp(options.only).test(question.id)) continue;
         if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
-        const system = twoPassSystem(library, question.scope);
+        const shipped = armName === "shipped" ? shippedSystem(library, question.scope) : null;
+        const system = shipped ?? twoPassSystem(library, question.scope);
         if (options.dryRun) {
           const tokens = system.text.length / 4;
           ceiling +=
@@ -1658,14 +1682,26 @@ async function twoPass(
         let turn: TwoPassTurn;
         try {
           const messages: PromptMessage[] = [{ role: "system", content: system.text }];
-          if (armName === "two-pass") {
+          if (shipped?.mode === "whole") {
+            for (const [label, id] of system.labels) {
+              const entry = library.overviews.get(id)!;
+              for (const { part, index } of overviewParts(entry.overview)) partIds.add(`${label}.${overviewPartId(part, index)}`);
+              texts.set(label, `${texts.get(label)}\n${overviewMarkdown(entry.overview)}`);
+            }
+          }
+          if (armName === "two-pass" || shipped?.mode === "map") {
             const pick = await completeJson(
               apiKey!,
               [
                 ...messages,
-                { role: "user", content: `Choose the overviews whose full notes you need to answer this question: ${question.question}` },
+                shipped === null
+                  ? {
+                      role: "user",
+                      content: `Choose the overviews whose full notes you need to answer this question: ${question.question}`,
+                    }
+                  : pickPrompt(question.question),
               ],
-              PICK_SCHEMA,
+              shipped === null ? PICK_SCHEMA : PICK_SHAPE.schema,
               PICK_TOKENS,
               key,
             );
@@ -1683,10 +1719,20 @@ async function twoPass(
               texts.set(label, `${texts.get(label)}\n${markdown}`);
               return `## [${label}]\n\n${markdown}`;
             });
-            messages.push({ role: "user", content: `The full notes of the overviews you chose:\n\n${whole.join("\n\n")}` });
+            messages.push(
+              shipped === null
+                ? { role: "user", content: `The full notes of the overviews you chose:\n\n${whole.join("\n\n")}` }
+                : pickedBlock(picked.map((label) => [label, library.overviews.get(system.labels.get(label)!)!.overview] as const)),
+            );
           }
           messages.push({ role: "user", content: question.question });
-          const reply = await completeJson(apiKey!, messages, STRUCTURED_SCHEMA, STRUCTURED_ANSWER_TOKENS, key);
+          const reply = await completeJson(
+            apiKey!,
+            messages,
+            shipped === null ? STRUCTURED_SCHEMA : SECTIONED_SHAPE.schema,
+            shipped === null ? STRUCTURED_ANSWER_TOKENS : SECTIONED_SHAPE.maxTokens,
+            key,
+          );
           usage = addUsage(usage, reply.usage);
           const answer = reply.json as StructuredAnswer;
           const points = answer.sections.flatMap((section) => section.points);

@@ -4,6 +4,7 @@ import {
   overviewParts,
   type ChatCitation,
   type OtherOverviewCitation,
+  type Overview,
   type OverviewPartItem,
 } from "@overview/domain";
 import type { ChatReply } from "./ChatReply.js";
@@ -19,18 +20,27 @@ export interface CitedAnswer {
   otherOverviewCitations: number;
 }
 
-const SOURCE_ID = /^(S[1-9]\d*)(?:\.(.+))?$/;
+// An overview an answer may cite by its label: another overview in an overview's chat (S2), or one
+// of a library's or project's (O3). One the model saw only in brief, without its items, can be
+// cited only as a whole.
+export interface CitableOverview {
+  overviewId: OtherOverviewCitation["overviewId"];
+  title: string;
+  overview: Overview;
+  brief?: boolean;
+}
 
-// Another overview's id is its label, S2, or an item of it, S2.kp1. An overview listed in brief
-// had no items shown, so only the overview itself is cited. An overview cited by an item isn't
-// cited again on its own.
-function otherOverviewCitationsOf(ids: readonly string[], sources: ReadonlyMap<string, LabelledSource>): OtherOverviewCitation[] {
+const LABELLED_ID = /^([SO][1-9]\d*)(?:\.(.+))?$/;
+
+// Its label, or an item of it (S2.kp1, O3.step2). Unknown labels and items are dropped, and an
+// overview cited by an item isn't cited again on its own.
+export function overviewCitationsOf(ids: readonly string[], labels: ReadonlyMap<string, CitableOverview>): OtherOverviewCitation[] {
   const cited: OtherOverviewCitation[] = [];
   for (const id of new Set(ids)) {
-    const [, label, item] = SOURCE_ID.exec(id) ?? [];
-    const entry = label === undefined ? undefined : sources.get(label);
+    const [, label, item] = LABELLED_ID.exec(id) ?? [];
+    const entry = label === undefined ? undefined : labels.get(label);
     if (entry === undefined) continue;
-    const { overviewId, title, brief } = entry.source;
+    const { overviewId, title, brief } = entry;
     const found =
       item === undefined || brief === true
         ? undefined
@@ -49,6 +59,14 @@ function otherOverviewCitationsOf(ids: readonly string[], sources: ReadonlyMap<s
       (!byItem.has(citation.overviewId) && cited.findIndex((each) => each.overviewId === citation.overviewId) === index),
   );
 }
+
+const citable = (sources: ReadonlyMap<string, LabelledSource>): Map<string, CitableOverview> =>
+  new Map(
+    [...sources].map(([label, { source, overview }]) => [
+      label,
+      { overviewId: source.overviewId, title: source.title, overview, ...(source.brief === true ? { brief: true } : {}) },
+    ]),
+  );
 
 // The model names passages, the overview's items, other chats' messages and other overviews by
 // id; code turns them into times, places in the overview, message places and overviews, and drops
@@ -80,7 +98,10 @@ export function citationsOf(
     const citation = chatLabels.get(label);
     return citation === undefined ? [] : [citation];
   });
-  const others = otherOverviewCitationsOf(reply.overviewParts, sources);
+  const others = overviewCitationsOf(
+    reply.overviewParts.filter((id) => id.startsWith("S")),
+    citable(sources),
+  );
   return {
     citations: [...cited, ...overview, ...chats, ...others],
     inSource: cited.length > 0,

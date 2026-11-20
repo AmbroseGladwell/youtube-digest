@@ -75,3 +75,12 @@ test("drops another overview's label and its items' ids (OV-355)", () => {
   ];
   for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
 });
+
+test("drops a library or project overview's label and its items' ids (OV-353)", () => {
+  const seen: Array<[string, string]> = [
+    ["Charge from day one (O3.kp2).", "Charge from day one."],
+    ["Most start small [O1, O4].", "Most start small."],
+  ];
+  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer, { library: true }), shown);
+  assert.equal(withoutCitationMarks("Breathe in oxygen (O2) slowly."), "Breathe in oxygen (O2) slowly.");
+});

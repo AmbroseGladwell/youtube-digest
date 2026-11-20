@@ -1,6 +1,6 @@
 import type { ChatQuestionInput, ChatStreamEvent, ChatUsage } from "@overview/domain";
 
-export type ChatOutcome = Exclude<ChatStreamEvent, { type: "text" | "sources" }>;
+export type ChatOutcome = Extract<ChatStreamEvent, { type: "answered" | "failed" }>;
 
 // Asking about an overview on our server: the answer streams to `onText` as it is written,
 // then settles as stored or failed. A refusal before it starts (a wait, a full conversation,

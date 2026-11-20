@@ -812,3 +812,14 @@ test("an empty reply is logged as one", async (t) => {
   assert.equal(eventsOf(response.body).at(-1)?.type, "failed");
   assert.equal(lines.find((line) => line.logCode === "api.chat.failed")?.["reason"], "EmptyAnswerError");
 });
+
+test("a reply cut off at its token cap fails as one, gives the question back, and is logged as cut off (OV-353)", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [{ reply: '{"answer":"', finishReason: "length" }], { logger });
+
+  const response = await setup.ask(randomUUID(), "How would my desserts score?");
+
+  assert.equal(eventsOf(response.body).at(-1)?.type, "failed");
+  assert.equal(await usedThisMonth(setup), 0);
+  assert.equal(lines.find((line) => line.logCode === "api.chat.failed")?.["reason"], "AnswerCutOffError");
+});

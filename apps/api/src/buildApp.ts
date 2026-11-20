@@ -84,6 +84,7 @@ import { OverviewUsageRepository } from "./usage/OverviewUsageRepository.js";
 import { TrialsRepository } from "./usage/TrialsRepository.js";
 import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
 import { ChatAnswerer } from "./chats/ChatAnswerer.js";
+import { LibraryChatAnswerer } from "./chats/LibraryChatAnswerer.js";
 import { ChatUsageRepository } from "./usage/ChatUsageRepository.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
@@ -329,6 +330,19 @@ export async function buildApp({
       const chatUsage = new ChatUsageRepository(sql);
       chatRoutes(api, {
         records,
+        libraryAnswerer:
+          ourKey === null
+            ? null
+            : new LibraryChatAnswerer({
+                apiKey: ourKey.apiKey,
+                http: ourKey.http,
+                dailyMessages: ourKey.dailyChatMessages,
+                records,
+                usage: chatUsage,
+                costs,
+                clock,
+                ...(ourKey.sleep === undefined ? {} : { sleep: ourKey.sleep }),
+              }),
         answerer:
           ourKey === null
             ? null

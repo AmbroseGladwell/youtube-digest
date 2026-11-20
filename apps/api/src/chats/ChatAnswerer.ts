@@ -27,7 +27,7 @@ import {
   type ChatStreamEvent,
   type Plan,
 } from "@overview/domain";
-import { costInDollars, priceOf, promptTokensOf, type TokenUsage } from "@overview/generation";
+import type { TokenUsage } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
 import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import type { MeaningSearch } from "../meaning/MeaningSearch.js";
@@ -35,11 +35,12 @@ import { ApiError } from "../http/ApiError.js";
 import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
-import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
-import { secondsToNextUsageMonth, nextUsageMonth } from "../usage/usageMonth.js";
 import { answerSoFar } from "./answerSoFar.js";
+import { assertWhole, CHAT_FAILED as FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
+import { recordChatCost, type ChatCost } from "./recordChatCost.js";
+import { reserveChatMessage } from "./reserveChatMessage.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatReply } from "./ChatReply.js";
@@ -49,7 +50,7 @@ import { chooseOtherSources } from "./chooseOtherSources.js";
 import { citationsOf } from "./citationsOf.js";
 import { otherChatsInPrompt } from "./otherChatsInPrompt.js";
 import { otherSourcesInPrompt, type OtherSourcesInPrompt, type SourcesTurn } from "./otherSourcesInPrompt.js";
-import { ChatProviderError, streamChatCompletion, type ChatCompletionStream, type PromptMessage } from "./streamChatCompletion.js";
+import { streamChatCompletion, type ChatCompletionStream, type PromptMessage } from "./streamChatCompletion.js";
 import { transcriptPassages } from "./transcriptPassages.js";
 
 export interface ChatAnswererOptions {
@@ -79,10 +80,6 @@ interface OtherSourcesTurn {
 }
 
 const NO_OTHER_SOURCES: OtherSourcesTurn = { added: [], setAside: [], searched: false, inPrompt: { blocks: [], labels: new Map() } };
-
-class EmptyAnswerError extends Error {}
-
-const FAILED = "Something went wrong answering that. Try again in a while.";
 
 const readChat = (record: StoredRecord): Chat | null => {
   const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Chat, CHAT_MIGRATIONS);
@@ -124,27 +121,7 @@ export class ChatAnswerer {
       .flatMap((record) => readChat(record) ?? []);
 
     const askedAt = clock();
-    const reservation = await usage.reserve(askedAt, accountId, plan, dailyMessages);
-    if (!reservation.reserved) {
-      if (reservation.quota === "our-key-daily") {
-        log.warn(apiLogLines.chat.dailyCapSpent({ limit: dailyMessages }));
-        throw new ApiError("too_many_requests", "We've answered as many questions as we can today. Try again tomorrow.", {
-          quota: "chat-our-key-daily",
-          retryAfterSeconds: secondsToNextUsageDay(askedAt),
-        });
-      }
-      log.info(apiLogLines.chat.allowanceSpent({ plan, quota: reservation.quota, used: reservation.used, limit: reservation.limit }));
-      throw reservation.quota === "month"
-        ? new ApiError("too_many_requests", "You've asked this month's questions on us.", {
-            quota: "chat-month",
-            resetsOn: nextUsageMonth(askedAt),
-            retryAfterSeconds: secondsToNextUsageMonth(askedAt),
-          })
-        : new ApiError("too_many_requests", "You've asked as many questions as you can today.", {
-            quota: "chat-day",
-            retryAfterSeconds: secondsToNextUsageDay(askedAt),
-          });
-    }
+    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages }, log);
 
     const settings = await readSettings(records, accountId);
     const reader = settings === null ? null : composeReaderContext(settings.aboutYou, settings.learned);
@@ -236,6 +213,7 @@ export class ChatAnswerer {
             sent = text;
           }
         }
+        assertWhole(stream);
         const reply = ChatReply.parse(JSON.parse(raw));
         const text = withoutCitationMarks(reply.answer).slice(0, MAX_CHAT_MESSAGE_LENGTH);
         if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
@@ -385,32 +363,7 @@ export class ChatAnswerer {
     return { kind, passages };
   }
 
-  async #recordCost(
-    accountId: AccountId,
-    usage: TokenUsage | null,
-    detail: string,
-    log: FastifyBaseLogger,
-  ): Promise<{ inputTokens: number; cachedShare: number | null; outputTokens: number; costDollars: number | null }> {
-    if (usage === null) return { inputTokens: 0, cachedShare: null, outputTokens: 0, costDollars: null };
-    const price = priceOf(chatModel);
-    const inputTokens = promptTokensOf(usage);
-    const costDollars = price === undefined ? null : costInDollars(price, usage);
-    if (costDollars !== null) {
-      await this.#options.costs.recordOrLog(
-        this.#options.clock(),
-        { accountId },
-        { area: "chat", detail, quantity: inputTokens + usage.outputTokens, dollars: costDollars },
-        log,
-      );
-    }
-    return {
-      inputTokens,
-      cachedShare: inputTokens === 0 ? null : Math.round((usage.cachedInputTokens / inputTokens) * 100) / 100,
-      outputTokens: usage.outputTokens,
-      costDollars,
-    };
+  #recordCost(accountId: AccountId, usage: TokenUsage | null, detail: string, log: FastifyBaseLogger): Promise<ChatCost> {
+    return recordChatCost(this.#options, accountId, usage, detail, log);
   }
 }
-
-const reasonOf = (error: unknown): string => (error instanceof Error ? error.constructor.name : "unknown");
-const statusOf = (error: unknown): number | null => (error instanceof ChatProviderError ? error.status : null);

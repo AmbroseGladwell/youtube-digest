@@ -109,6 +109,55 @@ sent as overviews only (no transcripts; OV-352 adds keyword minutes):
   no pins, no `sources` event.
 - It counts as one message of the allowance, as any question does.
 
+## Library and project chat
+
+OV-353, step 2 of OV-307's recommendation (`docs/architecture/in-app-chat.md`, "Chat across
+sources"). A chat over the whole library has no owner, and a project page's chat is owned by the
+project. Both are answered by `LibraryChatAnswerer`, from the overviews in scope: the library's
+live overviews, or the project's members that are still in it (`isInProject`), never a deleted
+or taken-out one.
+
+- **Endpoints:** `POST /api/chats/library/messages` and `POST /api/chats/projects/:projectId/messages`,
+  with `{ conversationId, text }`. The refusals are an overview chat's, and both passes together
+  are one message of the allowance (`reserveChatMessage`). A project that isn't held is 404, and
+  a scope with no overviews yet is 422 `chat: "no-source"`.
+- **Whole or map** (`libraryChatPrompt.ts`, ported from the harness and tested by its `shipped` arm):
+  - Overviews are labelled O1, O2… oldest saved first, so a new save lands at the end of the
+    cached prefix.
+  - While their whole notes fit 80,000 characters (about 20k tokens, counted by code), they go
+    whole in the system message and one pass answers. That covers small libraries and every
+    recipe project measured.
+  - Past that, the system message is the compact map: each overview's title, big picture and core
+    claim, plus a recipe's first 12 ingredient lines, since a recipe has no claim.
+  - A project's prompt carries its name and purpose.
+- **Two passes on the map:**
+  - **Pass one** asks the model to choose up to 5 overviews (`PICK_SHAPE`, a 2,000-token cap, since
+    Luna's reasoning counts). Code keeps known labels only and drops any already read in this
+    conversation.
+  - **Pass two** sends the chosen ones whole after the history as one user message, then the
+    question (`SECTIONED_SHAPE`, a 4,000-token cap). Each question's picks are stored on its reader
+    message (`picked`) and rebuilt in place, so the prompt only grows at its end.
+- **The answer** is `{ intro, sections[{ heading, points[{ text, sources }] }], takeaway }`:
+  - Code turns each point's `O3` or `O3.kp2` into `{ overviewId, title, item }` (`overviewCitationsOf`)
+    and drops unknown ids. An overview seen only on the map is cited as a whole.
+  - Ids written into the text are stripped (`withoutCitationMarks` with `library`, so an
+    overview chat's "(O2)" stays oxygen).
+  - It is stored on the answer as `sections`; `text` is its flattened reading and `citations` the
+    union.
+  - `stats` (overviews in scope, and projects for the library) is counted by code. The prompt
+    still says never to count.
+- **The stream:** `picking`, then `picked { overviews: [{ overviewId, title }] }` on the map, then
+  the intro as `text`, each `section` as soon as it is whole (`sectionsSoFar`), and `answered`, or
+  `failed` for a failure in either pass.
+- **Cut off at the cap:** Luna's reasoning counts against every cap, so a reply can run out before
+  a word is written. OV-307's one empty "@ project" reply was that: "how would my Dessert Recipes
+  score against these reflexes?" was cut off at 1,000 tokens 3 times in 3, and at 2,000 once in 3,
+  with 1,254 and 1,452 used when it got through. So an overview chat's cap is now 4,000
+  (`MAX_ANSWER_TOKENS`). A reply that hits a cap fails as `AnswerCutOffError`, read from the
+  provider's finish reason, rather than as unreadable JSON.
+- **Not yet:** these chats don't read each other, and don't carry the reader's profile. The UI is
+  OV-354, and keyword minutes from transcripts are OV-352.
+
 ## Fitted to the reader
 
 Each question carries what is known about the reader, as overview generation reads it
