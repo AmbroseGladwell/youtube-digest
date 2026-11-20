@@ -582,7 +582,7 @@ test("a chat the server writes reaches both devices; deleted on one, it goes fro
       records,
       account.accountId,
       {
-        overviewId: overview.id,
+        owner: { kind: "overview", id: overview.id },
         conversationId: conversation,
         messages: [
           { from: "reader", text: "How much creatine?", at },
@@ -595,7 +595,7 @@ test("a chat the server writes reaches both devices; deleted on one, it goes fro
 
   await laptop.sync();
   await phone.sync();
-  assert.equal((await phone.chats.listChats(overview.id)).length, 2);
+  assert.equal((await phone.chats.listChats({ kind: "overview", id: overview.id })).length, 2);
   assert.deepEqual(
     (await phone.chats.getChat(chatRecordId(overview.id, kept)))?.messages.map((message) => message.text),
     ["How much creatine?", "Three to five grams."],
@@ -605,15 +605,63 @@ test("a chat the server writes reaches both devices; deleted on one, it goes fro
   await laptop.sync();
   await phone.sync();
   assert.deepEqual(
-    (await phone.chats.listChats(overview.id)).map(({ id }) => id),
+    (await phone.chats.listChats({ kind: "overview", id: overview.id })).map(({ id }) => id),
     [chatRecordId(overview.id, kept)],
   );
 
   await phone.overviews.deleteOverview(overview.id);
   await phone.sync();
   await laptop.sync();
-  assert.deepEqual(await laptop.chats.listChats(overview.id), []);
+  assert.deepEqual(await laptop.chats.listChats({ kind: "overview", id: overview.id }), []);
   assert.equal((await account.change("chat", chatRecordId(overview.id, kept))).deleted, true);
   assert.equal((await laptop.sync()).pending, 0);
+  await testApp.close();
+});
+
+test("a project's chat and a library chat reach both devices; deleted on one, a library chat goes from the other, and the project's go with it", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const laptop = await makeDevice(testApp, account);
+  const phone = await makeDevice(testApp, account);
+  const project = makeProject();
+  await laptop.projects.createProject(project);
+  await laptop.sync();
+  const records = new RecordsRepository(testApp.sql, () => testApp.clock.now);
+  const at = testApp.clock.now.toISOString();
+  const exchange = [
+    { from: "reader" as const, text: "What do these have in common?", at },
+    { from: "answer" as const, text: "Most start small.", at, citations: [], inSource: false },
+  ];
+  const owners = [{ kind: "project" as const, id: project.id }, { kind: "library" as const }, { kind: "library" as const }];
+  const ids: string[] = [];
+  for (const owner of owners) {
+    const conversationId = randomUUID();
+    await appendChatMessages(records, account.accountId, { owner, conversationId, messages: exchange }, testApp.clock.now);
+    ids.push(chatRecordId(owner, conversationId));
+  }
+  const [projectChat, libraryKept, libraryDeleted] = ids as [string, string, string];
+
+  await phone.sync();
+  assert.deepEqual(
+    (await phone.chats.listChats({ kind: "project", id: project.id })).map(({ id }) => id),
+    [projectChat],
+  );
+  assert.deepEqual((await phone.chats.listChats({ kind: "library" })).map(({ id }) => id).sort(), [libraryKept, libraryDeleted].sort());
+
+  await phone.chats.deleteChat(libraryDeleted);
+  await phone.sync();
+  await laptop.sync();
+  assert.deepEqual(
+    (await laptop.chats.listChats({ kind: "library" })).map(({ id }) => id),
+    [libraryKept],
+  );
+
+  await laptop.projects.deleteProject(project.id);
+  await laptop.sync();
+  await phone.sync();
+  assert.deepEqual(await phone.chats.listChats({ kind: "project", id: project.id }), []);
+  assert.equal((await account.change("chat", projectChat)).deleted, true);
+  assert.equal((await account.change("chat", libraryKept)).deleted, false);
+  assert.equal((await phone.sync()).pending, 0);
   await testApp.close();
 });

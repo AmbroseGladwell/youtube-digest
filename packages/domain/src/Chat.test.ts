@@ -1,6 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Chat, chatQuestionCount, chatRecordId, MAX_CHAT_QUESTIONS, type ChatMessage } from "./Chat.js";
+import {
+  Chat,
+  chatConversationId,
+  chatOwner,
+  chatOwnerOfId,
+  chatQuestionCount,
+  chatRecordId,
+  MAX_CHAT_QUESTIONS,
+  type ChatMessage,
+} from "./Chat.js";
 
 const OVERVIEW = "0b8f5f5a-3c2e-4f51-8a43-6a1d7c2e9f10";
 const AT = "2026-11-15T10:00:00.000Z";
@@ -55,4 +64,45 @@ test("a question keeps the other overviews it added, each with a fixed label, an
   assert.ok(Chat.safeParse(chat([{ ...question, sources: [{ ...added, how: "pinned", brief: true }] }, answer])).success);
   assert.ok(!Chat.safeParse(chat([{ ...question, sources: [{ ...added, label: "S0" }] }, answer])).success);
   assert.ok(!Chat.safeParse(chat([{ ...question, sources: [{ ...added, how: "guessed" }] }, answer])).success);
+});
+
+const PROJECT = "8d2e4f6a-1b3c-4d5e-9f7a-2b4c6d8e0f12";
+
+test("a chat is owned by an overview, a project, or no one for the library, never two (OV-353)", () => {
+  const { overviewId: _overviewId, ...unowned } = chat([question, answer]);
+  assert.ok(Chat.safeParse(chat([question, answer])).success);
+  assert.ok(Chat.safeParse({ ...unowned, projectId: PROJECT }).success);
+  assert.ok(Chat.safeParse(unowned).success);
+  assert.ok(!Chat.safeParse({ ...chat([question, answer]), projectId: PROJECT }).success);
+  assert.deepEqual(chatOwner(Chat.parse(unowned)), { kind: "library" });
+  assert.deepEqual(chatOwner(Chat.parse({ ...unowned, projectId: PROJECT })), { kind: "project", id: PROJECT });
+});
+
+test("an owner's chats share a prefix no other owner's can, and an id says whose chat it is", () => {
+  assert.equal(chatRecordId({ kind: "overview", id: OVERVIEW }, "c1"), `${OVERVIEW}:c1`);
+  assert.equal(chatRecordId({ kind: "project", id: PROJECT }, "c1"), `project:${PROJECT}:c1`);
+  assert.equal(chatRecordId({ kind: "library" }, "c1"), "library:c1");
+  assert.deepEqual(chatOwnerOfId(`${OVERVIEW}:c1`), { kind: "overview", id: OVERVIEW });
+  assert.deepEqual(chatOwnerOfId(`project:${PROJECT}:c1`), { kind: "project", id: PROJECT });
+  assert.deepEqual(chatOwnerOfId("library:c1"), { kind: "library" });
+  assert.equal(chatOwnerOfId("nothing"), null);
+  assert.equal(chatConversationId(`project:${PROJECT}:c1`), "c1");
+});
+
+test("a library or project answer carries its sections, each point citing overviews, and the stats code counted", () => {
+  const cited = { overviewId: OVERVIEW, title: "Start small", item: null };
+  const sectioned = {
+    ...answer,
+    citations: [cited],
+    inSource: false,
+    sections: {
+      intro: "Most start small.",
+      sections: [{ heading: "Scope", points: [{ text: "One habit.", citations: [cited] }] }],
+      takeaway: "Pick one.",
+    },
+    stats: { overviews: 208, projects: 4 },
+  };
+  assert.ok(Chat.safeParse(chat([{ ...question, picked: [OVERVIEW] }, sectioned])).success);
+  assert.ok(!Chat.safeParse(chat([question, { ...sectioned, stats: { overviews: -1 } }])).success);
+  assert.ok(!Chat.safeParse(chat([{ ...question, picked: Array.from({ length: 6 }, () => OVERVIEW) }, answer])).success);
 });

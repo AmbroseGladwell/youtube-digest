@@ -152,7 +152,7 @@ export function overviewRoutes(
     ]);
     // On every delete, the retry of one already done included, so a failure here heals.
     await tombstoneProjectMembers(records, accountId, { overviewId: id });
-    await tombstoneChats(records, accountId, id);
+    await tombstoneChats(records, accountId, { kind: "overview", id });
     const forgotten = await transcripts.forgetUnnoted(accountId);
     if (forgotten > 0) {
       request.log.info(apiLogLines.transcripts.forgotten({ count: forgotten }));

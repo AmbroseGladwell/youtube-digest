@@ -8,7 +8,7 @@ import { chatKeys } from "../chatKeys.js";
 export const chatsQueryOptions = (chatStore: ChatStore, overviewId: OverviewId) =>
   queryOptions({
     queryKey: chatKeys.list(overviewId),
-    queryFn: () => chatStore.listChats(overviewId),
+    queryFn: () => chatStore.listChats({ kind: "overview", id: overviewId }),
   });
 
 export const useChatsQuery = (overviewId: OverviewId) => {

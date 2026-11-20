@@ -5,6 +5,7 @@ import {
   DATABASE_VERSION,
   FOLLOWED_PLAYLISTS_STORE,
   CHATS_BY_OVERVIEW_INDEX,
+  CHATS_BY_PROJECT_INDEX,
   CHATS_STORE,
   MEMBERS_BY_OVERVIEW_INDEX,
   MEMBERS_BY_PROJECT_INDEX,
@@ -87,6 +88,9 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
       if (!db.objectStoreNames.contains(CHATS_STORE)) {
         db.createObjectStore(CHATS_STORE, { keyPath: "id" }).createIndex(CHATS_BY_OVERVIEW_INDEX, "overviewId");
       }
+      // A project's chats (OV-353), indexed on a store that may already hold an overview's.
+      const chats = request.transaction!.objectStore(CHATS_STORE);
+      if (!chats.indexNames.contains(CHATS_BY_PROJECT_INDEX)) chats.createIndex(CHATS_BY_PROJECT_INDEX, "projectId");
     };
 
     request.onblocked = () => reject(new LocalDatabaseBlockedError(name));

@@ -1,4 +1,11 @@
-import { answeredFromOtherOverviews, answeredFromOverview, type Chat, type ChatCitation, type OtherOverviewCitation } from "./Chat.js";
+import {
+  answeredFromOtherOverviews,
+  answeredFromOverview,
+  type Chat,
+  type ChatAnswerSections,
+  type ChatCitation,
+  type OtherOverviewCitation,
+} from "./Chat.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import type { Overview } from "./Overview.js";
 import { answeredFromOverviewAlone, chatSourceKind, type ChatSourceKind } from "./chatSourceKind.js";
@@ -73,10 +80,44 @@ const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" 
     : `The ${kind} doesn't cover this; anything the answer adds is general knowledge, not from the ${kind}.`;
 };
 
+// What a library or project chat was over, for its heading (OV-353).
+export type ChatScopeLabel = { kind: "project"; name: string; id: string } | { kind: "library" };
+
+const titlesOf = (citations: readonly OtherOverviewCitation[]): string =>
+  [...new Set(citations.map((citation) => `"${citation.title}"`))].join(", ");
+
+// A sectioned answer as headings and points, each point naming the overviews it rests on.
+function sectionsText(sections: ChatAnswerSections): string {
+  const body = sections.sections.flatMap((section, index) => [
+    `   ${index + 1}. ${section.heading}`,
+    ...section.points.map((point) => `      - ${point.text}${point.citations.length === 0 ? "" : ` (from ${titlesOf(point.citations)})`}`),
+  ]);
+  return [sections.intro, ...body, sections.takeaway].filter((line) => line.trim() !== "").join("\n");
+}
+
+function scopedChatMarkdown(chat: Chat, scope: ChatScopeLabel, from: number, count: number): string {
+  const lines = chat.messages.slice(from, from + count).map((message, offset) => {
+    const index = from + offset;
+    const said = message.from === "answer" && message.sections !== undefined ? sectionsText(message.sections) : message.text;
+    return `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${said}`;
+  });
+  const over = scope.kind === "library" ? "the reader's whole library" : `the reader's project "${scope.name}"`;
+  return [
+    `# A conversation over ${over}`,
+    `Conversation id: ${chat.id}${scope.kind === "project" ? ` · project id ${scope.id}` : ""} · started ${chat.startedAt.slice(0, 10)} · ${chat.messages.length} messages`,
+    "",
+    `Answers come from the overviews in ${over}, each point naming the overviews it rests on; where an answer connects them, the connection is the answer's, not theirs.`,
+    "",
+    ...lines,
+  ].join("\n");
+}
+
 // A conversation as it reads outside the app: each question, each answer with where it found
 // what it says, and a plain flag on an answer the source didn't cover
 // (docs/features/mcp-connector.md, "Chats").
-export function chatMarkdown(chat: Chat, overview: Overview, { from = 0, count = chat.messages.length } = {}): string {
+export function chatMarkdown(chat: Chat, about: Overview | ChatScopeLabel, { from = 0, count = chat.messages.length } = {}): string {
+  if (!("source" in about)) return scopedChatMarkdown(chat, about, from, count);
+  const overview = about;
   const kind = chatSourceKind(overview);
   const lines = chat.messages.slice(from, from + count).map((message, offset) => {
     const index = from + offset;

@@ -21,7 +21,13 @@ import {
 } from "@overview/domain";
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
-import { MEMBERS_BY_PROJECT_INDEX, PROJECTS_STORE, PROJECT_MEMBERS_STORE } from "./localDatabaseSchema.js";
+import {
+  CHATS_BY_PROJECT_INDEX,
+  CHATS_STORE,
+  MEMBERS_BY_PROJECT_INDEX,
+  PROJECTS_STORE,
+  PROJECT_MEMBERS_STORE,
+} from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 
@@ -98,10 +104,10 @@ export class IndexedDbProjectStore implements ProjectStore {
     await this.#finish(transaction, journaled);
   }
 
-  // Its membership records go with it here and now; on the server the delete takes them with it, so
-  // they are not journaled one by one (docs/features/projects.md).
+  // Its membership records and its chats go with it here and now; on the server the delete takes
+  // them with it, so they are not journaled one by one (docs/features/projects.md).
   async deleteProject(id: ProjectId): Promise<void> {
-    const transaction = this.#db.transaction([PROJECTS_STORE, PROJECT_MEMBERS_STORE, ...JOURNALLED_STORES], "readwrite");
+    const transaction = this.#db.transaction([PROJECTS_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, ...JOURNALLED_STORES], "readwrite");
     const projects = transaction.objectStore(PROJECTS_STORE);
     const existing = await promisifyRequest<unknown>(projects.get(id));
     projects.delete(id);
@@ -109,6 +115,8 @@ export class IndexedDbProjectStore implements ProjectStore {
     for (const key of await promisifyRequest<IDBValidKey[]>(members.index(MEMBERS_BY_PROJECT_INDEX).getAllKeys(id))) {
       members.delete(key);
     }
+    const chats = transaction.objectStore(CHATS_STORE);
+    for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_PROJECT_INDEX).getAllKeys(id))) chats.delete(key);
     const journaled =
       existing !== undefined &&
       (await appendPendingWrite(transaction, { kind: "project", id, updatedAt: new Date().toISOString(), change: { op: "delete" } }));

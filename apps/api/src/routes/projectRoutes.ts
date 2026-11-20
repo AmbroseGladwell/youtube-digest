@@ -19,6 +19,7 @@ import { decideReplace } from "../records/decideReplace.js";
 import { decideTombstone } from "../records/decideTombstone.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
+import { tombstoneChats } from "../records/tombstoneChats.js";
 import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 
 const Params = z.object({ id: ProjectId });
@@ -87,6 +88,7 @@ export function projectRoutes(app: FastifyInstance, records: RecordsRepository):
       { kind: "project", id, decide: (current) => decideTombstone("project", current, null, request.client!) },
     ]);
     await tombstoneProjectMembers(records, accountId, { projectId: id });
+    await tombstoneChats(records, accountId, { kind: "project", id });
     if (project === null || project === undefined) {
       request.log.info(apiLogLines.sync.recordAlreadyDeleted({ kind: "project", id }));
       return reply.status(204).send();
