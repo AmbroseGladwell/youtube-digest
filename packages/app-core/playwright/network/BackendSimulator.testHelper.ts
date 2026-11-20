@@ -33,6 +33,7 @@ import {
   type Plan,
   type MagicLinkRequest,
   type ArticleRead,
+  type VideoRead,
   type PodcastRead,
   type PodcastTranscription,
   type TranscriptCheck,
@@ -262,6 +263,8 @@ export class BackendSimulator {
   #podcastAnswer: PodcastRead = { status: "failed", reason: "not-an-episode" };
   #podcastWords: StoredTranscript | null = null;
   #podcastReads: string[] = [];
+  #videoReads: string[] = [];
+  #videoAnswer: VideoRead | null = null;
   #podcastReadsHeld: Array<() => void> | null = null;
   #podcastTranscriptAsks: Array<{ feedUrl: string; guid: string }> = [];
   #podcastCheck: TranscriptCheck | null = null;
@@ -962,6 +965,16 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
     });
 
+    // A video's card before anything is written: the video our server would fetch for it, with no
+    // kind and no transcript unless a test says otherwise (docs/features/onboarding.md).
+    await this.#page.route("**/api/videos/read", (route) => {
+      const { videoId } = route.request().postDataJSON() as { videoId: string };
+      this.#videoReads.push(videoId);
+      const video = (this.#serviceTranscripts?.get(videoId) ?? makeServiceTranscriptFixture(videoId)).video!;
+      const answer: VideoRead = this.#videoAnswer ?? { status: "read", video, noteKind: null, transcript: null };
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(answer) });
+    });
+
     await this.#page.route("**/api/podcasts/read", async (route) => {
       this.#podcastReads.push((route.request().postDataJSON() as { url: string }).url);
       const held = this.#podcastReadsHeld;
@@ -1558,6 +1571,14 @@ export class BackendSimulator {
       this.#sessionHasEnded = true;
       this.simulateEndpointError(EndpointKey.SESSION_LINK_CODE);
     },
+  };
+
+  // A video link read for its card, kind and transcript before the account (OV-327).
+  videos = {
+    answerWith: (read: VideoRead): void => {
+      this.#videoAnswer = read;
+    },
+    reads: (): string[] => [...this.#videoReads],
   };
 
   // A pasted link, as our server's fetch answers it (docs/features/pasted-article-links.md).

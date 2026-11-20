@@ -73,12 +73,6 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
     moving.current = moving.current.then(() => moveInto(accountId));
   }, [accountId, openLibrary, pulled, moveInto]);
 
-  // Before the first pull, the first move is still to come and will find what's there.
-  const moveAgain = useCallback(() => {
-    if (accountId === null || openLibrary === null || !pulled) return;
-    moving.current = moving.current.then(() => moveInto(accountId));
-  }, [accountId, openLibrary, pulled, moveInto]);
-
   useEffect(() => {
     if (accountId === null) {
       setMove(null);
@@ -86,6 +80,6 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
     }
   }, [accountId]);
 
-  const value = useMemo(() => ({ move, dismiss: () => setMove(null), answersIn, moveAgain }), [move, answersIn, moveAgain]);
+  const value = useMemo(() => ({ move, dismiss: () => setMove(null), answersIn }), [move, answersIn]);
   return <LibraryMoveProvider value={value}>{children}</LibraryMoveProvider>;
 }

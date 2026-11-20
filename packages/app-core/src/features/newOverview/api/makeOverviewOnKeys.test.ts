@@ -266,27 +266,8 @@ describe("makeOverviewOnKeys", () => {
     expect(overview.madeOn).toEqual({ key: "own", fallback: null });
   });
 
-  it("signed out, our key goes through the device's trial, with nothing reserved", async () => {
-    const { api, calls } = fakeServer();
-
-    const overview = await makeOverviewOnKeys({ order: ["ours"], own: null, api: null, trial: api }, input, meta);
-
-    expect(overview.madeOn).toEqual({ key: "ours", fallback: null });
-    expect(calls).toEqual(["generate"]);
-  });
-
-  it("signed out, a trial spent on our key, or on this address today, moves to the reader's own key", async () => {
-    for (const quota of ["trial", "trial-address"]) {
-      const { api } = fakeServer({ generate: refusal("too_many_requests", { quota }) });
-
-      const overview = await makeOverviewOnKeys(
-        { order: ["ours", "own"], own: { provider: "anthropic", model: "a-model", client: ownClient("made") }, api: null, trial: api },
-        input,
-        meta,
-      );
-
-      expect(overview.madeOn?.fallback?.cause).toBe("quota-spent");
-    }
+  it("signed out, nothing is made on us", async () => {
+    await expect(makeOverviewOnKeys({ order: ["ours"], own: null, api: null }, input, meta)).rejects.toThrow(/only with an account/);
   });
 
   describe("says each key as it tries it, for analytics", () => {
@@ -313,15 +294,6 @@ describe("makeOverviewOnKeys", () => {
       await makeOverviewOnKeys({ order: ["ours"], own: null, api, ourModel }, input, watched);
 
       expect(attempts).toEqual([{ key: "ours", ...ourModel }]);
-    });
-
-    it("names our key through a signed-out device's trial as the trial", async () => {
-      const { api } = fakeServer();
-      const { attempts, meta: watched } = tried();
-
-      await makeOverviewOnKeys({ order: ["ours"], own: null, api: null, trial: api, ourModel }, input, watched);
-
-      expect(attempts).toEqual([{ key: "trial", ...ourModel }]);
     });
 
     it("leaves our provider and model out when the server didn't say them", async () => {

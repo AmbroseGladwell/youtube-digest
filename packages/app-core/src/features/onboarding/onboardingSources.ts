@@ -13,6 +13,8 @@ import {
   youTubeSource,
   type ArticleRead,
   type PodcastRead,
+  type StoredTranscript,
+  type VideoRead,
   type ExtractedArticle,
   type Overview,
   type Recipe,
@@ -23,7 +25,9 @@ import {
 import { bigPictureBudget } from "@overview/generation";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
+import { VideoReadError } from "../newOverview/api/VideoReadError.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
 import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
@@ -46,6 +50,10 @@ export interface OnboardingFound {
 // The pipelines a run can call; the shell's hooks supply them, the kind chooses between them.
 export interface OnboardingMakers {
   video: (url: string, options: RunOverviewGenerationOptions) => Promise<Overview>;
+  readVideo: (videoId: string) => Promise<VideoRead>;
+  // The transcript the read was checked from, kept in the library the overview is written into,
+  // so writing finds it there rather than fetching it again.
+  keepTranscript: (transcript: StoredTranscript) => Promise<void>;
   article: (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readArticle: (url: string) => Promise<ArticleRead>;
   podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
@@ -59,7 +67,9 @@ export interface OnboardingMakeOptions {
   // Transcribing the episode's audio is waiting for a card, then under way.
   onTranscription?: ((progress: TranscriptionProgress) => void) | undefined;
   isCancelled: () => boolean;
-  waitToWrite: () => Promise<void>;
+  // Settles once the reader has an account and their answers are in it: nothing that costs
+  // anything runs before (docs/features/onboarding.md, "Nothing paid before the account").
+  waitToSpend: () => Promise<void>;
 }
 
 // The confirm card (154d–154g): a kicker naming the source and its kind, the title, then facts
@@ -103,6 +113,7 @@ export interface OnboardingSource {
 }
 
 const PAGE_OPENING_CHARACTERS = 3000;
+const TRANSCRIPT_OPENING_CHARACTERS = 3000;
 
 const pageOpening = (article: ExtractedArticle): string =>
   article.sections
@@ -169,17 +180,23 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       return videoUrl === null ? null : (extractYouTubeVideoId(videoUrl) as SourceKey | null);
     },
     target: ({ sourceKey }) => (sourceKey === null ? null : watchUrl(sourceKey)),
-    make: (target, makers, { onFound, isCancelled, waitToWrite }) =>
-      makers.video(target, {
-        isCancelled,
-        waitToWrite,
-        onProgress: ({ video, transcriptOpening }) =>
-          onFound({
-            source: youTubeSource(video),
-            recipe: null,
-            about: [video.description ?? "", transcriptOpening].filter((part) => part !== "").join("\n\n"),
-          }),
-      }),
+    make: async (target, makers, { onFound, isCancelled, waitToSpend }) => {
+      const read = await makers.readVideo(extractYouTubeVideoId(target) ?? target);
+      if (read.status === "failed") throw new VideoReadError(read.reason);
+      const opening = (read.transcript?.segments ?? [])
+        .map((segment) => segment.text)
+        .join(" ")
+        .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+      onFound({
+        source: youTubeSource(read.video),
+        recipe: null,
+        about: [read.video.description ?? "", opening].filter((part) => part !== "").join("\n\n"),
+      });
+      await waitToSpend();
+      if (isCancelled()) throw new GenerationCancelledError();
+      if (read.transcript !== null) await makers.keepTranscript({ ...read.transcript, video: read.video });
+      return makers.video(target, { isCancelled, ...(read.noteKind === null ? {} : { noteKind: read.noteKind }) });
+    },
     noun: (linkKind) => (linkKind === "playlist" ? "playlist" : "video"),
     lead: () => OVERVIEW_LEAD,
     pending: () => null,
@@ -203,19 +220,20 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     linkKind: (link) => (isPlatformPodcastLink(link) ? "episode" : null),
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToWrite, transcribe }) => {
+    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToSpend, transcribe }) => {
       const read = await makers.readPodcast(target);
       if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
       const id = await podcastSourceId(read.episode);
+      onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes });
+      await waitToSpend();
+      if (isCancelled()) throw new GenerationCancelledError();
       return makers
         .podcast(
           { episode: read.episode, sharedFrom: target, transcribe },
           {
             from: "onboarding",
             isCancelled,
-            waitToWrite,
             onTranscription,
-            onEpisodeWords: () => onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes }),
           },
         )
         .catch((error: unknown) => {
@@ -247,15 +265,16 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     linkKind: (link) => (isArticleLink(link) ? "article" : null),
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: (target, makers, { onFound, isCancelled, waitToWrite }) =>
-      makers.article(() => makers.readArticle(target), {
-        isCancelled,
-        waitToWrite,
-        onArticleRead: (article) =>
-          void articleSourceId(article.url).then((id) =>
-            onFound({ source: webSource(article, id), recipe: article.recipe, about: pageOpening(article) }),
-          ),
-      }),
+    make: async (target, makers, { onFound, isCancelled, waitToSpend }) => {
+      const read = await makers.readArticle(target);
+      if (read.status === "read") {
+        const id = await articleSourceId(read.article.url);
+        onFound({ source: webSource(read.article, id), recipe: read.article.recipe, about: pageOpening(read.article) });
+        await waitToSpend();
+        if (isCancelled()) throw new GenerationCancelledError();
+      }
+      return makers.article(async () => read, { isCancelled });
+    },
     noun: (_linkKind, found) => (found === null ? "page" : found.recipe !== null ? "recipe" : "article"),
     lead: (found) => (found?.recipe ? "We'll turn it into a recipe you can read, cook from and come back to." : OVERVIEW_LEAD),
     pending: (link) => domainOf(link),
