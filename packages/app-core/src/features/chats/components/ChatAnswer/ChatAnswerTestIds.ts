@@ -6,5 +6,6 @@ export const chatAnswerTestIds = {
   conversation: "ChatAnswer.conversation",
   deletedConversation: "ChatAnswer.deletedConversation",
   readOnPage: "ChatAnswer.readOnPage",
+  settingsLink: "ChatAnswer.settingsLink",
   showOnPage: "ChatAnswer.showOnPage",
 };

@@ -14,6 +14,7 @@ import { noteAskFieldTestIds } from "../../src/features/chats/components/NoteAsk
 import { overviewActionsMenuTestIds } from "../../src/features/reader/components/OverviewActionsMenu/OverviewActionsMenuTestIds.js";
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
 // Chat about one overview, beside its note on the web (OV-310; docs/features/chats.md).
 export class ChatPanelPageObject extends PageObject {
@@ -146,6 +147,12 @@ export class ChatPanelPageObject extends PageObject {
         ? expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.readOnPage)).toHaveCount(0)
         : expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.readOnPage)).toHaveAttribute("href", href),
     );
+
+  followSettingsLink = (index: number): Promise<SettingsPageObject> =>
+    this.step(`followSettingsLink ${index}`, async () => {
+      await this.answers().nth(index).getByTestId(chatAnswerTestIds.settingsLink).click();
+      return new SettingsPageObject(this.testContext).verifyIsShown();
+    });
 
   verifyNoteFieldAsks = (placeholder: string) =>
     this.step(`verifyNoteFieldAsks ${placeholder}`, () =>

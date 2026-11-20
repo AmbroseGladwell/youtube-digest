@@ -367,6 +367,9 @@ general assistant would.
   in Settings › Personalisation, and from what it notices in their overviews; they change it, and
   which sections an overview has, in Settings › Personalisation. A recipe, a page's or a video's,
   has no verdict, so those two lines are left out.
+- **"Settings › Personalisation" is a link.** The prompt has chat name the place in those exact
+  words, and `ChatAnswer` turns every one in an answer into a link to that section, in code, so
+  the model never writes a link and a reader taps straight through.
 - **The Markdown says it too.** `overviewMarkdown` writes the verdict's `similarTo` as "Similar
   overviews in the reader's library:" (was "Similar to:"), which every reader of the Markdown
   gets: chat, `get_overview` over MCP, and the hand-off and follow-up prompts.

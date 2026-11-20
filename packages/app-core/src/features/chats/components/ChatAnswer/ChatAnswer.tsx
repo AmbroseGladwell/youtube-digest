@@ -8,7 +8,9 @@ import {
   type TimeRange,
   type VideoSource,
 } from "@overview/domain";
+import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { Routes } from "../../../../app/Routes.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
 import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
 import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
@@ -44,6 +46,26 @@ export interface ChatPage {
 }
 
 const paragraphsOf = (text: string) => text.split(/\n+/).filter((paragraph) => paragraph.trim() !== "");
+
+// The prompt names this place in so many words when a reader asks what chat knows about them
+// (OV-342), so code, not the model, makes it a link.
+const PERSONALISATION = "Settings › Personalisation";
+
+const withSettingsLinks = (paragraph: string): ReactNode =>
+  paragraph.split(PERSONALISATION).map((piece, index) => (
+    <Fragment key={index}>
+      {index > 0 && (
+        <PageLink
+          to={Routes.settingsSection("personalisation")}
+          className={styles.settingsLink}
+          data-testid={chatAnswerTestIds.settingsLink}
+        >
+          {PERSONALISATION}
+        </PageLink>
+      )}
+      {piece}
+    </Fragment>
+  ));
 
 const conversationsOf = (citations: readonly ChatCitation[]) =>
   citations
@@ -88,7 +110,7 @@ export function ChatAnswer({
       )}
       <div className={styles.text} data-testid={chatAnswerTestIds.text}>
         {paragraphsOf(text).map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
+          <p key={index}>{withSettingsLinks(paragraph)}</p>
         ))}
       </div>
       {notCovered && page !== null && page.onPage === null && (
