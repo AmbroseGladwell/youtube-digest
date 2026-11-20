@@ -3,6 +3,7 @@ import { OverviewId, ProjectId } from "./Brands.js";
 import { ExtractedArticle } from "./ExtractedArticle.js";
 import { Tag } from "./Filing.js";
 import { ModelId } from "./ModelId.js";
+import { NoteKind } from "./NoteKind.js";
 import { Overview } from "./Overview.js";
 import { FilingProject } from "./Project.js";
 import { Provider } from "./Provider.js";
@@ -34,7 +35,13 @@ export const OurKeyGenerationRequest = z.object({
   // episode it is (docs/features/podcast-screens.md).
   input: z.union([
     z.object({ podcast: PodcastSource, video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
-    z.object({ video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
+    z.object({
+      video: VideoSource,
+      transcript: z.array(TranscriptSegment).min(1),
+      // Checked before the account (OV-327), so writing doesn't check again.
+      noteKind: NoteKind.optional(),
+      ...readerContext,
+    }),
     z.object({ article: ExtractedArticle, ...readerContext }),
   ]),
 });

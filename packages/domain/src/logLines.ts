@@ -442,6 +442,18 @@ export const apiLogLines = coded("api", {
     ),
     workerStopped: line("error", "transcription worker stopped", "A transcription worker hit an error outside any one job and stopped."),
   },
+  videos: {
+    read: line(
+      "info",
+      "video read",
+      "A video link was read for its card before anything was written; `outcome` is why it failed, `noteKind` what the check found. Never the link.",
+    ),
+    signedOutKindChecksSpent: line(
+      "warn",
+      "signed-out kind checks spent",
+      "The day's kind checks before an account were used up, so the video was read without one.",
+    ),
+  },
   playlists: {
     read: line("info", "playlist read", "A followed playlist was read, and what it cost in YouTube quota units."),
     unavailable: line("info", "playlist unavailable", "A playlist could not be read; `reason` says why."),

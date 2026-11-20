@@ -11,6 +11,7 @@ export interface TrialDevice {
   generate(overviewId?: string): Promise<LightMyRequestResponse>;
   fetchTranscript(videoId: string): Promise<LightMyRequestResponse>;
   readArticle(url: string): Promise<LightMyRequestResponse>;
+  readVideo(videoId: string): Promise<LightMyRequestResponse>;
   readPodcast(url: string): Promise<LightMyRequestResponse>;
   podcastTranscript(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
   transcribe(episode: { feedUrl: string; guid: string }): Promise<LightMyRequestResponse>;
@@ -33,6 +34,8 @@ export async function makeTrialDevice({ app }: TestApp, address = TRIAL_ADDRESS)
     fetchTranscript: (videoId) =>
       app.inject({ method: "POST", url: `/api/service-transcripts/${videoId}`, headers, remoteAddress: address }),
     readArticle: (url) => app.inject({ method: "POST", url: "/api/articles/read", headers, payload: { url }, remoteAddress: address }),
+    readVideo: (videoId) =>
+      app.inject({ method: "POST", url: "/api/videos/read", headers, payload: { videoId }, remoteAddress: address }),
     readPodcast: (url) => app.inject({ method: "POST", url: "/api/podcasts/read", headers, payload: { url }, remoteAddress: address }),
     podcastTranscript: (episode) =>
       app.inject({ method: "POST", url: "/api/podcasts/transcript", headers, payload: episode, remoteAddress: address }),

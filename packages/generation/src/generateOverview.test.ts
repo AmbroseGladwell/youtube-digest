@@ -57,6 +57,38 @@ test("a well-formed response from the client assembles into a valid Overview", a
   assert.equal(overview.howToApply?.items[0], "do this");
 });
 
+test("a kind already checked before the account is used, and the check isn't asked again", async () => {
+  const asked: string[] = [];
+  const client: GenerationClient = async (request) => {
+    if ("noteKind" in request.schema.shape) asked.push("kind check");
+    return {
+      inOneLine: "A short description.",
+      bigPicture: "",
+      followUpQuestions: [],
+      readerQuestions: [],
+      coreClaim: "The core claim.",
+      thin: false,
+      keyPoints: [
+        { text: "one", startSegmentIndex: -1, endSegmentIndex: -1 },
+        { text: "two", startSegmentIndex: -1, endSegmentIndex: -1 },
+        { text: "three", startSegmentIndex: -1, endSegmentIndex: -1 },
+      ],
+      chapters: [{ title: "Hello", summary: "A greeting.", startSegmentIndex: 0 }],
+      matchedTopicNames: [],
+      suggestedTopic: null,
+      tags: ["one-tag", "two-tag", "three-tag"],
+      sourceSteps: [],
+      howToApply: { items: ["do this"] },
+    };
+  };
+  const checked: string[] = [];
+
+  await generateOverview(client, { ...input, noteKind: "default" }, meta, { kindChecked: (kind) => checked.push(kind) });
+
+  assert.deepEqual(asked, []);
+  assert.deepEqual(checked, ["default"]);
+});
+
 test("the projects the model matched are reported by id beside the overview, never on it", async () => {
   const kitchen = { id: ProjectId.parse(randomUUID()), name: "Kitchen", purpose: null };
   const garden = { id: ProjectId.parse(randomUUID()), name: "Garden", purpose: "A vegetable patch" };

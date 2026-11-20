@@ -19,6 +19,7 @@ import { ourKeyModel } from "./generation/ourKeyModel.js";
 import { createOpenAiEmbedder } from "./meaning/createOpenAiEmbedder.js";
 import { undiciYouTubeFetch } from "./transcripts/undiciYouTubeFetch.js";
 import { youTubeDataApiPlaylistReader } from "./playlists/youTubeDataApiPlaylistReader.js";
+import { youTubeDataApiVideoReader } from "./videos/youTubeDataApiVideoReader.js";
 import { callBudget, PODCAST_INDEX_BUDGET } from "./podcasts/callBudget.js";
 import { fetchPodcastIndexJson, podcastIndexDirectory } from "./podcasts/podcastIndexDirectory.js";
 import { youTubeDataApiEpisodes } from "./podcasts/youTubeDataApiEpisodes.js";
@@ -95,6 +96,8 @@ const app = await buildApp({
     config.youTubeApiKey === null
       ? null
       : youTubeDataApiPlaylistReader({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
+  videoReader:
+    config.youTubeApiKey === null ? null : youTubeDataApiVideoReader({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
   youTubeEpisodes:
     config.youTubeApiKey === null ? null : youTubeDataApiEpisodes({ apiKey: config.youTubeApiKey, youTubeFetch: undiciYouTubeFetch() }),
   podcastIndex:

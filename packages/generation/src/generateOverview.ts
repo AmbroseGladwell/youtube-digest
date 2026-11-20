@@ -72,7 +72,7 @@ export async function generateOverview(
   meta: { id: OverviewId; savedAt: string },
   observer: GenerationObserver = {},
 ): Promise<Overview> {
-  const kind = await checkNoteKind(client, kindSampleOfVideo(input));
+  const kind = input.noteKind ?? (await checkNoteKind(client, kindSampleOfVideo(input)));
   observer.kindChecked?.(kind);
   if (kind === "recipe") {
     const output = await requestGeneratedOutput<GeneratedRecipeVideoOutput>(client, composePrompt(input, "recipe"));

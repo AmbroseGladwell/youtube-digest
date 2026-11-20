@@ -15,6 +15,7 @@ import {
   type TopicSuggestionResult,
 } from "@overview/domain";
 import {
+  checkNoteKind,
   costInDollars,
   createGenerationClient,
   fallbackReasonOf,
@@ -29,6 +30,7 @@ import {
   ProviderKeyRefusedError,
   type FallbackReason,
   type GenerationClient,
+  type KindSample,
   type MeteredCall,
 } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
@@ -99,7 +101,7 @@ export class TrialUnknownError extends Error {
 // trial token and the address it asks from.
 export type OurKeyCaller = { accountId: AccountId; plan: Plan } | { trialToken: string; address: string };
 
-export type SmallPass = "profile" | "forAnyone" | "topics" | "topicSuggestions";
+export type SmallPass = "profile" | "forAnyone" | "topics" | "topicSuggestions" | "kindCheck";
 
 // The caller's slot, and how to give it back when the overview fails.
 interface HeldSlot {
@@ -261,6 +263,12 @@ export class OurKeyGenerator {
 
   topicSuggestions(payer: CostPayer, input: TopicSuggestionInput, log: FastifyBaseLogger): Promise<TopicSuggestionResult> {
     return this.#smallPass("topicSuggestions", payer, (client) => generateTopicSuggestions(client, input), log);
+  }
+
+  // A video's kind before there's an account, so onboarding knows a recipe video from Your link on
+  // (docs/features/onboarding.md, "The recipe video check").
+  kindCheck(payer: CostPayer, sample: KindSample, log: FastifyBaseLogger): Promise<NoteKind> {
+    return this.#smallPass("kindCheck", payer, (client) => checkNoteKind(client, sample), log);
   }
 
   async #smallPass<Result>(

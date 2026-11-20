@@ -10,7 +10,8 @@ const comparable = (text: string): string =>
     .replace(/[^\p{L}\p{N}½¼¾⅓⅔⅛]+/gu, " ")
     .trim();
 
-export const descriptionOf = (input: GenerationInput): string => input.video.fullDescription ?? input.video.description ?? "";
+export const descriptionOf = (input: Pick<GenerationInput, "video">): string =>
+  input.video.fullDescription ?? input.video.description ?? "";
 
 // The model found the recipe, since a video has no structured data, so code checks every amount
 // against what the description and the video state, reads the times and yield only where the

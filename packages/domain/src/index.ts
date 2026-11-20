@@ -4,6 +4,7 @@ export * from "./ArticlePlace.js";
 export * from "./ArticleRead.js";
 export * from "./PodcastEpisode.js";
 export * from "./PodcastRead.js";
+export * from "./VideoRead.js";
 export * from "./PodcastTranscription.js";
 export * from "./parsePodcastLink.js";
 export * from "./canonicalArticleUrl.js";

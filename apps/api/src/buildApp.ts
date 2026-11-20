@@ -50,6 +50,7 @@ import { healthRoutes } from "./routes/healthRoutes.js";
 import { meaningSearchRoutes } from "./routes/meaningSearchRoutes.js";
 import { overviewReservationRoutes } from "./routes/overviewReservationRoutes.js";
 import { articleRoutes } from "./routes/articleRoutes.js";
+import { videoRoutes } from "./routes/videoRoutes.js";
 import { createArticlePageFetcher, type FetchedPage } from "./articles/fetchArticlePage.js";
 import { podcastRoutes } from "./routes/podcastRoutes.js";
 import { accountPlan } from "./auth/accountPlan.js";
@@ -66,6 +67,8 @@ import type { Transcriber } from "./podcasts/Transcriber.js";
 import { createPublicWebFetch } from "./publicWeb/createPublicWebFetch.js";
 import { playlistRoutes } from "./routes/playlistRoutes.js";
 import type { PlaylistReader } from "./playlists/PlaylistReader.js";
+import type { VideoReader } from "./videos/youTubeDataApiVideoReader.js";
+import { VideoKindsRepository } from "./videos/VideoKindsRepository.js";
 import { serviceTranscriptRoutes } from "./routes/serviceTranscriptRoutes.js";
 import { settingsRoutes } from "./routes/settingsRoutes.js";
 import { shareRoutes } from "./routes/shareRoutes.js";
@@ -170,6 +173,8 @@ export interface BuildAppOptions {
   // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
   // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
+  // Reads a video's card on our YouTube key; absent, onboarding finds the video once it has an account.
+  videoReader?: VideoReader | null;
   // Where checked analytics events are passed on to; absent, they are only logged.
   eventSink?: EventSink | null;
   // Where checked client errors are passed on to; absent, they are only logged.
@@ -209,6 +214,7 @@ export async function buildApp({
   ourKey = null,
   meaning = null,
   playlistReader = null,
+  videoReader = null,
   eventSink = null,
   errorSink = null,
   personEraser = null,
@@ -366,8 +372,10 @@ export async function buildApp({
         sql,
         clock,
       });
+      const generator =
+        ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, costs, clock });
       generationRoutes(api, {
-        generator: ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, costs, clock }),
+        generator,
         trials,
         sql,
         clock,
@@ -376,6 +384,15 @@ export async function buildApp({
         transcriptService === null
           ? null
           : new ServiceTranscripts({ ...transcriptService, usage: new ServiceUsageRepository(sql), costs, clock });
+      videoRoutes(api, {
+        reader: videoReader,
+        generator,
+        service: youTubeService,
+        kinds: new VideoKindsRepository(sql),
+        trials,
+        sql,
+        clock,
+      });
       const podcastTranscripts = createPodcastTranscripts({
         fetchPublicWeb: podcastWeb,
         sources: new EpisodeWordSourcesRepository(sql),

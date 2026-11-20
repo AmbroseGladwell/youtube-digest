@@ -1,4 +1,4 @@
-import { DEFAULT_SECTIONS_ENABLED, OurKeyGenerationRequest } from "@overview/domain";
+import { DEFAULT_SECTIONS_ENABLED, OurKeyGenerationRequest, type NoteKind } from "@overview/domain";
 
 export const validAnswer = {
   inOneLine: "A short description.",
@@ -52,7 +52,7 @@ export interface FakeOpenAi {
   answers: FakeOpenAiAnswer[];
   requests: { url: string; authorization: string | null; model: unknown }[];
   kindChecks: number;
-  kindCheckAnswer: "default" | { status: number; body: unknown };
+  kindCheckAnswer: NoteKind | { status: number; body: unknown };
 }
 
 const USAGE = { prompt_tokens: 1200, completion_tokens: 300, prompt_tokens_details: { cached_tokens: 200, cache_write_tokens: 800 } };
@@ -73,7 +73,7 @@ export function makeFakeOpenAi(...answers: FakeOpenAiAnswer[]): FakeOpenAi {
       if (String(init.body).includes('"noteKind"')) {
         fake.kindChecks++;
         const check = fake.kindCheckAnswer;
-        return check === "default"
+        return typeof check === "string"
           ? respond(200, { choices: [{ message: { content: JSON.stringify({ noteKind: check }) } }], usage: KIND_CHECK_USAGE })
           : respond(check.status, check.body);
       }
