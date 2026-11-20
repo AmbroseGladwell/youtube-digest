@@ -387,14 +387,14 @@ const termsOf = (text: string): string[] =>
     .map((word) => (word.length > 4 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word));
 
 function keywordIndex(library: Library) {
-  const docs: Array<{ overviewId: string; terms: Map<string, number>; length: number }> = [];
+  const docs: Array<{ overviewId: string; passage: Passage; terms: Map<string, number>; length: number }> = [];
   for (const entry of library.overviews.values()) {
     if (entry.segments === null) continue;
     for (const passage of transcriptPassages(entry.segments)) {
       const terms = new Map<string, number>();
       const words = termsOf(passage.text);
       for (const word of words) terms.set(word, (terms.get(word) ?? 0) + 1);
-      docs.push({ overviewId: entry.id, terms, length: words.length });
+      docs.push({ overviewId: entry.id, passage, terms, length: words.length });
     }
   }
   const frequency = new Map<string, number>();
@@ -402,22 +402,27 @@ function keywordIndex(library: Library) {
   const average = docs.reduce((total, doc) => total + doc.length, 0) / docs.length;
   const K1 = 1.2;
   const B = 0.75;
-  return (query: string, home: string): string[] => {
+  const scored = (query: string, home: string) => {
     const terms = [...new Set(termsOf(query))];
-    const best = new Map<string, number>();
-    for (const doc of docs) {
-      if (doc.overviewId === home) continue;
-      let score = 0;
-      for (const term of terms) {
-        const count = doc.terms.get(term);
-        if (count === undefined) continue;
-        const df = frequency.get(term)!;
-        const idf = Math.log(1 + (docs.length - df + 0.5) / (df + 0.5));
-        score += idf * ((count * (K1 + 1)) / (count + K1 * (1 - B + (B * doc.length) / average)));
-      }
-      if (score > (best.get(doc.overviewId) ?? 0)) best.set(doc.overviewId, score);
-    }
-    return [...best.entries()].sort((left, right) => right[1] - left[1]).map(([id]) => id);
+    return docs
+      .filter((doc) => doc.overviewId !== home)
+      .map((doc) => {
+        let score = 0;
+        for (const term of terms) {
+          const count = doc.terms.get(term);
+          if (count === undefined) continue;
+          const df = frequency.get(term)!;
+          const idf = Math.log(1 + (docs.length - df + 0.5) / (df + 0.5));
+          score += idf * ((count * (K1 + 1)) / (count + K1 * (1 - B + (B * doc.length) / average)));
+        }
+        return { overviewId: doc.overviewId, passage: doc.passage, score };
+      })
+      .filter((hit) => hit.score > 0)
+      .sort((left, right) => right.score - left.score);
+  };
+  return {
+    sources: (query: string, home: string): string[] => [...new Set(scored(query, home).map((hit) => hit.overviewId))],
+    passages: (query: string, home: string, count: number) => scored(query, home).slice(0, count),
   };
 }
 
@@ -430,7 +435,7 @@ async function keyword(dataDir: string, retrievalPath: string): Promise<void> {
   const rows = report.rows
     .filter((row) => row.kind !== "notInLibrary" && row.kind !== "notInSource")
     .map((row) => {
-      const order = search(byId.get(row.id)!.question, row.home);
+      const order = search.sources(byId.get(row.id)!.question, row.home);
       const ranks = row.expected.map((id) => order.indexOf(id)).filter((rank) => rank >= 0);
       return { row, keywordRank: ranks.length === 0 ? null : Math.min(...ranks) + 1, order };
     });
@@ -459,7 +464,7 @@ async function keyword(dataDir: string, retrievalPath: string): Promise<void> {
 
 // --- answering ---
 
-type Arm = { name: string; pick: (row: RetrievalRow) => string[]; transcripts: boolean | "closest" };
+type Arm = { name: string; pick: (row: RetrievalRow) => string[]; transcripts: boolean | "closest" | "keyword" };
 
 function arms(): Map<string, Arm> {
   const pinned = (count: number) => (row: RetrievalRow) => {
@@ -481,6 +486,7 @@ function arms(): Map<string, Arm> {
     { name: "pinned8-overviews", pick: pinned(8), transcripts: false },
     { name: "pinned3-full", pick: pinned(3), transcripts: true },
     { name: "search3+passages8", pick: search(3), transcripts: "closest" },
+    { name: "search3+keyword8", pick: search(3), transcripts: "keyword" },
     {
       name: "pinned1+search3-overviews",
       pick: (row) => [...new Set([...row.expected.slice(0, 1), ...search(3)(row)])],
@@ -603,6 +609,19 @@ async function answer(
       );
     return chosen;
   };
+  // The keyword shape: the eight minutes that best match the question's words, by BM25 over the
+  // transcripts already kept, chosen the same way and sent the same way.
+  const keywords = options.arms.some((name) => all.get(name)?.transcripts === "keyword") ? keywordIndex(library) : null;
+  const keywordPassages = (question: Located, home: string): Map<string, Passage[]> => {
+    const chosen = new Map<string, Passage[]>();
+    for (const { overviewId, passage } of keywords!.passages(question.question, home, 8)) {
+      chosen.set(
+        overviewId,
+        [...(chosen.get(overviewId) ?? []), passage].sort((a, b) => a.startMs - b.startMs),
+      );
+    }
+    return chosen;
+  };
   const price = priceOf(chatModel)!;
   const done: AnswerTurn[] = JSON.parse((await readFile(outPath, "utf-8").catch(() => "[]")) as string) as AnswerTurn[];
   const key = (arm: string, run: number, id: string) => `${arm}|${run}|${id}`;
@@ -626,7 +645,12 @@ async function answer(
         const home = library.overviews.get(row.home)!;
         const kind = chatSourceKind(home.overview);
         const homePassages = home.segments === null ? [] : transcriptPassages(home.segments);
-        const closest = arm.transcripts === "closest" ? closestPassages(question, row.home) : null;
+        const closest =
+          arm.transcripts === "closest"
+            ? closestPassages(question, row.home)
+            : arm.transcripts === "keyword"
+              ? keywordPassages(question, row.home)
+              : null;
         const others = [...new Set([...arm.pick(row), ...(closest?.keys() ?? [])])].filter((id) => id !== row.home);
         const system = chatSystemPrompt(kind, overviewMarkdown(home.overview, { partIds: true }), homePassages, {
           recipe: home.overview.recipe !== null,
