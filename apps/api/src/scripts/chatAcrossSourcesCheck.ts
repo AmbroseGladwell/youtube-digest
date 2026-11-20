@@ -369,6 +369,94 @@ function retrievalMarkdown(rows: RetrievalRow[]): string {
   ].join("\n");
 }
 
+// --- keyword search over the kept transcripts ---
+
+// The card's open question: before any vectors, would words find what claim search misses? BM25
+// over the same minute passages, a source scoring as its best passage. Nothing is stored or paid
+// for; Postgres full-text search would be the built version.
+const STOPWORDS = new Set(
+  "a an and are as at be been but by can could did do does doing for from had has have he her his how i if in into is it its just me my of on or our out she so than that the their them then there these they this to up was we were what when where which who why will with would you your about after all also any because before being both did does each few more most much no not now only other over own same should some such too under until very via what whom yours say says said tell told saved video videos overview overviews episode".split(
+    " ",
+  ),
+);
+
+const termsOf = (text: string): string[] =>
+  normalised(text)
+    .split(" ")
+    .filter((word) => word.length > 1 && !STOPWORDS.has(word))
+    .map((word) => (word.length > 4 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word));
+
+function keywordIndex(library: Library) {
+  const docs: Array<{ overviewId: string; terms: Map<string, number>; length: number }> = [];
+  for (const entry of library.overviews.values()) {
+    if (entry.segments === null) continue;
+    for (const passage of transcriptPassages(entry.segments)) {
+      const terms = new Map<string, number>();
+      const words = termsOf(passage.text);
+      for (const word of words) terms.set(word, (terms.get(word) ?? 0) + 1);
+      docs.push({ overviewId: entry.id, terms, length: words.length });
+    }
+  }
+  const frequency = new Map<string, number>();
+  for (const doc of docs) for (const term of doc.terms.keys()) frequency.set(term, (frequency.get(term) ?? 0) + 1);
+  const average = docs.reduce((total, doc) => total + doc.length, 0) / docs.length;
+  const K1 = 1.2;
+  const B = 0.75;
+  return (query: string, home: string): string[] => {
+    const terms = [...new Set(termsOf(query))];
+    const best = new Map<string, number>();
+    for (const doc of docs) {
+      if (doc.overviewId === home) continue;
+      let score = 0;
+      for (const term of terms) {
+        const count = doc.terms.get(term);
+        if (count === undefined) continue;
+        const df = frequency.get(term)!;
+        const idf = Math.log(1 + (docs.length - df + 0.5) / (df + 0.5));
+        score += idf * ((count * (K1 + 1)) / (count + K1 * (1 - B + (B * doc.length) / average)));
+      }
+      if (score > (best.get(doc.overviewId) ?? 0)) best.set(doc.overviewId, score);
+    }
+    return [...best.entries()].sort((left, right) => right[1] - left[1]).map(([id]) => id);
+  };
+}
+
+async function keyword(dataDir: string, retrievalPath: string): Promise<void> {
+  const library = await loadLibrary(dataDir);
+  const { located } = await loadQuestions(dataDir, library);
+  const report = JSON.parse(await readFile(retrievalPath, "utf-8")) as { rows: RetrievalRow[] };
+  const byId = new Map(located.map((question) => [question.id, question]));
+  const search = keywordIndex(library);
+  const rows = report.rows
+    .filter((row) => row.kind !== "notInLibrary" && row.kind !== "notInSource")
+    .map((row) => {
+      const order = search(byId.get(row.id)!.question, row.home);
+      const ranks = row.expected.map((id) => order.indexOf(id)).filter((rank) => rank >= 0);
+      return { row, keywordRank: ranks.length === 0 ? null : Math.min(...ranks) + 1, order };
+    });
+  const hit = (rank: number | null, depth: number) => rank !== null && rank <= depth;
+  const either = (entry: (typeof rows)[number], depth: number) =>
+    entry.row.expected.some((id) => entry.row.claimOrder.slice(0, depth).includes(id) || entry.order.slice(0, depth).includes(id));
+  const line = (label: string, subset: typeof rows) =>
+    `| ${label} | ${subset.length} | ${DEPTHS.map((depth) => subset.filter((entry) => hit(entry.row.claimRank, depth)).length).join(" | ")} | ${DEPTHS.map((depth) => subset.filter((entry) => hit(entry.keywordRank, depth)).length).join(" | ")} | ${DEPTHS.map((depth) => subset.filter((entry) => either(entry, depth)).length).join(" | ")} | ${DEPTHS.map((depth) => subset.filter((entry) => hit(entry.row.passageRank, depth)).length).join(" | ")} |`;
+  console.log(
+    [
+      "| Kind | Questions | Claims 3 | 5 | 8 | Keywords 3 | 5 | 8 | Claims or keywords 3 | 5 | 8 | Passage vectors 3 | 5 | 8 |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+      ...[...new Set(rows.map((entry) => entry.row.kind))].map((kind) =>
+        line(
+          kind,
+          rows.filter((entry) => entry.row.kind === kind),
+        ),
+      ),
+      line("All", rows),
+    ].join("\n"),
+  );
+  for (const entry of rows.filter((candidate) => !hit(candidate.row.claimRank, 8))) {
+    console.log(`claim miss ${entry.row.id}: keywords rank ${entry.keywordRank ?? "none"}, passage vectors rank ${entry.row.passageRank}`);
+  }
+}
+
 // --- answering ---
 
 type Arm = { name: string; pick: (row: RetrievalRow) => string[]; transcripts: boolean | "closest" };
@@ -929,6 +1017,8 @@ const { values, positionals } = parseArgs({
 const [command, dataDir, ...rest] = positionals;
 if (command === "retrieval" && dataDir && rest[0]) {
   await retrieval(dataDir, rest[0]);
+} else if (command === "keyword" && dataDir && rest[0]) {
+  await keyword(dataDir, rest[0]);
 } else if (command === "answer" && dataDir && rest[0] && rest[1]) {
   if (values.report) {
     console.log(answerMarkdown(JSON.parse(await readFile(rest[1], "utf-8")) as AnswerTurn[]));
