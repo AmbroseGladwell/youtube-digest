@@ -543,43 +543,74 @@ synthesis is good, so the answers are in the run for reading.
 
 ### What it does to a reader's month
 
-These are the medians above, priced at each plan's monthly allowance (Free 100, BYO Plus 500,
-Plus 1,000 messages) by code, with embeddings included:
+Each plan's monthly allowance (Free 100, BYO Plus 500, Plus 1,000 messages) priced by code, for
+conversations of 1 to 50 questions (`MAX_CHAT_QUESTIONS`). The model is built from the run's
+measured medians: each shape's prompt, its answer length (105 tokens for today's chat, about 200
+with other sources, 467 from the library map), and a 25-token question.
 
-- **The question's embedding** is about 25 tokens, $0.0000005, on every search message.
-- **Passage vectors** cost about $0.00029 an hour of transcript to make. This library's 69 hours
-  cost $0.02 once, and 5 to 30 hours of new saves a month cost $0.001 to $0.009.
-- **Claim embeddings** already exist and add nothing.
+- **History grows.** Every question re-sends the conversation so far, so the prompt grows by a
+  question and an answer each time. The last prompt is the cached prefix of the next, so only
+  the newest question and answer are paid at the uncached rate.
+- **Uncached tokens are priced as `modelPrices.ts` does**, as cache writes at $0.125 a million
+  (OV-260). With that, the model's single-question cost matches the measured first messages:
+  $0.00175 against $0.00178 for search.
+- **Embeddings are included.** The question's embedding is about 25 tokens, $0.0000005, on every
+  search message. Passage vectors cost about $0.00029 an hour of transcript to make: this
+  library's 69 hours cost $0.02 once, and 5 to 30 hours of new saves a month cost $0.001 to
+  $0.009. Claim embeddings already exist.
 
-| Per message                           | First message | Follow-up, cached |
-| ------------------------------------- | ------------- | ----------------- |
-| Today's chat                          | $0.00092      | $0.00013          |
-| Search's closest 3, overviews         | $0.00178      | $0.00025          |
-| 8 pinned overviews                    | $0.00271      | $0.00032          |
-| Closest 3 plus the 8 closest passages | $0.00214      | $0.00029          |
-| Closest 3, whole transcripts          | $0.00452      | $0.00048          |
-| Library map                           | $0.00185      | $0.00040          |
+Average cost per message, by conversation length:
 
-A month with the whole allowance used. Each cell runs from typical, where a third of messages
-start a conversation and the rest are cached follow-ups, to worst, where every message is uncached:
+| Shape                                 | 1 question | 3        | 10       | 25       | 50       | 50, sources re-chosen every question |
+| ------------------------------------- | ---------- | -------- | -------- | -------- | -------- | ------------------------------------ |
+| Today's chat                          | $0.00089   | $0.00039 | $0.00022 | $0.00018 | $0.00018 | —                                    |
+| Search's closest 3, overviews         | $0.00175   | $0.00076 | $0.00042 | $0.00035 | $0.00034 | $0.00169                             |
+| 8 pinned overviews                    | $0.00272   | $0.00113 | $0.00058 | $0.00045 | $0.00043 | —                                    |
+| Closest 3 plus the 8 closest passages | $0.00213   | $0.00091 | $0.00049 | $0.00039 | $0.00039 | $0.00208                             |
+| Closest 3, whole transcripts          | $0.00451   | $0.00182 | $0.00088 | $0.00066 | $0.00060 | $0.00441                             |
+| Library map                           | $0.00225   | $0.00106 | $0.00065 | $0.00058 | $0.00061 | —                                    |
 
-| Every message in this shape                           | Free (100)        | BYO Plus (500)    | Plus (1,000)      |
-| ----------------------------------------------------- | ----------------- | ----------------- | ----------------- |
-| Today's chat                                          | $0.04 – $0.09     | $0.20 – $0.46     | $0.39 – $0.92     |
-| Search, overviews                                     | $0.08 – $0.18     | $0.38 – $0.89     | $0.76 – $1.78     |
-| 8 pinned                                              | $0.11 – $0.27     | $0.56 – $1.35     | $1.11 – $2.71     |
-| Passage vectors                                       | $0.09 – $0.21     | $0.45 – $1.07     | $0.91 – $2.14     |
-| Whole transcripts                                     | $0.18 – $0.45     | $0.91 – $2.26     | $1.83 – $4.52     |
-| Library map                                           | $0.09 – $0.18     | $0.44 – $0.92     | $0.88 – $1.85     |
-| **Mix: 70% today's, 20% search, 5% passages, 5% map** | **$0.05 – $0.12** | **$0.26 – $0.60** | **$0.51 – $1.20** |
+A month with the whole allowance used, every conversation the same length:
 
+| Every message in this shape                           | Length | Free (100) | BYO Plus (500) | Plus (1,000) |
+| ----------------------------------------------------- | ------ | ---------- | -------------- | ------------ |
+| Today's chat                                          | 3      | $0.04      | $0.19          | $0.39        |
+|                                                       | 10     | $0.02      | $0.11          | $0.22        |
+|                                                       | 50     | $0.02      | $0.09          | $0.18        |
+| Search, overviews                                     | 3      | $0.08      | $0.38          | $0.76        |
+|                                                       | 10     | $0.04      | $0.21          | $0.42        |
+|                                                       | 50     | $0.03      | $0.17          | $0.34        |
+| 8 pinned                                              | 3      | $0.11      | $0.56          | $1.13        |
+|                                                       | 50     | $0.04      | $0.22          | $0.43        |
+| Passage vectors                                       | 3      | $0.09      | $0.45          | $0.91        |
+|                                                       | 50     | $0.04      | $0.19          | $0.39        |
+| Whole transcripts                                     | 3      | $0.18      | $0.91          | $1.82        |
+|                                                       | 50     | $0.06      | $0.30          | $0.60        |
+| Library map                                           | 3      | $0.11      | $0.53          | $1.06        |
+|                                                       | 50     | $0.06      | $0.30          | $0.61        |
+| **Mix: 70% today's, 20% search, 5% passages, 5% map** | 3      | **$0.05**  | **$0.26**      | **$0.52**    |
+|                                                       | 10     | **$0.03**  | **$0.15**      | **$0.29**    |
+|                                                       | 50     | **$0.02**  | **$0.12**      | **$0.25**    |
+| Search, sources re-chosen every question              | 50     | $0.17      | $0.85          | $1.69        |
+| Whole transcripts, sources re-chosen every question   | 50     | $0.44      | $2.20          | $4.41        |
+
+- **Longer conversations are cheaper per message, not dearer.** The history grows, but it is read
+  from the cache at a tenth of the price. A 50-question conversation costs about half as much per
+  message as a 3-question one, for every shape. So the 50-question cap bounds a conversation's
+  cost; it doesn't raise it. Short conversations are the expensive case. Each new conversation
+  pays to write its prompt once.
+- **How sources change mid-conversation matters more than which shape is chosen.** If each
+  question's search result replaced the sources block, the block and the whole history after it
+  would be paid again every time: about five times the cost at 50 questions. **Keep a
+  conversation's sources append-only.** Overviews found by a later question go in after the
+  history as a new user message, and nothing earlier changes, so the prefix stays cached (the
+  OV-313 rule).
 - **Fully used, cross-source chat about doubles a reader's chat bill, and it stays small.** A Plus
-  reader using all 1,000 messages on the mix costs about as much as 15 to 35 overviews on Sol
+  reader using all 1,000 messages on the mix costs $0.25 to $0.52, about 8 to 16 overviews on Sol
   (about $0.033 each, `tiers.md`). These are ceilings for a reader who uses everything, not
   averages.
-- **"Typical" assumes conversations of about three questions.** That's a guess until
-  `reader.chat.answered` shows real lengths. "Worst" is the honest bound for search, since a
-  follow-up reads the cache only when it finds the same overviews.
+- **Real conversation lengths will come from chat records**, which keep each conversation's
+  messages. The table lets the true figure be read off once they're known.
 - **Not counted:**
   - Answers cut off at the 1,000-token cap, whose cost isn't reported. Raising the cap adds
     output.
@@ -593,6 +624,10 @@ start a conversation and the rest are cached follow-ups, to worst, where every m
    user message after the cached prompt, in the shape measured here. A first message costs about
    twice today's. Show what was added, as Recall does, and let the reader remove it. A pinned topic
    or project that expands past about 8 overviews needs a cap, which this didn't measure beyond 8.
+   Sources are append-only within a conversation: overviews found or pinned later go after the
+   history, never into the earlier block, or each question pays for the history again (about five
+   times the cost at 50 questions). Removing one shouldn't rewrite the prompt either: tell the
+   model to set it aside, in a new message.
 2. **An empty chat over the library: the compact map.** It's its own entry point, the library or a
    project, not an overview's chat. It needs a higher answer cap (about 2,000 tokens) or a rule for
    shorter answers. "Never count overviews" stayed in the prompt (`constraints.md`), and no answer
