@@ -372,7 +372,7 @@ beyond one overview. The motivating case: in a recipe's chat, ask how the health
 from their saved overviews apply to the recipe. They also asked for two more cases: overviews the
 reader pins with "@", as Recall does, and an empty chat over the whole library ("tell me the key
 common factors across all my cards"). Recommendation 1 is built (OV-355, `docs/features/chats.md`,
-"Other overviews"); the rest isn't yet.
+"Other overviews"), and so is recommendation 2 (OV-353, "Library and project chat"); the rest isn't yet.
 
 ### The answer
 
@@ -805,7 +805,12 @@ for each step is named at its end. The Claude Design round and the UI for all of
    times the cost at 50 questions). Removing one shouldn't rewrite the prompt either: tell the
    model to set it aside, in a new message.
 2. **An empty chat over the library: the compact map, read in two passes, answered in sections
-   (OV-353).**
+   (OV-353, built 20 Nov 2026).**
+   - Re-run on the shipped prompt (the harness's `shipped` arm, whole while the overviews fit):
+     19 of 22 core overviews, no unknown ids, no point drifting from its sources, $0.0020 a question.
+   - One answer counted ("two sources"). The rule now names that phrasing, and 3 re-runs gave none.
+   - The one question below 20/22 (s-disagree) depends on where the overview sits in the map: it was
+     found 2 times in 3 in the export's order, and 0 in 4 oldest saved first.
    It's its own entry point, the library or a project, not an overview's chat.
    - The model picks up to 5 overviews from the map, with a picking cap of about 1,000 tokens.
    - Code sends those whole.

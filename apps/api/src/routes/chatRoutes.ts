@@ -9,10 +9,12 @@ import {
   ChatQuestionRequest,
   FIRST_ACROSS_SOURCES_CLIENT_VERSION,
   OverviewId,
+  ProjectId,
   type ChatStreamEvent,
 } from "@overview/domain";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { ChatAnswerer } from "../chats/ChatAnswerer.js";
+import type { LibraryChatAnswerer, LibraryChatOwner } from "../chats/LibraryChatAnswerer.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { ApiError, isApiError } from "../http/ApiError.js";
 import { parseOrThrow } from "../http/parseOrThrow.js";
@@ -28,6 +30,8 @@ const RecordParams = z.object({
   id: z.string().refine((id) => chatOwnerOfId(id) !== null && z.uuid().safeParse(chatConversationId(id)).success, "not a chat's id"),
 });
 const OverviewParams = z.object({ overviewId: OverviewId });
+const ProjectParams = z.object({ projectId: ProjectId });
+const LibraryQuestion = ChatQuestionRequest.pick({ conversationId: true, text: true });
 
 async function* serverSentEvents(events: AsyncIterable<ChatStreamEvent>): AsyncGenerator<string> {
   for await (const event of events) yield `data: ${JSON.stringify(event)}\n\n`;
@@ -40,28 +44,22 @@ export function chatRoutes(
   {
     records,
     answerer,
+    libraryAnswerer,
     usage,
     sql,
     clock,
-  }: { records: RecordsRepository; answerer: ChatAnswerer | null; usage: ChatUsageRepository; sql: SqlClient; clock: () => Date },
+  }: {
+    records: RecordsRepository;
+    answerer: ChatAnswerer | null;
+    libraryAnswerer: LibraryChatAnswerer | null;
+    usage: ChatUsageRepository;
+    sql: SqlClient;
+    clock: () => Date;
+  },
 ): void {
-  app.post("/chats/:overviewId/messages", async (request, reply) => {
-    const { overviewId } = parseOrThrow(OverviewParams, request.params, "The overview");
-    bindLogContext(request, reply, { overviewId });
-    const question = parseOrThrow(ChatQuestionRequest, request.body, "The question");
-    if (answerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
-    const { accountId } = request.session!;
+  const streamed = async (reply: FastifyReply, start: () => Promise<AsyncIterable<ChatStreamEvent>>) => {
     try {
-      const events = await answerer.ask(
-        {
-          accountId,
-          plan: await accountPlan(sql, accountId),
-          acrossSources: request.client!.version >= FIRST_ACROSS_SOURCES_CLIENT_VERSION,
-        },
-        overviewId,
-        question,
-        request.log,
-      );
+      const events = await start();
       return reply
         .header("content-type", "text/event-stream; charset=utf-8")
         .header("cache-control", "no-store")
@@ -71,6 +69,41 @@ export function chatRoutes(
       if (typeof retryAfter === "number") reply.header("retry-after", String(retryAfter));
       throw error;
     }
+  };
+
+  // A chat over the whole library, or on a project's page: answered in sections (OV-353).
+  const askOver = async (owner: LibraryChatOwner, request: FastifyRequest, reply: FastifyReply) => {
+    const question = parseOrThrow(LibraryQuestion, request.body, "The question");
+    if (libraryAnswerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
+    const { accountId } = request.session!;
+    return streamed(reply, async () =>
+      libraryAnswerer.ask({ accountId, plan: await accountPlan(sql, accountId) }, owner, question, request.log),
+    );
+  };
+  app.post("/chats/library/messages", (request, reply) => askOver({ kind: "library" }, request, reply));
+  app.post("/chats/projects/:projectId/messages", (request, reply) => {
+    const { projectId } = parseOrThrow(ProjectParams, request.params, "The project");
+    return askOver({ kind: "project", id: projectId }, request, reply);
+  });
+
+  app.post("/chats/:overviewId/messages", async (request, reply) => {
+    const { overviewId } = parseOrThrow(OverviewParams, request.params, "The overview");
+    bindLogContext(request, reply, { overviewId });
+    const question = parseOrThrow(ChatQuestionRequest, request.body, "The question");
+    if (answerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
+    const { accountId } = request.session!;
+    return streamed(reply, async () =>
+      answerer.ask(
+        {
+          accountId,
+          plan: await accountPlan(sql, accountId),
+          acrossSources: request.client!.version >= FIRST_ACROSS_SOURCES_CLIENT_VERSION,
+        },
+        overviewId,
+        question,
+        request.log,
+      ),
+    );
   });
 
   app.get("/chat-usage", async (request) => {

@@ -1,6 +1,6 @@
 import type { PromptMessage } from "./streamChatCompletion.js";
 
-export type FakeChatAnswer = { reply: unknown; usage?: unknown } | { status: number; retryAfter?: string };
+export type FakeChatAnswer = { reply: unknown; usage?: unknown; finishReason?: string } | { status: number; retryAfter?: string };
 
 export interface FakeChatOpenAi {
   http: typeof fetch;
@@ -37,7 +37,11 @@ export function makeFakeChatOpenAi(...answers: FakeChatAnswer[]): FakeChatOpenAi
       for (let start = 0; start < content.length; start += 7) {
         chunks.push(`data: ${JSON.stringify({ choices: [{ delta: { content: content.slice(start, start + 7) } }] })}\n\n`);
       }
-      chunks.push(`data: ${JSON.stringify({ choices: [], usage: answer.usage ?? CHAT_USAGE })}\n\n`, "data: [DONE]\n\n");
+      chunks.push(
+        `data: ${JSON.stringify({ choices: [{ delta: {}, finish_reason: answer.finishReason ?? "stop" }] })}\n\n`,
+        `data: ${JSON.stringify({ choices: [], usage: answer.usage ?? CHAT_USAGE })}\n\n`,
+        "data: [DONE]\n\n",
+      );
       const encoder = new TextEncoder();
       return new Response(
         new ReadableStream({
