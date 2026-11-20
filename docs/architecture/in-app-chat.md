@@ -177,10 +177,10 @@ honestly, on real library sources up to 89 minutes.
 
 - **One overview per conversation.** It is the bounded case: the material is one source the reader
   saved, and the measurements are for it.
-- **Not across the library or a project.** That is open-ended synthesis, which the connector
-  already does on the reader's own plan, from `search_overviews`, `get_overviews`, `get_project`
-  and `get_transcript`. Building it would need retrieval across many transcripts and would compete
-  with the free connector. If testers ask for it, the project page could get its own card later.
+- **Not across the library or a project, at first.** That was the call on 15 Nov, leaving
+  open-ended synthesis to the connector. The owner reopened it on 19 Nov. OV-307 measured chat
+  across sources, the whole library and projects, and it replaces this bullet: see
+  "Chat across sources" below.
 - **No web search.** It costs per call, it breaks "answer only from what you saved", and it is
   what the reader's own assistant is better at.
 
@@ -197,8 +197,8 @@ honestly, on real library sources up to 89 minutes.
   (`shared-transcript-cache.md`). Per-account chunk vectors would be lawful and cost almost nothing
   to make ($0.00024 an hour of video). Stored, though, they take about 60 rows of 1,536 numbers per
   hour of video per account, which is real Neon storage for no measured gain.
-- **Reopen this** if chat goes beyond one source, or if sources much longer than three hours become
-  common. The code for both is in the spike.
+- **Reopen this** if sources much longer than three hours become common. The code is in the
+  spike. Chat beyond one source was reopened, and "Chat across sources" below answers it.
 - **If chat goes beyond one source, start from search by meaning, not transcript vectors.**
   OV-229 already embeds each overview's big picture, core claim, key points and recipe summary,
   one vector per claim (`claimsOf`, `search-by-meaning.md`). That is enough to pick which sources
@@ -391,6 +391,13 @@ common factors across all my cards"). Nothing here is built.
   vectors: it finds the source, but sometimes not the minute that holds the answer.
 - **Pinning works.** With the right overview pinned among 2 or 7 near misses, answers still cited
   the right one and set where overviews disagreed apart (`pinned3`, `pinned8`).
+- **Projects work too, measured on the owner's four.**
+  - **"@" a project:** a project of up to 8 overviews goes in whole. A larger one sends its closest
+    5 whole and the rest in brief. It picked the same sources as sending everything, at up to a
+    sixth of the cost.
+  - **A project page's chat:** whole overviews while the project is small, which covers recipe
+    projects, whose map entries are only titles. Past that, the compact map plus keyword minutes,
+    which answered 6 of 6 details at 81 overviews for $0.0013.
 - **An empty chat over the whole library works from a compact library map.** That's every overview's
   title, big picture and core claim, about 16,000 tokens for this library, sent whole. It found every
   core overview the questions needed, cited nothing off the subject, and never invented an
@@ -596,6 +603,68 @@ Komisar standing apart, and the two "three kids" videos as practical rather than
 cost five times as much and added nothing measured. Code can check citations but not whether a
 synthesis is good, so the answers are in the run for reading.
 
+### A project: its own chat, and pinned with "@"
+
+On 20 Nov the owner asked whether this covers a project, either pinned with "@" in an overview's
+chat or as a chat on the project page. We ran it on their four real projects from a second
+read-only export: Dessert Recipes with 5 overviews, Dinner Recipes 21, Software Engineering with
+AI 39, and Building tech products 81. Each project got 5 or 6 questions:
+
+- a synthesis question, such as "the key common factors across the apps in here that make money";
+- a detail held in one overview, such as the Italian Cream Cake's oven temperature or Cardstock's
+  revenue;
+- a question about the project's purpose, such as "given what this project is for, what should my
+  first month look like?";
+- a question the project can't answer.
+
+There were also 4 "@" questions asked from an overview's chat, such as asking from Dr Rupy's
+healthy-eating video "which recipes in my Dinner Recipes project best fit this advice?". The run
+cost $0.28. The compact map and "@" shapes ran twice, and the whole-overview shapes once.
+
+**A project page's chat**, as first message cost and results by project size:
+
+| Shape                                                          | 5 (recipes)        | 21 (recipes)    | 39              | 81              |
+| -------------------------------------------------------------- | ------------------ | --------------- | --------------- | --------------- |
+| Whole overviews, with purpose                                  | 4k tokens, $0.0006 | 16k, $0.0022    | 81k, $0.0105    | 152k, $0.0191   |
+| Compact map, with purpose                                      | 0.4k, $0.0001      | 0.6k, $0.0002   | 4k, $0.0007     | 7k, $0.0010     |
+| Compact map + 8 keyword minutes from the project's transcripts | 0.5k, $0.0002      | 2.4k, $0.0004   | 6k, $0.0010     | 9k, $0.0013     |
+| Detail questions answered: whole / map / map + keywords        | 2/2 · 0/4 · 1/4    | 2/2 · 2/4 · 2/4 | 2/2 · 2/4 · 4/4 | 3/3 · 4/6 · 6/6 |
+
+- **Whole overviews answer everything, and are cheap for small and recipe projects.** Every
+  detail was right, and the jollof question compared all three recipes by stock, base and method.
+  The compact map is the wrong tool for recipes: a recipe overview has no big picture or core
+  claim, so its map entry is just its title. On the map, every recipe detail and the jollof
+  comparison came back as "the project doesn't say". That reply is honest, since none was made
+  up, but it isn't useful.
+- **Large projects need the map plus keyword minutes.** At 81 overviews the map with keyword
+  minutes answered 6 of 6 details, against 4 of 6 for the map alone, at a fifteenth of the cost of
+  sending everything whole. It found the same core overviews for synthesis questions as the whole
+  shape did.
+- **The reader's purpose made no difference we could measure.** The purpose answers with and
+  without it named the same overviews and gave the same advice. It costs about 40 tokens, so send
+  it anyway: it is the reader's own framing, and it may matter for vaguer questions than ours.
+- **Unanswerable questions were all declined** by every shape. No answer named an overview that
+  isn't in the project.
+- **Broad questions on the 81-overview project hit the 1,000-token cap**, as the library map did:
+  2 or 3 in 12 per shape. Twice, the whole shape stated a count ("all five recipes", "your three
+  recipes"), which breaks the never-count rule (`constraints.md`). The map shapes never did.
+
+**"@" a project in an overview's chat.** For a project of up to 8 overviews, every overview went in
+whole, as with pins. A larger project sent its 5 closest by claim search in full and listed the
+rest in brief, cited by label:
+
+| Project pinned                                                        | Capped: closest 5 whole + the rest in brief | Every overview whole |
+| --------------------------------------------------------------------- | ------------------------------------------- | -------------------- |
+| Dinner Recipes (21), from Dr Rupy                                     | 17k tokens, $0.0025                         | 28k, $0.0040         |
+| Software Engineering with AI (39), from "Why Software Factories Fail" | 20k, $0.0028                                | 87k, $0.0112         |
+| Building tech products (81), from "All Code Is Slop"                  | 25k, $0.0035                                | 158k, $0.0201        |
+
+The capped shape picked the same pushback sources as the whole shape, including some it saw only
+in brief, and cited them by label. On Dr Rupy it chose the lentil curry and the bean stew for the
+"beans every day" reflex. Sending everything whole cites item ids more precisely and costs up to
+six times as much. One question, Dr Rupy against Dessert Recipes, failed on every attempt in both
+shapes with an empty reply, and we didn't find out why. The build should log empty replies.
+
 ### What it does to a reader's month
 
 Each plan's monthly allowance (Free 100, BYO Plus 500, Plus 1,000 messages) priced by code, for
@@ -697,10 +766,18 @@ A month with the whole allowance used, every conversation the same length:
    `reader.chat.answered` would need a label for answers whose cited source isn't the chat's own
    to show that. A cheaper fix to try first: send each keyword minute with its neighbours, so an
    answer a minute away still goes in.
-4. **Project chat (OV-168)** is the pinned shape with the project's members. At 8 members as
-   overviews it costs $0.0027 a first message. It needs no search.
-5. **Not measured:** conversations longer than one question, readers' own questions, and keyword
-   minutes sent with their neighbours.
+4. **Projects (OV-168).**
+   - **"@" a project in an overview's chat:** a project of up to 8 overviews goes in whole, as pins
+     do. A larger one sends its closest 5 whole and the rest in brief, about $0.0035 a first
+     message at 81 overviews.
+   - **A project page's chat:** send the whole overviews while they fit about 20,000 tokens, which
+     covers every recipe project here. Past that, send the compact map of the project plus the 8
+     best keyword minutes from its transcripts.
+   - **Both:** include the reader's purpose. Use the library chat's higher answer cap.
+   - **When the map is built:** give recipes a map entry that carries their main ingredients. A
+     title alone answers nothing.
+5. **Not measured:** conversations longer than one question, readers' own questions, keyword
+   minutes sent with their neighbours, and why one pinned-project question got empty replies.
 6. **When built, it changes the privacy page:** the other overviews and passages go to OpenAI with
    the question. A stored full-text index, or passage vectors if they ever come, is new derived
    data kept per account (`legal-pages.md`).
@@ -736,6 +813,10 @@ node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
   each with a `questions.json`), `cross.json` (questions asked from one overview about others) and
   `synthesis.json` (the library-map questions). It lives in `packages/model-comparison/.local/`,
   which is never committed and is kept per worktree.
+- `project <data dir> <out.json> --arms <arm,…>` runs the project questions in the data dir's
+  `projects.json` against the export's projects. Its arms are `project-full`, `project-map`,
+  `project-map-nopurpose`, `project-map+keyword8`, `at-project` (capped past 8) and
+  `at-project-full`.
 - Arms are `home`, `search3-overviews`, `search5-overviews`, `search3-full`, `search3+passages8`,
   `search3+keyword8`, `pinned1-overviews`, `pinned3-overviews`, `pinned8-overviews`, `pinned3-full`,
   `pinned1+search3-overviews`, `map-compact` and `map-keypoints`. A map arm writes beside the
