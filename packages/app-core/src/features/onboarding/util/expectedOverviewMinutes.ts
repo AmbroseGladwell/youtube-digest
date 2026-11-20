@@ -1,9 +1,11 @@
 import { READING_WORDS_PER_MINUTE, SPOKEN_WORDS_PER_MINUTE, type Source } from "@overview/domain";
 import { noteBudget } from "@overview/generation";
 
-// Premise, core claim, verdict and How to apply, beside the key points and big picture the budget
-// sizes. Set from real overviews' word counts (docs/features/onboarding.md, "Your link").
-export const FIXED_SECTION_WORDS = 200;
+// Everything an overview's reader reads beside the key points and big picture the budget sizes:
+// premise, core claim, How to apply, the steps it gives, the verdict. Measured 20 Nov 2026 over the
+// 60 overviews saved since 12 Nov: a median of 374 words beyond the budget, half between 164 and
+// 478 (docs/features/onboarding.md, "The flow on the web").
+export const FIXED_SECTION_WORDS = 370;
 
 export interface ExpectedMinutes {
   read: number;
