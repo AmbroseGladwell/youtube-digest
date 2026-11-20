@@ -13,6 +13,11 @@ import {
   stampSchemaVersion,
   StoredTranscript,
   formatClock,
+  isInProject,
+  Project,
+  PROJECT_MEMBER_MIGRATIONS,
+  PROJECT_MIGRATIONS,
+  ProjectMember,
   type TranscriptSegment,
 } from "@overview/domain";
 import { costInDollars, priceOf, promptTokensOf, type TokenUsage } from "@overview/generation";
@@ -38,6 +43,7 @@ import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
 //
 //   node dist/scripts/chatAcrossSourcesCheck.js retrieval <data dir> <out.json>
 //   node dist/scripts/chatAcrossSourcesCheck.js answer <data dir> <retrieval.json> <out.json> --arms a,b --runs 2 --budget 3 [--dry-run]
+//   node dist/scripts/chatAcrossSourcesCheck.js project <data dir> <out.json> --arms a,b --runs 2 --budget 1 [--dry-run]
 //
 // retrieval spends only embeddings: the questions, and every transcript's minute passages for the
 // passage-vector arm, each cached in the data dir. Ranking by claims is ClaimEmbeddingsRepository's
@@ -68,10 +74,18 @@ interface LibraryOverview {
   segments: TranscriptSegment[] | null;
 }
 
+interface LibraryProject {
+  project: Project;
+  members: string[];
+}
+
 interface Library {
   overviews: Map<string, LibraryOverview>;
   claimVectors: Map<string, number[][]>;
+  projects: Map<string, LibraryProject>;
   raw: {
+    projects?: Array<{ id: string; schemaVersion: number; body: unknown }>;
+    projectMembers?: Array<{ id: string; schemaVersion: number; body: unknown }>;
     overviews: Array<{ id: string; rev: number; schemaVersion: number; storedAt: string; body: unknown }>;
     embeddings: Array<{
       overviewId: string;
@@ -148,7 +162,27 @@ async function loadLibrary(dataDir: string): Promise<Library> {
   const claimVectors = new Map(
     raw.embeddings.map((row) => [row.overviewId, row.claims.map((claim) => JSON.parse(claim.embedding) as number[])]),
   );
-  return { overviews, claimVectors, raw };
+  const members = (raw.projectMembers ?? []).flatMap((row) => {
+    const read = readStoredRecord(
+      stampSchemaVersion(row.body as Record<string, unknown>, row.schemaVersion),
+      ProjectMember,
+      PROJECT_MEMBER_MIGRATIONS,
+    );
+    return read.status === "read" && isInProject(read.record) && overviews.has(read.record.overviewId) ? [read.record] : [];
+  });
+  const projects = new Map<string, LibraryProject>();
+  for (const row of raw.projects ?? []) {
+    const read = readStoredRecord(stampSchemaVersion(row.body as Record<string, unknown>, row.schemaVersion), Project, PROJECT_MIGRATIONS);
+    if (read.status !== "read" || read.record.archivedAt !== null) continue;
+    projects.set(read.record.id, {
+      project: read.record,
+      members: members
+        .filter((member) => member.projectId === read.record.id)
+        .sort((left, right) => left.addedAt.localeCompare(right.addedAt))
+        .map((member) => member.overviewId),
+    });
+  }
+  return { overviews, claimVectors, projects, raw };
 }
 
 async function claimSearch(library: Library): Promise<(vector: number[]) => Promise<Array<{ overviewId: string; similarity: number }>>> {
@@ -1027,6 +1061,353 @@ function answerMarkdown(turns: AnswerTurn[]): string {
   ].join("\n");
 }
 
+// --- a project: its own chat, and pinned with "@" in an overview's chat ---
+
+type ProjectKind = "synthesis" | "detail" | "purpose" | "outside" | "atProject";
+
+interface ProjectQuestion {
+  id: string;
+  project: string;
+  kind: ProjectKind;
+  question: string;
+  core: string[];
+  mentions: string[];
+  home?: string;
+}
+
+interface ProjectTurn {
+  arm: string;
+  run: number;
+  id: string;
+  kind: ProjectKind;
+  project: string;
+  members: number;
+  failed: boolean;
+  cited: string[];
+  citedNonMembers: number;
+  invalidIds: string[];
+  coreFound: number | null;
+  coreTotal: number;
+  mentioned: boolean | null;
+  gaveCount: boolean;
+  answer: string;
+  inputTokens: number;
+  outputTokens: number;
+  costDollars: number;
+  followUpDollars: number;
+  ms: number;
+}
+
+const BRIEF_FULL = 5;
+const PINNED_WHOLE = 8;
+const COUNTED =
+  /\b(\d+|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+(of (these|the|your) )?(overviews|videos|recipes|sources|desserts|dinners|items)\b/i;
+
+const briefLine = (label: string, entry: LibraryOverview) =>
+  [`## [${label}] ${entry.overview.source.title ?? ""}`, entry.overview.bigPicture ?? "", entry.overview.coreClaim]
+    .filter((line) => line !== "")
+    .join("\n");
+
+// A project page's chat: its overviews whole, or compact as in the library map, with the
+// reader's purpose for it or without, and with the minutes of its transcripts that best match
+// the question's words or without.
+function projectMaterial(
+  library: Library,
+  { project, members }: LibraryProject,
+  options: { whole: boolean; purpose: boolean; passages: ReadonlyMap<string, Passage[]> | null },
+): { text: string; labels: Map<string, string>; partIds: Set<string> } {
+  const labels = new Map<string, string>();
+  const partIds = new Set<string>();
+  const blocks = members.map((id, index) => {
+    const label = `O${index + 1}`;
+    labels.set(label, id);
+    const entry = library.overviews.get(id)!;
+    let body: string;
+    if (options.whole) {
+      for (const { part, index: at } of overviewParts(entry.overview)) partIds.add(`${label}.${overviewPartId(part, at)}`);
+      body = `## [${label}]\n\n${overviewMarkdown(entry.overview, { partIds: true }).replace(PART_ID, (_, part: string) => `[${label}.${part}] `)}`;
+    } else {
+      body = briefLine(label, entry);
+    }
+    const passages = options.passages?.get(id) ?? [];
+    for (const passage of passages) partIds.add(`${label}.${passage.id}`);
+    const minutes =
+      passages.length === 0
+        ? ""
+        : `\n\nMinutes of its transcript that match the question:\n${passages.map((passage) => `[${label}.${passage.id} ${formatClock(passage.startMs / 1000)}] ${passage.text}`).join("\n")}`;
+    return `${body}${minutes}`;
+  });
+  const shown = options.whole
+    ? "Each is given in full, and its items carry their own ids (such as O12.kp3)"
+    : "Each shows its title, its big picture and its core claim";
+  const purpose =
+    options.purpose && project.purpose !== null
+      ? ` The reader keeps it for this, in their own words: "${project.purpose}". Fit answers to that purpose.`
+      : "";
+  const text = `You answer a reader's questions about one of their projects in The Overview, "${project.name}": the overviews they have gathered in it, listed below.${purpose} Each overview has an id (O1, O2 and so on). ${shown}.${options.passages === null ? "" : " Some also carry minutes of their transcript, with ids such as O12.p14."}
+
+Answer from the project below. Answer in up to eight short sentences, or a short list when the question asks for several things.
+- Name each overview you draw on by its title, and list in overviewParts the ids the answer rests on (an overview's id${options.whole ? ", or an item's id" : ""}).${options.passages === null ? "" : " List transcript minute ids in passages."}
+- Never give a count of overviews, or a share of the project: say "several" or "most" instead.
+- When the project doesn't cover what the question asks, say so plainly, and never invent an overview.
+- When overviews disagree, say which ones, and how.
+- There is no single source here: always set inSource to false, leave chatMessages empty${options.passages === null ? " and passages empty" : ""}, and set generalKnowledge to false unless you add something from beyond the project, which you mark as such.
+
+# The project
+
+${blocks.join("\n\n")}`;
+  return { text, labels, partIds };
+}
+
+// "@" a project in an overview's chat: a small project goes in whole, as pins do; a larger one
+// sends its closest few whole and the rest in brief, so the prompt stays bounded.
+function pinnedProjectBlock(
+  library: Library,
+  { project, members }: LibraryProject,
+  home: string,
+  closest: string[],
+  capped: boolean,
+): { text: string; labelled: Map<string, string>; sources: OtherSource[] } {
+  const others = members.filter((id) => id !== home);
+  const whole = !capped || others.length <= PINNED_WHOLE ? others : closest.filter((id) => others.includes(id)).slice(0, BRIEF_FULL);
+  const brief = others.filter((id) => !whole.includes(id));
+  const block = otherSourcesBlock(library, whole, false);
+  const labelled = new Map(block.sources.map((source) => [source.label, source.overviewId]));
+  const lines = brief.map((id, index) => {
+    const label = `S${whole.length + index + 1}`;
+    labelled.set(label, id);
+    return briefLine(label, library.overviews.get(id)!);
+  });
+  const lead = `The reader pinned their project "${project.name}" to this conversation${project.purpose === null ? "" : `, which they keep for this: "${project.purpose}"`}. Its overviews follow.${brief.length === 0 ? "" : ` The ${whole.length === 1 ? "one" : "few"} closest to the question ${whole.length === 1 ? "is" : "are"} given in full; the rest of the project is listed in brief after them, by title, big picture and core claim. Cite one listed in brief by its label alone (such as S${whole.length + 1}) in overviewParts.`}`;
+  const text = `${lead}\n\n${block.text}${lines.length === 0 ? "" : `\n\n# The rest of the project, in brief\n\n${lines.join("\n\n")}`}`;
+  return { text, labelled, sources: block.sources };
+}
+
+async function projectChat(
+  dataDir: string,
+  outPath: string,
+  options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
+): Promise<void> {
+  const apiKey = process.env["OPENAI_API_KEY"];
+  if (!options.dryRun && !apiKey) throw new Error("OPENAI_API_KEY is needed");
+  const library = await loadLibrary(dataDir);
+  const file = JSON.parse(await readFile(join(dataDir, "projects.json"), "utf-8")) as {
+    questions: ProjectQuestion[];
+    atProject: Array<Omit<ProjectQuestion, "kind">>;
+  };
+  const resolve = (prefix: string) => [...library.overviews.keys()].find((id) => id.startsWith(prefix)) ?? prefix;
+  const projectOf = (prefix: string) => [...library.projects.values()].find((entry) => entry.project.id.startsWith(prefix))!;
+  const price = priceOf(chatModel)!;
+  const done: ProjectTurn[] = JSON.parse((await readFile(outPath, "utf-8").catch(() => "[]")) as string) as ProjectTurn[];
+  let spent = done.reduce((total, turn) => total + turn.costDollars, 0);
+  let ceiling = 0;
+  const atQuestions = file.atProject.map((question) => ({ ...question, kind: "atProject" as const }));
+  const needsVectors = options.arms.includes("at-project") && !options.dryRun;
+  const vectors = needsVectors
+    ? (
+        await cachedEmbeddings(
+          join(dataDir, "project-questions.json"),
+          atQuestions.map((question) => question.question.trim().toLowerCase()),
+          apiKey!,
+        )
+      ).vectors
+    : new Map<string, number[]>();
+  const closestMembers = (question: ProjectQuestion, members: string[]): string[] => {
+    const vector = vectors.get(question.question.trim().toLowerCase());
+    if (vector === undefined) return members;
+    const best = (id: string) => Math.max(...(library.claimVectors.get(id) ?? []).map((claim) => cosine(vector, claim)), -1);
+    return [...members].sort((left, right) => best(right) - best(left));
+  };
+
+  for (const armName of options.arms) {
+    const pinned = armName === "at-project" || armName === "at-project-full";
+    const questions: ProjectQuestion[] = pinned ? atQuestions : file.questions;
+    for (let run = 1; run <= options.runs; run += 1) {
+      for (const question of questions) {
+        if (options.only !== null && !new RegExp(options.only).test(question.id)) continue;
+        if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
+        const entry = projectOf(question.project);
+        let messages: PromptMessage[];
+        let citedOf: (reply: ChatReply) => { cited: string[]; invalid: string[] };
+        if (pinned) {
+          const home = library.overviews.get(resolve(question.home!))!;
+          const block = pinnedProjectBlock(library, entry, home.id, closestMembers(question, entry.members), armName === "at-project");
+          const homePassages = home.segments === null ? [] : transcriptPassages(home.segments);
+          messages = [
+            {
+              role: "system",
+              content: chatSystemPrompt(chatSourceKind(home.overview), overviewMarkdown(home.overview, { partIds: true }), homePassages, {
+                recipe: home.overview.recipe !== null,
+              }),
+            },
+            { role: "user", content: block.text },
+            { role: "user", content: question.question },
+          ];
+          citedOf = (reply) => {
+            const ids = [...new Set([...reply.overviewParts, ...reply.passages])];
+            const cited = [
+              ...new Set(
+                ids.flatMap((id) => {
+                  const label = /^S\d+/.exec(id)?.[0];
+                  return label === undefined ? [] : (block.labelled.get(label) ?? []);
+                }),
+              ),
+            ];
+            const invalid = ids.filter((id) => /^S\d+/.test(id) && !block.labelled.has(/^S\d+/.exec(id)![0]));
+            return { cited, invalid };
+          };
+        } else {
+          const whole = armName === "project-full";
+          const keywordArm = armName === "project-map+keyword8";
+          if (!["project-full", "project-map", "project-map-nopurpose", "project-map+keyword8"].includes(armName))
+            throw new Error(`no arm ${armName}`);
+          let passages: Map<string, Passage[]> | null = null;
+          if (keywordArm) {
+            const within: Library = { ...library, overviews: new Map(entry.members.map((id) => [id, library.overviews.get(id)!])) };
+            passages = new Map();
+            for (const { overviewId, passage } of keywordIndex(within).passages(question.question, "", 8))
+              passages.set(
+                overviewId,
+                [...(passages.get(overviewId) ?? []), passage].sort((a, b) => a.startMs - b.startMs),
+              );
+          }
+          const material = projectMaterial(library, entry, { whole, purpose: armName !== "project-map-nopurpose", passages });
+          messages = [
+            { role: "system", content: material.text },
+            { role: "user", content: question.question },
+          ];
+          citedOf = (reply) => {
+            const ids = [...new Set([...reply.overviewParts, ...reply.passages])];
+            return {
+              cited: [...new Set(ids.flatMap((id) => material.labels.get(id.split(".")[0]!) ?? []))],
+              invalid: ids.filter((id) => !material.labels.has(id) && !material.partIds.has(id)),
+            };
+          };
+        }
+        const characters = messages.reduce((total, message) => total + message.content.length, 0);
+        if (options.dryRun) {
+          if (process.env["SHOW"] === question.id && run === 1)
+            console.log(messages.map((m) => `=== ${m.role}\n${m.content}`).join("\n\n"));
+          if (run === 1)
+            console.log(`${armName} ${question.id}: ${entry.members.length} members, about ${Math.round(characters / 4)} prompt tokens`);
+          ceiling += (characters / 4) * (0.125 / 1_000_000) + (700 * price.perMillion.output) / 1_000_000;
+          continue;
+        }
+        if (spent >= options.budget) {
+          console.error(`budget of $${options.budget} reached at $${spent.toFixed(4)}`);
+          break;
+        }
+        const startedAt = Date.now();
+        const base = {
+          arm: armName,
+          run,
+          id: question.id,
+          kind: question.kind,
+          project: entry.project.name,
+          members: entry.members.length,
+        };
+        let turn: ProjectTurn;
+        try {
+          const stream = await streamChatCompletion(
+            { apiKey: apiKey!, http: fetch, sleep: (ms) => new Promise((r) => setTimeout(r, ms)), retried: () => {} },
+            messages,
+            `ov307-${armName}-${run}-${question.id}`,
+          );
+          let raw = "";
+          for await (const piece of stream.pieces) raw += piece;
+          const reply = ChatReply.parse(JSON.parse(raw));
+          const usage = stream.usage();
+          const { cited, invalid } = citedOf(reply);
+          const core = question.core.map(resolve);
+          const text = withoutCitationMarks(reply.answer);
+          const inputTokens = usage === null ? 0 : promptTokensOf(usage);
+          turn = {
+            ...base,
+            failed: false,
+            cited,
+            citedNonMembers: cited.filter((id) => !entry.members.includes(id)).length,
+            invalidIds: invalid,
+            coreFound: core.length === 0 ? null : core.filter((id) => cited.includes(id)).length,
+            coreTotal: core.length,
+            mentioned:
+              question.mentions.length === 0 ? null : question.mentions.some((term) => text.toLowerCase().includes(term.toLowerCase())),
+            gaveCount: COUNTED.test(text),
+            answer: text,
+            inputTokens,
+            outputTokens: usage?.outputTokens ?? 0,
+            costDollars: usage === null ? 0 : costInDollars(price, usage),
+            followUpDollars:
+              usage === null
+                ? 0
+                : costInDollars(price, {
+                    uncachedInputTokens: 0,
+                    cacheWriteTokens: 0,
+                    cachedInputTokens: inputTokens,
+                    outputTokens: usage.outputTokens,
+                  }),
+            ms: Date.now() - startedAt,
+          };
+        } catch (error) {
+          turn = {
+            ...base,
+            failed: true,
+            cited: [],
+            citedNonMembers: 0,
+            invalidIds: [],
+            coreFound: null,
+            coreTotal: question.core.length,
+            mentioned: null,
+            gaveCount: false,
+            answer: error instanceof Error ? error.message : String(error),
+            inputTokens: 0,
+            outputTokens: 0,
+            costDollars: 0,
+            followUpDollars: 0,
+            ms: Date.now() - startedAt,
+          };
+        }
+        done.push(turn);
+        spent += turn.costDollars;
+        await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
+        console.error(
+          `${armName} r${run} ${question.id} ${turn.failed ? "FAILED" : `$${turn.costDollars.toFixed(5)} cited ${turn.cited.length}${turn.coreTotal > 0 ? ` core ${turn.coreFound}/${turn.coreTotal}` : ""}`}`,
+        );
+      }
+    }
+  }
+  if (options.dryRun) {
+    console.log(`dry run: ceiling about $${ceiling.toFixed(2)} (characters / 4 at $0.125/M uncached, 700 output tokens each)`);
+    return;
+  }
+  console.log(projectMarkdown(done));
+  console.error(`spent $${spent.toFixed(4)} in all`);
+}
+
+function projectMarkdown(turns: ProjectTurn[]): string {
+  const keys = [...new Set(turns.map((turn) => `${turn.arm}|${turn.project}`))];
+  const count = (subset: ProjectTurn[], test: (turn: ProjectTurn) => boolean | null) => {
+    const scored = subset.filter((turn) => test(turn) !== null);
+    return scored.length === 0 ? "—" : `${scored.filter((turn) => test(turn) === true).length}/${scored.length}`;
+  };
+  return [
+    "| Arm | Project | Overviews | Cut off | Prompt tokens | First message | Cached follow-up | Core found | Detail cited | Detail named | Outside: cited none | Gave a count | Bad ids |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...keys.map((key) => {
+      const [arm, project] = key.split("|");
+      const all = turns.filter((turn) => turn.arm === arm && turn.project === project);
+      const subset = all.filter((turn) => !turn.failed);
+      const core = subset.filter((turn) => turn.coreFound !== null);
+      const found = core.reduce((total, turn) => total + turn.coreFound!, 0);
+      const total = core.reduce((sum, turn) => sum + turn.coreTotal, 0);
+      const detail = subset.filter((turn) => turn.kind === "detail");
+      return `| ${arm} | ${project} | ${all[0]?.members ?? 0} | ${all.length - subset.length}/${all.length} | ${median(subset.map((turn) => turn.inputTokens))} | $${median(subset.map((turn) => turn.costDollars)).toFixed(5)} | $${median(subset.map((turn) => turn.followUpDollars)).toFixed(5)} | ${total === 0 ? "—" : `${found}/${total}`} | ${count(detail, (turn) => (turn.coreFound === null ? null : turn.coreFound > 0))} | ${count(detail, (turn) => turn.mentioned)} | ${count(
+        subset.filter((turn) => turn.kind === "outside"),
+        (turn) => turn.cited.length === 0,
+      )} | ${count(subset, (turn) => turn.gaveCount)} | ${subset.reduce((sum, turn) => sum + turn.invalidIds.length, 0)} |`;
+    }),
+  ].join("\n");
+}
+
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -1041,6 +1422,14 @@ const { values, positionals } = parseArgs({
 const [command, dataDir, ...rest] = positionals;
 if (command === "retrieval" && dataDir && rest[0]) {
   await retrieval(dataDir, rest[0]);
+} else if (command === "project" && dataDir && rest[0]) {
+  await projectChat(dataDir, rest[0], {
+    arms: values.arms.split(","),
+    runs: Number(values.runs),
+    budget: Number(values.budget),
+    dryRun: values["dry-run"],
+    only: values.only ?? null,
+  });
 } else if (command === "keyword" && dataDir && rest[0]) {
   await keyword(dataDir, rest[0]);
 } else if (command === "answer" && dataDir && rest[0] && rest[1]) {
