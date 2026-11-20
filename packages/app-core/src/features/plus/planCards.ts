@@ -12,6 +12,8 @@ export const EVERY_ACCOUNT_INCLUDES = [
 
 export interface PlanCard {
   name: string;
+  // The price as the plans modal shows it (327ah); provisional, in GBP.
+  price: string;
   ourKey: string;
   ownKey: string;
   // Questions about an overview a month, always on us (OV-310).
@@ -24,6 +26,7 @@ export interface PlanCard {
 export const PLAN_CARDS: PlanCard[] = [
   {
     name: "Free",
+    price: "£0",
     ourKey: "5 a month",
     ownKey: "10 a month",
     questions: `${chatAllowances.free.toLocaleString("en-GB")} a month`,
@@ -32,6 +35,7 @@ export const PLAN_CARDS: PlanCard[] = [
   },
   {
     name: "BYO Plus",
+    price: "£4.99 a month",
     ourKey: "10 a month",
     ownKey: "200 a month",
     questions: `${chatAllowances["byo-plus"].toLocaleString("en-GB")} a month`,
@@ -40,6 +44,7 @@ export const PLAN_CARDS: PlanCard[] = [
   },
   {
     name: "Plus",
+    price: "£7.99 a month",
     ourKey: "50 a month",
     ownKey: "200 a month",
     questions: `${chatAllowances.plus.toLocaleString("en-GB")} a month`,

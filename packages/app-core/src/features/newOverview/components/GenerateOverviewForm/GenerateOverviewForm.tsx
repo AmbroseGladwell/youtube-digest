@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
+import { DEFAULT_PLAN, domainOf } from "@overview/domain";
 import { useActiveVideoUrl } from "../../../../app/ActiveVideoContext.js";
 import { keyPromptDetail } from "../../../transcripts/transcriptSourceNote.js";
 import { KeyPromptNote } from "../../../apiKeys/components/KeyPromptNote/KeyPromptNote.js";
@@ -24,6 +25,11 @@ import { PastedLinkStatus } from "../PastedLinkStatus/PastedLinkStatus.js";
 import { isPlatformPodcastLink, usePodcastLink } from "../../usePodcastLink.js";
 import { useNewOverviewRunController } from "../../NewOverviewRunContext.js";
 import { pastedLinkState } from "../../util/pastedLinkState.js";
+import { resetDate } from "../../util/usageLine.js";
+import { useNextQuota } from "../../useNextQuota.js";
+import { useOverviewUsageQuery } from "../../queries/overviewUsageQuery.js";
+import { PlansModal } from "../../../plus/components/PlansModal/PlansModal.js";
+import { SoftWall } from "../SoftWall/SoftWall.js";
 import { createLabelOf, transcribeChoiceOf } from "../../../podcasts/util/episodeActionOf.js";
 
 export interface GenerateOverviewFormProps {
@@ -74,6 +80,13 @@ export function GenerateOverviewForm({
   const readiness = useGenerationReadiness();
   const keysReady = readiness.ready;
   const limit = useLimitMessage();
+  const next = useNextQuota();
+  const plan = useOverviewUsageQuery().data?.plan ?? DEFAULT_PLAN;
+  // A Free or BYO Plus reader at the limit meets the wall when they try to save (327aa); Plus keeps
+  // the note, since the wall's way on is Plus.
+  const walled = limit !== null && plan !== "plus" && next?.kind === "spent" ? next : null;
+  const [wallShown, setWallShown] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const analytics = useAnalytics();
   const urlFieldId = useId();
@@ -96,6 +109,11 @@ export function GenerateOverviewForm({
     if (target !== null) {
       setValidationError(null);
       onPlaylist(target, url);
+      return;
+    }
+    if (walled !== null && url.trim() !== "") {
+      analytics.capture.newOverviewForm.wallShown({ plan });
+      setWallShown(true);
       return;
     }
     if (choosing !== null || limit !== null) {
@@ -136,6 +154,33 @@ export function GenerateOverviewForm({
   const isWatchedVideo = activeVideoUrl !== null && activeVideoUrl === url.trim();
   const offersWatchedVideo = activeVideoUrl !== null && !isWatchedVideo;
   const watchedCaptionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
+
+  if (wallShown && walled !== null) {
+    const pasted =
+      podcast.link.status === "found"
+        ? { kicker: `${podcast.link.episode.showName} · Podcast`, title: podcast.link.episode.title }
+        : article.link.status === "found"
+          ? {
+              kicker: `${article.link.article.siteName ?? domainOf(url)} · ${article.link.article.recipe === null ? "Article" : "Recipe"}`,
+              title: article.link.article.title,
+            }
+          : { kicker: isYouTubeUrl(url) ? "YouTube · Video" : null, title: url.trim() };
+    return (
+      <>
+        <SoftWall
+          link={pasted}
+          resetsOn={resetDate(walled.resetsOn)}
+          offerKey={plan === "free" && !readiness.hasChosenKey}
+          onSeePlans={() => {
+            analytics.capture.newOverviewForm.plansOpened({ from: "wall" });
+            setPlansOpen(true);
+          }}
+          onFollowed={onCancel}
+        />
+        <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
+      </>
+    );
+  }
 
   return (
     <form className={styles.root} onSubmit={handleSubmit} data-testid={generateOverviewFormTestIds.root}>
@@ -213,7 +258,7 @@ export function GenerateOverviewForm({
         </button>
       )}
 
-      {limit !== null ? (
+      {limit !== null && walled === null ? (
         <LimitMessageNote
           message={limit}
           from="dialog"

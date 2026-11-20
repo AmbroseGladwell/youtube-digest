@@ -993,6 +993,8 @@ export const analyticsEvents = {
       }),
     },
     newOverviewForm: {
+      wallShown: event("A Free or BYO Plus reader tried to save at the monthly limit and met the soft wall (327aa)", { plan: Plan }),
+      plansOpened: event("The plans modal opened, and from where (327ah)", { from: z.enum(["wall"]) }),
       linkEntered: event("The reader types or pastes a video link, counted once they stop; never the link", {
         recognised: z.boolean(),
         from: z.enum(["dialog", "home"]),
