@@ -20,7 +20,7 @@ import {
   ProjectMember,
   type TranscriptSegment,
 } from "@overview/domain";
-import { costInDollars, priceOf, promptTokensOf, type TokenUsage } from "@overview/generation";
+import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage } from "@overview/generation";
 import { AccountId } from "../auth/AccountId.js";
 import { ChatReply } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
@@ -43,6 +43,7 @@ import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
 //
 //   node dist/scripts/chatAcrossSourcesCheck.js retrieval <data dir> <out.json>
 //   node dist/scripts/chatAcrossSourcesCheck.js answer <data dir> <retrieval.json> <out.json> --arms a,b --runs 2 --budget 3 [--dry-run]
+//   node dist/scripts/chatAcrossSourcesCheck.js twopass <data dir> <out.json> --arms structured-map,two-pass --runs 1 --budget 1 [--dry-run]
 //   node dist/scripts/chatAcrossSourcesCheck.js project <data dir> <out.json> --arms a,b --runs 2 --budget 1 [--dry-run]
 //
 // retrieval spends only embeddings: the questions, and every transcript's minute passages for the
@@ -1408,6 +1409,361 @@ function projectMarkdown(turns: ProjectTurn[]): string {
   ].join("\n");
 }
 
+// --- structured answers, and a second pass that reads the chosen overviews whole ---
+
+const STRUCTURED_ANSWER_TOKENS = 2_000;
+const PICKS = 5;
+// Luna's reasoning counts against the cap, and broad questions reason longest: 300 cut off 4 in 17.
+const PICK_TOKENS = 1_000;
+
+const STRUCTURED_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["intro", "sections", "takeaway"],
+  properties: {
+    intro: { type: "string" },
+    sections: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["heading", "points"],
+        properties: {
+          heading: { type: "string" },
+          points: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["text", "sources"],
+              properties: { text: { type: "string" }, sources: { type: "array", items: { type: "string" } } },
+            },
+          },
+        },
+      },
+    },
+    takeaway: { type: "string" },
+  },
+} as const;
+
+const PICK_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["overviews"],
+  properties: { overviews: { type: "array", items: { type: "string" } } },
+} as const;
+
+interface StructuredAnswer {
+  intro: string;
+  sections: Array<{ heading: string; points: Array<{ text: string; sources: string[] }> }>;
+  takeaway: string;
+}
+
+interface TwoPassQuestion {
+  id: string;
+  scope: string;
+  question: string;
+  core: string[];
+}
+
+interface TwoPassTurn {
+  arm: string;
+  run: number;
+  id: string;
+  scope: string;
+  failed: boolean;
+  picked: string[];
+  coreInPicks: number | null;
+  cited: string[];
+  coreFound: number | null;
+  coreTotal: number;
+  sections: number;
+  points: number;
+  pointsWithoutSources: number;
+  pointsComparing: number;
+  invalidIds: string[];
+  weakPoints: Array<{ text: string; sources: string[]; overlap: number }>;
+  gaveCount: boolean;
+  answer: StructuredAnswer | string;
+  inputTokens: number;
+  cachedTokens: number;
+  outputTokens: number;
+  costDollars: number;
+  ms: number;
+}
+
+async function completeJson(
+  apiKey: string,
+  messages: PromptMessage[],
+  schema: object,
+  maxTokens: number,
+  cacheKey: string,
+): Promise<{ json: unknown; usage: TokenUsage | null }> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: chatModel.model,
+      max_completion_tokens: maxTokens,
+      messages,
+      prompt_cache_key: cacheKey,
+      response_format: { type: "json_schema", json_schema: { name: "reply", strict: true, schema } },
+    }),
+    signal: AbortSignal.timeout(180_000),
+  });
+  if (!response.ok) throw new Error(`The provider answered ${response.status}`);
+  const body = (await response.json()) as { choices: Array<{ message: { content: string | null }; finish_reason: string }> };
+  const usage = tokenUsageOf("openai", body);
+  const choice = body.choices[0]!;
+  if (choice.finish_reason === "length") throw Object.assign(new Error("cut off at the answer cap"), { usage });
+  return { json: JSON.parse(choice.message.content ?? ""), usage };
+}
+
+const addUsage = (left: TokenUsage | null, right: TokenUsage | null): TokenUsage | null =>
+  left === null
+    ? right
+    : right === null
+      ? left
+      : {
+          uncachedInputTokens: left.uncachedInputTokens + right.uncachedInputTokens,
+          cacheWriteTokens: left.cacheWriteTokens + right.cacheWriteTokens,
+          cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
+          outputTokens: left.outputTokens + right.outputTokens,
+        };
+
+const contentWords = (text: string) => termsOf(text).filter((word) => word.length > 4);
+
+// The library or a project as the compact map, with one system message that serves both passes,
+// so the second pass reads the map from the cache.
+function twoPassSystem(library: Library, scope: string): { text: string; labels: Map<string, string>; order: string[] } {
+  const project = scope === "library" ? null : [...library.projects.values()].find((entry) => entry.project.id.startsWith(scope))!;
+  const order = project === null ? [...library.overviews.keys()] : project.members;
+  const labels = new Map(order.map((id, index) => [`O${index + 1}`, id]));
+  const blocks = order.map((id, index) => briefLine(`O${index + 1}`, library.overviews.get(id)!));
+  const where =
+    project === null
+      ? "their whole library in The Overview: every overview they have saved"
+      : `one of their projects in The Overview, "${project.project.name}"${project.project.purpose === null ? "" : `, which they keep for this: "${project.project.purpose}"`}`;
+  const text = `You answer a reader's questions about ${where}, listed below in brief. Each overview has an id (O1, O2 and so on) and shows its title, its big picture and its core claim.
+
+Sometimes you are first asked to choose the overviews whose full notes you need. Choose up to ${PICKS}, the ones the answer will rest on, and return their ids. You may then be given those overviews in full, with their items' ids (such as O12.kp3).
+
+Answer in this shape:
+- intro: one or two sentences that answer the question.
+- sections: two to four, each with a short heading and one to three points. Each point is one or two sentences. Its sources list the ids it rests on: an overview's id, or an item's id from the full notes. A point that compares or connects overviews lists every one of them.
+- takeaway: one sentence.
+
+Rules:
+- Name overviews by their titles only where the sentence needs it; the sources carry the citation.
+- Never give a count of overviews, or a share of them: say "several" or "most" instead.
+- Use only what the overviews say. Where you connect them, say it is your connection, not theirs.
+- When they disagree, say which ones, and how.
+- When nothing here covers the question, say so in the intro and leave sections empty.
+
+# The overviews
+
+${blocks.join("\n\n")}`;
+  return { text, labels, order };
+}
+
+async function twoPass(
+  dataDir: string,
+  outPath: string,
+  options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
+): Promise<void> {
+  const apiKey = process.env["OPENAI_API_KEY"];
+  if (!options.dryRun && !apiKey) throw new Error("OPENAI_API_KEY is needed");
+  const library = await loadLibrary(dataDir);
+  const resolve = (prefix: string) => [...library.overviews.keys()].find((id) => id.startsWith(prefix)) ?? prefix;
+  const synthesis = (JSON.parse(await readFile(join(dataDir, "synthesis.json"), "utf-8")) as { questions: SynthesisQuestion[] }).questions;
+  const projects = (JSON.parse(await readFile(join(dataDir, "projects.json"), "utf-8")) as { questions: ProjectQuestion[] }).questions;
+  const questions: TwoPassQuestion[] = [
+    ...synthesis.map((question) => ({ id: question.id, scope: "library", question: question.question, core: question.core.map(resolve) })),
+    { id: "s-novel", scope: "library", question: "Tell me something novel that connects my overviews.", core: [] },
+    ...projects
+      .filter((question) => question.kind === "synthesis" || question.kind === "purpose")
+      .map((question) => ({ id: question.id, scope: question.project, question: question.question, core: question.core.map(resolve) })),
+  ];
+  const price = priceOf(chatModel)!;
+  const done: TwoPassTurn[] = JSON.parse((await readFile(outPath, "utf-8").catch(() => "[]")) as string) as TwoPassTurn[];
+  let spent = done.reduce((total, turn) => total + turn.costDollars, 0);
+  let ceiling = 0;
+
+  for (const armName of options.arms) {
+    if (armName !== "structured-map" && armName !== "two-pass") throw new Error(`no arm ${armName}`);
+    for (let run = 1; run <= options.runs; run += 1) {
+      for (const question of questions) {
+        if (options.only !== null && !new RegExp(options.only).test(question.id)) continue;
+        if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
+        const system = twoPassSystem(library, question.scope);
+        if (options.dryRun) {
+          const tokens = system.text.length / 4;
+          ceiling +=
+            armName === "two-pass"
+              ? tokens * (0.125 / 1e6) + tokens * (0.01 / 1e6) + 12_000 * (0.125 / 1e6) + 1_600 * (price.perMillion.output / 1e6)
+              : tokens * (0.125 / 1e6) + 1_500 * (price.perMillion.output / 1e6);
+          if (run === 1) console.log(`${armName} ${question.id}: about ${Math.round(tokens)} map tokens`);
+          continue;
+        }
+        if (spent >= options.budget) {
+          console.error(`budget of $${options.budget} reached at $${spent.toFixed(4)}`);
+          break;
+        }
+        const startedAt = Date.now();
+        const key = `ov307-twopass-${question.scope}`;
+        let usage: TokenUsage | null = null;
+        let picked: string[] = [];
+        const partIds = new Set<string>();
+        const texts = new Map<string, string>();
+        for (const [label, id] of system.labels) texts.set(label, briefLine(label, library.overviews.get(id)!));
+        let turn: TwoPassTurn;
+        try {
+          const messages: PromptMessage[] = [{ role: "system", content: system.text }];
+          if (armName === "two-pass") {
+            const pick = await completeJson(
+              apiKey!,
+              [
+                ...messages,
+                { role: "user", content: `Choose the overviews whose full notes you need to answer this question: ${question.question}` },
+              ],
+              PICK_SCHEMA,
+              PICK_TOKENS,
+              key,
+            );
+            usage = addUsage(usage, pick.usage);
+            picked = [...new Set((pick.json as { overviews: string[] }).overviews.map((id) => id.split(".")[0]!))]
+              .filter((label) => system.labels.has(label))
+              .slice(0, PICKS);
+            const whole = picked.map((label) => {
+              const entry = library.overviews.get(system.labels.get(label)!)!;
+              for (const { part, index } of overviewParts(entry.overview)) partIds.add(`${label}.${overviewPartId(part, index)}`);
+              const markdown = overviewMarkdown(entry.overview, { partIds: true }).replace(
+                PART_ID,
+                (_, part: string) => `[${label}.${part}] `,
+              );
+              texts.set(label, `${texts.get(label)}\n${markdown}`);
+              return `## [${label}]\n\n${markdown}`;
+            });
+            messages.push({ role: "user", content: `The full notes of the overviews you chose:\n\n${whole.join("\n\n")}` });
+          }
+          messages.push({ role: "user", content: question.question });
+          const reply = await completeJson(apiKey!, messages, STRUCTURED_SCHEMA, STRUCTURED_ANSWER_TOKENS, key);
+          usage = addUsage(usage, reply.usage);
+          const answer = reply.json as StructuredAnswer;
+          const points = answer.sections.flatMap((section) => section.points);
+          const ids = [...new Set(points.flatMap((point) => point.sources))];
+          const valid = (id: string) => system.labels.has(id) || partIds.has(id);
+          const cited = [...new Set(ids.filter(valid).map((id) => system.labels.get(id.split(".")[0]!)!))];
+          const weakPoints = points
+            .map((point) => {
+              const words = [...new Set(contentWords(point.text))];
+              const source = point.sources
+                .filter(valid)
+                .map((id) => texts.get(id.split(".")[0]!) ?? "")
+                .join(" ");
+              const known = new Set(contentWords(source));
+              return {
+                text: point.text,
+                sources: point.sources,
+                overlap: words.length === 0 ? 1 : words.filter((word) => known.has(word)).length / words.length,
+              };
+            })
+            .filter((point) => point.overlap < 0.25);
+          const allText = [
+            answer.intro,
+            ...answer.sections.flatMap((section) => [section.heading, ...section.points.map((point) => point.text)]),
+            answer.takeaway,
+          ].join(" ");
+          turn = {
+            arm: armName,
+            run,
+            id: question.id,
+            scope: question.scope,
+            failed: false,
+            picked: picked.map((label) => system.labels.get(label)!),
+            coreInPicks:
+              armName === "two-pass" && question.core.length > 0
+                ? question.core.filter((id) => picked.some((label) => system.labels.get(label) === id)).length
+                : null,
+            cited,
+            coreFound: question.core.length === 0 ? null : question.core.filter((id) => cited.includes(id)).length,
+            coreTotal: question.core.length,
+            sections: answer.sections.length,
+            points: points.length,
+            pointsWithoutSources: points.filter((point) => point.sources.filter(valid).length === 0).length,
+            pointsComparing: points.filter((point) => new Set(point.sources.filter(valid).map((id) => id.split(".")[0])).size > 1).length,
+            invalidIds: ids.filter((id) => !valid(id)),
+            weakPoints,
+            gaveCount: COUNTED.test(allText),
+            answer,
+            inputTokens: usage === null ? 0 : promptTokensOf(usage),
+            cachedTokens: usage?.cachedInputTokens ?? 0,
+            outputTokens: usage?.outputTokens ?? 0,
+            costDollars: usage === null ? 0 : costInDollars(price, usage),
+            ms: Date.now() - startedAt,
+          };
+        } catch (error) {
+          const partial = (error as { usage?: TokenUsage | null }).usage ?? null;
+          usage = addUsage(usage, partial);
+          turn = {
+            arm: armName,
+            run,
+            id: question.id,
+            scope: question.scope,
+            failed: true,
+            picked: picked.map((label) => system.labels.get(label)!),
+            coreInPicks: null,
+            cited: [],
+            coreFound: null,
+            coreTotal: question.core.length,
+            sections: 0,
+            points: 0,
+            pointsWithoutSources: 0,
+            pointsComparing: 0,
+            invalidIds: [],
+            weakPoints: [],
+            gaveCount: false,
+            answer: error instanceof Error ? error.message : String(error),
+            inputTokens: usage === null ? 0 : promptTokensOf(usage),
+            cachedTokens: usage?.cachedInputTokens ?? 0,
+            outputTokens: usage?.outputTokens ?? 0,
+            costDollars: usage === null ? 0 : costInDollars(price, usage),
+            ms: Date.now() - startedAt,
+          };
+        }
+        done.push(turn);
+        spent += turn.costDollars;
+        await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
+        console.error(
+          `${armName} r${run} ${question.id} ${turn.failed ? `FAILED ${String(turn.answer)}` : `$${turn.costDollars.toFixed(5)} cited ${turn.cited.length} points ${turn.points} weak ${turn.weakPoints.length}`}`,
+        );
+      }
+    }
+  }
+  if (options.dryRun) {
+    console.log(`dry run: ceiling about $${ceiling.toFixed(2)}`);
+    return;
+  }
+  console.log(twoPassMarkdown(done));
+  console.error(`spent $${spent.toFixed(4)} in all`);
+}
+
+function twoPassMarkdown(turns: TwoPassTurn[]): string {
+  const arms = [...new Set(turns.map((turn) => turn.arm))];
+  return [
+    "| Arm | Answers | Cut off | Prompt tokens | Output tokens | Cost a question | Core found | Core in picks | Points | Without a source | Comparing 2+ | Bad ids | Weak overlap | Gave a count | Latency |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...arms.map((arm) => {
+      const all = turns.filter((turn) => turn.arm === arm);
+      const ok = all.filter((turn) => !turn.failed);
+      const sum = (pick: (turn: TwoPassTurn) => number) => ok.reduce((total, turn) => total + pick(turn), 0);
+      const core = ok.filter((turn) => turn.coreFound !== null);
+      const picks = ok.filter((turn) => turn.coreInPicks !== null);
+      return `| ${arm} | ${all.length} | ${all.length - ok.length} | ${median(ok.map((turn) => turn.inputTokens))} | ${median(ok.map((turn) => turn.outputTokens))} | $${median(ok.map((turn) => turn.costDollars)).toFixed(5)} | ${core.length === 0 ? "—" : `${core.reduce((t, x) => t + x.coreFound!, 0)}/${core.reduce((t, x) => t + x.coreTotal, 0)}`} | ${picks.length === 0 ? "—" : `${picks.reduce((t, x) => t + x.coreInPicks!, 0)}/${picks.reduce((t, x) => t + x.coreTotal, 0)}`} | ${sum((turn) => turn.points)} | ${sum((turn) => turn.pointsWithoutSources)} | ${sum((turn) => turn.pointsComparing)} | ${sum((turn) => turn.invalidIds.length)} | ${sum((turn) => turn.weakPoints.length)} | ${ok.filter((turn) => turn.gaveCount).length} | ${(median(ok.map((turn) => turn.ms)) / 1000).toFixed(1)} s |`;
+    }),
+  ].join("\n");
+}
+
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -1422,6 +1778,14 @@ const { values, positionals } = parseArgs({
 const [command, dataDir, ...rest] = positionals;
 if (command === "retrieval" && dataDir && rest[0]) {
   await retrieval(dataDir, rest[0]);
+} else if (command === "twopass" && dataDir && rest[0]) {
+  await twoPass(dataDir, rest[0], {
+    arms: values.arms.split(","),
+    runs: Number(values.runs),
+    budget: Number(values.budget),
+    dryRun: values["dry-run"],
+    only: values.only ?? null,
+  });
 } else if (command === "project" && dataDir && rest[0]) {
   await projectChat(dataDir, rest[0], {
     arms: values.arms.split(","),
