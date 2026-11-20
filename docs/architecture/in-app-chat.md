@@ -541,6 +541,51 @@ Komisar standing apart, and the two "three kids" videos as practical rather than
 cost five times as much and added nothing measured. Code can check citations but not whether a
 synthesis is good, so the answers are in the run for reading.
 
+### What it does to a reader's month
+
+These are the medians above, priced at each plan's monthly allowance (Free 100, BYO Plus 500,
+Plus 1,000 messages) by code, with embeddings included:
+
+- **The question's embedding** is about 25 tokens, $0.0000005, on every search message.
+- **Passage vectors** cost about $0.00029 an hour of transcript to make. This library's 69 hours
+  cost $0.02 once, and 5 to 30 hours of new saves a month cost $0.001 to $0.009.
+- **Claim embeddings** already exist and add nothing.
+
+| Per message                           | First message | Follow-up, cached |
+| ------------------------------------- | ------------- | ----------------- |
+| Today's chat                          | $0.00092      | $0.00013          |
+| Search's closest 3, overviews         | $0.00178      | $0.00025          |
+| 8 pinned overviews                    | $0.00271      | $0.00032          |
+| Closest 3 plus the 8 closest passages | $0.00214      | $0.00029          |
+| Closest 3, whole transcripts          | $0.00452      | $0.00048          |
+| Library map                           | $0.00185      | $0.00040          |
+
+A month with the whole allowance used. Each cell runs from typical, where a third of messages
+start a conversation and the rest are cached follow-ups, to worst, where every message is uncached:
+
+| Every message in this shape                           | Free (100)        | BYO Plus (500)    | Plus (1,000)      |
+| ----------------------------------------------------- | ----------------- | ----------------- | ----------------- |
+| Today's chat                                          | $0.04 – $0.09     | $0.20 – $0.46     | $0.39 – $0.92     |
+| Search, overviews                                     | $0.08 – $0.18     | $0.38 – $0.89     | $0.76 – $1.78     |
+| 8 pinned                                              | $0.11 – $0.27     | $0.56 – $1.35     | $1.11 – $2.71     |
+| Passage vectors                                       | $0.09 – $0.21     | $0.45 – $1.07     | $0.91 – $2.14     |
+| Whole transcripts                                     | $0.18 – $0.45     | $0.91 – $2.26     | $1.83 – $4.52     |
+| Library map                                           | $0.09 – $0.18     | $0.44 – $0.92     | $0.88 – $1.85     |
+| **Mix: 70% today's, 20% search, 5% passages, 5% map** | **$0.05 – $0.12** | **$0.26 – $0.60** | **$0.51 – $1.20** |
+
+- **Fully used, cross-source chat about doubles a reader's chat bill, and it stays small.** A Plus
+  reader using all 1,000 messages on the mix costs about as much as 15 to 35 overviews on Sol
+  (about $0.033 each, `tiers.md`). These are ceilings for a reader who uses everything, not
+  averages.
+- **"Typical" assumes conversations of about three questions.** That's a guess until
+  `reader.chat.answered` shows real lengths. "Worst" is the honest bound for search, since a
+  follow-up reads the cache only when it finds the same overviews.
+- **Not counted:**
+  - Answers cut off at the 1,000-token cap, whose cost isn't reported. Raising the cap adds
+    output.
+  - Passage-vector storage on Neon, about 0.36 MB an hour of video per account, which isn't
+    priced here. It is the one recurring cost passage vectors add.
+
 ### Recommendations
 
 1. **In an overview's chat: claim search plus pins, overviews only.** Send the closest 3 by claim
