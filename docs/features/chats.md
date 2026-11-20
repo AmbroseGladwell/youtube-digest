@@ -10,12 +10,22 @@ chats over MCP. The panel inside the overview is OV-310.
 ## One record per conversation
 
 A synced kind, `chat`, added at client version 22 (`sync-api.md`, "A kind a client was built
-before"). Each record is one conversation about one overview:
+before"). Each record is one conversation. Since chat schema 4 (OV-353, client 26), a chat has an
+**owner**: an overview, a project, or no one, which makes it a chat over the whole library. One
+chat type serves all three; the owner decides where a chat is listed, what it is deleted with, and
+how it is answered. There's room for topics later.
 
-- `id`: `chatRecordId(overviewId, conversationId)`, the overview's id, a colon and the
-  conversation's own uuid. The overview comes first, so the server finds an overview's chats
-  by the start of their ids, as it finds a project's membership records (`projects.md`).
-- `overviewId`, and `startedAt`, the time of the first message.
+- **The owner is a flat field:** `overviewId` for an overview's chat, `projectId` for a project's,
+  neither for the library's, never both. `chatOwner(chat)` reads it as `{ kind, id }`. It is a
+  field each, not an owner object, because the device's `byOverview` and `byProject` indexes,
+  the server's sweeps and MCP's filter all read the stored body as it is, unmigrated, and every
+  chat written before schema 4 already carries `overviewId`.
+- `id`: `chatRecordId(owner, conversationId)`. An overview's chats are the overview's id, a colon
+  and the conversation's own uuid, as they always were. A project's are
+  `project:<projectId>:<uuid>`, and the library's are `library:<uuid>`. So each owner's chats are
+  found by the start of their ids (`chatOwnerPrefix`), as a project's membership records are
+  (`projects.md`). `chatOwnerOfId` reads the owner back from an id.
+- `startedAt`, the time of the first message.
 - `messages`, in order. A reader's message is `{ from: "reader", text, at }`, with `sources`
   and `setAside` when the question added other overviews or took some out ("Other overviews"
   below). An answer adds `citations` and `inSource`.
@@ -441,8 +451,9 @@ general assistant would.
 
 ## Deleting
 
-- **One conversation:** `DELETE /api/chats/:overviewId/:conversationId` tombstones it. A retry of
-  one already deleted answers 204. On a device, `ChatStore.deleteChat` removes it and journals
+- **One conversation:** `DELETE /api/chat-records/:id` tombstones it, whatever owns it (client 26
+  on). Clients up to 25 use `DELETE /api/chats/:overviewId/:conversationId`, which stays. A retry
+  of one already deleted answers 204. On a device, `ChatStore.deleteChat` removes it and journals
   the delete, which the outbox pushes like any other.
 - **With its overview:** deleting an overview tombstones its chats, in a sweep run after the
   overview's own tombstone commits and on every retry of the delete (`tombstoneChats`, through
@@ -452,6 +463,11 @@ general assistant would.
   overview's transaction, which would need the ids before the transaction opens. A device
   removes the overview's chats when it deletes the overview, or when it pulls the overview's
   tombstone, without journaling them, since the server's delete takes them.
+- **With its project:** deleting a project tombstones the chats on its page in the same way
+  (`tombstoneChats({ kind: "project" })`, after the membership sweep). A device drops them when it
+  deletes the project or pulls its tombstone (the `byProject` index, local database version 8).
+- **A library chat** has no owner to go with: it goes when the reader deletes it, or with the
+  account.
 - **With the account:** chats are rows in `records`, which go with the account
   (`account-deletion.md`). `accountDeletion.test.ts` seeds one.
 
@@ -604,7 +620,10 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
 A connected assistant reads chats under `overviews:read` (OV-311; `mcp-connector.md`, "Chats"):
 `list_chats` by overview, by project or across the library, `get_chat` with each citation as a
 timestamp link, and a line at the end of `get_overview` naming its conversations. Nothing an
-assistant can call writes to a chat.
+assistant can call writes to a chat. Since OV-353, `list_chats` names each chat by what it's over
+("about <title>", "on the project <name>", "over the whole library"). Its `project` filter takes the
+project's own chats as well as chats about its overviews, and `library: true` lists the library's.
+`get_chat` reads a sectioned answer as numbered headings, each point naming the overviews it rests on.
 
 ## Privacy
 

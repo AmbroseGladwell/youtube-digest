@@ -81,7 +81,8 @@ The dates are wall clocks, with the bound `sync-metadata.md` already accepts und
 skew". Between a device and an assistant, the assistant's write is dated by the server.
 
 A tombstone is still used, but only when the parent goes: deleting a project or an overview
-tombstones its members.
+tombstones its members. Deleting a project also tombstones the chats on its page (OV-353,
+`chats.md`, "Deleting").
 
 ## The server
 

@@ -26,7 +26,12 @@ async function withOverview(account: TestAccount) {
 function chatting(testApp: TestApp, account: TestAccount) {
   const records = new RecordsRepository(testApp.sql, () => testApp.clock.now);
   return (overviewId: string, conversationId: string, messages: ChatMessage[]) =>
-    appendChatMessages(records, account.accountId, { overviewId, conversationId, messages }, testApp.clock.now);
+    appendChatMessages(
+      records,
+      account.accountId,
+      { owner: { kind: "overview", id: overviewId }, conversationId, messages },
+      testApp.clock.now,
+    );
 }
 
 const refusal = async (attempt: Promise<unknown>): Promise<string> => {

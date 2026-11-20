@@ -497,14 +497,14 @@ test("a full conversation, a deleted one, and an overview the account doesn't ho
     await appendChatMessages(
       records,
       setup.account.accountId,
-      { overviewId: setup.overviewId, conversationId: full, messages: exchange },
+      { owner: { kind: "overview", id: setup.overviewId }, conversationId: full, messages: exchange },
       setup.testApp.clock.now,
     );
   }
   await appendChatMessages(
     records,
     setup.account.accountId,
-    { overviewId: setup.overviewId, conversationId: deleted, messages: exchange },
+    { owner: { kind: "overview", id: setup.overviewId }, conversationId: deleted, messages: exchange },
     setup.testApp.clock.now,
   );
   await setup.account.inject({ method: "DELETE", url: `/api/chats/${setup.overviewId}/${deleted}` });

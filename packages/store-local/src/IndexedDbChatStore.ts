@@ -1,7 +1,7 @@
-import { CHAT_MIGRATIONS, Chat, readStoredRecord, type ChatStore, type OverviewId } from "@overview/domain";
+import { CHAT_MIGRATIONS, Chat, chatOwner, readStoredRecord, type ChatOwner, type ChatStore } from "@overview/domain";
 import { appendPendingWrite, JOURNALLED_STORES } from "./appendPendingWrite.js";
 import type { IndexedDbStoreOptions } from "./IndexedDbStoreOptions.js";
-import { CHATS_BY_OVERVIEW_INDEX, CHATS_STORE } from "./localDatabaseSchema.js";
+import { CHATS_BY_OVERVIEW_INDEX, CHATS_BY_PROJECT_INDEX, CHATS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 
@@ -21,9 +21,18 @@ export class IndexedDbChatStore implements ChatStore {
     this.#onJournaled = onJournaled;
   }
 
-  async listChats(overviewId: OverviewId): Promise<Chat[]> {
-    const index = this.#db.transaction(CHATS_STORE, "readonly").objectStore(CHATS_STORE).index(CHATS_BY_OVERVIEW_INDEX);
-    const chats = (await promisifyRequest<unknown[]>(index.getAll(overviewId))).flatMap(readable);
+  // The library's chats have no owner, so no index holds them: they are the ones left over.
+  async listChats(owner: ChatOwner): Promise<Chat[]> {
+    const store = this.#db.transaction(CHATS_STORE, "readonly").objectStore(CHATS_STORE);
+    const request =
+      owner.kind === "overview"
+        ? store.index(CHATS_BY_OVERVIEW_INDEX).getAll(owner.id)
+        : owner.kind === "project"
+          ? store.index(CHATS_BY_PROJECT_INDEX).getAll(owner.id)
+          : store.getAll();
+    const chats = (await promisifyRequest<unknown[]>(request))
+      .flatMap(readable)
+      .filter((chat) => owner.kind !== "library" || chatOwner(chat).kind === "library");
     return chats.sort((left, right) => left.startedAt.localeCompare(right.startedAt));
   }
 

@@ -37,7 +37,7 @@ async function connected(t: test.TestContext): Promise<Connected> {
       await appendChatMessages(
         records,
         reader.accountId,
-        { overviewId, conversationId, messages },
+        { owner: { kind: "overview", id: overviewId }, conversationId, messages },
         at === undefined ? testApp.clock.now : new Date(at),
       );
       return chatRecordId(overviewId, conversationId);
@@ -159,4 +159,51 @@ test("a long conversation is read a page of messages at a time, numbered as in t
   assert.match(first, /These are messages 1–20 of 24\. More remain: call again with cursor "20"\.$/);
   assert.match(second, /21\. \*\*The reader asked\*\* \(2026-09-26\): Question 11\?/);
   assert.ok(!second.includes("More remain"));
+});
+
+test("a project's chat and a library chat are listed by what they're over, read in sections, and filtered by project or library (OV-353)", async (t) => {
+  const { client, reader, testApp, library } = await connected(t);
+  const project = { ...makeProject({ name: "Training" }), schemaVersion: CURRENT_SCHEMA_VERSIONS.project, updatedAt: UPDATED_AT };
+  assert.equal((await reader.inject({ method: "POST", url: "/api/projects", body: project })).statusCode, 201);
+  const records = new RecordsRepository(testApp.sql, () => testApp.clock.now);
+  const cited = { overviewId: library.notes[0]!.overview.id, title: library.notes[0]!.overview.source.title, item: null };
+  const sectioned: ChatMessage[] = [
+    { from: "reader", text: "What do they share?", at: UPDATED_AT },
+    {
+      from: "answer",
+      text: "Most start small.",
+      at: UPDATED_AT,
+      citations: [cited],
+      inSource: false,
+      sections: {
+        intro: "Most start small.",
+        sections: [{ heading: "Scope", points: [{ text: "Begin with one habit.", citations: [cited] }] }],
+        takeaway: "Pick one.",
+      },
+      stats: { overviews: 3, projects: 1 },
+    },
+  ];
+  const write = async (owner: Parameters<typeof chatRecordId>[0]) => {
+    const conversationId = randomUUID();
+    await appendChatMessages(records, reader.accountId, { owner: owner as never, conversationId, messages: sectioned }, testApp.clock.now);
+    return chatRecordId(owner, conversationId);
+  };
+  const onProject = await write({ kind: "project", id: project.id });
+  const overLibrary = await write({ kind: "library" });
+
+  const all = (await client.callTool("list_chats")).text;
+  assert.match(all, /on the project "Training"/);
+  assert.match(all, /over the whole library/);
+  const byProject = (await client.callTool("list_chats", { project: "Training" })).text;
+  assert.ok(byProject.includes(onProject) && !byProject.includes(overLibrary));
+  const byLibrary = (await client.callTool("list_chats", { library: true })).text;
+  assert.ok(byLibrary.includes(overLibrary) && !byLibrary.includes(onProject));
+
+  const read = (await client.callTool("get_chat", { id: onProject })).text;
+  assert.match(read, /^# A conversation over the reader's project "Training"/);
+  assert.match(read, /1\. Scope\n {6}- Begin with one habit\. \(from "/);
+  assert.match((await client.callTool("get_chat", { id: overLibrary })).text, /^# A conversation over the reader's whole library/);
+
+  assert.equal((await reader.inject({ method: "DELETE", url: `/api/projects/${project.id}` })).statusCode < 300, true);
+  assert.equal((await client.callTool("get_chat", { id: onProject })).isError, true);
 });

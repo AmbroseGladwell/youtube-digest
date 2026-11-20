@@ -1422,7 +1422,8 @@ export class BackendSimulator {
       this.#chatUsage = { ...this.#chatUsage, ...usage };
     },
     questions: () => this.#chatQuestions,
-    list: (overviewId: OverviewId) => this.#page.evaluate((id) => window.__iwftStores__.chatStore.listChats(id), overviewId),
+    list: (overviewId: OverviewId) =>
+      this.#page.evaluate((id) => window.__iwftStores__.chatStore.listChats({ kind: "overview", id }), overviewId),
   };
 
   #nextSeq = (): number => Math.max(0, ...this.#feed.map((change) => change.seq)) + 1;

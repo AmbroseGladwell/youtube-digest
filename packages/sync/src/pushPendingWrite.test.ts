@@ -393,5 +393,5 @@ test("deleting a chat deletes that conversation, by its overview and its own id"
   );
 
   assert.deepEqual(outcome, { result: "gone" });
-  assert.deepEqual(api.calls, [{ method: "deleteChat", args: [OVERVIEW, conversation] }]);
+  assert.deepEqual(api.calls, [{ method: "deleteChat", args: [`${OVERVIEW}:${conversation}`] }]);
 });

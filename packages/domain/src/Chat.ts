@@ -13,6 +13,8 @@ const OverviewPartPlace = z
   })
   .strict();
 
+const OtherOverviewCitationPlace = z.object({ overviewId: OverviewId, title: z.string(), item: OverviewPartPlace.nullable() }).strict();
+
 // Where an answer found what it says, worked out by code from the ids the model cited, never
 // stated by the model: a stretch of a video or episode, a paragraph of an article, a message in
 // another chat about the same overview, an item of the overview itself, with a hash of its
@@ -25,12 +27,35 @@ export const ChatCitation = z.union([
   z.object({ paragraph: z.number().int().nonnegative() }).strict(),
   z.object({ chatId: z.string().min(1), message: z.number().int().nonnegative() }).strict(),
   OverviewPartPlace,
-  z.object({ overviewId: OverviewId, title: z.string(), item: OverviewPartPlace.nullable() }).strict(),
+  OtherOverviewCitationPlace,
 ]);
 export type ChatCitation = z.infer<typeof ChatCitation>;
 export type OtherOverviewCitation = Extract<ChatCitation, { overviewId: string }>;
 
 export const MAX_CHAT_SOURCES = 200;
+export const MAX_CHAT_PICKS = 5;
+
+// A library or project chat's answer in sections, as OV-307's two-pass shape measured it: each
+// point carries the overviews it rests on, cited by code from the ids the model gave
+// (docs/features/chats.md, "Library and project chat").
+export const ChatAnswerSections = z.object({
+  intro: z.string(),
+  sections: z.array(
+    z.object({
+      heading: z.string(),
+      points: z.array(z.object({ text: z.string(), citations: z.array(OtherOverviewCitationPlace) })),
+    }),
+  ),
+  takeaway: z.string(),
+});
+export type ChatAnswerSections = z.infer<typeof ChatAnswerSections>;
+
+// What the question was asked over, counted by code when it was answered, never by the model.
+export const ChatScopeStats = z.object({
+  overviews: z.number().int().nonnegative(),
+  projects: z.number().int().nonnegative().optional(),
+});
+export type ChatScopeStats = z.infer<typeof ChatScopeStats>;
 
 // Another of the reader's overviews that went into a conversation with a question: pinned by the
 // reader with "@" (on its own or as part of a project) or found by search. Its label is fixed for
@@ -56,6 +81,8 @@ export const ChatMessage = z.discriminatedUnion("from", [
     at: z.iso.datetime(),
     sources: z.array(ChatSource).max(MAX_CHAT_SOURCES).optional(),
     setAside: z.array(z.string()).max(MAX_CHAT_SOURCES).optional(),
+    // A library or project chat: the overviews read whole for this question.
+    picked: z.array(OverviewId).max(MAX_CHAT_PICKS).optional(),
   }),
   // inSource is false when the source doesn't say. Another chat and the overview are never the
   // source: an answer resting only on the overview is "From the overview", read off its citations.
@@ -65,26 +92,58 @@ export const ChatMessage = z.discriminatedUnion("from", [
     at: z.iso.datetime(),
     citations: z.array(ChatCitation),
     inSource: z.boolean(),
+    // A library or project chat's answer: text is its flattened reading, citations every point's.
+    sections: ChatAnswerSections.optional(),
+    stats: ChatScopeStats.optional(),
   }),
 ]);
 export type ChatMessage = z.infer<typeof ChatMessage>;
 
-// One conversation about one overview. Its own record, never a field of the overview, which
-// is replaced wholesale when it is made again (CLAUDE.md, the read and favourite lesson). The
-// server writes it; a device only reads it or deletes it (docs/features/chats.md).
-export const Chat = z.object({
-  id: z.string().min(1),
-  overviewId: OverviewId,
-  startedAt: z.iso.datetime(),
-  messages: z
-    .array(ChatMessage)
-    .min(1)
-    .max(MAX_CHAT_QUESTIONS * 2),
-});
+// One conversation. Its owner is the overview or the project it belongs to, or neither for a chat
+// over the whole library; the owner decides where it is listed and what it goes with (OV-353). A
+// flat field each, never an owner object, because the device's index and the server's sweeps read
+// the stored body as it is. Its own record, never a field of the overview, which is replaced
+// wholesale when it is made again (CLAUDE.md, the read and favourite lesson). The server writes
+// it; a device only reads it or deletes it (docs/features/chats.md).
+export const Chat = z
+  .object({
+    id: z.string().min(1),
+    overviewId: OverviewId.optional(),
+    projectId: ProjectId.optional(),
+    startedAt: z.iso.datetime(),
+    messages: z
+      .array(ChatMessage)
+      .min(1)
+      .max(MAX_CHAT_QUESTIONS * 2),
+  })
+  .refine((chat) => chat.overviewId === undefined || chat.projectId === undefined, { message: "a chat has at most one owner" });
 export type Chat = z.infer<typeof Chat>;
 
-// The overview comes first, so an overview's chats are found by the start of their ids.
-export const chatRecordId = (overviewId: string, conversationId: string): string => `${overviewId}:${conversationId}`;
+export type ChatOwner = { kind: "overview"; id: string } | { kind: "project"; id: string } | { kind: "library" };
+
+export const chatOwner = (chat: Pick<Chat, "overviewId" | "projectId">): ChatOwner =>
+  chat.overviewId !== undefined
+    ? { kind: "overview", id: chat.overviewId }
+    : chat.projectId !== undefined
+      ? { kind: "project", id: chat.projectId }
+      : { kind: "library" };
+
+// An overview's chats start with its id, as they always have; a project's and the library's with
+// a word no overview id can be, so each owner's chats are found by the start of their ids.
+export const chatOwnerPrefix = (owner: ChatOwner): string =>
+  owner.kind === "overview" ? `${owner.id}:` : owner.kind === "project" ? `project:${owner.id}:` : "library:";
+
+export const chatRecordId = (owner: ChatOwner | string, conversationId: string): string =>
+  `${chatOwnerPrefix(typeof owner === "string" ? { kind: "overview", id: owner } : owner)}${conversationId}`;
+
+export const chatOwnerOfId = (id: string): ChatOwner | null => {
+  const [first, second] = id.split(":");
+  if (first === "library" && second !== undefined) return { kind: "library" };
+  if (first === "project" && second !== undefined && id.split(":").length === 3) return { kind: "project", id: second };
+  return first !== undefined && second !== undefined && id.split(":").length === 2 ? { kind: "overview", id: first } : null;
+};
+
+export const chatConversationId = (id: string): string => id.slice(id.lastIndexOf(":") + 1);
 
 export const answeredFromOverview = (message: Pick<Extract<ChatMessage, { from: "answer" }>, "inSource" | "citations">): boolean =>
   !message.inSource && message.citations.some((citation) => "part" in citation);

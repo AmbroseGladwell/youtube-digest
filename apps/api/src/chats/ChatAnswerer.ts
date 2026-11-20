@@ -253,7 +253,7 @@ export class ChatAnswerer {
         const written = await appendChatMessages(
           records,
           accountId,
-          { overviewId, conversationId: question.conversationId, messages },
+          { owner: { kind: "overview", id: overviewId }, conversationId: question.conversationId, messages },
           clock(),
         );
         settled = true;
