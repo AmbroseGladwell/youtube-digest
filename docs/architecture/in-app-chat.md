@@ -386,7 +386,9 @@ common factors across all my cards"). Nothing here is built.
 - **Keyword search over the transcripts we already keep finds what claim search misses, with no
   vectors.** Claim search or keywords put the right source in the closest 3 for all 78 answerable
   questions, as passage vectors did. A stored full-text index is about a sixth of passage vectors'
-  size, or nothing if computed per question.
+  size, or nothing if computed per question. Sending the 8 best keyword minutes answered 59 of 66
+  detail questions for $0.0026. That's better than whole transcripts and a little behind passage
+  vectors: it finds the source, but sometimes not the minute that holds the answer.
 - **Pinning works.** With the right overview pinned among 2 or 7 near misses, answers still cited
   the right one and set where overviews disagreed apart (`pinned3`, `pinned8`).
 - **An empty chat over the whole library works from a compact library map.** That's every overview's
@@ -435,7 +437,8 @@ name, which makes it harder.
 
 **Prices** are `modelPrices.ts`, checked 9 Nov 2026: Luna $0.10 in, $0.01 cached, $0.50 out per
 million, and `text-embedding-3-small` $0.02. The run spent **$0.02 on embeddings and $4.42 on
-answers**, on the evals key. Each arm had a budget, and nine reached it short of a full second
+answers**, on the evals key, plus $0.49 for the keyword arm (`search3+keyword8`), which ran
+afterwards and finished both runs. Each arm had a budget, and nine reached it short of a full second
 run: every arm ran each question once, and 73 to 92 of the 94 a second time. The missing second
 answers are the last questions in the order, mostly the apply and unanswerable ones. A cached
 follow-up is the measured prompt re-priced at the cached rate. A real follow-up only gets that
@@ -515,6 +518,7 @@ Every arm adds sources to today's chat about one overview. "Overviews" means the
 | search5-overviews         | closest 5                                                       | 16,390        | $0.00219      | $0.00028         | 2.9 s   |
 | search3-full              | closest 3, whole transcripts                                    | 35,363        | $0.00452      | $0.00048         | 2.7 s   |
 | search3+passages8         | closest 3, plus the 8 closest transcript minutes in the library | 16,181        | $0.00214      | $0.00029         | 3.2 s   |
+| search3+keyword8          | closest 3, plus the 8 best keyword-matched minutes              | 18,842        | $0.00256      | $0.00032         | 2.8 s   |
 | pinned1-overviews         | the right overview, pinned                                      | 9,345         | $0.00127      | $0.00021         | 2.7 s   |
 | pinned3-overviews         | it, plus 2 near misses                                          | 13,209        | $0.00178      | $0.00025         | 2.8 s   |
 | pinned8-overviews         | it, plus 7 near misses                                          | 20,946        | $0.00271      | $0.00032         | 3.0 s   |
@@ -531,6 +535,7 @@ the expected detail.
 | search5-overviews         | 33/33 · — · 32/33     | 7/65 · — · 4/65       | 30/32 · — · 26/32     | 10/10 · — · 7/7   |
 | search3-full              | 34/34 · 34/34 · 34/34 | 54/68 · 52/68 · 55/68 | 32/34 · 26/34 · 31/34 | 10/10 · — · 7/7   |
 | search3+passages8         | 33/33 · 30/33 · 33/33 | 63/65 · 56/65 · 58/65 | 32/32 · 16/32 · 27/32 | 9/9 · — · 6/6     |
+| search3+keyword8          | 34/34 · 26/34 · 34/34 | 59/66 · 52/66 · 55/66 | 33/33 · 13/33 · 29/33 | 18/18 · — · 13/13 |
 | pinned1-overviews         | 34/34 · — · 34/34     | 6/67 · — · 2/67       | 32/34 · — · 26/34     | 20/20 · — · 14/14 |
 | pinned3-overviews         | 33/33 · — · 32/33     | 7/66 · — · 5/66       | 31/33 · — · 25/33     | 10/10 · — · 7/7   |
 | pinned8-overviews         | 33/33 · — · 32/33     | 7/64 · — · 5/64       | 30/32 · — · 27/32     | 10/10 · — · 7/7   |
@@ -548,6 +553,14 @@ the expected detail.
   `transcriptOnly` questions. Whole transcripts of the closest 3 cost two and a half times as much,
   and still lose what search misses. The 8 closest passages found more for half the price. They
   are worse at two-moment questions (16 of 32 moments), because only the closest minutes go in.
+- **Keyword minutes come close to passage vectors.** They answered 59 of 66 detail questions
+  against 63 of 65, and cited the right moment 52 times against 56. They cost $0.0026 a first
+  message against $0.0021, because the matched minutes spread over more sources. In all seven
+  misses the right overview was in the prompt, but the minute holding the answer wasn't among
+  the eight sent, so the answer said, rightly, that nothing it was shown covered it. The likely
+  reason is that the question's words aren't the answer's: "which drug did she keep asking the
+  nurse for" never says "potassium". Meaning finds that minute; words can't. Declining held as
+  well: 8 of 8 unanswerable answers cited nothing.
 - **Pins don't confuse it.** Seven near misses beside the right overview changed nothing that was
   measured. Answers named each pinned overview by title and said where they differed, for example
   Becky Kennedy's repair against Erica Komisar's presence.
@@ -674,18 +687,20 @@ A month with the whole allowance used, every conversation the same length:
    project, not an overview's chat. It needs a higher answer cap (about 2,000 tokens) or a rule for
    shorter answers. "Never count overviews" stayed in the prompt (`constraints.md`), and no answer
    gave a count.
-3. **For details: keyword search over the kept transcripts, not passage vectors.** Run beside claim
-   search, it found every source passage vectors found, for no embeddings and little or no
-   storage. Send the best-matching keyword passages, as `search3+passages8` sent the closest
-   vector passages. That answer shape is unmeasured with keyword passages: a run of about $0.40
-   would check it before building. Reopen passage vectors only if readers' own questions, which
-   are vaguer than these, miss by keyword. `reader.chat.answered` would need a label for answers
-   whose cited source isn't the chat's own to show that. Meanwhile a pinned overview could go in
-   with its whole transcript (`pinned3-full`: 65 of 66).
+3. **For details: keyword search over the kept transcripts, not passage vectors, for now.** Run
+   beside claim search, it found every source passage vectors found, and its 8 best minutes
+   answered 59 of 66 detail questions, against 63 of 65 for passage vectors and 54 of 68 for
+   whole transcripts. It needs no embeddings, and little or no storage. Passage vectors would buy
+   about six more points on detail questions, which are a minority of what readers ask, for a
+   per-account index seven times the size of the transcripts and an earlier move off Neon's free
+   plan. Reopen them if readers' own questions, which will be vaguer than these, miss by keyword.
+   `reader.chat.answered` would need a label for answers whose cited source isn't the chat's own
+   to show that. A cheaper fix to try first: send each keyword minute with its neighbours, so an
+   answer a minute away still goes in.
 4. **Project chat (OV-168)** is the pinned shape with the project's members. At 8 members as
    overviews it costs $0.0027 a first message. It needs no search.
-5. **Not measured:** answers built from keyword passages, conversations longer than one question,
-   and readers' own questions.
+5. **Not measured:** conversations longer than one question, readers' own questions, and keyword
+   minutes sent with their neighbours.
 6. **When built, it changes the privacy page:** the other overviews and passages go to OpenAI with
    the question. A stored full-text index, or passage vectors if they ever come, is new derived
    data kept per account (`legal-pages.md`).
@@ -722,7 +737,7 @@ node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
   `synthesis.json` (the library-map questions). It lives in `packages/model-comparison/.local/`,
   which is never committed and is kept per worktree.
 - Arms are `home`, `search3-overviews`, `search5-overviews`, `search3-full`, `search3+passages8`,
-  `pinned1-overviews`, `pinned3-overviews`, `pinned8-overviews`, `pinned3-full`,
+  `search3+keyword8`, `pinned1-overviews`, `pinned3-overviews`, `pinned8-overviews`, `pinned3-full`,
   `pinned1+search3-overviews`, `map-compact` and `map-keypoints`. A map arm writes beside the
   output as `.map.json`.
 - Run through `scripts/secrets.sh run` from a script with no spaces in its path: the worktree's
