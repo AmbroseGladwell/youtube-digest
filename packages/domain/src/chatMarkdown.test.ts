@@ -99,3 +99,27 @@ test("a recipe page's decline says the recipe doesn't cover it", () => {
   const recipe = makeRecipeOverview();
   assert.match(chatMarkdown(answeredWith(recipe.id, [], false), recipe), /The recipe doesn't cover this/);
 });
+
+test("an answer citing another overview names it by title and says it came from the reader's other overviews", () => {
+  const overview = makeOverview();
+  const other = makeOverview();
+  const markdown = chatMarkdown(
+    answeredWith(
+      overview.id,
+      [
+        { overviewId: other.id, title: "Eat more plants", item: { part: "keyPoint", index: 1, textHash: overviewPartHash("x") } },
+        { overviewId: other.id, title: "Eat more plants", item: null },
+      ],
+      false,
+    ),
+    overview,
+  );
+  assert.match(
+    markdown,
+    new RegExp(
+      `Cites: item 2 of "Key points" in the reader's overview "Eat more plants" \\(${other.id}\\); the reader's overview "Eat more plants"`,
+    ),
+  );
+  assert.match(markdown, /Answered from the reader's other overviews, not from what the video says\./);
+  assert.doesNotMatch(markdown, /doesn't cover this/);
+});

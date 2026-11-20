@@ -1,4 +1,4 @@
-import { answeredFromOverview, type Chat, type ChatCitation } from "./Chat.js";
+import { answeredFromOtherOverviews, answeredFromOverview, type Chat, type ChatCitation, type OtherOverviewCitation } from "./Chat.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import type { Overview } from "./Overview.js";
 import { answeredFromOverviewAlone, chatSourceKind, type ChatSourceKind } from "./chatSourceKind.js";
@@ -12,6 +12,7 @@ function citationText(overview: Overview, citation: ChatCitation): string {
   if ("chatId" in citation) return `message ${citation.message + 1} of conversation ${citation.chatId}`;
   if ("paragraph" in citation) return `paragraph ${citation.paragraph + 1} of the article`;
   if ("part" in citation) return overviewPartText(overview, citation);
+  if ("overviewId" in citation) return otherOverviewText(citation);
   const label = `${formatTimestamp(citation.startMs)}–${formatTimestamp(citation.endMs)}`;
   return overview.source.kind === "youtube" ? `[${label}](${youtubeTimestampUrl(overview.source.url, citation.startMs)})` : label;
 }
@@ -46,9 +47,22 @@ function overviewPartText(overview: Overview, citation: Extract<ChatCitation, { 
   return SINGLE_ITEM_PARTS.has(cited.part) ? `the overview's "${section}"` : `item ${cited.index + 1} of the overview's "${section}"`;
 }
 
+// Named by the title it had when cited, which outlives the overview; its item by the section and place
+// it had then.
+function otherOverviewText({ overviewId, title, item }: OtherOverviewCitation): string {
+  const named = `the reader's overview "${title}" (${overviewId})`;
+  if (item === null) return named;
+  return SINGLE_ITEM_PARTS.has(item.part)
+    ? `"${PART_SECTION[item.part]}" of ${named}`
+    : `item ${item.index + 1} of "${PART_SECTION[item.part]}" in ${named}`;
+}
+
 // An article or a recipe page is answered from its overview alone, so only a decline is noted.
 const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" }>, kind: ChatSourceKind): string | null => {
   if (message.inSource) return null;
+  if (!answeredFromOverview(message) && answeredFromOtherOverviews(message)) {
+    return `Answered from the reader's other overviews, not from what the ${answeredFromOverviewAlone(kind) ? "overview of this " + kind : kind} says.`;
+  }
   if (answeredFromOverviewAlone(kind)) {
     return answeredFromOverview(message)
       ? null

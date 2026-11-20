@@ -34,3 +34,25 @@ test("a chat holds at least one message and at most its questions' worth", () =>
   assert.equal(chatQuestionCount(full), MAX_CHAT_QUESTIONS);
   assert.ok(!Chat.safeParse(chat([...full, question])).success);
 });
+
+const OTHER = "6c1d3a7e-2b4f-4e8a-9c5d-1f2e3a4b5c6d";
+
+test("an answer can cite another overview, or an item of it, by id and the title it had (OV-355)", () => {
+  const item = { part: "keyPoint", index: 1, textHash: "0a1b2c3d" };
+  assert.ok(Chat.safeParse(chat([question, { ...answer, citations: [{ overviewId: OTHER, title: "Eat more plants", item }] }])).success);
+  assert.ok(
+    Chat.safeParse(chat([question, { ...answer, citations: [{ overviewId: OTHER, title: "Eat more plants", item: null }] }])).success,
+  );
+  assert.ok(!Chat.safeParse(chat([question, { ...answer, citations: [{ overviewId: OTHER, item: null }] }])).success);
+  assert.ok(
+    !Chat.safeParse(chat([question, { ...answer, citations: [{ overviewId: OTHER, title: "T", item: null, part: "verdict" }] }])).success,
+  );
+});
+
+test("a question keeps the other overviews it added, each with a fixed label, and the labels it set aside", () => {
+  const added = { label: "S1", overviewId: OTHER, title: "Eat more plants", how: "found" };
+  assert.ok(Chat.safeParse(chat([{ ...question, sources: [added], setAside: [] }, answer])).success);
+  assert.ok(Chat.safeParse(chat([{ ...question, sources: [{ ...added, how: "pinned", brief: true }] }, answer])).success);
+  assert.ok(!Chat.safeParse(chat([{ ...question, sources: [{ ...added, label: "S0" }] }, answer])).success);
+  assert.ok(!Chat.safeParse(chat([{ ...question, sources: [{ ...added, how: "guessed" }] }, answer])).success);
+});

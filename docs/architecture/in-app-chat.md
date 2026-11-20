@@ -371,7 +371,8 @@ OV-307, an investigation, 20 November 2026. On 19 Nov the owner asked for chat t
 beyond one overview. The motivating case: in a recipe's chat, ask how the healthy eating swaps
 from their saved overviews apply to the recipe. They also asked for two more cases: overviews the
 reader pins with "@", as Recall does, and an empty chat over the whole library ("tell me the key
-common factors across all my cards"). Nothing here is built.
+common factors across all my cards"). Recommendation 1 is built (OV-355, `docs/features/chats.md`,
+"Other overviews"); the rest isn't yet.
 
 ### The answer
 
@@ -794,7 +795,7 @@ A month with the whole allowance used, every conversation the same length:
 The owner approved building these on 20 Nov 2026. They're carded as OV-352 to OV-355, and the card
 for each step is named at its end. The Claude Design round and the UI for all of them are OV-354.
 
-1. **In an overview's chat: claim search plus pins, overviews only (OV-355).** Send the closest 3 by claim
+1. **In an overview's chat: claim search plus pins, overviews only (OV-355, built 20 Nov 2026).** Send the closest 3 by claim
    search (never the chat's own overview) and any overviews the reader pins with "@". They go as a
    user message after the cached prompt, in the shape measured here. A first message costs about
    twice today's. Show what was added, as Recall does, and let the reader remove it. A pinned topic

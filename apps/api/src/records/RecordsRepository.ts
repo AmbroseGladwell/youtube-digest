@@ -147,6 +147,15 @@ export class RecordsRepository {
     return this.#get(this.#sql, accountId, kind, id);
   }
 
+  async readLive(accountId: AccountId, kind: RecordKind, ids: readonly string[]): Promise<StoredRecord[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.#sql.query<RecordRow>(
+      `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = $2 and not deleted and id = any($3::text[])`,
+      [accountId, kind, [...ids]],
+    );
+    return rows.map(storedRecordFromRow);
+  }
+
   async #liveOverviewOf(tx: SqlClient, accountId: AccountId, sourceKey: string, exceptId: string): Promise<StoredRecord | null> {
     const rows = await tx.query<RecordRow>(
       `select ${RECORD_COLUMNS} from records

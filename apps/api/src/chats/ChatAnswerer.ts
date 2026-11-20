@@ -13,6 +13,8 @@ import {
   Overview,
   OVERVIEW_MIGRATIONS,
   overviewMarkdown,
+  PROJECT_MIGRATIONS,
+  Project,
   overviewParts,
   readStoredRecord,
   sourceKey,
@@ -20,6 +22,7 @@ import {
   StoredTranscript,
   type ChatMessage,
   type ChatQuestionRequest,
+  type ChatSource,
   type ChatSourceKind,
   type ChatStreamEvent,
   type Plan,
@@ -27,6 +30,7 @@ import {
 import { costInDollars, priceOf, promptTokensOf, type TokenUsage } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
 import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
+import type { MeaningSearch } from "../meaning/MeaningSearch.js";
 import { ApiError } from "../http/ApiError.js";
 import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
@@ -41,8 +45,10 @@ import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatReply } from "./ChatReply.js";
 import { chatModel } from "./chatModel.js";
 import { chatSystemPrompt, otherChatsPrompt } from "./chatPrompt.js";
+import { chooseOtherSources } from "./chooseOtherSources.js";
 import { citationsOf } from "./citationsOf.js";
 import { otherChatsInPrompt } from "./otherChatsInPrompt.js";
+import { otherSourcesInPrompt, type OtherSourcesInPrompt, type SourcesTurn } from "./otherSourcesInPrompt.js";
 import { ChatProviderError, streamChatCompletion, type ChatCompletionStream, type PromptMessage } from "./streamChatCompletion.js";
 import { transcriptPassages } from "./transcriptPassages.js";
 
@@ -54,6 +60,7 @@ export interface ChatAnswererOptions {
   transcripts: TranscriptsRepository;
   usage: ChatUsageRepository;
   costs: AccountCostsRepository;
+  meaningSearch: MeaningSearch | null;
   clock: () => Date;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -61,7 +68,19 @@ export interface ChatAnswererOptions {
 export interface ChatCaller {
   accountId: AccountId;
   plan: Plan;
+  acrossSources: boolean;
 }
+
+interface OtherSourcesTurn {
+  added: ChatSource[];
+  setAside: string[];
+  searched: boolean;
+  inPrompt: OtherSourcesInPrompt;
+}
+
+const NO_OTHER_SOURCES: OtherSourcesTurn = { added: [], setAside: [], searched: false, inPrompt: { blocks: [], labels: new Map() } };
+
+class EmptyAnswerError extends Error {}
 
 const FAILED = "Something went wrong answering that. Try again in a while.";
 
@@ -131,6 +150,19 @@ export class ChatAnswerer {
     const reader = settings === null ? null : composeReaderContext(settings.aboutYou, settings.learned);
     const othersInPrompt = otherChatsInPrompt(others);
     const othersText = otherChatsPrompt(kind, othersInPrompt);
+    const history = conversation?.messages ?? [];
+    let sources: OtherSourcesTurn;
+    try {
+      sources = caller.acrossSources ? await this.#otherSources(accountId, overviewId, question, history) : NO_OTHER_SOURCES;
+    } catch (error) {
+      await usage.release(reservation.day, accountId);
+      throw error;
+    }
+    const sourcesBlock = (turn: number): PromptMessage[] => {
+      const block = sources.inPrompt.blocks[turn] ?? null;
+      return block === null ? [] : [{ role: "user", content: block }];
+    };
+    let readerTurn = 0;
     const prompt: PromptMessage[] = [
       {
         role: "system",
@@ -140,13 +172,26 @@ export class ChatAnswerer {
         }),
       },
       ...(othersText === null ? [] : [{ role: "user" as const, content: othersText }]),
-      ...(conversation?.messages ?? []).map((message): PromptMessage => ({
-        role: message.from === "reader" ? "user" : "assistant",
-        content: message.text,
-      })),
+      ...history.flatMap((message): PromptMessage[] =>
+        message.from === "reader"
+          ? [...sourcesBlock(readerTurn++), { role: "user", content: message.text }]
+          : [{ role: "assistant", content: message.text }],
+      ),
+      ...sourcesBlock(readerTurn),
       { role: "user", content: question.text },
     ];
-    const logged = { plan, about: kind, model: chatModel.model, otherChatMessages: othersInPrompt.messages, personalised: reader !== null };
+    const logged = {
+      plan,
+      about: kind,
+      model: chatModel.model,
+      otherChatMessages: othersInPrompt.messages,
+      personalised: reader !== null,
+      searched: sources.searched,
+      pinnedSources: sources.added.filter((source) => source.how === "pinned").length,
+      foundSources: sources.added.filter((source) => source.how === "found").length,
+      briefSources: sources.added.filter((source) => source.brief === true).length,
+      setAsideSources: sources.setAside.length,
+    };
     const startedAt = askedAt.getTime();
     const release = () => usage.release(reservation.day, accountId);
 
@@ -176,6 +221,13 @@ export class ChatAnswerer {
       let sent = "";
       let settled = false;
       try {
+        if (sources.added.length > 0) {
+          yield {
+            type: "sources",
+            pinned: sources.added.filter((source) => source.how === "pinned"),
+            found: sources.added.filter((source) => source.how === "found"),
+          };
+        }
         for await (const piece of stream.pieces) {
           raw += piece;
           const text = withoutCitationMarks(answerSoFar(raw), { arriving: true });
@@ -186,10 +238,16 @@ export class ChatAnswerer {
         }
         const reply = ChatReply.parse(JSON.parse(raw));
         const text = withoutCitationMarks(reply.answer).slice(0, MAX_CHAT_MESSAGE_LENGTH);
-        if (text.length === 0) throw new Error("the reply had no answer");
-        const cited = citationsOf(reply, passages, overviewParts(overview), othersInPrompt.labels);
+        if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
+        const cited = citationsOf(reply, passages, overviewParts(overview), othersInPrompt.labels, sources.inPrompt.labels);
         const messages: ChatMessage[] = [
-          { from: "reader", text: question.text, at: askedAt.toISOString() },
+          {
+            from: "reader",
+            text: question.text,
+            at: askedAt.toISOString(),
+            ...(sources.added.length === 0 ? {} : { sources: sources.added }),
+            ...(sources.setAside.length === 0 ? {} : { setAside: sources.setAside }),
+          },
           { from: "answer", text, at: clock().toISOString(), citations: cited.citations, inSource: cited.inSource },
         ];
         const written = await appendChatMessages(
@@ -209,6 +267,7 @@ export class ChatAnswerer {
             sourceCitations: cited.sourceCitations,
             overviewCitations: cited.overviewCitations,
             chatCitations: cited.chatCitations,
+            otherOverviewCitations: cited.otherOverviewCitations,
             used: reservation.used,
             limit: reservation.limit,
             ms: clock().getTime() - startedAt,
@@ -241,6 +300,62 @@ export class ChatAnswerer {
       }
     };
     return answer.call(this);
+  }
+
+  // The other overviews this conversation has held, question by question, and what this question
+  // adds or sets aside. Each source keeps its label, so earlier questions' blocks rebuild exactly.
+  async #otherSources(
+    accountId: AccountId,
+    overviewId: string,
+    question: ChatQuestionRequest,
+    history: readonly ChatMessage[],
+  ): Promise<OtherSourcesTurn> {
+    const { records, meaningSearch } = this.#options;
+    const past: SourcesTurn[] = history.flatMap((message) =>
+      message.from === "reader" ? [{ sources: message.sources ?? [], setAside: message.setAside ?? [] }] : [],
+    );
+    const all = past.flatMap((turn) => turn.sources);
+    const wasSetAside = new Set(past.flatMap((turn) => turn.setAside));
+    const live = all.filter((source) => !wasSetAside.has(source.label));
+    const setAside = live.filter((source) => question.setAside.includes(source.overviewId)).map((source) => source.label);
+    const stillLive = live.filter((source) => !setAside.includes(source.label));
+    const inConversation = new Set(stillLive.map((source) => source.overviewId));
+    const choice = await chooseOtherSources(records, meaningSearch, {
+      accountId,
+      home: overviewId,
+      question,
+      inConversation,
+      setAside: new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id))),
+      nextLabel: Math.max(0, ...all.map((source) => Number(source.label.slice(1)))) + 1,
+    });
+    const sources = [...all, ...choice.added];
+    const overviews = await this.#overviewsOf(
+      accountId,
+      sources.map((source) => source.overviewId),
+    );
+    const projectIds = [...new Set(sources.flatMap((source) => (source.projectId === undefined ? [] : [source.projectId])))];
+    const projects = new Map(
+      (await records.readLive(accountId, "project", projectIds)).flatMap((record) => {
+        const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Project, PROJECT_MIGRATIONS);
+        return read.status === "read" ? [[read.record.id as string, read.record] as const] : [];
+      }),
+    );
+    return {
+      added: choice.added,
+      setAside,
+      searched: choice.searched,
+      inPrompt: otherSourcesInPrompt([...past, { sources: choice.added, setAside }], overviews, projects),
+    };
+  }
+
+  async #overviewsOf(accountId: AccountId, ids: readonly string[]): Promise<Map<string, Overview>> {
+    const rows = await this.#options.records.readLive(accountId, "overview", [...new Set(ids)]);
+    return new Map(
+      rows.flatMap((record) => {
+        const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Overview, OVERVIEW_MIGRATIONS);
+        return read.status === "read" ? [[read.record.id as string, read.record] as const] : [];
+      }),
+    );
   }
 
   async #overview(accountId: AccountId, overviewId: string): Promise<Overview> {

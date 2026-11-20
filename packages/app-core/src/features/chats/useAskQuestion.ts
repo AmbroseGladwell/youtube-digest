@@ -71,6 +71,7 @@ export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, ap
             sourceCitations: answer.citations.filter((citation) => "startMs" in citation || "paragraph" in citation).length,
             overviewCitations: answer.citations.filter((citation) => "part" in citation).length,
             conversationCitations: answer.citations.filter((citation) => "chatId" in citation).length,
+            otherOverviewCitations: answer.citations.filter((citation) => "overviewId" in citation).length,
           });
         }
         void queryClient.invalidateQueries({ queryKey: chatKeys.usage(accountId) });

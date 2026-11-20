@@ -198,4 +198,37 @@ test.describe("Chat citing the overview", () => {
     await reader.chat.verifySheetIs("raised");
     await reader.chat.verifyOverviewCitationIsFocused(0, 0);
   });
+
+  test("an answer drawing on another overview links to it by title and place, and one deleted since is named but not a link", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const plants = makeOverview({ savedAt: "2026-11-01T09:00:00.000Z" });
+    plants.source.title = "Eat more plants";
+    const home = { ...creatine(), savedAt: "2026-11-10T09:00:00.000Z" };
+    backendSimulator.overviews.seedSynced(plants);
+    backendSimulator.overviews.seedSynced(home);
+    backendSimulator.chats.answerWith({
+      text: "Have it with a bean-heavy dinner, as Eat more plants suggests.",
+      inSource: false,
+      citations: [
+        { overviewId: plants.id, title: "Eat more plants", item: { part: "keyPoint", index: 1, textHash: overviewPartHash("x") } },
+        { overviewId: "6c1d3a7e-2b4f-4e8a-9c5d-1f2e3a4b5c6d" as Overview["id"], title: "Sleep first", item: null },
+      ],
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.askInNote("How does this fit with my other overviews?");
+
+    await reader.chat.verifyNoNotInSource(0);
+    await reader.chat.verifyOtherOverviewCitationsNamed(0, ["Open your overview Eat more plants · Key point 2"]);
+    await reader.chat.verifyDeletedOtherOverviewReads(0, "Sleep first · an overview you deleted");
+
+    await reader.chat.followOtherOverviewCitation(0, 0);
+
+    await reader.verifyTitle("Eat more plants");
+    await expect
+      .poll(() => followed(backendSimulator.analytics.events()))
+      .toEqual([expect.objectContaining({ to: "otherOverview", part: "keyPoint", index: 1 })]);
+  });
 });

@@ -16,8 +16,9 @@ before"). Each record is one conversation about one overview:
   conversation's own uuid. The overview comes first, so the server finds an overview's chats
   by the start of their ids, as it finds a project's membership records (`projects.md`).
 - `overviewId`, and `startedAt`, the time of the first message.
-- `messages`, in order. A reader's message is `{ from: "reader", text, at }`. An answer adds
-  `citations` and `inSource`.
+- `messages`, in order. A reader's message is `{ from: "reader", text, at }`, with `sources`
+  and `setAside` when the question added other overviews or took some out ("Other overviews"
+  below). An answer adds `citations` and `inSource`.
 - **Citations are worked out by code** from the passages the model cited, never stated by it
   (`CLAUDE.md`, "Never let a model count, measure or time anything"):
   - `{ startMs, endMs }` for a stretch of a video or episode;
@@ -25,7 +26,11 @@ before"). Each record is one conversation about one overview:
   - `{ chatId, message }` for a message in another chat about the same overview, by its
     place in that chat's `messages`;
   - `{ part, index, textHash }` for an item of the overview itself, since chat schema version
-    2 (OV-319, "Citing the overview" below).
+    2 (OV-319, "Citing the overview" below);
+  - `{ overviewId, title, item }` for another of the reader's overviews, `item` being
+    `{ part, index, textHash }` or null for the overview as a whole, since chat schema version 3
+    (OV-355, "Other overviews" below). It has no top-level `part`, so `"part" in citation` still
+    means this overview's own item.
 - **`inSource: false`** marks an answer the source doesn't back. Another chat and the
   overview are never the source: an answer resting only on them is not `inSource`. One that
   is not `inSource` but cites the overview is "From the overview" (`answeredFromOverview`);
@@ -60,6 +65,40 @@ bump.
 **Notes**, the reader's own writing on an overview, should take the same shape when they are
 built: a per-overview record, synced, deleted with its overview.
 
+## Other overviews
+
+OV-355, step 1 of OV-307's recommendation (`docs/architecture/in-app-chat.md`, "Chat across
+sources"). Each question in an overview's chat can bring in the reader's other saved overviews,
+sent as overviews only (no transcripts; OV-352 adds keyword minutes):
+
+- **Found:** claim search (`MeaningSearch`, floored at `MEANING_FLOOR`) runs on the question, and
+  its closest 3 go in, never the chat's own overview and never one the reader set aside. Search
+  is on for every reader from client version 25 (`FIRST_ACROSS_SOURCES_CLIENT_VERSION`; owner,
+  20 Nov 2026). Without search (no embedder, or the embedding service down) nothing is found and
+  pins still go in.
+- **Pinned with "@":** the request's `pins.overviews` go in whether or not search would find them.
+  A pinned project (`pins.projects`) goes in whole up to 8 members; past that its 5 closest to the
+  question go in whole (claim search within the project, then the most recently added) and the
+  rest `brief`, as title, big picture and core claim. The UI that pins is OV-354.
+- **Append-only.** What a question adds is stored on its reader message as `sources`
+  (`ChatSource`: `label` S1, S2…, `overviewId`, `title`, `how`, and `projectId` and `brief` for a
+  project's), and each later question rebuilds those blocks in the same places
+  (`otherSourcesInPrompt.ts`), so the prompt only ever grows at its end and the history stays
+  cached. An overview already in the conversation isn't sent again; one deleted since is left out
+  of the rebuild and can't be cited.
+- **Setting aside.** The request's `setAside` overview ids become a new message naming the labels
+  and titles, stored as the reader message's `setAside`. Earlier blocks stay, and code no longer
+  accepts citations of those labels. Pinning one again adds it under a new label.
+- **Citations.** The model cites `S2` or `S2.kp1` in `overviewParts`; `citationsOf` turns them into
+  `{ overviewId, title, item }`, copying the title from the record, and drops unknown labels and
+  items. An overview listed in brief is cited as a whole. `withoutCitationMarks` strips both forms
+  from the text. Another overview is never the source, so such an answer has `inSource: false`,
+  and the app doesn't label it "not covered".
+- **The stream** starts with a `sources` event, `{ pinned, found }`, when the question added any.
+- **A client before version 25** is answered from its own overview alone, as before: no search,
+  no pins, no `sources` event.
+- It counts as one message of the allowance, as any question does.
+
 ## Fitted to the reader
 
 Each question carries what is known about the reader, as overview generation reads it
@@ -84,8 +123,9 @@ No route lets a device write a chat.
 
 ## Asking
 
-`POST /api/chats/:overviewId/messages` with `{ conversationId, text }` (`ChatQuestionRequest`):
-a new conversation is a new uuid, a follow-up repeats its conversation's. Signed in only, on
+`POST /api/chats/:overviewId/messages` with `{ conversationId, text, pins?, setAside? }`
+(`ChatQuestionRequest`): a new conversation is a new uuid, a follow-up repeats its conversation's;
+`pins` (`{ overviews, projects }`) and `setAside` are up to 20 ids each ("Other overviews" above). Signed in only, on
 our key, on GPT-6 Luna (`chatModel.ts`) for every plan. `ChatAnswerer` settles everything that
 can refuse before the answer starts, so a refusal is an ordinary JSON error:
 
@@ -98,7 +138,8 @@ can refuse before the answer starts, so a refusal is an ordinary JSON error:
 | No key on this server                                      | 503 `unavailable`            |                                                                                                    |
 | The provider failed before answering                       | 502 `generation_failed`      |                                                                                                    |
 
-**The answer streams** as server-sent events (`ChatStreamEvent`): `text` events carry the
+**The answer streams** as server-sent events (`ChatStreamEvent`): a `sources` event first when the
+question added other overviews, then `text` events carry the
 answer as it arrives, then one `answered` event carries both messages as stored and the
 record's rev, or one `failed` event says nothing was stored. The model replies in JSON,
 `{ answer, passages, chatMessages, inSource }`, answer first, and `answerSoFar` reads the
@@ -110,7 +151,7 @@ the instructions, the overview with an id on each item an answer can cite, and t
 passages with ids (`transcriptPassages.ts`), as the first message, which never changes, so
 follow-ups and the overview's other conversations read it from the cache
 (`prompt_cache_key` is per overview). Then the other conversations, then this conversation's
-history, then the question.
+history, each question preceded by the other overviews it added, then the question.
 
 **Citations are code's.** `citationsOf` turns passage ids into `{ startMs, endMs }`, the
 overview's item ids into `{ part, index, textHash }` and other chats' message ids into
@@ -129,8 +170,10 @@ billed for the part already written isn't priced.
 
 **Costs and logs.** Each answer's tokens and list-price cost go into `account_costs`, area
 `chat` (`unit-economics.md`). `api.chat.answered` logs the plan, model, tokens, cached share,
-cost, `inSource`, the citations of the source and of other chats, how many other chats'
-messages went in, the month's count and the time; never the question or the answer.
+cost, `inSource`, the citations of the source, of other chats and of other overviews, how many
+other chats' messages went in, whether search ran, how many other overviews the question added
+(pinned, found, brief) or set aside, the month's count and the time; never the question or the
+answer. A reply with no answer fails as `EmptyAnswerError`.
 
 **Always on us.** Every plan asks on our key, whatever key it makes overviews with, and
 "Only ever use my key" doesn't change that (owner, 16 Nov 2026). Settings › API keys says so
@@ -442,10 +485,16 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   overview syncs (OV-321).
 - **Where a tapped question goes:** `Settings.questionsAnsweredHere`, answered here by default
   (`follow-up-questions.md`, "Answered here").
+- **Another overview cited** (OV-355) shows as a link pill under the answer,
+  `ChatOtherOverviewCitation`: the title it had when cited and, for an item, its place ("Key point
+  2"), opening that overview. Once the overview is gone from the library it reads "an overview you
+  deleted" and isn't a link. It borrows the overview pill's look until OV-354's design round, which
+  also adds the "@" picker and the list of what went in.
 - **Events**, `reader.chat.*`: opened (from a question, typed, or the menu), closed, asked (from
   a question or typed, new conversation or not), answered (in the source, citations of each
-  kind), answerFailed, stopped, waited (which wait), citationFollowed (to what; for the overview,
-  the part and, unless it changed since, the item's place, never its text), answerCopied, continuedIn
+  kind), answerFailed, stopped, waited (which wait), citationFollowed (to what, another overview
+  included; for an overview, the part and, unless it changed since, the item's place, never its
+  text), answerCopied, continuedIn
   (assistant, filled in or copied, connected), conversationOpened and conversationDeleted. Never
   the question or the answer.
 
@@ -562,5 +611,7 @@ assistant can call writes to a chat.
 `/privacy` has a section, "Asking questions about an overview", added with OV-309, which first
 writes chats: what goes to OpenAI, that it is always on our key, how conversations are kept and
 deleted, what is counted and logged. OV-320 added articles and recipe pages: their overview, and
-a recipe page's recipe, go to OpenAI, never text from the page. `/terms` names the allowance and
+a recipe page's recipe, go to OpenAI, never text from the page. OV-355 added other overviews: the
+question goes to OpenAI for an embedding to search the library by meaning, and the other
+overviews found or pinned go to OpenAI with the question. `/terms` names the allowance and
 who can ask (`legal-pages.md`).

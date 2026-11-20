@@ -131,18 +131,25 @@ export class ClaimEmbeddingsRepository {
 
   // One reader's claims only, compared against the current rev of each overview: a search
   // never reaches another account, and never an embedding the record has moved past.
-  async closest(accountId: AccountId, vector: number[], model: string, limit: number): Promise<MeaningMatch[]> {
+  // within narrows it to those overviews, such as a project's members.
+  async closest(
+    accountId: AccountId,
+    vector: number[],
+    model: string,
+    limit: number,
+    within: readonly string[] | null = null,
+  ): Promise<MeaningMatch[]> {
     const rows = await this.#sql.query<{ overview_id: string; similarity: number }>(
       `select c.overview_id, max(1 - (c.embedding <=> $2::vector)) as similarity
          from claim_embeddings c
          join overview_embeddings e on e.account_id = c.account_id and e.overview_id = c.overview_id
          join records r on r.account_id = e.account_id and r.kind = 'overview' and r.id = e.overview_id
                        and not r.deleted and r.rev = e.embedded_rev
-        where c.account_id = $1 and c.model = $3
+        where c.account_id = $1 and c.model = $3 and ($5::text[] is null or c.overview_id = any($5::text[]))
         group by c.overview_id
         order by similarity desc
         limit $4`,
-      [accountId, asVector(vector), model, limit],
+      [accountId, asVector(vector), model, limit, within === null ? null : [...within]],
     );
     return rows.map((row) => ({ overviewId: row.overview_id, similarity: Number(row.similarity) }));
   }

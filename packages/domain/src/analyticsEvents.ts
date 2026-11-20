@@ -99,7 +99,7 @@ const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink",
 // conversation, or one deleted since.
 // A video, an episode, an article or a recipe page: what a chat is about (OV-320).
 const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
-const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation"]);
+const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
 const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
@@ -451,6 +451,7 @@ export const analyticsEvents = {
         sourceCitations: z.number().int().nonnegative(),
         overviewCitations: z.number().int().nonnegative(),
         conversationCitations: z.number().int().nonnegative(),
+        otherOverviewCitations: z.number().int().nonnegative(),
       }),
       answerFailed: event("An answer failed while it was being written, so nothing was stored or counted"),
       waited: event("A question was turned away by a wait, and which, and what it was about", { wait: ChatWait, about: ChatAbout }),

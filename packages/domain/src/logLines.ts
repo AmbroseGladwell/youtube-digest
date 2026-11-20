@@ -272,12 +272,12 @@ export const apiLogLines = coded("api", {
     answered: line(
       "info",
       "chat answered",
-      "A chat question answered on our key: plan, model, tokens (input counts cache reads), the cached share, cost in dollars, whether the source covered it, whether the answer added general knowledge beyond the source, how many citations of the source, of the overview and of other chats, how many other chats' messages went with it, whether the reader's profile went with it (`personalised`), the month's count and how long it took. Never the question, the answer or the profile.",
+      "A chat question answered on our key: plan, model, tokens (input counts cache reads), the cached share, cost in dollars, whether the source covered it, whether the answer added general knowledge beyond the source, how many citations of the source, of the overview, of other chats and of other overviews, how many other chats' messages went with it, whether search ran and how many other overviews this question added (pinned, found, in brief) or set aside, whether the reader's profile went with it (`personalised`), the month's count and how long it took. Never the question, the answer or the profile.",
     ),
     failed: line(
       "warn",
       "chat answer failed",
-      "A chat question on our key failed and its allowance was given back; `reason` says why, with the tokens and cost the provider still billed.",
+      "A chat question on our key failed and its allowance was given back; `reason` says why (`EmptyAnswerError` when the reply had no answer), with the tokens and cost the provider still billed.",
     ),
     stopped: line(
       "info",

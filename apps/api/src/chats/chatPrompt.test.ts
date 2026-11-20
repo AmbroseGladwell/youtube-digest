@@ -39,7 +39,10 @@ test("every prompt says what chat can't do, and where the reader changes what Th
   for (const kind of ["video", "episode", "article", "recipe"] as const) {
     const prompt = chatSystemPrompt(kind, "# Overview", PASSAGES);
 
-    assert.match(prompt, /You can't see images or files, open links, search the web, read the rest of their library/);
+    assert.match(
+      prompt,
+      /You can't see images or files, open links, search the web, read more of their library than the other overviews shown here/,
+    );
     assert.match(prompt, /About you sentence they write in onboarding or in Settings › Personalisation/);
     assert.ok(prompt.indexOf("\n# The Overview\n") < prompt.indexOf("\n# The overview\n"));
   }

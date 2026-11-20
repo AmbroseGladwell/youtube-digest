@@ -39,7 +39,7 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
         for await (const raw of serverSentEvents(response.body)) {
           const event = ChatStreamEvent.parse(raw);
           if (event.type === "text") onText(event.text);
-          else outcome = event;
+          else if (event.type !== "sources") outcome = event;
         }
       } catch (error) {
         if (signal?.aborted === true) throw error;
