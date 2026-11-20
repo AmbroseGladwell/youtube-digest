@@ -379,11 +379,14 @@ common factors across all my cards"). Nothing here is built.
   are enough.** All 10 "apply my other saved overviews to this" questions found the right overview
   in the closest 3 and cited it in every arm. A first message costs about $0.0018 against $0.0009
   for today's chat, and a follow-up about $0.00025. No new embeddings are needed.
-- **A detail only a transcript holds needs transcript text, and passage vectors are the best way to
-  send it.** Overviews alone answered 7 of 67 such questions. The closest 3 overviews with their
-  whole transcripts answered 54 of 68, missing exactly where search missed, for $0.0045 a message.
-  Claim search's closest 3 plus the 8 closest transcript minutes from anywhere in the library
-  answered 63 of 65, for $0.0021.
+- **A detail only a transcript holds needs transcript text.** Overviews alone answered 7 of 67
+  such questions. The closest 3 overviews with their whole transcripts answered 54 of 68, missing
+  exactly where search missed, for $0.0045 a message. Claim search's closest 3 plus the 8 closest
+  transcript minutes by passage vector answered 63 of 65, for $0.0021.
+- **Keyword search over the transcripts we already keep finds what claim search misses, with no
+  vectors.** Claim search or keywords put the right source in the closest 3 for all 78 answerable
+  questions, as passage vectors did. A stored full-text index is about a sixth of passage vectors'
+  size, or nothing if computed per question.
 - **Pinning works.** With the right overview pinned among 2 or 7 near misses, answers still cited
   the right one and set where overviews disagreed apart (`pinned3`, `pinned8`).
 - **An empty chat over the whole library works from a compact library map.** That's every overview's
@@ -392,8 +395,9 @@ common factors across all my cards"). Nothing here is built.
   overview, for about $0.0016 a first message and $0.0004 cached. Broad questions ran past the
   1,000-token answer cap and failed 5 times in 8.
 - **The decision:** build in three steps. First, claim search plus pins in an overview's chat,
-  overviews only. Second, the library map as its own chat. Third, per-account passage vectors,
-  once reader data shows detail questions across sources (below).
+  overviews only. Second, the library map as its own chat. Third, keyword search over the kept
+  transcripts as a second pass, with the matching passages sent. Passage vectors aren't needed on
+  this evidence (below).
 
 ### How it was measured
 
@@ -442,24 +446,62 @@ question finds the same overviews.
 
 How often the answering overview was in the closest few, for 78 answerable questions:
 
-| Kind           | Questions | Claims: closest 3 | 5   | 8   | Passages: closest 3 | 5   | 8   |
-| -------------- | --------- | ----------------- | --- | --- | ------------------- | --- | --- |
-| inOverview     | 17        | 17                | 17  | 17  | 17                  | 17  | 17  |
-| transcriptOnly | 34        | 27                | 28  | 28  | 34                  | 34  | 34  |
-| twoMoments     | 17        | 16                | 17  | 17  | 17                  | 17  | 17  |
-| applyAcross    | 10        | 10                | 10  | 10  | 10                  | 10  | 10  |
-| All            | 78        | 70                | 72  | 72  | 78                  | 78  | 78  |
+| Kind           | Questions | Claims: closest 3 | 5   | 8   | Keywords: 3 | 5   | 8   | Claims or keywords: 3 | Passage vectors: 3 | 5   | 8   |
+| -------------- | --------- | ----------------- | --- | --- | ----------- | --- | --- | --------------------- | ------------------ | --- | --- |
+| inOverview     | 17        | 17                | 17  | 17  | 17          | 17  | 17  | 17                    | 17                 | 17  | 17  |
+| transcriptOnly | 34        | 27                | 28  | 28  | 32          | 33  | 33  | 34                    | 34                 | 34  | 34  |
+| twoMoments     | 17        | 16                | 17  | 17  | 17          | 17  | 17  | 17                    | 17                 | 17  | 17  |
+| applyAcross    | 10        | 10                | 10  | 10  | 9           | 9   | 9   | 10                    | 10                 | 10  | 10  |
+| All            | 78        | 70                | 72  | 72  | 75          | 76  | 76  | 78                    | 78                 | 78  | 78  |
+
+"Claims or keywords: 3" counts a question as found when the source is in either list's closest 3,
+so up to 6 sources.
 
 - **Claim search misses details, and naming the speaker doesn't help.** Six `transcriptOnly`
   questions fell below the floor altogether. Two of them named Rupy Aujla, such as where he
   learned to grate walnuts over food. A speaker's asides aren't in any claim. Passage vectors
   ranked all six first or second.
+- **Keyword search ranked all six first.** It's BM25 over the same one-minute passages of the kept
+  transcripts, with a source scoring as its best passage. It drops common words and a plural "s",
+  and no model is called (`chatAcrossSourcesCheck.ts keyword`). It's weaker where claims are strong:
+  it missed one apply question, which asks about "my saved healthy eating overview" in words the
+  podcast doesn't use. The two kinds of search cover each other's gaps. Two of the six were
+  OV-267's nameless "she" questions. The others named a speaker or a number, which suits words
+  well, so readers' own questions might suit keywords less.
 - **The floor doesn't tell "nothing here" from a match.** The four unanswerable questions' best
   claims scored 0.35 to 0.36, above the 0.3 floor, against a median of 0.53 for the right source.
   As OV-229 found, the closest few always return something, so declining rests on the model.
-- **Passage vectors for this whole library cost $0.02 to make**, 4,112 one-minute passages. Stored
-  as `vector(1536)` they are about 25 MB for this account (0.36 MB an hour of video), or about
-  13 MB as `halfvec`, before index and row overhead (code arithmetic, not a measurement of Neon).
+- **Passage vectors for this whole library cost $0.02 to make**, 4,112 one-minute passages.
+  Storing them is the larger cost (below).
+
+### What each index would store
+
+Measured on 20 Nov 2026. Prod's database is 32.7 MB in all. Its claim vectors take 13.9 MB for
+1,535 rows, **about 9.1 KB a vector** with row and index overhead, half as much again as the raw
+6 KB. Every kept transcript together is 4.9 MB. For this library's 69 hours, measured in the
+in-memory Postgres (its vector rows, 8.4 KB, agree with prod's):
+
+| Index                                                            | Size    | Per hour of video | Paid plan, $0.35 per GB-month |
+| ---------------------------------------------------------------- | ------- | ----------------- | ----------------------------- |
+| Passage vectors, `vector(1536)`                                  | 34.7 MB | 0.50 MB           | $0.012 a month                |
+| Passage vectors, `halfvec(1536)`                                 | 17.7 MB | 0.26 MB           | $0.006 a month                |
+| Full-text index (`tsvector` and a GIN index)                     | 6.1 MB  | 0.09 MB           | $0.002 a month                |
+| Full-text, worked out per question from transcripts already kept | 0       | 0                 | 0                             |
+
+- **The bill isn't the problem; the free plan's cap is.** Neon's free plan holds a project to 1 GB
+  and blocks writes past it (neon.com/pricing, updated 4 Nov 2026). Passage vectors for about 25
+  libraries this size would fill it. Moving to Launch then costs mostly compute, which Neon puts at
+  about $15 a month for a small database, not storage. Growth will bring that move anyway, but
+  passage vectors would bring it forward.
+- **Passage vectors are about seven times the size of the transcripts they come from.** A minute of
+  compressed text is small, and 1,536 numbers aren't.
+- **Reading them costs time too.** Search compares a question with every one of the reader's rows,
+  with no index. That's 1,420 claim rows for this library today, and passage vectors would add
+  4,112 rows and about 35 MB per question. Probably fine, but unmeasured, and an index would add
+  storage.
+- **Keyword search needs little or nothing.** Postgres can rank the kept transcripts per question
+  with no new storage, at some query time. A stored index is about a sixth of passage vectors'
+  size.
 
 ### Cost and quality per shape
 
@@ -614,8 +656,8 @@ A month with the whole allowance used, every conversation the same length:
 - **Not counted:**
   - Answers cut off at the 1,000-token cap, whose cost isn't reported. Raising the cap adds
     output.
-  - Passage-vector storage on Neon, about 0.36 MB an hour of video per account, which isn't
-    priced here. It is the one recurring cost passage vectors add.
+  - Storage, priced separately above. It's under $0.02 a month a reader at this library's size for
+    any index.
 
 ### Recommendations
 
@@ -632,19 +674,21 @@ A month with the whole allowance used, every conversation the same length:
    project, not an overview's chat. It needs a higher answer cap (about 2,000 tokens) or a rule for
    shorter answers. "Never count overviews" stayed in the prompt (`constraints.md`), and no answer
    gave a count.
-3. **Passage vectors: yes, but third.** They are the only shape that answers detail questions across
-   sources well, and they make messages cheaper than whole transcripts. They cost per-account
-   storage, about 0.36 MB an hour of video, a backfill and a worker. Build them when
-   `reader.chat.answered` shows readers asking for details of other sources. A label for answers
-   whose cited source isn't the chat's own would make that countable. Until then, a pinned
-   overview could go in with its whole transcript (`pinned3-full`: 65 of 66).
+3. **For details: keyword search over the kept transcripts, not passage vectors.** Run beside claim
+   search, it found every source passage vectors found, for no embeddings and little or no
+   storage. Send the best-matching keyword passages, as `search3+passages8` sent the closest
+   vector passages. That answer shape is unmeasured with keyword passages: a run of about $0.40
+   would check it before building. Reopen passage vectors only if readers' own questions, which
+   are vaguer than these, miss by keyword. `reader.chat.answered` would need a label for answers
+   whose cited source isn't the chat's own to show that. Meanwhile a pinned overview could go in
+   with its whole transcript (`pinned3-full`: 65 of 66).
 4. **Project chat (OV-168)** is the pinned shape with the project's members. At 8 members as
    overviews it costs $0.0027 a first message. It needs no search.
-5. **Not measured:** keyword search over transcripts as a fallback before vectors, conversations
-   longer than one question, and readers' own questions. The card's open question on keyword
-   fallback stays open.
-6. **When built, it changes the privacy page:** the other overviews (and passages) go to OpenAI with
-   the question, and passage vectors are new derived data kept per account (`legal-pages.md`).
+5. **Not measured:** answers built from keyword passages, conversations longer than one question,
+   and readers' own questions.
+6. **When built, it changes the privacy page:** the other overviews and passages go to OpenAI with
+   the question. A stored full-text index, or passage vectors if they ever come, is new derived
+   data kept per account (`legal-pages.md`).
 
 ## Running it again
 
@@ -668,6 +712,7 @@ npm run chat-report --workspace packages/model-comparison -- --run <name>
 ```
 DATABASE_URL=… node dist/scripts/exportChatLibrary.js <email> <data dir>/library        # overview-prod, read only
 node dist/scripts/chatAcrossSourcesCheck.js retrieval <data dir> <data dir>/retrieval.json   # evals: embeddings only
+node dist/scripts/chatAcrossSourcesCheck.js keyword <data dir> <data dir>/retrieval.json     # free: BM25 over kept transcripts
 node dist/scripts/chatAcrossSourcesCheck.js answer <data dir> <data dir>/retrieval.json <out.json> --arms <arm,…> --runs 2 --budget <$> [--dry-run]
 node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
 ```
