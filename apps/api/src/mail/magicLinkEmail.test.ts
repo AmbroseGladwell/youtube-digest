@@ -56,12 +56,26 @@ test("a link asked for from the extension says where the code will appear", () =
   assert.doesNotMatch(magicLinkEmail(mail).text, /code/);
 });
 
-test("a web mail with a code says it under the link, in the text and the html", () => {
-  const { html, text } = magicLinkEmail({ ...mail, code: "ABCD-EFGH" });
-  assert.ok(text.includes("\nOr enter this code on the page you asked from:\nABCD-EFGH\n"));
-  assert.ok(html.includes("Or enter this code on the page you asked from:"));
-  assert.match(html, /<p[^>]*>ABCD-EFGH<\/p>/);
-  assert.ok(html.indexOf("ABCD-EFGH") > html.indexOf("Paste this link"));
+test("a web mail with a code puts it in the subject and first, with a copy page and the link as the backup", () => {
+  const { subject, html, text } = magicLinkEmail({ ...mail, code: "ABCD-EFGH" });
+  assert.equal(subject, "Your code: ABCD-EFGH");
+  assert.match(html, /<h1[^>]*>Your code for The Overview<\/h1>/);
+  assert.ok(
+    text.includes(
+      "Enter this code on the page that asked for it:\nABCD-EFGH\n\nOr sign in with this link:\nhttps://overview.example/sign-in#token=a&b\n",
+    ),
+  );
+  assert.match(html, /<p[^>]*user-select: all[^>]*>ABCD-EFGH<\/p>/);
+  assert.ok(html.includes('href="https://overview.example/code#ABCD-EFGH"'));
+  assert.ok(html.indexOf("ABCD-EFGH") < html.indexOf("Or sign in with this link:"));
+  assert.ok(html.indexOf("Or sign in with this link:") < html.indexOf("Paste this link"));
+  for (const body of [html, text]) {
+    assert.ok(body.includes("The code and the link each work once, for the next fifteen minutes."));
+  }
+});
+
+test("an extension mail with a code keeps the link first", () => {
+  assert.equal(magicLinkEmail({ ...mail, surface: "extension", code: "ABCD-EFGH" }).subject, "Sign in to The Overview");
 });
 
 test("a mail with no code says nothing about one", () => {

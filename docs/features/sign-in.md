@@ -59,8 +59,15 @@ one shell that asked. The page says so.
 
 A web link signs in whichever browser opens it, which is not always the one that asked: the
 mail may be read on a phone, or in an app that opens links in a browser of its own. So a
-web mail carries a code as well as the link, under it: "Or enter this code on the page you
-asked from". `Check your email` says `Reading your email on another device? Enter the code
+web mail carries a code as well as the link. **Since OV-327 the code comes first** (design
+327l-3): it is the subject ("Your code: 95J9-Q8TT"), so it can be read from the notification,
+then the first thing in the mail, selectable in one tap, with a Copy code link, then "Or sign in
+with this link:". A mail client runs no script, so Copy code opens `/code` (`CopyCodePage`), which
+copies the code and shows it large. The code rides in that link's fragment, as the sign-in token
+does, so a code that can still sign someone in never reaches a request line or a log.
+Onboarding's account step takes the code in place right after the form (`RequestLinkFlow`'s
+`onboarding` variant, `EnterCode`'s `codeFirst`), and submits once eight characters are in.
+The other sign-in pages still show `Check your email` first. `Check your email` says `Reading your email on another device? Enter the code
 from it`, a link-styled button like the extension's, so the link stays the page's one
 action. It leads to the same code screen the extension uses, with the address, `Use a
 different email` and `Email me a new code`; the button says `Sign in`, or `Create account`

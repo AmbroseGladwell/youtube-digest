@@ -216,3 +216,4 @@ export * from "./resolveTags.js";
 export * from "./suggestStarterTopics.js";
 export * from "./TopicSuggestion.js";
 export * from "./MeaningSearchResponse.js";
+export * from "./copyCodeLink.js";

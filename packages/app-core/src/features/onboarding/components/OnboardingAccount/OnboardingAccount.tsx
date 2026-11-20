@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import type { AuthIntent } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingAccount.module.scss";
 import { onboardingAccountTestIds } from "./OnboardingAccountTestIds.js";
 
@@ -12,38 +10,19 @@ const WHAT_YOU_GET = [
 ];
 
 export interface OnboardingAccountProps {
+  // The way in: the inline form, then the code in its place (327l, 327l-2).
+  form: ReactNode;
   // Their card with its pills and answers, "Saved with your account"; null for nothing to show.
   saved: ReactNode | null;
-  onChoose: (way: AuthIntent) => void;
 }
 
 // Design 327l: the account comes before anything is written, so the screen shows what they've put
-// in and what they'll get, then the way in, with the reassurance right under it. Email only for now
-// (docs/features/onboarding.md, "The account").
-export function OnboardingAccount({ saved, onChoose }: OnboardingAccountProps) {
+// in and what they'll get beside the way in. Email only for now (docs/features/onboarding.md,
+// "The account").
+export function OnboardingAccount({ form, saved }: OnboardingAccountProps) {
   return (
     <div className={styles.root} data-testid={onboardingAccountTestIds.root}>
-      <div className={styles.form}>
-        <OnboardingHeading>Create your free account to get your overview.</OnboardingHeading>
-        <div className={styles.ways}>
-          <button
-            type="button"
-            className={styles.way}
-            onClick={() => onChoose("createAccount")}
-            data-testid={onboardingAccountTestIds.continueWithEmail}
-          >
-            <StrokeIcon name="mail" size={17} />
-            Continue with email
-          </button>
-          <p className={styles.reassurance} data-testid={onboardingAccountTestIds.reassurance}>
-            <StrokeIcon name="check" size={14} />
-            No card needed. Free includes 5 overviews a month.
-          </p>
-        </div>
-        <button type="button" className={styles.quiet} onClick={() => onChoose("signIn")} data-testid={onboardingAccountTestIds.signIn}>
-          Already have an account? Sign in
-        </button>
-      </div>
+      <div className={styles.form}>{form}</div>
 
       <aside className={styles.side}>
         {saved !== null && (

@@ -131,13 +131,13 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const topics = useTopicsQuery().data ?? [];
   const { run, attempt, retry, transcribe } = useOnboardingRunState();
-  const [asking, setAsking] = useState<AuthIntent | null>(null);
+  const [intent, setIntent] = useState<AuthIntent>(progress.way ?? "createAccount");
   const [savingTopics, setSavingTopics] = useState(false);
   const step = progress.step;
   const scroller = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (scroller.current !== null) scroller.current.scrollTop = 0;
-  }, [step, asking]);
+  }, [step]);
   const share = progress.share;
   const sample = share?.sample ?? false;
   const steps = share === null ? ONBOARDING_STEPS : FROM_SHARE_STEPS;
@@ -283,6 +283,12 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     opened.current = true;
     finish(progress.overviewId);
   });
+
+  // The way in is the account screen's own until the reader switches it, so a sign-in landing
+  // knows it came from here.
+  useEffect(() => {
+    if (step === "account" && progress.way === null) update({ way: "createAccount", mayWrite: true });
+  }, [step, progress.way, update]);
 
   const shown = useRef<string | null>(null);
   useEffect(() => {
@@ -438,11 +444,19 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
         return (
           <OnboardingAccount
             saved={savedCard(true)}
-            onChoose={(way) => {
-              analytics.onboarding.account.chosen({ way });
-              update({ way, mayWrite: true });
-              setAsking(way);
-            }}
+            form={
+              <RequestLinkFlow
+                key={intent}
+                intent={intent}
+                onboarding={{
+                  onSwitchIntent: (way) => {
+                    analytics.onboarding.account.chosen({ way });
+                    setIntent(way);
+                    update({ way });
+                  },
+                }}
+              />
+            }
           />
         );
       case "wait":
@@ -511,54 +525,33 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       >
         <PageScrolledSentinel />
         <main className={styles.main} aria-labelledby={ONBOARDING_HEADING_ID}>
-          {asking === null || signedIn ? (
-            <>
-              {segment !== null && (
-                <div className={styles.stepper} data-sticky-fade="" data-testid={onboardingPageTestIds.stepper}>
-                  <div className={styles.nav}>
-                    {!signedIn && (
-                      <button
-                        type="button"
-                        className={styles.back}
-                        aria-label="Back"
-                        onClick={back}
-                        data-testid={onboardingPageTestIds.back}
-                      >
-                        <StrokeIcon name="arrowLeft" size={18} />
-                      </button>
-                    )}
-                    <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
-                      {Array.from({ length: SEGMENTS }, (_, index) => (
-                        <span key={index} className={index < segment ? styles.segmentDone : styles.segment} />
-                      ))}
-                    </span>
-                    <span className={styles.stepCount} data-testid={onboardingPageTestIds.stepCount}>
-                      Step {segment} of {SEGMENTS}
-                    </span>
-                    {SKIPPABLE.includes(step) && (
-                      <button type="button" className={styles.skip} onClick={skip} data-testid={onboardingPageTestIds.skip}>
-                        Skip
-                      </button>
-                    )}
-                  </div>
+          <>
+            {segment !== null && (
+              <div className={styles.stepper} data-sticky-fade="" data-testid={onboardingPageTestIds.stepper}>
+                <div className={styles.nav}>
+                  {!signedIn && (
+                    <button type="button" className={styles.back} aria-label="Back" onClick={back} data-testid={onboardingPageTestIds.back}>
+                      <StrokeIcon name="arrowLeft" size={18} />
+                    </button>
+                  )}
+                  <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
+                    {Array.from({ length: SEGMENTS }, (_, index) => (
+                      <span key={index} className={index < segment ? styles.segmentDone : styles.segment} />
+                    ))}
+                  </span>
+                  <span className={styles.stepCount} data-testid={onboardingPageTestIds.stepCount}>
+                    Step {segment} of {SEGMENTS}
+                  </span>
+                  {SKIPPABLE.includes(step) && (
+                    <button type="button" className={styles.skip} onClick={skip} data-testid={onboardingPageTestIds.skip}>
+                      Skip
+                    </button>
+                  )}
                 </div>
-              )}
-              {screen}
-            </>
-          ) : (
-            <div className={styles.asking}>
-              <button
-                type="button"
-                className={styles.backFromAccount}
-                onClick={() => setAsking(null)}
-                data-testid={onboardingPageTestIds.backFromAccount}
-              >
-                <StrokeIcon name="arrowLeft" size={16} />
-                Back
-              </button>
-              <RequestLinkFlow intent={asking} />
-            </div>
-          )}
+              </div>
+            )}
+            {screen}
+          </>
           <span className={styles.end} ref={contentEnd} aria-hidden="true" />
         </main>
 

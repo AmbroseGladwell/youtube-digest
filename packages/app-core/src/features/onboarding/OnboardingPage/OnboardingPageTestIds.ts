@@ -6,5 +6,4 @@ export const onboardingPageTestIds = {
   stepCount: "onboarding-page-step-count",
   stepper: "onboarding-page-stepper",
   scroller: "onboarding-page-scroller",
-  backFromAccount: "onboarding-page-back-from-account",
 };
