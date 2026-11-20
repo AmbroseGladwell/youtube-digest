@@ -791,7 +791,10 @@ A month with the whole allowance used, every conversation the same length:
 
 ### Recommendations
 
-1. **In an overview's chat: claim search plus pins, overviews only.** Send the closest 3 by claim
+The owner approved building these on 20 Nov 2026. They're carded as OV-352 to OV-355, and the card
+for each step is named at its end. The Claude Design round and the UI for all of them are OV-354.
+
+1. **In an overview's chat: claim search plus pins, overviews only (OV-355).** Send the closest 3 by claim
    search (never the chat's own overview) and any overviews the reader pins with "@". They go as a
    user message after the cached prompt, in the shape measured here. A first message costs about
    twice today's. Show what was added, as Recall does, and let the reader remove it. A pinned topic
@@ -800,7 +803,8 @@ A month with the whole allowance used, every conversation the same length:
    history, never into the earlier block, or each question pays for the history again (about five
    times the cost at 50 questions). Removing one shouldn't rewrite the prompt either: tell the
    model to set it aside, in a new message.
-2. **An empty chat over the library: the compact map, read in two passes, answered in sections.**
+2. **An empty chat over the library: the compact map, read in two passes, answered in sections
+   (OV-353).**
    It's its own entry point, the library or a project, not an overview's chat.
    - The model picks up to 5 overviews from the map, with a picking cap of about 1,000 tokens.
    - Code sends those whole.
@@ -812,7 +816,8 @@ A month with the whole allowance used, every conversation the same length:
      one-overview chat can keep its plain answer.
    - Code can work out the stats line Recall shows first ("10 cards, 7 tags"). "Never count
      overviews" stayed in the prompt (`constraints.md`), and no answer gave a count.
-3. **For details: keyword search over the kept transcripts, not passage vectors, for now.** Run
+3. **For details: keyword search over the kept transcripts, not passage vectors, for now
+   (OV-352).** Run
    beside claim search, it found every source passage vectors found, and its 8 best minutes
    answered 59 of 66 detail questions, against 63 of 65 for passage vectors and 54 of 68 for
    whole transcripts. It needs no embeddings, and little or no storage. Passage vectors would buy
@@ -823,14 +828,14 @@ A month with the whole allowance used, every conversation the same length:
    to show that. A cheaper fix to try first: send each keyword minute with its neighbours, so an
    answer a minute away still goes in.
 4. **Projects (OV-168).**
-   - **"@" a project in an overview's chat:** a project of up to 8 overviews goes in whole, as pins
+   - **"@" a project in an overview's chat (OV-355):** a project of up to 8 overviews goes in whole, as pins
      do. A larger one sends its closest 5 whole and the rest in brief, about $0.0035 a first
      message at 81 overviews.
-   - **A project page's chat:** send the whole overviews while they fit about 20,000 tokens, which
+   - **A project page's chat (OV-353):** send the whole overviews while they fit about 20,000 tokens, which
      covers every recipe project here. Past that, send the compact map of the project plus the 8
      best keyword minutes from its transcripts.
    - **Both:** include the reader's purpose. Use the library chat's higher answer cap.
-   - **When the map is built:** give recipes a map entry that carries their main ingredients. A
+   - **When the map is built (OV-353):** give recipes a map entry that carries their main ingredients. A
      title alone answers nothing.
 5. **Not measured:** conversations longer than one question, readers' own questions, keyword
    minutes sent with their neighbours, and why one pinned-project question got empty replies.
