@@ -1,14 +1,16 @@
-# Onboarding: inside the first overview
+# Onboarding: around the first link
 
-Card: OV-46. Designs: "OV-46 1 Start and Questions", "OV-46 2 Account Plan and Reveal" and
-"OV-46 3 Panel and Afterwards" (46a–46s), with About you replaced by OV-141 (141a–141j). Built
-as stacked PRs; this file says what each one settled, and grows with them.
+Cards: OV-46, then OV-327 (designs "OV-327 1–9", 327a–327ah; the decisions are on page 6 and in
+the project's DECISIONS.md). This file says what each card settled.
 
-A new reader pastes a link and the overview starts at once. While it is made they answer,
-or skip, a few questions that shape it: analytics, the video, topics, about you and a
-voice, with a slide after each to show what it buys. Then they create an account, choose a
-plan, and see the overview. **Seeing any overview needs an account** (decided 28 Oct 2026):
-signed out, a reader can start their first overview, and nothing else.
+A new reader pastes a link at Start. Onboarding reads it for free and shows it back to them,
+then tells one story around it in six steps and three short moments: analytics, Your link,
+Moment 1 (save anything), Topics, Moment 2 (your own AI knowledge base), Moment 3 (steps that
+fit your life), About you, and the account. **Nothing that costs anything runs before the
+account** (OV-327, decided 18 Nov 2026): the overview is written once the account exists, from
+the answers given, while the reader waits on the wait screen, which opens the overview's own
+page. There is no reveal, no plan screen and no voice question. **Seeing any overview needs
+an account** (decided 28 Oct 2026).
 
 ## Analytics before the answer
 
@@ -89,17 +91,6 @@ for a sample or shared copy, which doesn't ask (`code-only`); or nothing. `code-
 one to watch, since the design assumes the answer is usually back in time. A call refused for
 a trial the server doesn't know is logged as `topic suggestions refused for an unknown trial`.
 
-## The library slide
-
-OV-177, design 175c. "A library that sorts itself" says how sorting works: "As each overview
-is written, we check it against your topics and add it to the ones it fits best, if any"
-(`filingSection.ts`). Its scene is the reader's own: their video or page, "not written yet",
-and their topics, the first five then "and N more". It claims no result, since nothing is filed
-until it's written, so there's no "+1 arriving"; the real filing shows in the preview once
-written. With no topics it says overviews wait in Unsorted until they add one. A sample or a
-shared copy is already written, so its card says "not sorted yet". The scene stays hidden from
-screen readers; the sentence carries the meaning.
-
 ## Signed out sees no overviews
 
 Where there are accounts, every page that would show an overview shows `SignedOutGate`
@@ -117,7 +108,7 @@ OV-154. Onboarding takes every kind of source the product reads, and stays in st
 are added. Everything it does differently by kind comes from one table,
 `onboardingSources.ts`, keyed on `Source["kind"]`: how a link given at Start is recognised,
 using the same recognisers as the shell's own field; what the run makes from it; what the
-confirm screen, the preview, the teaser's byline and the progress line call it. The table's
+Your link, the card and the wait call it. The table's
 type and `onboardingSources.test.ts` both fail when `Source` gains a kind with no entry
 (`source-identity.md`, "Adding a kind").
 
@@ -145,30 +136,17 @@ before this held the video's address, and reads as that video.
 **The screens by kind** (designs "OV-154 1–13", 154a–154n). Each entry in the table also gives
 what these read:
 
-- **Is this the right one? (154d–154g):** one card for every kind (`OnboardingSourceCard`):
-  - the image, or the site's name on a stone tile;
-  - a kicker naming the source and the kind ("The Harbour Post · Article");
-  - the title, and facts that belong to the kind: "By … · 14 min read" for an article, the page's
-    own Prep, Cook, Total and Makes for a recipe, never summed.
-
-  The heading says the kind's noun and takes focus again when it changes. Before the page is
-  read it says "page", and the card shows the address with "Reading the page…". A recipe changes
-  only the words and the facts, never the layout. A playlist keeps its lower row, because there's
-  a choice inside it. In the panel the card is compact, with the image beside the title.
-- **The preview (154h):** the same card made small, then the kind's sections. A recipe's are
-  Summary, Ingredients and Method, and the last two say "From the page" once it's read, because
-  they're the page's own.
-- **The progress line (154i):** "Reading the page" in place of "Fetching the video". Every later
-  stage reads the same for every kind.
-- **The teaser (154j, 154k):** "The Harbour Post · Article · 14 min read" or "… · Recipe · 1 hr
-  5 min", then the first section (Premise, or a recipe's Summary), and a last line naming what an
-  account opens for that kind. On a wide screen it sits in the preview beside the account screen;
-  narrower, above it.
+- **The card (154d–154g, redrawn by 327s):** one card for every kind (`OnboardingSourceCard`):
+  the image, or the site's name on a stone tile; a kicker naming the source and the kind ("The
+  Harbour Post · Article", "Run Coach Ash · Video", "Sunday Kitchen · Recipe video"); the title;
+  and the kind's facts on one line: "38:14 · YouTube", "26 min read · domain", "1 hr 25 min ·
+  Serves 6 · domain", "1 hr 12 min · 10 Nov 2026 · from Spotify". Before the link is read the card
+  shows the address with "Reading the page…". In the panel it is compact.
+- **Your link's words** are the kind's own (`yourLink`); see "The flow on the web".
 
 **When a page can't be used (154l–154n).** The failure shows at the confirm step, where the read
 lands (`OnboardingReadFailure`, words in `onboardingFailureCopy.ts`). It has a short bar, what
-happened, the link that was pasted, and a field for another, and the preview waits for a link it
-can read.
+happened, the link that was pasted, and a field for another.
 
 - **The words are onboarding's own, not the paste field's.** They never say "nothing counted",
   since a trial read counts whether or not the page could be read. Instead the foot says the free
@@ -185,99 +163,81 @@ Another link given there replaces the first, and onboarding carries on from the 
 
 ## The flow on the web
 
-**Start is the home page.** Signed out where there are accounts, `/` is the first-run hero
-with "Make my overview" (46a), taking any link we can read ("Any kind of link"). It asks for "a
-link to a video or a page" (154a), the two shapes every kind arrives in, so the hint doesn't go
-stale as kinds are added. Anything else is refused in place: "That doesn't look like a link we
-can read. Try the address of a video or a web page." The shared page's Make your own says the
-same (154c). The link is saved as onboarding's progress and the reader goes to `/start`
-(`OnboardingPage`), which the shell renders without its masthead. A playlist starts with its
-first available video, and "Choose a different video" picks another; the playlist isn't
-followed. Below the field Start offers samples ("Try a sample").
+**Start is the home page** (327b). Signed out where there are accounts, `/` is the first-run
+hero with "Make my overview", taking any link we can read ("Any kind of link"). The line under
+the heading is the story: "Save what you care about, get an overview plus personalised actions,
+and build a knowledge base you and your AI can use." The field asks for "a link to a video, page
+or episode", with "YouTube, any web page, Apple Podcasts or Spotify." under it; anything else is
+refused in place. The headline verb follows the deck's front card: Watch Less, Learn More, Cook
+Easier, Listen Less. The deck holds the samples one of each kind in turn (`mixedByKind`) and opens
+on a random card each visit. The link is saved as onboarding's progress and the reader goes to
+`/start` (`OnboardingPage`).
 
-**The screens:** analytics (46b, passed by where it was answered before), Is this the right
-video? (46c), topics (46d), A library that sorts itself (46e), About you (141a), Steps that fit
-around you (141j), the voice (46g), Ask your AI (46h), More sources on the way (46i), the account
-(46j) and the plan (46k). Topics, the four slides, About you and the voice have Skip, which keeps the default. Back
-goes a screen back, and from the first screen back to Start. "Use a different link" goes back
-to Start and forgets the progress. Every screen's heading takes focus as it arrives.
+**The steps** (327a): analytics (passed by where it was answered before), Your link, Moment 1,
+Topics, Moment 2, Moment 3, About you, the account, then the wait. The stepper reads "Step n of 6"
+(Start, analytics, Your link, Topics, About you, account); a moment shows the step of the screen
+before it, and the wait has none. The moments, Topics and About you have Skip; Skip on Moment 3
+or About you goes straight to the account. Back goes a screen back, and from the first screen to
+Start. Every screen's heading takes focus as it arrives.
 
-**Two layers at the top.** The overview's own progress says what the run is doing, and
-**shows no bar until writing starts** (OV-175, designs 175a–175l), so it never looks stalled.
-While fetching it's a spinner and "Fetching the video…" or "Reading the page…". Once the
-source is in hand it's a calm line: "Transcript ready" (or "Page read", "Recipe read") and
-"Writing starts in a few taps", which becomes "…when you continue" on the screen whose
-Continue lets writing go. That line says what's done and nothing about the reader, and names
-no screen (it replaced OV-164's "Writing starts once you've told us about you"). The bar
-appears when writing starts, then becomes See your overview, which goes straight to the
-account from whatever screen the reader is on. A failure says so on that screen, and the
-account screen offers Try again. The bar is drawn by stage, not measured: writing is one
-stage. Below it, fourteen segments say where the reader is in the story, Start and the
-reveal included.
+**Your link** (327c, and 327s–327v by kind; `OnboardingYourLink`): one centred column on every
+width. Their own card, the line "38 minutes from Run Coach Ash, turned into an overview you can
+read in about 4, listen to in about 6, and share.", the Read · Listen · Share pills (Cook · Read
+· Share for a recipe, which is read aloud step by step in cooking mode), one line for what's
+inside, and "Saved to your library, ready for you and your AI." The minutes are worked out in
+code (`expectedOverviewMinutes`): the writer's own note budget for a source that long
+(`noteBudget`), plus a fixed allowance for the premise, claim, verdict and How to apply, at the
+reader's reading and speaking rates. A video's length counts as spoken words at those rates; a
+page's words are counted. Each kind's words come from `onboardingSources` (`yourLink`, `card`).
+A playlist starts with its first available video, and "Choose a different video" picks another.
 
-**The preview on a wide screen.** From 64rem the screens and the preview are one centred
-pair with a fixed 40px gap, the preview level with the screen's heading, so the halves don't
-drift apart on a wide window. Before writing, the preview lists what writing waits on: the
-source, Topics, Written for you, then Writing ("Starts after these"). The row the current
-screen feeds is marked Now (confirm, topics, About you; never a slide), and answers land in
-their rows as they're given: picked topics as they're pressed, up to four and "+N", and
-"Personalised" once the sentence has something in it, never the sentence itself. Topics
-say what happens to them, never where this overview will be filed. On the confirm screen the
-source card isn't repeated in the preview; it arrives there on Looks right. When writing
-starts the rows fold into pills (topics, Personalised or Written for anyone, the voice) and
-the bar appears over the kind's sections, Chapters included, then "Topic" shows where it was
-sorted once written. A failure before the source is in hand leaves "Nothing to make yet"; one
-while writing says so in the preview, with Try again. `onboarding.overview.retried` says
-which Try again was pressed: the preview's, the account screen's, or a page that couldn't be
-read. Never the overview's text.
+**The moments** (`OnboardingSavingMoment`, `OnboardingKnowledgeMoment`, `OnboardingStepsMoment`)
+are fixed and illustrative: nothing is tailored live before the account. Moment 3 says "the
+video", "the article" or "the episode", and a recipe's own line.
 
-**About you** is a sentence to finish (`personalisation.md`), with What this changes showing a
-fixed before-and-after under it. Continue saves it before writing is let go. The screen says it
-goes through our server to OpenAI on us.
+**Topics** (327e): up to three suggested for this source, pre-ticked until the reader presses a
+chip; "Popular" shows eight (Finance stands in for the design's Money), and See all opens the 27
+and a field for anything else. Wide, the pane beside is about topics and projects
+(`OnboardingProjectsCard`); on a phone the same card sits under the chips. Topics are made on
+Continue, a starter one with its description and a typed one with none.
 
-**Steps that fit around you** follows it with a fixed example about sleep and the reader's own
-sentence quoted, never their overview's text. With an empty sentence, whether skipped or
-continued through, it becomes "Let's make your overviews personal and actionable" with
-Personalise my overviews back to the sentence, and the progress line drops "for you".
-
-**Topics** are made on Continue, not as chips are pressed, so pressing one off again leaves
-nothing behind. A starter topic is made with its description; a typed one with none.
+**About you** (327i): "Make it yours." over the three-part sentence (`personalisation.md`), with
+"You can update this anytime in Settings." and the line on where it goes. Wide, the pane shows
+their card, the topics picked and Personalised once the sentence has something in it.
 
 ## The account
 
-**The account screen** shows the overview's title and Premise and nothing else of it: the
-rest is drawn bars under a fade, not its text, so none of it is in the page before an account.
-It can't be passed without one. **Its ways in work the moment the reader gets there** (OV-163,
-owner, 4 Nov 2026), whether or not the overview is written: holding a quick reader at the step
-they're most likely to give up on was a mistake. Until then the teaser's place says "Your
-overview is still being written. It'll be ready in your account.", and the overview's own
-progress stays at the top. Email only for now; Google and Apple are a later card. "Continue
-with email" and "Already have an account? Sign in" open the existing email flow in place.
+**The account screen** (327l) holds the way in itself (`RequestLinkFlow`'s `onboarding` variant):
+First name (optional), Email, the terms line, Create account, "No card needed. Free includes 5
+overviews a month." and "Already have an account? Sign in", which switches in place. Beside it
+(below on a phone), "Saved with your account": their card, the topics and Personalised as pills,
+and the Read · Listen · Share pills, then "What you get". Email only for now.
+
+**The code, first** (327l-2): once the email is sent, the same screen takes the 8-character code
+from the mail, which submits itself once eight characters are in; "Or tap the link in the email"
+is the backup (`EnterCode`'s `codeFirst`; the mail itself is in `sign-in.md`, "A code in the web
+mail"). In the extension the link's page shows the code, as before.
 
 **The magic link may open in another tab.** The progress is kept on the device
-(`overview.onboarding.v1`), and home sends a reader with progress back to `/start`, signed out,
-or signed in from the account screen, with the overview made or still on its way. A sign-in
-link can only return to a consent screen, so it lands on home and home sends it on.
+(`overview.onboarding.v1`), and home sends a reader with progress back to `/start`. Once signed in
+from the account screen the run's tab goes to the wait.
 
-**The plan** (46k) follows a new account; signing in to one already held skips it. Free and
-Plus are the same card; Plus says Coming soon until there is billing, and BYO Plus is a line
-under them. **The plan never waits on the overview** (owner, 5 Nov 2026): Continue with Free
-goes straight to the overview when it's in the account, and otherwise records the choice
-(`plan` in the progress) and waits on Nearly there, below. While it's still being written the
-lead says "Your overview is on its way."; the bar at the top is what says it's being made.
-"This overview counts as your first of the month."
+## The wait
 
-**Nearly there** (`OnboardingNearlyThere`) holds the place once the account exists and the
-overview isn't in it yet, after the plan ("Your plan is set. Your overview opens as soon as
-it's ready.") or after a sign-in to an account already held ("You're signed in. …"), and the
-reveal opens on its own when it arrives. Under the lead, what the overview is doing
-(`OnboardingArriving`): "Still writing your overview…" with the bar still going at the top,
-then "Bringing your overview into your account…", or "Something went wrong making your
-overview." with Try again. A reader who reaches the end first waits here rather than going
-to an empty library, since the reveal is the overview's own page and its next steps hang off
-it. On a phone the overview taking shape, the card a wide window shows beside the screens, sits
-under the status, without the bar the top already carries (owner, 5 Nov 2026); it's left out
-while the run has failed, since the status carries Try again. There's no Back once signed in.
+327m, live on page 7 (`OnboardingWaitScreen`, `OnboardingWait`, `waitStages.ts`). The first paid
+screen: their card, then each stage of the run with the logo mark as its loader, from the run's
+real events (the words the source was found to hold, writing begun, the overview in the
+account): Fetching transcript, then Creating overview for a video; the page, the recipe or the
+episode for the other kinds. Only the line under the writing stage is a timed script, spread over
+the expected time, and the bar creeps by elapsed time and completes only when the overview is
+in. "You can switch tabs but keep this tab open" stands under it, a `beforeunload` prompt holds a
+running tab, and the tab's title becomes "Ready: …" once it's done (`useKeepTabWhileRunning`).
+Beside it (below on a phone), set-ups to do meanwhile that never move by themselves
+(`OnboardingSetups`): Appearance exactly as Settings, the extension on desktop Chrome only, and
+Connect your AI, each opening in a new tab. When it's ready the screen changes in place, the card
+fills in with its topics, Personalised and pills, and Open your overview goes to the overview's
+page; nothing jumps on its own. A failure says so with Try again. A shared copy or a sample has
+nothing to wait for and opens as soon as it's in the account.
 
 ## The run lives in one tab
 
@@ -301,26 +261,24 @@ it writes (OV-327), so there is nothing to move in afterwards, and the no-accoun
 opened for it. A run started signed in, or a retry after the account exists, starts writing as soon
 as its link is read.
 
-**The reveal is the overview's own page.** Onboarding forgets its progress and dismisses the
+**The wait opens the overview's own page.** Onboarding forgets its progress and dismisses the
 move notice as it goes there. Under the Verdict of that overview, and no other, the next
-steps (46l): Save in one click with Add to Chrome, which stays disabled until the extension
-is in the Web Store, and Ask your AI with Connect your AI, which opens Settings ›
-Connections. Each has ×; which were dismissed is kept on the device (`overview.nextSteps.v1`). How to apply
-there carries Written for you / For anyone (`personalisation.md`).
-The library then shows the first-overview milestone (46m, `time-saved.md`).
+steps (46l): Save in one click and Ask your AI with Connect your AI. Each has ×; which were
+dismissed is kept on the device (`overview.nextSteps.v1`). The library then shows the
+first-overview milestone (46m, `time-saved.md`).
 
 ## From a shared page
 
 OV-152. A visitor who chooses **Save to my overviews** on a shared page (`sharing.md`)
 goes through onboarding with the shared copy as its overview, instead of straight to an
 account. Nothing is made: the copy travels in onboarding's progress, beside the share's
-token, so there is no "Is this the right video?" screen and no run. The story is a segment
-shorter. The other screens are the same: the questions and slides, then the account screen
-with the copy's title and Premise, the plan, and the copy as the reveal.
+token, so there is no Your link and no wait (OV-327). The other screens are the same: the
+moments and questions, then the account screen with the copy's card, and the copy opens as soon
+as it's in the account.
 
-**The answers don't rewrite the copy.** Topics, About you and the voice are saved for every
+**The answers don't rewrite the copy.** Topics and About you are saved for every
 overview after it. The copy itself is someone else's note, so it isn't sorted or written
-for the reader, and the preview says Unsorted.
+for the reader.
 
 **It's saved once the account's library is open**, not before. The share's token goes to
 the server first, so the copy's push is let in uncounted (`tiers.md`, "Reserving on the
@@ -337,10 +295,8 @@ other ways in go to Start.
 OV-155. Start offers a few ready-made overviews below the link field, on the web and in the
 panel, so a new reader can begin without leaving to find a link. **Choosing one starts onboarding
 around it exactly as Save to my overviews does around a shared copy** ("From a shared page"):
-there's no "Is this the right one?" screen and no run. The questions and slides are the same,
-then the account screen with the sample's title and Premise (or a recipe's Summary), the plan,
-and the sample as the reveal, saved into the new account as the reader's own. The answers
-apply from the next overview on.
+there's no Your link, no run and no wait (OV-327). The moments and questions are the same, then
+the account screen with the sample's card, and the sample opens as soon as it's in the account.
 
 **Samples are shares.** Each is a live share owned by a house account (decided 4 Nov 2026), so
 it's made, replaced and stopped the way any share is (`sharing.md`), and nothing new is stored.
@@ -399,15 +355,11 @@ sample on the deck, or of the length on a row), and the deck stops cycling. If t
 fetched, "That sample couldn't be opened. Try another, or paste a link." shows above the samples,
 focus returns to the card, and the deck stays paused with it in front.
 
-**Through onboarding (155g–155k).** A sample is already made, so the overview's progress line
-doesn't show and there is no See your overview: the way to the account is through the screens. On a
-wide screen the preview shows it with every section Written and the line "Written for anyone. The
-overviews you make are written for you." The teaser says "Your sample overview is ready", and the
-plan "Your sample overview is ready." and "This sample doesn't count towards your month. The first
-overview you make will." The reveal carries no sample label; under How to apply it says "Written
-for anyone, like every sample. The overviews you make are written for you.", and the Written for
-you / For anyone flip doesn't show, so nothing is written for anyone either. The first of its
-next steps is **Now try your own**, with its own field, which starts the next overview as the
+**Through onboarding (155g–155k, then OV-327).** A sample is already made, so there is no Your
+link, run or wait: the moments and questions, then the account, and the sample opens once it's in
+the account. Its overview page carries no sample label; under How to apply it says "Written for
+anyone, like every sample. The overviews you make are written for you.", and the Written for you /
+For anyone flip doesn't show. The first of its next steps is **Now try your own**, with its own field, which starts the next overview as the
 library's own field does, and hides when there's no way to make one. The next steps record that
 it was a sample (`overview.nextSteps.v1`'s `sample`).
 
@@ -498,22 +450,20 @@ account (OV-327). The analytics answer carries in as it always has.
 
 `onboarding.*`: the link given at Start, with its kind (video, playlist or article; a recipe
 isn't known until it's read), or refused; the sample chosen, by where it sat in the list and its
-kind, never its title or link; each screen shown, skipped or gone back
-from; the video being the wrong one or another of a playlist's chosen; how many topics were
-picked and typed; how many entries each section of About you holds and how many were typed,
-never what they say; See your overview before the end; the overview failing, on which screen,
-and whether the account already existed (`afterAccount`), and being tried again, from the
-preview, the account screen, the plan or a page that couldn't be read; the way to an account;
-the sign-in landing (`account.landed`), by which way and whether the overview was ready, still
-being written, or had failed, which is how often the account comes first; the overview
-arriving in the account after that (`overview.arrived`), with how many seconds the reader
-waited and on which screen; the plan; the reveal, and whether its overview was made from a
-link or saved from a sample or a shared page; and a next step followed or dismissed. The
-landing and the arrival are recorded in the progress (`landed`) so a page that comes back
-counts each once. The run itself is counted as `capture.newOverview.started` with
+kind, never its title or link; each screen shown, skipped or gone back from (the moments are
+screens of their own: `saving`, `knowledgeBase`, `stepsForYou`); the video being the wrong one or
+another of a playlist's chosen; how many topics were picked and typed; how many entries each
+section of About you holds and how many were typed, never what they say; the overview failing, on
+which screen, and whether the account already existed (`afterAccount`), and being tried again;
+the way to an account; the sign-in landing (`account.landed`); the overview arriving in the
+account after that (`overview.arrived`), with how many seconds the reader waited; opening it, and
+whether it was made from a link or saved from a sample or a shared page; and a next step followed
+or dismissed. The landing and the arrival are recorded in the progress (`landed`) so a page that
+comes back counts each once. The run itself is counted as `capture.newOverview.started` with
 `from: "onboarding"`.
 
 ## Not built yet
 
 - "Vote for what's next", the unsorted reveal prompt.
-- Open from 155: the deck's cycle time (6 seconds, the design's default) and a random first card.
+- Open from 155: the deck's cycle time (6 seconds, the design's default).
+- OV-327's `kind` property on every onboarding event, the set-up cards' and the wait's own events, and the soft wall (round 4).
