@@ -177,10 +177,10 @@ honestly, on real library sources up to 89 minutes.
 
 - **One overview per conversation.** It is the bounded case: the material is one source the reader
   saved, and the measurements are for it.
-- **Not across the library or a project.** That is open-ended synthesis, which the connector
-  already does on the reader's own plan, from `search_overviews`, `get_overviews`, `get_project`
-  and `get_transcript`. Building it would need retrieval across many transcripts and would compete
-  with the free connector. If testers ask for it, the project page could get its own card later.
+- **Not across the library or a project, at first.** That was the call on 15 Nov, leaving
+  open-ended synthesis to the connector. The owner reopened it on 19 Nov. OV-307 measured chat
+  across sources, the whole library and projects, and it replaces this bullet: see
+  "Chat across sources" below.
 - **No web search.** It costs per call, it breaks "answer only from what you saved", and it is
   what the reader's own assistant is better at.
 
@@ -197,8 +197,8 @@ honestly, on real library sources up to 89 minutes.
   (`shared-transcript-cache.md`). Per-account chunk vectors would be lawful and cost almost nothing
   to make ($0.00024 an hour of video). Stored, though, they take about 60 rows of 1,536 numbers per
   hour of video per account, which is real Neon storage for no measured gain.
-- **Reopen this** if chat goes beyond one source, or if sources much longer than three hours become
-  common. The code for both is in the spike.
+- **Reopen this** if sources much longer than three hours become common. The code is in the
+  spike. Chat beyond one source was reopened, and "Chat across sources" below answers it.
 - **If chat goes beyond one source, start from search by meaning, not transcript vectors.**
   OV-229 already embeds each overview's big picture, core claim, key points and recipe summary,
   one vector per claim (`claimsOf`, `search-by-meaning.md`). That is enough to pick which sources
@@ -363,6 +363,485 @@ The owner said build on 15 Nov 2026. Cards 1 to 4 are on the board as OV-308 to 
    question in the closest few, by question kind, over a whole library. Then price and score
    "closest overviews plus their whole transcripts" against passage vectors, using this harness.
    Passage vectors are built only if `transcriptOnly` questions miss their source often.
+   Done 20 Nov 2026: see "Chat across sources" below.
+
+## Chat across sources
+
+OV-307, an investigation, 20 November 2026. On 19 Nov the owner asked for chat that reaches
+beyond one overview. The motivating case: in a recipe's chat, ask how the healthy eating swaps
+from their saved overviews apply to the recipe. They also asked for two more cases: overviews the
+reader pins with "@", as Recall does, and an empty chat over the whole library ("tell me the key
+common factors across all my cards"). Nothing here is built.
+
+### The answer
+
+- **Asking from one overview about others works with claim search alone, and the others' overviews
+  are enough.** All 10 "apply my other saved overviews to this" questions found the right overview
+  in the closest 3 and cited it in every arm. A first message costs about $0.0018 against $0.0009
+  for today's chat, and a follow-up about $0.00025. No new embeddings are needed.
+- **A detail only a transcript holds needs transcript text.** Overviews alone answered 7 of 67
+  such questions. The closest 3 overviews with their whole transcripts answered 54 of 68, missing
+  exactly where search missed, for $0.0045 a message. Claim search's closest 3 plus the 8 closest
+  transcript minutes by passage vector answered 63 of 65, for $0.0021.
+- **Keyword search over the transcripts we already keep finds what claim search misses, with no
+  vectors.** Claim search or keywords put the right source in the closest 3 for all 78 answerable
+  questions, as passage vectors did. A stored full-text index is about a sixth of passage vectors'
+  size, or nothing if computed per question. Sending the 8 best keyword minutes answered 59 of 66
+  detail questions for $0.0026. That's better than whole transcripts and a little behind passage
+  vectors: it finds the source, but sometimes not the minute that holds the answer.
+- **Pinning works.** With the right overview pinned among 2 or 7 near misses, answers still cited
+  the right one and set where overviews disagreed apart (`pinned3`, `pinned8`).
+- **Projects work too, measured on the owner's four.**
+  - **"@" a project:** a project of up to 8 overviews goes in whole. A larger one sends its closest
+    5 whole and the rest in brief. It picked the same sources as sending everything, at up to a
+    sixth of the cost.
+  - **A project page's chat:** whole overviews while the project is small, which covers recipe
+    projects, whose map entries are only titles. Past that, the compact map plus keyword minutes,
+    which answered 6 of 6 details at 81 overviews for $0.0013.
+- **An empty chat over the whole library works from a compact library map.** That's every overview's
+  title, big picture and core claim, about 16,000 tokens for this library, sent whole. It found every
+  core overview the questions needed, cited nothing off the subject, and never invented an
+  overview, for about $0.0016 a first message and $0.0004 cached. Broad questions ran past the
+  1,000-token answer cap and failed 5 times in 8.
+- **The decision:** build in three steps. First, claim search plus pins in an overview's chat,
+  overviews only. Second, the library map as its own chat. Third, keyword search over the kept
+  transcripts as a second pass, with the matching passages sent. Passage vectors aren't needed on
+  this evidence (below).
+
+### How it was measured
+
+`apps/api/src/scripts/exportChatLibrary.ts` read the owner's library from production over a
+connection opened read only at the server (`default_transaction_read_only`, checked before the
+first query): 208 live overviews, all embedded at their current rev (1,420 claims), and 167 kept
+transcripts, 69.4 hours in all. The longest was 4h03. `chatAcrossSourcesCheck.ts` loads the export
+into the in-memory Postgres with pgvector the tests use. **Search is `ClaimEmbeddingsRepository.closest`,
+the production query, with `MEANING_FLOOR`**, and each question is lowercased as `MeaningSearch`
+does. Answers use the production pieces: `chatSystemPrompt` for the overview the chat is about,
+`streamChatCompletion` on Luna with the `ChatReply` schema, and `transcriptPassages`. The other
+sources go in as one user message after the cached system prompt (the OV-313 lesson), labelled
+S1, S2 and so on, with their ids prefixed (`S2.kp3`, `S2.p14`). Code turns cited ids back into
+overviews and moments.
+
+**The questions, 94 in all, placed by code:**
+
+- OV-267's 36, on its six sources.
+- 44 new ones on 11 more sources: one the overview answers, two only the transcript answers, and
+  one needing two moments at least a quarter of the source apart. These include the 2h00, 2h22 and
+  4h03 sources, and near neighbours that make search harder (two stress overviews, collagen and
+  peptides, several parenting ones).
+- 10 "apply" questions asked from one overview about another, six of them from recipes about the
+  healthy eating podcast.
+- 4 questions nothing in the library answers (vitamin D, fasting, salary, sauna). Code checked that
+  no overview mentions them.
+- 6 synthesis questions for the library map.
+
+Every quote was located in its transcript by code. Each lookup question is asked from a chat
+about another overview: for the 80 source questions, the overview nearest the answering one by
+best pair of claims, and for the apply questions, the overview named. The answering overview is
+never the chat's own. Claude wrote the questions. The new ones name their subject
+("the dermatologist who took collagen"), which makes search easier. OV-267's say "she" with no
+name, which makes it harder.
+
+**Prices** are `modelPrices.ts`, checked 9 Nov 2026: Luna $0.10 in, $0.01 cached, $0.50 out per
+million, and `text-embedding-3-small` $0.02. The run spent **$0.02 on embeddings and $4.42 on
+answers**, on the evals key, plus $0.49 for the keyword arm (`search3+keyword8`), which ran
+afterwards and finished both runs. Each arm had a budget, and nine reached it short of a full second
+run: every arm ran each question once, and 73 to 92 of the 94 a second time. The missing second
+answers are the last questions in the order, mostly the apply and unanswerable ones. A cached
+follow-up is the measured prompt re-priced at the cached rate. A real follow-up only gets that
+rate when the extra sources stay the same, which holds for pins and holds for search when the new
+question finds the same overviews.
+
+### Does search find the source?
+
+How often the answering overview was in the closest few, for 78 answerable questions:
+
+| Kind           | Questions | Claims: closest 3 | 5   | 8   | Keywords: 3 | 5   | 8   | Claims or keywords: 3 | Passage vectors: 3 | 5   | 8   |
+| -------------- | --------- | ----------------- | --- | --- | ----------- | --- | --- | --------------------- | ------------------ | --- | --- |
+| inOverview     | 17        | 17                | 17  | 17  | 17          | 17  | 17  | 17                    | 17                 | 17  | 17  |
+| transcriptOnly | 34        | 27                | 28  | 28  | 32          | 33  | 33  | 34                    | 34                 | 34  | 34  |
+| twoMoments     | 17        | 16                | 17  | 17  | 17          | 17  | 17  | 17                    | 17                 | 17  | 17  |
+| applyAcross    | 10        | 10                | 10  | 10  | 9           | 9   | 9   | 10                    | 10                 | 10  | 10  |
+| All            | 78        | 70                | 72  | 72  | 75          | 76  | 76  | 78                    | 78                 | 78  | 78  |
+
+"Claims or keywords: 3" counts a question as found when the source is in either list's closest 3,
+so up to 6 sources.
+
+- **Claim search misses details, and naming the speaker doesn't help.** Six `transcriptOnly`
+  questions fell below the floor altogether. Two of them named Rupy Aujla, such as where he
+  learned to grate walnuts over food. A speaker's asides aren't in any claim. Passage vectors
+  ranked all six first or second.
+- **Keyword search ranked all six first.** It's BM25 over the same one-minute passages of the kept
+  transcripts, with a source scoring as its best passage. It drops common words and a plural "s",
+  and no model is called (`chatAcrossSourcesCheck.ts keyword`). It's weaker where claims are strong:
+  it missed one apply question, which asks about "my saved healthy eating overview" in words the
+  podcast doesn't use. The two kinds of search cover each other's gaps. Two of the six were
+  OV-267's nameless "she" questions. The others named a speaker or a number, which suits words
+  well, so readers' own questions might suit keywords less.
+- **The floor doesn't tell "nothing here" from a match.** The four unanswerable questions' best
+  claims scored 0.35 to 0.36, above the 0.3 floor, against a median of 0.53 for the right source.
+  As OV-229 found, the closest few always return something, so declining rests on the model.
+- **Passage vectors for this whole library cost $0.02 to make**, 4,112 one-minute passages.
+  Storing them is the larger cost (below).
+
+### What each index would store
+
+Measured on 20 Nov 2026. Prod's database is 32.7 MB in all. Its claim vectors take 13.9 MB for
+1,535 rows, **about 9.1 KB a vector** with row and index overhead, half as much again as the raw
+6 KB. Every kept transcript together is 4.9 MB. For this library's 69 hours, measured in the
+in-memory Postgres (its vector rows, 8.4 KB, agree with prod's):
+
+| Index                                                            | Size    | Per hour of video | Paid plan, $0.35 per GB-month |
+| ---------------------------------------------------------------- | ------- | ----------------- | ----------------------------- |
+| Passage vectors, `vector(1536)`                                  | 34.7 MB | 0.50 MB           | $0.012 a month                |
+| Passage vectors, `halfvec(1536)`                                 | 17.7 MB | 0.26 MB           | $0.006 a month                |
+| Full-text index (`tsvector` and a GIN index)                     | 6.1 MB  | 0.09 MB           | $0.002 a month                |
+| Full-text, worked out per question from transcripts already kept | 0       | 0                 | 0                             |
+
+- **The bill isn't the problem; the free plan's cap is.** Neon's free plan holds a project to 1 GB
+  and blocks writes past it (neon.com/pricing, updated 4 Nov 2026). Passage vectors for about 25
+  libraries this size would fill it. Moving to Launch then costs mostly compute, which Neon puts at
+  about $15 a month for a small database, not storage. Growth will bring that move anyway, but
+  passage vectors would bring it forward.
+- **Passage vectors are about seven times the size of the transcripts they come from.** A minute of
+  compressed text is small, and 1,536 numbers aren't.
+- **Reading them costs time too.** Search compares a question with every one of the reader's rows,
+  with no index. That's 1,420 claim rows for this library today, and passage vectors would add
+  4,112 rows and about 35 MB per question. Probably fine, but unmeasured, and an index would add
+  storage.
+- **Keyword search needs little or nothing.** Postgres can rank the kept transcripts per question
+  with no new storage, at some query time. A stored index is about a sixth of passage vectors'
+  size.
+
+### Cost and quality per shape
+
+Every arm adds sources to today's chat about one overview. "Overviews" means their overviews only;
+"full" adds their whole transcripts. Medians over every answer, both runs:
+
+| Arm                       | What goes in                                                    | Prompt tokens | First message | Cached follow-up | Latency |
+| ------------------------- | --------------------------------------------------------------- | ------------- | ------------- | ---------------- | ------- |
+| home                      | today's chat, nothing added                                     | 6,683         | $0.00092      | $0.00013         | 2.0 s   |
+| search3-overviews         | claim search's closest 3                                        | 13,209        | $0.00177      | $0.00025         | 2.9 s   |
+| search5-overviews         | closest 5                                                       | 16,390        | $0.00219      | $0.00028         | 2.9 s   |
+| search3-full              | closest 3, whole transcripts                                    | 35,363        | $0.00452      | $0.00048         | 2.7 s   |
+| search3+passages8         | closest 3, plus the 8 closest transcript minutes in the library | 16,181        | $0.00214      | $0.00029         | 3.2 s   |
+| search3+keyword8          | closest 3, plus the 8 best keyword-matched minutes              | 18,842        | $0.00256      | $0.00032         | 2.8 s   |
+| pinned1-overviews         | the right overview, pinned                                      | 9,345         | $0.00127      | $0.00021         | 2.7 s   |
+| pinned3-overviews         | it, plus 2 near misses                                          | 13,209        | $0.00178      | $0.00025         | 2.8 s   |
+| pinned8-overviews         | it, plus 7 near misses                                          | 20,946        | $0.00271      | $0.00032         | 3.0 s   |
+| pinned3-full              | 3 pinned, whole transcripts                                     | 36,311        | $0.00482      | $0.00049         | 3.0 s   |
+| pinned1+search3-overviews | the pin, plus search's 3                                        | 13,209        | $0.00174      | $0.00025         | 2.9 s   |
+
+What each answer cited. Each cell is: cited the answering overview, cited the right moment, named
+the expected detail.
+
+| Arm                       | inOverview            | transcriptOnly        | twoMoments            | applyAcross       |
+| ------------------------- | --------------------- | --------------------- | --------------------- | ----------------- |
+| home                      | 0/34 · — · 2/34       | 0/68 · — · 0/68       | 0/34 · — · 2/34       | 0/20 · — · 9/14   |
+| search3-overviews         | 34/34 · — · 34/34     | 7/67 · — · 4/67       | 29/33 · — · 25/33     | 10/10 · — · 7/7   |
+| search5-overviews         | 33/33 · — · 32/33     | 7/65 · — · 4/65       | 30/32 · — · 26/32     | 10/10 · — · 7/7   |
+| search3-full              | 34/34 · 34/34 · 34/34 | 54/68 · 52/68 · 55/68 | 32/34 · 26/34 · 31/34 | 10/10 · — · 7/7   |
+| search3+passages8         | 33/33 · 30/33 · 33/33 | 63/65 · 56/65 · 58/65 | 32/32 · 16/32 · 27/32 | 9/9 · — · 6/6     |
+| search3+keyword8          | 34/34 · 26/34 · 34/34 | 59/66 · 52/66 · 55/66 | 33/33 · 13/33 · 29/33 | 18/18 · — · 13/13 |
+| pinned1-overviews         | 34/34 · — · 34/34     | 6/67 · — · 2/67       | 32/34 · — · 26/34     | 20/20 · — · 14/14 |
+| pinned3-overviews         | 33/33 · — · 32/33     | 7/66 · — · 5/66       | 31/33 · — · 25/33     | 10/10 · — · 7/7   |
+| pinned8-overviews         | 33/33 · — · 32/33     | 7/64 · — · 5/64       | 30/32 · — · 27/32     | 10/10 · — · 7/7   |
+| pinned3-full              | 34/34 · 33/34 · 34/34 | 65/66 · 59/66 · 65/66 | 33/33 · 24/33 · 31/33 | 10/10 · — · 7/7   |
+| pinned1+search3-overviews | 34/34 · — · 34/34     | 10/67 · — · 4/67      | 31/34 · — · 26/34     | 16/16 · — · 13/13 |
+
+- **Today's chat can't do any of this.** It cited nothing outside itself, as it should. On the
+  recipe questions it either said "the recipe page doesn't include the rule from your healthy
+  eating overview" or answered from general knowledge.
+- **For advice, overviews are enough.** Every search and pinned arm cited the right overview on all
+  apply questions. On the cookies, for example: "Your saved healthy eating overview's rule is under
+  5g added sugar per 100g… these cookies are very likely to exceed that." That's the owner's case,
+  at about twice today's price.
+- **For a detail, the transcript has to be there.** Overviews alone answered about a tenth of
+  `transcriptOnly` questions. Whole transcripts of the closest 3 cost two and a half times as much,
+  and still lose what search misses. The 8 closest passages found more for half the price. They
+  are worse at two-moment questions (16 of 32 moments), because only the closest minutes go in.
+- **Keyword minutes come close to passage vectors.** They answered 59 of 66 detail questions
+  against 63 of 65, and cited the right moment 52 times against 56. They cost $0.0026 a first
+  message against $0.0021, because the matched minutes spread over more sources. In all seven
+  misses the right overview was in the prompt, but the minute holding the answer wasn't among
+  the eight sent, so the answer said, rightly, that nothing it was shown covered it. The likely
+  reason is that the question's words aren't the answer's: "which drug did she keep asking the
+  nurse for" never says "potassium". Meaning finds that minute; words can't. Declining held as
+  well: 8 of 8 unanswerable answers cited nothing.
+- **Pins don't confuse it.** Seven near misses beside the right overview changed nothing that was
+  measured. Answers named each pinned overview by title and said where they differed, for example
+  Becky Kennedy's repair against Erica Komisar's presence.
+- **It declines what nothing covers.** Across the arms that added sources, 37 of 38 answers to the
+  four unanswerable questions cited nothing and said none of the overviews shown covered it. The
+  38th said the same, and then cited a pinned football training overview for the recovery
+  practices it does cover, which is fair. OV-267's 24 unanswerable questions sometimes cited
+  their own source for the part it covers and then said it doesn't cover the rest, which is right.
+- **Failures are cut-off answers.** Every failed call, 1 to 3 per arm out of about 170, was an
+  answer that ran past `MAX_ANSWER_TOKENS` (1,000), so its JSON was cut off. More sources make longer
+  answers. The cost of a cut-off answer isn't reported, so it counted as $0 here.
+- **Ids leak into the text.** Some answers wrote "(S2.kp1; S3.kp4)" into the prose.
+  `withoutCitationMarks` knows only unprefixed ids, so the labelled form has to be added.
+
+### An empty chat over the whole library
+
+The library map: each overview's id, title, big picture and core claim, or the same plus every key
+point, in one cached system message. Six questions, twice each:
+
+|                                                  | Compact map     | Map with key points                                                |
+| ------------------------------------------------ | --------------- | ------------------------------------------------------------------ |
+| Prompt tokens                                    | 16,122          | 77,061                                                             |
+| First message (uncached)                         | about $0.0016   | $0.0100 (measured)                                                 |
+| Each later message, cached                       | $0.0003–$0.0006 | about $0.0010                                                      |
+| Core overviews found (stress, parenting, eating) | 16/16           | 15/16                                                              |
+| Cited overviews on the subject                   | every one       | 2 of 3 on stress (added a productivity video), otherwise every one |
+| Ids not in the library                           | 0               | 0                                                                  |
+| Cut off at 1,000 tokens                          | 3 of 12         | 3 of 12                                                            |
+
+The cut-off answers were all "the key common factors across everything I've saved" and "which of
+my saved overviews disagree". The compact map answered the parenting question with the shared idea,
+Komisar standing apart, and the two "three kids" videos as practical rather than advice. Key points
+cost five times as much and added nothing measured. Code can check citations but not whether a
+synthesis is good, so the answers are in the run for reading.
+
+### A project: its own chat, and pinned with "@"
+
+On 20 Nov the owner asked whether this covers a project, either pinned with "@" in an overview's
+chat or as a chat on the project page. We ran it on their four real projects from a second
+read-only export: Dessert Recipes with 5 overviews, Dinner Recipes 21, Software Engineering with
+AI 39, and Building tech products 81. Each project got 5 or 6 questions:
+
+- a synthesis question, such as "the key common factors across the apps in here that make money";
+- a detail held in one overview, such as the Italian Cream Cake's oven temperature or Cardstock's
+  revenue;
+- a question about the project's purpose, such as "given what this project is for, what should my
+  first month look like?";
+- a question the project can't answer.
+
+There were also 4 "@" questions asked from an overview's chat, such as asking from Dr Rupy's
+healthy-eating video "which recipes in my Dinner Recipes project best fit this advice?". The run
+cost $0.28. The compact map and "@" shapes ran twice, and the whole-overview shapes once.
+
+**A project page's chat**, as first message cost and results by project size:
+
+| Shape                                                          | 5 (recipes)        | 21 (recipes)    | 39              | 81              |
+| -------------------------------------------------------------- | ------------------ | --------------- | --------------- | --------------- |
+| Whole overviews, with purpose                                  | 4k tokens, $0.0006 | 16k, $0.0022    | 81k, $0.0105    | 152k, $0.0191   |
+| Compact map, with purpose                                      | 0.4k, $0.0001      | 0.6k, $0.0002   | 4k, $0.0007     | 7k, $0.0010     |
+| Compact map + 8 keyword minutes from the project's transcripts | 0.5k, $0.0002      | 2.4k, $0.0004   | 6k, $0.0010     | 9k, $0.0013     |
+| Detail questions answered: whole / map / map + keywords        | 2/2 · 0/4 · 1/4    | 2/2 · 2/4 · 2/4 | 2/2 · 2/4 · 4/4 | 3/3 · 4/6 · 6/6 |
+
+- **Whole overviews answer everything, and are cheap for small and recipe projects.** Every
+  detail was right, and the jollof question compared all three recipes by stock, base and method.
+  The compact map is the wrong tool for recipes: a recipe overview has no big picture or core
+  claim, so its map entry is just its title. On the map, every recipe detail and the jollof
+  comparison came back as "the project doesn't say". That reply is honest, since none was made
+  up, but it isn't useful.
+- **Large projects need the map plus keyword minutes.** At 81 overviews the map with keyword
+  minutes answered 6 of 6 details, against 4 of 6 for the map alone, at a fifteenth of the cost of
+  sending everything whole. It found the same core overviews for synthesis questions as the whole
+  shape did.
+- **The reader's purpose made no difference we could measure.** The purpose answers with and
+  without it named the same overviews and gave the same advice. It costs about 40 tokens, so send
+  it anyway: it is the reader's own framing, and it may matter for vaguer questions than ours.
+- **Unanswerable questions were all declined** by every shape. No answer named an overview that
+  isn't in the project.
+- **Broad questions on the 81-overview project hit the 1,000-token cap**, as the library map did:
+  2 or 3 in 12 per shape. Twice, the whole shape stated a count ("all five recipes", "your three
+  recipes"), which breaks the never-count rule (`constraints.md`). The map shapes never did.
+
+**"@" a project in an overview's chat.** For a project of up to 8 overviews, every overview went in
+whole, as with pins. A larger project sent its 5 closest by claim search in full and listed the
+rest in brief, cited by label:
+
+| Project pinned                                                        | Capped: closest 5 whole + the rest in brief | Every overview whole |
+| --------------------------------------------------------------------- | ------------------------------------------- | -------------------- |
+| Dinner Recipes (21), from Dr Rupy                                     | 17k tokens, $0.0025                         | 28k, $0.0040         |
+| Software Engineering with AI (39), from "Why Software Factories Fail" | 20k, $0.0028                                | 87k, $0.0112         |
+| Building tech products (81), from "All Code Is Slop"                  | 25k, $0.0035                                | 158k, $0.0201        |
+
+The capped shape picked the same pushback sources as the whole shape, including some it saw only
+in brief, and cited them by label. On Dr Rupy it chose the lentil curry and the bean stew for the
+"beans every day" reflex. Sending everything whole cites item ids more precisely and costs up to
+six times as much. One question, Dr Rupy against Dessert Recipes, failed on every attempt in both
+shapes with an empty reply, and we didn't find out why. The build should log empty replies.
+
+### Structured answers, and reading the chosen overviews whole
+
+The owner shared one of Recall's library answers ("tell me something novel that connects my cards")
+and asked for answers in that shape. It has an intro, sections with headings, points that each
+carry their sources (one title shown, "+2" for the rest), and a takeaway. Recall's trace also
+shows a "synthesizing cards" step before the answer. We tried both on 17 synthesis and purpose
+questions: the six library-map questions, Recall's "something novel" question, and the project
+ones above. Each ran once, for about $0.05 in all.
+
+- **Structured, one pass:** the compact map (the library's or the project's) with a structured
+  schema: `intro`, `sections[{heading, points[{text, sources}]}]`, `takeaway`, capped at 2,000
+  tokens.
+- **Two passes:**
+  1. Given the same map, the model picks up to 5 overviews whose full notes it needs.
+  2. Code sends those overviews whole after the map, in the same cached conversation.
+  3. The model answers in the same structured shape and can cite items (`O12.kp3`).
+
+|                                                    | Structured, one pass | Two passes                         |
+| -------------------------------------------------- | -------------------- | ---------------------------------- |
+| Cost a question (median)                           | $0.0004              | $0.0019                            |
+| Core overviews found                               | 13/22                | 20/22                              |
+| Points                                             | 52                   | 85                                 |
+| Points with no valid source                        | 0                    | 0                                  |
+| Points that barely share words with what they cite | 9                    | 0                                  |
+| Ids that don't exist (dropped in code)             | 0                    | 3                                  |
+| Cut off                                            | 0                    | 0, once the picking cap was raised |
+| Latency (median)                                   | 6.6 s                | 12.4 s                             |
+
+- **The second pass is what makes answers specific.** On one pass, the jollof comparison and "where
+  do these disagree about software factories" found none of their core overviews (0/3 and 0/5),
+  because a map entry is too thin to compare. With two passes both found all of them. Answers
+  cited key points and steps, such as Linear's daily feedback briefing, rather than core claims.
+  On one pass, 9 points shared under a quarter of their words with what they cited. Most were
+  generic advice, and some were the model's own connections, which it labelled as such. With two
+  passes there were none.
+- **Pass 1 picked well:** the overviews it chose held 20 of 22 core overviews. The picking cap must
+  allow for Luna's reasoning. At 300 tokens, 4 of 17 broad questions were cut off while picking. At
+  1,000 none were.
+- **Points citing several overviews worked:** 50 of 85 points cited two or more, as Recall's
+  "+2" does. Recall's food-matrix point, citing Katie Dill and Dr Rupy, is that kind of point.
+- **It holds the house rules:** no answer gave a count. When the model connected overviews in a
+  way they don't, it said the connection was its own. Ids that don't exist are dropped in code,
+  so a point never shows a wrong source.
+- **Cost:** about $0.0019 a question against $0.0016 for today's plain map answer. That's
+  $0.0004 cached plus the five whole overviews, which change with each question. It's well inside
+  the monthly range in "What it does to a reader's month", since library and project chats are
+  5% of the mix.
+
+### What it does to a reader's month
+
+Each plan's monthly allowance (Free 100, BYO Plus 500, Plus 1,000 messages) priced by code, for
+conversations of 1 to 50 questions (`MAX_CHAT_QUESTIONS`). The model is built from the run's
+measured medians: each shape's prompt, its answer length (105 tokens for today's chat, about 200
+with other sources, 467 from the library map), and a 25-token question.
+
+- **History grows.** Every question re-sends the conversation so far, so the prompt grows by a
+  question and an answer each time. The last prompt is the cached prefix of the next, so only
+  the newest question and answer are paid at the uncached rate.
+- **Uncached tokens are priced as `modelPrices.ts` does**, as cache writes at $0.125 a million
+  (OV-260). With that, the model's single-question cost matches the measured first messages:
+  $0.00175 against $0.00178 for search.
+- **Embeddings are included.** The question's embedding is about 25 tokens, $0.0000005, on every
+  search message. Passage vectors cost about $0.00029 an hour of transcript to make: this
+  library's 69 hours cost $0.02 once, and 5 to 30 hours of new saves a month cost $0.001 to
+  $0.009. Claim embeddings already exist.
+
+Average cost per message, by conversation length:
+
+| Shape                                 | 1 question | 3        | 10       | 25       | 50       | 50, sources re-chosen every question |
+| ------------------------------------- | ---------- | -------- | -------- | -------- | -------- | ------------------------------------ |
+| Today's chat                          | $0.00089   | $0.00039 | $0.00022 | $0.00018 | $0.00018 | —                                    |
+| Search's closest 3, overviews         | $0.00175   | $0.00076 | $0.00042 | $0.00035 | $0.00034 | $0.00169                             |
+| 8 pinned overviews                    | $0.00272   | $0.00113 | $0.00058 | $0.00045 | $0.00043 | —                                    |
+| Closest 3 plus the 8 closest passages | $0.00213   | $0.00091 | $0.00049 | $0.00039 | $0.00039 | $0.00208                             |
+| Closest 3, whole transcripts          | $0.00451   | $0.00182 | $0.00088 | $0.00066 | $0.00060 | $0.00441                             |
+| Library map                           | $0.00225   | $0.00106 | $0.00065 | $0.00058 | $0.00061 | —                                    |
+
+A month with the whole allowance used, every conversation the same length:
+
+| Every message in this shape                           | Length | Free (100) | BYO Plus (500) | Plus (1,000) |
+| ----------------------------------------------------- | ------ | ---------- | -------------- | ------------ |
+| Today's chat                                          | 3      | $0.04      | $0.19          | $0.39        |
+|                                                       | 10     | $0.02      | $0.11          | $0.22        |
+|                                                       | 50     | $0.02      | $0.09          | $0.18        |
+| Search, overviews                                     | 3      | $0.08      | $0.38          | $0.76        |
+|                                                       | 10     | $0.04      | $0.21          | $0.42        |
+|                                                       | 50     | $0.03      | $0.17          | $0.34        |
+| 8 pinned                                              | 3      | $0.11      | $0.56          | $1.13        |
+|                                                       | 50     | $0.04      | $0.22          | $0.43        |
+| Passage vectors                                       | 3      | $0.09      | $0.45          | $0.91        |
+|                                                       | 50     | $0.04      | $0.19          | $0.39        |
+| Whole transcripts                                     | 3      | $0.18      | $0.91          | $1.82        |
+|                                                       | 50     | $0.06      | $0.30          | $0.60        |
+| Library map                                           | 3      | $0.11      | $0.53          | $1.06        |
+|                                                       | 50     | $0.06      | $0.30          | $0.61        |
+| **Mix: 70% today's, 20% search, 5% passages, 5% map** | 3      | **$0.05**  | **$0.26**      | **$0.52**    |
+|                                                       | 10     | **$0.03**  | **$0.15**      | **$0.29**    |
+|                                                       | 50     | **$0.02**  | **$0.12**      | **$0.25**    |
+| Search, sources re-chosen every question              | 50     | $0.17      | $0.85          | $1.69        |
+| Whole transcripts, sources re-chosen every question   | 50     | $0.44      | $2.20          | $4.41        |
+
+- **Longer conversations are cheaper per message, not dearer.** The history grows, but it is read
+  from the cache at a tenth of the price. A 50-question conversation costs about half as much per
+  message as a 3-question one, for every shape. So the 50-question cap bounds a conversation's
+  cost; it doesn't raise it. Short conversations are the expensive case. Each new conversation
+  pays to write its prompt once.
+- **How sources change mid-conversation matters more than which shape is chosen.** If each
+  question's search result replaced the sources block, the block and the whole history after it
+  would be paid again every time: about five times the cost at 50 questions. **Keep a
+  conversation's sources append-only.** Overviews found by a later question go in after the
+  history as a new user message, and nothing earlier changes, so the prefix stays cached (the
+  OV-313 rule).
+- **Fully used, cross-source chat about doubles a reader's chat bill, and it stays small.** A Plus
+  reader using all 1,000 messages on the mix costs $0.25 to $0.52, about 8 to 16 overviews on Sol
+  (about $0.033 each, `tiers.md`). These are ceilings for a reader who uses everything, not
+  averages.
+- **Real conversation lengths will come from chat records**, which keep each conversation's
+  messages. The table lets the true figure be read off once they're known.
+- **Not counted:**
+  - Answers cut off at the 1,000-token cap, whose cost isn't reported. Raising the cap adds
+    output.
+  - Storage, priced separately above. It's under $0.02 a month a reader at this library's size for
+    any index.
+
+### Recommendations
+
+The owner approved building these on 20 Nov 2026. They're carded as OV-352 to OV-355, and the card
+for each step is named at its end. The Claude Design round and the UI for all of them are OV-354.
+
+1. **In an overview's chat: claim search plus pins, overviews only (OV-355).** Send the closest 3 by claim
+   search (never the chat's own overview) and any overviews the reader pins with "@". They go as a
+   user message after the cached prompt, in the shape measured here. A first message costs about
+   twice today's. Show what was added, as Recall does, and let the reader remove it. A pinned topic
+   or project that expands past about 8 overviews needs a cap, which this didn't measure beyond 8.
+   Sources are append-only within a conversation: overviews found or pinned later go after the
+   history, never into the earlier block, or each question pays for the history again (about five
+   times the cost at 50 questions). Removing one shouldn't rewrite the prompt either: tell the
+   model to set it aside, in a new message.
+2. **An empty chat over the library: the compact map, read in two passes, answered in sections
+   (OV-353).**
+   It's its own entry point, the library or a project, not an overview's chat.
+   - The model picks up to 5 overviews from the map, with a picking cap of about 1,000 tokens.
+   - Code sends those whole.
+   - The answer comes back structured: intro, sections of points that each carry their sources,
+     and a takeaway, with a cap of about 2,000 tokens.
+   - Code turns ids into title chips (the first title plus "+n", as Recall shows them) and drops
+     unknown ids. The model never writes a title.
+   - The chips and sections need a Claude Design round, as OV-319's citations did. Today's
+     one-overview chat can keep its plain answer.
+   - Code can work out the stats line Recall shows first ("10 cards, 7 tags"). "Never count
+     overviews" stayed in the prompt (`constraints.md`), and no answer gave a count.
+3. **For details: keyword search over the kept transcripts, not passage vectors, for now
+   (OV-352).** Run
+   beside claim search, it found every source passage vectors found, and its 8 best minutes
+   answered 59 of 66 detail questions, against 63 of 65 for passage vectors and 54 of 68 for
+   whole transcripts. It needs no embeddings, and little or no storage. Passage vectors would buy
+   about six more points on detail questions, which are a minority of what readers ask, for a
+   per-account index seven times the size of the transcripts and an earlier move off Neon's free
+   plan. Reopen them if readers' own questions, which will be vaguer than these, miss by keyword.
+   `reader.chat.answered` would need a label for answers whose cited source isn't the chat's own
+   to show that. A cheaper fix to try first: send each keyword minute with its neighbours, so an
+   answer a minute away still goes in.
+4. **Projects (OV-168).**
+   - **"@" a project in an overview's chat (OV-355):** a project of up to 8 overviews goes in whole, as pins
+     do. A larger one sends its closest 5 whole and the rest in brief, about $0.0035 a first
+     message at 81 overviews.
+   - **A project page's chat (OV-353):** send the whole overviews while they fit about 20,000 tokens, which
+     covers every recipe project here. Past that, send the compact map of the project plus the 8
+     best keyword minutes from its transcripts.
+   - **Both:** include the reader's purpose. Use the library chat's higher answer cap.
+   - **When the map is built (OV-353):** give recipes a map entry that carries their main ingredients. A
+     title alone answers nothing.
+5. **Not measured:** conversations longer than one question, readers' own questions, keyword
+   minutes sent with their neighbours, and why one pinned-project question got empty replies.
+6. **When built, it changes the privacy page:** the other overviews and passages go to OpenAI with
+   the question. A stored full-text index, or passage vectors if they ever come, is new derived
+   data kept per account (`legal-pages.md`).
 
 ## Running it again
 
@@ -380,3 +859,31 @@ npm run chat-report --workspace packages/model-comparison -- --run <name>
 - `--dry-run` prints a rough ceiling, counting characters divided by four. The real run records
   the providers' own token counts.
 - The run stops at its budget, and it carries on from where it left off when started again.
+
+**Chat across sources (OV-307)**, from `apps/api` after a build:
+
+```
+DATABASE_URL=… node dist/scripts/exportChatLibrary.js <email> <data dir>/library        # overview-prod, read only
+node dist/scripts/chatAcrossSourcesCheck.js retrieval <data dir> <data dir>/retrieval.json   # evals: embeddings only
+node dist/scripts/chatAcrossSourcesCheck.js keyword <data dir> <data dir>/retrieval.json     # free: BM25 over kept transcripts
+node dist/scripts/chatAcrossSourcesCheck.js answer <data dir> <data dir>/retrieval.json <out.json> --arms <arm,…> --runs 2 --budget <$> [--dry-run]
+node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
+```
+
+- The data dir holds `library/` from the export, `ov267/` and `write/` (one folder per source,
+  each with a `questions.json`), `cross.json` (questions asked from one overview about others) and
+  `synthesis.json` (the library-map questions). It lives in `packages/model-comparison/.local/`,
+  which is never committed and is kept per worktree.
+- `project <data dir> <out.json> --arms <arm,…>` runs the project questions in the data dir's
+  `projects.json` against the export's projects. Its arms are `project-full`, `project-map`,
+  `project-map-nopurpose`, `project-map+keyword8`, `at-project` (capped past 8) and
+  `at-project-full`.
+- `twopass <data dir> <out.json> --arms structured-map,two-pass` runs the data dir's
+  `synthesis.json` questions and the project synthesis and purpose questions as structured
+  answers, in one pass or two.
+- Arms are `home`, `search3-overviews`, `search5-overviews`, `search3-full`, `search3+passages8`,
+  `search3+keyword8`, `pinned1-overviews`, `pinned3-overviews`, `pinned8-overviews`, `pinned3-full`,
+  `pinned1+search3-overviews`, `map-compact` and `map-keypoints`. A map arm writes beside the
+  output as `.map.json`.
+- Run through `scripts/secrets.sh run` from a script with no spaces in its path: the worktree's
+  path has a space, and the arguments split on it.
