@@ -7,7 +7,6 @@ import type { PublicWebAnswer } from "../publicWeb/createPublicWebFetch.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount } from "../testing/TestAccount.testHelper.js";
 import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
-import { makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { makeScriptedTranscriber, transcribedAudio, type ScriptedTranscriber } from "./ScriptedTranscriber.testHelper.js";
 import { START_WAIT_MS } from "./TranscriptionQueue.js";
 
@@ -147,31 +146,22 @@ test("a free account transcribes up to five hours a month, and is told when they
   await testApp.close();
 });
 
-test("signed out, a trial can transcribe onboarding's episode, and no one else can read what it asked for", async () => {
+test("signed out, a trial can check onboarding's episode, but transcribing it waits for an account", async () => {
   const testApp = await createTestApp(
     {},
     {
       podcastWeb: webOf(feed(item("ep1", 1800))),
       transcriber: makeScriptedTranscriber(),
-      ourKey: {
-        apiKey: "sk-test-ours",
-        dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
-        dailyChatMessages: 300,
-        http: makeFakeOpenAi().http,
-      },
     },
   );
   const device = await makeTrialDevice(testApp);
-  const account = await makeAccount(testApp);
 
   const checked = await device.checkTranscript(EPISODE);
   const asked = await device.transcribe(EPISODE);
-  await testApp.drainTranscriptions();
 
-  assert.deepEqual(checked.json().transcription.usage, { usedSeconds: 0, limitSeconds: 4 * 3600, episodes: 0 });
-  assert.equal((await device.transcription(asked.json().id)).json().status, "ready");
-  assert.equal((await account.inject({ method: "GET", url: `/api/podcasts/transcription/${asked.json().id}` })).statusCode, 404);
+  assert.equal(checked.statusCode, 200);
+  assert.equal(checked.json().words, "none");
+  assert.equal(asked.statusCode, 401);
   await testApp.close();
 });
 

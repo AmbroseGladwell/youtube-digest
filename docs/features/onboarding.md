@@ -16,17 +16,26 @@ The analytics question is the second screen, so the first is counted only if the
 waits for the answer instead of discarding. It does, in memory only: `analytics-consent.md`,
 "Before an answer".
 
-## Writing waits for the answers
+## Nothing paid before the account
 
-`runOverviewGeneration` reads topics and Settings once, just before it writes, so anything
-chosen after that would miss the first overview. Onboarding passes `waitToWrite`: the run
-resolves the video and fetches the transcript straight away (so the "Is this the right
-video?" screen has something to show, and a transcript that can't be had fails early), then
-waits on that promise before reading topics and Settings and writing. The flow settles it
-when About you is answered, or when the reader leaves the questions some other way. With an
-empty sentence it waits through the slide after About you too, because that slide offers the
-sentence once more and anything added has to reach the first overview. Other runs pass nothing
-and write at once, as before.
+OV-327 (decided 18 Nov 2026). Signed out, onboarding reads the link and nothing that costs runs.
+Each kind's run (`onboardingSources.ts`) reads its link first, for free, and shows it: the video
+read (`POST /api/videos/read`, below), the page, or the episode. Then it waits on `waitToSpend`,
+which settles once the reader has answered About you (or left the questions), has an account,
+and their answers are moved into it (`answersIn`, `OnboardingRunRuntime`). Only then does
+anything paid run: a transcript from our server, the episode's words or its transcribing, and
+writing, straight into the account's library on the account's keys. `runOverviewGeneration` reads
+topics and Settings just before it writes, so the overview is made from the answers.
+
+**The video read** is one request for the card: the YouTube Data API's title, channel, length and
+thumbnail, and the video's kind from the writer's own check (`checkNoteKind`), with the transcript
+the check was made from. The kind is remembered per video for everyone, so a link anyone has pasted
+costs nothing again; signed out the checks are capped at 300 a UTC day. The device keeps the
+transcript and saves it into the account's store before writing, so `resolveVideo` finds it there
+and our server never fetches it twice; writing takes the kind and skips its own check. No captions,
+a check that fails or the day's cap: no kind, and writing checks as before. A video YouTube doesn't
+list, or a read that fails, stops at the confirm step ("We couldn't find that video", or "We
+couldn't reach YouTube just now" with Try again).
 
 ## Starter topics
 
@@ -99,11 +108,8 @@ instead, with Create an account and Sign in, and nothing is made signed out on e
 signed-out library and its strips (`account-libraries.md`, "What signed out looks like").
 On the web, onboarding's Start takes its place for a reader who has none.
 
-What stays is what onboarding's overview needs. Its run is made on us through the device's
-trial token, which the server now allows one overview (`TRIAL_OVERVIEWS`), behind the same
-cap per address and signed-out share of the day. It is saved to the no-account library,
-unseen, and the move on sign-in carries it into the account, where it counts as one of the
-plan's overviews on us.
+Since OV-327 nothing is made signed out at all: onboarding's overview is written once the
+account exists, as one of the plan's overviews on us ("Nothing paid before the account").
 
 ## Any kind of link
 
@@ -120,20 +126,17 @@ recipe is a web page that turned out to hold one, so it's named a recipe once it
 
 **Reading a link signed out.** An article is read by our server, which is otherwise only for
 accounts. Signed out, the device's trial token reads it: 5 links a token (`TRIAL_READS`), and
-15 a UTC day per address across every token, apart from the trial's one overview. A read is
-counted whether or not the page could be read, since fetching it is the cost; it never spends
-the overview, so a wrong paste, a paywall or a front page doesn't use up a reader's only try
-(decided 3 Nov 2026). Reels join the table when they ship.
+15 a UTC day per address across every token, whatever the kind, a video's read included. A read is
+counted whether or not the link could be read, since fetching it is the cost (decided 3 Nov 2026).
+Reels join the table when they ship.
 
 **A podcast episode** (OV-106) is an Apple Podcasts or Spotify link; a show's own episode page is
 left to the web entry, which reads it as a page. Reading the link spends one of the trial's reads,
-as an article's does (`reserveTrialRead`, shared by both routes). The episode's words are then found
-on the same token while it hasn't made its overview, and only then does the card show, "Is this the
-right episode?", as a video's transcript is fetched before its card does. So an episode with no
-words stops at the confirm step (106i): what happened, that it's common, "Transcribing is coming
-soon", and a field for another link, with the free overview unused. A link our server can't use
-gets that reason's words at the same step (`podcastLinkFailureCopy`), without "No overview was
-used.", since the foot says the free overview hasn't been.
+as an article's does (`reserveTrialRead`, shared by the read routes), and the card shows from the
+read. The episode's words are found, or transcribed, only once there's an account, so an episode
+with none is found to have none after it (OV-327; round 2 of the design moves the check before the
+card). A link our server can't use gets that reason's words at the confirm step
+(`podcastLinkFailureCopy`), without "No overview was used.".
 
 **The progress** keeps the link given and, once known, the source's key: the video's id from
 the link or the playlist video chosen, or the article's once it has been read. Progress kept
@@ -175,8 +178,8 @@ can read.
   line mentions the extension, for after the first overview.
 - **No response adds Try again**, which reads the page once more.
 - **A front page** is a page with nothing readable at a site's root.
-- **Out of trial reads,** on the device or across the network, the field asks for a video link,
-  since those use none. The network's says to try a page tomorrow, and neither counts down.
+- **Out of trial reads,** on the device or across the network, it says every link counts and to
+  sign in or try again tomorrow, and neither counts down.
 
 Another link given there replaces the first, and onboarding carries on from the same screen.
 
@@ -281,8 +284,7 @@ while the run has failed, since the status carries Try again. There's no Back on
 OV-163. The run is made above the router (`OnboardingRunRuntime`, in `App`), so the page coming
 and going never starts the overview over: the web's sign-in lands on home and comes straight
 back, and going home mid-run comes back too. Before this the page owned the run, and either
-would have cancelled a generation in flight and started another, which the trial's one overview
-would then refuse.
+would have cancelled a generation in flight and started another.
 
 **One tab has it.** The tab that started onboarding writes its own id into the progress
 (`runner`, from `overview.onboarding.tab.v1` in session storage, so a reload is the same tab).
@@ -294,20 +296,10 @@ the first tab, if it's merely slow, sees and yields to. Try again from a mirrori
 the run over the same way, so the retry runs where it was pressed. Progress from before this
 names no runner, and the first tab to ask and hear nothing takes it.
 
-**Where a run writes.** A run started signed out opens the no-account library beside whatever
-the app is showing and writes there, so a sign-in mid-run, which swaps the app's library and
-closes the old handle, doesn't lose it; when it lands, it asks the move to run again
-(`LibraryMoveRuntime.moveAgain`, `account-libraries.md`, "The move on sign-in"), and the
-overview arrives in the account the same way as one made before the account. A run started
-signed in, a retry after the account exists or a take-over by the signed-in tab, writes
-straight into the account's library on the account's key, with nothing to move. The trial
-counts the first run against its token whenever its generation went out signed out; the server
-sees a session only on a request sent after sign-in, so nothing is counted twice.
-
-**Known gap.** A run whose transcript is still being fetched when the account's first pull
-completes reads topics and About you from the no-account library after the move has copied
-and cleared them, and so is written for anyone. It needs the sign-in to finish before a
-transcript fetch does, which is seconds against an email round trip.
+**Where a run writes.** Into the account's library, always: the run waits for the account before
+it writes (OV-327), so there is nothing to move in afterwards, and the no-account library isn't
+opened for it. A run started signed in, or a retry after the account exists, starts writing as soon
+as its link is read.
 
 **The reveal is the overview's own page.** Onboarding forgets its progress and dismisses the
 move notice as it goes there. Under the Verdict of that overview, and no other, the next
@@ -496,13 +488,11 @@ none, so the gate offers no way back to itself.
 
 ## Into the account
 
-Topics, About you, the voice and the overview are written into the no-account library while
-signed out. On sign-in, `moveAnswersInto` brings every topic in with its description, and
-About you and the voice where the account has none (the account's own win), before
-`moveLibraryInto` brings the overview (`account-libraries.md`, "The move on sign-in"). An
-overview that lands after the sign-in is brought in by the move running once more, after
-the first has finished; the move is the same either way, and never moves one twice. The
-analytics answer carries in as it always has.
+Topics, About you and the voice are written into the no-account library while signed out. On
+sign-in, `moveAnswersInto` brings every topic in with its description, and About you and the
+voice where the account has none (the account's own win) (`account-libraries.md`, "The move on
+sign-in"). The overview waits for that move (`answersIn`) and is written straight into the
+account (OV-327). The analytics answer carries in as it always has.
 
 ## Analytics
 

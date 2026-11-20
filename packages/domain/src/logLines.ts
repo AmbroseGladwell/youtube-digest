@@ -214,11 +214,6 @@ export const apiLogLines = coded("api", {
       "service transcript refused for spent overviews",
       "An account asked with no overview left this month on either key.",
     ),
-    trialSpent: line(
-      "warn",
-      "service transcript refused for a spent trial",
-      "A signed-out device asked after its onboarding overview on our key was made.",
-    ),
     proxySpend: line("info", "transcript proxy spend", "Bytes billed to the residential proxy, and the day's running total."),
   },
   costs: {
@@ -251,21 +246,6 @@ export const apiLogLines = coded("api", {
     ),
     quotaSpent: line("info", "our key quota spent", "An account asked for an overview on our key with none left this month."),
     dailyCapSpent: line("warn", "our key daily cap spent", "The global daily cap on our key refused a generation for every plan."),
-    signedOutShareSpent: line(
-      "warn",
-      "our key signed-out share spent",
-      "The signed-out share of the global daily cap refused a trial overview; accounts carry on.",
-    ),
-    trialSpent: line(
-      "info",
-      "trial spent on our key",
-      "A signed-out device asked for another overview on our key after its onboarding one.",
-    ),
-    trialAddressSpent: line(
-      "warn",
-      "trial address cap spent",
-      "An address made its 3 onboarding overviews on our key today, across every token. Never the address.",
-    ),
     keyRefused: line("error", "our key refused", "The provider refused our own key. Every generation on our key fails until it is fixed."),
   },
   chat: {
@@ -306,7 +286,11 @@ export const apiLogLines = coded("api", {
     ),
   },
   trials: {
-    issued: line("info", "trial token issued", "A signed-out device was given a trial token before its onboarding overview on our key."),
+    issued: line(
+      "info",
+      "trial token issued",
+      "A signed-out device was given a trial token, to read its onboarding link and ask for topic suggestions.",
+    ),
     topicSuggestionsUnknownTrial: line(
       "warn",
       "topic suggestions refused for an unknown trial",
@@ -321,11 +305,6 @@ export const apiLogLines = coded("api", {
     ),
     released: line("info", "own-key reservation released", "A generation on the reader's own key failed, and its slot was given back."),
     quotaSpent: line("info", "own key quota spent", "An account asked to reserve an overview on its own key with none left this month."),
-    movedFromTrial: line(
-      "info",
-      "trial overview moved in on our key",
-      "An overview made on our key in a signed-out trial was moved into an account, and counted on our key: plan, the count and limit of the month it went on, and whether it was carried to a later month because this one was full.",
-    ),
     shareSaved: line("info", "shared overview saved", "A reader saved a shared overview into their library. It is not counted."),
     pushRefused: line(
       "warn",

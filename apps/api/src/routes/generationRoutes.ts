@@ -25,9 +25,6 @@ import {
   OurKeyGenerationError,
   OurKeyQuotaSpentError,
   OurKeyUnavailableError,
-  TrialAddressSpentError,
-  TrialSpentError,
-  TrialUnknownError,
   type OurKeyCaller,
   type OurKeyGenerator,
 } from "../generation/OurKeyGenerator.js";
@@ -48,8 +45,8 @@ export function generationRoutes(
     return status;
   });
 
-  // Signed out, a device asks for its trial token before its first overview on our key
-  // (docs/architecture/tiers.md, "Counting").
+  // Signed out, a device asks for its trial token before it reads its first link or asks for
+  // topic suggestions; the trial makes nothing (docs/architecture/tiers.md, "Signed out").
   app.post(
     "/trials",
     {
@@ -57,9 +54,6 @@ export function generationRoutes(
       preHandler: rateLimitHook(rateLimits.trialPerAddress, (request) => request.clientAddress, clock),
     },
     async (request) => {
-      if (generator === null) {
-        throw new ApiError("unavailable", "This server does not make overviews on its own key");
-      }
       const trial: TrialToken = { token: await trials.issue(clock()) };
       request.log.info(apiLogLines.trials.issued());
       return trial;
@@ -127,7 +121,7 @@ export function generationRoutes(
         if (trialToken === null) {
           throw new ApiError("unauthenticated", "Sign in, or start a trial, to have topics suggested");
         }
-        if ((await trials.used(trialToken)) === null) {
+        if (!(await trials.isKnown(trialToken))) {
           request.log.warn(apiLogLines.trials.topicSuggestionsUnknownTrial());
           throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
         }
@@ -137,35 +131,17 @@ export function generationRoutes(
     },
   );
 
-  app.post("/generations", { bodyLimit: GENERATION_BODY_LIMIT_BYTES, config: { optionalSession: true } }, async (request, reply) => {
+  // Only for an account: nothing is made on us signed out (OV-327).
+  app.post("/generations", { bodyLimit: GENERATION_BODY_LIMIT_BYTES }, async (request, reply) => {
     const body = parseOrThrow(OurKeyGenerationRequest, request.body, "The generation request");
-    const trialToken = request.headers[TRIAL_TOKEN_HEADER];
-    if (request.session === null && typeof trialToken !== "string") {
-      throw new ApiError("unauthenticated", "Sign in, or start a trial, to make an overview on us");
-    }
     if (generator === null) {
       throw new ApiError("unavailable", "This server does not make overviews on its own key");
     }
-    const caller: OurKeyCaller =
-      request.session === null
-        ? { trialToken: trialToken as string, address: request.clientAddress }
-        : { accountId: request.session.accountId, plan: await accountPlan(sql, request.session.accountId) };
+    const { accountId } = request.session!;
+    const caller: OurKeyCaller = { accountId, plan: await accountPlan(sql, accountId) };
     try {
       return await generator.generate(caller, body, request.log);
     } catch (error) {
-      if (error instanceof TrialSpentError) {
-        throw new ApiError("too_many_requests", error.message, { quota: "trial" });
-      }
-      if (error instanceof TrialAddressSpentError) {
-        reply.header("retry-after", String(error.retryAfterSeconds));
-        throw new ApiError("too_many_requests", error.message, {
-          quota: "trial-address",
-          retryAfterSeconds: error.retryAfterSeconds,
-        });
-      }
-      if (error instanceof TrialUnknownError) {
-        throw new ApiError("unauthenticated", error.message, { trial: "unknown" });
-      }
       if (error instanceof OurKeyQuotaSpentError) {
         reply.header("retry-after", String(error.retryAfterSeconds));
         throw new ApiError("too_many_requests", error.message, {

@@ -23,7 +23,6 @@ const appServing = (page: FetchedPage, logger?: ReturnType<typeof recordingLogge
       ourKey: {
         apiKey: "sk-test-ours",
         dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
         dailyChatMessages: 20_000,
         http: makeFakeOpenAi().http,
       },
@@ -96,17 +95,6 @@ test("signed out, a trial reads a few links, whether or not they can be read, th
   assert.equal(next.statusCode, 429);
   assert.equal(next.json().error.details.quota, "trial-reads");
   assert.equal(saying(lines, "trial reads spent").length, 1);
-  await testApp.close();
-});
-
-test("a trial's reads leave its one overview on us", async () => {
-  const testApp = await appServing({ status: "page", url: URL_OF_PAGE, html: HTML });
-  const device = await makeTrialDevice(testApp);
-  for (let n = 0; n < TRIAL_READS; n += 1) await device.readArticle(URL_OF_PAGE);
-
-  const made = await device.generate();
-
-  assert.equal(made.statusCode, 200);
   await testApp.close();
 });
 

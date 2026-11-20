@@ -40,7 +40,7 @@ const appReading = async ({
     {
       ...(reader === null ? {} : { videoReader: reader }),
       transcriptService: { fetches: youTube.fetches, proxyDailyFetches: 1000 },
-      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, signedOutDailyGenerations: 50, dailyChatMessages: 20_000, http: openAi.http },
+      ourKey: { apiKey: "sk-test-ours", dailyGenerations: 300, dailyChatMessages: 20_000, http: openAi.http },
       ...(logger === undefined ? {} : { logger }),
     },
   );
@@ -175,8 +175,12 @@ test("YouTube not listing the video answers not found, and failing answers unava
     },
   });
 
-  const notFound = await (await makeAccount(missing)).inject({ method: "POST", url: "/api/videos/read", body: { videoId: FIXTURE_VIDEO_ID } });
-  const unavailable = await (await makeAccount(failing)).inject({
+  const notFound = await (
+    await makeAccount(missing)
+  ).inject({ method: "POST", url: "/api/videos/read", body: { videoId: FIXTURE_VIDEO_ID } });
+  const unavailable = await (
+    await makeAccount(failing)
+  ).inject({
     method: "POST",
     url: "/api/videos/read",
     body: { videoId: FIXTURE_VIDEO_ID },

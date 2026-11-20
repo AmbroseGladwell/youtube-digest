@@ -130,7 +130,6 @@ export interface TranscriptServiceSetup {
 export interface OurKeySetup {
   apiKey: string;
   dailyGenerations: number;
-  signedOutDailyGenerations: number;
   dailyChatMessages: number;
   http: typeof fetch;
   // A test hands in its own, so a provider's retry waits take no time.
@@ -333,7 +332,7 @@ export async function buildApp({
           ? null
           : createPodcastTranscriptions({ fetchPublicWeb: podcastWeb, jobs: transcriptionJobs, queue: transcriptionQueue, clock });
       overviewUsageRoutes(api, { usage: overviewUsage, transcriptions, sql, clock });
-      overviewReservationRoutes(api, { reservations, usage: overviewUsage, trials, shares, sql, clock });
+      overviewReservationRoutes(api, { reservations, usage: overviewUsage, shares, sql, clock });
       const chatUsage = new ChatUsageRepository(sql);
       chatRoutes(api, {
         records,
@@ -372,8 +371,7 @@ export async function buildApp({
         sql,
         clock,
       });
-      const generator =
-        ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, trials, costs, clock });
+      const generator = ourKey === null ? null : new OurKeyGenerator({ ...ourKey, usage: overviewUsage, reservations, costs, clock });
       generationRoutes(api, {
         generator,
         trials,
@@ -412,7 +410,7 @@ export async function buildApp({
                 .then((answer) => answer.transcript)
                 .catch(() => null),
       });
-      serviceTranscriptRoutes(api, { usage: overviewUsage, trials, service: youTubeService, sql, clock });
+      serviceTranscriptRoutes(api, { usage: overviewUsage, service: youTubeService, sql, clock });
       podcastRoutes(api, {
         readEpisode: readPodcastEpisode,
         resolveTranscript: podcastTranscripts.resolve,

@@ -61,10 +61,11 @@ apps/api/
     postHog/             PostHog's one batch call, shared by events and errors
     logs/                pino with a route-only request log, written to stdout and to an OTLP log endpoint
     playlists/           reading a YouTube playlist whole through the Data API, and telling a private one from a missing one
-    usage/               the month's counts per key, our key's daily cap, the signed-out trial's counts, and the reservations a new overview is let in by
+    videos/              onboarding's video card from the Data API, its kind checked once per video, and the day's signed-out checks
+    usage/               the month's counts per key, our key's daily cap, the signed-out trial's reads, and the reservations a new overview is let in by
     generation/          OurKeyGenerator, the model our key makes overviews with
     rateLimit/           the limits, the fixed-window limiter, the hook that throttles, the caller's address
-    routes/              changes, overviews, topics, settings, followed playlists, playlists, transcripts, audio, shares, overview usage, reservations, generations and trials
+    routes/              changes, overviews, topics, settings, followed playlists, playlists, transcripts, audio, shares, overview usage, reservations, generations, trials and video reads
     scripts/             mintSession, setPlan, seedVoiceSamples (the deploy's release step), forgetSharedTranscript
     testing/             createTestApp, TestAccount, record fixtures (.testHelper.ts)
 ```
@@ -303,6 +304,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `account` | 600 | minute, per account | every request with a session, after the session is known |
 | `articleReadAddress` | 120 | hour, per address | `POST /api/articles/read`, which reads a link as it is pasted and counts nothing against the month; signed out, a trial's reads are counted on top (`tiers.md`) |
 | `podcastReadAddress` | 120 | hour, per address | `POST /api/podcasts/read`, which turns a podcast link into its episode and counts nothing against the month (`podcast-links.md`) |
+| `videoReadAddress` | 120 | hour, per address | `POST /api/videos/read`, onboarding's video card, kind and transcript before anything is written; signed out, a trial's reads and the day's 300 kind checks are counted on top (`tiers.md`) |
 | `podcastTranscriptAddress` | 120 | hour, per address | `POST /api/podcasts/transcript`, which walks the podcast transcript rungs and counts nothing against the month (`podcast-transcripts.md`), and `POST /api/podcasts/transcript/check`, which asks them whether words are there and fetches none (`speech-to-text.md`), sharing the count |
 | `transcriptionAddress` | 20 | hour, per address | `POST /api/podcasts/transcription`, which starts a GPU transcribing an episode against the month's hours; asking after one (`GET`) is held only to `address` (`speech-to-text.md`) |
 | `magicLinkAddress` | 20 | hour, per address | `POST /api/auth/magic-link` |
@@ -318,7 +320,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `oauthTokenAddress` | 60 | minute, per address | `POST /oauth/token`, `POST /oauth/revoke` |
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
-| `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token makes one overview, onboarding's, and costs nothing until it does; the 3 a day per address in Postgres counts those (`tiers.md`, "Counting") |
+| `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token reads onboarding's link and asks for its topic suggestions, and makes nothing (`tiers.md`, "Signed out") |
 | `smallPassAccount` | 30 | day, per account | `POST /api/generations/profile`, `/how-to-apply`, `/topics` and `/topic-suggestions`: none counts as an overview, so this is what bounds them (`docs/features/personalisation.md`; `/topics` sorts a sample, `docs/features/onboarding.md`) |
 | `topicSuggestionTrial` | 5 | day, per trial token | `POST /api/generations/topic-suggestions` signed out: onboarding asks once per link, so five covers a few links tried (`tiers.md`) |
 | `topicSuggestionAddress` | 20 | day, per address | the same, across every token from one address, so a private window doesn't reset it |
@@ -417,13 +419,12 @@ of the repository, is `docs/conventions/secrets.md`:
 | `TRANSCRIPT_SERVICE` | `off` | `on` lets the server fetch transcripts itself, as the ladder's last rung; `off` answers `unavailable`, and says so at startup (`docs/architecture/server-side-transcripts.md`) |
 | `TRANSCRIPT_PROXY_URL` | unset | an http(s) residential proxy with its credentials, `{session}` replaced per fetch for a sticky exit address; a secret. Unset fetches only from the server's own address |
 | `TRANSCRIPT_PROXY_DAILY_FETCHES` | 1000 | transcripts a UTC day that may go through the proxy, across everyone |
-| `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists are read with, and podcast episodes found on their shows' channels; a secret. Unset, `/api/playlists` answers `unavailable`, our server can't search YouTube for an episode, and both say so at startup (`docs/features/playlists.md`, `docs/features/podcast-on-youtube.md`) |
+| `YOUTUBE_API_KEY` | unset | the YouTube Data API key playlists and onboarding's video card are read with, and podcast episodes found on their shows' channels; a secret. Unset, `/api/playlists` and `/api/videos/read` answer `unavailable`, our server can't search YouTube for an episode, and both say so at startup (`docs/features/playlists.md`, `docs/features/podcast-on-youtube.md`) |
 | `PODCAST_INDEX_API_KEY`, `PODCAST_INDEX_API_SECRET` | unset | Podcast Index's key and its secret, which sign every request; both secrets, and one without the other is refused. Unset, a Spotify link's show is looked up in Apple's directory alone, and startup says so (`docs/features/podcast-links.md`, "The directories") |
 | `SUPPORT_EMAIL` | `hello@theoverviewapp.com` | the address the account mails tell a reader to write to when a mail's own way out cannot help (`docs/features/account-changes.md`) |
 | `SAMPLE_SHARE_TOKENS` | unset | comma-separated share tokens, in order, of the house account's live shares that Start offers as samples. Not a secret, since each is a public link. Unset, `/api/samples` lists none and Start offers only its field (`docs/features/onboarding.md`, "Try a sample") |
 | `OPENAI_API_KEY` | unset | our own key, for overviews made on it with GPT-6.1 Sol; a secret. Unset, `/api/generations` answers `unavailable` and says so at startup (`tiers.md`). In `overview-dev` and `overview-prod`, a different key in each, and neither is the harness's (`overview-evals`); the prod key is restricted to chat completions |
 | `OUR_KEY_DAILY_GENERATIONS` | 300 | overviews a UTC day on our key, across everyone: about $11 at Sol's mean of $0.038 |
-| `OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS` | 50 | the share of that day a signed-out trial may spend, so proxies rotating addresses can't turn accounts away: about £2 (`tiers.md`, "Counting") |
 | `OUR_KEY_DAILY_CHAT_MESSAGES` | 20000 | chat questions answered on our key in a UTC day, across every account (`tiers.md`, "Questions about an overview") |
 | `POSTHOG_API_KEY` | unset | the PostHog project the app's analytics are passed on to; unset logs them and stops, and says so at startup (`docs/architecture/analytics.md`) |
 | `POSTHOG_HOST` | `https://eu.i.posthog.com` | the project's ingestion host: the EU cloud, where the project is made |

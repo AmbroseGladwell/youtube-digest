@@ -1,7 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
 import {
   apiLogLines,
-  TRIAL_OVERVIEWS,
   type ForAnyoneInput,
   type NoteKind,
   type OurKeyGenerationRequest,
@@ -39,17 +38,14 @@ import { secondsToNextUsageDay, usageDay } from "../transcripts/ServiceUsageRepo
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import { TRIAL_OVERVIEWS_PER_ADDRESS_DAILY, type TrialsRepository } from "../usage/TrialsRepository.js";
 import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js";
 import { ourKeyModel } from "./ourKeyModel.js";
 
 export interface OurKeyGeneratorOptions {
   apiKey: string;
   dailyGenerations: number;
-  signedOutDailyGenerations: number;
   usage: OverviewUsageRepository;
   reservations: OverviewReservationsRepository;
-  trials: TrialsRepository;
   costs: AccountCostsRepository;
   http: typeof fetch;
   clock: () => Date;
@@ -75,31 +71,8 @@ export class OurKeyDailyCapSpentError extends Error {
   }
 }
 
-export class TrialSpentError extends Error {
-  constructor() {
-    super("You've made the overviews you can without an account. Sign up to keep going.");
-  }
-}
-
-// Readers sharing an address share its trial overviews on our key for the day.
-export class TrialAddressSpentError extends Error {
-  readonly retryAfterSeconds: number;
-
-  constructor(retryAfterSeconds: number) {
-    super("Overviews on us without an account have run out on this network today. Sign up, or add your own key, to keep going.");
-    this.retryAfterSeconds = retryAfterSeconds;
-  }
-}
-
-export class TrialUnknownError extends Error {
-  constructor() {
-    super("This trial isn't one this server knows");
-  }
-}
-
-// An account, counted by the month on its plan, or a signed-out device, counted by its
-// trial token and the address it asks from.
-export type OurKeyCaller = { accountId: AccountId; plan: Plan } | { trialToken: string; address: string };
+// An account, counted by the month on its plan. Nothing is made on us signed out (OV-327).
+export type OurKeyCaller = { accountId: AccountId; plan: Plan };
 
 export type SmallPass = "profile" | "forAnyone" | "topics" | "topicSuggestions" | "kindCheck";
 
@@ -140,7 +113,7 @@ export class OurKeyGenerationError extends Error {
 }
 
 // Makes an overview on our key through production's own generation. The global day's
-// slot and the caller's slot (the account's month, or the trial's) are both reserved first
+// slot and the account's month are both reserved first
 // and both given back on any failure, so an overview counts once, when it succeeds
 // (docs/architecture/tiers.md).
 export class OurKeyGenerator {
@@ -155,28 +128,22 @@ export class OurKeyGenerator {
     { overviewId, input }: OurKeyGenerationRequest,
     log: FastifyBaseLogger,
   ): Promise<OurKeyGenerationResult> {
-    const { apiKey, dailyGenerations, signedOutDailyGenerations, usage, reservations, trials, http, clock } = this.#options;
+    const { apiKey, dailyGenerations, usage, reservations, http, clock } = this.#options;
     const now = clock();
     const day = usageDay(now);
-    const signedOut = "trialToken" in caller;
-    const logged = signedOut ? { caller: "trial" as const, plan: null } : { caller: "account" as const, plan: caller.plan };
-    const dayReservation = await usage.reserveOurKeyDay(now, dailyGenerations, signedOut ? signedOutDailyGenerations : null);
-    if (dayReservation === "spent") {
+    const logged = { caller: "account" as const, plan: caller.plan };
+    if (!(await usage.reserveOurKeyDay(now, dailyGenerations))) {
       log.warn(apiLogLines.ourKey.dailyCapSpent({ ...logged, limit: dailyGenerations }));
       throw new OurKeyDailyCapSpentError(secondsToNextUsageDay(now));
     }
-    if (dayReservation === "signed-out-share-spent") {
-      log.warn(apiLogLines.ourKey.signedOutShareSpent({ limit: signedOutDailyGenerations }));
-      throw new OurKeyDailyCapSpentError(secondsToNextUsageDay(now));
-    }
     const held = await this.#hold(caller, now, log).catch(async (error: unknown) => {
-      await usage.releaseOurKeyDay(day, signedOut);
+      await usage.releaseOurKeyDay(day);
       throw error;
     });
 
     const metered = meteredFetch(ourKeyModel.provider, http);
     const startedAt = now.getTime();
-    const payer: CostPayer = signedOut ? "signed-out" : { accountId: caller.accountId };
+    const payer: CostPayer = { accountId: caller.accountId };
     // The kind check's calls are costed on their own line, apart from the note's
     // (docs/architecture/unit-economics.md); an article has no check.
     let noteKind: NoteKind | null = null;
@@ -204,8 +171,7 @@ export class OurKeyGenerator {
         { id: overviewId, savedAt: now.toISOString() },
         observer,
       );
-      if (signedOut) await trials.made(now, overviewId);
-      else await reservations.madeOnOurKey(now, caller.accountId, overviewId);
+      await reservations.madeOnOurKey(now, caller.accountId, overviewId);
       await recordCosts(false);
       log.info(
         apiLogLines.ourKey.generated({
@@ -222,7 +188,7 @@ export class OurKeyGenerator {
       return { ...overview, filedProjectIds };
     } catch (error) {
       await held.release();
-      await usage.releaseOurKeyDay(day, signedOut);
+      await usage.releaseOurKeyDay(day);
       await recordCosts(true);
       if (error instanceof ProviderKeyRefusedError) {
         log.error(apiLogLines.ourKey.keyRefused({ model: ourKeyModel.model }));
@@ -321,36 +287,16 @@ export class OurKeyGenerator {
   }
 
   async #hold(caller: OurKeyCaller, now: Date, log: FastifyBaseLogger): Promise<HeldSlot> {
-    const { usage, trials } = this.#options;
-    if ("accountId" in caller) {
-      const reservation = await usage.reserve(now, caller.accountId, "ours", overviewQuotas[caller.plan].ours);
-      if (!reservation.reserved) {
-        log.info(apiLogLines.ourKey.quotaSpent({ plan: caller.plan, used: reservation.used, limit: reservation.limit }));
-        throw new OurKeyQuotaSpentError(nextUsageMonth(now), secondsToNextUsageMonth(now));
-      }
-      return {
-        used: reservation.used,
-        limit: reservation.limit,
-        release: () => usage.release(reservation.month, caller.accountId, "ours"),
-      };
+    const { usage } = this.#options;
+    const reservation = await usage.reserve(now, caller.accountId, "ours", overviewQuotas[caller.plan].ours);
+    if (!reservation.reserved) {
+      log.info(apiLogLines.ourKey.quotaSpent({ plan: caller.plan, used: reservation.used, limit: reservation.limit }));
+      throw new OurKeyQuotaSpentError(nextUsageMonth(now), secondsToNextUsageMonth(now));
     }
-    const reservation = await trials.reserve(now, caller.trialToken, caller.address);
-    if (reservation.reserved) {
-      return {
-        used: reservation.used,
-        limit: TRIAL_OVERVIEWS,
-        release: () => trials.release(caller.trialToken, reservation.day, caller.address),
-      };
-    }
-    switch (reservation.reason) {
-      case "unknown":
-        throw new TrialUnknownError();
-      case "spent":
-        log.info(apiLogLines.ourKey.trialSpent({ used: reservation.used, limit: TRIAL_OVERVIEWS }));
-        throw new TrialSpentError();
-      case "address-spent":
-        log.warn(apiLogLines.ourKey.trialAddressSpent({ used: reservation.used, limit: TRIAL_OVERVIEWS_PER_ADDRESS_DAILY }));
-        throw new TrialAddressSpentError(secondsToNextUsageDay(now));
-    }
+    return {
+      used: reservation.used,
+      limit: reservation.limit,
+      release: () => usage.release(reservation.month, caller.accountId, "ours"),
+    };
   }
 }

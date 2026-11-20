@@ -83,7 +83,6 @@ test("the tables the migrations create are there to be used", async () => {
       "transcript_passages",
       "transcription_usage",
       "trial_address_usage",
-      "trial_overviews",
       "trial_tokens",
       "video_kind_checks_signed_out",
       "video_kinds",

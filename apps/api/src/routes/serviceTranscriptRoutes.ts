@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { apiLogLines, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEADER, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
+import { apiLogLines, VideoId, type ServiceTranscriptStatus } from "@overview/domain";
 import { TranscriptFetchError } from "@overview/transcripts";
 import { accountPlan } from "../auth/accountPlan.js";
 import type { SqlClient } from "../db/SqlClient.js";
@@ -10,7 +10,6 @@ import { rateLimitHook } from "../rateLimit/rateLimitHook.js";
 import { rateLimits } from "../rateLimit/rateLimits.js";
 import { QuotaSpentError, type ServiceCaller, type ServiceTranscripts } from "../transcripts/ServiceTranscripts.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import type { TrialsRepository } from "../usage/TrialsRepository.js";
 import { secondsToNextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ videoId: VideoId });
@@ -20,13 +19,11 @@ export function serviceTranscriptRoutes(
   {
     service,
     usage,
-    trials,
     sql,
     clock,
   }: {
     service: ServiceTranscripts | null;
     usage: OverviewUsageRepository;
-    trials: TrialsRepository;
     sql: SqlClient;
     clock: () => Date;
   },
@@ -39,7 +36,6 @@ export function serviceTranscriptRoutes(
   app.post(
     "/service-transcripts/:videoId",
     {
-      config: { optionalSession: true },
       preHandler: rateLimitHook(rateLimits.serviceTranscriptPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply) => {
@@ -47,35 +43,22 @@ export function serviceTranscriptRoutes(
       if (service === null) {
         throw new ApiError("unavailable", "This server does not fetch transcripts itself");
       }
-      const caller: ServiceCaller =
-        request.session === null
-          ? { address: request.clientAddress }
-          : { accountId: request.session.accountId, plan: await accountPlan(sql, request.session.accountId) };
-      // A transcript from our server is part of an overview, so an account with none left
-      // this month, on either key, has no use for one (docs/architecture/tiers.md, "Counting").
-      if ("accountId" in caller) {
-        const now = clock();
-        const month = await usage.usage(now, caller.accountId, caller.plan);
-        if (month.ours.used >= month.ours.limit && month.own.used >= month.own.limit) {
-          const retryAfterSeconds = secondsToNextUsageMonth(now);
-          request.log.warn(apiLogLines.serviceTranscripts.overviewsSpent({ plan: caller.plan, resetsOn: month.resetsOn }));
-          reply.header("retry-after", String(retryAfterSeconds));
-          throw new ApiError("too_many_requests", "You've made this month's overviews", {
-            quota: "overviews",
-            resetsOn: month.resetsOn,
-            retryAfterSeconds,
-          });
-        }
-      }
-      // Signed out, the same holds for the trial: once its token has made the trial's
-      // overviews on our key, the extension or the shared cache is where a transcript comes from.
-      const trialToken = request.headers[TRIAL_TOKEN_HEADER];
-      if (!("accountId" in caller) && typeof trialToken === "string") {
-        const used = await trials.used(trialToken);
-        if (used !== null && used >= TRIAL_OVERVIEWS) {
-          request.log.warn(apiLogLines.serviceTranscripts.trialSpent({ used, limit: TRIAL_OVERVIEWS }));
-          throw new ApiError("too_many_requests", "You've made the overviews you can without an account", { quota: "trial" });
-        }
+      // Only for an account: signed out, onboarding's video read fetches the one transcript it
+      // needs (OV-327). A transcript from our server is part of an overview, so an account with
+      // none left this month, on either key, has no use for one (docs/architecture/tiers.md, "Counting").
+      const { accountId } = request.session!;
+      const caller: ServiceCaller = { accountId, plan: await accountPlan(sql, accountId) };
+      const now = clock();
+      const month = await usage.usage(now, caller.accountId, caller.plan);
+      if (month.ours.used >= month.ours.limit && month.own.used >= month.own.limit) {
+        const retryAfterSeconds = secondsToNextUsageMonth(now);
+        request.log.warn(apiLogLines.serviceTranscripts.overviewsSpent({ plan: caller.plan, resetsOn: month.resetsOn }));
+        reply.header("retry-after", String(retryAfterSeconds));
+        throw new ApiError("too_many_requests", "You've made this month's overviews", {
+          quota: "overviews",
+          resetsOn: month.resetsOn,
+          retryAfterSeconds,
+        });
       }
       try {
         const answer = await service.resolve(videoId, caller, request.log);

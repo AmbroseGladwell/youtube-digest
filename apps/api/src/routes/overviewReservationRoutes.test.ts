@@ -7,7 +7,6 @@ import { generationRequest, makeFakeOpenAi } from "../generation/FakeOpenAi.test
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
-import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { storedOverview, withVideo } from "../testing/storedRecords.testHelper.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 
@@ -15,7 +14,6 @@ const RESERVING = CLIENT_VERSION;
 const OUR_KEY = {
   apiKey: "sk-test-ours",
   dailyGenerations: 300,
-  signedOutDailyGenerations: 50,
   dailyChatMessages: 20_000,
   http: makeFakeOpenAi().http,
 };
@@ -191,46 +189,6 @@ test("an overview made on our key is let in, and an own-key slot still held for 
   assert.equal(made.statusCode, 200);
   assert.equal(pushed.statusCode, 201);
   assert.deepEqual([usage.ours.used, usage.own.used], [1, 0]);
-  await testApp.close();
-});
-
-test("an overview made on our key in a signed-out trial and moved in on sign-in counts on the account's month on our key", async () => {
-  const testApp = await createTestApp({}, { ourKey: OUR_KEY });
-  const device = await makeTrialDevice(testApp);
-  const overviewId = randomUUID();
-  const made = await device.generate(overviewId);
-  const account = await makeAccount(testApp);
-
-  const refused = await push(account, { ...storedOverview(), ...made.json() });
-  const reserved = await reserve(account, overviewId);
-  const pushed = await push(account, { ...storedOverview(), ...made.json() });
-
-  assert.equal(refused.json().error.code, "not_reserved");
-  assert.equal(reserved.statusCode, 200);
-  assert.deepEqual([reserved.json().ours.used, reserved.json().own.used], [1, 0]);
-  assert.equal(pushed.statusCode, 201);
-  await testApp.close();
-});
-
-test("a moved trial overview is let in with the month on our key spent, and counted on the next month", async () => {
-  const testApp = await createTestApp({}, { ourKey: OUR_KEY });
-  const account = await makeAccount(testApp);
-  for (let made = 0; made < overviewQuotas.free.ours; made += 1) {
-    await account.inject({ method: "POST", url: "/api/generations", body: generationRequest(randomUUID()) });
-  }
-  const overviewId = randomUUID();
-  const made = await (await makeTrialDevice(testApp)).generate(overviewId);
-
-  const reserved = await reserve(account, overviewId);
-  const pushed = await push(account, { ...storedOverview(), ...made.json() });
-
-  testApp.clock.now = new Date(reserved.json().resetsOn);
-  const nextMonth = await account.inject({ method: "GET", url: "/api/overview-usage" });
-
-  assert.equal(reserved.statusCode, 200);
-  assert.deepEqual(reserved.json().ours, { used: overviewQuotas.free.ours, limit: overviewQuotas.free.ours });
-  assert.equal(pushed.statusCode, 201);
-  assert.equal(nextMonth.json().ours.used, 1);
   await testApp.close();
 });
 

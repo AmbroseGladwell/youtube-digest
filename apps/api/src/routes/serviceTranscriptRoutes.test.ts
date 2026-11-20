@@ -1,14 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, VideoId } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, VideoId } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
 import { storedOverview } from "../testing/storedRecords.testHelper.js";
 import { FIXTURE_VIDEO_ID } from "@overview/transcripts/testing";
 import { LOG_LEVELS, recordingLogger, type LogLine } from "../logs/recordingLogger.testHelper.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
-import { makeAccount } from "../testing/TestAccount.testHelper.js";
-import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
-import { makeFakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
+import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { makeFakeYouTube, type FakeYouTube } from "../transcripts/FakeYouTube.testHelper.js";
 import { PROXY_PRICE, serviceTranscriptQuotas } from "../transcripts/ServiceTranscripts.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
@@ -34,14 +32,32 @@ async function serviceApp(
 
 const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
 
-const askAnonymously = (testApp: TestApp, videoId: string, remoteAddress = "203.0.113.7") =>
-  testApp.app.inject({ method: "POST", url: `/api/service-transcripts/${videoId}`, headers: HEADERS, remoteAddress });
+// Each named reader is an account of its own, made the first time it asks.
+const readers = new WeakMap<TestApp, Map<string, Promise<TestAccount>>>();
+const askAs = async (testApp: TestApp, videoId: string, reader = "first") => {
+  const byName = readers.get(testApp) ?? new Map<string, Promise<TestAccount>>();
+  readers.set(testApp, byName);
+  if (!byName.has(reader)) byName.set(reader, makeAccount(testApp));
+  const account = await byName.get(reader)!;
+  return account.inject({ method: "POST", url: `/api/service-transcripts/${videoId}` });
+};
 
-test("a signed-out reader gets a transcript our server fetched, and nothing is kept for the next reader", async () => {
+test("signed out, our server fetches no transcript: that waits for an account", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
 
-  const fetched = await askAnonymously(testApp, FIXTURE_VIDEO_ID);
+  const response = await testApp.app.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}`, headers: HEADERS });
+
+  assert.equal(response.statusCode, 401);
+  assert.equal(youTube.requests.length, 0);
+  await testApp.close();
+});
+
+test("a reader gets a transcript our server fetched, and nothing is kept for the next reader", async () => {
+  const youTube = makeFakeYouTube();
+  const testApp = await serviceApp(youTube);
+
+  const fetched = await askAs(testApp, FIXTURE_VIDEO_ID);
   const shared = await testApp.app.inject({ method: "GET", url: `/api/shared-transcripts/${FIXTURE_VIDEO_ID}` });
 
   assert.equal(fetched.statusCode, 200);
@@ -54,10 +70,10 @@ test("a signed-out reader gets a transcript our server fetched, and nothing is k
 test("the next reader of the same video is fetched for afresh, on their own cap", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
-  await askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.1");
+  await askAs(testApp, FIXTURE_VIDEO_ID, "198.51.100.1");
   const before = youTube.requests.length;
 
-  const next = await askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.2");
+  const next = await askAs(testApp, FIXTURE_VIDEO_ID, "198.51.100.2");
 
   assert.equal(next.statusCode, 200);
   assert.ok(youTube.requests.length > before);
@@ -68,7 +84,7 @@ test("when YouTube turns our own address away, the transcript is fetched through
   const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "captions" });
   const testApp = await serviceApp(youTube);
 
-  const response = await askAnonymously(testApp, FIXTURE_VIDEO_ID);
+  const response = await askAs(testApp, FIXTURE_VIDEO_ID);
   const proxied = youTube.requests.filter((request) => request.route === "proxy");
   const spend = await new ServiceUsageRepository(testApp.sql).spendOn(usageDay(testApp.clock.now));
 
@@ -81,22 +97,19 @@ test("when YouTube turns our own address away, the transcript is fetched through
   await testApp.close();
 });
 
-test("the proxy's bytes are recorded, priced per GB, against the account whose fetch went through it, and a signed-out one apart", async () => {
+test("the proxy's bytes are recorded, priced per GB, against the account whose fetch went through it", async () => {
   const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "captions" });
   const testApp = await serviceApp(youTube);
   const account = await makeAccount(testApp);
 
   await account.inject({ method: "POST", url: `/api/service-transcripts/${FIXTURE_VIDEO_ID}` });
-  await askAnonymously(testApp, videoIdNumbered(7));
   const costs = new AccountCostsRepository(testApp.sql);
   const spend = await new ServiceUsageRepository(testApp.sql).spendOn(usageDay(testApp.clock.now));
   const [ofAccount] = await costs.of({ accountId: account.accountId });
-  const [signedOut] = await costs.of("signed-out");
 
   assert.deepEqual([ofAccount?.area, ofAccount?.detail, ofAccount?.calls], ["transcripts", "proxy", 1]);
   assert.equal(ofAccount?.dollars, ((ofAccount?.quantity ?? 0) / 1e9) * PROXY_PRICE.dollarsPerGb);
-  assert.equal(signedOut?.calls, 1);
-  assert.equal((ofAccount?.quantity ?? 0) + (signedOut?.quantity ?? 0), spend.proxyBytes);
+  assert.equal(ofAccount?.quantity, spend.proxyBytes);
   await testApp.close();
 });
 
@@ -104,7 +117,7 @@ test("a bot check through the proxy is tried once more on a fresh session, then 
   const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "bot-check" });
   const testApp = await serviceApp(youTube);
 
-  const response = await askAnonymously(testApp, FIXTURE_VIDEO_ID);
+  const response = await askAs(testApp, FIXTURE_VIDEO_ID);
   const sessions = new Set(youTube.requests.filter((request) => request.route === "proxy").map((request) => request.session));
 
   assert.equal(response.statusCode, 422);
@@ -117,9 +130,9 @@ test("a bot check through the proxy is tried once more on a fresh session, then 
 test("once the day's proxy budget is spent, the reader is told so and the proxy is not used", async () => {
   const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "captions" });
   const testApp = await serviceApp(youTube, 1);
-  await askAnonymously(testApp, videoIdNumbered(1));
+  await askAs(testApp, videoIdNumbered(1));
 
-  const response = await askAnonymously(testApp, videoIdNumbered(2));
+  const response = await askAs(testApp, videoIdNumbered(2));
 
   assert.equal(response.statusCode, 422);
   assert.equal(response.json().error.details.failure, "budget-exhausted");
@@ -130,10 +143,10 @@ test("once the day's proxy budget is spent, the reader is told so and the proxy 
 test("the budget is a day's: the next UTC day the proxy is used again", async () => {
   const youTube = makeFakeYouTube({ direct: "bot-check", proxy: "captions" });
   const testApp = await serviceApp(youTube, 1);
-  await askAnonymously(testApp, videoIdNumbered(1));
+  await askAs(testApp, videoIdNumbered(1));
   testApp.clock.advance(24 * 60 * 60 * 1000);
 
-  const response = await askAnonymously(testApp, videoIdNumbered(2));
+  const response = await askAs(testApp, videoIdNumbered(2));
 
   assert.equal(response.statusCode, 200);
   await testApp.close();
@@ -142,10 +155,10 @@ test("the budget is a day's: the next UTC day the proxy is used again", async ()
 test("a fetch our own address answers costs no proxy budget", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube, 1);
-  await askAnonymously(testApp, videoIdNumbered(1));
+  await askAs(testApp, videoIdNumbered(1));
   youTube.answers.direct = "bot-check";
 
-  const response = await askAnonymously(testApp, videoIdNumbered(2));
+  const response = await askAs(testApp, videoIdNumbered(2));
 
   assert.equal(response.statusCode, 200);
   await testApp.close();
@@ -155,9 +168,9 @@ test("a video with no captions is never tried through the proxy, and is not aske
   const youTube = makeFakeYouTube({ direct: "no-captions", proxy: "captions" });
   const testApp = await serviceApp(youTube);
 
-  const first = await askAnonymously(testApp, FIXTURE_VIDEO_ID);
+  const first = await askAs(testApp, FIXTURE_VIDEO_ID);
   const asked = youTube.requests.length;
-  const second = await askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.2");
+  const second = await askAs(testApp, FIXTURE_VIDEO_ID, "198.51.100.2");
 
   assert.equal(first.json().error.details.failure, "no-captions");
   assert.equal(second.json().error.details.failure, "no-captions");
@@ -166,30 +179,10 @@ test("a video with no captions is never tried through the proxy, and is not aske
   await testApp.close();
 });
 
-test("a signed-out address has a small daily safety cap, and is told when it can ask again", async () => {
-  const youTube = makeFakeYouTube();
-  const testApp = await serviceApp(youTube);
-  for (let n = 1; n <= serviceTranscriptQuotas.address; n += 1) {
-    assert.equal((await askAnonymously(testApp, videoIdNumbered(n))).statusCode, 200);
-  }
-
-  const refused = await askAnonymously(testApp, videoIdNumbered(99));
-
-  assert.equal(serviceTranscriptQuotas.address, 5);
-  assert.equal(refused.statusCode, 429);
-  assert.equal(refused.json().error.details.daily, true);
-  assert.equal(refused.json().error.details.retryAfterSeconds, 15 * 60 * 60);
-  assert.equal(refused.headers["retry-after"], String(15 * 60 * 60));
-  await testApp.close();
-});
-
 test("a signed-in reader is counted by account at its plan's cap, not by address", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
   const account = await makeAccount(testApp);
-  for (let n = 1; n <= serviceTranscriptQuotas.address; n += 1) {
-    await askAnonymously(testApp, videoIdNumbered(n), "127.0.0.1");
-  }
 
   const answers = [];
   for (let n = 1; n <= serviceTranscriptQuotas.free + 1; n += 1) {
@@ -255,11 +248,11 @@ test("a video with no captions gives its slot back, so it never spends the day's
   const testApp = await serviceApp(youTube);
 
   const answers = [];
-  for (let n = 1; n <= serviceTranscriptQuotas.address + 1; n += 1) {
-    answers.push((await askAnonymously(testApp, videoIdNumbered(n))).json().error.details.failure);
+  for (let n = 1; n <= serviceTranscriptQuotas.free + 1; n += 1) {
+    answers.push((await askAs(testApp, videoIdNumbered(n))).json().error.details.failure);
   }
   youTube.answers.direct = "captions";
-  const fetched = await askAnonymously(testApp, videoIdNumbered(99));
+  const fetched = await askAs(testApp, videoIdNumbered(99));
 
   assert.deepEqual(new Set(answers), new Set(["no-captions"]));
   assert.equal(fetched.statusCode, 200);
@@ -271,11 +264,11 @@ test("captions our server refused as unfit give the slot back", async () => {
   const testApp = await serviceApp(youTube);
 
   const statuses = [];
-  for (let n = 1; n <= serviceTranscriptQuotas.address + 1; n += 1) {
-    statuses.push((await askAnonymously(testApp, videoIdNumbered(n))).statusCode);
+  for (let n = 1; n <= serviceTranscriptQuotas.free + 1; n += 1) {
+    statuses.push((await askAs(testApp, videoIdNumbered(n))).statusCode);
   }
   youTube.answers.direct = "captions";
-  const fetched = await askAnonymously(testApp, videoIdNumbered(99));
+  const fetched = await askAs(testApp, videoIdNumbered(99));
 
   assert.deepEqual(new Set(statuses), new Set([422]));
   assert.equal(fetched.statusCode, 200);
@@ -286,17 +279,16 @@ test("readers who share one in-flight fetch spend one slot between them", async 
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
 
-  const shared = await Promise.all(
-    Array.from({ length: serviceTranscriptQuotas.address }, () => askAnonymously(testApp, FIXTURE_VIDEO_ID)),
-  );
+  const shared = await Promise.all(Array.from({ length: 5 }, () => askAs(testApp, FIXTURE_VIDEO_ID)));
   const answers = [];
-  for (let n = 2; n <= serviceTranscriptQuotas.address; n += 1) {
-    answers.push((await askAnonymously(testApp, videoIdNumbered(n))).statusCode);
+  for (let n = 2; n <= serviceTranscriptQuotas.free; n += 1) {
+    answers.push((await askAs(testApp, videoIdNumbered(n))).statusCode);
   }
+  testApp.clock.advance(60 * 60 * 1000);
 
   assert.deepEqual(new Set(shared.map((answer) => answer.statusCode)), new Set([200]));
-  assert.deepEqual(answers, Array(serviceTranscriptQuotas.address - 1).fill(200));
-  assert.equal((await askAnonymously(testApp, videoIdNumbered(99))).statusCode, 429);
+  assert.deepEqual(answers, Array(serviceTranscriptQuotas.free - 1).fill(200));
+  assert.equal((await askAs(testApp, videoIdNumbered(99))).statusCode, 429);
   await testApp.close();
 });
 
@@ -341,31 +333,11 @@ test("reaching the cap is one warn line saying who, which plan, the limit, today
   await testApp.close();
 });
 
-test("a signed-out caller's cap line names the address counter, never the address", async () => {
-  const { lines, logger } = recordingLogger();
-  const testApp = await serviceApp(makeFakeYouTube(), 1000, logger);
-  for (let n = 1; n <= serviceTranscriptQuotas.address + 1; n += 1) {
-    await askAnonymously(testApp, videoIdNumbered(n), "203.0.113.77");
-  }
-
-  const [spent] = saying(lines, "service transcript quota spent");
-
-  assert.deepEqual(
-    { caller: spent!.caller, plan: spent!.plan, limit: spent!.limit, used: spent!.used },
-    { caller: "address", plan: null, limit: 5, used: 5 },
-  );
-  assert.doesNotMatch(JSON.stringify(spent), /203\.0\.113\.77/);
-  await testApp.close();
-});
-
 test("readers asking for one video at the same moment share one fetch", async () => {
   const youTube = makeFakeYouTube();
   const testApp = await serviceApp(youTube);
 
-  const answers = await Promise.all([
-    askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.3"),
-    askAnonymously(testApp, FIXTURE_VIDEO_ID, "198.51.100.4"),
-  ]);
+  const answers = await Promise.all([askAs(testApp, FIXTURE_VIDEO_ID, "198.51.100.3"), askAs(testApp, FIXTURE_VIDEO_ID, "198.51.100.4")]);
 
   assert.deepEqual(
     answers.map((answer) => answer.statusCode),
@@ -379,7 +351,7 @@ test("a server with the service off says so, and refuses to fetch", async () => 
   const testApp = await createTestApp();
 
   const status = await testApp.app.inject({ method: "GET", url: "/api/service-transcripts" });
-  const refused = await askAnonymously(testApp, FIXTURE_VIDEO_ID);
+  const refused = await askAs(testApp, FIXTURE_VIDEO_ID);
 
   assert.deepEqual(status.json(), { available: false });
   assert.equal(refused.statusCode, 503);
@@ -392,33 +364,6 @@ test("a server with the service on says so", async () => {
   const status = await testApp.app.inject({ method: "GET", url: "/api/service-transcripts" });
 
   assert.deepEqual(status.json(), { available: true });
-  await testApp.close();
-});
-
-test("signed out, our server fetches only while the trial has an overview left on our key", async () => {
-  const youTube = makeFakeYouTube();
-  const testApp = await createTestApp(
-    {},
-    {
-      transcriptService: { fetches: youTube.fetches, proxyDailyFetches: 1000 },
-      ourKey: {
-        apiKey: "sk-test-ours",
-        dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
-        dailyChatMessages: 20_000,
-        http: makeFakeOpenAi().http,
-      },
-    },
-  );
-  const device = await makeTrialDevice(testApp);
-  const before = await device.fetchTranscript(videoIdNumbered(1));
-  for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) await device.generate();
-
-  const after = await device.fetchTranscript(videoIdNumbered(2));
-
-  assert.equal(before.statusCode, 200);
-  assert.equal(after.statusCode, 429);
-  assert.equal(after.json().error.details.quota, "trial");
   await testApp.close();
 });
 

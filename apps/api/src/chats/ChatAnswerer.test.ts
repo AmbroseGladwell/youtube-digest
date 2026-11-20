@@ -80,7 +80,6 @@ async function setUp(
       ourKey: {
         apiKey: "sk-test-ours",
         dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
         dailyChatMessages,
         http: openAi.http,
         sleep: async (ms) => {
