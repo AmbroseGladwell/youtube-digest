@@ -37,12 +37,12 @@ describe("sampleFacts", () => {
     });
   });
 
-  it("gives a recipe its total time, its Summary and Cook More", () => {
+  it("gives a recipe its total time, its Summary and Cook Easier", () => {
     const recipe = makeRecipeOverview();
     expect(sampleFacts(noteOf(recipe))).toMatchObject({
       kindLabel: "Recipe",
       length: "1 hr 5 min",
-      verb: "Cook More,",
+      verb: "Cook Easier,",
       first: { label: "Summary", text: recipe.recipe!.summary },
       sections: ["Ingredients", "Method"],
     });
