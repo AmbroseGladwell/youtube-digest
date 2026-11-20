@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Source, VideoId, type ArticleRead, type PodcastEpisode, type StoredTranscript, type VideoSource } from "@overview/domain";
-import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
+import { makeArticleOverview, makeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
 import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingMakers } from "./onboardingSources.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
 
@@ -44,75 +44,32 @@ describe("onboardingSources", () => {
     expect(onboardingSources.web.noun("article", { ...article, recipe: RECIPE })).toBe("recipe");
   });
 
-  it("gives an article's card its site and kind, then its author and reading time", () => {
-    const overview = makeArticleOverview();
-    const card = onboardingSources.web.card(foundIn(overview));
-    expect(card.kicker).toMatch(/ · Article$/);
-    expect(card.facts).toEqual({ line: expect.stringMatching(/\d+ min read$/) });
-  });
-
-  it("gives a recipe's card the page's own times, never summed", () => {
-    const card = onboardingSources.web.card({ ...foundIn(makeArticleOverview()), recipe: { ...RECIPE, totalMinutes: null } });
-    expect(card.kicker).toMatch(/ · Recipe$/);
-    expect(card.facts).toEqual({
-      figures: [
-        { label: "Prep", value: "15 min" },
-        { label: "Cook", value: "50 min" },
-        { label: "Makes", value: "4" },
-      ],
+  it("gives each kind's card the facts 327s draws", () => {
+    const article = makeArticleOverview();
+    const video = makeOverview();
+    expect(onboardingSources.web.card(foundIn(article))).toEqual({
+      kicker: expect.stringMatching(/ · Article$/),
+      facts: { line: expect.stringMatching(/^\d+ min read · /) },
     });
+    expect(onboardingSources.web.card({ ...foundIn(article), recipe: RECIPE }).facts.line).toMatch(/^1 hr 5 min · Serves 4 · /);
+    expect(onboardingSources.youtube.card(foundIn(video)).kicker).toMatch(/ · Video$/);
+    expect(onboardingSources.youtube.card({ ...foundIn(video), noteKind: "recipe" }).kicker).toMatch(/ · Recipe video$/);
+    expect(onboardingSources.youtube.card(foundIn(video)).facts.line).toMatch(/YouTube$/);
   });
 
-  it("previews a recipe's ingredients and method as the page's own, and writes only its summary", () => {
-    const found = { ...foundIn(makeArticleOverview()), recipe: RECIPE };
-    expect(onboardingSources.web.sections(found)).toEqual([
-      { name: "Summary", fromPage: false },
-      { name: "Ingredients", fromPage: true },
-      { name: "Method", fromPage: true },
-    ]);
-    expect(onboardingSources.web.sections(null).map(({ name }) => name)).toEqual([
-      "Premise",
-      "Key points",
-      "How to apply",
-      "Verdict",
-      "Chapters",
-    ]);
-  });
-
-  it("lists the big picture only for a source long enough to earn one", () => {
-    const names = (kind: "youtube" | "web", source: Source) =>
-      onboardingSources[kind].sections({ source, recipe: null, about: "" }).map(({ name }) => name);
-    const video = makeOverview().source;
-    const article = makeArticleOverview().source;
-
-    expect(names("youtube", { ...video, durationMs: 10 * 60_000 } as Source)).toContain("Big picture");
-    expect(names("youtube", { ...video, durationMs: 9 * 60_000 } as Source)).not.toContain("Big picture");
-    expect(names("youtube", { ...video, durationMs: null } as Source)).not.toContain("Big picture");
-    expect(names("web", { ...article, wordCount: 1001 } as Source).slice(0, 2)).toEqual(["Premise", "Big picture"]);
-    expect(names("web", { ...article, wordCount: 1000 } as Source)).not.toContain("Big picture");
-  });
-
-  it("names the big picture among what an account opens, when the overview has one", () => {
-    expect(onboardingSources.youtube.teaser(makeOverview({ bigPicture: "The ground." })).locked).toBe(
-      "Big picture, key points, How to apply and Verdict open with an account.",
-    );
-    expect(onboardingSources.youtube.teaser(makeOverview({ bigPicture: null })).locked).toBe(
-      "Key points, How to apply and Verdict open with an account.",
-    );
-  });
-
-  it("says what's in hand by kind once the source is read", () => {
-    expect(onboardingSources.youtube.ready(null)).toBe("Transcript ready");
-    expect(onboardingSources.web.ready(foundIn(makeArticleOverview()))).toBe("Page read");
-    expect(onboardingSources.web.ready({ ...foundIn(makeArticleOverview()), recipe: RECIPE })).toBe("Recipe read");
-  });
-
-  it("teases a recipe by its summary and total, and says what an account opens", () => {
-    const teaser = onboardingSources.web.teaser(makeRecipeOverview());
-    expect(teaser.byline).toMatch(/ · Recipe · 1 hr 5 min$/);
-    expect(teaser.first.label).toBe("Summary");
-    expect(teaser.locked).toBe("The ingredients and method open with an account.");
-    expect(onboardingSources.web.teaser(makeArticleOverview()).byline).toMatch(/ · Article · \d+ min read$/);
+  it("says on Your link what they'll get, with the minutes it's given and none it isn't", () => {
+    const video = { ...foundIn(makeOverview()), source: { ...makeOverview().source, durationMs: 38 * 60_000 } as Source };
+    const words = onboardingSources.youtube.yourLink(video, { read: 4, listen: 6 });
+    expect(words.heading).toBe("Here’s what’s in the video you saved.");
+    expect(words.line).toMatch(/^38 minutes from .+, turned into an overview you can read in about 4, listen to in about 6, and share\.$/);
+    expect(words.pills).toBe("readListen");
+    expect(onboardingSources.youtube.yourLink(video, null).line).toMatch(/turned into an overview you can read, listen to and share\.$/);
+    expect(onboardingSources.youtube.yourLink({ ...video, noteKind: "recipe" }, null)).toMatchObject({
+      heading: "Here’s the recipe you saved.",
+      pills: "cook",
+    });
+    expect(onboardingSources.web.yourLink({ ...foundIn(makeArticleOverview()), recipe: RECIPE }, null).pills).toBe("cook");
+    expect(onboardingSources.web.yourLink(foundIn(makeArticleOverview()), null).inside).toMatch(/the things it links to\.$/);
   });
   it("transcribes the episode it read, and passes on how the transcribing is going", async () => {
     const link = "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk";

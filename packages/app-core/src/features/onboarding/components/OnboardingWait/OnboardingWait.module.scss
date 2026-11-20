@@ -1,0 +1,344 @@
+@use "../../onboarding" as onboarding;
+
+$done-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+// Phone first: the wait, then the set-ups under it in their panel, then the foot once it's ready.
+// From 64rem the set-ups sit beside the wait (designs 327m, 327m-p).
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+
+  @media (min-width: 64rem) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 25rem;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "main setups"
+      "foot setups";
+    column-gap: 2.5rem;
+    row-gap: 1.375rem;
+    align-items: start;
+  }
+}
+
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem;
+}
+
+.headingText {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: fade-in var(--motion-arrive) var(--motion-ease) both;
+  }
+}
+
+.card {
+  @include onboarding.card;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cardLabel {
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.stages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.stage {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+
+  &[data-state="waiting"] {
+    opacity: 0.4;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: opacity var(--motion-travel) var(--motion-ease);
+  }
+}
+
+.mark {
+  flex: none;
+  width: 1.875rem;
+  height: 1.875rem;
+  overflow: visible;
+  stroke: var(--mark);
+}
+
+.arc {
+  opacity: 0;
+  transform-origin: 16px 14.5px;
+
+  .mark[data-state="running"] & {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .root[data-phase="running"] .mark[data-state="running"] & {
+      animation: spin 1.1s linear infinite;
+    }
+  }
+}
+
+.ring {
+  fill: transparent;
+  transform-origin: 16px 14.5px;
+
+  .mark[data-state="running"] & {
+    opacity: 0;
+  }
+
+  .mark[data-state="done"] & {
+    fill: var(--mark);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: fill 200ms $done-ease 100ms;
+
+    .mark[data-state="done"] & {
+      animation: press 450ms $done-ease both;
+    }
+  }
+}
+
+.underline {
+  fill: var(--mark);
+  stroke: none;
+  transform-origin: 16px 26.25px;
+
+  .mark[data-state="done"] & {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      opacity 200ms $done-ease,
+      transform 200ms $done-ease;
+  }
+}
+
+.tick {
+  stroke: var(--on-action);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+
+  .mark[data-state="done"] & {
+    stroke-dashoffset: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: stroke-dashoffset 250ms $done-ease 250ms;
+  }
+}
+
+.stageText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-top: 0.1875rem;
+}
+
+.name,
+.doneLine {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.doneLine {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: rise-in var(--motion-arrive) $done-ease both;
+  }
+}
+
+.subLine {
+  font-size: 0.84375rem;
+  line-height: 1.5;
+  color: var(--muted);
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: rise-in var(--motion-arrive) $done-ease both;
+  }
+}
+
+.bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--brand);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: width 1s linear;
+  }
+}
+
+.estimate {
+  margin: -0.5rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+
+  .root[data-phase="ready"] & {
+    color: var(--ink);
+  }
+}
+
+.keepTab {
+  margin: 0;
+  display: flex;
+  gap: 0.4375rem;
+  align-items: flex-start;
+  font-size: 0.78125rem;
+  line-height: 1.45;
+  color: var(--muted);
+
+  svg {
+    margin-top: 0.125rem;
+  }
+}
+
+.failure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.failureTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.failureBody {
+  @include onboarding.lead;
+}
+
+.tryAgain {
+  @include onboarding.primary;
+  margin-top: 0.5rem;
+}
+
+.setups {
+  grid-area: setups;
+  margin-top: 0.5rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-dialog);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+
+  @media (min-width: 64rem) {
+    margin-top: 3.25rem;
+  }
+}
+
+.foot {
+  @include onboarding.foot;
+  grid-area: foot;
+
+  @media (min-width: 64rem) {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: none;
+
+    &::before,
+    &::after {
+      content: none;
+    }
+  }
+}
+
+.open {
+  @include onboarding.primary;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: rise-in var(--motion-arrive) $done-ease both;
+  }
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes press {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(0.86);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

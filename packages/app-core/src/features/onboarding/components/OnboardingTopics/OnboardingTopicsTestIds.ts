@@ -7,4 +7,5 @@ export const onboardingTopicsTestIds = {
   suggestion: (name: string) => `onboarding-topics-suggestion-${name}`,
   count: "onboarding-topics-count",
   continue: "onboarding-topics-continue",
+  seeAll: "onboarding-topics-see-all",
 };

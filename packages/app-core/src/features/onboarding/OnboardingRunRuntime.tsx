@@ -48,7 +48,15 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
   const value = useMemo((): OnboardingRunState => {
     const shown: OnboardingRun = mine
       ? run
-      : { phase: held?.phase ?? "writing", found: null, overview: null, failure: null, transcription: null };
+      : {
+          phase: held?.phase ?? "writing",
+          found: null,
+          overview: null,
+          failure: null,
+          transcription: null,
+          sourceWords: null,
+          writingStarted: false,
+        };
     return {
       run: shown,
       mine,

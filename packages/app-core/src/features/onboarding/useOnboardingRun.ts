@@ -30,9 +30,20 @@ export interface OnboardingRun {
   failure: OnboardingFailure | null;
   // An episode the reader chose to transcribe, until its words are in.
   transcription: EpisodeTranscription | null;
+  // The wait's real events (327m): the words the source held once they're in, and writing begun.
+  sourceWords: number | null;
+  writingStarted: boolean;
 }
 
-const FETCHING: OnboardingRun = { phase: "fetching", found: null, overview: null, failure: null, transcription: null };
+const FETCHING: OnboardingRun = {
+  phase: "fetching",
+  found: null,
+  overview: null,
+  failure: null,
+  transcription: null,
+  sourceWords: null,
+  writingStarted: false,
+};
 
 // Onboarding's one overview, of whatever kind the link is: read straight away, for free and signed
 // out on the device's trial, then held until the reader has an account and their answers are in
@@ -165,20 +176,24 @@ export function useOnboardingRun({
             return { ...current, transcription: { state: "starting" } };
           });
         },
+        onSourceWords: (words) => {
+          if (!cancelled) setRun((current) => ({ ...current, sourceWords: words }));
+        },
+        onWriting: () => {
+          if (!cancelled) setRun((current) => ({ ...current, writingStarted: true }));
+        },
         onFound: (found) => {
           if (cancelled) return;
           latest.current.onFound(found);
           setRun((current) =>
-            current.phase === "fetching"
-              ? { phase: maySpendNow.current ? "writing" : "waiting", found, overview: null, failure: null, transcription: null }
-              : current,
+            current.phase === "fetching" ? { ...FETCHING, phase: maySpendNow.current ? "writing" : "waiting", found } : current,
           );
         },
       })
       .then((overview) => {
         if (cancelled) return;
         latest.current.onMade(overview);
-        setRun({ phase: "ready", found: foundIn(overview), overview, failure: null, transcription: null });
+        setRun((current) => ({ ...current, phase: "ready", found: foundIn(overview), overview, failure: null, transcription: null }));
       })
       .catch((error: unknown) => {
         if (cancelled || error instanceof GenerationCancelledError) return;

@@ -105,3 +105,9 @@
 .primary {
   @include onboarding.primary;
 }
+
+.seeAll {
+  @include onboarding.quiet;
+  align-self: center;
+  text-decoration: underline;
+}

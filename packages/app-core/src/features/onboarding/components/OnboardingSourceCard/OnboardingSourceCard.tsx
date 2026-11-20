@@ -39,21 +39,9 @@ export function OnboardingSourceCard({ kind, found, size = "large" }: Onboarding
 }
 
 function Facts({ facts }: { facts: OnboardingCard["facts"] }) {
-  if ("line" in facts) {
-    return facts.line === "" ? null : (
-      <span className={styles.line} data-testid={onboardingSourceCardTestIds.facts}>
-        {facts.line}
-      </span>
-    );
-  }
-  return (
-    <dl className={styles.figures} data-testid={onboardingSourceCardTestIds.facts}>
-      {facts.figures.map(({ label, value }) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{value}</dd>
-        </div>
-      ))}
-    </dl>
+  return facts.line === "" ? null : (
+    <span className={styles.line} data-testid={onboardingSourceCardTestIds.facts}>
+      {facts.line}
+    </span>
   );
 }
