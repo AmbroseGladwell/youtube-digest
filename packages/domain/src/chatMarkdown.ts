@@ -56,8 +56,9 @@ function overviewPartText(overview: Overview, citation: Extract<ChatCitation, { 
 
 // Named by the title it had when cited, which outlives the overview; its item by the section and place
 // it had then.
-function otherOverviewText({ overviewId, title, item }: OtherOverviewCitation): string {
+function otherOverviewText({ overviewId, title, item, range }: OtherOverviewCitation): string {
   const named = `the reader's overview "${title}" (${overviewId})`;
+  if (range !== undefined) return `${formatTimestamp(range.startMs)}–${formatTimestamp(range.endMs)} of ${named}`;
   if (item === null) return named;
   return SINGLE_ITEM_PARTS.has(item.part)
     ? `"${PART_SECTION[item.part]}" of ${named}`

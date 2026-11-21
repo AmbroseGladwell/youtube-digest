@@ -147,6 +147,16 @@ export class RecordsRepository {
     return this.#get(this.#sql, accountId, kind, id);
   }
 
+  // The live overviews of these sources, as each overview's source key is stored beside it.
+  async liveOverviewsOfSources(accountId: AccountId, sourceKeys: readonly string[]): Promise<StoredRecord[]> {
+    if (sourceKeys.length === 0) return [];
+    const rows = await this.#sql.query<RecordRow>(
+      `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = 'overview' and not deleted and source_key = any($2::text[])`,
+      [accountId, [...sourceKeys]],
+    );
+    return rows.map(storedRecordFromRow);
+  }
+
   async readLive(accountId: AccountId, kind: RecordKind, ids: readonly string[]): Promise<StoredRecord[]> {
     if (ids.length === 0) return [];
     const rows = await this.#sql.query<RecordRow>(

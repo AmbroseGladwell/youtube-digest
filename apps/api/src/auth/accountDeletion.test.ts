@@ -72,6 +72,10 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     JSON.stringify({ videoId: VIDEO, segments: [] }),
   ]);
   await sql.query(
+    "insert into transcript_passages (account_id, video_id, passage_id, start_ms, end_ms, terms) values ($1, $2, 'p1', 0, 60000, to_tsvector('english', 'creatine'))",
+    [accountId, VIDEO],
+  );
+  await sql.query(
     `insert into audio_renders (key, voice, render_version, lines, status, priority, not_before, requested_at, requested_by, line_starts, duration_seconds)
      values ($1, 'af_heart', 1, '["hello"]'::jsonb, 'ready', 1, $2::timestamptz, $2::timestamptz, $3, '[0]'::jsonb, 1)`,
     [narrationKey, now, accountId],

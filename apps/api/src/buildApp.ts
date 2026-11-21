@@ -85,6 +85,7 @@ import { TrialsRepository } from "./usage/TrialsRepository.js";
 import { OurKeyGenerator } from "./generation/OurKeyGenerator.js";
 import { ChatAnswerer } from "./chats/ChatAnswerer.js";
 import { LibraryChatAnswerer } from "./chats/LibraryChatAnswerer.js";
+import { TranscriptPassagesRepository } from "./transcripts/TranscriptPassagesRepository.js";
 import { ChatUsageRepository } from "./usage/ChatUsageRepository.js";
 import { TranscriptsRepository } from "./transcripts/TranscriptsRepository.js";
 import { clientVersionPlugin } from "./versions/clientVersionPlugin.js";
@@ -338,6 +339,8 @@ export async function buildApp({
                 http: ourKey.http,
                 dailyMessages: ourKey.dailyChatMessages,
                 records,
+                passages: new TranscriptPassagesRepository(sql),
+                transcripts,
                 usage: chatUsage,
                 costs,
                 clock,
@@ -355,6 +358,7 @@ export async function buildApp({
                 usage: chatUsage,
                 costs,
                 meaningSearch,
+                passages: new TranscriptPassagesRepository(sql),
                 clock,
                 ...(ourKey.sleep === undefined ? {} : { sleep: ourKey.sleep }),
               }),

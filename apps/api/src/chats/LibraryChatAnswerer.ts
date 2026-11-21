@@ -17,6 +17,7 @@ import {
   Project,
   ProjectMember,
   readStoredRecord,
+  sourceKey,
   stampSchemaVersion,
   type ChatAnswerSections,
   type ChatMessage,
@@ -35,16 +36,20 @@ import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js"
 import { ApiError } from "../http/ApiError.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
+import type { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesRepository.js";
+import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { answerSoFar } from "./answerSoFar.js";
 import { appendChatMessages } from "./appendChatMessages.js";
 import { assertWhole, CHAT_FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
 import { chatModel } from "./chatModel.js";
 import { overviewCitationsOf, type CitableOverview } from "./citationsOf.js";
+import { keywordMinutes, transcriptMinutes } from "./keywordMinutes.js";
 import {
   libraryChatMaterial,
   PICK_SHAPE,
   PickReply,
+  minutesBlock,
   pickedBlock,
   pickPrompt,
   SECTIONED_SHAPE,
@@ -56,6 +61,7 @@ import { recordChatCost } from "./recordChatCost.js";
 import { reserveChatMessage } from "./reserveChatMessage.js";
 import { sectionsSoFar } from "./sectionsSoFar.js";
 import { streamChatCompletion, type ChatCompletionStream, type PromptMessage, type ReplyShape } from "./streamChatCompletion.js";
+import type { Passage } from "./transcriptPassages.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
 
 export interface LibraryChatAnswererOptions {
@@ -68,6 +74,9 @@ export interface LibraryChatAnswererOptions {
   clock: () => Date;
   sleep?: (ms: number) => Promise<void>;
   wholeCharacters?: number;
+  // A large project's keyword minutes (OV-352); without them, none are sent.
+  passages?: TranscriptPassagesRepository | null;
+  transcripts?: TranscriptsRepository | null;
 }
 
 export type LibraryChatOwner = Exclude<ChatOwner, { kind: "overview" }>;
@@ -142,14 +151,52 @@ export class LibraryChatAnswerer {
       });
       return entries.length === 0 ? [] : [pickedBlock(entries)];
     };
+    const minuteLabels = new Map<string, OtherOverviewCitation>();
+    const minutesMessage = (minutes: ReadonlyArray<{ overviewId: string; passages: readonly Passage[] }>): PromptMessage[] => {
+      const entries = minutes.flatMap(({ overviewId, passages }) => {
+        const label = labelOf.get(overviewId);
+        const overview = label === undefined ? undefined : material.labels.get(label);
+        if (label === undefined || overview === undefined || passages.length === 0) return [];
+        for (const passage of passages) {
+          minuteLabels.set(`${label}.${passage.id}`, {
+            overviewId: overview.id as OverviewId,
+            title: overview.source.title,
+            item: null,
+            range: { startMs: passage.startMs, endMs: passage.endMs },
+          });
+        }
+        return [[label, overview, passages] as const];
+      });
+      return entries.length === 0 ? [] : [minutesBlock(entries)];
+    };
+    const earlier = history.flatMap((message) => (message.from === "reader" ? (message.minutes ?? []) : []));
+    const cut =
+      earlier.length === 0 || this.#options.transcripts == null
+        ? new Map<string, Passage[]>()
+        : await transcriptMinutes(
+            this.#options.transcripts,
+            accountId,
+            overviews.filter((overview) => earlier.some((each) => each.overviewId === overview.id)),
+          );
     const before: PromptMessage[] = [
       { role: "system", content: material.system },
       ...history.flatMap((message): PromptMessage[] =>
         message.from === "reader"
-          ? [...block(message.picked ?? []), { role: "user", content: message.text }]
+          ? [
+              ...block(message.picked ?? []),
+              ...minutesMessage(
+                (message.minutes ?? []).map(({ overviewId, passages: ids }) => ({
+                  overviewId,
+                  passages: (cut.get(overviewId) ?? []).filter((passage) => ids.includes(passage.id)),
+                })),
+              ),
+              { role: "user", content: message.text },
+            ]
           : [{ role: "assistant", content: message.text }],
       ),
     ];
+    const memberKeys = overviews.flatMap((overview) => sourceKey(overview.source) ?? []);
+    const { passages: passageIndex } = this.#options;
     const cacheKey = `chat-${owner.kind === "project" ? `project-${owner.id}` : `library-${createHash("sha256").update(accountId).digest("hex").slice(0, 16)}`}`;
     const startedAt = askedAt.getTime();
     const logged = { plan, owner: owner.kind, mode: material.mode, model: chatModel.model, overviewsInScope: overviews.length };
@@ -164,6 +211,8 @@ export class LibraryChatAnswerer {
 
     const answer = async function* (): AsyncGenerator<ChatStreamEvent> {
       let pickUsage: TokenUsage | null = null;
+      let keywordMinuteCount = 0;
+      let sentMinutes: Array<{ overviewId: OverviewId; passages: string[] }> = [];
       let stream: ChatCompletionStream | null = null;
       let settled = false;
       try {
@@ -202,10 +251,30 @@ export class LibraryChatAnswerer {
         );
         const sectionOf = (section: SectionedSection): ChatAnswerSections["sections"][number] => ({
           heading: cleaned(section.heading),
-          points: section.points.map((point) => ({ text: cleaned(point.text), citations: overviewCitationsOf(point.sources, citable) })),
+          points: section.points.map((point) => ({
+            text: cleaned(point.text),
+            citations: [
+              ...overviewCitationsOf(
+                point.sources.filter((source) => !/\.p\d+$/.test(source)),
+                citable,
+              ),
+              ...[...new Set(point.sources)].flatMap((source) => minuteLabels.get(source) ?? []),
+            ],
+          })),
         });
 
-        stream = await ask([...before, ...block(picked), { role: "user", content: question.text }], SECTIONED_SHAPE);
+        // OV-352: a large project also sends the 8 best minutes of its members' transcripts.
+        const found =
+          material.mode === "map" && owner.kind === "project" && passageIndex != null
+            ? await keywordMinutes({ passages: passageIndex, records }, accountId, question.text, { within: memberKeys }, log)
+            : [];
+        const minutes = found.map((each) => ({ overviewId: each.overviewId, passages: each.passages }));
+        keywordMinuteCount = minutes.reduce((total, each) => total + each.passages.length, 0);
+        sentMinutes = minutes.map(({ overviewId, passages: sent }) => ({ overviewId, passages: sent.map((passage) => passage.id) }));
+        stream = await ask(
+          [...before, ...block(picked), ...minutesMessage(minutes), { role: "user", content: question.text }],
+          SECTIONED_SHAPE,
+        );
         let raw = "";
         let sent = "";
         let sectionsSent = 0;
@@ -233,7 +302,13 @@ export class LibraryChatAnswerer {
         if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
         const citations = uniqueCitations(sections.sections.flatMap((section) => section.points.flatMap((point) => point.citations)));
         const messages: ChatMessage[] = [
-          { from: "reader", text: question.text, at: askedAt.toISOString(), ...(picked.length === 0 ? {} : { picked }) },
+          {
+            from: "reader",
+            text: question.text,
+            at: askedAt.toISOString(),
+            ...(picked.length === 0 ? {} : { picked }),
+            ...(sentMinutes.length === 0 ? {} : { minutes: sentMinutes }),
+          },
           { from: "answer", text, at: clock().toISOString(), citations, inSource: false, sections, stats },
         ];
         const written = await appendChatMessages(records, accountId, { owner, conversationId: question.conversationId, messages }, clock());
@@ -251,6 +326,8 @@ export class LibraryChatAnswerer {
             sections: sections.sections.length,
             points: sections.sections.reduce((total, section) => total + section.points.length, 0),
             otherOverviewCitations: citations.length,
+            keywordMinutes: keywordMinuteCount,
+            minuteCitations: citations.filter((citation) => citation.range !== undefined).length,
             inSource: false,
             used: reservation.used,
             limit: reservation.limit,

@@ -18,10 +18,12 @@ import {
   PROJECT_MEMBER_MIGRATIONS,
   PROJECT_MIGRATIONS,
   ProjectMember,
+  VideoId,
   type OverviewId,
   type TranscriptSegment,
 } from "@overview/domain";
 import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage } from "@overview/generation";
+import { makeStoredTranscript } from "@overview/store-conformance";
 import { AccountId } from "../auth/AccountId.js";
 import { CHAT_REPLY_SCHEMA, ChatReply } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
@@ -35,6 +37,7 @@ import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ClaimEmbeddingsRepository } from "../meaning/ClaimEmbeddingsRepository.js";
+import { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesRepository.js";
 import { createOpenAiEmbedder } from "../meaning/createOpenAiEmbedder.js";
 import { MEANING_FLOOR } from "../meaning/MeaningSearch.js";
 import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
@@ -500,9 +503,94 @@ async function keyword(dataDir: string, retrievalPath: string): Promise<void> {
   }
 }
 
+// The library's transcripts in Postgres, indexed by the shipped repository (OV-352).
+async function keywordStore(library: Library) {
+  const sql = createPgliteSqlClient(createTestPglite());
+  await runMigrations(sql, { before: migrationSteps() });
+  await sql.query("insert into accounts (id, email) values ($1, 'reader@example.invalid')", [ACCOUNT]);
+  const videoOf = new Map<string, string>();
+  const overviewOf = new Map<string, string>();
+  for (const entry of library.overviews.values()) {
+    const key = sourceKey(entry.overview.source);
+    if (key === null || entry.segments === null || videoOf.has(entry.id)) continue;
+    videoOf.set(entry.id, key);
+    overviewOf.set(key, entry.id);
+    const body = makeStoredTranscript({ videoId: VideoId.parse(key), segments: entry.segments });
+    await sql.query(
+      "insert into account_transcripts (account_id, video_id, body, stored_at) values ($1, $2, $3::jsonb, now()) on conflict do nothing",
+      [ACCOUNT, key, JSON.stringify(body)],
+    );
+  }
+  const repository = new TranscriptPassagesRepository(sql);
+  const started = performance.now();
+  await repository.backfill(ACCOUNT);
+  return { sql, repository, videoOf, overviewOf, indexMs: performance.now() - started };
+}
+
+// OV-352: the shipped keyword search, Postgres full text over stored minute passages, against the
+// harness's BM25: where it ranks each question's source, and how long a search takes, with the
+// alternative of reading every transcript and scoring it per question timed beside it.
+async function pgKeyword(dataDir: string, retrievalPath: string): Promise<void> {
+  const library = await loadLibrary(dataDir);
+  const { located } = await loadQuestions(dataDir, library);
+  const report = JSON.parse(await readFile(retrievalPath, "utf-8")) as { rows: RetrievalRow[] };
+  const byId = new Map(located.map((question) => [question.id, question]));
+  const { sql, repository, videoOf, overviewOf, indexMs } = await keywordStore(library);
+  const [{ passages, bytes }] = (await sql.query<{ passages: number; bytes: number }>(
+    "select count(*)::int as passages, pg_total_relation_size('transcript_passages')::int as bytes from transcript_passages",
+  )) as [{ passages: number; bytes: number }];
+  let started = performance.now();
+  const timings: number[] = [];
+  const computedTimings: number[] = [];
+  const ranked: Array<{ row: RetrievalRow; rank: number | null; order: string[] }> = [];
+  for (const row of report.rows.filter((candidate) => candidate.kind !== "notInLibrary" && candidate.kind !== "notInSource")) {
+    const question = byId.get(row.id)!.question;
+    const home = videoOf.get(row.home);
+    started = performance.now();
+    const hits = await repository.search(ACCOUNT, question, { limit: 40, except: home === undefined ? [] : [home] });
+    timings.push(performance.now() - started);
+    const order = [...new Set(hits.flatMap((hit) => overviewOf.get(hit.videoId) ?? []))];
+    const ranks = row.expected.map((id) => order.indexOf(id)).filter((rank) => rank >= 0);
+    ranked.push({ row, rank: ranks.length === 0 ? null : Math.min(...ranks) + 1, order });
+    started = performance.now();
+    await sql.query<{ body: unknown }>("select body from account_transcripts where account_id = $1", [ACCOUNT]);
+    keywordIndex(library).passages(question, row.home, 8);
+    computedTimings.push(performance.now() - started);
+  }
+  const hit = (rank: number | null, depth: number) => rank !== null && rank <= depth;
+  const either = (entry: (typeof ranked)[number], depth: number) =>
+    entry.row.expected.some((id) => entry.row.claimOrder.slice(0, depth).includes(id) || entry.order.slice(0, depth).includes(id));
+  const sorted = (values: number[]) => [...values].sort((left, right) => left - right);
+  const at = (values: number[], share: number) => sorted(values)[Math.min(values.length - 1, Math.floor(values.length * share))]!;
+  console.log(`${passages} passages, index ${(bytes / 1e6).toFixed(1)} MB, cut and indexed in ${(indexMs / 1000).toFixed(1)} s`);
+  console.log(
+    `stored search: median ${at(timings, 0.5).toFixed(0)} ms, p90 ${at(timings, 0.9).toFixed(0)} ms, max ${Math.max(...timings).toFixed(0)} ms`,
+  );
+  console.log(
+    `computed per question (read every transcript, score in code): median ${at(computedTimings, 0.5).toFixed(0)} ms, p90 ${at(computedTimings, 0.9).toFixed(0)} ms`,
+  );
+  console.log(
+    [
+      "| Kind | Questions | Postgres 3 | 5 | 8 | Claims or Postgres 3 | 5 | 8 |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- |",
+      ...[...new Set(ranked.map((entry) => entry.row.kind)), "All"].map((kind) => {
+        const subset = kind === "All" ? ranked : ranked.filter((entry) => entry.row.kind === kind);
+        return `| ${kind} | ${subset.length} | ${DEPTHS.map((depth) => subset.filter((entry) => hit(entry.rank, depth)).length).join(" | ")} | ${DEPTHS.map((depth) => subset.filter((entry) => either(entry, depth)).length).join(" | ")} |`;
+      }),
+    ].join("\n"),
+  );
+  for (const entry of ranked.filter((candidate) => !hit(candidate.row.claimRank, 8))) {
+    console.log(`claim miss ${entry.row.id}: Postgres rank ${entry.rank ?? "none"}`);
+  }
+}
+
 // --- answering ---
 
-type Arm = { name: string; pick: (row: RetrievalRow) => string[]; transcripts: boolean | "closest" | "keyword" };
+type Arm = {
+  name: string;
+  pick: (row: RetrievalRow) => string[];
+  transcripts: boolean | "closest" | "keyword" | "keywordNeighbours" | "shipped";
+};
 
 function arms(): Map<string, Arm> {
   const pinned = (count: number) => (row: RetrievalRow) => {
@@ -525,6 +613,10 @@ function arms(): Map<string, Arm> {
     { name: "pinned3-full", pick: pinned(3), transcripts: true },
     { name: "search3+passages8", pick: search(3), transcripts: "closest" },
     { name: "search3+keyword8", pick: search(3), transcripts: "keyword" },
+    // OV-352: each keyword minute with the minute either side, for "right source, wrong minute".
+    { name: "search3+keyword8n", pick: search(3), transcripts: "keywordNeighbours" },
+    // The shipped OV-352 search and prompt: Postgres minutes with neighbours, sent by otherSourcesInPrompt.
+    { name: "shipped-keyword", pick: search(3), transcripts: "shipped" },
     {
       name: "pinned1+search3-overviews",
       pick: (row) => [...new Set([...row.expected.slice(0, 1), ...search(3)(row)])],
@@ -545,7 +637,12 @@ interface OtherSource {
 const PART_ID = /\[((?:verdict|sells|anyway)|(?:dubious|kp|step|apply|ing|method|ch)\d+)\] /g;
 
 // Overviews only, pinned or found, as the shipped chat sends them (OV-355).
-function shippedSourcesBlock(library: Library, ids: string[], pinned: number): { text: string; sources: OtherSource[] } {
+function shippedSourcesBlock(
+  library: Library,
+  ids: string[],
+  pinned: number,
+  minutes: ReadonlyMap<string, Passage[]> = new Map(),
+): { text: string; sources: OtherSource[] } {
   const chatSources = ids.map((id, index) => ({
     label: `S${index + 1}`,
     overviewId: id as OverviewId,
@@ -553,8 +650,15 @@ function shippedSourcesBlock(library: Library, ids: string[], pinned: number): {
     how: index < pinned ? ("pinned" as const) : ("found" as const),
   }));
   const overviews = new Map(ids.map((id) => [id, library.overviews.get(id)!.overview]));
-  const text = otherSourcesInPrompt([{ sources: chatSources, setAside: [] }], overviews, new Map()).blocks[0]!;
-  return { text, sources: chatSources.map((source) => otherSourceOf(library, source.overviewId, source.label)) };
+  const sent = [...minutes].map(([overviewId, passages]) => ({ overviewId, passages }));
+  const text = otherSourcesInPrompt([{ sources: chatSources, setAside: [], minutes: sent }], overviews, new Map()).blocks[0]!;
+  return {
+    text,
+    sources: chatSources.map((source) => ({
+      ...otherSourceOf(library, source.overviewId, source.label),
+      passages: minutes.get(source.overviewId) ?? [],
+    })),
+  };
 }
 
 const otherSourceOf = (library: Library, id: string, label: string): OtherSource => {
@@ -676,13 +780,35 @@ async function answer(
   };
   // The keyword shape: the eight minutes that best match the question's words, by BM25 over the
   // transcripts already kept, chosen the same way and sent the same way.
-  const keywords = options.arms.some((name) => all.get(name)?.transcripts === "keyword") ? keywordIndex(library) : null;
-  const keywordPassages = (question: Located, home: string): Map<string, Passage[]> => {
+  const keywords = options.arms.some((name) => ["keyword", "keywordNeighbours"].includes(String(all.get(name)?.transcripts)))
+    ? keywordIndex(library)
+    : null;
+  const keywordPassages = (question: Located, home: string, neighbours = false): Map<string, Passage[]> => {
     const chosen = new Map<string, Passage[]>();
     for (const { overviewId, passage } of keywords!.passages(question.question, home, 8)) {
+      const all = transcriptPassages(library.overviews.get(overviewId)!.segments!);
+      const at = all.findIndex((candidate) => candidate.id === passage.id);
+      const wanted = neighbours ? all.slice(Math.max(0, at - 1), at + 2) : [passage];
+      const held = chosen.get(overviewId) ?? [];
       chosen.set(
         overviewId,
-        [...(chosen.get(overviewId) ?? []), passage].sort((a, b) => a.startMs - b.startMs),
+        [...held, ...wanted.filter((one) => !held.some((other) => other.id === one.id))].sort((a, b) => a.startMs - b.startMs),
+      );
+    }
+    return chosen;
+  };
+  const store = options.arms.some((name) => all.get(name)?.transcripts === "shipped") ? await keywordStore(library) : null;
+  const shippedMinutes = async (question: Located, home: string): Promise<Map<string, Passage[]>> => {
+    const homeKey = store!.videoOf.get(home);
+    const hits = await store!.repository.search(ACCOUNT, question.question, { limit: 8, except: homeKey === undefined ? [] : [homeKey] });
+    const chosen = new Map<string, Passage[]>();
+    for (const hit of hits) {
+      const overviewId = store!.overviewOf.get(hit.videoId);
+      if (overviewId === undefined) continue;
+      const held = chosen.get(overviewId) ?? [];
+      chosen.set(
+        overviewId,
+        [...held, ...hit.around.filter((one) => !held.some((other) => other.id === one.id))].sort((a, b) => a.startMs - b.startMs),
       );
     }
     return chosen;
@@ -713,9 +839,11 @@ async function answer(
         const closest =
           arm.transcripts === "closest"
             ? closestPassages(question, row.home)
-            : arm.transcripts === "keyword"
-              ? keywordPassages(question, row.home)
-              : null;
+            : arm.transcripts === "keyword" || arm.transcripts === "keywordNeighbours"
+              ? keywordPassages(question, row.home, arm.transcripts === "keywordNeighbours")
+              : arm.transcripts === "shipped"
+                ? await shippedMinutes(question, row.home)
+                : null;
         const others = [...new Set([...arm.pick(row), ...(closest?.keys() ?? [])])].filter((id) => id !== row.home);
         const system = chatSystemPrompt(kind, overviewMarkdown(home.overview, { partIds: true }), homePassages, {
           recipe: home.overview.recipe !== null,
@@ -725,7 +853,9 @@ async function answer(
             ? null
             : arm.transcripts === false
               ? shippedSourcesBlock(library, others, pinnedCount(arm.name, others))
-              : otherSourcesBlock(library, others, closest ?? arm.transcripts === true);
+              : arm.transcripts === "shipped"
+                ? shippedSourcesBlock(library, others, 0, closest!)
+                : otherSourcesBlock(library, others, closest ?? arm.transcripts === true);
         const messages: PromptMessage[] = [
           { role: "system", content: system },
           ...(block === null ? [] : [{ role: "user" as const, content: block.text }]),
@@ -1881,6 +2011,8 @@ if (command === "retrieval" && dataDir && rest[0]) {
   });
 } else if (command === "keyword" && dataDir && rest[0]) {
   await keyword(dataDir, rest[0]);
+} else if (command === "pgkeyword" && dataDir && rest[0]) {
+  await pgKeyword(dataDir, rest[0]);
 } else if (command === "answer" && dataDir && rest[0] && rest[1]) {
   if (values.report) {
     console.log(answerMarkdown(JSON.parse(await readFile(rest[1], "utf-8")) as AnswerTurn[]));

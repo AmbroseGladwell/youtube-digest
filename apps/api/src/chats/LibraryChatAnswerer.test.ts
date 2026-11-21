@@ -8,11 +8,15 @@ import {
   type ChatMessage,
   type ChatStreamEvent,
   type Overview,
+  VideoId,
+  youTubeSource,
 } from "@overview/domain";
-import { makeProject } from "@overview/store-conformance";
+import { makeProject, makeStoredTranscript } from "@overview/store-conformance";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { recordingLogger } from "../logs/recordingLogger.testHelper.js";
 import { RecordsRepository } from "../records/RecordsRepository.js";
+import { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesRepository.js";
+import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { noteAbout } from "../testing/meaningFixtures.testHelper.js";
 import { UPDATED_AT } from "../testing/storedRecords.testHelper.js";
@@ -55,6 +59,8 @@ async function setUp(t: TestContext, answers: FakeChatAnswer[], { wholeCharacter
     usage: new ChatUsageRepository(testApp.sql),
     costs: new AccountCostsRepository(testApp.sql),
     clock: () => testApp.clock.now,
+    passages: new TranscriptPassagesRepository(testApp.sql),
+    transcripts: new TranscriptsRepository(testApp.sql, () => testApp.clock.now),
     ...(wholeCharacters === undefined ? {} : { wholeCharacters }),
   });
   return {
@@ -296,4 +302,43 @@ test("the routes ask over the library or a project, and refuse a project that is
   assert.equal(response.statusCode, 200);
   assert.match(response.body, /"type":"section"/);
   assert.match(response.body, /"type":"answered"/);
+});
+
+test("a large project's chat also sends the best minutes of its members' transcripts, and a point cites one as a time (OV-352)", async (t) => {
+  const setup = await setUp(
+    t,
+    [
+      { reply: { overviews: ["O1"] } },
+      sectioned([{ heading: "Dose", points: [{ text: "Three hundred milligrams.", sources: ["O2.p2", "O2.p9"] }] }]),
+    ],
+    { wholeCharacters: 10 },
+  );
+  const stored = makeStoredTranscript({
+    videoId: VideoId.parse(randomUUID().slice(0, 11)),
+    segments: [
+      { text: "Welcome.", startMs: 0, endMs: 50_000 },
+      { text: "Take 300 milligrams of ashwagandha before bed.", startMs: 60_000, endMs: 110_000 },
+    ],
+  });
+  const first = titled("First", "2026-11-01T09:00:00.000Z");
+  const withWords = { ...titled("Sleep", "2026-11-02T09:00:00.000Z"), source: { ...youTubeSource(stored.video!), title: "Sleep" } };
+  const outside = titled("Outside", "2026-11-03T09:00:00.000Z");
+  await saved(setup, first, withWords, outside);
+  assert.equal((await setup.account.inject({ method: "PUT", url: `/api/transcripts/${stored.videoId}`, body: stored })).statusCode, 204);
+  const project = await projectOf(setup, [first, withWords]);
+
+  const events = await setup.ask({ kind: "project", id: project.id }, randomUUID(), "How much ashwagandha?");
+
+  const answer = setup.openAi.requests[1]!.messages;
+  const minutes = answer.at(-2)!.content;
+  assert.match(minutes, /^Minutes of their transcripts that match the question's words/);
+  assert.match(minutes, /## \[O2\] Sleep\n\n\[O2\.p1 0:00\] Welcome\.\n\[O2\.p2 1:00\] Take 300 milligrams of ashwagandha before bed\./);
+  const done = answeredOf(events);
+  assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).minutes, [
+    { overviewId: withWords.id, passages: ["p1", "p2"] },
+  ]);
+  const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  assert.deepEqual(reply.sections!.sections[0]!.points[0]!.citations, [
+    { overviewId: withWords.id, title: "Sleep", item: null, range: { startMs: 60_000, endMs: 110_000 } },
+  ]);
 });

@@ -822,7 +822,20 @@ for each step is named at its end. The Claude Design round and the UI for all of
      one-overview chat can keep its plain answer.
    - Code can work out the stats line Recall shows first ("10 cards, 7 tags"). "Never count
      overviews" stayed in the prompt (`constraints.md`), and no answer gave a count.
-3. **For details: keyword search over the kept transcripts, not passage vectors, for now
+3. **For details: keyword search over the kept transcripts, not passage vectors, for now (OV-352,
+   built 20 Nov 2026).** Two measurements settled the build:
+   - **Neighbours:** sending each of the 8 best minutes with the minute either side cited the right
+     moment in 54 of 68 answers, against 45 without, for about 14% more ($0.55 run, same day).
+   - **Where the index lives:** a stored Postgres full-text index, each word weighted by its
+     rarity, rather than computing per question. It ranked as well as BM25 or better, searched in
+     about 120 ms even in pglite, and is 10.6 MB for this library. Computing per question would
+     read all 9.5 MB of transcripts every time.
+   - **Re-run on the shipped search and prompt** (`shipped-keyword` arm, $0.30): the detail named
+     70 of 75, the right moment cited 50 of 68, the source given 78 of 78, every "not in your
+     library" question declined, $0.0030 a first message. On the same day both harness arms named
+     68 of 75.
+   The original recommendation follows.
+   **For details: keyword search over the kept transcripts, not passage vectors, for now
    (OV-352).** Run
    beside claim search, it found every source passage vectors found, and its 8 best minutes
    answered 59 of 66 detail questions, against 63 of 65 for passage vectors and 54 of 68 for

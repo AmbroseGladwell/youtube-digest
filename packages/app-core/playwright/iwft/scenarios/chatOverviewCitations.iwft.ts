@@ -214,6 +214,7 @@ test.describe("Chat citing the overview", () => {
       citations: [
         { overviewId: plants.id, title: "Eat more plants", item: { part: "keyPoint", index: 1, textHash: overviewPartHash("x") } },
         { overviewId: "6c1d3a7e-2b4f-4e8a-9c5d-1f2e3a4b5c6d" as Overview["id"], title: "Sleep first", item: null },
+        { overviewId: plants.id, title: "Eat more plants", item: null, range: { startMs: 201_000, endMs: 260_000 } },
       ],
     });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -221,7 +222,10 @@ test.describe("Chat citing the overview", () => {
     await reader.chat.askInNote("How does this fit with my other overviews?");
 
     await reader.chat.verifyNoNotInSource(0);
-    await reader.chat.verifyOtherOverviewCitationsNamed(0, ["Open your overview Eat more plants · Key point 2"]);
+    await reader.chat.verifyOtherOverviewCitationsNamed(0, [
+      "Open your overview Eat more plants · Key point 2",
+      "Open your overview Eat more plants · 3:21",
+    ]);
     await reader.chat.verifyDeletedOtherOverviewReads(0, "Sleep first · an overview you deleted");
 
     await reader.chat.followOtherOverviewCitation(0, 0);

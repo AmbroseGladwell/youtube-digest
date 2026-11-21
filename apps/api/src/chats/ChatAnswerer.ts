@@ -25,12 +25,14 @@ import {
   type ChatSource,
   type ChatSourceKind,
   type ChatStreamEvent,
+  type OverviewId,
   type Plan,
 } from "@overview/domain";
 import type { TokenUsage } from "@overview/generation";
 import type { AccountId } from "../auth/AccountId.js";
 import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import type { MeaningSearch } from "../meaning/MeaningSearch.js";
+import type { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesRepository.js";
 import { ApiError } from "../http/ApiError.js";
 import { readSettings } from "../records/readSettings.js";
 import type { RecordsRepository } from "../records/RecordsRepository.js";
@@ -48,10 +50,11 @@ import { chatModel } from "./chatModel.js";
 import { chatSystemPrompt, otherChatsPrompt } from "./chatPrompt.js";
 import { chooseOtherSources } from "./chooseOtherSources.js";
 import { citationsOf } from "./citationsOf.js";
+import { keywordMinutes, transcriptMinutes } from "./keywordMinutes.js";
 import { otherChatsInPrompt } from "./otherChatsInPrompt.js";
 import { otherSourcesInPrompt, type OtherSourcesInPrompt, type SourcesTurn } from "./otherSourcesInPrompt.js";
 import { streamChatCompletion, type ChatCompletionStream, type PromptMessage } from "./streamChatCompletion.js";
-import { transcriptPassages } from "./transcriptPassages.js";
+import { transcriptPassages, type Passage } from "./transcriptPassages.js";
 
 export interface ChatAnswererOptions {
   apiKey: string;
@@ -62,6 +65,7 @@ export interface ChatAnswererOptions {
   usage: ChatUsageRepository;
   costs: AccountCostsRepository;
   meaningSearch: MeaningSearch | null;
+  passages: TranscriptPassagesRepository | null;
   clock: () => Date;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -75,11 +79,18 @@ export interface ChatCaller {
 interface OtherSourcesTurn {
   added: ChatSource[];
   setAside: string[];
+  minutes: Array<{ overviewId: OverviewId; passages: Passage[] }>;
   searched: boolean;
   inPrompt: OtherSourcesInPrompt;
 }
 
-const NO_OTHER_SOURCES: OtherSourcesTurn = { added: [], setAside: [], searched: false, inPrompt: { blocks: [], labels: new Map() } };
+const NO_OTHER_SOURCES: OtherSourcesTurn = {
+  added: [],
+  setAside: [],
+  minutes: [],
+  searched: false,
+  inPrompt: { blocks: [], labels: new Map(), minuteLabels: new Map() },
+};
 
 const readChat = (record: StoredRecord): Chat | null => {
   const read = readStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), Chat, CHAT_MIGRATIONS);
@@ -130,7 +141,7 @@ export class ChatAnswerer {
     const history = conversation?.messages ?? [];
     let sources: OtherSourcesTurn;
     try {
-      sources = caller.acrossSources ? await this.#otherSources(accountId, overviewId, question, history) : NO_OTHER_SOURCES;
+      sources = caller.acrossSources ? await this.#otherSources(accountId, overview, question, history, log) : NO_OTHER_SOURCES;
     } catch (error) {
       await usage.release(reservation.day, accountId);
       throw error;
@@ -168,6 +179,7 @@ export class ChatAnswerer {
       foundSources: sources.added.filter((source) => source.how === "found").length,
       briefSources: sources.added.filter((source) => source.brief === true).length,
       setAsideSources: sources.setAside.length,
+      keywordMinutes: sources.minutes.reduce((total, each) => total + each.passages.length, 0),
     };
     const startedAt = askedAt.getTime();
     const release = () => usage.release(reservation.day, accountId);
@@ -217,7 +229,14 @@ export class ChatAnswerer {
         const reply = ChatReply.parse(JSON.parse(raw));
         const text = withoutCitationMarks(reply.answer).slice(0, MAX_CHAT_MESSAGE_LENGTH);
         if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
-        const cited = citationsOf(reply, passages, overviewParts(overview), othersInPrompt.labels, sources.inPrompt.labels);
+        const cited = citationsOf(
+          reply,
+          passages,
+          overviewParts(overview),
+          othersInPrompt.labels,
+          sources.inPrompt.labels,
+          sources.inPrompt.minuteLabels,
+        );
         const messages: ChatMessage[] = [
           {
             from: "reader",
@@ -225,6 +244,14 @@ export class ChatAnswerer {
             at: askedAt.toISOString(),
             ...(sources.added.length === 0 ? {} : { sources: sources.added }),
             ...(sources.setAside.length === 0 ? {} : { setAside: sources.setAside }),
+            ...(sources.minutes.length === 0
+              ? {}
+              : {
+                  minutes: sources.minutes.map(({ overviewId: id, passages: sent }) => ({
+                    overviewId: id,
+                    passages: sent.map((passage) => passage.id),
+                  })),
+                }),
           },
           { from: "answer", text, at: clock().toISOString(), citations: cited.citations, inSource: cited.inSource },
         ];
@@ -246,6 +273,7 @@ export class ChatAnswerer {
             overviewCitations: cited.overviewCitations,
             chatCitations: cited.chatCitations,
             otherOverviewCitations: cited.otherOverviewCitations,
+            minuteCitations: cited.minuteCitations,
             used: reservation.used,
             limit: reservation.limit,
             ms: clock().getTime() - startedAt,
@@ -284,14 +312,15 @@ export class ChatAnswerer {
   // adds or sets aside. Each source keeps its label, so earlier questions' blocks rebuild exactly.
   async #otherSources(
     accountId: AccountId,
-    overviewId: string,
+    home: Overview,
     question: ChatQuestionRequest,
     history: readonly ChatMessage[],
+    log: FastifyBaseLogger,
   ): Promise<OtherSourcesTurn> {
-    const { records, meaningSearch } = this.#options;
-    const past: SourcesTurn[] = history.flatMap((message) =>
-      message.from === "reader" ? [{ sources: message.sources ?? [], setAside: message.setAside ?? [] }] : [],
-    );
+    const { records, meaningSearch, passages, transcripts } = this.#options;
+    const overviewId = home.id;
+    const asked = history.flatMap((message) => (message.from === "reader" ? [message] : []));
+    const past: SourcesTurn[] = asked.map((message) => ({ sources: message.sources ?? [], setAside: message.setAside ?? [] }));
     const all = past.flatMap((turn) => turn.sources);
     const wasSetAside = new Set(past.flatMap((turn) => turn.setAside));
     const live = all.filter((source) => !wasSetAside.has(source.label));
@@ -306,11 +335,46 @@ export class ChatAnswerer {
       setAside: new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id))),
       nextLabel: Math.max(0, ...all.map((source) => Number(source.label.slice(1)))) + 1,
     });
-    const sources = [...all, ...choice.added];
+    // OV-352: the 8 best minutes for the question's words across the other transcripts, each with
+    // its neighbours. An overview they come from joins as a found source when it isn't here yet.
+    const homeKey = sourceKey(home.source);
+    const setAsideIds = new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id)));
+    const addedIds = new Set<string>(choice.added.map((source) => source.overviewId));
+    const found =
+      passages === null
+        ? []
+        : (
+            await keywordMinutes({ passages, records }, accountId, question.text, { except: homeKey === null ? [] : [homeKey] }, log)
+          ).filter(
+            (minutes) => minutes.overviewId !== overviewId && (!setAsideIds.has(minutes.overviewId) || addedIds.has(minutes.overviewId)),
+          );
+    let next = Math.max(0, ...[...all, ...choice.added].map((source) => Number(source.label.slice(1)))) + 1;
+    const joined: ChatSource[] = found
+      .filter((minutes) => !inConversation.has(minutes.overviewId) && !addedIds.has(minutes.overviewId))
+      .map((minutes) => ({ label: `S${next++}`, overviewId: minutes.overviewId, title: minutes.overview.source.title, how: "found" }));
+    const added = [...choice.added, ...joined];
+    const minutes = found.map((each) => ({ overviewId: each.overviewId, passages: each.passages }));
+    const sources = [...all, ...added];
     const overviews = await this.#overviewsOf(
       accountId,
       sources.map((source) => source.overviewId),
     );
+    const earlier = asked.flatMap((message) => message.minutes ?? []);
+    const cut =
+      earlier.length === 0
+        ? new Map<string, Passage[]>()
+        : await transcriptMinutes(
+            transcripts,
+            accountId,
+            [...new Set(earlier.map((each) => each.overviewId))].flatMap((id) => overviews.get(id) ?? []),
+          );
+    const pastWithMinutes = past.map((turn, index) => ({
+      ...turn,
+      minutes: (asked[index]!.minutes ?? []).map(({ overviewId: id, passages: ids }) => ({
+        overviewId: id,
+        passages: (cut.get(id) ?? []).filter((passage) => ids.includes(passage.id)),
+      })),
+    }));
     const projectIds = [...new Set(sources.flatMap((source) => (source.projectId === undefined ? [] : [source.projectId])))];
     const projects = new Map(
       (await records.readLive(accountId, "project", projectIds)).flatMap((record) => {
@@ -319,10 +383,11 @@ export class ChatAnswerer {
       }),
     );
     return {
-      added: choice.added,
+      added,
       setAside,
+      minutes,
       searched: choice.searched,
-      inPrompt: otherSourcesInPrompt([...past, { sources: choice.added, setAside }], overviews, projects),
+      inPrompt: otherSourcesInPrompt([...pastWithMinutes, { sources: added, setAside, minutes }], overviews, projects),
     };
   }
 
