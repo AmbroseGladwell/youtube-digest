@@ -1,4 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { CHROME_EXTENSION_URL } from "../../src/util/chromeExtensionUrl.js";
 import type { OnboardingStep } from "@overview/domain";
 import { authScreenTestIds } from "../../src/features/auth/components/AuthScreen/AuthScreenTestIds.js";
 import { onboardingAboutYouTestIds } from "../../src/features/onboarding/components/OnboardingAboutYou/OnboardingAboutYouTestIds.js";
@@ -194,8 +195,13 @@ export class OnboardingPageObject extends PageObject {
   // The moments (327d, 327g, 327h): one screen each, with nothing to answer.
   continueFromSaving = () => this.step("continueFromSaving", () => this.click(onboardingSavingMomentTestIds.next));
 
-  verifyExtensionCantBeAddedYet = () =>
-    this.step("verifyExtensionCantBeAddedYet", () => expect(this.get(onboardingSavingMomentTestIds.addToChrome)).toBeDisabled());
+  verifyOffersTheExtension = (offered: boolean) =>
+    this.step(`verifyOffersTheExtension ${offered}`, async () => {
+      if (!offered) return this.expectToHaveCount(onboardingSavingMomentTestIds.addToChrome, 0);
+      const link = this.get(onboardingSavingMomentTestIds.addToChrome);
+      await expect(link).toHaveAttribute("href", CHROME_EXTENSION_URL);
+      await expect(link).toHaveAttribute("target", "_blank");
+    });
 
   continueFromKnowledgeBase = () => this.step("continueFromKnowledgeBase", () => this.click(onboardingKnowledgeMomentTestIds.next));
 
@@ -346,7 +352,12 @@ export class OnboardingPageObject extends PageObject {
   verifyAsksToKeepTheTab = (asked: boolean) =>
     this.step(`verifyAsksToKeepTheTab ${asked}`, () => this.expectToHaveCount(onboardingWaitTestIds.keepTab, asked ? 1 : 0));
 
-  verifyWaitOffersSetups = () => this.step("verifyWaitOffersSetups", () => this.expectToBeVisible(onboardingSetupsTestIds.root));
+  // Three where the extension can be added (appearance, the extension, your AI), two elsewhere.
+  verifyWaitOffersSetups = (count: number) =>
+    this.step(`verifyWaitOffersSetups ${count}`, async () => {
+      await this.expectToBeVisible(onboardingSetupsTestIds.root);
+      await expect(this.get(onboardingSetupsTestIds.count)).toHaveText(`1 of ${count}`);
+    });
 
   verifyWaitFailed = () =>
     this.step("verifyWaitFailed", () => expect(this.get(onboardingWaitTestIds.failure)).toBeVisible({ timeout: 10_000 }));

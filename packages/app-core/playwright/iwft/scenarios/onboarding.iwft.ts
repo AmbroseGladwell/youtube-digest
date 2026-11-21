@@ -66,7 +66,7 @@ test("a new reader sees their link read back, answers the questions, creates an 
 
   await onboarding.verifyOnScreen("saving", "Save the content you want to come back to.");
   await onboarding.verifyStepCountReads("Step 3 of 6");
-  await onboarding.verifyExtensionCantBeAddedYet();
+  await onboarding.verifyOffersTheExtension(true);
   await onboarding.continueFromSaving();
 
   await onboarding.verifyOnScreen("topics", "It joins a library built around what you care about.");
@@ -123,10 +123,12 @@ test("a new reader sees their link read back, answers the questions, creates an 
   await onboarding.verifyWaitStage(0, { state: "done", text: /^Transcript fetched · [\d,]+ words?/ });
   await onboarding.verifyWaitStage(1, { state: "done", text: /^Overview written/ });
   await onboarding.verifyWaitSays("Your overview is ready.");
-  await onboarding.verifyWaitOffersSetups();
+  await onboarding.verifyWaitOffersSetups(3);
   const reader = await onboarding.openOverview();
 
   await reader.verifyTitle(VIDEO_TITLE);
+  await launcher.onboardingNextSteps.verifyOffers(["extension", "ai"]);
+  await launcher.onboardingNextSteps.verifyExtensionLinksToTheStore();
   const [made] = backendSimulator.ourKey.generations();
   expect(made?.input.readerContext).toBe("I'm a dad and a husband, and right now I'm focusing on new recipes and a half marathon.");
   expect(made?.input.existingTopics.map(({ name, description }) => ({ name, description }))).toEqual([
@@ -136,6 +138,34 @@ test("a new reader sees their link read back, answers the questions, creates an 
   ]);
   expect(backendSimulator.ourKey.trialTokensSent()).toEqual([null]);
   expect(await backendSimulator.sync.overviewsHeldIn(SIMULATED_ACCOUNT_ID)).toBe(1);
+});
+
+test("on a phone the extension is never offered: not on Start, Moment 1, the wait or under the overview", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  const home = await launcher.launch({ ...signedOut, desktopChrome: false });
+  await home.verifyOffersNoExtension();
+
+  await home.submitHeroUrl(VIDEO_URL);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.allowAnalytics();
+  await onboarding.confirmVideo();
+  await onboarding.verifyOnScreen("saving");
+  await onboarding.verifyOffersTheExtension(false);
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("account");
+  await onboarding.createAccount(ADA);
+
+  await onboarding.verifyOnScreen("wait");
+  await onboarding.verifyWaitSays("Your overview is ready.");
+  await onboarding.verifyWaitOffersSetups(2);
+  await onboarding.openOverview();
+  await launcher.onboardingNextSteps.verifyOffers(["ai"]);
 });
 
 test("every question can be skipped, Skip on Moment 3 goes straight to the account, and the overview knows nothing of the reader", async ({

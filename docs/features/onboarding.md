@@ -188,6 +188,12 @@ before it, and the wait has none. The moments, Topics and About you have Skip; S
 or About you goes straight to the account. Back goes a screen back, and from the first screen to
 Start. Every screen's heading takes focus as it arrives.
 
+**The extension is offered only where it can be added** (`useExtensionOffered`): the web app in
+desktop Chrome. Start's extension line, Moment 1's Add to Chrome, the wait's set-up and the next
+steps under the overview all link to the Web Store listing in a new tab. On a phone, in another
+browser and in the extension itself (panel or tab) none of them shows, and neither does Connect the
+extension in the account menu.
+
 **Your link** (327c, and 327s–327v by kind; `OnboardingYourLink`): one centred column on every
 width. Their own card, the line "38 minutes from Run Coach Ash, turned into an overview you can
 read in about 4, listen to in about 6, and share.", the Read · Listen · Share pills (Cook · Read
@@ -241,7 +247,7 @@ the expected time, and the bar creeps by elapsed time and completes only when th
 in. "You can switch tabs but keep this tab open" stands under it, a `beforeunload` prompt holds a
 running tab, and the tab's title becomes "Ready: …" once it's done (`useKeepTabWhileRunning`).
 Beside it (below on a phone), set-ups to do meanwhile that never move by themselves
-(`OnboardingSetups`): Appearance exactly as Settings, the extension on desktop Chrome only, and
+(`OnboardingSetups`): Appearance exactly as Settings, the extension where it can be added, and
 Connect your AI, each opening in a new tab. When it's ready the screen changes in place, the card
 fills in with its topics, Personalised and pills, and Open your overview goes to the overview's
 page; nothing jumps on its own. A failure says so with Try again. A shared copy or a sample has

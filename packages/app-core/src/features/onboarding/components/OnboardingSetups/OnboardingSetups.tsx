@@ -11,10 +11,10 @@ import {
   type FollowUpAssistant,
   type ThemeMode,
 } from "@overview/domain";
-import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { CHROME_EXTENSION_URL } from "../../../../util/chromeExtensionUrl.js";
+import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
 import { useMediaQuery } from "../../../../util/useMediaQuery.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { applyAppearance } from "../../../appearance/applyAppearance.js";
@@ -22,7 +22,6 @@ import { writeAppearance, type Appearance } from "../../../appearance/appearance
 import appearanceStyles from "../../../appearance/components/AppearanceSection/AppearanceSection.module.scss";
 import { useAppearance } from "../../../appearance/useAppearance.js";
 import { useUpdateSettingsMutation } from "../../../settings/mutations/useUpdateSettingsMutation.js";
-import { isDesktopChrome } from "../../util/isDesktopChrome.js";
 import styles from "./OnboardingSetups.module.scss";
 import { onboardingSetupsTestIds } from "./OnboardingSetupsTestIds.js";
 
@@ -50,10 +49,9 @@ export interface OnboardingSetupsProps {
 }
 
 // Moment 4 (designs 327m, 327r-6): set-ups beside the wait, moved only by the reader. The
-// extension's card shows on desktop Chrome alone, and never in the panel, which is the extension.
+// extension's card shows only where it can be added (useExtensionOffered).
 export function OnboardingSetups({ ready, onOpened }: OnboardingSetupsProps) {
-  const isPanel = useIsPanel();
-  const [extensionShown] = useState(() => !isPanel && isDesktopChrome());
+  const extensionShown = useExtensionOffered();
   const setups: readonly Setup[] = extensionShown ? ["appearance", "extension", "ai"] : ["appearance", "ai"];
   const [at, setAt] = useState(0);
   const shownAt = Math.min(at, setups.length - 1);

@@ -60,6 +60,7 @@ test("a new reader makes their first overview of the video the panel is beside, 
   await onboarding.verifyOnScreen("video", "Here’s what’s in the video you saved.");
   await onboarding.verifyVideoTitle(VIDEO_TITLE);
   await onboarding.confirmVideo();
+  await onboarding.verifyOffersTheExtension(false);
   await onboarding.continueFromSaving();
   await onboarding.pickTopics("Food");
   await onboarding.continueFromTopics();

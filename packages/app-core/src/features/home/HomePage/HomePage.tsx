@@ -39,6 +39,7 @@ import { SourceOffer } from "../../capture/components/SourceOffer/SourceOffer.js
 import { fromStart } from "../../auth/fromStart.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { CHROME_EXTENSION_URL } from "../../../util/chromeExtensionUrl.js";
+import { useExtensionOffered } from "../../../util/useExtensionOffered.js";
 import type { Sample } from "@overview/domain";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
@@ -379,6 +380,7 @@ function Hero({
   panel = false,
 }: HeroProps) {
   const surface = useSurface();
+  const extensionOffered = useExtensionOffered();
   return (
     <div className={alignTop ? `${styles.hero} ${styles.heroTop}` : styles.hero} data-testid={homePageTestIds.hero}>
       <div className={styles.heroText}>
@@ -396,7 +398,7 @@ function Hero({
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>
             This is the extension's own library, kept separate from the web app's by the browser itself.
           </p>
-        ) : (
+        ) : extensionOffered ? (
           <div className={styles.extensionRow}>
             <span className={styles.youtubePill} aria-hidden="true">
               <svg viewBox="0 0 32 32" width="19" height="19" className={styles.youtubeMark}>
@@ -417,7 +419,7 @@ function Hero({
               <StrokeIcon name="arrowRight" size={14} />
             </a>
           </div>
-        )}
+        ) : null}
       </div>
 
       {aside}

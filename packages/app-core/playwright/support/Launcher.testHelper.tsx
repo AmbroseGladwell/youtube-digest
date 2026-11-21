@@ -78,6 +78,8 @@ export interface LaunchOptions {
   analyticsConsent?: AnalyticsConsent | null;
   accountSeen?: boolean;
   surface?: Surface;
+  // False is a phone's browser, where the extension can't be added. Absent is desktop Chrome.
+  desktopChrome?: boolean;
   layout?: AppLayout;
   defaultApiUrl?: string;
   // False is a build installed from the Web Store, which offers no other server.
@@ -203,6 +205,7 @@ export class Launcher {
         analyticsConsent: options.analyticsConsent === undefined ? makeAnalyticsConsent() : options.analyticsConsent,
         ...(options.accountSeen === true ? { accountSeen: true } : {}),
         surface: options.surface,
+        desktopChrome: options.desktopChrome,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
         serverSwitchable: options.serverSwitchable,

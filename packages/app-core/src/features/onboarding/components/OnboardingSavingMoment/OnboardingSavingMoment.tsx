@@ -1,5 +1,7 @@
 import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { CHROME_EXTENSION_URL } from "../../../../util/chromeExtensionUrl.js";
+import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingSavingMoment.module.scss";
 import { onboardingSavingMomentTestIds } from "./OnboardingSavingMomentTestIds.js";
@@ -17,7 +19,6 @@ const KINDS: readonly { icon: StrokeIconName; name: string; from: string; become
 const EXTENSION_TITLE = "Add content in 1 click with the extension";
 const EXTENSION_NAME = "The Overview for Chrome";
 const EXTENSION_ACTION = "Add to Chrome";
-const EXTENSION_NOT_LISTED = "The extension isn't in the Web Store yet";
 const CONTINUE = "Continue";
 
 export interface OnboardingSavingMomentProps {
@@ -27,6 +28,7 @@ export interface OnboardingSavingMomentProps {
 }
 
 export function OnboardingSavingMoment({ onContinue, onSkip }: OnboardingSavingMomentProps) {
+  const extensionOffered = useExtensionOffered();
   return (
     <div className={styles.root} data-testid={onboardingSavingMomentTestIds.root}>
       <OnboardingHeading>{HEADING}</OnboardingHeading>
@@ -57,23 +59,24 @@ export function OnboardingSavingMoment({ onContinue, onSkip }: OnboardingSavingM
         </ul>
       </section>
 
-      <div className={styles.extension}>
-        <span className={styles.extensionText}>
-          <span className={styles.extensionTitle}>{EXTENSION_TITLE}</span>
-          <span className={styles.extensionName}>{EXTENSION_NAME}</span>
-        </span>
-        <span>
-          <button
-            type="button"
+      {extensionOffered && (
+        <div className={styles.extension}>
+          <span className={styles.extensionText}>
+            <span className={styles.extensionTitle}>{EXTENSION_TITLE}</span>
+            <span className={styles.extensionName}>{EXTENSION_NAME}</span>
+          </span>
+          <a
             className={styles.extensionAction}
-            disabled
-            title={EXTENSION_NOT_LISTED}
+            href={CHROME_EXTENSION_URL}
+            target="_blank"
+            rel="noopener"
+            aria-label={`${EXTENSION_ACTION}, opens in a new tab`}
             data-testid={onboardingSavingMomentTestIds.addToChrome}
           >
             {EXTENSION_ACTION}
-          </button>
-        </span>
-      </div>
+          </a>
+        </div>
+      )}
 
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onContinue} data-testid={onboardingSavingMomentTestIds.next}>
