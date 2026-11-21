@@ -250,6 +250,18 @@ export function AppShell() {
                       </nav>
 
                       <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
+                        {!accountNeeded && signedIn && (
+                          <PageLink
+                            className={`${styles.newOverviewButton} ${styles.askButton}`}
+                            to={Routes.ask()}
+                            aria-label="Ask"
+                            aria-current={pathname === Routes.ask() ? "page" : undefined}
+                            data-testid={appShellTestIds.askButton}
+                          >
+                            <StrokeIcon name="chat" />
+                            <span className={styles.askLabel}>Ask</span>
+                          </PageLink>
+                        )}
                         {!accountNeeded && (
                           <button
                             type="button"

@@ -1,0 +1,36 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.arrived {
+  animation: arrive 0.3s var(--motion-ease) both;
+}
+
+.text {
+  font: 400 0.96875rem/1.6 var(--font-body);
+  color: var(--ink);
+
+  p {
+    margin: 0 0 0.625rem;
+  }
+}
+
+.stats {
+  margin: 0;
+  font: 500 0.78125rem/1.4 var(--font-body);
+  color: var(--muted);
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrived {
+    animation: none;
+  }
+}

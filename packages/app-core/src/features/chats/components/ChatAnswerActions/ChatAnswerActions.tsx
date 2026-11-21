@@ -1,27 +1,23 @@
 import type { ReactNode } from "react";
-import type { OverviewId } from "@overview/domain";
 import { copyText } from "../../../reader/util/handOffFollowUp.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import styles from "./ChatAnswerActions.module.scss";
 import { chatAnswerActionsTestIds } from "./ChatAnswerActionsTestIds.js";
 
 export interface ChatAnswerActionsProps {
-  overviewId: OverviewId;
   answer: string;
   latest: boolean;
   onSaid: (text: string, done: boolean) => void;
+  onCopied: () => void;
   // OV-354: the answer's Sources menu, beside Copy.
   sources?: ReactNode;
 }
 
 // Design 324x, 324ae, 324af: Copy under each answer. The latest answer's always shows; an earlier
 // one's on hover, focus or tap, in a slot kept so nothing moves.
-export function ChatAnswerActions({ overviewId, answer, latest, onSaid, sources }: ChatAnswerActionsProps) {
-  const analytics = useAnalytics();
-
+export function ChatAnswerActions({ answer, latest, onSaid, onCopied, sources }: ChatAnswerActionsProps) {
   const copy = () => {
-    analytics.reader.chat.answerCopied({ overviewId });
+    onCopied();
     void copyText(answer).then((copied) => onSaid(copied ? "Answer copied" : "That couldn’t be copied.", copied));
   };
 

@@ -101,6 +101,7 @@ const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink",
 const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
+const AskScope = z.enum(["library", "project"]);
 const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
@@ -1372,6 +1373,64 @@ export const analyticsEvents = {
     },
     overviewLine: {
       projectOpened: event("The reader opens a project from the line under an overview's byline", { projectId: ProjectId }),
+    },
+  },
+  // The Ask page, over the whole library or one project (OV-354, pages 3 and 4). Never the
+  // question, the answer, a title or which project (docs/features/chats.md, "The Ask page").
+  ask: {
+    page: {
+      opened: event("The reader opens the Ask page, from the top bar or a project's page, and over what", {
+        from: z.enum(["topBar", "project"]),
+        scope: AskScope,
+      }),
+    },
+    chat: {
+      asked: event(
+        "The reader asks on the Ask page, over what, whether they typed it or chose a starter, whether it starts a new conversation, and how many overviews and projects it newly pins and sets aside",
+        {
+          scope: AskScope,
+          from: z.enum(["typed", "starter"]),
+          newConversation: z.boolean(),
+          pinnedOverviews: z.number().int().nonnegative(),
+          pinnedProjects: z.number().int().nonnegative(),
+          setAside: z.number().int().nonnegative(),
+        },
+      ),
+      picked: event("An Ask question chose what to read, with how many overviews, counted by code", {
+        scope: AskScope,
+        overviews: z.number().int().nonnegative(),
+      }),
+      answered: event("An Ask answer settled, with how many sections and how many overviews it cited, counted by code", {
+        scope: AskScope,
+        sections: z.number().int().nonnegative(),
+        overviewCitations: z.number().int().nonnegative(),
+      }),
+      answerFailed: event("An Ask answer failed while it was being written, so nothing was stored or counted", { scope: AskScope }),
+      waited: event("An Ask question was turned away by a wait, and which", { scope: AskScope, wait: ChatWait }),
+      stopped: event("The reader stops an Ask answer while it is being written; it isn't stored or counted", { scope: AskScope }),
+      answerCopied: event("The reader copies an Ask answer", { scope: AskScope }),
+      sourcesMenuOpened: event("The reader opens an Ask answer's Sources menu, with how many sources it lists", {
+        scope: AskScope,
+        sources: z.number().int().nonnegative(),
+      }),
+      readOpened: event("The reader opens the line naming the overviews an Ask answer read", { scope: AskScope }),
+      sourcePinned: event('The reader pins an overview or a project with "@" on the Ask page', {
+        scope: AskScope,
+        kind: z.enum(["overview", "project"]),
+      }),
+      sourceRemoved: event("The reader removes a source from the next Ask question, or clears them all", {
+        scope: AskScope,
+        all: z.boolean(),
+      }),
+      overviewFollowed: event("The reader follows an overview an Ask answer cited or read", { scope: AskScope }),
+      plansFollowed: event("The reader follows a spent month's wait on the Ask page to Settings › Plan", { scope: AskScope }),
+    },
+    drawer: {
+      opened: event("The reader opens the Ask page's drawer of conversations"),
+      newChat: event("The reader starts a new chat from the Ask page's drawer"),
+      conversationOpened: event("The reader opens an earlier library or project conversation from the drawer", { scope: AskScope }),
+      conversationDeleted: event("The reader deletes a library or project conversation from the drawer", { scope: AskScope }),
+      deleteUndone: event("The reader undoes deleting a library or project conversation", { scope: AskScope }),
     },
   },
   sharedPage: {

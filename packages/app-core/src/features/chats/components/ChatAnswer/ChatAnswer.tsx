@@ -18,6 +18,7 @@ import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOve
 import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { chatWords } from "../../util/chatWords.js";
+import { byRelation, citationKey } from "../../util/chatSourceGroups.js";
 import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
@@ -89,26 +90,6 @@ const otherOverviewsOf = (citations: readonly ChatCitation[]) =>
 const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
   citations.flatMap((citation) => ("startMs" in citation ? [citation] : [])).sort((a, b) => a.startMs - b.startMs);
 
-const keyOf = (citation: ChatCitation): string =>
-  "chatId" in citation
-    ? `c:${citation.chatId}`
-    : "overviewId" in citation
-      ? `o:${citation.overviewId}:${citation.item?.part ?? ""}:${citation.item?.index ?? ""}:${citation.range?.startMs ?? ""}`
-      : "startMs" in citation
-        ? `t:${citation.startMs}`
-        : `p:${JSON.stringify(citation)}`;
-
-// Each section's sources grouped by how they relate, in the order the relations first appear.
-const byRelation = (sources: ChatAnswerSections["introSources"]) => {
-  const groups = new Map<string, ChatCitation[]>();
-  for (const { citation, relation } of sources) {
-    const held = groups.get(relation) ?? [];
-    if (!held.some((each) => keyOf(each) === keyOf(citation))) held.push(citation);
-    groups.set(relation, held);
-  }
-  return [...groups.entries()];
-};
-
 // Design 310k–310m, 310w, 310y: an answer is plain text on the panel. Under the whole of it, the
 // other conversations it drew on are links that open words, then one row of pills: the parts of
 // the overview it rests on in the note's order, then its stretches of the video in time order
@@ -176,21 +157,9 @@ export function ChatAnswer({
     return [...own, ...times, ...elsewhere];
   };
 
-  const sourceRow = (sources: ChatAnswerSections["introSources"]) =>
-    sources.length === 0 ? null : (
-      <div className={styles.sectionSources} data-testid={chatAnswerTestIds.sectionSources}>
-        {byRelation(sources).map(([relation, cited]) => (
-          <div key={relation} className={styles.relation}>
-            <p className={styles.relationLabel}>{relation}</p>
-            <div className={styles.chips}>{chipsOf(cited)}</div>
-          </div>
-        ))}
-      </div>
-    );
-
   const listed = citations
     .filter((citation) => !("chatId" in citation))
-    .filter((citation, index, all) => all.findIndex((each) => keyOf(each) === keyOf(citation)) === index);
+    .filter((citation, index, all) => all.findIndex((each) => citationKey(each) === citationKey(citation)) === index);
   const sourcesMenu =
     sections === undefined || listed.length === 0 ? null : (
       <ChatSourcesMenu count={listed.length} onOpened={onSourcesOpened}>
@@ -213,7 +182,7 @@ export function ChatAnswer({
         </div>
       ) : (
         <div className={styles.text} data-testid={chatAnswerTestIds.text}>
-          <ChatAnswerSectionsView sections={sections} sourceRow={sourceRow} />
+          <ChatAnswerSectionsView sections={sections} chipsOf={chipsOf} />
         </div>
       )}
       {notCovered && page !== null && page.onPage === null && (
@@ -285,11 +254,23 @@ export function ChatAnswer({
 // sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
 export function ChatAnswerSectionsView({
   sections,
-  sourceRow,
+  chipsOf,
 }: {
   sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
-  sourceRow: (sources: ChatAnswerSections["introSources"]) => ReactNode;
+  // The chips for what a section cites; none while it streams in an overview's chat.
+  chipsOf?: ((cited: readonly ChatCitation[]) => ReactNode[]) | undefined;
 }) {
+  const sourceRow = (sources: ChatAnswerSections["introSources"]) =>
+    chipsOf === undefined || sources.length === 0 ? null : (
+      <div className={styles.sectionSources} data-testid={chatAnswerTestIds.sectionSources}>
+        {byRelation(sources).map(([relation, cited]) => (
+          <div key={relation} className={styles.relation}>
+            <p className={styles.relationLabel}>{relation}</p>
+            <div className={styles.chips}>{chipsOf(cited)}</div>
+          </div>
+        ))}
+      </div>
+    );
   return (
     <>
       {paragraphsOf(sections.intro).map((paragraph, index) => (
@@ -331,7 +312,7 @@ export function ChatAnswerSectionsView({
 
 // OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
 // moments first. N is counted by code.
-function ChatSourcesMenu({
+export function ChatSourcesMenu({
   count,
   onOpened,
   children,

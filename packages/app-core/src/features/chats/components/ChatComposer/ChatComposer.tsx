@@ -12,8 +12,8 @@ import styles from "./ChatComposer.module.scss";
 import { chatComposerTestIds } from "./ChatComposerTestIds.js";
 
 export interface ChatComposerProps extends Omit<ChatFieldProps, "onAt" | "onPickerKey" | "combobox"> {
-  // The chat's own overview, never offered.
-  overviewId: OverviewId;
+  // The chat's own overview, never offered; none on the Ask page.
+  exclude?: OverviewId | undefined;
   pinned: readonly PinnedItem[];
   liveSources: readonly ChatSource[];
   onPin: (item: PinnedItem) => void;
@@ -40,7 +40,7 @@ type RowItem = {
 // then "+N", and the "@" picker over it, a combobox listing projects and the newest overviews,
 // filtered by title as the reader types.
 export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(function ChatComposer(
-  { overviewId, pinned, liveSources, onPin, onUnpin, onRemoveSource, onClear, value, onChange, ...field },
+  { exclude: own, pinned, liveSources, onPin, onUnpin, onRemoveSource, onClear, value, onChange, ...field },
   ref,
 ) {
   const listId = useId();
@@ -62,7 +62,11 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   const byId = new Map(overviews.map((overview) => [overview.id as string, overview]));
   const added = pinned.length + liveSources.length;
   const full = added >= MAX_CHAT_PINS;
-  const exclude = new Set<string>([overviewId, ...pinned.map((item) => item.id), ...liveSources.map((source) => source.overviewId)]);
+  const exclude = new Set<string>([
+    ...(own === undefined ? [] : [own]),
+    ...pinned.map((item) => item.id),
+    ...liveSources.map((source) => source.overviewId),
+  ]);
   const { options, more } =
     picking === null ? { options: [], more: 0 } : sourcePickerOptions({ query: picking.query, projects, members, overviews, exclude });
   const open = picking !== null;
