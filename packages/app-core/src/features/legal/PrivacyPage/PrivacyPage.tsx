@@ -263,7 +263,8 @@ const sections: readonly LegalSection[] = [
           A question can also draw on your other saved overviews. Our server sends the question to OpenAI to make an embedding, and compares
           it with the embeddings of your overviews to find the few closest to it, as search by meaning does; any overview or project you add
           to the question yourself goes in too. Those overviews go to OpenAI with the question, as overviews only, never their transcripts.
-          The conversation keeps which overviews went in with each question, and the titles of any an answer cites.
+          The conversation keeps which overviews went in with each question, and the titles of any an answer cites. Turn Search my library
+          off in a conversation and only what you add yourself is sent, with no search by meaning or by words.
         </p>
         <p>
           To find a detail only a video's or episode's words hold, a question is also searched by its words across your own copies of your
@@ -275,7 +276,8 @@ const sections: readonly LegalSection[] = [
           You can also ask a question over your whole library, or on a project's page. Our server sends OpenAI the question with every
           overview in it: whole while they are few, otherwise a short entry for each (its title, big picture and core claim, and a recipe's
           ingredients), and then the few overviews chosen from those, whole. A project's question also sends its name and what you keep it
-          for. The conversation keeps which overviews were read whole for each question, and the titles each point of an answer cites.
+          for. Any overview or project you add with "@" goes too. The conversation keeps which overviews were read whole for each question,
+          and the titles each part of an answer cites.
         </p>
         <p>
           The question and the answer are kept as a conversation in your library, under your account, and synced to your devices; your

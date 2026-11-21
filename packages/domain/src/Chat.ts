@@ -40,29 +40,43 @@ export const ChatCitation = z.union([
 export type ChatCitation = z.infer<typeof ChatCitation>;
 export type OtherOverviewCitation = Extract<ChatCitation, { overviewId: string }>;
 
-export const MAX_CHAT_SOURCES = 200;
-export const MAX_CHAT_PICKS = 5;
-export const MAX_CHAT_MINUTES = 24;
+export const MAX_SOURCE_RELATION_LENGTH = 40;
 
-// A library or project chat's answer in sections, as OV-307's two-pass shape measured it: each
-// point carries the overviews it rests on, cited by code from the ids the model gave
-// (docs/features/chats.md, "Library and project chat").
+// Every chat's answer, structured where it helps, whatever its scope (OV-354, page 4; owner, 21
+// Nov 2026): an intro, which alone answers a simple question, then sections, each a bold heading,
+// short paragraphs, a numbered list where order matters and bullets where it doesn't, and
+// underneath, everything it draws on with how it relates ("Supports", or the side it takes when it
+// compares), then a takeaway. Every source is cited by code from the ids the model gave
+// (docs/features/chats.md, "One shape for every answer").
+const ChatSourceRelation = z.object({ citation: ChatCitation, relation: z.string().max(MAX_SOURCE_RELATION_LENGTH) });
+
+export const ChatAnswerSection = z.object({
+  heading: z.string(),
+  paragraphs: z.array(z.string()),
+  numbered: z.array(z.string()),
+  bullets: z.array(z.string()),
+  sources: z.array(ChatSourceRelation),
+});
+export type ChatAnswerSection = z.infer<typeof ChatAnswerSection>;
+
 export const ChatAnswerSections = z.object({
   intro: z.string(),
-  sections: z.array(
-    z.object({
-      heading: z.string(),
-      points: z.array(z.object({ text: z.string(), citations: z.array(OtherOverviewCitationPlace) })),
-    }),
-  ),
+  introSources: z.array(ChatSourceRelation),
+  sections: z.array(ChatAnswerSection),
   takeaway: z.string(),
 });
 export type ChatAnswerSections = z.infer<typeof ChatAnswerSections>;
+
+export const MAX_CHAT_SOURCES = 200;
+export const MAX_CHAT_PICKS = 5;
+export const MAX_CHAT_MINUTES = 24;
 
 // What the question was asked over, counted by code when it was answered, never by the model.
 export const ChatScopeStats = z.object({
   overviews: z.number().int().nonnegative(),
   projects: z.number().int().nonnegative().optional(),
+  // How many of them the answer read whole: "From 5 of your 208 overviews" (OV-354).
+  read: z.number().int().nonnegative().optional(),
 });
 export type ChatScopeStats = z.infer<typeof ChatScopeStats>;
 
@@ -92,6 +106,8 @@ export const ChatMessage = z.discriminatedUnion("from", [
     setAside: z.array(z.string()).max(MAX_CHAT_SOURCES).optional(),
     // A library or project chat: the overviews read whole for this question.
     picked: z.array(OverviewId).max(MAX_CHAT_PICKS).optional(),
+    // False when the reader turned Search my library off for this question: only pins were read (OV-354).
+    searchedLibrary: z.literal(false).optional(),
     // Minutes of other overviews' transcripts sent with this question, by passage id (OV-352).
     minutes: z
       .array(z.object({ overviewId: OverviewId, passages: z.array(z.string().regex(/^p[1-9]\d*$/)).max(MAX_CHAT_MINUTES) }))

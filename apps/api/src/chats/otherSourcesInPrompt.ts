@@ -75,7 +75,7 @@ export function otherSourcesInPrompt(
 function minutesBlock(shown: ReadonlyArray<{ label: string; title: string; passages: readonly Passage[] }>): string {
   return `# Minutes of their transcripts that match the question's words
 
-Each line is a minute of the transcript of one of the reader's other overviews above, with its id (such as S2.p14). When an answer uses one, list its id in passages, even where this chat's own material has no transcript. inSource is still about this chat's own transcript alone.
+Each line is a minute of the transcript of one of the reader's other overviews above, with its id (such as S2.p14). When an answer uses one, list its id as a source, even where this chat's own material has no transcript. inSource is still about this chat's own transcript alone.
 
 ${shown.map(({ label, title, passages }) => `## ${label}: ${title}\n\n${passages.map((passage) => `[${label}.${passage.id} ${formatClock(passage.startMs / 1000)}] ${passage.text}`).join("\n")}`).join("\n\n")}`;
 }
@@ -86,7 +86,7 @@ const listed = (items: readonly string[]): string =>
 const FIRST_LEAD = `# Other overviews from the reader's library
 
 The reader saved these too. They are not what this chat is about, but the reader may ask about them or how they apply here. Each is labelled S1, S2 and so on, and its ids carry the label (such as S2.kp3).
-- When an answer uses one, name it by its title in the answer, and list its ids in overviewParts. Their transcripts aren't shown, except any minutes of them listed below: cite those in passages.
+- When an answer uses one, name it by its title in the answer, and list its ids as sources. Their transcripts aren't shown, except any minutes of them listed below, which are cited the same way.
 - When two of them disagree, or one disagrees with this source, say so plainly rather than blending them.
 - When none of them answers a question about the reader's other saved overviews, say none of the overviews you were shown cover it, and cite none of them. Never say the reader's library has nothing on it: you are only shown a few.
 - inSource is still about this chat's own transcript alone.`;
@@ -105,7 +105,7 @@ function sourcesBlock(present: readonly LabelledSource[], projects: ReadonlyMap<
   const lines = [
     pinned.length === 0 ? null : `The reader pinned ${listed(pinned)} to this conversation with "@".`,
     ...projectIds.map((projectId) => projectLead(projects.get(projectId), present, projectId)),
-    anyBrief ? "Cite an overview listed in brief by its label alone (such as S7) in overviewParts." : null,
+    anyBrief ? "Cite an overview listed in brief by its label alone (such as S7)." : null,
   ].filter((line) => line !== null);
   const whole = present
     .filter(({ source }) => source.brief !== true)

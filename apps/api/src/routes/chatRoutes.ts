@@ -31,7 +31,7 @@ const RecordParams = z.object({
 });
 const OverviewParams = z.object({ overviewId: OverviewId });
 const ProjectParams = z.object({ projectId: ProjectId });
-const LibraryQuestion = ChatQuestionRequest.pick({ conversationId: true, text: true });
+const LibraryQuestion = ChatQuestionRequest.pick({ conversationId: true, text: true, pins: true, setAside: true });
 
 async function* serverSentEvents(events: AsyncIterable<ChatStreamEvent>): AsyncGenerator<string> {
   for await (const event of events) yield `data: ${JSON.stringify(event)}\n\n`;

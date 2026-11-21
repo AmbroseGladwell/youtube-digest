@@ -1,4 +1,5 @@
 import { answeredFromOverviewAlone, formatClock, type ChatSourceKind } from "@overview/domain";
+import { ANSWER_SHAPE_RULES } from "./ChatReply.js";
 import type { OtherChatsInPrompt } from "./otherChatsInPrompt.js";
 import type { Passage } from "./transcriptPassages.js";
 
@@ -47,16 +48,18 @@ ${reader}
 function sourcePrompt(kind: ChatSourceKind, overview: string, passages: readonly Passage[], recipe: boolean): string {
   return `You answer a reader's questions about one ${kind} they saved in The Overview, and about the overview The Overview wrote of it.
 
-Answer from the material below: the overview and the transcript. Answer from general knowledge only as the rules below allow. Answer in two to five plain sentences.
-- When the transcript answers the question, set inSource to true and list in passages the ids (such as p12) of the transcript passages that support the answer.
-- When the answer rests on an item of the overview, list its id (such as step2, dubious1 or apply1) in overviewParts. Items with ids are the verdict, why it is dubious, key points, the steps it gives, How to apply, what it sells, whether to watch it anyway, chapters, and a recipe's ingredients and method. When the transcript backs the same point, cite its passages as well.
+Answer from the material below: the overview and the transcript. Answer from general knowledge only as the rules below allow.
+- When the transcript answers the question, set inSource to true and list as sources the ids (such as p12) of the transcript passages that support each part of the answer.
+- When the answer rests on an item of the overview, list its id (such as step2, dubious1 or apply1) as a source. Items with ids are the verdict, why it is dubious, key points, the steps it gives, How to apply, what it sells, whether to watch it anyway, chapters, and a recipe's ingredients and method. When the transcript backs the same point, cite its passages as well.
 - The verdict, why it is dubious, what it sells and whether to watch it anyway are the overview's own judgement of the ${kind}, not something the ${kind} says. Answer a question about them from the item, and cite the passage it refers to where the transcript has one.
 - How to apply suggests what the reader might do, and may go beyond the ${kind}. When you answer from it, give the suggestion and add a short clause such as "That goes beyond the ${kind}, which doesn't cover how to try it." when the ${kind} doesn't.
 - Never speak of the overview as a third party ("the overview suggests", "its judgement") and never in the first person. Give the answer itself, and mark a line only against the ${kind} ("the ${kind} doesn't say"). When the question is about a section, name it as the subject: "Watch it anyway says…", "Start with Step 1…", "It's marked dubious because…".
 - inSource is about the transcript alone: set it to false when the transcript doesn't back the answer, even when the overview does.
-${beyondSourceRules({ noun: kind, material: "the transcript nor the overview", decline: `the ${kind} doesn't cover it`, cited: "passages and overviewParts" })}
+${beyondSourceRules({ noun: kind, material: "the transcript nor the overview", decline: `the ${kind} doesn't cover it`, cited: "the sources" })}
 - Cite only ids that appear in the material. The premise, big picture and core claim have no ids: for those, cite the transcript.
 ${recipe ? `${AMOUNTS_RULE}\n` : ""}
+${ANSWER_SHAPE_RULES}
+
 ${productBlock(kind, `this overview, the ${kind}'s transcript`, !recipe)}
 
 # The overview
@@ -116,11 +119,13 @@ function overviewOnlyPrompt(kind: "article" | "recipe", overview: string): strin
       : `${AMOUNTS_RULE}\n`;
   return `You answer a reader's questions about one ${noun} they saved in The Overview, from the overview The Overview wrote of it. The page's own text isn't kept, so the overview is all there is to answer from.
 
-Answer from the overview below. Answer from general knowledge only as the rules below allow. Answer in two to five plain sentences.
-- List in overviewParts the ids (such as ${examples}) of the items the answer rests on. There is no transcript: always set inSource to false and leave passages empty.
+Answer from the overview below. Answer from general knowledge only as the rules below allow.
+- List as sources the ids (such as ${examples}) of the items the answer rests on. There is no transcript: always set inSource to false.
 ${judgement}- Never speak of the overview as a third party ("the overview suggests", "its judgement") and never in the first person. Give the answer itself. When the question is about a section, name it as the subject: ${kind === "recipe" ? '"Step 2 of the method…", "The ingredients list…"' : '"Read it anyway says…", "The chapter on costs…", "It\'s marked dubious because…"'}.
-${beyondSourceRules({ noun, material: "the overview", decline, cited: "overviewParts" })} A question about what the full ${kind === "recipe" ? "page" : "article"} says gets that plain decline too: only the page could answer it.
+${beyondSourceRules({ noun, material: "the overview", decline, cited: "the sources" })} A question about what the full ${kind === "recipe" ? "page" : "article"} says gets that plain decline too: only the page could answer it.
 - Cite only ids that appear in the overview. The premise, big picture, core claim and summary have no ids.
+
+${ANSWER_SHAPE_RULES}
 
 ${productBlock(kind, "this overview", kind === "article")}
 
@@ -138,7 +143,7 @@ export function otherChatsPrompt(kind: ChatSourceKind, others: OtherChatsInPromp
   if (others.conversations.length === 0) return null;
   return `# The reader's other conversations about this ${kind}
 
-Earlier conversations the reader had about the same ${kind}. Use them when the question refers to something the reader asked, decided or was told there, and list in chatMessages the ids (such as c1.m3) of the messages you used. They are not the source: ${answeredFromOverviewAlone(kind) ? "anything about the " + kind + " must still cite the overview's items" : `anything about what the ${kind} says must still cite transcript passages`}, and an answer that rests only on these conversations has inSource false.
+Earlier conversations the reader had about the same ${kind}. Use them when the question refers to something the reader asked, decided or was told there, and list as sources the ids (such as c1.m3) of the messages you used. They are not the source: ${answeredFromOverviewAlone(kind) ? "anything about the " + kind + " must still cite the overview's items" : `anything about what the ${kind} says must still cite transcript passages`}, and an answer that rests only on these conversations has inSource false.
 
 ${others.conversations
   .map(

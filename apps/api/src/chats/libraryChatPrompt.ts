@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { formatClock, MAX_CHAT_PICKS, overviewMarkdown, type Overview, type Project } from "@overview/domain";
 import type { Passage } from "./transcriptPassages.js";
+import { ANSWER_SHAPE_RULES, CHAT_REPLY_SCHEMA } from "./ChatReply.js";
 import type { PromptMessage, ReplyShape } from "./streamChatCompletion.js";
 
 // About 20,000 tokens, counted in characters by code: below it the overviews go whole and one pass
@@ -23,49 +24,10 @@ export const PICK_SHAPE: ReplyShape = {
   },
 };
 
-// intro first, so it streams while the sections are still to come.
-export const SECTIONED_SHAPE: ReplyShape = {
-  name: "sectioned_answer",
-  maxTokens: SECTIONED_TOKENS,
-  schema: {
-    type: "object",
-    additionalProperties: false,
-    required: ["intro", "sections", "takeaway"],
-    properties: {
-      intro: { type: "string" },
-      sections: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["heading", "points"],
-          properties: {
-            heading: { type: "string" },
-            points: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["text", "sources"],
-                properties: { text: { type: "string" }, sources: { type: "array", items: { type: "string" } } },
-              },
-            },
-          },
-        },
-      },
-      takeaway: { type: "string" },
-    },
-  },
-};
+// The same reply every chat gives (OV-354), with room for a long, structured answer.
+export const SECTIONED_SHAPE: ReplyShape = { name: "chat_reply", maxTokens: SECTIONED_TOKENS, schema: CHAT_REPLY_SCHEMA };
 
 export const PickReply = z.object({ overviews: z.array(z.string()) });
-
-export const SectionedSection = z.object({
-  heading: z.string(),
-  points: z.array(z.object({ text: z.string(), sources: z.array(z.string()) })),
-});
-export const SectionedReply = z.object({ intro: z.string(), sections: z.array(SectionedSection), takeaway: z.string() });
-export type SectionedReply = z.infer<typeof SectionedReply>;
 
 export type LibraryChatScope = { kind: "library" } | { kind: "project"; project: Project };
 
@@ -91,17 +53,15 @@ const where = (scope: LibraryChatScope): string =>
     ? "their whole library in The Overview: every overview they have saved"
     : `one of their projects in The Overview, "${scope.project.name}"${scope.project.purpose === null ? "" : `, which they keep for this: "${scope.project.purpose}"`}`;
 
-const SHAPE_AND_RULES = `Answer in this shape:
-- intro: one or two sentences that answer the question.
-- sections: two to four, each with a short heading and one to three points. Each point is one or two sentences. Its sources list the ids it rests on: an overview's id, or an item's id from the full notes. A point that compares or connects overviews lists every one of them.
-- takeaway: one sentence.
+const SHAPE_AND_RULES = `${ANSWER_SHAPE_RULES}
 
 Rules:
-- Name overviews by their titles only where the sentence needs it; the sources carry the citation. Never write an id in the text.
+- A source is an overview's id, or an item's id from the full notes, such as O12.kp3. A section that compares or connects overviews lists every one of them.
+- Name overviews by their titles only where the sentence needs it; the sources carry the citation.
 - Never give a count of overviews or sources, or a share of them, in words or figures ("two sources", "three of your recipes"): say "a couple", "several" or "most" instead.
 - Use only what the overviews say. Where you connect them, say it is your connection, not theirs.
-- When they disagree, say which ones, and how.
-- When nothing here covers the question, say so in the intro and leave sections empty.`;
+- When nothing here covers the question, say so in the intro and leave sections empty.
+- There is no single source here: always set inSource to false, and set generalKnowledge to false unless you add something from beyond these overviews, which you mark as such.`;
 
 // OV-307's two-pass system message, which found 20 of 22 core overviews with no point drifting from
 // its sources. The map serves both passes, so the second reads it from the cache. Below the

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { overviewPartHash, type ChatSource, type OverviewId, type OverviewPartItem } from "@overview/domain";
 import { makeOverview } from "@overview/store-conformance";
-import type { ChatReply } from "./ChatReply.js";
+import type { CitedIds } from "./ChatReply.js";
 import { citationsOf } from "./citationsOf.js";
 
 const passages = [
@@ -16,13 +16,11 @@ const parts: OverviewPartItem[] = [
   { part: "step", index: 1, text: "Skip loading" },
 ];
 const labels = new Map([["c1.m2", { chatId: "o:c", message: 1 }]]);
-const reply = (fields: Partial<ChatReply>): ChatReply => ({
-  answer: "a",
+const reply = (fields: Partial<CitedIds>): CitedIds => ({
   passages: [],
   overviewParts: [],
   chatMessages: [],
   inSource: true,
-  generalKnowledge: false,
   ...fields,
 });
 

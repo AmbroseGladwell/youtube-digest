@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { CHAT_MIGRATIONS } from "./chatMigrations.js";
+import { readStoredRecord } from "./readStoredRecord.js";
 import {
   Chat,
   chatConversationId,
@@ -89,7 +91,7 @@ test("an owner's chats share a prefix no other owner's can, and an id says whose
   assert.equal(chatConversationId(`project:${PROJECT}:c1`), "c1");
 });
 
-test("a library or project answer carries its sections, each point citing overviews, and the stats code counted", () => {
+test("an answer carries its sections, each naming its sources and how they relate, and the stats code counted", () => {
   const cited = { overviewId: OVERVIEW, title: "Start small", item: null };
   const sectioned = {
     ...answer,
@@ -97,10 +99,13 @@ test("a library or project answer carries its sections, each point citing overvi
     inSource: false,
     sections: {
       intro: "Most start small.",
-      sections: [{ heading: "Scope", points: [{ text: "One habit.", citations: [cited] }] }],
+      introSources: [],
+      sections: [
+        { heading: "Scope", paragraphs: ["One habit."], numbered: [], bullets: [], sources: [{ citation: cited, relation: "Supports" }] },
+      ],
       takeaway: "Pick one.",
     },
-    stats: { overviews: 208, projects: 4 },
+    stats: { overviews: 208, projects: 4, read: 5 },
   };
   assert.ok(Chat.safeParse(chat([{ ...question, picked: [OVERVIEW] }, sectioned])).success);
   assert.ok(!Chat.safeParse(chat([question, { ...sectioned, stats: { overviews: -1 } }])).success);
@@ -116,4 +121,49 @@ test("another overview can be cited at a minute of its source, and a question ke
   );
   assert.ok(Chat.safeParse(chat([{ ...question, minutes: [{ overviewId: OTHER, passages: ["p13", "p14", "p15"] }] }, answer])).success);
   assert.ok(!Chat.safeParse(chat([{ ...question, minutes: [{ overviewId: OTHER, passages: ["14"] }] }, answer])).success);
+});
+
+test("a schema 5 answer of points reads as bullets, each point's sources cited once as Supports (OV-354)", () => {
+  const cited = { overviewId: OTHER, title: "Start small", item: null };
+  const old = {
+    ...chat([
+      question,
+      {
+        ...answer,
+        citations: [cited],
+        inSource: false,
+        sections: {
+          intro: "Most start small.",
+          sections: [
+            {
+              heading: "Scope",
+              points: [
+                { text: "One habit.", citations: [cited] },
+                { text: "Then two.", citations: [cited] },
+              ],
+            },
+          ],
+          takeaway: "Pick one.",
+        },
+      },
+    ]),
+    schemaVersion: 5,
+  };
+  const read = readStoredRecord(old, Chat, CHAT_MIGRATIONS);
+  assert.equal(read.status, "read");
+  const sections = read.status === "read" ? (read.record.messages[1] as Extract<ChatMessage, { from: "answer" }>).sections : undefined;
+  assert.deepEqual(sections, {
+    intro: "Most start small.",
+    introSources: [],
+    sections: [
+      {
+        heading: "Scope",
+        paragraphs: [],
+        numbered: [],
+        bullets: ["One habit.", "Then two."],
+        sources: [{ citation: cited, relation: "Supports" }],
+      },
+    ],
+    takeaway: "Pick one.",
+  });
 });

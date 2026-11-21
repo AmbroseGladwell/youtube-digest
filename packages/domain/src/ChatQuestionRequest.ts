@@ -18,6 +18,8 @@ export const ChatQuestionRequest = z.object({
     })
     .default({ overviews: [], projects: [] }),
   setAside: z.array(OverviewId).max(MAX_CHAT_PINS).default([]),
+  // Search my library (OV-354): off, only what the reader pinned is read.
+  searchLibrary: z.boolean().default(true),
 });
 export type ChatQuestionRequest = z.infer<typeof ChatQuestionRequest>;
 export type ChatQuestionInput = z.input<typeof ChatQuestionRequest>;
