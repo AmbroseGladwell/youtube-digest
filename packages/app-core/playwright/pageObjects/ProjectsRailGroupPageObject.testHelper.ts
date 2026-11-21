@@ -26,7 +26,9 @@ export class ProjectsRailGroupPageObject extends PageObject {
     this.step(`verifyRowMatchesTopicRow ${name} ${topicId}`, async () => {
       const { height, fontSize, padding } = await this.measure(projectsRailGroupTestIds.project(name));
       const topic = await this.measure(filterPanelTestIds.topicChip(topicId));
-      expect({ height, fontSize, padding }).toEqual({ height: topic.height, fontSize: topic.fontSize, padding: topic.padding });
+      // Heights are compared to a hundredth of a pixel: where a row lands can leave sub-pixel noise.
+      expect(height).toBeCloseTo(topic.height, 2);
+      expect({ fontSize, padding }).toEqual({ fontSize: topic.fontSize, padding: topic.padding });
     });
 
   // "Show all N topics" and New topic share one shape; All projects takes it, underlined.
