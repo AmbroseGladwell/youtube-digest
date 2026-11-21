@@ -6,7 +6,9 @@ import {
   chatRecordId,
   type Chat,
   type ChatCitation,
+  type ChatAnswerSections,
   type ChatMessage,
+  type ChatSource,
   type ChatUsage,
   DEFAULT_NARRATION_VOICE,
   NarrationVoice,
@@ -145,6 +147,18 @@ export interface ChatAnswerReply {
   text: string;
   citations?: ChatCitation[];
   inSource?: boolean;
+  // OV-354: what search found for the question, and the answer in sections.
+  found?: Array<{ overviewId: OverviewId; title: string }>;
+  sections?: ChatAnswerSections;
+}
+
+export interface ChatQuestionSent {
+  overviewId: string;
+  conversationId: string;
+  text: string;
+  pins?: { overviews: string[]; projects: string[] };
+  setAside?: string[];
+  searchLibrary?: boolean;
 }
 
 type ChatReply =
@@ -197,7 +211,7 @@ export class BackendSimulator {
   // The answers the chat endpoint gives, in turn, then its default; a refusal waits its turn too
   // (docs/features/chats.md, "Asking").
   #chatReplies: ChatReply[] = [];
-  #chatQuestions: Array<{ overviewId: string; conversationId: string; text: string }> = [];
+  #chatQuestions: ChatQuestionSent[] = [];
   #chatRecords = new Map<string, Chat & { rev: number }>();
   #chatUsage: ChatUsage = { plan: "free", resetsOn: "2026-10-01", used: 0, limit: 100 };
   #generatedOutputOverrides: Record<string, unknown> = {};
@@ -1104,8 +1118,8 @@ export class BackendSimulator {
       this.#respond(route, EndpointKey.CHAT_MESSAGES, {
         onDefault: () => {
           const overviewId = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-2) ?? "");
-          const { conversationId, text } = route.request().postDataJSON() as { conversationId: string; text: string };
-          return this.#answerChat({ overviewId, conversationId, text });
+          const body = route.request().postDataJSON() as Omit<ChatQuestionSent, "overviewId">;
+          return this.#answerChat({ overviewId, ...body });
         },
         onError: () => ({ status: 502, body: { error: { code: "generation_failed", message: "Simulated: the provider failed" } } }),
       }),
@@ -1428,18 +1442,44 @@ export class BackendSimulator {
 
   #nextSeq = (): number => Math.max(0, ...this.#feed.map((change) => change.seq)) + 1;
 
-  #answerChat = (request: { overviewId: string; conversationId: string; text: string }): SimulatedResponse => {
+  #answerChat = (request: ChatQuestionSent): SimulatedResponse => {
     this.#chatQuestions.push(request);
     const reply = this.#chatReplies.shift() ?? DEFAULT_CHAT_REPLY;
     if (reply.kind === "refused") return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
     if (reply.kind === "failed") return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
     const at = new Date().toISOString();
-    const messages: ChatMessage[] = [
-      { from: "reader", text: request.text, at },
-      { from: "answer", text: reply.text, at, citations: reply.citations ?? [], inSource: reply.inSource ?? true },
-    ];
     const chatId = chatRecordId(request.overviewId, request.conversationId);
     const known = this.#chatRecords.get(chatId);
+    // As the server labels them: S1 on, never sending one twice, and a pinned overview by its title
+    // in the library; pinned projects aren't expanded here.
+    const before = (known?.messages ?? []).flatMap((message) => (message.from === "reader" ? (message.sources ?? []) : []));
+    const library = new Map(this.#seedOverviews.map((overview) => [overview.id as string, overview.source.title]));
+    const sources: ChatSource[] = [];
+    const add = (overviewId: string, title: string, how: ChatSource["how"]) => {
+      if (overviewId === request.overviewId || [...before, ...sources].some((source) => source.overviewId === overviewId)) return;
+      sources.push({ label: `S${before.length + sources.length + 1}`, overviewId: overviewId as OverviewId, title, how });
+    };
+    for (const id of request.pins?.overviews ?? []) add(id, library.get(id) ?? "Untitled", "pinned");
+    if (request.searchLibrary !== false) for (const found of reply.found ?? []) add(found.overviewId, found.title, "found");
+    const setAside = before.filter((source) => request.setAside?.includes(source.overviewId)).map((source) => source.label);
+    const messages: ChatMessage[] = [
+      {
+        from: "reader",
+        text: request.text,
+        at,
+        ...(sources.length > 0 ? { sources } : {}),
+        ...(setAside.length > 0 ? { setAside } : {}),
+        ...(request.searchLibrary === false ? { searchedLibrary: false as const } : {}),
+      },
+      {
+        from: "answer",
+        text: reply.text,
+        at,
+        citations: reply.citations ?? [],
+        inSource: reply.inSource ?? true,
+        ...(reply.sections === undefined ? {} : { sections: reply.sections }),
+      },
+    ];
     const record =
       known === undefined
         ? { id: chatId, overviewId: request.overviewId as OverviewId, startedAt: at, messages, rev: 1 }
@@ -1447,10 +1487,18 @@ export class BackendSimulator {
     this.#chatRecords.set(chatId, record);
     this.#feed.push(chatChange(record, record.rev, this.#nextSeq()));
     this.#chatUsage = { ...this.#chatUsage, used: this.#chatUsage.used + 1 };
-    const pieces = reply.text.match(/\S+\s*/g) ?? [reply.text];
+    const streamed = reply.sections?.intro ?? reply.text;
+    const pieces = streamed.match(/\S+\s*/g) ?? [streamed];
+    const pinned = sources.filter((source) => source.how === "pinned");
+    const found = sources.filter((source) => source.how === "found");
     return {
       status: 200,
-      stream: [...pieces.map((text) => ({ type: "text", text })), { type: "answered", chatId, rev: record.rev, messages }],
+      stream: [
+        ...(sources.length > 0 ? [{ type: "sources", pinned, found }] : []),
+        ...pieces.map((text) => ({ type: "text", text })),
+        ...(reply.sections?.sections ?? []).map((section) => ({ type: "section", section })),
+        { type: "answered", chatId, rev: record.rev, messages },
+      ],
     };
   };
 

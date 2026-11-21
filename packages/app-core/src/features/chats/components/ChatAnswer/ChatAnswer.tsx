@@ -1,7 +1,8 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
   articlePlaceUrl,
   type ArticlePlace,
+  type ChatAnswerSections,
   type ChatCitation,
   type ChatSourceKind,
   type Overview,
@@ -15,6 +16,7 @@ import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
 import { ChatOtherOverviewCitation, type ChatOtherOverviewCitationProps } from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
 import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
 import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
+import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { chatWords } from "../../util/chatWords.js";
 import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
@@ -40,8 +42,13 @@ export interface ChatAnswerProps {
   // Another of the reader's overviews an answer drew on (OV-355): whether it is still in the library.
   holdsOverview: (overviewId: string) => boolean;
   onOtherOverviewFollowed: ChatOtherOverviewCitationProps["onFollowed"];
-  // Copy, under each answer (design 324x).
-  actions?: ReactNode;
+  // The answer in sections (OV-354, page 4): every scope's answers share this one shape.
+  sections?: ChatAnswerSections | undefined;
+  // A mini thumbnail for another overview's chip, when it's still in the library.
+  imageOf?: ((overviewId: string) => { url: string | null; wide: boolean }) | undefined;
+  onSourcesOpened?: ((count: number) => void) | undefined;
+  // Copy, under each answer (design 324x), with the Sources menu beside it when there is one.
+  actions?: ((sources: ReactNode) => ReactNode) | undefined;
 }
 
 export interface ChatPage {
@@ -82,6 +89,26 @@ const otherOverviewsOf = (citations: readonly ChatCitation[]) =>
 const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
   citations.flatMap((citation) => ("startMs" in citation ? [citation] : [])).sort((a, b) => a.startMs - b.startMs);
 
+const keyOf = (citation: ChatCitation): string =>
+  "chatId" in citation
+    ? `c:${citation.chatId}`
+    : "overviewId" in citation
+      ? `o:${citation.overviewId}:${citation.item?.part ?? ""}:${citation.item?.index ?? ""}:${citation.range?.startMs ?? ""}`
+      : "startMs" in citation
+        ? `t:${citation.startMs}`
+        : `p:${JSON.stringify(citation)}`;
+
+// Each section's sources grouped by how they relate, in the order the relations first appear.
+const byRelation = (sources: ChatAnswerSections["introSources"]) => {
+  const groups = new Map<string, ChatCitation[]>();
+  for (const { citation, relation } of sources) {
+    const held = groups.get(relation) ?? [];
+    if (!held.some((each) => keyOf(each) === keyOf(citation))) held.push(citation);
+    groups.set(relation, held);
+  }
+  return [...groups.entries()];
+};
+
 // Design 310k–310m, 310w, 310y: an answer is plain text on the panel. Under the whole of it, the
 // other conversations it drew on are links that open words, then one row of pills: the parts of
 // the overview it rests on in the note's order, then its stretches of the video in time order
@@ -104,12 +131,72 @@ export function ChatAnswer({
   onConversationFollowed,
   holdsOverview,
   onOtherOverviewFollowed,
+  sections,
+  imageOf,
+  onSourcesOpened,
   actions,
 }: ChatAnswerProps) {
   const stretches = video === null ? [] : stretchesOf(citations);
   const parts = overviewCitationViews(overview, citations);
   const others = otherOverviewsOf(citations);
   const notCovered = !inSource && !citations.some((citation) => "part" in citation) && others.length === 0;
+
+  const chipsOf = (cited: readonly ChatCitation[]): ReactNode[] => {
+    const own = overviewCitationViews(overview, cited).map((view, index) => (
+      <Fragment key={`${view.part}-${index}`}>
+        <ChatOverviewCitation view={view} onFollowed={onOverviewPartFollowed} />
+        {page !== null && view.kind === "item" && view.place !== undefined && <ShowOnPageLink page={page} place={view.place} />}
+      </Fragment>
+    ));
+    const times =
+      video === null
+        ? []
+        : stretchesOf(cited).map((range) => (
+            <ChatCitationPill
+              key={`${range.startMs}-${range.endMs}`}
+              range={range}
+              video={video}
+              onFollowed={onCitationFollowed}
+              onOpenTranscriptAt={onOpenTranscriptAt}
+            />
+          ));
+    const elsewhere = otherOverviewsOf(cited).map((citation, index) => {
+      const image = imageOf?.(citation.overviewId);
+      return (
+        <ChatOtherOverviewCitation
+          key={`${citation.overviewId}-${index}`}
+          citation={citation}
+          held={holdsOverview(citation.overviewId)}
+          imageUrl={image?.url}
+          wide={image?.wide}
+          onFollowed={onOtherOverviewFollowed}
+        />
+      );
+    });
+    return [...own, ...times, ...elsewhere];
+  };
+
+  const sourceRow = (sources: ChatAnswerSections["introSources"]) =>
+    sources.length === 0 ? null : (
+      <div className={styles.sectionSources} data-testid={chatAnswerTestIds.sectionSources}>
+        {byRelation(sources).map(([relation, cited]) => (
+          <div key={relation} className={styles.relation}>
+            <p className={styles.relationLabel}>{relation}</p>
+            <div className={styles.chips}>{chipsOf(cited)}</div>
+          </div>
+        ))}
+      </div>
+    );
+
+  const listed = citations
+    .filter((citation) => !("chatId" in citation))
+    .filter((citation, index, all) => all.findIndex((each) => keyOf(each) === keyOf(citation)) === index);
+  const sourcesMenu =
+    sections === undefined || listed.length === 0 ? null : (
+      <ChatSourcesMenu count={listed.length} onOpened={onSourcesOpened}>
+        {chipsOf(listed)}
+      </ChatSourcesMenu>
+    );
   return (
     <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} data-testid={chatAnswerTestIds.root}>
       {notCovered && (
@@ -118,11 +205,17 @@ export function ChatAnswer({
           {chatWords(about).notCovered}
         </p>
       )}
-      <div className={styles.text} data-testid={chatAnswerTestIds.text}>
-        {paragraphsOf(text).map((paragraph, index) => (
-          <p key={index}>{withSettingsLinks(paragraph)}</p>
-        ))}
-      </div>
+      {sections === undefined ? (
+        <div className={styles.text} data-testid={chatAnswerTestIds.text}>
+          {paragraphsOf(text).map((paragraph, index) => (
+            <p key={index}>{withSettingsLinks(paragraph)}</p>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.text} data-testid={chatAnswerTestIds.text}>
+          <ChatAnswerSectionsView sections={sections} sourceRow={sourceRow} />
+        </div>
+      )}
       {notCovered && page !== null && page.onPage === null && (
         <a className={styles.onPage} href={page.url} target="_blank" rel="noopener" data-testid={chatAnswerTestIds.readOnPage}>
           Read it on the page
@@ -155,7 +248,7 @@ export function ChatAnswer({
           </button>
         );
       })}
-      {parts.length + stretches.length + others.length > 0 && (
+      {sections === undefined && parts.length + stretches.length + others.length > 0 && (
         <div className={styles.citations} data-testid={chatAnswerTestIds.citations}>
           {parts.map((view, index) => (
             <Fragment key={`${view.part}-${index}`}>
@@ -183,7 +276,108 @@ export function ChatAnswer({
           ))}
         </div>
       )}
-      {actions}
+      {actions?.(sourcesMenu)}
+    </div>
+  );
+}
+
+// OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
+// sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
+export function ChatAnswerSectionsView({
+  sections,
+  sourceRow,
+}: {
+  sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
+  sourceRow: (sources: ChatAnswerSections["introSources"]) => ReactNode;
+}) {
+  return (
+    <>
+      {paragraphsOf(sections.intro).map((paragraph, index) => (
+        <p key={`intro-${index}`}>{withSettingsLinks(paragraph)}</p>
+      ))}
+      {sourceRow(sections.introSources)}
+      {sections.sections.map((section, index) => (
+        <section key={index} className={styles.section} data-testid={chatAnswerTestIds.section}>
+          <h3 className={styles.sectionHeading}>{section.heading}</h3>
+          {section.paragraphs.map((paragraph, at) => (
+            <p key={`p-${at}`}>{paragraph}</p>
+          ))}
+          {section.numbered.length > 0 && (
+            <ol className={styles.list}>
+              {section.numbered.map((item, at) => (
+                <li key={at}>{item}</li>
+              ))}
+            </ol>
+          )}
+          {section.bullets.length > 0 && (
+            <ul className={styles.list}>
+              {section.bullets.map((item, at) => (
+                <li key={at}>{item}</li>
+              ))}
+            </ul>
+          )}
+          {sourceRow(section.sources)}
+        </section>
+      ))}
+      {sections.takeaway !== undefined && sections.takeaway !== "" && (
+        <section className={styles.section} data-testid={chatAnswerTestIds.takeaway}>
+          <h3 className={styles.sectionHeading}>Takeaway</h3>
+          <p>{sections.takeaway}</p>
+        </section>
+      )}
+    </>
+  );
+}
+
+// OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
+// moments first. N is counted by code.
+function ChatSourcesMenu({
+  count,
+  onOpened,
+  children,
+}: {
+  count: number;
+  onOpened?: ((count: number) => void) | undefined;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement | null>(null);
+  const menu = useRef<HTMLDivElement | null>(null);
+  useDismissOnOutside(open, () => setOpen(false), menu, root);
+  return (
+    <div
+      className={styles.sourcesHost}
+      ref={root}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !open) return;
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        className={styles.sourcesButton}
+        aria-expanded={open}
+        onClick={() => {
+          if (!open) onOpened?.(count);
+          setOpen(!open);
+        }}
+        data-testid={chatAnswerTestIds.sources}
+      >
+        Sources <span>{count}</span>
+      </button>
+      {open && (
+        <div
+          className={styles.sourcesMenu}
+          ref={menu}
+          role="group"
+          aria-label={`Sources, ${count}`}
+          data-testid={chatAnswerTestIds.sourcesMenu}
+        >
+          {children}
+        </div>
+      )}
     </div>
   );
 }

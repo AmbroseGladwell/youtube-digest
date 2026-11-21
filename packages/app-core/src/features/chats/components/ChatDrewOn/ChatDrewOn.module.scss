@@ -1,0 +1,34 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  list-style: none;
+}
+
+.pinned {
+  align-items: flex-end;
+}
+
+.found {
+  align-items: flex-start;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: var(--muted);
+  font: 600 12px var(--font-body);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pinned .chips {
+  justify-content: flex-end;
+}

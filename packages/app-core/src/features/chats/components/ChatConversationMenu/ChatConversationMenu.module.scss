@@ -162,3 +162,49 @@ $sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 
     animation: none;
   }
 }
+
+// OV-354, 354w: the switch sits at the item's right; its line wraps under the label.
+.switchItem {
+  position: relative;
+  padding-right: 58px;
+}
+
+.switch {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--muted);
+  transition: background 0.15s ease;
+
+  span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: transform 0.15s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    span {
+      transition: none;
+    }
+  }
+}
+
+.switchOn {
+  background: var(--action);
+  box-shadow: none;
+
+  span {
+    background: var(--on-action);
+    transform: translateX(14px);
+  }
+}

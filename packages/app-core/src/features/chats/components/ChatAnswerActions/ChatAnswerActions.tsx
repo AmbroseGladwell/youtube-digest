@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { OverviewId } from "@overview/domain";
 import { copyText } from "../../../reader/util/handOffFollowUp.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -10,11 +11,13 @@ export interface ChatAnswerActionsProps {
   answer: string;
   latest: boolean;
   onSaid: (text: string, done: boolean) => void;
+  // OV-354: the answer's Sources menu, beside Copy.
+  sources?: ReactNode;
 }
 
 // Design 324x, 324ae, 324af: Copy under each answer. The latest answer's always shows; an earlier
 // one's on hover, focus or tap, in a slot kept so nothing moves.
-export function ChatAnswerActions({ overviewId, answer, latest, onSaid }: ChatAnswerActionsProps) {
+export function ChatAnswerActions({ overviewId, answer, latest, onSaid, sources }: ChatAnswerActionsProps) {
   const analytics = useAnalytics();
 
   const copy = () => {
@@ -27,6 +30,7 @@ export function ChatAnswerActions({ overviewId, answer, latest, onSaid }: ChatAn
       <button type="button" className={styles.copy} aria-label="Copy answer" onClick={copy} data-testid={chatAnswerActionsTestIds.copy}>
         <StrokeIcon name="copy" size={14} />
       </button>
+      {sources}
     </div>
   );
 }

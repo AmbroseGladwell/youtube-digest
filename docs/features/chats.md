@@ -623,18 +623,20 @@ OV-310's plumbing, ahead of the panel the Design round draws:
   overview syncs (OV-321).
 - **Where a tapped question goes:** `Settings.questionsAnsweredHere`, answered here by default
   (`follow-up-questions.md`, "Answered here").
-- **Another overview cited** (OV-355) shows as a link pill under the answer,
-  `ChatOtherOverviewCitation`: the title it had when cited and, for an item, its place ("Key point
-  2"), opening that overview. Once the overview is gone from the library it reads "an overview you
-  deleted" and isn't a link. It borrows the overview pill's look until OV-354's design round, which
-  also adds the "@" picker and the list of what went in.
+- **Another overview cited** (OV-355) is a chip under the answer, `ChatOtherOverviewCitation`: the
+  title it had when cited and, for an item or a minute, its place ("· Key point 2", "· 3:21"),
+  opening that overview. Once the overview is gone from the library it reads "an overview you
+  deleted" and isn't a link. Since OV-354 it is the shared chip ("Inside an overview's chat").
 - **Events**, `reader.chat.*`: opened (from a question, typed, or the menu), closed, asked (from
   a question or typed, new conversation or not), answered (in the source, citations of each
   kind), answerFailed, stopped, waited (which wait), citationFollowed (to what, another overview
   included; for an overview, the part and, unless it changed since, the item's place, never its
   text), answerCopied, continuedIn
-  (assistant, filled in or copied, connected), conversationOpened and conversationDeleted. Never
-  the question or the answer.
+  (assistant, filled in or copied, connected), conversationOpened and conversationDeleted. Since
+  OV-354: asked also carries how many overviews and projects it newly pinned and set aside, and
+  whether Search my library was on; sourcesAdded (how many pinned and found, from the stream's
+  `sources`), sourcePinned (overview or project), sourceRemoved (one, or all), searchLibrarySwitched
+  and sourcesMenuOpened (how many sources). Never the question, the answer or a title.
 
 ### Beside the note (design 310a, 310d–310p)
 
@@ -705,8 +707,8 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
   names the overview and the conversation for the assistant to read with `get_chat`; otherwise it
   carries the note and the conversation, filled in or copied. Its second line says which, or "Sends
   the finished answers" while a later answer is written. With no assistant chosen it reads
-  "Continue in…" and opens OV-266's menu as "Continue in" in its place. ⋯ hides while it would hold
-  nothing: a lone conversation before its first answer. After a hand-off, focus returns to ⋯ and
+  "Continue in…" and opens OV-266's menu as "Continue in" in its place. Since OV-354 ⋯ also holds
+  Search my library, so it always shows in a conversation. After a hand-off, focus returns to ⋯ and
   the toast above the field says what happened.
 - **An overview's conversations** (design 310q–310u) sit behind the header's ⋯, and the note's
   "3 conversations about this video" opens them: newest first, the open one tinted, New
@@ -736,6 +738,42 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
 - **Questions to ask next** sit above the field in an empty conversation: the set of three, with
   Different questions (`chatSuggestions`). They go once the first question is sent, as it is
   being answered and for the rest of that conversation (OV-323), and while the reader types.
+
+### Inside an overview's chat (OV-354, pages 1, 2 and 5)
+
+From the hand-off's pages, built for the panel beside the note and the phone sheet:
+
+- **The "@" picker** (`ChatComposer`) opens from the "@" at the field's left or by typing "@" at the
+  start of a word (`atQueryOf`). The field is its combobox: arrow keys move, Enter pins, Escape
+  closes, and a polite line announces how many projects and overviews it shows. Empty, it lists the
+  projects with their counts, then the four overviews saved most recently; typed words filter titles
+  and project names, every word matching and shown in bold, the first eight with "N more · Keep
+  typing to narrow it down." (`sourcePickerOptions`). Titles only, no search by meaning. Never the
+  chat's own overview, nor anything already added. At 20 it says so and pins nothing more.
+- **The row above the field** is everything the next question sends besides its words: what was just
+  pinned, then what the conversation already added, pinned or found (`conversationSources`, from
+  each reader message's `sources` less its `setAside`). One row that never wraps: two quiet chips,
+  then "+N", whose menu removes any of them or clears them all. A chip's × ("Remove source · Not
+  used for your next question") keeps focus in the field; removing a pin just unpins it, removing a
+  conversation's source sends it as `setAside` with the next question. Pinning it again brings it
+  back. One deleted since is muted.
+- **What a question drew on**: "Pinned" above the question, right-aligned, and "Found for you" below
+  it, left-aligned, both from the stream's `sources` while it is answered and from the stored
+  message after (`ChatDrewOn`). Their chips open the overview and have no ×: a sent question keeps
+  its sources. Nothing found means no row, never an empty one.
+- **Search my library** is a switch in ⋯ (so ⋯ always shows in a conversation): "On: up to 3 close
+  overviews are read with each question", "Off: only what you pin with "@" is read". It goes as
+  `searchLibrary` with each question, and a conversation reads its last question's
+  `searchedLibrary`, so the choice is the conversation's on every device; a new one starts on.
+- **One chip for every reference** (`ChatSourceChip`): 28px, a 1.5px outline, a mini thumbnail when
+  the overview has one, the title cut with an ellipsis, then its place ("· Key point 6", "· 3:21")
+  and "+n". The note's own parts (`ChatOverviewCitation`) and other overviews use it; the video's
+  time pills keep their fill at the same height. The row above the field uses its quiet form.
+- **Answers in sections** (`ChatAnswerSectionsView`): the intro, then each section's heading,
+  paragraphs, numbered and bulleted lists, and its sources grouped by relation ("Supports"), then
+  "Takeaway". The intro streams; each section shows as it lands, its sources once the answer
+  settles. A sectioned answer has no citation row under it: "Sources N" beside Copy opens every
+  source it cites, the overview's own first, N counted by code.
 
 ## Over MCP
 
