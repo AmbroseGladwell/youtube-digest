@@ -1,8 +1,11 @@
-import { overviewMarkdown, type ChatSource, type Overview, type Project } from "@overview/domain";
+import { formatClock, overviewMarkdown, type ChatSource, type OtherOverviewCitation, type Overview, type Project } from "@overview/domain";
+import type { Passage } from "./transcriptPassages.js";
 
 export interface SourcesTurn {
   sources: readonly ChatSource[];
   setAside: readonly string[];
+  // Minutes of their transcripts that matched the question's words (OV-352).
+  minutes?: ReadonlyArray<{ overviewId: string; passages: readonly Passage[] }>;
 }
 
 export interface LabelledSource {
@@ -13,6 +16,8 @@ export interface LabelledSource {
 export interface OtherSourcesInPrompt {
   blocks: Array<string | null>;
   labels: ReadonlyMap<string, LabelledSource>;
+  // S2.p14 → the minute of S2's source it names, for code to cite.
+  minuteLabels: ReadonlyMap<string, OtherOverviewCitation>;
 }
 
 // One user message per question that added overviews or set some aside, rebuilt the same way for
@@ -25,24 +30,54 @@ export function otherSourcesInPrompt(
   projects: ReadonlyMap<string, Project>,
 ): OtherSourcesInPrompt {
   const labels = new Map<string, LabelledSource>();
+  const minuteLabels = new Map<string, OtherOverviewCitation>();
   const titles = new Map<string, string>();
   let shown = false;
-  const blocks = turns.map(({ sources, setAside }) => {
+  const blocks = turns.map(({ sources, setAside, minutes = [] }) => {
     const present = sources.flatMap((source) => {
       titles.set(source.label, source.title);
       const overview = overviews.get(source.overviewId);
       return overview === undefined ? [] : [{ source, overview }];
     });
     for (const entry of present) labels.set(entry.source.label, entry);
-    for (const label of setAside) labels.delete(label);
+    for (const label of setAside) {
+      labels.delete(label);
+      for (const key of [...minuteLabels.keys()]) if (key.startsWith(`${label}.`)) minuteLabels.delete(key);
+    }
+    const labelOf = (overviewId: string) => [...labels].reverse().find(([, entry]) => entry.source.overviewId === overviewId)?.[0];
+    const shownMinutes = minutes.flatMap(({ overviewId, passages }) => {
+      const label = labelOf(overviewId);
+      if (label === undefined || passages.length === 0) return [];
+      const { source } = labels.get(label)!;
+      for (const passage of passages) {
+        minuteLabels.set(`${label}.${passage.id}`, {
+          overviewId: source.overviewId,
+          title: source.title,
+          item: null,
+          range: { startMs: passage.startMs, endMs: passage.endMs },
+        });
+      }
+      return [{ label, title: source.title, passages }];
+    });
     const parts = [
       present.length === 0 ? null : sourcesBlock(present, projects, !shown),
+      shownMinutes.length === 0 ? null : minutesBlock(shownMinutes),
       setAside.length === 0 ? null : setAsideBlock(setAside.map((label) => `${label} (${titles.get(label) ?? "an overview"})`)),
     ].filter((part) => part !== null);
     if (present.length > 0) shown = true;
     return parts.length === 0 ? null : parts.join("\n\n");
   });
-  return { blocks, labels };
+  return { blocks, labels, minuteLabels };
+}
+
+// OV-307's keyword shape: the minutes beside their overviews, each with an id the model cites in
+// passages, which code turns into a time of that overview's source.
+function minutesBlock(shown: ReadonlyArray<{ label: string; title: string; passages: readonly Passage[] }>): string {
+  return `# Minutes of their transcripts that match the question's words
+
+Each line is a minute of the transcript of one of the reader's other overviews above, with its id (such as S2.p14). When an answer uses one, list its id in passages, even where this chat's own material has no transcript. inSource is still about this chat's own transcript alone.
+
+${shown.map(({ label, title, passages }) => `## ${label}: ${title}\n\n${passages.map((passage) => `[${label}.${passage.id} ${formatClock(passage.startMs / 1000)}] ${passage.text}`).join("\n")}`).join("\n\n")}`;
 }
 
 const listed = (items: readonly string[]): string =>
@@ -51,7 +86,7 @@ const listed = (items: readonly string[]): string =>
 const FIRST_LEAD = `# Other overviews from the reader's library
 
 The reader saved these too. They are not what this chat is about, but the reader may ask about them or how they apply here. Each is labelled S1, S2 and so on, and its ids carry the label (such as S2.kp3).
-- When an answer uses one, name it by its title in the answer, and list its ids in overviewParts. There are no transcripts for these: cite their items only.
+- When an answer uses one, name it by its title in the answer, and list its ids in overviewParts. Their transcripts aren't shown, except any minutes of them listed below: cite those in passages.
 - When two of them disagree, or one disagrees with this source, say so plainly rather than blending them.
 - When none of them answers a question about the reader's other saved overviews, say none of the overviews you were shown cover it, and cite none of them. Never say the reader's library has nothing on it: you are only shown a few.
 - inSource is still about this chat's own transcript alone.`;

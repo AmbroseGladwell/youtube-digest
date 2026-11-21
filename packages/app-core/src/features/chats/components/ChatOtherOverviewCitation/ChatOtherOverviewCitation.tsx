@@ -1,4 +1,4 @@
-import type { OtherOverviewCitation, OverviewPart } from "@overview/domain";
+import { formatTimestamp, type OtherOverviewCitation, type OverviewPart } from "@overview/domain";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
@@ -25,7 +25,8 @@ const SECTION: Record<OverviewPart, string> = {
   method: "Method",
 };
 
-const otherOverviewCitationLabel = ({ title, item }: OtherOverviewCitation): string => {
+const otherOverviewCitationLabel = ({ title, item, range }: OtherOverviewCitation): string => {
+  if (range !== undefined) return `${title} · ${formatTimestamp(range.startMs)}`;
   if (item === null) return title;
   const numbered = NUMBERED[item.part];
   return `${title} · ${numbered === undefined ? SECTION[item.part] : `${numbered} ${item.index + 1}`}`;

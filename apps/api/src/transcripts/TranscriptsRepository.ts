@@ -1,6 +1,7 @@
 import type { StoredTranscript, VideoId } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
+import { TranscriptPassagesRepository } from "./TranscriptPassagesRepository.js";
 
 const liveNoteOn = (key: string) => `select 1 from records
   where account_id = $1 and kind = 'overview' and not deleted and source_key = ${key}`;
@@ -42,6 +43,7 @@ export class TranscriptsRepository {
          on conflict (account_id, video_id) do update set body = excluded.body, stored_at = excluded.stored_at`,
         [accountId, transcript.videoId, JSON.stringify(transcript), now],
       );
+      await TranscriptPassagesRepository.index(tx, accountId, transcript.videoId, transcript);
       return "kept";
     });
   }

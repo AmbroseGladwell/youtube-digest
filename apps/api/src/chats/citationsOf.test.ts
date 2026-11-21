@@ -51,6 +51,7 @@ test("ids become times, places in the overview and message places in code, and i
       overviewCitations: 2,
       chatCitations: 1,
       otherOverviewCitations: 0,
+      minuteCitations: 0,
     },
   );
 });

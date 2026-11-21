@@ -328,6 +328,23 @@ be asked, the tab shows the failure and a *Try again* button, because a network 
 not "none was kept". Only a local miss that the server then confirms, or a miss on a
 device that is not signed in, shows *"No transcript was stored for this note"*.
 
+## A search index of the minutes (OV-352)
+
+Chat finds details in the reader's other transcripts by their words (`chats.md`, "Details from
+other transcripts"), so each account's transcripts are also kept as a full-text index:
+`transcript_passages`, one row per 60-second passage as chat cites them (`transcriptPassages`), with
+the passage's times and a `tsvector`, under a GIN index (`V0039`).
+
+- **The words stay in the transcript.** A hit is cut again from it, so the index is about 10.6 MB for
+  a 69-hour library, not a second copy of the text.
+- **It never lags.** `putIfNoted` re-indexes a transcript in its own transaction. A transcript kept
+  before the index existed is indexed on the account's next search (`backfill`).
+- **It goes with its transcript.** A foreign key into `account_transcripts` cascades, so
+  `forgetUnnoted`, deleting a note and deleting the account all take it.
+- **Ranking:** Postgres's `ts_rank` knows nothing of how rare a word is. So each question word is
+  weighted by its inverse document frequency over the account's passages, as BM25 does. That put
+  the right source in the closest 3 for 76 of 78 questions, against 75 for the harness's BM25.
+
 ## What this does not do
 
 - ~~**Chapters.**~~ Built — see `docs/features/chapters.md`. It was a new prompt

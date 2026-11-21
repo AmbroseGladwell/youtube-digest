@@ -13,7 +13,15 @@ const OverviewPartPlace = z
   })
   .strict();
 
-const OtherOverviewCitationPlace = z.object({ overviewId: OverviewId, title: z.string(), item: OverviewPartPlace.nullable() }).strict();
+const OtherOverviewCitationPlace = z
+  .object({
+    overviewId: OverviewId,
+    title: z.string(),
+    item: OverviewPartPlace.nullable(),
+    // A minute of that overview's own source, from a keyword passage it was shown (OV-352).
+    range: z.object({ startMs: z.number().int().nonnegative(), endMs: z.number().int().nonnegative() }).strict().optional(),
+  })
+  .strict();
 
 // Where an answer found what it says, worked out by code from the ids the model cited, never
 // stated by the model: a stretch of a video or episode, a paragraph of an article, a message in
@@ -34,6 +42,7 @@ export type OtherOverviewCitation = Extract<ChatCitation, { overviewId: string }
 
 export const MAX_CHAT_SOURCES = 200;
 export const MAX_CHAT_PICKS = 5;
+export const MAX_CHAT_MINUTES = 24;
 
 // A library or project chat's answer in sections, as OV-307's two-pass shape measured it: each
 // point carries the overviews it rests on, cited by code from the ids the model gave
@@ -83,6 +92,11 @@ export const ChatMessage = z.discriminatedUnion("from", [
     setAside: z.array(z.string()).max(MAX_CHAT_SOURCES).optional(),
     // A library or project chat: the overviews read whole for this question.
     picked: z.array(OverviewId).max(MAX_CHAT_PICKS).optional(),
+    // Minutes of other overviews' transcripts sent with this question, by passage id (OV-352).
+    minutes: z
+      .array(z.object({ overviewId: OverviewId, passages: z.array(z.string().regex(/^p[1-9]\d*$/)).max(MAX_CHAT_MINUTES) }))
+      .max(MAX_CHAT_MINUTES)
+      .optional(),
   }),
   // inSource is false when the source doesn't say. Another chat and the overview are never the
   // source: an answer resting only on the overview is "From the overview", read off its citations.

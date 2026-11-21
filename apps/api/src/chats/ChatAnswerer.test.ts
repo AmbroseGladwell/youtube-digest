@@ -564,6 +564,7 @@ test("a reader who stops an answer, or leaves, before it is stored gets the ques
     usage: new ChatUsageRepository(testApp.sql),
     costs: new AccountCostsRepository(testApp.sql),
     meaningSearch: null,
+    passages: null,
     clock: () => testApp.clock.now,
   });
   const { logger, lines } = recordingLogger();
@@ -822,4 +823,78 @@ test("a reply cut off at its token cap fails as one, gives the question back, an
   assert.equal(eventsOf(response.body).at(-1)?.type, "failed");
   assert.equal(await usedThisMonth(setup), 0);
   assert.equal(lines.find((line) => line.logCode === "api.chat.failed")?.["reason"], "AnswerCutOffError");
+});
+
+async function keptWithTranscript(setup: Setup, title: string, segments: Array<{ text: string; startMs: number; endMs: number }>) {
+  const stored = makeStoredTranscript({ videoId: VideoId.parse(randomUUID().slice(0, 11)), segments });
+  const overview = titled(storedOverview({ source: youTubeSource(stored.video!) }), title);
+  assert.equal((await setup.account.inject({ method: "POST", url: "/api/overviews", body: overview })).statusCode, 201);
+  assert.equal((await setup.account.inject({ method: "PUT", url: `/api/transcripts/${stored.videoId}`, body: stored })).statusCode, 204);
+  return overview;
+}
+
+const minuteOf = (index: number, text: string) => ({ text, startMs: index * 60_000, endMs: index * 60_000 + 50_000 });
+
+test("the best minutes of other transcripts go with the question, each with its neighbours, and an answer cites one as a time (OV-352)", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [answer("Take 300 milligrams an hour before bed.", ["S1.p3", "S1.p99", "p2"], [], true)], { logger });
+  const sleep = await keptWithTranscript(setup, "Sleep better", [
+    minuteOf(0, "Welcome, today it's sleep."),
+    minuteOf(1, "Recovery needs sleep."),
+    minuteOf(2, "Take 300 milligrams of ashwagandha an hour before bed."),
+    minuteOf(3, "Then keep the room cool."),
+    minuteOf(4, "That's all."),
+  ]);
+  const conversation = randomUUID();
+
+  const response = await setup.ask(conversation, "How much ashwagandha should I take?");
+
+  assert.deepEqual(eventsOf(response.body)[0], {
+    type: "sources",
+    pinned: [],
+    found: [{ label: "S1", overviewId: sleep.id, title: "Sleep better", how: "found" }],
+  });
+  const block = setup.openAi.requests[0]!.messages.at(-2)!.content;
+  assert.match(block, /# Minutes of their transcripts that match the question's words/);
+  assert.match(
+    block,
+    /## S1: Sleep better\n\n\[S1\.p2 1:00\] Recovery needs sleep\.\n\[S1\.p3 2:00\] Take 300 milligrams of ashwagandha an hour before bed\.\n\[S1\.p4 3:00\] Then keep the room cool\./,
+  );
+  assert.doesNotMatch(block, /Creatine/);
+  const done = answered(response.body);
+  assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).minutes, [
+    { overviewId: sleep.id, passages: ["p2", "p3", "p4"] },
+  ]);
+  const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  assert.deepEqual(reply.citations, [
+    { startMs: 61_000, endMs: 70_000 },
+    { overviewId: sleep.id, title: "Sleep better", item: null, range: { startMs: 120_000, endMs: 170_000 } },
+  ]);
+  const line = lines.find((each) => each.logCode === "api.chat.answered");
+  assert.equal(line?.["keywordMinutes"], 3);
+  assert.equal(line?.["minuteCitations"], 1);
+
+  answered((await setup.ask(conversation, "And when?")).body);
+  const [first, second] = setup.openAi.requests.map((request) => request.messages);
+  assert.deepEqual(second!.slice(0, first!.length), first);
+});
+
+test("the chat's own transcript and an overview set aside are never searched for minutes", async (t) => {
+  const setup = await setUp(t, [answer("Three to five grams.")]);
+  const other = await keptWithTranscript(setup, "Creatine again", [minuteOf(0, "Creatine at three to five grams a day.")]);
+  const conversation = randomUUID();
+  answered((await setup.ask(conversation, "Creatine grams?", setup.overviewId, { pins: { overviews: [other.id] } })).body);
+
+  answered((await setup.ask(conversation, "Creatine grams again?", setup.overviewId, { setAside: [other.id] })).body);
+
+  const [first, second] = setup.openAi.requests.map((request) => request.messages);
+  assert.match(first!.at(-2)!.content, /\[S1\.p1 0:00\] Creatine at three to five grams a day\./);
+  assert.doesNotMatch(first!.at(-2)!.content, /Take three to five grams a day\./);
+  assert.doesNotMatch(
+    second!
+      .slice(first!.length)
+      .map((message) => message.content)
+      .join("\n"),
+    /# Minutes of their transcripts/,
+  );
 });

@@ -106,3 +106,14 @@ test("a library or project answer carries its sections, each point citing overvi
   assert.ok(!Chat.safeParse(chat([question, { ...sectioned, stats: { overviews: -1 } }])).success);
   assert.ok(!Chat.safeParse(chat([{ ...question, picked: Array.from({ length: 6 }, () => OVERVIEW) }, answer])).success);
 });
+
+test("another overview can be cited at a minute of its source, and a question keeps the minutes it sent (OV-352)", () => {
+  const range = { startMs: 61_000, endMs: 120_000 };
+  assert.ok(Chat.safeParse(chat([question, { ...answer, citations: [{ overviewId: OTHER, title: "T", item: null, range }] }])).success);
+  assert.ok(
+    !Chat.safeParse(chat([question, { ...answer, citations: [{ overviewId: OTHER, title: "T", item: null, range: { startMs: 1 } }] }]))
+      .success,
+  );
+  assert.ok(Chat.safeParse(chat([{ ...question, minutes: [{ overviewId: OTHER, passages: ["p13", "p14", "p15"] }] }, answer])).success);
+  assert.ok(!Chat.safeParse(chat([{ ...question, minutes: [{ overviewId: OTHER, passages: ["14"] }] }, answer])).success);
+});

@@ -123,3 +123,17 @@ test("an answer citing another overview names it by title and says it came from 
   assert.match(markdown, /Answered from the reader's other overviews, not from what the video says\./);
   assert.doesNotMatch(markdown, /doesn't cover this/);
 });
+
+test("a minute of another overview's source is named by its times (OV-352)", () => {
+  const overview = makeOverview();
+  const other = makeOverview();
+  const markdown = chatMarkdown(
+    answeredWith(
+      overview.id,
+      [{ overviewId: other.id, title: "Eat more plants", item: null, range: { startMs: 201_000, endMs: 260_000 } }],
+      false,
+    ),
+    overview,
+  );
+  assert.match(markdown, /Cites: 3:21–4:20 of the reader's overview "Eat more plants"/);
+});

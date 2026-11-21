@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { MAX_CHAT_PICKS, overviewMarkdown, type Overview, type Project } from "@overview/domain";
+import { formatClock, MAX_CHAT_PICKS, overviewMarkdown, type Overview, type Project } from "@overview/domain";
+import type { Passage } from "./transcriptPassages.js";
 import type { PromptMessage, ReplyShape } from "./streamChatCompletion.js";
 
 // About 20,000 tokens, counted in characters by code: below it the overviews go whole and one pass
@@ -137,6 +138,18 @@ ${[...labels].map(([label, overview]) => briefEntry(label, overview)).join("\n\n
 export const pickPrompt = (question: string): PromptMessage => ({
   role: "user",
   content: `Choose the overviews whose full notes you need to answer this question: ${question}`,
+});
+
+// A large project's keyword minutes (OV-352): each a minute of a member's transcript with an id,
+// such as O3.p14, that a point lists in its sources.
+export const minutesBlock = (minutes: ReadonlyArray<readonly [string, Overview, readonly Passage[]]>): PromptMessage => ({
+  role: "user",
+  content: `Minutes of their transcripts that match the question's words. Each has an id (such as O3.p14); a point that rests on one lists it in its sources.\n\n${minutes
+    .map(
+      ([label, overview, passages]) =>
+        `## [${label}] ${overview.source.title}\n\n${passages.map((passage) => `[${label}.${passage.id} ${formatClock(passage.startMs / 1000)}] ${passage.text}`).join("\n")}`,
+    )
+    .join("\n\n")}`,
 });
 
 export const pickedBlock = (picked: ReadonlyArray<readonly [string, Overview]>): PromptMessage => ({

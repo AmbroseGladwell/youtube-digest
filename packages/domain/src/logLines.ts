@@ -289,6 +289,11 @@ export const apiLogLines = coded("api", {
       "chat provider retried",
       "The provider refused a chat question for now (`status`) and it was asked again after a wait.",
     ),
+    keywordSearchFailed: line(
+      "warn",
+      "chat keyword search failed",
+      "Searching the account's transcripts for a question's words failed (`reason`), so the answer went on without minutes from other transcripts.",
+    ),
     allowanceSpent: line(
       "info",
       "chat allowance spent",

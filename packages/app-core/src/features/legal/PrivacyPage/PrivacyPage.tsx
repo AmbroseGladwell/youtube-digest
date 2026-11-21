@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-20";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-21";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -264,6 +264,12 @@ const sections: readonly LegalSection[] = [
           it with the embeddings of your overviews to find the few closest to it, as search by meaning does; any overview or project you add
           to the question yourself goes in too. Those overviews go to OpenAI with the question, as overviews only, never their transcripts.
           The conversation keeps which overviews went in with each question, and the titles of any an answer cites.
+        </p>
+        <p>
+          To find a detail only a video's or episode's words hold, a question is also searched by its words across your own copies of your
+          other transcripts. For that we keep a search index of them, a minute at a time, without the words themselves; it is kept beside
+          your transcripts and goes when they do. The few minutes that match best, and the minute either side of each, go to OpenAI with the
+          question, and the conversation keeps which minutes went in and the times an answer cites.
         </p>
         <p>
           You can also ask a question over your whole library, or on a project's page. Our server sends OpenAI the question with every
@@ -569,7 +575,7 @@ const sections: readonly LegalSection[] = [
             "the codes 15 minutes, as hashes; the change itself with the account",
           ],
           ["Your library and settings", "until you delete the overview or the account"],
-          ["Your conversations about an overview", "until you delete the conversation, the overview or the account"],
+          ["Your conversations", "until you delete the conversation, the overview or project it belongs to, or the account"],
           ["What we learn from your overviews, and the items you removed", "with your settings, until you delete the account"],
           ["Embeddings of your overviews, for search", "until the overview changes or is deleted, or the account is"],
           [
@@ -578,6 +584,7 @@ const sections: readonly LegalSection[] = [
           ],
           ["Shared links", "until you stop them; the copy goes with the account"],
           ["Your own copy of the words behind your overviews", "while a note of yours uses the video or episode; gone with the account"],
+          ["A search index of those words, a minute at a time, without the words", "with your copy of the words, as above"],
           [
             "Where a podcast episode's words were found, with no account on it",
             "until that source stops answering; a YouTube video matched to the episode is checked again every 30 days",

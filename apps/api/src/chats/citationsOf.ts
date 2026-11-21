@@ -18,6 +18,7 @@ export interface CitedAnswer {
   overviewCitations: number;
   chatCitations: number;
   otherOverviewCitations: number;
+  minuteCitations: number;
 }
 
 // An overview an answer may cite by its label: another overview in an overview's chat (S2), or one
@@ -79,6 +80,7 @@ export function citationsOf(
   parts: readonly OverviewPartItem[],
   chatLabels: ReadonlyMap<string, Extract<ChatCitation, { chatId: string }>>,
   sources: ReadonlyMap<string, LabelledSource> = new Map(),
+  minuteLabels: ReadonlyMap<string, OtherOverviewCitation> = new Map(),
 ): CitedAnswer {
   const byId = new Map(passages.map((passage) => [passage.id, passage]));
   const cited = reply.inSource
@@ -102,12 +104,18 @@ export function citationsOf(
     reply.overviewParts.filter((id) => id.startsWith("S")),
     citable(sources),
   );
+  // A minute of another overview's source it was shown, cited as a time of that source (OV-352).
+  const minutes = [...new Set(reply.passages)].flatMap((id) => {
+    const citation = minuteLabels.get(id);
+    return citation === undefined ? [] : [citation];
+  });
   return {
-    citations: [...cited, ...overview, ...chats, ...others],
+    citations: [...cited, ...overview, ...chats, ...others, ...minutes],
     inSource: cited.length > 0,
     sourceCitations: cited.length,
     overviewCitations: overview.length,
     chatCitations: chats.length,
-    otherOverviewCitations: others.length,
+    otherOverviewCitations: others.length + minutes.length,
+    minuteCitations: minutes.length,
   };
 }

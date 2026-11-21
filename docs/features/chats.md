@@ -158,6 +158,30 @@ or taken-out one.
 - **Not yet:** these chats don't read each other, and don't carry the reader's profile. The UI is
   OV-354, and keyword minutes from transcripts are OV-352.
 
+## Details from other transcripts
+
+OV-352, step 3 of OV-307's recommendation. A detail only a transcript holds, such as an exact dose
+or a named tool, needs transcript words, so each question is also searched by its words across
+the account's other transcripts (`TranscriptPassagesRepository`, `keywordMinutes.ts`;
+`transcript-storage.md`, "A search index of the minutes").
+
+- **An overview's chat:**
+  - The 8 best minutes go with the question, never from the chat's own source or an overview set
+    aside, each with the minute either side.
+  - An overview they come from joins as a found source if it isn't in the conversation yet.
+  - The minutes follow that question's sources as their own section (`[S2.p14 3:21] …`), and each
+    question's are stored on its reader message (`minutes`), so later questions rebuild them in
+    place.
+  - The model cites one in `passages`, and code turns `S2.p14` into
+    `{ overviewId, title, item: null, range }` (chat schema 5, client 27). It is never the source,
+    so `inSource` stays about the chat's own transcript.
+- **A project page's chat, past ~20k tokens:** the 8 best minutes of the members' transcripts
+  follow the picked block (`O3.p14`). A point that rests on one is cited the same way. Whole-mode
+  and library chats send none.
+- **Search failing** never stops an answer: it goes on without minutes (`api.chat.keywordSearchFailed`).
+- `api.chat.answered` counts `keywordMinutes` and `minuteCitations`. The app's pill reads
+  "Title · 3:21" until OV-354's design round.
+
 ## Fitted to the reader
 
 Each question carries what is known about the reader, as overview generation reads it
