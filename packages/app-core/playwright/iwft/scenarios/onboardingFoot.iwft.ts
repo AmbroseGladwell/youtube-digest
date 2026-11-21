@@ -16,7 +16,9 @@ import { aboutYouSheetTestIds } from "../../../src/features/settings/components/
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const PHONE = { width: 390, height: 844 };
 const PHONE_AT_200 = { width: 195, height: 422 };
-const WIDE = { width: 1440, height: 640 };
+// Tall enough for the projects card to fit whole beside the flow (on a shorter window it scrolls
+// up at the end so its foot can be seen), short enough that the topics step still scrolls.
+const WIDE = { width: 1440, height: 720 };
 
 const reachTopics = async (launcher: Launcher, backendSimulator: BackendSimulator, { allTopics = true } = {}) => {
   backendSimulator.ourKey.isAvailable();
