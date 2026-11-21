@@ -49,7 +49,14 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
     if (wanted === library.accountId) return;
     let superseded = false;
     openLibrary(wanted).then(
-      (opened) => (superseded ? opened.close() : setLibrary(opened)),
+      (opened) => {
+        if (superseded) {
+          opened.close();
+          return;
+        }
+        for (const query of queryClient.getQueryCache().getAll()) query.reset();
+        setLibrary(opened);
+      },
       (error: unknown) => {
         if (superseded) return;
         console.error(error);
@@ -61,7 +68,7 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
     return () => {
       superseded = true;
     };
-  }, [wanted, library.accountId, openLibrary, surface, layout, build, defaultApiUrl]);
+  }, [wanted, library.accountId, openLibrary, queryClient, surface, layout, build, defaultApiUrl]);
 
   useEffect(() => {
     if (shown.current === library) return;

@@ -266,7 +266,9 @@ unfollowing does the same here when the tombstone is pulled
 
 The move on sign-in (`account-libraries.md`) takes followed playlists, their checks and
 the queue into the account's library too (`moveFollowingInto`). Where the account already
-follows a playlist, its own record is kept.
+follows a playlist, its own record is kept. Only queued videos from a playlist the
+no-account library follows are carried. Any others are dropped, because they can only have
+come from another account (OV-359).
 
 ## The From line
 

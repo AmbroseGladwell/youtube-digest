@@ -1,4 +1,4 @@
-import { CURRENT_SCHEMA_VERSIONS, VideoId, type OutboxEntry, type Overview, type RecordChange } from "@overview/domain";
+import { CURRENT_SCHEMA_VERSIONS, PlaylistId, VideoId, type OutboxEntry, type Overview, type RecordChange } from "@overview/domain";
 import { test } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import {
@@ -8,6 +8,8 @@ import {
   type BackendSimulator,
 } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
+import { makeFollowedPlaylist } from "../../../src/features/playlists/types/PlaylistFactory.testHelper.js";
+import { PSYCHOLOGY_ID, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 
@@ -90,6 +92,27 @@ test.describe("each account's library", () => {
     await launcher.homePage.verifyShowsFirstRunHero();
     await launcher.appShell.accountMenu.open();
     await menu.verifySignedInAs("Bea", SIMULATED_EMAIL);
+  });
+
+  test("a second account signing in on this device never gets the first account's playlists or queue", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.playlists.seed(psychologyPlaylist());
+    backendSimulator.playlists.seedFollowed(
+      makeFollowedPlaylist({ id: PlaylistId.parse(PSYCHOLOGY_ID), followedAt: "2026-08-01T09:00:00.000Z" }),
+    );
+    await launcher.launch({ sync: true, syncConnection: signedInAs("the-first-account") });
+    await test.expect.poll(async () => (await backendSimulator.playlists.listQueue()).length).toBe(2);
+    const menu = await launcher.appShell.accountMenu.open();
+    await menu.chooseSignOut();
+    await launcher.homePage.verifyShowsStart();
+
+    await launcher.openSignInLink("the-token-from-the-email");
+
+    await launcher.homePage.verifyShowsFirstRunHero();
+    test.expect(await backendSimulator.playlists.listFollowed()).toEqual([]);
+    test.expect(await backendSimulator.playlists.listQueue()).toEqual([]);
   });
 
   test("signing in never syncs the library being left", async ({ launcher, backendSimulator }) => {

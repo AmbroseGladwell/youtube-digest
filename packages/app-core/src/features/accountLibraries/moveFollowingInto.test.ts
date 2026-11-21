@@ -29,6 +29,24 @@ describe("moveFollowingInto", () => {
     expect(await from.captureQueueStore.listQueue()).toEqual([]);
   });
 
+  it("drops, rather than carries, a queued video from a playlist this device never followed", async () => {
+    const from = library();
+    const into = library();
+    from.followedPlaylistStore.seedFollowed(makeFollowedPlaylist());
+    await from.captureQueueStore.enqueue([
+      makeQueuedCapture({ videoId: VideoId.parse("followed") }),
+      makeQueuedCapture({
+        videoId: VideoId.parse("stray"),
+        fromPlaylist: { id: PlaylistId.parse("PLsomeoneElse"), title: "Not Followed" },
+      }),
+    ]);
+
+    await moveFollowingInto(from, into);
+
+    expect((await into.captureQueueStore.listQueue()).map((capture) => capture.videoId)).toEqual(["followed"]);
+    expect(await from.captureQueueStore.listQueue()).toEqual([]);
+  });
+
   it("keeps the account's own record of a playlist it already follows", async () => {
     const from = library();
     const into = library();

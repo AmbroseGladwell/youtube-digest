@@ -76,6 +76,16 @@ watches the connection; when the account it implies differs from the open librar
 asks the shell to open the other one, swaps it into `StoresProvider`, resets every query so
 each page reads again from the new stores, and only then closes the old database.
 
+**The cache is emptied before the new stores render, not after.** React runs a parent's
+effects after its children's, so a reset in `LibraryRuntime`'s own effect left one commit
+where the app shell had the new library's stores and the old library's cached queries. The
+playlist check on opening ran in that commit. It took the signed-out account's followed
+playlists from the cache and queued their videos into the no-account library, and the move on
+the next sign-in carried them into a different account (OV-359). So every query is reset,
+without refetching, in the same step that sets the new library. The effect's reset then
+refetches against the new stores. `accountLibraries.iwft.ts` checks that a second account
+gets none of the first one's playlists or queue.
+
 It swaps rather than remounting the app because a sign-in happens in the middle of a
 screen. The extension's code exchange ends on "You're in, Ada", local state of a page the
 connection change would otherwise throw away. The router is a module-level object either
