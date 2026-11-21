@@ -109,7 +109,7 @@ export function EnterCode(props: EnterCodeProps) {
         )
       }
     >
-      <form className={styles.form} onSubmit={connect} noValidate>
+      <form className={`${styles.form} ${codeFirst ? styles.codeFirst : ""}`} onSubmit={connect} noValidate>
         {serverShown && (
           <label className={styles.label}>
             <span className={styles.labelText}>Server address</span>

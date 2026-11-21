@@ -291,7 +291,7 @@ export class OnboardingPageObject extends PageObject {
 
   verifyAccountCard = ({ title, answers }: { title: string; answers: string[] }) =>
     this.step(`verifyAccountCard ${title}`, async () => {
-      const saved = this.get(onboardingAccountTestIds.root).getByRole("region", { name: "Saved with your account" });
+      const saved = this.get(onboardingPageTestIds.root).getByRole("region", { name: "Saved with your account" });
       await expect(saved.getByTestId(onboardingSourceCardTestIds.title)).toHaveText(title);
       if (answers.length === 0) await expect(saved.getByRole("list", { name: "Your answers" })).toHaveCount(0);
       else await expect(saved.getByRole("list", { name: "Your answers" }).getByRole("listitem")).toHaveText(answers);
@@ -299,7 +299,7 @@ export class OnboardingPageObject extends PageObject {
 
   verifyAccountHasNoCard = () =>
     this.step("verifyAccountHasNoCard", () =>
-      expect(this.get(onboardingAccountTestIds.root).getByRole("region", { name: "Saved with your account" })).toHaveCount(0),
+      expect(this.get(onboardingPageTestIds.root).getByRole("region", { name: "Saved with your account" })).toHaveCount(0),
     );
 
   createAccount = ({ firstName, email, code }: { firstName: string; email: string; code: string }) =>

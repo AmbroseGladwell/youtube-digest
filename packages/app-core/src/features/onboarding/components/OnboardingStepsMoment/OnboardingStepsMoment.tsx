@@ -4,6 +4,7 @@ import { ABOUT_YOU_SECTION_COPY } from "../../../settings/util/aboutYouCopy.js";
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingStepsMoment.module.scss";
 import { onboardingStepsMomentTestIds } from "./OnboardingStepsMomentTestIds.js";
+import { onboardingPageTestIds } from "../../OnboardingPage/OnboardingPageTestIds.js";
 
 const HEADING = "Steps that fit your life.";
 const leadFor = (noun: OnboardingStepsMomentProps["noun"]): string =>
@@ -31,9 +32,11 @@ const ADD_CONTEXT = "Add context about you";
 export interface OnboardingStepsMomentProps {
   noun: "video" | "article" | "episode" | "recipe";
   onAddContext: () => void;
+  // Design 327d: Skip sits beside the button on a moment, not in the stepper.
+  onSkip: () => void;
 }
 
-export function OnboardingStepsMoment({ noun, onAddContext }: OnboardingStepsMomentProps) {
+export function OnboardingStepsMoment({ noun, onAddContext, onSkip }: OnboardingStepsMomentProps) {
   return (
     <div className={styles.root} data-testid={onboardingStepsMomentTestIds.root}>
       <div className={styles.intro}>
@@ -95,6 +98,9 @@ export function OnboardingStepsMoment({ noun, onAddContext }: OnboardingStepsMom
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onAddContext} data-testid={onboardingStepsMomentTestIds.addContext}>
           {ADD_CONTEXT}
+        </button>
+        <button type="button" className={styles.quiet} onClick={onSkip} data-testid={onboardingPageTestIds.skip}>
+          Skip
         </button>
       </div>
     </div>

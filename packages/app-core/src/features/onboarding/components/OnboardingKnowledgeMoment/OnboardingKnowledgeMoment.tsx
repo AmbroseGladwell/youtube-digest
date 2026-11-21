@@ -3,6 +3,7 @@ import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/S
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingKnowledgeMoment.module.scss";
 import { onboardingKnowledgeMomentTestIds } from "./OnboardingKnowledgeMomentTestIds.js";
+import { onboardingPageTestIds } from "../../OnboardingPage/OnboardingPageTestIds.js";
 
 const HEADING = "Your own AI knowledge base.";
 const LEAD =
@@ -26,9 +27,11 @@ const CONTINUE = "Continue";
 
 export interface OnboardingKnowledgeMomentProps {
   onContinue: () => void;
+  // Design 327d: Skip sits beside the button on a moment, not in the stepper.
+  onSkip: () => void;
 }
 
-export function OnboardingKnowledgeMoment({ onContinue }: OnboardingKnowledgeMomentProps) {
+export function OnboardingKnowledgeMoment({ onContinue, onSkip }: OnboardingKnowledgeMomentProps) {
   const isPanel = useIsPanel();
   return (
     <div className={styles.root} data-testid={onboardingKnowledgeMomentTestIds.root}>
@@ -83,6 +86,9 @@ export function OnboardingKnowledgeMoment({ onContinue }: OnboardingKnowledgeMom
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onContinue} data-testid={onboardingKnowledgeMomentTestIds.next}>
           {CONTINUE}
+        </button>
+        <button type="button" className={styles.quiet} onClick={onSkip} data-testid={onboardingPageTestIds.skip}>
+          Skip
         </button>
       </div>
     </div>

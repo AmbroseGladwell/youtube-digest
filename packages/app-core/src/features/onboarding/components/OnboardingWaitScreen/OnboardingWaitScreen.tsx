@@ -85,7 +85,7 @@ export function OnboardingWaitScreen({
   const card =
     found === null || kind === null ? null : (
       <div className={styles.card}>
-        <OnboardingSourceCard kind={kind} found={found} size="compact" />
+        <OnboardingSourceCard kind={kind} found={found} size="row" />
         {phase === "ready" && (
           <>
             {(topics.length > 0 || personal) && (

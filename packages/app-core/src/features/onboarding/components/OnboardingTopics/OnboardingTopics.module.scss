@@ -95,11 +95,13 @@
   font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--muted);
+}
 
-  strong {
-    font-weight: 600;
-    color: var(--ink);
-  }
+// Design 327e: beside Continue.
+.picked {
+  align-self: center;
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 .primary {
@@ -107,7 +109,12 @@
 }
 
 .seeAll {
-  @include onboarding.quiet;
-  align-self: center;
-  text-decoration: underline;
+  @include onboarding.toggle-chip;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--surface);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--surface);
+  }
 }

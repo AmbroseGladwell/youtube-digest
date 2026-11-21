@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import type { PlaylistLookup } from "@overview/domain";
 import type { OnboardingFound, OnboardingLinkKind, OnboardingSource } from "../../onboardingSources.js";
@@ -70,29 +71,7 @@ export function OnboardingYourLink({
         )}
         {playlist !== null && <span className={styles.startWith}>We'll start with the first video</span>}
         {found !== null && kind !== null ? (
-          <>
-            <OnboardingSourceCard kind={kind} found={found} size={playlist !== null ? "small" : isPanel ? "compact" : "large"} />
-            {stop !== null ? (
-              <p className={styles.stop} role="alert" data-testid={onboardingYourLinkTestIds.stop}>
-                {stop}
-              </p>
-            ) : (
-              <>
-                {words?.notice != null && (
-                  <p className={styles.notice} data-testid={onboardingYourLinkTestIds.notice}>
-                    {words.notice}
-                  </p>
-                )}
-                {words !== null && <OnboardingPills pills={words.pills} minutes={minutes} />}
-                {words !== null && (
-                  <p className={styles.inside} data-testid={onboardingYourLinkTestIds.inside}>
-                    {words.inside}
-                  </p>
-                )}
-                <p className={styles.saved}>Saved to your library, ready for you and your AI.</p>
-              </>
-            )}
-          </>
+          <OnboardingSourceCard kind={kind} found={found} size={playlist !== null ? "small" : isPanel ? "compact" : "row"} />
         ) : pending !== null ? (
           <div className={styles.pending}>
             <span className={styles.domain}>{pending}</span>
@@ -140,6 +119,34 @@ export function OnboardingYourLink({
           </ul>
         )}
       </div>
+
+      {found !== null && kind !== null && words !== null && (
+        <>
+          {stop !== null ? (
+            <p className={styles.stop} role="alert" data-testid={onboardingYourLinkTestIds.stop}>
+              {stop}
+            </p>
+          ) : (
+            <>
+              {words.notice != null && (
+                <p className={styles.notice} data-testid={onboardingYourLinkTestIds.notice}>
+                  {words.notice}
+                </p>
+              )}
+              <OnboardingPills pills={words.pills} minutes={minutes} />
+              <div className={styles.details}>
+                <p className={styles.inside} data-testid={onboardingYourLinkTestIds.inside}>
+                  {words.inside}
+                </p>
+                <p className={styles.saved}>
+                  <StrokeIcon name="folder" size={14} />
+                  Saved to your library, ready for you and your AI.
+                </p>
+              </div>
+            </>
+          )}
+        </>
+      )}
 
       <div className={styles.foot}>
         {stop === null && (

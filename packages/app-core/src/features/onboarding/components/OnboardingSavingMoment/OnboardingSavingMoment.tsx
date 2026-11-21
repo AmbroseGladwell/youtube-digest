@@ -3,6 +3,7 @@ import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/S
 import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingSavingMoment.module.scss";
 import { onboardingSavingMomentTestIds } from "./OnboardingSavingMomentTestIds.js";
+import { onboardingPageTestIds } from "../../OnboardingPage/OnboardingPageTestIds.js";
 
 const HEADING = "Save the content you want to come back to.";
 const LIBRARY = "Your library";
@@ -10,7 +11,7 @@ const LIBRARY_NOTE = "4 kinds, one place";
 const KINDS: readonly { icon: StrokeIconName; name: string; from: string; becomes: string }[] = [
   { icon: "play", name: "Videos", from: "YouTube", becomes: "The good bits, and the part worth watching." },
   { icon: "fileText", name: "Articles", from: "Any web page", becomes: "The point in 2 minutes." },
-  { icon: "headphones", name: "Podcasts", from: "Apple Podcasts, Spotify", becomes: "The ideas from any episode." },
+  { icon: "mic", name: "Podcasts", from: "Apple Podcasts, Spotify", becomes: "The ideas from any episode." },
   { icon: "chefHat", name: "Recipes", from: "Any recipe site", becomes: "Made easy to follow with cooking mode." },
 ];
 const EXTENSION_TITLE = "Add content in 1 click with the extension";
@@ -21,9 +22,11 @@ const CONTINUE = "Continue";
 
 export interface OnboardingSavingMomentProps {
   onContinue: () => void;
+  // Design 327d: Skip sits beside the button on a moment, not in the stepper.
+  onSkip: () => void;
 }
 
-export function OnboardingSavingMoment({ onContinue }: OnboardingSavingMomentProps) {
+export function OnboardingSavingMoment({ onContinue, onSkip }: OnboardingSavingMomentProps) {
   return (
     <div className={styles.root} data-testid={onboardingSavingMomentTestIds.root}>
       <OnboardingHeading>{HEADING}</OnboardingHeading>
@@ -75,6 +78,9 @@ export function OnboardingSavingMoment({ onContinue }: OnboardingSavingMomentPro
       <div className={styles.foot}>
         <button type="button" className={styles.primary} onClick={onContinue} data-testid={onboardingSavingMomentTestIds.next}>
           {CONTINUE}
+        </button>
+        <button type="button" className={styles.quiet} onClick={onSkip} data-testid={onboardingPageTestIds.skip}>
+          Skip
         </button>
       </div>
     </div>

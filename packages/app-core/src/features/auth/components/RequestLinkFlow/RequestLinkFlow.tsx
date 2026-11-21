@@ -305,6 +305,7 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
           initialEmail={lastEmail}
           askForServer={askForServer}
           initialServerUrl={knownServer}
+          onboarding
           note={creating ? NO_CARD : null}
           {...(creating ? { aboveSubmit: <AccountTermsLine /> } : {})}
           switchLink={

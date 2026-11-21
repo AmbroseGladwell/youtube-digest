@@ -54,7 +54,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
   const popular = [...POPULAR, ...STARTER_TOPICS.map((topic) => topic.name)]
     .filter((name, index, all) => !isSuggested(name) && all.findIndex((other) => sameTopicName(other, name)) === index)
     .slice(0, POPULAR_SHOWN);
-  const typed = chosen.filter((name) => !isStarter(name));
+  const typed = chosen.filter((name) => !isStarter(name) && !isSuggested(name));
   const has = (name: string) => chosen.some((held) => sameTopicName(held, name));
   const toggle = (name: string) =>
     setChosen((current) => (has(name) ? current.filter((held) => !sameTopicName(held, name)) : [...current, name]));
@@ -152,6 +152,7 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
             ))}
             <button type="button" className={styles.seeAll} onClick={() => setAllShown(true)} data-testid={onboardingTopicsTestIds.seeAll}>
               See all {STARTER_TOPICS.length} topics
+              <StrokeIcon name="chevronDown" size={14} />
             </button>
           </div>
         </div>
@@ -159,13 +160,11 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
 
       {below}
 
-      <p className={styles.count} aria-live="polite" data-testid={onboardingTopicsTestIds.count}>
-        {chosen.length > 0 ? (
-          <strong>{chosen.length} picked</strong>
-        ) : (
-          "No topics yet? That's fine. New overviews will wait in Unsorted until you sort them."
-        )}
-      </p>
+      {chosen.length === 0 && (
+        <p className={styles.count} aria-live="polite" data-testid={onboardingTopicsTestIds.count}>
+          No topics yet? That's fine. New overviews will wait in Unsorted until you sort them.
+        </p>
+      )}
 
       <div className={styles.foot}>
         <button
@@ -177,6 +176,11 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
         >
           Continue
         </button>
+        {chosen.length > 0 && (
+          <span className={styles.picked} aria-live="polite" data-testid={onboardingTopicsTestIds.count}>
+            {chosen.length} picked
+          </span>
+        )}
       </div>
     </div>
   );

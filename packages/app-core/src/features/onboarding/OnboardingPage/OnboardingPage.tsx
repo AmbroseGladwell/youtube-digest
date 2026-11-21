@@ -44,6 +44,7 @@ import { useIsPhone } from "../../../util/useIsPhone.js";
 import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { OnboardingAboutYou } from "../components/OnboardingAboutYou/OnboardingAboutYou.js";
 import { OnboardingAccount } from "../components/OnboardingAccount/OnboardingAccount.js";
+import { OnboardingAccountSide } from "../components/OnboardingAccountSide/OnboardingAccountSide.js";
 import { OnboardingAnalytics } from "../components/OnboardingAnalytics/OnboardingAnalytics.js";
 import { ONBOARDING_HEADING_ID } from "../components/OnboardingHeading/OnboardingHeading.js";
 import { OnboardingKnowledgeMoment } from "../components/OnboardingKnowledgeMoment/OnboardingKnowledgeMoment.js";
@@ -69,7 +70,8 @@ import { onboardingKindOf } from "../util/onboardingKindOf.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
-const SKIPPABLE: readonly OnboardingStep[] = ["saving", "topics", "knowledgeBase", "stepsForYou", "aboutYou"];
+// The questions offer Skip beside the stepper; a moment offers it beside its button (327d, 327e).
+const SKIPPABLE: readonly OnboardingStep[] = ["topics", "aboutYou"];
 // Six segments: Start, analytics, your link, topics, About you and the account. A moment shows the
 // segment of the screen before it, and the wait has none (327a).
 const SEGMENTS = 6;
@@ -356,22 +358,46 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     retry();
   };
 
-  // Their card with its pills and answers, as the account and About you show it (327i, 327l).
-  const savedCard = (answers: boolean): ReactNode =>
+  // Their card with their answers: on About you the count of topics, what's inside and where it's
+  // kept (327i); on the account each topic and the pills (327l).
+  const savedCard = (where: "aboutYou" | "account"): ReactNode =>
     found === null || kind === null ? null : (
       <>
-        <OnboardingSourceCard kind={kind} found={found} size="compact" />
-        {answers && (progress.topics.length > 0 || personal) && (
+        <OnboardingSourceCard kind={kind} found={found} size="row" />
+        {(progress.topics.length > 0 || personal) && (
           <ul className={styles.answers} aria-label="Your answers">
-            {progress.topics.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-            {personal && <li className={styles.personal}>Personalised</li>}
+            {where === "account" ? (
+              progress.topics.map((name) => <li key={name}>{name}</li>)
+            ) : progress.topics.length > 0 ? (
+              <li>{progress.topics.length === 1 ? "1 topic" : `${progress.topics.length} topics`}</li>
+            ) : null}
+            {personal && (
+              <li className={styles.personal}>
+                <StrokeIcon name="check" size={11} />
+                Personalised
+              </li>
+            )}
           </ul>
         )}
-        <OnboardingPills pills={kind.yourLink(found, null).pills} minutes={expectedOverviewMinutes(found.source)} />
+        {where === "account" ? (
+          <OnboardingPills pills={kind.yourLink(found, null).pills} minutes={expectedOverviewMinutes(found.source)} />
+        ) : (
+          <div className={styles.paneDetails}>
+            <p className={styles.paneInside}>{kind.yourLink(found, null).inside}</p>
+            <p className={styles.paneSaved}>
+              <StrokeIcon name="folder" size={14} />
+              Saved to your library, ready for you and your AI.
+            </p>
+          </div>
+        )}
       </>
     );
+
+  const skip = () => {
+    analytics.onboarding.step.skipped({ ...tagged, step });
+    if (step === "stepsForYou" || step === "aboutYou") go("account");
+    else next();
+  };
 
   const screen = (() => {
     switch (step) {
@@ -421,7 +447,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           />
         );
       case "saving":
-        return <OnboardingSavingMoment onContinue={next} />;
+        return <OnboardingSavingMoment onContinue={next} onSkip={skip} />;
       case "topics":
         return (
           <OnboardingTopics
@@ -433,12 +459,13 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           />
         );
       case "knowledgeBase":
-        return <OnboardingKnowledgeMoment onContinue={next} />;
+        return <OnboardingKnowledgeMoment onContinue={next} onSkip={skip} />;
       case "stepsForYou":
         return (
           <OnboardingStepsMoment
             noun={noun === "episode" || noun === "article" || noun === "recipe" ? noun : "video"}
             onAddContext={next}
+            onSkip={skip}
           />
         );
       case "aboutYou":
@@ -453,7 +480,8 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       case "account":
         return (
           <OnboardingAccount
-            saved={savedCard(true)}
+            saved={savedCard("account")}
+            sideBeside={wide}
             form={
               <RequestLinkFlow
                 key={intent}
@@ -493,11 +521,12 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const aside = (() => {
     if (!wide) return null;
     if (step === "topics") return <OnboardingProjectsCard />;
+    if (step === "account") return <OnboardingAccountSide saved={savedCard("account")} />;
     if (step === "aboutYou" && found !== null) {
       return (
         <section className={styles.paneCard} aria-label="Your overview, once you're in">
           <span className={styles.paneLabel}>Your overview, once you’re in</span>
-          {savedCard(true)}
+          {savedCard("aboutYou")}
         </section>
       );
     }
@@ -510,11 +539,6 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     const before = steps[indexOf(step) - 1];
     if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
     else update({ step: before });
-  };
-  const skip = () => {
-    analytics.onboarding.step.skipped({ ...tagged, step });
-    if (step === "stepsForYou" || step === "aboutYou") go("account");
-    else next();
   };
 
   return (
@@ -541,7 +565,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
                 <div className={styles.nav}>
                   {!signedIn && (
                     <button type="button" className={styles.back} aria-label="Back" onClick={back} data-testid={onboardingPageTestIds.back}>
-                      <StrokeIcon name="arrowLeft" size={18} />
+                      <StrokeIcon name="chevronLeft" size={18} />
                     </button>
                   )}
                   <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
