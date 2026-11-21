@@ -110,9 +110,13 @@ test("a document with no copy in it is a link that goes nowhere, not a broken pa
   await launcher.sharedOverviewPage.verifySaysLinkGoesNowhere();
 });
 
-// A visitor who saves the copy is onboarded around it: the questions, then the account and
-// the plan, and the copy is their first overview (docs/features/onboarding.md, "From a shared page").
-test("saving starts onboarding around the copy, which is the reveal once the account is made", async ({ launcher, backendSimulator }) => {
+// A visitor who saves the copy is onboarded around it: the moments and questions, then the
+// account, and the copy is their first overview, opened as soon as it's in the account
+// (docs/features/onboarding.md, "From a shared page").
+test("saving starts onboarding around the copy, which opens once the account is made, with no wait", async ({
+  launcher,
+  backendSimulator,
+}) => {
   const overview = shared();
   await launcher.launch({ sync: true, defaultApiUrl: SERVER });
   await launcher.inlineSharePayload(sharedPayload(overview));
@@ -122,33 +126,19 @@ test("saving starts onboarding around the copy, which is the reveal once the acc
   await page.clickSave();
 
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.verifyOnScreen("topics", "What are you curious about?");
+  await onboarding.verifyOnScreen("saving", "Save the content you want to come back to.");
+  await onboarding.continueFromSaving();
+  await onboarding.verifyOnScreen("topics");
   await onboarding.pickTopics("Food");
   await onboarding.continueFromTopics();
-  await onboarding.verifyOnScreen("library");
-  await onboarding.skip();
-  await onboarding.verifyOnScreen("aboutYou");
+  await onboarding.verifyOnScreen("knowledgeBase");
   await onboarding.skip();
   await onboarding.verifyOnScreen("stepsForYou");
   await onboarding.skip();
-  await onboarding.verifyOnScreen("voice");
-  await onboarding.skip();
-  await onboarding.verifyOnScreen("askYourAi");
-  await onboarding.skip();
-  await onboarding.verifyOnScreen("moreSources");
-  await onboarding.skip();
 
-  await onboarding.verifyOnScreen("account", "Create your free account");
-  await onboarding.verifyTeaser({ title: TITLE, premise: overview.inOneLine });
+  await onboarding.verifyOnScreen("account", "Create your free account to get your overview.");
   await onboarding.verifyPageHasNoText("Worth it for the grid-load animations.");
-  const createAccount = await onboarding.continueWithEmail();
-  await createAccount.typeFirstName("Ada");
-  await createAccount.requestLink(SIMULATED_EMAIL);
-  await createAccount.chooseCodeFromEmail();
-  await createAccount.enterCode("ABCD-EFGH");
-
-  await onboarding.verifyOnScreen("plan", "Choose your plan");
-  await onboarding.continueWithFree();
+  await onboarding.createAccount({ firstName: "Ada", email: SIMULATED_EMAIL, code: "ABCD-EFGH" });
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(TITLE);
@@ -156,9 +146,12 @@ test("saving starts onboarding around the copy, which is the reveal once the acc
   await reader.verifyHasNoReason();
   expect(backendSimulator.ourKey.generations()).toEqual([]);
   expect(backendSimulator.ourKey.reservations()).toEqual([{ overviewId: overview.id, shareToken: TOKEN }]);
+  await expect
+    .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.finished.revealed")?.props)
+    .toEqual({ way: "createAccount", from: "share" });
 });
 
-test("a visitor with an account can leave the questions, sign in, and land on the copy with no plan to pick", async ({
+test("a visitor with an account skips the questions, signs in from the account step, and lands on the copy", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -170,12 +163,8 @@ test("a visitor with an account can leave the questions, sign in, and land on th
   await page.clickSave();
 
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.verifyCanSeeOverview();
-  await onboarding.seeOverview();
-  const signIn = await onboarding.signIn();
-  await signIn.requestLink(SIMULATED_EMAIL);
-  await signIn.chooseCodeFromEmail();
-  await signIn.enterCode("ABCD-EFGH");
+  await onboarding.skipToAccount();
+  await onboarding.signIn({ email: SIMULATED_EMAIL, code: "ABCD-EFGH" });
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(TITLE);
@@ -193,7 +182,7 @@ test("a link pasted beside the copy starts onboarding with it, and one it can't 
 
   await page.pasteLinkAndMakeOverview(`https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.verifyOnScreen("video", "Is this the right video?");
+  await onboarding.verifyOnScreen("video", "Here’s what’s in the video you saved.");
 });
 
 // A reader who is already signed in has a library behind them, so the page offers the way

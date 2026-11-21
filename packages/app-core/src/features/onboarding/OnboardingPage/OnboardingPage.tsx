@@ -86,6 +86,9 @@ const SEGMENT_OF: Readonly<Record<OnboardingStep, number | null>> = {
 // A copy saved from a shared page, or a sample, is already made: nothing to check, nothing to wait for.
 const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video" && step !== "wait");
 const AFTER_THE_ANSWERS = ONBOARDING_STEPS.indexOf("account");
+// Held outside the page, which remounts while signing in, so a copy is never saved, reserved and
+// sorted twice at once.
+const SHARES_BEING_SAVED = new Set<string>();
 
 // Onboarding around the reader's first link (designs 327a–327m): read for free, shown back to
 // them, then the moments and questions that make it theirs, the account, and the wait while it's
@@ -234,20 +237,21 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   // A shared copy or sample goes into the account once there is one; a sample waits for the
   // topics picked here, since it's sorted into them.
-  const savingShare = useRef(false);
   const { refetch: refetchStored } = stored;
   const answersIn = libraryMove.answersIn === accountId;
   useEffect(() => {
-    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount || savingShare.current) return;
+    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount) return;
     if (share.sample && !answersIn) return;
-    savingShare.current = true;
+    const saving = `${accountId}:${share.token}`;
+    if (SHARES_BEING_SAVED.has(saving)) return;
+    SHARES_BEING_SAVED.add(saving);
     void (async () => {
       if ((await overviewStore.getOverview(share.snapshot.note.id)) === null) {
         await saveFromShare(share.token, share.snapshot, { sample: share.sample });
       }
       await refetchStored();
     })().finally(() => {
-      savingShare.current = false;
+      SHARES_BEING_SAVED.delete(saving);
     });
   }, [share, signedIn, openLibraryAccountId, accountId, inAccount, answersIn, overviewStore, saveFromShare, refetchStored]);
 

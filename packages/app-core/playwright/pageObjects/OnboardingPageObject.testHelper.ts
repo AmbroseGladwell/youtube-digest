@@ -1,47 +1,41 @@
 import { expect } from "@playwright/experimental-ct-react";
 import type { OnboardingStep } from "@overview/domain";
+import { authScreenTestIds } from "../../src/features/auth/components/AuthScreen/AuthScreenTestIds.js";
 import { onboardingAboutYouTestIds } from "../../src/features/onboarding/components/OnboardingAboutYou/OnboardingAboutYouTestIds.js";
 import { onboardingAccountTestIds } from "../../src/features/onboarding/components/OnboardingAccount/OnboardingAccountTestIds.js";
 import { onboardingAnalyticsTestIds } from "../../src/features/onboarding/components/OnboardingAnalytics/OnboardingAnalyticsTestIds.js";
-import { onboardingArrivingTestIds } from "../../src/features/onboarding/components/OnboardingArriving/OnboardingArrivingTestIds.js";
-import { onboardingNearlyThereTestIds } from "../../src/features/onboarding/components/OnboardingNearlyThere/OnboardingNearlyThereTestIds.js";
-import { onboardingPlanTestIds } from "../../src/features/onboarding/components/OnboardingPlan/OnboardingPlanTestIds.js";
-import { onboardingPreviewTestIds } from "../../src/features/onboarding/components/OnboardingPreview/OnboardingPreviewTestIds.js";
-import { onboardingPreviewStepsTestIds } from "../../src/features/onboarding/components/OnboardingPreviewSteps/OnboardingPreviewStepsTestIds.js";
-import { onboardingProgressBarTestIds } from "../../src/features/onboarding/components/OnboardingProgressBar/OnboardingProgressBarTestIds.js";
+import { onboardingKnowledgeMomentTestIds } from "../../src/features/onboarding/components/OnboardingKnowledgeMoment/OnboardingKnowledgeMomentTestIds.js";
+import { onboardingPillsTestIds } from "../../src/features/onboarding/components/OnboardingPills/OnboardingPillsTestIds.js";
+import { onboardingProjectsCardTestIds } from "../../src/features/onboarding/components/OnboardingProjectsCard/OnboardingProjectsCardTestIds.js";
 import { onboardingReadFailureTestIds } from "../../src/features/onboarding/components/OnboardingReadFailure/OnboardingReadFailureTestIds.js";
+import { onboardingSavingMomentTestIds } from "../../src/features/onboarding/components/OnboardingSavingMoment/OnboardingSavingMomentTestIds.js";
+import { onboardingSetupsTestIds } from "../../src/features/onboarding/components/OnboardingSetups/OnboardingSetupsTestIds.js";
 import { onboardingSourceCardTestIds } from "../../src/features/onboarding/components/OnboardingSourceCard/OnboardingSourceCardTestIds.js";
-import { onboardingTeaserTestIds } from "../../src/features/onboarding/components/OnboardingTeaser/OnboardingTeaserTestIds.js";
-import { onboardingSlideTestIds } from "../../src/features/onboarding/components/OnboardingSlide/OnboardingSlideTestIds.js";
-import { onboardingStepsForYouTestIds } from "../../src/features/onboarding/components/OnboardingStepsForYou/OnboardingStepsForYouTestIds.js";
+import { onboardingStepsMomentTestIds } from "../../src/features/onboarding/components/OnboardingStepsMoment/OnboardingStepsMomentTestIds.js";
 import { onboardingTopicsTestIds } from "../../src/features/onboarding/components/OnboardingTopics/OnboardingTopicsTestIds.js";
-import { onboardingVideoTestIds } from "../../src/features/onboarding/components/OnboardingVideo/OnboardingVideoTestIds.js";
-import { onboardingVoiceTestIds } from "../../src/features/onboarding/components/OnboardingVoice/OnboardingVoiceTestIds.js";
+import { onboardingWaitTestIds } from "../../src/features/onboarding/components/OnboardingWait/OnboardingWaitTestIds.js";
+import { onboardingYourLinkTestIds } from "../../src/features/onboarding/components/OnboardingYourLink/OnboardingYourLinkTestIds.js";
 import { onboardingPageTestIds } from "../../src/features/onboarding/OnboardingPage/OnboardingPageTestIds.js";
 import { AboutYouSentencePageObject } from "./AboutYouSentencePageObject.testHelper.js";
-import { NarrationVoicePickerPageObject } from "./NarrationVoicePickerPageObject.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
 const SCREEN_ROOT: Record<OnboardingStep, string> = {
   analytics: onboardingAnalyticsTestIds.root,
-  video: onboardingVideoTestIds.root,
+  video: onboardingYourLinkTestIds.root,
+  saving: onboardingSavingMomentTestIds.root,
   topics: onboardingTopicsTestIds.root,
-  library: onboardingSlideTestIds.root,
+  knowledgeBase: onboardingKnowledgeMomentTestIds.root,
+  stepsForYou: onboardingStepsMomentTestIds.root,
   aboutYou: onboardingAboutYouTestIds.root,
-  stepsForYou: onboardingStepsForYouTestIds.root,
-  voice: onboardingVoiceTestIds.root,
-  askYourAi: onboardingSlideTestIds.root,
-  moreSources: onboardingSlideTestIds.root,
   account: onboardingAccountTestIds.root,
-  plan: onboardingPlanTestIds.root,
+  wait: onboardingWaitTestIds.root,
 };
 
-export class OnboardingPageObject extends PageObject {
-  // The overview's progress sits above the screen on a phone and in the preview beside it on a
-  // wide screen; only one of the two is shown.
-  #progress = (testId: string) => this.get(testId).filter({ visible: true });
+const CREATE_ACCOUNT_TITLE = "Create your free account to get your overview.";
 
+export class OnboardingPageObject extends PageObject {
   verifyIsShown = (): Promise<OnboardingPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(onboardingPageTestIds.root);
@@ -51,81 +45,26 @@ export class OnboardingPageObject extends PageObject {
   verifyOnScreen = (step: OnboardingStep, heading?: string) =>
     this.step(`verifyOnScreen ${step}`, async () => {
       await this.expectToBeVisible(SCREEN_ROOT[step]);
-      if (heading !== undefined) {
-        await expect(this.page.getByRole("heading", { level: 1, name: heading })).toBeFocused();
-      }
+      if (heading === undefined) return;
+      // The account step's heading is the sign-in form's own (327l).
+      const focused = step === "account" ? this.get(authScreenTestIds.title) : this.page.getByRole("heading", { level: 1 });
+      await expect(focused).toHaveText(heading);
+      await expect(focused).toBeFocused();
     });
 
-  verifyProgressReads = (phase: string) =>
-    this.step(`verifyProgressReads ${phase}`, () => expect(this.#progress(onboardingProgressBarTestIds.phase)).toHaveText(` · ${phase}`));
+  verifyStepCountReads = (text: string) =>
+    this.step(`verifyStepCountReads ${text}`, () => expect(this.get(onboardingPageTestIds.stepCount)).toHaveText(text));
 
-  // On a wide screen the preview says it in a sentence; narrower, the line above the screen does.
-  verifyPreviewSays = (status: string) =>
-    this.step(`verifyPreviewSays ${status}`, () => expect(this.get(onboardingPreviewTestIds.status)).toHaveText(status));
+  verifyHasNoStepper = () => this.step("verifyHasNoStepper", () => this.expectToHaveCount(onboardingPageTestIds.stepper, 0));
 
-  verifyReadyLineReads = (line: string) =>
-    this.step(`verifyReadyLineReads ${line}`, () => expect(this.#progress(onboardingProgressBarTestIds.status)).toHaveText(line));
-
-  verifyHasNoProgressBar = () =>
-    this.step("verifyHasNoProgressBar", () => expect(this.get(onboardingProgressBarTestIds.root)).toHaveCount(0));
-
-  verifyWritingHasStarted = () =>
-    this.step("verifyWritingHasStarted", () => expect(this.#progress(onboardingProgressBarTestIds.root)).toBeVisible());
-
-  verifyPreviewMarksNow = (step: "source" | "topics" | "you" | null) =>
-    this.step(`verifyPreviewMarksNow ${step}`, async () => {
-      for (const row of ["source", "topics", "you"] as const) {
-        const marked = this.get(onboardingPreviewStepsTestIds.row(row));
-        if (row === step) await expect(marked).toHaveAttribute("aria-current", "step");
-        else await expect(marked).not.toHaveAttribute("aria-current");
-      }
-    });
-
-  verifyPreviewStepReads = (step: "source" | "topics" | "you", value: string) =>
-    this.step(`verifyPreviewStepReads ${step} ${value}`, () =>
-      expect(this.get(onboardingPreviewStepsTestIds.value(step))).toHaveText(value),
-    );
-
-  verifyPreviewMadeWith = (...pills: string[]) =>
-    this.step(`verifyPreviewMadeWith ${pills.join(", ")}`, () =>
-      expect(this.get(onboardingPreviewTestIds.madeWith).locator("span")).toHaveText(pills),
-    );
-
-  verifyCanSeeOverview = () =>
-    this.step("verifyCanSeeOverview", () => expect(this.#progress(onboardingProgressBarTestIds.seeOverview)).toBeVisible());
-
-  verifySaysItFailed = () =>
-    this.step("verifySaysItFailed", () =>
-      expect(
-        this.#progress(onboardingProgressBarTestIds.failed).or(
-          this.get(onboardingPreviewTestIds.status).filter({ visible: true, hasText: "Couldn't make your overview" }),
-        ),
-      ).toBeVisible(),
-    );
-
-  verifyPreviewOffersTryAgain = () =>
-    this.step("verifyPreviewOffersTryAgain", () => expect(this.get(onboardingPreviewTestIds.tryAgain)).toBeVisible());
-
-  seeOverview = () => this.step("seeOverview", () => this.#progress(onboardingProgressBarTestIds.seeOverview).click());
+  verifyOffersSkip = (offered: boolean) =>
+    this.step(`verifyOffersSkip ${offered}`, () => this.expectToHaveCount(onboardingPageTestIds.skip, offered ? 1 : 0));
 
   skip = () => this.step("skip", () => this.click(onboardingPageTestIds.skip));
 
   back = () => this.step("back", () => this.click(onboardingPageTestIds.back));
 
   allowAnalytics = () => this.step("allowAnalytics", () => this.click(onboardingAnalyticsTestIds.allow));
-
-  // A sample has no overview being made, so there's no See your overview: the way to the account
-  // is through the screens, answering analytics if it's asked and skipping the rest.
-  skipToAccount = () =>
-    this.step("skipToAccount", async () => {
-      await expect(this.get(onboardingAnalyticsTestIds.root).or(this.get(onboardingTopicsTestIds.root))).toBeVisible();
-      if (await this.get(onboardingAnalyticsTestIds.root).isVisible()) await this.declineAnalytics();
-      for (const step of ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"] as const) {
-        await this.verifyOnScreen(step);
-        await this.skip();
-      }
-      await this.verifyOnScreen("account");
-    });
 
   declineAnalytics = () => this.step("declineAnalytics", () => this.click(onboardingAnalyticsTestIds.noThanks));
 
@@ -139,16 +78,69 @@ export class OnboardingPageObject extends PageObject {
       await expect(this.get(onboardingAnalyticsTestIds.policyLink)).toHaveAttribute("target", "_blank");
     });
 
+  // From wherever the questions start (analytics if it's asked, Your link for a link, topics for a
+  // shared copy or sample), on through every screen to the account, skipping what can be skipped.
+  skipToAccount = () =>
+    this.step("skipToAccount", async () => {
+      const first = this.get(onboardingAnalyticsTestIds.root)
+        .or(this.get(onboardingYourLinkTestIds.root))
+        .or(this.get(onboardingSavingMomentTestIds.root))
+        .or(this.get(onboardingTopicsTestIds.root));
+      await expect(first).toBeVisible();
+      if (await this.get(onboardingAnalyticsTestIds.root).isVisible()) await this.declineAnalytics();
+      if (await this.get(onboardingYourLinkTestIds.root).isVisible()) await this.confirmVideo();
+      await expect(this.get(onboardingSavingMomentTestIds.root).or(this.get(onboardingTopicsTestIds.root))).toBeVisible();
+      if (await this.get(onboardingSavingMomentTestIds.root).isVisible()) await this.skip();
+      for (const step of ["topics", "knowledgeBase", "stepsForYou"] as const) {
+        await this.verifyOnScreen(step);
+        await this.skip();
+      }
+      await this.verifyOnScreen("account", CREATE_ACCOUNT_TITLE);
+    });
+
+  // Your link (327c): the reader's own link read back to them before anything is written.
+  #yourLink = (testId: string) => this.get(onboardingYourLinkTestIds.root).getByTestId(testId);
+
   verifyVideoTitle = (title: string) =>
-    this.step(`verifyVideoTitle ${title}`, () => expect(this.#confirm(onboardingSourceCardTestIds.title)).toHaveText(title));
+    this.step(`verifyVideoTitle ${title}`, () => expect(this.#yourLink(onboardingSourceCardTestIds.title)).toHaveText(title));
 
   verifyFound = ({ kicker, facts }: { kicker?: string; facts: string | RegExp }) =>
     this.step(`verifyFound ${facts}`, async () => {
-      if (kicker !== undefined) await expect(this.#confirm(onboardingSourceCardTestIds.kicker)).toHaveText(kicker);
-      await expect(this.#confirm(onboardingSourceCardTestIds.facts)).toHaveText(facts);
+      if (kicker !== undefined) await expect(this.#yourLink(onboardingSourceCardTestIds.kicker)).toHaveText(kicker);
+      await expect(this.#yourLink(onboardingSourceCardTestIds.facts)).toHaveText(facts);
     });
 
-  #confirm = (testId: string) => this.get(onboardingVideoTestIds.root).getByTestId(testId);
+  verifyYourLinkLineReads = (line: string | RegExp) =>
+    this.step(`verifyYourLinkLineReads ${line}`, () => expect(this.get(onboardingYourLinkTestIds.line)).toHaveText(line));
+
+  verifyPillsRead = (...pills: (string | RegExp)[]) =>
+    this.step(`verifyPillsRead ${pills.join(", ")}`, () =>
+      expect(this.#yourLink(onboardingPillsTestIds.root).getByRole("listitem")).toHaveText(pills),
+    );
+
+  verifyInsideReads = (text: string) =>
+    this.step(`verifyInsideReads ${text}`, () => expect(this.get(onboardingYourLinkTestIds.inside)).toHaveText(text));
+
+  verifySaysSavedToLibrary = () =>
+    this.step("verifySaysSavedToLibrary", () =>
+      expect(this.get(onboardingYourLinkTestIds.root)).toContainText("Saved to your library, ready for you and your AI."),
+    );
+
+  verifyFindingReads = (text: string) =>
+    this.step(`verifyFindingReads ${text}`, () => expect(this.get(onboardingYourLinkTestIds.finding)).toHaveText(text));
+
+  verifyPlaylistTitle = (title: string) =>
+    this.step(`verifyPlaylistTitle ${title}`, () => expect(this.get(onboardingYourLinkTestIds.playlistTitle)).toHaveText(title));
+
+  confirmVideo = () => this.step("confirmVideo", () => this.click(onboardingYourLinkTestIds.looksRight));
+
+  useDifferentLink = () => this.step("useDifferentLink", () => this.click(onboardingYourLinkTestIds.differentLink));
+
+  chooseDifferentVideo = (videoId: string) =>
+    this.step(`chooseDifferentVideo ${videoId}`, async () => {
+      await this.click(onboardingYourLinkTestIds.chooseDifferent);
+      await this.click(onboardingYourLinkTestIds.entry(videoId));
+    });
 
   verifyReadFailure = ({ title, link }: { title: string; link: string }) =>
     this.step(`verifyReadFailure ${title}`, async () => {
@@ -176,22 +168,29 @@ export class OnboardingPageObject extends PageObject {
       await this.get(onboardingReadFailureTestIds.linkField).press("Enter");
     });
 
-  verifyFindingReads = (text: string) =>
-    this.step(`verifyFindingReads ${text}`, () => expect(this.get(onboardingVideoTestIds.finding)).toHaveText(text));
+  tryReadingAgain = () => this.step("tryReadingAgain", () => this.click(onboardingReadFailureTestIds.tryAgain));
 
-  verifyPlaylistTitle = (title: string) =>
-    this.step(`verifyPlaylistTitle ${title}`, () => expect(this.get(onboardingVideoTestIds.playlistTitle)).toHaveText(title));
+  verifyOffersTranscribing = (offered: boolean) =>
+    this.step(`verifyOffersTranscribing ${offered}`, () =>
+      this.expectToHaveCount(onboardingReadFailureTestIds.transcribe, offered ? 1 : 0),
+    );
 
-  confirmVideo = () => this.step("confirmVideo", () => this.click(onboardingVideoTestIds.looksRight));
+  transcribe = () => this.step("transcribe", () => this.click(onboardingReadFailureTestIds.transcribe));
 
-  useDifferentLink = () => this.step("useDifferentLink", () => this.click(onboardingVideoTestIds.differentLink));
+  // The moments (327d, 327g, 327h): one screen each, with nothing to answer.
+  continueFromSaving = () => this.step("continueFromSaving", () => this.click(onboardingSavingMomentTestIds.next));
 
-  chooseDifferentVideo = (videoId: string) =>
-    this.step(`chooseDifferentVideo ${videoId}`, async () => {
-      await this.click(onboardingVideoTestIds.chooseDifferent);
-      await this.click(onboardingVideoTestIds.entry(videoId));
-    });
+  verifyExtensionCantBeAddedYet = () =>
+    this.step("verifyExtensionCantBeAddedYet", () => expect(this.get(onboardingSavingMomentTestIds.addToChrome)).toBeDisabled());
 
+  continueFromKnowledgeBase = () => this.step("continueFromKnowledgeBase", () => this.click(onboardingKnowledgeMomentTestIds.next));
+
+  verifyStepsMomentLeadReads = (text: string) =>
+    this.step(`verifyStepsMomentLeadReads ${text}`, () => expect(this.get(onboardingStepsMomentTestIds.lead)).toHaveText(text));
+
+  addContextAboutYou = () => this.step("addContextAboutYou", () => this.click(onboardingStepsMomentTestIds.addContext));
+
+  // Topics (327e).
   pickTopics = (...names: string[]) =>
     this.step(`pickTopics ${names.join(", ")}`, async () => {
       for (const name of names) await this.click(onboardingTopicsTestIds.chip(name));
@@ -214,14 +213,27 @@ export class OnboardingPageObject extends PageObject {
       expect(this.get(onboardingTopicsTestIds.suggestion(name))).toHaveAccessibleName(`${name}, new topic`),
     );
 
-  pickSuggestion = (name: string) => this.step(`pickSuggestion ${name}`, () => this.click(onboardingTopicsTestIds.suggestion(name)));
+  verifySuggestionPressed = (name: string, pressed: boolean) =>
+    this.step(`verifySuggestionPressed ${name} ${pressed}`, () =>
+      expect(this.get(onboardingTopicsTestIds.suggestion(name))).toHaveAttribute("aria-pressed", String(pressed)),
+    );
 
-  verifyLibrarySlide = ({ lead, scene }: { lead: string; scene: string[] }) =>
-    this.step("verifyLibrarySlide", async () => {
-      await expect(this.get(onboardingSlideTestIds.lead)).toHaveText(lead);
-      for (const text of scene) await expect(this.get(onboardingSlideTestIds.scene)).toContainText(text);
-      await expect(this.get(onboardingSlideTestIds.scene)).not.toContainText("arriving");
-    });
+  toggleSuggestion = (name: string) => this.step(`toggleSuggestion ${name}`, () => this.click(onboardingTopicsTestIds.suggestion(name)));
+
+  verifyTopicsOffered = (group: "Popular topics" | "All topics", names: string[]) =>
+    this.step(`verifyTopicsOffered ${group}`, () =>
+      expect(this.page.getByRole("group", { name: group }).locator(`[data-testid^="onboarding-topics-chip-"]`)).toHaveText(names),
+    );
+
+  verifyTopicCountIn = (group: "Popular topics" | "All topics", count: number) =>
+    this.step(`verifyTopicCountIn ${group} ${count}`, () =>
+      expect(this.page.getByRole("group", { name: group }).locator(`[data-testid^="onboarding-topics-chip-"]`)).toHaveCount(count),
+    );
+
+  verifyCanTypeTopic = (can: boolean) =>
+    this.step(`verifyCanTypeTopic ${can}`, () => this.expectToHaveCount(onboardingTopicsTestIds.typeField, can ? 1 : 0));
+
+  seeAllTopics = () => this.step("seeAllTopics", () => this.click(onboardingTopicsTestIds.seeAll));
 
   typeTopic = (name: string) =>
     this.step(`typeTopic ${name}`, async () => {
@@ -237,35 +249,112 @@ export class OnboardingPageObject extends PageObject {
   verifyTopicCountReads = (text: string | RegExp) =>
     this.step(`verifyTopicCountReads ${text}`, () => expect(this.get(onboardingTopicsTestIds.count)).toHaveText(text));
 
+  verifyProjectsCardIsShown = () =>
+    this.step("verifyProjectsCardIsShown", () =>
+      expect(this.get(onboardingProjectsCardTestIds.root).filter({ visible: true })).toBeVisible(),
+    );
+
   continueFromTopics = () => this.step("continueFromTopics", () => this.click(onboardingTopicsTestIds.continue));
 
-  next = () => this.step("next", () => this.click(onboardingSlideTestIds.next));
+  focusTopicField = () => this.step("focusTopicField", () => this.get(onboardingTopicsTestIds.typeField).focus());
 
+  leaveTopicField = () => this.step("leaveTopicField", () => this.get(onboardingTopicsTestIds.typeField).blur());
+
+  verifyTopicFieldHasFocus = () =>
+    this.step("verifyTopicFieldHasFocus", () => expect(this.get(onboardingTopicsTestIds.typeField)).toBeFocused());
+
+  // About you (327i).
   get sentence() {
     return new AboutYouSentencePageObject(this.testContext);
   }
 
-  get voicePicker() {
-    return new NarrationVoicePickerPageObject(this.testContext);
-  }
-
-  verifyWhatThisChangesShowsExample = (shown: boolean) =>
-    this.step(`verifyWhatThisChangesShowsExample ${shown}`, () =>
-      shown
-        ? expect(this.get(onboardingAboutYouTestIds.why)).toContainText("For a dad who cooks after work")
-        : expect(this.get(onboardingAboutYouTestIds.why)).not.toContainText("For a dad who cooks after work"),
-    );
-
-  verifySentenceQuoted = (text: string) =>
-    this.step("verifySentenceQuoted", () => expect(this.get(onboardingStepsForYouTestIds.quote)).toHaveText(`"${text}"`));
-
-  personalise = () => this.step("personalise", () => this.click(onboardingStepsForYouTestIds.personalise));
-
-  nextFromStepsForYou = () => this.step("nextFromStepsForYou", () => this.click(onboardingStepsForYouTestIds.next));
-
   continueFromAboutYou = () => this.step("continueFromAboutYou", () => this.click(onboardingAboutYouTestIds.continue));
 
-  continueFromVoice = () => this.step("continueFromVoice", () => this.click(onboardingVoiceTestIds.continue));
+  // The account (327l): the form in place, then the code in its place.
+  get accountForm(): SignInPageObject {
+    return new SignInPageObject(this.testContext);
+  }
+
+  verifyAccountCard = ({ title, answers }: { title: string; answers: string[] }) =>
+    this.step(`verifyAccountCard ${title}`, async () => {
+      const saved = this.get(onboardingAccountTestIds.root).getByRole("region", { name: "Saved with your account" });
+      await expect(saved.getByTestId(onboardingSourceCardTestIds.title)).toHaveText(title);
+      if (answers.length === 0) await expect(saved.getByRole("list", { name: "Your answers" })).toHaveCount(0);
+      else await expect(saved.getByRole("list", { name: "Your answers" }).getByRole("listitem")).toHaveText(answers);
+    });
+
+  verifyAccountHasNoCard = () =>
+    this.step("verifyAccountHasNoCard", () =>
+      expect(this.get(onboardingAccountTestIds.root).getByRole("region", { name: "Saved with your account" })).toHaveCount(0),
+    );
+
+  createAccount = ({ firstName, email, code }: { firstName: string; email: string; code: string }) =>
+    this.step(`createAccount ${email}`, async () => {
+      const form = await this.accountForm.verifyAsksForEmail(CREATE_ACCOUNT_TITLE);
+      await form.typeFirstName(firstName);
+      await form.requestLink(email);
+      await form.verifyAsksForCode(email);
+      await form.typeCode(code);
+    });
+
+  switchToSignIn = (): Promise<SignInPageObject> =>
+    this.step("switchToSignIn", async () => {
+      await this.accountForm.verifyAsksForEmail(CREATE_ACCOUNT_TITLE);
+      return (await this.accountForm.switchToOtherPage()).verifyAsksForEmail("Sign in to get your overview.");
+    });
+
+  signIn = ({ email, code }: { email: string; code: string }) =>
+    this.step(`signIn ${email}`, async () => {
+      const form = await this.switchToSignIn();
+      await form.requestLink(email);
+      await form.verifyAsksForCode(email);
+      await form.typeCode(code);
+    });
+
+  // The wait (327m): each stage is a real event of the run, and it ends on Open your overview.
+  verifyWaitStage = (index: number, { state, text }: { state: "waiting" | "running" | "done"; text: string | RegExp }) =>
+    this.step(`verifyWaitStage ${index} ${state}`, async () => {
+      const stage = this.get(onboardingWaitTestIds.stage(index));
+      await expect(stage).toHaveAttribute("data-state", state, { timeout: 10_000 });
+      await expect(stage).toContainText(text);
+    });
+
+  verifyWaitStageCount = (count: number) =>
+    this.step(`verifyWaitStageCount ${count}`, () =>
+      expect(this.get(onboardingWaitTestIds.root).locator(`[data-testid^="onboarding-wait-stage-"]`)).toHaveCount(count),
+    );
+
+  verifyWaitSays = (heading: string) =>
+    this.step(`verifyWaitSays ${heading}`, () =>
+      expect(this.get(onboardingWaitTestIds.root).getByRole("heading", { level: 1 })).toHaveText(heading, { timeout: 10_000 }),
+    );
+
+  verifyAsksToKeepTheTab = (asked: boolean) =>
+    this.step(`verifyAsksToKeepTheTab ${asked}`, () => this.expectToHaveCount(onboardingWaitTestIds.keepTab, asked ? 1 : 0));
+
+  verifyWaitOffersSetups = () => this.step("verifyWaitOffersSetups", () => this.expectToBeVisible(onboardingSetupsTestIds.root));
+
+  verifyWaitFailed = () =>
+    this.step("verifyWaitFailed", () => expect(this.get(onboardingWaitTestIds.failure)).toBeVisible({ timeout: 10_000 }));
+
+  tryAgainFromWait = () => this.step("tryAgainFromWait", () => this.click(onboardingWaitTestIds.tryAgain));
+
+  verifyCanOpenOverview = (can: boolean) =>
+    this.step(`verifyCanOpenOverview ${can}`, () =>
+      can
+        ? expect(this.get(onboardingWaitTestIds.open)).toBeVisible({ timeout: 10_000 })
+        : this.expectToHaveCount(onboardingWaitTestIds.open, 0),
+    );
+
+  openOverview = (): Promise<ReaderPageObject> =>
+    this.step("openOverview", async () => {
+      await expect(this.get(onboardingWaitTestIds.open)).toBeVisible({ timeout: 10_000 });
+      await this.click(onboardingWaitTestIds.open);
+      return new ReaderPageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyPageHasNoText = (text: string) =>
+    this.step(`verifyPageHasNoText ${text}`, () => expect(this.get(onboardingPageTestIds.root)).not.toContainText(text));
 
   // OV-210 (210a–210k): below the brand row one area scrolls, and each step's foot is pinned to
   // its bottom. The foot is the sticky element nearest the step's Continue.
@@ -325,102 +414,16 @@ export class OnboardingPageObject extends PageObject {
       expect(bottom).toBeLessThanOrEqual(footTop);
     });
 
-  focusTopicField = () => this.step("focusTopicField", () => this.get(onboardingTopicsTestIds.typeField).focus());
-
-  leaveTopicField = () => this.step("leaveTopicField", () => this.get(onboardingTopicsTestIds.typeField).blur());
-
-  verifyTopicFieldHasFocus = () =>
-    this.step("verifyTopicFieldHasFocus", () => expect(this.get(onboardingTopicsTestIds.typeField)).toBeFocused());
-
   verifyContinueIsShown = (continueTestId: string, shown: boolean) =>
     this.step(`verifyContinueIsShown ${shown}`, () =>
       shown ? this.expectToBeVisible(continueTestId) : this.expectNotToBeVisible(continueTestId),
     );
 
-  verifyPreviewStaysPut = async (move: () => Promise<unknown>) =>
-    this.step("verifyPreviewStaysPut", async () => {
-      const preview = this.get(onboardingPreviewTestIds.root).filter({ visible: true });
-      const before = (await preview.boundingBox())!.y;
+  verifyAsideStaysPut = async (aside: string, move: () => Promise<unknown>) =>
+    this.step("verifyAsideStaysPut", async () => {
+      const pane = this.get(aside).filter({ visible: true });
+      const before = (await pane.boundingBox())!.y;
       await move();
-      expect((await preview.boundingBox())!.y).toBeCloseTo(before, 0);
+      expect((await pane.boundingBox())!.y).toBeCloseTo(before, 0);
     });
-
-  verifyTeaser = ({ title, premise }: { title: string; premise: string }) =>
-    this.step(`verifyTeaser ${title}`, async () => {
-      await expect(this.get(onboardingTeaserTestIds.title)).toHaveText(title);
-      await expect(this.get(onboardingTeaserTestIds.first)).toHaveText(premise);
-    });
-
-  verifyTeaserSaysSample = () =>
-    this.step("verifyTeaserSaysSample", () =>
-      expect(this.get(onboardingTeaserTestIds.root).filter({ visible: true }).first()).toContainText("Your sample overview is ready"),
-    );
-
-  // A sample is already made, so the overview's progress isn't shown anywhere (155f).
-  verifyHasNoOverviewProgress = () =>
-    this.step("verifyHasNoOverviewProgress", async () => {
-      await expect(this.get(onboardingProgressBarTestIds.root)).toHaveCount(0);
-      await expect(this.get(onboardingProgressBarTestIds.seeOverview)).toHaveCount(0);
-    });
-
-  verifyPreviewSaysWrittenForAnyone = () =>
-    this.step("verifyPreviewSaysWrittenForAnyone", () =>
-      expect(this.get(onboardingPreviewTestIds.forAnyone)).toHaveText("Written for anyone. The overviews you make are written for you."),
-    );
-
-  verifyPlanCountsRead = (text: string) =>
-    this.step(`verifyPlanCountsRead ${text}`, () => expect(this.get(onboardingPlanTestIds.counts)).toHaveText(text));
-
-  verifyTeaserReads = ({ byline, locked }: { byline: string; locked: string }) =>
-    this.step(`verifyTeaserReads ${byline}`, async () => {
-      await expect(this.get(onboardingTeaserTestIds.byline)).toHaveText(byline);
-      await expect(this.get(onboardingTeaserTestIds.locked)).toHaveText(locked);
-    });
-
-  verifyPageHasNoText = (text: string) =>
-    this.step(`verifyPageHasNoText ${text}`, () => expect(this.get(onboardingPageTestIds.root)).not.toContainText(text));
-
-  tryAgain = () => this.step("tryAgain", () => this.click(onboardingAccountTestIds.tryAgain));
-
-  verifyNotReadyReads = (text: string) =>
-    this.step(`verifyNotReadyReads ${text}`, () => expect(this.get(onboardingAccountTestIds.notReady)).toHaveText(text));
-
-  // Once the account exists: what the overview is doing until it's in the account, under the
-  // plan or on the screen a sign-in waits on. Taking the run over from a tab that has gone
-  // waits for its answer to stop coming, which is longer than a screen takes to change.
-  verifyArriving = (phase: "writing" | "bringingIn" | "failed") =>
-    this.step(`verifyArriving ${phase}`, () => expect(this.get(onboardingArrivingTestIds[phase])).toBeVisible({ timeout: 10_000 }));
-
-  tryAgainAfterAccount = () => this.step("tryAgainAfterAccount", () => this.click(onboardingArrivingTestIds.tryAgain));
-
-  verifyNearlyThere = (lead: string) =>
-    this.step("verifyNearlyThere", async () => {
-      await this.expectToBeVisible(onboardingNearlyThereTestIds.root);
-      await expect(this.page.getByRole("heading", { level: 1, name: "Nearly there" })).toBeFocused();
-      await expect(this.get(onboardingNearlyThereTestIds.root)).toContainText(lead);
-    });
-
-  tryAgainFromPreview = () => this.step("tryAgainFromPreview", () => this.click(onboardingPreviewTestIds.tryAgain));
-
-  tryReadingAgain = () => this.step("tryReadingAgain", () => this.click(onboardingReadFailureTestIds.tryAgain));
-
-  continueWithEmail = (): Promise<SignInPageObject> =>
-    this.step("continueWithEmail", async () => {
-      await this.click(onboardingAccountTestIds.continueWithEmail);
-      return new SignInPageObject(this.testContext);
-    });
-
-  signIn = (): Promise<SignInPageObject> =>
-    this.step("signIn", async () => {
-      await this.click(onboardingAccountTestIds.signIn);
-      return new SignInPageObject(this.testContext);
-    });
-
-  verifyPlusIsComingSoon = () =>
-    this.step("verifyPlusIsComingSoon", async () => {
-      await expect(this.get(onboardingPlanTestIds.startPlus)).toHaveText("Coming soon");
-      await expect(this.get(onboardingPlanTestIds.startPlus)).toBeDisabled();
-    });
-
-  continueWithFree = () => this.step("continueWithFree", () => this.click(onboardingPlanTestIds.continueWithFree));
 }

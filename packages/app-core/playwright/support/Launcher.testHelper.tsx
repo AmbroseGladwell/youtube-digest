@@ -54,6 +54,8 @@ import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.
 import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
 import { OnboardingSamplesPageObject } from "../pageObjects/OnboardingSamplesPageObject.testHelper.js";
 import { SampleDeckPageObject } from "../pageObjects/SampleDeckPageObject.testHelper.js";
+import { PlansModalPageObject } from "../pageObjects/PlansModalPageObject.testHelper.js";
+import { SoftWallPageObject } from "../pageObjects/SoftWallPageObject.testHelper.js";
 import { createAccountThroughSample } from "../pageObjects/createAccountThroughSample.testHelper.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
 import { HowToApplyFlipPageObject } from "../pageObjects/HowToApplyFlipPageObject.testHelper.js";
@@ -392,6 +394,14 @@ export class Launcher {
 
   get errorState(): ErrorStatePageObject {
     return new ErrorStatePageObject(this.testContext);
+  }
+
+  get softWall(): SoftWallPageObject {
+    return new SoftWallPageObject(this.testContext);
+  }
+
+  get plansModal(): PlansModalPageObject {
+    return new PlansModalPageObject(this.testContext);
   }
 
   get readerPage(): ReaderPageObject {

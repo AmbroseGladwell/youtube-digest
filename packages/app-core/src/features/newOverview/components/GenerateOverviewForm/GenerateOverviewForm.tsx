@@ -320,7 +320,7 @@ export function GenerateOverviewForm({
         <button type="button" className={styles.cancelButton} onClick={onCancel} data-testid={generateOverviewFormTestIds.cancelButton}>
           Cancel
         </button>
-        {choosing === null && limit === null && generateOffered && (
+        {choosing === null && (limit === null || walled !== null) && generateOffered && (
           <button
             type="submit"
             className={styles.generateButton}
