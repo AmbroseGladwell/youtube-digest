@@ -111,6 +111,10 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
     },
   };
   window.__iwftSurface__ = hooksConfig?.surface ?? "web";
+  Object.defineProperty(navigator, "userAgentData", {
+    configurable: true,
+    value: { brands: [{ brand: "Chromium" }, { brand: "Google Chrome" }], mobile: hooksConfig?.desktopChrome === false },
+  });
   window.__iwftLayout__ = hooksConfig?.layout ?? "full";
   window.__iwftDefaultApiUrl__ = hooksConfig?.defaultApiUrl ?? null;
   window.__iwftServerSwitchable__ = hooksConfig?.serverSwitchable ?? true;

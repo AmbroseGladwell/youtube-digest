@@ -22,4 +22,5 @@ export const homePageTestIds = {
   fromCreateNote: "HomePage.fromCreateNote",
   pasteLink: "HomePage.pasteLink",
   signIn: "HomePage.signIn",
+  accepted: "home-page-accepted",
 };

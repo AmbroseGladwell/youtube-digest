@@ -1,5 +1,6 @@
 import type {
   ClaimSummary,
+  NoteKind,
   FilingProject,
   SectionsEnabled,
   TagAliases,
@@ -22,4 +23,6 @@ export interface GenerationInput {
   // Every tag in the reader's library, most used first.
   existingTags: TagCount[];
   tagAliases: TagAliases;
+  // Already checked before the account (OV-327), so writing skips its own check.
+  noteKind?: NoteKind | undefined;
 }

@@ -1,0 +1,101 @@
+@use "../../../../theme/controls.scss" as controls;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--ink);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.lead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.linkTitle {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.way {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.wayName {
+  font-weight: 600;
+}
+
+.wayBody {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.primary {
+  @include controls.action-pill;
+  @include controls.pill-lg;
+}
+
+.foot {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}

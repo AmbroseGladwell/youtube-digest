@@ -54,6 +54,8 @@ import { SignedOutGatePageObject } from "../pageObjects/SignedOutGatePageObject.
 import { OnboardingPageObject } from "../pageObjects/OnboardingPageObject.testHelper.js";
 import { OnboardingSamplesPageObject } from "../pageObjects/OnboardingSamplesPageObject.testHelper.js";
 import { SampleDeckPageObject } from "../pageObjects/SampleDeckPageObject.testHelper.js";
+import { PlansModalPageObject } from "../pageObjects/PlansModalPageObject.testHelper.js";
+import { SoftWallPageObject } from "../pageObjects/SoftWallPageObject.testHelper.js";
 import { createAccountThroughSample } from "../pageObjects/createAccountThroughSample.testHelper.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
 import { HowToApplyFlipPageObject } from "../pageObjects/HowToApplyFlipPageObject.testHelper.js";
@@ -76,6 +78,8 @@ export interface LaunchOptions {
   analyticsConsent?: AnalyticsConsent | null;
   accountSeen?: boolean;
   surface?: Surface;
+  // False is a phone's browser, where the extension can't be added. Absent is desktop Chrome.
+  desktopChrome?: boolean;
   layout?: AppLayout;
   defaultApiUrl?: string;
   // False is a build installed from the Web Store, which offers no other server.
@@ -201,6 +205,7 @@ export class Launcher {
         analyticsConsent: options.analyticsConsent === undefined ? makeAnalyticsConsent() : options.analyticsConsent,
         ...(options.accountSeen === true ? { accountSeen: true } : {}),
         surface: options.surface,
+        desktopChrome: options.desktopChrome,
         layout: options.layout,
         defaultApiUrl: options.defaultApiUrl,
         serverSwitchable: options.serverSwitchable,
@@ -392,6 +397,14 @@ export class Launcher {
 
   get errorState(): ErrorStatePageObject {
     return new ErrorStatePageObject(this.testContext);
+  }
+
+  get softWall(): SoftWallPageObject {
+    return new SoftWallPageObject(this.testContext);
+  }
+
+  get plansModal(): PlansModalPageObject {
+    return new PlansModalPageObject(this.testContext);
   }
 
   get readerPage(): ReaderPageObject {

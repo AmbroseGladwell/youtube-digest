@@ -8,6 +8,8 @@ import styles from "./EnterCode.module.scss";
 import { enterCodeTestIds } from "./EnterCodeTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
+const CODE_CHARACTERS = 8;
+
 interface EnterCodeCommonProps {
   connecting: boolean;
   refused: string | null;
@@ -20,6 +22,8 @@ export type EnterCodeProps = EnterCodeCommonProps &
     | {
         from: "emailCode";
         intent: AuthIntent;
+        // Code first, the link as backup, inside onboarding's account step (327l-2).
+        codeFirst?: boolean;
         email: string;
         sentAt: number;
         resending: boolean;
@@ -39,6 +43,7 @@ export function EnterCode(props: EnterCodeProps) {
   const { connecting, refused, onConnect } = props;
   const fromEmail = props.from !== "webApp";
   const inMail = props.from === "emailCode";
+  const codeFirst = props.from === "emailCode" && props.codeFirst === true;
   const ids = useId();
   const [code, setCode] = useState("");
   const analytics = useAnalytics();
@@ -69,13 +74,27 @@ export function EnterCode(props: EnterCodeProps) {
     analytics.account.signIn.codeSubmitted({ from: props.from });
     onConnect(code.trim(), serverShown ? serverUrl.trim() : null);
   };
+  const typed = (value: string) => {
+    setCode(value);
+    if (codeFirst && !connecting && value.replace(/[^A-Za-z0-9]/g, "").length === CODE_CHARACTERS) {
+      analytics.account.signIn.codeSubmitted({ from: props.from });
+      onConnect(value.trim(), null);
+    }
+  };
 
   return (
     <AuthScreen
       testId={enterCodeTestIds.root}
-      title="Enter your code"
+      embedded={codeFirst}
+      title={codeFirst ? "Enter the code we sent to" : "Enter your code"}
       lead={
-        inMail ? (
+        codeFirst ? (
+          <>
+            <strong data-testid={enterCodeTestIds.email}>{props.email}</strong>
+            <br />
+            It confirms it’s you. There’s no password.
+          </>
+        ) : inMail ? (
           <>
             The email we sent to <strong data-testid={enterCodeTestIds.email}>{props.email}</strong> has an 8-character code under the link.
             Type it here to sign in this browser.
@@ -90,7 +109,7 @@ export function EnterCode(props: EnterCodeProps) {
         )
       }
     >
-      <form className={styles.form} onSubmit={connect} noValidate>
+      <form className={`${styles.form} ${codeFirst ? styles.codeFirst : ""}`} onSubmit={connect} noValidate>
         {serverShown && (
           <label className={styles.label}>
             <span className={styles.labelText}>Server address</span>
@@ -137,7 +156,7 @@ export function EnterCode(props: EnterCodeProps) {
             maxLength={9}
             placeholder="XXXX-XXXX"
             value={code}
-            onChange={(event) => setCode(event.target.value)}
+            onChange={(event) => typed(event.target.value)}
             aria-invalid={problem !== null}
             aria-describedby={problem === null ? undefined : `${ids}-error`}
             data-testid={enterCodeTestIds.codeInput}
@@ -196,11 +215,13 @@ export function EnterCode(props: EnterCodeProps) {
 
         <div className={styles.footer}>
           <p className={styles.note}>
-            {inMail
-              ? `The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`
-              : refused === null && fromEmail
-                ? "You can close this panel to open your email. It'll be waiting here when you come back."
-                : `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`}
+            {codeFirst
+              ? `Or tap the link in the email. The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`
+              : inMail
+                ? `The code works once, for ${MAGIC_LINK_TTL_MINUTES} minutes after we sent it.`
+                : refused === null && fromEmail
+                  ? "You can close this panel to open your email. It'll be waiting here when you come back."
+                  : `Codes work once, for ${LINK_CODE_TTL_MINUTES} minutes.`}
           </p>
           <button type="submit" className={styles.submit} disabled={connecting} data-testid={enterCodeTestIds.connectButton}>
             {!inMail ? "Connect" : props.intent === "createAccount" ? "Create account" : "Sign in"}

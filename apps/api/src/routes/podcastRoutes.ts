@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   apiLogLines,
   parsePodcastLink,
-  TRIAL_OVERVIEWS,
   TRIAL_TOKEN_HEADER,
   type Plan,
   type PodcastRead,
@@ -52,10 +51,10 @@ const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof Transcri
 
 type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }>;
 
-// An account, or signed out a trial token making onboarding's overview, and never the link, the
-// feed or the episode in a log: what someone listens to is theirs. A read spends one of the
-// trial's reads, as an article's does; finding the words is part of the trial's one overview
-// (docs/features/podcast-links.md, docs/features/podcast-transcripts.md, docs/features/onboarding.md).
+// An account, and never the link, the feed or the episode in a log: what someone listens to is
+// theirs. Signed out, onboarding reads the episode on the trial's reads and checks whether it has
+// words, before an account; finding the words and transcribing wait for one (OV-327,
+// docs/features/podcast-links.md, docs/features/podcast-transcripts.md, docs/features/onboarding.md).
 export function podcastRoutes(
   app: FastifyInstance,
   {
@@ -77,16 +76,16 @@ export function podcastRoutes(
     clock: () => Date;
   },
 ): void {
-  // Signed out, the words are found only for a trial that hasn't made its overview yet.
-  const callerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
-    if (request.session !== null) return { accountId: request.session.accountId, plan: await planOf(request.session.accountId) };
+  const accountCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
+    if (request.session === null) throw new ApiError("unauthenticated", "Sign in to make an overview");
+    return { accountId: request.session.accountId, plan: await planOf(request.session.accountId) };
+  };
+  // The check alone runs signed out, on a trial the server issued.
+  const checkCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
+    if (request.session !== null) return accountCallerOf(request);
     const trialToken = request.headers[TRIAL_TOKEN_HEADER];
-    if (typeof trialToken !== "string") throw new ApiError("unauthenticated", "Sign in, or start a trial, to make an overview");
-    const used = await trials.used(trialToken);
-    if (used === null) throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
-    if (used >= TRIAL_OVERVIEWS) {
-      throw new ApiError("too_many_requests", "You've made the overviews you can without an account", { quota: "trial" });
-    }
+    if (typeof trialToken !== "string") throw new ApiError("unauthenticated", "Sign in, or start a trial, to check an episode");
+    if (!(await trials.isKnown(trialToken))) throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
     return { address: request.clientAddress };
   };
 
@@ -117,13 +116,12 @@ export function podcastRoutes(
   app.post(
     "/podcasts/transcript",
     {
-      config: { optionalSession: true },
       preHandler: rateLimitHook(rateLimits.podcastTranscriptPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply): Promise<StoredTranscript> => {
       const body = parseOrThrow(TranscriptBody, request.body, "The episode");
       const { feedUrl, guid } = body;
-      const caller = await callerOf(request);
+      const caller = await accountCallerOf(request);
       const youTube = youTubeAskOf(body);
       const startedAt = clock().getTime();
       try {
@@ -180,7 +178,7 @@ export function podcastRoutes(
     },
     async (request): Promise<TranscriptCheck> => {
       const body = parseOrThrow(TranscriptBody, request.body, "The episode");
-      const caller = await callerOf(request);
+      const caller = await checkCallerOf(request);
       // Where nothing can be transcribed, the card has nothing to say, so the feed isn't read and
       // no YouTube search is spent: Create looks for the words as it always has.
       if (transcriptions === null) return { words: "unknown" };
@@ -209,13 +207,12 @@ export function podcastRoutes(
   app.post(
     "/podcasts/transcription",
     {
-      config: { optionalSession: true },
       preHandler: rateLimitHook(rateLimits.transcriptionPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply): Promise<PodcastTranscription> => {
       if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
       const { feedUrl, guid } = parseOrThrow(TranscriptionBody, request.body, "The episode");
-      const caller = await callerOf(request);
+      const caller = await accountCallerOf(request);
       const started = await transcriptions.start(feedUrl, guid, caller, request.log);
       switch (started.status) {
         case "started":
@@ -247,18 +244,11 @@ export function podcastRoutes(
     },
   );
 
-  // Asked after every few seconds while the reader waits, so held only to the address limit. A
-  // trial that has since made its overview can still collect the words it asked for.
-  app.get("/podcasts/transcription/:id", { config: { optionalSession: true } }, async (request): Promise<PodcastTranscription> => {
+  // Asked after every few seconds while the reader waits, so held only to the address limit.
+  app.get("/podcasts/transcription/:id", async (request): Promise<PodcastTranscription> => {
     if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
     const { id } = parseOrThrow(TranscriptionParams, request.params, "The transcription");
-    const caller: ServiceCaller | null =
-      request.session !== null
-        ? { accountId: request.session.accountId, plan: await planOf(request.session.accountId) }
-        : typeof request.headers[TRIAL_TOKEN_HEADER] === "string"
-          ? { address: request.clientAddress }
-          : null;
-    if (caller === null) throw new ApiError("unauthenticated", "Sign in, or start a trial, to make an overview");
+    const caller = await accountCallerOf(request);
     const transcription = await transcriptions.status(id, caller);
     if (transcription === null) throw new ApiError("not_found", "No such transcription");
     return transcription;

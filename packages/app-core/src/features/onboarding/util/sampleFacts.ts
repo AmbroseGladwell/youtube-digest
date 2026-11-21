@@ -8,7 +8,7 @@ const KIND_LABEL: Record<SampleKind, string> = { video: "Video", article: "Artic
 export const START_VERB: Record<SampleKind, string> = {
   video: "Watch Less,",
   article: "Learn More,",
-  recipe: "Cook More,",
+  recipe: "Cook Easier,",
   podcast: "Listen Less,",
 };
 

@@ -1,0 +1,148 @@
+@use "../../onboarding" as onboarding;
+
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.intro {
+  @include onboarding.intro;
+}
+
+.lead {
+  @include onboarding.lead;
+}
+
+.example {
+  margin: 0;
+  padding: 0.875rem;
+  border-radius: 1.75rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.sentence {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.0625rem;
+  line-height: 1.9;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.filled {
+  padding: 1px 0.375rem;
+  border: 1px solid var(--muted);
+  border-radius: 0.875rem;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  align-items: stretch;
+
+  @media (min-width: 64rem) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.card {
+  margin: 0;
+  min-width: 0;
+  padding: 0.875rem;
+  border-radius: 1.125rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.applyHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.applyTitle {
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+
+.personalised {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 3px 0.625rem;
+  border-radius: var(--radius-badge);
+  background: var(--stone-tint);
+  color: var(--on-stone-tint);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.step {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.question {
+  margin: 0;
+  align-self: flex-end;
+  max-width: 92%;
+  padding: 0.5625rem 0.8125rem;
+  border-radius: 1.125rem 1.125rem 0.25rem 1.125rem;
+  background: var(--card);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.answerText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.foot {
+  @include onboarding.foot;
+}
+
+.primary {
+  @include onboarding.primary;
+}
+
+.quiet {
+  @include onboarding.quiet;
+}

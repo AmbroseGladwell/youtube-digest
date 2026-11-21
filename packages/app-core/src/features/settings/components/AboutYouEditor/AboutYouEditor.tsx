@@ -16,7 +16,6 @@ export interface AboutYouEditorProps {
   size: "hero" | "card";
   topicNames: readonly string[];
   onChange: (section: AboutYouSection, entries: string[]) => void;
-  onSheetOpen?: (open: boolean) => void;
 }
 
 // The sentence and its sheet, the same in onboarding and Settings. Wide, the sheet is a
@@ -25,7 +24,7 @@ export interface AboutYouEditorProps {
 // out commits them; Done, Escape and Back hand focus back to the section, while a click or tab
 // away from the popover leaves focus where it went. A click away commits on press but closes
 // on click, so the popover's going doesn't move what was clicked out from under the pointer.
-export function AboutYouEditor({ aboutYou, size, topicNames, onChange, onSheetOpen }: AboutYouEditorProps) {
+export function AboutYouEditor({ aboutYou, size, topicNames, onChange }: AboutYouEditorProps) {
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
   const [open, setOpen] = useState<AboutYouSection | null>(null);
@@ -51,13 +50,12 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange, onSheetOp
   );
 
   useEffect(() => {
-    onSheetOpen?.(open !== null);
     if (open === null) return;
     const element = dialog.current;
     if (element !== null && !element.open) element.showModal();
     popover.current?.scrollIntoView({ block: "nearest" });
     heading.current?.focus();
-  }, [open, onSheetOpen]);
+  }, [open]);
 
   const start = (section: AboutYouSection) => {
     if (open === section) {

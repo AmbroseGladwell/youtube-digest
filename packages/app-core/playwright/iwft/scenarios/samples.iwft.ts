@@ -6,6 +6,7 @@ import { makeAnalyticsConsent } from "../../../src/features/analyticsConsent/typ
 import { Routes } from "../../../src/app/Routes.js";
 import { homePageTestIds } from "../../../src/features/home/HomePage/HomePageTestIds.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import type { Page } from "@playwright/test";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
 
 // Start offers samples, so a new reader can begin onboarding without leaving to find a link,
@@ -25,21 +26,28 @@ const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 
 const signedOut = { sync: true, analyticsConsent: makeAnalyticsConsent({ answer: "share" }) };
 
-const throughToPlan = async (launcher: Launcher) => {
+const ADA = { firstName: "Ada", email: SIMULATED_EMAIL, code: "ABCD-EFGH" };
+
+// The deck opens on a random card each visit (327b); a test that needs to know which pins it,
+// as a fraction of the way through the deck.
+const deckOpensAt = (page: Page, fraction = 0) =>
+  page.evaluate((at) => {
+    const random = Math.random;
+    Math.random = () => at + random() * 0.01;
+  }, fraction);
+
+// A sample has nothing to wait for: it opens as soon as it's in the new account.
+const throughToTheSample = async (launcher: Launcher) => {
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.skipToAccount();
-  const createAccount = await onboarding.continueWithEmail();
-  await createAccount.typeFirstName("Ada");
-  await createAccount.requestLink(SIMULATED_EMAIL);
-  await createAccount.chooseCodeFromEmail();
-  await createAccount.enterCode("ABCD-EFGH");
-  await onboarding.verifyOnScreen("plan", "Choose your plan");
-  return onboarding;
+  await onboarding.createAccount(ADA);
+  return launcher.readerPage.verifyIsShown();
 };
 
 test.describe("the deck on web Start", () => {
-  test.beforeEach(({ backendSimulator }) => {
+  test.beforeEach(async ({ backendSimulator, page }) => {
     backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
+    await deckOpensAt(page);
   });
 
   test("takes the Example overview card's place, one card in front, and the headline's verb follows it", async ({ launcher }) => {
@@ -61,7 +69,7 @@ test.describe("the deck on web Start", () => {
     await launcher.homePage.verifyHeadlineReads("Learn More,");
     await launcher.sampleDeck.next();
     await launcher.sampleDeck.verifyFront(RECIPE_NAME, "Sample 3 of 3");
-    await launcher.homePage.verifyHeadlineReads("Cook More,");
+    await launcher.homePage.verifyHeadlineReads("Cook Easier,");
     await launcher.sampleDeck.next();
     await launcher.sampleDeck.verifyFront(VIDEO_NAME, "Sample 1 of 3");
     await launcher.sampleDeck.previous();
@@ -106,6 +114,17 @@ test.describe("the deck on web Start", () => {
     await launcher.onboardingPage.verifyIsShown();
   });
 
+  test("opens on a random card, holding the deck's order around it", async ({ launcher, page }) => {
+    await deckOpensAt(page, 0.5);
+
+    await launcher.launch(signedOut);
+
+    await launcher.sampleDeck.verifyFront(ARTICLE_NAME, "Sample 2 of 3");
+    await launcher.homePage.verifyHeadlineReads("Learn More,");
+    await launcher.sampleDeck.next();
+    await launcher.sampleDeck.verifyFront(RECIPE_NAME, "Sample 3 of 3");
+  });
+
   test("a card that can't be opened says so, stays in front with focus, and the deck stops cycling", async ({
     launcher,
     backendSimulator,
@@ -139,29 +158,40 @@ test("with no samples, Start keeps its field and the Example overview card", asy
   await launcher.homePage.verifyShowsExampleOverview(true);
 });
 
-for (const sample of [VIDEO, ARTICLE, RECIPE]) {
-  test(`a sample (${sample.source.title}) goes through the questions, the account and the plan to its reveal, made by nobody`, async ({
+test("the deck mixes the samples by kind, one of each in turn, whatever order they were offered in", async ({
+  launcher,
+  backendSimulator,
+  page,
+}) => {
+  backendSimulator.startSamples.offer(RECIPE, makeRecipeOverview({ source: { ...RECIPE.source, title: "Another stew" } }), ARTICLE, VIDEO);
+  await deckOpensAt(page);
+  await launcher.launch(signedOut);
+
+  await launcher.sampleDeck.seeAll();
+
+  await launcher.sampleDeck.verifyLaidOut([VIDEO_NAME, ARTICLE_NAME, RECIPE_NAME, "Another stew, Recipe, 1 hr 5 min"]);
+});
+
+for (const [sample, place] of [
+  [VIDEO, 0],
+  [ARTICLE, 0.4],
+  [RECIPE, 0.7],
+] as const) {
+  test(`a sample (${sample.source.title}) goes through the moments, questions and account, and opens once it's in the account, made by nobody`, async ({
     launcher,
     backendSimulator,
+    page,
   }) => {
-    const [token] = backendSimulator.startSamples.offer(sample, ...[VIDEO, ARTICLE, RECIPE].filter((other) => other !== sample));
+    const tokens = backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
+    const token = tokens[[VIDEO, ARTICLE, RECIPE].indexOf(sample)];
+    await deckOpensAt(page, place);
     await launcher.launch(signedOut);
 
     await launcher.sampleDeck.openFront();
     const onboarding = await launcher.onboardingPage.verifyIsShown();
-    await onboarding.verifyOnScreen("topics", "What are you curious about?");
-    await onboarding.verifyHasNoOverviewProgress();
+    await onboarding.verifyOnScreen("saving", "Save the content you want to come back to.");
     await onboarding.skipToAccount();
-    await onboarding.verifyTeaser({ title: sample.source.title, premise: sample.recipe?.summary ?? sample.inOneLine });
-    await onboarding.verifyTeaserSaysSample();
-    const createAccount = await onboarding.continueWithEmail();
-    await createAccount.typeFirstName("Ada");
-    await createAccount.requestLink(SIMULATED_EMAIL);
-    await createAccount.chooseCodeFromEmail();
-    await createAccount.enterCode("ABCD-EFGH");
-    await onboarding.verifyOnScreen("plan", "Choose your plan");
-    await onboarding.verifyPlanCountsRead("This sample doesn't count towards your month. The first overview you make will.");
-    await onboarding.continueWithFree();
+    await onboarding.createAccount(ADA);
 
     const reader = await launcher.readerPage.verifyIsShown();
     await reader.verifyTitle(sample.source.title);
@@ -170,29 +200,18 @@ for (const sample of [VIDEO, ARTICLE, RECIPE]) {
   });
 }
 
-test("on a wide screen the preview says a sample is written for anyone, with no progress of its own", async ({ launcher, page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await launcher.launch(signedOut);
-
-  await launcher.sampleDeck.openFront();
-  const onboarding = await launcher.onboardingPage.verifyIsShown();
-
-  await onboarding.verifyPreviewSaysWrittenForAnyone();
-  await onboarding.verifyHasNoOverviewProgress();
-});
-
-test("the reveal of a sample says How to apply is for anyone, offers no flip, and leads with Now try your own", async ({
+test("a sample's page says How to apply is for anyone, offers no flip, and leads with Now try your own", async ({
   launcher,
   backendSimulator,
+  page,
 }) => {
   backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
   backendSimulator.ourKey.isAvailable();
+  await deckOpensAt(page);
   await launcher.launch(signedOut);
   await launcher.sampleDeck.openFront();
-  const onboarding = await throughToPlan(launcher);
-  await onboarding.continueWithFree();
 
-  const reader = await launcher.readerPage.verifyIsShown();
+  const reader = await throughToTheSample(launcher);
   await reader.verifyTitle(VIDEO.source.title);
   await launcher.howToApplyFlip.verifySampleLine();
   await launcher.howToApplyFlip.verifyIsAbsent();
@@ -201,13 +220,11 @@ test("the reveal of a sample says How to apply is for anyone, offers no flip, an
   await launcher.onboardingNextSteps.verifyOffers(["extension", "ai"]);
 });
 
-test("Now try your own starts the reader's next overview from the reveal, written for them", async ({ launcher, backendSimulator }) => {
+test("Now try your own starts the reader's next overview from the sample, written for them", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launch(signedOut);
   await launcher.sampleDeck.openFront();
-  const onboarding = await throughToPlan(launcher);
-  await onboarding.continueWithFree();
-  await launcher.readerPage.verifyIsShown();
+  await throughToTheSample(launcher);
 
   await launcher.onboardingNextSteps.tryYourOwn(VIDEO_URL);
 
@@ -219,25 +236,25 @@ test("Now try your own starts the reader's next overview from the reveal, writte
 test("a sample is sorted into the topics the reader picked, where it fits, and isn't their first overview", async ({
   launcher,
   backendSimulator,
+  page,
 }) => {
   backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
   backendSimulator.ourKey.sortsSampleInto(["Health"]);
+  await deckOpensAt(page);
   await launcher.launch(signedOut);
   await launcher.sampleDeck.openFront();
   const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.continueFromSaving();
   await onboarding.verifyOnScreen("topics");
-  await onboarding.pickTopics("Health", "Food");
+  await onboarding.verifySuggestionPressed("Health", true);
+  await onboarding.verifySuggestionPressed("Finance", true);
+  await onboarding.toggleSuggestion("Finance");
+  await onboarding.pickTopics("Food");
   await onboarding.continueFromTopics();
-  for (const step of ["library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"] as const) {
-    await onboarding.verifyOnScreen(step);
-    await onboarding.skip();
-  }
-  const createAccount = await onboarding.continueWithEmail();
-  await createAccount.typeFirstName("Ada");
-  await createAccount.requestLink(SIMULATED_EMAIL);
-  await createAccount.chooseCodeFromEmail();
-  await createAccount.enterCode("ABCD-EFGH");
-  await onboarding.continueWithFree();
+  await onboarding.skip();
+  await onboarding.skip();
+  await onboarding.verifyOnScreen("account");
+  await onboarding.createAccount(ADA);
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyFiledUnder(["Health"]);
@@ -254,18 +271,18 @@ test("a sample is sorted into the topics the reader picked, where it fits, and i
 test("with no topics picked a sample is saved unsorted, with nothing asked", async ({ launcher, backendSimulator }) => {
   await launcher.launch(signedOut);
   await launcher.sampleDeck.openFront();
-  const onboarding = await throughToPlan(launcher);
-  await onboarding.continueWithFree();
 
-  await launcher.readerPage.verifyIsShown();
+  await throughToTheSample(launcher);
   expect(backendSimulator.ourKey.topicPasses()).toEqual([]);
 });
 
 test("choosing a sample is counted on the press, by its place and kind, even when it can't be opened", async ({
   launcher,
   backendSimulator,
+  page,
 }) => {
   backendSimulator.simulateEndpointError(EndpointKey.SAMPLE);
+  await deckOpensAt(page);
   await launcher.launch(signedOut);
   await launcher.sampleDeck.next();
 
@@ -279,19 +296,19 @@ test("choosing a sample is counted on the press, by its place and kind, even whe
 test("finishing on a sample is counted as from a sample", async ({ launcher, backendSimulator }) => {
   await launcher.launch(signedOut);
   await launcher.sampleDeck.openFront();
-  const onboarding = await throughToPlan(launcher);
-  await onboarding.continueWithFree();
-  await launcher.readerPage.verifyIsShown();
+  await throughToTheSample(launcher);
 
   const props = (name: string) => backendSimulator.analytics.events().find((event) => event.name === name)?.props;
-  await expect.poll(() => props("onboarding.finished.revealed")).toEqual({ way: "createAccount", from: "sample" });
+  await expect
+    .poll(() => props("onboarding.finished.revealed"))
+    .toEqual({ kind: expect.any(String), way: "createAccount", from: "sample" });
 });
 
 test("back from a sample's first screen returns to Start", async ({ launcher }) => {
   const home = await launcher.launch(signedOut);
   await launcher.sampleDeck.openFront();
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.verifyOnScreen("topics");
+  await onboarding.verifyOnScreen("saving");
 
   await onboarding.back();
 
@@ -323,8 +340,9 @@ test.describe("in the panel", () => {
 
   // 205g: the panel's samples are the phone's deck, under Make my overview and Sign in,
   // rather than the rows the panel used to draw.
-  test("Start offers the samples as the deck, and See all lays them out", async ({ launcher, backendSimulator }) => {
+  test("Start offers the samples as the deck, and See all lays them out", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
+    await deckOpensAt(page);
     await launcher.launchPanel(signedOutPanel);
     await launcher.homePage.verifyShowsStart();
 
@@ -338,24 +356,26 @@ test.describe("in the panel", () => {
   });
 
   // Beside a video the headline follows the tab and holds, so only the deck cycles (205g-2).
-  test("beside a video the headline follows the tab rather than the deck", async ({ launcher, backendSimulator }) => {
-    backendSimulator.startSamples.offer(ARTICLE, RECIPE, VIDEO);
+  test("beside a video the headline follows the tab rather than the deck", async ({ launcher, backendSimulator, page }) => {
+    backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
+    await deckOpensAt(page, 0.5);
     await launcher.launchPanel(signedOutPanel);
     const start = await launcher.homePage.verifyShowsStart();
 
     await start.verifyHeadlineReads("Watch Less,");
-    await launcher.sampleDeck.verifyFront(ARTICLE_NAME, "Sample 1 of 3");
+    await launcher.sampleDeck.verifyFront(ARTICLE_NAME, "Sample 2 of 3");
 
     await launcher.sampleDeck.next();
 
-    await launcher.sampleDeck.verifyFront(RECIPE_NAME, "Sample 2 of 3");
+    await launcher.sampleDeck.verifyFront(RECIPE_NAME, "Sample 3 of 3");
     await start.verifyHeadlineReads("Watch Less,");
   });
 
   // With nothing on the tab there is no subject, so the headline goes back to following the
   // deck, exactly as on the web (155l).
-  test("with nothing on the tab the headline follows the deck's front card", async ({ launcher, backendSimulator }) => {
+  test("with nothing on the tab the headline follows the deck's front card", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
+    await deckOpensAt(page);
     await launcher.launchPanel({ ...signedOutPanel, activeVideoUrl: null });
     const start = await launcher.homePage.verifyShowsStart();
 
@@ -365,7 +385,7 @@ test.describe("in the panel", () => {
     await start.verifyHeadlineReads("Learn More,");
 
     await launcher.sampleDeck.next();
-    await start.verifyHeadlineReads("Cook More,");
+    await start.verifyHeadlineReads("Cook Easier,");
   });
 
   test("a card that can't be opened says so, and keeps focus", async ({ launcher, backendSimulator }) => {
@@ -392,6 +412,6 @@ test.describe("in the panel", () => {
     await createAccount.typeFirstName("Ada");
     await createAccount.requestLink(SIMULATED_EMAIL);
     await createAccount.enterCode(SIMULATED_LINK_CODE);
-    await launcher.onboardingPage.verifyOnScreen("plan");
+    await launcher.readerPage.verifyIsShown();
   });
 });

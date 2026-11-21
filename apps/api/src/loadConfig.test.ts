@@ -203,14 +203,9 @@ test("overviews are made on our key only once there is a key, under a global dai
   assert.deepEqual(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test" }).ourKey, {
     apiKey: "sk-test",
     dailyGenerations: 300,
-    signedOutDailyGenerations: 50,
     dailyChatMessages: 20_000,
   });
   assert.equal(loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_DAILY_GENERATIONS: "40" }).ourKey?.dailyGenerations, 40);
-  assert.equal(
-    loadConfig({ DATABASE_URL, OPENAI_API_KEY: "sk-test", OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: "5" }).ourKey?.signedOutDailyGenerations,
-    5,
-  );
 });
 
 test("erasing a deleted account's records at PostHog is on with the personal key, which has to name its project", () => {

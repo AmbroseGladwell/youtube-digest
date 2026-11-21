@@ -110,18 +110,6 @@ test("an overview made on our key names our key, and the provider and model our 
   await expect.poll(() => finishedProps(backendSimulator)).toMatchObject({ key: "ours", ...SIMULATED_OUR_MODEL });
 });
 
-test("signed out, an overview made on our key is counted as the trial's", async ({ launcher, backendSimulator }) => {
-  backendSimulator.ourKey.isAvailable();
-  const { apiKeys: _noKey, ...signedOutWithoutAKey } = SIGNED_IN;
-  await launcher.launch(signedOutWithoutAKey);
-  const dialog = await launcher.appShell.openNewOverview();
-  await dialog.form.submitUrl(VALID_URL);
-  await dialog.clickReadOverview();
-  await launcher.readerPage.verifyIsShown();
-
-  await expect.poll(() => finishedProps(backendSimulator)).toMatchObject({ key: "trial", ...SIMULATED_OUR_MODEL });
-});
-
 test("an overview our key makes after the reader's runs out of credit names our key, not the one tried first", async ({
   launcher,
   backendSimulator,

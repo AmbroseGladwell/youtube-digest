@@ -31,6 +31,9 @@ export interface EmailLinkFormProps {
   sending: boolean;
   refused: string | null;
   onSubmit: (values: EmailLinkFormValues) => void;
+  // Onboarding's account step (327l): no hint beside the name, the button the form's width, and
+  // the note's first sentence leading it with a tick.
+  onboarding?: boolean;
 }
 
 // Checked here before anything is sent (design 9i); what the server refuses is said in
@@ -48,6 +51,7 @@ export function EmailLinkForm({
   sending,
   refused,
   onSubmit,
+  onboarding = false,
 }: EmailLinkFormProps) {
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
@@ -100,8 +104,16 @@ export function EmailLinkForm({
       {submitLabel}
     </button>
   );
+  const [noteLead, ...noteRest] = note === null ? [] : note.split(/(?<=\.) /);
   const noteLine =
-    note === null ? null : (
+    note === null ? null : onboarding ? (
+      <p className={styles.noteTicked} data-testid={emailLinkFormTestIds.savedOverviewsNote}>
+        <StrokeIcon name="check" size={15} />
+        <span>
+          <strong>{noteLead}</strong> {noteRest.join(" ")}
+        </span>
+      </p>
+    ) : (
       <p className={styles.note} data-testid={emailLinkFormTestIds.savedOverviewsNote}>
         {note}
       </p>
@@ -114,7 +126,12 @@ export function EmailLinkForm({
     );
 
   return (
-    <form className={`${styles.root} ${footed ? styles.footed : ""}`} onSubmit={submit} noValidate data-testid={emailLinkFormTestIds.root}>
+    <form
+      className={`${styles.root} ${footed ? styles.footed : ""} ${onboarding ? styles.onboarding : ""}`}
+      onSubmit={submit}
+      noValidate
+      data-testid={emailLinkFormTestIds.root}
+    >
       <div className={styles.fields}>
         {serverShown && (
           <label className={styles.label}>
@@ -145,7 +162,7 @@ export function EmailLinkForm({
           <label className={styles.label}>
             <span className={styles.labelRow}>
               <span className={styles.labelText}>First name (optional)</span>
-              {!footed && <span className={styles.labelHint}>So we know what to call you</span>}
+              {!footed && !onboarding && <span className={styles.labelHint}>So we know what to call you</span>}
             </span>
             <span className={styles.field}>
               <StrokeIcon name="user" size={16} />

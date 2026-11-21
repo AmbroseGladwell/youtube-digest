@@ -317,16 +317,18 @@ test.describe("signing in on the web", () => {
 });
 
 test.describe("creating an account on the web", () => {
-  test("asks for a first name, sends it with the link, and thanks the reader by it", async ({ launcher, backendSimulator }) => {
+  test("goes through onboarding's account step, which asks for a first name, sends it with the link, and asks for the code in place", async ({
+    launcher,
+    backendSimulator,
+  }) => {
     await launcher.launch({ sync: true });
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
 
     await createAccount.typeFirstName("Ada");
     await createAccount.requestLink(SIMULATED_EMAIL);
 
-    await createAccount.verifyKickerReads("Thanks, Ada.");
-    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
-    await createAccount.verifyLeadReads(/to finish creating your account/);
+    await createAccount.verifyAsksForCode(SIMULATED_EMAIL);
+    await launcher.onboardingPage.verifyOnScreen("account");
     test
       .expect(backendSimulator.auth.magicLinkRequests())
       .toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "createAccount", firstName: "Ada" }]);
@@ -338,7 +340,7 @@ test.describe("creating an account on the web", () => {
 
     await createAccount.requestLink(SIMULATED_EMAIL);
 
-    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
+    await createAccount.verifyAsksForCode(SIMULATED_EMAIL);
     test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" }]);
   });
 
@@ -349,25 +351,29 @@ test.describe("creating an account on the web", () => {
     await createAccount.typeFirstName("   ");
     await createAccount.requestLink(SIMULATED_EMAIL);
 
-    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
+    await createAccount.verifyAsksForCode(SIMULATED_EMAIL);
     test.expect(backendSimulator.auth.magicLinkRequests()).toEqual([{ email: SIMULATED_EMAIL, surface: "web", intent: "createAccount" }]);
   });
 
-  test("the code from a create-account email finishes creating the account", async ({ launcher, backendSimulator }) => {
+  test("the code from a create-account email finishes creating the account, sent once all of it is typed", async ({
+    launcher,
+    backendSimulator,
+  }) => {
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
     await signIn.typeFirstName("Ada");
     await signIn.requestLink(SIMULATED_EMAIL);
 
-    await signIn.chooseCodeFromEmail();
     await signIn.verifySubmitReads("Create account");
-    await signIn.enterCode("ABCD-EFGH");
+    await signIn.typeCode("ABCD-EFGH");
 
-    await launcher.onboardingPage.verifyOnScreen("plan", "Choose your plan");
+    await launcher.readerPage.verifyIsShown();
     test.expect(backendSimulator.auth.emailCodeAttempts()).toEqual([{ email: SIMULATED_EMAIL, code: "ABCD-EFGH" }]);
   });
 
-  test("signing in leads to Start for a reader with no account, and creating one leads back to signing in", async ({ launcher }) => {
+  test("signing in leads to Start for a reader with no account, and the account step switches to signing in in place", async ({
+    launcher,
+  }) => {
     await launcher.launch({ sync: true });
     const signIn = await (await launcher.appShell.accountMenu.open()).chooseSignIn();
 
@@ -375,7 +381,7 @@ test.describe("creating an account on the web", () => {
     await launcher.homePage.verifyShowsStart();
 
     const createAccount = await (await launcher.appShell.accountMenu.open()).chooseCreateAccount();
-    await (await createAccount.switchToOtherPage()).verifyAsksForEmail("Sign in");
+    await (await createAccount.switchToOtherPage()).verifyAsksForEmail("Sign in to get your overview.");
   });
 });
 

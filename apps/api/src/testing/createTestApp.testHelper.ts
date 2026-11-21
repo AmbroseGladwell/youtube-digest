@@ -12,6 +12,7 @@ import { seedVoiceSamples, type SeededVoiceSamples } from "../audio/seedVoiceSam
 import { VoiceSamplesRepository } from "../audio/VoiceSamplesRepository.js";
 import { buildApp, type AppConfig, type BuildAppOptions, type OurKeySetup, type TranscriptServiceSetup } from "../buildApp.js";
 import type { PlaylistReader } from "../playlists/PlaylistReader.js";
+import type { VideoReader } from "../videos/youTubeDataApiVideoReader.js";
 import type { Transcriber } from "../podcasts/Transcriber.js";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { migrationSteps } from "../db/migrationSteps.js";
@@ -64,6 +65,7 @@ export interface TestAppOptions {
   // Search by meaning on this embedder, with its queue drained by the test.
   embedder?: Embedder;
   playlistReader?: PlaylistReader;
+  videoReader?: VideoReader;
   // Speech-to-text through this GPU host, its queue drained by the test.
   transcriber?: Transcriber;
   // The database left at an earlier migration, so a test can seed what a later one cleans up
@@ -86,6 +88,7 @@ export async function createTestApp(
     ourKey,
     embedder,
     playlistReader,
+    videoReader,
     transcriber,
     migrationsUpTo,
     fetchArticlePage,
@@ -131,6 +134,7 @@ export async function createTestApp(
     ...(readPodcastEpisode === undefined ? {} : { readPodcastEpisode }),
     ...(podcastWeb === undefined ? {} : { podcastWeb }),
     playlistReader: playlistReader ?? null,
+    videoReader: videoReader ?? null,
     eventSink,
     errorSink,
     personEraser,

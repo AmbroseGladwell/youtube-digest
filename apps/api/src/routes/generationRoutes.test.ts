@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_OVERVIEWS, TRIAL_TOKEN_HEADER } from "@overview/domain";
+import { CLIENT_VERSION, CLIENT_VERSION_HEADER, TRIAL_TOKEN_HEADER } from "@overview/domain";
 import { generationRequest, makeFakeOpenAi, type FakeOpenAi } from "../generation/FakeOpenAi.testHelper.js";
 import { AccountCostsRepository } from "../costs/AccountCostsRepository.js";
 import { ourKeyModel } from "../generation/ourKeyModel.js";
@@ -12,22 +12,17 @@ import { makeTrialDevice } from "../testing/TrialDevice.testHelper.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import { TRIAL_OVERVIEWS_PER_ADDRESS_DAILY, TrialsRepository } from "../usage/TrialsRepository.js";
 
 const OUR_KEY = "sk-test-ours";
 
 async function ourKeyApp(
   openAi: FakeOpenAi,
-  {
-    dailyGenerations = 300,
-    signedOutDailyGenerations = 50,
-    logger,
-  }: { dailyGenerations?: number; signedOutDailyGenerations?: number; logger?: ReturnType<typeof recordingLogger>["logger"] } = {},
+  { dailyGenerations = 300, logger }: { dailyGenerations?: number; logger?: ReturnType<typeof recordingLogger>["logger"] } = {},
 ) {
   return createTestApp(
     {},
     {
-      ourKey: { apiKey: OUR_KEY, dailyGenerations, signedOutDailyGenerations, dailyChatMessages: 20_000, http: openAi.http },
+      ourKey: { apiKey: OUR_KEY, dailyGenerations, dailyChatMessages: 20_000, http: openAi.http },
       ...(logger === undefined ? {} : { logger }),
     },
   );
@@ -314,25 +309,6 @@ test("a provider that answers only with an error costs nothing, since it reporte
   await testApp.close();
 });
 
-test("a trial overview is costed as signed out, never against an account", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi());
-  const device = await makeTrialDevice(testApp);
-  const account = await makeAccount(testApp);
-
-  await device.generate();
-  const costs = new AccountCostsRepository(testApp.sql);
-
-  assert.deepEqual(
-    sortedByDetail(await costs.of("signed-out")).map((cost) => [cost.detail, cost.calls]),
-    [
-      ["kindCheck", 1],
-      ["overview", 1],
-    ],
-  );
-  assert.deepEqual(await costs.of({ accountId: account.accountId }), []);
-  await testApp.close();
-});
-
 test("a server with a key of its own says which provider and model it makes overviews with", async () => {
   const testApp = await ourKeyApp(makeFakeOpenAi());
 
@@ -362,135 +338,31 @@ test("a server with no key of its own says so before anyone asks it to generate"
   await testApp.close();
 });
 
-test("making an overview on our key needs an account or a trial", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi());
+test("making an overview on our key needs an account, and a trial token makes nothing", async () => {
+  const openAi = makeFakeOpenAi();
+  const testApp = await ourKeyApp(openAi);
+  const device = await makeTrialDevice(testApp);
 
-  const response = await testApp.app.inject({
+  const withNothing = await testApp.app.inject({
     method: "POST",
     url: "/api/generations",
     headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
     payload: generationRequest(randomUUID()),
   });
+  const onTheTrial = await device.generate();
 
-  assert.equal(response.json().error.code, "unauthenticated");
+  assert.equal(withNothing.statusCode, 401);
+  assert.equal(onTheTrial.statusCode, 401);
+  assert.equal(openAi.kindChecks + openAi.requests.length, 0);
+  assert.equal(await new OverviewUsageRepository(testApp.sql).ourKeyGenerationsOn(usageDay(testApp.clock.now)), 0);
   await testApp.close();
 });
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 function sortedByDetail<Cost extends { detail: string }>(costs: Cost[]): Cost[] {
   return [...costs].sort((a, b) => a.detail.localeCompare(b.detail));
 }
 
-test("signed out, a device makes its one onboarding overview on our key on its token, and the next is refused as the trial's", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi());
-  const device = await makeTrialDevice(testApp);
-
-  const made = [];
-  for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) made.push((await device.generate()).statusCode);
-  const next = await device.generate();
-
-  assert.deepEqual(made, [200]);
-  assert.equal(next.statusCode, 429);
-  assert.equal(next.json().error.details.quota, "trial");
-  await testApp.close();
-});
-
-test("a new token from the same address gets no more on our key that day, while another address does", async () => {
-  const { lines, logger } = recordingLogger();
-  const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
-  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await (await makeTrialDevice(testApp)).generate();
-
-  const privateWindow = await makeTrialDevice(testApp);
-  const refused = await privateWindow.generate();
-  const elsewhere = await (await makeTrialDevice(testApp, "198.51.100.4")).generate();
-  testApp.clock.advance(DAY_MS);
-  const tomorrow = await privateWindow.generate();
-
-  assert.equal(refused.statusCode, 429);
-  assert.equal(refused.json().error.details.quota, "trial-address");
-  assert.ok(Number(refused.headers["retry-after"]) > 0);
-  assert.equal(elsewhere.statusCode, 200);
-  assert.equal(tomorrow.statusCode, 200);
-  assert.equal(saying(lines, "trial address cap spent").length, 1);
-  assert.ok(!JSON.stringify(lines).includes("203.0.113.7"));
-  await testApp.close();
-});
-
-test("a refusal from the address doesn't spend the token's own trial", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi());
-  for (let n = 0; n < TRIAL_OVERVIEWS_PER_ADDRESS_DAILY; n += 1) await (await makeTrialDevice(testApp)).generate();
-  const device = await makeTrialDevice(testApp);
-  await device.generate();
-
-  testApp.clock.advance(DAY_MS);
-  const made = [];
-  for (let n = 0; n < TRIAL_OVERVIEWS; n += 1) made.push((await device.generate()).statusCode);
-
-  assert.deepEqual(made, [200]);
-  await testApp.close();
-});
-
-test("once the signed-out share of the day is spent, a trial is refused as busy while an account still makes one", async () => {
-  const { lines, logger } = recordingLogger();
-  const testApp = await ourKeyApp(makeFakeOpenAi(), { signedOutDailyGenerations: 1, logger });
-  await (await makeTrialDevice(testApp)).generate();
-
-  const refused = await (await makeTrialDevice(testApp, "198.51.100.4")).generate();
-  const account = await generate(await makeAccount(testApp));
-
-  assert.equal(refused.statusCode, 429);
-  assert.equal(refused.json().error.details.quota, "our-key-daily");
-  assert.equal(account.statusCode, 200);
-  assert.equal(saying(lines, "our key signed-out share spent").length, 1);
-  await testApp.close();
-});
-
-test("a failed trial generation gives back its token's slot, its address's and the signed-out share", async () => {
-  const openAi = makeFakeOpenAi({ status: 503, body: { error: { message: "overloaded" } } });
-  const testApp = await ourKeyApp(openAi, { signedOutDailyGenerations: 1 });
-  const device = await makeTrialDevice(testApp);
-
-  for (let n = 0; n < TRIAL_OVERVIEWS + 1; n += 1) await device.generate();
-  const usage = new OverviewUsageRepository(testApp.sql);
-  const day = usageDay(testApp.clock.now);
-
-  assert.equal((await device.generate()).json().error.code, "generation_failed");
-  assert.deepEqual([await usage.ourKeyGenerationsOn(day), await usage.signedOutGenerationsOn(day)], [0, 0]);
-  await testApp.close();
-});
-
-test("a token this server never issued is told so, so the device can ask for a new one", async () => {
-  const testApp = await ourKeyApp(makeFakeOpenAi());
-
-  const response = await testApp.app.inject({
-    method: "POST",
-    url: "/api/generations",
-    headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION), [TRIAL_TOKEN_HEADER]: "never-issued" },
-    payload: generationRequest(randomUUID()),
-  });
-
-  assert.equal(response.statusCode, 401);
-  assert.equal(response.json().error.details.trial, "unknown");
-  assert.equal(await new OverviewUsageRepository(testApp.sql).ourKeyGenerationsOn(usageDay(testApp.clock.now)), 0);
-  await testApp.close();
-});
-
-test("a trial overview logs as the trial's, with the token's count", async () => {
-  const { lines, logger } = recordingLogger();
-  const testApp = await ourKeyApp(makeFakeOpenAi(), { logger });
-  const device = await makeTrialDevice(testApp);
-
-  await device.generate();
-  const [made] = saying(lines, "overview made on our key");
-
-  assert.deepEqual([made?.caller, made?.plan, made?.used, made?.limit], ["trial", null, 1, TRIAL_OVERVIEWS]);
-  assert.equal(saying(lines, "trial token issued").length, 1);
-  assert.ok(!JSON.stringify(lines).includes(device.token));
-  await testApp.close();
-});
-
-test("a server with no key of its own issues no trials", async () => {
+test("a server with no key of its own still issues trials, which only read", async () => {
   const testApp = await createTestApp();
 
   const response = await testApp.app.inject({
@@ -499,7 +371,8 @@ test("a server with no key of its own issues no trials", async () => {
     headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
   });
 
-  assert.equal(response.json().error.code, "unavailable");
+  assert.equal(response.statusCode, 200);
+  assert.ok(typeof response.json().token === "string");
   await testApp.close();
 });
 
@@ -633,7 +506,7 @@ const suggestionAnswer = {
   },
 };
 
-test("signed out, onboarding has topics suggested on its trial, and its one overview is still there to make", async () => {
+test("signed out, onboarding has topics suggested on its trial", async () => {
   const { lines, logger } = recordingLogger();
   const testApp = await ourKeyApp(makeFakeOpenAi(suggestionAnswer), { logger });
   const device = await makeTrialDevice(testApp);
@@ -643,7 +516,6 @@ test("signed out, onboarding has topics suggested on its trial, and its one over
   assert.equal(response.statusCode, 200);
   assert.deepEqual(response.json(), { starter: ["Food"], newTopic: "Knife skills" });
   assert.equal(saying(lines, "small pass on our key").at(0)?.pass, "topicSuggestions");
-  assert.equal(await new TrialsRepository(testApp.sql).used(device.token), 0);
   await testApp.close();
 });
 

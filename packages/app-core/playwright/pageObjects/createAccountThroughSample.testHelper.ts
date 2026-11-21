@@ -13,5 +13,5 @@ export async function createAccountThroughSample(testContext: TestContext): Prom
   await front.or(page.getByTestId(sampleRowTestIds.root).first()).click();
   const onboarding = await new OnboardingPageObject(testContext).verifyIsShown();
   await onboarding.skipToAccount();
-  return (await onboarding.continueWithEmail()).verifyAsksForEmail("Create your account");
+  return onboarding.accountForm.verifyAsksForEmail("Create your free account to get your overview.");
 }

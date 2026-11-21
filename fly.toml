@@ -43,7 +43,7 @@ primary_region = "lhr"
   TRANSCRIPT_SERVICE = "on"
   # Start's samples, in order: live shares owned by the house account, so they're replaced or
   # stopped there like any share (docs/features/onboarding.md, "Try a sample").
-  SAMPLE_SHARE_TOKENS = "IQ1AeRPcSQ1XkkOv,pCdVwW1EUsSH3Krp,eeK1DREKBooGFrJZ,Gjhrz5pGLs8lpqTZ,WQpV-nH9iRq4AE9b,gTd3Svmu7vuIq26n,tH7DvGZSyxI_7tMo,s8Q8lBSR_ivC9yr9"
+  SAMPLE_SHARE_TOKENS = "IQ1AeRPcSQ1XkkOv,pCdVwW1EUsSH3Krp,eeK1DREKBooGFrJZ,Gjhrz5pGLs8lpqTZ,WQpV-nH9iRq4AE9b,gTd3Svmu7vuIq26n,YXomZjDFd3xx-4-S,s8Q8lBSR_ivC9yr9,VQ-HpBus8uk9ApGD,5CZHWHsTGJm3IgeS"
 
 # Renders any missing voice sample before the new version goes live
 # (docs/features/narration-voice.md, "The samples").

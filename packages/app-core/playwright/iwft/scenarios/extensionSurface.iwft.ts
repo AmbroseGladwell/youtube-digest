@@ -48,3 +48,8 @@ test("the same run on the web promises only that the dialog can be closed", asyn
 
   await launcher.appShell.newOverviewDialog.verifyFootNote(/^You can close this — it keeps going\.$/);
 });
+
+test("the web app on a phone offers no extension, which can't be added there", async ({ launcher }) => {
+  const home = await launcher.launch({ surface: "web", desktopChrome: false });
+  await home.verifyOffersNoExtension();
+});

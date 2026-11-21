@@ -236,7 +236,6 @@ async function main() {
       ourKey: {
         apiKey,
         dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
         dailyChatMessages: 20_000,
         http: globalThis.fetch.bind(globalThis),
       },

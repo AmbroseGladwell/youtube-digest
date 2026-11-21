@@ -60,6 +60,9 @@ export interface IwftHooksConfig {
   // This device has been signed in to an account before (design 46q).
   accountSeen?: boolean;
   surface?: Surface;
+  // Whether the browser says it is desktop Chrome, where the extension can be added. Absent is
+  // desktop Chrome; false is a phone (src/util/useExtensionOffered.ts).
+  desktopChrome?: boolean;
   layout?: AppLayout;
   // The server this shell was built for, filled into the panel before anything is typed.
   defaultApiUrl?: string;

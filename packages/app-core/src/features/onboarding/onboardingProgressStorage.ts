@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AuthIntent, OnboardingStep, OverviewId, Plan, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
+import { AuthIntent, OnboardingStep, OverviewId, SharedOverview, ShareToken, SourceKey } from "@overview/domain";
 import { extractYouTubeVideoId } from "../newOverview/util/parseYouTubeUrl.js";
 
 // Progress from before any kind of link was taken held the video's address instead of its key.
@@ -7,6 +7,20 @@ const keyedBySource = (raw: unknown): unknown => {
   if (typeof raw !== "object" || raw === null || "sourceKey" in raw || !("videoUrl" in raw)) return raw;
   const { videoUrl, ...rest } = raw as { videoUrl: unknown };
   return { ...rest, sourceKey: typeof videoUrl === "string" ? extractYouTubeVideoId(videoUrl) : null };
+};
+
+// Steps from before OV-327's screens, carried to the nearest screen that's left.
+const STEPS_SINCE_GONE: Record<string, OnboardingStep> = {
+  library: "knowledgeBase",
+  voice: "account",
+  askYourAi: "account",
+  moreSources: "account",
+  plan: "wait",
+};
+const onTodaysStep = (raw: unknown): unknown => {
+  if (typeof raw !== "object" || raw === null || !("step" in raw)) return raw;
+  const step = (raw as { step: unknown }).step;
+  return typeof step === "string" && step in STEPS_SINCE_GONE ? { ...raw, step: STEPS_SINCE_GONE[step] } : raw;
 };
 
 const OnboardingProgressShape = z.object({
@@ -26,8 +40,6 @@ const OnboardingProgressShape = z.object({
   // it gone and takes the run over. Null when nothing is run, as for a share.
   runner: z.string().nullable().catch(null),
   way: AuthIntent.nullable(),
-  // The plan picked, so the reveal opens on its own once the overview is in the account.
-  plan: Plan.nullable().catch(null),
   // The sign-in from the account screen has landed: when, what the overview was doing then, and
   // whether its arrival in the account has been counted since (docs/features/onboarding.md, "Analytics").
   landed: z
@@ -42,7 +54,7 @@ const OnboardingProgressShape = z.object({
     .nullable()
     .catch(null),
 });
-export const OnboardingProgress = z.preprocess(keyedBySource, OnboardingProgressShape);
+export const OnboardingProgress = z.preprocess((raw) => onTodaysStep(keyedBySource(raw)), OnboardingProgressShape);
 export type OnboardingProgress = z.infer<typeof OnboardingProgressShape>;
 
 export const ONBOARDING_PROGRESS_STORAGE_KEY = "overview.onboarding.v1";

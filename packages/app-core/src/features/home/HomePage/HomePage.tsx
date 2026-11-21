@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 import { useIsPanel } from "../../../app/LayoutContext.js";
 import { Routes } from "../../../app/Routes.js";
@@ -32,12 +32,14 @@ import { REFUSED_LINK } from "../../onboarding/util/refusedLink.js";
 import { OnboardingSamples } from "../../onboarding/components/OnboardingSamples/OnboardingSamples.js";
 import { SampleDeck } from "../../onboarding/components/SampleDeck/SampleDeck.js";
 import { StartVerb } from "../../onboarding/components/StartVerb/StartVerb.js";
+import { mixedByKind } from "../../onboarding/util/mixedByKind.js";
 import { useSamplesQuery } from "../../onboarding/queries/samplesQuery.js";
 import { DEFAULT_START_VERB, sampleFacts } from "../../onboarding/util/sampleFacts.js";
 import { SourceOffer } from "../../capture/components/SourceOffer/SourceOffer.js";
 import { fromStart } from "../../auth/fromStart.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { CHROME_EXTENSION_URL } from "../../../util/chromeExtensionUrl.js";
+import { useExtensionOffered } from "../../../util/useExtensionOffered.js";
 import type { Sample } from "@overview/domain";
 import { SignedOutGate } from "../../accountLibraries/components/SignedOutGate/SignedOutGate.js";
 import { readAccountSeen } from "../../accountLibraries/accountSeenStorage.js";
@@ -240,7 +242,11 @@ function StartHero() {
   const phone = useIsPhone();
   const samples = useSamplesQuery().data ?? [];
   const [front, setFront] = useState<Sample | null>(null);
-  const shownFirst = front ?? samples[0] ?? null;
+  const deck = useMemo(() => mixedByKind(samples), [samples]);
+  // A random first card each visit, so no one kind leads (327b).
+  const [firstCard] = useState(() => Math.random());
+  const firstIndex = deck.length === 0 ? 0 : Math.floor(firstCard * deck.length);
+  const shownFirst = front ?? deck[firstIndex] ?? null;
   const analytics = useAnalytics();
   const urlFieldId = useId();
   const [url, setUrl] = useState("");
@@ -266,9 +272,7 @@ function StartHero() {
       standfirst={
         offered
           ? `Make this ${subject.noun} your first overview. We'll set up your account as we go.`
-          : isPanel
-            ? "Paste a link, or open a video or page you've been meaning to get to. We'll make it your first overview, to read or listen to, and set up your account as we go."
-            : "Paste a link to a video or a page you've been meaning to get to, and we'll make your first overview of it, to read or listen to."
+          : "Save what you care about, get an overview plus personalised actions, and build a knowledge base you and your AI can use."
       }
       verb={<StartVerb verb={offered ? subject.verb : deckVerb} />}
       note={
@@ -283,7 +287,7 @@ function StartHero() {
       panel={isPanel}
       aside={
         samples.length >= DECK_LEAST ? (
-          <SampleDeck samples={samples} phone={phone} onFront={setFront} />
+          <SampleDeck samples={deck} firstIndex={firstIndex} phone={phone} onFront={setFront} />
         ) : samples.length > 0 ? (
           <OnboardingSamples samples={samples} />
         ) : isPanel ? null : (
@@ -317,7 +321,7 @@ function StartHero() {
               autoCorrect="off"
               spellCheck={false}
               className={styles.heroInput}
-              placeholder="Paste a link to a video or a page"
+              placeholder="Paste a link to a video, page or episode"
               value={url}
               onChange={(event) => {
                 setUrl(event.target.value);
@@ -331,9 +335,13 @@ function StartHero() {
               Make my overview
             </button>
           </form>
-          {refused && (
+          {refused ? (
             <p id={`${urlFieldId}-error`} className={styles.heroError} role="alert" data-testid={homePageTestIds.validationError}>
               {REFUSED_LINK}
+            </p>
+          ) : (
+            <p className={styles.accepted} data-testid={homePageTestIds.accepted}>
+              YouTube, any web page, Apple Podcasts or Spotify.
             </p>
           )}
         </>
@@ -372,6 +380,7 @@ function Hero({
   panel = false,
 }: HeroProps) {
   const surface = useSurface();
+  const extensionOffered = useExtensionOffered();
   return (
     <div className={alignTop ? `${styles.hero} ${styles.heroTop}` : styles.hero} data-testid={homePageTestIds.hero}>
       <div className={styles.heroText}>
@@ -389,7 +398,7 @@ function Hero({
           <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>
             This is the extension's own library, kept separate from the web app's by the browser itself.
           </p>
-        ) : (
+        ) : extensionOffered ? (
           <div className={styles.extensionRow}>
             <span className={styles.youtubePill} aria-hidden="true">
               <svg viewBox="0 0 32 32" width="19" height="19" className={styles.youtubeMark}>
@@ -398,9 +407,7 @@ function Hero({
               </svg>
               Overview
             </span>
-            <p className={styles.heroAside}>
-              Or press <strong className={styles.heroStrong}>Overview</strong> under any YouTube video with the Chrome extension.
-            </p>
+            <p className={styles.heroAside}>Add content in 1 click with the extension.</p>
             <a
               className={styles.getExtension}
               href={CHROME_EXTENSION_URL}
@@ -412,7 +419,7 @@ function Hero({
               <StrokeIcon name="arrowRight" size={14} />
             </a>
           </div>
-        )}
+        ) : null}
       </div>
 
       {aside}

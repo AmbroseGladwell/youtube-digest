@@ -13,21 +13,16 @@ async function toTheReveal(launcher: Launcher, { sentence }: { sentence: boolean
   await onboarding.confirmVideo();
   await onboarding.skip();
   await onboarding.skip();
+  await onboarding.skip();
   if (sentence) {
+    await onboarding.addContextAboutYou();
     await onboarding.sentence.fill("who", "dad", "husband");
     await onboarding.continueFromAboutYou();
   } else {
     await onboarding.skip();
   }
-  await onboarding.skip();
-  await onboarding.seeOverview();
-  const createAccount = await onboarding.continueWithEmail();
-  await createAccount.typeFirstName("Ada");
-  await createAccount.requestLink(SIMULATED_EMAIL);
-  await createAccount.chooseCodeFromEmail();
-  await createAccount.enterCode("ABCD-EFGH");
-  await onboarding.continueWithFree();
-  return launcher.readerPage.verifyIsShown();
+  await onboarding.createAccount({ firstName: "Ada", email: SIMULATED_EMAIL, code: "ABCD-EFGH" });
+  return onboarding.openOverview();
 }
 
 test("the reveal flips How to apply to the version for anyone and back, by mouse and by arrow key", async ({

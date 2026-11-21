@@ -10,7 +10,7 @@ import { useStartOnboarding } from "./useStartOnboarding.js";
 export interface StartSubject {
   // The headline's verb while the tab holds this (205g-2, 205g-3). A page is "Learn More,"
   // whatever it turns out to be: we don't read one until Create, so a recipe isn't known
-  // here and Cook More waits for the deck's front card.
+  // here and Cook Easier waits for the deck's front card.
   verb: string;
   noun: "video" | "page";
   // The same card as signed in (205a), once the tab says enough to draw it: a video's

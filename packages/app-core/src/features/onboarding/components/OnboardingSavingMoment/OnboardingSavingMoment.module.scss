@@ -1,0 +1,167 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../onboarding" as onboarding;
+
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.library {
+  padding: 0.875rem;
+  border-radius: 1.25rem;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.libraryHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.375rem;
+}
+
+.libraryName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.mark {
+  display: inline-flex;
+  color: var(--mark);
+}
+
+.libraryNote {
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.kinds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.kind {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  row-gap: 0.25rem;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.875rem;
+  background: var(--surface);
+
+  @media (min-width: 64rem) {
+    grid-template-columns: 2.25rem 9.375rem 1fr;
+    grid-template-rows: auto;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+.tile {
+  grid-row: span 2;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  color: var(--ink);
+
+  @media (min-width: 64rem) {
+    grid-row: auto;
+  }
+}
+
+.kindName {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.from {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.becomes {
+  grid-column: 2;
+  font-size: 0.84375rem;
+  line-height: 1.4;
+  text-wrap: pretty;
+
+  @media (min-width: 64rem) {
+    grid-column: auto;
+  }
+}
+
+.extension {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 1.125rem;
+  background: var(--card);
+}
+
+.extensionText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.extensionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.extensionName {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.extensionAction {
+  @include controls.surface-pill;
+  @include controls.pill-sm;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.foot {
+  @include onboarding.foot;
+}
+
+.primary {
+  @include onboarding.primary;
+}
+
+.quiet {
+  @include onboarding.quiet;
+}

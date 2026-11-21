@@ -1,3 +1,4 @@
+import { copyCodeLink } from "@overview/domain";
 import type { MagicLinkMail } from "./Mailer.js";
 import { transactionalEmailHtml } from "./transactionalEmailHtml.js";
 
@@ -11,7 +12,65 @@ export interface EmailContent {
 // link opens is not the thing that asked (docs/features/sign-in.md).
 // A web mail also carries a code, for when the mail is read somewhere other than the browser
 // that asked (docs/features/sign-in.md, "A code in the web mail").
-export function magicLinkEmail({ link, code, surface, purpose, firstName }: MagicLinkMail): EmailContent {
+export function magicLinkEmail(mail: MagicLinkMail): EmailContent {
+  return mail.code !== null && mail.surface === "web" ? codeFirstEmail({ ...mail, code: mail.code }) : linkFirstEmail(mail);
+}
+
+// Design 327l-3: the code in the subject, so it can be read from the notification, then first in
+// the mail with a Copy code link to a page of ours (a mail client runs no script), and the link
+// as the backup (docs/features/sign-in.md, "A code in the web mail").
+function codeFirstEmail({ link, code, purpose, firstName }: MagicLinkMail & { code: string }): EmailContent {
+  const creating = purpose === "createAccount";
+  const siteUrl = new URL(link).origin;
+  const subject = `Your code: ${code}`;
+  const heading = "Your code for The Overview";
+  const greeting = creating && firstName !== null ? `Hi ${firstName},` : null;
+  const body = "Enter this code on the page that asked for it:";
+  const actionLead = "Or sign in with this link:";
+  const copyLink = copyCodeLink(siteUrl, code);
+  const notes = [
+    "The code and the link each work once, for the next fifteen minutes. The link signs in the browser you open it in.",
+    "If you didn’t ask for this, you can ignore it. Nothing happens unless the code or link is used.",
+  ];
+  const reason = creating
+    ? "You’re getting this because someone asked to create an account on The Overview with this address."
+    : "You’re getting this because someone asked to sign in to The Overview with this address.";
+  const text = [
+    ...(greeting === null ? [] : [greeting, ""]),
+    body,
+    code,
+    "",
+    actionLead,
+    link,
+    "",
+    notes[0],
+    "",
+    notes[1],
+    "",
+    "—",
+    `The Overview · ${siteUrl}`,
+    reason,
+  ].join("\n");
+  return {
+    subject,
+    text,
+    html: transactionalEmailHtml({
+      subject,
+      preview: "Your code, valid for 15 minutes.",
+      greeting,
+      heading,
+      body,
+      action: { label: "Sign in", link },
+      code: { lead: null, value: code, copyLink },
+      codeFirst: { actionLead },
+      notes,
+      reason,
+      siteUrl,
+    }),
+  };
+}
+
+function linkFirstEmail({ link, code, surface, purpose, firstName }: MagicLinkMail): EmailContent {
   const creating = purpose === "createAccount";
   const siteUrl = new URL(link).origin;
   const subject = creating ? "Finish creating your account on The Overview" : "Sign in to The Overview";

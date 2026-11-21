@@ -13,6 +13,7 @@ import {
   type CaptureTranscriptSource,
   type ClientTimingReport,
   type ExtractedArticle,
+  type NoteKind,
   type Overview,
   type OverviewStore,
   type PodcastEpisode,
@@ -23,7 +24,7 @@ import {
   type TranscriptStore,
   type VideoSource,
 } from "@overview/domain";
-import { episodeAsVideo, type OverviewInput, type PodcastGenerationInput } from "@overview/generation";
+import { episodeAsVideo, type GenerationInput, type OverviewInput, type PodcastGenerationInput } from "@overview/generation";
 import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
 import { countWords } from "../../../util/countWords.js";
 import { captureReasonFromDraft } from "../../overviews/util/captureReasonFromDraft.js";
@@ -92,10 +93,8 @@ export interface RunOverviewGenerationOptions {
   // Whether anything about the reader went into the prompt, as composed for this run
   // (docs/features/personalisation.md, "Analytics").
   onPersonalised?: ((personalised: boolean) => void) | undefined;
-  // Onboarding fetches the transcript, or reads the article, at once but writes only once the reader has answered
-  // or skipped About you, so the first overview is made from their answers. Topics and
-  // Settings are read after it settles (docs/features/onboarding.md, "Writing waits").
-  waitToWrite?: (() => Promise<void>) | undefined;
+  // A video's kind, already checked before the account (OV-327), so writing skips its own check.
+  noteKind?: NoteKind | undefined;
   // The same measurement the timing is sent from, so the event's duration agrees with it.
   onTimed?: ((timing: ClientTimingReport) => void) | undefined;
   // Each key as it is tried, so analytics names the one that made or failed the overview.
@@ -129,8 +128,13 @@ export async function runOverviewGeneration(
       .join(" ")
       .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
     options.onProgress?.({ video, transcriptWords, transcriptSource, transcriptOpening });
-    await waitToWrite(options);
-    const overview = await writeOverview({ video, transcript }, deps, options, stopwatch);
+    stopIfCancelled(options);
+    const overview = await writeOverview(
+      { video, transcript, ...(options.noteKind === undefined ? {} : { noteKind: options.noteKind }) },
+      deps,
+      options,
+      stopwatch,
+    );
     timed("finished");
     return overview;
   } catch (error) {
@@ -156,7 +160,7 @@ export async function runArticleOverviewGeneration(
     const held = await heldOverviewOf(deps.overviewStore, key);
     if (held !== null) throw new ArticleAlreadyHeldError(held);
   }
-  await waitToWrite(options);
+  stopIfCancelled(options);
   return writeOverview({ article: result.article }, deps, options);
 }
 
@@ -188,19 +192,13 @@ export async function runPodcastOverviewGeneration(
   stopIfCancelled(options);
   await deps.transcriptStore.saveTranscript({ ...transcript, videoId: key });
   options.onEpisodeWords?.(transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0));
-  await waitToWrite(options);
+  stopIfCancelled(options);
   const podcast = podcastSource(episode, id, sharedFrom);
   return writeOverview({ podcast, video: episodeAsVideo(podcast, episode.notes), transcript: transcript.segments }, deps, options);
 }
 
 function stopIfCancelled(options: RunOverviewGenerationOptions): void {
   if (options.isCancelled?.()) throw new GenerationCancelledError();
-}
-
-async function waitToWrite(options: RunOverviewGenerationOptions): Promise<void> {
-  if (!options.waitToWrite) return;
-  await options.waitToWrite();
-  stopIfCancelled(options);
 }
 
 // A regeneration rewrites what the model wrote and keeps what the reader did: why they saved it,
@@ -216,7 +214,7 @@ const keptOnRegeneration = (previous: Overview) => ({
 });
 
 type WhatToWrite =
-  | Pick<Extract<OverviewInput, { video: unknown }>, "video" | "transcript">
+  | Pick<GenerationInput, "video" | "transcript" | "noteKind">
   | Pick<PodcastGenerationInput, "podcast" | "video" | "transcript">
   | { article: ExtractedArticle };
 
