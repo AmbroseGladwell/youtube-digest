@@ -25,7 +25,7 @@ import {
 import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage } from "@overview/generation";
 import { makeStoredTranscript } from "@overview/store-conformance";
 import { AccountId } from "../auth/AccountId.js";
-import { CHAT_REPLY_SCHEMA, ChatReply } from "../chats/ChatReply.js";
+import { allIds, CHAT_REPLY_SCHEMA, ChatReply, citedIds, type CitedIds } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
 import { chatSystemPrompt } from "../chats/chatPrompt.js";
 import { libraryChatMaterial, PICK_SHAPE, pickedBlock, pickPrompt, SECTIONED_SHAPE } from "../chats/libraryChatPrompt.js";
@@ -584,6 +584,21 @@ async function pgKeyword(dataDir: string, retrievalPath: string): Promise<void> 
   }
 }
 
+// The reply as the scoring below reads it, from the shape every chat now gives (OV-354): its text
+// flattened, and its ids by kind.
+type ScoredReply = CitedIds & { answer: string; generalKnowledge: boolean };
+const scoredReply = (reply: ChatReply): ScoredReply => ({
+  ...citedIds(allIds(reply), reply.inSource),
+  answer: [
+    reply.intro,
+    ...reply.sections.flatMap((section) => [section.heading, ...section.paragraphs, ...section.numbered, ...section.bullets]),
+    reply.takeaway,
+  ]
+    .filter((part) => part !== "")
+    .join("\n"),
+  generalKnowledge: reply.generalKnowledge,
+});
+
 // --- answering ---
 
 type Arm = {
@@ -604,6 +619,9 @@ function arms(): Map<string, Arm> {
   const search = (count: number) => (row: RetrievalRow) => row.claimOrder.slice(0, count);
   const list: Arm[] = [
     { name: "home", pick: () => [], transcripts: false },
+    // OV-354: each question asked in the chat of the overview it is about, scored on its own
+    // transcript: the shipped prompt's own citing, as OV-267 measured it.
+    { name: "own", pick: () => [], transcripts: false },
     { name: "search3-full", pick: search(3), transcripts: true },
     { name: "search3-overviews", pick: search(3), transcripts: false },
     { name: "search5-overviews", pick: search(5), transcripts: false },
@@ -833,7 +851,9 @@ async function answer(
         if (question === undefined) continue;
         if (options.only !== null && !new RegExp(options.only).test(question.kind)) continue;
         if (seen.has(key(arm.name, run, row.id))) continue;
-        const home = library.overviews.get(row.home)!;
+        const ownId = arm.name === "own" && question.expected.length === 1 ? question.expected[0]! : row.home;
+        if (arm.name === "own" && (question.kind === "notInLibrary" || question.kind === "applyAcross")) continue;
+        const home = library.overviews.get(ownId)!;
         const kind = chatSourceKind(home.overview);
         const homePassages = home.segments === null ? [] : transcriptPassages(home.segments);
         const closest =
@@ -884,17 +904,34 @@ async function answer(
           );
           let raw = "";
           for await (const piece of stream.pieces) raw += piece;
-          const reply = ChatReply.parse(JSON.parse(raw));
+          const reply = scoredReply(ChatReply.parse(JSON.parse(raw)));
           const usage = stream.usage();
+          const own = arm.name === "own";
           turn = score(
             arm.name,
             run,
             question,
             row,
             others,
-            block?.sources ?? [],
+            own
+              ? [
+                  {
+                    label: "H",
+                    overviewId: ownId,
+                    title: home.overview.source.title,
+                    passages: homePassages,
+                    partIds: overviewParts(home.overview).map(({ part, index }) => `H.${overviewPartId(part, index)}`),
+                  },
+                ]
+              : (block?.sources ?? []),
             homePassages,
-            reply,
+            own
+              ? {
+                  ...reply,
+                  passages: reply.passages.map((id) => (/^p\d+$/.test(id) ? `H.${id}` : id)),
+                  overviewParts: reply.overviewParts.map((id) => (id.includes(".") ? id : `H.${id}`)),
+                }
+              : reply,
             usage,
             price,
             Date.now() - startedAt,
@@ -950,7 +987,7 @@ function score(
   others: string[],
   sources: OtherSource[],
   homePassages: Passage[],
-  reply: ChatReply,
+  reply: ScoredReply,
   usage: TokenUsage | null,
   price: NonNullable<ReturnType<typeof priceOf>>,
   ms: number,
@@ -1121,7 +1158,7 @@ async function mapArm(
         );
         let raw = "";
         for await (const piece of stream.pieces) raw += piece;
-        const reply = ChatReply.parse(JSON.parse(raw));
+        const reply = scoredReply(ChatReply.parse(JSON.parse(raw)));
         const usage = stream.usage();
         const ids = [...new Set(reply.overviewParts)];
         const invalidIds = ids.filter((id) => !map.labels.has(id) && !map.partIds.has(id));
@@ -1399,7 +1436,7 @@ async function projectChat(
         if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
         const entry = projectOf(question.project);
         let messages: PromptMessage[];
-        let citedOf: (reply: ChatReply) => { cited: string[]; invalid: string[] };
+        let citedOf: (reply: ScoredReply) => { cited: string[]; invalid: string[] };
         if (pinned) {
           const home = library.overviews.get(resolve(question.home!))!;
           const block = pinnedProjectBlock(library, entry, home.id, closestMembers(question, entry.members), armName === "at-project");
@@ -1492,7 +1529,7 @@ async function projectChat(
           for await (const piece of stream.pieces) raw += piece;
           if (stream.finishReason() === "length")
             throw new Error(`cut off at the cap, ${stream.usage()?.outputTokens ?? "?"} output tokens`);
-          const reply = ChatReply.parse(JSON.parse(raw));
+          const reply = scoredReply(ChatReply.parse(JSON.parse(raw)));
           const usage = stream.usage();
           const { cited, invalid } = citedOf(reply);
           const core = question.core.map(resolve);
@@ -1633,6 +1670,32 @@ interface StructuredAnswer {
   intro: string;
   sections: Array<{ heading: string; points: Array<{ text: string; sources: string[] }> }>;
   takeaway: string;
+}
+
+// The shared reply shape (OV-354) scored as the older points were: each section one point, its text
+// the paragraphs and lists, its sources every id the section names. The intro's sources join as a point.
+function asPoints(json: unknown): StructuredAnswer {
+  const sections = (json as { sections: Array<Record<string, unknown>> }).sections;
+  if (sections.every((section) => Array.isArray(section["points"]))) return json as StructuredAnswer;
+  const shared = json as ChatReply;
+  return {
+    intro: shared.intro,
+    sections: [
+      ...(shared.introSources.length === 0
+        ? []
+        : [{ heading: "", points: [{ text: shared.intro, sources: shared.introSources.map((source) => source.id) }] }]),
+      ...shared.sections.map((section) => ({
+        heading: section.heading,
+        points: [
+          {
+            text: [...section.paragraphs, ...section.numbered, ...section.bullets].join(" "),
+            sources: section.sources.map((source) => source.id),
+          },
+        ],
+      })),
+    ],
+    takeaway: shared.takeaway,
+  };
 }
 
 interface TwoPassQuestion {
@@ -1864,7 +1927,7 @@ async function twoPass(
             key,
           );
           usage = addUsage(usage, reply.usage);
-          const answer = reply.json as StructuredAnswer;
+          const answer = asPoints(reply.json);
           const points = answer.sections.flatMap((section) => section.points);
           const ids = [...new Set(points.flatMap((point) => point.sources))];
           const valid = (id: string) => system.labels.has(id) || partIds.has(id);

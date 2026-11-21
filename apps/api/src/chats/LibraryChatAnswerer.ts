@@ -7,7 +7,6 @@ import {
   chatQuestionCount,
   chatRecordId,
   isInProject,
-  MAX_CHAT_MESSAGE_LENGTH,
   MAX_CHAT_PICKS,
   MAX_CHAT_QUESTIONS,
   Overview,
@@ -19,7 +18,8 @@ import {
   readStoredRecord,
   sourceKey,
   stampSchemaVersion,
-  type ChatAnswerSections,
+  type ChatSource,
+  type ChatCitation,
   type ChatMessage,
   type ChatOwner,
   type ChatScopeStats,
@@ -45,6 +45,7 @@ import { assertWhole, CHAT_FAILED, EmptyAnswerError, reasonOf, statusOf } from "
 import { chatModel } from "./chatModel.js";
 import { overviewCitationsOf, type CitableOverview } from "./citationsOf.js";
 import { keywordMinutes, transcriptMinutes } from "./keywordMinutes.js";
+import { PINNED_PROJECT_WHOLE } from "./chooseOtherSources.js";
 import {
   libraryChatMaterial,
   PICK_SHAPE,
@@ -53,8 +54,6 @@ import {
   pickedBlock,
   pickPrompt,
   SECTIONED_SHAPE,
-  SectionedReply,
-  SectionedSection,
   type LibraryChatScope,
 } from "./libraryChatPrompt.js";
 import { recordChatCost } from "./recordChatCost.js";
@@ -63,6 +62,8 @@ import { sectionsSoFar } from "./sectionsSoFar.js";
 import { streamChatCompletion, type ChatCompletionStream, type PromptMessage, type ReplyShape } from "./streamChatCompletion.js";
 import type { Passage } from "./transcriptPassages.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
+import { ChatReply, type ChatReplySection } from "./ChatReply.js";
+import { flattenedAnswer, structuredAnswer } from "./structuredAnswer.js";
 
 export interface LibraryChatAnswererOptions {
   apiKey: string;
@@ -88,21 +89,6 @@ function readAll<T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrati
   });
 }
 
-type SectionedSection = z.infer<typeof SectionedSection>;
-
-const cleaned = (text: string) => withoutCitationMarks(text, { library: true });
-
-// The answer as one text: what copy, a hand-off, MCP and the next question's history read.
-const flattened = (sections: ChatAnswerSections): string =>
-  [
-    sections.intro,
-    ...sections.sections.map((section) => [section.heading, ...section.points.map((point) => `- ${point.text}`)].join("\n")),
-    sections.takeaway,
-  ]
-    .filter((part) => part.trim() !== "")
-    .join("\n\n")
-    .slice(0, MAX_CHAT_MESSAGE_LENGTH);
-
 // Answers a reader's question over their whole library or one project, on our key, within the
 // same allowance as an overview's chat. Small enough, the overviews go whole and one pass answers;
 // larger, the model picks up to five from the map and code sends those whole for a second pass
@@ -117,7 +103,12 @@ export class LibraryChatAnswerer {
   async ask(
     { accountId, plan }: { accountId: AccountId; plan: Plan },
     owner: LibraryChatOwner,
-    question: { conversationId: string; text: string },
+    question: {
+      conversationId: string;
+      text: string;
+      pins?: { overviews: readonly string[]; projects: readonly string[] };
+      setAside?: readonly string[];
+    },
     log: FastifyBaseLogger,
   ): Promise<AsyncGenerator<ChatStreamEvent>> {
     const { records, usage, clock, dailyMessages } = this.#options;
@@ -140,13 +131,57 @@ export class LibraryChatAnswerer {
     const release = () => usage.release(reservation.day, accountId);
 
     const material = libraryChatMaterial(scope, overviews, this.#options.wholeCharacters);
-    const labelOf = new Map([...material.labels].map(([label, overview]) => [overview.id as string, label]));
     const history = conversation?.messages ?? [];
-    const readBefore = new Set(history.flatMap((message) => (message.from === "reader" ? (message.picked ?? []) : [])));
+    const asked = history.flatMap((message) => (message.from === "reader" ? [message] : []));
+    // Pins (OV-354): what the reader added with "@" is read whole with that question, beside the
+    // picks. One outside the project gets a label after the map's, fixed for the conversation.
+    const pastSources = asked.flatMap((message) => message.sources ?? []);
+    const wasSetAside = new Set(asked.flatMap((message) => message.setAside ?? []));
+    const pinnedNow = await this.#pinned(accountId, question.pins ?? { overviews: [], projects: [] });
+    const labels = new Map(material.labels);
+    const labelOf = new Map([...labels].map(([label, overview]) => [overview.id as string, label]));
+    const outside = await this.#overviewsOf(
+      accountId,
+      pastSources.map((source) => source.overviewId).filter((id) => !labelOf.has(id)),
+    );
+    for (const overview of [...outside, ...pinnedNow]) {
+      if (labelOf.has(overview.id)) continue;
+      const label = `O${labels.size + 1}`;
+      labels.set(label, overview);
+      labelOf.set(overview.id, label);
+    }
+    const setAsideNow = pastSources.filter(
+      (source) => !wasSetAside.has(source.label) && (question.setAside ?? []).includes(source.overviewId),
+    );
+    const setAsideIds = new Set<string>([
+      ...pastSources.filter((source) => wasSetAside.has(source.label)).map((source) => source.overviewId),
+      ...setAsideNow.map((source) => source.overviewId),
+    ]);
+    const readBefore = new Set<string>([
+      ...asked.flatMap((message) => message.picked ?? []),
+      ...pastSources.filter((source) => !setAsideIds.has(source.overviewId)).map((source) => source.overviewId),
+    ]);
+    const pinnedNew = pinnedNow.filter((overview) => !readBefore.has(overview.id));
+    const nextS = Math.max(0, ...pastSources.map((source) => Number(source.label.slice(1)))) + 1;
+    const pinnedSources: ChatSource[] = pinnedNew.map((overview, index) => ({
+      label: `S${nextS + index}`,
+      overviewId: overview.id as OverviewId,
+      title: overview.source.title,
+      how: "pinned",
+    }));
+    const setAsideLine = (named: readonly ChatSource[]): PromptMessage[] =>
+      named.length === 0
+        ? []
+        : [
+            {
+              role: "user",
+              content: `The reader set aside ${named.map((source) => `"${source.title}"`).join(", ")} from this conversation. Don't use or cite ${named.length === 1 ? "it" : "them"} from here on.`,
+            },
+          ];
     const block = (picked: readonly string[]): PromptMessage[] => {
       const entries = picked.flatMap((overviewId) => {
         const label = labelOf.get(overviewId);
-        const overview = label === undefined ? undefined : material.labels.get(label);
+        const overview = label === undefined ? undefined : labels.get(label);
         return label === undefined || overview === undefined ? [] : [[label, overview] as const];
       });
       return entries.length === 0 ? [] : [pickedBlock(entries)];
@@ -155,7 +190,7 @@ export class LibraryChatAnswerer {
     const minutesMessage = (minutes: ReadonlyArray<{ overviewId: string; passages: readonly Passage[] }>): PromptMessage[] => {
       const entries = minutes.flatMap(({ overviewId, passages }) => {
         const label = labelOf.get(overviewId);
-        const overview = label === undefined ? undefined : material.labels.get(label);
+        const overview = label === undefined ? undefined : labels.get(label);
         if (label === undefined || overview === undefined || passages.length === 0) return [];
         for (const passage of passages) {
           minuteLabels.set(`${label}.${passage.id}`, {
@@ -183,7 +218,8 @@ export class LibraryChatAnswerer {
       ...history.flatMap((message): PromptMessage[] =>
         message.from === "reader"
           ? [
-              ...block(message.picked ?? []),
+              ...block([...(message.sources ?? []).map((source) => source.overviewId), ...(message.picked ?? [])]),
+              ...setAsideLine(pastSources.filter((source) => (message.setAside ?? []).includes(source.label))),
               ...minutesMessage(
                 (message.minutes ?? []).map(({ overviewId, passages: ids }) => ({
                   overviewId,
@@ -228,7 +264,9 @@ export class LibraryChatAnswerer {
           picked = [...new Set(labels)]
             .flatMap((label) => {
               const overview = material.labels.get(label);
-              return overview === undefined || readBefore.has(overview.id) ? [] : [overview.id as OverviewId];
+              return overview === undefined || readBefore.has(overview.id) || pinnedNew.some((pin) => pin.id === overview.id)
+                ? []
+                : [overview.id as OverviewId];
             })
             .slice(0, MAX_CHAT_PICKS);
           yield {
@@ -237,31 +275,30 @@ export class LibraryChatAnswerer {
           };
         }
 
-        const readWhole = new Set<string>([...readBefore, ...picked]);
+        const readWhole = new Set<string>([...readBefore, ...picked, ...pinnedNew.map((overview) => overview.id)]);
         const citable = new Map<string, CitableOverview>(
-          [...material.labels].map(([label, overview]) => [
-            label,
-            {
-              overviewId: overview.id as OverviewId,
-              title: overview.source.title,
-              overview,
-              ...(material.mode === "map" && !readWhole.has(overview.id) ? { brief: true } : {}),
-            },
-          ]),
+          [...labels]
+            .filter(([, overview]) => !setAsideIds.has(overview.id))
+            .map(([label, overview]) => [
+              label,
+              {
+                overviewId: overview.id as OverviewId,
+                title: overview.source.title,
+                overview,
+                ...(material.mode === "map" && !readWhole.has(overview.id) ? { brief: true } : {}),
+              },
+            ]),
         );
-        const sectionOf = (section: SectionedSection): ChatAnswerSections["sections"][number] => ({
-          heading: cleaned(section.heading),
-          points: section.points.map((point) => ({
-            text: cleaned(point.text),
-            citations: [
-              ...overviewCitationsOf(
-                point.sources.filter((source) => !/\.p\d+$/.test(source)),
-                citable,
-              ),
-              ...[...new Set(point.sources)].flatMap((source) => minuteLabels.get(source) ?? []),
-            ],
-          })),
-        });
+        // An overview's id or item (O3, O3.kp2), or a minute of its transcript (O3.p14).
+        const cite = (ids: readonly string[]): ChatCitation[] => [
+          ...overviewCitationsOf(
+            ids.filter((id) => !/\.p\d+$/.test(id)),
+            citable,
+          ),
+          ...[...new Set(ids)].flatMap((id) => minuteLabels.get(id) ?? []),
+        ];
+        const sectionOf = (section: ChatReplySection) =>
+          structuredAnswer({ intro: "", introSources: [], sections: [section], takeaway: "" }, cite, { library: true }).sections[0]!;
 
         // OV-352: a large project also sends the 8 best minutes of its members' transcripts.
         const found =
@@ -272,7 +309,13 @@ export class LibraryChatAnswerer {
         keywordMinuteCount = minutes.reduce((total, each) => total + each.passages.length, 0);
         sentMinutes = minutes.map(({ overviewId, passages: sent }) => ({ overviewId, passages: sent.map((passage) => passage.id) }));
         stream = await ask(
-          [...before, ...block(picked), ...minutesMessage(minutes), { role: "user", content: question.text }],
+          [
+            ...before,
+            ...block([...pinnedNew.map((overview) => overview.id), ...picked]),
+            ...minutesMessage(minutes),
+            ...setAsideLine(setAsideNow),
+            { role: "user", content: question.text },
+          ],
           SECTIONED_SHAPE,
         );
         let raw = "";
@@ -287,29 +330,37 @@ export class LibraryChatAnswerer {
           }
           const whole = sectionsSoFar(raw);
           for (; sectionsSent < whole.length; sectionsSent += 1) {
-            const section = SectionedSection.safeParse(whole[sectionsSent]);
+            const section = ChatReply.shape.sections.element.safeParse(whole[sectionsSent]);
             if (section.success) yield { type: "section", section: sectionOf(section.data) };
           }
         }
         assertWhole(stream);
-        const reply = SectionedReply.parse(JSON.parse(raw));
-        const sections: ChatAnswerSections = {
-          intro: cleaned(reply.intro),
-          sections: reply.sections.map(sectionOf),
-          takeaway: cleaned(reply.takeaway),
-        };
-        const text = flattened(sections);
+        const reply = ChatReply.parse(JSON.parse(raw));
+        const sections = structuredAnswer(reply, cite, { library: true });
+        const text = flattenedAnswer(sections);
         if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
-        const citations = uniqueCitations(sections.sections.flatMap((section) => section.points.flatMap((point) => point.citations)));
+        const citations = uniqueCitations(
+          [...sections.introSources, ...sections.sections.flatMap((section) => section.sources)].map((source) => source.citation),
+        );
         const messages: ChatMessage[] = [
           {
             from: "reader",
             text: question.text,
             at: askedAt.toISOString(),
             ...(picked.length === 0 ? {} : { picked }),
+            ...(pinnedSources.length === 0 ? {} : { sources: pinnedSources }),
+            ...(setAsideNow.length === 0 ? {} : { setAside: setAsideNow.map((source) => source.label) }),
             ...(sentMinutes.length === 0 ? {} : { minutes: sentMinutes }),
           },
-          { from: "answer", text, at: clock().toISOString(), citations, inSource: false, sections, stats },
+          {
+            from: "answer",
+            text,
+            at: clock().toISOString(),
+            citations,
+            inSource: false,
+            sections,
+            stats: { ...stats, read: material.mode === "whole" ? overviews.length : picked.length + pinnedNew.length },
+          },
         ];
         const written = await appendChatMessages(records, accountId, { owner, conversationId: question.conversationId, messages }, clock());
         settled = true;
@@ -324,10 +375,10 @@ export class LibraryChatAnswerer {
             pickOutputTokens: pickCost.outputTokens,
             picked: picked.length,
             sections: sections.sections.length,
-            points: sections.sections.reduce((total, section) => total + section.points.length, 0),
+            sourcesCited: citations.length,
             otherOverviewCitations: citations.length,
             keywordMinutes: keywordMinuteCount,
-            minuteCitations: citations.filter((citation) => citation.range !== undefined).length,
+            minuteCitations: citations.filter((citation) => "overviewId" in citation && citation.range !== undefined).length,
             inSource: false,
             used: reservation.used,
             limit: reservation.limit,
@@ -363,6 +414,31 @@ export class LibraryChatAnswerer {
     return answer();
   }
 
+  // What the reader pinned: overviews, and a project's members, the most recently added 8 of a large
+  // one, as an overview's chat caps them. Only live ones.
+  async #pinned(accountId: AccountId, pins: { overviews: readonly string[]; projects: readonly string[] }): Promise<Overview[]> {
+    const { records } = this.#options;
+    const members: string[] = [];
+    for (const project of readAll(await records.readLive(accountId, "project", pins.projects), Project, PROJECT_MIGRATIONS)) {
+      members.push(
+        ...readAll(await records.listLive(accountId, "projectMember", `${project.id}:%`), ProjectMember, PROJECT_MEMBER_MIGRATIONS)
+          .filter(isInProject)
+          .sort((left, right) => right.addedAt.localeCompare(left.addedAt))
+          .slice(0, PINNED_PROJECT_WHOLE)
+          .map((member) => member.overviewId),
+      );
+    }
+    const ids = [...new Set([...pins.overviews, ...members])];
+    const found = new Map((await this.#overviewsOf(accountId, ids)).map((overview) => [overview.id as string, overview]));
+    return ids.flatMap((id) => found.get(id) ?? []);
+  }
+
+  async #overviewsOf(accountId: AccountId, ids: readonly string[]): Promise<Overview[]> {
+    return ids.length === 0
+      ? []
+      : readAll(await this.#options.records.readLive(accountId, "overview", [...new Set(ids)]), Overview, OVERVIEW_MIGRATIONS);
+  }
+
   // The overviews a question is over, oldest saved first so a new save lands at the end of the
   // cached map, and the counts its answer shows, worked out here.
   async #scope(
@@ -387,10 +463,10 @@ export class LibraryChatAnswerer {
 }
 
 // An overview cited by several points is one citation of each place, and of the whole only once.
-function uniqueCitations(citations: readonly OtherOverviewCitation[]): OtherOverviewCitation[] {
+function uniqueCitations(citations: readonly ChatCitation[]): ChatCitation[] {
   const seen = new Set<string>();
   return citations.filter((citation) => {
-    const key = `${citation.overviewId}:${citation.item === null ? "" : `${citation.item.part}:${citation.item.index}`}`;
+    const key = JSON.stringify(citation);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

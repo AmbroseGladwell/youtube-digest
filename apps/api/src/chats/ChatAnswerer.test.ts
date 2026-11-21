@@ -43,7 +43,14 @@ const answer = (
   overviewParts: string[] = [],
   generalKnowledge = false,
 ) => ({
-  reply: { answer: text, passages, overviewParts, chatMessages, inSource, generalKnowledge },
+  reply: {
+    intro: text,
+    introSources: [...passages, ...overviewParts, ...chatMessages].map((id) => ({ id, relation: "Supports" })),
+    sections: [],
+    takeaway: "",
+    inSource,
+    generalKnowledge,
+  },
 });
 
 interface Setup {
@@ -103,6 +110,12 @@ async function setUp(
   };
 }
 
+// The stored answer without its structured shape, which tests of the shape check on their own.
+const withoutSections = (message: ChatMessage | undefined) => {
+  const { sections: _sections, ...rest } = message as Extract<ChatMessage, { from: "answer" }>;
+  return rest;
+};
+
 const eventsOf = (body: string): ChatStreamEvent[] =>
   body
     .split("\n\n")
@@ -133,7 +146,7 @@ test("a question is answered as a stream on Luna, cited by time from code, store
   const stored = await setup.account.change("chat", chatRecordId(setup.overviewId, conversation));
   assert.equal(stored.rev, done.rev);
   assert.deepEqual((stored.body as { messages: ChatMessage[] }).messages, done.messages);
-  assert.deepEqual(done.messages[1], {
+  assert.deepEqual(withoutSections(done.messages[1]), {
     from: "answer",
     text: "Three to five grams a day.",
     at: setup.testApp.clock.now.toISOString(),
@@ -210,7 +223,7 @@ test("a follow-up carries its conversation, another chat can be built on and cit
   answered((await setup.ask(first, "When should I take it?")).body);
 
   const built = answered((await setup.ask(second, "Remind me when I decided to take it?")).body);
-  assert.deepEqual(built.messages[1], {
+  assert.deepEqual(withoutSections(built.messages[1]), {
     from: "answer",
     text: "As you decided, after training.",
     at: setup.testApp.clock.now.toISOString(),
@@ -239,7 +252,7 @@ test("a question the transcript doesn't answer is declined, with no citation of 
 
   const done = answered((await setup.ask(randomUUID(), "Is it vegan?")).body);
 
-  assert.deepEqual(done.messages[1], {
+  assert.deepEqual(withoutSections(done.messages[1]), {
     from: "answer",
     text: "The video doesn't cover that.",
     at: setup.testApp.clock.now.toISOString(),
@@ -259,7 +272,7 @@ test("a fair question the source doesn't cover is answered from general knowledg
   answered((await setup.ask(randomUUID(), "Where does it mention chickens?")).body);
 
   assert.match(setup.openAi.requests[0]?.messages[0]?.content ?? "", /answer briefly from general knowledge/);
-  assert.deepEqual(done.messages[1], {
+  assert.deepEqual(withoutSections(done.messages[1]), {
     from: "answer",
     text: general,
     at: setup.testApp.clock.now.toISOString(),
@@ -572,7 +585,7 @@ test("a reader who stops an answer, or leaves, before it is stored gets the ques
   const events = await answerer.ask(
     { accountId: account.accountId, plan: "free", acrossSources: true },
     setup.overviewId,
-    { conversationId, text: "How much?", pins: { overviews: [], projects: [] }, setAside: [] },
+    { conversationId, text: "How much?", pins: { overviews: [], projects: [] }, setAside: [], searchLibrary: true },
     logger,
   );
   const first = await events.next();
@@ -897,4 +910,89 @@ test("the chat's own transcript and an overview set aside are never searched for
       .join("\n"),
     /# Minutes of their transcripts/,
   );
+});
+
+test("every answer is stored in the shared shape: a simple one as its intro with its sources, a longer one in sections (OV-354)", async (t) => {
+  const setup = await setUp(t, [
+    answer("Three to five grams a day.", ["p2"]),
+    {
+      reply: {
+        intro: "There are two ways to take it.",
+        introSources: [],
+        sections: [
+          {
+            heading: "Daily",
+            paragraphs: ["Take it every day (p2)."],
+            numbered: [],
+            bullets: [],
+            sources: [
+              { id: "p2", relation: "Supports" },
+              { id: "p9", relation: "Supports" },
+            ],
+          },
+          {
+            heading: "Where they differ",
+            paragraphs: ["Loading is optional."],
+            numbered: ["Load for a week", "Then keep to the daily dose"],
+            bullets: [],
+            sources: [
+              { id: "p1", relation: "For loading" },
+              { id: "p2", relation: "  " },
+            ],
+          },
+        ],
+        takeaway: "Take it daily.",
+        inSource: true,
+        generalKnowledge: false,
+      },
+    },
+  ]);
+  const conversation = randomUUID();
+
+  const simple = answered((await setup.ask(conversation, "How much?")).body).messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  const response = await setup.ask(conversation, "How do I take it?");
+
+  assert.deepEqual(simple.sections, {
+    intro: "Three to five grams a day.",
+    introSources: [{ citation: { startMs: 61_000, endMs: 70_000 }, relation: "Supports" }],
+    sections: [],
+    takeaway: "",
+  });
+  const events = eventsOf(response.body);
+  assert.equal(events.filter((event) => event.type === "section").length, 2);
+  const long = answered(response.body).messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  assert.deepEqual(long.sections?.sections[0], {
+    heading: "Daily",
+    paragraphs: ["Take it every day."],
+    numbered: [],
+    bullets: [],
+    sources: [{ citation: { startMs: 61_000, endMs: 70_000 }, relation: "Supports" }],
+  });
+  assert.deepEqual(
+    long.sections?.sections[1]?.sources.map((source) => source.relation),
+    ["For loading", "Supports"],
+  );
+  assert.equal(
+    long.text,
+    "There are two ways to take it.\n\nDaily\nTake it every day.\n\nWhere they differ\nLoading is optional.\n1. Load for a week\n2. Then keep to the daily dose\n\nTake it daily.",
+  );
+});
+
+test("with Search my library off, nothing is found by meaning or by words, pins still go in, and the question says so", async (t) => {
+  const setup = await setUp(t, [answer("Three to five grams.")], { embedder: conceptEmbedder() });
+  const founders = foundersNote();
+  const pinned = titled(breadNote(), "Sourdough");
+  await saved(setup, founders, pinned);
+
+  const response = await setup.ask(randomUUID(), "What happens when leaders overstay?", setup.overviewId, {
+    pins: { overviews: [pinned.id] },
+    searchLibrary: false,
+  });
+
+  assert.deepEqual(eventsOf(response.body)[0], {
+    type: "sources",
+    pinned: [{ label: "S1", overviewId: pinned.id, title: "Sourdough", how: "pinned" }],
+    found: [],
+  });
+  assert.equal((answered(response.body).messages[0] as Extract<ChatMessage, { from: "reader" }>).searchedLibrary, false);
 });

@@ -7,7 +7,7 @@ import {
   type Overview,
   type OverviewPartItem,
 } from "@overview/domain";
-import type { ChatReply } from "./ChatReply.js";
+import type { CitedIds } from "./ChatReply.js";
 import type { LabelledSource } from "./otherSourcesInPrompt.js";
 import type { Passage } from "./transcriptPassages.js";
 
@@ -75,7 +75,7 @@ const citable = (sources: ReadonlyMap<string, LabelledSource>): Map<string, Cita
 // An answer is in the source only when it cites the transcript: the overview and another chat
 // are never the source (docs/features/chats.md).
 export function citationsOf(
-  reply: ChatReply,
+  reply: CitedIds,
   passages: readonly Passage[],
   parts: readonly OverviewPartItem[],
   chatLabels: ReadonlyMap<string, Extract<ChatCitation, { chatId: string }>>,

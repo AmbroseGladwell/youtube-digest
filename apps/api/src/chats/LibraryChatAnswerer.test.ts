@@ -30,7 +30,12 @@ interface Setup {
   account: TestAccount;
   openAi: FakeChatOpenAi;
   lines: Array<Record<string, unknown>>;
-  ask(owner: LibraryChatOwner, conversationId: string, text: string): Promise<ChatStreamEvent[]>;
+  ask(
+    owner: LibraryChatOwner,
+    conversationId: string,
+    text: string,
+    extra?: { pins?: { overviews: string[]; projects: string[] }; setAside?: string[] },
+  ): Promise<ChatStreamEvent[]>;
 }
 
 async function setUp(t: TestContext, answers: FakeChatAnswer[], { wholeCharacters }: { wholeCharacters?: number } = {}): Promise<Setup> {
@@ -68,12 +73,12 @@ async function setUp(t: TestContext, answers: FakeChatAnswer[], { wholeCharacter
     account,
     openAi,
     lines,
-    ask: async (owner, conversationId, text) => {
+    ask: async (owner, conversationId, text, extra = {}) => {
       const events: ChatStreamEvent[] = [];
       for await (const event of await answerer.ask(
         { accountId: account.accountId, plan: "free" },
         owner,
-        { conversationId, text },
+        { conversationId, text, ...extra },
         logger,
       )) {
         events.push(event);
@@ -115,7 +120,20 @@ async function projectOf(setup: Setup, overviews: Overview[], removed: Overview[
 }
 
 const sectioned = (sections: Array<{ heading: string; points: Array<{ text: string; sources: string[] }> }>) => ({
-  reply: { intro: "Most of them start small.", sections, takeaway: "Pick one habit." },
+  reply: {
+    intro: "Most of them start small.",
+    introSources: [],
+    sections: sections.map((section) => ({
+      heading: section.heading,
+      paragraphs: section.points.map((point) => point.text),
+      numbered: [],
+      bullets: [],
+      sources: section.points.flatMap((point) => point.sources.map((id) => ({ id, relation: "Supports" }))),
+    })),
+    takeaway: "Pick one habit.",
+    inSource: false,
+    generalKnowledge: false,
+  },
 });
 
 const answeredOf = (events: ChatStreamEvent[]) => {
@@ -157,17 +175,24 @@ test("a small project goes whole in one pass, with its purpose, and answers in s
     ["text", "section", "answered"],
   );
   const section = events.find((event) => event.type === "section") as Extract<ChatStreamEvent, { type: "section" }>;
-  assert.equal(section.section.points[0]!.text, "Begin with one habit.");
+  assert.equal(section.section.paragraphs[0], "Begin with one habit.");
 
   const done = answeredOf(events);
   const answer = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
-  assert.deepEqual(answer.sections?.sections[0]?.points[0]?.citations, [
-    { overviewId: older.id, title: "Cardstock", item: { part: "keyPoint", index: 0, textHash: overviewPartHash("Start with one habit") } },
-    { overviewId: newer.id, title: "Tiny SaaS", item: null },
-  ]);
-  assert.deepEqual(answer.stats, { overviews: 2 });
+  assert.deepEqual(
+    answer.sections?.sections[0]?.sources.map((source) => source.citation),
+    [
+      {
+        overviewId: older.id,
+        title: "Cardstock",
+        item: { part: "keyPoint", index: 0, textHash: overviewPartHash("Start with one habit") },
+      },
+      { overviewId: newer.id, title: "Tiny SaaS", item: null },
+    ],
+  );
+  assert.deepEqual(answer.stats, { overviews: 2, read: 2 });
   assert.equal(answer.inSource, false);
-  assert.match(answer.text, /^Most of them start small\.\n\nScope\n- Begin with one habit\.\n\nPick one habit\.$/);
+  assert.match(answer.text, /^Most of them start small\.\n\nScope\nBegin with one habit\.\n\nPick one habit\.$/);
   assert.equal((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).picked, undefined);
   const stored = await setup.account.change("chat", chatRecordId({ kind: "project", id: project.id }, conversation));
   assert.equal((stored.body as { projectId: string }).projectId, project.id);
@@ -219,7 +244,7 @@ test("a large library is read in two passes: it picks from the map, reads the pi
   const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
   assert.deepEqual(
     reply.sections!.sections.flatMap((section) =>
-      section.points[0]!.citations.map((citation) => [citation.title, citation.item?.index ?? null]),
+      section.sources.flatMap(({ citation }) => ("overviewId" in citation ? [[citation.title, citation.item?.index ?? null]] : [])),
     ),
     [
       ["First", 1],
@@ -228,7 +253,7 @@ test("a large library is read in two passes: it picks from the map, reads the pi
       ["Third", 2],
     ],
   );
-  assert.deepEqual(reply.stats, { overviews: 3, projects: 1 });
+  assert.deepEqual(reply.stats, { overviews: 3, projects: 1, read: 2 });
   assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).picked, [overviews[0]!.id, overviews[2]!.id]);
   assert.equal(await usedThisMonth(setup), 1);
   const costs = await setup.testApp.sql.query<{ detail: string }>(
@@ -272,7 +297,9 @@ test("a follow-up's picks go after the history, the earlier ones stay where they
 });
 
 test("an empty reply fails, gives the question back and is logged as one", async (t) => {
-  const setup = await setUp(t, [{ reply: { intro: "", sections: [], takeaway: "" } }]);
+  const setup = await setUp(t, [
+    { reply: { intro: "", introSources: [], sections: [], takeaway: "", inSource: false, generalKnowledge: false } },
+  ]);
   await saved(setup, titled("Only", "2026-11-01T09:00:00.000Z"));
 
   const events = await setup.ask({ kind: "library" }, randomUUID(), "Anything?");
@@ -338,7 +365,45 @@ test("a large project's chat also sends the best minutes of its members' transcr
     { overviewId: withWords.id, passages: ["p1", "p2"] },
   ]);
   const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
-  assert.deepEqual(reply.sections!.sections[0]!.points[0]!.citations, [
-    { overviewId: withWords.id, title: "Sleep", item: null, range: { startMs: 60_000, endMs: 110_000 } },
+  assert.deepEqual(
+    reply.sections!.sections[0]!.sources.map((source) => source.citation),
+    [{ overviewId: withWords.id, title: "Sleep", item: null, range: { startMs: 60_000, endMs: 110_000 } }],
+  );
+});
+
+test("an overview pinned from outside the project is read whole with the question under its own label, and setting it aside says so (OV-354)", async (t) => {
+  const setup = await setUp(t, [
+    sectioned([{ heading: "Scope", points: [{ text: "Bake slowly.", sources: ["O2.kp1"] }] }]),
+    sectioned([{ heading: "Scope", points: [{ text: "Start small.", sources: ["O2", "O1"] }] }]),
   ]);
+  const member = titled("Member", "2026-11-01T09:00:00.000Z");
+  const outside = titled("Sourdough", "2026-11-02T09:00:00.000Z", ["Feed the starter", "Keep it warm", "Bake in a pot"]);
+  await saved(setup, member, outside);
+  const project = await projectOf(setup, [member]);
+  const conversation = randomUUID();
+
+  const first = await setup.ask({ kind: "project", id: project.id }, conversation, "How do I start?", {
+    pins: { overviews: [outside.id], projects: [] },
+  });
+  const second = await setup.ask({ kind: "project", id: project.id }, conversation, "And now?", { setAside: [outside.id] });
+
+  const [asked] = setup.openAi.requests.map((request) => request.messages);
+  assert.match(asked!.at(-2)!.content, /^The full notes of the overviews you chose:\n\n## \[O2\]\n\n# Sourdough/);
+  const done = answeredOf(first);
+  assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).sources, [
+    { label: "S1", overviewId: outside.id, title: "Sourdough", how: "pinned" },
+  ]);
+  assert.deepEqual(
+    (done.messages[1] as Extract<ChatMessage, { from: "answer" }>).sections!.sections[0]!.sources.map(({ citation }) =>
+      "overviewId" in citation ? citation.item?.index : null,
+    ),
+    [0],
+  );
+  const later = setup.openAi.requests[1]!.messages;
+  assert.equal(later.at(-2)!.content, 'The reader set aside "Sourdough" from this conversation. Don\'t use or cite it from here on.');
+  const reply = answeredOf(second).messages[1] as Extract<ChatMessage, { from: "answer" }>;
+  assert.deepEqual(
+    reply.sections!.sections[0]!.sources.map(({ citation }) => ("overviewId" in citation ? citation.title : null)),
+    ["Member"],
+  );
 });

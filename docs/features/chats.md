@@ -107,7 +107,51 @@ sent as overviews only (no transcripts; OV-352 adds keyword minutes):
 - **The stream** starts with a `sources` event, `{ pinned, found }`, when the question added any.
 - **A client before version 25** is answered from its own overview alone, as before: no search,
   no pins, no `sources` event.
+- **Search my library** (OV-354): a question with `searchLibrary: false` runs neither claim search
+  nor keyword search, so only pins are read. It's stored on the question as `searchedLibrary: false`,
+  so the switch is remembered per conversation on every device.
 - It counts as one message of the allowance, as any question does.
+
+## One shape for every answer
+
+OV-354; owner, 21 Nov 2026: every chat answers in the same shape, whatever its scope (an overview,
+a project, the library). They look and feel the same; only what they draw on differs. The reply
+(`ChatReply`, `CHAT_REPLY_SCHEMA`, `ANSWER_SHAPE_RULES`) is:
+
+- **an intro**, which alone answers a simple question in two to five plain sentences, with its
+  sources in `introSources`;
+- **sections**, only where the question has parts or the answer compares or lists. Each has a
+  heading, short paragraphs, a numbered list where order matters or bullets where it doesn't, and
+  `sources`: every id it rests on, each with how it relates ("Supports", or a few words for the
+  side it takes when it compares). Disagreement gets a section of its own;
+- **a takeaway**, one sentence when there are sections;
+- for an overview's chat, `inSource` and `generalKnowledge`, as before.
+
+**Citing.** A source id may be anything the chat can cite:
+- a passage (`p12`);
+- an item of the overview (`step2`);
+- another chat's message (`c1.m3`);
+- another overview or its item (`S2`, `S2.kp1`, `O3.kp2`);
+- a minute of another transcript (`S2.p14`, `O3.p14`).
+
+`structuredAnswer` cites each by code (an id it wasn't given is dropped) and stores
+`{ citation, relation }` pairs on the answer's `sections` (chat schema 6, client 28).
+
+**Text.** `text` is the flattened reading, for copy, hand-offs and the next question's history.
+`citations` is the union of every source.
+
+**Streaming.** Every chat's stream sends the intro as `text` and each section as `section`, once it
+is whole. An answer stored at schema 5, as points, reads as bullets with their sources as "Supports".
+
+**Measured on the shared shape** (21 Nov 2026, harness `own`, `shipped-keyword` and `twopass shipped`
+arms, ~$0.67):
+
+| Chat | Result | Before the change |
+|---|---|---|
+| An overview's own transcript (`own`) | right moment 61/68 (single moments 48/51; both of two moments 13/17); detail named 67/68 | OV-267's 46/48, on other questions |
+| The same: not covered | 10 of 12 cited nothing. The other 2 cited the part the video did cover and marked the rest as general knowledge | |
+| Across sources (`shipped-keyword`) | right moment 51/68, detail named 70/75 | 50/68 and 70/75, same day |
+| Library and project (`twopass shipped`) | 18/22 core overviews, no unknown ids, no counts | 19/22 |
 
 ## Library and project chat
 
@@ -155,6 +199,11 @@ or taken-out one.
   with 1,254 and 1,452 used when it got through. So an overview chat's cap is now 4,000
   (`MAX_ANSWER_TOKENS`). A reply that hits a cap fails as `AnswerCutOffError`, read from the
   provider's finish reason, rather than as unreadable JSON.
+- **Pins** (OV-354): the routes also take `pins` and `setAside`. Pinned overviews, and a pinned
+  project's 8 most recently added members, are read whole with that question beside the picks,
+  never counted against the 5. One outside the project gets a label after the map's. They're stored
+  as the question's `sources`, and setting one aside is a new message, as in an overview's chat.
+- **`stats.read`** counts the overviews the answer read whole ("From 5 of your 208 overviews").
 - **Not yet:** these chats don't read each other, and don't carry the reader's profile. The UI is
   OV-354, and keyword minutes from transcripts are OV-352.
 

@@ -8,7 +8,6 @@ import {
   composeReaderContext,
   chatQuestionCount,
   chatRecordId,
-  MAX_CHAT_MESSAGE_LENGTH,
   MAX_CHAT_QUESTIONS,
   Overview,
   OVERVIEW_MIGRATIONS,
@@ -40,12 +39,14 @@ import type { StoredRecord } from "../records/StoredRecord.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { answerSoFar } from "./answerSoFar.js";
+import { sectionsSoFar } from "./sectionsSoFar.js";
+import { flattenedAnswer, structuredAnswer } from "./structuredAnswer.js";
 import { assertWhole, CHAT_FAILED as FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
 import { recordChatCost, type ChatCost } from "./recordChatCost.js";
 import { reserveChatMessage } from "./reserveChatMessage.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
 import { appendChatMessages } from "./appendChatMessages.js";
-import { ChatReply } from "./ChatReply.js";
+import { allIds, ChatReply, citedIds } from "./ChatReply.js";
 import { chatModel } from "./chatModel.js";
 import { chatSystemPrompt, otherChatsPrompt } from "./chatPrompt.js";
 import { chooseOtherSources } from "./chooseOtherSources.js";
@@ -217,26 +218,41 @@ export class ChatAnswerer {
             found: sources.added.filter((source) => source.how === "found"),
           };
         }
+        const cite = (ids: readonly string[], inSource: boolean) =>
+          citationsOf(
+            citedIds(ids, inSource),
+            passages,
+            overviewParts(overview),
+            othersInPrompt.labels,
+            sources.inPrompt.labels,
+            sources.inPrompt.minuteLabels,
+          );
+        let sectionsSent = 0;
         for await (const piece of stream.pieces) {
           raw += piece;
-          const text = withoutCitationMarks(answerSoFar(raw), { arriving: true });
+          const text = withoutCitationMarks(answerSoFar(raw, "intro"), { arriving: true });
           if (text.length > sent.length && text.startsWith(sent)) {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;
           }
+          const whole = sectionsSoFar(raw);
+          for (; sectionsSent < whole.length; sectionsSent += 1) {
+            const section = ChatReply.shape.sections.element.safeParse(whole[sectionsSent]);
+            if (!section.success) continue;
+            // A passage cited before inSource is known shows as a moment; the stored answer settles it.
+            const [shown] = structuredAnswer(
+              { intro: "", introSources: [], sections: [section.data], takeaway: "" },
+              (ids) => cite(ids, true).citations,
+            ).sections;
+            if (shown !== undefined) yield { type: "section", section: shown };
+          }
         }
         assertWhole(stream);
         const reply = ChatReply.parse(JSON.parse(raw));
-        const text = withoutCitationMarks(reply.answer).slice(0, MAX_CHAT_MESSAGE_LENGTH);
+        const answerSections = structuredAnswer(reply, (ids) => cite(ids, reply.inSource).citations);
+        const text = flattenedAnswer(answerSections);
         if (text.length === 0) throw new EmptyAnswerError("the reply had no answer");
-        const cited = citationsOf(
-          reply,
-          passages,
-          overviewParts(overview),
-          othersInPrompt.labels,
-          sources.inPrompt.labels,
-          sources.inPrompt.minuteLabels,
-        );
+        const cited = cite(allIds(reply), reply.inSource);
         const messages: ChatMessage[] = [
           {
             from: "reader",
@@ -244,6 +260,7 @@ export class ChatAnswerer {
             at: askedAt.toISOString(),
             ...(sources.added.length === 0 ? {} : { sources: sources.added }),
             ...(sources.setAside.length === 0 ? {} : { setAside: sources.setAside }),
+            ...(question.searchLibrary ? {} : { searchedLibrary: false as const }),
             ...(sources.minutes.length === 0
               ? {}
               : {
@@ -253,7 +270,14 @@ export class ChatAnswerer {
                   })),
                 }),
           },
-          { from: "answer", text, at: clock().toISOString(), citations: cited.citations, inSource: cited.inSource },
+          {
+            from: "answer",
+            text,
+            at: clock().toISOString(),
+            citations: cited.citations,
+            inSource: cited.inSource,
+            sections: answerSections,
+          },
         ];
         const written = await appendChatMessages(
           records,
@@ -327,7 +351,9 @@ export class ChatAnswerer {
     const setAside = live.filter((source) => question.setAside.includes(source.overviewId)).map((source) => source.label);
     const stillLive = live.filter((source) => !setAside.includes(source.label));
     const inConversation = new Set(stillLive.map((source) => source.overviewId));
-    const choice = await chooseOtherSources(records, meaningSearch, {
+    // Search my library off (OV-354): only what the reader pinned is read.
+    const searching = question.searchLibrary;
+    const choice = await chooseOtherSources(records, searching ? meaningSearch : null, {
       accountId,
       home: overviewId,
       question,
@@ -341,7 +367,7 @@ export class ChatAnswerer {
     const setAsideIds = new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id)));
     const addedIds = new Set<string>(choice.added.map((source) => source.overviewId));
     const found =
-      passages === null
+      passages === null || !searching
         ? []
         : (
             await keywordMinutes({ passages, records }, accountId, question.text, { except: homeKey === null ? [] : [homeKey] }, log)

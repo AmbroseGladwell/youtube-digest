@@ -84,22 +84,41 @@ const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" 
 // What a library or project chat was over, for its heading (OV-353).
 export type ChatScopeLabel = { kind: "project"; name: string; id: string } | { kind: "library" };
 
-const titlesOf = (citations: readonly OtherOverviewCitation[]): string =>
-  [...new Set(citations.map((citation) => `"${citation.title}"`))].join(", ");
+// Sources grouped by how they relate, each group named once: "Supports: …; For charging early: …".
+const sourcesLine = (sources: ChatAnswerSections["introSources"], describe: (citation: ChatCitation) => string): string | null => {
+  if (sources.length === 0) return null;
+  const groups = new Map<string, string[]>();
+  for (const { citation, relation } of sources) groups.set(relation, [...(groups.get(relation) ?? []), describe(citation)]);
+  return [...groups].map(([relation, cited]) => `${relation}: ${cited.join("; ")}`).join(" · ");
+};
 
-// A sectioned answer as headings and points, each point naming the overviews it rests on.
-function sectionsText(sections: ChatAnswerSections): string {
-  const body = sections.sections.flatMap((section, index) => [
-    `   ${index + 1}. ${section.heading}`,
-    ...section.points.map((point) => `      - ${point.text}${point.citations.length === 0 ? "" : ` (from ${titlesOf(point.citations)})`}`),
-  ]);
-  return [sections.intro, ...body, sections.takeaway].filter((line) => line.trim() !== "").join("\n");
+// A structured answer as it reads outside the app: the intro, each section's heading, paragraphs
+// and lists with its sources by how they relate, then the takeaway (OV-354).
+function sectionsText(sections: ChatAnswerSections, describe: (citation: ChatCitation) => string): string {
+  const introSources = sourcesLine(sections.introSources, describe);
+  const body = sections.sections.flatMap((section, index) => {
+    const sources = sourcesLine(section.sources, describe);
+    return [
+      `   ${index + 1}. ${section.heading}`,
+      ...section.paragraphs.map((paragraph) => `      ${paragraph}`),
+      ...section.numbered.map((item, at) => `      ${at + 1}) ${item}`),
+      ...section.bullets.map((item) => `      - ${item}`),
+      ...(sources === null ? [] : [`      (${sources})`]),
+    ];
+  });
+  return [sections.intro, ...(introSources === null ? [] : [`   (${introSources})`]), ...body, sections.takeaway]
+    .filter((line) => line.trim() !== "")
+    .join("\n");
 }
+
+const scopedCitation = (citation: ChatCitation): string =>
+  "overviewId" in citation ? otherOverviewText(citation) : "a place in the overview";
 
 function scopedChatMarkdown(chat: Chat, scope: ChatScopeLabel, from: number, count: number): string {
   const lines = chat.messages.slice(from, from + count).map((message, offset) => {
     const index = from + offset;
-    const said = message.from === "answer" && message.sections !== undefined ? sectionsText(message.sections) : message.text;
+    const said =
+      message.from === "answer" && message.sections !== undefined ? sectionsText(message.sections, scopedCitation) : message.text;
     return `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${said}`;
   });
   const over = scope.kind === "library" ? "the reader's whole library" : `the reader's project "${scope.name}"`;
@@ -107,7 +126,7 @@ function scopedChatMarkdown(chat: Chat, scope: ChatScopeLabel, from: number, cou
     `# A conversation over ${over}`,
     `Conversation id: ${chat.id}${scope.kind === "project" ? ` · project id ${scope.id}` : ""} · started ${chat.startedAt.slice(0, 10)} · ${chat.messages.length} messages`,
     "",
-    `Answers come from the overviews in ${over}, each point naming the overviews it rests on; where an answer connects them, the connection is the answer's, not theirs.`,
+    `Answers come from the overviews in ${over}, each section naming the overviews it rests on and how; where an answer connects them, the connection is the answer's, not theirs.`,
     "",
     ...lines,
   ].join("\n");
@@ -122,7 +141,11 @@ export function chatMarkdown(chat: Chat, about: Overview | ChatScopeLabel, { fro
   const kind = chatSourceKind(overview);
   const lines = chat.messages.slice(from, from + count).map((message, offset) => {
     const index = from + offset;
-    const head = `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${message.text}`;
+    const said =
+      message.from === "answer" && message.sections !== undefined
+        ? sectionsText(message.sections, (citation) => citationText(overview, citation))
+        : message.text;
+    const head = `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${said}`;
     if (message.from === "reader") return head;
     const notes = [
       answerNote(message, kind),
