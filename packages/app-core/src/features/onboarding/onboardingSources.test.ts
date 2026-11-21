@@ -213,9 +213,8 @@ describe("onboarding's run, before and after the account", () => {
       isCancelled: () => false,
       waitToSpend,
     });
+    await vi.waitFor(() => expect(shown).toBe(true));
     await settle();
-
-    expect(shown).toBe(true);
     expect(written).toEqual([]);
     open();
     await run;

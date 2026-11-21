@@ -20,6 +20,7 @@ import { foundIn, type OnboardingFound, type OnboardingMakers, type OnboardingSo
 import { pageAccessFor } from "./pageAccess.js";
 import { onboardingFailureOf, type OnboardingFailure } from "./util/onboardingFailureOf.js";
 import { rememberEpisodeRead } from "./util/rememberEpisodeRead.js";
+import { onboardingKindOf } from "./util/onboardingKindOf.js";
 
 export type OnboardingRunPhase = "fetching" | "waiting" | "writing" | "ready" | "failed";
 
@@ -134,10 +135,19 @@ export function useOnboardingRun({
   const episodeReads = useRef(new Map<string, Promise<PodcastRead>>());
   const maySpendNow = useRef(maySpend);
   const releaseSpending = useRef<(() => void) | null>(null);
+  // When the run read its link, so the gate opening can say how long the value shown up front held.
+  const readAt = useRef<number | null>(null);
 
   useEffect(() => {
     maySpendNow.current = maySpend;
     if (maySpend) releaseSpending.current?.();
+    if (maySpend && state.run.phase === "waiting" && readAt.current !== null) {
+      latest.current.analytics.onboarding.spend.released({
+        ...(state.run.found === null ? {} : { kind: onboardingKindOf(state.run.found) }),
+        seconds: Math.max(0, Math.round((Date.now() - readAt.current) / 1000)),
+      });
+      readAt.current = null;
+    }
     setRun((current) => (maySpend && current.phase === "waiting" ? { ...current, phase: "writing" } : current));
   }, [maySpend]);
 
@@ -184,6 +194,7 @@ export function useOnboardingRun({
         },
         onFound: (found) => {
           if (cancelled) return;
+          if (!maySpendNow.current) readAt.current = Date.now();
           latest.current.onFound(found);
           setRun((current) =>
             current.phase === "fetching" ? { ...FETCHING, phase: maySpendNow.current ? "writing" : "waiting", found } : current,

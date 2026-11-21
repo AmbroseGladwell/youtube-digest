@@ -67,12 +67,12 @@ export function useForAnyoneSteps(overview: Overview | null): ForAnyoneSteps {
       .then((items) => {
         if (items.length === 0) throw new Error("Nothing written");
         remember(items);
-        analytics.onboarding.writtenForYou.shown();
+        analytics.onboarding.writtenForYou.shown({});
         setSteps({ status: "ready", items });
       })
       .catch(() => {
         remember("failed");
-        analytics.onboarding.writtenForYou.failed();
+        analytics.onboarding.writtenForYou.failed({});
         setSteps(HIDDEN);
       });
   }, [due, overview, settings, apiKeys, knownApiUrl, connection, analytics]);

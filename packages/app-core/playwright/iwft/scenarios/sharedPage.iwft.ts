@@ -148,7 +148,7 @@ test("saving starts onboarding around the copy, which opens once the account is 
   expect(backendSimulator.ourKey.reservations()).toEqual([{ overviewId: overview.id, shareToken: TOKEN }]);
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.finished.revealed")?.props)
-    .toEqual({ way: "createAccount", from: "share" });
+    .toEqual({ kind: expect.any(String), way: "createAccount", from: "share" });
 });
 
 test("a visitor with an account skips the questions, signs in from the account step, and lands on the copy", async ({

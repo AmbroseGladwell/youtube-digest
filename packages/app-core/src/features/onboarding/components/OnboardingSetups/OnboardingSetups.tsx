@@ -41,13 +41,17 @@ const CONNECTABLE: ReadonlyArray<{ assistant: FollowUpAssistant; line: string }>
   { assistant: "chatgpt", line: "Add The Overview as an app" },
 ];
 
+export type OnboardingSetup = "appearance" | "extension" | "connect";
+
 export interface OnboardingSetupsProps {
   ready: boolean;
+  // A set-up the reader used, for the wait's analytics.
+  onOpened?: ((setup: OnboardingSetup) => void) | undefined;
 }
 
 // Moment 4 (designs 327m, 327r-6): set-ups beside the wait, moved only by the reader. The
 // extension's card shows on desktop Chrome alone, and never in the panel, which is the extension.
-export function OnboardingSetups({ ready }: OnboardingSetupsProps) {
+export function OnboardingSetups({ ready, onOpened }: OnboardingSetupsProps) {
   const isPanel = useIsPanel();
   const [extensionShown] = useState(() => !isPanel && isDesktopChrome());
   const setups: readonly Setup[] = extensionShown ? ["appearance", "extension", "ai"] : ["appearance", "ai"];
@@ -79,9 +83,9 @@ export function OnboardingSetups({ ready }: OnboardingSetupsProps) {
         >
           <span className={styles.title}>{SETUP_TITLES[setup].title}</span>
           <p className={styles.line}>{SETUP_TITLES[setup].line}</p>
-          {setup === "appearance" && <AppearanceSetup />}
-          {setup === "extension" && <ExtensionSetup />}
-          {setup === "ai" && <ConnectSetup />}
+          {setup === "appearance" && <AppearanceSetup onOpened={() => onOpened?.("appearance")} />}
+          {setup === "extension" && <ExtensionSetup onOpened={() => onOpened?.("extension")} />}
+          {setup === "ai" && <ConnectSetup onOpened={() => onOpened?.("connect")} />}
         </div>
 
         <div className={styles.nav}>
@@ -121,7 +125,7 @@ export function OnboardingSetups({ ready }: OnboardingSetupsProps) {
 
 // Settings › Appearance's Theme and Accent colour (designs 135a–135d), painted by its own
 // stylesheet and saved the same way, so a choice here is the one Settings shows.
-function AppearanceSetup() {
+function AppearanceSetup({ onOpened }: { onOpened: () => void }) {
   const saved = useAppearance();
   const updateSettings = useUpdateSettingsMutation();
   const appearance = updateSettings.isPending ? { ...saved, ...updateSettings.variables } : saved;
@@ -138,6 +142,7 @@ function AppearanceSetup() {
     applyAppearance(next);
     writeAppearance(next);
     setStatus(said);
+    onOpened();
     updateSettings.mutate(patch);
   };
 
@@ -218,7 +223,7 @@ function AppearanceSetup() {
   );
 }
 
-function ExtensionSetup() {
+function ExtensionSetup({ onOpened }: { onOpened: () => void }) {
   return (
     <div className={styles.row}>
       <span className={styles.rowText}>
@@ -231,6 +236,7 @@ function ExtensionSetup() {
         target="_blank"
         rel="noopener"
         aria-label="Add to Chrome, opens in a new tab"
+        onClick={onOpened}
         data-testid={onboardingSetupsTestIds.addToChrome}
       >
         Add to Chrome
@@ -241,7 +247,7 @@ function ExtensionSetup() {
 
 // Each opens Settings › Connections in a new tab, so the run in this one carries on, with the
 // chosen assistant's steps already showing there (OV-301).
-function ConnectSetup() {
+function ConnectSetup({ onOpened }: { onOpened: () => void }) {
   const connectionsHref = useHref(Routes.settingsSection("connections"));
   const updateSettings = useUpdateSettingsMutation();
   return (
@@ -258,7 +264,10 @@ function ConnectSetup() {
             target="_blank"
             rel="noopener"
             aria-label={`Connect ${FOLLOW_UP_ASSISTANTS[assistant].name}, opens in a new tab`}
-            onClick={() => updateSettings.mutate({ followUpAssistant: assistant })}
+            onClick={() => {
+              onOpened();
+              updateSettings.mutate({ followUpAssistant: assistant });
+            }}
             data-testid={onboardingSetupsTestIds.connect(assistant)}
           >
             Connect

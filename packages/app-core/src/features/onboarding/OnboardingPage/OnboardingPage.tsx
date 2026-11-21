@@ -65,6 +65,7 @@ import { useOnboardingRunState } from "../OnboardingRunContext.js";
 import { foundIn, onboardingSourceOf, onboardingSources } from "../onboardingSources.js";
 import { onboardingFailureCopy } from "../util/onboardingFailureCopy.js";
 import { expectedOverviewMinutes } from "../util/expectedOverviewMinutes.js";
+import { onboardingKindOf } from "../util/onboardingKindOf.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
@@ -170,6 +171,8 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
   const found = run.found ?? (overview === null ? null : foundIn(overview));
   const noun = found !== null && kind !== null ? kind.noun("video", found) : "video";
+  // Every onboarding event after Start says what the link turned out to be (327s).
+  const tagged = found === null ? {} : { kind: onboardingKindOf(found) };
   const asked = useTopicSuggestions(found, kind, share === null && !signedIn);
   const offered = useMemo((): OnboardingTopicSuggestions | null => {
     if (found === null || kind === null) return null;
@@ -220,6 +223,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   const finish = (overviewId: string) => {
     analytics.onboarding.finished.revealed({
+      ...tagged,
       way: progress.way ?? "signIn",
       from: share === null ? "link" : share.sample ? "sample" : "share",
     });
@@ -271,12 +275,12 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   useEffect(() => {
     if (!signedIn || progress.way === null || progress.landed !== null) return;
     const landedWith = progress.overviewId !== null ? "ready" : failed ? "failed" : "writing";
-    analytics.onboarding.account.landed({ way: progress.way, overview: landedWith });
+    analytics.onboarding.account.landed({ ...tagged, way: progress.way, overview: landedWith });
     update({ landed: { at: Date.now(), overview: landedWith, arrived: false } });
   }, [signedIn, progress.way, progress.landed, progress.overviewId, failed, analytics, update]);
   useEffect(() => {
     if (!inAccount || progress.landed === null || progress.landed.arrived) return;
-    analytics.onboarding.overview.arrived({ seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
+    analytics.onboarding.overview.arrived({ ...tagged, seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
     update({ landed: { ...progress.landed, arrived: true } });
   }, [inAccount, progress.landed, step, analytics, update]);
 
@@ -298,14 +302,14 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   useEffect(() => {
     if (shown.current === step) return;
     shown.current = step;
-    analytics.onboarding.step.shown({ step });
+    analytics.onboarding.step.shown({ ...tagged, step });
   }, [step, analytics]);
 
   const heardFailure = useRef(-1);
   useEffect(() => {
     if (!failed || heardFailure.current === attempt) return;
     heardFailure.current = attempt;
-    analytics.onboarding.overview.failed({ step, afterAccount: signedIn });
+    analytics.onboarding.overview.failed({ ...tagged, step, afterAccount: signedIn });
   }, [failed, attempt, step, signedIn, analytics]);
 
   const saveTopics = async (chosen: string[]) => {
@@ -323,6 +327,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     }
     const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
     analytics.onboarding.topics.continued({
+      ...tagged,
       suggestedBy: suggested.length === 0 ? "none" : (suggestions?.by ?? "none"),
       picked: chosen.filter((name) => STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
       typed: chosen.filter((name) => !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
@@ -336,6 +341,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const saveAboutYou = async (answer: AboutYou) => {
     await updateSettings.mutateAsync(aboutYouPatch(answer));
     analytics.onboarding.aboutYou.continued({
+      ...tagged,
       who: answer.who.length,
       time: answer.time.length,
       focus: answer.focus.length,
@@ -346,7 +352,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   const personal = !aboutYouIsEmpty(aboutYou);
   const tryAgain = (from: "account" | "readFailure") => {
-    analytics.onboarding.overview.retried({ from });
+    analytics.onboarding.overview.retried({ ...tagged, from });
     retry();
   };
 
@@ -405,11 +411,11 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
             failed={failed}
             onLooksRight={next}
             onDifferentLink={() => {
-              analytics.onboarding.video.differentLinkChosen();
+              analytics.onboarding.video.differentLinkChosen(tagged);
               startAgain();
             }}
             onChooseVideo={(videoId) => {
-              analytics.onboarding.video.differentVideoChosen();
+              analytics.onboarding.video.differentVideoChosen(tagged);
               update({ sourceKey: SourceKey.parse(videoId), overviewId: null });
             }}
           />
@@ -454,7 +460,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
                 intent={intent}
                 onboarding={{
                   onSwitchIntent: (way) => {
-                    analytics.onboarding.account.chosen({ way });
+                    analytics.onboarding.account.chosen({ ...tagged, way });
                     setIntent(way);
                     update({ way });
                   },
@@ -500,13 +506,13 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   const segment = SEGMENT_OF[step];
   const back = () => {
-    analytics.onboarding.step.backChosen({ step });
+    analytics.onboarding.step.backChosen({ ...tagged, step });
     const before = steps[indexOf(step) - 1];
     if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
     else update({ step: before });
   };
   const skip = () => {
-    analytics.onboarding.step.skipped({ step });
+    analytics.onboarding.step.skipped({ ...tagged, step });
     if (step === "stepsForYou" || step === "aboutYou") go("account");
     else next();
   };

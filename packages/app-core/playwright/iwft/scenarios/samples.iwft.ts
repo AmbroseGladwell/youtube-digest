@@ -299,7 +299,9 @@ test("finishing on a sample is counted as from a sample", async ({ launcher, bac
   await throughToTheSample(launcher);
 
   const props = (name: string) => backendSimulator.analytics.events().find((event) => event.name === name)?.props;
-  await expect.poll(() => props("onboarding.finished.revealed")).toEqual({ way: "createAccount", from: "sample" });
+  await expect
+    .poll(() => props("onboarding.finished.revealed"))
+    .toEqual({ kind: expect.any(String), way: "createAccount", from: "sample" });
 });
 
 test("back from a sample's first screen returns to Start", async ({ launcher }) => {

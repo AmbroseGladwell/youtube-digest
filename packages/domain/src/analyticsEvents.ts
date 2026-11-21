@@ -18,6 +18,9 @@ import { PlaylistPace } from "./PlaylistPace.js";
 import { SectionsEnabled } from "./Settings.js";
 import { ChosenAssistant, FollowUpAssistant } from "./FollowUpAssistant.js";
 import { OnboardingStep } from "./OnboardingStep.js";
+
+// What onboarding's link turned out to be, on every event after Start (327s).
+const OnboardingKind = z.enum(["video", "article", "recipe", "podcast"]);
 import { OVERVIEW_PARTS } from "./overviewParts.js";
 
 // A property can only be a choice, a flag, a number, one of our own random ids or a
@@ -682,18 +685,26 @@ export const analyticsEvents = {
       ),
     },
     step: {
-      shown: event("A screen of onboarding is shown", { step: OnboardingStep }),
-      skipped: event("The reader skips a screen of onboarding, which keeps its default", { step: OnboardingStep }),
-      backChosen: event("The reader goes back a screen in onboarding", { step: OnboardingStep }),
+      shown: event("A screen of onboarding is shown", { kind: OnboardingKind.optional(), step: OnboardingStep }),
+      skipped: event("The reader skips a screen of onboarding, which keeps its default", {
+        kind: OnboardingKind.optional(),
+        step: OnboardingStep,
+      }),
+      backChosen: event("The reader goes back a screen in onboarding", { kind: OnboardingKind.optional(), step: OnboardingStep }),
     },
     video: {
-      differentLinkChosen: event("The reader says the video found isn't the one they meant, and goes back to Start"),
-      differentVideoChosen: event("The reader starts a playlist's first overview from another of its videos"),
+      differentLinkChosen: event("The reader says the video found isn't the one they meant, and goes back to Start", {
+        kind: OnboardingKind.optional(),
+      }),
+      differentVideoChosen: event("The reader starts a playlist's first overview from another of its videos", {
+        kind: OnboardingKind.optional(),
+      }),
     },
     topics: {
       continued: event(
         "The reader leaves the topics screen: how many starter topics they picked and how many they typed, how many were suggested from the source and by what, and how many of those they picked",
         {
+          kind: OnboardingKind.optional(),
           picked: z.number().int().nonnegative(),
           typed: z.number().int().nonnegative(),
           suggested: z.number().int().nonnegative(),
@@ -705,12 +716,13 @@ export const analyticsEvents = {
       ),
     },
     writtenForYou: {
-      shown: event("The reveal's Written for you / For anyone flip is ready", {}),
-      flipped: event("The reader flips How to apply on the reveal", { to: z.enum(["you", "anyone"]) }),
-      failed: event("How to apply for anyone couldn't be written, so the flip stays hidden", {}),
+      shown: event("The reveal's Written for you / For anyone flip is ready", { kind: OnboardingKind.optional() }),
+      flipped: event("The reader flips How to apply on the reveal", { kind: OnboardingKind.optional(), to: z.enum(["you", "anyone"]) }),
+      failed: event("How to apply for anyone couldn't be written, so the flip stays hidden", { kind: OnboardingKind.optional() }),
     },
     aboutYou: {
       continued: event("The reader leaves About you; never what it says, only how it was made", {
+        kind: OnboardingKind.optional(),
         who: z.number().int().nonnegative(),
         time: z.number().int().nonnegative(),
         focus: z.number().int().nonnegative(),
@@ -718,49 +730,63 @@ export const analyticsEvents = {
       }),
     },
     overview: {
-      seenEarly: event("The reader follows See your overview before the questions are done", { step: OnboardingStep }),
+      seenEarly: event("The reader follows See your overview before the questions are done", {
+        kind: OnboardingKind.optional(),
+        step: OnboardingStep,
+      }),
       failed: event(
         "Onboarding's overview couldn't be made, the screen the reader was on when it failed, and whether their account already existed",
-        {
-          step: OnboardingStep,
-          afterAccount: z.boolean(),
-        },
+        { kind: OnboardingKind.optional(), step: OnboardingStep, afterAccount: z.boolean() },
       ),
       arrived: event(
         "Onboarding's overview reached the account after the account was made: how long the reader had waited for it, in seconds, and on which screen",
-        { seconds: z.number().int().nonnegative(), step: OnboardingStep },
+        { kind: OnboardingKind.optional(), seconds: z.number().int().nonnegative(), step: OnboardingStep },
       ),
       retried: event("The reader tries onboarding's overview again after it failed, and where they pressed Try again", {
+        kind: OnboardingKind.optional(),
         from: z.enum(["preview", "account", "plan", "readFailure"]),
       }),
     },
     account: {
-      chosen: event("The reader picks how to get to the overview: a new account, or one they have", { way: AuthIntent }),
+      chosen: event("The reader picks how to get to the overview: a new account, or one they have", {
+        kind: OnboardingKind.optional(),
+        way: AuthIntent,
+      }),
       landed: event(
         "The reader's sign-in from the account screen lands, by which way, and whether their overview was ready, still being written, or had failed",
-        { way: AuthIntent, overview: z.enum(["ready", "writing", "failed"]) },
+        { kind: OnboardingKind.optional(), way: AuthIntent, overview: z.enum(["ready", "writing", "failed"]) },
       ),
     },
     plan: {
-      chosen: event("The reader picks a plan and goes on to their first overview", { plan: Plan }),
+      chosen: event("The reader picks a plan and goes on to their first overview", { kind: OnboardingKind.optional(), plan: Plan }),
     },
     nextSteps: {
       chosen: event(
         "The reader follows a next step under their first overview: making their own after a sample, the extension or their AI",
-        {
-          step: z.enum(["own", "extension", "ai"]),
-        },
+        { kind: OnboardingKind.optional(), step: z.enum(["own", "extension", "ai"]) },
       ),
-      dismissed: event("The reader dismisses a next step under their first overview", { step: z.enum(["own", "extension", "ai"]) }),
+      dismissed: event("The reader dismisses a next step under their first overview", {
+        kind: OnboardingKind.optional(),
+        step: z.enum(["own", "extension", "ai"]),
+      }),
     },
     finished: {
       revealed: event(
         "Onboarding ends on the reader's first overview, by a new account or one they had, made from a link or saved from a sample or a shared page",
-        {
-          way: AuthIntent,
-          from: z.enum(["link", "sample", "share"]),
-        },
+        { kind: OnboardingKind.optional(), way: AuthIntent, from: z.enum(["link", "sample", "share"]) },
       ),
+    },
+    spend: {
+      released: event(
+        "Onboarding's paid work began: the reader had an account and their answers were in it; how long after the link was read, in seconds, which says whether the value shown before the account was enough",
+        { kind: OnboardingKind.optional(), seconds: z.number().int().nonnegative() },
+      ),
+    },
+    wait: {
+      setupOpened: event("A set-up was opened while the first overview was written (327m)", {
+        kind: OnboardingKind.optional(),
+        setup: z.enum(["appearance", "extension", "connect"]),
+      }),
     },
   },
   analyticsConsent: {

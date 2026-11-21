@@ -269,8 +269,8 @@ test("an overview that can't be written says so on the wait, and Try again write
         .map(({ name, props }) => ({ name, ...props })),
     )
     .toEqual([
-      { name: "onboarding.overview.failed", step: "wait", afterAccount: true },
-      { name: "onboarding.overview.retried", from: "account" },
+      { name: "onboarding.overview.failed", kind: "video", step: "wait", afterAccount: true },
+      { name: "onboarding.overview.retried", kind: "video", from: "account" },
     ]);
 });
 
@@ -292,7 +292,7 @@ test("a reader with an account switches the form to signing in in place, and lan
   expect(backendSimulator.auth.emailCodeAttempts()).toEqual([{ email: SIMULATED_EMAIL, code: CODE }]);
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.finished.revealed")?.props)
-    .toEqual({ way: "signIn", from: "link" });
+    .toEqual({ kind: "video", way: "signIn", from: "link" });
 });
 
 test("the account form asks for a first name and an email beside the terms, and the code comes in its place, sent with no button", async ({
@@ -556,7 +556,7 @@ test("topics suggested from a page come pre-ticked, and one ticked off again isn
   await onboarding.verifyOnScreen("knowledgeBase");
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
-    .toEqual({ picked: 1, typed: 0, suggested: 2, pickedSuggested: 1, suggestedBy: "code-failed" });
+    .toEqual({ kind: "article", picked: 1, typed: 0, suggested: 2, pickedSuggested: 1, suggestedBy: "code-failed" });
   expect((await backendSimulator.overviewStore.listTopics()).map(({ name }) => name)).toEqual(["Fitness"]);
 });
 
@@ -605,7 +605,7 @@ test("suggestions matched in code while the model's answer is still on its way a
   await onboarding.verifyOnScreen("knowledgeBase");
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
-    .toEqual({ picked: 2, typed: 0, suggested: 2, pickedSuggested: 2, suggestedBy: "code-pending" });
+    .toEqual({ kind: "article", picked: 2, typed: 0, suggested: 2, pickedSuggested: 2, suggestedBy: "code-pending" });
 });
 
 test("the model's suggestions, asked on the trial as soon as the video is read, can name one new topic, made with no description", async ({
@@ -642,7 +642,7 @@ test("the model's suggestions, asked on the trial as soon as the video is read, 
   ]);
   await expect
     .poll(() => backendSimulator.analytics.events().find(({ name }) => name === "onboarding.topics.continued")?.props)
-    .toEqual({ picked: 1, typed: 1, suggested: 2, pickedSuggested: 2, suggestedBy: "model" });
+    .toEqual({ kind: "video", picked: 1, typed: 1, suggested: 2, pickedSuggested: 2, suggestedBy: "model" });
 });
 
 test("a recipe page is shown back as a recipe, with the page's own times and Cook first", async ({ launcher, backendSimulator }) => {
@@ -793,8 +793,8 @@ test("signed out, the link is only read: writing starts once the account exists,
         .map(({ name, props }) => ({ name, ...props })),
     )
     .toEqual([
-      { name: "onboarding.account.landed", way: "createAccount", overview: "writing" },
-      { name: "onboarding.overview.arrived", seconds: expect.any(Number), step: "wait" },
+      { name: "onboarding.account.landed", kind: "video", way: "createAccount", overview: "writing" },
+      { name: "onboarding.overview.arrived", kind: "video", seconds: expect.any(Number), step: "wait" },
     ]);
 });
 

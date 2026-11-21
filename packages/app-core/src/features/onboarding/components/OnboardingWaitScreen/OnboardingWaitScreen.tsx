@@ -8,7 +8,9 @@ import { OnboardingPills } from "../OnboardingPills/OnboardingPills.js";
 import { OnboardingSetups } from "../OnboardingSetups/OnboardingSetups.js";
 import { OnboardingSourceCard } from "../OnboardingSourceCard/OnboardingSourceCard.js";
 import { OnboardingWait } from "../OnboardingWait/OnboardingWait.js";
+import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { expectedOverviewMinutes } from "../../util/expectedOverviewMinutes.js";
+import { onboardingKindOf } from "../../util/onboardingKindOf.js";
 import styles from "./OnboardingWaitScreen.module.scss";
 
 // The writer's own pace isn't fitted yet (OV-326's writingMs), so the timed line spreads over this.
@@ -34,12 +36,6 @@ export interface OnboardingWaitScreenProps {
   onOpen: () => void;
 }
 
-const waitKindOf = (found: OnboardingFound | null): WaitKind => {
-  if (found === null) return "video";
-  if (found.recipe !== null || found.noteKind === "recipe") return "recipe";
-  return found.source.kind === "web" ? "article" : found.source.kind === "podcast" ? "podcast" : "video";
-};
-
 // Design 327m, live on page 7: the first paid screen. Each stage is a real event of the run (the
 // words found, writing begun, the overview in the account); only the line under the writing stage
 // is a timed script (docs/features/onboarding.md, "The wait").
@@ -56,7 +52,8 @@ export function OnboardingWaitScreen({
   onTryAgain,
   onOpen,
 }: OnboardingWaitScreenProps) {
-  const waitKind = waitKindOf(found);
+  const analytics = useAnalytics();
+  const waitKind: WaitKind = found === null ? "video" : onboardingKindOf(found);
   const copy = WAIT_COPY[waitKind];
   const phase: WaitPhase = failed ? "failed" : overview !== null ? "ready" : "running";
   useKeepTabWhileRunning(phase, found?.source.title ?? "Your overview");
@@ -118,7 +115,12 @@ export function OnboardingWaitScreen({
       onTryAgain={onTryAgain}
       openLabel={copy.openLabel}
       onOpen={onOpen}
-      setups={<OnboardingSetups ready={phase === "ready"} />}
+      setups={
+        <OnboardingSetups
+          ready={phase === "ready"}
+          onOpened={(setup) => analytics.onboarding.wait.setupOpened({ ...(found === null ? {} : { kind: waitKind }), setup })}
+        />
+      }
     />
   );
 }
