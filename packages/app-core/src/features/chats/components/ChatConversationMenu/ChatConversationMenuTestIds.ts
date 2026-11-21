@@ -1,4 +1,5 @@
 export const chatConversationMenuTestIds = {
+  searchLibrary: "ChatConversationMenu.searchLibrary",
   root: "ChatConversationMenu.root",
   trigger: "ChatConversationMenu.trigger",
   menu: "ChatConversationMenu.menu",

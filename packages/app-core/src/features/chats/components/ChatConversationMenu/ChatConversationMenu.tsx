@@ -28,6 +28,9 @@ export interface ChatConversationMenuProps {
   header: RefObject<HTMLElement | null>;
   onOpenList: () => void;
   onSaid: (text: string, done: boolean) => void;
+  // OV-354, 354w: Search my library, remembered per conversation by its last question.
+  searchLibrary: boolean;
+  onSearchLibrary: (on: boolean) => void;
 }
 
 type Open = "closed" | "menu" | "choose";
@@ -57,6 +60,8 @@ export function ChatConversationMenu({
   header,
   onOpenList,
   onSaid,
+  searchLibrary,
+  onSearchLibrary,
 }: ChatConversationMenuProps) {
   const { assistant, connectedTo, anyConnection, choose } = useFollowUpAssistant();
   const analytics = useAnalytics();
@@ -90,8 +95,6 @@ export function ChatConversationMenu({
     if (compact && sheet.current !== null && !sheet.current.open) sheet.current.showModal();
     items.current.find((item) => item instanceof HTMLButtonElement)?.focus({ preventScroll: true });
   }, [open, compact]);
-
-  if (!offerConversations && finished === null) return null;
 
   const continueIn = (to: FollowUpAssistant) => {
     if (finished === null) return;
@@ -204,6 +207,26 @@ export function ChatConversationMenu({
             </small>
           </button>
         ))}
+      <button
+        type="button"
+        role="menuitemcheckbox"
+        aria-checked={searchLibrary}
+        ref={(element) => {
+          items.current[2] = element;
+        }}
+        className={`${styles.item} ${styles.switchItem}`}
+        onClick={() => onSearchLibrary(!searchLibrary)}
+        data-testid={chatConversationMenuTestIds.searchLibrary}
+      >
+        <StrokeIcon name="search" size={15} />
+        <span className={styles.label}>Search my library</span>
+        <span className={`${styles.switch} ${searchLibrary ? styles.switchOn : ""}`} aria-hidden="true">
+          <span />
+        </span>
+        <small className={styles.detail}>
+          {searchLibrary ? "On: up to 3 close overviews are read with each question" : "Off: only what you pin with \u201c@\u201d is read"}
+        </small>
+      </button>
       {finished !== null && assistant !== null && <p className={styles.foot}>Change the assistant in Settings › Connections.</p>}
     </div>
   );

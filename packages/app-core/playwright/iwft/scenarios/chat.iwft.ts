@@ -323,7 +323,9 @@ test.describe("The chat header's ⋯", () => {
     const reader = await library.nthCard(0).openReader();
     await reader.chat.askInNote("How much lean mass?");
     await reader.chat.verifyWriting();
-    await reader.chat.verifyMenuIsOffered(false);
+    await reader.chat.openMenu();
+    await reader.chat.verifyMenuOffers([]);
+    await reader.chat.pressEscape();
 
     await backendSimulator.releaseEndpoint(EndpointKey.CHAT_MESSAGES);
 

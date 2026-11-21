@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Chat, ChatSourceKind, OverviewId } from "@overview/domain";
+import { chatRecordId, MAX_CHAT_PINS, type Chat, type ChatSourceKind, type OverviewId, type ProjectId } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
 import { useChatsQuery } from "./queries/chatsQuery.js";
-import { useAskQuestion, type AskedFrom } from "./useAskQuestion.js";
+import { useAskQuestion, type AskedFrom, type AskExtras } from "./useAskQuestion.js";
+import { conversationSources } from "./util/conversationSources.js";
 import { firstQuestionOf, lastActive } from "./util/conversationLine.js";
 
 type OpenedFrom = AskedFrom | "menu" | "conversationsLink" | "receipt";
@@ -18,6 +19,11 @@ export interface CameFrom {
 }
 
 export const UNDO_DELETE_MS = 6000;
+
+// Something the reader added with "@" for the next question (OV-354, page 1).
+export type PinnedItem =
+  | { kind: "overview"; id: OverviewId; title: string }
+  | { kind: "project"; id: ProjectId; title: string; count: number };
 
 const newConversationId = (): string => crypto.randomUUID();
 
@@ -36,11 +42,51 @@ export function useChatPanel(overviewId: OverviewId, about: ChatSourceKind) {
   const [cameFrom, setCameFrom] = useState<CameFrom | null>(null);
   const [focusedMessage, setFocusedMessage] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<Chat | null>(null);
+  // What the next question sends besides the conversation's sources (OV-354): new pins, sources
+  // the reader removed, and Search my library when they changed it here.
+  const [pinned, setPinned] = useState<PinnedItem[]>([]);
+  const [removed, setRemoved] = useState<OverviewId[]>([]);
+  const [searchChoice, setSearchChoice] = useState<boolean | null>(null);
   const opener = useRef<HTMLElement | null>(null);
   const field = useRef<HTMLTextAreaElement | null>(null);
   const idOf = (chat: Chat) => chat.id.slice(overviewId.length + 1);
 
   const chats = stored.filter((chat) => chat.id !== deleting?.id);
+  const sources = conversationSources(chats.find((chat) => chat.id === chatRecordId(overviewId, conversationId)) ?? null);
+  const searchLibrary = searchChoice ?? sources.searchLibrary;
+  const resetNext = () => {
+    setPinned([]);
+    setRemoved([]);
+    setSearchChoice(null);
+  };
+  const extras = (): AskExtras => ({
+    pins: {
+      overviews: pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])),
+      projects: pinned.flatMap((item) => (item.kind === "project" ? [item.id] : [])),
+    },
+    setAside: removed,
+    searchLibrary,
+  });
+  // A source removed only leaves the next question; one pinned again comes back (page 2).
+  const pin = (item: PinnedItem) => {
+    if (pinned.length + sources.live.length >= MAX_CHAT_PINS || pinned.some((each) => each.id === item.id)) return;
+    setPinned((current) => [...current, item]);
+    analytics.reader.chat.sourcePinned({ overviewId, kind: item.kind });
+    setRemoved((current) => current.filter((id) => id !== item.id));
+  };
+  const unpin = (id: string) => {
+    setPinned((current) => current.filter((item) => item.id !== id));
+    analytics.reader.chat.sourceRemoved({ overviewId, all: false });
+  };
+  const removeSource = (id: OverviewId) => {
+    setRemoved((current) => (current.includes(id) ? current : [...current, id]));
+    analytics.reader.chat.sourceRemoved({ overviewId, all: false });
+  };
+  const clearSources = () => {
+    analytics.reader.chat.sourceRemoved({ overviewId, all: true });
+    setPinned([]);
+    setRemoved(sources.live.map((source) => source.overviewId));
+  };
 
   const commitDelete = useCallback(
     (chat: Chat) => {
@@ -81,6 +127,7 @@ export function useChatPanel(overviewId: OverviewId, about: ChatSourceKind) {
 
   const goTo = (id: string) => {
     setConversationId(id);
+    resetNext();
     setView("conversation");
     setCameFrom(null);
     setFocusedMessage(null);
@@ -89,14 +136,15 @@ export function useChatPanel(overviewId: OverviewId, about: ChatSourceKind) {
   const ask = (question: string, from: AskedFrom) => {
     if (question === "") return;
     if (open && view === "conversation") {
-      void asking.ask(conversationId, question, from);
+      void asking.ask(conversationId, question, from, extras());
+      resetNext();
       return;
     }
     const fresh = newConversationId();
     goTo(fresh);
     if (!open) show(from);
     focusField();
-    void asking.ask(fresh, question, from);
+    void asking.ask(fresh, question, from, extras());
   };
 
   const openLatest = () => {
@@ -194,6 +242,14 @@ export function useChatPanel(overviewId: OverviewId, about: ChatSourceKind) {
     focusedMessage,
     state: asking.state,
     field,
+    pinned,
+    liveSources: sources.live.filter((source) => !removed.includes(source.overviewId)),
+    searchLibrary,
+    pin,
+    unpin,
+    removeSource,
+    clearSources,
+    setSearchLibrary: setSearchChoice,
     noSource,
     ask,
     openLatest,

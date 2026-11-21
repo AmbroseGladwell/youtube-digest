@@ -1,4 +1,5 @@
 export const chatPanelTestIds = {
+  streamedSections: "ChatPanel.streamedSections",
   root: "ChatPanel.root",
   title: "ChatPanel.title",
   about: "ChatPanel.about",

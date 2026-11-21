@@ -1,0 +1,105 @@
+// OV-354, page 2: 28px tall; the outline is 1.5px of --surface; quiet chips are the tint alone.
+.chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  height: 28px;
+  border-radius: 999px;
+  color: var(--ink);
+  font: 500 12.5px/1 var(--font-body);
+}
+
+.outline {
+  box-shadow: inset 0 0 0 1.5px var(--surface);
+}
+
+.quiet {
+  max-width: 200px;
+  background: var(--surface);
+}
+
+.deleted {
+  color: var(--muted);
+
+  .title {
+    color: var(--muted);
+  }
+}
+
+.face {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  padding: 0 10px 0 8px;
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+
+  :global(svg) {
+    flex: none;
+    color: var(--muted);
+  }
+}
+
+button.face {
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+a.face:hover,
+button.face:hover {
+  background: var(--chat-raised, var(--surface));
+}
+
+.thumb {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.wide {
+  width: 20px;
+}
+
+.title {
+  overflow: hidden;
+  max-width: 170px;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  flex: none;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0 3px 0 -6px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface);
+    color: var(--ink);
+  }
+}

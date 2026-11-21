@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { chatRecordId, type Chat, type ChatSourceKind, type OverviewId } from "@overview/domain";
+import {
+  chatRecordId,
+  type Chat,
+  type ChatAnswerSection,
+  type ChatSource,
+  type ChatSourceKind,
+  type OverviewId,
+  type ProjectId,
+} from "@overview/domain";
 import { createFetchChatApi, type ChatApi } from "@overview/sync";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useSync } from "../sync/SyncContext.js";
@@ -11,9 +19,26 @@ import { chatKeys } from "./chatKeys.js";
 import { chatWaitOf, type ChatWait } from "./util/chatWaitOf.js";
 import { withAnswer } from "./util/withAnswer.js";
 
+// What a question takes besides its words (OV-354): what the reader pinned with "@", what they took
+// out of the conversation, and whether Search my library is on.
+export interface AskExtras {
+  pins: { overviews: OverviewId[]; projects: ProjectId[] };
+  setAside: OverviewId[];
+  searchLibrary: boolean;
+}
+
+export const NO_EXTRAS: AskExtras = { pins: { overviews: [], projects: [] }, setAside: [], searchLibrary: true };
+
 export type AskState =
   | { status: "idle" }
-  | { status: "answering"; conversationId: string; question: string; text: string }
+  | {
+      status: "answering";
+      conversationId: string;
+      question: string;
+      text: string;
+      sources: { pinned: ChatSource[]; found: ChatSource[] } | null;
+      sections: ChatAnswerSection[];
+    }
   | { status: "stopped"; conversationId: string; question: string; text: string }
   | { status: "failed"; conversationId: string; question: string }
   | { status: "waiting"; conversationId: string; question: string; wait: ChatWait };
@@ -38,21 +63,39 @@ export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, ap
   useEffect(() => () => inFlight.current?.abort(), []);
 
   const ask = useCallback(
-    async (conversationId: string, question: string, from: AskedFrom) => {
+    async (conversationId: string, question: string, from: AskedFrom, extras: AskExtras = NO_EXTRAS) => {
       const chatApi = api ?? (apiUrl === null ? null : createFetchChatApi({ baseUrl: apiUrl, token: connection.token }));
       if (chatApi === null || inFlight.current !== null) return;
       const controller = new AbortController();
       inFlight.current = controller;
       const chatId = chatRecordId(overviewId, conversationId);
       const known = queryClient.getQueryData<Chat[]>(chatKeys.list(overviewId)) ?? [];
-      analytics.reader.chat.asked({ overviewId, from, newConversation: !known.some((chat) => chat.id === chatId) });
-      setState({ status: "answering", conversationId, question, text: "" });
+      analytics.reader.chat.asked({
+        overviewId,
+        from,
+        newConversation: !known.some((chat) => chat.id === chatId),
+        pinnedOverviews: extras.pins.overviews.length,
+        pinnedProjects: extras.pins.projects.length,
+        setAside: extras.setAside.length,
+        searchLibrary: extras.searchLibrary,
+      });
+      setState({ status: "answering", conversationId, question, text: "", sources: null, sections: [] });
       try {
         const outcome = await chatApi.ask(
           overviewId,
-          { conversationId, text: question },
+          { conversationId, text: question, pins: extras.pins, setAside: extras.setAside, searchLibrary: extras.searchLibrary },
           (piece) => setState((current) => (current.status === "answering" ? { ...current, text: current.text + piece } : current)),
           controller.signal,
+          (event) =>
+            setState((current) => {
+              if (current.status !== "answering") return current;
+              if (event.type === "sources") {
+                analytics.reader.chat.sourcesAdded({ overviewId, pinned: event.pinned.length, found: event.found.length });
+                return { ...current, sources: { pinned: event.pinned, found: event.found } };
+              }
+              if (event.type === "section") return { ...current, sections: [...current.sections, event.section] };
+              return current;
+            }),
         );
         if (outcome.type === "failed") {
           analytics.reader.chat.answerFailed({ overviewId });

@@ -26,7 +26,7 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
   const request = createApiRequester(options);
   return {
     usage: () => answered(request("GET", "/chat-usage", ChatUsage)),
-    ask: async (overviewId, question, onText, signal) => {
+    ask: async (overviewId, question, onText, signal, onProgress) => {
       const prepared = call("POST", `/chats/${encodeURIComponent(overviewId)}/messages`, {
         body: question,
         ...(signal === undefined ? {} : { signal }),
@@ -40,6 +40,7 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
           const event = ChatStreamEvent.parse(raw);
           if (event.type === "text") onText(event.text);
           else if (event.type === "answered" || event.type === "failed") outcome = event;
+          else onProgress?.(event);
         }
       } catch (error) {
         if (signal?.aborted === true) throw error;

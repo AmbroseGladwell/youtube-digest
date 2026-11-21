@@ -1,4 +1,9 @@
 export const chatAnswerTestIds = {
+  section: "ChatAnswer.section",
+  sectionSources: "ChatAnswer.sectionSources",
+  takeaway: "ChatAnswer.takeaway",
+  sources: "ChatAnswer.sources",
+  sourcesMenu: "ChatAnswer.sourcesMenu",
   root: "ChatAnswer.root",
   notInSource: "ChatAnswer.notInSource",
   text: "ChatAnswer.text",

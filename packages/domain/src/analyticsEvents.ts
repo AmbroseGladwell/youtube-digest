@@ -441,9 +441,31 @@ export const analyticsEvents = {
     },
     // Never the question or the answer (docs/features/chats.md).
     chat: {
-      asked: event("The reader asks a question about the overview, where from, and whether it starts a new conversation", {
-        from: ChatAskedFrom,
-        newConversation: z.boolean(),
+      asked: event(
+        "The reader asks a question about the overview, where from, whether it starts a new conversation, how many overviews and projects it newly pins and sets aside, and whether Search my library is on",
+        {
+          from: ChatAskedFrom,
+          newConversation: z.boolean(),
+          pinnedOverviews: z.number().int().nonnegative().optional(),
+          pinnedProjects: z.number().int().nonnegative().optional(),
+          setAside: z.number().int().nonnegative().optional(),
+          searchLibrary: z.boolean().optional(),
+        },
+      ),
+      sourcesAdded: event(
+        "A question's answer began, with how many overviews it read as pinned and how many search found, counted by code",
+        {
+          pinned: z.number().int().nonnegative(),
+          found: z.number().int().nonnegative(),
+        },
+      ),
+      sourcePinned: event('The reader pins an overview or a project with "@" for the next question', {
+        kind: z.enum(["overview", "project"]),
+      }),
+      sourceRemoved: event("The reader removes a source from the next question, or clears them all", { all: z.boolean() }),
+      searchLibrarySwitched: event("The reader turns Search my library on or off for the conversation", { on: z.boolean() }),
+      sourcesMenuOpened: event("The reader opens an answer's Sources menu, with how many sources it lists", {
+        sources: z.number().int().nonnegative(),
       }),
       answered: event("An answer to the reader's question settled, what it was about, whether the source covered it, and what it cited", {
         about: ChatAbout,

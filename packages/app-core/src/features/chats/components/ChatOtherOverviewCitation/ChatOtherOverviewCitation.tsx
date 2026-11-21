@@ -1,13 +1,13 @@
 import { formatTimestamp, type OtherOverviewCitation, type OverviewPart } from "@overview/domain";
-import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
-import styles from "./ChatOtherOverviewCitation.module.scss";
+import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
 import { chatOtherOverviewCitationTestIds } from "./ChatOtherOverviewCitationTestIds.js";
 
 export interface ChatOtherOverviewCitationProps {
   citation: OtherOverviewCitation;
   held: boolean;
+  imageUrl?: string | null | undefined;
+  wide?: boolean | undefined;
   onFollowed: (citation: OtherOverviewCitation) => void;
 }
 
@@ -25,35 +25,30 @@ const SECTION: Record<OverviewPart, string> = {
   method: "Method",
 };
 
-const otherOverviewCitationLabel = ({ title, item, range }: OtherOverviewCitation): string => {
-  if (range !== undefined) return `${title} · ${formatTimestamp(range.startMs)}`;
-  if (item === null) return title;
+export const otherOverviewCitationPlace = ({ item, range }: Pick<OtherOverviewCitation, "item" | "range">): string | undefined => {
+  if (range !== undefined) return formatTimestamp(range.startMs);
+  if (item === null) return undefined;
   const numbered = NUMBERED[item.part];
-  return `${title} · ${numbered === undefined ? SECTION[item.part] : `${numbered} ${item.index + 1}`}`;
+  return numbered === undefined ? SECTION[item.part] : `${numbered} ${item.index + 1}`;
 };
 
 // Another of the reader's overviews an answer drew on (OV-355), named by the title it had when
-// cited, as a link to it; muted, and not a link, once it is deleted. OV-354 designs it properly.
-export function ChatOtherOverviewCitation({ citation, held, onFollowed }: ChatOtherOverviewCitationProps) {
-  if (!held) {
-    return (
-      <span className={styles.gone} data-testid={chatOtherOverviewCitationTestIds.gone}>
-        <StrokeIcon name="fileX" size={14} />
-        {citation.title} · an overview you deleted
-      </span>
-    );
-  }
-  const label = otherOverviewCitationLabel(citation);
+// cited, as the shared chip (OV-354, page 2) linking to it; muted, and not a link, once deleted.
+export function ChatOtherOverviewCitation({ citation, held, imageUrl, wide, onFollowed }: ChatOtherOverviewCitationProps) {
+  const place = otherOverviewCitationPlace(citation);
+  const label = place === undefined ? citation.title : `${citation.title} · ${place}`;
   return (
-    <PageLink
+    <ChatSourceChip
+      title={citation.title}
+      detail={held ? place : undefined}
+      label={`Open your overview ${label}`}
+      imageUrl={held ? imageUrl : null}
+      wide={wide}
+      deleted={!held}
+      deletedDetail="an overview you deleted"
       to={Routes.overview(citation.overviewId)}
-      className={styles.pill}
-      aria-label={`Open your overview ${label}`}
-      onClick={() => onFollowed(citation)}
-      data-testid={chatOtherOverviewCitationTestIds.link}
-    >
-      <StrokeIcon name="fileText" size={14} />
-      <span className={styles.label}>{label}</span>
-    </PageLink>
+      onFollow={() => onFollowed(citation)}
+      testId={held ? chatOtherOverviewCitationTestIds.link : chatOtherOverviewCitationTestIds.gone}
+    />
   );
 }

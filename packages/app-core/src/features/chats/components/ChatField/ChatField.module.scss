@@ -90,3 +90,25 @@
   border-radius: 0.1875rem;
   background: currentColor;
 }
+
+// OV-354, page 1: a quiet "@" at the field's left.
+.at {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: -6px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-press);
+    color: var(--ink);
+  }
+}

@@ -1,5 +1,6 @@
-import { forwardRef, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, forwardRef, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
+  sourceImage,
   FOLLOW_UP_QUESTIONS_SHOWN,
   MAX_CHAT_QUESTIONS,
   chatRecordId,
@@ -25,11 +26,12 @@ import { chatSuggestions } from "../../util/chatSuggestions.js";
 import { chatWords, type ChatWords } from "../../util/chatWords.js";
 import { streamedParagraphs } from "../../util/streamedParagraphs.js";
 import { conversationDate, firstQuestionOf, questionsIn } from "../../util/conversationLine.js";
-import { ChatAnswer, type ChatAnswerProps, type ChatPage } from "../ChatAnswer/ChatAnswer.js";
+import { ChatAnswer, ChatAnswerSectionsView, type ChatAnswerProps, type ChatPage } from "../ChatAnswer/ChatAnswer.js";
 import { ChatAnswerActions } from "../ChatAnswerActions/ChatAnswerActions.js";
 import { ChatConversationList } from "../ChatConversationList/ChatConversationList.js";
 import { ChatConversationMenu } from "../ChatConversationMenu/ChatConversationMenu.js";
-import { ChatField } from "../ChatField/ChatField.js";
+import { ChatComposer } from "../ChatComposer/ChatComposer.js";
+import { ChatDrewOn } from "../ChatDrewOn/ChatDrewOn.js";
 import { ChatStreamedText } from "../ChatStreamedText/ChatStreamedText.js";
 import styles from "./ChatPanel.module.scss";
 import { chatPanelTestIds } from "./ChatPanelTestIds.js";
@@ -133,6 +135,15 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
       : `About ${overview.source.title}${full ? ` · ${asked} questions` : ""}`;
 
   const library = useOverviewsWithStateQuery().data;
+  const overviewOf = (id: string) => {
+    const entry = library?.find((each) => each.kind === "overview" && each.overview.id === id);
+    return entry?.kind === "overview" ? entry.overview : null;
+  };
+  const imageOf = (id: string) => {
+    const found = overviewOf(id);
+    return { url: found === null ? null : sourceImage(found.source), wide: found?.source.kind === "youtube" };
+  };
+  const followSource = () => analytics.reader.chat.citationFollowed({ overviewId: overview.id, to: "otherOverview" });
   const holdsOverview = (overviewId: string) =>
     library === undefined || library.some((entry) => entry.kind === "overview" && entry.overview.id === overviewId);
   const conversationOf = (cited: string) => {
@@ -255,6 +266,11 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
             header={header}
             onOpenList={panel.openList}
             onSaid={say}
+            searchLibrary={panel.searchLibrary}
+            onSearchLibrary={(on) => {
+              panel.setSearchLibrary(on);
+              analytics.reader.chat.searchLibrarySwitched({ overviewId: overview.id, on });
+            }}
           />
         )}
         <button type="button" className={styles.iconButton} aria-label="Close" onClick={panel.close} data-testid={chatPanelTestIds.close}>
@@ -291,15 +307,28 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
             <ol className={styles.messages}>
               {messages.map((message, index) =>
                 message.from === "reader" ? (
-                  <li
-                    key={index}
-                    className={`${styles.question} ${outlined === index ? styles.outlined : ""}`}
-                    tabIndex={-1}
-                    data-message={index}
-                    data-testid={chatPanelTestIds.question}
-                  >
-                    {message.text}
-                  </li>
+                  <Fragment key={index}>
+                    <ChatDrewOn
+                      how="pinned"
+                      sources={(message.sources ?? []).filter((source) => source.how === "pinned")}
+                      overviewOf={overviewOf}
+                      onFollow={followSource}
+                    />
+                    <li
+                      className={`${styles.question} ${outlined === index ? styles.outlined : ""}`}
+                      tabIndex={-1}
+                      data-message={index}
+                      data-testid={chatPanelTestIds.question}
+                    >
+                      {message.text}
+                    </li>
+                    <ChatDrewOn
+                      how="found"
+                      sources={(message.sources ?? []).filter((source) => source.how === "found")}
+                      overviewOf={overviewOf}
+                      onFollow={followSource}
+                    />
+                  </Fragment>
                 ) : (
                   <li
                     key={index}
@@ -332,20 +361,27 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                           ...(cited.item === null ? {} : { part: cited.item.part, index: cited.item.index }),
                         })
                       }
-                      actions={
+                      sections={message.sections}
+                      imageOf={imageOf}
+                      onSourcesOpened={(sources) => analytics.reader.chat.sourcesMenuOpened({ overviewId: overview.id, sources })}
+                      actions={(sources) => (
                         <ChatAnswerActions
                           overviewId={overview.id}
                           answer={message.text}
                           latest={index === latestAnswerAt && pending === null}
                           onSaid={say}
+                          sources={sources}
                         />
-                      }
+                      )}
                     />
                   </li>
                 ),
               )}
               {pending !== null && (
                 <>
+                  {pending.status === "answering" && pending.sources !== null && (
+                    <ChatDrewOn how="pinned" sources={pending.sources.pinned} overviewOf={overviewOf} onFollow={followSource} />
+                  )}
                   <li
                     className={styles.question}
                     {...(pending.status === "answering" ? { [ARRIVING_ATTRIBUTE]: "" } : {})}
@@ -353,6 +389,9 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                   >
                     {pending.question}
                   </li>
+                  {pending.status === "answering" && pending.sources !== null && (
+                    <ChatDrewOn how="found" sources={pending.sources.found} overviewOf={overviewOf} onFollow={followSource} />
+                  )}
                   <li data-testid={chatPanelTestIds.pending}>
                     {(pending.status === "answering" || pending.status === "stopped") && (
                       <div className={styles.streaming} aria-busy={pending.status === "answering"}>
@@ -364,6 +403,14 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                           </span>
                         ) : (
                           <ChatStreamedText text={pending.text} whole={pending.status === "stopped"} />
+                        )}
+                        {pending.status === "answering" && pending.sections.length > 0 && (
+                          <div data-testid={chatPanelTestIds.streamedSections}>
+                            <ChatAnswerSectionsView
+                              sections={{ intro: "", introSources: [], sections: pending.sections }}
+                              sourceRow={() => null}
+                            />
+                          </div>
                         )}
                         {slowness === "noWordsYet" && (
                           <p className={styles.status} data-testid={chatPanelTestIds.slow}>
@@ -455,8 +502,15 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
               onPlansFollowed={() => analytics.reader.chat.plansFollowed({ overviewId: overview.id })}
             />
           ) : (
-            <ChatField
+            <ChatComposer
               ref={fieldRef}
+              overviewId={overview.id}
+              pinned={panel.pinned}
+              liveSources={panel.liveSources}
+              onPin={panel.pin}
+              onUnpin={panel.unpin}
+              onRemoveSource={panel.removeSource}
+              onClear={panel.clearSources}
               value={draft}
               placeholder={`Ask about this ${words.noun}`}
               answering={answering}

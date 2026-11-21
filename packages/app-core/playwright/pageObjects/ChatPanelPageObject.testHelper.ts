@@ -1,5 +1,8 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
+import { chatComposerTestIds } from "../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
+import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
+import { chatSourceChipTestIds } from "../../src/features/chats/components/ChatSourceChip/ChatSourceChipTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
 import { chatConversationListTestIds } from "../../src/features/chats/components/ChatConversationList/ChatConversationListTestIds.js";
 import { chatConversationMenuTestIds } from "../../src/features/chats/components/ChatConversationMenu/ChatConversationMenuTestIds.js";
@@ -440,6 +443,132 @@ export class ChatPanelPageObject extends PageObject {
   raiseFromLowered = () => this.step("raiseFromLowered", () => this.click(chatSheetTestIds.raise));
 
   pressF6 = () => this.step("pressF6", () => this.page.keyboard.press("F6"));
+
+  // OV-354: the "@" picker, the row above the field and what each question drew on.
+  openPickerWithButton = () => this.step("openPickerWithButton", () => this.click(this.panel().getByTestId(chatFieldTestIds.at)));
+
+  verifyPickerOffers = (titles: string[]) =>
+    this.step(`verifyPickerOffers ${titles.join(" | ")}`, () =>
+      expect(this.panel().getByTestId(chatComposerTestIds.option).locator("b")).toHaveText(titles),
+    );
+
+  verifyPickerDetailsRead = (details: string[]) =>
+    this.step(`verifyPickerDetailsRead ${details.join(" | ")}`, () =>
+      expect(this.panel().getByTestId(chatComposerTestIds.option).locator("small")).toHaveText(details),
+    );
+
+  verifyPickerLineReads = (text: string) =>
+    this.step(`verifyPickerLineReads ${text}`, () => expect(this.panel().getByTestId(chatComposerTestIds.pickerLine)).toHaveText(text));
+
+  verifyPickerIsOpen = (open: boolean) =>
+    this.step(`verifyPickerIsOpen ${open}`, () => expect(this.panel().getByTestId(chatComposerTestIds.picker)).toHaveCount(open ? 1 : 0));
+
+  pressInField = (key: string) => this.step(`pressInField ${key}`, () => this.field().press(key));
+
+  choosePickerOption = (index: number) =>
+    this.step(`choosePickerOption ${index}`, () => this.click(this.panel().getByTestId(chatComposerTestIds.option).nth(index)));
+
+  verifyFieldReads = (text: string) => this.step(`verifyFieldReads ${text}`, () => expect(this.field()).toHaveValue(text));
+
+  verifyNextSourcesRead = (texts: string[]) =>
+    this.step(`verifyNextSourcesRead ${texts.join(" | ")}`, async () => {
+      const row = this.panel().getByTestId(chatComposerTestIds.sources);
+      if (texts.length === 0) return expect(row).toHaveCount(0);
+      await expect(row.locator(":scope > *")).toHaveText(texts);
+    });
+
+  removeNextSource = (index: number) =>
+    this.step(`removeNextSource ${index}`, () =>
+      this.click(this.panel().getByTestId(chatComposerTestIds.sources).getByTestId(chatSourceChipTestIds.remove).nth(index)),
+    );
+
+  openMoreSources = () => this.step("openMoreSources", () => this.click(this.panel().getByTestId(chatComposerTestIds.more)));
+
+  verifyMoreSourcesRead = (titles: string[]) =>
+    this.step(`verifyMoreSourcesRead ${titles.join(" | ")}`, async () => {
+      const removes = this.panel().getByTestId(chatComposerTestIds.moreMenu).getByTestId(chatComposerTestIds.moreRemove);
+      await expect(removes).toHaveCount(titles.length);
+      for (const [at, title] of titles.entries()) await expect(removes.nth(at)).toHaveAccessibleName(`Remove source: ${title}`);
+    });
+
+  clearAllSources = () => this.step("clearAllSources", () => this.click(this.panel().getByTestId(chatComposerTestIds.clearAll)));
+
+  verifyDrewOn = (how: "pinned" | "found", question: number, titles: string[] | null) =>
+    this.step(`verifyDrewOn ${how} ${question} ${titles?.join(" | ") ?? "none"}`, async () => {
+      const question_ = this.panel().getByTestId(chatPanelTestIds.question).nth(question);
+      const row = question_.locator(
+        how === "pinned"
+          ? `xpath=preceding-sibling::li[1][@data-testid="${chatDrewOnTestIds.pinned}"]`
+          : `xpath=following-sibling::li[1][@data-testid="${chatDrewOnTestIds.found}"]`,
+      );
+      if (titles === null) return expect(row).toHaveCount(0);
+      await expect(row.getByTestId(chatSourceChipTestIds.chip)).toHaveText(titles);
+      await expect(row.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
+    });
+
+  followDrewOn = (how: "pinned" | "found", index: number) =>
+    this.step(`followDrewOn ${how} ${index}`, () =>
+      this.click(
+        this.panel()
+          .getByTestId(how === "pinned" ? chatDrewOnTestIds.pinned : chatDrewOnTestIds.found)
+          .getByRole("link")
+          .nth(index),
+      ),
+    );
+
+  verifySearchLibraryIs = (on: boolean) =>
+    this.step(`verifySearchLibraryIs ${on}`, async () => {
+      await this.openMenuIfClosed();
+      const item = this.page.getByTestId(chatConversationMenuTestIds.searchLibrary);
+      await expect(item).toHaveAttribute("aria-checked", String(on));
+      await expect(item).toContainText(
+        on ? "On: up to 3 close overviews are read with each question" : "Off: only what you pin with “@” is read",
+      );
+    });
+
+  switchSearchLibrary = () =>
+    this.step("switchSearchLibrary", async () => {
+      await this.openMenuIfClosed();
+      await this.click(this.page.getByTestId(chatConversationMenuTestIds.searchLibrary));
+    });
+
+  verifySectionsRead = (answer: number, headings: string[]) =>
+    this.step(`verifySectionsRead ${answer} ${headings.join(" | ")}`, () =>
+      expect(
+        this.answers()
+          .nth(answer)
+          .locator(`[data-testid="${chatAnswerTestIds.section}"] h3, [data-testid="${chatAnswerTestIds.takeaway}"] h3`),
+      ).toHaveText(headings),
+    );
+
+  verifySectionSourcesRead = (answer: number, section: number, groups: string[]) =>
+    this.step(`verifySectionSourcesRead ${answer} ${section} ${groups.join(" | ")}`, () =>
+      expect(
+        this.answers()
+          .nth(answer)
+          .getByTestId(chatAnswerTestIds.section)
+          .nth(section)
+          .getByTestId(chatAnswerTestIds.sectionSources)
+          .locator(":scope > *"),
+      ).toHaveText(groups),
+    );
+
+  verifyNoCitationRow = (answer: number) =>
+    this.step(`verifyNoCitationRow ${answer}`, () =>
+      expect(this.answers().nth(answer).getByTestId(chatAnswerTestIds.citations)).toHaveCount(0),
+    );
+
+  openSourcesMenu = (answer: number) =>
+    this.step(`openSourcesMenu ${answer}`, async () => {
+      await this.answers().nth(answer).hover();
+      await this.click(this.answers().nth(answer).getByTestId(chatAnswerTestIds.sources));
+    });
+
+  verifySourcesMenuReads = (answer: number, count: number, texts: string[]) =>
+    this.step(`verifySourcesMenuReads ${answer} ${count}`, async () => {
+      await expect(this.answers().nth(answer).getByTestId(chatAnswerTestIds.sources)).toHaveText(`Sources ${count}`);
+      await expect(this.answers().nth(answer).getByTestId(chatAnswerTestIds.sourcesMenu).locator(":scope > *")).toHaveText(texts);
+    });
 
   verifyNoteIsFocused = () => this.step("verifyNoteIsFocused", () => expect(this.page.getByRole("tabpanel")).toBeFocused());
 }
