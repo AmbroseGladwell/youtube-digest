@@ -8,6 +8,8 @@ import {
   type ChatCitation,
   type ChatAnswerSections,
   type ChatMessage,
+  type ChatOwner,
+  type ChatScopeStats,
   type ChatSource,
   type ChatUsage,
   DEFAULT_NARRATION_VOICE,
@@ -28,6 +30,7 @@ import {
   type QueuedCapture,
   type Project,
   type ProjectMember,
+  type ProjectId,
   TRIAL_TOKEN_HEADER,
   type AuthSurface,
   type Connection,
@@ -150,9 +153,13 @@ export interface ChatAnswerReply {
   // OV-354: what search found for the question, and the answer in sections.
   found?: Array<{ overviewId: OverviewId; title: string }>;
   sections?: ChatAnswerSections;
+  // The Ask page (OV-354): what a library or project question chose to read, and the counts.
+  picked?: Array<{ overviewId: OverviewId; title: string }>;
+  stats?: ChatScopeStats;
 }
 
 export interface ChatQuestionSent {
+  // An overview's id, or "library", or "project:<id>" for a question on the Ask page.
   overviewId: string;
   conversationId: string;
   text: string;
@@ -1125,6 +1132,20 @@ export class BackendSimulator {
       }),
     );
 
+    // Registered after the overview route, so these win for the paths both would match.
+    await this.#page.route(/\/api\/chats\/(library|projects\/[^/]+)\/messages$/, (route) =>
+      this.#respond(route, EndpointKey.CHAT_MESSAGES, {
+        onDefault: () => {
+          const parts = new URL(route.request().url()).pathname.split("/");
+          const owner: ChatOwner =
+            parts.at(-2) === "library" ? { kind: "library" } : { kind: "project", id: decodeURIComponent(parts.at(-2) ?? "") };
+          const body = route.request().postDataJSON() as Omit<ChatQuestionSent, "overviewId">;
+          return this.#answerAsk(owner, body);
+        },
+        onError: () => ({ status: 502, body: { error: { code: "generation_failed", message: "Simulated: the provider failed" } } }),
+      }),
+    );
+
     await this.#page.route("**/api/chat-usage", (route) =>
       this.#respond(route, EndpointKey.CHAT_USAGE, {
         onDefault: () => ({ status: 200, body: this.#chatUsage }),
@@ -1438,6 +1459,7 @@ export class BackendSimulator {
     questions: () => this.#chatQuestions,
     list: (overviewId: OverviewId) =>
       this.#page.evaluate((id) => window.__iwftStores__.chatStore.listChats({ kind: "overview", id }), overviewId),
+    listLibrary: () => this.#page.evaluate(() => window.__iwftStores__.chatStore.listChats({ kind: "library" })),
   };
 
   #nextSeq = (): number => Math.max(0, ...this.#feed.map((change) => change.seq)) + 1;
@@ -1495,6 +1517,67 @@ export class BackendSimulator {
       status: 200,
       stream: [
         ...(sources.length > 0 ? [{ type: "sources", pinned, found }] : []),
+        ...pieces.map((text) => ({ type: "text", text })),
+        ...(reply.sections?.sections ?? []).map((section) => ({ type: "section", section })),
+        { type: "answered", chatId, rev: record.rev, messages },
+      ],
+    };
+  };
+
+  // A question on the Ask page, answered as the server answers it: choosing, what it chose, the
+  // intro as text, then each section whole (OV-353, OV-354).
+  #answerAsk = (owner: ChatOwner, request: Omit<ChatQuestionSent, "overviewId">): SimulatedResponse => {
+    this.#chatQuestions.push({ overviewId: owner.kind === "library" ? "library" : `project:${owner.id}`, ...request });
+    const reply = this.#chatReplies.shift() ?? DEFAULT_CHAT_REPLY;
+    if (reply.kind === "refused") return { status: reply.status, body: { error: { message: "Simulated", ...reply.error } } };
+    if (reply.kind === "failed") return { status: 200, stream: [{ type: "failed", message: "Simulated: the provider failed" }] };
+    const at = new Date().toISOString();
+    const chatId = chatRecordId(owner, request.conversationId);
+    const known = this.#chatRecords.get(chatId);
+    const before = (known?.messages ?? []).flatMap((message) => (message.from === "reader" ? (message.sources ?? []) : []));
+    const library = new Map(this.#seedOverviews.map((overview) => [overview.id as string, overview.source.title]));
+    const pinned: ChatSource[] = [];
+    for (const id of request.pins?.overviews ?? [])
+      if (![...before, ...pinned].some((source) => source.overviewId === id))
+        pinned.push({
+          label: `S${before.length + pinned.length + 1}`,
+          overviewId: id as OverviewId,
+          title: library.get(id) ?? "Untitled",
+          how: "pinned",
+        });
+    const picked = reply.picked ?? [];
+    const messages: ChatMessage[] = [
+      {
+        from: "reader",
+        text: request.text,
+        at,
+        ...(pinned.length > 0 ? { sources: pinned } : {}),
+        ...(picked.length > 0 ? { picked: picked.map((each) => each.overviewId) } : {}),
+      },
+      {
+        from: "answer",
+        text: reply.text,
+        at,
+        citations: reply.citations ?? [],
+        inSource: reply.inSource ?? true,
+        ...(reply.sections === undefined ? {} : { sections: reply.sections }),
+        ...(reply.stats === undefined ? {} : { stats: reply.stats }),
+      },
+    ];
+    const record =
+      known === undefined
+        ? { id: chatId, ...(owner.kind === "project" ? { projectId: owner.id as ProjectId } : {}), startedAt: at, messages, rev: 1 }
+        : { ...known, messages: [...known.messages, ...messages], rev: known.rev + 1 };
+    this.#chatRecords.set(chatId, record);
+    this.#feed.push(chatChange(record, record.rev, this.#nextSeq()));
+    this.#chatUsage = { ...this.#chatUsage, used: this.#chatUsage.used + 1 };
+    const streamed = reply.sections?.intro ?? reply.text;
+    const pieces = streamed.match(/\S+\s*/g) ?? [streamed];
+    return {
+      status: 200,
+      stream: [
+        ...(picked.length > 0 ? [{ type: "picking" }, { type: "picked", overviews: picked }] : []),
+        ...(pinned.length > 0 ? [{ type: "sources", pinned, found: [] }] : []),
         ...pieces.map((text) => ({ type: "text", text })),
         ...(reply.sections?.sections ?? []).map((section) => ({ type: "section", section })),
         { type: "answered", chatId, rev: record.rev, messages },

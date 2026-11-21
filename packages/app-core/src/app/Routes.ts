@@ -42,6 +42,13 @@ export const Routes = {
   // (docs/features/projects.md, "The project page").
   projects: () => "/projects",
   project: (projectId: ProjectId | string) => `/projects/${projectId}`,
+  // The Ask page over the whole library, or one project, at one of its conversations (OV-354, page 3).
+  ask: (at: { project?: ProjectId | string | null; chat?: string | null } = {}) => {
+    const query = new URLSearchParams();
+    if (at.project) query.set("project", at.project);
+    if (at.chat) query.set("chat", at.chat);
+    return query.size === 0 ? "/ask" : `/ask?${query}`;
+  },
   // The address the API writes into every shared link, so the two cannot drift
   // (docs/features/sharing.md).
   sharedOverview: (token: ShareToken | string) => sharePath(token),
