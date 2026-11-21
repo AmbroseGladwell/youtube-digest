@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { TranscribeChoice } from "@overview/domain";
-import type { Overview, PodcastRead } from "@overview/domain";
+import type { Overview, PodcastEpisode, PodcastRead } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
@@ -15,6 +15,9 @@ import { useStores } from "../../stores/StoresContext.js";
 import { createTrialArticleApi } from "../signedOutTrial/api/createTrialArticleApi.js";
 import { createTrialVideoApi } from "../signedOutTrial/api/createTrialVideoApi.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
+import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
+import { checkEpisodeWords } from "../podcasts/api/checkEpisodeWords.js";
+import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 import type { EpisodeTranscription } from "../podcasts/types/EpisodeTranscription.js";
 import { foundIn, type OnboardingFound, type OnboardingMakers, type OnboardingSource } from "./onboardingSources.js";
 import { pageAccessFor } from "./pageAccess.js";
@@ -29,7 +32,7 @@ export interface OnboardingRun {
   found: OnboardingFound | null;
   overview: Overview | null;
   failure: OnboardingFailure | null;
-  // An episode the reader chose to transcribe, until its words are in.
+  // An episode being transcribed for the run, kept once done so the wait still says it was.
   transcription: EpisodeTranscription | null;
   // The wait's real events (327m): the words the source held once they're in, and writing begun.
   sourceWords: number | null;
@@ -82,6 +85,7 @@ export function useOnboardingRun({
   const analytics = useAnalytics();
   const shown = useStores();
   const signedIn = useLibraryAccountId() !== null;
+  const youTubeFetch = useYouTubeFetch();
   // Kept with the try it belongs to, so a new try never shows the last one's result.
   const key = `${target ?? ""}#${attempt}`;
   const [state, setState] = useState<{ key: string; run: OnboardingRun }>({ key, run: FETCHING });
@@ -104,6 +108,14 @@ export function useOnboardingRun({
       ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token }).read(url)
       : createTrialPodcastApi({ baseUrl: knownApiUrl }).read(url);
   };
+  const checkEpisode = async (episode: PodcastEpisode) => {
+    if (knownApiUrl === null) throw new Error("There's no server to check that episode through.");
+    const api =
+      libraryAccountIdOf(connection) !== null
+        ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token })
+        : createTrialPodcastApi({ baseUrl: knownApiUrl });
+    return checkEpisodeWords(api, episode, youTubeFetch);
+  };
   const latest = useRef({
     source,
     runVideo,
@@ -112,6 +124,7 @@ export function useOnboardingRun({
     readArticle,
     readVideo,
     readPodcast,
+    checkEpisode,
     onFound,
     onMade,
     analytics,
@@ -127,6 +140,7 @@ export function useOnboardingRun({
     readArticle,
     readVideo,
     readPodcast,
+    checkEpisode,
     onFound,
     onMade,
     analytics,
@@ -171,6 +185,7 @@ export function useOnboardingRun({
       readArticle: (url) => latest.current.readArticle(url),
       podcast: (request, options) => latest.current.runPodcast(request, options, latest.current.shown),
       readPodcast: (url) => rememberEpisodeRead(episodeReads.current, url, latest.current.readPodcast),
+      checkEpisode: (episode) => latest.current.checkEpisode(episode),
     };
 
     kind
@@ -204,10 +219,10 @@ export function useOnboardingRun({
       .then((overview) => {
         if (cancelled) return;
         latest.current.onMade(overview);
-        setRun((current) => ({ ...current, phase: "ready", found: foundIn(overview), overview, failure: null, transcription: null }));
+        setRun((current) => ({ ...current, phase: "ready", found: foundIn(overview), overview, failure: null }));
       })
       .catch((error: unknown) => {
-        if (cancelled || error instanceof GenerationCancelledError) return;
+        if (cancelled || error instanceof GenerationCancelledError || error instanceof EpisodeCannotBeMadeError) return;
         setRun((current) => ({ ...current, phase: "failed", failure: onboardingFailureOf(error) }));
       });
 

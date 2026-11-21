@@ -23,6 +23,7 @@ const EPISODE: PodcastEpisode = {
   chaptersUrl: null,
   linkFrom: "apple",
 };
+const TRANSCRIPTION_ID = "8c0f3a52-0d7e-4d6b-9a51-2f4c3e7b9a10";
 const WORDS = {
   videoId: "podcast:episode" as never,
   segments: [{ startMs: 0, endMs: 4_000, text: "Most decline starts a decade before anyone notices it." }],
@@ -97,6 +98,67 @@ test("an episode with no transcript, where our server doesn't transcribe, is fou
   ]);
   expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([]);
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+});
+
+test("an episode with no transcript says on Your link it'll be transcribed, so after the account the wait transcribes it without asking", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.answerWith({ status: "read", episode: EPISODE });
+  backendSimulator.podcasts.checkSays({
+    words: "none",
+    transcription: {
+      status: "needed",
+      episodeSeconds: EPISODE.durationSeconds,
+      usage: { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 },
+    },
+  });
+  backendSimulator.podcasts.transcribesAs(
+    { status: "waiting", id: TRANSCRIPTION_ID, episodeSeconds: EPISODE.durationSeconds },
+    { status: "transcribing", id: TRANSCRIPTION_ID, episodeSeconds: null },
+    { status: "ready", id: TRANSCRIPTION_ID, transcript: WORDS },
+  );
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(LINK);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+  await onboarding.verifyNoticeReads(
+    "There’s no transcript, so we’ll make one from the audio: about 1 hr 56 min of your 5 free hours this month.",
+  );
+  await skipToAccount(onboarding);
+  expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([]);
+
+  await onboarding.createAccount(ADA);
+
+  await onboarding.verifyOnScreen("wait");
+  await onboarding.verifyWaitStage(1, { state: "done", text: "Episode transcribed · 1 hr 56 min" });
+  await onboarding.verifyCanOpenOverview(true);
+  expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([{ feedUrl: EPISODE.feedUrl, guid: EPISODE.guid }]);
+  expect(backendSimulator.podcasts.transcriptAsks()).toEqual([]);
+});
+
+test("an episode over 4 hours stops on Your link, saying why, with nothing used and only another link to try", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.podcasts.answerWith({ status: "read", episode: { ...EPISODE, durationSeconds: 5 * 3600 } });
+  backendSimulator.podcasts.checkSays({ words: "none", transcription: { status: "too-long", episodeSeconds: 5 * 3600 } });
+  const home = await launcher.launch(signedOutAnswered);
+
+  await home.submitHeroUrl(LINK);
+  const onboarding = await launcher.onboardingPage.verifyIsShown();
+
+  await onboarding.verifyOnScreen("video", "We found the episode, but can’t make this one.");
+  await onboarding.verifyYourLinkLineReads("Nothing has been used. Paste another link and we’ll start again.");
+  await onboarding.verifyStopReads(
+    "This episode is over 4 hours, so it can’t be transcribed. Try an episode under 4 hours, or one with a transcript.",
+  );
+  await onboarding.useDifferentLink();
+  await home.verifyShowsStart();
+  expect(backendSimulator.podcasts.transcriptAsks()).toEqual([]);
+  expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([]);
 });
 
 test("a Spotify exclusive is named as one where the read lands, with a field for another link", async ({

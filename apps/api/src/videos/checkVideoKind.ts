@@ -49,9 +49,7 @@ export async function checkVideoKind(
     .catch(() => null);
   if (transcript === null || transcript.segments.length === 0) return UNCHECKED;
   const payer: CostPayer = signedOut ? "signed-out" : { accountId: caller.accountId };
-  const noteKind = await generator
-    .kindCheck(payer, kindSampleOfVideo({ video, transcript: transcript.segments }), log)
-    .catch(() => null);
+  const noteKind = await generator.kindCheck(payer, kindSampleOfVideo({ video, transcript: transcript.segments }), log).catch(() => null);
   if (noteKind !== null) await kinds.remember(now, videoId, noteKind);
   return { noteKind, transcript };
 }

@@ -146,7 +146,7 @@ test("a free account transcribes up to five hours a month, and is told when they
   await testApp.close();
 });
 
-test("signed out, a trial can check onboarding's episode, but transcribing it waits for an account", async () => {
+test("signed out, a trial can check onboarding's episode, answered as a new Free account, but transcribing it waits for an account", async () => {
   const testApp = await createTestApp(
     {},
     {
@@ -160,7 +160,10 @@ test("signed out, a trial can check onboarding's episode, but transcribing it wa
   const asked = await device.transcribe(EPISODE);
 
   assert.equal(checked.statusCode, 200);
-  assert.equal(checked.json().words, "none");
+  assert.deepEqual(checked.json(), {
+    words: "none",
+    transcription: { status: "needed", episodeSeconds: 1800, usage: { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 } },
+  });
   assert.equal(asked.statusCode, 401);
   await testApp.close();
 });

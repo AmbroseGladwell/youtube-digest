@@ -12,7 +12,9 @@ import {
   webSource,
   youTubeSource,
   type ArticleRead,
+  type PodcastEpisode,
   type PodcastRead,
+  type TranscriptCheck,
   type StoredTranscript,
   type VideoRead,
   type ExtractedArticle,
@@ -34,6 +36,8 @@ import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
 import { formatPublishedDate } from "../../util/formatPublishedDate.js";
 import type { ExpectedMinutes } from "./util/expectedOverviewMinutes.js";
+import { episodeWordsNotice } from "./util/episodeWordsNotice.js";
+import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 
 export type OnboardingLinkKind = "video" | "playlist" | "article" | "episode";
 
@@ -47,6 +51,9 @@ export interface OnboardingFound {
   about: string;
   // A video already checked as a recipe before the account takes the recipe's words (327u-2).
   noteKind?: NoteKind | null;
+  // Whether an episode's words were found as it was read, so Your link can say it'll be
+  // transcribed, or that it can't be (327v–327w-4).
+  episodeWords?: TranscriptCheck | null;
 }
 
 // The pipelines a run can call; the shell's hooks supply them, the kind chooses between them.
@@ -60,6 +67,8 @@ export interface OnboardingMakers {
   readArticle: (url: string) => Promise<ArticleRead>;
   podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readPodcast: (url: string) => Promise<PodcastRead>;
+  // Free, signed out on the trial: no words are fetched (design 305c).
+  checkEpisode: (episode: PodcastEpisode) => Promise<TranscriptCheck>;
 }
 
 export interface OnboardingMakeOptions {
@@ -107,6 +116,10 @@ export interface OnboardingYourLink {
   // A recipe is cooked rather than listened to: Cook · Read · Share.
   pills: "readListen" | "cook";
   inside: string;
+  // What Looks right agrees to, said on the card (327w).
+  notice?: string | null;
+  // Why it can't be made, in place of the pills and Looks right (327w-3, 327w-4).
+  stop?: string | null;
 }
 
 const PAGE_OPENING_CHARACTERS = 3000;
@@ -229,9 +242,10 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
     },
   },
   // Design 106c: an episode takes the same card in a podcast's words. It claims Apple and Spotify
-  // links; a show's own page is left to the web, which reads it as a page. It is found, and its
-  // words with it, before the card shows, as a video's transcript is fetched before its card
-  // does, so an episode with no words stops at the confirm step (106i).
+  // links; a show's own page is left to the web, which reads it as a page. Whether its words can be
+  // found is checked before the card shows, fetching none, so Your link says it'll be transcribed
+  // and Looks right is the consent, or that it can't be made (327v–327w-4). Words that turn out
+  // missing after all are transcribed in the wait: a new account has the hours.
   podcast: {
     linkKind: (link) => (isPlatformPodcastLink(link) ? "episode" : null),
     keyFromLink: () => null,
@@ -240,12 +254,17 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       const read = await makers.readPodcast(target);
       if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
       const id = await podcastSourceId(read.episode);
-      onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes });
+      const episodeWords = await makers.checkEpisode(read.episode).catch((): TranscriptCheck => ({ words: "unknown" }));
+      const source = podcastSource(read.episode, id, target);
+      onFound({ source, recipe: null, about: read.episode.notes, episodeWords });
+      if (episodeWordsNotice(episodeWords, source.kind === "podcast" ? source.durationMs : null).stop !== null) {
+        throw new EpisodeCannotBeMadeError();
+      }
       await waitToSpend();
       if (isCancelled()) throw new GenerationCancelledError();
-      return makers
-        .podcast(
-          { episode: read.episode, sharedFrom: target, transcribe },
+      const make = (choice: TranscribeChoice | undefined) =>
+        makers.podcast(
+          { episode: read.episode, sharedFrom: target, transcribe: choice },
           {
             from: "onboarding",
             isCancelled,
@@ -253,7 +272,13 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
             onEpisodeWords: (words) => onSourceWords?.(words),
             onWriting,
           },
-        )
+        );
+      const needsTranscribing = episodeWords.words === "none" && episodeWords.transcription.status !== "free";
+      return (transcribe !== undefined || needsTranscribing ? make(transcribe ?? "chosen") : make(undefined))
+        .catch((error: unknown) => {
+          if (error instanceof EpisodeNeedsTranscribingError) return make("chosen");
+          throw error;
+        })
         .catch((error: unknown) => {
           if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
             throw new PodcastNoTranscriptError(error instanceof EpisodeNeedsTranscribingError, read.episode.durationSeconds);
@@ -269,12 +294,24 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       kicker: `${sourceName(source)} · Podcast`,
       facts: { line: episodeFacts(source) },
     }),
-    yourLink: ({ source }, minutes) => ({
-      heading: "Here’s what’s in the episode you saved.",
-      line: `${fromWhom(episodeLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
-      pills: "readListen",
-      inside: INSIDE,
-    }),
+    yourLink: ({ source, episodeWords }, minutes) => {
+      const { notice, stop } = episodeWordsNotice(episodeWords, source.kind === "podcast" ? source.durationMs : null);
+      return stop !== null
+        ? {
+            heading: "We found the episode, but can’t make this one.",
+            line: "Nothing has been used. Paste another link and we’ll start again.",
+            pills: "readListen",
+            inside: INSIDE,
+            stop,
+          }
+        : {
+            heading: "Here’s what’s in the episode you saved.",
+            line: `${fromWhom(episodeLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
+            pills: "readListen",
+            inside: INSIDE,
+            notice,
+          };
+    },
   },
   web: {
     linkKind: (link) => (isArticleLink(link) ? "article" : null),

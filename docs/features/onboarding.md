@@ -124,9 +124,17 @@ Reels join the table when they ship.
 **A podcast episode** (OV-106) is an Apple Podcasts or Spotify link; a show's own episode page is
 left to the web entry, which reads it as a page. Reading the link spends one of the trial's reads,
 as an article's does (`reserveTrialRead`, shared by the read routes), and the card shows from the
-read. The episode's words are found, or transcribed, only once there's an account, so an episode
-with none is found to have none after it (OV-327; round 2 of the design moves the check before the
-card). A link our server can't use gets that reason's words at the confirm step
+read. Before the card shows, `POST /api/podcasts/transcript/check` asks whether its words can be
+found, fetching none: on the trial signed out, answered as a new Free account would be, since the
+episode is transcribed once there is one (`episodeWordsNotice`, designs 327v–327w-4). Found:
+nothing is said. None: Your link says it'll make one from the audio and how much of the 5 free
+hours that uses, and Looks right is the consent OV-305 asks for, so the wait transcribes without
+asking and shows Transcribing the episode in place of Fetching transcript. A check that couldn't
+tell says it may transcribe. Over 4 hours or no audio in the feed: a stop on Your link ("We found
+the episode, but can’t make this one.", the reason in the warning colour, only Use a different
+link), and the run ends there. The words themselves are found, or transcribed, only once there's
+an account; if a check said found and was wrong, the wait transcribes (a new account has the
+hours). A link our server can't use gets that reason's words at the confirm step
 (`podcastLinkFailureCopy`), without "No overview was used.".
 
 **The progress** keeps the link given and, once known, the source's key: the video's id from

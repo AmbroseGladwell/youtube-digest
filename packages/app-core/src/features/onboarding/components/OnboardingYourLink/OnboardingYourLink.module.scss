@@ -34,6 +34,20 @@
   color: var(--ink);
 }
 
+.notice {
+  margin: 0;
+  padding: 0 0.25rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+
+.stop {
+  margin: 0;
+  padding: 0 0.25rem;
+  font-size: 0.875rem;
+  color: var(--alert);
+}
+
 .saved {
   margin: 0;
   padding: 0 0.25rem;

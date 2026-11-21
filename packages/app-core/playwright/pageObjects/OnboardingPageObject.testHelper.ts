@@ -126,6 +126,20 @@ export class OnboardingPageObject extends PageObject {
       expect(this.get(onboardingYourLinkTestIds.root)).toContainText("Saved to your library, ready for you and your AI."),
     );
 
+  verifyNoticeReads = (text: string | null) =>
+    this.step(`verifyNoticeReads ${text}`, () =>
+      text === null
+        ? this.expectToHaveCount(onboardingYourLinkTestIds.notice, 0)
+        : expect(this.get(onboardingYourLinkTestIds.notice)).toHaveText(text),
+    );
+
+  verifyStopReads = (text: string | RegExp) =>
+    this.step(`verifyStopReads ${text}`, async () => {
+      await expect(this.get(onboardingYourLinkTestIds.stop)).toHaveText(text);
+      await this.expectToHaveCount(onboardingYourLinkTestIds.looksRight, 0);
+      await this.expectToHaveCount(onboardingPillsTestIds.root, 0);
+    });
+
   verifyFindingReads = (text: string) =>
     this.step(`verifyFindingReads ${text}`, () => expect(this.get(onboardingYourLinkTestIds.finding)).toHaveText(text));
 

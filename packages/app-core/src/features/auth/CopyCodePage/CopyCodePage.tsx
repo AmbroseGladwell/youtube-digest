@@ -24,9 +24,7 @@ export function CopyCodePage() {
   useEffect(copy, [code]);
 
   if (code === null) {
-    return (
-      <AuthScreen testId={copyCodePageTestIds.root} title="There’s no code here" lead="Open the Copy code link in the email again." />
-    );
+    return <AuthScreen testId={copyCodePageTestIds.root} title="There’s no code here" lead="Open the Copy code link in the email again." />;
   }
   return (
     <AuthScreen

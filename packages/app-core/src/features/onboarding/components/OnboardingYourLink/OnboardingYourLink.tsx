@@ -43,6 +43,7 @@ export function OnboardingYourLink({
   const pending = found === null && !failed ? (kind?.pending(link) ?? null) : null;
   const minutes = found === null ? null : expectedOverviewMinutes(found.source);
   const words = found === null || kind === null ? null : kind.yourLink(found, minutes);
+  const stop = words?.stop ?? null;
   const heading = words?.heading ?? (playlist !== null ? "Here’s the playlist you saved." : "Here’s what you saved.");
 
   return (
@@ -71,13 +72,26 @@ export function OnboardingYourLink({
         {found !== null && kind !== null ? (
           <>
             <OnboardingSourceCard kind={kind} found={found} size={playlist !== null ? "small" : isPanel ? "compact" : "large"} />
-            {words !== null && <OnboardingPills pills={words.pills} minutes={minutes} />}
-            {words !== null && (
-              <p className={styles.inside} data-testid={onboardingYourLinkTestIds.inside}>
-                {words.inside}
+            {stop !== null ? (
+              <p className={styles.stop} role="alert" data-testid={onboardingYourLinkTestIds.stop}>
+                {stop}
               </p>
+            ) : (
+              <>
+                {words?.notice != null && (
+                  <p className={styles.notice} data-testid={onboardingYourLinkTestIds.notice}>
+                    {words.notice}
+                  </p>
+                )}
+                {words !== null && <OnboardingPills pills={words.pills} minutes={minutes} />}
+                {words !== null && (
+                  <p className={styles.inside} data-testid={onboardingYourLinkTestIds.inside}>
+                    {words.inside}
+                  </p>
+                )}
+                <p className={styles.saved}>Saved to your library, ready for you and your AI.</p>
+              </>
             )}
-            <p className={styles.saved}>Saved to your library, ready for you and your AI.</p>
           </>
         ) : pending !== null ? (
           <div className={styles.pending}>
@@ -128,16 +142,23 @@ export function OnboardingYourLink({
       </div>
 
       <div className={styles.foot}>
+        {stop === null && (
+          <button
+            type="button"
+            className={styles.primary}
+            disabled={found === null}
+            onClick={onLooksRight}
+            data-testid={onboardingYourLinkTestIds.looksRight}
+          >
+            Looks right
+          </button>
+        )}
         <button
           type="button"
-          className={styles.primary}
-          disabled={found === null}
-          onClick={onLooksRight}
-          data-testid={onboardingYourLinkTestIds.looksRight}
+          className={stop === null ? styles.quiet : styles.primary}
+          onClick={onDifferentLink}
+          data-testid={onboardingYourLinkTestIds.differentLink}
         >
-          Looks right
-        </button>
-        <button type="button" className={styles.quiet} onClick={onDifferentLink} data-testid={onboardingYourLinkTestIds.differentLink}>
           Use a different link
         </button>
       </div>

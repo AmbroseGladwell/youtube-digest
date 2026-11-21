@@ -12,9 +12,8 @@ import type { TranscriptionQueue } from "./TranscriptionQueue.js";
 const HOUR = 3600;
 
 // Hours of audio transcribed a month: a guard against misuse more than a cost, at about a cent an
-// hour. A trial's address, making onboarding's one overview, has room for one of the longest
-// episodes (OV-305, 16 Nov 2026).
-export const transcriptionHours = { address: 4, free: 5, "byo-plus": 15, plus: 30 } as const satisfies Record<"address" | Plan, number>;
+// hour (OV-305, 16 Nov 2026).
+export const transcriptionHours = { free: 5, "byo-plus": 15, plus: 30 } as const satisfies Record<Plan, number>;
 export const LONGEST_EPISODE_SECONDS = 4 * HOUR;
 // A feed's length is the publisher's word, so the audio itself may run a little past it.
 const MEASURED_SLACK_SECONDS = 10 * 60;
@@ -43,8 +42,9 @@ export interface PodcastTranscriptionsOptions {
   clock: () => Date;
 }
 
-const limitSecondsOf = (caller: ServiceCaller): number =>
-  ("accountId" in caller ? transcriptionHours[caller.plan] : transcriptionHours.address) * HOUR;
+// Signed out, only the check is asked, and onboarding's episode is transcribed once the reader has
+// an account: a new one, on Free (OV-327).
+const limitSecondsOf = (caller: ServiceCaller): number => transcriptionHours["accountId" in caller ? caller.plan : "free"] * HOUR;
 
 const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): PodcastTranscription => {
   if (job.status === "ready") return { status: "ready", id: job.id, transcript: job.transcript! };

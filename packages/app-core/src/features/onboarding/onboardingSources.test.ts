@@ -1,8 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import { Source, VideoId, type ArticleRead, type PodcastEpisode, type StoredTranscript, type VideoSource } from "@overview/domain";
+import {
+  Source,
+  VideoId,
+  type ArticleRead,
+  type PodcastEpisode,
+  type StoredTranscript,
+  type TranscriptCheck,
+  type VideoSource,
+} from "@overview/domain";
 import { makeArticleOverview, makeOverview } from "../overviews/types/OverviewFactory.testHelper.js";
 import { foundIn, onboardingSourceOf, onboardingSources, type OnboardingMakers } from "./onboardingSources.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
+import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
+import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
+import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 
 const kindsOfSource = Source.options.map((option) => option.shape.kind.value);
 
@@ -78,13 +89,14 @@ describe("onboardingSources", () => {
     const told: TranscriptionProgress[] = [];
     const makers = {
       readPodcast: async () => ({ status: "read", episode }),
+      checkEpisode: async () => ({ words: "found" }),
       podcast: async (request, options) => {
         asked.push({ transcribe: request.transcribe, episode: request.episode });
         options.onTranscription?.("starting");
         options.onTranscription?.("transcribing");
         return makeOverview();
       },
-    } as Pick<OnboardingMakers, "readPodcast" | "podcast"> as OnboardingMakers;
+    } as Pick<OnboardingMakers, "readPodcast" | "checkEpisode" | "podcast"> as OnboardingMakers;
 
     await onboardingSources.podcast.make(link, makers, {
       transcribe: "asked",
@@ -230,11 +242,15 @@ describe("onboarding's run, before and after the account", () => {
         order.push("read");
         return { status: "read", episode };
       },
+      checkEpisode: async () => {
+        order.push("checked");
+        return { words: "found" };
+      },
       podcast: async () => {
         order.push("words and writing");
         return makeOverview();
       },
-    } as Pick<OnboardingMakers, "readPodcast" | "podcast"> as OnboardingMakers;
+    } as Pick<OnboardingMakers, "readPodcast" | "checkEpisode" | "podcast"> as OnboardingMakers;
     const { open, waitToSpend } = account();
 
     const run = onboardingSources.podcast.make("https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk", makers, {
@@ -242,11 +258,119 @@ describe("onboarding's run, before and after the account", () => {
       isCancelled: () => false,
       waitToSpend,
     });
-    await vi.waitFor(() => expect(order).toEqual(["read", "shown"]));
+    await vi.waitFor(() => expect(order).toEqual(["read", "checked", "shown"]));
     await settle();
-    expect(order).toEqual(["read", "shown"]);
+    expect(order).toEqual(["read", "checked", "shown"]);
     open();
     await run;
-    expect(order).toEqual(["read", "shown", "words and writing"]);
+    expect(order).toEqual(["read", "checked", "shown", "words and writing"]);
+  });
+
+  describe("an episode's words, checked as it's read (327v–327w-4)", () => {
+    const LINK = "https://open.spotify.com/episode/4rOoJ6Egrf8K2IrywzwOMk";
+    const episode = {
+      feedUrl: "https://feeds.example/diary.xml",
+      guid: "episode-guid",
+      title: "Ageing",
+      notes: "",
+      durationSeconds: 4320,
+    } as PodcastEpisode;
+    const usage = { usedSeconds: 0, limitSeconds: 5 * 3600, episodes: 0 };
+    const noWords = () =>
+      new EpisodeNeedsTranscribingError(new TranscriptFetchError("none", { failure: TranscriptFetchFailure.NO_CAPTIONS }));
+    const runWith = (
+      check: () => Promise<TranscriptCheck>,
+      written: (transcribe: unknown) => void,
+      firstTry: "words" | "none" = "words",
+    ) => {
+      const shown: { episodeWords?: TranscriptCheck | null }[] = [];
+      let waited = false;
+      const makers = {
+        readPodcast: async () => ({ status: "read", episode }),
+        checkEpisode: check,
+        podcast: async (request) => {
+          written(request.transcribe);
+          if (firstTry === "none" && request.transcribe === undefined) throw noWords();
+          return makeOverview();
+        },
+      } as Pick<OnboardingMakers, "readPodcast" | "checkEpisode" | "podcast"> as OnboardingMakers;
+      const run = onboardingSources.podcast.make(LINK, makers, {
+        onFound: (found) => shown.push(found),
+        isCancelled: () => false,
+        waitToSpend: async () => {
+          waited = true;
+        },
+      });
+      return { run, shown, waited: () => waited };
+    };
+
+    it("with no transcript, Looks right was the consent, so the wait transcribes without asking", async () => {
+      const asked: unknown[] = [];
+      const { run, shown } = runWith(
+        async () => ({ words: "none", transcription: { status: "needed", episodeSeconds: 4320, usage } }),
+        (transcribe) => asked.push(transcribe),
+      );
+      await run;
+      expect(shown[0]?.episodeWords?.words).toBe("none");
+      expect(asked).toEqual(["chosen"]);
+    });
+
+    it("looks for the words first where the check found them, and transcribes if they turn out missing", async () => {
+      const asked: unknown[] = [];
+      const { run } = runWith(
+        async () => ({ words: "found" }),
+        (transcribe) => asked.push(transcribe),
+        "none",
+      );
+      await run;
+      expect(asked).toEqual([undefined, "chosen"]);
+    });
+
+    it("takes a check that couldn't be asked as unknown, and looks for the words", async () => {
+      const asked: unknown[] = [];
+      const { run, shown } = runWith(
+        async () => {
+          throw new Error("offline");
+        },
+        (transcribe) => asked.push(transcribe),
+      );
+      await run;
+      expect(shown[0]?.episodeWords).toEqual({ words: "unknown" });
+      expect(asked).toEqual([undefined]);
+    });
+
+    it("stops at an episode it can't transcribe, having shown it and spent nothing", async () => {
+      const asked: unknown[] = [];
+      const { run, shown, waited } = runWith(
+        async () => ({ words: "none", transcription: { status: "too-long", episodeSeconds: 5 * 3600 } }),
+        (transcribe) => asked.push(transcribe),
+      );
+      await expect(run).rejects.toBeInstanceOf(EpisodeCannotBeMadeError);
+      expect(shown).toHaveLength(1);
+      expect(waited()).toBe(false);
+      expect(asked).toEqual([]);
+    });
+
+    it("says on Your link what will happen, or why it can't be made", () => {
+      const found = (episodeWords: TranscriptCheck) => ({
+        ...foundIn(makeOverview()),
+        source: { kind: "podcast", durationMs: 4_320_000, sharedFrom: LINK, title: "Ageing", show: "Diary", publishedAt: null } as never,
+        episodeWords,
+      });
+      const needed = onboardingSources.podcast.yourLink(
+        found({ words: "none", transcription: { status: "needed", episodeSeconds: 4320, usage } }),
+        null,
+      );
+      const noAudio = onboardingSources.podcast.yourLink(found({ words: "none", transcription: { status: "no-audio" } }), null);
+      const withWords = onboardingSources.podcast.yourLink(found({ words: "found" }), null);
+
+      expect(needed.notice).toBe(
+        "There’s no transcript, so we’ll make one from the audio: about 1 hr 12 min of your 5 free hours this month.",
+      );
+      expect(noAudio.heading).toBe("We found the episode, but can’t make this one.");
+      expect(noAudio.stop).toMatch(/^This episode’s audio isn’t in the public feed/);
+      expect(withWords.notice ?? null).toBeNull();
+      expect(withWords.stop ?? null).toBeNull();
+    });
   });
 });

@@ -58,7 +58,9 @@ export function OnboardingWaitScreen({
   const phase: WaitPhase = failed ? "failed" : overview !== null ? "ready" : "running";
   useKeepTabWhileRunning(phase, found?.source.title ?? "Your overview");
 
-  const transcribing = run.transcription !== null;
+  // Known from the check before the account (327y-2), or found once the words turn out missing.
+  const transcribing =
+    run.transcription !== null || (found?.episodeWords?.words === "none" && found.episodeWords.transcription.status !== "free");
   const ids = waitStageIds(waitKind, { transcribing });
   const sourceIn = run.sourceWords !== null || run.writingStarted || phase === "ready";
   const writing = run.writingStarted || phase === "ready";

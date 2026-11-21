@@ -34,8 +34,7 @@ export async function makeTrialDevice({ app }: TestApp, address = TRIAL_ADDRESS)
     fetchTranscript: (videoId) =>
       app.inject({ method: "POST", url: `/api/service-transcripts/${videoId}`, headers, remoteAddress: address }),
     readArticle: (url) => app.inject({ method: "POST", url: "/api/articles/read", headers, payload: { url }, remoteAddress: address }),
-    readVideo: (videoId) =>
-      app.inject({ method: "POST", url: "/api/videos/read", headers, payload: { videoId }, remoteAddress: address }),
+    readVideo: (videoId) => app.inject({ method: "POST", url: "/api/videos/read", headers, payload: { videoId }, remoteAddress: address }),
     readPodcast: (url) => app.inject({ method: "POST", url: "/api/podcasts/read", headers, payload: { url }, remoteAddress: address }),
     podcastTranscript: (episode) =>
       app.inject({ method: "POST", url: "/api/podcasts/transcript", headers, payload: episode, remoteAddress: address }),
