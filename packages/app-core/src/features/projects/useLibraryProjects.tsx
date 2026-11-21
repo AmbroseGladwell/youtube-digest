@@ -3,6 +3,8 @@ import { useNavigate } from "react-router";
 import { BY_READER, type OverviewId, type ProjectId } from "@overview/domain";
 import { Routes } from "../../app/Routes.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
+import { isConnected } from "../sync/types/SyncConnection.js";
+import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import type { LibraryPlace } from "../library/types/LibraryPlace.js";
 import type { OverviewWithState } from "../overviews/types/OverviewWithState.js";
@@ -54,6 +56,7 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
   const analytics = useAnalytics();
   const navigate = useNavigate();
   const accountId = useLibraryAccountId();
+  const { connection } = useSyncConnection();
   const updateProject = useUpdateProjectMutation();
   const deleteProject = useDeleteProjectMutation();
   const setMember = useSetProjectMemberMutation();
@@ -109,6 +112,7 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
         summary={current}
         now={now}
         assistantConnected={assistants.any}
+        askable={isConnected(connection)}
         nudged={!keptNow.has(current.project.id) && projectNudged(current, readProjectNudgeKept(accountId, current.project.id), now)}
         onRename={(name) => {
           analytics.projects.page.renamed({ projectId: current.project.id });

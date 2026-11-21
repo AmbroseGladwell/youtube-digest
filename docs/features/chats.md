@@ -205,7 +205,7 @@ or taken-out one.
   as the question's `sources`, and setting one aside is a new message, as in an overview's chat.
 - **`stats.read`** counts the overviews the answer read whole ("From 5 of your 208 overviews").
 - **Not yet:** these chats don't read each other, and don't carry the reader's profile. The UI is
-  OV-354, and keyword minutes from transcripts are OV-352.
+  the Ask page ("In the app", OV-354), and keyword minutes from transcripts are OV-352.
 
 ## Details from other transcripts
 
@@ -774,6 +774,58 @@ From the hand-off's pages, built for the panel beside the note and the phone she
   "Takeaway". The intro streams; each section shows as it lands, its sources once the answer
   settles. A sectioned answer has no citation row under it: "Sources N" beside Copy opens every
   source it cites, the overview's own first, N counted by code.
+
+### The Ask page (OV-354, pages 3 and 4)
+
+Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` for a project and
+`?chat=` for the open conversation, so a reload keeps it (`AskPage`, `useAskPage`):
+
+- **Ways in:** the Ask pill in the top bar, beside + New and the same pill. On a phone narrower than
+  27rem it keeps only its icon, named "Ask", so the bar never scrolls sideways. A project's page has
+  an Ask link beside Copy as Markdown, which opens the page over that project. Both show only
+  signed in. Neither is in the extension's panel, which keeps chat within an overview.
+- **No header and no close:** the top bar is the way back, and on a phone it's a page, not a sheet.
+  Signed out it says to sign in.
+- **Empty**, the field sits centred under "Ask across everything you've saved." or "Ask about this
+  project.", with the project as a chip above it. Its placeholder is "Ask your library or @ to add
+  sources" ("Ask about this project or @ to add sources"). Under it are three starter questions,
+  made by code from templates, never by a model (`askStarters`):
+  - **For the library:** its biggest topic with three or more overviews, its biggest unarchived
+    project with three or more, and how many are unread.
+  - **For a project:** what it's for, where its overviews disagree, and how many are unread in it.
+  - Plain questions fill any that don't apply.
+- **Asking** (`useAskOver`, `ChatApi.askOver`) posts to the library's or the project's route with
+  `pins` and `setAside`; the "@" picker and the row above the field are the overview chat's
+  (`ChatComposer`, with nothing excluded). Pinned shows above the question.
+- **The picking wait** (`AskPickingWait`; the hand-off's mp4):
+  - It's a small muted list: "Choosing which overviews to read · A few seconds" on `picking`, then
+    "Chosen" ticks and "Reading 5 overviews · Then the answer" names the titles from `picked`,
+    80ms apart.
+  - Once the intro or a section arrives it folds into "Read 5 overviews" with a tick and a chevron.
+    That line opens to the five as chips, and stays on each stored question, from its `picked`.
+  - After 10 seconds still choosing, "Still choosing, slow connection".
+  - Each step is announced once, never the titles. Reduced motion has no spin, slide or drawing.
+  - A small library or project, read whole, has no picking: three dots, then the intro.
+- **The answer** (`AskAnswer`) is the shared sectioned view, with each section's sources as other
+  overviews' chips by relation, then the line from `stats` (`askStatsLine`: "From 5 of your 208
+  overviews", "From 5 of this project's 83 overviews"), then Copy and "Sources N". Each section
+  lands whole.
+- **The drawer** (`AskDrawer`, top left) holds New chat and every library and project conversation,
+  never an overview's (`askChatsQuery`: the library's, then each project's).
+  - It's grouped Today, Yesterday, Previous 7 days and Earlier (`askHistoryGroups`). Each item
+    shows its first question and its scope, "Your library" or the project's name.
+  - Its ⋯ (on hover, on focus and on the open one; always on touch) has only Delete conversation.
+    There's no Rename, because the title is the first question.
+  - Deleting has Undo for six seconds, and the delete is made when the toast goes or the reader
+    leaves.
+  - On the web it's a raised 280px panel. On a phone it's a bottom sheet over a scrim.
+- **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation.
+- **Events**, `ask.*`, never the question, the answer, a title or which project:
+  - `page.opened`: from the top bar or a project, and over what.
+  - `chat.*`: asked (typed or a starter, new conversation, pins and set aside counted), picked (how
+    many), answered (sections, overviews cited), answerFailed, waited, stopped, answerCopied,
+    sourcesMenuOpened, readOpened, sourcePinned, sourceRemoved, overviewFollowed and plansFollowed.
+  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone.
 
 ## Over MCP
 

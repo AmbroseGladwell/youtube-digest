@@ -103,3 +103,28 @@ test("the month's allowance is read with what's used and when it resets", async 
 
   assert.deepEqual(await createFetchChatApi({ baseUrl: "https://o.example", fetch }).usage(), usage);
 });
+
+test("a question over the library or a project goes to its own route, and says what it picks as it goes", async () => {
+  const PROJECT = "7c2e9f10-0b8f-4f51-8a43-6a1d3c2e5f5a";
+  const picked: ChatStreamEvent = { type: "picked", overviews: [{ overviewId: OVERVIEW as never, title: "Eat more plants" }] };
+  const library = streaming([{ type: "picking" }, picked, { type: "text", text: "Mostly beans." }, answeredEvent]);
+  const progress: unknown[] = [];
+
+  await createFetchChatApi({ baseUrl: "https://o.example", fetch: library.fetch }).askOver(
+    { kind: "library" },
+    QUESTION,
+    () => undefined,
+    undefined,
+    (event) => progress.push(event),
+  );
+  const project = streaming([answeredEvent]);
+  await createFetchChatApi({ baseUrl: "https://o.example", fetch: project.fetch }).askOver(
+    { kind: "project", id: PROJECT as never },
+    QUESTION,
+    () => undefined,
+  );
+
+  assert.equal(library.sent[0]?.url, "https://o.example/api/chats/library/messages");
+  assert.deepEqual(progress, [{ type: "picking" }, picked]);
+  assert.equal(project.sent[0]?.url, `https://o.example/api/chats/projects/${PROJECT}/messages`);
+});

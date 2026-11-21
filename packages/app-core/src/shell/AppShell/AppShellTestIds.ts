@@ -5,6 +5,7 @@ export const appShellTestIds = {
   brandSlot: "AppShell.brandSlot",
   brand: "AppShell.brand",
   backLink: "AppShell.backLink",
+  askButton: "AppShell.askButton",
   newOverviewButton: "AppShell.newOverviewButton",
   notNowLink: "AppShell.notNowLink",
 };

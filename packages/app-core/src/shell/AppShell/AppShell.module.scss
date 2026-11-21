@@ -176,6 +176,18 @@
   }
 }
 
+// OV-354: beside + New and the account on a narrow phone, Ask keeps its icon and its name to
+// assistive tech, so the bar never scrolls sideways.
+@media (max-width: 26.9375rem) {
+  .actions .askButton {
+    padding-inline: 0.75rem;
+  }
+
+  .askLabel {
+    display: none;
+  }
+}
+
 // Design OV-167 (167a–167c): where the slot hands over it is one fixed box the bar's
 // full height, holding the brand and the way back one over the other. The one not shown
 // is inert. Keyed off .brandSlotLive rather than a width, because the shell already

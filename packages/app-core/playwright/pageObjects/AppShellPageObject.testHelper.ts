@@ -15,6 +15,7 @@ import { CaptureQueueStripPageObject } from "./CaptureQueueStripPageObject.testH
 import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.testHelper.js";
 import { QueuePageObject } from "./QueuePageObject.testHelper.js";
 import { LibraryPageObject } from "./LibraryPageObject.testHelper.js";
+import { AskPagePageObject } from "./AskPagePageObject.testHelper.js";
 
 const OVERVIEW_IMAGE_GROUP = "::view-transition-group(overview-image)";
 
@@ -339,6 +340,15 @@ export class AppShellPageObject extends PageObject {
       await this.clickNewOverview();
       return this.newOverviewDialog.verifyIsShown();
     });
+
+  openAsk = (): Promise<AskPagePageObject> =>
+    this.step("openAsk", async () => {
+      await this.click(appShellTestIds.askButton);
+      return new AskPagePageObject(this.testContext).verifyIsShown();
+    });
+
+  verifyOffersAsk = (offers: boolean) =>
+    this.step(`verifyOffersAsk ${offers}`, () => this.expectToHaveCount(appShellTestIds.askButton, offers ? 1 : 0));
 
   openSettings = (): Promise<SettingsPageObject> =>
     this.step("openSettings", async () => {

@@ -366,10 +366,10 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                       onSourcesOpened={(sources) => analytics.reader.chat.sourcesMenuOpened({ overviewId: overview.id, sources })}
                       actions={(sources) => (
                         <ChatAnswerActions
-                          overviewId={overview.id}
                           answer={message.text}
                           latest={index === latestAnswerAt && pending === null}
                           onSaid={say}
+                          onCopied={() => analytics.reader.chat.answerCopied({ overviewId: overview.id })}
                           sources={sources}
                         />
                       )}
@@ -406,10 +406,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
                         )}
                         {pending.status === "answering" && pending.sections.length > 0 && (
                           <div data-testid={chatPanelTestIds.streamedSections}>
-                            <ChatAnswerSectionsView
-                              sections={{ intro: "", introSources: [], sections: pending.sections }}
-                              sourceRow={() => null}
-                            />
+                            <ChatAnswerSectionsView sections={{ intro: "", introSources: [], sections: pending.sections }} />
                           </div>
                         )}
                         {slowness === "noWordsYet" && (
@@ -504,7 +501,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
           ) : (
             <ChatComposer
               ref={fieldRef}
-              overviewId={overview.id}
+              exclude={overview.id}
               pinned={panel.pinned}
               liveSources={panel.liveSources}
               onPin={panel.pin}

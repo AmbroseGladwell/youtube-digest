@@ -22,6 +22,8 @@ export interface ProjectHeadProps {
   summary: ProjectSummary;
   now: Date;
   assistantConnected: boolean;
+  // Signed in, so the Ask page can answer over the project (OV-354, page 3).
+  askable?: boolean;
   nudged: boolean;
   onRename: (name: string) => void;
   onPurpose: (purpose: string | null) => void;
@@ -47,6 +49,7 @@ export function ProjectHead({
   summary,
   now,
   assistantConnected,
+  askable = false,
   nudged,
   onRename,
   onPurpose,
@@ -260,6 +263,12 @@ export function ProjectHead({
       )}
 
       <div className={styles.actions}>
+        {askable && (
+          <PageLink className={styles.pill} to={Routes.ask({ project: project.id })} data-testid={projectHeadTestIds.askLink}>
+            <StrokeIcon name="chat" />
+            Ask
+          </PageLink>
+        )}
         {archived && (
           <button type="button" className={styles.pill} onClick={onRestore} data-testid={projectHeadTestIds.restoreButton}>
             <StrokeIcon name="archive" />

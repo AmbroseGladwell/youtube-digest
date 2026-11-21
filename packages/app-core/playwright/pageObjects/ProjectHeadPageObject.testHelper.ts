@@ -1,4 +1,5 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { AskPagePageObject } from "./AskPagePageObject.testHelper.js";
 import { projectActionsMenuTestIds } from "../../src/features/projects/components/ProjectActionsMenu/ProjectActionsMenuTestIds.js";
 import { projectEmptyTestIds } from "../../src/features/projects/components/ProjectEmpty/ProjectEmptyTestIds.js";
 import { projectHeadTestIds } from "../../src/features/projects/components/ProjectHead/ProjectHeadTestIds.js";
@@ -8,6 +9,12 @@ import { ProjectSuggestionsPageObject } from "./ProjectSuggestionsPageObject.tes
 import { ProjectsIndexPageObject } from "./ProjectsIndexPageObject.testHelper.js";
 
 export class ProjectHeadPageObject extends PageObject {
+  openAsk = (): Promise<AskPagePageObject> =>
+    this.step("openAsk", async () => {
+      await this.click(projectHeadTestIds.askLink);
+      return new AskPagePageObject(this.testContext).verifyIsShown();
+    });
+
   verifyIsShown = (): Promise<ProjectHeadPageObject> =>
     this.step("verifyIsShown", async () => {
       await this.expectToBeVisible(projectHeadTestIds.root);

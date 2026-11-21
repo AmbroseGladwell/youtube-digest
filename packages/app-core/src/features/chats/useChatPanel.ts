@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chatRecordId, MAX_CHAT_PINS, type Chat, type ChatSourceKind, type OverviewId, type ProjectId } from "@overview/domain";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
+import { chatKeys } from "./chatKeys.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
 import { useChatsQuery } from "./queries/chatsQuery.js";
 import { useAskQuestion, type AskedFrom, type AskExtras } from "./useAskQuestion.js";
@@ -91,7 +92,7 @@ export function useChatPanel(overviewId: OverviewId, about: ChatSourceKind) {
   const commitDelete = useCallback(
     (chat: Chat) => {
       analytics.reader.chat.conversationDeleted({ overviewId });
-      deleteChat.mutate({ overviewId, chatId: chat.id });
+      deleteChat.mutate({ listKey: chatKeys.list(overviewId), chatId: chat.id });
     },
     [analytics, deleteChat, overviewId],
   );

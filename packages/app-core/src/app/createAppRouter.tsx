@@ -4,6 +4,7 @@ import { HomePage } from "../features/home/HomePage/HomePage.js";
 import { ProjectRoute } from "../features/projects/ProjectRoute/ProjectRoute.js";
 import { ReaderPage } from "../features/reader/ReaderPage/ReaderPage.js";
 import { QueuePage } from "../features/captureQueue/QueuePage/QueuePage.js";
+import { AskPage } from "../features/chats/AskPage/AskPage.js";
 import { SettingsPage } from "../features/settings/SettingsPage/SettingsPage.js";
 import { SETTINGS_SECTION_IDS } from "../features/settings/SettingsSectionId.js";
 import { ConnectExtensionPage } from "../features/auth/ConnectExtensionPage/ConnectExtensionPage.js";
@@ -46,6 +47,7 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
         { path: Routes.projects(), element: <HomePage place={{ kind: "projects" }} /> },
         { path: Routes.project(`:${RouteParams.projectId}`), element: <ProjectRoute /> },
         { path: Routes.queue(), element: <QueuePage /> },
+        { path: Routes.ask(), element: <AskPage /> },
         { path: Routes.settings(), element: <SettingsPage /> },
         ...SETTINGS_SECTION_IDS.map((section) => ({
           path: Routes.settingsSection(section),
