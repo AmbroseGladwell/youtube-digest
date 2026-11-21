@@ -6,8 +6,9 @@ export interface FollowingStores {
 }
 
 // The playlists this device followed without an account, what it had seen of each, and
-// what it still had queued, into the account's library. Written there before it leaves
-// here, so a move that stops is finished by running it again
+// what it still had queued from them, into the account's library. A queued video from a
+// playlist this device never followed is not carried, only dropped. Written there before it
+// leaves here, so a move that stops is finished by running it again
 // (docs/features/playlists.md, "Signing in").
 export async function moveFollowingInto(from: FollowingStores, into: FollowingStores): Promise<{ playlists: number }> {
   const [leaving, held, queued] = await Promise.all([
@@ -28,7 +29,8 @@ export async function moveFollowingInto(from: FollowingStores, into: FollowingSt
     await from.followedPlaylistStore.unfollow(playlist.id);
   }
 
-  await into.captureQueueStore.enqueue(queued);
+  const leavingIds = new Set<string>(leaving.map((playlist) => playlist.id));
+  await into.captureQueueStore.enqueue(queued.filter((capture) => leavingIds.has(capture.fromPlaylist.id)));
   for (const capture of queued) await from.captureQueueStore.removeQueued(capture.videoId);
 
   return { playlists: leaving.filter((playlist) => !heldIds.has(playlist.id)).length };
