@@ -1,12 +1,8 @@
 import { z } from "zod";
 
-// Signed out, a reader sees no overviews, and starts only the first, on us, through
-// onboarding (docs/architecture/tiers.md, "Counting"). The server counts it against a token it
-// issued the device; once an account exists it counts towards that account's plan.
-export const TRIAL_OVERVIEWS = 1;
-
-// Links the trial may ask our server to read, apart from its overview, so a link that can't be
-// read doesn't spend it (docs/features/onboarding.md, "Any kind of link").
+// Signed out, a reader sees no overviews and nothing is made (OV-327): the trial token the
+// server issues the device only reads onboarding's link and asks for its topic suggestions.
+// Links the trial may ask our server to read (docs/features/onboarding.md, "Any kind of link").
 export const TRIAL_READS = 5;
 // The same, a UTC day per address across every token: three tokens' worth.
 export const TRIAL_READS_PER_ADDRESS_DAILY = 15;

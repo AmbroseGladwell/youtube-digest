@@ -166,14 +166,14 @@ export class SettingsPageObject extends PageObject {
   verifyPlanUsagePeriodReads = (text: string) =>
     this.step(`verifyPlanUsagePeriodReads ${text}`, () => expect(this.get(planUsageTestIds.period)).toHaveText(text));
 
-  verifyPlanUsageCellReads = (quota: "ours" | "own" | "trial" | "questions" | "transcribing", lines: string[]) =>
+  verifyPlanUsageCellReads = (quota: "ours" | "own" | "questions" | "transcribing", lines: string[]) =>
     this.step(`verifyPlanUsageCellReads ${quota} ${lines.join(" ")}`, () =>
       expect(this.get(planUsageTestIds.cell(quota)).locator("dd")).toHaveText(lines),
     );
 
-  verifyPlanUsageCellsAre = (quotas: Array<"ours" | "own" | "trial">) =>
+  verifyPlanUsageCellsAre = (quotas: Array<"ours" | "own">) =>
     this.step(`verifyPlanUsageCellsAre ${quotas.join(", ")}`, async () => {
-      for (const quota of ["ours", "own", "trial"] as const) {
+      for (const quota of ["ours", "own"] as const) {
         await this.expectToHaveCount(planUsageTestIds.cell(quota), quotas.includes(quota) ? 1 : 0);
       }
     });

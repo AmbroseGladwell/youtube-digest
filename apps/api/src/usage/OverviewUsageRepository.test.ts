@@ -101,22 +101,3 @@ test("the quotas are the ones set on 18 Oct 2026, per plan and key", () => {
     plus: { ours: 50, own: 200 },
   });
 });
-
-test("an overview counted on a full month goes on the first later month with room", async () => {
-  const { testApp, accountId, usage } = await usageApp();
-  const now = testApp.clock.now;
-  const limit = 1;
-
-  const first = await usage.count(now, accountId, "ours", limit);
-  const second = await usage.count(now, accountId, "ours", limit);
-  const third = await usage.count(now, accountId, "ours", limit);
-  const months = [first, second, third].map(({ month, carried }) => [month, carried]);
-
-  assert.deepEqual(months, [
-    ["2026-09-01", false],
-    ["2026-10-01", true],
-    ["2026-11-01", true],
-  ]);
-  assert.equal((await usage.reserve(new Date("2026-10-15T00:00:00Z"), accountId, "ours", limit)).reserved, false);
-  await testApp.close();
-});

@@ -50,7 +50,7 @@ test.describe("linking what was shared", () => {
     await createAccount.typeFirstName("Ada");
     await createAccount.requestLink(SIMULATED_EMAIL);
 
-    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
+    await createAccount.verifyAsksForCode(SIMULATED_EMAIL);
     test.expect(backendSimulator.auth.magicLinkRequests().map(({ anonymousId }) => anonymousId)).toEqual([ANONYMOUS_ID]);
   });
 
@@ -61,7 +61,7 @@ test.describe("linking what was shared", () => {
     await createAccount.typeFirstName("Ada");
     await createAccount.requestLink(SIMULATED_EMAIL);
 
-    await createAccount.verifyChecksEmail(SIMULATED_EMAIL);
+    await createAccount.verifyAsksForCode(SIMULATED_EMAIL);
     test.expect(backendSimulator.auth.magicLinkRequests().map(({ anonymousId }) => anonymousId)).toEqual([undefined]);
   });
 

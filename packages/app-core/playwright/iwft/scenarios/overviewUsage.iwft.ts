@@ -107,9 +107,10 @@ test("the panel's capture screen gives the narrow line", async ({ launcher, back
   await capture.verifyUsageLineReads("7 of 10 left on your own key · Resets 1 Nov");
 });
 
-// At the limit, the message takes Generate's place and offers only routes that exist
-// (designs 95i–95o; docs/architecture/tiers.md, "At the limit").
-test("on Free with no key, our key's 5 spent: the message says when more come, takes focus, and leads to a key", async ({
+// At the limit, a Free or BYO Plus reader can still paste a link, and meets the soft wall on
+// saving it (designs 327aa–327ah); Plus keeps the message in Generate's place (95i–95o), since
+// the wall's way on is Plus (docs/architecture/tiers.md, "At the limit").
+test("on Free with no key, our key's 5 spent: saving a link meets the wall, which keeps the link and leads to a key", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -117,35 +118,79 @@ test("on Free with no key, our key's 5 spent: the message says when more come, t
   backendSimulator.ourKey.monthHasMade({ ours: 5 });
   await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
   const dialog = await launcher.appShell.openNewOverview();
+  await launcher.softWall.verifyIsAbsent();
 
-  await dialog.form.verifyLimitMessage({
-    title: "You've made this month's 5. More on 1 November.",
-    body: "Get more overviews with Plus. Or add your own key: your free account makes 10 a month with it.",
-    actions: ["Add your own key", "See plans"],
-  });
-  await dialog.form.verifyLimitActionIsFocused("addKey");
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.verifyIsShown({ resetsOn: "1 November", link: { kicker: "YouTube · Video", title: VALID_URL } });
+  await launcher.softWall.verifyOffersAKey(true);
+  expect(backendSimulator.ourKey.generations()).toEqual([]);
   await expect
-    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name.startsWith("capture.limitMessage")))
-    .toContainEqual({ name: "capture.limitMessage.shown", props: { quota: "ours", plan: "free", from: "dialog" } });
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "capture.newOverviewForm.wallShown"))
+    .toEqual([{ name: "capture.newOverviewForm.wallShown", props: { plan: "free" } }]);
 
-  await dialog.form.clickLimitAction("addKey");
+  await launcher.softWall.addAKey();
   await launcher.settingsPage.verifySectionIsShown("keys");
-  await expect
-    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "capture.limitMessage.wayChosen"))
-    .toEqual([{ name: "capture.limitMessage.wayChosen", props: { way: "addKey", from: "dialog" } }]);
 });
 
-test("on Free with both quotas spent, the message names both and offers BYO Plus", async ({ launcher, backendSimulator }) => {
+test("the wall's Get Plus and See every plan open the plans, where paying for a plan isn't open yet", async ({
+  launcher,
+  backendSimulator,
+}) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.getPlus();
+
+  await launcher.plansModal.verifyIsShown();
+  await launcher.plansModal.verifyCardsInOrder(["free", "byo-plus", "plus"]);
+  await launcher.plansModal.verifyCardsRead([
+    { plan: "free", lines: ["£0", "Your plan", "5 a month", "10 a month"] },
+    { plan: "byo-plus", lines: ["£4.99 a month", "10 a month", "200 a month"] },
+    { plan: "plus", lines: ["£7.99 a month", "Recommended", "50 a month", "200 a month"] },
+  ]);
+  await launcher.plansModal.verifyCannotChoose("free");
+  await launcher.plansModal.verifyPayingOpensSoon("byo-plus");
+  await launcher.plansModal.verifyPayingOpensSoon("plus");
+  await launcher.plansModal.close();
+  await launcher.plansModal.verifyIsClosed();
+
+  await launcher.softWall.seeEveryPlan();
+  await launcher.plansModal.verifyIsShown();
+  await expect
+    .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "capture.newOverviewForm.plansOpened"))
+    .toEqual([
+      { name: "capture.newOverviewForm.plansOpened", props: { from: "wall" } },
+      { name: "capture.newOverviewForm.plansOpened", props: { from: "wall" } },
+    ]);
+});
+
+test("on a phone the plans put Plus first", async ({ page, launcher, backendSimulator }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  await launcher.launch(SIGNED_IN_WITHOUT_A_KEY);
+  const dialog = await launcher.appShell.openNewOverview();
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.seeEveryPlan();
+
+  await launcher.plansModal.verifyCardsInOrder(["plus", "byo-plus", "free"]);
+});
+
+test("on Free with both quotas spent, the wall offers no key to a reader who has one", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.ourKey.monthHasMade({ own: 10, ours: 5 });
   await launcher.launch(SIGNED_IN);
   const dialog = await launcher.appShell.openNewOverview();
 
-  await dialog.form.verifyLimitMessage({
-    title: "You've made this month's 10 on your own key and 5 on us. More on 1 November.",
-    body: "BYO Plus makes 200 a month on your own key.",
-    actions: ["See BYO Plus"],
-  });
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.verifyIsShown({ resetsOn: "1 November", link: { kicker: "YouTube · Video", title: VALID_URL } });
+  await launcher.softWall.verifyOffersAKey(false);
 });
 
 test("on Plus with both quotas spent, the message says there's no upgrade, on the hero too", async ({ launcher, backendSimulator }) => {
@@ -165,7 +210,7 @@ test("on Plus with both quotas spent, the message says there's no upgrade, on th
   });
 });
 
-test("on Free with Only ever use my key on, the own key's 10 is the limit, and BYO Plus the way round", async ({
+test("on Free with Only ever use my key on, the own key's 10 is the limit, and saving meets the wall", async ({
   launcher,
   backendSimulator,
 }) => {
@@ -174,10 +219,19 @@ test("on Free with Only ever use my key on, the own key's 10 is the limit, and B
   await launcher.launch({ ...SIGNED_IN, onlyMyKey: true });
   const dialog = await launcher.appShell.openNewOverview();
 
-  await dialog.form.verifyLimitMessage({
-    title: "You've made this month's 10 on your own key. More on 1 November.",
-    actions: ["See BYO Plus"],
-  });
+  await dialog.form.submitUrl(VALID_URL);
+
+  await launcher.softWall.verifyIsShown({ resetsOn: "1 November", link: { kicker: "YouTube · Video", title: VALID_URL } });
+  await launcher.softWall.verifyOffersAKey(false);
+});
+
+test("on the panel, Free at the limit sees the wall in the offer's place straight away", async ({ launcher, backendSimulator }) => {
+  backendSimulator.ourKey.isAvailable();
+  backendSimulator.ourKey.monthHasMade({ ours: 5 });
+  await launcher.launchPanel({ ...SIGNED_IN_WITHOUT_A_KEY, activeVideoUrl: VALID_URL, youTubeFetch: true });
+
+  await launcher.softWall.verifyIsShown({ resetsOn: "1 Nov", link: { kicker: null, title: VALID_URL } });
+  await launcher.softWall.verifyOffersAKey(true);
 });
 
 test("on the panel, Plus with no key and our key spent is offered a key", async ({ launcher, backendSimulator }) => {

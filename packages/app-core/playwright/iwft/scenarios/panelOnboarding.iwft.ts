@@ -3,6 +3,7 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 import { SIMULATED_EMAIL, SIMULATED_LINK_CODE } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
+import type { OnboardingPageObject } from "../../pageObjects/OnboardingPageObject.testHelper.js";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
 // Onboarding in the extension's side panel (docs/features/onboarding.md, designs 46n–46q and
@@ -17,6 +18,14 @@ const signedOutPanel = {
   analyticsConsent: null,
 };
 const { analyticsConsent: _neverAsked, ...signedOutPanelAnswered } = signedOutPanel;
+// In the extension the link opens a page that shows the code, which is typed in here (10c).
+const createAccountInThePanel = async (onboarding: OnboardingPageObject) => {
+  const form = await onboarding.accountForm.verifyAsksForEmail("Create your free account to get your overview.");
+  await form.typeFirstName("Ada");
+  await form.requestLink(SIMULATED_EMAIL);
+  await form.verifyAsksForCode(SIMULATED_EMAIL);
+  await form.enterCode(SIMULATED_LINK_CODE);
+};
 const PAGE_URL = "https://theharbourpost.example/2026/11/bridge-bill-twice";
 const PAGE_TITLE = "The town that pays its bridge bill twice";
 const PAGE_ARTICLE: ExtractedArticle = {
@@ -48,41 +57,34 @@ test("a new reader makes their first overview of the video the panel is beside, 
   await onboarding.verifyOnScreen("analytics", "Help shape what we build next?");
   await onboarding.verifyAnalyticsDisclosure();
   await onboarding.allowAnalytics();
-  await onboarding.verifyOnScreen("video");
+  await onboarding.verifyOnScreen("video", "Here’s what’s in the video you saved.");
   await onboarding.verifyVideoTitle(VIDEO_TITLE);
-  await onboarding.verifyReadyLineReads("Transcript ready · Writing starts in a few taps");
   await onboarding.confirmVideo();
+  await onboarding.verifyOffersTheExtension(false);
+  await onboarding.continueFromSaving();
   await onboarding.pickTopics("Food");
   await onboarding.continueFromTopics();
-  await onboarding.next();
-  await onboarding.verifyReadyLineReads("Transcript ready · Writing starts when you continue");
-  await onboarding.verifyHasNoProgressBar();
+  await onboarding.continueFromKnowledgeBase();
+  await onboarding.addContextAboutYou();
   await onboarding.sentence.openSection("time");
   await onboarding.sentence.pick("healthcare");
   await onboarding.sentence.backToSentence();
   await onboarding.sentence.verifySectionHasFocus("time");
-  await onboarding.verifyWhatThisChangesShowsExample(false);
   await onboarding.continueFromAboutYou();
-  await onboarding.verifyOnScreen("stepsForYou");
-  await onboarding.seeOverview();
 
-  await onboarding.verifyOnScreen("account", "Create your free account");
-  await onboarding.verifyTeaser({ title: VIDEO_TITLE, premise: "Made on our key." });
-  const createAccount = await onboarding.continueWithEmail();
-  await createAccount.typeFirstName("Ada");
-  await createAccount.requestLink(SIMULATED_EMAIL);
-  await createAccount.enterCode(SIMULATED_LINK_CODE);
+  await onboarding.verifyOnScreen("account", "Create your free account to get your overview.");
+  expect(backendSimulator.ourKey.generations()).toHaveLength(0);
+  expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(0);
+  await createAccountInThePanel(onboarding);
 
-  await onboarding.verifyOnScreen("plan", "Choose your plan");
-  await onboarding.continueWithFree();
-
-  const reader = await launcher.readerPage.verifyIsShown();
+  await onboarding.verifyOnScreen("wait");
+  const reader = await onboarding.openOverview();
   await reader.verifyTitle(VIDEO_TITLE);
   await launcher.onboardingNextSteps.verifyOffers(["ai"]);
   await launcher.onboardingNextSteps.connectYourAi();
   await launcher.settingsPage.verifySectionIsShown("connections");
   expect(backendSimulator.ourKey.generations()[0]?.input.readerContext).toBe("I spend my time on healthcare.");
-  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
+  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([null]);
 });
 
 test("the sheet takes the panel over, and every suggestion is offered", async ({ launcher, backendSimulator }) => {
@@ -91,8 +93,10 @@ test("the sheet takes the panel over, and every suggestion is offered", async ({
   await (await launcher.homePage.verifyShowsStart()).makeOverview();
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.confirmVideo();
-  await onboarding.skip();
-  await onboarding.skip();
+  await onboarding.continueFromSaving();
+  await onboarding.continueFromTopics();
+  await onboarding.continueFromKnowledgeBase();
+  await onboarding.addContextAboutYou();
 
   await onboarding.verifyOnScreen("aboutYou");
   await onboarding.sentence.openSection("who");
@@ -225,7 +229,7 @@ test("beside a page, the panel's Start offers it, and the page is read in the br
   await start.makeOverview();
 
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.verifyOnScreen("video", "Is this the right article?");
+  await onboarding.verifyOnScreen("video", "Here’s what’s in the article you saved.");
   await onboarding.verifyVideoTitle(PAGE_TITLE);
   expect(backendSimulator.articles.reads()).toEqual([]);
 });
@@ -237,12 +241,12 @@ test("on a tab with nothing to read, the panel's Start asks for a link", async (
 
   await start.verifyOffersNothingFromTheTab();
   await start.verifyStandfirstReads(
-    "Paste a link, or open a video or page you've been meaning to get to. We'll make it your first overview, to read or listen to, and set up your account as we go.",
+    "Save what you care about, get an overview plus personalised actions, and build a knowledge base you and your AI can use.",
   );
   await start.verifyHeroFieldEnabled();
 });
 
-test("in the panel, the account can be made with its code before the overview is written, and the overview arrives in it", async ({
+test("in the panel, the account is made with its code before anything is written, and the overview then arrives in it", async ({
   launcher,
   backendSimulator,
   page,
@@ -253,31 +257,18 @@ test("in the panel, the account can be made with its code before the overview is
   await launcher.launchPanel(signedOutPanelAnswered);
   await (await launcher.homePage.verifyShowsStart()).makeOverview();
   const onboarding = await launcher.onboardingPage.verifyIsShown();
-  await onboarding.confirmVideo();
-  await onboarding.skip();
-  await onboarding.skip();
-  await onboarding.skip();
-  await onboarding.skip();
-  await onboarding.verifyWritingHasStarted();
-  await onboarding.continueFromVoice();
-  await onboarding.skip();
-  await onboarding.skip();
-  await onboarding.verifyOnScreen("account", "Create your free account");
+  await onboarding.skipToAccount();
+  expect(backendSimulator.getCallCount(EndpointKey.OUR_KEY_GENERATE)).toBe(0);
 
-  const createAccount = await onboarding.continueWithEmail();
-  await createAccount.typeFirstName("Ada");
-  await createAccount.requestLink(SIMULATED_EMAIL);
-  await createAccount.enterCode(SIMULATED_LINK_CODE);
+  await createAccountInThePanel(onboarding);
 
-  await onboarding.verifyOnScreen("plan", "Choose your plan");
-  await onboarding.continueWithFree();
-  await onboarding.verifyNearlyThere("Your plan is set. Your overview opens as soon as it's ready.");
-  await onboarding.verifyArriving("writing");
+  await onboarding.verifyOnScreen("wait");
+  await onboarding.verifyCanOpenOverview(false);
+  await expect.poll(() => backendSimulator.getCallCount(EndpointKey.OUR_KEY_GENERATE)).toBe(1);
   await backendSimulator.releaseEndpoint(EndpointKey.OUR_KEY_GENERATE);
 
-  const reader = await launcher.readerPage.verifyIsShown();
+  const reader = await onboarding.openOverview();
   await reader.verifyTitle(VIDEO_TITLE);
   expect(backendSimulator.ourKey.generations()).toHaveLength(1);
-  expect(backendSimulator.ourKey.trialTokensSent()).toEqual([expect.stringMatching(/^simulated-trial-/)]);
   expect(await backendSimulator.sync.overviewsHeldIn(null)).toBe(0);
 });

@@ -16,23 +16,23 @@
   }
 
   @media (min-width: 64rem) {
-    font-size: 2.5rem;
+    font-size: 2.375rem;
+    line-height: 1.12;
   }
 }
 
 @mixin lead {
   margin: 0;
-  max-width: 52ch;
-  font-size: 0.9375rem;
+  font-size: 0.96875rem;
   line-height: 1.55;
-  color: var(--ink);
+  color: var(--muted);
   text-wrap: pretty;
 }
 
 @mixin intro {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 1rem;
 }
 
 // Pinned to the foot of the step's scroll area on every step, so Continue never scrolls off;
@@ -93,6 +93,9 @@
   @media (min-width: 64rem) {
     margin-top: 0;
     padding: 0.875rem var(--onboarding-gutter, 0px) 1.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
 
     &::before {
       left: -100vw;
@@ -116,8 +119,10 @@
   justify-content: center;
 
   @media (min-width: 64rem) {
-    align-self: flex-start;
-    min-width: 10rem;
+    align-self: auto;
+    min-height: 3.25rem;
+    padding-inline: 1.875rem;
+    font-size: 0.9375rem;
   }
 }
 
@@ -141,8 +146,14 @@
   font-size: 0.8125rem;
   font-weight: 600;
 
+  // Design 327c: beside the button, an underlined link in the label's colour.
   @media (min-width: 64rem) {
-    align-self: flex-start;
+    align-self: auto;
+    padding: 0;
+    color: var(--label);
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 }
 

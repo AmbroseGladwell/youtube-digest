@@ -1,5 +1,6 @@
 import {
   consentPath,
+  COPY_CODE_PATH,
   CREATE_ACCOUNT_PATH,
   REVERT_EMAIL_PATH,
   SIGN_IN_PATH,
@@ -26,6 +27,8 @@ export const Routes = {
   // The path the server writes into the mail an address with no account gets for asking to
   // sign in (docs/features/sign-in.md, "Which mail an address gets").
   createAccount: () => CREATE_ACCOUNT_PATH,
+  // Where a code-first mail's Copy code lands, the code in the fragment (327l-3).
+  copyCode: () => COPY_CODE_PATH,
   // Onboarding's screens after Start, which is the home page's own field (docs/features/onboarding.md).
   onboarding: () => "/start",
   connectExtension: () => "/connect-extension",

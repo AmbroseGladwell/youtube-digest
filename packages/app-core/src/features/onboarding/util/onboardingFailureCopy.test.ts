@@ -36,15 +36,22 @@ describe("onboardingFailureCopy", () => {
     expect(onboardingFailureCopy(failure, LINK, "computer").title).toBe("We couldn't read that page");
   });
 
-  it("points a device or network out of reads to video links, which use none", () => {
+  it("tells a device or network out of reads that every link counts, and when it can read again", () => {
     expect(onboardingFailureCopy({ kind: "trialReads" }, LINK, "computer")).toMatchObject({
-      title: "You've tried 5 pages on this device",
-      videoOnly: true,
+      title: "You've tried 5 links on this device",
+      body: expect.stringMatching(/tomorrow/),
     });
     expect(onboardingFailureCopy({ kind: "trialReadsAddress" }, LINK, "computer")).toMatchObject({
-      body: expect.stringMatching(/15 pages a day.*tomorrow/),
-      videoOnly: true,
+      body: expect.stringMatching(/15 links a day.*tomorrow/),
     });
+  });
+
+  it("says a video it couldn't find is gone, and offers to try again only when YouTube didn't answer", () => {
+    expect(onboardingFailureCopy({ kind: "videoRead", reason: "not-found" }, LINK, "computer")).toMatchObject({
+      title: "We couldn't find that video",
+      tryAgain: false,
+    });
+    expect(onboardingFailureCopy({ kind: "videoRead", reason: "unavailable" }, LINK, "computer").tryAgain).toBe(true);
   });
 });
 

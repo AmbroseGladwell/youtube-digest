@@ -11,16 +11,6 @@ export type OverviewReservation =
   | { reserved: true; month: string; used: number; limit: number }
   | { reserved: false; used: number; limit: number };
 
-export interface CountedOverview {
-  month: string;
-  used: number;
-  carried: boolean;
-}
-
-const MONTHS_TO_CARRY = 12;
-
-export type OurKeyDayReservation = "reserved" | "spent" | "signed-out-share-spent";
-
 // One row per UTC month, account and key. A slot is reserved before generation and released
 // when it fails, so an overview counts once, when it succeeds; regenerating reserves again
 // (docs/architecture/tiers.md, "Counting"). Kept in Postgres, since a deploy that reset it
@@ -44,30 +34,6 @@ export class OverviewUsageRepository {
     );
     if (row !== undefined) return { reserved: true, month, used: row.overviews, limit };
     return { reserved: false, used: await this.#usedIn(month, accountId, keySource), limit };
-  }
-
-  // An overview already made, so never refused: it counts on the first month from this one
-  // with room, and a month already full passes it to the next.
-  async count(now: Date, accountId: AccountId, keySource: KeySource, limit: number): Promise<CountedOverview> {
-    const thisMonth = usageMonth(now);
-    for (let ahead = 0; limit > 0 && ahead < MONTHS_TO_CARRY; ahead += 1) {
-      const month = usageMonth(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + ahead, 1)));
-      const [row] = await this.#sql.query<{ overviews: number }>(
-        `insert into overview_usage (month, account_id, key_source, overviews) values ($1::date, $2, $3, 1)
-         on conflict (month, account_id, key_source) do update set overviews = overview_usage.overviews + 1
-         where overview_usage.overviews < $4
-         returning overviews`,
-        [month, accountId, keySource, limit],
-      );
-      if (row !== undefined) return { month, used: row.overviews, carried: month !== thisMonth };
-    }
-    const [row] = await this.#sql.query<{ overviews: number }>(
-      `insert into overview_usage (month, account_id, key_source, overviews) values ($1::date, $2, $3, 1)
-       on conflict (month, account_id, key_source) do update set overviews = overview_usage.overviews + 1
-       returning overviews`,
-      [thisMonth, accountId, keySource],
-    );
-    return { month: thisMonth, used: row?.overviews ?? 1, carried: false };
   }
 
   async release(month: string, accountId: AccountId, keySource: KeySource): Promise<void> {
@@ -94,38 +60,21 @@ export class OverviewUsageRepository {
   }
 
   // The global cap behind every plan, counted per UTC day: one slot per generation on our
-  // key, given back when it fails, like the proxy's budget. Signed out has its own share of
-  // it, so a trial can't spend the day an account was counting on.
-  async reserveOurKeyDay(now: Date, limit: number, signedOutLimit: number | null): Promise<OurKeyDayReservation> {
-    const signedOut = signedOutLimit === null ? 0 : 1;
-    if (limit < 1) return "spent";
-    if (signedOutLimit !== null && signedOutLimit < 1) return "signed-out-share-spent";
+  // key, given back when it fails, like the proxy's budget.
+  async reserveOurKeyDay(now: Date, limit: number): Promise<boolean> {
+    if (limit < 1) return false;
     const rows = await this.#sql.query(
-      `insert into our_key_usage (day, generations, signed_out) values ($1::date, 1, $3)
-       on conflict (day) do update set
-         generations = our_key_usage.generations + 1,
-         signed_out = our_key_usage.signed_out + $3
-       where our_key_usage.generations < $2 and our_key_usage.signed_out + $3 <= $4
+      `insert into our_key_usage (day, generations) values ($1::date, 1)
+       on conflict (day) do update set generations = our_key_usage.generations + 1
+       where our_key_usage.generations < $2
        returning generations`,
-      [usageDay(now), limit, signedOut, signedOutLimit ?? limit],
+      [usageDay(now), limit],
     );
-    if (rows.length > 0) return "reserved";
-    return (await this.ourKeyGenerationsOn(usageDay(now))) < limit ? "signed-out-share-spent" : "spent";
+    return rows.length > 0;
   }
 
-  async releaseOurKeyDay(day: string, signedOut: boolean): Promise<void> {
-    await this.#sql.query(
-      `update our_key_usage set
-         generations = greatest(generations - 1, 0),
-         signed_out = greatest(signed_out - $2, 0)
-       where day = $1::date`,
-      [day, signedOut ? 1 : 0],
-    );
-  }
-
-  async signedOutGenerationsOn(day: string): Promise<number> {
-    const [row] = await this.#sql.query<{ signed_out: number }>("select signed_out from our_key_usage where day = $1::date", [day]);
-    return row?.signed_out ?? 0;
+  async releaseOurKeyDay(day: string): Promise<void> {
+    await this.#sql.query("update our_key_usage set generations = greatest(generations - 1, 0) where day = $1::date", [day]);
   }
 
   async ourKeyGenerationsOn(day: string): Promise<number> {

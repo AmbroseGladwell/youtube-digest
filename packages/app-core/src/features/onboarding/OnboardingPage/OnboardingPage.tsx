@@ -4,9 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   aboutYouIsEmpty,
   aboutYouPatch,
-  DEFAULT_NARRATION_VOICE,
   EMPTY_ABOUT_YOU,
-  narrationVoiceName,
   ONBOARDING_STEPS,
   OverviewId,
   sameTopicName,
@@ -41,48 +39,67 @@ import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { typedEntryCount } from "../../settings/util/aboutYouCopy.js";
 import { libraryAccountIdOf } from "../../sync/types/SyncConnection.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
+import { useSurface } from "../../../app/SurfaceContext.js";
+import { useIsPhone } from "../../../util/useIsPhone.js";
+import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { OnboardingAboutYou } from "../components/OnboardingAboutYou/OnboardingAboutYou.js";
 import { OnboardingAccount } from "../components/OnboardingAccount/OnboardingAccount.js";
+import { OnboardingAccountSide } from "../components/OnboardingAccountSide/OnboardingAccountSide.js";
 import { OnboardingAnalytics } from "../components/OnboardingAnalytics/OnboardingAnalytics.js";
-import type { OnboardingArrivingPhase } from "../components/OnboardingArriving/OnboardingArriving.js";
 import { ONBOARDING_HEADING_ID } from "../components/OnboardingHeading/OnboardingHeading.js";
-import { OnboardingNearlyThere } from "../components/OnboardingNearlyThere/OnboardingNearlyThere.js";
-import { OnboardingPlan } from "../components/OnboardingPlan/OnboardingPlan.js";
-import { OnboardingPreview } from "../components/OnboardingPreview/OnboardingPreview.js";
-import { OnboardingProgressBar } from "../components/OnboardingProgressBar/OnboardingProgressBar.js";
-import { OnboardingSlide } from "../components/OnboardingSlide/OnboardingSlide.js";
-import { OnboardingStepsForYou } from "../components/OnboardingStepsForYou/OnboardingStepsForYou.js";
+import { OnboardingKnowledgeMoment } from "../components/OnboardingKnowledgeMoment/OnboardingKnowledgeMoment.js";
+import { OnboardingPills } from "../components/OnboardingPills/OnboardingPills.js";
+import { OnboardingProjectsCard } from "../components/OnboardingProjectsCard/OnboardingProjectsCard.js";
+import { OnboardingReadFailure } from "../components/OnboardingReadFailure/OnboardingReadFailure.js";
+import { OnboardingSavingMoment } from "../components/OnboardingSavingMoment/OnboardingSavingMoment.js";
+import { OnboardingSourceCard } from "../components/OnboardingSourceCard/OnboardingSourceCard.js";
+import { OnboardingStepsMoment } from "../components/OnboardingStepsMoment/OnboardingStepsMoment.js";
 import { OnboardingTopics, type OnboardingTopicSuggestions } from "../components/OnboardingTopics/OnboardingTopics.js";
+import { OnboardingYourLink } from "../components/OnboardingYourLink/OnboardingYourLink.js";
+import { OnboardingWaitScreen } from "../components/OnboardingWaitScreen/OnboardingWaitScreen.js";
 import { useContentBelow } from "../useContentBelow.js";
 import { useTopicSuggestions } from "../useTopicSuggestions.js";
-import { OnboardingVideo } from "../components/OnboardingVideo/OnboardingVideo.js";
-import { OnboardingVoice } from "../components/OnboardingVoice/OnboardingVoice.js";
 import type { OnboardingProgress } from "../onboardingProgressStorage.js";
 import { writeNextSteps } from "../nextStepsStorage.js";
 import { useOnboardingProgress, writeProgress } from "../useOnboardingProgress.js";
 import { useOnboardingRunState } from "../OnboardingRunContext.js";
 import { foundIn, onboardingSourceOf, onboardingSources } from "../onboardingSources.js";
 import { onboardingFailureCopy } from "../util/onboardingFailureCopy.js";
-import { OnboardingReadFailure } from "../components/OnboardingReadFailure/OnboardingReadFailure.js";
-import { OnboardingTeaser } from "../components/OnboardingTeaser/OnboardingTeaser.js";
-import { useSurface } from "../../../app/SurfaceContext.js";
-import { useIsPhone } from "../../../util/useIsPhone.js";
-import { useMediaQuery } from "../../../util/useMediaQuery.js";
+import { expectedOverviewMinutes } from "../util/expectedOverviewMinutes.js";
+import { onboardingKindOf } from "../util/onboardingKindOf.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
-const SKIPPABLE: readonly OnboardingStep[] = ["topics", "library", "aboutYou", "stepsForYou", "voice", "askYourAi", "moreSources"];
-// A copy saved from a shared page is already made, so there is nothing to check.
-const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video");
+// The questions offer Skip beside the stepper; a moment offers it beside its button (327d, 327e).
+const SKIPPABLE: readonly OnboardingStep[] = ["topics", "aboutYou"];
+// Six segments: Start, analytics, your link, topics, About you and the account. A moment shows the
+// segment of the screen before it, and the wait has none (327a).
+const SEGMENTS = 6;
+const SEGMENT_OF: Readonly<Record<OnboardingStep, number | null>> = {
+  analytics: 2,
+  video: 3,
+  saving: 3,
+  topics: 4,
+  knowledgeBase: 4,
+  stepsForYou: 4,
+  aboutYou: 5,
+  account: 6,
+  wait: null,
+};
+// A copy saved from a shared page, or a sample, is already made: nothing to check, nothing to wait for.
+const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video" && step !== "wait");
+const AFTER_THE_ANSWERS = ONBOARDING_STEPS.indexOf("account");
+// Held outside the page, which remounts while signing in, so a copy is never saved, reserved and
+// sorted twice at once.
+const SHARES_BEING_SAVED = new Set<string>();
 
-// Onboarding inside the first overview (designs 46b–46k): while it's made, the reader answers
-// or skips what shapes it, then makes an account, picks a plan and lands on it. Where they are
-// is kept on the device, so a reload or the sign-in link in another tab carries on. The run
-// itself lives above the router (OnboardingRunRuntime), so neither unmounts it
+// Onboarding around the reader's first link (designs 327a–327m): read for free, shown back to
+// them, then the moments and questions that make it theirs, the account, and the wait while it's
+// written. Where they are is kept on the device, so a reload or the sign-in link in another tab
+// carries on. The run lives above the router (OnboardingRunRuntime), so neither unmounts it
 // (docs/features/onboarding.md).
 export function OnboardingPage() {
   const [progress, update] = useOnboardingProgress();
-  // Leaving forgets the progress and goes somewhere of its own; arriving with none goes home.
   const leaving = useRef(false);
   if (progress === null) return leaving.current ? null : <Navigate to={Routes.home()} replace />;
   return (
@@ -120,24 +137,23 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const topics = useTopicsQuery().data ?? [];
   const { run, attempt, retry, transcribe } = useOnboardingRunState();
-  const [asking, setAsking] = useState<AuthIntent | null>(null);
+  const [intent, setIntent] = useState<AuthIntent>(progress.way ?? "createAccount");
   const [savingTopics, setSavingTopics] = useState(false);
-  const [picking, setPicking] = useState<readonly string[] | null>(null);
   const step = progress.step;
   const scroller = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (scroller.current !== null) scroller.current.scrollTop = 0;
-  }, [step, asking]);
+  }, [step]);
   const share = progress.share;
   const sample = share?.sample ?? false;
   const steps = share === null ? ONBOARDING_STEPS : FROM_SHARE_STEPS;
   const indexOf = (of: OnboardingStep) => steps.indexOf(of);
-  // Start, the screens here, then the reveal and its next steps: in the story's segments
-  // (design 46b's second layer).
-  const storyLength = steps.length + 3;
   const sharedCopy = useMemo(() => (share === null ? null : savedFromShare(share.snapshot.note)), [share]);
   const saveFromShare = useSaveFromShare();
   const openLibraryAccountId = useLibraryAccountId();
+  const wide = useMediaQuery("(min-width: 64rem)");
+  const surface = useSurface();
+  const phone = useIsPhone();
 
   const recognised = useMemo(() => onboardingSourceOf(progress.link), [progress.link]);
   const kind = recognised?.source ?? null;
@@ -156,10 +172,12 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   });
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
   const found = run.found ?? (overview === null ? null : foundIn(overview));
+  const noun = found !== null && kind !== null ? kind.noun("video", found) : "video";
+  // Every onboarding event after Start says what the link turned out to be (327s).
+  const tagged = found === null ? {} : { kind: onboardingKindOf(found) };
   const asked = useTopicSuggestions(found, kind, share === null && !signedIn);
   const offered = useMemo((): OnboardingTopicSuggestions | null => {
     if (found === null || kind === null) return null;
-    const noun = kind.noun("video", found);
     return asked.status === "answered"
       ? { noun, names: asked.result.starter, newTopic: asked.result.newTopic, by: "model" }
       : {
@@ -168,7 +186,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           newTopic: null,
           by: asked.status === "failed" ? "code-failed" : asked.status === "pending" ? "code-pending" : "code-only",
         };
-  }, [found, kind, asked]);
+  }, [found, kind, asked, noun]);
   // Held once the topics screen shows them, so a late answer never moves chips under the reader.
   const [held, setHeld] = useState<OnboardingTopicSuggestions | null>(null);
   useEffect(() => {
@@ -177,34 +195,27 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const suggestions = step === "topics" ? (held ?? offered) : offered;
   const inAccount = signedIn && stored.data != null;
   const failed = progress.overviewId === null && (run.phase === "failed" || playlist.isError);
-  const phase = progress.overviewId !== null ? "ready" : failed ? "failed" : run.phase;
-  const wide = useMediaQuery("(min-width: 64rem)");
-  const surface = useSurface();
-  const phone = useIsPhone();
-  // A page that couldn't be read, or reads the trial can't spend, is shown at the confirm step
-  // with a field for another link (154l–154n); a video's failure keeps its own words.
   const readFailure =
-    phase === "failed" && run.found === null && run.failure !== null && (run.failure.kind !== "other" || kind === onboardingSources.web)
+    failed && run.found === null && run.failure !== null && (run.failure.kind !== "other" || kind === onboardingSources.web)
       ? run.failure
       : null;
 
-  const anotherLink = (link: string): boolean => {
-    const another = onboardingSourceOf(link);
+  const anotherLink = (given: string): boolean => {
+    const another = onboardingSourceOf(given);
     if (another === null) {
       analytics.onboarding.start.linkRefused();
       return false;
     }
     analytics.onboarding.start.linkSubmitted({ kind: another.linkKind });
-    update({ link: link.trim(), sourceKey: another.source.keyFromLink(link), tabId: null, overviewId: null });
+    update({ link: given.trim(), sourceKey: another.source.keyFromLink(given), tabId: null, overviewId: null });
     retry();
     return true;
   };
 
-  const go = (next: OnboardingStep) => update({ step: next, ...(indexOf(next) > indexOf("stepsForYou") ? { mayWrite: true } : {}) });
+  const go = (next: OnboardingStep) =>
+    update({ step: next, ...(ONBOARDING_STEPS.indexOf(next) >= AFTER_THE_ANSWERS ? { mayWrite: true } : {}) });
   const next = () => go(steps[indexOf(step) + 1] ?? "account");
-  // From a shared page, leaving the questions goes back to the page. It's a full load, since
-  // the copy is read from the document the server writes (docs/features/sharing.md). A sample
-  // came from Start, so it goes back there.
+  // From a shared page, leaving goes back to the page; a sample came from Start, so it goes back there.
   const startAgain = () => {
     onLeave();
     update(null);
@@ -214,6 +225,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   const finish = (overviewId: string) => {
     analytics.onboarding.finished.revealed({
+      ...tagged,
       way: progress.way ?? "signIn",
       from: share === null ? "link" : share.sample ? "sample" : "share",
     });
@@ -229,77 +241,78 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     if (step === "analytics" && analyticsAnswered) update({ step: afterAnalytics });
   }, [step, analyticsAnswered, afterAnalytics, update]);
 
-  // Signed in to an account that already holds the copy, it's left as it is, with the
-  // reader's own reason and topics. A sample waits for the topics picked here to reach the
-  // account, since it's sorted into them.
-  const savingShare = useRef(false);
+  // A shared copy or sample goes into the account once there is one; a sample waits for the
+  // topics picked here, since it's sorted into them.
   const { refetch: refetchStored } = stored;
   const answersIn = libraryMove.answersIn === accountId;
   useEffect(() => {
-    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount || savingShare.current) return;
+    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount) return;
     if (share.sample && !answersIn) return;
-    savingShare.current = true;
+    const saving = `${accountId}:${share.token}`;
+    if (SHARES_BEING_SAVED.has(saving)) return;
+    SHARES_BEING_SAVED.add(saving);
     void (async () => {
       if ((await overviewStore.getOverview(share.snapshot.note.id)) === null) {
         await saveFromShare(share.token, share.snapshot, { sample: share.sample });
       }
       await refetchStored();
     })().finally(() => {
-      savingShare.current = false;
+      SHARES_BEING_SAVED.delete(saving);
     });
   }, [share, signedIn, openLibraryAccountId, accountId, inAccount, answersIn, overviewStore, saveFromShare, refetchStored]);
 
-  // Signed in from the account screen, the overview may still be on its way: the plan, or the
-  // wait for a sign-in, holds the place until it's in the account. Signed in some other way
-  // with nothing made, there's nothing here to carry on with.
+  // Signed in from the account screen: a link's run goes to the wait; signed in some other way with
+  // nothing to carry on with, onboarding has nothing to do.
   useEffect(() => {
     if (!signedIn) return;
-    if (progress.overviewId === null && (progress.way === null || kind === null)) {
+    if (progress.overviewId === null && (progress.way === null || kind === null) && share === null) {
       onLeave();
       update(null);
       void navigate(Routes.home(), { replace: true });
-    } else if (progress.way === "createAccount" && step !== "plan") {
-      update({ step: "plan", mayWrite: true });
+    } else if (share === null && step !== "wait" && progress.way !== null) {
+      update({ step: "wait", mayWrite: true });
     }
-  }, [signedIn, progress.overviewId, progress.way, kind, step, update, navigate, onLeave]);
+  }, [signedIn, progress.overviewId, progress.way, kind, share, step, update, navigate, onLeave]);
 
-  // The account came first, or didn't: counted as the sign-in lands, then how long the overview
-  // took to arrive after it (docs/features/onboarding.md, "Analytics").
   useEffect(() => {
     if (!signedIn || progress.way === null || progress.landed !== null) return;
-    const overview = progress.overviewId !== null ? "ready" : failed ? "failed" : "writing";
-    analytics.onboarding.account.landed({ way: progress.way, overview });
-    update({ landed: { at: Date.now(), overview, arrived: false } });
+    const landedWith = progress.overviewId !== null ? "ready" : failed ? "failed" : "writing";
+    analytics.onboarding.account.landed({ ...tagged, way: progress.way, overview: landedWith });
+    update({ landed: { at: Date.now(), overview: landedWith, arrived: false } });
   }, [signedIn, progress.way, progress.landed, progress.overviewId, failed, analytics, update]);
   useEffect(() => {
     if (!inAccount || progress.landed === null || progress.landed.arrived) return;
-    analytics.onboarding.overview.arrived({ seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
+    analytics.onboarding.overview.arrived({ ...tagged, seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
     update({ landed: { ...progress.landed, arrived: true } });
   }, [inAccount, progress.landed, step, analytics, update]);
 
-  // The reveal opens on its own once the overview is in the account: at once for a sign-in to
-  // an account already held, and after the plan is picked for a new one.
-  const revealed = useRef(false);
+  // A shared copy or sample has nothing to wait for: it opens as soon as it's in the account.
+  const opened = useRef(false);
   useEffect(() => {
-    if (!inAccount || (progress.way === "createAccount" && progress.plan === null) || progress.overviewId === null || revealed.current)
-      return;
-    revealed.current = true;
+    if (share === null || !inAccount || progress.overviewId === null || opened.current) return;
+    opened.current = true;
     finish(progress.overviewId);
   });
+
+  // The way in is the account screen's own until the reader switches it, so a sign-in landing
+  // knows it came from here.
+  useEffect(() => {
+    if (step === "account" && progress.way === null) update({ way: "createAccount", mayWrite: true });
+  }, [step, progress.way, update]);
 
   const shown = useRef<string | null>(null);
   useEffect(() => {
     if (shown.current === step) return;
     shown.current = step;
-    analytics.onboarding.step.shown({ step });
+    analytics.onboarding.step.shown({ ...tagged, step });
   }, [step, analytics]);
 
   const heardFailure = useRef(-1);
   useEffect(() => {
-    if (phase !== "failed" || heardFailure.current === attempt) return;
+    if (!failed || heardFailure.current === attempt) return;
     heardFailure.current = attempt;
-    analytics.onboarding.overview.failed({ step, afterAccount: signedIn });
-  }, [phase, attempt, step, signedIn, analytics]);
+    analytics.onboarding.overview.failed({ ...tagged, step, afterAccount: signedIn });
+  }, [failed, attempt, step, signedIn, analytics]);
 
   const saveTopics = async (chosen: string[]) => {
     setSavingTopics(true);
@@ -316,6 +329,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     }
     const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
     analytics.onboarding.topics.continued({
+      ...tagged,
       suggestedBy: suggested.length === 0 ? "none" : (suggestions?.by ?? "none"),
       picked: chosen.filter((name) => STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
       typed: chosen.filter((name) => !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
@@ -323,85 +337,67 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       pickedSuggested: chosen.filter((name) => suggested.some((offered) => sameTopicName(offered, name))).length,
     });
     update({ topics: chosen });
-    setPicking(null);
     next();
   };
 
   const saveAboutYou = async (answer: AboutYou) => {
     await updateSettings.mutateAsync(aboutYouPatch(answer));
     analytics.onboarding.aboutYou.continued({
+      ...tagged,
       who: answer.who.length,
       time: answer.time.length,
       focus: answer.focus.length,
       typed: typedEntryCount(answer, progress.topics),
     });
-    update({ step: "stepsForYou", mayWrite: !aboutYouIsEmpty(answer) });
+    go("account");
   };
 
   const personal = !aboutYouIsEmpty(aboutYou);
-  // The Continue that lets writing go: About you, or the slide after it when the sentence is empty.
-  const soon = step === "aboutYou" || (step === "stepsForYou" && !progress.mayWrite);
-  const tryAgain = (from: "preview" | "account" | "plan" | "readFailure") => {
-    analytics.onboarding.overview.retried({ from });
+  const tryAgain = (from: "account" | "readFailure") => {
+    analytics.onboarding.overview.retried({ ...tagged, from });
     retry();
   };
-  // Once the account exists: what the overview is doing until it's in the account's library.
-  const arriving: OnboardingArrivingPhase | null = inAccount
-    ? null
-    : failed
-      ? "failed"
-      : progress.overviewId !== null
-        ? "bringingIn"
-        : "writing";
 
-  // A sample is already made, so there is no overview's progress to show (155f).
-  const progressBar = sample ? null : (
-    <OnboardingProgressBar
-      phase={phase}
-      fetching={kind?.fetching ?? null}
-      ready={kind?.ready(found) ?? null}
-      soon={soon}
-      personal={personal}
-      onSeeOverview={
-        step === "account" || step === "plan"
-          ? null
-          : () => {
-              analytics.onboarding.overview.seenEarly({ step });
-              go("account");
-            }
-      }
-    />
-  );
+  // Their card with their answers: on About you the count of topics, what's inside and where it's
+  // kept (327i); on the account each topic and the pills (327l).
+  const savedCard = (where: "aboutYou" | "account"): ReactNode =>
+    found === null || kind === null ? null : (
+      <>
+        <OnboardingSourceCard kind={kind} found={found} size="row" />
+        {(progress.topics.length > 0 || personal) && (
+          <ul className={styles.answers} aria-label="Your answers">
+            {where === "account" ? (
+              progress.topics.map((name) => <li key={name}>{name}</li>)
+            ) : progress.topics.length > 0 ? (
+              <li>{progress.topics.length === 1 ? "1 topic" : `${progress.topics.length} topics`}</li>
+            ) : null}
+            {personal && (
+              <li className={styles.personal}>
+                <StrokeIcon name="check" size={11} />
+                Personalised
+              </li>
+            )}
+          </ul>
+        )}
+        {where === "account" ? (
+          <OnboardingPills pills={kind.yourLink(found, null).pills} minutes={expectedOverviewMinutes(found.source)} />
+        ) : (
+          <div className={styles.paneDetails}>
+            <p className={styles.paneInside}>{kind.yourLink(found, null).inside}</p>
+            <p className={styles.paneSaved}>
+              <StrokeIcon name="folder" size={14} />
+              Saved to your library, ready for you and your AI.
+            </p>
+          </div>
+        )}
+      </>
+    );
 
-  const sortedInto =
-    overview === null ? null : overview.topicIds.flatMap((topicId) => topics.find((topic) => topic.id === topicId)?.name ?? []);
-
-  // The overview taking shape: beside the screens on a wide window, and on a phone inside
-  // Nearly there, where the bar at the top already shows its progress.
-  const previewOf = (bar: ReactNode | null) => (
-    <OnboardingPreview
-      progress={bar}
-      phase={phase}
-      kind={kind}
-      found={found}
-      failure={phase !== "failed" ? null : readFailure !== null || found === null ? "fetch" : "write"}
-      answers={{
-        current: step === "video" ? "source" : step === "topics" ? "topics" : step === "aboutYou" ? "you" : null,
-        topics: step === "topics" ? (picking ?? progress.topics) : progress.topics,
-        topicsAnswered: indexOf(step) > indexOf("topics"),
-        personal,
-        soon,
-        voice: narrationVoiceName(settings?.narrationVoice ?? DEFAULT_NARRATION_VOICE),
-      }}
-      sortedInto={phase === "ready" ? sortedInto : null}
-      forAnyone={sample}
-      onTryAgain={() => tryAgain("preview")}
-      teaser={
-        wide && step === "account" && overview !== null && !failed ? <OnboardingTeaser overview={overview} sample={sample} beside /> : null
-      }
-    />
-  );
-  const nearlyThereCard = wide || failed || sample ? null : previewOf(null);
+  const skip = () => {
+    analytics.onboarding.step.skipped({ ...tagged, step });
+    if (step === "stepsForYou" || step === "aboutYou") go("account");
+    else next();
+  };
 
   const screen = (() => {
     switch (step) {
@@ -432,7 +428,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
           );
         }
         return (
-          <OnboardingVideo
+          <OnboardingYourLink
             kind={kind}
             linkKind={recognised?.linkKind ?? "video"}
             link={progress.link}
@@ -441,23 +437,35 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
             failed={failed}
             onLooksRight={next}
             onDifferentLink={() => {
-              analytics.onboarding.video.differentLinkChosen();
+              analytics.onboarding.video.differentLinkChosen(tagged);
               startAgain();
             }}
             onChooseVideo={(videoId) => {
-              analytics.onboarding.video.differentVideoChosen();
+              analytics.onboarding.video.differentVideoChosen(tagged);
               update({ sourceKey: SourceKey.parse(videoId), overviewId: null });
             }}
           />
         );
+      case "saving":
+        return <OnboardingSavingMoment onContinue={next} onSkip={skip} />;
       case "topics":
         return (
           <OnboardingTopics
             chosen={progress.topics}
             suggestions={suggestions}
             saving={savingTopics}
-            onChange={setPicking}
+            below={wide ? null : <OnboardingProjectsCard compact />}
             onContinue={(chosen) => void saveTopics(chosen)}
+          />
+        );
+      case "knowledgeBase":
+        return <OnboardingKnowledgeMoment onContinue={next} onSkip={skip} />;
+      case "stepsForYou":
+        return (
+          <OnboardingStepsMoment
+            noun={noun === "episode" || noun === "article" || noun === "recipe" ? noun : "video"}
+            onAddContext={next}
+            onSkip={skip}
           />
         );
       case "aboutYou":
@@ -469,70 +477,65 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
             onContinue={(answer) => void saveAboutYou(answer)}
           />
         );
-      case "stepsForYou":
-        return <OnboardingStepsForYou aboutYou={aboutYou} onPersonalise={() => update({ step: "aboutYou" })} onNext={next} />;
-      case "voice":
-        return <OnboardingVoice onContinue={next} />;
-      case "library":
-      case "askYourAi":
-      case "moreSources":
-        return (
-          <OnboardingSlide slide={step} topics={progress.topics} source={found?.source ?? null} written={share !== null} onNext={next} />
-        );
       case "account":
-        if (signedIn) {
-          return (
-            <OnboardingNearlyThere
-              phase={arriving ?? "bringingIn"}
-              after="signIn"
-              card={nearlyThereCard}
-              onTryAgain={() => tryAgain("account")}
-            />
-          );
-        }
         return (
           <OnboardingAccount
-            overview={overview}
-            teaserBeside={wide}
-            sample={sample}
-            failed={failed}
-            onTryAgain={() => tryAgain("account")}
-            onChoose={(way) => {
-              analytics.onboarding.account.chosen({ way });
-              update({ way });
-              setAsking(way);
-            }}
+            saved={savedCard("account")}
+            sideBeside={wide}
+            form={
+              <RequestLinkFlow
+                key={intent}
+                intent={intent}
+                onboarding={{
+                  onSwitchIntent: (way) => {
+                    analytics.onboarding.account.chosen({ ...tagged, way });
+                    setIntent(way);
+                    update({ way });
+                  },
+                }}
+              />
+            }
           />
         );
-      case "plan":
-        if (progress.plan !== null) {
-          return (
-            <OnboardingNearlyThere
-              phase={arriving ?? "bringingIn"}
-              after="plan"
-              card={nearlyThereCard}
-              onTryAgain={() => tryAgain("plan")}
-            />
-          );
-        }
+      case "wait":
         return (
-          <OnboardingPlan
-            made={share !== null || progress.overviewId !== null}
-            sample={sample}
-            onFree={() => {
-              analytics.onboarding.plan.chosen({ plan: "free" });
-              if (inAccount && progress.overviewId !== null) finish(progress.overviewId);
-              else update({ plan: "free" });
+          <OnboardingWaitScreen
+            kind={kind}
+            found={found}
+            run={run}
+            overview={inAccount ? overview : null}
+            failed={failed}
+            startedAt={progress.landed?.at ?? null}
+            topics={progress.topics}
+            personal={personal}
+            focus={aboutYou.focus[0] ?? null}
+            onTryAgain={() => tryAgain("account")}
+            onOpen={() => {
+              if (progress.overviewId !== null) finish(progress.overviewId);
             }}
           />
         );
     }
   })();
 
-  const narrowProgress = progressBar !== null && <div className={styles.narrowProgress}>{progressBar}</div>;
-  const position = indexOf(step) + 2;
+  const aside = (() => {
+    if (!wide) return null;
+    if (step === "topics") return <OnboardingProjectsCard />;
+    if (step === "account") return <OnboardingAccountSide saved={savedCard("account")} />;
+    if (step === "aboutYou" && found !== null) {
+      return (
+        <section className={styles.paneCard} aria-label="Your overview, once you're in">
+          <span className={styles.paneLabel}>Your overview, once you’re in</span>
+          {savedCard("aboutYou")}
+        </section>
+      );
+    }
+    return null;
+  })();
+
+  const segment = SEGMENT_OF[step];
   const back = () => {
-    analytics.onboarding.step.backChosen({ step });
+    analytics.onboarding.step.backChosen({ ...tagged, step });
     const before = steps[indexOf(step) - 1];
     if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
     else update({ step: before });
@@ -547,65 +550,46 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
         </Link>
       </header>
 
-      <div className={styles.layout} ref={scroller} data-testid={onboardingPageTestIds.scroller}>
+      <div
+        className={styles.layout}
+        data-aside={aside === null ? undefined : ""}
+        data-full={step === "wait" ? "" : undefined}
+        ref={scroller}
+        data-testid={onboardingPageTestIds.scroller}
+      >
         <PageScrolledSentinel />
         <main className={styles.main} aria-labelledby={ONBOARDING_HEADING_ID}>
-          {asking === null || signedIn ? (
-            <>
+          <>
+            {segment !== null && (
               <div className={styles.stepper} data-sticky-fade="" data-testid={onboardingPageTestIds.stepper}>
-                {narrowProgress}
                 <div className={styles.nav}>
-                  {step !== "plan" && !signedIn && (
+                  {!signedIn && (
                     <button type="button" className={styles.back} aria-label="Back" onClick={back} data-testid={onboardingPageTestIds.back}>
-                      <StrokeIcon name="arrowLeft" size={18} />
+                      <StrokeIcon name="chevronLeft" size={18} />
                     </button>
                   )}
                   <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
-                    {Array.from({ length: storyLength }, (_, index) => (
-                      <span key={index} className={index < position ? styles.segmentDone : styles.segment} />
+                    {Array.from({ length: SEGMENTS }, (_, index) => (
+                      <span key={index} className={index < segment ? styles.segmentDone : styles.segment} />
                     ))}
                   </span>
-                  <span className={styles.visuallyHidden}>
-                    Screen {position} of {storyLength}
+                  <span className={styles.stepCount} data-testid={onboardingPageTestIds.stepCount}>
+                    Step {segment} of {SEGMENTS}
                   </span>
                   {SKIPPABLE.includes(step) && (
-                    <button
-                      type="button"
-                      className={styles.skip}
-                      onClick={() => {
-                        analytics.onboarding.step.skipped({ step });
-                        next();
-                      }}
-                      data-testid={onboardingPageTestIds.skip}
-                    >
+                    <button type="button" className={styles.skip} onClick={skip} data-testid={onboardingPageTestIds.skip}>
                       Skip
                     </button>
                   )}
                 </div>
               </div>
-              {screen}
-            </>
-          ) : (
-            <>
-              {narrowProgress}
-              <div className={styles.asking}>
-                <button
-                  type="button"
-                  className={styles.backFromAccount}
-                  onClick={() => setAsking(null)}
-                  data-testid={onboardingPageTestIds.backFromAccount}
-                >
-                  <StrokeIcon name="arrowLeft" size={16} />
-                  Back to your overview
-                </button>
-                <RequestLinkFlow intent={asking} />
-              </div>
-            </>
-          )}
+            )}
+            {screen}
+          </>
           <span className={styles.end} ref={contentEnd} aria-hidden="true" />
         </main>
 
-        <div className={styles.wide}>{previewOf(progressBar)}</div>
+        {aside !== null && <div className={styles.aside}>{aside}</div>}
       </div>
     </div>
   );

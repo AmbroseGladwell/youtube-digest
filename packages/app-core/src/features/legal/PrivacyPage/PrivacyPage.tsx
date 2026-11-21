@@ -129,7 +129,10 @@ const sections: readonly LegalSection[] = [
         <p>
           A video's overview is written from its captions. Your device fetches them, from YouTube or through a transcript provider you have
           a key for, and when the captions can't be had any other way our server fetches them itself, sometimes through a residential proxy
-          run by Decodo. The proxy sees a request for the video's page and nothing about you.
+          run by Decodo. The proxy sees a request for the video's page and nothing about you. When you paste a video link in onboarding,
+          before you have an account, our server reads the video's title, channel, length and picture through YouTube's API, fetches its
+          captions once to check what kind of overview it needs, and sends both to your device, which keeps the captions for your first
+          overview.
         </p>
         <p>
           <strong>Your own copy.</strong> The words behind each of your overviews, a video's captions or an episode's transcript, are your
@@ -196,8 +199,10 @@ const sections: readonly LegalSection[] = [
           the transcript or article, your About you sentence and what we have learned from your overviews to our server, which sends them to
           OpenAI in the United States and returns the overview. The overview says when it was written this way. If you would rather your
           overviews were never made through us, turn on "Only ever use my key" in Settings › API keys; questions you ask about an overview
-          still go through us, as below. During onboarding, your first overview and the topic suggestions beside it are made on our key too,
-          from the title, description and opening of the video or page.
+          still go through us, as below. During onboarding, before you have an account, nothing is written, but two small checks run on our
+          key: topic suggestions, from the title, description and opening of the video or page, and, for a video, which kind of overview it
+          needs, from its title, channel, description and the opening of its captions. Your first overview is written once you have an
+          account, on our key, as above.
         </p>
         <p>
           Your About you sentence and what we have learned from your overviews shape only How to apply, the section that suggests what you
@@ -223,9 +228,10 @@ const sections: readonly LegalSection[] = [
           into projects" in Settings › Personalisation and your projects are left out.
         </p>
         <p>
-          We count how many overviews each account makes in a month on each kind of key, and how many a device makes before it has an
-          account. For a device without an account we keep a random trial token and a hashed form of the network address it came from, for
-          seven days, so a limit can't be reset by opening a private window.
+          We count how many overviews each account makes in a month on each kind of key. For a device without an account we keep a random
+          trial token with how many links it has had us read, and a hashed form of the network address it came from, for seven days, so a
+          limit can't be reset by opening a private window. We remember which kind of overview each video needs, by the video alone, with no
+          account or device on it, so the check isn't repeated.
         </p>
         <p>
           We also keep a daily tally of what serving each account costs us, so we can price the plans fairly: for overviews and the smaller
@@ -551,7 +557,7 @@ const sections: readonly LegalSection[] = [
           <strong>Strictly necessary</strong>, because the app can't work without it: your library and its transcripts, in the browser's
           database; any API keys you added; your settings; your sign-in state, and in the extension the server it talks to; where you got to
           in each transcript; which of a followed playlist's videos this device has seen; when you chose to keep a project the app asked
-          about after it was left alone; and, before you have an account, the trial token that lets you make a first overview.
+          about after it was left alone; and, before you have an account, the trial token that lets us read your first link.
         </p>
         <p>
           <strong>Analytics only</strong>, and deleted when you say no: your answer to the analytics question, the date you gave it, and,

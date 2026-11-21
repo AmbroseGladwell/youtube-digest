@@ -23,7 +23,8 @@
             pkgs.git
             pkgs.nodejs_22
             pkgs.go-task
-            pkgs.postgresql_17
+            # Search's embeddings need pgvector (OV-229), which the plain build doesn't carry.
+            (pkgs.postgresql_17.withPackages (p: [ p.pgvector ]))
             pkgs.bws
             pkgs.gitleaks
             pkgs.flyctl

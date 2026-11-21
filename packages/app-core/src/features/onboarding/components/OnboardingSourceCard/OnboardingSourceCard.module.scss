@@ -1,3 +1,4 @@
+.row,
 .large,
 .compact,
 .small {
@@ -25,6 +26,11 @@
   width: 6.5rem;
   border-radius: 0.5rem;
 
+  .row & {
+    width: 7.5rem;
+    border-radius: 0.625rem;
+  }
+
   .large & {
     width: 100%;
     border-radius: 0.875rem;
@@ -46,6 +52,11 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--ink);
+
+  .row & {
+    font-size: 0.78125rem;
+    color: var(--label);
+  }
 }
 
 .title {
@@ -58,11 +69,20 @@
   .compact & {
     font-size: 1rem;
   }
+
+  .row & {
+    font-size: 1.1875rem;
+    line-height: 1.18;
+  }
 }
 
 .line {
   font-size: 0.8125rem;
   color: var(--muted);
+
+  .row & {
+    font-size: 0.78125rem;
+  }
 }
 
 .figures {

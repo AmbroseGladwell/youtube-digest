@@ -168,15 +168,13 @@ no-account library holding something. So an overview that arrived before an inte
 counts as the account's, and only leaves here; none is ever in neither library, and none is
 pushed twice.
 
-**It runs again when asked** (`moveAgain`, OV-163): onboarding's overview can land in the
-no-account library after the reader has signed in, since the account screen no longer waits
-for it. Moves run one after another on a single chain, never together, and one asked for
-before the first pull is left to the first move, which finds what's there.
+**Moves run one after another on a single chain, never together.** Onboarding's overview is no
+longer written into the no-account library (OV-327, which removed `moveAgain`): it waits for the
+move and is written straight into the account.
 
 **A moved overview counts against the account's month,** on the key that made it, and
-reserves its slot like a new one before it is pushed (OV-102, `tiers.md`, "Counting"). A
-month already spent doesn't refuse it: it syncs at once and counts on the next month instead
-(OV-325).
+reserves its slot like a new one before it is pushed (OV-102, `tiers.md`, "Counting"). OV-325's
+carry of a trial overview into a later month went with the trial's overviews (OV-327).
 
 **State is copied only where it differs from the default.** The server refuses a patch that
 changes nothing (`sync-api.md`), and a refused write would sit parked forever.

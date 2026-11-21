@@ -16,6 +16,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { signOutCopy, useTimersWillStop } from "../../../cookingTimers/useTimersWillStop.js";
 import { useSignOut } from "../../../accountLibraries/useSignOut.js";
 import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
+import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
@@ -27,6 +28,7 @@ export function AccountMenu() {
   const { pathname } = useLocation();
   const isPanel = useIsPanel();
   const surface = useSurface();
+  const extensionOffered = useExtensionOffered();
   const sync = useSync();
   const signOutNow = useSignOut();
   const willStop = useTimersWillStop();
@@ -142,7 +144,7 @@ export function AccountMenu() {
           )}
         </div>
         <div role="separator" className={styles.separator} />
-        {surface === "web" &&
+        {extensionOffered &&
           !signedOutAtServer &&
           item(
             "puzzle",

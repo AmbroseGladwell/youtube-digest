@@ -17,6 +17,7 @@ export * from "./ServiceTranscriptApi.js";
 export * from "./fetchServiceTranscriptApi.js";
 export * from "./GenerationApi.js";
 export * from "./fetchArticleApi.js";
+export * from "./fetchVideoApi.js";
 export * from "./fetchGenerationApi.js";
 export * from "./ChatApi.js";
 export * from "./fetchChatApi.js";

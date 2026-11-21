@@ -192,10 +192,10 @@ month's seconds and episodes. Until OV-337 a queued job carried no lease, so eve
 woke claimed it at once and each sent it to the host: the first two transcriptions ran six and five
 times.
 
-**Allowances.** Hours of audio a month: a trial's address 4, Free 5, BYO Plus 15, Plus 30, with no
-episode over 4 hours by its feed (owner, 16 Nov 2026). The trial is onboarding's one overview, made
-before there is an account, and it may be an episode that needs transcribing (owner, 16 Nov 2026,
-after the design round's "no trial"). `GET /api/overview-usage`
+**Allowances.** Hours of audio a month: Free 5, BYO Plus 15, Plus 30, with no episode over 4 hours
+by its feed (owner, 16 Nov 2026). Nothing is transcribed signed out: onboarding checks its episode
+before the account, and the check answers as a new Free account would, since the episode is
+transcribed once the reader has one (OV-327). `GET /api/overview-usage`
 carries `transcription` (seconds used, the limit, and the episodes it went on, counted as each is
 transcribed) where the server transcribes. The feed's length is held when the job is
 queued and settled to the audio's measured length once it finishes. An episode with no length in its
@@ -203,7 +203,7 @@ feed holds an hour. Asking again for an episode already transcribed, or on its w
 allowance the answer is `too_many_requests`, with `quota: "transcription"`, the seconds used and the
 limit, and the time until the month turns.
 
-**Never shared.** A job belongs to one caller: an account, or a trial's hashed address. The words are
+**Never shared.** A job belongs to one account. The words are
 held for at most a day for that caller's device to collect. After that they are the reader's own copy
 through the usual upload (`transcript-storage.md`). Nothing is remembered in
 `podcast_transcript_sources`, so another reader's ask transcribes again.

@@ -1,8 +1,9 @@
 import { useId, useState } from "react";
 import type { OverviewId } from "@overview/domain";
-import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { CHROME_EXTENSION_URL } from "../../../../util/chromeExtensionUrl.js";
+import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { createLabelOf } from "../../../podcasts/util/episodeActionOf.js";
 import { PastedLinkStatus } from "../../../newOverview/components/PastedLinkStatus/PastedLinkStatus.js";
@@ -13,16 +14,17 @@ import { onboardingNextStepsTestIds } from "./OnboardingNextStepsTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 // Design 46l: under the Verdict of onboarding's overview, the extension and the AI connection,
-// each dismissible, and never a modal. Shown only on the overview onboarding ended on. The panel
-// is the extension already, so there it offers the AI connection alone. After a sample, making
+// each dismissible, and never a modal. Shown only on the overview onboarding ended on. The
+// extension is offered only where it can be added (useExtensionOffered); elsewhere the AI
+// connection alone. After a sample, making
 // one of their own comes first (155k).
 export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) {
   const analytics = useAnalytics();
-  const isPanel = useIsPanel();
+  const extensionOffered = useExtensionOffered();
   const [nextSteps, setNextSteps] = useState(readNextSteps);
   if (nextSteps === null || nextSteps.overviewId !== overviewId) return null;
 
-  const shown = (step: NextStep) => !nextSteps.dismissed.includes(step) && !(isPanel && step === "extension");
+  const shown = (step: NextStep) => !nextSteps.dismissed.includes(step) && (extensionOffered || step !== "extension");
   const dismiss = (step: NextStep) => {
     analytics.onboarding.nextSteps.dismissed({ step });
     const next = { ...(readNextSteps() ?? nextSteps), dismissed: [...nextSteps.dismissed, step] };
@@ -45,15 +47,17 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
             <span className={styles.title}>Save in one click.</span>
             <p className={styles.body}>Add the Chrome extension and save straight from the page you're on.</p>
             <span>
-              <button
-                type="button"
+              <a
                 className={styles.action}
-                disabled
-                title="The extension isn't in the Web Store yet"
+                href={CHROME_EXTENSION_URL}
+                target="_blank"
+                rel="noopener"
+                aria-label="Add to Chrome, opens in a new tab"
+                onClick={() => analytics.onboarding.nextSteps.chosen({ step: "extension" })}
                 data-testid={onboardingNextStepsTestIds.action("extension")}
               >
                 Add to Chrome
-              </button>
+              </a>
             </span>
           </div>
         )}

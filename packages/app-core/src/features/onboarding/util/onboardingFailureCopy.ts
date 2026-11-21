@@ -8,8 +8,6 @@ export interface OnboardingFailureCopy {
   title: string;
   body: string;
   tryAgain: boolean;
-  // Out of reads, only a video link is worth asking for: it uses none.
-  videoOnly: boolean;
   extension: string | null;
   // The episode's audio can be transcribed instead, and the button that does it (design 305c-2).
   transcribe: string | null;
@@ -19,7 +17,6 @@ const failed = (title: string, body: string, more: Partial<OnboardingFailureCopy
   title,
   body,
   tryAgain: false,
-  videoOnly: false,
   extension: null,
   transcribe: null,
   ...more,
@@ -40,16 +37,18 @@ export function onboardingFailureCopy(failure: OnboardingFailure, link: string, 
   switch (failure.kind) {
     case "trialReads":
       return failed(
-        `You've tried ${TRIAL_READS} pages on this device`,
-        "That's as many as we can read before you have an account. Video links still work, so try one of those.",
-        { videoOnly: true },
+        `You've tried ${TRIAL_READS} links on this device`,
+        "That's as many as we can read before you have an account. Sign in if you have one, or try again tomorrow.",
       );
     case "trialReadsAddress":
       return failed(
-        "We've read a lot of pages from your network today",
-        `Each network can read ${TRIAL_READS_PER_ADDRESS_DAILY} pages a day before an account. Video links still work, or try a page again tomorrow.`,
-        { videoOnly: true },
+        "We've read a lot of links from your network today",
+        `Each network can read ${TRIAL_READS_PER_ADDRESS_DAILY} links a day before an account. Sign in if you have one, or try again tomorrow.`,
       );
+    case "videoRead":
+      return failure.reason === "not-found"
+        ? failed("We couldn't find that video", "It may be private or taken down. Try another link.")
+        : failed("We couldn't reach YouTube just now", "Try again in a moment, or use another link.", { tryAgain: true });
     case "other":
       return failed("We couldn't read that page", "Something went wrong reading it. Try again in a moment, or use another link.", {
         tryAgain: true,

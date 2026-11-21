@@ -1,7 +1,7 @@
 import { VideoId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
-import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
+import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
@@ -47,7 +47,7 @@ test("a press that arrives before our key has answered waits, rather than asking
     runBridge: true,
     youTubeFetch: true,
     sync: true,
-    syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+    syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL, firstName: "Ada" },
   });
 
   await launcher.pressInjectedButton(WATCHED_URL);
@@ -126,7 +126,7 @@ test("a press on the page and the panel it opens are counted, with what the pres
   const capture = await launcher.launchPanel({
     ...panel,
     sync: true,
-    syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
+    syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL, firstName: "Ada" },
   });
 
   await launcher.pressInjectedButton(WATCHED_URL);

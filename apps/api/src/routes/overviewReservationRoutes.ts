@@ -9,7 +9,6 @@ import type { SharesRepository } from "../shares/SharesRepository.js";
 import { overviewQuotas } from "../usage/overviewQuotas.js";
 import type { OverviewReservationsRepository } from "../usage/OverviewReservationsRepository.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
-import type { TrialsRepository } from "../usage/TrialsRepository.js";
 import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js";
 
 const Params = z.object({ overviewId: OverviewId });
@@ -19,14 +18,12 @@ export function overviewReservationRoutes(
   {
     reservations,
     usage,
-    trials,
     shares,
     sql,
     clock,
   }: {
     reservations: OverviewReservationsRepository;
     usage: OverviewUsageRepository;
-    trials: TrialsRepository;
     shares: SharesRepository;
     sql: SqlClient;
     clock: () => Date;
@@ -44,13 +41,6 @@ export function overviewReservationRoutes(
       }
       await reservations.savedFromShare(now, accountId, overviewId);
       request.log.info(apiLogLines.reservations.shareSaved({ plan }));
-      return usage.usage(now, accountId, plan);
-    }
-    if (await trials.madeInTrial(overviewId)) {
-      const limit = overviewQuotas[plan].ours;
-      const { used, carried } = await reservations.movedFromTrial(now, accountId, overviewId, limit);
-      await trials.forget(overviewId);
-      request.log.info(apiLogLines.reservations.movedFromTrial({ plan, used, limit, carried }));
       return usage.usage(now, accountId, plan);
     }
     const reservation = await reservations.reserveOwn(now, accountId, overviewId, overviewQuotas[plan].own);

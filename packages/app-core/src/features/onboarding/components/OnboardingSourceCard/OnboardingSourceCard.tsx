@@ -6,17 +6,17 @@ import { onboardingSourceCardTestIds } from "./OnboardingSourceCardTestIds.js";
 export interface OnboardingSourceCardProps {
   kind: OnboardingSource;
   found: OnboardingFound;
-  // Large on the confirm screen; compact in the panel, with the image beside the title and the
-  // facts under both; small in the preview and a playlist's row, with facts only where there's
-  // no kicker.
-  size?: "large" | "compact" | "small";
+  // A row on Your link (327c), the image beside the kicker, title and facts; large where the
+  // image leads; compact in the panel, with the image beside the title and the facts under both;
+  // small in the preview and a playlist's row, with facts only where there's no kicker.
+  size?: "row" | "large" | "compact" | "small";
 }
 
 // One card for every kind (154d–154h): the image, or the site's name on a stone tile, then a
 // kicker naming the source and its kind, the title, and facts that belong to the kind.
 export function OnboardingSourceCard({ kind, found, size = "large" }: OnboardingSourceCardProps) {
   const { kicker, facts } = kind.card(found);
-  const factsBeside = size === "large" || kicker === null;
+  const factsBeside = size === "large" || size === "row" || kicker === null;
   return (
     <div className={styles[size]} data-testid={onboardingSourceCardTestIds.root}>
       <span className={styles.head}>
@@ -39,21 +39,9 @@ export function OnboardingSourceCard({ kind, found, size = "large" }: Onboarding
 }
 
 function Facts({ facts }: { facts: OnboardingCard["facts"] }) {
-  if ("line" in facts) {
-    return facts.line === "" ? null : (
-      <span className={styles.line} data-testid={onboardingSourceCardTestIds.facts}>
-        {facts.line}
-      </span>
-    );
-  }
-  return (
-    <dl className={styles.figures} data-testid={onboardingSourceCardTestIds.facts}>
-      {facts.figures.map(({ label, value }) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{value}</dd>
-        </div>
-      ))}
-    </dl>
+  return facts.line === "" ? null : (
+    <span className={styles.line} data-testid={onboardingSourceCardTestIds.facts}>
+      {facts.line}
+    </span>
   );
 }

@@ -68,7 +68,6 @@ const ConfigEnv = z
       .pipe(z.array(ShareToken)),
     OPENAI_API_KEY: z.string().min(1).optional(),
     OUR_KEY_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(300),
-    OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS: z.coerce.number().int().min(0).default(50),
     OUR_KEY_DAILY_CHAT_MESSAGES: z.coerce.number().int().min(0).default(20_000),
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().default("https://eu.i.posthog.com"),
@@ -142,7 +141,6 @@ export type TranscriptServiceConfig = { proxyUrl: string | null; proxyDailyFetch
 export type OurKeyConfig = {
   apiKey: string;
   dailyGenerations: number;
-  signedOutDailyGenerations: number;
   dailyChatMessages: number;
 } | null;
 
@@ -259,7 +257,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
         : {
             apiKey: data.OPENAI_API_KEY,
             dailyGenerations: data.OUR_KEY_DAILY_GENERATIONS,
-            signedOutDailyGenerations: data.OUR_KEY_SIGNED_OUT_DAILY_GENERATIONS,
             dailyChatMessages: data.OUR_KEY_DAILY_CHAT_MESSAGES,
           },
     youTubeApiKey: data.YOUTUBE_API_KEY ?? null,

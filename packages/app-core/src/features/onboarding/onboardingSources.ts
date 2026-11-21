@@ -6,30 +6,38 @@ import {
   podcastSourceId,
   domainOf,
   formatClock,
-  recipeFigures,
+  parsePodcastLink,
   recipeMinutes,
   sourceName,
   webSource,
   youTubeSource,
   type ArticleRead,
+  type PodcastEpisode,
   type PodcastRead,
+  type TranscriptCheck,
+  type StoredTranscript,
+  type VideoRead,
   type ExtractedArticle,
   type Overview,
   type Recipe,
-  type RecipeFigure,
+  type NoteKind,
   type Source,
   type SourceKey,
 } from "@overview/domain";
-import { bigPictureBudget } from "@overview/generation";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../newOverview/api/generationPipeline.js";
+import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../newOverview/api/PodcastReadError.js";
+import { VideoReadError } from "../newOverview/api/VideoReadError.js";
 import { EpisodeNeedsTranscribingError } from "../podcasts/api/EpisodeNeedsTranscribingError.js";
 import type { TranscriptionProgress } from "../podcasts/api/transcribeEpisode.js";
 import { isPlatformPodcastLink } from "../newOverview/usePodcastLink.js";
 import { isArticleLink } from "../newOverview/useArticleLink.js";
 import { extractYouTubeVideoId, youTubeLink } from "../newOverview/util/parseYouTubeUrl.js";
 import { formatPublishedDate } from "../../util/formatPublishedDate.js";
+import type { ExpectedMinutes } from "./util/expectedOverviewMinutes.js";
+import { episodeWordsNotice } from "./util/episodeWordsNotice.js";
+import { EpisodeCannotBeMadeError } from "./EpisodeCannotBeMadeError.js";
 
 export type OnboardingLinkKind = "video" | "playlist" | "article" | "episode";
 
@@ -41,15 +49,26 @@ export interface OnboardingFound {
   recipe: RecipeTimes | null;
   // What topics are suggested from besides the title: a video's description, a page's opening.
   about: string;
+  // A video already checked as a recipe before the account takes the recipe's words (327u-2).
+  noteKind?: NoteKind | null;
+  // Whether an episode's words were found as it was read, so Your link can say it'll be
+  // transcribed, or that it can't be (327v–327w-4).
+  episodeWords?: TranscriptCheck | null;
 }
 
 // The pipelines a run can call; the shell's hooks supply them, the kind chooses between them.
 export interface OnboardingMakers {
   video: (url: string, options: RunOverviewGenerationOptions) => Promise<Overview>;
+  readVideo: (videoId: string) => Promise<VideoRead>;
+  // The transcript the read was checked from, kept in the library the overview is written into,
+  // so writing finds it there rather than fetching it again.
+  keepTranscript: (transcript: StoredTranscript) => Promise<void>;
   article: (read: () => Promise<ArticleRead>, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readArticle: (url: string) => Promise<ArticleRead>;
   podcast: (request: PodcastRunRequest, options: RunOverviewGenerationOptions) => Promise<Overview>;
   readPodcast: (url: string) => Promise<PodcastRead>;
+  // Free, signed out on the trial: no words are fetched (design 305c).
+  checkEpisode: (episode: PodcastEpisode) => Promise<TranscriptCheck>;
 }
 
 export interface OnboardingMakeOptions {
@@ -59,26 +78,19 @@ export interface OnboardingMakeOptions {
   // Transcribing the episode's audio is waiting for a card, then under way.
   onTranscription?: ((progress: TranscriptionProgress) => void) | undefined;
   isCancelled: () => boolean;
-  waitToWrite: () => Promise<void>;
+  // The wait's real events (327m): the words the source was found to hold, then writing begun.
+  onSourceWords?: ((words: number) => void) | undefined;
+  onWriting?: (() => void) | undefined;
+  // Settles once the reader has an account and their answers are in it: nothing that costs
+  // anything runs before (docs/features/onboarding.md, "Nothing paid before the account").
+  waitToSpend: () => Promise<void>;
 }
 
 // The confirm card (154d–154g): a kicker naming the source and its kind, the title, then facts
 // that belong to the kind. A kind with no kicker keeps its facts as a byline under the title.
 export interface OnboardingCard {
   kicker: string | null;
-  facts: { line: string } | { figures: RecipeFigure[] };
-}
-
-export interface OnboardingSection {
-  name: string;
-  // Taken from the page rather than written, so it's known as soon as the read lands (154h).
-  fromPage: boolean;
-}
-
-export interface OnboardingTeaser {
-  byline: string;
-  first: { label: string; text: string };
-  locked: string;
+  facts: { line: string };
 }
 
 export interface OnboardingSource {
@@ -87,22 +99,31 @@ export interface OnboardingSource {
   // What the run makes from: the link, or a playlist's chosen video. Null until it's known.
   target: (progress: { link: string; sourceKey: string | null }) => string | null;
   make: (target: string, makers: OnboardingMakers, options: OnboardingMakeOptions) => Promise<Overview>;
-  // The word in "Is this the right …?", before and after the link is found.
+  // What the source is called on Your link, Topics and Moment 3, before and after it's found.
   noun: (linkKind: OnboardingLinkKind, found: OnboardingFound | null) => string;
-  lead: (found: OnboardingFound | null) => string;
   // What stands in for the card until the link is found: the address, or null for "finding".
   pending: (link: string) => string | null;
   finding: string;
   notFound: string;
-  fetching: string;
-  // What the preview says once the source is in hand and writing waits on the questions.
-  ready: (found: OnboardingFound | null) => string;
   card: (found: OnboardingFound) => OnboardingCard;
-  sections: (found: OnboardingFound | null) => readonly OnboardingSection[];
-  teaser: (overview: Overview) => OnboardingTeaser;
+  // Your link's words (327c, 327s–327v), with the read and listen minutes worked out in code.
+  yourLink: (found: OnboardingFound, minutes: ExpectedMinutes | null) => OnboardingYourLink;
+}
+
+export interface OnboardingYourLink {
+  heading: string;
+  line: string;
+  // A recipe is cooked rather than listened to: Cook · Read · Share.
+  pills: "readListen" | "cook";
+  inside: string;
+  // What Looks right agrees to, said on the card (327w).
+  notice?: string | null;
+  // Why it can't be made, in place of the pills and Looks right (327w-3, 327w-4).
+  stop?: string | null;
 }
 
 const PAGE_OPENING_CHARACTERS = 3000;
+const TRANSCRIPT_OPENING_CHARACTERS = 3000;
 
 const pageOpening = (article: ExtractedArticle): string =>
   article.sections
@@ -112,43 +133,46 @@ const pageOpening = (article: ExtractedArticle): string =>
 
 const watchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
 
-const BIG_PICTURE_FROM_MS = 10 * 60_000;
+const INSIDE = "Premise, key points, a verdict, steps and more.";
+const RECIPE_INSIDE = "Ingredients, the method step by step, timers, and amounts that scale to your servings.";
+const RECIPE_LINE = "with just the ingredients and the method, easy to follow with cooking mode, and shareable.";
 
-// Listed only when the source is long enough to earn one: an article's words are known, and a
-// video of ten minutes clears the threshold at any speaking pace (docs/features/overview-generation-decisions.md).
-const mayEarnBigPicture = (source: Source): boolean =>
-  source.kind === "web" ? bigPictureBudget(source.wordCount) > 0 : source.durationMs !== null && source.durationMs >= BIG_PICTURE_FROM_MS;
+const turnedInto = (minutes: ExpectedMinutes | null): string =>
+  minutes === null
+    ? "turned into an overview you can read, listen to and share."
+    : `turned into an overview you can read in about ${minutes.read}, listen to in about ${minutes.listen}, and share.`;
 
-const writtenSections = (found: OnboardingFound | null): readonly OnboardingSection[] =>
-  [
-    "Premise",
-    ...(found !== null && mayEarnBigPicture(found.source) ? ["Big picture"] : []),
-    "Key points",
-    "How to apply",
-    "Verdict",
-    "Chapters",
-  ].map((name) => ({ name, fromPage: false }));
-const RECIPE_SECTIONS: readonly OnboardingSection[] = [
-  { name: "Summary", fromPage: false },
-  { name: "Ingredients", fromPage: true },
-  { name: "Method", fromPage: true },
-];
+const spokenLength = (durationMs: number | null): string | null => {
+  if (durationMs === null) return null;
+  const minutes = Math.round(durationMs / 60_000);
+  return minutes < 60 ? `${minutes} minutes` : recipeMinutes(minutes);
+};
 
-const OVERVIEW_LEAD = "We'll turn it into an overview you can read, listen to and come back to.";
-const overviewLocked = (overview: Overview): string =>
-  `${overview.bigPicture ? "Big picture, key points" : "Key points"}, How to apply and Verdict open with an account.`;
+const platformOf = (link: string): string | null => {
+  const platform = parsePodcastLink(link)?.platform;
+  if (platform === "apple" || platform === "apple-show") return "from Apple Podcasts";
+  return platform === "spotify" || platform === "spotify-short" || platform === "spotify-show" ? "from Spotify" : null;
+};
+
+const fromWhom = (length: string | null, who: string): string => (length === null ? `From ${who}` : `${length} from ${who}`);
 
 const videoFacts = (source: Source): string =>
-  source.kind === "youtube"
-    ? [source.channel, source.durationMs === null ? null : formatClock(source.durationMs / 1000)].filter(Boolean).join(" · ")
-    : sourceName(source);
+  [source.kind === "youtube" && source.durationMs !== null ? formatClock(source.durationMs / 1000) : null, "YouTube"]
+    .filter(Boolean)
+    .join(" · ");
 
 const episodeLength = (source: Source): string | null =>
   source.kind === "podcast" && source.durationMs !== null ? recipeMinutes(Math.round(source.durationMs / 60_000)) : null;
 
-// "1 hr 56 min · 10 Nov 2026", or the date alone when the feed gives no length (design 106b).
+// "1 hr 12 min · 10 Nov 2026 · from Spotify", leaving out what the feed doesn't give (106b, 327v).
 const episodeFacts = (source: Source): string =>
-  [episodeLength(source), source.publishedAt === null ? null : formatPublishedDate(source.publishedAt)].filter(Boolean).join(" · ");
+  [
+    episodeLength(source),
+    source.publishedAt === null ? null : formatPublishedDate(source.publishedAt),
+    source.kind === "podcast" ? platformOf(source.sharedFrom) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
 const readMinutes = (source: Source): string | null => (source.kind === "web" ? `${articleReadMinutes(source.wordCount)} min read` : null);
 
@@ -169,55 +193,92 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       return videoUrl === null ? null : (extractYouTubeVideoId(videoUrl) as SourceKey | null);
     },
     target: ({ sourceKey }) => (sourceKey === null ? null : watchUrl(sourceKey)),
-    make: (target, makers, { onFound, isCancelled, waitToWrite }) =>
-      makers.video(target, {
+    make: async (target, makers, { onFound, isCancelled, waitToSpend, onSourceWords, onWriting }) => {
+      const read = await makers.readVideo(extractYouTubeVideoId(target) ?? target);
+      if (read.status === "failed") throw new VideoReadError(read.reason);
+      const opening = (read.transcript?.segments ?? [])
+        .map((segment) => segment.text)
+        .join(" ")
+        .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+      onFound({
+        source: youTubeSource(read.video),
+        recipe: null,
+        about: [read.video.description ?? "", opening].filter((part) => part !== "").join("\n\n"),
+        noteKind: read.noteKind,
+      });
+      await waitToSpend();
+      if (isCancelled()) throw new GenerationCancelledError();
+      if (read.transcript !== null) await makers.keepTranscript({ ...read.transcript, video: read.video });
+      return makers.video(target, {
         isCancelled,
-        waitToWrite,
-        onProgress: ({ video, transcriptOpening }) =>
-          onFound({
-            source: youTubeSource(video),
-            recipe: null,
-            about: [video.description ?? "", transcriptOpening].filter((part) => part !== "").join("\n\n"),
-          }),
-      }),
-    noun: (linkKind) => (linkKind === "playlist" ? "playlist" : "video"),
-    lead: () => OVERVIEW_LEAD,
+        onProgress: ({ transcriptWords }) => onSourceWords?.(transcriptWords),
+        onWriting,
+        ...(read.noteKind === null ? {} : { noteKind: read.noteKind }),
+      });
+    },
+    noun: (linkKind, found) => (linkKind === "playlist" ? "playlist" : found?.noteKind === "recipe" ? "recipe" : "video"),
     pending: () => null,
     finding: "Finding the video…",
     notFound: "We couldn't find that video.",
-    fetching: "Fetching the video",
-    ready: () => "Transcript ready",
-    card: ({ source }) => ({ kicker: null, facts: { line: videoFacts(source) } }),
-    sections: writtenSections,
-    teaser: (overview) => ({
-      byline: videoFacts(overview.source),
-      first: { label: "Premise", text: overview.inOneLine },
-      locked: overviewLocked(overview),
+    card: ({ source, noteKind }) => ({
+      kicker: `${sourceName(source)} · ${noteKind === "recipe" ? "Recipe video" : "Video"}`,
+      facts: { line: videoFacts(source) },
     }),
+    yourLink: ({ source, noteKind }, minutes) => {
+      const length = spokenLength(source.kind === "youtube" ? source.durationMs : null);
+      return noteKind === "recipe"
+        ? {
+            heading: "Here’s the recipe you saved.",
+            line: `${sourceName(source)}’s ${length === null ? "" : `${length.replace(" minutes", "-minute")} `}video, ${RECIPE_LINE}`,
+            pills: "cook",
+            inside: "Ingredients, the method step by step with the moment in the video, timers, and amounts that scale.",
+          }
+        : {
+            heading: "Here’s what’s in the video you saved.",
+            line: `${fromWhom(length, sourceName(source))}, ${turnedInto(minutes)}`,
+            pills: "readListen",
+            inside: INSIDE,
+          };
+    },
   },
   // Design 106c: an episode takes the same card in a podcast's words. It claims Apple and Spotify
-  // links; a show's own page is left to the web, which reads it as a page. It is found, and its
-  // words with it, before the card shows, as a video's transcript is fetched before its card
-  // does, so an episode with no words stops at the confirm step (106i).
+  // links; a show's own page is left to the web, which reads it as a page. Whether its words can be
+  // found is checked before the card shows, fetching none, so Your link says it'll be transcribed
+  // and Looks right is the consent, or that it can't be made (327v–327w-4). Words that turn out
+  // missing after all are transcribed in the wait: a new account has the hours.
   podcast: {
     linkKind: (link) => (isPlatformPodcastLink(link) ? "episode" : null),
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToWrite, transcribe }) => {
+    make: async (target, makers, { onFound, onTranscription, isCancelled, waitToSpend, transcribe, onSourceWords, onWriting }) => {
       const read = await makers.readPodcast(target);
       if (read.status === "failed") throw new PodcastReadError(read.reason, read.showName ?? null);
       const id = await podcastSourceId(read.episode);
-      return makers
-        .podcast(
-          { episode: read.episode, sharedFrom: target, transcribe },
+      const episodeWords = await makers.checkEpisode(read.episode).catch((): TranscriptCheck => ({ words: "unknown" }));
+      const source = podcastSource(read.episode, id, target);
+      onFound({ source, recipe: null, about: read.episode.notes, episodeWords });
+      if (episodeWordsNotice(episodeWords, source.kind === "podcast" ? source.durationMs : null).stop !== null) {
+        throw new EpisodeCannotBeMadeError();
+      }
+      await waitToSpend();
+      if (isCancelled()) throw new GenerationCancelledError();
+      const make = (choice: TranscribeChoice | undefined) =>
+        makers.podcast(
+          { episode: read.episode, sharedFrom: target, transcribe: choice },
           {
             from: "onboarding",
             isCancelled,
-            waitToWrite,
             onTranscription,
-            onEpisodeWords: () => onFound({ source: podcastSource(read.episode, id, target), recipe: null, about: read.episode.notes }),
+            onEpisodeWords: (words) => onSourceWords?.(words),
+            onWriting,
           },
-        )
+        );
+      const needsTranscribing = episodeWords.words === "none" && episodeWords.transcription.status !== "free";
+      return (transcribe !== undefined || needsTranscribing ? make(transcribe ?? "chosen") : make(undefined))
+        .catch((error: unknown) => {
+          if (error instanceof EpisodeNeedsTranscribingError) return make("chosen");
+          throw error;
+        })
         .catch((error: unknown) => {
           if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
             throw new PodcastNoTranscriptError(error instanceof EpisodeNeedsTranscribingError, read.episode.durationSeconds);
@@ -226,72 +287,81 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         });
     },
     noun: (_linkKind, found) => (found === null ? "page" : "episode"),
-    lead: () => OVERVIEW_LEAD,
     pending: (link) => domainOf(link),
     finding: "Finding the episode…",
     notFound: "We couldn't find that episode.",
-    fetching: "Finding the episode",
-    ready: () => "Transcript ready",
     card: ({ source }) => ({
       kicker: `${sourceName(source)} · Podcast`,
       facts: { line: episodeFacts(source) },
     }),
-    sections: writtenSections,
-    teaser: (overview) => ({
-      byline: [sourceName(overview.source), "Podcast", episodeLength(overview.source)].filter(Boolean).join(" · "),
-      first: { label: "Premise", text: overview.inOneLine },
-      locked: overviewLocked(overview),
-    }),
+    yourLink: ({ source, episodeWords }, minutes) => {
+      const { notice, stop } = episodeWordsNotice(episodeWords, source.kind === "podcast" ? source.durationMs : null);
+      return stop !== null
+        ? {
+            heading: "We found the episode, but can’t make this one.",
+            line: "Nothing has been used. Paste another link and we’ll start again.",
+            pills: "readListen",
+            inside: INSIDE,
+            stop,
+          }
+        : {
+            heading: "Here’s what’s in the episode you saved.",
+            line: `${fromWhom(episodeLength(source), sourceName(source))}, ${turnedInto(minutes)}`,
+            pills: "readListen",
+            inside: INSIDE,
+            notice,
+          };
+    },
   },
   web: {
     linkKind: (link) => (isArticleLink(link) ? "article" : null),
     keyFromLink: () => null,
     target: ({ link }) => link,
-    make: (target, makers, { onFound, isCancelled, waitToWrite }) =>
-      makers.article(() => makers.readArticle(target), {
-        isCancelled,
-        waitToWrite,
-        onArticleRead: (article) =>
-          void articleSourceId(article.url).then((id) =>
-            onFound({ source: webSource(article, id), recipe: article.recipe, about: pageOpening(article) }),
-          ),
-      }),
+    make: async (target, makers, { onFound, isCancelled, waitToSpend, onSourceWords, onWriting }) => {
+      const read = await makers.readArticle(target);
+      if (read.status === "read") {
+        const id = await articleSourceId(read.article.url);
+        onFound({ source: webSource(read.article, id), recipe: read.article.recipe, about: pageOpening(read.article) });
+        await waitToSpend();
+        if (isCancelled()) throw new GenerationCancelledError();
+        onSourceWords?.(read.article.wordCount);
+      }
+      return makers.article(async () => read, { isCancelled, onWriting });
+    },
     noun: (_linkKind, found) => (found === null ? "page" : found.recipe !== null ? "recipe" : "article"),
-    lead: (found) => (found?.recipe ? "We'll turn it into a recipe you can read, cook from and come back to." : OVERVIEW_LEAD),
     pending: (link) => domainOf(link),
     finding: "Reading the page…",
     notFound: "We couldn't read that page.",
-    fetching: "Reading the page",
-    ready: (found) => (found?.recipe ? "Recipe read" : "Page read"),
-    card: ({ source, recipe }) =>
-      recipe !== null
-        ? { kicker: `${sourceName(source)} · Recipe`, facts: { figures: recipeFigures(recipe) } }
-        : {
-            kicker: `${sourceName(source)} · Article`,
+    card: ({ source, recipe }) => {
+      const domain = source.kind === "web" ? domainOf(source.url) : null;
+      return recipe !== null
+        ? {
+            kicker: `${sourceName(source)} · Recipe`,
             facts: {
-              line: [source.kind === "web" && source.author ? `By ${source.author}` : null, readMinutes(source)]
+              line: [
+                recipe.totalMinutes === null ? null : recipeMinutes(recipe.totalMinutes),
+                recipe.yield === null ? null : `Serves ${recipe.yield}`,
+                domain,
+              ]
                 .filter(Boolean)
                 .join(" · "),
             },
-          },
-    sections: (found) => (found?.recipe ? RECIPE_SECTIONS : writtenSections(found)),
-    teaser: (overview) =>
-      overview.recipe
+          }
+        : { kicker: `${sourceName(source)} · Article`, facts: { line: [readMinutes(source), domain].filter(Boolean).join(" · ") } };
+    },
+    yourLink: ({ source, recipe }, minutes) =>
+      recipe !== null
         ? {
-            byline: [
-              sourceName(overview.source),
-              "Recipe",
-              overview.recipe.totalMinutes === null ? null : recipeMinutes(overview.recipe.totalMinutes),
-            ]
-              .filter(Boolean)
-              .join(" · "),
-            first: { label: "Summary", text: overview.recipe.summary },
-            locked: "The ingredients and method open with an account.",
+            heading: "Here’s the recipe you saved.",
+            line: `${sourceName(source)}’s recipe, ${RECIPE_LINE}`,
+            pills: "cook",
+            inside: RECIPE_INSIDE,
           }
         : {
-            byline: [sourceName(overview.source), "Article", readMinutes(overview.source)].filter(Boolean).join(" · "),
-            first: { label: "Premise", text: overview.inOneLine },
-            locked: overviewLocked(overview),
+            heading: "Here’s what’s in the article you saved.",
+            line: `${source.kind === "web" ? `A ${articleReadMinutes(source.wordCount)}-minute read from ${sourceName(source)}` : `From ${sourceName(source)}`}, ${turnedInto(minutes)}`,
+            pills: "readListen",
+            inside: "Premise, key points, a verdict, steps, and the things it links to.",
           },
   },
 };

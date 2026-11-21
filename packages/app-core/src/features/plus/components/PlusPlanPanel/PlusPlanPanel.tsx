@@ -10,7 +10,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 
 // Design 16c, redrawn by 95d–95h: the plan's name and this month's counts, what every account
 // includes, then every plan as a card carrying both quotas, with the reader's own ringed and
-// named. Signed out, the plan is the trial, and no card is the reader's.
+// named. Signed out there is no plan, and no card is the reader's.
 export function PlusPlanPanel() {
   const { plan, status, recheck } = usePlan();
   const usage = usePlanUsage();
@@ -44,13 +44,13 @@ export function PlusPlanPanel() {
     );
   }
 
-  const onTrial = usage?.signedIn === false;
+  const signedOut = usage?.signedIn === false;
   const transcribes = usage?.signedIn === true && usage.usage.status === "known" && usage.usage.data.transcription !== undefined;
-  const planName = onTrial ? "Trial" : PLAN_LABEL[plan];
+  const planName = signedOut ? "No account" : PLAN_LABEL[plan];
 
   return (
     <section className={styles.root} data-testid={plusPlanPanelTestIds.root}>
-      <p className={styles.eyebrow}>{onTrial ? "Signed out" : "Your plan"}</p>
+      <p className={styles.eyebrow}>{signedOut ? "Signed out" : "Your plan"}</p>
       <p className={styles.planName} data-testid={plusPlanPanelTestIds.planName}>
         {planName}
       </p>

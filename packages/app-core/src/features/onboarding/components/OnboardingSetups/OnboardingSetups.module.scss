@@ -1,0 +1,203 @@
+@use "../../../../theme/controls.scss" as controls;
+@use "../../onboarding" as onboarding;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 1.3125rem;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.lead {
+  @include onboarding.lead;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.slide {
+  position: relative;
+  isolation: isolate;
+  min-height: 9.375rem;
+  box-sizing: border-box;
+  padding: 0.875rem;
+  border-radius: 20px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -5px -12px 8px 8px;
+    z-index: -1;
+    border-radius: 22px;
+    background: var(--surface);
+    opacity: 0.5;
+    transform: rotate(1.2deg);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: slide-in var(--motion-travel) var(--motion-ease) both;
+  }
+}
+
+.title {
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.line {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.appearance {
+  --tile-height: 4.125rem;
+  --tile-padding: 0.5rem 0.25rem 0.4375rem;
+  --theme-height: 2.375rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .themes {
+    background: var(--card);
+  }
+
+  input:hover + .accentFace {
+    background: var(--stone-tint);
+  }
+}
+
+.accentLabel {
+  margin: 0.25rem 0 0;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-tile);
+  background: var(--card);
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rowName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rowLine {
+  font-size: 0.78125rem;
+  color: var(--muted);
+}
+
+.rowAction {
+  @include controls.surface-pill;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 0.84375rem;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.count {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot,
+.dotOn {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.4;
+}
+
+.dotOn {
+  background: var(--ink);
+  opacity: 1;
+}
+
+.arrows {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.arrow {
+  @include controls.surface-pill;
+  @include controls.circle(2.5rem);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

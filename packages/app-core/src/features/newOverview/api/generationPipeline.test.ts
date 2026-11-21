@@ -107,29 +107,12 @@ const makeDeps = ({ held = true }: { held?: boolean } = {}) => {
 };
 
 describe("runOverviewGeneration", () => {
-  it("waits to write until told, and writes with the topics and reader context chosen meanwhile", async () => {
-    const { deps, inputs, addTopic, setAboutYou } = makeDeps();
-    let startWriting!: () => void;
-    const answered = new Promise<void>((resolve) => (startWriting = resolve));
-    let fetched = false;
+  it("writes with a kind already checked, so the writer doesn't check again", async () => {
+    const { deps, inputs } = makeDeps();
 
-    const run = runOverviewGeneration(VIDEO.url, deps, {
-      onProgress: () => (fetched = true),
-      waitToWrite: () => answered,
-    });
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(fetched).toBe(true);
-    expect(inputs).toEqual([]);
+    await runOverviewGeneration(VIDEO.url, deps, { noteKind: "recipe" });
 
-    const food = makeTopic({ name: "Food", description: "Cooking, recipes and eating well." });
-    addTopic(food);
-    setAboutYou({ who: ["nurse"], time: [], focus: ["new recipes"] });
-    startWriting();
-    await run;
-
-    expect(inputs).toHaveLength(1);
-    expect(inputs[0]!.existingTopics).toEqual([food]);
-    expect(inputs[0]!.readerContext).toBe("I'm a nurse, and right now I'm focusing on new recipes.");
+    expect(inputs[0]).toHaveProperty("noteKind", "recipe");
   });
 
   it("times each rung asked, the model and the save on its own clock, and reports the whole however it was answered", async () => {
@@ -175,7 +158,7 @@ describe("runOverviewGeneration", () => {
 
     const run = runOverviewGeneration(VIDEO.url, deps, {
       isCancelled: () => cancelled,
-      waitToWrite: async () => {
+      onProgress: () => {
         cancelled = true;
       },
     });
@@ -331,26 +314,6 @@ describe("runArticleOverviewGeneration", () => {
     expect(made[0]).not.toHaveProperty("transcript");
   });
 
-  it("reads the article at once but waits to write until told, as onboarding's does", async () => {
-    heldId = await articleSourceId(ARTICLE_URL);
-    const { deps, made } = withLibrary(false);
-    let startWriting!: () => void;
-    const answered = new Promise<void>((resolve) => (startWriting = resolve));
-    let read = false;
-
-    const run = runArticleOverviewGeneration(async () => READ, deps, {
-      onArticleRead: () => (read = true),
-      waitToWrite: () => answered,
-    });
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(read).toBe(true);
-    expect(made).toEqual([]);
-
-    startWriting();
-    await run;
-    expect(made).toHaveLength(1);
-  });
-
   it("makes nothing from a page that couldn't be read", async () => {
     const { deps, made } = withLibrary(false);
 
@@ -452,7 +415,7 @@ describe("runPodcastOverviewGeneration", () => {
     expect(input.video.channel).toBe("The Diary Of A CEO");
   });
 
-  it("says writing has started once the words are kept and the reader has let it begin", async () => {
+  it("says writing has started once the words are kept", async () => {
     const { deps } = setUp();
     const key = `podcast:${await podcastSourceId(episode)}`;
     const order: string[] = [];
@@ -469,13 +432,10 @@ describe("runPodcastOverviewGeneration", () => {
       },
       {
         onEpisodeWords: () => order.push("words"),
-        waitToWrite: async () => {
-          order.push("let begin");
-        },
         onWriting: () => order.push("writing"),
       },
     );
-    expect(order).toEqual(["words", "let begin", "writing", "made"]);
+    expect(order).toEqual(["words", "writing", "made"]);
   });
 
   it("makes nothing when no words are found, so nothing is used", async () => {

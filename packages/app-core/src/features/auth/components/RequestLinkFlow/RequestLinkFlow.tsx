@@ -43,7 +43,12 @@ export interface RequestLinkFlowProps {
   // Where a web link should land once it has signed in: a consent screen whose link
   // expired is asked for again without losing the request (docs/features/sign-in.md).
   returnTo?: string | null;
+  // Inside onboarding's account step (327l): its own heading, the reassurance under the button,
+  // switching between creating and signing in in place, and on the web the code first.
+  onboarding?: { onSwitchIntent: (intent: AuthIntent) => void } | undefined;
 }
+
+const NO_CARD = "No card needed. Free includes 5 overviews a month.";
 
 // Asking for a link, then waiting for it: design 9a–9e and 9h on the web, 10b–10e in the
 // extension, where the wait is for a code and outlives the panel being closed
@@ -56,7 +61,7 @@ const sharedAnonymousId = (): { anonymousId?: string } => {
   return consentAllowsSharing(consent) && consent?.anonymousId != null ? { anonymousId: consent.anonymousId } : {};
 };
 
-export function RequestLinkFlow({ intent, expired = false, returnTo = null }: RequestLinkFlowProps) {
+export function RequestLinkFlow({ intent, expired = false, returnTo = null, onboarding }: RequestLinkFlowProps) {
   const surface = useSurface();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -215,11 +220,12 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         />
       );
     }
-    if (codeFromEmail) {
+    if (codeFromEmail || onboarding !== undefined) {
       return (
         <EnterCode
           key="emailCode"
           from="emailCode"
+          codeFirst={onboarding !== undefined}
           intent={sent.intent}
           email={sent.email}
           sentAt={sent.sentAt}
@@ -285,6 +291,48 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null }: Re
         : `We'll email you a link. Open it on ${here} and you're in. There's no password.`;
   const place = inExtension ? "extension" : isPhone ? "phone" : "browser";
   const shortSwitch = isPanel || isPhone;
+
+  if (onboarding !== undefined) {
+    return (
+      <AuthScreen
+        testId={requestLinkFlowTestIds.root}
+        embedded
+        title={creating ? "Create your free account to get your overview." : "Sign in to get your overview."}
+      >
+        <EmailLinkForm
+          intent={intent}
+          submitLabel={creating ? "Create account" : "Email me a code"}
+          initialEmail={lastEmail}
+          askForServer={askForServer}
+          initialServerUrl={knownServer}
+          onboarding
+          note={creating ? NO_CARD : null}
+          {...(creating ? { aboveSubmit: <AccountTermsLine /> } : {})}
+          switchLink={
+            <>
+              {creating ? "Already have an account?" : "New here?"}{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  analytics.account.signIn.switchChosen({ to: creating ? "signIn" : "createAccount" });
+                  onboarding.onSwitchIntent(creating ? "signIn" : "createAccount");
+                }}
+                data-testid={requestLinkFlowTestIds.switchLink}
+              >
+                {creating ? "Sign in" : "Create an account"}
+              </button>
+            </>
+          }
+          sending={requestLink.isPending}
+          refused={refused}
+          onSubmit={({ email, firstName, serverUrl }: EmailLinkFormValues) => {
+            const apiUrl = serverUrl ?? knownServer;
+            if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
+          }}
+        />
+      </AuthScreen>
+    );
+  }
 
   return (
     <AuthScreen

@@ -25,9 +25,6 @@ import {
   type RunOverviewGenerationOptions,
 } from "./api/generationPipeline.js";
 import { makeOverviewOnKeys, type OverviewMeta } from "./api/makeOverviewOnKeys.js";
-import { createTrialGenerationApi } from "../signedOutTrial/api/createTrialGenerationApi.js";
-import { createTrialPodcastApi } from "../signedOutTrial/api/createTrialPodcastApi.js";
-import { currentSignedOutTrial } from "../signedOutTrial/useSignedOutTrial.js";
 import { useOurKeyStatusQuery } from "./queries/ourKeyStatusQuery.js";
 import { useOverviewUsageQuery } from "./queries/overviewUsageQuery.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
@@ -46,12 +43,10 @@ type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptSto
 
 // One generation with everything this shell has to make it: the transcript rungs it can
 // ask, the reader's own key and model for the provider they chose, our key, in the order
-// the plan sets, and the library to save into. Signed out where there are accounts it is
-// onboarding's one overview, on us through the device's trial and never on the reader's key
+// the plan sets, and the library to save into. Nothing is made signed out where there are accounts
 // (docs/architecture/tiers.md, "Signed out"). Shared by a run the reader starts and by the
 // capture queue (docs/features/capture-queue.md). The library is the one shown, unless the
-// run brings its own: onboarding's keeps writing where it started once the reader signs in
-// (docs/features/onboarding.md, "Into the account").
+// run brings its own.
 export function useRunOverviewGeneration(apiKeys: ApiKeys) {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
@@ -59,7 +54,6 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
   const knownApiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const reporter = useErrorReporter();
-  const signedIn = libraryAccountIdOf(connection) !== null;
 
   return useCallback(
     async (url: string, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
@@ -68,10 +62,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
         {
           sources: createTranscriptSources({
             youTubeFetch,
-            service:
-              knownApiUrl === null
-                ? null
-                : { apiUrl: knownApiUrl, token: connection.token, trialToken: signedIn ? null : currentSignedOutTrial().token },
+            service: knownApiUrl === null ? null : { apiUrl: knownApiUrl, token: connection.token },
           }),
           makeOverview: makeWith(),
           overviewStore: stores.overviewStore,
@@ -85,7 +76,7 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
       )
         .then((overview) => learnFrom(overview, stores))
         .finally(settled),
-    [makeWith, learnFrom, settled, signedIn, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
+    [makeWith, learnFrom, settled, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
   );
 }
 
@@ -111,7 +102,7 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
   );
 }
 
-// An episode's words come through our server, on the account or signed out on the trial; the reader's
+// An episode's words come through our server, on the account; the reader's
 // extension searches YouTube for the episode on their own connection when it can
 // (docs/features/podcast-on-youtube.md). Or its audio is transcribed, as the reader chose, with the
 // events of that measured here, wherever the run was started (docs/features/speech-to-text.md).
@@ -122,14 +113,11 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
   const youTubeFetch = useYouTubeFetch();
   const knownApiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
-  const signedIn = libraryAccountIdOf(connection) !== null;
 
   return useCallback(
     async (request: PodcastRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
       if (knownApiUrl === null) throw new Error("Episodes are read through our server, and there isn't one here");
-      const api = signedIn
-        ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token })
-        : createTrialPodcastApi({ baseUrl: knownApiUrl });
+      const api = createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token });
       const from = options.from ?? "dialog";
       const episodeMinutes = {
         episodeMinutes: request.episode.durationSeconds === null ? undefined : Math.round(request.episode.durationSeconds / 60),
@@ -182,7 +170,7 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
         .then((overview) => learnFrom(overview, stores))
         .finally(settled);
     },
-    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, signedIn, analytics],
+    [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, analytics],
   );
 }
 
@@ -213,7 +201,6 @@ function useOverviewMaker(apiKeys: ApiKeys) {
       order,
       own: apiKey === undefined ? null : { provider, model, client: createGenerationClient(provider, apiKey, model) },
       api: signedIn && knownApiUrl !== null ? createFetchGenerationApi({ baseUrl: knownApiUrl, token: connection.token }) : null,
-      trial: !signedIn && knownApiUrl !== null ? createTrialGenerationApi({ baseUrl: knownApiUrl }) : null,
       ourModel: ourProvider === undefined || ourModelId === undefined ? null : { provider: ourProvider, model: ourModelId },
     };
   }, [

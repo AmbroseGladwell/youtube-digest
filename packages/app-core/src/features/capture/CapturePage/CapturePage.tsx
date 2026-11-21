@@ -1,4 +1,4 @@
-import { domainOf, formatClock, timeSavedSummary } from "@overview/domain";
+import { DEFAULT_PLAN, domainOf, formatClock, timeSavedSummary } from "@overview/domain";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import type { Overview } from "@overview/domain";
@@ -8,6 +8,11 @@ import { useActivePage, useArticlePages } from "../../../app/ArticlePagesContext
 import { isOfferedPage } from "../../../app/isOfferedPage.js";
 import { LimitMessageNote } from "../../newOverview/components/LimitMessageNote/LimitMessageNote.js";
 import { useLimitMessage } from "../../newOverview/useLimitMessage.js";
+import { useNextQuota } from "../../newOverview/useNextQuota.js";
+import { useOverviewUsageQuery } from "../../newOverview/queries/overviewUsageQuery.js";
+import { resetDate } from "../../newOverview/util/usageLine.js";
+import { SoftWall } from "../../newOverview/components/SoftWall/SoftWall.js";
+import { PlansModal } from "../../plus/components/PlansModal/PlansModal.js";
 import { UsageLine } from "../../newOverview/components/UsageLine/UsageLine.js";
 import { RunErrorMessage } from "../../newOverview/components/RunErrorMessage/RunErrorMessage.js";
 import { useGenerationReadiness } from "../../newOverview/useGenerationReadiness.js";
@@ -80,6 +85,12 @@ export function CapturePage() {
   const readiness = useGenerationReadiness();
   const keysReady = readiness.ready;
   const limit = useLimitMessage();
+  const next = useNextQuota();
+  const plan = useOverviewUsageQuery().data?.plan ?? DEFAULT_PLAN;
+  // The panel's offer page becomes the wall for a Free or BYO Plus reader at the limit, so the
+  // Overview button never fails silently (327ac).
+  const walled = limit !== null && plan !== "plus" && next?.kind === "spent" ? next : null;
+  const [plansOpen, setPlansOpen] = useState(false);
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
   const milestones = useMilestones(timeSaved.minutes, overviewsQuery.data !== undefined);
   const sync = useSync();
@@ -313,6 +324,23 @@ export function CapturePage() {
           <EpisodeNoTranscript />
         ) : episodeStopped ? null : episodeTab?.status === "found" && episodeAction?.kind === "stop" ? (
           <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />
+        ) : walled !== null ? (
+          <>
+            <SoftWall
+              link={{
+                kicker: null,
+                title: episodeTab?.status === "found" ? episodeTab.episode.title : (offeredPage?.title ?? activeVideoUrl ?? "This link"),
+              }}
+              resetsOn={resetDate(walled.resetsOn, true)}
+              offerKey={plan === "free" && !readiness.hasChosenKey}
+              onSeePlans={() => {
+                analytics.capture.newOverviewForm.plansOpened({ from: "wall" });
+                setPlansOpen(true);
+              }}
+              onFollowed={() => undefined}
+            />
+            <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
+          </>
         ) : limit !== null ? (
           <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />
         ) : (

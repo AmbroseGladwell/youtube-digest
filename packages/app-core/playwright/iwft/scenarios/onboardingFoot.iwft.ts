@@ -5,11 +5,10 @@ import type { Launcher } from "../../support/Launcher.testHelper.js";
 import type { BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { onboardingAboutYouTestIds } from "../../../src/features/onboarding/components/OnboardingAboutYou/OnboardingAboutYouTestIds.js";
 import { onboardingAnalyticsTestIds } from "../../../src/features/onboarding/components/OnboardingAnalytics/OnboardingAnalyticsTestIds.js";
+import { onboardingProjectsCardTestIds } from "../../../src/features/onboarding/components/OnboardingProjectsCard/OnboardingProjectsCardTestIds.js";
 import { onboardingTopicsTestIds } from "../../../src/features/onboarding/components/OnboardingTopics/OnboardingTopicsTestIds.js";
-import { onboardingVoiceTestIds } from "../../../src/features/onboarding/components/OnboardingVoice/OnboardingVoiceTestIds.js";
 import { onboardingPageTestIds } from "../../../src/features/onboarding/OnboardingPage/OnboardingPageTestIds.js";
 import { aboutYouSheetTestIds } from "../../../src/features/settings/components/AboutYouSheet/AboutYouSheetTestIds.js";
-import { narrationVoicePickerTestIds } from "../../../src/features/settings/components/NarrationVoicePicker/NarrationVoicePickerTestIds.js";
 
 // OV-210, designs 210a–210k: Continue never scrolls off an onboarding step. The step's content
 // scrolls and its foot stays at the bottom, topped with OV-166's fade, mirrored, while there
@@ -17,16 +16,19 @@ import { narrationVoicePickerTestIds } from "../../../src/features/settings/comp
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const PHONE = { width: 390, height: 844 };
 const PHONE_AT_200 = { width: 195, height: 422 };
-const WIDE = { width: 1440, height: 640 };
-const LAST_VOICE = "bf_isabella";
+// Tall enough for the projects card to fit whole beside the flow (on a shorter window it scrolls
+// up at the end so its foot can be seen), short enough that the topics step still scrolls.
+const WIDE = { width: 1440, height: 720 };
 
-const reachTopics = async (launcher: Launcher, backendSimulator: BackendSimulator) => {
+const reachTopics = async (launcher: Launcher, backendSimulator: BackendSimulator, { allTopics = true } = {}) => {
   backendSimulator.ourKey.isAvailable();
   const home = await launcher.launch({ sync: true });
   await home.submitHeroUrl(VIDEO_URL);
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.confirmVideo();
+  await onboarding.continueFromSaving();
   await onboarding.verifyOnScreen("topics");
+  if (allTopics) await onboarding.seeAllTopics();
   return onboarding;
 };
 
@@ -36,7 +38,7 @@ const useATouchScreen = async (page: Page) => {
   await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
 };
 
-test("on a phone Continue is on screen on arrival at topics, and the list scrolls under the foot's fade to its end", async ({
+test("on a phone Continue is on screen with all topics open, and the list scrolls under the foot's fade to its end", async ({
   page,
   launcher,
   backendSimulator,
@@ -55,34 +57,7 @@ test("on a phone Continue is on screen on arrival at topics, and the list scroll
   await onboarding.verifyClearOfTheFoot(onboardingTopicsTestIds.count, onboardingTopicsTestIds.continue);
   await onboarding.verifyPageDoesNotScrollSideways();
   await onboarding.continueFromTopics();
-  await onboarding.verifyOnScreen("library");
-});
-
-test("on a phone the voice list scrolls under the foot, and the last voice comes clear of it and can be chosen", async ({
-  page,
-  launcher,
-  backendSimulator,
-}) => {
-  await page.setViewportSize(PHONE);
-  const onboarding = await reachTopics(launcher, backendSimulator);
-  for (const step of ["topics", "library", "aboutYou", "stepsForYou"] as const) {
-    await onboarding.verifyOnScreen(step);
-    await onboarding.skip();
-  }
-  await onboarding.verifyOnScreen("voice");
-
-  await onboarding.verifyStepOverflows(true);
-  await onboarding.verifyContinueInReachWithoutScrolling(onboardingVoiceTestIds.continue);
-  await onboarding.verifyFootFadeIsShown(onboardingVoiceTestIds.continue, true);
-  await onboarding.verifyFootSitsOnTheWindowsEdge(onboardingVoiceTestIds.continue);
-
-  await onboarding.scrollStepToTheEnd();
-
-  await onboarding.verifyClearOfTheFoot(narrationVoicePickerTestIds.row(LAST_VOICE), onboardingVoiceTestIds.continue);
-  await onboarding.voicePicker.chooseVoice(LAST_VOICE);
-  await onboarding.voicePicker.verifyChosen(LAST_VOICE);
-  await onboarding.continueFromVoice();
-  await onboarding.verifyOnScreen("askYourAi");
+  await onboarding.verifyOnScreen("knowledgeBase");
 });
 
 // Design 210d: the foot is pinned on every step, so one that fits keeps it where it was.
@@ -124,7 +99,7 @@ test("on a touch screen the foot stands aside while a topic is typed, and Pick k
 // Design 210f: at 200% zoom a phone is 195 × 422 CSS px.
 test("at 200% zoom on a phone Continue is still on screen on arrival", async ({ page, launcher, backendSimulator }) => {
   await page.setViewportSize(PHONE_AT_200);
-  const onboarding = await reachTopics(launcher, backendSimulator);
+  const onboarding = await reachTopics(launcher, backendSimulator, { allTopics: false });
 
   await onboarding.verifyContinueInReachWithoutScrolling(onboardingTopicsTestIds.continue);
   await onboarding.scrollStepToTheEnd();
@@ -132,8 +107,8 @@ test("at 200% zoom on a phone Continue is still on screen on arrival", async ({ 
 });
 
 // Design 210h: the foot pins inside the flow column, the stepper stays at its top, and the
-// preview beside them doesn't move.
-test("on a wide screen Continue is in reach in the flow column, and only the flow scrolls beside the preview", async ({
+// topics-and-projects card beside them doesn't move (327f).
+test("on a wide screen Continue is in reach in the flow column, and only the flow scrolls beside the projects card", async ({
   page,
   launcher,
   backendSimulator,
@@ -146,7 +121,7 @@ test("on a wide screen Continue is in reach in the flow column, and only the flo
   await onboarding.verifyFootFadeIsShown(onboardingTopicsTestIds.continue, true);
   await onboarding.verifyFootSitsOnTheWindowsEdge(onboardingTopicsTestIds.continue);
 
-  await onboarding.verifyPreviewStaysPut(() => onboarding.scrollStepToTheEnd());
+  await onboarding.verifyAsideStaysPut(onboardingProjectsCardTestIds.root, () => onboarding.scrollStepToTheEnd());
 
   await onboarding.verifyFootFadeIsShown(onboardingTopicsTestIds.continue, false);
   await onboarding.verifyFadeHangsFrom(onboardingPageTestIds.stepper);
@@ -163,8 +138,9 @@ test("on a wide screen opening a section of the sentence brings its Done clear o
 }) => {
   await page.setViewportSize({ width: 1024, height: 760 });
   const onboarding = await reachTopics(launcher, backendSimulator);
-  await onboarding.skip();
-  await onboarding.skip();
+  await onboarding.continueFromTopics();
+  await onboarding.continueFromKnowledgeBase();
+  await onboarding.addContextAboutYou();
   await onboarding.verifyOnScreen("aboutYou");
 
   await onboarding.sentence.openSection("focus");

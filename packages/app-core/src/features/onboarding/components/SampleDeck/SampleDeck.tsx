@@ -23,6 +23,8 @@ type Layout = "deck" | "gather" | "list" | "stack";
 
 export interface SampleDeckProps {
   samples: readonly Sample[];
+  // Where the deck opens; Start picks it at random each visit (327b).
+  firstIndex?: number;
   phone: boolean;
   onFront: (sample: Sample) => void;
 }
@@ -32,13 +34,13 @@ export interface SampleDeckProps {
 // the visit, and the arrows step by hand. See all unfolds it into a list in deck order. With
 // reduced motion it doesn't cycle until Play, and every change is a crossfade
 // (docs/features/onboarding.md, "Try a sample").
-export function SampleDeck({ samples, phone, onFront }: SampleDeckProps) {
+export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDeckProps) {
   const n = samples.length;
   const g = phone ? GEOMETRY.phone : GEOMETRY.wide;
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   const headingId = useId();
   const { opening, busy, failed, open } = useStartFromSample();
-  const [front, setFrontIndex] = useState(0);
+  const [front, setFrontIndex] = useState(firstIndex);
   const [layout, setLayout] = useState<Layout>("deck");
   const [paused, setPaused] = useState(false);
   const [userPlay, setUserPlay] = useState(false);

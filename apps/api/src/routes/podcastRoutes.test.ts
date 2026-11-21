@@ -229,7 +229,6 @@ test("signed out, onboarding's trial reads a podcast link, and the read counts a
       ourKey: {
         apiKey: "sk-test-ours",
         dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
         dailyChatMessages: 20_000,
         http: makeFakeOpenAi().http,
       },
@@ -246,34 +245,16 @@ test("signed out, onboarding's trial reads a podcast link, and the read counts a
   await testApp.close();
 });
 
-test("signed out, a trial finds an episode's words until it has made its one overview", async () => {
+test("signed out, a trial reads an episode but finding its words waits for an account", async () => {
   const web = scriptedWeb({
     [EPISODE.feedUrl]: { body: FEED_XML, type: "application/rss+xml" },
     "https://show.example/ep1.vtt": { body: VTT, type: "text/vtt" },
   });
-  const testApp = await createTestApp(
-    {},
-    {
-      podcastWeb: web.podcastWeb,
-      ourKey: {
-        apiKey: "sk-test-ours",
-        dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
-        dailyChatMessages: 20_000,
-        http: makeFakeOpenAi().http,
-      },
-    },
-  );
+  const testApp = await createTestApp({}, { podcastWeb: web.podcastWeb });
   const device = await makeTrialDevice(testApp);
-  const episode = { feedUrl: EPISODE.feedUrl, guid: EPISODE.guid };
 
-  const found = await device.podcastTranscript(episode);
-  assert.equal(found.statusCode, 200);
-  assert.deepEqual(found.json().segments, [{ text: "Hello there.", startMs: 1000, endMs: 3000 }]);
+  const words = await device.podcastTranscript({ feedUrl: EPISODE.feedUrl, guid: EPISODE.guid });
 
-  assert.equal((await device.generate()).statusCode, 200);
-  const afterwards = await device.podcastTranscript(episode);
-  assert.equal(afterwards.statusCode, 429);
-  assert.equal(afterwards.json().error.details.quota, "trial");
+  assert.equal(words.statusCode, 401);
   await testApp.close();
 });

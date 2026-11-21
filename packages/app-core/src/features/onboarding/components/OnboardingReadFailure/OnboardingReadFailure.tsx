@@ -58,7 +58,7 @@ export function OnboardingReadFailure({ copy, link, onTryAgain, onTranscribe, on
 
       <form id={`${fieldId}-form`} className={styles.form} onSubmit={submit}>
         <label htmlFor={fieldId} className={styles.label}>
-          {copy.videoOnly ? "Try a video link" : "Try another link"}
+          Try another link
         </label>
         <span className={styles.field}>
           <input
@@ -69,7 +69,7 @@ export function OnboardingReadFailure({ copy, link, onTryAgain, onTranscribe, on
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder={copy.videoOnly ? "Paste a video link" : "Paste a link to a video or a page"}
+            placeholder="Paste a link to a video or a page"
             value={another}
             aria-describedby={refused ? `${fieldId}-refused` : undefined}
             onChange={(event) => {

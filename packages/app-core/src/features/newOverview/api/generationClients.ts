@@ -16,10 +16,8 @@ export function createGenerationClient(provider: Provider, apiKey: string, model
 
 export interface TranscriptSourceOptions {
   youTubeFetch: YouTubeFetch | null;
-  // Where our own server is asked to fetch, last, and the session it counts against: none
-  // counts against the reader's address, and signed out the trial's token, when the device
-  // holds one, lets it refuse a trial already spent on our key. Null never asks it.
-  service: { apiUrl: string; token: string | null; trialToken?: string | null } | null;
+  // Where our own server is asked to fetch, last, and the session it counts against. Null never asks it.
+  service: { apiUrl: string; token: string | null } | null;
 }
 
 // The rungs this surface can actually reach, in the order they are asked: the free ones
@@ -30,14 +28,6 @@ export function createTranscriptSources(options: TranscriptSourceOptions): Trans
     ...(options.youTubeFetch === null ? [] : [innerTubeTranscriptSource(options.youTubeFetch)]),
     ...(options.service === null
       ? []
-      : [
-          serviceTranscriptSource(
-            createFetchServiceTranscriptApi({
-              baseUrl: options.service.apiUrl,
-              token: options.service.token,
-              trialToken: options.service.trialToken ?? null,
-            }),
-          ),
-        ]),
+      : [serviceTranscriptSource(createFetchServiceTranscriptApi({ baseUrl: options.service.apiUrl, token: options.service.token }))]),
   ];
 }

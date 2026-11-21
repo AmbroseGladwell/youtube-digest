@@ -18,11 +18,8 @@ export interface OverviewKeys {
   // The reader's own key, when they have one on this device.
   own: { provider: Provider; model: string; client: GenerationClient } | null;
   // Our server, for a signed-in reader: our key, and the reservations an own-key overview
-  // takes on the account's month. Null signed out, where the device counts its own trial.
+  // takes on the account's month. Null signed out, where nothing is made on us (OV-327).
   api: GenerationApi | null;
-  // Signed out, our key through the device's trial, which the server counts only on our key
-  // (docs/architecture/tiers.md, "Counting").
-  trial?: Pick<GenerationApi, "generate"> | null;
   // Our key's provider and model, as our server says them, for analytics. Null when it
   // didn't say.
   ourModel?: { provider: Provider; model: ModelId } | null;
@@ -44,7 +41,7 @@ export interface OverviewMeta {
   onProjectsFiled?: ((projectIds: ProjectId[]) => void) | undefined;
 }
 
-const SPENT_QUOTAS = new Set(["ours", "own", "trial", "trial-address"]);
+const SPENT_QUOTAS = new Set(["ours", "own"]);
 
 // Why a key couldn't make the overview, when that is a reason to try the next one. Null is
 // a failure the reader has to see, such as a refused key (design 110f).
@@ -70,7 +67,7 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
 // counts on its own key and gives its slot back when it fails, so a fallback counts once,
 // on the key that made it.
 export async function makeOverviewOnKeys(
-  { order, own, api, trial = null, ourModel = null }: OverviewKeys,
+  { order, own, api, ourModel = null }: OverviewKeys,
   input: OverviewInput,
   meta: OverviewMeta,
 ): Promise<Overview> {
@@ -79,10 +76,10 @@ export async function makeOverviewOnKeys(
     meta.onAttempt?.(
       key === "own"
         ? { key, provider: own!.provider, model: own!.model }
-        : { key: api === null ? "trial" : "ours", provider: ourModel?.provider, model: ourModel?.model },
+        : { key: "ours", provider: ourModel?.provider, model: ourModel?.model },
     );
     try {
-      const overview = key === "own" ? await onOwnKey(own!, api, input, meta) : await onOurKey((api ?? trial)!, input, meta);
+      const overview = key === "own" ? await onOwnKey(own!, api, input, meta) : await onOurKey(api, input, meta);
       return { ...overview, madeOn: { key, fallback: passedOver } };
     } catch (error) {
       const cause = fallbackCauseOf(error);
@@ -95,7 +92,8 @@ export async function makeOverviewOnKeys(
   throw new Error("There is no key to make this overview with.");
 }
 
-async function onOurKey(api: Pick<GenerationApi, "generate">, input: OverviewInput, meta: OverviewMeta): Promise<Overview> {
+async function onOurKey(api: Pick<GenerationApi, "generate"> | null, input: OverviewInput, meta: OverviewMeta): Promise<Overview> {
+  if (api === null) throw new Error("An overview is made on us only with an account.");
   const { filedProjectIds, ...overview } = await api.generate({ overviewId: meta.id, input });
   meta.onProjectsFiled?.(filedProjectIds);
   return overview;

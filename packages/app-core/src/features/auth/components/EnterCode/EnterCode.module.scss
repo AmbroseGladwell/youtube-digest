@@ -66,6 +66,20 @@
   @include auth.secondary;
 }
 
+// Design 327l-2: in onboarding the button comes straight under the code, then the line about
+// the link, then the other ways out, the resend as a plain link.
+.codeFirst {
+  .footer {
+    margin-top: 0;
+    flex-direction: column-reverse;
+  }
+
+  .linkActions {
+    order: 1;
+    justify-content: flex-start;
+  }
+}
+
 .footer {
   margin-top: auto;
   display: flex;

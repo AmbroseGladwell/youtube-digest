@@ -26,6 +26,7 @@ export const rateLimits = {
   topicSuggestionPerAddress: { name: "topicSuggestionAddress", limit: 20, windowMs: DAY_MS },
   articleReadPerAddress: { name: "articleReadAddress", limit: 120, windowMs: HOUR_MS },
   podcastReadPerAddress: { name: "podcastReadAddress", limit: 120, windowMs: HOUR_MS },
+  videoReadPerAddress: { name: "videoReadAddress", limit: 120, windowMs: HOUR_MS },
   podcastTranscriptPerAddress: { name: "podcastTranscriptAddress", limit: 120, windowMs: HOUR_MS },
   transcriptionPerAddress: { name: "transcriptionAddress", limit: 20, windowMs: HOUR_MS },
   trialPerAddress: { name: "trialAddress", limit: 10, windowMs: HOUR_MS },

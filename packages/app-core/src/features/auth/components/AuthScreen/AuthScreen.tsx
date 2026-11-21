@@ -11,12 +11,14 @@ export interface AuthScreenProps {
   lead?: ReactNode;
   compactTitle?: boolean;
   testId?: string | undefined;
+  // Inside another screen, as onboarding's account step holds it (327l): no page padding of its own.
+  embedded?: boolean;
   children?: ReactNode;
 }
 
 // Design 9's one column and 10's panel: every step of signing in is this screen with a
 // different heading, so the heading takes focus whenever a step arrives.
-export function AuthScreen({ title, icon, kicker, lead, compactTitle = false, testId, children }: AuthScreenProps) {
+export function AuthScreen({ title, icon, kicker, lead, compactTitle = false, testId, embedded = false, children }: AuthScreenProps) {
   const isPanel = useIsPanel();
   const heading = useRef<HTMLHeadingElement | null>(null);
 
@@ -25,7 +27,7 @@ export function AuthScreen({ title, icon, kicker, lead, compactTitle = false, te
   }, [title]);
 
   return (
-    <div className={`${styles.root} ${isPanel ? styles.panel : ""}`} data-testid={testId}>
+    <div className={`${styles.root} ${isPanel ? styles.panel : ""} ${embedded ? styles.embedded : ""}`} data-testid={testId}>
       <div className={styles.column}>
         {icon !== undefined && (
           <span className={styles.badge}>

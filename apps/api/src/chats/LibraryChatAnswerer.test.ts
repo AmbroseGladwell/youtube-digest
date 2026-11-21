@@ -46,7 +46,6 @@ async function setUp(t: TestContext, answers: FakeChatAnswer[], { wholeCharacter
       ourKey: {
         apiKey: "sk-test-ours",
         dailyGenerations: 300,
-        signedOutDailyGenerations: 50,
         dailyChatMessages: 20_000,
         http: openAi.http,
         sleep: async () => {},

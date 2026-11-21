@@ -13,7 +13,14 @@ import { PageObject } from "./PageObject.testHelper.js";
 // Every step of signing in and creating an account: /sign-in and /create-account are the
 // one flow with a different first screen (docs/features/sign-in.md).
 export class SignInPageObject extends PageObject {
-  verifyAsksForEmail = (title: "Sign in" | "Create your account" | "That link has expired"): Promise<SignInPageObject> =>
+  verifyAsksForEmail = (
+    title:
+      | "Sign in"
+      | "Create your account"
+      | "That link has expired"
+      | "Create your free account to get your overview."
+      | "Sign in to get your overview.",
+  ): Promise<SignInPageObject> =>
     this.step(`verifyAsksForEmail ${title}`, async () => {
       await this.expectToBeVisible(requestLinkFlowTestIds.root);
       await expect(this.get(authScreenTestIds.title)).toHaveText(title);
@@ -110,6 +117,9 @@ export class SignInPageObject extends PageObject {
       await this.get(enterCodeTestIds.codeInput).fill(code);
       await this.click(enterCodeTestIds.connectButton);
     });
+
+  // Inside onboarding the code comes first and sends itself once all 8 characters are in (327l-2).
+  typeCode = (code: string) => this.step(`typeCode ${code}`, () => this.get(enterCodeTestIds.codeInput).fill(code));
 
   verifyCodeErrorReads = (pattern: RegExp) =>
     this.step(`verifyCodeErrorReads ${pattern.source}`, () => expect(this.get(enterCodeTestIds.error)).toHaveText(pattern));

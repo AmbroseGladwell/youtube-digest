@@ -17,60 +17,10 @@
   @include onboarding.lead;
 }
 
-.why {
-  margin: 0;
-  padding: 0.875rem 1rem;
-  border-radius: 1.25rem;
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.whyTitle {
+.label {
   font-size: 0.8125rem;
   font-weight: 600;
-}
-
-.whyBody {
-  margin: 0;
-  font-size: 0.84375rem;
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-
-.whyExample {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem 0.875rem;
-  padding-top: 0.25rem;
-  font-size: 0.84375rem;
-  line-height: 1.45;
-
-  @media (min-width: 64rem) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.whyStep {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.whyLabel,
-.whyLabelYou {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.whyLabelYou {
-  color: var(--on-stone-tint);
-}
-
-.whyMuted {
-  color: var(--muted);
+  color: var(--label);
 }
 
 .costNote {

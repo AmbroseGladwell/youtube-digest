@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { onboardingNextStepsTestIds } from "../../src/features/onboarding/components/OnboardingNextSteps/OnboardingNextStepsTestIds.js";
+import { CHROME_EXTENSION_URL } from "../../src/util/chromeExtensionUrl.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 export class OnboardingNextStepsPageObject extends PageObject {
@@ -19,8 +20,12 @@ export class OnboardingNextStepsPageObject extends PageObject {
 
   verifyIsAbsent = () => this.step("verifyIsAbsent", () => this.expectNotToBeVisible(onboardingNextStepsTestIds.root));
 
-  verifyExtensionCantBeAddedYet = () =>
-    this.step("verifyExtensionCantBeAddedYet", () => expect(this.get(onboardingNextStepsTestIds.action("extension"))).toBeDisabled());
+  verifyExtensionLinksToTheStore = () =>
+    this.step("verifyExtensionLinksToTheStore", async () => {
+      const link = this.get(onboardingNextStepsTestIds.action("extension"));
+      await expect(link).toHaveAttribute("href", CHROME_EXTENSION_URL);
+      await expect(link).toHaveAttribute("target", "_blank");
+    });
 
   dismiss = (step: "own" | "extension" | "ai") => this.step(`dismiss ${step}`, () => this.click(onboardingNextStepsTestIds.dismiss(step)));
 
