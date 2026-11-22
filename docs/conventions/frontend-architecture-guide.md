@@ -617,7 +617,9 @@ fine. What has to hold:
   refuses a `px` font size in lint and in the pre-commit hook.
 - **Nothing runs off the side.** The page never scrolls sideways at 320 CSS px wide.
 - **Overlays stay reachable.** A menu, sheet or dialog either fits or scrolls inside, and
-  its scroll area shows at least a quarter of the screen.
+  its scroll area shows at least a quarter of the screen. A menu hung from a sticky bar,
+  which the page's own scroll can't reveal, caps itself with `shortScreens.fits-below`
+  (the account menu, OV-386).
 - **Bars leave room.** Fixed and sticky bars together cover at most half the screen; on a
   short screen they scroll away or fold. `theme/shortScreens.scss` holds the heights
   (`short-screen`, `very-short-screen`, both in `rem`, so 200% text counts as shorter). A

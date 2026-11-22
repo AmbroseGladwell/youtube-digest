@@ -181,6 +181,8 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
+  verifyActionsCanBeReached = () => this.verifyControlsCanBeReached(this.get(overviewActionsMenuTestIds.menu));
+
   verifyActionsMenuIsShown = (shown: boolean) =>
     this.step(`verifyActionsMenuIsShown ${shown}`, () =>
       shown ? this.expectToBeVisible(overviewActionsMenuTestIds.menu) : this.expectNotToBeVisible(overviewActionsMenuTestIds.menu),
