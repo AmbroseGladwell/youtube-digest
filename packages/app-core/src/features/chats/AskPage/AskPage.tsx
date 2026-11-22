@@ -238,6 +238,7 @@ export function AskPage() {
           openChatId={page.chat?.id ?? null}
           now={now}
           projectName={(id) => projects.find((each) => each.id === id)?.name ?? null}
+          overviewTitle={(id) => (library === undefined ? "" : (overviewOf(id)?.source.title ?? null))}
           sheet={isPhone}
           trigger={drawerButton}
           onNew={() => {

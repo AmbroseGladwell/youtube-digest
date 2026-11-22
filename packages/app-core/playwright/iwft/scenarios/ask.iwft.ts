@@ -162,7 +162,7 @@ test.describe("Ask", () => {
     await ask.verifyPinnedRead(0, [PLANTS]);
   });
 
-  test("the drawer is a column at the left listing library and project conversations by day, never an overview's; it opens one beside it, and a deleted one comes back with Undo", async ({
+  test("the drawer is a column at the left listing library, project and overview conversations by day; it opens a library or project one beside it, and a deleted one comes back with Undo", async ({
     launcher,
     backendSimulator,
     page,
@@ -172,6 +172,7 @@ test.describe("Ask", () => {
     backendSimulator.overviews.seedSynced(plants);
     backendSimulator.projects.seed(dinner);
     const today = new Date().toISOString();
+    const earlierToday = new Date(Date.now() - 60_000).toISOString();
     const yesterday = new Date(Date.now() - 86_400_000).toISOString();
     const libraryChat = "5d1c3e8a-0f4b-4a52-9c3e-2b7a1d9e6f01";
     const projectChat = "6e2d4f9b-1a5c-4b63-8d4f-3c8b2e0f7a12";
@@ -180,7 +181,7 @@ test.describe("Ask", () => {
       conversation(`project:${dinner.id}:${projectChat}`, "What should I cook first?", yesterday, { projectId: dinner.id }),
     );
     backendSimulator.chats.seed(
-      conversation(`${plants.id}:7f3e5a0c-2b6d-4c74-9e5a-4d9c3f1a8b23`, "How much?", today, { overviewId: plants.id }),
+      conversation(`${plants.id}:7f3e5a0c-2b6d-4c74-9e5a-4d9c3f1a8b23`, "How much?", earlierToday, { overviewId: plants.id }),
     );
     await launcher.launchExpectingLibrary(SIGNED_IN);
     await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(1);
@@ -190,11 +191,11 @@ test.describe("Ask", () => {
 
     await ask.verifyDrawerIsSheet(false);
     await ask.verifyDrawerReads([
-      "Today: What do my overviews agree on? · Your library",
+      `Today: What do my overviews agree on? · Your library, How much? · ${PLANTS}`,
       "Yesterday: What should I cook first? · Dinner Recipes",
     ]);
 
-    await ask.openDrawerConversation(1);
+    await ask.openDrawerConversation(2);
 
     await ask.verifyDrawerIsOpen(true);
     await ask.verifyQuestionsRead(["What should I cook first?"]);
@@ -203,12 +204,12 @@ test.describe("Ask", () => {
     await ask.deleteDrawerConversation(0);
 
     await ask.verifyToastReads("Conversation deletedUndo");
-    await ask.verifyDrawerReads(["Yesterday: What should I cook first? · Dinner Recipes"]);
+    await ask.verifyDrawerReads([`Today: How much? · ${PLANTS}`, "Yesterday: What should I cook first? · Dinner Recipes"]);
 
     await ask.undo();
 
     await ask.verifyDrawerReads([
-      "Today: What do my overviews agree on? · Your library",
+      `Today: What do my overviews agree on? · Your library, How much? · ${PLANTS}`,
       "Yesterday: What should I cook first? · Dinner Recipes",
     ]);
 
@@ -219,6 +220,56 @@ test.describe("Ask", () => {
     await ask.closeDrawer();
 
     await ask.verifyDrawerIsOpen(false);
+  });
+
+  test("an overview's conversation in the drawer opens on that overview with its chat open on it, and deletes with Undo (OV-363)", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
+    backendSimulator.overviews.seedSynced(plants);
+    const today = new Date().toISOString();
+    const earlierToday = new Date(Date.now() - 60_000).toISOString();
+    backendSimulator.chats.seed(
+      conversation(`${plants.id}:1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d`, "How much a day?", today, { overviewId: plants.id }),
+    );
+    backendSimulator.chats.seed(
+      conversation(`${plants.id}:2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e`, "Which beans?", earlierToday, { overviewId: plants.id }),
+    );
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.list(plants.id)).toHaveLength(2);
+    const ask = await launcher.appShell.openAsk();
+    await ask.openDrawer();
+    await ask.verifyDrawerReads([`Today: How much a day? · ${PLANTS}, Which beans? · ${PLANTS}`]);
+
+    await ask.deleteDrawerConversation(0);
+
+    await ask.verifyToastReads("Conversation deletedUndo");
+    await ask.verifyDrawerReads([`Today: Which beans? · ${PLANTS}`]);
+
+    await ask.undo();
+
+    await ask.verifyDrawerReads([`Today: How much a day? · ${PLANTS}, Which beans? · ${PLANTS}`]);
+
+    const reader = await ask.openDrawerOverviewConversation(1);
+
+    await expect(page).toHaveURL(new RegExp(`/overviews/${plants.id}$`));
+    await reader.chat.verifyIsOpen(true);
+    await reader.chat.verifyTitleReads("Which beans?");
+    await reader.chat.verifyAnswersRead(["An answer."]);
+    await expect
+      .poll(() =>
+        backendSimulator.analytics
+          .events()
+          .filter(({ name }) => name === "ask.drawer.conversationOpened")
+          .map(({ props }) => props),
+      )
+      .toEqual([{ scope: "overview" }]);
+
+    await page.reload();
+
+    await reader.chat.verifyIsOpen(false);
   });
 
   test("on a phone Ask is a page, its drawer is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
