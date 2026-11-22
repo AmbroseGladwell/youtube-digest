@@ -516,8 +516,7 @@ export class ChatPanelPageObject extends PageObject {
       const root = this.answers().nth(answer);
       await expect(root.locator("p code")).toHaveText(code);
       await expect(root.getByTestId(chatMarkedTextTestIds.link)).toHaveText(links.map((link) => `${link} (opens in a new tab)`));
-      for (const link of await root.getByTestId(chatMarkedTextTestIds.link).all())
-        await expect(link).toHaveAttribute("target", "_blank");
+      for (const link of await root.getByTestId(chatMarkedTextTestIds.link).all()) await expect(link).toHaveAttribute("target", "_blank");
       await expect(root.getByTestId(chatCodeBlockTestIds.code)).toHaveText(blocks);
       await expect(root).not.toContainText("```");
       await expect(root).not.toContainText("`");

@@ -235,7 +235,9 @@ test.describe("Chat across sources", () => {
 
   test("an answer's inline code, links and code blocks render, and a block copies (OV-364)", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-10T09:00:00.000Z"));
-    backendSimulator.chats.answerWith({ text: "Run `npm test` first, and read [the guide](https://example.com/guide).\n```bash\nnpm test  --watch\n```" });
+    backendSimulator.chats.answerWith({
+      text: "Run `npm test` first, and read [the guide](https://example.com/guide).\n```bash\nnpm test  --watch\n```",
+    });
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
 

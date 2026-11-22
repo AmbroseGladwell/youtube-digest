@@ -341,7 +341,12 @@ test.describe("Ask", () => {
     backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
     backendSimulator.chats.answerWith({
       text: "x",
-      sections: { intro: "Run `npm test` first, and read [the guide](https://example.com/guide).\n```bash\nnpm test  --watch\n```", introSources: [], sections: [], takeaway: "" },
+      sections: {
+        intro: "Run `npm test` first, and read [the guide](https://example.com/guide).\n```bash\nnpm test  --watch\n```",
+        introSources: [],
+        sections: [],
+        takeaway: "",
+      },
       stats: { overviews: 1 },
     });
     await launcher.launchExpectingLibrary(SIGNED_IN);
