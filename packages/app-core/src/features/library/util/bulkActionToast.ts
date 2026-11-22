@@ -47,10 +47,17 @@ const failedText = (action: BulkAction, share: string): string => {
   }
 };
 
-export const bulkActionToast = (
-  action: BulkAction,
-  { writes, failed }: { writes: number; failed: number },
-): { text: string; done: boolean } => {
+export interface BulkActionCounts {
+  writes: number;
+  failed: number;
+}
+
+export interface BulkActionToast {
+  text: string;
+  done: boolean;
+}
+
+export const bulkActionToast = (action: BulkAction, { writes, failed }: BulkActionCounts): BulkActionToast => {
   if (failed === 0) {
     return { text: doneText(action), done: true };
   }

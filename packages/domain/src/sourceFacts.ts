@@ -83,9 +83,14 @@ export const sourceLength = (source: Source): string => {
   return length === null ? capitalised(kind) : `${length} ${kind}`;
 };
 
+export interface SourcedNote {
+  source: Source;
+  recipe?: RecipeNote | null | undefined;
+}
+
 // The chip a library row leads with. A video is most of the library and says so in its meta
 // line, so it has none; any other kind does, and a recipe keeps its yield (design 232a, 232f).
-export const kindChip = (note: { source: Source; recipe?: RecipeNote | null | undefined }): string | null => {
+export const kindChip = (note: SourcedNote): string | null => {
   if (note.recipe != null) {
     return note.recipe.yield === null ? "Recipe" : `Recipe · ${note.recipe.yield}`;
   }
@@ -95,7 +100,7 @@ export const kindChip = (note: { source: Source; recipe?: RecipeNote | null | un
 // A recipe names itself by the page's stated total, "1 hr 5 min recipe", or just "Recipe",
 // never by a sum of prep and cook (design 144m); a recipe video by its length, "14:32 recipe
 // video" (122n).
-export const noteSourceLength = (note: { source: Source; recipe?: RecipeNote | null | undefined }): string => {
+export const noteSourceLength = (note: SourcedNote): string => {
   if (note.recipe != null && note.source.kind === "youtube") {
     return note.source.durationMs ? `${formatClock(note.source.durationMs / 1000)} recipe video` : "Recipe video";
   }

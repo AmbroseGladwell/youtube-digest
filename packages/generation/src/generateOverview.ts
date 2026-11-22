@@ -1,4 +1,4 @@
-import type { NoteKind, Overview, OverviewId, ProjectId } from "@overview/domain";
+import type { NoteKind, Overview, ProjectId } from "@overview/domain";
 import type { GenerationInput } from "./GenerationInput.js";
 import type { GeneratedOutput, GeneratedRecipeVideoOutput } from "./GeneratedOutput.js";
 import { composePrompt } from "./composePrompt.js";
@@ -7,6 +7,7 @@ import { checkNoteKind } from "./noteKind/checkNoteKind.js";
 import { kindSampleOfVideo } from "./noteKind/kindSampleOfVideo.js";
 import { requestGeneratedOutput, type GenerationClient } from "./requestGeneratedOutput.js";
 import { filedProjectIds } from "./sections/projectInstructions.js";
+import type { OverviewMeta } from "./OverviewMeta.js";
 
 // Lets a caller tell the kind check's calls apart from the note's, so each can be costed on
 // its own (docs/architecture/unit-economics.md).
@@ -24,7 +25,7 @@ export interface GenerationObserver {
 export const generateOverview = async (
   client: GenerationClient,
   input: GenerationInput,
-  meta: { id: OverviewId; savedAt: string },
+  meta: OverviewMeta,
   observer: GenerationObserver = {},
 ): Promise<Overview> => {
   const kind = input.noteKind ?? (await checkNoteKind(client, kindSampleOfVideo(input)));

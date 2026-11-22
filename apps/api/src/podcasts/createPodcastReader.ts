@@ -47,6 +47,12 @@ const samePage = (a: string | null, b: string | null): boolean => {
   return key(a) === key(b);
 };
 
+export interface FetchedPodcastPage {
+  url: string;
+  html: string;
+  isFeed: boolean;
+}
+
 // docs/features/podcast-links.md
 export const createPodcastReader = ({
   fetchPublicWeb,
@@ -54,7 +60,7 @@ export const createPodcastReader = ({
   appleBudget,
   podcastIndex = null,
 }: PodcastReaderOptions) => {
-  const fetchPage = async (link: string): Promise<{ url: string; html: string; isFeed: boolean } | { failure: PodcastReadFailure }> => {
+  const fetchPage = async (link: string): Promise<FetchedPodcastPage | { failure: PodcastReadFailure }> => {
     const answer = await fetchPublicWeb(link, { accept: HTML });
     if (answer.status === "failed") {
       return { failure: answer.reason === "no-answer" ? "no-answer" : "not-found" };

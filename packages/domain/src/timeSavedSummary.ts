@@ -65,7 +65,12 @@ export const overviewTimeSaved = (overview: SharedNote): OverviewTimeSaved => {
   };
 };
 
-export const timeSavedSummary = (entries: ReadonlyArray<{ overview: SharedNote; state: { read: boolean } }>): TimeSavedSummary => {
+export interface SharedNoteState {
+  overview: SharedNote;
+  state: { read: boolean };
+}
+
+export const timeSavedSummary = (entries: ReadonlyArray<SharedNoteState>): TimeSavedSummary => {
   const summary: TimeSavedSummary = { minutes: 0, counted: 0, lessPartToWatch: 0, withoutLength: 0, watchVerdict: 0, recipe: 0 };
   for (const { overview, state } of entries) {
     if (!state.read) {

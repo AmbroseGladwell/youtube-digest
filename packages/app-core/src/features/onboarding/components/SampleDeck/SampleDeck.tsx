@@ -29,6 +29,11 @@ export interface SampleDeckProps {
   onFront: (sample: Sample) => void;
 }
 
+export interface FrontChange {
+  manual: boolean;
+  fling?: number;
+}
+
 // Design 155l: on the web, Start's samples are a deck in the Example overview card's shape, one
 // full card with two behind it, cycling on its own. Hover or focus holds it, Pause stops it for
 // the visit, and the arrows step by hand. See all unfolds it into a list in deck order. With
@@ -59,7 +64,7 @@ export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const expanded = layout === "list" || layout === "gather";
   const playing = !paused && (!reduced || userPlay);
 
-  const setFront = (index: number, by: { manual: boolean; fling?: number }) => {
+  const setFront = (index: number, by: FrontChange) => {
     setFrontIndex(index);
     setManual(by.manual);
     setFling(by.fling ?? 0);
@@ -357,9 +362,7 @@ interface Placement {
   still: boolean;
 }
 
-// Where each card sits, by its place behind the front one: the deck's three, the one leaving,
-// the rest waiting out of sight; or squared into a stack, or laid out as rows.
-const placement = (o: {
+interface PlacementInput {
   layout: Layout;
   slot: number;
   n: number;
@@ -368,7 +371,11 @@ const placement = (o: {
   drag: number | null;
   fling: number;
   reduced: boolean;
-}): Placement => {
+}
+
+// Where each card sits, by its place behind the front one: the deck's three, the one leaving,
+// the rest waiting out of sight; or squared into a stack, or laid out as rows.
+const placement = (o: PlacementInput): Placement => {
   const { layout, slot, n, g, dragging, drag, fling, reduced } = o;
   const p: Placement = {
     top: TOP,

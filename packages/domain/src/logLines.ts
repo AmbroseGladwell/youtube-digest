@@ -8,9 +8,14 @@ export interface LogLineDeclaration {
   description: string;
 }
 
+export interface CodedLogMessage {
+  logCode: string;
+  msg: string;
+}
+
 export interface LogLine extends LogLineDeclaration {
   logCode: string;
-  (fields?: LogFields): { logCode: string; msg: string };
+  (fields?: LogFields): CodedLogMessage;
 }
 
 export type LogLineAreas = Record<string, Record<string, LogLineDeclaration>>;

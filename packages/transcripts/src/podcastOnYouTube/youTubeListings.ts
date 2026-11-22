@@ -104,7 +104,12 @@ export const videosIn = (searchResponse: unknown): ListedVideo[] => {
   });
 };
 
-export const uploadsIn = (browseResponse: unknown): { uploads: ListedUpload[]; continuation: string | null } => {
+export interface UploadsPage {
+  uploads: ListedUpload[];
+  continuation: string | null;
+}
+
+export const uploadsIn = (browseResponse: unknown): UploadsPage => {
   const uploads = [
     ...everyValueAt(browseResponse, "lockupViewModel").map(fromLockup),
     ...everyValueAt(browseResponse, "videoRenderer").map(fromVideoRenderer),
@@ -115,8 +120,13 @@ export const uploadsIn = (browseResponse: unknown): { uploads: ListedUpload[]; c
 
 const DAYS: Record<string, number> = { second: 0, minute: 0, hour: 0, day: 1, week: 7, month: 30, year: 365 };
 
+export interface AgeRangeDays {
+  fewest: number;
+  most: number;
+}
+
 // "3 weeks ago" as the days it could mean, with the slack the rounding leaves.
-export const ageInDays = (age: string): { fewest: number; most: number } | null => {
+export const ageInDays = (age: string): AgeRangeDays | null => {
   const match = /(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/.exec(age);
   if (match === null) {
     return null;

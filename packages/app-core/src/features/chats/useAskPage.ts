@@ -16,6 +16,11 @@ const newConversationId = (): string => crypto.randomUUID();
 
 export const askScopeOfChat = (chat: Chat): "library" | "project" | "overview" => chatOwner(chat).kind;
 
+export interface AskPageTarget {
+  project: ProjectId | null;
+  chat: string | null;
+}
+
 // The Ask page (OV-354, page 3): one conversation over the library or a project at a time, named
 // in the address so it survives a reload; the drawer's history of every conversation, an
 // overview's opening on that overview (OV-363), a deleted one undoable for six seconds; and what
@@ -47,7 +52,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
 
   const focusField = () => requestAnimationFrame(() => field.current?.focus());
 
-  const goTo = (at: { project: ProjectId | null; chat: string | null }) => {
+  const goTo = (at: AskPageTarget) => {
     resetNext();
     if (at.chat === null) {
       setFresh(newConversationId());

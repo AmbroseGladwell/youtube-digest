@@ -5,13 +5,18 @@ import type { AppBuild } from "./AppBuildContext.js";
 import type { AppLayout } from "./LayoutContext.js";
 import type { Surface } from "./SurfaceContext.js";
 
+export interface ApiDestinationOptions {
+  apiUrl: string;
+  token: string | null;
+}
+
 export interface ReportStartupFailureOptions {
   surface: Surface;
   layout?: AppLayout;
   build: AppBuild | null;
   defaultApiUrl?: string | null;
   storage?: Storage;
-  createApi?: (destination: { apiUrl: string; token: string | null }) => ErrorsApi;
+  createApi?: (destination: ApiDestinationOptions) => ErrorsApi;
   now?: () => Date;
 }
 

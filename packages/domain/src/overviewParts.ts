@@ -97,13 +97,15 @@ export interface OverviewPartCitation {
   textHash: string;
 }
 
+export interface CitedPart {
+  part: OverviewPart;
+  index: number | null;
+}
+
 // Where a citation of the overview lands now. A regenerated overview keeps its id but can move
 // or rewrite its items: the item that still has the cited text, wherever it moved within its
 // part, else the part's section alone (index null), else nothing when the section is gone.
-export const citedOverviewPart = (
-  overview: Overview,
-  citation: OverviewPartCitation,
-): { part: OverviewPart; index: number | null } | null => {
+export const citedOverviewPart = (overview: Overview, citation: OverviewPartCitation): CitedPart | null => {
   const inPart = overviewParts(overview).filter(({ part }) => part === citation.part);
   if (inPart.length === 0) {
     return null;

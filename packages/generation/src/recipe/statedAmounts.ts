@@ -102,9 +102,14 @@ export const statedNumbersIn = (sources: readonly string[]): StatedNumbers => {
 
 const unstatedIn = (text: string, stated: StatedNumbers): number => numbersStated(text).filter((value) => !stated.has(value)).length;
 
+export interface StatedAmounts {
+  ingredients: string[];
+  amountsDropped: number;
+}
+
 // A line whose amount nobody stated keeps its name and loses the amount: "1 tsp salt" becomes
 // "salt" (docs/features/recipe-notes.md, "Recipe videos").
-export const withStatedAmounts = (lines: readonly string[], stated: StatedNumbers): { ingredients: string[]; amountsDropped: number } => {
+export const withStatedAmounts = (lines: readonly string[], stated: StatedNumbers): StatedAmounts => {
   let amountsDropped = 0;
   const ingredients = lines.flatMap((line) => {
     if (unstatedIn(line, stated) === 0) {

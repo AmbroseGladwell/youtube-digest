@@ -42,6 +42,11 @@ import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 import { storedRecordId } from "./storedRecordId.js";
 
+export interface CreateTopicOptions {
+  name: string;
+  description?: string;
+}
+
 export class IndexedDbOverviewStore implements OverviewStore {
   #db: IDBDatabase;
   #onJournaled: (() => void) | undefined;
@@ -224,7 +229,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
       .flatMap((read) => (read.status === "read" ? [read.record] : []));
   }
 
-  async createTopic(input: { name: string; description?: string }) {
+  async createTopic(input: CreateTopicOptions) {
     const now = new Date();
     const topic: Topic = {
       id: TopicId.parse(crypto.randomUUID()),

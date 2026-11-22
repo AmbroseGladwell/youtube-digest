@@ -114,13 +114,14 @@ const escaped = (cue: string) => cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export const usesCue = (action: string, cues: readonly string[]): boolean =>
   cues.some((cue) => new RegExp(`(?<![\\p{L}\\p{N}])${escaped(cue)}`, "iu").test(action));
 
+export interface SpreadReader {
+  name: string;
+  cues: { sentence: readonly string[]; learned: readonly string[] };
+}
+
 // How often a reader's actions draw on what we know of them, against how often actions
 // written for nobody hit the same words by chance: the baseline the count has to beat.
-export const contextUse = (
-  reader: { name: string; cues: { sentence: readonly string[]; learned: readonly string[] } },
-  nobody: string,
-  byVideo: ReadonlyMap<string, ActionsByReader>,
-): ContextUse => {
+export const contextUse = (reader: SpreadReader, nobody: string, byVideo: ReadonlyMap<string, ActionsByReader>): ContextUse => {
   const all = [...reader.cues.sentence, ...reader.cues.learned];
   const theirs = [...byVideo.values()].map((actions) => actions.get(reader.name) ?? []);
   const nobodys = [...byVideo.values()].flatMap((actions) => actions.get(nobody) ?? []);

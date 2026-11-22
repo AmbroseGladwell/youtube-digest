@@ -9,13 +9,16 @@ import { geoAddress } from "./geoAddress.js";
 
 const SHARED_PAGE_EVENTS_BODY_LIMIT_BYTES = 32 * 1024;
 
+export interface SharedPageEventRoutesOptions {
+  shares: SharesRepository;
+  sink: EventSink | null;
+  clock: () => Date;
+}
+
 // With or without an account, and only sharedPage.* events. The token never leaves this
 // handler: the overview it names is added to each event instead (docs/architecture/analytics.md,
 // "The shared page").
-export const sharedPageEventRoutes = (
-  app: FastifyInstance,
-  { shares, sink, clock }: { shares: SharesRepository; sink: EventSink | null; clock: () => Date },
-): void => {
+export const sharedPageEventRoutes = (app: FastifyInstance, { shares, sink, clock }: SharedPageEventRoutesOptions): void => {
   app.post<{ Params: { token: string } }>(
     "/shares/:token/events",
     {

@@ -31,6 +31,12 @@ export interface KeywordHit {
   score: number;
 }
 
+export interface SearchOptions {
+  limit: number;
+  except?: readonly string[];
+  within?: readonly string[] | null;
+}
+
 // The account's transcripts as minute passages under a full-text index, searched by the
 // question's words. Postgres's ts_rank knows nothing of how rare a word is, so each word is
 // weighted by its inverse document frequency over this account's passages, as BM25 weights it:
@@ -87,11 +93,7 @@ export class TranscriptPassagesRepository {
   // The best passages for the question's words, from the given transcripts only when `within` is
   // set, never from those in `except`. Only transcripts of the account's live overviews are kept,
   // so a passage never outlives the note it came with.
-  async search(
-    accountId: AccountId,
-    question: string,
-    { limit, except = [], within = null }: { limit: number; except?: readonly string[]; within?: readonly string[] | null },
-  ): Promise<KeywordHit[]> {
+  async search(accountId: AccountId, question: string, { limit, except = [], within = null }: SearchOptions): Promise<KeywordHit[]> {
     const terms = keywordTermsOf(question);
     if (terms.length === 0 || limit <= 0) {
       return [];

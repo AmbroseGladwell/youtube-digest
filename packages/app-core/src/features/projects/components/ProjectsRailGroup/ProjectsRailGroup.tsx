@@ -41,7 +41,13 @@ export const ProjectsRailGroup = ({ active, archived, current, onOpen, onLeave, 
                   className={`${styles.option} ${on ? styles.optionActive : ""}`}
                   to={on ? Routes.home() : Routes.project(project.id)}
                   aria-current={on ? "page" : undefined}
-                  onClick={() => (on ? onLeave() : onOpen(project))}
+                  onClick={() => {
+                    if (on) {
+                      onLeave();
+                    } else {
+                      onOpen(project);
+                    }
+                  }}
                   data-testid={projectsRailGroupTestIds.project(project.name)}
                 >
                   <span className={styles.name}>

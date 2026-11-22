@@ -155,7 +155,13 @@ export const ChecklistPicker = ({
             <button
               type="button"
               className={`${styles.option} ${styles.newProject}`}
-              onClick={() => (typeof onNew === "function" ? onNew() : setNaming(""))}
+              onClick={() => {
+                if (typeof onNew === "function") {
+                  onNew();
+                } else {
+                  setNaming("");
+                }
+              }}
               data-testid={testIds.newProjectButton}
             >
               <span className={styles.plus} aria-hidden="true">

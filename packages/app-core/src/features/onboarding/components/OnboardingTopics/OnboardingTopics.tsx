@@ -192,7 +192,13 @@ export const OnboardingTopics = ({ chosen: initiallyChosen, suggestions, saving,
   );
 };
 
-const TopicChip = ({ name, pressed, onToggle }: { name: string; pressed: boolean; onToggle: (name: string) => void }) => {
+interface TopicChipProps {
+  name: string;
+  pressed: boolean;
+  onToggle: (name: string) => void;
+}
+
+const TopicChip = ({ name, pressed, onToggle }: TopicChipProps) => {
   return (
     <button
       type="button"

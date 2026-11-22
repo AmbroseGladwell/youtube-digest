@@ -13,6 +13,14 @@ export interface CheckedVideoKind {
 
 const UNCHECKED: CheckedVideoKind = { noteKind: null, transcript: null };
 
+export interface CheckVideoKindOptions {
+  generator: OurKeyGenerator | null;
+  service: ServiceTranscripts | null;
+  kinds: VideoKindsRepository;
+  now: Date;
+  log: FastifyBaseLogger;
+}
+
 // The writer's own kind check, run as the link is read so onboarding knows a recipe video before
 // Your link. One check per video for everyone, remembered; signed out, capped for the day across
 // every device. The transcript fetched for it goes back to the device, which keeps it for the
@@ -21,19 +29,7 @@ export const checkVideoKind = async (
   videoId: VideoId,
   video: VideoSource,
   caller: ServiceCaller,
-  {
-    generator,
-    service,
-    kinds,
-    now,
-    log,
-  }: {
-    generator: OurKeyGenerator | null;
-    service: ServiceTranscripts | null;
-    kinds: VideoKindsRepository;
-    now: Date;
-    log: FastifyBaseLogger;
-  },
+  { generator, service, kinds, now, log }: CheckVideoKindOptions,
 ): Promise<CheckedVideoKind> => {
   const known = await kinds.kindOf(videoId);
   if (known !== null) {

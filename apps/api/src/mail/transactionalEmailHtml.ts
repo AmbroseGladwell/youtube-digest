@@ -166,7 +166,12 @@ ${notes}
 `;
 };
 
-const actionBlock = ({ label: rawLabel, link: rawLink }: { label: string; link: string }): string => {
+interface EmailAction {
+  label: string;
+  link: string;
+}
+
+const actionBlock = ({ label: rawLabel, link: rawLink }: EmailAction): string => {
   const link = escapeHtml(rawLink);
   const label = escapeHtml(rawLabel);
   const vmlWidth = rawLabel.length * 10 + 64;

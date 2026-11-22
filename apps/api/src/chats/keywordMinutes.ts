@@ -25,14 +25,24 @@ export interface OverviewMinutes {
   passages: Passage[];
 }
 
+export interface KeywordMinutesDeps {
+  passages: TranscriptPassagesRepository;
+  records: RecordsRepository;
+}
+
+export interface KeywordMinutesFilter {
+  except?: readonly string[];
+  within?: readonly string[] | null;
+}
+
 // The 8 best minutes for a question's words across the account's transcripts, each with its
 // neighbours, grouped by the live overview they belong to, best first (OV-352). Search failing never
 // stops the answer: it goes on without minutes, and the log says so.
 export const keywordMinutes = async (
-  { passages, records }: { passages: TranscriptPassagesRepository; records: RecordsRepository },
+  { passages, records }: KeywordMinutesDeps,
   accountId: AccountId,
   question: string,
-  { except = [], within = null }: { except?: readonly string[]; within?: readonly string[] | null },
+  { except = [], within = null }: KeywordMinutesFilter,
   log: FastifyBaseLogger,
 ): Promise<OverviewMinutes[]> => {
   let hits;

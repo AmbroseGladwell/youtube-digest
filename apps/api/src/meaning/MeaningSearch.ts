@@ -11,6 +11,12 @@ const CACHED_QUERIES = 500;
 
 export type MeaningResult = { available: true; matches: MeaningMatch[] } | { available: false };
 
+export interface MeaningSearchOptions {
+  costs: AccountCostsRepository;
+  clock: () => Date;
+  log: { error(line: object): void };
+}
+
 // Searches repeat, so a query's vector is kept rather than paid for again.
 export class MeaningSearch {
   #embeddings: ClaimEmbeddingsRepository;
@@ -20,11 +26,7 @@ export class MeaningSearch {
   #log: { error(line: object): void };
   #cache = new Map<string, number[]>();
 
-  constructor(
-    embeddings: ClaimEmbeddingsRepository,
-    embedder: Embedder,
-    { costs, clock, log }: { costs: AccountCostsRepository; clock: () => Date; log: { error(line: object): void } },
-  ) {
+  constructor(embeddings: ClaimEmbeddingsRepository, embedder: Embedder, { costs, clock, log }: MeaningSearchOptions) {
     this.#embeddings = embeddings;
     this.#embedder = embedder;
     this.#costs = costs;

@@ -154,7 +154,13 @@ const TryYourOwn = ({ onDismiss }: { onDismiss: () => void }) => {
   );
 };
 
-const DismissButton = ({ label, step, onDismiss }: { label: string; step: NextStep; onDismiss: () => void }) => {
+interface DismissButtonProps {
+  label: string;
+  step: NextStep;
+  onDismiss: () => void;
+}
+
+const DismissButton = ({ label, step, onDismiss }: DismissButtonProps) => {
   return (
     <button
       type="button"

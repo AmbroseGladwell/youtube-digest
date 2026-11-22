@@ -22,12 +22,17 @@ export const personalisedVerdict = (spread: ReaderSpread): string => {
   return `${above.length} of ${between.length} reader pairs overlap as much as two runs for nobody (${overlap(noise)}) or more: for them, the context made no difference sampling didn't.`;
 };
 
+export interface JudgeSummaries {
+  judge: string;
+  summaries: readonly ActionJudgmentSummary[];
+}
+
 export const readerSpreadMarkdown = (
   readers: readonly SpreadReader[],
   spread: ReaderSpread,
   byVideo: ReadonlyMap<string, ActionsByReader>,
   transcripts: ReadonlyMap<string, FetchedTranscript>,
-  judged: { judge: string; summaries: readonly ActionJudgmentSummary[] } | null = null,
+  judged: JudgeSummaries | null = null,
 ): string => {
   const pairRow = (pair: PairSpread) =>
     `| ${pair.left} · ${pair.right} | ${pair.videos} | ${pair.bothEmpty} | ${pair.identical} (${percent(pair.identical, pair.videos)}) | ${overlap(pair.meanWordOverlap)} |`;

@@ -29,11 +29,18 @@ export interface IssuedEmailChange {
   expiresAt: string;
 }
 
+export interface IssueEmailChangeOptions {
+  accountId: AccountId;
+  oldEmail: string;
+  newEmail: string;
+  now: Date;
+}
+
 // Null inside the cooldown. Whether the address is taken is decided here and told only to
 // that inbox, so the route's answer is the same either way.
 export const issueEmailChange = async (
   sql: SqlClient,
-  { accountId, oldEmail, newEmail: rawNewEmail, now }: { accountId: AccountId; oldEmail: string; newEmail: string; now: Date },
+  { accountId, oldEmail, newEmail: rawNewEmail, now }: IssueEmailChangeOptions,
 ): Promise<IssuedEmailChange | null> => {
   const newEmail = normaliseEmail(rawNewEmail);
   const recent = await sql.query<{ id: string }>(

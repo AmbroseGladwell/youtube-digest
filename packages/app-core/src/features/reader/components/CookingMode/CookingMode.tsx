@@ -58,17 +58,14 @@ const INTERACTIVE = "button, a, input, select, textarea, [contenteditable]";
 
 const placeOf = (action: RecipeAction) => `Step ${action.step + 1}${action.count === 1 ? "" : ` · ${action.index + 1} of ${action.count}`}`;
 
-const VoiceLine = ({
-  voice,
-  step,
-  firstScreen,
-  onTryAgain,
-}: {
+interface VoiceLineProps {
   voice: CookingVoice;
   step: number;
   firstScreen: boolean;
   onTryAgain: () => void;
-}) => {
+}
+
+const VoiceLine = ({ voice, step, firstScreen, onTryAgain }: VoiceLineProps) => {
   if (voice === "reading") {
     return (
       <>
@@ -311,8 +308,20 @@ export const CookingMode = ({
   };
 
   const leaveNow = () => (mode.finished ? mode.close() : mode.done());
-  const leave = () => (asking ? setLeaving(true) : leaveNow());
-  const backToRecipe = () => (asking ? setLeaving(true) : mode.close());
+  const leave = () => {
+    if (asking) {
+      setLeaving(true);
+    } else {
+      leaveNow();
+    }
+  };
+  const backToRecipe = () => {
+    if (asking) {
+      setLeaving(true);
+    } else {
+      mode.close();
+    }
+  };
   const times = action === undefined ? [] : methodTimes(action.text);
   const shownTimer = timers.running.find((timer) => timer.id === timerShown) ?? null;
 
@@ -636,7 +645,13 @@ export const CookingMode = ({
                       type="button"
                       className={styles.watch}
                       aria-label={`Watch step ${action.step + 1} in the video, from ${formatTimestamp(moment.startMs)}`}
-                      onClick={() => (seekVideo === null ? setWatching(true) : seekVideo(moment.startMs))}
+                      onClick={() => {
+                        if (seekVideo === null) {
+                          setWatching(true);
+                        } else {
+                          seekVideo(moment.startMs);
+                        }
+                      }}
                       data-testid={cookingModeTestIds.watchStep}
                     >
                       <StrokeIcon name="play" size={13} />

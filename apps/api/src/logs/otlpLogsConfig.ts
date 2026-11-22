@@ -42,14 +42,16 @@ const keyValueList = (raw: string | undefined, name: string): Record<string, str
   return Object.fromEntries(entries);
 };
 
+export interface OtlpLogsConfigOptions {
+  postHog: PostHogLogsFallback | null;
+  environment: string;
+}
+
 // Where the server's logs are shipped, by the standard OTEL_* variables so another
 // destination needs no code change. With none set, PostHog's own log ingest, under the
 // project token analytics already uses; with OTEL_LOGS_EXPORTER=none, nowhere
 // (docs/architecture/errors-and-logs.md, "Shipping the server's logs").
-export const otlpLogsConfig = (
-  env: OtlpLogsEnv,
-  { postHog, environment }: { postHog: PostHogLogsFallback | null; environment: string },
-): OtlpLogsConfig | null => {
+export const otlpLogsConfig = (env: OtlpLogsEnv, { postHog, environment }: OtlpLogsConfigOptions): OtlpLogsConfig | null => {
   if (env.OTEL_LOGS_EXPORTER?.trim() === "none") {
     return null;
   }

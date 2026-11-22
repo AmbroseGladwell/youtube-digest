@@ -101,7 +101,13 @@ export const CookingTimerSheet = ({
             <button
               type="button"
               className={styles.control}
-              onClick={() => (paused ? onResume(timer.id) : onPause(timer.id))}
+              onClick={() => {
+                if (paused) {
+                  onResume(timer.id);
+                } else {
+                  onPause(timer.id);
+                }
+              }}
               data-testid={cookingTimerSheetTestIds.pause}
             >
               <StrokeIcon name={paused ? "play" : "pause"} size={18} />

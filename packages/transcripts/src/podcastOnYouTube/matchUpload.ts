@@ -31,7 +31,12 @@ const titleWords = (title: string): string[] =>
     .replace(/[̀-ͯ]/g, "")
     .match(/[a-z0-9]+/g) ?? [];
 
-const lengthWithin = (episode: number | null, upload: number | null, slack: { seconds: number; share: number }): boolean =>
+interface LengthSlack {
+  seconds: number;
+  share: number;
+}
+
+const lengthWithin = (episode: number | null, upload: number | null, slack: LengthSlack): boolean =>
   episode !== null && upload !== null && Math.abs(episode - upload) <= Math.max(slack.seconds, slack.share * episode);
 
 // "Part 2" and "Part 1" share every word but one. A number on one side only is fine, since

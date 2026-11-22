@@ -6,11 +6,19 @@ import { AUTHORIZATION_CODE_TTL_MS } from "./connectionTimings.js";
 import type { OAuthUrls } from "./oauthUrls.js";
 import { withQueryParams } from "./withQueryParams.js";
 
+export interface DecideAuthorizationOptions {
+  id: string;
+  accountId: AccountId;
+  approve: boolean;
+  urls: OAuthUrls;
+  now: Date;
+}
+
 // One statement decides and reads, so a request can be decided once: a second answer finds
 // nothing left to update.
 export const decideAuthorization = async (
   sql: SqlClient,
-  { id, accountId, approve, urls, now }: { id: string; accountId: AccountId; approve: boolean; urls: OAuthUrls; now: Date },
+  { id, accountId, approve, urls, now }: DecideAuthorizationOptions,
 ): Promise<string | null> => {
   const code = approve ? generateToken() : null;
   const [row] = await sql.query<{ redirect_uri: string; state: string | null }>(

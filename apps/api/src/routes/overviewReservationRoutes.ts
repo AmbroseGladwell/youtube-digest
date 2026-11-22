@@ -13,21 +13,17 @@ import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js"
 
 const Params = z.object({ overviewId: OverviewId });
 
+export interface OverviewReservationRoutesOptions {
+  reservations: OverviewReservationsRepository;
+  usage: OverviewUsageRepository;
+  shares: SharesRepository;
+  sql: SqlClient;
+  clock: () => Date;
+}
+
 export const overviewReservationRoutes = (
   app: FastifyInstance,
-  {
-    reservations,
-    usage,
-    shares,
-    sql,
-    clock,
-  }: {
-    reservations: OverviewReservationsRepository;
-    usage: OverviewUsageRepository;
-    shares: SharesRepository;
-    sql: SqlClient;
-    clock: () => Date;
-  },
+  { reservations, usage, shares, sql, clock }: OverviewReservationRoutesOptions,
 ): void => {
   app.post("/overview-reservations", async (request, reply) => {
     const { overviewId, shareToken } = parseOrThrow(OverviewReservationRequest, request.body, "The reservation");

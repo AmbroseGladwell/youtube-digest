@@ -4,6 +4,11 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./NewProjectDialog.module.scss";
 import { newProjectDialogTestIds } from "./NewProjectDialogTestIds.js";
 
+export interface OnCreateOptions {
+  name: string;
+  purpose: string | null;
+}
+
 export interface NewProjectDialogProps {
   // The overview made from the picker, which the new project takes with it (168x).
   adds: { title: string } | { count: number } | null;
@@ -11,7 +16,7 @@ export interface NewProjectDialogProps {
   assistantConnected: boolean;
   takenNames: string[];
   busy: boolean;
-  onCreate: (input: { name: string; purpose: string | null }) => void;
+  onCreate: (input: OnCreateOptions) => void;
   onClose: () => void;
 }
 

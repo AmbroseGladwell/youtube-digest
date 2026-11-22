@@ -152,12 +152,17 @@ const filingOf = (body: Record<string, unknown>): FoldableFiling => ({
   captureReason: typeof body.captureReason === "string" ? body.captureReason : null,
 });
 
+interface FoldableRecord {
+  record: StoredRecord;
+  state: FoldableState;
+}
+
 const statesOf = async (
   sql: SqlClient,
   accountId: AccountId,
   overviewIds: string[],
   videoId: string,
-): Promise<Map<string, { record: StoredRecord; state: FoldableState }>> => {
+): Promise<Map<string, FoldableRecord>> => {
   const rows = await sql.query<RecordRow>(
     `select ${RECORD_COLUMNS} from records
      where account_id = $1 and kind = 'overviewState' and not deleted and id = any($2::text[])`,

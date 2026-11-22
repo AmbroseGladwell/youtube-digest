@@ -68,8 +68,12 @@ export const MODEL_PRICES: Record<string, ModelPrice> = {
   },
 };
 
-export const priceOf = ({ provider, model }: { provider: Provider; model: string }): ModelPrice | undefined =>
-  MODEL_PRICES[`${provider}:${model}`];
+export interface PricedModel {
+  provider: Provider;
+  model: string;
+}
+
+export const priceOf = ({ provider, model }: PricedModel): ModelPrice | undefined => MODEL_PRICES[`${provider}:${model}`];
 
 export const costInDollars = (price: ModelPrice, usage: TokenUsage): number => {
   const { perMillion } = price.longPrompt !== undefined && promptTokensOf(usage) > price.longPrompt.aboveTokens ? price.longPrompt : price;

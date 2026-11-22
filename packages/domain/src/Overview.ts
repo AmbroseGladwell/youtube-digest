@@ -16,10 +16,14 @@ import { Chapters } from "./Chapter.js";
 import { MadeOn } from "./MadeOn.js";
 import { PlaylistOrigin } from "./PlaylistOrigin.js";
 
-export const recipeShape = (
-  note: { recipe?: RecipeNote | null | undefined; keyPoints: KeyPoint[]; verdict: unknown; article?: unknown },
-  ctx: z.RefinementCtx,
-) => {
+export interface RecipeShapeNote {
+  recipe?: RecipeNote | null | undefined;
+  keyPoints: KeyPoint[];
+  verdict: unknown;
+  article?: unknown;
+}
+
+export const recipeShape = (note: RecipeShapeNote, ctx: z.RefinementCtx) => {
   if (note.recipe == null) {
     if (note.keyPoints.length < 3) {
       ctx.addIssue({ code: "custom", path: ["keyPoints"], message: "a note has at least 3 key points" });

@@ -1,4 +1,4 @@
-import type { OverviewId, PodcastOverview } from "@overview/domain";
+import type { PodcastOverview } from "@overview/domain";
 import { assembleOverview } from "../assembleOverview.js";
 import type { GeneratedOutput } from "../GeneratedOutput.js";
 import { type GenerationObserver } from "../generateOverview.js";
@@ -8,6 +8,7 @@ import { kindSampleOfVideo } from "../noteKind/kindSampleOfVideo.js";
 import { composePodcastPrompt } from "./composePodcastPrompt.js";
 import { filedProjectIds } from "../sections/projectInstructions.js";
 import type { PodcastGenerationInput } from "./PodcastGenerationInput.js";
+import type { OverviewMeta } from "../OverviewMeta.js";
 
 // The kind is checked as for a video. A recipe episode gets the default note, since a recipe note
 // is built from a page's or a video's stated amounts, which an episode has neither of
@@ -15,7 +16,7 @@ import type { PodcastGenerationInput } from "./PodcastGenerationInput.js";
 export const generatePodcastOverview = async (
   client: GenerationClient,
   input: PodcastGenerationInput,
-  meta: { id: OverviewId; savedAt: string },
+  meta: OverviewMeta,
   observer: GenerationObserver = {},
 ): Promise<PodcastOverview> => {
   const kind = await checkNoteKind(client, kindSampleOfVideo(input));

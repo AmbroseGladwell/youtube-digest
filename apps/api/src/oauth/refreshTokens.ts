@@ -15,12 +15,15 @@ interface RefreshRow {
   scope: string;
 }
 
+export interface RefreshTokensOptions {
+  client: OAuthClient;
+  refreshToken: string;
+  now: Date;
+}
+
 // Refresh tokens rotate: each is spent once, and presenting a spent one means it was copied,
 // so the whole connection goes (OAuth 2.1 §4.3.1; docs/features/mcp-connector.md).
-export const refreshTokens = async (
-  sql: SqlClient,
-  { client, refreshToken, now }: { client: OAuthClient; refreshToken: string; now: Date },
-): Promise<TokenGrant> => {
+export const refreshTokens = async (sql: SqlClient, { client, refreshToken, now }: RefreshTokensOptions): Promise<TokenGrant> => {
   return sql.transaction(async (tx) => {
     const tokenHash = hashToken(refreshToken);
     const [row] = await tx.query<RefreshRow>(

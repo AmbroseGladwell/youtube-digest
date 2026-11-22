@@ -13,19 +13,15 @@ import { personalisationSectionTestIds } from "./PersonalisationSectionTestIds.j
 export const PERSONALISATION_STANDFIRST =
   "Turns each overview's How to apply into steps that fit your life. Overviews you already have stay as they are.";
 
-const SettingSwitch = ({
-  testId,
-  label,
-  hint,
-  on,
-  onSwitch,
-}: {
+interface SettingSwitchProps {
   testId: string;
   label: string;
   hint: string;
   on: boolean;
   onSwitch: () => void;
-}) => {
+}
+
+const SettingSwitch = ({ testId, label, hint, on, onSwitch }: SettingSwitchProps) => {
   const labelId = useId();
   const hintId = useId();
 

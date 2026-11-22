@@ -18,6 +18,11 @@ export interface ArticleParserOptions {
 
 export type ArticleParser = (html: string, url: string) => Promise<ArticleRead>;
 
+export interface ParsedArticleMessage {
+  id: number;
+  read: ArticleRead;
+}
+
 // One warm worker, one page at a time, replaced whenever a page outruns the limit or the
 // worker fails (docs/features/pasted-article-links.md, "Parsing").
 export const createArticleParser = ({ workerUrl, timeoutMs, heapLimitMb }: ArticleParserOptions): ArticleParser => {
@@ -44,7 +49,7 @@ export const createArticleParser = ({ workerUrl, timeoutMs, heapLimitMb }: Artic
 
   const startWorker = (): Worker => {
     const started = new Worker(workerUrl, { resourceLimits: { maxOldGenerationSizeMb: heapLimitMb } });
-    started.on("message", ({ id, read }: { id: number; read: ArticleRead }) => {
+    started.on("message", ({ id, read }: ParsedArticleMessage) => {
       if (started === worker && current?.job.id === id) {
         settle(read);
       }

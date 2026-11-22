@@ -17,9 +17,14 @@ const EmbeddingsResponse = z.object({
 
 export class EmbedderError extends Error {}
 
+export interface CreateOpenAiEmbedderOptions {
+  apiKey: string;
+  http: typeof fetch;
+}
+
 // OV-229 chose OpenAI's small model after measuring it against two open models on a real
 // library (docs/features/search-by-meaning.md, "Why OpenAI").
-export const createOpenAiEmbedder = ({ apiKey, http }: { apiKey: string; http: typeof fetch }): Embedder => {
+export const createOpenAiEmbedder = ({ apiKey, http }: CreateOpenAiEmbedderOptions): Embedder => {
   return {
     model: EMBEDDING_MODEL,
     dimensions: EMBEDDING_DIMENSIONS,

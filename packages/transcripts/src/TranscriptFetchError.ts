@@ -1,5 +1,12 @@
 import { isRetryableFailure, type TranscriptFetchFailure } from "./TranscriptFetchFailure.js";
 
+export interface TranscriptFetchErrorOptions {
+  failure: TranscriptFetchFailure;
+  cause?: unknown;
+  sourceId?: string;
+  retryAfterSeconds?: number;
+}
+
 // retryable is derived rather than passed, so a caller cannot name a failure and then
 // contradict it (docs/features/transcript-retrieval.md).
 export class TranscriptFetchError extends Error {
@@ -10,10 +17,7 @@ export class TranscriptFetchError extends Error {
   // when it said so.
   readonly retryAfterSeconds: number | null;
 
-  constructor(
-    message: string,
-    options: { failure: TranscriptFetchFailure; cause?: unknown; sourceId?: string; retryAfterSeconds?: number },
-  ) {
+  constructor(message: string, options: TranscriptFetchErrorOptions) {
     super(message, { cause: options.cause });
     this.failure = options.failure;
     this.retryable = isRetryableFailure(options.failure);

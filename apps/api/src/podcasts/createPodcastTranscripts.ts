@@ -74,7 +74,12 @@ const MOST_TRANSCRIPT_BYTES = 10 * 1024 * 1024;
 // (docs/features/podcast-on-youtube.md, "Keeping a match").
 const MATCH_KEPT_MS = 30 * 24 * 60 * 60 * 1000;
 
-export const podcastSourceKey = async (episode: { feedUrl: string; guid: string }): Promise<SourceKey> =>
+export interface FeedEpisode {
+  feedUrl: string;
+  guid: string;
+}
+
+export const podcastSourceKey = async (episode: FeedEpisode): Promise<SourceKey> =>
   sourceKey({ kind: "podcast", id: await podcastSourceId(episode) })!;
 
 const byPreference = (links: readonly PodcastTranscriptLink[]) =>
@@ -96,6 +101,11 @@ const dataApiUnavailable = (error: unknown): never => {
     cause: error,
   });
 };
+
+export interface ResolvedTranscript {
+  transcript: StoredTranscript;
+  answer: PodcastTranscriptAnswer;
+}
 
 // The podcast rungs, each asked only if the one before couldn't answer. What is kept for everyone
 // is where the words were found, never the words: a show's transcript is its own work, so each
@@ -214,7 +224,7 @@ export const createPodcastTranscripts = ({
     return known === null || !isFresh(known) ? null : fromSource(key, known.source, caller, log);
   };
 
-  const resolve = async (request: PodcastTranscriptRequest): Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }> => {
+  const resolve = async (request: PodcastTranscriptRequest): Promise<ResolvedTranscript> => {
     const key = await podcastSourceKey(request);
     const known = await sources.get(key);
     if (known !== null && isFresh(known)) {

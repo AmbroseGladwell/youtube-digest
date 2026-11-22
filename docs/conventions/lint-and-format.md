@@ -16,8 +16,9 @@ config files.
 ## Before every commit
 
 `.githooks/pre-commit` (pointed at by `task install`) runs gitleaks, then Oxlint and
-`oxfmt --check` on the staged JS and TS files only, so it takes seconds. A lint error or an
-unformatted file refuses the commit; `task format` fixes the second. It lints the files as
+`oxfmt --check` on the staged JS and TS files only, then the changed-lines rules below on the
+lines the commit adds, so it takes seconds. A lint error or an unformatted file refuses the
+commit; `task format` fixes the second. It lints the files as
 they are on disk, so a file staged in part is checked whole. Typecheck and the test suites
 stay in CI: they are too slow and too heavy on memory for every commit.
 
@@ -80,6 +81,33 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `prefer-arrow-callback` | Callbacks are arrow functions. Components take `ref` as a prop (React 19), not through `forwardRef(function …)`. |
 | `import/no-duplicates`, `import/no-cycle` | One import per module, and no cycles. |
 | `react/jsx-no-useless-fragment`, allowing expressions | No fragment around a single element. `<>{node}</>` stays allowed, since it's how a component returns a `ReactNode` as an element. |
+| `overview/no-side-effect-ternary` | A ternary sets or returns a value; a side effect is an `if`/`else`. Besides a ternary whose value is thrown away, it catches an assignment in a branch, and an arrow whose whole body is a ternary where nothing uses the result: an `on…` handler in JSX, a `forEach` or `useEffect` callback, a `: void` arrow, or one that calls a `set…` state setter. Without types it can't see every case, so it errs towards letting a returned value through. |
+| `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
+
+### Custom rules: `scripts/oxlint/`
+
+The `overview/…` rules are an Oxlint JS plugin in `scripts/oxlint/overviewPlugin.mjs`, one file
+per rule, each with a `RuleTester` test that `task test:tooling` runs. A new house rule goes
+there when no built-in rule holds the pattern.
+
+### Rules on the lines a change adds
+
+Two rules would fail on thousands of existing lines, so they check only the lines a change
+adds or edits. Nothing gets worse, and older lines are cleaned up in batches of their own.
+`.oxlintrc.changed-lines.json` holds them, and `scripts/oxlint/lintChangedLines.mjs` keeps only
+the problems on new lines. The pre-commit hook checks what's staged. CI and `task lint` check
+everything the branch adds since it left `origin/main`. A line moved unchanged within a file
+doesn't count as new; editing it does.
+
+| Rule | What it holds |
+|---|---|
+| `overview/no-long-comment` | A comment is one line at most, and never a TODO or FIXME (`commenting.md`). Tool directives such as `@ts-expect-error` and `oxlint-disable` don't count. |
+| `overview/no-repeated-string` | A string written twice in one file is a const at the top of the file. One that another product file also has is exported once, from the module that owns it. Off in tests, where repeating a fixture reads better. |
+
+`no-repeated-string` leaves out strings that are usually a string union's members rather than
+copy: single words like `"video"` or `"in-progress"`, strings compared with `===` or in a
+`case`, import paths, object keys, types and JSX attribute values. Across files it only
+compares strings of eight characters or more.
 
 ### Import boundaries
 

@@ -99,6 +99,11 @@ const readChat = (record: StoredRecord): Chat | null => {
   return read.status === "read" ? read.record : null;
 };
 
+export interface SourcePassages {
+  kind: ChatSourceKind;
+  passages: ReturnType<typeof transcriptPassages>;
+}
+
 // Answers a reader's question about one overview from their own transcript, on our key,
 // within their plan's monthly allowance. Everything that can refuse is settled before the
 // answer starts to stream; once it has, a failure gives the message back and says so in
@@ -447,10 +452,7 @@ export class ChatAnswerer {
 
   // Only what the account holds itself: no transcript, no chat, and the panel hides
   // (docs/features/chats.md, "No transcript, no chat").
-  async #source(
-    accountId: AccountId,
-    overview: Overview,
-  ): Promise<{ kind: ChatSourceKind; passages: ReturnType<typeof transcriptPassages> }> {
+  async #source(accountId: AccountId, overview: Overview): Promise<SourcePassages> {
     const { source } = overview;
     const kind = chatSourceKind(overview);
     // An article or a recipe page is answered from its overview alone: no page text is kept (OV-320).

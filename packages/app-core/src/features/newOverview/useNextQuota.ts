@@ -40,8 +40,13 @@ export const useNextQuota = (): NextQuota | null => {
   return context === null ? null : nextQuotaOf(context);
 };
 
+export interface LeftThisMonth {
+  left: number;
+  resetsOn: string | null;
+}
+
 // What's left this month on every key the next overviews could use, and when more come.
-export const useLeftThisMonth = (): { left: number; resetsOn: string | null } | null => {
+export const useLeftThisMonth = (): LeftThisMonth | null => {
   const context = useQuotaContext();
   const left = context === null ? null : leftThisMonthOf(context);
   if (context === null || left === null) {

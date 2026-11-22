@@ -93,11 +93,16 @@ export interface OnboardingCard {
   facts: { line: string };
 }
 
+export interface TargetProgress {
+  link: string;
+  sourceKey: string | null;
+}
+
 export interface OnboardingSource {
   linkKind: (link: string) => OnboardingLinkKind | null;
   keyFromLink: (link: string) => SourceKey | null;
   // What the run makes from: the link, or a playlist's chosen video. Null until it's known.
-  target: (progress: { link: string; sourceKey: string | null }) => string | null;
+  target: (progress: TargetProgress) => string | null;
   make: (target: string, makers: OnboardingMakers, options: OnboardingMakeOptions) => Promise<Overview>;
   // What the source is called on Your link, Topics and Moment 3, before and after it's found.
   noun: (linkKind: OnboardingLinkKind, found: OnboardingFound | null) => string;
@@ -388,7 +393,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
   },
 };
 
-export const onboardingSourceOf = (link: string): { source: OnboardingSource; linkKind: OnboardingLinkKind } | null => {
+export interface OnboardingSourceMatch {
+  source: OnboardingSource;
+  linkKind: OnboardingLinkKind;
+}
+
+export const onboardingSourceOf = (link: string): OnboardingSourceMatch | null => {
   for (const source of Object.values(onboardingSources)) {
     const linkKind = source.linkKind(link);
     if (linkKind !== null) {

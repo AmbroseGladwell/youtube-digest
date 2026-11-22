@@ -24,10 +24,13 @@ export type EpisodeWords = (key: SourceKey, accountId: AccountId, log: FastifyBa
 // doesn't fetch, or couldn't (docs/features/transcript-storage.md, "Each account's own copy").
 export type VideoWords = (videoId: VideoId, accountId: AccountId, log: FastifyBaseLogger) => Promise<StoredTranscript | null>;
 
-export const transcriptRoutes = (
-  app: FastifyInstance,
-  { transcripts, episodeWords, videoWords }: { transcripts: TranscriptsRepository; episodeWords: EpisodeWords; videoWords: VideoWords },
-): void => {
+export interface TranscriptRoutesOptions {
+  transcripts: TranscriptsRepository;
+  episodeWords: EpisodeWords;
+  videoWords: VideoWords;
+}
+
+export const transcriptRoutes = (app: FastifyInstance, { transcripts, episodeWords, videoWords }: TranscriptRoutesOptions): void => {
   // The words an account has a note on but no copy of, fetched for it and kept as its own.
   const fetchedFor = async (accountId: AccountId, videoId: VideoId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
     if (!(await transcripts.hasLiveNote(accountId, videoId))) {

@@ -56,7 +56,12 @@ export const chosenBarLine = (
   );
 };
 
-export const madeNowNotice = (captures: readonly QueuedCapture[], paceOf: PaceOf): { lead: string; rest: string } => {
+export interface MadeNowNotice {
+  lead: string;
+  rest: string;
+}
+
+export const madeNowNotice = (captures: readonly QueuedCapture[], paceOf: PaceOf): MadeNowNotice => {
   const lead = captures.length === 1 ? `Making “${captures[0]!.title}” next.` : `Making ${captures.length.toLocaleString("en-GB")} next.`;
   return { lead, rest: paceStays(captures, paceOf) };
 };

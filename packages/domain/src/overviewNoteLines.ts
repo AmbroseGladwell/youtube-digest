@@ -57,7 +57,12 @@ const inOrder = (items: Body[], middleLinks: string[]): Body[] =>
     return { ...item, spoken: `${link}, ${afterOrdinal(item.text)}` };
   });
 
-const withRange = ({ text, range }: { text: string; range: TimeRange | null }): Body => (range === null ? { text } : { text, range });
+interface RangedText {
+  text: string;
+  range: TimeRange | null;
+}
+
+const withRange = ({ text, range }: RangedText): Body => (range === null ? { text } : { text, range });
 
 const COUNT_NAME = ["", "one", "two", "three", "four", "five", "six", "seven"];
 const STEP_COUNT_NAME = [
@@ -106,6 +111,13 @@ const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[]) =
 // One chapter has nowhere to link but the top of the page (design 77p).
 export const hasChapterLinks = (overview: SharedNote): boolean => (overview.article?.chapters.length ?? 0) > 1;
 
+export interface ShownRecipeParts {
+  ingredients?: readonly string[];
+  units?: RecipeUnits;
+  methodAmounts?: readonly MethodAmount[];
+  steps?: boolean;
+}
+
 // Takes SharedNote rather than Overview because a shared copy has to build the same body
 // from the same fields, and the three the copy leaves out are ones this never read
 // (docs/features/sharing.md). An Overview is a SharedNote with more on it.
@@ -113,10 +125,7 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
 // `steps: false` is the reader's switch: the block is hidden everywhere, and How to apply is
 // introduced as it was before the block.
-export const overviewNoteLines = (
-  overview: SharedNote,
-  shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[]; steps?: boolean } = {},
-): NoteLine[] => {
+export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts = {}): NoteLine[] => {
   const lines: NoteLine[] = [];
 
   const section = (name: string, heading: Body, bodies: Body[], bullet = false) => {

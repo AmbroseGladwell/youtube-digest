@@ -70,6 +70,11 @@ export interface PutShareInput {
   contentHash: string;
 }
 
+export interface SharedOverviewRef {
+  overviewId: string;
+  stopped: boolean;
+}
+
 // A live link per overview, and every link ever made kept afterwards so a revoked one can
 // still answer honestly. Stopping does not delete the row, it marks it, which is what lets
 // /s/<token> say "no longer shared" rather than 404 (docs/features/sharing.md).
@@ -140,7 +145,7 @@ export class SharesRepository {
 
   // Which overview a shared page's events are about, read without counting a visit. A
   // stopped link still answers, so what its visitors do next is counted too.
-  async overviewFor(token: string): Promise<{ overviewId: string; stopped: boolean } | null> {
+  async overviewFor(token: string): Promise<SharedOverviewRef | null> {
     const rows = await this.#sql.query<{ overview_id: string; revoked_at: Date | null }>(
       "select overview_id, revoked_at from shares where token = $1",
       [token],

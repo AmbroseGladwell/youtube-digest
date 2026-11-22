@@ -31,7 +31,12 @@ import { OVERVIEW_SECTIONS } from "./overviewSections.js";
 
 export const NOT_SIGNED_IN_ROW_VALUE = "Not signed in";
 
-export const accountRowValue = (sync: { connected: boolean; status: SyncStatus }, connection: SyncConnection, now: Date): string => {
+export interface AccountSyncState {
+  connected: boolean;
+  status: SyncStatus;
+}
+
+export const accountRowValue = (sync: AccountSyncState, connection: SyncConnection, now: Date): string => {
   if (!sync.connected) {
     return NOT_SIGNED_IN_ROW_VALUE;
   }

@@ -33,10 +33,15 @@ export interface DirectoryEpisode {
   durationSeconds: number | null;
 }
 
+export interface ShowWithEpisodes {
+  show: DirectoryShow;
+  episodes: DirectoryEpisode[];
+}
+
 // What a Spotify link needs of a directory: the show by its name, and its newest episodes.
 export interface ShowDirectory {
   searchShows(name: string): Promise<DirectoryShow[]>;
-  showWithEpisodes(showId: string): Promise<{ show: DirectoryShow; episodes: DirectoryEpisode[] } | null>;
+  showWithEpisodes(showId: string): Promise<ShowWithEpisodes | null>;
 }
 
 export type FetchJson = (url: string) => Promise<unknown>;
@@ -69,18 +74,23 @@ const parsed = <T>(schema: z.ZodType<T>, rows: readonly unknown[]): T[] =>
     return result.success ? [result.data] : [];
   });
 
+export interface ShowEpisode {
+  show: DirectoryShow;
+  episode: DirectoryEpisode;
+}
+
 // Apple's free directory: a show's feed, and the guids of its newest episodes
 // (docs/features/podcast-links.md, "From a link to an episode").
 export const appleDirectory = (fetchJson: FetchJson) => {
   return {
-    async showWithEpisodes(showId: string): Promise<{ show: DirectoryShow; episodes: DirectoryEpisode[] } | null> {
+    async showWithEpisodes(showId: string): Promise<ShowWithEpisodes | null> {
       const { results } = Results.parse(
         await fetchJson(`${LOOKUP}?id=${encodeURIComponent(showId)}&entity=podcastEpisode&limit=${MOST_EPISODES}`),
       );
       const [show] = parsed(Show, results);
       return show === undefined ? null : { show: toShow(show), episodes: parsed(Episode, results).map(toEpisode) };
     },
-    async searchEpisodes(title: string): Promise<{ show: DirectoryShow; episode: DirectoryEpisode }[]> {
+    async searchEpisodes(title: string): Promise<ShowEpisode[]> {
       const { results } = Results.parse(
         await fetchJson(`${SEARCH}?term=${encodeURIComponent(title)}&media=podcast&entity=podcastEpisode&limit=10`),
       );

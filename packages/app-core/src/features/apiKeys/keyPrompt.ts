@@ -21,10 +21,13 @@ export type KeyPrompt =
   | { kind: "no-key"; heading: string; detail: string }
   | { kind: "wrong-device"; heading: string; detail: string; provider: Provider; fallback: Provider; footnote: string };
 
-export const keyPrompt = (
-  readiness: GenerationReadiness,
-  { surface, isPhone, detail }: { surface: Surface; isPhone: boolean; detail: string },
-): KeyPrompt | null => {
+export interface KeyPromptOptions {
+  surface: Surface;
+  isPhone: boolean;
+  detail: string;
+}
+
+export const keyPrompt = (readiness: GenerationReadiness, { surface, isPhone, detail }: KeyPromptOptions): KeyPrompt | null => {
   if (readiness.hasChosenKey) {
     return null;
   }

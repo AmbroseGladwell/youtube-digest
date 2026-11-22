@@ -8,6 +8,11 @@ import { ChatOtherOverviewCitation } from "../ChatOtherOverviewCitation/ChatOthe
 import styles from "./AskAnswer.module.scss";
 import { askAnswerTestIds } from "./AskAnswerTestIds.js";
 
+export interface OverviewImage {
+  url: string | null;
+  wide: boolean;
+}
+
 export interface AskAnswerProps {
   text: string;
   sections: ChatAnswerSections | undefined;
@@ -16,7 +21,7 @@ export interface AskAnswerProps {
   scope: "library" | "project";
   arrived?: boolean;
   holds: (overviewId: string) => boolean;
-  imageOf: (overviewId: string) => { url: string | null; wide: boolean };
+  imageOf: (overviewId: string) => OverviewImage;
   onFollowed: (citation: OtherOverviewCitation) => void;
   onSourcesOpened: (count: number) => void;
   actions: (sources: ReactNode) => ReactNode;

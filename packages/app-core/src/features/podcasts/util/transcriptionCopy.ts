@@ -24,8 +24,13 @@ export interface TranscriptionNotice {
   body: string;
 }
 
+interface MoreTranscriptionOffer {
+  upsell: string;
+  route: TranscriptionStopRoute;
+}
+
 // What else transcribes more, for a plan that has somewhere to go (design 305h).
-const moreOf = (plan: Plan): { upsell: string; route: TranscriptionStopRoute } => {
+const moreOf = (plan: Plan): MoreTranscriptionOffer => {
   if (plan === "free") {
     return { upsell: "BYO Plus transcribes 15 hours a month, Plus 30.", route: "plans" };
   }

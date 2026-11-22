@@ -45,7 +45,13 @@ export interface FollowUpAssistantMenuProps {
 
 type Option = "here" | FollowUpAssistant;
 
-const OptionDetail = ({ assistant, connected, continueIn }: { assistant: FollowUpAssistant; connected: boolean; continueIn: boolean }) => {
+interface OptionDetailProps {
+  assistant: FollowUpAssistant;
+  connected: boolean;
+  continueIn: boolean;
+}
+
+const OptionDetail = ({ assistant, connected, continueIn }: OptionDetailProps) => {
   if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null) {
     return (
       <>
@@ -155,7 +161,13 @@ export const FollowUpAssistantMenu = ({
               options.current[index] = element;
             }}
             className={styles.option}
-            onClick={() => (option === "here" ? onChooseHere() : onChoose(option))}
+            onClick={() => {
+              if (option === "here") {
+                onChooseHere();
+              } else {
+                onChoose(option);
+              }
+            }}
             data-testid={followUpAssistantMenuTestIds.option(option)}
           >
             <span className={`${styles.dot} ${option === checked ? styles.dotOn : ""}`} aria-hidden="true" />

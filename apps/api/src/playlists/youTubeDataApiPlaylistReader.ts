@@ -69,7 +69,12 @@ const whyUnavailable = async (youTubeFetch: YouTubeFetch, playlistId: string): P
   return response.status === 401 || response.status === 403 ? "private" : "gone";
 };
 
-export const youTubeDataApiPlaylistReader = ({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): PlaylistReader => {
+export interface YouTubeDataApiPlaylistReaderOptions {
+  apiKey: string;
+  youTubeFetch: YouTubeFetch;
+}
+
+export const youTubeDataApiPlaylistReader = ({ apiKey, youTubeFetch }: YouTubeDataApiPlaylistReaderOptions): PlaylistReader => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   return {

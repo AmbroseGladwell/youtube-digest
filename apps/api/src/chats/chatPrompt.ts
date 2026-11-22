@@ -5,6 +5,11 @@ import type { Passage } from "./transcriptPassages.js";
 
 const passageBlock = (passage: Passage): string => `[${passage.id} ${formatClock(passage.startMs / 1000)}] ${passage.text}`;
 
+export interface ChatSystemPromptOptions {
+  recipe?: boolean;
+  reader?: string | null;
+}
+
 // OV-267's fullTranscript shape, which cited the right moment on 46 of 48 questions and
 // declined all 24 the source didn't answer, with the overview's items given ids so an answer
 // can cite them too (OV-319). It is the first message and never changes within a
@@ -14,7 +19,7 @@ export const chatSystemPrompt = (
   kind: ChatSourceKind,
   overview: string,
   passages: readonly Passage[],
-  { recipe = false, reader = null }: { recipe?: boolean; reader?: string | null } = {},
+  { recipe = false, reader = null }: ChatSystemPromptOptions = {},
 ): string => {
   const prompt = answeredFromOverviewAlone(kind) ? overviewOnlyPrompt(kind, overview) : sourcePrompt(kind, overview, passages, recipe);
   return `${prompt}\n\n${reader === null ? NOTHING_KNOWN : readerBlock(kind, reader)}`;
@@ -76,20 +81,17 @@ ${transcriptBlocks(passages)}`;
 const AMOUNTS_RULE =
   "- Never work out an amount yourself: never scale a quantity, change the number of servings, or convert a unit, weight or temperature. Give the recipe's own amounts and cite them, and when the question wants other amounts, say the servings control above the ingredients changes them.";
 
-// OV-329: a fair question the source doesn't cover gets a short answer from general knowledge,
-// said to be from beyond it, rather than a refusal. The app labels it from its citations, never
-// from generalKnowledge, which only tells a general answer from a decline in the log line.
-const beyondSourceRules = ({
-  noun,
-  material,
-  decline,
-  cited,
-}: {
+interface BeyondSourceRulesOptions {
   noun: string;
   material: string;
   decline: string;
   cited: string;
-}): string => {
+}
+
+// OV-329: a fair question the source doesn't cover gets a short answer from general knowledge,
+// said to be from beyond it, rather than a refusal. The app labels it from its citations, never
+// from generalKnowledge, which only tells a general answer from a decline in the log line.
+const beyondSourceRules = ({ noun, material, decline, cited }: BeyondSourceRulesOptions): string => {
   const opening = decline.charAt(0).toUpperCase() + decline.slice(1);
   return `- When neither ${material} answers the question but it is a fair question about the ${noun}'s subject (why something works, what something means, whether two things go together), begin with "${opening}." and then answer briefly from general knowledge. Set inSource to false, leave ${cited} empty, and set generalKnowledge to true.
 - When the ${noun} answers part of the question and general knowledge adds to it, give the ${noun}'s part first with its citations, then mark the rest with "Beyond the ${noun}, …", and set generalKnowledge to true.

@@ -21,13 +21,18 @@ export class SyncRequestError extends Error {
 
 export const isSyncRequestError = (error: unknown): error is SyncRequestError => error instanceof SyncRequestError;
 
+export interface SyncTransportErrorOptions {
+  cause?: unknown;
+  requestId?: string;
+}
+
 // The server did not answer, or answered with something that is not the API: no network,
 // a proxy's error page, a body that fails the schema.
 export class SyncTransportError extends Error {
   // The id the request was sent with, when it got as far as being sent.
   readonly requestId: string | undefined;
 
-  constructor(message: string, options?: { cause?: unknown; requestId?: string }) {
+  constructor(message: string, options?: SyncTransportErrorOptions) {
     super(message, options?.cause === undefined ? undefined : { cause: options.cause });
     this.name = "SyncTransportError";
     this.requestId = options?.requestId;

@@ -135,12 +135,19 @@ const resolveStandsOut = (input: GenerationInput, novelty: Novelty, standsOut: G
   return { text, range: resolveOptionalRange(input, standsOut === null ? null : segmentRangeOf(standsOut)) };
 };
 
+interface SegmentRange {
+  startSegmentIndex: number;
+  endSegmentIndex: number;
+}
+
+interface MsRange {
+  startMs: number;
+  endMs: number;
+}
+
 // A stretch a line merely points at: one that doesn't fit the transcript loses its jump
 // rather than failing the overview (docs/features/novelty-scale.md).
-const resolveOptionalRange = (
-  input: GenerationInput,
-  range: { startSegmentIndex: number; endSegmentIndex: number } | null,
-): { startMs: number; endMs: number } | null => {
+const resolveOptionalRange = (input: GenerationInput, range: SegmentRange | null): MsRange | null => {
   const fits = range !== null && range.startSegmentIndex <= range.endSegmentIndex && range.endSegmentIndex < input.transcript.length;
   return fits ? resolveRange(input, range) : null;
 };
@@ -186,10 +193,7 @@ const resolveDubiousClaims = (input: GenerationInput, dubiousClaims: DubiousClai
   });
 };
 
-const resolveRange = (
-  input: GenerationInput,
-  range: { startSegmentIndex: number; endSegmentIndex: number } | null,
-): { startMs: number; endMs: number } | null => {
+const resolveRange = (input: GenerationInput, range: SegmentRange | null): MsRange | null => {
   if (!range) {
     return null;
   }

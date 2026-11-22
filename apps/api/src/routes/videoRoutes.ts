@@ -17,29 +17,20 @@ import type { VideoReader } from "../videos/youTubeDataApiVideoReader.js";
 
 const Body = z.object({ videoId: VideoId });
 
+export interface VideoRoutesOptions {
+  reader: VideoReader | null;
+  generator: OurKeyGenerator | null;
+  service: ServiceTranscripts | null;
+  kinds: VideoKindsRepository;
+  trials: TrialsRepository;
+  sql: SqlClient;
+  clock: () => Date;
+}
+
 // A video's card, read before anything is written: an account, or signed out a trial token
 // reading onboarding's link, as an article's or an episode's read is, with its kind where it
 // can be checked. Never the video in a log.
-export const videoRoutes = (
-  app: FastifyInstance,
-  {
-    reader,
-    generator,
-    service,
-    kinds,
-    trials,
-    sql,
-    clock,
-  }: {
-    reader: VideoReader | null;
-    generator: OurKeyGenerator | null;
-    service: ServiceTranscripts | null;
-    kinds: VideoKindsRepository;
-    trials: TrialsRepository;
-    sql: SqlClient;
-    clock: () => Date;
-  },
-): void => {
+export const videoRoutes = (app: FastifyInstance, { reader, generator, service, kinds, trials, sql, clock }: VideoRoutesOptions): void => {
   app.post(
     "/videos/read",
     {

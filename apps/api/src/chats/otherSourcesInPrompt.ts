@@ -80,9 +80,15 @@ export const otherSourcesInPrompt = (
   return { blocks, labels, minuteLabels };
 };
 
+interface ShownMinutes {
+  label: string;
+  title: string;
+  passages: readonly Passage[];
+}
+
 // OV-307's keyword shape: the minutes beside their overviews, each with an id the model cites in
 // passages, which code turns into a time of that overview's source.
-const minutesBlock = (shown: ReadonlyArray<{ label: string; title: string; passages: readonly Passage[] }>): string => {
+const minutesBlock = (shown: ReadonlyArray<ShownMinutes>): string => {
   return `# Minutes of their transcripts that match the question's words
 
 Each line is a minute of the transcript of one of the reader's other overviews above, with its id (such as S2.p14). When an answer uses one, list its id as a source, even where this chat's own material has no transcript. inSource is still about this chat's own transcript alone.

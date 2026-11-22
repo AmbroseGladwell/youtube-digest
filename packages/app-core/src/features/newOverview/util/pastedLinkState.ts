@@ -13,9 +13,14 @@ export interface PastedLinkState {
   episodeAction: EpisodeAction | null;
 }
 
+export interface PastedPodcast {
+  link: PodcastLink;
+  platformLink: boolean;
+}
+
 // A Spotify or Apple link is only ever an episode. Any other page is one only once our server has
 // found the episode there, and until it has, it may still be an article.
-export const pastedLinkState = (article: ArticleLink, podcast: { link: PodcastLink; platformLink: boolean }): PastedLinkState => {
+export const pastedLinkState = (article: ArticleLink, podcast: PastedPodcast): PastedLinkState => {
   const podcastShown = podcast.platformLink
     ? podcast.link.status !== "none"
     : podcast.link.status === "found" || podcast.link.status === "held";
