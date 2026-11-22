@@ -1,4 +1,4 @@
-// 354v and the mp4: small muted type, the same size as the folded line, the mark as the loader.
+// Design 354v and its mp4.
 .root {
   display: flex;
   flex-direction: column;
@@ -185,7 +185,6 @@
   }
 }
 
-// Reduced motion: no spinning, no slides, ticks appear without drawing, the titles together.
 @media (prefers-reduced-motion: reduce) {
   .on .arc,
   .titles li,

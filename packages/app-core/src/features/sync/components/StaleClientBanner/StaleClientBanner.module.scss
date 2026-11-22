@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// The generation strip's slot, under the masthead, on the stone tint: the two can
-// stack, and this one carries the cause and the one global action while the cards carry
-// everything else (docs/features/record-migrations.md, "Where the banner lives").
+// The slot: docs/features/record-migrations.md, "Where the banner lives, and when it has a button".
 .root {
   background: var(--stone-tint);
   color: var(--on-stone-tint);

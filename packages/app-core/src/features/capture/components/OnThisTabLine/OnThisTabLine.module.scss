@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 205e: one 36px pill in the band under the bar, inset from the panel's edges so it
-// reads as a notice about the tab rather than another band of chrome. It sits inside the
-// measured masthead, so every pixel it takes comes off the note.
+// Design 205e: inside the measured masthead, so every pixel it takes comes off the note.
 .root {
   display: flex;
   align-items: center;
@@ -22,8 +20,6 @@
   color: var(--label);
 }
 
-// Wider than 400 the line stretches and the copy stays put, so there is nothing
-// width-dependent to say (design 205w).
 .message {
   flex: 1;
   min-width: 0;

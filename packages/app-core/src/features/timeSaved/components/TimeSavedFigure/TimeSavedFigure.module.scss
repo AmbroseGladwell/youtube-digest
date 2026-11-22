@@ -1,5 +1,4 @@
-// Each digit strip sits in a one-row window and travels the rows between the old value and
-// the new; the strips start in turn, units first (docs/features/time-saved.md).
+// Each digit strip travels a one-row window, units first (docs/features/time-saved.md, "Every day").
 $row: 1.2em;
 
 .root {

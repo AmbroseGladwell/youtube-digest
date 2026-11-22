@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// The dialog DeleteOverviewDialog draws, widened for the link row: a centred card on a
-// desktop and a bottom sheet on a phone (OV-30 Sharing, 30b–30d).
+// DeleteOverviewDialog's dialog, widened for the link row (30b–30d).
 $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .dialog {
@@ -164,8 +163,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   gap: 0.5rem;
 }
 
-// On the surface rather than the card, because the panel itself is the card: a white
-// field on a white dialog has no edge in the light theme.
+// On the surface, since a white field on the white dialog has no edge in the light theme.
 .linkField {
   @include controls.field-pill;
 
@@ -233,8 +231,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   @include controls.pill-md;
 }
 
-// Quiet until the pointer arrives, and in the accent rather than the ink: stopping is
-// destructive but it is not the thing the reader came here to do (design 30c).
+// Quiet: stopping is destructive but not what the reader came to do (design 30c).
 .dangerAction {
   @include controls.ghost-pill;
   @include controls.pill-md;
@@ -266,8 +263,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
     grid-template-columns: 1fr;
   }
 
-  // Design 30d: the sheet stacks its actions, Share… above Copy link, with the link
-  // itself readable above both.
+  // Design 30d: the sheet stacks its actions under the link.
   .linkRow {
     flex-direction: column;
     align-items: stretch;

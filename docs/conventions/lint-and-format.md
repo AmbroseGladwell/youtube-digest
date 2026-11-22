@@ -88,6 +88,10 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `overview/no-long-comment` | A comment is one line at most, and never a TODO or FIXME (`commenting.md`). Tool directives such as `@ts-expect-error` and `oxlint-disable` don't count. It ran on changed lines only until OV-377 cleared the 2,507 older ones. |
 | `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
 
+### Stylesheets
+
+Oxlint doesn't read SCSS or CSS, so `scripts/checkStyleComments.mjs` holds the same line there as `no-long-comment` does in TypeScript: no comment of more than one line, and no TODO or FIXME (OV-378). `npm run lint` runs it on every style file, and the pre-commit hook on the staged ones. `prototype/` is left alone, as evidence.
+
 ### Type-aware rules
 
 `npm run lint` and the pre-commit hook pass `--type-aware`, so Oxlint asks `oxlint-tsgolint` (TypeScript's own checker, in Go) for types. That runs the type-aware rules in `correctness`, and the two below. A run over the whole repo takes about 9 seconds and peaks under 1 GB. On a commit's few files it takes under a second. It reads `@overview/*` types from each package's `dist`, so CI's `lint` job builds the packages first, and locally a stale `dist` gives stale answers, just as it does for `task typecheck`.

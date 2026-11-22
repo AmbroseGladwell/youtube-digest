@@ -1,8 +1,7 @@
 @use "../../../../theme/controls.scss" as controls;
 @use "../../../../theme/dialog.scss" as dialog;
 
-// Design 84j–84n: a tall centred dialog on a desktop and a sheet on a phone, the list scrolling
-// between a fixed head and a fixed action bar.
+// Design 84j–84n: the list scrolls between a fixed head and a fixed action bar.
 .dialog {
   @include dialog.dialog-shell;
 }

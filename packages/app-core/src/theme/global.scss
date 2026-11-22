@@ -1,6 +1,9 @@
 @use "./tokens.scss";
 @use "./stickyFade.scss";
 
+$ios-no-zoom-field-size: 16px;
+$cited-part-clearance: 90px;
+
 * {
   box-sizing: border-box;
 }
@@ -44,13 +47,12 @@ select {
   color: inherit;
 }
 
-// iOS zooms the page into any field under 16px when it takes focus. Raising the field
-// rather than capping the viewport's scale keeps pinch-to-zoom working (OV-33).
+// Raising the field, not capping the viewport's scale, keeps pinch-to-zoom working (OV-33).
 @media (pointer: coarse) {
   input,
   textarea,
   select {
-    font-size: 16px !important;
+    font-size: $ios-no-zoom-field-size !important;
   }
 }
 
@@ -88,14 +90,12 @@ a:hover {
     @include stickyFade.fade-gradient(var(--ground));
   }
 
-  // The fallback, and the reduced-motion path: the blanket rule at the foot of this file
-  // leaves the animation below switched off for this to answer.
+  // The fallback, and the reduced-motion path once the foot of this file switches animation off.
   :root[data-page-scrolled] &::after {
     opacity: 1;
   }
 
-  // Guarded because with no scroll timeline this would run on time instead, showing the
-  // fade at the top of the page.
+  // Guarded: with no scroll timeline it would run on time, showing the fade at the top.
   @supports (animation-timeline: scroll()) {
     &::after {
       animation: sticky-fade-in linear both;
@@ -126,11 +126,9 @@ a:hover {
   }
 }
 
-// A part of the overview a chat answer's citation was followed to: tinted until another
-// citation is followed or chat closes, and brought to just below the top (designs 319n–319s).
-// Focus lands on it with no outline: the tint is the mark.
+// A part a chat citation was followed to (319n–319s): focus lands with no outline, the tint marks it.
 [data-overview-part] {
-  scroll-margin-top: 90px;
+  scroll-margin-top: $cited-part-clearance;
 }
 
 // Raised above a component's own line and hover backgrounds, which load after this sheet.

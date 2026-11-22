@@ -1,12 +1,12 @@
-// Design 310g: 64px from the top on a phone, so the note's title stays in view; in the
-// extension's panel, under its masthead.
+$clear-of-note-title: 4rem; // Design 310g
+
 .sheet {
   position: fixed;
   z-index: 200;
   left: 0;
   right: 0;
   bottom: 0;
-  top: var(--chat-sheet-top, 4rem);
+  top: var(--chat-sheet-top, $clear-of-note-title);
   display: flex;
   flex-direction: column;
   border-radius: 1.375rem 1.375rem 0 0;

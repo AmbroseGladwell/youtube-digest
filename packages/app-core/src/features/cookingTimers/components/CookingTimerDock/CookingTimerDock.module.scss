@@ -1,12 +1,13 @@
-// Designs 288g–288r: one dock at the foot of the page, centred at the floating player's width.
-// The timers sit above the player in tiles of the same card and shadow.
+$floating-player-width: 32.5rem;
+
+// Designs 288g–288r.
 .dock {
   position: fixed;
   left: 50%;
   bottom: 1.25rem;
   z-index: 4;
   transform: translateX(-50%);
-  width: min(32.5rem, calc(100% - 2rem));
+  width: min($floating-player-width, calc(100% - 2rem));
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -17,8 +18,7 @@
   }
 }
 
-// Designs 288aa, 288ab: one quiet line above the timers, on a pill of its own so the page under it
-// never shows through.
+// Designs 288aa and 288ab: on a pill of its own, so the page under it never shows through.
 .line {
   align-self: center;
   margin: 0;

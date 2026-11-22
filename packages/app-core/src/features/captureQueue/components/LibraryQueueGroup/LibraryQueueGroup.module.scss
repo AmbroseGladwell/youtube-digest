@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Recessed rather than raised: the group sits a step below the ground the tiles stand on,
-// so nothing in it reads as a finished overview (design 27i).
+// Recessed rather than raised, so nothing in it reads as a finished overview (design 27i).
 .root {
   display: flex;
   flex-direction: column;

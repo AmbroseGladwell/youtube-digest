@@ -60,10 +60,7 @@ $ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   cursor: pointer;
 }
 
-// A phone folds the search into an icon at the row's left edge, with sort, Filters and select
-// together on the right. Opening grows the field across the row and the three fade out; a
-// query kept with the keyboard down leaves it open beside them ("OV-168 5" 168au–168aw).
-// The width changes at once and a clip draws the growth (docs/features/library-view.md, "Search").
+// Designs 168au–168aw; how it grows: docs/features/library-view.md, "Search".
 @media (max-width: 47.9375rem) {
   .root[data-search] {
     min-height: $folded;

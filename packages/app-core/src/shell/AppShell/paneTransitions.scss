@@ -1,17 +1,12 @@
-// Design 9c, choreographed the way docs/conventions/frontend-architecture-guide.md 2.4
-// asks for: one stylesheet beside the swapping region, and the reasoning for each
-// non-obvious rule kept in that section rather than repeated here.
-//
-// Forward the pane arrives from 10px right over 300ms; back the library returns from 6px
-// left over 260ms. Leaves are shorter and ease in, which is 2.4's asymmetry. The direction
-// is published on the root by AppShell from navigationDirection().
+// Why each rule: docs/conventions/frontend-architecture-guide.md, "2.4 Choreograph in one dedicated stylesheet".
+$slide-from-right: 10px;
+$slide-from-left: -6px;
 
 :root {
   view-transition-name: none;
 }
 
-// 2.4 rule 2: the masthead is identical before and after and paints above the pane, so it
-// is captured and only the new snapshot is painted, held steady.
+// 2.4 rule 2: the masthead is identical before and after, so only the new snapshot paints.
 ::view-transition-group(masthead),
 ::view-transition-new(masthead) {
   animation: none;
@@ -34,8 +29,7 @@
   z-index: 3;
 }
 
-// The default cross-fade blends the two snapshots additively, which washes out everything
-// they overlap on once the opacity below is ours rather than the browser's.
+// The default cross-fade blends additively, washing out the overlap once the opacity is ours.
 ::view-transition-old(pane),
 ::view-transition-new(pane) {
   mix-blend-mode: normal;
@@ -44,7 +38,7 @@
 @keyframes paneEnterForward {
   from {
     opacity: 0;
-    transform: translateX(10px);
+    transform: translateX($slide-from-right);
   }
   to {
     opacity: 1;
@@ -59,14 +53,14 @@
   }
   to {
     opacity: 0;
-    transform: translateX(-6px);
+    transform: translateX($slide-from-left);
   }
 }
 
 @keyframes paneEnterBack {
   from {
     opacity: 0;
-    transform: translateX(-6px);
+    transform: translateX($slide-from-left);
   }
   to {
     opacity: 1;
@@ -81,7 +75,7 @@
   }
   to {
     opacity: 0;
-    transform: translateX(10px);
+    transform: translateX($slide-from-right);
   }
 }
 
@@ -101,12 +95,7 @@
   animation: paneLeaveBack 160ms ease-in both;
 }
 
-// Design OV-170 170b, 170e, 170g: the row's thumbnail and the note's head image are one
-// object. useOverviewImageMorph names both ends `overview-image`, so only the group's box
-// is animated between them. The two snapshots are not crossfaded: the old one is hidden and
-// the new one painted at its own radius for the whole flight, which is what keeps a read
-// row's half-opacity tile from showing through and why the image comes up to full on the
-// way. `height: 100%` with `object-fit: cover` holds the 16:9 crop while the box changes.
+// The image morph: docs/features/page-transitions.md, "The row becomes the head".
 ::view-transition-group(overview-image) {
   z-index: 2;
   animation-duration: var(--motion-arrive);
@@ -128,10 +117,7 @@
   opacity: 0;
 }
 
-// Design OV-170 170h, "The pane while it runs": with the image carrying the eye the pane
-// holds still and only crossfades. The 10px slide is dropped for this journey alone,
-// because two movements in different directions read as a stutter. Every other navigation
-// keeps 9c as built, including this one when there is no image to carry.
+// Why the pane only fades here: docs/features/page-transitions.md, "The row becomes the head".
 @keyframes paneFade {
   from {
     opacity: 0;
@@ -160,14 +146,12 @@
   animation-name: paneFadeOut;
 }
 
-// 170h's timing table: coming back the note leaves in 150ms rather than 9c's 160ms, because
-// the image is already on its way home.
+// 170h's timing table: docs/features/page-transitions.md, "The row becomes the head".
 :root[data-overview-morph][data-nav-direction="back"]::view-transition-old(pane) {
   animation-duration: 150ms;
 }
 
-// shouldAnimateNavigation() already refuses to start one of these, so this is the belt to
-// its braces: a transition begun any other way still comes out at its end state.
+// Belt to shouldAnimateNavigation()'s braces, for a transition begun any other way.
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),

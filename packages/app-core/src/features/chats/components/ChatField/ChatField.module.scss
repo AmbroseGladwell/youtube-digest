@@ -37,8 +37,7 @@
     overflow: hidden;
   }
 
-  // Empty, the field is one line: a long placeholder ends in an ellipsis rather than wrapping
-  // out of sight (OV-362).
+  // A long placeholder ends in an ellipsis rather than wrapping out of sight (OV-362).
   &:placeholder-shown {
     field-sizing: fixed;
     white-space: nowrap;
@@ -103,8 +102,7 @@
   background: currentColor;
 }
 
-// OV-354, page 1: a quiet "@" at the field's left, as tall as Send so its centre sits on the line of
-// text (OV-362).
+// As tall as Send, so its centre sits on the line of text (OV-354 page 1, OV-362).
 .at {
   display: inline-flex;
   flex: none;
@@ -126,7 +124,7 @@
   }
 }
 
-// 354u: the Ask page's empty field, taller and a little larger.
+// Design 354u.
 .large {
   min-height: 3.5rem;
   padding-left: 1.125rem;

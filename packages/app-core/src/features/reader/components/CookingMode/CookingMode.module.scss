@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Designs 150c (phone), 150x (panel) and 150z (web). The action's size steps down with its
-// length, set as --length from 0 (a few words) to 1 (30 words and over), in rem so it grows
-// with the reader's own text size.
+// Designs 150c, 150x and 150z; --length runs 0 (a few words) to 1 (30 words and over).
 .root {
   --action-max: 2.125rem;
   --action-min: 1.4375rem;
@@ -61,9 +59,7 @@
   }
 }
 
-// On the web the action's scale follows the column it sits in as well as its length: one
-// step down under 720px, the phone's sizes under 480px, with the controls stacked as on a
-// phone (designs 190g, 190k). The class comes from useCookingColumnScale.
+// The column's scale, from useCookingColumnScale (designs 190g, 190k).
 .narrow,
 .compact {
   --next-height: 5.5rem;
@@ -81,11 +77,7 @@
   --action-min: 1.4375rem;
 }
 
-// The cooking screen and, on the web, the ingredients drawer beside it, in one row: opening
-// the drawer narrows the screen rather than covering it (190a). The gauge is laid out at the
-// width the screen will settle at, so its scale can be read before the drawer has moved. The
-// row is the window's height exactly, so a long ingredients list scrolls inside the drawer
-// instead of pushing the controls below the fold.
+// The screen and its drawer in one row: docs/features/recipe-notes.md, "Cooking step by step".
 .layout {
   position: relative;
   display: flex;
@@ -208,8 +200,7 @@
   background: var(--muted) !important;
 }
 
-// The step being cooked fills a little with each of its actions, and is full on its last
-// (OV-162).
+// The step being cooked fills with each of its actions, full on its last (OV-162).
 .dotFill {
   display: block;
   height: 100%;
@@ -242,9 +233,7 @@
   }
 }
 
-// The action moves inside this frame and fades over its padding, so text swiped or rising past
-// the frame's edge dissolves before the progress dots and the controls, and never shows under
-// them (OV-160).
+// Text moving past the frame's edge fades over its padding, never under the controls (OV-160).
 .stage {
   --fade-top: 1.625rem;
   --fade-bottom: 1.125rem;
@@ -282,8 +271,7 @@
   }
 }
 
-// OV-158: the next action rises from where it was previewed, and the last one comes back down.
-// A drag follows the finger with no easing; letting go springs back.
+// OV-158: a drag follows the finger with no easing; letting go springs back.
 .dragging {
   transition: none;
 }

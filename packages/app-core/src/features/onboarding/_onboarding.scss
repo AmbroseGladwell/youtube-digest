@@ -1,7 +1,6 @@
 @use "../../theme/controls.scss" as controls;
 
-// What every onboarding screen shares (designs 46b–46k): a Gloock heading that takes focus,
-// one or two lines under it, and the actions at the foot of the column.
+// What every onboarding screen shares (designs 46b–46k).
 @mixin heading {
   margin: 0;
   font-family: var(--font-heading);
@@ -35,8 +34,7 @@
   gap: 1rem;
 }
 
-// Pinned to the foot of the step's scroll area on every step, so Continue never scrolls off;
-// a step that fits looks as it did (docs/features/onboarding-foot.md, designs 210a–210k).
+// Why it's pinned: docs/features/onboarding-foot.md, "The problem" (designs 210a–210k).
 @mixin foot {
   position: sticky;
   bottom: 0;

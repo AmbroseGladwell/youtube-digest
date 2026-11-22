@@ -1,5 +1,4 @@
-// Design 3b: the steps in one surface box, each a numbered row with its receipt under
-// the label and a brand-orange bar while it runs.
+// Design 3b.
 .root {
   list-style: none;
   margin: 0;
@@ -86,8 +85,7 @@
   animation: stepSweep 1.5s linear infinite;
 }
 
-// A sweep rather than a percentage: nothing here knows how far through a step it is, and
-// a bar that claimed to would be inventing the number (docs/prototype/constraints.md).
+// A sweep, not a percentage: nothing knows how far through a step it is (docs/prototype/constraints.md).
 @keyframes stepSweep {
   from {
     transform: translateX(-100%);

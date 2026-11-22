@@ -1,5 +1,4 @@
-// Design 324al, 324am: on the web the panel takes the sheet's card colour, and what is raised
-// inside it (the reader's bubbles, the pills, the field) takes the surface, as in the sheet.
+// Designs 324al and 324am: on the web, the sheet's colours.
 .root {
   --chat-raised: var(--surface);
 
@@ -15,7 +14,6 @@
   overflow: hidden;
 }
 
-// In the sheet the panel sits on the page's card.
 .inSheet {
   flex: 1;
   border-radius: 0;
@@ -262,7 +260,7 @@
   padding: 0.625rem 0.875rem 0.875rem;
 }
 
-// Design 324m: the toast sits centred just above the field.
+// Design 324m.
 .toastSpot {
   position: absolute;
   left: 0.875rem;

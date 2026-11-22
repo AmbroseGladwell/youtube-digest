@@ -1,8 +1,6 @@
 @use "../../../theme/controls.scss" as controls;
 
-// Design 4a: one 760px reading column, centred, with no rail beside it. The note's size
-// is a variable so the panel can take 14.5px and the phone 15.5px without a second
-// stylesheet (docs/features/stone-theme.md, "The single overview").
+// Design 4a, one column: docs/features/stone-theme.md, "The single overview".
 .root {
   --note-size: 1rem;
   --reader-column: 47.5rem;
@@ -14,9 +12,7 @@
   min-width: 0;
 }
 
-// Design 310a: chat opens on the right and the note's column eases left to make room. The chat
-// sits in the page under the bar, inset by the page's margin, sticky and fixed in height, so the
-// note scrolls on its own beside it.
+// Chat beside the note: docs/features/chats.md, "Beside the note (design 310a, 310d–310p)".
 $chat-width: 25rem;
 $chat-width-narrow: 22.5rem;
 
@@ -34,8 +30,7 @@ $chat-width-narrow: 22.5rem;
   grid-template-columns: minmax(0, 1fr) calc(var(--chat-width) + 1.5rem);
 }
 
-// OV-328: a page with one tab has no tab strip, so the bar itself is the lowest band and its
-// fade would run on over the chat. It stops where the chat column starts.
+// Why the fade stops at the chat: docs/features/fade-under-the-bar.md, "What was built" (OV-328).
 :global(:root):has(.layoutWithChat) {
   --masthead-fade-right: calc(#{$chat-width} + 1.5rem);
 
@@ -107,9 +102,7 @@ $chat-width-narrow: 22.5rem;
   min-width: 0;
 }
 
-// Design 9b: the panel inks in after a 60ms hold and does not travel, because the tab
-// strip's own indicator has already said where you are. The key on the element is what
-// re-runs it — a tab change swaps the panel's contents, not the element.
+// Design 9b: no travel, as the tab indicator already moved; the element's key re-runs it.
 .panel {
   animation: panelInk 180ms ease-out 60ms both;
 }

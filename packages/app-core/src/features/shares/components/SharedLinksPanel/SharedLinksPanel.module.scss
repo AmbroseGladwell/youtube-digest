@@ -79,8 +79,7 @@
   flex: none;
 }
 
-// Design 30h·2: the question replaces the row it is about, the way revoking a connection
-// asks (58j), rather than raising a dialog over a list.
+// Design 30h·2: the question replaces its row, as revoking a connection does (58j).
 .confirmRow {
   display: flex;
   flex-direction: column;
@@ -132,8 +131,7 @@
   background: var(--surface);
 }
 
-// Design 30h·4: on a phone each row becomes a card with its actions under it, both at a
-// full tap target.
+// Design 30h·4: on a phone each row is a card with full-size actions under it.
 @media (max-width: 47.9375rem) {
   .card {
     background: transparent;

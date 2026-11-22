@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 110b: a box one step off the ground with no shadow — the surface is the
-// structure, which is the stone theme's whole argument.
+// Design 110b: one step off the ground with no shadow; the surface is the structure.
 .root {
   display: flex;
   flex-direction: column;

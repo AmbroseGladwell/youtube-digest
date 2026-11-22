@@ -18,8 +18,7 @@
   color: var(--ink);
 }
 
-// On the dialog's own card the field takes the surface, one step down from what it
-// sits on (docs/features/stone-theme.md, "Fields").
+// On a card the field takes the surface: docs/features/stone-theme.md, "What was built".
 .urlInput {
   @include controls.field-solo;
 

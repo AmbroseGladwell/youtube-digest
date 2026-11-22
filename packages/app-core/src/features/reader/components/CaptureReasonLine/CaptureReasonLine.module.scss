@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 4a/4c: the reason read back as a stone-tint note above the premise, and the
-// same note with its field and actions while it is being edited.
+// Design 4a/4c: the reason as a note above the premise, and with its field while edited.
 .root {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,4 @@
-// A segmented control: three labels on one surface track, and one ink pill that slides
-// behind whichever is chosen (docs/features/stone-theme.md).
+// A segmented control with a sliding ink pill: docs/features/stone-theme.md, "The single overview".
 .root {
   position: sticky;
   top: var(--masthead-height);
@@ -15,8 +14,7 @@
   margin: 0 auto;
 }
 
-// The positioned ancestor the tabs are measured within, so the indicator's offset is
-// the tab's own offsetLeft.
+// The positioned ancestor, so the indicator's offset is the tab's own offsetLeft.
 .track {
   position: relative;
   display: inline-flex;
@@ -50,9 +48,7 @@
   color: var(--ground);
 }
 
-// Design 9b: one indicator that travels between the labels, so the eye follows it to the
-// new tab rather than losing it and finding it again. The duration is fixed regardless of
-// distance. Position and width come from useTabIndicator.
+// Design 9b: one travelling indicator the eye can follow; position and width from useTabIndicator.
 .indicator {
   position: absolute;
   top: 0.25rem;
@@ -67,8 +63,7 @@
     width var(--motion-travel) var(--motion-ease);
 }
 
-// Design 5c and 6d: on a phone and in the panel the control takes the whole width and
-// the three labels share it equally.
+// Design 5c and 6d: on a phone and in the panel the labels share the whole width equally.
 @media (max-width: 61.9375rem) {
   .track {
     display: flex;
