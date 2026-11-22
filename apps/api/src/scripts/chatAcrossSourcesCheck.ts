@@ -620,12 +620,19 @@ const pgKeyword = async (dataDir: string, retrievalPath: string): Promise<void> 
 
 // The reply as the scoring below reads it, from the shape every chat now gives (OV-354): its text
 // flattened, and its ids by kind.
+const textsOf = (items: readonly { text: string }[]) => items.map((item) => item.text);
+
 type ScoredReply = CitedIds & { answer: string; generalKnowledge: boolean };
 const scoredReply = (reply: ChatReply): ScoredReply => ({
   ...citedIds(allIds(reply), reply.inSource),
   answer: [
     reply.intro,
-    ...reply.sections.flatMap((section) => [section.heading, ...section.paragraphs, ...section.numbered, ...section.bullets]),
+    ...reply.sections.flatMap((section) => [
+      section.heading,
+      ...section.paragraphs,
+      ...textsOf(section.numbered),
+      ...textsOf(section.bullets),
+    ]),
     reply.takeaway,
   ]
     .filter((part) => part !== "")
@@ -1779,7 +1786,7 @@ const asPoints = (json: unknown): StructuredAnswer => {
         heading: section.heading,
         points: [
           {
-            text: [...section.paragraphs, ...section.numbered, ...section.bullets].join(" "),
+            text: [...section.paragraphs, ...textsOf(section.numbered), ...textsOf(section.bullets)].join(" "),
             sources: section.sources.map((source) => source.id),
           },
         ],
@@ -1795,6 +1802,8 @@ interface TwoPassQuestion {
   question: string;
   core: string[];
 }
+
+const failureText = (answer: StructuredAnswer | string): string => (typeof answer === "string" ? answer : JSON.stringify(answer));
 
 interface TwoPassTurn {
   arm: string;
@@ -2124,7 +2133,7 @@ const twoPass = async (
         spent += turn.costDollars;
         await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
         console.error(
-          `${armName} r${run} ${question.id} ${turn.failed ? `FAILED ${String(turn.answer)}` : `$${turn.costDollars.toFixed(5)} cited ${turn.cited.length} points ${turn.points} weak ${turn.weakPoints.length}`}`,
+          `${armName} r${run} ${question.id} ${turn.failed ? `FAILED ${failureText(turn.answer)}` : `$${turn.costDollars.toFixed(5)} cited ${turn.cited.length} points ${turn.points} weak ${turn.weakPoints.length}`}`,
         );
       }
     }

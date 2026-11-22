@@ -10,7 +10,7 @@ export interface ProjectsLineProps {
   // Most recently changed first, archived left off.
   projects: Project[];
   // The panel opens a project in the web app; null where there is no web app to open.
-  webApp: string | null | "here";
+  webApp: string | null;
   onOpen: (project: Project) => void;
   onChange: (from: "line") => void;
 }

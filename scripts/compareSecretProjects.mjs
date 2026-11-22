@@ -6,7 +6,9 @@ export const PROJECTS = ["overview-dev", "overview-prod", "overview-evals"];
 
 export const compareSecretProjects = (secretsByProject) => {
   const projects = Object.keys(secretsByProject);
-  const keys = [...new Set(projects.flatMap((project) => secretsByProject[project].map((secret) => secret.key)))].sort();
+  const keys = [...new Set(projects.flatMap((project) => secretsByProject[project].map((secret) => secret.key)))].sort(
+    (a, b) => Number(a > b) - Number(a < b),
+  );
   return keys.map((key) => {
     const digests = projects.map((project) => {
       const secret = secretsByProject[project].find((candidate) => candidate.key === key);

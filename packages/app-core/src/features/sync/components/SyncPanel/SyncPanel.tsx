@@ -64,7 +64,7 @@ export const SyncPanel = () => {
                 className={styles.primaryButton}
                 onClick={() => {
                   analytics.settings.sync.signOutChosen({ signedOutAtServer: true });
-                  void signOut();
+                  signOut();
                 }}
                 data-testid={syncPanelTestIds.signOutButton}
               >
@@ -106,7 +106,7 @@ export const SyncPanel = () => {
                   return;
                 }
                 analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
-                void signOut();
+                signOut();
               }}
               aria-disabled={sync.signingOut}
               aria-live="polite"

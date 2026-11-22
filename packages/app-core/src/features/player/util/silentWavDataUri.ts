@@ -11,7 +11,8 @@ export const silentWavDataUri = (): string => {
   }
   const bytes = new Uint8Array(44 + SAMPLES);
   const view = new DataView(bytes.buffer);
-  const ascii = (offset: number, text: string) => [...text].forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
+  const ascii = (offset: number, text: string) =>
+    text.split("").forEach((char, index) => view.setUint8(offset + index, char.charCodeAt(0)));
 
   ascii(0, "RIFF");
   view.setUint32(4, 36 + SAMPLES, true);

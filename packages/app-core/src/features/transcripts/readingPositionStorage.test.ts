@@ -7,7 +7,7 @@ const makeStorage = (): Storage => {
     getItem: (key) => data.get(key) ?? null,
     setItem: (key, value) => void data.set(key, value),
     removeItem: (key) => void data.delete(key),
-    clear: () => void data.clear(),
+    clear: () => data.clear(),
     key: () => null,
     get length() {
       return data.size;

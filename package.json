@@ -16,7 +16,7 @@
     "build:packages": "npm run build --workspace packages/domain --workspace packages/articles --workspace packages/transcripts --workspace packages/generation --workspace packages/store-conformance --workspace packages/store-local --workspace packages/sync --workspace packages/app-core",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test:tooling": "node --test scripts/*.test.mjs scripts/spend/*.test.mjs scripts/oxlint/*.test.mjs .claude/hooks/*.test.mjs",
-    "lint": "oxlint --deny-warnings .",
+    "lint": "oxlint --type-aware --deny-warnings .",
     "lint:changed": "node scripts/oxlint/lintChangedLines.mjs",
     "format": "oxfmt \"**/*.{ts,tsx,mts,cts,js,mjs,cjs}\"",
     "format:check": "oxfmt --check \"**/*.{ts,tsx,mts,cts,js,mjs,cjs}\""
@@ -26,6 +26,7 @@
     "aws4fetch": "1.0.20",
     "oxfmt": "0.75.0",
     "oxlint": "1.90.0",
+    "oxlint-tsgolint": "7.0.2006",
     "playwright": "1.62.1"
   }
 }
