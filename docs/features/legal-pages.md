@@ -111,7 +111,7 @@ one line in `legalIdentity.ts` or one sentence in a page:
 ## Does this change the texts?
 
 Every card is checked against this list before its PR opens (`CLAUDE.md`, "Working style",
-habit 4). A match means the page changes in the same PR, its `*_UPDATED_ON` moves, and a line
+habit 5). A match means the page changes in the same PR, its `*_UPDATED_ON` moves, and a line
 goes in the log below. No match means the PR says "No change to /privacy or /terms".
 
 A change touches the **privacy policy** when it:

@@ -212,6 +212,15 @@ export class LibraryPageObject extends PageObject {
       expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
+  openFiltersWhereFolded = () =>
+    this.step("openFiltersWhereFolded", async () => {
+      if (await this.get(libraryPageTestIds.filterButton).isVisible()) {
+        await this.openFilters();
+      }
+    });
+
+  verifyFilterControlsCanBeReached = () => this.verifyControlsCanBeReached(this.get(libraryPageTestIds.rail));
+
   openFilters = () =>
     this.step("openFilters", async () => {
       await this.click(libraryPageTestIds.filterButton);

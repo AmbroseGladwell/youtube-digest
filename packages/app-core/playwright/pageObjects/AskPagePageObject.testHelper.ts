@@ -271,6 +271,15 @@ export class AskPagePageObject extends PageObject {
       await this.drawer().evaluate((drawer) => Promise.all(drawer.getAnimations().map((animation) => animation.finished)));
     });
 
+  openDrawerWhereFolded = () =>
+    this.step("openDrawerWhereFolded", async () => {
+      if ((await this.drawer().count()) === 0) {
+        await this.openDrawer();
+      }
+    });
+
+  verifyDrawerControlsCanBeReached = () => this.verifyControlsCanBeReached(this.drawer());
+
   verifyDrawerIsOpen = (open: boolean) => this.step(`verifyDrawerIsOpen ${open}`, () => expect(this.drawer()).toHaveCount(open ? 1 : 0));
 
   verifyDrawerIsSheet = (sheet: boolean) =>
