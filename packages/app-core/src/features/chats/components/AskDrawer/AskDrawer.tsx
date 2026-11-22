@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { chatOwner, type Chat } from "@overview/domain";
+import { CutText } from "../../../../components/shared/CutText/CutText.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { askHistoryGroups } from "../../util/askHistory.js";
@@ -8,6 +9,8 @@ import styles from "./AskDrawer.module.scss";
 import { askDrawerTestIds } from "./AskDrawerTestIds.js";
 
 export interface AskDrawerProps {
+  // Sliding in when the reader opens it, out when they close it, or still when it starts open (OV-371).
+  motion: "arriving" | "still" | "leaving";
   chats: readonly Chat[];
   openChatId: string | null;
   now: Date;
@@ -30,6 +33,7 @@ export interface AskDrawerProps {
 // item is Delete conversation; there's no Rename, because the title is the first question. On the
 // web a raised column down the left of the page; on a phone a bottom sheet.
 export function AskDrawer({
+  motion,
   chats,
   openChatId,
   now,
@@ -46,6 +50,7 @@ export function AskDrawer({
   const menu = useRef<HTMLDivElement | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [menuUp, setMenuUp] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   // On the web the drawer is a column beside the page, closed with its own button; as a sheet it
   // closes on a tap outside it.
   useDismissOnOutside(sheet && menuFor === null, onClose, root, trigger);
@@ -71,32 +76,36 @@ export function AskDrawer({
 
   return (
     <>
-      {sheet && <div className={styles.scrim} aria-hidden="true" />}
+      {sheet && <div className={`${styles.scrim} ${styles[motion] ?? ""}`} aria-hidden="true" />}
       <div
-        className={`${styles.root} ${sheet ? styles.sheet : styles.panel}`}
+        className={`${styles.root} ${sheet ? styles.sheet : styles.panel} ${styles[motion] ?? ""}`}
         ref={root}
         role="dialog"
         aria-label="Conversations"
+        data-scrolled={scrolled ? "" : undefined}
+        onScroll={(event) => setScrolled(event.currentTarget.scrollTop > 0)}
         data-testid={askDrawerTestIds.root}
       >
-        {sheet ? (
-          <span className={styles.handle} aria-hidden="true" />
-        ) : (
-          <button
-            type="button"
-            className={styles.close}
-            aria-label="Hide conversations"
-            aria-expanded="true"
-            onClick={onClose}
-            data-testid={askDrawerTestIds.close}
-          >
-            <StrokeIcon name="panelClose" size={18} />
+        <div className={styles.top} data-testid={askDrawerTestIds.top}>
+          {sheet ? (
+            <span className={styles.handle} aria-hidden="true" />
+          ) : (
+            <button
+              type="button"
+              className={styles.close}
+              aria-label="Hide conversations"
+              aria-expanded="true"
+              onClick={onClose}
+              data-testid={askDrawerTestIds.close}
+            >
+              <StrokeIcon name="panelClose" size={18} />
+            </button>
+          )}
+          <button type="button" className={styles.newChat} onClick={onNew} data-testid={askDrawerTestIds.newChat}>
+            <StrokeIcon name="plus" size={16} />
+            New chat
           </button>
-        )}
-        <button type="button" className={styles.newChat} onClick={onNew} data-testid={askDrawerTestIds.newChat}>
-          <StrokeIcon name="plus" size={16} />
-          New chat
-        </button>
+        </div>
         {groups.length === 0 && (
           <p className={styles.empty} data-testid={askDrawerTestIds.empty}>
             Your questions across your library, projects and overviews will be here.
@@ -122,7 +131,7 @@ export function AskDrawer({
                       onClick={() => onOpen(chat)}
                       data-testid={askDrawerTestIds.open}
                     >
-                      <span className={styles.question}>{question}</span>
+                      <CutText text={question} className={styles.question} testId={askDrawerTestIds.question} />
                       <span className={styles.scope} data-testid={askDrawerTestIds.scope}>
                         {scopeOf(chat)}
                       </span>

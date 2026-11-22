@@ -10,6 +10,7 @@ import {
   type TimeRange,
   type VideoSource,
 } from "@overview/domain";
+import { CutText } from "../../../../components/shared/CutText/CutText.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOnline } from "../../../../util/useOnline.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
@@ -245,9 +246,7 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
     >
       <header className={styles.header} ref={header} data-sheet-drag>
         <div className={styles.titles}>
-          <p className={styles.title} data-testid={chatPanelTestIds.title}>
-            {title}
-          </p>
+          <CutText text={title} className={styles.title} testId={chatPanelTestIds.title} />
           <p className={styles.about} data-testid={chatPanelTestIds.about}>
             {about}
           </p>

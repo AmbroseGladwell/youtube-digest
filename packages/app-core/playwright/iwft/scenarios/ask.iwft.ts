@@ -277,6 +277,44 @@ test.describe("Ask", () => {
     await reader.chat.verifyIsOpen(false);
   });
 
+  test("in the drawer a cut-off question shows in full in a tip on hover, one that fits shows none, and New chat stays at the top as the list scrolls (OV-371)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    const long = "Which of the overviews I saved about sleep, caffeine and training agree on when to stop drinking coffee each day?";
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    const now = Date.now();
+    backendSimulator.chats.seed(conversation("library:0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", long, new Date(now).toISOString()));
+    backendSimulator.chats.seed(
+      conversation("library:1b2c3d4e-5f6a-4b7c-9d8e-0f1a2b3c4d5e", "Short one?", new Date(now - 60_000).toISOString()),
+    );
+    for (let day = 1; day <= 20; day += 1)
+      backendSimulator.chats.seed(
+        conversation(
+          `library:${String(day).padStart(8, "0")}-2c3d-4e5f-8a6b-7c8d9e0f1a2b`,
+          `Earlier question ${day}?`,
+          new Date(now - day * 86_400_000).toISOString(),
+        ),
+      );
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(22);
+    const ask = await launcher.appShell.openAsk();
+    await ask.verifyDrawerIsOpen(true);
+
+    await ask.hoverDrawerConversation(0);
+
+    await ask.verifyDrawerTipReads(0, long);
+
+    await ask.hoverDrawerConversation(1);
+
+    await ask.verifyDrawerTipReads(1, null);
+    await ask.verifyDrawerTopIsPinned(false);
+
+    await ask.scrollDrawerToEnd();
+
+    await ask.verifyDrawerTopIsPinned(true);
+  });
+
   test("on a phone Ask is a page, its drawer starts closed and is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
     launcher,
     backendSimulator,

@@ -1,5 +1,7 @@
 export const askDrawerTestIds = {
   root: "ask-drawer",
+  top: "ask-drawer-top",
+  question: "ask-drawer-question",
   close: "ask-drawer-close",
   menu: "ask-drawer-menu",
   newChat: "ask-drawer-new-chat",
