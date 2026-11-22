@@ -25,10 +25,11 @@ const NOT_AN_ACTION = new Set(["the", "a", "an", "another", "some", "more", "any
 const CONDITION = /^If\s[^,]*,/;
 const ASIDE = /^\([^()]*\)[.!]?$/;
 
-const trimmed = (text: string, { start, end, then }: Span): Span => {
+const trimmed = (text: string, span: Span): Span => {
+  let { start, end } = span;
   while (start < end && /\s/.test(text[start]!)) start += 1;
   while (end > start && /\s/.test(text[end - 1]!)) end -= 1;
-  return { start, end, then };
+  return { start, end, then: span.then };
 };
 
 const isAbbreviation = (text: string, dot: number): boolean => {

@@ -7,7 +7,7 @@ import {
   type ProfilePassInput,
   type ProfilePassItem,
 } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 
 const ProfileOutput = z.object({

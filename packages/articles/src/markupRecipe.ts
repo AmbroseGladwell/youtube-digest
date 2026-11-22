@@ -3,7 +3,11 @@ import { isPageFurniture } from "./isPageFurniture.js";
 import { labelledRecipeFacts } from "./labelledRecipeFacts.js";
 
 type Part = "ingredients" | "method";
-type Section = { part: Part; heading: Element; items: RecipeStep[] };
+interface Section {
+  part: Part;
+  heading: Element;
+  items: RecipeStep[];
+}
 
 const INGREDIENTS_HEADING = /^(the )?(ingredients?|what you('ll| will)? need|you('ll| will)? need)$/;
 const METHOD_HEADING = /^(the )?(method|instructions|directions|steps|preparation|how to make it)$/;

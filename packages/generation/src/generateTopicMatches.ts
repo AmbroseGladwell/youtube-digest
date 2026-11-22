@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { TopicMatchInput } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 
 // Which of the reader's own topics a finished note belongs under, zero or more, matched against

@@ -1,7 +1,6 @@
-import { sourceName } from "@overview/domain";
+import { sourceName, resolveTags, type Overview, type TagAliases, type TagCount } from "@overview/domain";
 import { z } from "zod";
-import { resolveTags, type Overview, type TagAliases, type TagCount } from "@overview/domain";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 import { GeneratedTags, tagInstructions } from "./sections/filingSection.js";
 

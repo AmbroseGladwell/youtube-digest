@@ -15,8 +15,9 @@ import {
   type SectionsEnabled,
   type ThemeMode,
   type TimerSound,
+  modelFor,
+  type ModelByProvider,
 } from "@overview/domain";
-import { modelFor, type ModelByProvider } from "@overview/domain";
 import type { SyncStatus } from "@overview/sync";
 import type { AppBuild } from "../../../app/AppBuildContext.js";
 import { TIMER_SOUND_LABELS } from "./timerSoundLabels.js";

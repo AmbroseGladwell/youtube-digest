@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { OverviewId, VideoId, type Overview } from "@overview/domain";
-import type { YouTubeSource } from "@overview/domain";
+import { OverviewId, VideoId, type Overview, type YouTubeSource } from "@overview/domain";
 
 export type VideoOverview = Overview & { source: YouTubeSource };
 

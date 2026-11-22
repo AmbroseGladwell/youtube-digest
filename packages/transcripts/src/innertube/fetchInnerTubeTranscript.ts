@@ -1,5 +1,5 @@
 import type { FetchedTranscript } from "../FetchedTranscript.js";
-import { TranscriptFetchError } from "../TranscriptFetchError.js";
+import type { TranscriptFetchError } from "../TranscriptFetchError.js";
 import { TranscriptFetchFailure, isWorthAnotherSource } from "../TranscriptFetchFailure.js";
 import type { YouTubeFetch } from "../YouTubeFetch.js";
 import { fetchCaptionTrack } from "./fetchCaptionTrack.js";

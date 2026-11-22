@@ -1,5 +1,5 @@
 import {
-  ArticlePlace,
+  type ArticlePlace,
   DUBIOUS_BASIS_LABEL,
   NOVELTY_LABEL,
   OverviewId,

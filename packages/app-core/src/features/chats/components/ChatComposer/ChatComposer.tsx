@@ -1,4 +1,4 @@
-import { forwardRef, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react";
 import { MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
@@ -26,7 +26,7 @@ const VISIBLE_CHIPS = 2;
 
 const plural = (count: number, noun: string) => (count === 0 ? null : `${count} ${noun}${count === 1 ? "" : "s"}`);
 
-type RowItem = {
+interface RowItem {
   id: string;
   title: string;
   imageUrl: string | null;
@@ -34,15 +34,24 @@ type RowItem = {
   project: boolean;
   deleted: boolean;
   remove: () => void;
-};
+}
 
 // OV-354, page 1: the field with what the next question will send in one row above it, two chips
 // then "+N", and the "@" picker over it, a combobox listing projects and the newest overviews,
 // filtered by title as the reader types.
-export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(function ChatComposer(
-  { exclude: own, pinned, liveSources, onPin, onUnpin, onRemoveSource, onClear, value, onChange, ...field },
+export const ChatComposer = ({
+  exclude: own,
+  pinned,
+  liveSources,
+  onPin,
+  onUnpin,
+  onRemoveSource,
+  onClear,
+  value,
+  onChange,
   ref,
-) {
+  ...field
+}: ChatComposerProps) => {
   const listId = useId();
   const optionId = (index: number) => `${listId}-${index}`;
   const library = useOverviewsWithStateQuery().data ?? [];
@@ -55,7 +64,7 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   const setRefs = (node: HTMLTextAreaElement | null) => {
     input.current = node;
     if (typeof ref === "function") ref(node);
-    else if (ref !== null) (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
+    else if (ref != null) (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
   };
 
   const overviews = library.flatMap((entry) => (entry.kind === "overview" ? [entry.overview] : []));
@@ -318,4 +327,4 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
       />
     </div>
   );
-});
+};

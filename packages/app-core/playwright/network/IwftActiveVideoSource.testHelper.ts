@@ -3,7 +3,11 @@ import type { ActiveVideoSource } from "../../src/app/ActiveVideoContext.js";
 export class IwftActiveVideoSource implements ActiveVideoSource {
   private readonly listeners = new Set<() => void>();
 
-  constructor(private videoUrl: string | null) {}
+  private videoUrl: string | null;
+
+  constructor(videoUrl: string | null) {
+    this.videoUrl = videoUrl;
+  }
 
   getVideoUrl = (): string | null => this.videoUrl;
 

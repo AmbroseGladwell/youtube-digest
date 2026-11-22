@@ -3,7 +3,11 @@ import type { PlaybackPosition, PlaybackSource } from "../../src/app/PlaybackCon
 export class IwftPlaybackSource implements PlaybackSource {
   private readonly listeners = new Set<() => void>();
 
-  constructor(private position: PlaybackPosition | null) {}
+  private position: PlaybackPosition | null;
+
+  constructor(position: PlaybackPosition | null) {
+    this.position = position;
+  }
 
   getPosition = (): PlaybackPosition | null => this.position;
 

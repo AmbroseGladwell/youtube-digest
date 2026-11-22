@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { DEFAULT_SECTIONS_ENABLED, OverviewId, SourceKey, type PodcastSource } from "@overview/domain";
 import { composePrompt } from "../composePrompt.js";
-import type { GenerationClient } from "../generateOverview.js";
+import type { GenerationClient } from "../requestGeneratedOutput.js";
 import { answeringKindCheck } from "../noteKind/answeringKindCheck.testHelper.js";
 import { providerJsonSchema } from "../providerJsonSchema.js";
 import { composePodcastPrompt } from "./composePodcastPrompt.js";

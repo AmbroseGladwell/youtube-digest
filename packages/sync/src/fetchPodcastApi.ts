@@ -1,8 +1,16 @@
 import { PodcastRead, PodcastTranscription, StoredTranscript, TranscriptCheck } from "@overview/domain";
 import { answered, createApiRequester, type ApiRequesterOptions } from "./apiRequest.js";
 
-export type PodcastTranscriptAsk = { feedUrl: string; guid: string; youTubeVideoId?: string; searchYouTube?: boolean };
-export type PodcastEpisodeAsk = { feedUrl: string; guid: string };
+export interface PodcastTranscriptAsk {
+  feedUrl: string;
+  guid: string;
+  youTubeVideoId?: string;
+  searchYouTube?: boolean;
+}
+export interface PodcastEpisodeAsk {
+  feedUrl: string;
+  guid: string;
+}
 
 // A podcast link read on our server, an episode's transcript from its rungs there, and an episode
 // transcribed from its audio when the reader chooses (docs/features/podcast-links.md,

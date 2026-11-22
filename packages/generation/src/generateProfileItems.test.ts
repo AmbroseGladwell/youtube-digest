@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { GenerationError } from "./GenerationError.js";
-import type { GenerationClient } from "./generateOverview.js";
+import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { generateProfileItems } from "./generateProfileItems.js";
 
 const overview = (title: string, topics: string[]) => ({ title, premise: "A premise.", topics, captureReason: null });

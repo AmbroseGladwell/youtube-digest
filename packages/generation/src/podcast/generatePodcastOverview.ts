@@ -1,7 +1,8 @@
 import type { OverviewId, PodcastOverview } from "@overview/domain";
 import { assembleOverview } from "../assembleOverview.js";
 import type { GeneratedOutput } from "../GeneratedOutput.js";
-import { requestGeneratedOutput, type GenerationClient, type GenerationObserver } from "../generateOverview.js";
+import { type GenerationObserver } from "../generateOverview.js";
+import { requestGeneratedOutput, type GenerationClient } from "../requestGeneratedOutput.js";
 import { checkNoteKind } from "../noteKind/checkNoteKind.js";
 import { kindSampleOfVideo } from "../noteKind/kindSampleOfVideo.js";
 import { composePodcastPrompt } from "./composePodcastPrompt.js";

@@ -155,11 +155,11 @@ export type SpeechToTextConfig = { url: string; token: string; concurrency: numb
 // deleted account's records there is on exactly when the personal key is set, so the project
 // id can ship in fly.toml ahead of the secret rather than refusing startup, as R2's bucket
 // does (docs/features/account-deletion.md, "Erasure at PostHog").
-export type AnalyticsConfig = {
+export interface AnalyticsConfig {
   environment: "development" | "production";
   postHog: { apiKey: string; host: string } | null;
   erasure: { personalApiKey: string; projectId: string; host: string } | null;
-};
+}
 
 export interface Config {
   databaseUrl: string;

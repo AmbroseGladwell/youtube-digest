@@ -1,4 +1,4 @@
-import pg from "pg";
+import type pg from "pg";
 import type { SqlClient } from "./SqlClient.js";
 
 type Queryable = Pick<pg.Pool, "query"> | Pick<pg.PoolClient, "query">;

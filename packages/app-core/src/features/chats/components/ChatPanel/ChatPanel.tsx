@@ -1,4 +1,4 @@
-import { Fragment, forwardRef, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type Ref } from "react";
 import {
   sourceImage,
   FOLLOW_UP_QUESTIONS_SHOWN,
@@ -37,6 +37,7 @@ import styles from "./ChatPanel.module.scss";
 import { chatPanelTestIds } from "./ChatPanelTestIds.js";
 
 export interface ChatPanelProps {
+  ref?: Ref<HTMLTextAreaElement> | undefined;
   panel: ReturnType<typeof useChatPanel>;
   overview: Overview;
   video: VideoSource | null;
@@ -80,10 +81,17 @@ const questionAt = (messages: readonly ChatMessage[], message: number) => (messa
 // its own above the field; the overview's questions sit just above the field until the reader
 // types; an answer streams in under three dots, each word fading in, and is announced once, when final.
 // The header's ⋯ holds the overview's other conversations and Continue in (design 324x).
-export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(function ChatPanel(
-  { panel, overview, video, page, compact, onCitationFollowed, onOverviewPartFollowed, onOpenTranscriptAt },
-  fieldRef,
-) {
+export const ChatPanel = ({
+  panel,
+  overview,
+  video,
+  page,
+  compact,
+  onCitationFollowed,
+  onOverviewPartFollowed,
+  onOpenTranscriptAt,
+  ref: fieldRef,
+}: ChatPanelProps) => {
   const { conversationId, chats, view, cameFrom, focusedMessage, deleting } = panel;
   const ask: AskState = panel.state;
   const [draft, setDraft] = useState("");
@@ -535,4 +543,4 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
       {view === "list" && toast}
     </section>
   );
-});
+};

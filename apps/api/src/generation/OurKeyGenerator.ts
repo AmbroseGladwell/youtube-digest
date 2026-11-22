@@ -70,7 +70,10 @@ export class OurKeyDailyCapSpentError extends Error {
 }
 
 // An account, counted by the month on its plan. Nothing is made on us signed out (OV-327).
-export type OurKeyCaller = { accountId: AccountId; plan: Plan };
+export interface OurKeyCaller {
+  accountId: AccountId;
+  plan: Plan;
+}
 
 export type SmallPass = "profile" | "topics" | "topicSuggestions" | "kindCheck";
 

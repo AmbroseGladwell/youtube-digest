@@ -1,6 +1,12 @@
-import { sourceKey } from "@overview/domain";
+import {
+  sourceKey,
+  DEFAULT_PLAYLIST_ORDER,
+  DEFAULT_PLAYLIST_PACE,
+  type PlaylistId,
+  type PlaylistOrder,
+  type PlaylistPace,
+} from "@overview/domain";
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_PLAYLIST_ORDER, DEFAULT_PLAYLIST_PACE, type PlaylistId, type PlaylistOrder, type PlaylistPace } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useCaptureQueueQuery } from "../../../captureQueue/queries/captureQueueQuery.js";

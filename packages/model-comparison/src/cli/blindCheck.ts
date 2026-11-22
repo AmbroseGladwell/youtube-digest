@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 import { parseArgs } from "node:util";
 import { formatTimestamp } from "@overview/domain";
 import { blindPageHtml } from "../blindPageHtml.js";
@@ -37,7 +37,7 @@ const picks = pickStore(comparisonPaths.picks(runName));
 const judgments = judgmentStore(comparisonPaths.judgments(runName));
 const shown = new Map<string, { pair: JudgingPair; candidateWasA: boolean }>();
 
-const send = (response: import("node:http").ServerResponse, status: number, type: string, body: string) => {
+const send = (response: ServerResponse, status: number, type: string, body: string) => {
   response.writeHead(status, { "content-type": type, "cache-control": "no-store" });
   response.end(body);
 };
