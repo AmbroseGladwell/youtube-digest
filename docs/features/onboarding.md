@@ -372,14 +372,13 @@ focus returns to the card, and the deck stays paused with it in front.
 **Through onboarding (155g–155k, then OV-327).** A sample is already made, so there is no Your
 link, run or wait: the moments and questions, then the account, and the sample opens once it's in
 the account. Its overview page carries no sample label; under How to apply it says "Written for
-anyone, like every sample. The overviews you make are written for you.", and the Written for you /
-For anyone flip doesn't show. The first of its next steps is **Now try your own**, with its own field, which starts the next overview as the
+anyone, like every sample. The overviews you make are written for you." The first of its next steps is **Now try your own**, with its own field, which starts the next overview as the
 library's own field does, and hides when there's no way to make one. The next steps record that
 it was a sample (`overview.nextSteps.v1`'s `sample`).
 
 **A sample is sorted into the reader's topics where it fits any** (owner, 5 Nov 2026). As it's
 saved into the account, `POST /api/generations/topics` matches its note against the account's
-topics on us: a small pass like For anyone, with no transcript, that never adds a topic and doesn't
+topics on us: a small pass with no transcript, that never adds a topic and doesn't
 count against the plan. It waits for the topics picked in onboarding to reach the account. With no
 topics, or if the pass fails, it's saved unsorted. A copy saved from a shared page still isn't
 sorted, and the preview still says Unsorted until the sample is in the account.

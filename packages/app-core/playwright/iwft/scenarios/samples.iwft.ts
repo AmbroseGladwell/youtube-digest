@@ -200,11 +200,7 @@ for (const [sample, place] of [
   });
 }
 
-test("a sample's page says How to apply is for anyone, offers no flip, and leads with Now try your own", async ({
-  launcher,
-  backendSimulator,
-  page,
-}) => {
+test("a sample's page says How to apply is for anyone and leads with Now try your own", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
   backendSimulator.ourKey.isAvailable();
   await deckOpensAt(page);
@@ -213,8 +209,7 @@ test("a sample's page says How to apply is for anyone, offers no flip, and leads
 
   const reader = await throughToTheSample(launcher);
   await reader.verifyTitle(VIDEO.source.title);
-  await launcher.howToApplyFlip.verifySampleLine();
-  await launcher.howToApplyFlip.verifyIsAbsent();
+  await launcher.howToApplyLine.verifySampleLine();
   await launcher.onboardingNextSteps.verifyOffers(["own", "extension", "ai"]);
   await launcher.onboardingNextSteps.dismiss("own");
   await launcher.onboardingNextSteps.verifyOffers(["extension", "ai"]);

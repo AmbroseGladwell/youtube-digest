@@ -1,6 +1,4 @@
 import type {
-  ForAnyoneInput,
-  ForAnyoneResult,
   OurKeyGenerationRequest,
   OurKeyGenerationResult,
   OurKeyGenerationStatus,
@@ -22,7 +20,6 @@ export interface GenerationApi {
   generate(request: OurKeyGenerationRequest): Promise<OurKeyGenerationResult>;
   // Never counted against the plan (docs/features/personalisation.md).
   profilePass(input: ProfilePassInput): Promise<ProfilePassResult>;
-  forAnyone(input: ForAnyoneInput): Promise<ForAnyoneResult>;
   topics(input: TopicMatchInput): Promise<TopicMatchResult>;
   // Signed out, onboarding's topics screen, on the device's trial (docs/features/onboarding.md).
   topicSuggestions(input: TopicSuggestionInput): Promise<TopicSuggestionResult>;

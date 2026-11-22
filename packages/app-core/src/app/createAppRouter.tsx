@@ -10,7 +10,6 @@ import { SETTINGS_SECTION_IDS } from "../features/settings/SettingsSectionId.js"
 import { ConnectExtensionPage } from "../features/auth/ConnectExtensionPage/ConnectExtensionPage.js";
 import { CreateAccountPage } from "../features/auth/CreateAccountPage/CreateAccountPage.js";
 import { SignInPage } from "../features/auth/SignInPage/SignInPage.js";
-import { CopyCodePage } from "../features/auth/CopyCodePage/CopyCodePage.js";
 import { RevertEmailPage } from "../features/auth/RevertEmailPage/RevertEmailPage.js";
 import { ConsentPage } from "../features/connections/ConsentPage/ConsentPage.js";
 import { SharedOverviewRoute } from "../features/sharedPage/SharedOverviewRoute.js";
@@ -55,7 +54,6 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
         })),
         { path: Routes.signIn(), element: <SignInPage /> },
         { path: Routes.createAccount(), element: <CreateAccountPage /> },
-        { path: Routes.copyCode(), element: <CopyCodePage /> },
         { path: Routes.connectExtension(), element: <ConnectExtensionPage /> },
         { path: Routes.revertEmail(), element: <RevertEmailPage /> },
         { path: Routes.connect(`:${RouteParams.requestId}`), element: <ConsentPage /> },

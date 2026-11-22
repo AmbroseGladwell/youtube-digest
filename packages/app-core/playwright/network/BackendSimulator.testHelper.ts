@@ -270,7 +270,6 @@ export class BackendSimulator {
   #profilePasses: ProfilePassInput[] = [];
   #ourKeyHowToApply: string[] | null = null;
   #ourKeyFilesInto: string[] = [];
-  #forAnyoneItems: string[] = ["Practise the claw grip on one onion a day."];
   #topicMatches: string[] = [];
   #topicPasses: TopicMatchInput[] = [];
   // Null answers as a failed pass, so onboarding falls back to matching in code.
@@ -1085,13 +1084,6 @@ export class BackendSimulator {
           this.#profilePasses.push(route.request().postDataJSON() as ProfilePassInput);
           return { status: 200, body: { items: this.#profilePassItems } };
         },
-        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
-      }),
-    );
-
-    await this.#page.route("**/api/generations/how-to-apply", (route) =>
-      this.#respond(route, EndpointKey.FOR_ANYONE, {
-        onDefault: () => ({ status: 200, body: { items: this.#forAnyoneItems } }),
         onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: no pass" } } }),
       }),
     );

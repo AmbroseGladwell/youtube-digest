@@ -321,7 +321,7 @@ wait, and never the address or the email, so the numbers can be tuned from real 
 | `mcpAccount` | 120 | minute, per account | every `/mcp` request, after its access token is known |
 | `serviceTranscriptAddress` | 60 | hour, per address | `POST /api/service-transcripts/:videoId`, on top of the daily fetch quotas kept in Postgres (`docs/architecture/server-side-transcripts.md`, "Limits") |
 | `trialAddress` | 10 | hour, per address | `POST /api/trials`: a token reads onboarding's link and asks for its topic suggestions, and makes nothing (`tiers.md`, "Signed out") |
-| `smallPassAccount` | 30 | day, per account | `POST /api/generations/profile`, `/how-to-apply`, `/topics` and `/topic-suggestions`: none counts as an overview, so this is what bounds them (`docs/features/personalisation.md`; `/topics` sorts a sample, `docs/features/onboarding.md`) |
+| `smallPassAccount` | 30 | day, per account | `POST /api/generations/profile`, `/topics` and `/topic-suggestions`: none counts as an overview, so this is what bounds them (`docs/features/personalisation.md`; `/topics` sorts a sample, `docs/features/onboarding.md`) |
 | `topicSuggestionTrial` | 5 | day, per trial token | `POST /api/generations/topic-suggestions` signed out: onboarding asks once per link, so five covers a few links tried (`tiers.md`) |
 | `topicSuggestionAddress` | 20 | day, per address | the same, across every token from one address, so a private window doesn't reset it |
 | `playlistAddress` | 120 | hour, per address | `GET /api/playlists/:id`: each read spends YouTube Data API quota shared by every reader (`docs/features/playlists.md`) |

@@ -1,5 +1,4 @@
 import {
-  ForAnyoneResult,
   OurKeyGenerationResult,
   OurKeyGenerationStatus,
   OverviewUsage,
@@ -17,7 +16,6 @@ export function createFetchGenerationApi(options: ApiRequesterOptions): Generati
     status: () => answered(request("GET", "/generations", OurKeyGenerationStatus)),
     usage: () => answered(request("GET", "/overview-usage", OverviewUsage)),
     generate: (body) => answered(request("POST", "/generations", OurKeyGenerationResult, { body })),
-    forAnyone: (body) => answered(request("POST", "/generations/how-to-apply", ForAnyoneResult, { body })),
     topics: (body) => answered(request("POST", "/generations/topics", TopicMatchResult, { body })),
     topicSuggestions: (body) => answered(request("POST", "/generations/topic-suggestions", TopicSuggestionResult, { body })),
     profilePass: (body) => answered(request("POST", "/generations/profile", ProfilePassResult, { body })),

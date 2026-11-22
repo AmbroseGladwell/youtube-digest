@@ -23,7 +23,7 @@ test.describe("the privacy policy and the terms", () => {
 
     const policy = await launcher.legalPage.verifyIsShown("Privacy policy");
     await policy.verifyHeadingHasFocus();
-    await policy.verifyLastUpdated("21 November 2026");
+    await policy.verifyLastUpdated("22 November 2026");
     await policy.verifyContentsListEverySection();
   });
 

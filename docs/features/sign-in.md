@@ -61,10 +61,10 @@ A web link signs in whichever browser opens it, which is not always the one that
 mail may be read on a phone, or in an app that opens links in a browser of its own. So a
 web mail carries a code as well as the link. **Since OV-327 the code comes first** (design
 327l-3): it is the subject ("Your code: 95J9-Q8TT"), so it can be read from the notification,
-then the first thing in the mail, selectable in one tap, with a Copy code link, then "Or sign in
-with this link:". A mail client runs no script, so Copy code opens `/code` (`CopyCodePage`), which
-copies the code and shows it large. The code rides in that link's fragment, as the sign-in token
-does, so a code that can still sign someone in never reaches a request line or a log.
+then the first thing in the mail, selectable in one tap, then "Or sign in with this link:".
+There is no Copy code button (OV-361): a mail client runs no script, so a button could only open a
+page of ours, which is the wrong place to land. Phones offer to copy a code from the subject or
+the notification themselves.
 Onboarding's account step takes the code in place right after the form (`RequestLinkFlow`'s
 `onboarding` variant, `EnterCode`'s `codeFirst`), and submits once eight characters are in.
 The other sign-in pages still show `Check your email` first. `Check your email` says `Reading your email on another device? Enter the code

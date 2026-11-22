@@ -8,7 +8,7 @@ export interface TransactionalEmailSlots {
   action: { label: string; link: string } | null;
   // A code to type instead of following the link, said under the link with what it is for;
   // with no lead, the code stands alone under the body.
-  code: { lead: string | null; value: string; copyLink?: string | undefined } | null;
+  code: { lead: string | null; value: string } | null;
   // The code above the link, with this line between them (327l-3): the code is what to use.
   codeFirst?: { actionLead: string } | undefined;
   notes: string[];
@@ -88,7 +88,7 @@ export function transactionalEmailHtml(slots: TransactionalEmailSlots): string {
   const code =
     slots.code === null
       ? ""
-      : `${slots.code.lead === null ? "" : `<p class="ov-ink" style="margin: 24px 0 8px; font-family: ${sans}; font-size: 15px; line-height: 22px; color: ${light.ink};">${escapeHtml(slots.code.lead)}</p>\n`}<p class="ov-ink" style="margin: 0; font-family: ${sans}; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: 0.12em; color: ${light.ink}; user-select: all; -webkit-user-select: all;">${escapeHtml(slots.code.value)}</p>${slots.code.copyLink === undefined ? "" : `\n<p style="margin: 10px 0 0; font-family: ${sans}; font-size: 14px; line-height: 20px;"><a class="ov-link" href="${escapeHtml(slots.code.copyLink)}" style="color: ${light.link}; font-weight: 600; text-decoration: underline;">Copy code</a></p>`}`;
+      : `${slots.code.lead === null ? "" : `<p class="ov-ink" style="margin: 24px 0 8px; font-family: ${sans}; font-size: 15px; line-height: 22px; color: ${light.ink};">${escapeHtml(slots.code.lead)}</p>\n`}<p class="ov-ink" style="margin: 0; font-family: ${sans}; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: 0.12em; color: ${light.ink}; user-select: all; -webkit-user-select: all;">${escapeHtml(slots.code.value)}</p>`;
   const actionLead =
     slots.codeFirst === undefined
       ? ""

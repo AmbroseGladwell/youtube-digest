@@ -134,6 +134,17 @@ test("signed out, the status says the choice is on this device", async ({ launch
   await settings.appearance.verifyStatusReads("Accent colour: Sky. Saved on this device.");
 });
 
+test("signing out drops the account's look, so whoever is next sees the defaults", async ({ launcher }) => {
+  await launcher.launch({ ...SIGNED_IN, theme: "dark", accentColour: "teal" });
+  const settings = await (await launcher.appShell.openSettings()).openSection("appearance");
+  await settings.appearance.verifyPageIs({ theme: "dark", accent: "teal" });
+
+  await (await launcher.appShell.accountMenu.open()).chooseSignOut();
+
+  await settings.appearance.verifyPageIs({ theme: null, accent: null });
+  await settings.appearance.verifyDeviceCopyIs({ theme: "system", accentColour: "orange" });
+});
+
 test("the accent is handed on to what the extension's pages can't reach", async ({ launcher }) => {
   await launcher.launch({ accentColour: "violet", accentMirror: true });
   const settings = await (await launcher.appShell.openSettings()).openSection("appearance");

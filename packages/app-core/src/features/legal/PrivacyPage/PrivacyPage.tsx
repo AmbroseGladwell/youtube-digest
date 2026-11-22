@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { LegalTable } from "../LegalTable/LegalTable.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const PRIVACY_POLICY_UPDATED_ON = "2026-11-21";
+export const PRIVACY_POLICY_UPDATED_ON = "2026-11-22";
 
 const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
@@ -212,11 +212,8 @@ const sections: readonly LegalSection[] = [
           unless that assistant is connected to {service}, the whole overview, in the link or copied for you to paste. Continue in, under an
           answer to a question you asked about an overview, does the same with that conversation: the overview and the conversation so far,
           or, when the assistant is connected, only which overview and conversation to read. That goes from your browser to the assistant's
-          provider, not through us. When your first overview is shown to you in onboarding, How to apply is also written once for anyone, so
-          you can compare: the overview's title, channel, one-line premise, central claim and key points go to the provider whose key made
-          the overview, and if that was our key, through our server to OpenAI. No transcript and nothing about you goes with them, and the
-          result is kept only on your device. When a sample overview is saved into your account, its title, channel or site, premise and key
-          points go through our server to OpenAI with the names and descriptions of your topics, to sort it into the ones it fits.
+          provider, not through us. When a sample overview is saved into your account, its title, channel or site, premise and key points go
+          through our server to OpenAI with the names and descriptions of your topics, to sort it into the ones it fits.
         </p>
         <p>
           Either way, a video's overview is written from its captions together with its title, channel and whole description, which is where

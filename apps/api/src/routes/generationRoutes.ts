@@ -1,14 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import {
   apiLogLines,
-  ForAnyoneInput,
   OurKeyGenerationRequest,
   ProfilePassInput,
   TRIAL_TOKEN_HEADER,
   TopicMatchInput,
   TopicSuggestionInput,
   TrialToken,
-  type ForAnyoneResult,
   type TopicMatchResult,
   type TopicSuggestionResult,
   type OurKeyGenerationStatus,
@@ -80,12 +78,6 @@ export function generationRoutes(
   app.post("/generations/profile", { preHandler: smallPassLimit }, async (request) => {
     const input = parseOrThrow(ProfilePassInput, request.body, "The profile pass");
     const result: ProfilePassResult = { items: await smallPass((passes) => passes.profilePass(payerOf(request), input, request.log)) };
-    return result;
-  });
-
-  app.post("/generations/how-to-apply", { preHandler: smallPassLimit }, async (request) => {
-    const input = parseOrThrow(ForAnyoneInput, request.body, "The How to apply pass");
-    const result: ForAnyoneResult = { items: await smallPass((passes) => passes.forAnyone(payerOf(request), input, request.log)) };
     return result;
   });
 

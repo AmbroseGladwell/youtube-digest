@@ -89,20 +89,6 @@ your assistants is on by default and decides whether a connected assistant can r
 (OV-221, `mcp-connector.md`, "The profile"); off stops every connection at once. Where no key can run the pass (`useCanLearn`), learning isn't offered, though
 items already held stay readable and removable, because they are still sent.
 
-### Written for you
-
-On the reveal, and no other overview, How to apply carries Written for you / For anyone (141o), so
-the reader sees what their sentence bought on their own video. For anyone is the same section's
-prompt with no reader, written from the finished note with no transcript, once. It runs as the
-reveal opens, on the key that made the overview if that's the reader's own, otherwise through
-`POST /api/generations/how-to-apply`, free and sharing the profile pass's daily limit.
-
-It's kept in the reveal's device-local state (`nextStepsStorage.ts`), so a reload doesn't pay
-twice. While it's written the option spins and can't be chosen. If it fails the control goes, for
-good, and the section reads as it always has. It's hidden too with nothing known about the reader,
-or a note with no How to apply. The narration reads the note as written whichever side shows: For
-anyone stands in for the lines on the page without moving them in the list the voice follows.
-
 ### Chat reads it too
 
 OV-343. A question asked about an overview carries the same reader context generation reads
@@ -186,12 +172,10 @@ entries in each section and how many were typed. The text is never logged.
 
 How to apply is the only section the reader context shapes, so it is the only place
 personalisation can fail where a reader sees it, and the section most able to cost their
-trust (OV-230). Three numbers answer it, all counted by code, none carrying an action or any
-part of the context:
+trust (OV-230). Two numbers answer it, both counted by code, neither carrying an action or any
+part of the context. (The reveal's Written for you / For anyone flip, a third, was removed in
+OV-361.)
 
-- **The reveal's choice.** `onboarding.writtenForYou.shown` once For anyone is ready, then
-  `onboarding.writtenForYou.flipped` with `to` on every flip. A reader's last flip is their
-  choice; a reader shown the flip who never flipped didn't choose, and is counted apart.
 - **Switched off.** `settings.personalisation.sectionSwitched` with `section: howToApply`,
   read beside `learningSwitched`. The profile feeds How to apply, so the two are the two
   halves of one chain: without both, a wrong action can't be traced to the profile or the

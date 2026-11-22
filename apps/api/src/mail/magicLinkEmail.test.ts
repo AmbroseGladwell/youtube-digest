@@ -56,7 +56,7 @@ test("a link asked for from the extension says where the code will appear", () =
   assert.doesNotMatch(magicLinkEmail(mail).text, /code/);
 });
 
-test("a web mail with a code puts it in the subject and first, with a copy page and the link as the backup", () => {
+test("a web mail with a code puts it in the subject and first, with no Copy code link, and the link as the backup", () => {
   const { subject, html, text } = magicLinkEmail({ ...mail, code: "ABCD-EFGH" });
   assert.equal(subject, "Your code: ABCD-EFGH");
   assert.match(html, /<h1[^>]*>Your code for The Overview<\/h1>/);
@@ -66,7 +66,7 @@ test("a web mail with a code puts it in the subject and first, with a copy page 
     ),
   );
   assert.match(html, /<p[^>]*user-select: all[^>]*>ABCD-EFGH<\/p>/);
-  assert.ok(html.includes('href="https://overview.example/code#ABCD-EFGH"'));
+  assert.doesNotMatch(html, /Copy code|\/code#/);
   assert.ok(html.indexOf("ABCD-EFGH") < html.indexOf("Or sign in with this link:"));
   assert.ok(html.indexOf("Or sign in with this link:") < html.indexOf("Paste this link"));
   for (const body of [html, text]) {

@@ -1,7 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadAlongNote/ReadAlongNoteTestIds.js";
 import { dubiousStepFlagTestIds } from "../../src/features/reader/components/DubiousStepFlag/DubiousStepFlagTestIds.js";
-import { howToApplyFlipTestIds } from "../../src/features/reader/components/HowToApplyFlip/HowToApplyFlipTestIds.js";
+import { howToApplyLineTestIds } from "../../src/features/reader/components/HowToApplyLine/HowToApplyLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
 // The steps a source gives, on the reader page or a shared copy (design OV-250).
@@ -86,11 +86,11 @@ export class SourceStepsPageObject extends PageObject {
   verifyHowToApplyIsPersonalised = (personalised: boolean) =>
     this.step(`verifyHowToApplyIsPersonalised ${personalised}`, async () => {
       if (personalised) {
-        await this.expectToBeVisible(howToApplyFlipTestIds.personalised);
-        await this.expectToHaveCount(howToApplyFlipTestIds.forAnyoneLine, 0);
+        await this.expectToBeVisible(howToApplyLineTestIds.personalised);
+        await this.expectToHaveCount(howToApplyLineTestIds.forAnyoneLine, 0);
       } else {
-        await this.expectToHaveCount(howToApplyFlipTestIds.personalised, 0);
-        await expect(this.get(howToApplyFlipTestIds.forAnyoneLine)).toHaveText(
+        await this.expectToHaveCount(howToApplyLineTestIds.personalised, 0);
+        await expect(this.get(howToApplyLineTestIds.forAnyoneLine)).toHaveText(
           "Tell us about yourself in Settings and these fit around you.",
         );
       }
