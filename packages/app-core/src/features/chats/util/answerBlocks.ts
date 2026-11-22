@@ -22,3 +22,5 @@ export function answerBlocks(text: string): AnswerBlock[] {
   blocks.push(...paragraphsOf(text.slice(from)));
   return blocks;
 }
+
+export const holdsCodeBlock = (text: string): boolean => answerBlocks(text).some((block) => block.kind === "code");
