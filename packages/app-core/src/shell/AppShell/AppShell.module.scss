@@ -343,3 +343,28 @@
     transform calc(var(--handoff) * 0.8) var(--handoff-settle) calc(var(--handoff) * 0.45),
     filter calc(var(--handoff) * 0.8) var(--handoff-settle) calc(var(--handoff) * 0.45);
 }
+
+// OV-380: the narrowest phones fit the bar by spacing and a smaller name, never smaller touch targets.
+@media (max-width: 23.375rem) {
+  .bar {
+    gap: 0.75rem;
+    padding-inline: 1rem;
+  }
+
+  .actions {
+    gap: 0.375rem;
+  }
+
+  .brandSlot,
+  .brand {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .title {
+    overflow: hidden;
+    font-size: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
