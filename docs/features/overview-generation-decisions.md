@@ -737,6 +737,8 @@ are, never a count. The error never moves to another key, and our server answers
 `capture.newOverview` failures. The measured TikToks set the floor: the shortest real talk was 71
 words, and the only clip under 30 was lyrics.
 
+**Measured on 15 real TikToks (22 Nov 2026),** through ScrapeCreators and on our key's model (GPT-6.1 Sol): news explainers, cooking clips, interviews and one music clip. 13 made notes, one had no captions, and the 7-second music clip (29 words of lyrics) stopped at the floor without a model call. 11 notes fell in the 400-word row and all kept to 3 points, no chapters and a yes-or-no answer. The 2 in the 1,000-word row had 4 points and 3 chapters. No point passed 25 words. Every note was right first time, with one kind check and one note call and no correction pass. The kinds were 10 default, 2 process and 1 recipe (a 30-second recipe clip, which got the recipe note). Watch it anyway was no 11 times and yes once, for a clip guessing sweets from CT scans, where the pictures are the content. A note cost about 1.9¢ on average and at most 2.8¢. The kind check's `nothing` answer wasn't reached: the only music clip was under the floor. One harness slip worth keeping: a TikTok caption can run past the 400 characters `VideoSource.description` allows, so the input built for a TikTok slices it as `episodeAsVideo` does, keeping the rest as `fullDescription`.
+
 **Up to 6,000 words nothing else moved.** OV-87's call (10 Nov): keep each kind's short rows as they
 were and raise only the ceiling for long sources. A spoken source's chapter ceiling of 10 is
 new, but sits above the "3 to 8" the prompt still asks for, so it bounds a runaway rather than
