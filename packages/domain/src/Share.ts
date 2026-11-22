@@ -6,9 +6,7 @@ import { ShareToken } from "./shareLink.js";
 import { SharedNarration } from "./SharedOverview.js";
 import { StoredTranscript } from "./StoredTranscript.js";
 
-// What the reader posts to make or replace a link: the whole overview, so the server builds
-// the shared copy itself through shareSnapshot rather than trusting one the client
-// assembled (docs/features/sharing.md).
+// The whole overview, so the server builds the copy itself (docs/features/sharing.md).
 export const ShareRequest = z.object({
   overview: z.preprocess(moveVideoToSource, Overview),
   // Older clients still send the transcript; it is accepted and never kept (OV-295).
@@ -17,9 +15,7 @@ export const ShareRequest = z.object({
 });
 export type ShareRequest = z.infer<typeof ShareRequest>;
 
-// One live link, as the dialog and Settings › Shared links read it. contentHash is what the
-// reader's copy is compared against to decide whether it has been edited since sharing;
-// hasNarration is whether the copy plays, so audio rendered later can be offered.
+// contentHash detects edits since sharing; hasNarration lets audio rendered later be offered.
 export const Share = z.object({
   token: ShareToken,
   url: z.url(),

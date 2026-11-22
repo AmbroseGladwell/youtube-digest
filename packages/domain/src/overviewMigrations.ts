@@ -3,10 +3,7 @@ import { currentSchemaVersion } from "./currentSchemaVersion.js";
 
 const VIDEO_FIELDS_ADDED_AFTER_THE_FIRST_NOTES = ["durationMs", "publishedAt", "thumbnailUrl"];
 
-// The three fields whose absence produced a missing image, a NaN:NaN duration and a
-// RangeError that took the page down. Null is what the schema already says each of them
-// means for a note generated before the field existed
-// (docs/features/record-migrations.md).
+// Their absence broke the page; null is what each already means (docs/features/record-migrations.md).
 const fillVideoFieldsAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 2,
   alterRecord: (record) => {
@@ -27,10 +24,7 @@ const fillVideoFieldsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
-// A rename is derivable: the record already holds the value, under the other key
-// (docs/features/record-migrations.md). Nothing has shipped and no client but this one
-// writes, so the deprecation window that a rename would otherwise need — write both names,
-// raise the write floor, then drop one — is not needed and is not built.
+// Derivable; nothing shipped, so no deprecation window is built (docs/features/record-migrations.md).
 const renameSavedNoteToCaptureReason: RecordMigration = {
   newSchemaVersion: 3,
   alterRecord: (record) => {
@@ -42,8 +36,7 @@ const renameSavedNoteToCaptureReason: RecordMigration = {
   },
 };
 
-// Not derivable: nothing in an older record says where its video's subject changes, so
-// the honest value is the one the reader is told about (docs/features/chapters.md).
+// Not derivable: no record says where the subject changes (docs/features/chapters.md).
 const fillChaptersAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 4,
   alterRecord: (record) => {
@@ -54,10 +47,7 @@ const fillChaptersAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
-// The novelty half is not derivable: the old scale's middle bucket splits across the new
-// one, and only the developer's own overviews were ever written on it. The key points half
-// is: each keeps its words and has no stretch of the video yet
-// (docs/features/novelty-scale.md).
+// Novelty isn't derivable; key points keep their words, untimed (docs/features/novelty-scale.md).
 const moveToTheNewScaleAndTimedKeyPoints: RecordMigration = {
   newSchemaVersion: 5,
   alterRecord: (record) => {
@@ -73,8 +63,7 @@ const moveToTheNewScaleAndTimedKeyPoints: RecordMigration = {
   },
 };
 
-// Not derivable either: an older note says it is dubious but never said why, and the reader
-// is told no reason was saved rather than shown an empty panel (docs/features/dubious-reasons.md).
+// Not derivable: older notes never said why (docs/features/dubious-reasons.md).
 const fillDubiousClaimsAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 6,
   alterRecord: (record) => {
@@ -89,8 +78,7 @@ const fillDubiousClaimsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
-// Derivable: every overview made before playlists could be followed was asked for on its
-// own (docs/features/playlists.md).
+// Derivable: everything before playlists was asked for on its own (docs/features/playlists.md).
 const fillFromPlaylistAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 7,
   alterRecord: (record) => {
@@ -101,12 +89,10 @@ const fillFromPlaylistAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
-// Additive: a note may now hold fewer than three tags, after the reader merges or deletes
-// them. Moving the number keeps an older client from quarantining one (docs/features/tag-reuse.md).
+// Additive: fewer than three tags, so older clients don't quarantine (docs/features/tag-reuse.md).
 const allowFewerThanThreeTags: RecordMigration = { newSchemaVersion: 8 };
 
-// Derivable as unknown: nothing recorded which key made an overview before our key existed,
-// and only a fallback is ever shown (docs/architecture/tiers.md).
+// Derivable as unknown: nothing recorded the key before ours existed (docs/architecture/tiers.md).
 const fillMadeOnAddedWithOurKey: RecordMigration = {
   newSchemaVersion: 9,
   alterRecord: (record) => {
@@ -117,9 +103,7 @@ const fillMadeOnAddedWithOurKey: RecordMigration = {
   },
 };
 
-// A rename, derivable because every overview so far is of a YouTube video. Exported because a
-// client at an older version still posts this shape to POST /shares, which takes the overview
-// itself rather than a record (docs/features/source-identity.md).
+// Exported: older clients still post this shape to POST /shares (docs/features/source-identity.md).
 export const moveVideoToSource = (record: unknown): unknown => {
   if (typeof record !== "object" || record === null) {
     return record;
@@ -150,16 +134,13 @@ const fillRecipeAddedWithRecipes: RecordMigration = {
   },
 };
 
-// Nothing to alter: a recipe can now come from a video, whose steps carry their moment, so older
-// clients hold these records back rather than show a recipe they would treat as a page's.
+// Recipes from videos: older clients hold these back rather than treat them as a page's.
 const allowRecipesFromVideos: RecordMigration = { newSchemaVersion: 13 };
 
-// Nothing to alter: In one line may now run to 35 words, past the 25 an older client refuses,
-// so older clients hold these records back rather than quarantine them.
+// In one line may run to 35 words, so older clients hold these back rather than quarantine them.
 const allowLongerOneLiners: RecordMigration = { newSchemaVersion: 14 };
 
-// Not derivable: an older note has no ground written for it, and it opens on its premise as
-// it always did (docs/features/overview-generation-decisions.md, "The big picture").
+// Not derivable: docs/features/overview-generation-decisions.md, "The big picture".
 const fillBigPictureAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 15,
   alterRecord: (record) => {
@@ -170,12 +151,10 @@ const fillBigPictureAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
-// Nothing to alter: a long source's note may now hold ten key points, past the seven an older
-// client refuses, so older clients hold these records back rather than quarantine them.
+// Ten key points exceed older clients' seven, so they hold these back rather than quarantine.
 const allowTenKeyPoints: RecordMigration = { newSchemaVersion: 16 };
 
-// Not derivable: an older note has no steps written for it, and keeps what it always carried
-// (docs/features/source-steps.md).
+// Not derivable: older notes keep what they carried (docs/features/source-steps.md).
 const fillSourceStepsAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 17,
   alterRecord: (record) => {
@@ -186,13 +165,10 @@ const fillSourceStepsAddedAfterTheFirstNotes: RecordMigration = {
   },
 };
 
-// Nothing to alter: an article's note may now carry the links it names, which an older client
-// would drop and then write back without, so older clients hold these records back
-// (docs/features/article-resources.md).
+// Older clients would drop resources on write-back, so hold them back (docs/features/article-resources.md).
 const allowArticleResources: RecordMigration = { newSchemaVersion: 18 };
 
-// Not derivable: an older note was written without questions, and shows none
-// (docs/features/follow-up-questions.md).
+// Not derivable: older notes show no questions (docs/features/follow-up-questions.md).
 const fillFollowUpQuestionsAddedAfterTheFirstNotes: RecordMigration = {
   newSchemaVersion: 19,
   alterRecord: (record) => {

@@ -15,7 +15,6 @@ export interface ChatApi {
     signal?: AbortSignal,
     onProgress?: (event: ChatProgress) => void,
   ): Promise<ChatOutcome>;
-  // The same over the library or a project: it picks what to read, then answers in sections.
   askOver(
     owner: AskOwner,
     question: AskQuestionInput,

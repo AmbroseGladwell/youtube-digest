@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// 96 bits of randomness in the path. Long enough that the only way to reach a shared copy
-// is to be sent the link, short enough to read out (docs/features/sharing.md).
+// 96 bits: reachable only by being sent the link, short enough to read out (docs/features/sharing.md).
 export const SHARE_TOKEN_BYTES = 12;
 
 export const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{16}$/;

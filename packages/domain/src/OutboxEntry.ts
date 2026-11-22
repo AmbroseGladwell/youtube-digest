@@ -1,9 +1,6 @@
 import type { SyncedRecordKind } from "./SchemaVersions.js";
 
-// What one local write journals, in the same transaction as the write itself. The change
-// is the exact thing that changed rather than the record that contains it, so two devices
-// editing different fields of one record commute on the server as they do locally
-// (docs/features/sync-client.md).
+// The exact change, so edits to different fields commute on the server (docs/features/sync-client.md).
 export type OutboxChange =
   | { op: "replace"; record: Record<string, unknown> }
   | { op: "topics"; topicIds: string[] }
@@ -14,9 +11,7 @@ export type OutboxChange =
   | { op: "project"; patch: Record<string, unknown> }
   | { op: "member"; change: Record<string, unknown> }
   | { op: "delete" }
-  // No body: the transcript is read from the store when the entry is pushed, so megabytes
-  // of segments are not copied into the journal. The note that sent it, which it waits
-  // behind while that note's write is parked (docs/features/transcript-storage.md).
+  // No body: read from the store when pushed, behind its note (docs/features/transcript-storage.md).
   | { op: "transcript"; overviewId: string };
 
 // Transcripts are journaled and pushed like records, but never come down the feed.
@@ -36,7 +31,6 @@ export interface PendingWrite {
 
 export interface OutboxEntry extends PendingWrite {
   key: number;
-  // A write the server refused for a reason no resend can change. It stays, counted, rather
-  // than being dropped, and every later write to the same record waits behind it.
+  // Never dropped; later writes to the record wait behind it.
   stuck: OutboxFailure | null;
 }

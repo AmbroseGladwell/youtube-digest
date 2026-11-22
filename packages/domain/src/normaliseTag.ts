@@ -1,5 +1,4 @@
-// What the reader types or the model writes, as a stored tag: lowercase, hyphenated, and
-// null when nothing is left to call it (docs/features/tag-reuse.md).
+// Lowercase, hyphenated, or null when nothing is left (docs/features/tag-reuse.md).
 export const normaliseTag = (raw: string): string | null => {
   const tag = raw
     .normalize("NFKD")

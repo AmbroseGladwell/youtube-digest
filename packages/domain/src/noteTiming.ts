@@ -1,9 +1,7 @@
 import type { NoteLine } from "./NoteLine.js";
 import { wordCount } from "./wordCount.js";
 
-// The two rates the reader's "4 min read · 6 min listen" line and its pacer are built
-// from, and why they are arithmetic over the note's own words rather than an estimate
-// anybody guessed: docs/features/overview-redesign.md, "Read and listen times".
+// docs/features/overview-redesign.md, "Read and listen times".
 export const READING_WORDS_PER_MINUTE = 220;
 export const SPOKEN_WORDS_PER_MINUTE = 150;
 const MINIMUM_LINE_SECONDS = 1.5;

@@ -7,9 +7,7 @@ export const makeTranscriptSegment = (overrides: Partial<TranscriptSegment> = {}
   ...overrides,
 });
 
-// A run of back-to-back captions of the length YouTube actually emits. Every test that
-// exercises the merging, the search or the following needs one, and they only differ in
-// where the run starts and how long each cue is.
+// Cues of the length YouTube actually emits.
 export const makeCaptionRun = (
   texts: string[],
   { startMs = 0, cueMs = 3000 }: { startMs?: number; cueMs?: number } = {},

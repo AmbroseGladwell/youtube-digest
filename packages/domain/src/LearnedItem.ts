@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-// One thing the profile pass has picked up about the reader. A removed item stays in the map
-// with removedAt set: that is what keeps it from coming back, and being keyed lets two devices
-// add and remove at once without one overwriting the other (docs/features/personalisation.md).
+// A removed item stays with removedAt, so it never comes back (docs/features/personalisation.md).
 export const LearnedItem = z.object({
   text: z.string(),
   source: z.string(),
@@ -32,8 +30,7 @@ export const removedLearnedItems = (learned: LearnedItems): LearnedItem[] =>
 export const unnoticedLearnedItems = (learned: LearnedItems): LearnedItem[] =>
   keptLearnedItems(learned).filter(({ noticedAt }) => noticedAt === null);
 
-// What generation and assistants may use: kept, and shown to the reader by the library's notice
-// or Settings, so nothing shapes an overview before the reader has been told of it.
+// Only noticed items, so nothing shapes an overview before the reader is told of it.
 export const noticedLearnedItems = (learned: LearnedItems): LearnedItem[] =>
   keptLearnedItems(learned).filter(({ noticedAt }) => noticedAt !== null);
 
@@ -51,8 +48,7 @@ export interface ProfilePassSchedule {
   keepLearning: boolean;
 }
 
-// Code decides when the pass runs and counts everything; the model never does
-// (docs/prototype/constraints.md).
+// Code counts and decides when the pass runs, never the model (docs/prototype/constraints.md).
 export const profilePassIsDue = ({ overviewCount, countAtLastPass, keepLearning }: ProfilePassSchedule): boolean =>
   keepLearning && overviewCount - countAtLastPass >= PROFILE_PASS_EVERY_OVERVIEWS;
 

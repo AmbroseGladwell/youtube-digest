@@ -1,6 +1,6 @@
 import type { Handshake } from "@overview/domain";
 
-// Each stopped phase has its own way out (docs/features/sync-client.md, "What stops a cycle and what parks a write").
+// Each stopped phase's way out: docs/features/sync-client.md, "What stops a cycle and what parks a write".
 export type SyncPhase = "idle" | "syncing" | "offline" | "failed" | "signedOut" | "unsupported";
 
 export interface SyncStatus {

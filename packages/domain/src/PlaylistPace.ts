@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// How many of a followed playlist's videos the queue makes in a day, or none until the
-// reader chooses them (docs/features/playlists.md, "A pace for each playlist").
+// docs/features/playlists.md, "A pace for each playlist".
 export const PlaylistPace = z.enum(["asTheyCome", "fiveADay", "oneADay", "whenChosen"]);
 export type PlaylistPace = z.infer<typeof PlaylistPace>;
 

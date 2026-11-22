@@ -9,8 +9,7 @@ export const recipeMinutes = (minutes: number): string => {
   return `${Math.floor(minutes / 60)} hr${rest === 0 ? "" : ` ${rest} min`}`;
 };
 
-// A yield is kept in the page's words, so it may already say what it is: "Makes 12" and
-// "Serves 6" lead with their own verb, which is taken as the label rather than said twice.
+// "Makes 12" and "Serves 6" lead with their own verb, taken as the label rather than said twice.
 const YIELD_VERB = /^(makes|serves|yields?|servings?|portions?)\s*:?\s*(?=.*\d)/i;
 
 export interface RecipeYield {
@@ -31,8 +30,7 @@ export interface RecipeFigure {
   value: string;
 }
 
-// Prep, Cook, Total and Makes, only what the page states; a total it didn't give is not summed
-// (design 144f).
+// Only what the page states; a missing total is not summed (design 144f).
 export const recipeFigures = (recipe: Pick<Recipe, "prepMinutes" | "cookMinutes" | "totalMinutes" | "yield">): RecipeFigure[] => {
   const figures: RecipeFigure[] = [];
   if (recipe.prepMinutes !== null) {
@@ -60,8 +58,7 @@ export interface RecipeStepGroup {
   steps: string[];
 }
 
-// Steps grouped under the page's subheads, numbered straight through so "step 9" means one
-// thing (design 144g).
+// Numbered straight through, so "step 9" means one thing (design 144g).
 export const recipeStepGroups = (steps: readonly RecipeStep[]): RecipeStepGroup[] => {
   const groups: RecipeStepGroup[] = [];
   steps.forEach(({ text, group }, index) => {
@@ -80,8 +77,7 @@ export interface ChapterSpan {
   endMs: number;
 }
 
-// The steps a recipe video's chapter covers, by where each starts: "Steps 1–3", "Step 4", or
-// nothing for a chapter that holds none, the intro or the tasting (design 122j).
+// "Steps 1–3", "Step 4", or null for a chapter holding none (design 122j).
 export const chapterStepsLabel = (chapter: ChapterSpan, steps: readonly RecipeStep[]): string | null => {
   const numbers = steps.flatMap(({ range }, index) =>
     range !== undefined && range.startMs >= chapter.startMs && range.startMs < chapter.endMs ? [index + 1] : [],

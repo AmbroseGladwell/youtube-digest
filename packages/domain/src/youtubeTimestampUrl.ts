@@ -6,9 +6,7 @@ export const youtubeTimestampUrl = (videoUrl: string, startMs: number): string =
 
 const YOUTUBE_HOSTS = new Set(["youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"]);
 
-// A moment only links out on YouTube. An episode's times play its own audio in the note, and
-// a link to Spotify or Apple at a time would land wherever that listen's ads put it, so with
-// no player to move an episode's time is plain text (docs/features/podcast-notes.md).
+// Only YouTube: an episode's time links would land where ads put it (docs/features/podcast-notes.md).
 export const youtubeMomentUrl = (videoUrl: string, startMs: number): string | null => {
   let host: string;
   try {

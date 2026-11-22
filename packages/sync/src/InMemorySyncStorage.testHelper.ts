@@ -29,7 +29,6 @@ export class InMemorySyncStorage implements SyncStorage {
   applied: RecordChange[][] = [];
   #nextKey = 1;
   #listeners = new Set<() => void>();
-  // What enrol() would find in the library, for the tests that start with one.
   libraryOnEnrol: PendingWrite[] = [];
 
   journal(write: PendingWrite): OutboxEntry {
@@ -91,7 +90,6 @@ export class InMemorySyncStorage implements SyncStorage {
     return this.revisions.get(recordKey(kind, id)) ?? null;
   }
 
-  // What IndexedDbSyncStorage does over its stores, over the maps here.
   async foldOverview(from: string, into: string) {
     const winner = this.records.get(recordKey("overview", into));
     if (winner === undefined) {
@@ -157,7 +155,6 @@ export class InMemorySyncStorage implements SyncStorage {
     return () => this.#listeners.delete(listener);
   }
 
-  // Videos a note on this device uses; the tests that push a transcript add theirs.
   notedVideoIds = new Set<string>();
 
   async transcriptToPush(videoId: string) {

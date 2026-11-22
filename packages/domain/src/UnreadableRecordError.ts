@@ -1,7 +1,6 @@
 import type { UnreadableRecord } from "./UnreadableRecord.js";
 
-// Thrown rather than returned as null, because null already means no such record and a
-// record that is still in the store is not absent (docs/features/record-migrations.md).
+// Null already means no such record (docs/features/record-migrations.md).
 export class UnreadableRecordError extends Error {
   readonly record: UnreadableRecord;
 

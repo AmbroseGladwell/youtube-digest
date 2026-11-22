@@ -26,13 +26,10 @@ const readerContext = {
   tagAliases: TagAliases,
 };
 
-// What a device sends to have an overview made on our key: the same input it would give its
-// own key's model, with the transcript it already resolved or the article it read, so the
-// prompt is production's either way (docs/architecture/tiers.md, "Which key an overview uses").
+// The same input as the own-key path: docs/architecture/tiers.md, "Which key an overview uses".
 export const OurKeyGenerationRequest = z.object({
   overviewId: OverviewId,
-  // An episode first: it carries the video's fields too, and read as a video it would lose the
-  // episode it is (docs/features/podcast-screens.md).
+  // An episode first: read as a video it would lose the episode (docs/features/podcast-screens.md).
   input: z.union([
     z.object({ podcast: PodcastSource, video: VideoSource, transcript: z.array(TranscriptSegment).min(1), ...readerContext }),
     z.object({
@@ -47,15 +44,11 @@ export const OurKeyGenerationRequest = z.object({
 });
 export type OurKeyGenerationRequest = z.infer<typeof OurKeyGenerationRequest>;
 
-// The overview, with the projects it was filed into beside it rather than on it, since an
-// overview never lists its projects (docs/features/projects.md). A client from before reads the
-// overview and drops the rest; a server from before sends none.
+// Beside the overview, since an overview never lists its projects (docs/features/projects.md).
 export const OurKeyGenerationResult = z.intersection(Overview, z.object({ filedProjectIds: z.array(ProjectId).default([]) }));
 export type OurKeyGenerationResult = z.infer<typeof OurKeyGenerationResult>;
 
-// Whether this server makes overviews on our key at all, asked before it is offered, and
-// with which provider and model, so the app's analytics can name them (OV-255). Optional
-// because a server deployed before it says only whether.
+// Optional provider and model: a server deployed before OV-255 says only whether.
 export const OurKeyGenerationStatus = z.object({
   available: z.boolean(),
   provider: Provider.optional(),

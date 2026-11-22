@@ -10,8 +10,7 @@ export const MagicLinkRequest = z.object({
   intent: AuthIntent.default("signIn"),
   firstName: FirstName.optional(),
   returnTo: ConsentPath.optional(),
-  // A reader creating an account who said yes to analytics on this device: their
-  // anonymous id, linked to the account once it is made (docs/features/analytics-consent.md).
+  // Said yes to analytics on this device: linked once made (docs/features/analytics-consent.md).
   anonymousId: z.uuid().optional(),
 });
 export type MagicLinkRequest = z.input<typeof MagicLinkRequest>;

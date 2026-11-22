@@ -1,8 +1,6 @@
 export const UPDATED_AT_KEY = "updatedAt";
 
-// Null for a record written before this existed. The rule for one is uniform rather than
-// per record type — it precedes every stamped record — because a rule that is uniform
-// cannot be misapplied (docs/features/sync-metadata.md).
+// Null for older records, by one uniform rule (docs/features/sync-metadata.md).
 export const storedUpdatedAt = (record: unknown): string | null => {
   if (typeof record !== "object" || record === null) {
     return null;

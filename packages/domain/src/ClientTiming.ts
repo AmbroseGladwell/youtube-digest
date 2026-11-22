@@ -3,8 +3,7 @@ import { z } from "zod";
 export const MAX_CLIENT_TIMING_BATCH = 10;
 export const MAX_CAPTURE_STEPS = 6;
 
-// Each thing a capture waits on, in the order it happens: the local store, then the
-// transcript ladder's rungs, then the model, then the save (docs/features/transcript-retrieval.md).
+// In the order a capture meets them (docs/features/transcript-retrieval.md).
 export const CaptureStep = z.enum(["stored", "shared-cache", "extension", "service", "model", "save"]);
 export type CaptureStep = z.infer<typeof CaptureStep>;
 
@@ -23,9 +22,7 @@ const Milliseconds = z
 export const CaptureTimedStep = z.object({ step: CaptureStep, outcome: CaptureStepOutcome, ms: Milliseconds }).strict();
 export type CaptureTimedStep = z.infer<typeof CaptureTimedStep>;
 
-// How the time went for one thing the app did, measured on the device and logged by the
-// server at info: never an event, never an issue (docs/architecture/errors-and-logs.md,
-// "Client timings"). Enums, counts and ids only, as a warning is.
+// Logged at info, never an event or issue: docs/architecture/errors-and-logs.md, "Client timings".
 const captureTimed = <Step extends z.ZodType>(step: Step) =>
   z
     .object({
@@ -48,8 +45,7 @@ export type ClientTimingReport = {
   [Name in ClientTimingName]: Omit<Extract<ClientTiming, { name: Name }>, "at">;
 }[ClientTimingName];
 
-// On the wire a step is named loosely, so a server behind the app drops a step it doesn't
-// know rather than refusing the whole batch.
+// Named loosely, so an older server drops a step it doesn't know rather than the whole batch.
 const SentCaptureStep = z.object({ step: z.string().max(32), outcome: z.string().max(32), ms: Milliseconds }).strict();
 export const SentClientTiming = z.discriminatedUnion("name", [captureTimed(SentCaptureStep)]);
 export type SentClientTiming = z.infer<typeof SentClientTiming>;
@@ -57,8 +53,7 @@ export type SentClientTiming = z.infer<typeof SentClientTiming>;
 const isKnownStep = (sent: z.infer<typeof SentCaptureStep>): sent is CaptureTimedStep =>
   CaptureStep.safeParse(sent.step).success && CaptureStepOutcome.safeParse(sent.outcome).success;
 
-// A step or outcome the API doesn't have is dropped rather than logged as sent, the way
-// readClientWarning drops a code it doesn't know.
+// Unknown steps and outcomes are dropped, as readClientWarning drops unknown codes.
 export const readClientTiming = (sent: SentClientTiming): ClientTiming => {
   return { ...sent, steps: sent.steps.filter(isKnownStep) };
 };

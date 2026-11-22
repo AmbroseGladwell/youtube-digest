@@ -2,16 +2,14 @@ import { z } from "zod";
 import { VideoId } from "./Brands.js";
 import { PlaylistOrigin } from "./PlaylistOrigin.js";
 
-// Waiting is in line to be made. Skipped was never tried: YouTube will not show it, or it
-// was already made. Failed was tried and could not be made (docs/features/capture-queue.md).
+// skipped was never tried; failed was tried and couldn't be made (docs/features/capture-queue.md).
 export const QueuedCaptureStatus = z.enum(["waiting", "skipped", "failed"]);
 export type QueuedCaptureStatus = z.infer<typeof QueuedCaptureStatus>;
 
 export const QueuedCaptureProblem = z.enum(["private", "deleted", "noCaptions", "unavailable", "failed"]);
 export type QueuedCaptureProblem = z.infer<typeof QueuedCaptureProblem>;
 
-// One video waiting on this device to become an overview. The queue is the device's own
-// until OV-11 syncs it (docs/features/capture-queue.md).
+// The device's own until OV-11 syncs it (docs/features/capture-queue.md).
 export const QueuedCapture = z.object({
   videoId: VideoId,
   url: z.url(),
@@ -21,13 +19,9 @@ export const QueuedCapture = z.object({
   queuedAt: z.iso.datetime(),
   status: QueuedCaptureStatus,
   problem: QueuedCaptureProblem.nullable(),
-  // When the reader chose it to be made next, past its playlist's pace. Null for every video
-  // the queue makes on its own (docs/features/capture-queue.md, "Making waiting videos now").
+  // Null unless the reader chose it: docs/features/capture-queue.md, "Making waiting videos now".
   chosenAt: z.iso.datetime().nullable().catch(null),
-  // Where the video sat in its playlist when it was queued: when YouTube says it was added,
-  // and its place in the playlist's own order. Kept so the queue can put a playlist's waiting
-  // videos in the order the reader asks for (docs/features/playlists.md, "An order for each
-  // playlist"). Null on a video queued before there was an order to keep.
+  // Orders a playlist's waiting videos: docs/features/playlists.md, "An order for each playlist".
   addedAt: z.iso.datetime().nullable().catch(null),
   playlistIndex: z.number().int().nonnegative().nullable().catch(null),
 });

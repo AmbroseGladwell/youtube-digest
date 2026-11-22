@@ -23,8 +23,7 @@ const spotifyPath = (segments: readonly string[]): PodcastLink | null => {
   return null;
 };
 
-// Which kind of podcast link this is, from its shape alone (docs/features/podcast-links.md).
-// Any other web address is a page that may be a show's own episode page.
+// From its shape alone; any other address may be a show's episode page (docs/features/podcast-links.md).
 export const parsePodcastLink = (link: string): PodcastLink | null => {
   const uri = /^spotify:(episode|show):([A-Za-z0-9]{22})$/.exec(link.trim());
   if (uri !== null) {

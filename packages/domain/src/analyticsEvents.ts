@@ -23,10 +23,7 @@ import { OnboardingStep } from "./OnboardingStep.js";
 const OnboardingKind = z.enum(["video", "article", "recipe", "podcast"]);
 import { OVERVIEW_PARTS } from "./overviewParts.js";
 
-// A property can only be a choice, a flag, a number, one of our own random ids or a
-// provider's model id: nothing that could carry a URL, a video id or a sentence the reader
-// wrote (docs/architecture/analytics.md, "What an event may carry"). One added to an event
-// that already exists is optional, so an older client's event still parses ("Adding a property").
+// docs/architecture/analytics.md, "What an event may carry" and "Adding a property".
 export const ANALYTICS_IDS = [OverviewId, TopicId, ProjectId, ModelId] as const;
 type AnalyticsValue = z.ZodEnum | z.ZodBoolean | z.ZodNumber | (typeof ANALYTICS_IDS)[number];
 export type AnalyticsProp = AnalyticsValue | z.ZodOptional<AnalyticsValue>;
@@ -39,8 +36,7 @@ export interface AnalyticsEventDefinition<P extends AnalyticsProps = AnalyticsPr
 
 export type AnalyticsCatalogueShape = Record<string, Record<string, Record<string, AnalyticsEventDefinition>>>;
 
-// How a transcription came to start (OV-305): on the card before Create, at Create's question
-// after it, as a try again after a failure, or for free.
+// On the card, at Create's question, as a retry, or for free (OV-305).
 export const TranscribeChoice = z.enum(["chosen", "asked", "retried", "free"]);
 export type TranscribeChoice = z.infer<typeof TranscribeChoice>;
 // Why a transcription made no words: the server's reasons, a feed with no audio, or a refusal.
@@ -97,12 +93,9 @@ const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // Where a question about the overview was asked from: one of its questions to ask next, or typed.
 const ChatAskedFrom = z.enum(["question", "typed"]);
 const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt", "askDrawer"]);
-// Where a chat citation leads: a moment in the source, a part of the overview, another
-// conversation, or one deleted since.
 // A video, an episode, an article or a recipe page: what a chat is about (OV-320).
 const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
-// Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
 const AskScope = z.enum(["library", "project"]);
 // What a conversation in the Ask drawer is over: the drawer lists overviews' too (OV-363).
 const AskDrawerScope = z.enum([...AskScope.options, "overview"]);
@@ -111,9 +104,7 @@ const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 const VideoReach = z.enum(["skip", "youtube"]);
 const RangeReach = z.enum([...VideoReach.options, "transcript"]);
 const PlayerMainButton = z.enum(["play", "pause", "cancel", "buffering", "replay"]);
-// The player's state when that button was pressed, so a first listen is told from a resume:
-// `play` from `ready` started one, `play` from `paused` carried one on. app-core's
-// PlayerStatus, which playerBarView.test.ts keeps this in step with.
+// Tells a first listen from a resume; playerBarView.test.ts keeps it in step with PlayerStatus.
 export const PlayerState = z.enum(["ready", "preparing", "playing", "paused", "buffering", "ended", "failed", "busy"]);
 export type PlayerState = z.infer<typeof PlayerState>;
 // Where a listen was started from, for the wait that press led to.
@@ -124,8 +115,7 @@ export const PlaybackSource = z.enum(["audio", "pacer"]);
 export type PlaybackSource = z.infer<typeof PlaybackSource>;
 // A wait longer than this is a render that was given up on, not a wait anyone sat through.
 export const MAX_FIRST_SOUND_WAIT_MS = 600_000;
-// Why a listen ended: the note's end, the mini-player's ×, another note loaded over it, or
-// the page closed, or hidden while the listen was paused.
+// The note's end, the mini-player's ×, another note, the page closed or hidden while paused.
 export const ListenEnd = z.enum(["finished", "stopped", "switchedNote", "left", "signedOut"]);
 export type ListenEnd = z.infer<typeof ListenEnd>;
 export const SelectionAction = z.enum([
@@ -144,16 +134,12 @@ const OverviewControl = z.enum(["masthead", "actionsMenu", "playerBar", "noteEnd
 const BackSource = z.enum(["head", "bar"]);
 // What the panel's "on this tab" line offers for the thing the tab has moved on to.
 const TabOffer = z.enum(["make", "read"]);
-// Where a library filter was changed: the rail or its sheet, an applied chip's ×, Show all,
-// Reset, or the caught-up list's way out.
+// The rail or its sheet, an applied chip's ×, Show all, Reset, or the caught-up list's way out.
 const FilterControl = z.enum(["panel", "appliedChip", "filterChip", "clearAll", "reset", "caughtUp"]);
 const LibrarySort = z.enum(["newest", "oldest", "title"]);
-// Where a new overview was asked for.
 export const CaptureEntry = z.enum(["dialog", "home", "panel", "pageMenu", "injectedButton", "sharedPage", "regenerate", "onboarding"]);
 export type CaptureEntry = z.infer<typeof CaptureEntry>;
-// Which rung answered for the transcript, or the device's own copy (docs/features/transcript-retrieval.md).
-// Which key made an overview, or was being tried when it failed: the reader's own, ours
-// signed in, or ours through a signed-out device's trial.
+// The reader's own, ours signed in, or ours through a signed-out device's trial.
 export const GenerationKey = z.enum(["own", "ours", "trial"]);
 export type GenerationKey = z.infer<typeof GenerationKey>;
 
@@ -187,20 +173,17 @@ export const CaptureFailure = z.enum([
 ]);
 export type CaptureFailure = z.infer<typeof CaptureFailure>;
 const RunState = z.enum(["running", "ready", "failed"]);
-// Why a pasted playlist could not be followed, as the reader was told
-// (docs/features/playlists.md, "Playlists that can't be followed").
+// docs/features/playlists.md, "Pasting a link".
 const PlaylistRefusal = z.enum(["private", "gone", "watchLater", "liked", "mix", "lookupFailed", "unavailable"]);
 // Where a playlist was pasted: a paste field that also takes videos, or Settings.
 const PlaylistEntryPoint = z.enum(["dialog", "home", "settings"]);
 const QueueControl = z.enum(["strip", "page"]);
-// What ran out where a reader generates, and the ways round it (docs/architecture/tiers.md,
-// "At the limit").
+// docs/architecture/tiers.md, "At the limit".
 export const LimitQuota = z.enum(["ours", "own", "both"]);
 export type LimitQuota = z.infer<typeof LimitQuota>;
 export const LimitWay = z.enum(["addKey", "seePlans"]);
 const GenerateSurface = z.enum(["dialog", "home", "panel"]);
-// Which of the app's dead ends a reader was on, named because its title is copy
-// (docs/features/error-state.md).
+// Named because its title is copy (docs/features/error-state.md).
 export const ErrorScreen = z.enum([
   "routeError",
   "outOfDateTab",
@@ -261,10 +244,7 @@ export const OverviewMenuItem = z.enum([
 ]);
 export type OverviewMenuItem = z.infer<typeof OverviewMenuItem>;
 
-// The reader's tabs, note, transcript, chapters and player, wherever an overview is read: the
-// reader page sends them as reader.* with the overview's id, and a shared link as
-// sharedPage.*, where the server adds the id from the share (docs/architecture/analytics.md,
-// "One overview's events").
+// reader.* and sharedPage.*: docs/architecture/analytics.md, "One overview's events".
 export const overviewPageEvents = {
   tabs: {
     switched: event("The reader switches between the overview, transcript and chapters tabs", { tab: ReaderTabChoice }),
@@ -374,11 +354,7 @@ export const overviewPageEvents = {
 
 export type OverviewPageEvents = typeof overviewPageEvents;
 
-// Every event is something the reader did in the app: a click, a choice, a thing they made.
-// What the app or the server did on its own is logged, never an event
-// (docs/architecture/analytics.md, "Actions, not logs"). Each is named feature.screen.action
-// so a name says where it happened without a lookup ("Naming"), and its description is
-// what someone reading the numbers is told it means.
+// Reader actions only, named feature.screen.action: docs/architecture/analytics.md, "Actions, not logs".
 export const analyticsEvents = {
   reader: withOverviewId({
     ...overviewPageEvents,
@@ -389,8 +365,7 @@ export const analyticsEvents = {
         dubious: z.boolean(),
         read: z.boolean(),
         favourite: z.boolean(),
-        // How many steps the source gives that the note shows: none on a note with no block,
-        // or with the reader's steps switch off (OV-250).
+        // None with no block, or with the steps switch off (OV-250).
         steps: z.number().int().nonnegative(),
       }),
       neighbourFollowed: event("The reader steps to the previous or next overview from the reader's foot", {
@@ -733,8 +708,7 @@ export const analyticsEvents = {
           typed: z.number().int().nonnegative(),
           suggested: z.number().int().nonnegative(),
           pickedSuggested: z.number().int().nonnegative(),
-          // Matched in code while the model's answer was still on its way, because it failed, or
-          // because the model wasn't asked (a sample, a shared copy, no server).
+          // Code-matched while the model's answer was pending, after it failed, or with no model asked.
           suggestedBy: z.enum(["model", "code-pending", "code-failed", "code-only", "none"]),
         },
       ),
@@ -848,8 +822,7 @@ export const analyticsEvents = {
       allKeysRemoved: event("The reader removes every key from this device", { removed: z.number().int() }),
       providerChosen: event("The reader changes which provider overviews are generated with", {
         provider: Provider,
-        // A switch made from a dead end rather than from the picker: the choice arrived by
-        // sync and this device had no key for it (design 110g).
+        // From a dead end: the choice synced to a device with no key for it (design 110g).
         from: z.enum(["picker", "no-key-here"]),
       }),
       modelChosen: event("The reader chooses a model for one provider", {
@@ -939,8 +912,7 @@ export const analyticsEvents = {
     },
   },
   capture: {
-    // OV-305: an episode with no transcript anywhere, transcribed from its audio as the reader
-    // chose. Lengths are whole minutes of audio from the feed, absent where it gives none.
+    // Lengths are whole minutes of feed audio, absent where it gives none (OV-305).
     episodeTranscription: {
       asked: event("After Create, no words were found and the reader is asked whether to transcribe the episode (design 305c-2)", {
         from: CaptureEntry,
@@ -968,8 +940,7 @@ export const analyticsEvents = {
           from: CaptureEntry,
           transcriptSource: CaptureTranscriptSource,
           durationMs: z.number().int().nonnegative(),
-          // The writing alone, so a wait's last stage can be estimated from the source's length
-          // and the model (OV-326). Absent where writing never began, such as a held overview.
+          // Estimates a wait's last stage; absent where writing never began (OV-326).
           writingMs: z.number().int().nonnegative().optional(),
           reasonGiven: z.boolean(),
           novelty: z.enum([...Novelty.options, "none"]),
@@ -979,34 +950,26 @@ export const analyticsEvents = {
           howToApplyWritten: z.boolean().optional(),
           howToApplyItems: z.number().int().nonnegative().optional(),
           personalised: z.boolean().optional(),
-          // A recipe video's counts, never its text: its ingredient lines, and how many the video
-          // said rather than its description listed (OV-122).
+          // Counts only: ingredient lines, and how many the video said (OV-122).
           recipeIngredients: z.number().int().nonnegative().optional(),
           recipeIngredientsSaid: z.number().int().nonnegative().optional(),
-          // The note budget's dials, counts only: the source's words as measured by code, the
-          // key points and chapters the note holds, and the most key points its length allowed
-          // (OV-87). Absent for a recipe page, which is on no budget.
+          // Counts only, measured by code; absent for a recipe page, which has no budget (OV-87).
           sourceWords: z.number().int().nonnegative().optional(),
           keyPoints: z.number().int().nonnegative().optional(),
           keyPointCeiling: z.number().int().positive().optional(),
           chapters: z.number().int().nonnegative().optional(),
-          // An article's links, counts only, never an address: how many the page offered the model
-          // and how many the note names as resources (OV-203). Absent for a video.
+          // Counts only, never an address; absent for a video (OV-203).
           articleLinks: z.number().int().nonnegative().optional(),
           articleResources: z.number().int().nonnegative().optional(),
-          // How many questions to ask next the note kept, never their text: up to nine, fewer for a
-          // source with few ideas or when some came back blank or too long (OV-266).
+          // Never their text; up to nine (OV-266).
           followUpQuestions: z.number().int().nonnegative().optional(),
-          // How many of those link an idea to the reader: up to one in each three, and none when the
-          // model finds no real connection or the reader has no profile (OV-266).
+          // Up to one in three, none without a real connection or a profile (OV-266).
           readerQuestions: z.number().int().nonnegative().optional(),
-          // How many of the reader's projects it was put into as it was made, never which; absent
-          // when filing was switched off, when there were no projects or for a regeneration (OV-318).
+          // Never which; absent when filing was off, with no projects, or on regeneration (OV-318).
           projectsFiled: z.number().int().nonnegative().optional(),
           // The kind of note it got, after any fallback to the default note (OV-275).
           noteKind: NoteKind.optional(),
-          // The key that made it, after any fallback, and its provider and model (OV-255).
-          // Provider and model are absent on our key when the server didn't say them.
+          // After any fallback; provider and model absent when our server didn't say them (OV-255).
           key: GenerationKey.optional(),
           provider: Provider.optional(),
           model: ModelId.optional(),
@@ -1016,8 +979,7 @@ export const analyticsEvents = {
         from: CaptureEntry,
         failure: CaptureFailure,
         durationMs: z.number().int().nonnegative(),
-        // The last key tried and its provider and model, absent when it failed before any key
-        // was tried, such as on the transcript (OV-255).
+        // Absent when it failed before any key was tried (OV-255).
         key: GenerationKey.optional(),
         provider: Provider.optional(),
         model: ModelId.optional(),
@@ -1399,8 +1361,7 @@ export const analyticsEvents = {
       projectOpened: event("The reader opens a project from the line under an overview's byline", { projectId: ProjectId }),
     },
   },
-  // The Ask page, over the whole library or one project (OV-354, pages 3 and 4). Never the
-  // question, the answer, a title or which project (docs/features/chats.md, "The Ask page").
+  // docs/features/chats.md, "The Ask page (OV-354, pages 3 and 4)".
   ask: {
     page: {
       opened: event("The reader opens the Ask page, from the top bar or a project's page, and over what", {

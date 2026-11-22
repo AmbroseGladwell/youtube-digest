@@ -108,9 +108,7 @@ const amountWords = ({ whole, parts, plain }: Fraction) => {
 
 const isOne = ({ whole, parts, plain }: Fraction) => (parts === null ? plain === "1" : whole === null);
 
-// The unit after an amount, said in full for the narration: "½ tsp" is "half a teaspoon",
-// "2-3 tbsp" is "2 to 3 tablespoons", "400g tin" is "400 gram tin". The screen keeps the
-// page's own text (docs/features/recipe-notes.md, "Reading aloud").
+// Said in full; the screen keeps the page's text: docs/features/recipe-notes.md, "Reading aloud".
 const measure = (_: string, from: string, to: string | undefined, unit: string, next: string | undefined) => {
   const key = unit
     .toLowerCase()

@@ -20,9 +20,7 @@ export interface TimeSavedSummary {
 
 const MS_PER_MINUTE = 60_000;
 
-// The video's length at 1×, minus the reading time the reader is shown, minus any part
-// the verdict says to watch. Whole minutes, so the totals add up to the pills
-// (docs/features/time-saved.md, "Counted honestly").
+// Whole minutes, so the totals add up to the pills: docs/features/time-saved.md, "Counted honestly".
 const articleTimeSaved = (overview: SharedNote, words: number): OverviewTimeSaved => {
   const read = overview.article?.readAnyway ?? null;
   if (read?.answer === "yes") {
@@ -39,8 +37,7 @@ const articleTimeSaved = (overview: SharedNote, words: number): OverviewTimeSave
 };
 
 export const overviewTimeSaved = (overview: SharedNote): OverviewTimeSaved => {
-  // Reading time is the wrong measure for something the reader means to cook
-  // (docs/features/recipe-notes.md, "Time saved").
+  // docs/features/recipe-notes.md, "Time saved".
   if (overview.recipe != null) {
     return { kind: "recipe" };
   }

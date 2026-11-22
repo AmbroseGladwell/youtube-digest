@@ -6,8 +6,7 @@ export interface FollowUpAssistantChoice {
   connected: boolean;
 }
 
-// Which assistant a question opens: the reader's choice, or, before they've made one, the one
-// assistant their connections are to. Null asks them to pick. "Other" is no choice for questions.
+// Before a choice, the one connected assistant; null asks the reader to pick.
 export const followUpAssistantFor = (choice: ChosenAssistant | null, connections: readonly Connection[]): FollowUpAssistantChoice => {
   const chosen = choice === "other" ? null : choice;
   const connectedTo = new Set(connections.map((connection) => connectionAssistant(connection.clientName)).filter((name) => name !== null));

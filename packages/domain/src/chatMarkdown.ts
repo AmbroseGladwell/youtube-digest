@@ -15,9 +15,7 @@ import { answeredFromOverviewAlone, chatSourceKind, type ChatSourceKind } from "
 import { citedOverviewPart, type OverviewPart } from "./overviewParts.js";
 import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 
-// A stretch links into the video, as an overview's moments do; an episode's time is plain text,
-// since a link into its audio would land wherever that listen's ads put it
-// (docs/features/podcast-notes.md, "Times and the episode's audio").
+// docs/features/podcast-notes.md, "Times and the episode's audio".
 const citationText = (overview: Overview, citation: ChatCitation): string => {
   if ("chatId" in citation) {
     return `message ${citation.message + 1} of conversation ${citation.chatId}`;
@@ -72,8 +70,7 @@ const overviewPartText = (overview: Overview, citation: Extract<ChatCitation, { 
   return SINGLE_ITEM_PARTS.has(cited.part) ? `the overview's "${section}"` : `item ${cited.index + 1} of the overview's "${section}"`;
 };
 
-// Named by the title it had when cited, which outlives the overview; its item by the section and place
-// it had then.
+// By the title and place it had when cited, which outlive the overview.
 const otherOverviewText = ({ overviewId, title, item, range }: OtherOverviewCitation): string => {
   const named = `the reader's overview "${title}" (${overviewId})`;
   if (range !== undefined) {
@@ -105,7 +102,6 @@ const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" 
     : `The ${kind} doesn't cover this; anything the answer adds is general knowledge, not from the ${kind}.`;
 };
 
-// What a library or project chat was over, for its heading (OV-353).
 export type ChatScopeLabel = { kind: "project"; name: string; id: string } | { kind: "library" };
 
 // Sources grouped by how they relate, each group named once: "Based on: …; For charging early: …".
@@ -121,8 +117,7 @@ const sourcesLine = (sources: ChatAnswerSections["introSources"], describe: (cit
   return [...groups].map(([relation, cited]) => `${relation}: ${cited.join("; ")}`).join(" · ");
 };
 
-// Text inside a list item whose content starts `indent` columns in: each paragraph and fenced code
-// block on lines of its own, every line after the first indented so it stays in the item (OV-374).
+// Each paragraph and fence on lines of its own, indented to stay in the list item (OV-374).
 const nestedLines = (text: string, indent: number): string[] => {
   const lines = answerBlocks(text).flatMap((block) =>
     block.kind === "paragraph" ? [block.text] : ["```" + block.language, ...block.code.split("\n"), "```"],
@@ -147,9 +142,7 @@ const listItemText = (item: ChatListItem, describe: (citation: ChatCitation) => 
 // Where a message's text starts, after its "12. " in the conversation's list.
 const messageIndent = (index: number): number => `${index + 1}. `.length;
 
-// A structured answer as it reads outside the app: the intro, each section's heading, paragraphs
-// and lists with its sources by how they relate, then the takeaway (OV-354), all inside the
-// message's item in the conversation's list, starting `indent` columns in.
+// Intro, sections with sources by relation, then takeaway, indented into the message's item (OV-354).
 const sectionsText = (sections: ChatAnswerSections, describe: (citation: ChatCitation) => string, indent: number): string => {
   const pad = " ".repeat(indent);
   const introSources = sourcesLine(sections.introSources, describe);
@@ -201,9 +194,7 @@ const scopedChatMarkdown = (chat: Chat, scope: ChatScopeLabel, from: number, cou
   ].join("\n");
 };
 
-// A conversation as it reads outside the app: each question, each answer with where it found
-// what it says, and a plain flag on an answer the source didn't cover
-// (docs/features/mcp-connector.md, "Chats").
+// docs/features/mcp-connector.md, "Chats".
 export const chatMarkdown = (chat: Chat, about: Overview | ChatScopeLabel, { from = 0, count = chat.messages.length } = {}): string => {
   if (!("source" in about)) {
     return scopedChatMarkdown(chat, about, from, count);

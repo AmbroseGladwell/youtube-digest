@@ -9,8 +9,7 @@ export interface Milestone {
   label: string;
 }
 
-// Shortest first: the order a stack is shown in, and the order they are crossed.
-// 100 hours is the last for now (docs/features/time-saved.md).
+// Shortest first, the order shown and crossed (docs/features/time-saved.md).
 export const MILESTONES: readonly Milestone[] = [
   { id: "30m", minutes: 30, label: "30 minutes" },
   { id: "1h", minutes: 60, label: "1 hour" },
@@ -30,15 +29,12 @@ export const MilestoneMark = z.object({
 });
 export type MilestoneMark = z.infer<typeof MilestoneMark>;
 
-// Keyed by any string rather than by MilestoneId, so a milestone a newer client adds
-// survives this one reading and writing the record back.
+// Any string key, so a milestone a newer client adds survives a round trip here.
 export const MilestoneMarks = z.record(z.string(), MilestoneMark);
 export type MilestoneMarks = z.infer<typeof MilestoneMarks>;
 
-// The first-overview milestone (design 46m), kept among the marks under a key of its own: it
-// is counted in overviews rather than minutes, and gives way to the first time milestone.
+// Counted in overviews, not minutes, and gives way to the first time milestone (design 46m).
 export const FIRST_OVERVIEW_MARK = "firstOverview";
 
-// How a reader moved a milestone card to another line, for analytics.
 export const MilestoneLineControl = z.enum(["swipe", "keys", "dot"]);
 export type MilestoneLineControl = z.infer<typeof MilestoneLineControl>;

@@ -5,10 +5,7 @@ export interface ClientSchemaVersions {
   schemaVersions: SchemaVersions;
 }
 
-// Release metadata, kept beside the registries it describes rather than in a database
-// that would need populating at deploy time. One row per client version that moved a
-// registry; clientSchemaVersions.test.ts fails if a registry moves without one
-// (docs/architecture/api.md).
+// One row per client version that moved a registry; its test fails without one (docs/architecture/api.md).
 export const CLIENT_SCHEMA_VERSIONS: readonly ClientSchemaVersions[] = [
   {
     clientVersion: 1,

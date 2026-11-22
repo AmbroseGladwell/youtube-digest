@@ -35,52 +35,40 @@ export const recipeShape = (note: RecipeShapeNote, ctx: z.RefinementCtx) => {
   }
 };
 
-// Read/favourite state is intentionally absent — docs/prototype/decisions.md: it lives
-// in its own table, keyed by overview id, because this record can be replaced
-// wholesale on a re-run.
+// No read or favourite state, so a re-run can replace it wholesale (docs/prototype/decisions.md).
 export const Overview = z
   .object({
     id: OverviewId,
     source: Source,
     savedAt: z.iso.datetime(),
-    // Why the reader wanted this video overviewed, in their own words: asked for while the
-    // overview is being made, and editable from its page after. Not a note taken against
-    // the video, which is a separate future feature the word "note" is kept free for
-    // (docs/architecture/v1-architecture-decisions.md, docs/features/capture-reason.md).
+    // The reader's own why, not a note on the video (docs/features/capture-reason.md).
     captureReason: z.string().nullable(),
     // Null for an overview the reader asked for one video at a time (docs/features/playlists.md).
     fromPlaylist: PlaylistOrigin.nullable(),
-    // Null for an overview made before keys were recorded, and for one saved from a share
-    // (docs/architecture/tiers.md, "Which key an overview uses").
+    // Null before keys were recorded, and when saved from a share (docs/architecture/tiers.md).
     madeOn: MadeOn.nullable(),
-    // Saved from one of Start's samples, so it isn't the reader's first overview of their own.
-    // Absent on everything else (docs/features/onboarding.md, "Try a sample").
+    // From one of Start's samples, so not the reader's first: docs/features/onboarding.md, "Try a sample".
     fromSample: z.literal(true).optional(),
   })
   .extend(CoreFields.shape)
   .extend(Filing.shape)
   .extend({
-    // Null when the source earned none, and on a record written before it existed
-    // (docs/features/overview-generation-decisions.md, "The big picture").
+    // Null when unearned or older: docs/features/overview-generation-decisions.md, "The big picture".
     bigPicture: BigPicture.nullable(),
     verdict: Verdict.nullable(),
     selling: Selling.nullable(),
-    // Null when the source gives no process to follow, for a recipe (whose method is its steps),
-    // and on a record written before it existed (docs/features/source-steps.md).
+    // Null with no process to follow, for a recipe, and on older records (docs/features/source-steps.md).
     sourceSteps: SourceSteps.nullable(),
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
-    // Null for a record written before chapters existed; a list, possibly empty, for one
-    // written since (docs/features/chapters.md).
+    // Null on records from before chapters (docs/features/chapters.md).
     chapters: Chapters.nullable(),
     // Null for a video (docs/features/article-notes.md).
     article: ArticleDetails.nullable(),
-    // Null for anything but a recipe page, whose note is this in place of the argument-shaped
-    // fields, which stay empty (docs/features/recipe-notes.md).
+    // Only a recipe page's, in place of the argument fields (docs/features/recipe-notes.md).
     recipe: RecipeNote.nullable(),
     keyPoints: z.array(KeyPoint).max(MOST_KEY_POINTS),
-    // Null on a record written before they existed, which shows no questions. Up to nine, best
-    // first, shown three at a time (docs/features/follow-up-questions.md).
+    // Null on older records; up to nine, best first (docs/features/follow-up-questions.md).
     followUpQuestions: FollowUpQuestions.nullable(),
   })
   .superRefine((overview, ctx) => {

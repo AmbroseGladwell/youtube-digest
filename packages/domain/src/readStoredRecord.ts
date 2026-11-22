@@ -7,9 +7,7 @@ export type StoredRecordRead<T> =
   | { status: "read"; record: T; schemaVersion: number }
   | { status: "unreadable"; reason: UnreadableReason; schemaVersion: number; detail: string };
 
-// The one path every record takes, wherever it came from: migrate, then parse. The parse
-// is also what removes the version again, because zod objects strip unknown keys
-// (docs/features/record-migrations.md).
+// Migrate, then parse, which strips the version again (docs/features/record-migrations.md).
 export const readStoredRecord = <T>(raw: unknown, schema: z.ZodType<T>, migrations: readonly RecordMigration[]): StoredRecordRead<T> => {
   const migrated = migrateStoredRecord(raw, migrations);
   if (migrated.status === "unreadable") {

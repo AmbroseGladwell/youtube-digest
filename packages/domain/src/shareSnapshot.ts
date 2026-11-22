@@ -7,10 +7,7 @@ export interface ShareSnapshotInput {
   narration: SharedNarration | null;
 }
 
-// The one place a shared copy is built. The server runs it over the overview the reader
-// posted rather than trusting a snapshot the client assembled, so a private field cannot
-// reach a share by any route (docs/features/sharing.md). A shared copy never carries the
-// transcript: the source's words are each reader's own, not ours to publish on a link (OV-295).
+// Built by the server, so no private field or transcript reaches a share (docs/features/sharing.md).
 export const shareSnapshot = ({ overview, narration }: ShareSnapshotInput): SharedOverview => {
   const note: SharedNote = {
     id: overview.id,
@@ -21,8 +18,7 @@ export const shareSnapshot = ({ overview, narration }: ShareSnapshotInput): Shar
     thin: overview.thin,
     keyPoints: overview.keyPoints,
     tags: overview.tags,
-    // Similar overviews are the reader's other notes: their titles are not the visitor's to
-    // read, and the ids would be dead links off a page with no library behind it.
+    // The reader's other notes aren't the visitor's to read, and would be dead links here.
     verdict: overview.verdict === null ? null : { ...overview.verdict, similarTo: [] },
     selling: overview.selling,
     howToApply: overview.howToApply,

@@ -9,8 +9,7 @@ import { Provider } from "./Provider.js";
 export const MAX_CLIENT_WARNING_BATCH = 10;
 
 const TranscriptRung = z.enum(["shared-cache", "extension", "service"]);
-// TranscriptFetchFailure's names, so a rung's failure can be read without the transcripts
-// package (docs/features/transcript-retrieval.md).
+// TranscriptFetchFailure's names, so a rung's failure reads without the transcripts package.
 const TranscriptRungFailure = z.enum([
   "no-captions",
   "video-unavailable",
@@ -23,21 +22,15 @@ const TranscriptRungFailure = z.enum([
   "budget-exhausted",
   "daily-cap",
 ]);
-// The queue stopped on its own and waited: at our server's daily cap, for the moment it asked
-// us to slow down, and at the month's overview limit (docs/features/capture-queue.md,
-// "Waiting at a limit").
+// docs/features/capture-queue.md, "Waiting at a limit".
 const QueueHoldReason = z.enum(["serverCap", "serverBusy", "monthSpent"]);
 
-// What the app did when something it depends on let it down and it carried on anyway: a
-// line in the server's logs at warn, never an error-tracking issue and never an event
-// (docs/architecture/errors-and-logs.md, "Client warnings"). Every field is an enum, a
-// count, an id or a provider's model id, so a warning can carry nothing a reader wrote.
+// Logged at warn, never an issue or event: docs/architecture/errors-and-logs.md, "Client warnings".
 export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("transcriptFellThrough"),
-      // The rungs asked before one answered, or every rung when none did, each with why it
-      // failed when it named a reason.
+      // The rungs asked before one answered, or all of them, each with its reason when named.
       passed: z
         .array(
           z
@@ -67,8 +60,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("signOutSyncGaveUp"),
-      // The last cycle before signing out ran past its limit, and the reader was signed out
-      // anyway, with this much left unsent and refused (docs/features/account-libraries.md).
+      // Signed out anyway with this much unsent and refused (docs/features/account-libraries.md).
       pending: z.number().int().nonnegative(),
       stuck: z.number().int().nonnegative(),
       at: z.iso.datetime(),
@@ -77,8 +69,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("playlistCheckFailed"),
-      // A followed playlist could not be checked for new videos on opening; the others were
-      // (docs/features/playlists.md, "Checking on opening").
+      // docs/features/playlists.md, "Checking on opening".
       outcome: z.enum(["private", "gone", "failed"]),
       requestId: RequestId.optional(),
       apiErrorCode: z.string().max(64).optional(),
@@ -88,8 +79,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("queuedCaptureFailed"),
-      // A video the queue took from a followed playlist could not be made, and why, as the
-      // reader is told (docs/features/capture-queue.md, "Needs attention").
+      // docs/features/capture-queue.md, "Needs attention".
       problem: QueuedCaptureProblem,
       at: z.iso.datetime(),
     })
@@ -97,8 +87,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("captureQueueHeld"),
-      // The queue stopped asking and waited, with this many videos, until the limit resets
-      // (docs/features/capture-queue.md, "Waiting at a limit").
+      // docs/features/capture-queue.md, "Waiting at a limit".
       reason: QueueHoldReason,
       waiting: z.number().int().nonnegative(),
       resumesInSeconds: z.number().int().nonnegative(),
@@ -108,8 +97,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("captureQueueResumed"),
-      // The queue carried on after waiting at a limit: the limit reset, the extension
-      // connected and could fetch instead, or a key or plan gave the month more room.
+      // The limit reset, the extension could fetch instead, or a key or plan gave the month more room.
       reason: QueueHoldReason,
       waiting: z.number().int().nonnegative(),
       via: z.enum(["reset", "extension", "key", "plan"]),
@@ -119,9 +107,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("chosenModelFailed"),
-      // The reader's own key reached its provider, and the model they chose couldn't make
-      // the overview: refused by the provider, or an answer that still broke the schema
-      // after its retry (OV-247).
+      // The reader's own model refused, or broke the schema after its retry (OV-247).
       provider: Provider,
       model: ModelId,
       reason: z.enum(["refused", "schema"]),
@@ -132,9 +118,7 @@ export const ClientWarning = z.discriminatedUnion("name", [
   z
     .object({
       name: z.literal("captureQueuePaced"),
-      // A followed playlist reached its pace for the day, with what it made today and what
-      // now waits for tomorrow; the rest of the queue carried on
-      // (docs/features/capture-queue.md, "Waiting on a pace").
+      // docs/features/capture-queue.md, "Waiting on a pace".
       pace: PlaylistPace,
       madeToday: z.number().int().nonnegative(),
       waiting: z.number().int().nonnegative(),

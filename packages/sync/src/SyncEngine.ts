@@ -19,7 +19,6 @@ export interface SyncEngineOptions {
   clientVersion?: number | undefined;
   now?: (() => Date) | undefined;
   pageSize?: number | undefined;
-  // Called after a page of the feed has landed locally, so a screen can re-read.
   onApplied?: ((changes: RecordChange[]) => void) | undefined;
   onFolded?: ((fold: OverviewFold) => void) | undefined;
 }
@@ -84,7 +83,6 @@ export class SyncEngine {
     return () => this.#listeners.delete(listener);
   }
 
-  // Settles once no cycle is running, for a caller about to take the storage away.
   async whenIdle(): Promise<void> {
     while (this.#running !== null) {
       await this.#running.catch(() => undefined);

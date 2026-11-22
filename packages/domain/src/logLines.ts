@@ -33,8 +33,7 @@ const line = (level: LogLevel, message: string, description: string): LogLineDec
 const codedLine = (logCode: string, declaration: LogLineDeclaration): LogLine =>
   Object.assign((fields: LogFields = {}) => ({ ...fields, logCode, msg: declaration.message }), { ...declaration, logCode });
 
-// The code is the line's position in this tree, so it can't drift from where it is declared
-// (docs/architecture/errors-and-logs.md, "Logging codes").
+// The code is the line's position here: docs/architecture/errors-and-logs.md, "Logging codes".
 const coded = <A extends LogLineAreas>(service: string, areas: A): CodedLines<A> =>
   Object.fromEntries(
     Object.entries(areas).map(([area, events]) => [
@@ -45,9 +44,7 @@ const coded = <A extends LogLineAreas>(service: string, areas: A): CodedLines<A>
     ]),
   ) as CodedLines<A>;
 
-// Every line the API can write, by `service.area.event`, the way analytics events are
-// `feature.screen.action` (docs/architecture/analytics.md, "Naming"). The code is what a
-// PostHog filter matches; the message is prose and may be reworded without breaking it.
+// PostHog filters match the service.area.event code; the message may be reworded.
 export const apiLogLines = coded("api", {
   http: {
     requestReceived: line("info", "incoming request", "A call arrived, by method and route. The bulk of all log volume."),

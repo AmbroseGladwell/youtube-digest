@@ -20,15 +20,10 @@ const stableStringify = (value: unknown): string => {
   return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableStringify(entry)}`).join(",")}}`;
 };
 
-// What the hash is taken over. Keys are sorted, so two notes with the same content hash
-// the same however they were built. Split from the hashing itself the way
-// narrationKeySource is: a caller with node:crypto to hand can do it synchronously.
+// Split from the hashing, as narrationKeySource is, so a node:crypto caller can do it synchronously.
 export const shareContentSource = (note: SharedNote): string => stableStringify(note);
 
-// What "you've edited this overview since sharing it" compares. It covers the note alone:
-// a transcript filled in later, or narration rendered in another voice, is not an edit the
-// reader made, and telling them it was would train them to ignore the notice
-// (docs/features/sharing.md).
+// The note alone: a later transcript or voice isn't the reader's edit (docs/features/sharing.md).
 export const shareContentHash = async (note: SharedNote): Promise<string> => {
   const bytes = new TextEncoder().encode(shareContentSource(note));
   const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
