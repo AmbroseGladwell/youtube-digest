@@ -16,8 +16,6 @@ export interface CookingStepsSheetProps {
   onClose: () => void;
 }
 
-// Design 150m: every step by its first action, done ones ticked and the current one tinted.
-// Choosing one goes to its first action and reads it, backwards or forwards.
 export const CookingStepsSheet = ({
   open,
   steps,

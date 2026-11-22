@@ -8,8 +8,6 @@ export interface DeleteOverviewsDialogProps {
   onClose: () => void;
 }
 
-// Always asks, names the count, and says they leave their projects too; Cancel takes the
-// focus ("OV-168 5" 168at).
 export const DeleteOverviewsDialog = ({ count, onDelete, onClose }: DeleteOverviewsDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);

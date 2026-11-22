@@ -2,8 +2,6 @@ import { answerBlocks } from "@overview/domain";
 import { ChatCodeBlock } from "../ChatCodeBlock/ChatCodeBlock.js";
 import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
 
-// A field of an answer as it is drawn, the same in every chat (OV-364): its paragraphs with their
-// inline Markdown, and its fenced code blocks.
 export const ChatAnswerText = ({ text }: { text: string }) => {
   return (
     <>

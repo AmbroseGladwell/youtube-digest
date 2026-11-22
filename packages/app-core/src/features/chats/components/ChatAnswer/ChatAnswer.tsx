@@ -47,30 +47,22 @@ export interface ChatAnswerProps {
   citations: readonly ChatCitation[];
   about: ChatSourceKind;
   arrived?: boolean;
-  // An article's or a recipe page's own page: a decline offers it, and a cited key point or
-  // chapter can be shown on it, beside the article in the extension (OV-320).
   page: ChatPage | null;
   video: VideoSource | null;
   overview: Overview;
   onCitationFollowed: (range: TimeRange) => void;
   onOverviewPartFollowed: ChatOverviewCitationProps["onFollowed"];
   onOpenTranscriptAt: (positionMs: number) => void;
-  // Another conversation about the overview an answer drew on, or null once it is deleted.
   conversationOf: (chatId: string) => ConversationSummary | null;
   onConversationFollowed: (chatId: string, message: number) => void;
-  // Another of the reader's overviews an answer drew on (OV-355): whether it is still in the library.
   holdsOverview: (overviewId: string) => boolean;
   onOtherOverviewFollowed: ChatOtherOverviewCitationProps["onFollowed"];
-  // The answer in sections (OV-354, page 4): every scope's answers share this one shape.
   sections?: ChatAnswerSections | undefined;
-  // A mini thumbnail for another overview's chip, when it's still in the library.
   imageOf?: ((overviewId: string) => OverviewImage) | undefined;
   onSourcesOpened?: ((count: number) => void) | undefined;
-  // Copy, under each answer (design 324x), with the Sources menu beside it when there is one.
   actions?: ((sources: ReactNode) => ReactNode) | undefined;
 }
 
-// A chip and what it's called, so a folded row can name every chip it hides (OV-362).
 export interface ChatChip {
   chip: ReactNode;
   label: string;
@@ -97,12 +89,6 @@ const otherOverviewsOf = (citations: readonly ChatCitation[]) =>
 const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
   citations.flatMap((citation) => ("startMs" in citation ? [citation] : [])).sort((a, b) => a.startMs - b.startMs);
 
-// Design 310k–310m, 310w, 310y: an answer is plain text on the panel. Under the whole of it, the
-// other conversations it drew on are links that open words, then one row of pills: the parts of
-// the overview it rests on in the note's order, then its stretches of the video in time order
-// (319c). One the source doesn't cover says so in a label above it, its text as plain as any
-// other: an answer, not an error. One from the overview has no label: its pills and its wording
-// say so (319k). One that has just arrived fades in what streaming didn't show (OV-341).
 export const ChatAnswer = ({
   text,
   inSource,
@@ -265,7 +251,6 @@ export const ChatAnswer = ({
   );
 };
 
-// A list item's text, inline, or as paragraphs and code blocks when it holds a fence (OV-372).
 const ChatItemText = ({ text }: { text: string }) => {
   if (!holdsCodeBlock(text)) {
     return <ChatMarkedText text={text} />;
@@ -279,12 +264,9 @@ const ChatItemText = ({ text }: { text: string }) => {
 
 export interface ChatAnswerSectionsViewProps {
   sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
-  // The chips for what a section cites; none while it streams in an overview's chat.
   chipsOf?: ((cited: readonly ChatCitation[]) => ChatChip[]) | undefined;
 }
 
-// OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
-// sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
 export const ChatAnswerSectionsView = ({ sections, chipsOf }: ChatAnswerSectionsViewProps) => {
   const row = (cited: readonly ChatCitation[]) => {
     const chips = chipsOf?.(cited) ?? [];
@@ -358,8 +340,6 @@ export interface ChatSourcesMenuProps {
   children: ReactNode;
 }
 
-// OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
-// moments first. N is counted by code.
 export const ChatSourcesMenu = ({ count, onOpened, children }: ChatSourcesMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
@@ -412,8 +392,6 @@ interface ShowOnPageLinkProps {
   place: ArticlePlace;
 }
 
-// Design 319 for OV-320: a plain link beside an article's key point or chapter. Beside the
-// article it moves the page; anywhere else it opens the page at that place in a new tab.
 const ShowOnPageLink = ({ page, place }: ShowOnPageLinkProps) => {
   if (page.onPage !== null) {
     const { onPage } = page;

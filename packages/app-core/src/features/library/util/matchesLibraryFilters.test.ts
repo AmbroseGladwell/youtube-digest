@@ -72,10 +72,6 @@ describe("matchesLibraryFilters", () => {
     expect(matchesLibraryFilters(entry, { ...NO_LIBRARY_FILTERS, topicId: FITNESS_TOPIC, status: "read" })).toBe(false);
   });
 
-  // Read and favourite live in their own store, so they are answerable for a record whose
-  // overview is not. Every other filter reads a field of the overview, and including a
-  // record that cannot answer would pollute the view
-  // (docs/features/record-migrations.md).
   it("keeps an unreadable record under an unfiltered view and under the filters its state can answer", () => {
     const favourited = makeUnreadableEntry({}, { favourite: true });
 

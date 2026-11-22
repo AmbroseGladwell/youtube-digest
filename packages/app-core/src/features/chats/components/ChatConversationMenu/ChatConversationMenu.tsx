@@ -20,15 +20,12 @@ import { chatConversationMenuTestIds } from "./ChatConversationMenuTestIds.js";
 export interface ChatConversationMenuProps {
   chat: Chat | null;
   overview: Overview;
-  // Every conversation about this overview, this one included; offered only when there are others.
   conversations: number;
-  // An answer is being written after earlier ones: only the finished answers are handed on.
   writing: boolean;
   compact: boolean;
   header: RefObject<HTMLElement | null>;
   onOpenList: () => void;
   onSaid: (text: string, done: boolean) => void;
-  // OV-354, 354w: Search my library, remembered per conversation by its last question.
   searchLibrary: boolean;
   onSearchLibrary: (on: boolean) => void;
 }
@@ -51,9 +48,6 @@ const continueDetail = (assistant: FollowUpAssistant, connected: boolean, writin
     : "Opens with this conversation filled in";
 };
 
-// Design 324x–324ag: the chat header's ⋯, holding the overview's other conversations and
-// Continue in {assistant}. A menu under the header on the web, an action sheet on a phone and in
-// the panel. Hidden while it would hold nothing: a new conversation, alone, before its first answer.
 export const ChatConversationMenu = ({
   chat,
   overview,

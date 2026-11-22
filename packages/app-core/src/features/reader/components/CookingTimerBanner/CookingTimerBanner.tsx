@@ -11,8 +11,7 @@ export interface CookingTimerBannerProps {
   onDismiss: (id: number) => void;
   onMore: (id: number) => void;
   dismissKey: ReactNode;
-  // The recipe being cooked; a timer from any other, or any timer outside the mode (null), is
-  // named by its recipe (design 288w).
+  // The recipe being cooked: a timer from any other, or any outside the mode (null), names its recipe.
   here?: string | null;
 }
 
@@ -21,11 +20,7 @@ const detail = (timer: CookingTimer, now: number, here: string | null) =>
     ? `Step ${timer.step + 1} · ${timerLength(timer.source.seconds)} · ${timerAgo(now - (timer.rangAt ?? now))}`
     : `${timer.recipeTitle} · step ${timer.step + 1} · ${timerLength(timer.source.seconds)}`;
 
-// Designs 284s–284w: a banner in the strip's place on whatever step the reader is on, its edge
-// pulsing, with Dismiss and +1 min; two or more ringing get a row each, oldest first. Focus
-// moves to the first Dismiss when one starts, to the next Dismiss as each is answered, and to
-// the cooking screen itself once none ring, so Space and the arrows move on again. Outside the
-// mode it goes back to wherever it was before the ring (design 288y).
+// Focus returns to the cooking screen once none ring, so Space and the arrows move on again.
 export const CookingTimerBanner = ({ ringing, now, onDismiss, onMore, dismissKey, here = null }: CookingTimerBannerProps) => {
   const firstDismiss = useRef<HTMLButtonElement | null>(null);
   const screen = useRef<HTMLElement | null>(null);

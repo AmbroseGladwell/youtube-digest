@@ -16,12 +16,8 @@ import { NoTranscriptSourceError, type TranscriptSourceFailure } from "./NoTrans
 export interface VideoResolutionDeps {
   sources: TranscriptSource[];
   transcriptStore: TranscriptStore;
-  // Told when a rung failed on the way, or none answered, so the server's logs say so. A
-  // rung with no answer is the ladder working, and alone is not worth a warning
-  // (docs/architecture/errors-and-logs.md, "Client warnings").
+  // When the ladder warns: docs/architecture/errors-and-logs.md, "Client warnings".
   warn?: ((warning: ClientWarningReport) => void) | undefined;
-  // Times the store's read and each rung asked, for the capture's timing. The background
-  // prefetch brings none, and is not timed.
   stopwatch?: CaptureStopwatch | undefined;
 }
 
@@ -58,8 +54,7 @@ export interface ResolvedVideoWithSource extends ResolvedVideo {
   source: CaptureTranscriptSource;
 }
 
-// The rungs in order, each asked only if the one before could not answer. The store is
-// read before any of them (docs/features/transcript-retrieval.md).
+// The rungs, in order: docs/features/transcript-retrieval.md, "The ladder".
 export const resolveVideo = async (pastedUrl: string, deps: VideoResolutionDeps): Promise<ResolvedVideoWithSource> => {
   const url = canonicalYouTubeUrl(pastedUrl) ?? pastedUrl;
   const { stopwatch } = deps;
@@ -92,7 +87,6 @@ export const resolveVideo = async (pastedUrl: string, deps: VideoResolutionDeps)
       return { ...resolved, source: source.tier };
     } catch (error) {
       failures.push({ tier: source.tier, outcome: "failed", error });
-      // Nothing about the video will be different at the next rung.
       if (error instanceof TranscriptFetchError && !isWorthAnotherSource(error.failure)) {
         throw error;
       }
@@ -103,8 +97,7 @@ export const resolveVideo = async (pastedUrl: string, deps: VideoResolutionDeps)
   throw new NoTranscriptSourceError(transcriptFailureMessage(failures), failures);
 };
 
-// The one place a resolved video is written back, so every rung completes a record that
-// was stored before metadata was kept (docs/features/watching-detection.md).
+// The only write-back: docs/features/transcript-retrieval.md, "Why the rung is one method".
 const saveResolved = async (resolved: ResolvedVideo, transcriptStore: TranscriptStore): Promise<void> => {
   if (resolved.video.id === null) {
     return;
@@ -118,8 +111,7 @@ const saveResolved = async (resolved: ResolvedVideo, transcriptStore: Transcript
   });
 };
 
-// The url is this request's, not the one the first fetch happened to use: everything else
-// describes the video, but the url is what the reader's timestamp links point at.
+// The url is this request's, not the stored one: it is what the reader's timestamp links point at.
 const readCachedVideo = async (url: string, transcriptStore: TranscriptStore): Promise<ResolvedVideo | null> => {
   const parsedId = parseVideoId(url);
   if (parsedId === null) {
@@ -134,9 +126,7 @@ const readCachedVideo = async (url: string, transcriptStore: TranscriptStore): P
   return { video: { ...stored.video, url }, transcript: stored.segments, generated: stored.generated };
 };
 
-// Only ever used to ask the store a question. A parse that disagreed with the platform's
-// own id costs one metadata call and then resolves by the real id; it can never file
-// captions under an invented one.
+// Only asks the store: a wrong parse costs a metadata call, never captions filed under a wrong id.
 const parseVideoId = (url: string): VideoId | null => {
   const id = extractYouTubeVideoId(url);
   return id === null ? null : VideoId.parse(id);

@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-// The library's select mode: the select button is the one way in ("OV-168 5" 168au). It ends
-// when the place changes, so a selection never follows the reader to another project.
 export const useOverviewSelection = (placeKey: string) => {
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set());

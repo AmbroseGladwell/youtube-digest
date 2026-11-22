@@ -6,9 +6,6 @@ import { EpisodeEngine, type EpisodeSnapshot } from "./EpisodeEngine.js";
 const NO_EPISODE: EpisodeSnapshot = { status: "idle", positionMs: 0, durationMs: null, jumps: 0 };
 const subscribeToNothing = () => () => {};
 
-// The episode's player for an episode's note, or null for any other. One sound at a time:
-// starting the episode pauses the narration where it was, and the narration starting pauses
-// the episode (design 106q-2). Leaving the note stops the episode.
 export const useEpisodeEngine = (source: Source | null): EpisodeEngine | null => {
   const narration = usePlayer();
   const audioUrl = source?.kind === "podcast" ? source.audioUrl : null;

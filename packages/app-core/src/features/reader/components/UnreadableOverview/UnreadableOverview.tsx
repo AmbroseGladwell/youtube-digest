@@ -13,11 +13,7 @@ export interface UnreadableOverviewProps {
   record: UnreadableRecord;
 }
 
-// The safe action takes the prominent slot and the destructive one is a sentence: watching
-// costs nothing, while regenerating replaces the very record a later migration could have
-// recovered. A held-back record is not offered it at all, because writing this client's
-// version over a newer one is the clobber the read rule exists to prevent
-// (docs/features/record-migrations.md).
+// docs/features/record-migrations.md, "Both kinds get a card; only one of them gets a button".
 export const UnreadableOverview = ({ record }: UnreadableOverviewProps) => {
   const navigate = useNavigate();
   const { start } = useNewOverviewRunController();
@@ -38,7 +34,7 @@ export const UnreadableOverview = ({ record }: UnreadableOverviewProps) => {
     void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
   };
 
-  // Designs 77ax, 77ay: a video can be remade from anywhere, an article needs to be open.
+  // A video can be remade from anywhere; an article needs its page open beside it.
   if (isArticle && !heldBack && videoUrl !== null) {
     const makeAgain = () => {
       if (beside === null || !overviewId.success) {

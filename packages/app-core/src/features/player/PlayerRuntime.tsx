@@ -12,9 +12,7 @@ import { useClientSurface } from "../../app/SurfaceContext.js";
 import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 
-// Owns the one player for this tab, above the router so a note keeps playing across
-// navigation, and inside the sync runtime because narration needs the account's session
-// (docs/features/audio-player.md).
+// Why above the router and inside the sync runtime: docs/features/audio-player.md, "Where it lives".
 export const PlayerRuntime = ({ children }: { children: ReactNode }) => {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;

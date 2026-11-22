@@ -29,9 +29,6 @@ export interface SourcePickerQuery {
   exclude: ReadonlySet<string>;
 }
 
-// OV-354, page 1: with nothing typed, the projects with their counts, then the four overviews saved
-// most recently; typed words filter by title or project name, titles only, the first eight shown.
-// Never the chat's own overview, nor anything already added.
 export const sourcePickerOptions = ({ query, projects, members, overviews, exclude }: SourcePickerQuery): PickerOptions => {
   const words = wordsOf(query);
   const counted = projects
@@ -62,7 +59,6 @@ export interface MarkedText {
   marked: boolean;
 }
 
-// The title in pieces, each typed word marked where it appears, for the picker to set in bold.
 export const markedPieces = (text: string, query: string): Array<MarkedText> => {
   const words = wordsOf(query);
   if (words.length === 0) {
@@ -92,7 +88,6 @@ export interface AtQuery {
   query: string;
 }
 
-// The "@" being typed at the caret, and what follows it, or null when the caret isn't in one.
 export const atQueryOf = (text: string, caret: number): AtQuery | null => {
   const before = text.slice(0, caret);
   const at = before.lastIndexOf("@");

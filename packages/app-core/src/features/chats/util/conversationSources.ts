@@ -1,10 +1,7 @@
 import type { Chat, ChatSource } from "@overview/domain";
 
 export interface ConversationSources {
-  // What the next question sends again: every overview the conversation added, pinned or found,
-  // minus any the reader set aside since.
   live: ChatSource[];
-  // Search my library as the conversation last left it; on until a question turned it off (OV-354).
   searchLibrary: boolean;
 }
 

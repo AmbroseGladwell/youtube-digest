@@ -6,8 +6,7 @@ import { chatAnswerTestIds } from "../ChatAnswer/ChatAnswerTestIds.js";
 import styles from "./ChatMarkedText.module.scss";
 import { chatMarkedTextTestIds } from "./ChatMarkedTextTestIds.js";
 
-// The prompt names this place in so many words when a reader asks what chat knows about them
-// (OV-342), so code, not the model, makes it a link.
+// The prompt names this place verbatim (OV-342), so code, not the model, makes it a link.
 const PERSONALISATION = "Settings › Personalisation";
 
 const withSettingsLinks = (text: string): ReactNode =>
@@ -50,8 +49,6 @@ export const MarkedPieceView = ({ piece, className }: MarkedPieceViewProps) => {
   return className === undefined ? <>{node}</> : <span className={className}>{node}</span>;
 };
 
-// An answer's words with their inline Markdown drawn, in every chat (OV-362, OV-364): bold, italics,
-// inline code and links that open in a new tab. Nothing else is read, so raw HTML stays text.
 export const ChatMarkedText = ({ text }: { text: string }) => {
   return (
     <>

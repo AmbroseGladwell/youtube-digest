@@ -9,28 +9,24 @@ export type EpisodeStatus = "idle" | "loading" | "playing" | "paused" | "failed"
 
 export interface EpisodeSnapshot {
   status: EpisodeStatus;
-  // Always the audio element's own clock, never worked out (docs/prototype/constraints.md).
+  // docs/prototype/constraints.md, "Never let a model count, measure or time anything".
   positionMs: number;
-  // The served file's length once the element knows it, which can differ from the feed's.
+  // The served file's length, which can differ from the feed's.
   durationMs: number | null;
-  // Counts the times a time in the note moved the player, for the line that follows a jump.
   jumps: number;
 }
 
 export interface EpisodeEngineOptions {
   audioUrl: string;
-  // The id the note's times are matched against: the episode's source key.
   playbackId: string;
   createMedia: () => EpisodeMedia;
-  // Called as the episode starts, so the narration can step aside: one sound at a time (106q).
   onStart: () => void;
 }
 
 export const BACK_SECONDS = 15;
 export const FORWARD_SECONDS = 30;
 
-// The episode's own audio, inside its note (design 106p). One element, made on first play
-// so a note that is only read costs the show's host nothing.
+// The element is made on first play, so a note that is only read costs the show's host nothing.
 export class EpisodeEngine {
   readonly #options: EpisodeEngineOptions;
   #media: EpisodeMedia | null = null;
@@ -51,8 +47,6 @@ export class EpisodeEngine {
 
   getSnapshot = (): EpisodeSnapshot => this.#snapshot;
 
-  // What the note's times, transcript and chapters follow and move, as they do a video beside
-  // the panel (docs/features/following-playback.md).
   readonly playback: PlaybackSource = {
     subscribe: this.subscribe,
     getPosition: () => this.#position,
@@ -81,7 +75,7 @@ export class EpisodeEngine {
     this.#media?.pause();
   }
 
-  // The skips and the scrubber move the player without counting as a jump.
+  // Skips and the scrubber move the player without counting as a jump.
   skip(deltaSeconds: number): void {
     const media = this.#ensureMedia();
     this.seek(Math.max(0, media.currentTime + deltaSeconds) * 1000);
@@ -93,7 +87,6 @@ export class EpisodeEngine {
     this.#set({ positionMs });
   }
 
-  // A time in the note: play from there, and up to `untilMs` for a range (106s).
   jump(positionMs: number, untilMs: number | null = null): void {
     this.seek(positionMs);
     this.#stopAtMs = untilMs;
@@ -101,7 +94,6 @@ export class EpisodeEngine {
     this.play();
   }
 
-  // Leaving the overview stops the episode (owner, 13 Nov 2026, for now).
   dispose(): void {
     const media = this.#media;
     if (media === null) {

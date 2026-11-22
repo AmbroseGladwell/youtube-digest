@@ -20,8 +20,7 @@ describe("cappedTopics", () => {
     expect(hiddenCount).toBe(2);
   });
 
-  // A filter you cannot see is a filter you cannot clear.
-  it("keeps the topic being filtered by visible, even from beyond the limit", () => {
+  it("keeps the topic being filtered by visible so it can be cleared, even from beyond the limit", () => {
     const { shown, hiddenCount } = cappedTopics(TOPICS, TOPICS[7]!.id);
 
     expect(shown.map((topic) => topic.name)).toContain("eight");

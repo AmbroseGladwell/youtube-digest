@@ -17,11 +17,7 @@ import { useCookingTimerList } from "../../../cookingTimers/CookingTimersContext
 
 const DOCKED_STATUSES = new Set<PlayerSnapshot["status"]>(["preparing", "playing", "paused", "buffering"]);
 
-// Design 3a: leaving a note that is playing docks this at the foot of every page — title,
-// section and clock, the transport, and × to stop — until × is pressed. A note left paused
-// docks nothing (OV-333). It is absent on the playing note's own reader, whose bar already
-// says all of it (docs/features/audio-player.md). It sits in the cooking timers' dock, under
-// any timers (design 288g).
+// When it shows: docs/features/audio-player.md, "Which note the bar is about".
 export const MiniPlayer = () => {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();

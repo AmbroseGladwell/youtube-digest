@@ -18,8 +18,6 @@ export interface DubiousReasonsPanelProps {
   onClose: () => void;
 }
 
-// Design OV-85 (85b–85g): an inline disclosure under the byline rather than a modal
-// (docs/features/dubious-reasons.md).
 export const DubiousReasonsPanel = ({ dubiousClaims, video, onClose }: DubiousReasonsPanelProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   const thanks = useRef<HTMLSpanElement | null>(null);

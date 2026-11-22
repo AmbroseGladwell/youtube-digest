@@ -15,10 +15,7 @@ export const useArticleBeside = (url: string | null): ActivePage | null => {
   return page !== null && url !== null && page.url === canonicalArticleUrl(url, null) ? page : null;
 };
 
-// Beside the article a link moves the page rather than opening a tab, and there we can tell
-// when the place has gone (designs 77r, 77x, 77y). Null anywhere else, which is what keeps
-// a link an ordinary link. If we can't get into the page at all, the place's own address
-// still gets the reader there.
+// Null away from the article, which is what keeps a link an ordinary link there.
 export const useShowOnPage = (source: WebSource | null): ShowOnPage | null => {
   const pages = useArticlePages();
   const beside = useArticleBeside(source?.url ?? null);

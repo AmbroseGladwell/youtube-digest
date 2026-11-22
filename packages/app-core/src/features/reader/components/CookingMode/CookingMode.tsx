@@ -43,9 +43,8 @@ export interface CookingModeProps {
   surface: CookingSurface;
   usTemperatures: boolean;
   methodAmounts: readonly MethodAmount[];
-  // A recipe video's id, so a step with a moment can be watched (design 122l); null for a page.
   videoId?: string | null;
-  // In the panel the video beside it moves there instead of a sheet opening.
+  // In the panel the video beside it is moved instead of a sheet opening.
   seekVideo?: ((positionMs: number) => void) | null;
 }
 
@@ -133,7 +132,6 @@ interface TimedTextProps {
   onTime: (index: number) => void;
 }
 
-// Design 284a: each time in the action is underlined in orange, and tapping it does what its pill does.
 const TimedText = ({ text, offset, times, us, amounts, onTime }: TimedTextProps) => {
   const parts: ReactNode[] = [];
   let from = 0;
@@ -214,10 +212,7 @@ const arrivalClassOf = (from: "below" | "above" | null): string | undefined => {
   return from === "above" ? styles.fromAbove : "";
 };
 
-// Designs 150c–150au: the action being cooked, large, with the next one under it, and Next the
-// biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
-// web is a full-screen takeover with each control's key on it, where the ingredients open as a
-// column beside the step (190a–190k) (docs/features/recipe-notes.md, "Cooking step by step").
+// The layouts on each surface: docs/features/recipe-notes.md, "Cooking step by step".
 export const CookingMode = ({
   mode,
   title,

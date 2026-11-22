@@ -2,8 +2,6 @@ import type { TranscriptMatch } from "../types/TranscriptMatch.js";
 
 export interface BlockPart {
   text: string;
-  // The hit's place in the whole transcript's run of hits, or null for the plain text
-  // between hits. The panel marks one of them as the one the steppers are on.
   match: number | null;
 }
 

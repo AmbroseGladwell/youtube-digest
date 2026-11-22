@@ -11,16 +11,13 @@ export interface HeadImageProps {
   className?: string | undefined;
   onToggle: () => void;
   ref?: Ref<HTMLButtonElement> | undefined;
-  // Design OV-170: the note's own address, which is both ends of the journey the row's
-  // thumbnail makes. The shared page passes nothing, because it has no library behind it
-  // (docs/features/page-transitions.md).
+  // Absent on the shared page, which has no library row to carry the image from.
   carriesFrom?: string | undefined;
 }
 
 const YOUTUBE_THUMBNAIL = /^(https:\/\/i\.ytimg\.com\/vi(?:_webp)?\/[^/]+\/)[a-z]*default(\.jpg|\.webp)$/;
 
-// YouTube's placeholder for a missing size is a 120px grey frame served as an image, so a
-// load is only taken as the sharper picture when it is one.
+// YouTube serves a missing size as a 120px grey image, so only a wide load counts as sharper.
 const SHARP_MIN_WIDTH = 640;
 
 const sharperImage = (url: string): string | null => {
@@ -28,17 +25,12 @@ const sharperImage = (url: string): string | null => {
   return match === null ? null : `${match[1]}maxresdefault${match[2]}`;
 };
 
-// Design 151a–151e and 151p: the image is the control, a button that swaps it between the
-// tile and the column's width. Nothing is drawn when there is no image or it fails, so
-// there is nothing to press (151q).
 export const HeadImage = ({ source, full, className, onToggle, ref, carriesFrom }: HeadImageProps) => {
   const [failed, setFailed] = useState(false);
   const [sharpLoaded, setSharpLoaded] = useState(false);
   const imageUrl = sourceImage(source);
   const morph = useOverviewImageMorph<HTMLButtonElement>(carriesFrom ?? "", carriesFrom !== undefined);
-  // The head's own growing motion already holds this element (useHeadImageMotion), so the
-  // two refs are merged rather than one replacing the other. Held still across renders: a
-  // fresh callback ref each time would have React detach and re-attach it on every one.
+  // Stable, as a fresh callback ref would re-attach every render; merged with useHeadImageMotion's ref.
   const setButton = useCallback(
     (element: HTMLButtonElement | null) => {
       morph.current = element;

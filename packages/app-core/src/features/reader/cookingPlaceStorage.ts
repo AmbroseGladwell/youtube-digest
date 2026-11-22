@@ -9,8 +9,6 @@ export const COOKING_HINT_ENTRIES = 2;
 const CookingPlace = z.object({ action: z.number().int().nonnegative(), leftAt: z.number() });
 export type CookingPlace = z.infer<typeof CookingPlace>;
 
-// Where the reader left cooking a recipe step by step, kept on this device for a day and cleared
-// by Finish (design 150w, owner 3 Nov 2026). Never synced; nothing when it can't be read.
 export const readCookingPlace = (
   overviewId: OverviewId,
   now = Date.now(),
@@ -39,7 +37,6 @@ export const writeCookingPlace = (overviewId: OverviewId, place: CookingPlace | 
   }
 };
 
-// The headphones line is shown on the first two entries only (design 150t).
 export const readCookingHints = (storage: Storage = globalThis.localStorage): number => {
   try {
     return z
@@ -57,6 +54,6 @@ export const writeCookingHints = (count: number, storage: Storage = globalThis.l
   try {
     storage.setItem(HINTS_KEY, String(count));
   } catch {
-    // As above: the line simply shows again.
+    // A device that won't store it simply shows the line again.
   }
 };

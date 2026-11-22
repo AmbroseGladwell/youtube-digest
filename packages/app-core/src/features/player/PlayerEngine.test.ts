@@ -65,8 +65,6 @@ class FakeMedia extends EventTarget implements PlayerMedia {
   paused = true;
   preload: "" | "none" | "metadata" | "auto" = "";
   blockPlay = false;
-  // A real element plays some time after play() resolves; a test that measures that gap
-  // holds the sound and lets it out itself.
   holdSound = false;
 
   play = (): Promise<void> => {

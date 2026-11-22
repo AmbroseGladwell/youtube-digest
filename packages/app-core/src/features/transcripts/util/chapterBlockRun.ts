@@ -10,11 +10,7 @@ export interface ChapterSpan {
   endMs: number;
 }
 
-// Every block holding any of a chapter's words: the one its first words fall in, through
-// the last one that begins before the chapter ends. Chapters are contiguous
-// (docs/features/chapters.md), so a block the boundary runs through carries the tail of
-// one and the head of the next and belongs to both runs. Only the chapter the reader
-// opened is ever marked, so the two are never on screen together.
+// A block a chapter boundary runs through belongs to both chapters' runs.
 export const chapterBlockRun = (blocks: { startMs: number }[], chapter: ChapterSpan): ChapterBlockRun | null => {
   const from = blockAtPosition(blocks, chapter.startMs);
   if (from === -1) {

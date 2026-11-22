@@ -15,8 +15,6 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 export interface SortPillProps {
   sort: LibrarySort;
   onChange: (sort: LibrarySort) => void;
-  // The narrow layout's icon beside the search, which widens into a short name for any sort
-  // but the default (84v). The menu is the same either way.
   compact?: boolean;
 }
 

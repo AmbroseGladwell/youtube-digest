@@ -7,10 +7,6 @@ const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 const arriving = () => document.querySelector<HTMLElement>(`[${ARRIVING_ATTRIBUTE}]`);
 
-// Design 310a-4–310a-6: a copy of the tapped bubble, or of the typed question, lifts off and
-// travels into the chat as its question, narrowing to fit and following the chat every frame
-// while it slides in. The question it lands as stays hidden until it arrives. Nothing travels
-// with reduced motion.
 export const bubbleTravel = (from: HTMLElement, text: string): void => {
   if (prefersReducedMotion() || typeof requestAnimationFrame === "undefined") {
     return;

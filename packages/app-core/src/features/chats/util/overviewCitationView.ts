@@ -12,9 +12,6 @@ import {
   type OverviewPartCitation,
 } from "@overview/domain";
 
-// What an answer's citation of the overview shows: the part it lands on now, a section whose
-// item has since changed, or a section no longer in the overview (designs 319b, 319x, 319z).
-// An article's key point or chapter also carries its place on the page (OV-320).
 export type OverviewCitationView =
   | { kind: "item"; part: OverviewPart; index: number; label: string; opening: string; place?: ArticlePlace }
   | { kind: "changed"; part: OverviewPart; label: string }
@@ -43,8 +40,7 @@ const sectionOf = (part: OverviewPart, overview: Overview): string =>
     method: "Method",
   })[part];
 
-// The note's own heading for the part, numbered where the note numbers it. A section the note
-// doesn't number is numbered only when one answer cites two of its items (319b).
+// An unnumbered section is numbered only when one answer cites two of its items (319b).
 const labelOf = (part: OverviewPart, index: number, text: string | null, overview: Overview, twice: boolean): string => {
   const numbered = (name: string) => `${name} ${index + 1}`;
   switch (part) {
@@ -89,7 +85,6 @@ const placeOf = (overview: Overview, part: OverviewPart, index: number): Article
 
 const isOverviewCitation = (citation: ChatCitation): citation is Extract<ChatCitation, OverviewPartCitation> => "part" in citation;
 
-// An answer's citations of the overview, in the note's order.
 export const overviewCitationViews = (overview: Overview, citations: readonly ChatCitation[]): OverviewCitationView[] => {
   const cited = citations
     .filter(isOverviewCitation)

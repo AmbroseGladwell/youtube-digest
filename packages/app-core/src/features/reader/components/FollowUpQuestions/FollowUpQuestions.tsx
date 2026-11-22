@@ -31,16 +31,11 @@ export interface AnsweredHere {
 export interface FollowUpQuestionsProps {
   overview: Overview;
   questions: readonly FollowUpQuestion[];
-  // A phone or the panel: bubbles run full width and the menu is a sheet (266u, 266ac).
   compact: boolean;
-  // The reader's own record of which questions they've taken further (266aj), never shared.
   asked: readonly AskedQuestion[];
   onAsked: (asked: AskedQuestion[]) => void;
   analytics: ReaderAnalytics["followUps"];
-  // Present where chat is offered: a tapped question is answered in the app unless the reader
-  // chose their assistant (design 310f). Absent, the block is OV-266's as built.
   onAskHere?: ((question: string, from: HTMLElement | null) => void) | undefined;
-  // Where questions are answered here: the last time this one was, and its conversation (310d).
   answeredHereOf?: ((question: string) => AnsweredHere | null) | undefined;
 }
 
@@ -82,8 +77,7 @@ const AssistantLine = ({ assistant, connected, copies }: AssistantLineProps) => 
   return <>Each opens {name} in a new tab with this note filled in.</>;
 };
 
-// A ghost of the tapped question shrinks and drops to the toast, so the reader sees something
-// was picked up before they switch tabs (266am). Only when the tap copies.
+// The ghost shows something was picked up before the reader switches tabs.
 const dropGhost = (from: HTMLElement | null): Promise<void> => {
   if (from === null || prefersReducedMotion() || typeof from.animate !== "function") {
     return Promise.resolve();
@@ -118,9 +112,6 @@ const dropGhost = (from: HTMLElement | null): Promise<void> => {
     .then(() => ghost.remove());
 };
 
-// Design 266a–266ao: the last block in the note, questions as speech bubbles, three at a time,
-// taken to the reader's own assistant, or answered in the app where chat is offered (310f;
-// docs/features/follow-up-questions.md, docs/features/chats.md).
 export const FollowUpQuestions = ({
   overview,
   questions,
@@ -176,7 +167,7 @@ export const FollowUpQuestions = ({
     return () => observer.disconnect();
   }, [motion]);
 
-  // The next three start where the old ones went, then settle once the browser has seen them there.
+  // Reading offsetHeight lays the entering three out where the old ones went before they settle.
   useLayoutEffect(() => {
     if (motion !== "entering") {
       return;

@@ -8,16 +8,12 @@ export const questionsIn = (chat: Chat): number => chat.messages.filter((message
 
 export const firstQuestionOf = (chat: Chat): string => chat.messages.find((message) => message.from === "reader")?.text ?? "";
 
-// "12 Nov", with the year when it isn't this one: when a conversation started, as a citation of
-// it names it (design 310w).
 export const conversationDate = (at: string, now: Date): string => {
   const when = new Date(at);
   const day = `${when.getDate()} ${MONTHS[when.getMonth()]}`;
   return when.getFullYear() === now.getFullYear() ? day : `${day} ${when.getFullYear()}`;
 };
 
-// A row in an overview's conversations (design 310q): "Today, 14:20 · 2 questions", or
-// "12 Nov · 4 questions", by when it was last asked in.
 export const conversationLine = (chat: Chat, now: Date): string => {
   const when = new Date(lastActive(chat));
   const today = when.toDateString() === now.toDateString();

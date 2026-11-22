@@ -1,16 +1,12 @@
 import type { ChatSourceKind } from "@overview/domain";
 
 export interface ChatWords {
-  // "Ask about this article", "conversations about this recipe".
   noun: string;
-  // The muted label on an answer that cites nothing (310m), a decline or general knowledge (OV-329), and how it is announced.
   notCovered: string;
-  // The empty conversation's second line (310i).
   answersFrom: string;
 }
 
-// Chat's copy for what it is about. An article or a recipe page is answered from its overview
-// alone, so its labels say so rather than "Not from the article" (OV-320).
+// An article or recipe page is answered from its overview alone, so its labels say so (OV-320).
 export const chatWords = (about: ChatSourceKind): ChatWords =>
   ({
     video: { noun: "video", notCovered: "Not from the video", answersFrom: "Answers come from the video, with the moments they’re from." },

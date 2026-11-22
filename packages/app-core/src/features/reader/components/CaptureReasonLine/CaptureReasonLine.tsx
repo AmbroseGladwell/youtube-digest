@@ -13,16 +13,12 @@ export interface CaptureReasonLineProps {
   onEditingChange: (editing: boolean) => void;
 }
 
-// Design 20c and 21b: the reason reads back as one line above the premise, the reminder it
-// was in the prototype, and only when there is one. 21d: editing turns the same line into
-// the field, with Enter to save and Escape to cancel (docs/features/capture-reason.md).
 export const CaptureReasonLine = ({ overview, editing, compact, onEditingChange }: CaptureReasonLineProps) => {
   const setCaptureReason = useSetOverviewCaptureReasonMutation();
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement | null>(null);
 
-  // The draft is taken as editing opens and not again: a write landing mid-edit must not
-  // overwrite what is being typed.
+  // Taken only as editing opens, so a write landing mid-edit can't overwrite what is being typed.
   useEffect(() => {
     if (editing) {
       setDraft(overview.captureReason ?? "");

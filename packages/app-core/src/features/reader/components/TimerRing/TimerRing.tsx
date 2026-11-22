@@ -10,7 +10,6 @@ export interface TimerRingProps {
 const RADIUS = 15;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-// Designs 284g and 284r: the ring empties as the timer runs, and goes muted while paused.
 export const TimerRing = ({ leftMs, totalMs, paused, size = 34 }: TimerRingProps) => {
   const left = totalMs <= 0 ? 0 : Math.min(Math.max(leftMs / totalMs, 0), 1);
   return (

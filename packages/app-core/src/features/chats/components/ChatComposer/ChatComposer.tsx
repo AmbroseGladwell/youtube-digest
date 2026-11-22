@@ -12,7 +12,6 @@ import styles from "./ChatComposer.module.scss";
 import { chatComposerTestIds } from "./ChatComposerTestIds.js";
 
 export interface ChatComposerProps extends Omit<ChatFieldProps, "onAt" | "onPickerKey" | "combobox"> {
-  // The chat's own overview, never offered; none on the Ask page.
   exclude?: OverviewId | undefined;
   pinned: readonly PinnedItem[];
   liveSources: readonly ChatSource[];
@@ -68,9 +67,6 @@ interface RowItem {
   remove: () => void;
 }
 
-// OV-354, page 1: the field with what the next question will send in one row above it, two chips
-// then "+N", and the "@" picker over it, a combobox listing projects and the newest overviews,
-// filtered by title as the reader types.
 export const ChatComposer = ({
   exclude: own,
   pinned,
@@ -115,8 +111,6 @@ export const ChatComposer = ({
     picking === null ? { options: [], more: 0 } : sourcePickerOptions({ query: picking.query, projects, members, overviews, exclude });
   const open = picking !== null;
 
-  // Opens above the field, or below it when the space above, under the sticky top bar, is too
-  // small for it (OV-362).
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [below, setBelow] = useState(false);
   useLayoutEffect(() => {

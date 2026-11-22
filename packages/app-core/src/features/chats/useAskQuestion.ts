@@ -19,8 +19,6 @@ import { chatKeys } from "./chatKeys.js";
 import { chatWaitOf, type ChatWait } from "./util/chatWaitOf.js";
 import { withAnswer } from "./util/withAnswer.js";
 
-// What a question takes besides its words (OV-354): what the reader pinned with "@", what they took
-// out of the conversation, and whether Search my library is on.
 export interface AskExtras {
   pins: { overviews: OverviewId[]; projects: ProjectId[] };
   setAside: OverviewId[];
@@ -47,9 +45,7 @@ export type AskedFrom = "question" | "typed";
 
 const IDLE: AskState = { status: "idle" };
 
-// Asks a question about one overview and follows its answer as it streams. The stored answer
-// goes into the conversation at once, and sync brings the record down behind it; a wait comes
-// back as a state to show, never as a failure (docs/features/chats.md, "Asking").
+// The stored answer, sync and waits: docs/features/chats.md, "Asking".
 export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, api?: ChatApi) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
@@ -153,8 +149,6 @@ export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, ap
     [api, apiUrl, connection.token, overviewId, about, queryClient, analytics, accountId, syncNow],
   );
 
-  // Stops the answer: the server stops asking too, stores nothing and gives the question back.
-  // What was written stays on screen, saying it didn't count (design 310i).
   const stop = useCallback(() => inFlight.current?.abort(), []);
   const dismiss = useCallback(() => setState(IDLE), []);
 

@@ -51,8 +51,6 @@ describe("libraryFilterCounts", () => {
     });
   });
 
-  // A library that says 28 and holds 30 is the prototype's eleven missing notes with a
-  // new address (docs/features/record-migrations.md).
   it("counts a record it cannot read in the total, and says so separately", () => {
     const counts = libraryFilterCounts([makeOverviewWithState({ topicIds: [FITNESS] }, { read: true }), makeUnreadableEntry()]);
 

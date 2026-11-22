@@ -4,8 +4,7 @@ import { madeOnLine } from "../../util/madeOnLine.js";
 import styles from "./MadeOnLine.module.scss";
 import { madeOnLineTestIds } from "./MadeOnLineTestIds.js";
 
-// On the byline's scale, under the playlist line: provenance, not a warning. Only a
-// fallback earns it (docs/architecture/tiers.md, "Which key an overview uses").
+// Only a fallback earns it: docs/architecture/tiers.md, "Which key an overview uses".
 export const MadeOnLine = ({ overview }: { overview: Overview }) => {
   const line = madeOnLine(overview.madeOn);
   return line === null ? null : (

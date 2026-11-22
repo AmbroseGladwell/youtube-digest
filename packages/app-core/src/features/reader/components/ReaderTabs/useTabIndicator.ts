@@ -7,12 +7,7 @@ export interface TabIndicator {
   width: number;
 }
 
-// Design 9b is one indicator that travels, not three that switch on, so it has to know
-// where the active label actually is. The three labels are words of different lengths, so
-// the offset is measured off the laid-out buttons rather than divided out of the strip's
-// width — docs/prototype/constraints.md's rule that nothing estimates a number it could
-// read. The layout effect puts the measurement in before the first paint, and the ref
-// callbacks are built once so React never detaches a button between renders.
+// Labels differ in length, so the travelling indicator is measured off the buttons, not divided out.
 export const useTabIndicator = (active: ReaderTab): TabIndicator => {
   const buttons = useRef(new Map<ReaderTab, HTMLButtonElement>());
   const [bounds, setBounds] = useState({ offset: 0, width: 0 });

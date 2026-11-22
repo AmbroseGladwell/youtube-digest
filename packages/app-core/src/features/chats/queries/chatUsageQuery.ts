@@ -6,8 +6,7 @@ import { useKnownApiUrl } from "../../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { chatKeys } from "../chatKeys.js";
 
-// The account's questions this month against its plan's allowance, as the server counts
-// them (docs/architecture/tiers.md, "Questions about an overview").
+// The allowance, as the server counts it: docs/architecture/tiers.md, "Questions about an overview".
 export const useChatUsageQuery = () => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();

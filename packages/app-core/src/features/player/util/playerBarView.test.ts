@@ -174,8 +174,6 @@ describe("sectionHeadingAt", () => {
   });
 });
 
-// A press says which state it was made in, so the catalogue has to know every one of them:
-// the record fails to compile if a status is added here, and the test if one is added there.
 const EVERY_STATUS: Record<PlayerStatus, true> = {
   ready: true,
   preparing: true,

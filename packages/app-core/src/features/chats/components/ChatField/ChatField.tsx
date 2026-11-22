@@ -12,16 +12,12 @@ export interface ChatFieldProps {
   onChange: (value: string) => void;
   onSend: () => void;
   onStop: () => void;
-  // OV-354: the "@" button, and the field acting as the picker's combobox while it's open.
   onAt?: (() => void) | undefined;
   onPickerKey?: ((event: KeyboardEvent<HTMLTextAreaElement>) => boolean) | undefined;
   combobox?: { expanded: boolean; controls: string; activeDescendant: string | undefined } | undefined;
-  // The Ask page's empty state, where the field stands alone in the middle (354u).
   large?: boolean | undefined;
 }
 
-// Design 310i–310j: Enter sends and Shift+Enter starts a new line; while an answer is being
-// written, Stop (ink, never orange) takes Send's place.
 export const ChatField = ({
   value,
   placeholder,

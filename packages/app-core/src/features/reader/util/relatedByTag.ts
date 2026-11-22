@@ -7,8 +7,7 @@ export interface RelatedOverview extends OverviewWithState {
   sharedTags: number;
 }
 
-// The overviews that share the most tags with this one, newest first among equals
-// ("OV-84 1 On the Note" 84a). Read ones stay in.
+// Read ones stay in.
 export const relatedByTag = (
   current: OverviewWithState,
   library: readonly OverviewWithState[],

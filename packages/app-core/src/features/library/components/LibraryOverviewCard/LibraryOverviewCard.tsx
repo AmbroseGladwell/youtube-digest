@@ -23,11 +23,7 @@ export interface LibraryOverviewCardProps {
   playing: boolean;
   onListen: () => void;
   readerState: LibraryViewState;
-  // On a project's page, a row an assistant put there says so, with a way to take it out
-  // ("OV-168 2 The Project Page" 168f).
   addedBy?: { label: string; on: string; projectName: string; onRemove: () => void } | null;
-  // While the library is selecting, the whole row is one checkbox and nothing in it opens
-  // ("OV-168 5" 168ax, 168az).
   selection?: { selected: boolean; onToggle: () => void; order: number } | null;
 }
 
@@ -39,9 +35,6 @@ const SELLING_LABEL: Record<string, string> = {
   sponsor_or_affiliate: "Sponsored or affiliate",
 };
 
-// Design 10a: a thumbnail-first row on a raised tile. Every verdict is the same stone
-// chip, so a library that is three-quarters common knowledge reads calm; a row already read
-// recedes to the muted ink instead (docs/features/stone-theme.md).
 const bylineOf = (source: Source): string =>
   source.kind === "web" && source.author !== null ? `${sourceName(source)} · ${source.author}` : sourceName(source);
 

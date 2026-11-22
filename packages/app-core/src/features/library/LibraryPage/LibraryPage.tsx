@@ -76,11 +76,7 @@ import { SelectionTopicsPicker } from "../components/SelectionTopicsPicker/Selec
 import { DeleteOverviewsDialog } from "../components/DeleteOverviewsDialog/DeleteOverviewsDialog.js";
 import { useOverviewSelection } from "./useOverviewSelection.js";
 
-// Below this width the rail is a sheet behind the filter button, so a milestone sits at
-// the top of the list instead (LibraryPage.module.scss; "OV-34 3 Phone and Panel" 34ad).
 const RAIL_SHEET_QUERY = "(max-width: 61.9375rem)";
-// A phone folds the search into an icon, so the row holds search, sort, Filters and select
-// ("OV-168 5" 168au), and its selection bar is icons alone.
 const PHONE_QUERY = "(max-width: 47.9375rem)";
 const QUERY_TO_URL_MS = 300;
 
@@ -89,7 +85,6 @@ export interface LibraryPageProps {
   place?: LibraryPlace;
 }
 
-// A project's page starts from every overview in it (docs/features/projects.md).
 const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
 
 const selectionLineFor = (count: number, coarsePointer: boolean): string => {
@@ -109,8 +104,7 @@ const searchPlaceholderFor = (filtered: boolean, sortedOnSheet: boolean): string
 export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) => {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
-  // The field's words lead and the URL follows once typing pauses, so a key never waits on
-  // the router (OV-292, docs/features/library-view.md, "Search").
+  // Why the URL follows the field: docs/features/library-view.md, "Search".
   const [query, setQuery] = useState(view.filters.query);
   const [searchText, setSearchText] = useState<LibrarySearchText>({ text: query, revision: 0 });
   const queryWrites = useRef<string[]>([]);
@@ -154,8 +148,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const defaultView = place.kind === "library" ? DEFAULT_LIBRARY_VIEW : PROJECT_VIEW;
   const [keptIds, setKeptIds] = useState<ReadonlySet<string>>(new Set());
   const glide = useLibraryGlide(main, searchParams.toString());
-  // Typing in the search narrows the list in place; every other change to the view glides
-  // (useLibraryGlide).
   const changeView = (next: URLSearchParams) =>
     glide(() => {
       setKeptIds(new Set());
@@ -177,8 +169,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const player = usePlayer();
   const playerSnapshot = usePlayerSnapshot();
 
-  // Design 3a: Listen plays in place and docks the mini-player; the row that is playing
-  // says so, and pressing it again pauses (docs/features/audio-player.md).
   const isPlaying = (overviewId: OverviewId) =>
     playerSnapshot.track?.overviewId === overviewId && ["playing", "buffering", "preparing"].includes(playerSnapshot.status);
   const listen = (overview: Overview) => {
@@ -213,8 +203,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const coarsePointer = useMediaQuery("(pointer: coarse)");
   const timeSaved = timeSavedSummary(readableEntries(entries));
   const milestones = useMilestones(timeSaved.minutes, true);
-  // A sample saved during onboarding isn't the reader's first overview of their own
-  // (docs/features/onboarding.md, "Try a sample").
+  // A sample isn't the reader's first overview: docs/features/onboarding.md, "Try a sample".
   const firstOverview = useFirstOverviewMilestone(readableEntries(entries).filter(({ overview }) => !overview.fromSample).length);
   const milestoneStack = (
     <>
@@ -230,9 +219,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   );
 
   const entering = useEnteringOverviewIds(entries.map(libraryEntryId));
-  // The rail is a sheet over the page only in the narrow layout, and only there does it
-  // hold the keyboard. On the wide one it is part of the page and `filtersOpen` is never
-  // set, the button that would set it being hidden.
   const closeFilters = () => {
     if (filtersOpen) {
       analytics.library.filterSheet.closed();
@@ -281,20 +267,15 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
   const readerState = libraryViewState(viewParams, keptIds);
   const caughtUp = filters.status === "unread" && counts.unread === 0;
-  // The dot marks a view the reader changed, not the default's own Unread; the search says
-  // itself, so it is not counted (84i, docs/features/tag-reuse.md).
   const changedFilters = filtersChangedFromDefault(filters, defaultView.filters);
   const chips = libraryFilterChips(filters, topics, defaultView.filters);
 
-  // A row changed from the list stays where it is until the view changes, rather than
-  // vanishing from under the pointer (docs/features/library-view.md).
+  // Why a changed row stays put: docs/features/library-view.md, "Show all, Reset, caught up".
   const visible = orderLibraryEntries(
     entries.filter((entry) => matchesLibraryFilters(entry, filters) || keptIds.has(libraryEntryId(entry))),
     sort,
   );
   searchSettled.current = () => analytics.library.search.searched({ results: visible.length });
-  // Meaning is asked for once typing settles, so it never answers for words the field no
-  // longer holds (docs/features/search-by-meaning.md, "In the library").
   const meaningIsCurrent = settledQuery !== "" && settledQuery === filters.query.trim();
   const closeInMeaning = meaningIsCurrent ? meaningEntries(entries, filters, meaningQuery.data, new Set(visible.map(libraryEntryId))) : [];
   const meaningUnavailable = meaningIsCurrent && meaningQuery.data?.available === false;
@@ -382,8 +363,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     }
   };
 
-  // Only counts: with a tag set the chip under the search names it, so the line says it to a
-  // screen reader alone ("OV-84 2 Library Filter" 84o).
   const countLine =
     filters.tag === null ? (
       libraryCountLine(counts)
@@ -586,7 +565,6 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
               {projects.head ?? (
                 <div className={styles.listHead}>
                   <div className={styles.titleBlock}>
-                    {/* Narrow, time saved sits beside the title and the count has its line to itself (84o). */}
                     <div className={styles.titleRow}>
                       <h1 className={styles.title}>Overviews</h1>
                       {railIsSheet && <span className={styles.timeSavedSlot}>{timeSavedButton}</span>}

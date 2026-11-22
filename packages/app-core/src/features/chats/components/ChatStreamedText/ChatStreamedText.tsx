@@ -10,8 +10,7 @@ export interface ChatStreamedTextProps {
   whole: boolean;
 }
 
-// While it streams, the answer's last word is held back until it is whole, and a fence's backticks
-// until they are three, so no marker ever shows.
+// Holds back a half-written last word or fence while streaming, so no marker ever shows.
 const blocksSoFar = (text: string, whole: boolean): AnswerBlock[] => {
   if (whole) {
     return answerBlocks(text);
@@ -25,9 +24,6 @@ const blocksSoFar = (text: string, whole: boolean): AnswerBlock[] => {
   return blocks;
 };
 
-// OV-341: each word fades in as it arrives, in the final answer's paragraphs, so nothing moves when it
-// lands. Its Markdown shows as it is written, never its markers, and a code block grows line by line
-// (OV-362, OV-364).
 export const ChatStreamedText = ({ text, whole }: ChatStreamedTextProps) => {
   return (
     <div className={styles.root} data-testid={chatStreamedTextTestIds.root}>

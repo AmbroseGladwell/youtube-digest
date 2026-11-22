@@ -13,15 +13,13 @@ const SHOWN_AT_FIRST = 3;
 export interface RelatedByTagProps {
   tags: string[];
   related: RelatedOverview[];
-  // Where there is a library to land in. The side panel has none, so its tags are words.
+  // False in the side panel, which has no library to land in.
   tagsLink: boolean;
   onTagFollowed?: (() => void) | undefined;
   onOverviewOpened?: ((sharedTags: number) => void) | undefined;
   onMoreShown?: ((shown: boolean) => void) | undefined;
 }
 
-// The note's last section: its tags as the heading row, each opening the library filtered to
-// it, and under them the overviews sharing most of them ("OV-84 1 On the Note" 84a–84e).
 export const RelatedByTag = ({ tags, related, tagsLink, onTagFollowed, onOverviewOpened, onMoreShown }: RelatedByTagProps) => {
   const [allShown, setAllShown] = useState(false);
   const headingId = useId();

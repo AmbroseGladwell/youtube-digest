@@ -7,7 +7,7 @@ import { cookingLeaveSheetTestIds } from "./CookingLeaveSheetTestIds.js";
 
 export interface CookingLeaveSheetProps {
   open: boolean;
-  // This recipe's timers; another recipe's carry on whatever is chosen here.
+  // This recipe's only: another recipe's timers carry on whatever is chosen here.
   running: readonly CookingTimer[];
   ringing: readonly CookingTimer[];
   others: readonly CookingTimer[];
@@ -63,10 +63,6 @@ const othersLine = (others: readonly CookingTimer[]): string | null => {
   return `Your ${lower(others[0]!)} for ${others[0]!.recipeTitle} carries on either way.`;
 };
 
-// Designs 288a–288f: leaving with this recipe's timers running asks whether to keep them, since
-// they now carry on outside the mode. Keep running is filled and focused; Stop is the one that
-// loses something; Keep cooking is quiet, and Esc means it. With only a ringing timer, the choice
-// is Dismiss and leave or Keep it ringing. A sheet on the phone and in the panel, a dialog on the web.
 export const CookingLeaveSheet = ({
   open,
   running,

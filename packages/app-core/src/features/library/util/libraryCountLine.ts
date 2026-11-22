@@ -3,7 +3,6 @@ export interface LibraryCountLineOptions {
   unread: number;
 }
 
-// The list's subtitle.
 export const libraryCountLine = ({ total, unread }: LibraryCountLineOptions): string => {
   return `${total} ${total === 1 ? "overview" : "overviews"} · ${unread} unread`;
 };

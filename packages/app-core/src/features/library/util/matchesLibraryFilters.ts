@@ -3,10 +3,7 @@ import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { librarySourceOf } from "./librarySourceOf.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
 
-// Read and favourite are answerable for an unreadable record, because they live in their
-// own store. Everything else reads a field of the overview, so including it would pollute
-// every filtered view — it is excluded, and the exclusion is stated beside the count
-// (docs/features/record-migrations.md).
+// Unreadable records: docs/features/record-migrations.md, "What the library does with one".
 export const matchesLibraryFilters = (entry: LibraryEntry, filters: LibraryFilters): boolean => {
   const { state } = entry;
 

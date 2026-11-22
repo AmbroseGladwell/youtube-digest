@@ -9,10 +9,6 @@ export interface LibraryFilterChip {
   clear: Partial<LibraryFilters>;
 }
 
-// One chip per filter changed from the view the library opens on, in the order the row
-// shows them: tag, topic, verdict, show ("OV-84 2 Library Filter" 84r-2). The search is not
-// one: its own field shows it. Each chip's × puts its filter back to the default, which on a
-// project's page is every overview in it (docs/features/projects.md).
 export const libraryFilterChips = (
   filters: LibraryFilters,
   topics: Topic[],
@@ -59,8 +55,6 @@ export const libraryFilterChips = (
   return chips;
 };
 
-// As many whole chips as fit on one line, then a "+N" for the rest (84r-2). Widths are
-// measured by the caller; nothing is ever cut short.
 export const fittingChipCount = (chipWidths: readonly number[], available: number, moreWidth: number, gap: number): number => {
   let used = 0;
   for (let index = 0; index < chipWidths.length; index += 1) {

@@ -29,10 +29,7 @@ export interface UseLibraryViewResult {
   change: (next: URLSearchParams) => void;
 }
 
-// The URL holds the view. Opened with none of its params, the list takes the view this
-// account left on this device, or unread first; a link that names a view wins and is not
-// saved (docs/features/library-view.md). A project's page starts from every overview in it
-// and keeps nothing (docs/features/projects.md).
+// When a view is restored, and when saved: docs/features/library-view.md, "Where it lives".
 export const useLibraryView = (topics: Topic[] | undefined, { remember = true }: { remember?: boolean } = {}): UseLibraryViewResult => {
   const [searchParams, setSearchParams] = useSearchParams();
   const accountId = libraryAccountIdOf(useSyncConnection().connection);

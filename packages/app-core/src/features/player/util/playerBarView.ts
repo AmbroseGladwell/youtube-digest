@@ -8,7 +8,6 @@ export type PlayerBarAction = "tryAgain" | "readAlongInstead" | "readAlong" | "r
 export type PlayerMainButton = "play" | "pause" | "cancel" | "buffering" | "replay";
 
 export interface PlayerBarView {
-  // voiceLink: the rest names the voice, and is a way to Settings › Narration voice (43i).
   label: { lead: string; rest: string | null; tone: "ink" | "warning"; pacerTag: boolean; voiceLink?: boolean };
   clock: { inline: string; start: string; end: string };
   main: { kind: PlayerMainButton; label: string; disabled: boolean };
@@ -20,7 +19,6 @@ export interface PlayerBarView {
   note: string | null;
   showRate: boolean;
   rateLabel: string;
-  // Design 43j: "Re-record in Emma", for a note narrated before the reader chose Emma.
   reRecord: string | null;
 }
 
@@ -28,8 +26,7 @@ export interface PlayerBarContext {
   read: boolean;
 }
 
-// The name the note itself prints over the section, which is what a listener sees: the
-// Summary section is headed Premise.
+// The heading the note prints, not the section's key: the Summary section is headed Premise.
 export const sectionHeadingAt = (lines: NoteLine[], index: number): string => {
   for (let at = Math.min(index, lines.length - 1); at >= 0; at -= 1) {
     if (lines[at]!.heading) {
@@ -60,8 +57,7 @@ const liveLeadOf = (status: PlayerSnapshot["status"], section: string): string =
   return status === "paused" ? "Paused" : "Buffering";
 };
 
-// Design Player.dc.html section 1, one state per branch: what the bar says, which button
-// sits in the middle, and what the track is doing. The label line is the live region.
+// One branch per state in docs/features/audio-player.md, "The states".
 export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView => {
   const { track, status, source, pacerReason, availability, preparing, timings, rate, voice, narratedVoice } = snapshot;
   const lines = track?.lines ?? [];

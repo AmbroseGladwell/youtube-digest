@@ -7,7 +7,7 @@ import { cookingTimerStripTestIds } from "./CookingTimerStripTestIds.js";
 export interface CookingTimerStripProps {
   timers: readonly CookingTimer[];
   now: number;
-  // The recipe being cooked; another recipe's timers are named by it (design 288e).
+  // The recipe being cooked; another recipe's timers are named by their recipe.
   here: string;
   onOpen: (id: number) => void;
 }
@@ -25,8 +25,6 @@ const chipName = (timer: CookingTimer, here: string, solo: boolean): string => {
   return solo ? timerFullName(timer) : timerShortName(timer);
 };
 
-// Designs 284g–284o: the running timers under the step dots on every screen of the mode,
-// soonest first. One is named by its verb and step; two or more by the verb alone.
 export const CookingTimerStrip = ({ timers, now, here, onOpen }: CookingTimerStripProps) => {
   if (timers.length === 0) {
     return null;

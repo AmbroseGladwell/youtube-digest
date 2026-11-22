@@ -9,12 +9,9 @@ export interface ChatAnswerActionsProps {
   latest: boolean;
   onSaid: (text: string, done: boolean) => void;
   onCopied: () => void;
-  // OV-354: the answer's Sources menu, beside Copy.
   sources?: ReactNode;
 }
 
-// Design 324x, 324ae, 324af: Copy under each answer. The latest answer's always shows; an earlier
-// one's on hover, focus or tap, in a slot kept so nothing moves.
 export const ChatAnswerActions = ({ answer, latest, onSaid, onCopied, sources }: ChatAnswerActionsProps) => {
   const copy = () => {
     onCopied();

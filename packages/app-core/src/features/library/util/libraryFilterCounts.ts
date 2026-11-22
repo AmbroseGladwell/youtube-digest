@@ -15,10 +15,7 @@ export interface LibraryFilterCounts {
   bySource: Partial<Record<LibrarySource, number>>;
 }
 
-// total counts every record the library holds, readable or not: a library that says 28
-// and means 30 is the prototype's eleven missing notes with a new address
-// (docs/features/record-migrations.md). The counts that read a field of the overview
-// cannot include one, which is why byTopic stops summing to total.
+// Unreadable records count: docs/features/record-migrations.md, "What the library does with one".
 export const libraryFilterCounts = (entries: LibraryEntry[]): LibraryFilterCounts => {
   const byTopic: Record<string, number> = {};
   const byNovelty: Record<string, number> = {};

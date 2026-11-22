@@ -9,8 +9,7 @@ export interface RegenerateArticleDialogProps {
 
 const HEADING_ID = "RegenerateArticleDialog-heading";
 
-// Design 77au: we keep no copy of an article, so with no server to fetch it through, regenerating
-// needs it open beside the panel.
+// We keep no copy of an article, so regenerating one needs it open beside the panel.
 export const RegenerateArticleDialog = ({ url, onClose }: RegenerateArticleDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
 

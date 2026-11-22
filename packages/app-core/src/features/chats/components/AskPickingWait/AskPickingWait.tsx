@@ -14,10 +14,8 @@ export interface OverviewImage {
 }
 
 export interface AskPickingWaitProps {
-  // Choosing what to read, reading what was chosen, or read, once the answer has begun.
   phase: "choosing" | "reading" | "read";
   picked: readonly PickedOverview[];
-  // How many overviews the plan kept to look across (OV-373).
   looked?: number;
   imageOf: (overviewId: string) => OverviewImage;
   holds: (overviewId: string) => boolean;
@@ -29,8 +27,6 @@ type MarkState = "on" | "todo" | "done";
 
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
 
-// The mark as the loader (354v): its circle an orange arc turning over its bar while a step runs;
-// a filled circle with a tick drawn in once it is done; faint, and still, before it starts.
 const Mark = ({ state }: { state: MarkState }) => {
   return (
     <svg className={`${styles.mark} ${styles[state]}`} viewBox="0 0 30 30" fill="none" aria-hidden="true">
@@ -51,9 +47,6 @@ const Mark = ({ state }: { state: MarkState }) => {
   );
 };
 
-// OV-354, page 3 (354v, the mp4): a short list in small muted type while a library or project
-// question chooses what to read, then reads it, the titles named by code from the ids; once the
-// answer begins it folds into one "Read 5 overviews" line that opens to show them as chips.
 const readingStep = (reading: boolean, picked: number, looked: number | undefined): string => {
   if (!reading) {
     return "Reading the overviews";

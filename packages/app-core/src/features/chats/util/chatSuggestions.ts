@@ -1,7 +1,5 @@
 import { FOLLOW_UP_QUESTIONS_SHOWN, type ChatMessage, type FollowUpQuestion } from "@overview/domain";
 
-// The overview's questions above the chat's field (design 310i, OV-323): the set of three on show,
-// only until the conversation's first question.
 export const chatSuggestions = (questions: readonly FollowUpQuestion[], set: number, messages: readonly ChatMessage[]): string[] => {
   if (messages.some((message) => message.from === "reader")) {
     return [];

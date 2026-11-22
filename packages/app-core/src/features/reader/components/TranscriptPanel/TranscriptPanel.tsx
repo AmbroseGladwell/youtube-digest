@@ -32,17 +32,10 @@ export interface OpenedFromChapter {
 
 export interface TranscriptPanelProps {
   video: VideoSource;
-  // A transcript the caller already holds — the shared page's own copy, which travels with
-  // the shared overview rather than being read out of a store the visitor has not got
-  // (docs/features/sharing.md). Absent, the panel reads the reader's own store.
+  // The shared page's own copy; absent, the panel reads the reader's own store.
   held?: StoredTranscript | null;
-  // Where a chapter asked the transcript to open, or null when the reader chose the tab
-  // themselves (docs/features/chapters.md).
   openAtMs: number | null;
-  // The chapter that asked: its whole stretch of the transcript is marked, named at the
-  // top of the run, and offered a way back (design 2c).
   openedFrom: OpenedFromChapter | null;
-  // A recipe video's step that asked, named on the line it starts at (design 122v).
   openedFromStep?: number | null;
   onBackToChapters: () => void;
 }
@@ -54,12 +47,9 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
   const transcript = held ?? transcriptQuery.data ?? null;
   const blocks = useMemo(() => (transcript === null ? [] : transcriptBlocks(transcript.segments)), [transcript]);
 
-  // The head is state rather than a ref because every scroll below is measured off it,
-  // and those have to run again once it is there.
+  // State, not a ref: every scroll below is measured off it and has to run again once it's there.
   const [head, setHead] = useState<HTMLDivElement | null>(null);
   const search = useTranscriptSearch(blocks);
-  // A chapter marks its whole stretch; anything else that opens the transcript at a
-  // point — a key point's range, a remembered place — marks the one block it landed on.
   const targetRun = useMemo((): ChapterBlockRun | null => {
     if (openedFrom !== null) {
       return chapterBlockRun(blocks, openedFrom);
@@ -86,7 +76,6 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
     position.setRemembering(!follow.following);
   }, [position.setRemembering, follow.following]);
 
-  // Opening at a chapter is scrolling away from the video, the same as searching is.
   useEffect(() => {
     if (targetBlockIndex !== -1) {
       follow.stop();
@@ -108,8 +97,7 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
     void navigator.clipboard.writeText(plainText()).then(() => setCopied(true));
   };
 
-  // A Blob and an object URL rather than a data: URL, which a long transcript would
-  // overrun.
+  // An object URL rather than a data: URL, which a long transcript would overrun.
   const exportFile = () => {
     analytics.transcript.exported();
     const href = URL.createObjectURL(new Blob([plainText()], { type: "text/plain;charset=utf-8" }));
@@ -120,8 +108,7 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
     URL.revokeObjectURL(href);
   };
 
-  // Searching is scrolling away from the video, so it stands the following down rather
-  // than the two fighting over the scroll position.
+  // Why searching stops the follow: docs/features/following-playback.md, "Following, and stopping following".
   const searchFor = (query: string) => {
     search.setQuery(query);
     if (query.trim() !== "") {
@@ -187,9 +174,6 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
       <div className={styles.head} ref={setHead} data-sticky-fade="" data-testid={transcriptPanelTestIds.head}>
         <div className={styles.headingRow}>
-          {/* Design 2a–2c: what the row's left says is the transcript's relationship to
-              the video — the way back to the chapter that opened it, or whether it is
-              following — and only a transcript with no player to follow is labelled. */}
           <p className={styles.heading}>
             {headingLead}
             {transcript?.generated === true && (
@@ -231,8 +215,6 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
         />
       )}
 
-      {/* Design 2b: the way back names where the video is, and the dot is the same one
-          the following note carries. */}
       {follow.offered && (
         <button type="button" className={styles.followButton} onClick={followPlayback} data-testid={transcriptPanelTestIds.followButton}>
           <span className={styles.followButtonMark} aria-hidden="true" />
@@ -250,8 +232,6 @@ interface TranscriptState {
   retry: () => void;
 }
 
-// Null means there are blocks to read, which is the one case the tools and the search
-// box are worth drawing for.
 const unreadableTranscript = (video: VideoSource, { blocks, isPending, error, retry }: TranscriptState): ReactNode | null => {
   if (video.id === null) {
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
@@ -318,8 +298,6 @@ const TranscriptRows = ({
     }
   }, [targetRow, head]);
 
-  // Design 2a: paragraphs the video has already passed drop to the muted ink, so the
-  // eye finds the one being spoken by weight before it finds the card.
   const past = (index: number) => follow.currentBlockIndex !== -1 && index < follow.currentBlockIndex;
   const rowRefOf = (opensRun: boolean, restored: boolean, current: boolean) => {
     if (opensRun) {
@@ -423,9 +401,7 @@ interface TranscriptSearchBarProps {
   onQueryChange: (query: string) => void;
 }
 
-// The field's own clear button, in place of the browser's blue cancel glyph, so all
-// three round controls in the pill are the one size, colour and hover
-// (docs/features/stone-theme.md, "Transcript search").
+// Why its own clear button: docs/features/stone-theme.md, "Transcript search".
 const TranscriptSearchBar = ({ search, onQueryChange }: TranscriptSearchBarProps) => {
   const searching = search.query.trim() !== "";
   const found = search.matches.length;
@@ -439,8 +415,6 @@ const TranscriptSearchBar = ({ search, onQueryChange }: TranscriptSearchBarProps
     input.current?.focus();
   };
 
-  // Enter walks the hits the way a browser's own find does, and Escape empties the
-  // field before it gives the page back.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && found > 0) {
       event.preventDefault();
@@ -489,10 +463,7 @@ const TranscriptSearchBar = ({ search, onQueryChange }: TranscriptSearchBarProps
             {found === 0 ? "No matches" : `${search.currentIndex + 1}/${found}`}
           </span>
           <span className={styles.searchGap} aria-hidden="true" />
-          {/* The steppers stay in place with nothing to walk, disabled rather than gone,
-              so the field does not change width as you type (design 1a, "No matches").
-              They wrap rather than stopping at either end, which is why neither is
-              disabled at the first hit the way the design's frame shows. */}
+          {/* Why disabled rather than gone, and wrapping: docs/features/stone-theme.md, "Transcript search". */}
           <button
             type="button"
             className={styles.stepMatch}

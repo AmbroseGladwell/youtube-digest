@@ -13,13 +13,11 @@ export interface CookingTimerSheetProps {
   onAdjust: (id: number, minutes: number) => void;
   onCancel: (id: number) => void;
   onClose: () => void;
-  // Outside the mode, or a recipe other than the one being cooked (OV-288, design 288s).
+  // Given outside the mode, or for a recipe other than the one being cooked.
   recipeTitle?: string | null;
   wayBack?: ReactNode;
 }
 
-// Designs 284q and 284r (owner, 12 Nov 2026): a running timer's own sheet, with Pause or Resume,
-// −1 min and +1 min in one row, and Cancel timer set apart under them.
 export const CookingTimerSheet = ({
   timer,
   now,

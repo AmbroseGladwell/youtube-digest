@@ -9,9 +9,7 @@ export type ChatWait =
 
 const seconds = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
 
-// The endpoint's refusals that are waits or states, not failures: each limit with when it
-// lifts, a conversation at its length, and an overview with nothing to answer from
-// (docs/features/chats.md, "Asking"). Anything else is null and is a failure.
+// Which refusals are waits, not failures: docs/features/chats.md, "Asking".
 export const chatWaitOf = (error: unknown): ChatWait | null => {
   if (!(error instanceof SyncRequestError)) {
     return null;

@@ -25,12 +25,10 @@ export const WATCH_INTERVAL_MS = 5000;
 export const WATCH_GIVES_UP_AFTER_MS = 120_000;
 export const PREPARING_LONG_AFTER_MS = 45_000;
 export const PACER_TICK_MS = 250;
-// A line's stop lands just before the next line's first sound, and a timer that fires a little
-// early is set again rather than trusted.
+// A stop lands just before the next line's first sound; a timer firing early is set again, not trusted.
 export const STOP_AHEAD_SECONDS = 0.04;
 const STOP_TIMER_SLACK_SECONDS = 0.005;
-// Chromium can sit in `waiting` for good after seeks close together, with the audio already
-// there; one seek to where it is gets it going again (OV-278).
+// Why a stalled element is nudged: docs/features/audio-player.md, "The states".
 export const STALL_NUDGE_MS = 3_000;
 const POLL_FAILURES_BEFORE_GIVING_UP = 3;
 
@@ -39,9 +37,7 @@ export type PlayerMedia = Pick<
   "src" | "currentTime" | "playbackRate" | "paused" | "play" | "pause" | "addEventListener" | "preload"
 >;
 
-// How long a listen took to make a sound, measured from the press that started it to the
-// media's first `playing` event or the pacer's first tick (docs/features/audio-player.md,
-// "Time to first sound").
+// What it measures: docs/features/audio-player.md, "Time to first sound".
 export interface FirstSoundReport {
   overviewId: OverviewId;
   waitMs: number;
@@ -55,8 +51,7 @@ export interface ListenStartedReport {
   source: PlaybackSource;
 }
 
-// How far a listen got: the stretches actually played, as a share of the whole in whole
-// tens, and why it ended (docs/features/audio-player.md, "How far a listen got").
+// What it measures: docs/features/audio-player.md, "How far a listen got".
 export interface ListenEndedReport {
   overviewId: OverviewId;
   source: PlaybackSource;
@@ -69,8 +64,6 @@ export interface PlayerEngineOptions {
   api: NarrationApi | null;
   createMedia: () => PlayerMedia;
   voice?: NarrationVoice;
-  // Told when narration that should have played falls back to the pacer, so the server's
-  // logs say so (docs/architecture/errors-and-logs.md, "Client warnings").
   warn?: (warning: ClientWarningReport) => void;
   onFirstSound?: (report: FirstSoundReport) => void;
   onListenStarted?: (report: ListenStartedReport) => void;
@@ -106,15 +99,16 @@ const IDLE: PlayerSnapshot = {
 };
 
 const SOUNDING = new Set<PlayerStatus>(["preparing", "playing", "buffering"]);
+const RESTING_WITHOUT_SOUND = new Set<PlayerStatus>(["paused", "ended", "failed", "busy"]);
 
 const scriptOf = (track: PlayerTrack) => spokenLines(track.lines, track.opening);
 
-// Where getLine says the opening is being narrated: before the first line, which no line
-// on screen stands for.
+const isDailyNarrationSpent = (error: unknown): boolean =>
+  isSyncRequestError(error) && error.code === "too_many_requests" && error.details?.quota === "narration-daily";
+
 export const OPENING_LINE = -1;
 
-// A render made before the opening existed has no entry for it, and still describes the
-// lines one for one; a share made then keeps playing its audio.
+// Older renders have no opening timing: docs/features/tts-pre-rendered-speech.md, "The spoken script".
 const lineStartsOf = (render: ReadyNarration, track: PlayerTrack): number[] | null => {
   const { lineStartsSeconds } = render;
   if (track.opening !== null && lineStartsSeconds.length === track.lines.length + 1) {
@@ -135,9 +129,6 @@ const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) => {
   return a.lines.every((line, index) => line.text === b.lines[index]!.text && aScript[index] === bScript[index]);
 };
 
-// The one player for the whole app: narrated audio when there is some, the pacer when
-// there is not, and the states between (docs/features/audio-player.md). It lives above the
-// router so leaving a note does not stop it.
 export class PlayerEngine {
   #api: NarrationApi | null;
   #createMedia: () => PlayerMedia;
@@ -206,8 +197,6 @@ export class PlayerEngine {
   };
   canNarrate = (): boolean => this.#api !== null;
 
-  // A shell that signs in or out mid-note hands over a new API; a note nobody has pressed
-  // play on yet is looked at again with it.
   setApi(api: NarrationApi | null): void {
     if (api === this.#api) {
       return;
@@ -215,30 +204,29 @@ export class PlayerEngine {
     this.#api = api;
     const { track, status } = this.#snapshot;
     const pacerAtRest = this.#snapshot.source === "pacer" && status !== "playing";
-    if (track !== null && (status === "ready" || pacerAtRest)) {
+    const notYetPlayed = status === "ready" || pacerAtRest;
+    if (track !== null && notYetPlayed) {
       const line = this.getLine();
       this.#teardown();
       this.#begin(track, line);
     }
   }
 
-  // The reader chose another voice. A note nobody has pressed play on is looked at again,
-  // so the bar can offer to re-record it; one already under way carries on as it is.
   setVoice(voice: NarrationVoice): void {
     if (voice === this.#snapshot.voice) {
       return;
     }
     this.#set({ voice });
     const { track, status, source } = this.#snapshot;
-    if (track !== null && status === "ready" && source === "audio" && this.#api !== null) {
+    const audioNotYetPlayed = status === "ready" && source === "audio" && this.#api !== null;
+    if (track !== null && audioNotYetPlayed) {
       const line = this.getLine();
       this.#teardown();
       this.#begin(track, line);
     }
   }
 
-  // Design 43j: the note in the reader's chosen voice, from the line they had reached, and
-  // only once it has landed is the narration in the older voice thrown away.
+  // The older voice's narration is thrown away only once the chosen voice's has landed.
   reRecord(): void {
     const { track, narratedVoice, voice, status } = this.#snapshot;
     if (track === null || narratedVoice === null || narratedVoice === voice || status === "preparing") {
@@ -302,7 +290,6 @@ export class PlayerEngine {
     }
   }
 
-  // A listen begun is timed to its first sound; one carried on from paused is not.
   play(from: PlaybackFrom): void {
     const { track, status, source } = this.#snapshot;
     if (track === null || status === "playing" || status === "preparing") {
@@ -341,8 +328,7 @@ export class PlayerEngine {
     this.#armStop();
   }
 
-  // The render carries on without anyone waiting for it, so the bar goes back to saying
-  // what the server has, which is usually that it is still on its way.
+  // Why a cancel peeks again: docs/features/audio-player.md, "A note opened before its audio lands".
   cancel(): void {
     if (this.#snapshot.status !== "preparing") {
       return;
@@ -357,8 +343,6 @@ export class PlayerEngine {
     }
   }
 
-  // The pacer, chosen: meanwhile while audio is still being made (1d), instead once it has
-  // failed (1i) or there was no room to ask (1j).
   readAlong(): void {
     const { status, track } = this.#snapshot;
     if (track === null) {
@@ -402,9 +386,7 @@ export class PlayerEngine {
     this.seek(lineStarts[clamped] ?? 0);
   }
 
-  // Read one line and no further: Read aloud's lists and cooking step by step. The engine pauses at
-  // the end of that line itself, timed from the audio's own clock, because waiting to see the next
-  // line become active lets the first sound of it through (docs/features/recipe-notes.md).
+  // Why the engine times the stop itself: docs/features/recipe-notes.md, "Reading aloud".
   stopAfterLine(index: number | null): void {
     this.#stopLine = index;
     this.#armStop();
@@ -427,9 +409,7 @@ export class PlayerEngine {
     this.#armStop();
   }
 
-  // A note that has just been made asks for its narration straight away, behind anything
-  // somebody is waiting to hear, so its first play finds it ready. Nothing waits on the
-  // answer and nothing about the player changes, whatever it is.
+  // Why nothing waits on the answer: docs/features/audio-player.md, "A note just made".
   prepare(track: PlayerTrack): void {
     this.#api?.request(scriptOf(track), this.#snapshot.voice, "background").catch(() => undefined);
   }
@@ -467,9 +447,7 @@ export class PlayerEngine {
     }
   }
 
-  // After a cancel the bar already knows the audio can be asked for, so a peek that fails
-  // there leaves it at 1b rather than declaring narration unavailable.
-  #peek(quiet = false): void {
+  #peek(afterCancel = false): void {
     const api = this.#api!;
     const generation = this.#generation;
     this.#watchChecks = 0;
@@ -487,7 +465,7 @@ export class PlayerEngine {
           return;
         }
         const reason = this.#pacerReasonFor(error);
-        if (quiet && reason !== "signedOut") {
+        if (afterCancel && reason !== "signedOut") {
           this.#set({ availability: "onFirstPlay", preparing: null });
           return;
         }
@@ -495,8 +473,7 @@ export class PlayerEngine {
       });
   }
 
-  // A render somebody else asked for, usually the note's own background request (OV-41):
-  // watched slowly, because nobody is waiting, and landing without playing.
+  // Why watched slowly: docs/features/audio-player.md, "A note opened before its audio lands".
   #onPeeked(found: VoicedNarration | null, generation: number): void {
     const render = found?.render ?? null;
     if (render?.status === "queued" || render?.status === "rendering") {
@@ -517,9 +494,6 @@ export class PlayerEngine {
     }
   }
 
-  // Unlike an interactive wait, checks that fail are not a failure anybody sees: after a few,
-  // or after two minutes of the render not landing, the bar goes back to 1b, and pressing
-  // play asks again.
   #watch({ voice, render: watched }: VoicedNarration, generation: number): void {
     if (generation !== this.#generation || this.#api === null) {
       return;
@@ -579,9 +553,7 @@ export class PlayerEngine {
         }
         this.#replacing = null;
         this.#clearPreparing();
-        // The day's new narration is spent: reading along still works, so the reader gets
-        // that rather than a dead button (docs/architecture/tiers.md).
-        if (isSyncRequestError(error) && error.code === "too_many_requests" && error.details?.quota === "narration-daily") {
+        if (isDailyNarrationSpent(error)) {
           this.#fallBackToPacer("dailyCap", true);
           return;
         }
@@ -679,8 +651,7 @@ export class PlayerEngine {
     this.#set({ status: "failed", preparing: null });
   }
 
-  // False when the render does not describe these lines, which would put the highlight on
-  // the wrong sentence: better the pacer, marked as such, than that.
+  // False when the render doesn't describe these lines: a wrong highlight is worse than the pacer.
   #adopt(render: ReadyNarration, line = this.getLine()): boolean {
     const track = this.#snapshot.track;
     const lineStarts = track ? lineStartsOf(render, track) : null;
@@ -703,8 +674,6 @@ export class PlayerEngine {
     this.#emitTime();
   }
 
-  // The stretches heard so far were measured on the old clock; on the new one they keep
-  // their share of the whole.
   #retime(timings: LineTimings): void {
     this.#cutRun();
     const listen = this.#listen;
@@ -858,9 +827,7 @@ export class PlayerEngine {
     return this.#media;
   }
 
-  // iOS lets a page start sound only inside a tap. Audio that is still being made arrives
-  // after the tap is over, so the element is started on something silent while the tap
-  // is still happening, and swapped for the narration when it lands.
+  // Why start on silence: docs/features/audio-player.md, "iOS and the lock screen".
   #unlockMedia(): void {
     if (this.#unlocked) {
       return;
@@ -1057,10 +1024,9 @@ export class PlayerEngine {
     return scriptOf(this.#snapshot.track!);
   }
 
-  // A press that comes to rest before any sound is a press that made none.
   #set(patch: Partial<PlayerSnapshot>): void {
     const { status } = patch;
-    if (status === "paused" || status === "ended" || status === "failed" || status === "busy") {
+    if (status !== undefined && RESTING_WITHOUT_SOUND.has(status)) {
       this.#press = null;
     }
     const next = { ...this.#snapshot, ...patch };

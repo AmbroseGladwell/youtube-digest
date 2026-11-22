@@ -1,8 +1,5 @@
 import type { Chat, ChatMessage } from "@overview/domain";
 
-// The conversation as it stands once an answer is stored, ahead of sync bringing the record
-// down: the two new messages on the end, or a new conversation started with them, owned by an
-// overview, a project, or neither for the library.
 export const withAnswer = (
   chats: readonly Chat[],
   owner: Pick<Chat, "overviewId" | "projectId">,

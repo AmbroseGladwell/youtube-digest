@@ -62,9 +62,6 @@ const asServiceError = (error: unknown): TranscriptFetchError | null => {
   return serviceError("Our server could not fetch the transcript.", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
 };
 
-// The last rung: our own server fetches the captions, which costs us rather than the
-// reader, so the background prefetch never reaches it and a server with it off is never
-// offered (docs/architecture/server-side-transcripts.md).
 export const serviceTranscriptSource = (api: ServiceTranscriptApi): TranscriptSource => ({
   tier: "service",
   cost: "metered",

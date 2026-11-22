@@ -19,21 +19,16 @@ export const SET_UP_NOTE =
   "Connect your assistant to The Overview and it can read the whole transcript, search your library, save to projects and more.";
 
 export interface FollowUpAssistantMenuProps {
-  // The first tap asks as soon as one is picked, and offers Copy question; Change only chooses (266s, 266v).
+  // The first tap asks as soon as one is picked; Change only chooses.
   firstTap: boolean;
-  // A chat answer's "Continue in…" with no assistant chosen: hands the conversation on as soon as
-  // one is picked (design 310p).
   continueIn?: boolean;
   chosen: FollowUpAssistant | null;
-  // Where chat is offered, Here comes first and may be the choice (design 310f-2).
   offerHere: boolean;
   hereChosen: boolean;
   connectedTo: (assistant: FollowUpAssistant) => boolean;
   anyConnection: boolean;
   asSheet: boolean;
-  // On the web the menu centres under what opened it, or sits at the end of a header (design 324z-2).
   align?: "centre" | "end";
-  // Where the menu stands, from the top of the block, when it floats on the web.
   top: number;
   inside: RefObject<HTMLElement | null>;
   onChoose: (assistant: FollowUpAssistant) => void;
@@ -96,9 +91,6 @@ const menuPlacementClassOf = (asSheet: boolean, align: "centre" | "end"): string
   return align === "end" ? styles.alignEnd : "";
 };
 
-// Design 266s–266v: a menu under the tapped question, or a sheet on a phone and in the panel.
-// The assistants are a radio group with focus managed as ChoicePicker's; Escape or a tap
-// outside closes it with nothing remembered.
 export const FollowUpAssistantMenu = ({
   firstTap,
   continueIn = false,

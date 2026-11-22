@@ -7,9 +7,7 @@ export interface RecipeTimesProps {
   source: Source;
 }
 
-// Designs 144f and 122f: only what the page or the video's description states, labelled, with
-// a caption saying whose figures they are so nothing suggests we timed it. Nothing stated,
-// nothing shown.
+// The caption says whose figures they are, so nothing suggests we timed it.
 export const RecipeTimes = ({ recipe, source }: RecipeTimesProps) => {
   const figures = recipeFigures(recipe);
   if (figures.length === 0) {

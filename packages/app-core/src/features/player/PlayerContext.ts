@@ -2,9 +2,7 @@ import { createContext, useCallback, useContext, useSyncExternalStore } from "re
 import type { PlayerEngine } from "./PlayerEngine.js";
 import type { PlayerSnapshot } from "./types/PlayerSnapshot.js";
 
-// The app's one player, provided above the router (PlayerRuntime). Two subscriptions, split
-// by how often they change (frontend-architecture-guide.md 4.2): the state a few times a
-// note, the clock several times a second.
+// Why two subscriptions, split by frequency: docs/features/audio-player.md, "Where it lives".
 const PlayerContext = createContext<PlayerEngine | null>(null);
 
 export const PlayerProvider = PlayerContext.Provider;
@@ -27,8 +25,6 @@ export const usePlayerTime = (): number => {
   return useSyncExternalStore(engine.subscribeTime, engine.getTime);
 };
 
-// The spoken line, which moves far less often than the clock: a component that only
-// tints a line re-renders when the line changes, not on every tick.
 export const usePlayerLine = (): number => {
   const engine = usePlayer();
   const subscribe = useCallback(

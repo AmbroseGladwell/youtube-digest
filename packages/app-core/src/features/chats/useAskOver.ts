@@ -25,11 +25,9 @@ export type AskOverState =
       status: "answering";
       conversationId: string;
       question: string;
-      // The picking wait (OV-354, page 3): choosing, then reading what was chosen. Null for a
-      // small library or project, which is read whole with no choosing.
+      // Null for a small library or project, read whole with no choosing.
       picking: "choosing" | "reading" | null;
       picked: PickedOverview[];
-      // How many overviews the plan kept to look across (OV-373); absent before it says.
       looked?: number;
       text: string;
       sources: { pinned: ChatSource[]; found: ChatSource[] } | null;
@@ -43,9 +41,7 @@ const IDLE: AskOverState = { status: "idle" };
 
 export const askScopeOf = (owner: AskOwner): "library" | "project" => owner.kind;
 
-// Asks over the whole library or one project and follows its answer: the choosing, what it chose,
-// the intro as it streams and each section once whole. The stored answer goes into the Ask page's
-// list at once, and sync brings the record down behind it (docs/features/chats.md, "The Ask page").
+// The stored answer and sync: docs/features/chats.md, "The Ask page (OV-354, pages 3 and 4)".
 export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();

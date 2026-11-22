@@ -20,24 +20,20 @@ const MULTIPLIER_WORD: Record<RecipeMultiplier, string> = { 0.5: "Halved", 1: ""
 export const UNITS_LABEL: Record<RecipeUnits, string> = { asWritten: "As written", metric: "Metric", us: "US" };
 const UNITS_PHRASE: Record<RecipeUnits, string> = { asWritten: "", metric: "metric units", us: "US units" };
 
-// What the reader asked for: a number of servings where the page gives a yield to step from,
-// otherwise a multiplier (design 144aa).
 export type RecipeScale = { kind: "servings"; base: number; count: number } | { kind: "multiplier"; times: RecipeMultiplier };
 
 export interface RecipeAdjustment {
   lines: AdjustedIngredient[];
   adjusted: boolean;
-  // "Adjusted for 8 servings in US units. 2 lines have no amount to adjust."
   status: string | null;
-  // Said on a copy or a print, so it never passes for the page's own amounts.
+  // On a copy or a print, so it never passes for the page's own amounts.
   copyNote: string | null;
-  // The method's amounts that repeat an ingredient line, which scale with it (OV-231, 231k).
   methodAmounts: readonly MethodAmount[];
-  // Said once above step 1: what in the method changed, and that the rest is the recipe's (231a).
+  // Said once above step 1.
   methodNote: string | null;
-  // Said under the step on every action of cooking step by step (231f, replacing 150af).
+  // Said under the step on every action in cooking mode.
   actionNote: string | null;
-  // Said over the ingredients in cooking mode, where the method is a tap away (231j).
+  // Said over the ingredients in cooking mode.
   cookingNote: string | null;
   servings: string | null;
 }

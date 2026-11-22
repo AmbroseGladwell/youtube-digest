@@ -29,8 +29,7 @@ const phoneSearchOf = (isPhone: boolean, focused: boolean, query: string): "fold
   return query !== "" ? "kept" : "folded";
 };
 
-// The field keeps what is typed and hands it on as a transition, so no key waits for the
-// list (docs/features/library-view.md, "Search"). A new revision of `text` replaces it.
+// Why the field leads and hands on a transition: docs/features/library-view.md, "Search".
 export const LibrarySearch = ({ text, onType, onClearPressed, isPhone, placeholder, children }: LibrarySearchProps) => {
   const [query, setQuery] = useState(text.text);
   const [revision, setRevision] = useState(text.revision);

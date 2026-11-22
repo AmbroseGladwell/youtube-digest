@@ -2,9 +2,7 @@ import type { ReadingPosition } from "../types/ReadingPosition.js";
 
 export const READING_POSITIONS_KEPT = 20;
 
-// Most recent first, one entry per video, and never more than the cap: a reading
-// position is a convenience, not a record, and twenty is more transcripts than anyone
-// is part-way through (docs/features/reading-position.md).
+// Why a cap: docs/features/reading-position.md, "Where it lives, and for how long".
 export const rememberReadingPosition = (positions: ReadingPosition[], videoId: string, startMs: number): ReadingPosition[] => {
   return [{ videoId, startMs }, ...forgetReadingPositionIn(positions, videoId)].slice(0, READING_POSITIONS_KEPT);
 };

@@ -12,9 +12,7 @@ export interface LibraryFilterChipsProps {
 
 const GAP = 8;
 
-// The filters changed from the default, on one line under the search that never wraps:
-// whole chips while they fit, then "+N" for the rest ("OV-84 2 Library Filter" 84o, 84r-2).
-// A hidden copy of the row is what gets measured, since a chip that is not shown has no width.
+// A hidden copy of the row is what gets measured, since a chip that isn't shown has no width.
 export const LibraryFilterChips = ({ chips, onRemove, onMore }: LibraryFilterChipsProps) => {
   const row = useRef<HTMLDivElement | null>(null);
   const measure = useRef<HTMLDivElement | null>(null);

@@ -14,10 +14,6 @@ export interface ChatCitationPillProps {
   onOpenTranscriptAt: (positionMs: number) => void;
 }
 
-// Design 310k, 310n: a stretch an answer drew on, from the record's code-made times. Where a
-// player can seek (the video beside the extension's panel, an episode's own audio) it plays
-// from there; on the web it offers the video at that time or the transcript, as a note's moment
-// does. Either way the note shows the key point that holds it.
 export const ChatCitationPill = ({ range, video, onFollowed, onOpenTranscriptAt }: ChatCitationPillProps) => {
   const seek = useSeekPlayback(video.id);
   const [open, setOpen] = useState(false);

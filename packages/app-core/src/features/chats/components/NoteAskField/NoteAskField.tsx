@@ -6,15 +6,12 @@ import { noteAskFieldTestIds } from "./NoteAskFieldTestIds.js";
 
 export interface NoteAskFieldProps {
   sourceWord: string;
-  // While chat is open beside the note, the note's own field fades out and keeps its space (310a).
   chatOpen: boolean;
   conversations: number;
   onAsk: (question: string, from: HTMLElement | null) => void;
   onOpenConversations: () => void;
 }
 
-// Design 310d, 310a-3: "Ask about this video" under the questions to ask next, and under it the
-// way into the overview's conversations. Sending opens chat with the question.
 export const NoteAskField = ({ sourceWord, chatOpen, conversations, onAsk, onOpenConversations }: NoteAskFieldProps) => {
   const [draft, setDraft] = useState("");
   const field = useRef<HTMLDivElement | null>(null);

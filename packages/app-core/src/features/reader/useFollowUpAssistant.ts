@@ -4,23 +4,18 @@ import { useUpdateSettingsMutation } from "../settings/mutations/useUpdateSettin
 import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 
 export interface FollowUpAssistantState {
-  // Null until the reader picks one, unless their connections are to one known assistant.
   assistant: FollowUpAssistant | null;
-  // Where chat is offered, whether a tapped question is answered in the app (design 310f).
   answeredHere: boolean;
   connectedTo: (assistant: FollowUpAssistant) => boolean;
   anyConnection: boolean;
-  // Chosen where Here was offered, it also stops questions being answered here; chosen where
-  // chat is hidden, it leaves that alone.
   choose: (assistant: FollowUpAssistant, insteadOfHere: boolean) => void;
   chooseHere: () => void;
 }
 
-// The one synced setting questions open in, which Settings › Connections shares (designs 266aa,
-// 310f). Connections unknown are taken as none, so nothing claims a connection that isn't there.
 export const useFollowUpAssistant = (): FollowUpAssistantState => {
   const settings = useSettingsQuery().data;
   const chosen = settings?.followUpAssistant ?? null;
+  // Connections unknown are taken as none, so nothing claims a connection that isn't there.
   const connections = useConnectionsQuery().data ?? [];
   const updateSettings = useUpdateSettingsMutation();
   const { assistant } = followUpAssistantFor(chosen, connections);

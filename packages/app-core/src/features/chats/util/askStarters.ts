@@ -29,8 +29,6 @@ const membersOf = (project: Project, members: readonly ProjectMember[]) =>
 const firstThree = (made: readonly (string | null)[], fallbacks: readonly string[]) =>
   [...made.filter((question): question is string => question !== null), ...fallbacks].slice(0, STARTERS);
 
-// OV-354, page 3: three starter questions under the Ask page's field, made by code from templates
-// and the reader's own library (its projects, topics and what's unread), never by a model.
 export const askStarters = (library: AskStarterLibrary, project: Project | null): string[] => {
   if (project !== null) {
     const held = membersOf(project, library.members);

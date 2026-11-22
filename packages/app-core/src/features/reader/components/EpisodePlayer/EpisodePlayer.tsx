@@ -12,9 +12,6 @@ export interface EpisodePlayerProps {
   source: PodcastSource;
 }
 
-// Design 106p: a quiet strip under the head, in a podcast app's order: back 15, Play, forward
-// 30, then where it is, its length and the scrubber, in stone so it never reads as Listen.
-// After a time in the note moves it, and only then, one line says the jump may land early.
 export const EpisodePlayer = ({ engine, source }: EpisodePlayerProps) => {
   const { status, positionMs, durationMs, jumps } = useEpisodeSnapshot(engine);
   const lengthMs = durationMs ?? source.durationMs;
@@ -90,7 +87,6 @@ export const EpisodePlayer = ({ engine, source }: EpisodePlayerProps) => {
           >
             {JUMP_LINE}
           </span>
-          {/* Heard once per note, as a polite status, not on every jump. */}
           <span className={styles.announcement} role="status">
             {jumpLine.announced ? JUMP_LINE : ""}
           </span>
@@ -105,7 +101,6 @@ interface JumpLine {
   announced: boolean;
 }
 
-// Shown for six seconds after each jump; another jump starts the six seconds again.
 const useJumpLine = (jumps: number): JumpLine => {
   const [shown, setShown] = useState(false);
   const [announced, setAnnounced] = useState(false);

@@ -15,7 +15,6 @@ export interface WaitCopy {
 const count = (value: number) => value.toLocaleString("en-GB");
 const NOT_OVERVIEWS = "Making overviews isn’t affected.";
 
-// Design 310ad–310ah: what a wait in the field's place says (docs/features/chats.md, "Waits").
 export const chatWaitCopy = (wait: ShownWait, plan: Plan, resetsOn: string | null): WaitCopy => {
   switch (wait.kind) {
     case "month": {

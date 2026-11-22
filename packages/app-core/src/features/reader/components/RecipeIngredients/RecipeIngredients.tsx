@@ -15,12 +15,10 @@ export interface RecipeIngredientsProps {
   adjustment: RecipeAdjustment;
   scale: RecipeScale;
   units: RecipeUnits;
-  // On the wide web the list runs in two columns inside its card (design 144a).
   columns: boolean;
-  // A shared page shows the list as written, with no controls (design 144u).
   adjustable: boolean;
   voice: RecipeListVoice | null;
-  // A video's lines it said rather than its description listed; null for a page's recipe (122c).
+  // The lines a video said rather than its description listed; null for a page's recipe.
   said: readonly number[] | null;
   onScaleChange: (scale: RecipeScale) => void;
   onUnitsChange: (units: RecipeUnits) => void;
@@ -29,7 +27,6 @@ export interface RecipeIngredientsProps {
 
 const HAS_A_FIGURE = /\d|[¼½¾⅓⅔⅛]/;
 
-// A video's line with nothing to adjust either named no amount or said it in words (122e).
 const unreadableAside = (line: string, fromVideo: boolean): string => {
   if (!fromVideo) {
     return "· as written";
@@ -39,7 +36,6 @@ const unreadableAside = (line: string, fromVideo: boolean): string => {
     : "· no amount said";
 };
 
-// Design 122c–122d: one line under the heading says where a video's list came from.
 export const ingredientsSource = (said: readonly number[], total: number): string => {
   if (said.length === total) {
     return "As said in the video. Where no amount is said, the line has none.";
@@ -80,9 +76,6 @@ const Line = ({ line, fromVideo, saidAside }: LineProps) => {
   );
 };
 
-// Designs 144y–144ab: the ingredients on their own raised card, with servings and units at
-// its top. As written is where every note opens; changed amounts sit on the stone tint, and
-// a line we can't read stays exactly as the page wrote it and says so.
 export const RecipeIngredients = ({
   adjustment,
   scale,

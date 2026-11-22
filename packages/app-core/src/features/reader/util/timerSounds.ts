@@ -367,8 +367,7 @@ export const unlockTimerSound = (): void => {
   }
 };
 
-// Every sound is made here with Web Audio, so none needs a file and they play in the panel too
-// (docs/features/recipe-notes.md, "Timers"). Returns a stop that fades the sound out.
+// Why Web Audio, not files: docs/features/recipe-notes.md, "Timers".
 export const playTimerSound = (sound: TimerSound, { vibrate = true } = {}): (() => void) => {
   if (vibrate) {
     navigator.vibrate?.(VIBRATION_MS);

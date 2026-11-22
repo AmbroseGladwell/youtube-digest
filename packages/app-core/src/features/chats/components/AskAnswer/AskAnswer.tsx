@@ -29,9 +29,6 @@ export interface AskAnswerProps {
 
 const othersOf = (cited: readonly ChatCitation[]) => cited.flatMap((citation) => ("overviewId" in citation ? [citation] : []));
 
-// OV-354, page 4: an answer over the library or a project, the same shape as every chat's: its
-// intro, its sections each with their sources by relation, the Takeaway, then the line counted by
-// code, never written by the model, and Copy with Sources.
 export const AskAnswer = ({
   text,
   sections,

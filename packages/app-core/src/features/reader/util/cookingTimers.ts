@@ -1,5 +1,3 @@
-// Where a timer came from: the recipe (an overview's id, or a shared copy's), the action, which
-// time in it, and which end of a range (OV-288 edge case 3).
 export interface CookingTimerSource {
   recipe: string;
   action: number;
@@ -13,8 +11,7 @@ export interface CookingTimer {
   step: number;
   source: CookingTimerSource;
   range: boolean;
-  // The recipe's title, for the timer outside the mode, and the action's text, so the way back
-  // can tell whether the method has changed since (OV-288 edge case 4).
+  // The action's text lets the way back tell whether the method has changed since.
   recipeTitle: string;
   actionText: string;
   totalMs: number;

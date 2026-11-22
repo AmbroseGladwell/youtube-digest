@@ -3,10 +3,7 @@ import type { LibraryFilters } from "../types/LibraryFilters.js";
 
 export type FilterControl = "panel" | "filterChip" | "clearAll" | "reset" | "caughtUp";
 
-// One event per filter the patch actually changes, named for the filter and carrying the
-// value it changed to: a topic by its id, a novelty or status by its own enum, never a label
-// (docs/architecture/analytics.md, "What an event may carry"). The search query is not here:
-// it is counted once the reader stops typing.
+// Ids and enums, never labels: docs/architecture/analytics.md, "What an event may carry".
 export const recordLibraryFilterChange = (
   analytics: Analytics["library"]["filters"],
   before: LibraryFilters,

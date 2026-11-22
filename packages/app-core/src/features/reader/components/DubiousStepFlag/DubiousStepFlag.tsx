@@ -7,12 +7,9 @@ import { dubiousStepFlagTestIds } from "./DubiousStepFlagTestIds.js";
 
 export interface DubiousStepFlagProps {
   reason: string;
-  // Where in the video the step was said, or null for an article or a step with no moment.
   saidAtMs: number | null;
 }
 
-// Design 250i–250k: flagged in text under the step, never hidden or greyed out, opening the
-// reason in place. The byline's Dubious claim flag is the same button.
 export const DubiousStepFlag = ({ reason, saidAtMs }: DubiousStepFlagProps) => {
   const [open, setOpen] = useState(false);
   const reasonId = useId();

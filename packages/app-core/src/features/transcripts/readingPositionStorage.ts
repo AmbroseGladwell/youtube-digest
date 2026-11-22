@@ -5,8 +5,7 @@ const STORAGE_KEY = "overview.readingPositions.v1";
 
 const storageKeyFor = (accountId: string | null): string => (accountId === null ? STORAGE_KEY : `${STORAGE_KEY}.${accountId}`);
 
-// Every read and write is allowed to fail quietly: a browser that refuses site data
-// costs the reader a convenience, not the transcript (docs/features/reading-position.md).
+// Why it fails quietly: docs/features/reading-position.md, "Where it lives, and for how long".
 const readAll = (accountId: string | null, storage: Storage): ReadingPositions => {
   try {
     const raw = storage.getItem(storageKeyFor(accountId));
@@ -22,9 +21,7 @@ const readAll = (accountId: string | null, storage: Storage): ReadingPositions =
 const writeAll = (positions: ReadingPositions, accountId: string | null, storage: Storage): void => {
   try {
     storage.setItem(storageKeyFor(accountId), JSON.stringify(positions));
-  } catch {
-    // see above
-  }
+  } catch {}
 };
 
 export const readReadingPosition = (
@@ -51,8 +48,6 @@ export const forgetReadingPosition = (videoId: string, accountId: string | null,
   }
 };
 
-// Where the reader had got to in the overviews the move on sign-in carried into an account
-// goes with them, without replacing a place the account's library already holds.
 export const moveReadingPositions = (
   videoIds: readonly string[],
   toAccountId: string,
@@ -70,8 +65,7 @@ export const moveReadingPositions = (
   }
 };
 
-// An install signed in before accounts had libraries of their own: every place it
-// remembered was the account's, and moves under it with the library.
+// For an install signed in before accounts had libraries: every place it kept was the account's.
 export const adoptReadingPositions = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   const positions = readAll(null, storage);
   if (positions.length === 0) {
@@ -85,11 +79,8 @@ export const adoptReadingPositions = (accountId: string, storage: Storage = glob
   writeAll([], null, storage);
 };
 
-// A deleted account's places go with its library (docs/features/account-deletion.md).
 export const forgetReadingPositions = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.removeItem(storageKeyFor(accountId));
-  } catch {
-    // see above
-  }
+  } catch {}
 };

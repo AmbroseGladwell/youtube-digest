@@ -1,5 +1,3 @@
-// The spoken line at a moment is the last one to have started by then. Before the first
-// start, and for a note with no lines, it is the first.
 export const lineAtTime = (lineStarts: readonly number[], seconds: number): number => {
   let low = 0;
   let high = lineStarts.length - 1;

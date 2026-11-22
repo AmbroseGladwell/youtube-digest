@@ -7,7 +7,6 @@ export interface CappedTags {
   hiddenCount: number;
 }
 
-// As cappedTopics: the tag being filtered by is always listed, so it can be cleared.
 export const cappedTags = (tags: TagCount[], selected: string | null, limit: number = TAG_LIMIT): CappedTags => {
   const shown = tags.slice(0, limit);
   const chosen = tags.find(({ tag }) => tag === selected);
