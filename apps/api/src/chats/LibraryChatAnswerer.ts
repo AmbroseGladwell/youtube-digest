@@ -5,6 +5,7 @@ import {
   Chat,
   CHAT_MIGRATIONS,
   chatQuestionCount,
+  chatUnitsOf,
   chatRecordId,
   isInProject,
   MAX_CHAT_PICKS,
@@ -429,6 +430,8 @@ export class LibraryChatAnswerer {
         settled = true;
         const pickCost = await recordChatCost(options, accountId, pickUsage, "pick", log);
         const cost = await recordChatCost(options, accountId, stream.usage(), "message", log);
+        const usageUnits = chatUnitsOf((cost.costDollars ?? 0) + (pickCost.costDollars ?? 0));
+        await usage.settle(reservation.day, accountId, usageUnits);
         log.info(
           apiLogLines.chat.answered({
             ...logged,
@@ -436,6 +439,7 @@ export class LibraryChatAnswerer {
             costDollars: cost.costDollars === null ? null : cost.costDollars + (pickCost.costDollars ?? 0),
             pickInputTokens: pickCost.inputTokens,
             pickOutputTokens: pickCost.outputTokens,
+            usageUnits,
             picked: picked.length,
             answerMode: broad ? "broad" : "deep",
             filtered,

@@ -499,7 +499,48 @@ Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a su
   about in the last 30 minutes, and $0.004 for the first after that (OV-313). A Plus month of
   1,000 questions each about a different 169-minute source would be about $4.40; the same
   1,000 in conversations of 30 about $0.60.
-- `GET /api/chat-usage` says what is used, the limit and the reset date.
+- `GET /api/chat-usage` says what is used, the limit and the reset date, and since OV-376 the
+  `share` of the month's usage spent.
+
+### Chat usage (OV-376)
+
+Questions don't cost the same: a follow-up about a short video is a fraction of a cent, and a
+broad library answer covering dozens of overviews costs several times more (OV-373). So the
+allowance is moving from a count of questions to **usage**, as Claude counts it: each answer
+spends what it really cost, and each plan has an amount of usage a month. The owner's
+conditions, 22 Nov 2026: stay profitable without being stingy, and keep about today's numbers
+for questions about long-form content.
+
+- **A unit of usage is a millionth of a dollar** of list-price cost (`chatUnitsOf`), worked out
+  by code from the provider's own token counts, both passes of a library answer included. The
+  amounts live in config (`chatAllowances.ts`), so they can move without a migration, and
+  readers never see a unit.
+- **One question means one about long-form content:** `CHAT_UNITS_PER_QUESTION` is a question
+  about a 169-minute source in a conversation of four, the first from a cold cache and the rest
+  from a warm one (the endpoint measurements in `chats.md`). Each plan's usage is its question
+  count times that, so a plan's most expensive month of chat is fixed, however it's spent.
+- **What things cost, in those questions** (measured, OV-267's endpoint runs and OV-373's
+  production arm, with the map cached):
+
+  | Question                                             | Questions' worth |
+  | ---------------------------------------------------- | ---------------- |
+  | A follow-up about a video of up to 89 minutes        | about 0.15       |
+  | A follow-up about a 169-minute video                 | about 0.3        |
+  | The first question about a 169-minute video          | about 3          |
+  | A library question, deep, reading 5 in full          | about 2          |
+  | A broad library answer                               | about 2 to 8     |
+  | A library question in a new conversation (cold map)  | about 2 more     |
+
+  A reader who asks a handful of questions about each long video, or many about short ones,
+  gets at least today's numbers. One who asks a single question about each of many long videos,
+  or mostly broad library questions, gets fewer.
+- **Edge rules:** a question goes ahead while the month is under 100%, and its real cost is
+  charged once it's answered, so the last answer may go a little over. A failed or stopped
+  answer spends nothing (its cost still goes on the account's tally, `unit-economics.md`).
+- **Slice 1, built:** every answer settles its usage into `chat_usage.units` on the day it was
+  reserved, and into `our_key_usage.chat_units`, and logs `usageUnits`. The limits still count
+  questions. Slice 2, after a Design round for the meter: limits in usage (the month, the day
+  and the global day), the meter in place of "questions left", pricing copy and `/terms`.
 
 ## Options for saving cost, not built
 

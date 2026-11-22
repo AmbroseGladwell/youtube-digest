@@ -1,4 +1,4 @@
-import { CHAT_MESSAGES_PER_ACCOUNT_DAILY, chatAllowances, type ChatUsage, type Plan } from "@overview/domain";
+import { CHAT_MESSAGES_PER_ACCOUNT_DAILY, chatAllowances, chatUsageAllowances, type ChatUsage, type Plan } from "@overview/domain";
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
@@ -66,11 +66,28 @@ export class ChatUsageRepository {
     });
   }
 
+  // OV-376: an answer's real cost, in usage units, on the day its question was reserved; a failed answer settles nothing.
+  async settle(day: string, accountId: AccountId, units: number): Promise<void> {
+    if (units <= 0) {
+      return;
+    }
+    await this.#sql.transaction(async (tx) => {
+      await tx.query("update chat_usage set units = units + $3 where account_id = $1 and day = $2::date", [accountId, day, units]);
+      await tx.query("update our_key_usage set chat_units = chat_units + $2 where day = $1::date", [day, units]);
+    });
+  }
+
   async usage(now: Date, accountId: AccountId, plan: Plan): Promise<ChatUsage> {
-    const [row] = await this.#sql.query<{ month: number | string | null }>(
-      "select sum(messages) as month from chat_usage where account_id = $1 and day >= $2::date",
+    const [row] = await this.#sql.query<{ month: number | string | null; units: number | string | null }>(
+      "select sum(messages) as month, sum(units) as units from chat_usage where account_id = $1 and day >= $2::date",
       [accountId, usageMonth(now)],
     );
-    return { plan, resetsOn: nextUsageMonth(now), used: Number(row?.month ?? 0), limit: chatAllowances[plan] };
+    return {
+      plan,
+      resetsOn: nextUsageMonth(now),
+      used: Number(row?.month ?? 0),
+      limit: chatAllowances[plan],
+      share: Number(row?.units ?? 0) / chatUsageAllowances[plan],
+    };
   }
 }

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import {
   chatRecordId,
+  chatUnitsOf,
   CURRENT_SCHEMA_VERSIONS,
   overviewPartHash,
   type ChatMessage,
@@ -477,6 +478,7 @@ test("a plan's filters keep the scope by code: the marks and topics are sent, pi
   });
   const line = setup.lines.find((each) => each["logCode"] === "api.chat.answered")!;
   assert.deepEqual([line["answerMode"], line["filtered"], line["lookedAcross"], line["scopeCited"]], ["broad", true, 2, 2]);
+  assert.equal(line["usageUnits"], chatUnitsOf(line["costDollars"] as number));
 });
 
 test("a small library that goes whole sends the marks and leaves room for an answer that covers every overview (OV-373)", async (t) => {
