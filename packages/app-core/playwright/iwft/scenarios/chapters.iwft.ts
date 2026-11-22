@@ -256,13 +256,12 @@ test("a note made before chapters existed says so, rather than showing an empty 
   await reader.verifyChaptersNoteReads(/weren't made for this note/);
 });
 
-test("a note whose transcript had nothing to split says that instead", async ({ launcher, backendSimulator }) => {
+test("a short clip's note, made with no chapters, has no Chapters tab", async ({ page, launcher, backendSimulator }) => {
   seedNote(backendSimulator, { chapters: [] });
   const library = await launcher.launchExpectingLibrary();
-  const reader = await library.nthCard(0).openReader();
-  await reader.clickTab("Chapters");
+  await library.nthCard(0).openReader();
 
-  await reader.verifyChaptersNoteReads(/nothing to split/);
+  await expect(page.getByRole("tab")).toHaveText(["Overview", "Transcript"]);
 });
 
 // The fixture answers with segment indices, and the last chapter ends with the last caption.

@@ -300,8 +300,10 @@ On the wide layout the filter rail is part of the page. Under 992px it is a bott
 that rises over it, opened from the filter button beside the search ("OV-84 2 Library
 Filter" 84i), with "Clear all" and "Show N overviews" at its foot. Two things follow from
 that. It is never taller than the space under the bar — its max-height leaves the measured
-`--masthead-height` clear — so its head never slides underneath a bar that is fixed over the
-page. And while it is open it holds the
+`--masthead-size` clear — so its head never slides underneath a bar that is fixed over the
+page. On a very short screen (under 20rem, 400% zoom) the whole sheet scrolls as one, head
+and foot included, since a fixed head and foot would leave its list a sliver (OV-385); the
+Ask drawer's sheet and the overview's chat sheet follow the same height rule. And while it is open it holds the
 keyboard: `useFocusTrap` wraps Tab and Shift+Tab inside the sheet, Escape closes it, and
 closing hands focus back to the button that opened it. Without the trap, tabbing past the
 last filter walks into a library the reader cannot see.

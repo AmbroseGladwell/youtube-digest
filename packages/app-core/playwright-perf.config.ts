@@ -4,7 +4,7 @@ import { defineConfig } from "@playwright/experimental-ct-react";
 export default defineConfig({
   ...base,
   testDir: "./playwright/perf",
-  testMatch: "**/*.perf.ts",
+  testMatch: "**/*.perf.{ts,tsx}",
   timeout: 900_000,
   fullyParallel: false,
   workers: 1,

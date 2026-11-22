@@ -1,3 +1,5 @@
+@use "../../../../theme/shortScreens.scss";
+
 // A segmented control with a sliding ink pill: docs/features/stone-theme.md, "The single overview".
 .root {
   position: sticky;
@@ -5,6 +7,10 @@
   z-index: 2;
   background: var(--ground);
   padding: 0.75rem var(--reader-gutter, 2rem) 0.25rem;
+
+  @include shortScreens.short-screen {
+    position: relative;
+  }
 }
 
 // The strip is full width so it can stick; the control sits on the reading column.

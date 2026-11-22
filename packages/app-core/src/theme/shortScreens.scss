@@ -1,0 +1,30 @@
+// Why bars let go on short screens: docs/conventions/frontend-architecture-guide.md §4.5.
+$short-screen: 34rem;
+$very-short-screen: 20rem;
+$masthead-lets-go: "[data-masthead-lets-go]";
+
+@mixin short-screen {
+  @media (max-height: $short-screen) {
+    @content;
+  }
+}
+
+@mixin very-short-screen {
+  @media (max-height: $very-short-screen) {
+    @content;
+  }
+}
+
+@mixin sticky-offset($offset, $size) {
+  #{$offset}: var(#{$size});
+
+  @include short-screen {
+    #{$offset}: 0px;
+  }
+}
+
+@mixin fits-below($taken) {
+  max-height: calc(100dvh - #{$taken});
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

@@ -1,4 +1,5 @@
 @use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/shortScreens.scss";
 
 $thumb-target: 2.75rem; // Design 9m
 
@@ -38,6 +39,8 @@ $thumb-target: 2.75rem; // Design 9m
   flex-direction: column;
   gap: 2px;
   animation: menuRise var(--motion-arrive) var(--motion-ease) both;
+
+  @include shortScreens.fits-below(calc(var(--masthead-size, 3.5rem) + 1rem));
 }
 
 @keyframes menuRise {

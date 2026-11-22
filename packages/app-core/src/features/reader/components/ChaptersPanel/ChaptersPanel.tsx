@@ -13,7 +13,6 @@ import { playingLabel, timedNoun } from "../../util/timedSource.js";
 import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOverviewPartContext.js";
 
 const NOT_MADE = "Chapters weren't made for this note. Generating it again adds them.";
-const NOTHING_TO_SPLIT = "This video's transcript had nothing to split into chapters.";
 const LOOKING_FOR_TRANSCRIPT = "Looking for this note's transcript";
 const NO_TRANSCRIPT = "No transcript was kept for this note";
 const COULD_NOT_LOAD_TRANSCRIPT = "Couldn't load this note's transcript";
@@ -70,7 +69,7 @@ export const ChaptersPanel = ({ chapters, video, held, onOpenTranscriptAt, steps
     return (
       <div className={styles.root} data-testid={chaptersPanelTestIds.root}>
         <p className={styles.note} data-testid={chaptersPanelTestIds.note}>
-          {chapters === null ? NOT_MADE : NOTHING_TO_SPLIT}
+          {NOT_MADE}
         </p>
       </div>
     );
