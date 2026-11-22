@@ -32,6 +32,18 @@
 
   &::placeholder {
     color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  // Empty, the field is one line: a long placeholder ends in an ellipsis rather than wrapping
+  // out of sight (OV-362).
+  &:placeholder-shown {
+    field-sizing: fixed;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &:focus {
@@ -91,14 +103,15 @@
   background: currentColor;
 }
 
-// OV-354, page 1: a quiet "@" at the field's left.
+// OV-354, page 1: a quiet "@" at the field's left, as tall as Send so its centre sits on the line of
+// text (OV-362).
 .at {
   display: inline-flex;
   flex: none;
   align-items: center;
   justify-content: center;
   width: 30px;
-  height: 30px;
+  height: 2.375rem;
   margin-left: -6px;
   border: 0;
   border-radius: 999px;
@@ -110,5 +123,22 @@
   &:focus-visible {
     background: var(--surface-press);
     color: var(--ink);
+  }
+}
+
+// 354u: the Ask page's empty field, taller and a little larger.
+.large {
+  min-height: 3.5rem;
+  padding-left: 1.125rem;
+  border-radius: 1.75rem;
+
+  .input {
+    font-size: 0.96875rem;
+  }
+
+  .at,
+  .send,
+  .stop {
+    margin-bottom: 0.125rem;
   }
 }

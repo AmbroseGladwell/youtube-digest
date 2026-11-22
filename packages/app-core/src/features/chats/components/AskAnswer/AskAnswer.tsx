@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import type { ChatAnswerSections, ChatCitation, ChatScopeStats, OtherOverviewCitation } from "@overview/domain";
 import { askStatsLine } from "../../util/askStatsLine.js";
 import { citationKey } from "../../util/chatSourceGroups.js";
-import { ChatAnswerSectionsView, ChatSourcesMenu } from "../ChatAnswer/ChatAnswer.js";
+import { ChatAnswerSectionsView, ChatSourcesMenu, otherOverviewChipLabel, type ChatChip } from "../ChatAnswer/ChatAnswer.js";
+import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
 import { ChatOtherOverviewCitation } from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
 import styles from "./AskAnswer.module.scss";
 import { askAnswerTestIds } from "./AskAnswerTestIds.js";
@@ -41,19 +42,22 @@ export function AskAnswer({
   onSourcesOpened,
   actions,
 }: AskAnswerProps) {
-  const chipsOf = (cited: readonly ChatCitation[]): ReactNode[] =>
+  const chipsOf = (cited: readonly ChatCitation[]): ChatChip[] =>
     othersOf(cited).map((citation, index) => {
       const image = imageOf(citation.overviewId);
-      return (
-        <ChatOtherOverviewCitation
-          key={`${citationKey(citation)}-${index}`}
-          citation={citation}
-          held={holds(citation.overviewId)}
-          imageUrl={image.url}
-          wide={image.wide}
-          onFollowed={onFollowed}
-        />
-      );
+      return {
+        label: otherOverviewChipLabel(citation),
+        chip: (
+          <ChatOtherOverviewCitation
+            key={`${citationKey(citation)}-${index}`}
+            citation={citation}
+            held={holds(citation.overviewId)}
+            imageUrl={image.url}
+            wide={image.wide}
+            onFollowed={onFollowed}
+          />
+        ),
+      };
     });
   const listed = othersOf(citations).filter(
     (citation, index, all) => all.findIndex((each) => citationKey(each) === citationKey(citation)) === index,
@@ -61,14 +65,18 @@ export function AskAnswer({
   const sourcesMenu =
     listed.length === 0 ? null : (
       <ChatSourcesMenu count={listed.length} onOpened={onSourcesOpened}>
-        {chipsOf(listed)}
+        {chipsOf(listed).map((each) => each.chip)}
       </ChatSourcesMenu>
     );
   return (
     <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} data-testid={askAnswerTestIds.root}>
       <div className={styles.text}>
         {sections === undefined ? (
-          paragraphsOf(text).map((paragraph, index) => <p key={index}>{paragraph}</p>)
+          paragraphsOf(text).map((paragraph, index) => (
+            <p key={index}>
+              <ChatMarkedText text={paragraph} />
+            </p>
+          ))
         ) : (
           <ChatAnswerSectionsView sections={sections} chipsOf={chipsOf} />
         )}

@@ -102,17 +102,26 @@
   cursor: pointer;
 }
 
-// The picker: OV-324's menu surface with 18px corners, over the field.
+// The picker: OV-324's menu surface with 18px corners, over the field, or under it where there
+// isn't room above, as in the Ask page's empty state. A long list scrolls (OV-362).
 .picker {
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
   left: 0;
-  z-index: 5;
+  z-index: 10;
+  max-height: min(22rem, 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px;
   border-radius: 18px;
   background: var(--dialog);
   box-shadow: var(--shadow-menu);
+}
+
+.pickerBelow {
+  top: calc(100% + 6px);
+  bottom: auto;
 }
 
 .list {

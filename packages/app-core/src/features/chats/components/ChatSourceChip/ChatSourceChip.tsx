@@ -17,6 +17,8 @@ export interface ChatSourceChipProps {
   quiet?: boolean | undefined;
   deleted?: boolean | undefined;
   to?: string | undefined;
+  // What the link carries to the page it opens, such as the item a citation names (OV-362).
+  state?: unknown;
   onFollow?: (() => void) | undefined;
   // A place in this overview's own note: a button that moves the page, not a link.
   onPress?: ((chip: HTMLButtonElement) => void) | undefined;
@@ -39,6 +41,7 @@ export function ChatSourceChip({
   quiet,
   deleted,
   to,
+  state,
   onFollow,
   onPress,
   onRemove,
@@ -71,7 +74,7 @@ export function ChatSourceChip({
       {body}
     </button>
   ) : to !== undefined ? (
-    <PageLink className={styles.face} to={to} aria-label={name} onClick={onFollow} data-testid={testId}>
+    <PageLink className={styles.face} to={to} state={state} aria-label={name} onClick={onFollow} data-testid={testId}>
       {body}
     </PageLink>
   ) : (

@@ -1,4 +1,4 @@
-import type { Chat, ChatAnswerSections, ChatCitation, Overview, ProjectId } from "@overview/domain";
+import { overviewPartHash, type Chat, type ChatAnswerSections, type ChatCitation, type Overview, type ProjectId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
@@ -162,7 +162,7 @@ test.describe("Ask", () => {
     await ask.verifyPinnedRead(0, [PLANTS]);
   });
 
-  test("the drawer lists library and project conversations by day, never an overview's, opens one, and a deleted one comes back with Undo", async ({
+  test("the drawer is a column at the left listing library and project conversations by day, never an overview's; it opens one beside it, and a deleted one comes back with Undo", async ({
     launcher,
     backendSimulator,
     page,
@@ -196,11 +196,10 @@ test.describe("Ask", () => {
 
     await ask.openDrawerConversation(1);
 
-    await ask.verifyDrawerIsOpen(false);
+    await ask.verifyDrawerIsOpen(true);
     await ask.verifyQuestionsRead(["What should I cook first?"]);
     await expect(page).toHaveURL(new RegExp(`/ask\\?project=${dinner.id}&chat=${projectChat}$`));
 
-    await ask.openDrawer();
     await ask.deleteDrawerConversation(0);
 
     await ask.verifyToastReads("Conversation deletedUndo");
@@ -208,8 +207,6 @@ test.describe("Ask", () => {
 
     await ask.undo();
 
-    await ask.verifyDrawerIsOpen(false);
-    await ask.openDrawer();
     await ask.verifyDrawerReads([
       "Today: What do my overviews agree on? · Your library",
       "Yesterday: What should I cook first? · Dinner Recipes",
@@ -218,20 +215,122 @@ test.describe("Ask", () => {
     await ask.newChat();
 
     await ask.verifyHeadingReads("Ask about this project.");
+
+    await ask.closeDrawer();
+
+    await ask.verifyDrawerIsOpen(false);
   });
 
-  test("on a phone Ask is a page, and its drawer is a bottom sheet", async ({ launcher, backendSimulator, page }) => {
+  test("on a phone Ask is a page, its drawer is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
     await page.setViewportSize(PHONE);
     backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    backendSimulator.chats.seed(
+      conversation("library:5d1c3e8a-0f4b-4a52-9c3e-2b7a1d9e6f01", "What do my overviews agree on?", new Date().toISOString()),
+    );
     await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(1);
     const ask = await launcher.appShell.openAsk();
 
     await ask.verifyHeadingReads("Ask across everything you’ve saved.");
+    await ask.verifyPlaceholderReads("Ask or @ to add sources");
     await ask.verifyPageDoesNotScrollSideways();
 
     await ask.openDrawer();
 
     await ask.verifyDrawerIsSheet(true);
-    await ask.verifyDrawerEmpty();
+
+    await ask.openDrawerItemMenu(0);
+
+    await ask.verifyDrawerItemMenuIsInView();
+  });
+
+  test("an answer's bold shows as bold, a long source row folds into +N, a list item has its own chip, and following it opens that overview at the cited key point", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    const beansPoint = "A large handful of beans or lentils a day feeds the gut.";
+    const plants = makeOverview({
+      savedAt: "2026-11-03T09:00:00.000Z",
+      keyPoints: [
+        { text: "Most people eat too little fibre.", range: null },
+        { text: beansPoint, range: null },
+        { text: "Greens with every meal.", range: null },
+      ],
+    });
+    plants.source.title = PLANTS;
+    const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
+    const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
+    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    const beans: ChatCitation = {
+      overviewId: plants.id,
+      title: PLANTS,
+      item: { part: "keyPoint", index: 1, textHash: overviewPartHash(beansPoint) },
+    };
+    backendSimulator.chats.answerWith({
+      text: "Start with beans.",
+      citations: [beans, cite(stew), cite(curry)],
+      sections: {
+        intro: "Start with **beans**.",
+        introSources: [],
+        sections: [
+          {
+            heading: "Read first",
+            paragraphs: [],
+            numbered: [{ text: "**Eat more plants**, for the beans habit", sources: [beans] }],
+            bullets: [],
+            sources: [
+              { citation: beans, relation: "" },
+              { citation: cite(stew), relation: "" },
+              { citation: cite(curry), relation: "" },
+            ],
+          },
+        ],
+        takeaway: "",
+      },
+      stats: { overviews: 3, read: 3 },
+    });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.ask("What should I read for my gut?");
+
+    await ask.verifyBoldRead(0, ["beans", "Eat more plants"]);
+    await ask.verifySectionSourcesRead(0, 0, [`Based on${PLANTS} · Key point 2${STEW}+1`]);
+    await ask.verifySectionSourcesFold(0, 0, 2, 1, 3);
+    await ask.verifyItemSourcesRead(0, 0, 0, [`${PLANTS} · Key point 2`]);
+    await ask.verifyLatestQuestionInView();
+
+    await ask.followItemSource(0, 0, 0);
+
+    await expect(page).toHaveURL(new RegExp(`/overviews/${plants.id}$`));
+    const cited = page.locator('[data-cited-part="true"]');
+    await expect(cited.first()).toContainText(beansPoint);
+    await expect(cited.first()).toBeInViewport();
+  });
+
+  test("in the empty page the @ picker opens below the field, where there's room", async ({ launcher, backendSimulator }) => {
+    for (const [index, title] of [PLANTS, STEW, CURRY].entries())
+      backendSimulator.overviews.seedSynced(titled(title, `2026-11-0${index + 3}T09:00:00.000Z`));
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.type("@");
+
+    await ask.verifyPickerOpensBelowField();
+  });
+
+  test("on a phone Ask and New are round icons, each named by a tooltip", async ({ launcher, backendSimulator, page }) => {
+    await page.setViewportSize(PHONE);
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+
+    await launcher.appShell.verifyIconButtonWithTip("ask", "Ask your library");
+    await launcher.appShell.verifyIconButtonWithTip("new", "New overview");
+    await launcher.appShell.verifyPageDoesNotScrollSideways();
   });
 });

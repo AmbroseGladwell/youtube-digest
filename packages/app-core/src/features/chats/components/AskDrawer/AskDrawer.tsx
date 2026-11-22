@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { chatOwner, type Chat } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -22,16 +22,29 @@ export interface AskDrawerProps {
   onClose: () => void;
 }
 
-// OV-354, page 3 (354t): New chat and every library and project conversation, grouped by when it
-// was last asked in, each with its first question and its scope. Each has a ⋯ whose only item is
-// Delete conversation; there's no Rename, because the title is the first question. A raised panel
-// on the web, a bottom sheet on a phone.
+// OV-354, page 3 (354t-4 to 354t-7): New chat and every library and project conversation, grouped
+// by when it was last asked in, each with its first question and its scope. Each has a ⋯ whose only
+// item is Delete conversation; there's no Rename, because the title is the first question. On the
+// web a raised column down the left of the page; on a phone a bottom sheet.
 export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger, onNew, onOpen, onDelete, onClose }: AskDrawerProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
-  useDismissOnOutside(menuFor === null, onClose, root, trigger);
+  const [menuUp, setMenuUp] = useState(false);
+  // On the web the drawer is a column beside the page, closed with its own button; as a sheet it
+  // closes on a tap outside it.
+  useDismissOnOutside(sheet && menuFor === null, onClose, root, trigger);
   useDismissOnOutside(menuFor !== null, () => setMenuFor(null), menu);
+
+  // A conversation's menu opens below its ⋯, or above it when the drawer has no room below, as for
+  // the last in a phone's sheet (OV-362).
+  useLayoutEffect(() => {
+    if (menuFor === null) return;
+    const item = menu.current?.parentElement?.getBoundingClientRect();
+    const box = root.current?.getBoundingClientRect();
+    const height = menu.current?.offsetHeight ?? 0;
+    setMenuUp(item !== undefined && box !== undefined && item.bottom + height + 8 > Math.min(box.bottom, window.innerHeight));
+  }, [menuFor]);
   const groups = askHistoryGroups(chats, now);
 
   const scopeOf = (chat: Chat) => {
@@ -49,9 +62,22 @@ export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger,
         aria-label="Conversations"
         data-testid={askDrawerTestIds.root}
       >
-        {sheet && <span className={styles.handle} aria-hidden="true" />}
+        {sheet ? (
+          <span className={styles.handle} aria-hidden="true" />
+        ) : (
+          <button
+            type="button"
+            className={styles.close}
+            aria-label="Hide conversations"
+            aria-expanded="true"
+            onClick={onClose}
+            data-testid={askDrawerTestIds.close}
+          >
+            <StrokeIcon name="panelClose" size={18} />
+          </button>
+        )}
         <button type="button" className={styles.newChat} onClick={onNew} data-testid={askDrawerTestIds.newChat}>
-          <StrokeIcon name="pencil" size={16} />
+          <StrokeIcon name="plus" size={16} />
           New chat
         </button>
         {groups.length === 0 && (
@@ -96,7 +122,12 @@ export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger,
                       <StrokeIcon name="more" size={16} />
                     </button>
                     {menuFor === chat.id && (
-                      <div className={styles.menu} ref={menu} role="menu">
+                      <div
+                        className={`${styles.menu} ${menuUp ? styles.menuUp : ""}`}
+                        ref={menu}
+                        role="menu"
+                        data-testid={askDrawerTestIds.menu}
+                      >
                         <button
                           type="button"
                           role="menuitem"

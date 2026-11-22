@@ -23,12 +23,3 @@
   font: 600 12px var(--font-body);
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.pinned .chips {
-  justify-content: flex-end;
-}

@@ -1,6 +1,7 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatComposerTestIds } from "../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
+import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
 import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
 import { chatSourceChipTestIds } from "../../src/features/chats/components/ChatSourceChip/ChatSourceChipTestIds.js";
 import { chatAnswerActionsTestIds } from "../../src/features/chats/components/ChatAnswerActions/ChatAnswerActionsTestIds.js";
@@ -504,6 +505,27 @@ export class ChatPanelPageObject extends PageObject {
       if (titles === null) return expect(row).toHaveCount(0);
       await expect(row.getByTestId(chatSourceChipTestIds.chip)).toHaveText(titles);
       await expect(row.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
+    });
+
+  // OV-362: past two chips the row folds into "+N", whose menu lists every one.
+  verifyBoldRead = (answer: number, texts: string[]) =>
+    this.step(`verifyBoldRead ${answer} ${texts.join(" | ")}`, async () => {
+      await expect(this.answers().nth(answer).locator("strong")).toHaveText(texts);
+      await expect(this.answers().nth(answer)).not.toContainText("**");
+    });
+
+  verifyDrewOnFolds = (how: "pinned" | "found", question: number, shown: string[], hidden: string[]) =>
+    this.step(`verifyDrewOnFolds ${how} ${question}`, async () => {
+      const row = this.panel()
+        .getByTestId(how === "pinned" ? chatDrewOnTestIds.pinned : chatDrewOnTestIds.found)
+        .nth(question)
+        .getByTestId(chatChipRowTestIds.root);
+      await expect(row.getByTestId(chatSourceChipTestIds.chip)).toHaveText(shown);
+      const more = row.getByTestId(chatChipRowTestIds.more);
+      await expect(more).toHaveText(`+${hidden.length}`);
+      await expect(more).toHaveAccessibleName(`${hidden.length} more: ${hidden.join(", ")}`);
+      await more.click();
+      await expect(row.getByTestId(chatChipRowTestIds.menu).getByTestId(chatSourceChipTestIds.chip)).toHaveText([...shown, ...hidden]);
     });
 
   followDrewOn = (how: "pinned" | "found", index: number) =>

@@ -1,30 +1,35 @@
+// 354t-4: a raised column down the left of the page, 280px, on the tile surface.
 .root {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
+  padding: 12px 14px;
   background: var(--card);
   overflow-y: auto;
-  z-index: 20;
+  box-sizing: border-box;
 }
 
 .panel {
-  position: absolute;
-  top: 3.25rem;
-  left: 0;
+  position: sticky;
+  top: calc(var(--masthead-height) + 4px);
+  flex: none;
+  align-self: flex-start;
   width: 280px;
-  max-height: min(70vh, 560px);
+  height: calc(100dvh - var(--masthead-height) - 24px);
+  margin: 4px 0 20px 16px;
   border-radius: 22px;
   box-shadow: var(--shadow-float);
 }
 
+// 354t-5: on a phone, a bottom sheet with a grab handle over a scrim.
 .sheet {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: 75vh;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 20;
+  max-height: 78vh;
+  padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
+  background: var(--dialog);
   border-radius: 22px 22px 0 0;
   box-shadow: var(--shadow-dialog);
 }
@@ -37,25 +42,45 @@
 }
 
 .handle {
+  flex: none;
   align-self: center;
   width: 36px;
   height: 4px;
-  margin-bottom: 0.25rem;
+  margin-bottom: 8px;
   border-radius: 2px;
   background: var(--divider);
 }
 
+.close {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface);
+    color: var(--ink);
+  }
+}
+
 .newChat {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0 0.75rem;
+  gap: 10px;
+  margin: 6px 0 10px;
+  padding: 10px 12px;
   border: 0;
   border-radius: 12px;
   background: var(--surface);
   color: var(--ink);
-  font: 600 0.875rem/1 var(--font-body);
+  font: 600 14px var(--font-body);
   cursor: pointer;
 
   &:hover {
@@ -64,20 +89,20 @@
 }
 
 .empty {
-  margin: 0.5rem 0.75rem;
-  font: 400 0.8125rem/1.45 var(--font-body);
+  margin: 8px;
+  font: 400 13px/1.45 var(--font-body);
   color: var(--muted);
 }
 
 .group {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
 }
 
 .groupLabel {
-  margin: 0.5rem 0.75rem 0.25rem;
-  font: 600 0.75rem/1 var(--font-body);
+  margin: 0;
+  padding: 12px 8px 4px;
+  font: 600 12px var(--font-body);
   color: var(--muted);
 }
 
@@ -89,12 +114,9 @@
 
 .item {
   position: relative;
-  display: flex;
-  align-items: center;
-  border-radius: 12px;
+  border-radius: 10px;
 
-  &:hover,
-  &:focus-within {
+  &:hover {
     background: var(--surface);
   }
 }
@@ -104,12 +126,9 @@
 }
 
 .open {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1875rem;
-  padding: 0.5rem 0.25rem 0.5rem 0.75rem;
+  display: block;
+  width: 100%;
+  padding: 5px 34px 5px 8px;
   border: 0;
   background: none;
   color: var(--ink);
@@ -118,75 +137,88 @@
 }
 
 .question {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 500 0.84375rem/1.3 var(--font-body);
+  font: 500 14px/1.3 var(--font-body);
 }
 
 .scope {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 0.75rem/1.3 var(--font-body);
+  font: 500 11.5px var(--font-body);
   color: var(--muted);
 }
 
+// The ⋯ shows on hover, on focus and on the open conversation, and always on touch (354t-6).
 .more {
-  flex: none;
-  display: grid;
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: none;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  margin-right: 0.25rem;
+  width: 28px;
+  height: 28px;
   border: 0;
   border-radius: 999px;
   background: none;
   color: var(--muted);
   cursor: pointer;
-  opacity: 0;
-
-  &:hover {
-    background: var(--surface-press);
-  }
+  transform: translateY(-50%);
 }
 
 .item:hover .more,
 .item:focus-within .more,
 .current .more,
 .menuOpen .more {
-  opacity: 1;
+  display: inline-grid;
+}
+
+.menuOpen .more {
+  background: var(--card);
+  color: var(--ink);
 }
 
 @media (hover: none) {
   .more {
-    opacity: 1;
+    display: inline-grid;
   }
 }
 
+// Below the ⋯, right-aligned inside the panel; above it when there's no room below.
 .menu {
   position: absolute;
-  top: calc(100% - 0.25rem);
-  right: 0.25rem;
-  z-index: 2;
+  top: calc(100% + 2px);
+  right: 4px;
+  z-index: 8;
+  width: 220px;
   padding: 6px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: var(--dialog);
   box-shadow: var(--shadow-menu);
+  box-sizing: border-box;
+}
+
+.menuUp {
+  top: auto;
+  bottom: calc(100% + 2px);
 }
 
 .delete {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0 0.875rem;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: none;
   color: var(--alert);
-  font: 600 0.84375rem/1 var(--font-body);
-  white-space: nowrap;
+  font: 600 14px var(--font-body);
+  text-align: left;
   cursor: pointer;
 
   &:hover {

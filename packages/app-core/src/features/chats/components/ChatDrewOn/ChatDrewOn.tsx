@@ -1,6 +1,7 @@
 import { sourceImage, type ChatSource, type Overview } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
+import { ChatChipRow, VISIBLE_CHIPS } from "../ChatChipRow/ChatChipRow.js";
 import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
 import styles from "./ChatDrewOn.module.scss";
 import { chatDrewOnTestIds } from "./ChatDrewOnTestIds.js";
@@ -13,7 +14,8 @@ export interface ChatDrewOnProps {
 }
 
 // OV-354, page 2: what a sent question drew on. Pinned sits above the question, right-aligned;
-// Found for you below it, left-aligned, up to three, absent when empty. A sent question keeps its
+// Found for you below it, left-aligned, up to three, absent when empty. Two chips show, then "+N"
+// (OV-362). A sent question keeps its
 // sources, so these chips have no ×: they only open their overview.
 export function ChatDrewOn({ how, sources, overviewOf, onFollow }: ChatDrewOnProps) {
   if (sources.length === 0) return null;
@@ -26,8 +28,10 @@ export function ChatDrewOn({ how, sources, overviewOf, onFollow }: ChatDrewOnPro
         <StrokeIcon name={how === "pinned" ? "pin" : "search"} size={13} />
         {how === "pinned" ? "Pinned" : "Found for you"}
       </p>
-      <div className={styles.chips}>
-        {sources.map((source) => {
+      <ChatChipRow
+        align={how === "pinned" ? "end" : "start"}
+        hiddenLabels={sources.slice(VISIBLE_CHIPS).map((source) => source.title)}
+        chips={sources.map((source) => {
           const overview = overviewOf(source.overviewId);
           return (
             <ChatSourceChip
@@ -42,7 +46,7 @@ export function ChatDrewOn({ how, sources, overviewOf, onFollow }: ChatDrewOnPro
             />
           );
         })}
-      </div>
+      />
     </li>
   );
 }

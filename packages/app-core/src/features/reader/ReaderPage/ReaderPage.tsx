@@ -20,7 +20,9 @@ import {
   overviewNoteLines,
   overviewTimeSaved,
   recipeActions as actionsOf,
+  citedOverviewPart,
 } from "@overview/domain";
+import { CITED_PLACE_STATE, citedPlaceFromLocation } from "../util/citedPlaceFromLocation.js";
 import { timedSource } from "../util/timedSource.js";
 import { useEpisodeEngine } from "../episode/useEpisodeEngine.js";
 import { EpisodePlayer } from "../components/EpisodePlayer/EpisodePlayer.js";
@@ -413,8 +415,14 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [citedPart, setCitedPart] = useState<CitedOverviewPart | null>(null);
   const [citedSaid, setCitedSaid] = useState("");
   const citedPill = useRef<HTMLButtonElement | null>(null);
+  // Closing chat clears the tint; arriving with chat closed doesn't (OV-362).
+  const citedChatOpen = useRef(chat.open);
   useEffect(() => {
-    if (chat.open) return;
+    if (chat.open || !citedChatOpen.current) {
+      citedChatOpen.current = chat.open;
+      return;
+    }
+    citedChatOpen.current = false;
     setCitedPart(null);
     setCitedSaid("");
   }, [chat.open]);
@@ -443,6 +451,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     frame = requestAnimationFrame(bring);
     return () => cancelAnimationFrame(frame);
   }, [citedFollowed, citedPartName]);
+  // A citation of this overview's item followed from another chat or the Ask page lands here with
+  // the item in the link's state: the note opens at it, tinted, as a citation in its own chat does.
+  // The state is cleared so a reload or Back doesn't bring it again (OV-362).
+  const arrivedAt = overview === null ? null : citedPlaceFromLocation(location.state);
+  useEffect(() => {
+    if (overview === null || arrivedAt === null) return;
+    const found = citedOverviewPart(overview, arrivedAt);
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: { ...(location.state as object), [CITED_PLACE_STATE]: undefined },
+    });
+    if (found === null) return;
+    const onTab: ReaderTab = found.part === "chapter" ? "Chapters" : "Overview";
+    if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
+    setCitedPart({ part: found.part, index: found.index, followed: 1 });
+  }, [overview === null, arrivedAt?.part, arrivedAt?.index]);
   // Escape on the part returns to the pill that led there, raising the sheet first on a phone
   // or in the panel; a second Escape, in chat, closes it (319w).
   const backToAnswer = () => {

@@ -251,32 +251,43 @@ export function AppShell() {
 
                       <span className={`${styles.actions} ${onAuthPage ? styles.actionsBesideNotNow : ""}`}>
                         {!accountNeeded && signedIn && (
-                          <PageLink
-                            className={`${styles.newOverviewButton} ${styles.askButton}`}
-                            to={Routes.ask()}
-                            aria-label="Ask"
-                            aria-current={pathname === Routes.ask() ? "page" : undefined}
-                            data-testid={appShellTestIds.askButton}
-                          >
-                            <StrokeIcon name="chat" />
-                            <span className={styles.askLabel}>Ask</span>
-                          </PageLink>
+                          <span className={styles.tipHost}>
+                            <PageLink
+                              className={styles.askButton}
+                              to={Routes.ask()}
+                              aria-label="Ask your library"
+                              aria-current={pathname === Routes.ask() ? "page" : undefined}
+                              data-testid={appShellTestIds.askButton}
+                            >
+                              <StrokeIcon name="messageSquare" />
+                              <span className={styles.buttonLabel}>Ask</span>
+                            </PageLink>
+                            <span className={styles.tip} aria-hidden="true">
+                              Ask your library
+                            </span>
+                          </span>
                         )}
                         {!accountNeeded && (
-                          <button
-                            type="button"
-                            className={styles.newOverviewButton}
-                            onClick={() => {
-                              analytics.capture.newOverviewDialog.opened({ from: "newButton" });
-                              newOverview.open();
-                            }}
-                            aria-haspopup="dialog"
-                            aria-expanded={newOverview.dialogOpen}
-                            data-testid={appShellTestIds.newOverviewButton}
-                          >
-                            <StrokeIcon name="plus" />
-                            New
-                          </button>
+                          <span className={styles.tipHost}>
+                            <button
+                              type="button"
+                              className={`${styles.newOverviewButton} ${styles.iconOnPhone}`}
+                              aria-label="New overview"
+                              onClick={() => {
+                                analytics.capture.newOverviewDialog.opened({ from: "newButton" });
+                                newOverview.open();
+                              }}
+                              aria-haspopup="dialog"
+                              aria-expanded={newOverview.dialogOpen}
+                              data-testid={appShellTestIds.newOverviewButton}
+                            >
+                              <StrokeIcon name="plus" />
+                              <span className={styles.buttonLabel}>New</span>
+                            </button>
+                            <span className={styles.tip} aria-hidden="true">
+                              New overview
+                            </span>
+                          </span>
                         )}
                         <AccountMenu />
                       </span>
