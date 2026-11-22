@@ -1,4 +1,4 @@
-import { buildSearchHaystack } from "@overview/domain";
+import { searchHaystackOf } from "./searchHaystackOf.js";
 import type { LibraryEntry } from "../../overviews/types/LibraryEntry.js";
 import { librarySourceOf } from "./librarySourceOf.js";
 import type { LibraryFilters } from "../types/LibraryFilters.js";
@@ -33,7 +33,7 @@ export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilte
   if (filters.novelty !== "all" && overview.verdict?.novelty !== filters.novelty) return false;
   if (filters.dubious && !overview.verdict?.dubious) return false;
   if (filters.tag !== null && !overview.tags.includes(filters.tag) && !state.userTags.includes(filters.tag)) return false;
-  if (query && !buildSearchHaystack(overview).includes(query)) return false;
+  if (query && !searchHaystackOf(overview).includes(query)) return false;
 
   return true;
 }

@@ -84,6 +84,18 @@ test("the search box filters by a case-insensitive substring of the video title"
   await library.expectCardCountToBe(2);
 });
 
+test("every key typed into the search stays, however fast it comes, and the address follows", async ({ launcher, backendSimulator }) => {
+  backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Kitchen renovation" } }));
+  backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Compound interest" } }));
+
+  const library = await launcher.launchExpectingLibrary();
+  await library.typeInTheSearch("kitchen");
+
+  await library.verifySearchReads("kitchen");
+  await library.expectCardCountToBe(1);
+  await library.verifyTheAddressHoldsTheSearch("kitchen");
+});
+
 test("filters combine with AND: a video matching only one active filter stays hidden", async ({ launcher, backendSimulator }) => {
   const matchesNeither = makeOverview({
     source: { ...makeOverview().source, title: "Wrong video" },

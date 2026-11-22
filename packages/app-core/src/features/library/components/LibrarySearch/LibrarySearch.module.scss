@@ -1,0 +1,136 @@
+@use "../../../../theme/controls.scss" as controls;
+
+$folded: 2.75rem;
+$ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search {
+  @include controls.field-pill;
+
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  gap: 0.25rem;
+  padding: 0 0.375rem 0 0.875rem;
+}
+
+.icon {
+  flex: none;
+  display: inline-flex;
+  margin-right: 0.375rem;
+  color: var(--muted);
+}
+
+.input {
+  @include controls.field-input;
+
+  // The browser's own cancel glyph is a blue × that belongs to no palette here.
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    appearance: none;
+    display: none;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  transition: opacity 120ms var(--motion-ease) 60ms;
+}
+
+.opener {
+  @include controls.circle($folded);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: -2px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+// A phone folds the search into an icon at the row's left edge, with sort, Filters and select
+// together on the right. Opening grows the field across the row and the three fade out; a
+// query kept with the keyboard down leaves it open beside them ("OV-168 5" 168au–168aw).
+// The width changes at once and a clip draws the growth (docs/features/library-view.md, "Search").
+@media (max-width: 47.9375rem) {
+  .root[data-search] {
+    min-height: $folded;
+
+    .search {
+      flex: 1 1 auto;
+      max-width: $folded;
+      padding: 0;
+      overflow: hidden;
+      background: var(--surface);
+      clip-path: inset(0 calc(100% - #{$folded}) 0 0 round var(--radius-btn));
+      transition:
+        clip-path 180ms $ease-out,
+        max-width 0s linear 180ms,
+        background 140ms var(--motion-ease);
+    }
+
+    .icon {
+      display: none;
+    }
+
+    .input {
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 100ms var(--motion-ease),
+        visibility 0s linear 180ms;
+    }
+  }
+
+  .root[data-search="open"],
+  .root[data-search="kept"] {
+    .search {
+      max-width: 100%;
+      padding: 0 0.375rem 0 1rem;
+      background: var(--card);
+      clip-path: inset(0 0 0 0 round var(--radius-btn));
+    }
+
+    .input {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 100ms var(--motion-ease) 60ms;
+    }
+  }
+
+  .root[data-search="open"] {
+    .search {
+      transition:
+        clip-path 200ms $ease-out,
+        max-width 0s,
+        background 140ms var(--motion-ease);
+    }
+
+    .controls {
+      position: absolute;
+      right: 0;
+      opacity: 0;
+      transition-delay: 0s;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .root[data-search] .search,
+    .root[data-search] .input,
+    .controls {
+      transition: opacity 120ms ease;
+    }
+  }
+}
