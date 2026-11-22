@@ -246,4 +246,40 @@ test.describe("Chat across sources", () => {
     await reader.chat.verifyMarkdownRead(0, { code: ["npm test"], links: ["the guide"], blocks: ["npm test  --watch"] });
     await reader.chat.copyCodeBlock(0, 0, "npm test  --watch");
   });
+
+  test("a code block inside a section's numbered or bulleted item renders as a block, not inline, and copies (OV-372)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-10T09:00:00.000Z"));
+    const rule = 'rules: {\n  "no-explicit-any": "error",\n}';
+    backendSimulator.chats.answerWith({
+      text: "Two rules to start with.",
+      sections: {
+        intro: "Two rules to start with.",
+        introSources: [],
+        sections: [
+          {
+            heading: "Example rules",
+            paragraphs: [],
+            numbered: [{ text: "Run the linter:\n```bash\nnpm run lint\n```", sources: [] }],
+            bullets: [
+              { text: `Ban explicit \`any\`:\n\`\`\`js\n${rule}\n\`\`\`\nThen fix what it finds.`, sources: [] },
+              { text: "Keep tests beside the rules.", sources: [] },
+            ],
+            sources: [],
+          },
+        ],
+        takeaway: "",
+      },
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.askInNote("What lint rules should I add?");
+
+    await reader.chat.verifyMarkdownRead(0, { code: ["any"], links: [], blocks: ["npm run lint", rule] });
+    await reader.chat.verifyCodeBlocksInListItems(0, 2);
+    await reader.chat.copyCodeBlock(0, 1, rule);
+  });
 });

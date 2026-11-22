@@ -72,6 +72,7 @@ jobs:
   unit-api:
     name: unit (api)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
