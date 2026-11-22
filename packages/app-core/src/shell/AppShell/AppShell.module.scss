@@ -1,11 +1,14 @@
 @use "../../theme/controls.scss" as controls;
 @use "../../theme/tip.scss";
+@use "../../theme/shortScreens.scss";
 
 .root {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   background: var(--ground);
+
+  @include shortScreens.sticky-offset(--masthead-height, --masthead-size);
 }
 
 // The view-transition names: docs/features/page-transitions.md, "The name budget".
@@ -15,6 +18,10 @@
   z-index: 3;
   background: var(--ground);
   view-transition-name: masthead;
+
+  @include shortScreens.short-screen {
+    position: relative;
+  }
 }
 
 .masthead[data-sticky-fade]::after {

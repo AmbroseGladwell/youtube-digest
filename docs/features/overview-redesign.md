@@ -313,12 +313,20 @@ rail grew one wrapper for the same job. The reader's foot is the player bar rath
 window, so that is what its divider has to reach.
 
 Neither offset is a hardcoded number. `useMeasuredHeight` publishes the masthead's height
-as `--masthead-height` and the reader's tab strip as `--reader-tabs-height`, and the rails
-sit at the sum. That is the same argument as the tab strip's own `top`: the masthead wraps
+as `--masthead-size` and the reader's tab strip as `--reader-tabs-size`. The stylesheets turn
+those into the sticky offsets `--masthead-height` and `--reader-tabs-height`, and the rails
+sit at their sum. That is the same argument as the tab strip's own `top`: the masthead wraps
 on a phone and grows with the generation status strip, so any constant would be wrong half
 the time. It is one hook rather than two because the reader needed the second measurement —
 and it takes callback refs rather than `useRef`, because the reader renders a skeleton
 first and its elements arrive after the first render, which a mount-only effect would miss.
+
+**On a short screen the bars let go (OV-384).** Below 34rem of height (a phone on its side,
+400% zoom, or 200% text), the masthead and the tab strip scroll with the page, and both
+offsets read 0, so nothing below them leaves a gap. Below 20rem the player bar scrolls with
+the page too. `theme/shortScreens.scss` holds both heights. A size, which is what the
+filter sheet's height or the Ask page's minimum height subtracts, stays `--masthead-size`,
+because the masthead still takes that room at the top of the page.
 
 Below 992px none of this applies: the library's rail is a slide-over sheet and the reader's
 falls under the note, so the sticky rules live in `min-width` blocks and the phone layouts

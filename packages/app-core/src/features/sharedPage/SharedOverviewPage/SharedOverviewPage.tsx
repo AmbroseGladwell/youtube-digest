@@ -75,9 +75,7 @@ import { useSharedPageReader } from "../useSharedPageReader.js";
 import { sharedMetaParts } from "../util/sharedMetaParts.js";
 import styles from "./SharedOverviewPage.module.scss";
 import { sharedOverviewPageTestIds } from "./SharedOverviewPageTestIds.js";
-
-const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
-const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
+import { stickyChromeSizes } from "../../../util/stickyChromeSizes.js";
 
 const tabId = (tab: ReaderTab) => `shared-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `shared-panel-${tab.toLowerCase()}`;
@@ -317,8 +315,8 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
   const methodAction = recipeVoice?.methodAction ?? null;
   const cookFromHere = cookable && methodAction !== null ? () => cooking.start("bar", methodAction) : null;
   // Measured, not assumed: the read-along's scroll margin and the tab strip's offset are built from them.
-  const mastheadHeight = useMeasuredHeight<HTMLDivElement, HTMLElement>(MASTHEAD_HEIGHT_PROPERTY);
-  const tabsHeight = useMeasuredHeight<HTMLDivElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
+  const mastheadHeight = useMeasuredHeight<HTMLDivElement, HTMLElement>(stickyChromeSizes.masthead);
+  const tabsHeight = useMeasuredHeight<HTMLDivElement, HTMLDivElement>(stickyChromeSizes.readerTabs);
   const publishHeightsOn = useCallback(
     (element: HTMLDivElement | null) => {
       mastheadHeight.host(element);

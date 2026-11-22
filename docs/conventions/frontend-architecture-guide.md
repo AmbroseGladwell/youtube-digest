@@ -619,7 +619,10 @@ fine. What has to hold:
 - **Overlays stay reachable.** A menu, sheet or dialog either fits or scrolls inside, and
   its scroll area shows at least a quarter of the screen.
 - **Bars leave room.** Fixed and sticky bars together cover at most half the screen; on a
-  short screen they scroll away or fold.
+  short screen they scroll away or fold. `theme/shortScreens.scss` holds the heights
+  (`short-screen`, `very-short-screen`, both in `rem`, so 200% text counts as shorter). A
+  measured bar publishes its size as `--<bar>-size`, and `sticky-offset` turns that into the
+  `--<bar>-height` other sticky parts sit under, 0 once the bar lets go.
 
 `reflow.iwft.ts` checks each main screen and overlay under those conditions, plus axe's
 WCAG A and AA rules. A new main screen or overlay goes into that file. A known failure is
