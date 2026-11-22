@@ -429,7 +429,7 @@ export class LibraryChatAnswerer {
         const pickCost = await recordChatCost(options, accountId, pickUsage, "pick", log);
         const cost = await recordChatCost(options, accountId, stream.usage(), "message", log);
         const usageUnits = chatUnitsOf((cost.costDollars ?? 0) + (pickCost.costDollars ?? 0));
-        await usage.settle(reservation.day, accountId, usageUnits);
+        await usage.settle(reservation.day, accountId, usageUnits, "library");
         log.info(
           apiLogLines.chat.answered({
             ...logged,

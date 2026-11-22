@@ -545,7 +545,8 @@ for questions about long-form content.
   the day (`CHAT_UNITS_PER_ACCOUNT_DAILY`, 200 questions' worth) and the global day
   (`OUR_KEY_DAILY_CHAT_MESSAGES` questions' worth) are checked in units, under the account's row
   lock, against what is settled, so two questions at once can both go ahead near the end. The
-  question count is kept beside the units for analytics.
+  question count is kept beside the units for analytics, and `library_units` holds the part
+  spent on library and project questions, for the cost dashboard (`cost_reports.chat_months`).
 - **Refusals** keep their shape: `chat-month` (with `scope: "library"` when only a library
   question won't fit), `chat-day`, `chat-our-key-daily`. `GET /api/chat-usage` adds `share` and
   `libraryFits`; `used` and `limit` still count questions for older clients.

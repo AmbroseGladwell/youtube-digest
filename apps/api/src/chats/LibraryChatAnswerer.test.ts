@@ -506,6 +506,10 @@ test("a plan's filters keep the scope by code: the marks and topics are sent, pi
   const line = setup.lines.find((each) => each["logCode"] === "api.chat.answered")!;
   assert.deepEqual([line["answerMode"], line["filtered"], line["lookedAcross"], line["scopeCited"]], ["broad", true, 2, 2]);
   assert.equal(line["usageUnits"], chatUnitsOf(line["costDollars"] as number));
+  const [spent] = await setup.testApp.sql.query<{ units: string; library: string }>(
+    "select sum(units) as units, sum(library_units) as library from chat_usage",
+  );
+  assert.equal(Number(spent?.library), Number(spent?.units));
 });
 
 test("a small library that goes whole sends the marks and leaves room for an answer that covers every overview (OV-373)", async (t) => {

@@ -425,6 +425,8 @@ test("an answer spends its real cost as usage, beside the count, and the month's
   const usage = (await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { used: number; share: number };
   assert.equal(usage.used, 2);
   assert.equal(usage.share, (spent[0]! + spent[1]!) / chatUsageAllowances.free);
+  const [library] = await setup.testApp.sql.query<{ units: string }>("select sum(library_units) as units from chat_usage");
+  assert.equal(Number(library?.units), 0);
   const [global] = await setup.testApp.sql.query<{ chat_units: string }>("select chat_units from our_key_usage");
   assert.equal(Number(global?.chat_units), spent[0]! + spent[1]!);
 });
