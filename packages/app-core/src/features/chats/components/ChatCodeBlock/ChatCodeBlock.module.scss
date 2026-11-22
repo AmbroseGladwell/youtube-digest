@@ -13,7 +13,7 @@
 }
 
 .language {
-  font: 600 11.5px var(--font-body);
+  font: 600 0.71875rem var(--font-body);
   color: var(--muted);
 }
 
@@ -27,7 +27,7 @@
   border-radius: 999px;
   background: none;
   color: var(--muted);
-  font: 600 12px var(--font-body);
+  font: 600 0.75rem var(--font-body);
   cursor: pointer;
 
   &:hover {
@@ -40,7 +40,7 @@
   margin: 0;
   padding: 6px 14px 12px;
   overflow-x: auto;
-  font: 400 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 400 0.78125rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   color: var(--ink);
   white-space: pre;
 
