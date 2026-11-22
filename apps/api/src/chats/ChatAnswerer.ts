@@ -40,6 +40,7 @@ import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { answerSoFar } from "./answerSoFar.js";
 import { sectionsSoFar } from "./sectionsSoFar.js";
+import { outsideCode } from "./outsideCode.js";
 import { flattenedAnswer, structuredAnswer, withoutDashes } from "./structuredAnswer.js";
 import { assertWhole, CHAT_FAILED as FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
 import { recordChatCost, type ChatCost } from "./recordChatCost.js";
@@ -230,7 +231,9 @@ export class ChatAnswerer {
         let sectionsSent = 0;
         for await (const piece of stream.pieces) {
           raw += piece;
-          const text = withoutDashes(withoutCitationMarks(answerSoFar(raw, "intro"), { arriving: true })).trimEnd();
+          const text = outsideCode(answerSoFar(raw, "intro"), (prose) =>
+            withoutDashes(withoutCitationMarks(prose, { arriving: true })),
+          ).trimEnd();
           if (text.length > sent.length && text.startsWith(sent)) {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;

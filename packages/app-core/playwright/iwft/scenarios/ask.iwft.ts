@@ -333,4 +333,23 @@ test.describe("Ask", () => {
     await launcher.appShell.verifyIconButtonWithTip("new", "New overview");
     await launcher.appShell.verifyPageDoesNotScrollSideways();
   });
+
+  test("an Ask answer's inline code, links and code blocks render as in an overview's chat, and a block copies (OV-364)", async ({
+    launcher,
+    backendSimulator,
+  }) => {
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    backendSimulator.chats.answerWith({
+      text: "x",
+      sections: { intro: "Run `npm test` first, and read [the guide](https://example.com/guide).\n```bash\nnpm test  --watch\n```", introSources: [], sections: [], takeaway: "" },
+      stats: { overviews: 1 },
+    });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+
+    await ask.ask("How do I run the tests?");
+
+    await ask.verifyMarkdownRead(0, { code: ["npm test"], links: ["the guide"], blocks: ["npm test  --watch"] });
+    await ask.copyCodeBlock(0, 0, "npm test  --watch");
+  });
 });

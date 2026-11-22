@@ -1,4 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { chatCodeBlockTestIds } from "../../src/features/chats/components/ChatCodeBlock/ChatCodeBlockTestIds.js";
+import { chatMarkedTextTestIds } from "../../src/features/chats/components/ChatMarkedText/ChatMarkedTextTestIds.js";
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatComposerTestIds } from "../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
 import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
@@ -508,6 +510,28 @@ export class ChatPanelPageObject extends PageObject {
     });
 
   // OV-362: past two chips the row folds into "+N", whose menu lists every one.
+  // OV-364: an answer's inline code, links and code blocks, the same in every chat.
+  verifyMarkdownRead = (answer: number, { code, links, blocks }: { code: string[]; links: string[]; blocks: string[] }) =>
+    this.step(`verifyMarkdownRead ${answer}`, async () => {
+      const root = this.answers().nth(answer);
+      await expect(root.locator("p code")).toHaveText(code);
+      await expect(root.getByTestId(chatMarkedTextTestIds.link)).toHaveText(links.map((link) => `${link} (opens in a new tab)`));
+      for (const link of await root.getByTestId(chatMarkedTextTestIds.link).all())
+        await expect(link).toHaveAttribute("target", "_blank");
+      await expect(root.getByTestId(chatCodeBlockTestIds.code)).toHaveText(blocks);
+      await expect(root).not.toContainText("```");
+      await expect(root).not.toContainText("`");
+    });
+
+  copyCodeBlock = (answer: number, index: number, expected: string) =>
+    this.step(`copyCodeBlock ${answer} ${index}`, async () => {
+      await this.page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+      const copy = this.answers().nth(answer).getByTestId(chatCodeBlockTestIds.copy).nth(index);
+      await copy.click();
+      await expect(copy).toHaveAccessibleName("Code copied");
+      expect(await this.page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    });
+
   verifyBoldRead = (answer: number, texts: string[]) =>
     this.step(`verifyBoldRead ${answer} ${texts.join(" | ")}`, async () => {
       await expect(this.answers().nth(answer).locator("strong")).toHaveText(texts);

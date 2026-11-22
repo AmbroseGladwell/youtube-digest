@@ -790,8 +790,21 @@ From the hand-off's pages, built for the panel beside the note and the phone she
 - **Long chip rows fold** (OV-362, `ChatChipRow`): two chips, then "+N", whose menu lists every
   one. "+N" is named by every title it hides. This holds for a section's sources by relation, a
   list item's own chips, Pinned and Found for you.
-- **Bold** (OV-362, `inlineMarks`, `ChatMarkedText`): an answer's `**words**` show as bold
-  everywhere answer text is drawn, while streaming too, never with their asterisks.
+- **Markdown in answers** (OV-362, OV-364). The prompt allows light Markdown in the text: bold for
+  a few key words, italics, inline code, fenced code blocks with their language, and links only to
+  an address a source gives. It allows no headings, tables or HTML. Every chat draws it the same way
+  (`ChatAnswerText`, `ChatMarkedText`, `inlineMarks`, `answerBlocks`):
+  - Bold, italics and inline code render as such.
+  - A link opens in a new tab, and says so to a screen reader. Only http(s) addresses become links;
+    for any other, the words stay and the address goes.
+  - A fenced block is a monospace block on the surface tint, naming its language, with Copy. It
+    scrolls sideways and can be reached by keyboard.
+  - Raw HTML stays text.
+  - While an answer streams, an open mark or fence shows as it will be, never its markers.
+    A half-written link shows its words alone.
+  - The server's clean-up (citation marks, dashes, double spaces) never touches code
+    (`outsideCode`), so indentation and brackets survive.
+  - Copy answer copies the Markdown source.
 - **Following another overview's citation** (OV-362): its link carries the cited item
   (`citedPlace`), and the reader page opens at that item, tinted and scrolled to, switching to
   Chapters for a chapter. An item rewritten since lands on its section. The state is cleared, so a

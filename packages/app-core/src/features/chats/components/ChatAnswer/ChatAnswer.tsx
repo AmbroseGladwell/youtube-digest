@@ -11,11 +11,10 @@ import {
   type TimeRange,
   type VideoSource,
 } from "@overview/domain";
-import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { Routes } from "../../../../app/Routes.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
 import { ChatChipRow, VISIBLE_CHIPS } from "../ChatChipRow/ChatChipRow.js";
+import { ChatAnswerText } from "../ChatAnswerText/ChatAnswerText.js";
 import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
 import {
   ChatOtherOverviewCitation,
@@ -75,28 +74,6 @@ export interface ChatPage {
   url: string;
   onPage: ShowOnPage | null;
 }
-
-const paragraphsOf = (text: string) => text.split(/\n+/).filter((paragraph) => paragraph.trim() !== "");
-
-// The prompt names this place in so many words when a reader asks what chat knows about them
-// (OV-342), so code, not the model, makes it a link.
-const PERSONALISATION = "Settings › Personalisation";
-
-const withSettingsLinks = (paragraph: string): ReactNode =>
-  paragraph.split(PERSONALISATION).map((piece, index) => (
-    <Fragment key={index}>
-      {index > 0 && (
-        <PageLink
-          to={Routes.settingsSection("personalisation")}
-          className={styles.settingsLink}
-          data-testid={chatAnswerTestIds.settingsLink}
-        >
-          {PERSONALISATION}
-        </PageLink>
-      )}
-      <ChatMarkedText text={piece} />
-    </Fragment>
-  ));
 
 const conversationsOf = (citations: readonly ChatCitation[]) =>
   citations
@@ -204,9 +181,7 @@ export function ChatAnswer({
       )}
       {sections === undefined ? (
         <div className={styles.text} data-testid={chatAnswerTestIds.text}>
-          {paragraphsOf(text).map((paragraph, index) => (
-            <p key={index}>{withSettingsLinks(paragraph)}</p>
-          ))}
+          <ChatAnswerText text={text} />
         </div>
       ) : (
         <div className={styles.text} data-testid={chatAnswerTestIds.text}>
@@ -305,17 +280,13 @@ export function ChatAnswerSectionsView({
     );
   return (
     <>
-      {paragraphsOf(sections.intro).map((paragraph, index) => (
-        <p key={`intro-${index}`}>{withSettingsLinks(paragraph)}</p>
-      ))}
+      <ChatAnswerText text={sections.intro} />
       {sourceRow(sections.introSources)}
       {sections.sections.map((section, index) => (
         <section key={index} className={styles.section} data-testid={chatAnswerTestIds.section}>
           <h3 className={styles.sectionHeading}>{section.heading}</h3>
           {section.paragraphs.map((paragraph, at) => (
-            <p key={`p-${at}`}>
-              <ChatMarkedText text={paragraph} />
-            </p>
+            <ChatAnswerText key={`p-${at}`} text={paragraph} />
           ))}
           {section.numbered.length > 0 && (
             <ol className={styles.list}>
@@ -351,9 +322,7 @@ export function ChatAnswerSectionsView({
       {sections.takeaway !== undefined && sections.takeaway !== "" && (
         <section className={styles.section} data-testid={chatAnswerTestIds.takeaway}>
           <h3 className={styles.sectionHeading}>Takeaway</h3>
-          <p>
-            <ChatMarkedText text={sections.takeaway} />
-          </p>
+          <ChatAnswerText text={sections.takeaway} />
         </section>
       )}
     </>

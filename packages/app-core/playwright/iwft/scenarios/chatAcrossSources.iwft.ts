@@ -232,4 +232,16 @@ test.describe("Chat across sources", () => {
     await reader.chat.verifyBoldRead(0, ["a large handful"]);
     await reader.chat.verifyDrewOnFolds("found", 0, [PLANTS, SOUP], [CURRY]);
   });
+
+  test("an answer's inline code, links and code blocks render, and a block copies (OV-364)", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-10T09:00:00.000Z"));
+    backendSimulator.chats.answerWith({ text: "Run `npm test` first, and read [the guide](https://example.com/guide).\n```bash\nnpm test  --watch\n```" });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.askInNote("How do I run the tests?");
+
+    await reader.chat.verifyMarkdownRead(0, { code: ["npm test"], links: ["the guide"], blocks: ["npm test  --watch"] });
+    await reader.chat.copyCodeBlock(0, 0, "npm test  --watch");
+  });
 });

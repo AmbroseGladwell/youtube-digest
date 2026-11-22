@@ -3,7 +3,7 @@ import type { ChatAnswerSections, ChatCitation, ChatScopeStats, OtherOverviewCit
 import { askStatsLine } from "../../util/askStatsLine.js";
 import { citationKey } from "../../util/chatSourceGroups.js";
 import { ChatAnswerSectionsView, ChatSourcesMenu, otherOverviewChipLabel, type ChatChip } from "../ChatAnswer/ChatAnswer.js";
-import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
+import { ChatAnswerText } from "../ChatAnswerText/ChatAnswerText.js";
 import { ChatOtherOverviewCitation } from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
 import styles from "./AskAnswer.module.scss";
 import { askAnswerTestIds } from "./AskAnswerTestIds.js";
@@ -21,8 +21,6 @@ export interface AskAnswerProps {
   onSourcesOpened: (count: number) => void;
   actions: (sources: ReactNode) => ReactNode;
 }
-
-const paragraphsOf = (text: string) => text.split(/\n+/).filter((paragraph) => paragraph.trim() !== "");
 
 const othersOf = (cited: readonly ChatCitation[]) => cited.flatMap((citation) => ("overviewId" in citation ? [citation] : []));
 
@@ -71,15 +69,7 @@ export function AskAnswer({
   return (
     <div className={`${styles.root} ${arrived ? styles.arrived : ""}`} data-testid={askAnswerTestIds.root}>
       <div className={styles.text}>
-        {sections === undefined ? (
-          paragraphsOf(text).map((paragraph, index) => (
-            <p key={index}>
-              <ChatMarkedText text={paragraph} />
-            </p>
-          ))
-        ) : (
-          <ChatAnswerSectionsView sections={sections} chipsOf={chipsOf} />
-        )}
+        {sections === undefined ? <ChatAnswerText text={text} /> : <ChatAnswerSectionsView sections={sections} chipsOf={chipsOf} />}
       </div>
       {stats !== undefined && (
         <p className={styles.stats} data-testid={askAnswerTestIds.stats}>
