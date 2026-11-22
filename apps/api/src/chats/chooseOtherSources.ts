@@ -21,6 +21,10 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { StoredRecord } from "../records/StoredRecord.js";
 
 export const FOUND_SOURCES = 3;
+// How close an overview must be to the question to be found for it (OV-362). On one reader's 51 real
+// questions, unrelated overviews scored 0.33 to 0.37 and the ones worth reading 0.40 and up, so
+// nothing is found rather than the nearest of the unrelated. Library search keeps MEANING_FLOOR.
+export const FOUND_FLOOR = 0.4;
 export const PINNED_PROJECT_WHOLE = 8;
 export const PINNED_PROJECT_CLOSEST = 5;
 
@@ -95,6 +99,7 @@ export async function chooseOtherSources(
     if (result.available) {
       searched = true;
       const closest = result.matches
+        .filter((match) => match.similarity >= FOUND_FLOOR)
         .map((match) => match.overviewId as OverviewId)
         .filter((id) => id !== home && !setAside.has(id) && !pinned.has(id))
         .slice(0, FOUND_SOURCES);

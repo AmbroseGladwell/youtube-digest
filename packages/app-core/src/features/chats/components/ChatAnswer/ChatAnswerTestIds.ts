@@ -1,5 +1,6 @@
 export const chatAnswerTestIds = {
   section: "ChatAnswer.section",
+  itemSources: "ChatAnswer.itemSources",
   sectionSources: "ChatAnswer.sectionSources",
   takeaway: "ChatAnswer.takeaway",
   sources: "ChatAnswer.sources",

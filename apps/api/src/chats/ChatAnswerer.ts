@@ -40,7 +40,7 @@ import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { answerSoFar } from "./answerSoFar.js";
 import { sectionsSoFar } from "./sectionsSoFar.js";
-import { flattenedAnswer, structuredAnswer } from "./structuredAnswer.js";
+import { flattenedAnswer, structuredAnswer, withoutDashes } from "./structuredAnswer.js";
 import { assertWhole, CHAT_FAILED as FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
 import { recordChatCost, type ChatCost } from "./recordChatCost.js";
 import { reserveChatMessage } from "./reserveChatMessage.js";
@@ -230,7 +230,7 @@ export class ChatAnswerer {
         let sectionsSent = 0;
         for await (const piece of stream.pieces) {
           raw += piece;
-          const text = withoutCitationMarks(answerSoFar(raw, "intro"), { arriving: true });
+          const text = withoutDashes(withoutCitationMarks(answerSoFar(raw, "intro"), { arriving: true })).trimEnd();
           if (text.length > sent.length && text.startsWith(sent)) {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;
@@ -361,30 +361,25 @@ export class ChatAnswerer {
       setAside: new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id))),
       nextLabel: Math.max(0, ...all.map((source) => Number(source.label.slice(1)))) + 1,
     });
-    // OV-352: the 8 best minutes for the question's words across the other transcripts, each with
-    // its neighbours. An overview they come from joins as a found source when it isn't here yet.
-    const homeKey = sourceKey(home.source);
-    const setAsideIds = new Set(all.map((source) => source.overviewId).filter((id) => !inConversation.has(id)));
-    const addedIds = new Set<string>(choice.added.map((source) => source.overviewId));
-    const found =
-      passages === null || !searching
-        ? []
-        : (
-            await keywordMinutes({ passages, records }, accountId, question.text, { except: homeKey === null ? [] : [homeKey] }, log)
-          ).filter(
-            (minutes) => minutes.overviewId !== overviewId && (!setAsideIds.has(minutes.overviewId) || addedIds.has(minutes.overviewId)),
-          );
-    let next = Math.max(0, ...[...all, ...choice.added].map((source) => Number(source.label.slice(1)))) + 1;
-    const joined: ChatSource[] = found
-      .filter((minutes) => !inConversation.has(minutes.overviewId) && !addedIds.has(minutes.overviewId))
-      .map((minutes) => ({ label: `S${next++}`, overviewId: minutes.overviewId, title: minutes.overview.source.title, how: "found" }));
-    const added = [...choice.added, ...joined];
-    const minutes = found.map((each) => ({ overviewId: each.overviewId, passages: each.passages }));
+    // OV-352: the 8 best minutes for the question's words, each with its neighbours, searched only in
+    // the overviews this question reads: pinned, found or already in the conversation. Words alone
+    // never add an overview, since a shared word says nothing about relevance (OV-362).
+    const added = choice.added;
     const sources = [...all, ...added];
     const overviews = await this.#overviewsOf(
       accountId,
       sources.map((source) => source.overviewId),
     );
+    const reading = [...stillLive, ...added].flatMap((source) => {
+      const overview = overviews.get(source.overviewId);
+      const key = overview === undefined ? null : sourceKey(overview.source);
+      return key === null ? [] : [key];
+    });
+    const found =
+      passages === null || !searching || reading.length === 0
+        ? []
+        : await keywordMinutes({ passages, records }, accountId, question.text, { within: reading }, log);
+    const minutes = found.map((each) => ({ overviewId: each.overviewId, passages: each.passages }));
     const earlier = asked.flatMap((message) => message.minutes ?? []);
     const cut =
       earlier.length === 0

@@ -63,7 +63,7 @@ import { streamChatCompletion, type ChatCompletionStream, type PromptMessage, ty
 import type { Passage } from "./transcriptPassages.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
 import { ChatReply, type ChatReplySection } from "./ChatReply.js";
-import { flattenedAnswer, structuredAnswer } from "./structuredAnswer.js";
+import { flattenedAnswer, structuredAnswer, withoutDashes } from "./structuredAnswer.js";
 
 export interface LibraryChatAnswererOptions {
   apiKey: string;
@@ -323,7 +323,7 @@ export class LibraryChatAnswerer {
         let sectionsSent = 0;
         for await (const piece of stream.pieces) {
           raw += piece;
-          const intro = withoutCitationMarks(answerSoFar(raw, "intro"), { arriving: true, library: true });
+          const intro = withoutDashes(withoutCitationMarks(answerSoFar(raw, "intro"), { arriving: true, library: true })).trimEnd();
           if (intro.length > sent.length && intro.startsWith(sent)) {
             yield { type: "text", text: intro.slice(sent.length) };
             sent = intro;

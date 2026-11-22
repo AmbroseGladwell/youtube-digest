@@ -862,6 +862,23 @@ for each step is named at its end. The Claude Design round and the UI for all of
    the question. A stored full-text index, or passage vectors if they ever come, is new derived
    data kept per account (`legal-pages.md`).
 
+### What found sources should be (OV-362, 22 Nov 2026)
+
+The owner's first week of use showed Found for you adding unrelated overviews, 11 for one question.
+`foundRelevanceCheck.ts` lists, for each of one reader's 51 real questions, the closest overviews by
+meaning and the overviews keyword minutes come from, with their scores (production read only;
+embeddings on the evals key, 892 tokens, under $0.0001). The questions and titles stay local.
+
+- **By meaning:** unrelated overviews scored 0.33 to 0.37, and the ones worth reading 0.40 and up
+  (0.42 to 0.59 for the clearest). So found sources need 0.40 (`FOUND_FLOOR`). The questions with
+  nothing close now find nothing, where they used to find the nearest of the unrelated.
+- **By words:** keyword scores don't separate relevant from not. An unrelated overview sharing one
+  word scored 0.17 where a relevant one scored 0.14. So minutes are now searched only in the
+  overviews a question reads, and words never add one.
+- **Not re-measured:** the OV-352 answer arms (right moment 51/68 across sources). Their question
+  sets lived in a worktree that has since been removed. A question whose detail sits only in an
+  overview search by meaning doesn't find will now miss it, unless the reader pins that overview.
+
 ## Running it again
 
 ```
@@ -904,5 +921,8 @@ node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
   `search3+keyword8`, `pinned1-overviews`, `pinned3-overviews`, `pinned8-overviews`, `pinned3-full`,
   `pinned1+search3-overviews`, `map-compact` and `map-keypoints`. A map arm writes beside the
   output as `.map.json`.
+- `foundRelevanceCheck.js questions <email> <file>` (production, read only), then `embed <file>`
+  (evals), then `score <file> <out.json>` (production, read only) lists each question's closest
+  overviews by meaning and by words with their scores.
 - Run through `scripts/secrets.sh run` from a script with no spaces in its path: the worktree's
   path has a space, and the arguments split on it.

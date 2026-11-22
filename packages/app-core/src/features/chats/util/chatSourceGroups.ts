@@ -1,4 +1,4 @@
-import type { ChatAnswerSections, ChatCitation } from "@overview/domain";
+import { relationLabel, type ChatAnswerSections, type ChatCitation } from "@overview/domain";
 
 // One key per place cited, so the same place is listed once.
 export const citationKey = (citation: ChatCitation): string =>
@@ -14,9 +14,10 @@ export const citationKey = (citation: ChatCitation): string =>
 export const byRelation = (sources: ChatAnswerSections["introSources"]) => {
   const groups = new Map<string, ChatCitation[]>();
   for (const { citation, relation } of sources) {
-    const held = groups.get(relation) ?? [];
+    const label = relationLabel(relation);
+    const held = groups.get(label) ?? [];
     if (!held.some((each) => citationKey(each) === citationKey(citation))) held.push(citation);
-    groups.set(relation, held);
+    groups.set(label, held);
   }
   return [...groups.entries()];
 };
