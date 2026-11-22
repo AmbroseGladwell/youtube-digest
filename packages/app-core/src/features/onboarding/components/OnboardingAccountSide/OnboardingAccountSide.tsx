@@ -8,7 +8,6 @@ const WHAT_YOU_GET: { icon: StrokeIconName; line: string }[] = [
   { icon: "chat", line: "Ask your AI about anything you’ve saved" },
 ];
 
-// Design 327l: beside the way in, their card as it will be saved, and what the account gives them.
 export const OnboardingAccountSide = ({ saved }: { saved: ReactNode | null }) => {
   return (
     <aside className={styles.root}>

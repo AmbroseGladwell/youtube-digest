@@ -23,7 +23,6 @@ const CONTINUE = "Continue";
 
 export interface OnboardingSavingMomentProps {
   onContinue: () => void;
-  // Design 327d: Skip sits beside the button on a moment, not in the stepper.
   onSkip: () => void;
 }
 

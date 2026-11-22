@@ -10,9 +10,7 @@ const SHOWN_AT_FIRST = 3;
 
 export const SAMPLE_FAILED = "That sample couldn't be opened. Try another, or paste a link.";
 
-// Design 155d: Start's samples as rows, three at a time, under what the panel is beside. More
-// samples opens the rest in place and moves focus to the first of them; nothing scrolls sideways
-// (docs/features/onboarding.md, "Try a sample").
+// docs/features/onboarding.md, "Try a sample".
 export const OnboardingSamples = ({ samples }: { samples: readonly Sample[] }) => {
   const headingId = useId();
   const { opening, failed, open } = useStartFromSample();

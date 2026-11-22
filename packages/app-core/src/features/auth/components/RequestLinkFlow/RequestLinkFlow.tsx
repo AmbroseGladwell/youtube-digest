@@ -40,22 +40,15 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 export interface RequestLinkFlowProps {
   intent: AuthIntent;
   expired?: boolean;
-  // Where a web link should land once it has signed in: a consent screen whose link
-  // expired is asked for again without losing the request (docs/features/sign-in.md).
+  // So a consent screen whose link expired is asked for again without losing the request.
   returnTo?: string | null;
-  // Inside onboarding's account step (327l): its own heading, the reassurance under the button,
-  // switching between creating and signing in in place, and on the web the code first.
+  // Onboarding's account step: its own heading, switching intent in place, and the code first on the web.
   onboarding?: { onSwitchIntent: (intent: AuthIntent) => void } | undefined;
 }
 
 const NO_CARD = "No card needed. Free includes 5 overviews a month.";
 
-// Asking for a link, then waiting for it: design 9a–9e and 9h on the web, 10b–10e in the
-// extension, where the wait is for a code and outlives the panel being closed
-// (docs/features/sign-in.md).
-// A reader who said yes on this device sends their anonymous id with the request to create
-// an account, so what they shared is linked to it once it is made; anyone else sends none
-// (docs/features/analytics-consent.md, "Creating an account").
+// Why only a reader who said yes sends it: docs/features/analytics-consent.md, "Creating an account".
 const sharedAnonymousId = (): { anonymousId?: string } => {
   const { consent } = analyticsConsentSnapshot();
   return consentAllowsSharing(consent) && consent?.anonymousId != null ? { anonymousId: consent.anonymousId } : {};
@@ -142,8 +135,7 @@ export const RequestLinkFlow = ({ intent, expired = false, returnTo = null, onbo
   const sent = inExtension ? pending : sentHere;
   const setSent = inExtension ? setPending : setSentHere;
 
-  // Reached from Start, the bar says where home is: the panel draws no link of its own here,
-  // so the slot holds it from the first frame (205g-4, design 205d-2's shape).
+  // From Start the bar says where home is; the panel draws no link here, so the slot holds it at once.
   const homeName = useHomeName();
   const fromStart = isFromStart(useLocation().state);
   const backHome = useBackTo(Routes.home());
@@ -155,9 +147,7 @@ export const RequestLinkFlow = ({ intent, expired = false, returnTo = null, onbo
     follow: backHome,
   });
 
-  // A build with no server of its own must always be able to name one. One built for a
-  // server offers to change it only where that is of any use: loaded unpacked against a
-  // local API, never in a build installed from the Web Store.
+  // A server is changeable only where useful: unpacked against a local API, never from the Web Store.
   const askForServer = askForServerOf(inExtension, knownServer, serverSwitchable);
 
   const analytics = useAnalytics();
@@ -361,8 +351,7 @@ export const RequestLinkFlow = ({ intent, expired = false, returnTo = null, onbo
     }
     return (
       <>
-        {/* 205g-4: there is no Create account on the signed-out panel. The first
-            overview makes the account, and the line says so in a link's place. */}
+        {/* No Create account on the signed-out panel: the first overview makes the account. */}
         {isPanel ? (
           "New here? Your first overview sets up your account."
         ) : (

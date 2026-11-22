@@ -4,9 +4,7 @@ import { useStores } from "../../../stores/StoresContext.js";
 import { captureQueueKeys } from "../../captureQueue/captureQueueKeys.js";
 import { playlistKeys } from "../playlistKeys.js";
 
-// Unfollowing takes the playlist's waiting videos out of the queue; what needs attention
-// stays until it is dismissed, and the overviews already made keep their From line
-// (docs/features/playlists.md, "Unfollowing").
+// What unfollowing leaves behind: docs/features/playlists.md, "Unfollowing".
 export const useUnfollowPlaylistMutation = () => {
   const { followedPlaylistStore, captureQueueStore } = useStores();
   const queryClient = useQueryClient();

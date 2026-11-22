@@ -10,9 +10,7 @@ export interface OnboardingAnalyticsProps {
   onNoThanks: () => void;
 }
 
-// Designs 46b and 175l: a reason that's the reader's whatever they answer, two equal answers with
-// nothing chosen for them, and what's shared said on the screen with the policy beside it, as the
-// Chrome Web Store asks. No thanks is the skip (docs/features/analytics-consent.md, "In onboarding").
+// The disclosure the Chrome Web Store asks for: docs/features/analytics-consent.md, "Where it's asked".
 export const OnboardingAnalytics = ({ onAllow, onNoThanks }: OnboardingAnalyticsProps) => {
   const apiUrl = useKnownApiUrl();
   const panel = useSurface() === "extension";

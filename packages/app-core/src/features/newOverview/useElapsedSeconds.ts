@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 
-// Measured from the clock, never estimated — docs/prototype/constraints.md. It lives in
-// the two components that print it rather than in the run itself, so a generation ticking
-// once a second doesn't re-render the whole shell with it.
+// Lives in the components that print it, not the run, so the shell doesn't re-render every second.
 export const useElapsedSeconds = (startedAt: number, finishedAt: number | null): number => {
   const [now, setNow] = useState(() => Date.now());
 

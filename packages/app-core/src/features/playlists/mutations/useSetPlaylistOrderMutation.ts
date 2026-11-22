@@ -16,8 +16,7 @@ interface SetPlaylistOrderContext {
 export const applyOrder = (followed: FollowedPlaylistWithCheck[], { playlist, order }: SetPlaylistOrderVariables) =>
   followed.map((each) => (each.playlist.id === playlist.id ? { ...each, playlist: { ...each.playlist, order } } : each));
 
-// Saved as soon as it is chosen, for every device; the videos already waiting are put in the
-// new order straight away (docs/features/playlists.md, "An order for each playlist").
+// docs/features/playlists.md, "An order for each playlist".
 export const useSetPlaylistOrderMutation = () => {
   const { followedPlaylistStore } = useStores();
   const queryClient = useQueryClient();

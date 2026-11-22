@@ -11,15 +11,12 @@ import { accountTileTestIds } from "./AccountTileTestIds.js";
 export interface AccountTileProps {
   email: string;
   firstName: string | null;
-  // Said while a row is open, so the section's other primary can step down (design 14a).
+  // Said while a row is open, so the section's other primary button can step down.
   onEditingChange?: ((editing: boolean) => void) | undefined;
 }
 
 type Open = "name" | "email" | null;
 
-// Designs 14a–14e: the "Signed in as" tile as two rows, Name and Email, each with its own
-// Change. A row opens in place; nothing else on the section moves
-// (docs/features/account-changes.md).
 export const AccountTile = ({ email, firstName, onEditingChange }: AccountTileProps) => {
   const analytics = useAnalytics();
   const { connection } = useSyncConnection();

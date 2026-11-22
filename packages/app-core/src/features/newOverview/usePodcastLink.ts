@@ -20,8 +20,7 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { generationKeys } from "./generationKeys.js";
 import { isYouTubeUrl, youTubeLink } from "./util/parseYouTubeUrl.js";
 
-// Whether a found episode's words are there, asked before Create (design 305c): `unknown` when the
-// check couldn't tell, so Create looks again and asks after if it must (305c-2).
+// `unknown` when the check couldn't tell, so Create looks again.
 export type EpisodeWords =
   | { state: "checking" }
   | { state: "found" }
@@ -39,21 +38,17 @@ export type PodcastLink =
 const SETTLED_MS = 350;
 const KEPT_MS = 5 * 60 * 1000;
 
-// An Apple Podcasts or Spotify link, which is only ever an episode or a show.
 export const isPlatformPodcastLink = (link: string): boolean => {
   const platform = parsePodcastLink(link)?.platform;
   return platform !== undefined && platform !== "page";
 };
 
-// A show's own page on Spotify or Apple Podcasts, which holds no one episode.
 export const isPodcastShowLink = (link: string): boolean => {
   const platform = parsePodcastLink(link)?.platform;
   return platform === "apple-show" || platform === "spotify-show";
 };
 
-// Any other web page may be a show's own episode page, so it is read as one beside being read as
-// an article; a page that isn't an episode says so and is left to the article
-// (docs/features/podcast-links.md, "A show's own episode page").
+// docs/features/podcast-links.md, "From a link to an episode".
 const mayBeEpisodeLink = (link: string): boolean => {
   if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null) {
     return false;
@@ -61,9 +56,7 @@ const mayBeEpisodeLink = (link: string): boolean => {
   return parsePodcastLink(link) !== null;
 };
 
-// A pasted podcast link is read as soon as it settles, so the episode, or why it can't be used,
-// is known before Create (designs 106a–106f). Reading costs nothing against the month. Null where
-// there is no account on a server to read through.
+// Read as soon as it settles: docs/features/podcast-screens.md, "Making one".
 export const usePodcastLink = (url: string) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
@@ -109,8 +102,7 @@ export const usePodcastLink = (url: string) => {
     },
   });
 
-  // Asked once the episode is found, and only then: nothing is fetched or counted, so a check that
-  // fails is only "can't tell", and Create looks again.
+  // Nothing is fetched or counted, so a failed check only means "can't tell", and Create looks again.
   const found = query.data?.status === "found" ? query.data.episode : null;
   const youTubeFetch = useYouTubeFetch();
   const check = useQuery({

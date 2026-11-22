@@ -1,18 +1,12 @@
 import { paceDailyLimit, type PlaylistPace, type QueuedCapture } from "@overview/domain";
 
 export interface PacedQueue {
-  // What the queue can make now: the videos the reader chose first, then each playlist's
-  // first, in its own order, up to what its pace has left today.
   ready: QueuedCapture[];
-  // Past its playlist's pace for today.
   tomorrow: QueuedCapture[];
-  // From a playlist made only when the reader chooses.
   forYou: QueuedCapture[];
 }
 
-// A pace holds only its own playlist's videos; everything else carries on in its place, and
-// a video the reader chose never waits on its pace (docs/features/capture-queue.md,
-// "Waiting on a pace").
+// What a pace holds back: docs/features/capture-queue.md, "Waiting on a pace".
 export const pacedQueue = (
   waiting: readonly QueuedCapture[],
   paceOf: (capture: QueuedCapture) => PlaylistPace,

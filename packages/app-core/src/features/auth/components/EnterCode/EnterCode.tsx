@@ -22,7 +22,6 @@ export type EnterCodeProps = EnterCodeCommonProps &
     | {
         from: "emailCode";
         intent: AuthIntent;
-        // Code first, the link as backup, inside onboarding's account step (327l-2).
         codeFirst?: boolean;
         email: string;
         sentAt: number;
@@ -101,12 +100,7 @@ const submitLabelOf = (props: EnterCodeProps): string => {
   return props.intent === "createAccount" ? "Create account" : "Sign in";
 };
 
-// Design 10c/10d: the link opens a tab that shows a code, and the code comes back here.
-// Reopening the panel lands here again until the code is used or could no longer work
-// (docs/features/sign-in.md, "Waiting for the code"). A code the signed-in web app made
-// comes in the same way, with no email behind it. On the web, the code is the one printed in
-// the mail itself, for a mail read somewhere other than this browser
-// (docs/features/sign-in.md, "A code in the web mail").
+// Why reopening the panel lands here: docs/features/sign-in.md, "Waiting for the code".
 export const EnterCode = (props: EnterCodeProps) => {
   const { connecting, refused, onConnect } = props;
   const fromEmail = props.from !== "webApp";

@@ -9,8 +9,7 @@ const reportStatusOf = (status: GenerationRunStatus): RunReport["status"] => {
   return status.isReady ? "ready" : "running";
 };
 
-// The status and the fraction come from generationRunStatus rather than being worked out
-// again here, so the button's bar and the strip's bar are the same measurement.
+// From generationRunStatus, so the button's bar and the strip's are the same measurement.
 export const runReportFor = (run: NewOverviewRun): RunReport => {
   const status = generationRunStatus(run);
 

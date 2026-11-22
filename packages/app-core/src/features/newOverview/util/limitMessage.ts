@@ -7,7 +7,7 @@ export type LimitAction = "addKey" | "seePlans" | "seeByoPlus" | "seeUsage";
 
 export interface LimitMessage {
   quota: LimitQuota;
-  // What ran out, for a sentence that says it was made: "10 on your own key and 5 on ours".
+  // As in "10 on your own key and 5 on ours".
   made: string;
   title: string;
   body: string;
@@ -52,9 +52,7 @@ const madePhrase = (spent: SpentQuota[], plainOurs: boolean): string => {
   return plainOurs ? `${first!.limit}` : `${first!.limit} ${onKey(first!.key, true)}`;
 };
 
-// What ran out, when it's back, and only the ways round it that exist (designs 95i–95o, with
-// the key order flipped for everyone but Plus, decided on OV-131; docs/architecture/tiers.md,
-// "At the limit"). Null while there is still a quota to use.
+// Null while there is still a quota to use (docs/architecture/tiers.md, "At the limit").
 export const limitMessageOf = (next: NextQuota | null, plan: Plan): LimitMessage | null => {
   if (next?.kind !== "spent") {
     return null;

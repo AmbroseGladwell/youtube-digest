@@ -10,9 +10,7 @@ export interface CaptureReasonFieldProps {
   onCommit: () => void;
 }
 
-// Design 3b: a stone-tint note under the steps with the question and its field, so it
-// reads as a margin note written while the overview is being made. It saves on blur or
-// when the overview lands; there is nothing to confirm (docs/features/capture-reason.md).
+// Saves on blur or when the overview lands: docs/features/capture-reason.md, "Where it is written".
 export const CaptureReasonField = ({ value, onChange, onCommit }: CaptureReasonFieldProps) => {
   const analytics = useAnalytics();
   const fieldId = useId();

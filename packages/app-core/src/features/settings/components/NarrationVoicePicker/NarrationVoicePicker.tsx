@@ -44,8 +44,6 @@ export interface NarrationVoicePickerProps {
   labelledBy?: string;
 }
 
-// Design OV-43, 43a–43d and 43f: a radio group of voices by accent, each with a sample of
-// the same passage. Choosing saves at once; there is no Save button.
 export const NarrationVoicePicker = ({ scrollToChosen = false, labelledBy }: NarrationVoicePickerProps) => {
   const api = useNarrationApi();
   const settings = useSettingsQuery().data;

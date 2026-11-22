@@ -2,8 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { sampleKeys } from "../sampleKeys.js";
 import { useSampleApi } from "../useSampleApi.js";
 
-// Start's samples. A server that can't be asked, or doesn't answer, offers none, and Start
-// keeps its field alone rather than showing a choice that can't work.
+// A server that can't be asked, or doesn't answer, offers none, so Start shows no choice that can't work.
 export const useSamplesQuery = () => {
   const sampleApi = useSampleApi();
   return useQuery({

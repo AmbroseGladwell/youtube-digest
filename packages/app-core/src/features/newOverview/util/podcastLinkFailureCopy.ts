@@ -3,8 +3,7 @@ import type { ArticleFailureCopy } from "./articleFailureCopy.js";
 
 const NOTHING_USED = "No overview was used.";
 
-// Designs 106d–106f: one message for each of our server's reasons, in the reader's terms, each
-// saying nothing was used, which holds because nothing is reserved until the words are found.
+// Each says nothing was used: nothing is reserved until the words are found.
 export const podcastLinkFailureCopy = (reason: PodcastReadFailure, showName: string | null): ArticleFailureCopy => {
   const show = showName ?? "This show";
   switch (reason) {

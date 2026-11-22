@@ -12,7 +12,6 @@ export interface PastedLinkStatusProps {
   onOpened?: (() => void) | undefined;
 }
 
-// Under every paste field, what the link turned out to be: an episode or an article.
 export const PastedLinkStatus = ({ article, podcast, url, onClear, onOpened }: PastedLinkStatusProps) => {
   const opened = onOpened === undefined ? {} : { onOpened };
   return pastedLinkState(article.link, podcast).podcastShown ? (

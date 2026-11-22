@@ -3,8 +3,6 @@ import { articleReadMinutes, formatClock, recipeMinutes, sourceName, type Shared
 export type SampleKind = "video" | "article" | "recipe" | "podcast";
 
 const KIND_LABEL: Record<SampleKind, string> = { video: "Video", article: "Article", recipe: "Recipe", podcast: "Podcast" };
-// Start's headline verb for a kind, wherever the kind comes from: the deck's front card
-// (155l), or in the panel what the tab holds (205g-2, 205g-3).
 export const START_VERB: Record<SampleKind, string> = {
   video: "Watch Less,",
   article: "Learn More,",
@@ -41,9 +39,7 @@ export interface SampleFacts {
   kindLabel: string;
   source: string;
   length: string | null;
-  // Start's headline verb while this sample is in front (155l).
   verb: string;
-  // Each card is one button named by its title, kind and length.
   name: string;
   first: { label: string; text: string };
   sections: readonly string[];

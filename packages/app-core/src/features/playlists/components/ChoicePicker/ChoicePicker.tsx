@@ -8,15 +8,13 @@ export interface ChoicePickerProps<Choice extends string> {
   choice: Choice;
   choices: readonly Choice[];
   labelOf: (choice: Choice) => string;
-  // What is being chosen, for the test ids and the radio group's name: "pace", "order".
+  // Also names the test ids and the radio group: "pace", "order".
   name: string;
-  // The two halves of the control's label: "Pace" for "Psychology".
   title: string;
   subject: string;
   icon: StrokeIconName;
-  // What each option would do, written out under it. Absent, the options are names alone.
+  // Absent, the options are names alone.
   optionDetail?: (choice: Choice) => string;
-  // On a phone the choice is a sheet of radios rather than a menu (95z).
   asSheet: boolean;
   sheetLine?: string;
   sheetFoot: string;
@@ -24,9 +22,7 @@ export interface ChoicePickerProps<Choice extends string> {
   onChange: (choice: Choice) => void;
 }
 
-// Design 95x–95z: a pill naming the choice, which opens the options with what each would do.
-// Choosing saves straight away; there is nothing to confirm. Built for a playlist's pace, and
-// used for its order too (docs/features/playlists.md, "An order for each playlist").
+// Choosing saves straight away; there is nothing to confirm (95x–95z).
 export const ChoicePicker = <Choice extends string>({
   choice,
   choices,

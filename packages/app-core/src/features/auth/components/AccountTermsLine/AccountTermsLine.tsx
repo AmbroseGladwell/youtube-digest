@@ -4,10 +4,7 @@ import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 import styles from "./AccountTermsLine.module.scss";
 import { accountTermsLineTestIds } from "./AccountTermsLineTestIds.js";
 
-// Design 62j: read before Create account, so creating an account is agreeing to the terms
-// and to analytics on which features are used. No checkbox: analytics rests on legitimate
-// interests, not consent, and Settings › Privacy still turns it off
-// (docs/features/analytics-consent.md, "Creating an account").
+// Why there is no checkbox: docs/features/analytics-consent.md, "Creating an account".
 export const AccountTermsLine = () => {
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";

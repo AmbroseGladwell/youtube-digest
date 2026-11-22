@@ -15,8 +15,6 @@ export interface CheckEmailProps {
   onEnterCode: () => void;
 }
 
-// Design 9c: what happens next, and the two ways out of waiting. The mail's code is the way
-// in for a reader whose mail opens somewhere other than this browser.
 export const CheckEmail = ({ email, intent, firstName, sentAt, resending, onDifferentEmail, onResend, onEnterCode }: CheckEmailProps) => {
   const creating = intent === "createAccount";
   return (

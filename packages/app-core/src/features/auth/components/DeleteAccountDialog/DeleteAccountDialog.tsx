@@ -41,10 +41,7 @@ const KEPT = [
   "A note that your account fetched a video’s captions, kept for a year from when it did",
 ];
 
-// Designs 184b–184d: one dialog in the Delete overview shell. The first step deletes
-// nothing and names what goes and what stays; Continue asks for the code to the account's
-// own address, or goes straight to deleting for a session that just signed in; a failure
-// before the commit says nothing was deleted (docs/features/account-deletion.md).
+// The steps and what each promises: docs/features/account-deletion.md, "The dialog".
 export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccountDialogProps) => {
   const analytics = useAnalytics();
   const dialog = useRef<HTMLDialogElement | null>(null);

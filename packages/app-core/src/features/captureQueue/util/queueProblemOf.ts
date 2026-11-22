@@ -8,8 +8,7 @@ import type { QueueHold, QueueHoldReason } from "../types/QueueHold.js";
 
 const BUSY_WAIT_SECONDS = 60;
 
-// What a video the queue could not make is marked with, or that the queue itself should wait:
-// a hold reason is never written onto a capture (docs/features/capture-queue.md).
+// Why a hold reason never lands on a capture: docs/features/capture-queue.md, "Waiting at a limit".
 export type QueueProblem = QueuedCaptureProblem | QueueHoldReason;
 
 export const isQueueHoldReason = (problem: QueueProblem): problem is QueueHoldReason =>
@@ -22,7 +21,6 @@ const resetsOnOf = (details: Record<string, unknown> | undefined): string => {
   return typeof resetsOn === "string" ? resetsOn : "";
 };
 
-// The server refused every key the overview could use for this month.
 const monthSpentResetOf = (error: unknown): string | null =>
   isSyncRequestError(error) && error.code === "too_many_requests" && MONTH_QUOTAS.has(String(error.details?.quota))
     ? resetsOnOf(error.details)
@@ -43,9 +41,7 @@ const fetchErrorOf = (error: unknown): TranscriptFetchError | null => {
   return null;
 };
 
-// What the reader is told about a video the queue could not make, by kind, never by a
-// provider's own words. The ladder's last rung to answer says why
-// (docs/features/capture-queue.md, "Needs attention").
+// Named by kind, never in a provider's words: docs/features/capture-queue.md, "Needs attention".
 export const queueProblemOf = (error: unknown): QueueProblem => {
   if (monthSpentResetOf(error) !== null) {
     return "monthSpent";
@@ -66,8 +62,7 @@ export const queueProblemOf = (error: unknown): QueueProblem => {
   return "failed";
 };
 
-// How long the queue waits: until the month resets at its limit; as long as the server said;
-// when it didn't, until UTC midnight at the daily cap, or a minute when asked to slow down.
+// How long each reason waits: docs/features/capture-queue.md, "Waiting at a limit".
 export const queueHoldOf = (error: unknown, reason: QueueHoldReason, now: Date): QueueHold => {
   if (reason === "monthSpent") {
     return { reason, resumesAt: monthResetOf(monthSpentResetOf(error), now).getTime() };

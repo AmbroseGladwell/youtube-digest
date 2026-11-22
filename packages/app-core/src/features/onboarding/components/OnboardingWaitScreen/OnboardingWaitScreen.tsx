@@ -24,13 +24,12 @@ export interface OnboardingWaitScreenProps {
   kind: OnboardingSource | null;
   found: OnboardingFound | null;
   run: OnboardingRun;
-  // The overview once it's in the account; null until then.
+  // Null until it's in the account.
   overview: Overview | null;
   failed: boolean;
   startedAt: number | null;
   topics: readonly string[];
   personal: boolean;
-  // What About you says they're focusing on, for the script's last line.
   focus: string | null;
   onTryAgain: () => void;
   onOpen: () => void;
@@ -43,9 +42,7 @@ const phaseOf = (failed: boolean, ready: boolean): WaitPhase => {
   return ready ? "ready" : "running";
 };
 
-// Design 327m, live on page 7: the first paid screen. Each stage is a real event of the run (the
-// words found, writing begun, the overview in the account); only the line under the writing stage
-// is a timed script (docs/features/onboarding.md, "The wait").
+// Which stages are real events and which line is timed: docs/features/onboarding.md, "The wait".
 export const OnboardingWaitScreen = ({
   kind,
   found,

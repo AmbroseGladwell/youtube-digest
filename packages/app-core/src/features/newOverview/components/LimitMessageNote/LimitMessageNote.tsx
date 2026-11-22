@@ -12,8 +12,6 @@ export interface LimitMessageNoteProps {
   message: LimitMessage;
   from: "dialog" | "home" | "panel";
   testIds: LimitMessageNoteTestIds;
-  // Whether the message has just come into view, and so takes focus to its first action
-  // (design 95i): the dialog as it opens.
   takeFocus?: boolean;
   onFollowed?: () => void;
 }
@@ -27,7 +25,6 @@ const ROUTE: Record<LimitAction, () => string> = {
 
 const WAY = { addKey: "addKey", seePlans: "seePlans", seeByoPlus: "seePlans", seeUsage: "seePlans" } as const;
 
-// What ran out, when it's back and the ways round it, in Generate's place (designs 95i–95o).
 // The link stays in the field, so a reader who adds a key carries on where they were.
 export const LimitMessageNote = ({ message, from, testIds, takeFocus = false, onFollowed }: LimitMessageNoteProps) => {
   const analytics = useAnalytics();

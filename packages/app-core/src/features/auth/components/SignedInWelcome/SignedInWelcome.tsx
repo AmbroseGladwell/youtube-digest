@@ -6,15 +6,13 @@ import { signedInWelcomeTestIds } from "./SignedInWelcomeTestIds.js";
 
 export interface SignedInWelcomeProps {
   firstName: string | null;
-  // What signing in moved into the account, once the move has run (design 47e).
+  // Null until the move into the account has run.
   move: LibraryMove | null;
   onDone: () => void;
 }
 
 const SYNCING_LINE = "Overviews you make here will sync to your account, and be on the web app and your phone too.";
 
-// Design 10e: the panel's one moment of saying the code worked, and 47e's place in the
-// extension for saying what came into the account with it.
 export const SignedInWelcome = ({ firstName, move, onDone }: SignedInWelcomeProps) => {
   const copy = move === null ? null : libraryMoveCopy(move);
   return (

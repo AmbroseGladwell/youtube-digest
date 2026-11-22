@@ -46,7 +46,7 @@ const innerTransition = (dragging: boolean, reduced: boolean): string => {
 
 export interface SampleDeckProps {
   samples: readonly Sample[];
-  // Where the deck opens; Start picks it at random each visit (327b).
+  // Start picks it at random each visit (327b).
   firstIndex?: number;
   phone: boolean;
   onFront: (sample: Sample) => void;
@@ -57,11 +57,7 @@ export interface FrontChange {
   fling?: number;
 }
 
-// Design 155l: on the web, Start's samples are a deck in the Example overview card's shape, one
-// full card with two behind it, cycling on its own. Hover or focus holds it, Pause stops it for
-// the visit, and the arrows step by hand. See all unfolds it into a list in deck order. With
-// reduced motion it doesn't cycle until Play, and every change is a crossfade
-// (docs/features/onboarding.md, "Try a sample").
+// docs/features/onboarding.md, "Try a sample".
 export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDeckProps) => {
   const n = samples.length;
   const g = phone ? GEOMETRY.phone : GEOMETRY.wide;
@@ -396,8 +392,6 @@ interface PlacementInput {
   reduced: boolean;
 }
 
-// Where each card sits, by its place behind the front one: the deck's three, the one leaving,
-// the rest waiting out of sight; or squared into a stack, or laid out as rows.
 const placement = (o: PlacementInput): Placement => {
   const { layout, slot, n, g, dragging, drag, fling, reduced } = o;
   const p: Placement = {

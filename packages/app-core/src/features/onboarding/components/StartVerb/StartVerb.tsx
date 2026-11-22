@@ -3,9 +3,6 @@ import styles from "./StartVerb.module.scss";
 
 const ROLL_MS = 560;
 
-// Design 155l: Start's headline verb follows the deck's front card, Watch Less for a video,
-// Learn More for an article, Cook Easier for a recipe, Listen Less for a podcast (327b-2). The old verb rolls up out of a clipped line
-// as the new one rises in; with reduced motion the verb simply changes.
 export const StartVerb = ({ verb }: { verb: string }) => {
   const [shown, setShown] = useState({ verb, previous: null as string | null, turn: 0 });
   const clear = useRef<ReturnType<typeof setTimeout> | null>(null);

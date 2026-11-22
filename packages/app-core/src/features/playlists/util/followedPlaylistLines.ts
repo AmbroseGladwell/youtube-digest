@@ -23,9 +23,7 @@ export const checkedAgo = (checkedAt: string, now: Date): string => {
   return `Checked ${format.format(-Math.floor(elapsed / DAY_MS), "day")}`;
 };
 
-// Design 27p: owner, public or unlisted, how many videos this device last saw in it, and how
-// many overviews it has given. The video count is this device's last check, so it is left
-// out where this device has never checked.
+// The video count is this device's last check, so it's left out where this device never checked (27p).
 export const followedPlaylistMeta = (playlist: FollowedPlaylist, check: PlaylistCheck | null, overviews: number): string => {
   return [
     playlist.owner,
@@ -37,7 +35,6 @@ export const followedPlaylistMeta = (playlist: FollowedPlaylist, check: Playlist
     .join(" · ");
 };
 
-// Design 95x: a followed playlist's pace, the order it is made in, and what waits on both.
 export const followedPlaylistFacts = (playlist: FollowedPlaylist, waiting: number): string => {
   return [
     PACE_LABEL[playlist.pace],

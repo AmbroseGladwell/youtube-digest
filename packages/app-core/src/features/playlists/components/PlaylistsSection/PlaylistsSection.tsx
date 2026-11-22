@@ -41,10 +41,7 @@ const settingsTargetOf = (url: string): PlaylistTarget | null => {
   return { kind: "playlist", playlistId: link.playlistId };
 };
 
-// Design 27p–27s: the playlists this library follows, each with its pace, the order it is
-// made in and Unfollow, and a field to follow another. Empty, it teaches the habit the feature
-// is built around. Above the list, the pace and order a newly followed playlist starts at
-// (95x) (docs/features/playlists.md, "Settings").
+// docs/features/playlists.md, "Settings".
 export const PlaylistsSection = () => {
   const analytics = useAnalytics();
   const isPanel = useIsPanel();

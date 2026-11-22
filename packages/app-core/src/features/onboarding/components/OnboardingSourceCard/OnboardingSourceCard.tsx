@@ -6,14 +6,10 @@ import { onboardingSourceCardTestIds } from "./OnboardingSourceCardTestIds.js";
 export interface OnboardingSourceCardProps {
   kind: OnboardingSource;
   found: OnboardingFound;
-  // A row on Your link (327c), the image beside the kicker, title and facts; large where the
-  // image leads; compact in the panel, with the image beside the title and the facts under both;
-  // small in the preview and a playlist's row, with facts only where there's no kicker.
+  // Row on Your link, compact in the panel, small in the preview and a playlist's row (327c).
   size?: "row" | "large" | "compact" | "small";
 }
 
-// One card for every kind (154d–154h): the image, or the site's name on a stone tile, then a
-// kicker naming the source and its kind, the title, and facts that belong to the kind.
 export const OnboardingSourceCard = ({ kind, found, size = "large" }: OnboardingSourceCardProps) => {
   const { kicker, facts } = kind.card(found);
   const factsBeside = size === "large" || size === "row" || kicker === null;

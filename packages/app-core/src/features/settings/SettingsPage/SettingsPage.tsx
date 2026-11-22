@@ -39,8 +39,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   cooking: COOKING_STANDFIRST,
   personalisation: PERSONALISATION_STANDFIRST,
   appearance: APPEARANCE_STANDFIRST,
-  // Design 110a moves the standing note to the foot of the panel, so the list and the
-  // choice land above the fold in the 400x600 panel.
+  // The note sits at the panel's foot instead, so the list and choice land above the fold.
   keys: null,
   connections: null,
   playlists: null,
@@ -99,8 +98,6 @@ const backLabel = (sectionPage: boolean, isPanel: boolean, homeName: string): st
   return isPanel ? homeName : "All overviews";
 };
 
-// Design OV-51 (docs/features/settings.md): two panes on a wide screen, and on a phone or in
-// the panel the list is the page and each section is a page of its own.
 export const SettingsPage = ({ section }: SettingsPageProps) => {
   const analytics = useAnalytics();
   const sections = useSettingsSections();
@@ -116,8 +113,7 @@ export const SettingsPage = ({ section }: SettingsPageProps) => {
   const backLink = useLentBackLink({
     to: sectionPage ? Routes.settings() : Routes.home(),
     label: backLabel(sectionPage, isPanel, homeName),
-    // In the panel the page draws no link of its own, so the bar holds it throughout
-    // (design 205d-2).
+    // In the panel the page draws no link of its own, so the bar holds it throughout.
     inPage: !isPanel,
     follow: (event) => {
       if (sectionPage) {

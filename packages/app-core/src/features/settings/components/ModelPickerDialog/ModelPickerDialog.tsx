@@ -11,14 +11,13 @@ import styles from "./ModelPickerDialog.module.scss";
 import { modelPickerDialogTestIds } from "./ModelPickerDialogTestIds.js";
 
 export interface ModelPickerDialogProps {
-  // Null is closed. The dialog is mounted by the panel, which holds the key it reads.
+  // Null is closed.
   provider: Provider | null;
   apiKey: string | null;
   onClose: () => void;
 }
 
-// Design 110e: the rest of the catalogue opens five at a time, because OpenAI's own list
-// runs past a hundred and a reader looking for one of them is searching, not scrolling.
+// Five at a time: OpenAI's list runs past a hundred, and a reader looking for one is searching.
 const FIRST_FEW = 5;
 
 const HEADING_ID = "ModelPickerDialog-heading";
@@ -32,9 +31,7 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
 
-  // Native <dialog> rather than a hand-rolled overlay, for the same reason
-  // NewOverviewDialog uses one: showModal() makes the page behind it inert, keeps focus
-  // inside, and turns Escape into a cancel event.
+  // showModal() makes the page behind inert, keeps focus inside, and turns Escape into a cancel event.
   useEffect(() => {
     const element = dialog.current;
     if (element === null) {
@@ -58,15 +55,12 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
       writeCatalogue(provider, fetched);
       setCatalogue(fetched);
     } catch {
-      // The key works — it was accepted when it was saved. Only the catalogue call failed,
-      // so the picker quietly shows the models we know and says so in one muted line
-      // (design 110h). Nothing here is an error state.
+      // The key was accepted when saved; only the catalogue failed, so the models we know are shown.
       analytics.settings.apiKeys.modelsListFailed({ provider });
       setCatalogue(undefined);
     }
   }, [analytics, apiKey, provider]);
 
-  // Refetched when the picker opens and the stored list is more than a day old.
   useEffect(() => {
     if (provider === null) {
       return;
@@ -98,9 +92,7 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
     onClose();
   };
 
-  // role="radio" rather than the design's listbox option: the choice is one of several and
-  // saves straight away, which is what a radio means, and a <button> is focusable and
-  // answers Enter and Space without a key handler of its own.
+  // A radio, not the design's listbox option, because the choice saves straight away.
   const row = (choice: ModelChoice) => (
     <li key={choice.id}>
       <button
@@ -204,8 +196,7 @@ export const ModelPickerDialog = ({ provider, apiKey, onClose }: ModelPickerDial
             in. Longer videos cost more.
           </p>
 
-          {/* Dropped rather than shown empty when the catalogue call failed: a group that
-              says nothing is a control that cannot work (design 110h). */}
+          {/* Dropped rather than shown empty when the catalogue failed (CLAUDE.md, "degrade visibly"). */}
           {choices.rest.length > 0 && (
             <div className={styles.group}>
               {!searching && (

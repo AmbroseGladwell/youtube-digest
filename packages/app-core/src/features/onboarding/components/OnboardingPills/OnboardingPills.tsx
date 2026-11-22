@@ -8,8 +8,6 @@ export interface OnboardingPillsProps {
   minutes: ExpectedMinutes | null;
 }
 
-// What the reader will be able to do with it (327c, 327u): Read · Listen · Share with the minutes
-// worked out in code, or Cook · Read · Share for a recipe, which is read aloud step by step instead.
 export const OnboardingPills = ({ pills, minutes }: OnboardingPillsProps) => {
   return (
     <ul className={styles.root} aria-label="What you can do with it" data-testid={onboardingPillsTestIds.root}>

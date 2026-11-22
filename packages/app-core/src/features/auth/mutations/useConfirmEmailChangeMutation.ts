@@ -4,8 +4,7 @@ import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { authKeys } from "../authKeys.js";
 import { useSessionAuthApi } from "../useSessionAuthApi.js";
 
-// The code from the new address. The account has moved once this answers, so the
-// connection is written before anything else reads it (docs/features/account-changes.md).
+// The account has moved once this answers, so the connection is written before anything reads it.
 export const useConfirmEmailChangeMutation = () => {
   const api = useSessionAuthApi();
   const queryClient = useQueryClient();

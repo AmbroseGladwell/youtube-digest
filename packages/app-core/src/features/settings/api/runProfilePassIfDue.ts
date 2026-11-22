@@ -33,9 +33,7 @@ const passKeyOf = (madeOn: KeySource | null, hasOwn: boolean, hasApi: boolean): 
   return madeOn === "ours" && hasApi ? "ours" : null;
 };
 
-// Runs after an overview lands, on the key that made it. Its failing never touches the overview
-// and nothing tells the reader, so it is counted and left; the next due pass picks up from here
-// (docs/features/personalisation.md, "A profile that learns"). True when Settings changed.
+// Why a failure is only counted: docs/features/personalisation.md, "A profile that learns".
 export const runProfilePassIfDue = async ({
   madeOn,
   own,

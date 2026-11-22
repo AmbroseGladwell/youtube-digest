@@ -9,12 +9,11 @@ export interface CodeStepProps {
   lead: ReactNode;
   note: string;
   submitLabel: string;
-  // Hidden rather than disabled when nothing typed could work: a code that has expired,
-  // or an hour's codes already spent (CLAUDE.md, "degrade visibly").
+  // Hidden rather than disabled when nothing typed could work (CLAUDE.md, "degrade visibly").
   canSubmit: boolean;
   submitting: boolean;
   problem: string | null;
-  // Said once a new code has gone, until the reader types.
+  // Shown once a new code has gone, until the reader types.
   status: string | null;
   sentAt: number | null;
   canResend: boolean;
@@ -23,8 +22,7 @@ export interface CodeStepProps {
   onResend: () => void;
   onCancel: () => void;
   onDifferentAddress?: (() => void) | undefined;
-  // Inside a dialog the box has no surface of its own and its heading is the dialog's
-  // (design 184c, docs/features/account-deletion.md).
+  // Inside a dialog the box has no surface of its own and its heading is the dialog's.
   variant?: "box" | "dialog";
   headingId?: string | undefined;
 }
@@ -32,9 +30,6 @@ export interface CodeStepProps {
 const secondsLeft = (sentAt: number, now: number): number =>
   Math.max(0, Math.ceil((sentAt + MAGIC_LINK_COOLDOWN_SECONDS * 1000 - now) / 1000));
 
-// Designs 14d and 14i: one box for both codes, the step-up's and the new address's, so the
-// two read as a pair. The heading takes focus when the step arrives; an error keeps focus
-// in the field (docs/features/account-changes.md).
 export const CodeStep = ({
   heading,
   lead,

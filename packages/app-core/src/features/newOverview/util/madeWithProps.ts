@@ -7,8 +7,7 @@ export interface MadeWithProps {
   model: ModelId | undefined;
 }
 
-// A model that isn't shaped like a provider's id is left out, not sent, so the event still
-// parses (docs/architecture/analytics.md, "What an event may carry").
+// A model not shaped like a provider's id is left out, so the event still parses.
 export const madeWithProps = (attempt: GenerationAttempt | null): MadeWithProps => {
   return {
     key: attempt?.key,

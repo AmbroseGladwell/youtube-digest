@@ -16,7 +16,7 @@ export interface PacedQueueGroupProps {
   waitsFor: "tomorrow" | "you";
   stacked: boolean;
   canMakeNow: boolean;
-  // Null outside choosing; otherwise what is chosen (95ag).
+  // Null outside choosing.
   chosen: ReadonlySet<VideoId> | null;
   onToggle: (videoId: VideoId) => void;
   onChooseAll: (videoIds: VideoId[], chosen: boolean) => void;
@@ -26,10 +26,6 @@ export interface PacedQueueGroupProps {
 
 const count = (n: number) => n.toLocaleString("en-GB");
 
-// Design 95aa and 95aj: one playlist's videos waiting on its pace, or for the reader, under
-// its name with its pace and today's count. A big backfill shows two and the rest behind
-// "N more", so it never floods the page. On a phone or in the panel, rows keep one action
-// and Remove lives in choosing (95ae).
 export const PacedQueueGroup = ({
   group,
   waitsFor,

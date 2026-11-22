@@ -6,9 +6,7 @@ export type QueueNotice = { kind: "checked"; playlists: number; queued: number }
 
 export interface CaptureQueueStripInput {
   making: { title: string; step: string; stepProgress: number } | null;
-  // Every video still waiting, then the ones the queue can make now, the ones past their
-  // playlist's pace for today, and the ones waiting for the reader to choose them, each
-  // without the one being made.
+  // Each count leaves out the video being made.
   waiting: number;
   ready: number;
   tomorrow: number;
@@ -17,9 +15,7 @@ export interface CaptureQueueStripInput {
   skipped: number;
   paused: boolean;
   needsKey: boolean;
-  // Waiting at a limit, and whether the extension would be a way around it here.
   hold: QueueHold | null;
-  // What ran out, when the hold is the month's.
   limit: LimitMessage | null;
   viaExtension: boolean;
   batch: { done: number } | null;
@@ -27,8 +23,7 @@ export interface CaptureQueueStripInput {
   attentionDismissed: boolean;
 }
 
-// Which of the strip's states the queue is in, most pressing first. Null says nothing at
-// all, which is most of the time (docs/features/capture-queue.md, "The strip").
+// The states, most pressing first: docs/features/capture-queue.md, "The strip".
 export const captureQueueStrip = (input: CaptureQueueStripInput): CaptureQueueStrip | null => {
   const {
     making,

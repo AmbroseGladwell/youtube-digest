@@ -13,8 +13,6 @@ const stepLabel = (short: boolean, fetching: boolean): string => {
   return fetching ? "Fetching the transcript" : "Writing the overview";
 };
 
-// Where the video being made has got to, in the queue's words, and how far along that is,
-// counted from the steps that have actually happened (generationRunStatus).
 export const makingStep = (run: NewOverviewRun, short: boolean): MakingStep => {
   const fetching = run.transcriptWords === null;
   return {

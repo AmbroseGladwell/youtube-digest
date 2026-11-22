@@ -1,6 +1,5 @@
 import { sourceKey, type Overview } from "@overview/domain";
 
-// The reader's own day, in their clock: a pace starts again at local midnight.
 export const localDayKey = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
@@ -8,10 +7,7 @@ export const nextLocalMidnight = (now: Date): Date => {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 };
 
-// How many overviews each followed playlist has given today, counted from the library so
-// every device counts the same. A video the reader chose to make now never counts toward its
-// playlist's pace, and one made by hand has no playlist (docs/features/capture-queue.md,
-// "Waiting on a pace").
+// What counts as made today, and why: docs/features/playlists.md, "A pace for each playlist".
 export const madeTodayByPlaylist = (overviews: readonly Overview[], chosen: ReadonlySet<string>, now: Date): Map<string, number> => {
   const today = localDayKey(now);
   const counts = new Map<string, number>();

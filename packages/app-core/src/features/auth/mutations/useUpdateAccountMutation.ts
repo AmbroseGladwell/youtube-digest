@@ -4,8 +4,7 @@ import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { authKeys } from "../authKeys.js";
 import { useSessionAuthApi } from "../useSessionAuthApi.js";
 
-// The name, saved at once and written into this device's connection so every screen shows
-// it before the server is asked again (docs/features/account-changes.md).
+// Written into the connection, so every screen shows the name before the server is asked again.
 export const useUpdateAccountMutation = () => {
   const api = useSessionAuthApi();
   const queryClient = useQueryClient();

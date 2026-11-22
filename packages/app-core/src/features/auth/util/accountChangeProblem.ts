@@ -12,8 +12,7 @@ const SERVER = "The server had a problem. Try again in a moment.";
 
 const pad = (n: number): string => String(n).padStart(2, "0");
 
-// Design 14c/14i: the hour's limit is said as a clock time to try again, in the reader's
-// own zone, since the server only knows the seconds (docs/features/account-changes.md).
+// A clock time in the reader's own zone, since the server only knows the seconds.
 export const limitedCodesMessage = (retryAfterSeconds: number, limit: number, now: Date): string => {
   const at = new Date(now.getTime() + Math.max(0, retryAfterSeconds) * 1000);
   return `You’ve asked for ${limit} codes in the last hour. Try again after ${pad(at.getHours())}:${pad(at.getMinutes())}.`;
@@ -22,8 +21,7 @@ export const limitedCodesMessage = (retryAfterSeconds: number, limit: number, no
 const retryAfter = (details: Record<string, unknown> | undefined): number =>
   typeof details?.retryAfterSeconds === "number" ? details.retryAfterSeconds : 0;
 
-// The server answers one `link_invalid` for a wrong, spent or expired code; which it was
-// is told from the ask's own expiry, which this device knows.
+// One `link_invalid` covers wrong, spent and expired codes; the ask's own expiry tells which.
 export const codeProblem = (error: unknown, expiresAt: string | null, now: Date): CodeProblem => {
   if (isSyncTransportError(error)) {
     return { kind: "other", message: UNREACHABLE };

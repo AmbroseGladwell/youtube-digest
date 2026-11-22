@@ -1,6 +1,4 @@
-// The card's figure for one overview on the reader's own key. Every number that reaches the
-// reader is multiplied from this in code, never estimated by a model
-// (docs/prototype/constraints.md, docs/features/playlists.md, "The preview").
+// Every figure the reader sees is multiplied from this in code: docs/features/playlists.md, "The preview".
 export const TOKENS_PER_OVERVIEW = 30_000;
 
 export const tokenEstimate = (overviews: number): number => overviews * TOKENS_PER_OVERVIEW;

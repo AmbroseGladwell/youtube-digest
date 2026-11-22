@@ -11,18 +11,14 @@ import { useSampleApi } from "./useSampleApi.js";
 const OPENING_SHOWN_AFTER_MS = 300;
 
 export interface SampleOpening {
-  // The sample being fetched, once the wait has gone on long enough to say so.
+  // Set once the wait has gone on long enough to say so.
   opening: ShareToken | null;
-  // Pressed and not yet answered, shown or not.
   busy: boolean;
   failed: boolean;
   open: (sample: Sample, index: number) => Promise<boolean>;
 }
 
-// A sample chosen at Start begins onboarding around it, the way Save to my overviews does around
-// a shared copy: nothing is made, and it's saved into the account once there is one. The choice
-// is counted on the press, so a failed open still records it (docs/features/onboarding.md,
-// "Try a sample").
+// Counted on the press, so a failed open still records it (docs/features/onboarding.md, "Try a sample").
 export const useStartFromSample = (): SampleOpening => {
   const navigate = useNavigate();
   const analytics = useAnalytics();

@@ -8,8 +8,7 @@ export interface SamplePlayback {
   durationSeconds: number;
 }
 
-// One sample at a time, and a note that was playing is paused and left paused, so comparing
-// voices does not keep cutting back to it (docs/features/narration-voice.md, "Listening").
+// Why a playing note is left paused: docs/features/narration-voice.md, "Listening".
 export const useVoiceSamplePlayer = () => {
   const player = usePlayer();
   const audio = useRef<HTMLAudioElement | null>(null);

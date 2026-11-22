@@ -9,7 +9,6 @@ export interface OnboardingFailureCopy {
   body: string;
   tryAgain: boolean;
   extension: string | null;
-  // The episode's audio can be transcribed instead, and the button that does it (design 305c-2).
   transcribe: string | null;
 }
 
@@ -30,9 +29,7 @@ const isFrontPage = (url: string): boolean => {
   }
 };
 
-// Designs 154l–154n: say why, then ask for another link. Never "nothing counted", since a trial
-// read counts whether or not the page could be read; the free overview is what's untouched. A
-// new reader isn't sent to the extension mid-onboarding, only told of it for afterwards.
+// Why these words aren't the paste field's: docs/features/onboarding.md, "Any kind of link".
 export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, place: ReaderPlace): OnboardingFailureCopy => {
   switch (failure.kind) {
     case "trialReads":
@@ -63,7 +60,6 @@ export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, 
         "There’s no transcript for this episode yet",
         "We found the episode, but we couldn’t find a transcript for it, and an overview is written from the words. Many episodes don’t have one yet. Have it on YouTube? Paste that link instead.",
       );
-    // Design 305c-2's ask, in onboarding: the trial transcribes its one overview's episode.
     case "podcastNeedsTranscribing": {
       const ask = transcriptionCopy.ask(failure.episodeSeconds);
       return failed(ask.heading, ask.body, { transcribe: "Transcribe and create" });

@@ -1,6 +1,6 @@
 import type { VideoReadFailure } from "@overview/domain";
 
-// The video couldn't be read for its card, before anything was spent on it.
+// Read for its card, before anything was spent on it.
 export class VideoReadError extends Error {
   readonly reason: VideoReadFailure;
 

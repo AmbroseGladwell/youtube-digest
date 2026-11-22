@@ -12,10 +12,7 @@ export const sessionQueryOptions = (account: string | null, api: AuthApi | null)
     enabled: api !== null,
   });
 
-// Who the server says is signed in, and on which plan. Asked only when this device holds a
-// session (docs/features/mcp-connector.md, "Plus"). The name and address the server answers
-// with are written back to the connection, which is how a change made on another device
-// reaches this one (docs/features/account-changes.md).
+// The answer's name and address are written back, which is how another device's change reaches this one.
 export const useSessionQuery = () => {
   const { connection, setConnection } = useSyncConnection();
   const api = useSessionAuthApi();

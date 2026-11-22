@@ -9,20 +9,15 @@ const PLUS = PLAN_CARDS.find((card) => card.name === "Plus")!;
 const FREE = PLAN_CARDS.find((card) => card.name === "Free")!;
 
 export interface SoftWallProps {
-  // What they pasted, as far as it has been read: never more than the link itself costs to know.
+  // Never more than the link itself costs to know.
   link: { kicker: string | null; title: string };
-  // "1 December", the day the month's overviews come back.
   resetsOn: string;
-  // A reader who already has a key, or is on BYO Plus, isn't told about adding one.
   offerKey: boolean;
   onSeePlans: () => void;
   onFollowed: () => void;
 }
 
-// Design 327aa: the one place plans are offered in full, when a reader is saving something right
-// now. It's soft: everything they've saved keeps working, the link stays where it was, and the
-// ways on are Plus first, then every plan and, for a reader with no key, the key Free already
-// includes. Waiting for the reset with the link kept comes with OV-358.
+// Soft: everything they've saved keeps working, and the link stays where it was.
 export const SoftWall = ({ link, resetsOn, offerKey, onSeePlans, onFollowed }: SoftWallProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   useEffect(() => heading.current?.focus(), []);

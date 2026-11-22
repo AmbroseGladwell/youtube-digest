@@ -1,7 +1,6 @@
 import type { PodcastRead } from "@overview/domain";
 
-// An episode once read stays read for the run, so choosing to transcribe it carries on from the
-// episode the reader saw rather than reading the link again. A read that failed is asked again.
+// So transcribing carries on from the episode the reader saw; a read that failed is asked again.
 export const rememberEpisodeRead = (
   reads: Map<string, Promise<PodcastRead>>,
   link: string,

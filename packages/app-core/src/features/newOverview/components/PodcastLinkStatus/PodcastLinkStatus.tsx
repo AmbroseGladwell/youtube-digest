@@ -25,7 +25,7 @@ const FROM: Record<ReturnType<typeof podcastPlatform>, string> = { spotify: "Spo
 
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
-// "1 hr 56 min · 10 Nov 2026": the feed's own facts, the date alone when it gives no length.
+// "1 hr 56 min · 10 Nov 2026", or the date alone when the feed gives no length.
 export const episodeFacts = (episode: Pick<PodcastEpisode, "durationSeconds" | "publishedAt">): string =>
   [
     episode.durationSeconds === null ? null : recipeMinutes(Math.round(episode.durationSeconds / 60)),
@@ -34,7 +34,6 @@ export const episodeFacts = (episode: Pick<PodcastEpisode, "durationSeconds" | "
     .filter(Boolean)
     .join(" · ");
 
-// Designs 106a–106f: under the field, the episode our server found, or why it can't be used.
 export const PodcastLinkStatus = ({ link, url, onRetry, onClear, onOpened }: PodcastLinkStatusProps) => {
   switch (link.status) {
     case "none":
@@ -97,8 +96,6 @@ export interface EpisodeWordsNoteProps {
   onFollowed?: (() => void) | undefined;
 }
 
-// Designs 305c, 305d, 305h and 305j: under the card, what Create will spend, why it spends nothing,
-// or the stop in its place. Nothing while the check runs, or when it found the words.
 export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed }: EpisodeWordsNoteProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const action = episodeActionOf(words);
@@ -124,7 +121,6 @@ export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed }: EpisodeW
   }
 };
 
-// The line under the episode's facts: checking for its words, then whether it needs transcribing.
 const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string | null => {
   if (words.state === "checking") {
     return "Checking for a transcript…";

@@ -27,7 +27,6 @@ export interface NewOverviewDialogProps {
   open: boolean;
   prefill: string | null;
   run: NewOverviewRun | null;
-  // The library already holds the video submitted, so nothing was started.
   held: AlreadyHeld | null;
   onSubmit: (url: string) => void;
   onOpenHeld: (overviewId: Overview["id"]) => void;
@@ -61,8 +60,7 @@ export const NewOverviewDialog = ({
   const playlistsAvailable = usePlaylistApi() !== null;
   const phone = useIsPhone();
 
-  // Native <dialog> rather than a hand-rolled overlay: showModal() is what makes the page
-  // behind it inert and keeps focus inside, and Escape arrives as a cancel event.
+  // showModal() makes the page behind inert, keeps focus inside, and sends Escape as a cancel event.
   useEffect(() => {
     const element = dialog.current;
     if (!element) {
@@ -85,8 +83,7 @@ export const NewOverviewDialog = ({
     }
   }, [open, activeVideoUrl, prefill]);
 
-  // The panel closes this by unmounting it, so close()'s own focus restoration never runs
-  // (docs/features/extension-panel.md, "What the panel did break is the way back out").
+  // Unmounting skips close()'s focus restoration: docs/features/extension-panel.md, "One slot, one way out".
   useEffect(
     () => () => {
       const returnTo = returnFocusTo.current;
@@ -100,8 +97,7 @@ export const NewOverviewDialog = ({
 
   const inProgress = run !== null && run.overview === null && run.error === null;
 
-  // Closing a running generation hands it to the status strip; closing anything else is
-  // done with it (docs/features/overview-redesign.md, "Generating in the background").
+  // docs/features/overview-redesign.md, "Generating in the background".
   const analytics = useAnalytics();
   const closeForm = () => {
     analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
@@ -165,8 +161,7 @@ export const NewOverviewDialog = ({
         </>
       );
     }
-    // The library already holds this video: nothing to make, one thing to open
-    // (docs/features/one-overview-per-video.md, "Prevention").
+    // docs/features/one-overview-per-video.md, "Prevention: not generating what is already here".
     if (held !== null && run === null) {
       return (
         <>
@@ -363,8 +358,7 @@ const RunProgress = ({
 
       <GenerationSteps run={run} />
 
-      {/* Design 21a: the field stays through the done state too, so a reason can still
-          be added before pressing Read overview. */}
+      {/* Stays through the done state, so a reason can still be added before Read overview. */}
       <CaptureReasonField value={run.captureReason} onChange={onCaptureReasonChange} onCommit={onCaptureReasonCommit} />
 
       <div className={styles.foot}>

@@ -9,23 +9,17 @@ import { useOnboardingProgress } from "./useOnboardingProgress.js";
 import { useOnboardingRun, type OnboardingRun } from "./useOnboardingRun.js";
 import { useOnboardingRunOwner } from "./useOnboardingRunOwner.js";
 
-// Onboarding's run, above the router so it outlives the page: the web's sign-in lands on
-// home and comes back, and going home mid-run comes back too, neither of which should start
-// the overview over. One tab has it; the others ask after it and take it over if that tab
-// is gone. Nothing is spent until the account exists and the answers are moved into it
-// (docs/features/onboarding.md, "The run lives in one tab" and "Nothing paid before the account").
+// Above the router so it outlives the page: docs/features/onboarding.md, "The run lives in one tab".
 export const OnboardingRunRuntime = ({ children }: { children: ReactNode }) => {
   const [progress, update] = useOnboardingProgress();
   const libraryMove = useLibraryMove();
   const accountId = useLibraryAccountId();
   const [attempt, setAttempt] = useState(0);
-  // The link the reader chose to transcribe, and whether this is a try again; another link asks again.
   const [transcribing, setTranscribing] = useState<{ link: string; choice: TranscribeChoice } | null>(null);
   const kind = useMemo(() => (progress === null ? null : (onboardingSourceOf(progress.link)?.source ?? null)), [progress]);
   const link = progress?.link ?? null;
   const wanted = progress !== null && progress.share === null && progress.overviewId === null && kind !== null;
   const mine = progress !== null && progress.runner === onboardingTabId();
-  // The answers have been given, and the account they were moved into exists (OV-327).
   const maySpend = (progress?.mayWrite ?? false) && accountId !== null && libraryMove.answersIn === accountId;
   const claim = useCallback(() => {
     if (wanted) {

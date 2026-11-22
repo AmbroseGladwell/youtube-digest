@@ -4,9 +4,6 @@ import { useKnownApiUrl } from "../../../sync/useKnownApiUrl.js";
 import styles from "./PolicyLinks.module.scss";
 import { policyLinksTestIds } from "./PolicyLinksTestIds.js";
 
-// Designs 62d and 62i: the privacy policy and the terms, as plain links, at the foot of
-// Settings › Privacy and under the version in About. From the extension they open the web
-// app's pages in a tab of their own.
 export const PolicyLinks = () => {
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";

@@ -5,8 +5,7 @@ import { useSettingsQuery } from "../../queries/settingsQuery.js";
 import styles from "./ReadStepsAloudSwitch.module.scss";
 import { readStepsAloudSwitchTestIds } from "./ReadStepsAloudSwitchTestIds.js";
 
-// Designs 289i–289l: above Timer sound, the same setting as cooking mode's Mute, read the
-// other way round. It saves at once and syncs.
+// The same setting as cooking mode's Mute, read the other way round.
 export const ReadStepsAloudSwitch = () => {
   const analytics = useAnalytics();
   const settings = useSettingsQuery().data;

@@ -17,8 +17,6 @@ export interface RunErrorMessageProps {
   testId: string;
   testIds: RunErrorMessageTestIds;
   onFollowed?: () => void;
-  // An episode's run: its length from the feed, and the ways on from a transcription's question or
-  // failure (designs 305c-2, 305k).
   episodeSeconds?: number | null;
   onTranscribe?: () => void;
   onNotNow?: () => void;
@@ -69,8 +67,7 @@ export const RunErrorMessage = ({
   );
 };
 
-// The read was the run's, so there is no field to try again from: only a way that leaves the
-// app is offered, and a regeneration names the item that remakes it beside the article.
+// The read was the run's, so there is no field to try again from: only a way out of the app.
 const ArticleFetchFailure = ({ error }: { error: Extract<RunError, { kind: "articleFetch" }> }) => {
   const place = useReaderPlace();
   const copy = pastedLinkFailureCopy(error.failure, error.url, place);
@@ -93,8 +90,6 @@ interface TranscriptionStopProps {
   onFollowed: (() => void) | undefined;
 }
 
-// After Create: the question 305c-2 asks when the check couldn't tell, a transcription that failed
-// (305k), or one our server wouldn't start after all (305h, 305j). Each counted nothing.
 const TranscriptionStop = ({ error, episodeSeconds, onTranscribe, onNotNow, onFollowed }: TranscriptionStopProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const transcribing = usage?.transcription ?? null;
@@ -134,9 +129,7 @@ const TranscriptionStop = ({ error, episodeSeconds, onTranscribe, onNotNow, onFo
   return <TranscriptionNotice notice={stop} route={stop.route} onFollowed={onFollowed} takeFocus />;
 };
 
-// Design 106h: about half of episodes have no words we can find yet, so this is drawn as an
-// everyday outcome: what happened, that it's common, and that nothing was used. Where our server
-// can transcribe, the reader is asked instead (305c-2). It never says where we looked.
+// Drawn as an everyday outcome: docs/features/podcast-screens.md, "Making one".
 const PodcastNoTranscript = ({ testId }: { testId: string }) => {
   return (
     <div className={styles.noTranscript} role="alert" data-testid={testId}>

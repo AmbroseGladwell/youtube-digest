@@ -8,7 +8,7 @@ export interface FollowedPlaylistWithCheck {
   check: PlaylistCheck | null;
 }
 
-// Followed first, oldest first: the order they were followed in.
+// The order they were followed in.
 export const followedPlaylistsQueryOptions = (store: FollowedPlaylistStore) =>
   queryOptions({
     queryKey: playlistKeys.followed(),

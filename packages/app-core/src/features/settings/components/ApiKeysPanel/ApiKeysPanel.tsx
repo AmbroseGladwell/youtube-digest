@@ -22,10 +22,6 @@ import { apiKeysPanelTestIds } from "./ApiKeysPanelTestIds.js";
 
 export const NO_KEYS_STANDFIRST = "To write overviews you’ll need your own API key from one of these providers.";
 
-// A list, because holding several keys is the point (design 110a, Q1). Keys on this device
-// come first as full rows; providers without one sit below as quiet one-line rows. On a
-// first run there is no list to join yet, so all six are shown the same way and the
-// "Generate with" card is absent — there is nothing to generate with.
 export const ApiKeysPanel = () => {
   const { apiKeys, removeKey, removeAllKeys } = useApiKeys();
   const settingsQuery = useSettingsQuery();
@@ -55,8 +51,7 @@ export const ApiKeysPanel = () => {
     removeKey(gone);
     forgetCatalogue(gone);
     void permissions?.drop(gone);
-    // The choice moves only when this device can honour the move. With no other key here
-    // it is left alone: another device may still hold it (design 110i).
+    // With no other key here the choice is left alone: another device may still hold it.
     if (gone === provider && movesTo !== null) {
       updateSettings.mutate({ provider: movesTo });
     }
@@ -179,8 +174,7 @@ export const ApiKeysPanel = () => {
         </>
       )}
 
-      {/* The note ends the section rather than opening it, so the list and the choice land
-          above the fold in the 600-tall panel (design 110a's notes). */}
+      {/* Last rather than first, so the list and the choice land above the fold in the panel. */}
       <p className={styles.note} data-testid={apiKeysPanelTestIds.note}>
         {BYO_KEY_NOTE_SHORT}
       </p>

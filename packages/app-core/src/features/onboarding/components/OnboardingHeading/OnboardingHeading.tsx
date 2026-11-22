@@ -9,7 +9,6 @@ export interface OnboardingHeadingProps {
   small?: boolean;
 }
 
-// Every screen's heading, which takes focus as the screen arrives (the brief's accessibility).
 export const OnboardingHeading = ({ children, small = false }: OnboardingHeadingProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   const isPanel = useIsPanel();

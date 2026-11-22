@@ -1,7 +1,6 @@
 import { sourceKey, type CaptureQueueStore, type OverviewStore } from "@overview/domain";
 
-// Every video this library already has an overview of, readable or not: one overview per
-// video (docs/features/capture-queue.md).
+// Unreadable overviews count too: there is one overview per video.
 export const libraryVideoIds = async (overviewStore: OverviewStore): Promise<Set<string>> => {
   const [overviews, unreadable] = await Promise.all([overviewStore.listOverviews(), overviewStore.listUnreadable()]);
   return new Set<string>([
@@ -10,7 +9,7 @@ export const libraryVideoIds = async (overviewStore: OverviewStore): Promise<Set
   ]);
 };
 
-// ...and every video already queued, so none of them is queued twice.
+// Queued videos count too, so none of them is queued twice.
 export const knownVideoIds = async (overviewStore: OverviewStore, captureQueueStore: CaptureQueueStore): Promise<Set<string>> => {
   const [held, queue] = await Promise.all([libraryVideoIds(overviewStore), captureQueueStore.listQueue()]);
   return new Set<string>([...held, ...queue.map((capture) => capture.videoId)]);

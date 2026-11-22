@@ -6,23 +6,18 @@ import { innerTubeTranscriptSource } from "../../transcripts/api/innerTubeTransc
 import { serviceTranscriptSource } from "../../transcripts/api/serviceTranscriptSource.js";
 import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.js";
 
-// BYO-key, called straight from the browser holding the key
-// (docs/architecture/v1-architecture-decisions.md Model D). Every one of the six providers
-// answers a cross-origin preflight, so no server of ours is ever in the path; the adapter
-// behind this sends whatever header its provider needs to permit it.
+// Called straight from the browser: every provider answers a cross-origin preflight.
 export const createGenerationClient = (provider: Provider, apiKey: string, model: string): GenerationClient => {
   return createProviderClient({ provider, apiKey, model });
 };
 
 export interface TranscriptSourceOptions {
   youTubeFetch: YouTubeFetch | null;
-  // Where our own server is asked to fetch, last, and the session it counts against. Null never asks it.
+  // Our own server, asked last. Null never asks it.
   service: { apiUrl: string; token: string | null } | null;
 }
 
-// The rungs this surface can actually reach, in the order they are asked: the free ones
-// first, our own server last (docs/features/transcript-retrieval.md). There is no shared cache to
-// ask: each reader fetches their own words (OV-295).
+// Free rungs first, our own server last; no shared cache, each reader fetches their own (OV-295).
 export const createTranscriptSources = (options: TranscriptSourceOptions): TranscriptSource[] => {
   return [
     ...(options.youTubeFetch === null ? [] : [innerTubeTranscriptSource(options.youTubeFetch)]),

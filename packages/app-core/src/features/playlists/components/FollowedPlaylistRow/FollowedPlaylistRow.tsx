@@ -31,11 +31,7 @@ export interface FollowedPlaylistRowProps {
   onUnfollow: () => void;
 }
 
-// Design 27p–27q: the playlist's name opens it on YouTube; one that went private says so in
-// words and can still be unfollowed. Unfollowing asks once, inline, with the numbers. Design
-// 95x–95z: its pace, the order it is made in and what waits on them, in ink, with both
-// beside Unfollow; a change says once, in the row, what it did. One that can't be checked has
-// neither to set.
+// One that can't be checked has neither pace nor order to set (27p–27q, 95x–95z).
 export const FollowedPlaylistRow = ({
   playlist,
   check,

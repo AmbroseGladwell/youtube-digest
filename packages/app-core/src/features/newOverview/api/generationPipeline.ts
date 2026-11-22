@@ -37,13 +37,12 @@ import { GenerationCancelledError } from "./GenerationCancelledError.js";
 import type { OverviewMeta } from "./makeOverviewOnKeys.js";
 import type { TranscriptionProgress } from "../../podcasts/api/transcribeEpisode.js";
 
-// What the run has produced so far, so the progress list can report a receipt rather than
-// that it is thinking (docs/features/overview-redesign.md, "The receipts").
+// Receipts rather than "thinking": docs/features/overview-redesign.md, "The receipts".
 export interface GenerationProgress {
   video: VideoSource;
   transcriptWords: number;
   transcriptSource: CaptureTranscriptSource;
-  // What onboarding suggests topics from before writing (docs/features/onboarding.md).
+  // What onboarding suggests topics from: docs/features/onboarding.md, "Suggested topics".
   transcriptOpening: string;
 }
 
@@ -52,11 +51,9 @@ const TRANSCRIPT_OPENING_CHARACTERS = 3000;
 export interface GenerationPipelineDeps {
   sources: TranscriptSource[];
   warn?: VideoResolutionDeps["warn"];
-  // Told how a video capture's time split, however it ended, so the server's logs say so
-  // (docs/architecture/errors-and-logs.md, "Client timings").
+  // docs/architecture/errors-and-logs.md, "Client timings".
   timed?: ((timing: ClientTimingReport) => void) | undefined;
   now?: (() => number) | undefined;
-  // Makes the overview on whichever key can, and says which (makeOverviewOnKeys).
   makeOverview: (input: OverviewInput, meta: OverviewMeta) => Promise<Overview>;
   overviewStore: OverviewStore;
   settingsStore: Pick<SettingsStore, "get">;
@@ -71,41 +68,26 @@ export interface TaggingCounts {
 }
 
 export interface RunOverviewGenerationOptions {
-  // Where the reader asked, for the events a run sends of its own (an episode's transcription).
   from?: CaptureEntry | undefined;
   onProgress?: ((progress: GenerationProgress) => void) | undefined;
   onArticleRead?: ((article: ExtractedArticle) => void) | undefined;
-  // An episode's words were found, so the steps can say so (design 106g).
   onEpisodeWords?: ((words: number) => void) | undefined;
-  // Transcribing the episode's audio is waiting for a card, then under way (design 305e).
   onTranscription?: ((progress: TranscriptionProgress) => void) | undefined;
-  // The source's words are in hand and nothing waits on the reader, so writing starts now.
   onWriting?: (() => void) | undefined;
   isCancelled?: (() => boolean) | undefined;
-  // Regenerating an unreadable record writes under its own id, so the separate state row
-  // — read, favourite, user tags — stays attached rather than being orphaned under a new
-  // one (docs/features/record-migrations.md).
+  // docs/features/record-migrations.md, "Salvage, so the reader has something to do".
   overviewId?: OverviewId | undefined;
-  // Read at the moment the record is written, not when the run starts: the reason is
-  // typed while the overview is being made (docs/features/capture-reason.md).
+  // Read as the record is written, not when the run starts: the reason is typed while the run goes.
   captureReason?: (() => string) | undefined;
-  // Set for a video the capture queue took from a followed playlist
-  // (docs/features/playlists.md, "The From line").
   fromPlaylist?: PlaylistOrigin | undefined;
-  // How many of the note's tags were already in the library, counted against the library
-  // as the run saw it (docs/features/tag-reuse.md).
   onTagged?: ((tagging: TaggingCounts) => void) | undefined;
-  // Whether anything about the reader went into the prompt, as composed for this run
-  // (docs/features/personalisation.md, "Analytics").
   onPersonalised?: ((personalised: boolean) => void) | undefined;
   // A video's kind, already checked before the account (OV-327), so writing skips its own check.
   noteKind?: NoteKind | undefined;
   // The same measurement the timing is sent from, so the event's duration agrees with it.
   onTimed?: ((timing: ClientTimingReport) => void) | undefined;
-  // Each key as it is tried, so analytics names the one that made or failed the overview.
   onAttempt?: OverviewMeta["onAttempt"];
-  // How many projects a new overview was filed into, once each is written. Not called when
-  // nothing was offered for filing: switched off, no projects, or a regeneration.
+  // Not called when nothing was offered for filing: switched off, no projects, or a regeneration.
   onProjectsFiled?: ((count: number) => void) | undefined;
 }
 
@@ -148,9 +130,7 @@ export const runOverviewGeneration = async (
   }
 };
 
-// An article has no transcript to keep, so what's read is used and let go
-// (docs/features/article-panel.md). Nothing is reserved until it is read, so a page that
-// can't be read costs the reader nothing.
+// Nothing is reserved until the page is read, so a page that can't be read costs the reader nothing.
 export const runArticleOverviewGeneration = async (
   read: () => Promise<ArticleRead>,
   deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "projectStore">,
@@ -175,16 +155,11 @@ export const runArticleOverviewGeneration = async (
 
 export interface PodcastRunRequest {
   episode: PodcastEpisode;
-  // The link the reader pasted, kept as the overview's way out.
   sharedFrom: string;
-  // The episode's audio is transcribed rather than its words looked for, and how that came about
-  // (designs 305c, 305c-2, 305d, 305k).
   transcribe?: TranscribeChoice | undefined;
 }
 
-// An episode is read before Create is pressed, so the run starts at its words: the free routes,
-// then the note in a podcast's words. An episode with no words found makes nothing and costs
-// nothing (docs/features/podcast-screens.md).
+// No words found makes nothing and costs nothing: docs/features/podcast-screens.md, "Making one".
 export const runPodcastOverviewGeneration = async (
   { episode, sharedFrom }: PodcastRunRequest,
   findWords: (episode: PodcastEpisode, options: RunOverviewGenerationOptions) => Promise<Pick<PodcastTranscript, "transcript">>,
@@ -214,9 +189,7 @@ const stopIfCancelled = (options: RunOverviewGenerationOptions): void => {
   }
 };
 
-// A regeneration rewrites what the model wrote and keeps what the reader did: why they saved it,
-// where they filed it, its tags, when they saved it and where it came from
-// (docs/features/one-overview-per-video.md, "Regenerating").
+// What a regeneration keeps: docs/features/one-overview-per-video.md, "Regenerating".
 const keptOnRegeneration = (previous: Overview) => ({
   savedAt: previous.savedAt,
   captureReason: previous.captureReason,

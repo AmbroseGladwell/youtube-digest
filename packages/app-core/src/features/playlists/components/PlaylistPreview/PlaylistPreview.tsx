@@ -16,7 +16,6 @@ export interface PlaylistPreviewProps {
   alreadyFollowing: boolean;
   stacked: boolean;
   busy: boolean;
-  // The pace and order both follow actions follow at, preselected to the reader's defaults.
   // Null hides them: a playlist already followed keeps its own, and a single video needs none.
   pace: PlaylistPace | null;
   defaultPace: PlaylistPace;
@@ -50,10 +49,7 @@ const footOf = ({ alreadyFollowing, title, pace, toMake }: FootFacts): string =>
   return `Both follow ${title}, at this pace and in this order. Change them any time in Settings › YouTube playlists.`;
 };
 
-// Design 27c–27f: title, owner and how it's shared, then the numbers as sentences and the
-// token estimate labelled as one, every figure counted in code. Both main actions follow;
-// Cancel follows nothing. Focus moves to the actions when it opens. The pace and the order sit
-// behind one line each with Change, because the defaults need no attention (95t–95v).
+// The defaults need no attention, so pace and order sit behind one line each (95t–95v).
 export const PlaylistPreview = ({
   lookup,
   preview,

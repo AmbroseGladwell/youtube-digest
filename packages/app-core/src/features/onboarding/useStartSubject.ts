@@ -8,19 +8,15 @@ import { START_VERB } from "./util/sampleFacts.js";
 import { useStartOnboarding } from "./useStartOnboarding.js";
 
 export interface StartSubject {
-  // The headline's verb while the tab holds this (205g-2, 205g-3). A page is "Learn More,"
-  // whatever it turns out to be: we don't read one until Create, so a recipe isn't known
-  // here and Cook Easier waits for the deck's front card.
+  // A page is "Learn More" whatever it is: it isn't read until Create (205g-2, 205g-3).
   verb: string;
   noun: "video" | "page";
-  // The same card as signed in (205a), once the tab says enough to draw it: a video's
-  // channel and title arrive with the captions, which noticing it fetched anyway.
+  // A video's channel and title arrive with the captions, which noticing it fetched anyway (205a).
   offer: { source: string; title: string; video: boolean } | null;
   make: () => void;
 }
 
-// What Start is beside, which in the panel is the tab and on the web is nothing: the shell
-// supplies neither context there (docs/features/extension-panel.md).
+// Null on the web, where Start is beside no tab.
 export const useStartSubject = (): StartSubject | null => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();

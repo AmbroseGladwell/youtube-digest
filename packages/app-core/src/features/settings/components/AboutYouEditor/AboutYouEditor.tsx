@@ -18,12 +18,7 @@ export interface AboutYouEditorProps {
   onChange: (section: AboutYouSection, entries: string[]) => void;
 }
 
-// The sentence and its sheet, the same in onboarding and Settings. Wide, the sheet is a
-// popover under the sentence; on a phone, a bottom sheet; in the panel it takes the panel
-// over (designs 141b, 141g). The sentence reads the sheet's picks as they're made. Every way
-// out commits them; Done, Escape and Back hand focus back to the section, while a click or tab
-// away from the popover leaves focus where it went. A click away commits on press but closes
-// on click, so the popover's going doesn't move what was clicked out from under the pointer.
+// A click away commits on press but closes on click, so what was clicked doesn't move under the pointer.
 export const AboutYouEditor = ({ aboutYou, size, topicNames, onChange }: AboutYouEditorProps) => {
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();

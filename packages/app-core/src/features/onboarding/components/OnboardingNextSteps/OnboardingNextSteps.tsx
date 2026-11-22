@@ -13,11 +13,7 @@ import styles from "./OnboardingNextSteps.module.scss";
 import { onboardingNextStepsTestIds } from "./OnboardingNextStepsTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
-// Design 46l: under the Verdict of onboarding's overview, the extension and the AI connection,
-// each dismissible, and never a modal. Shown only on the overview onboarding ended on. The
-// extension is offered only where it can be added (useExtensionOffered); elsewhere the AI
-// connection alone. After a sample, making
-// one of their own comes first (155k).
+// Never a modal, and shown only on the overview onboarding ended on (46l, 155k).
 export const OnboardingNextSteps = ({ overviewId }: { overviewId: OverviewId }) => {
   const analytics = useAnalytics();
   const extensionOffered = useExtensionOffered();
@@ -89,9 +85,7 @@ export const OnboardingNextSteps = ({ overviewId }: { overviewId: OverviewId }) 
   );
 };
 
-// Design 155k: after a sample, the first next step is making one of their own, with its own
-// field, so the next overview can start without leaving the page. It's the shell's own run, as
-// the empty library's field starts, and it hides when there's no way to make one.
+// The shell's own run, as the empty library's field starts, so it hides when there's no way to make one.
 const TryYourOwn = ({ onDismiss }: { onDismiss: () => void }) => {
   const analytics = useAnalytics();
   const { ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
