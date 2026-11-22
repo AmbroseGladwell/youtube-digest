@@ -19,11 +19,15 @@ export function usOvenTemperatures(text: string): TemperaturePiece[] {
   const pieces: TemperaturePiece[] = [];
   let from = 0;
   for (const match of text.matchAll(CELSIUS)) {
-    if (match.index > from) pieces.push({ text: text.slice(from, match.index), converted: false });
+    if (match.index > from) {
+      pieces.push({ text: text.slice(from, match.index), converted: false });
+    }
     pieces.push({ text: `${fahrenheit(Number(match[1]))}°F`, converted: true });
     from = match.index + match[0].length;
   }
-  if (from < text.length) pieces.push({ text: text.slice(from), converted: false });
+  if (from < text.length) {
+    pieces.push({ text: text.slice(from), converted: false });
+  }
   return pieces;
 }
 

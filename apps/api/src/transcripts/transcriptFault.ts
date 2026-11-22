@@ -9,8 +9,12 @@ export function transcriptFault(transcript: StoredTranscript, videoId: VideoId):
   if (transcript.videoId !== videoId || (transcript.video?.id != null && transcript.video.id !== videoId)) {
     return "another-video";
   }
-  if (segments.length === 0) return "no-segments";
-  if (segments.every((segment) => segment.text.trim() === "")) return "no-words";
+  if (segments.length === 0) {
+    return "no-segments";
+  }
+  if (segments.every((segment) => segment.text.trim() === "")) {
+    return "no-words";
+  }
   const outOfOrder = segments.some(
     (segment, index) => segment.endMs < segment.startMs || (index > 0 && segment.startMs < segments[index - 1]!.startMs),
   );

@@ -24,8 +24,11 @@ export function ConnectionRow({ connection, now, sharingProfile, onRevoke }: Con
   const titleId = `connection-${connection.id}-revoke`;
 
   useEffect(() => {
-    if (confirming) confirmTitle.current?.focus();
-    else if (returned) revokeButton.current?.focus();
+    if (confirming) {
+      confirmTitle.current?.focus();
+    } else if (returned) {
+      revokeButton.current?.focus();
+    }
   }, [confirming, returned]);
 
   if (confirming) {

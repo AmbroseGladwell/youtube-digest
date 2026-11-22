@@ -11,7 +11,9 @@ export function useSlowAnswer(answering: boolean, text: string): Slowness {
   const [slow, setSlow] = useState<Slowness>(null);
   useEffect(() => {
     setSlow(null);
-    if (!answering) return;
+    if (!answering) {
+      return;
+    }
     const timer = setTimeout(() => setSlow(text === "" ? "noWordsYet" : "stalled"), text === "" ? NO_WORDS_MS : STALLED_MS);
     return () => clearTimeout(timer);
   }, [answering, text]);

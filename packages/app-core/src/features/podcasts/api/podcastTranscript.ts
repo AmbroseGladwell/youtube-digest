@@ -20,7 +20,9 @@ const FAILURES = new Set<string>(Object.values(TranscriptFetchFailure));
 const SOURCE_ID = "podcast";
 
 const asTranscriptError = (error: unknown): TranscriptFetchError => {
-  if (error instanceof TranscriptFetchError) return error;
+  if (error instanceof TranscriptFetchError) {
+    return error;
+  }
   if (isSyncRequestError(error) && error.code === "transcript_unavailable") {
     const failure = error.details?.failure;
     return new TranscriptFetchError(error.message, {
@@ -66,8 +68,12 @@ export async function podcastTranscript(
   try {
     return { transcript: await api.transcript(ask), keptForEveryone: true };
   } catch (error) {
-    if (!isNoCaptions(error)) throw asTranscriptError(error);
-    if (!isTranscribable(error)) return fromYouTube(api, episode, youTubeFetch, ask);
+    if (!isNoCaptions(error)) {
+      throw asTranscriptError(error);
+    }
+    if (!isTranscribable(error)) {
+      return fromYouTube(api, episode, youTubeFetch, ask);
+    }
   }
   try {
     return await fromYouTube(api, episode, youTubeFetch, ask);
@@ -103,7 +109,9 @@ async function fromYouTube(
       }
       videoId = found.videoId;
     } catch (error) {
-      if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) throw error;
+      if (error instanceof TranscriptFetchError && error.failure === TranscriptFetchFailure.NO_CAPTIONS) {
+        throw error;
+      }
     }
   }
 
@@ -116,7 +124,9 @@ async function fromYouTube(
   try {
     return { transcript: await api.transcript({ ...ask, youTubeVideoId: videoId }), keptForEveryone: true };
   } catch (error) {
-    if (!isUnconfirmed(error) || youTubeFetch === null) throw asTranscriptError(error);
+    if (!isUnconfirmed(error) || youTubeFetch === null) {
+      throw asTranscriptError(error);
+    }
   }
   const fetched = await fetchInnerTubeTranscript(youTubeFetch, videoId, `https://www.youtube.com/watch?v=${videoId}`);
   return {

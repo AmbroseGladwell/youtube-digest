@@ -13,7 +13,9 @@ function restoringFor(accountId: string | null): RestoredLibraryView {
 
 function withoutMissingTopic(restoring: RestoredLibraryView, topics: Topic[]): RestoredLibraryView {
   const { topicId } = restoring.view.filters;
-  if (topicId === "all" || topics.some((topic) => topic.id === topicId)) return restoring;
+  if (topicId === "all" || topics.some((topic) => topic.id === topicId)) {
+    return restoring;
+  }
   return {
     ...restoring,
     view: { ...restoring.view, filters: { ...restoring.view.filters, topicId: "all" } },
@@ -51,10 +53,16 @@ export function useLibraryView(topics: Topic[] | undefined, { remember = true }:
   }
 
   useEffect(() => {
-    if (restoring === null || target.current?.restoring === restoring) return;
-    if (topics === undefined && restoring.view.filters.topicId !== "all") return;
+    if (restoring === null || target.current?.restoring === restoring) {
+      return;
+    }
+    if (topics === undefined && restoring.view.filters.topicId !== "all") {
+      return;
+    }
     const restored = topics === undefined ? restoring : withoutMissingTopic(restoring, topics);
-    if (restored.dropped.length > 0) writeLibraryView(accountId, restored.view);
+    if (restored.dropped.length > 0) {
+      writeLibraryView(accountId, restored.view);
+    }
     const next = applyLibraryView(searchParams, restored.view);
     if (next.toString() === searchParams.toString()) {
       setRestoring(null);
@@ -70,7 +78,9 @@ export function useLibraryView(topics: Topic[] | undefined, { remember = true }:
   const change = (next: URLSearchParams) => {
     setRestoring(null);
     setSearchParams(next, { replace: true });
-    if (remember) writeLibraryView(accountId, parseLibraryView(next));
+    if (remember) {
+      writeLibraryView(accountId, parseLibraryView(next));
+    }
   };
 
   return { searchParams: shown, view: parseLibraryView(shown), change };

@@ -14,7 +14,9 @@ export function createHttpTranscriber(baseUrl: string, token: string, fetchImpl:
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
     });
-    if (!response.ok) throw new Error(`The transcriber answered ${response.status} to ${method} ${path.split("/")[1]}`);
+    if (!response.ok) {
+      throw new Error(`The transcriber answered ${response.status} to ${method} ${path.split("/")[1]}`);
+    }
     return response.json();
   };
   return {

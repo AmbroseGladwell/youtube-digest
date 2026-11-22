@@ -37,7 +37,9 @@ export class ServiceUsageRepository {
   // with no captions, or a fetch that failed, costs the caller nothing
   // (docs/architecture/server-side-transcripts.md, "Limits").
   async reserveFetch(now: Date, caller: string, limit: number): Promise<FetchReservation> {
-    if (limit < 1) return { reserved: false, used: 0, limit };
+    if (limit < 1) {
+      return { reserved: false, used: 0, limit };
+    }
     await this.#sql.query("delete from service_transcript_usage where caller <> $1 and day < $2::date", [
       GLOBAL_CALLER,
       usageDay(new Date(now.getTime() - CALLER_RETENTION_DAYS * DAY_MS)),
@@ -50,7 +52,9 @@ export class ServiceUsageRepository {
       [usageDay(now), caller, limit],
     );
     const [row] = rows;
-    if (row !== undefined) return { reserved: true, used: row.fetches, limit };
+    if (row !== undefined) {
+      return { reserved: true, used: row.fetches, limit };
+    }
     return { reserved: false, used: await this.fetchesOn(usageDay(now), caller), limit };
   }
 
@@ -70,7 +74,9 @@ export class ServiceUsageRepository {
   }
 
   async reserveProxy(now: Date, limit: number): Promise<boolean> {
-    if (limit < 1) return false;
+    if (limit < 1) {
+      return false;
+    }
     const rows = await this.#sql.query(
       `insert into service_transcript_usage (day, caller, proxied) values ($1::date, $2, 1)
        on conflict (day, caller) do update set proxied = service_transcript_usage.proxied + 1

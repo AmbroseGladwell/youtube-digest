@@ -62,7 +62,9 @@ test("one address can look up a bounded number of playlists an hour", async () =
   const ask = () =>
     testApp.app.inject({ method: "GET", url: "/api/playlists/PLpsychology", headers: HEADERS, remoteAddress: "203.0.113.9" });
 
-  for (let index = 0; index < 120; index += 1) await ask();
+  for (let index = 0; index < 120; index += 1) {
+    await ask();
+  }
   const refused = await ask();
 
   assert.equal(refused.statusCode, 429);

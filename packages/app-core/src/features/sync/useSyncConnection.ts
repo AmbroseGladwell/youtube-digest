@@ -19,7 +19,9 @@ function getSnapshot(): SyncConnection {
 
 function refresh(): void {
   snapshot = readSyncConnection();
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function subscribe(listener: () => void): () => void {
@@ -27,7 +29,9 @@ function subscribe(listener: () => void): () => void {
   globalThis.addEventListener?.("storage", refresh);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) globalThis.removeEventListener?.("storage", refresh);
+    if (listeners.size === 0) {
+      globalThis.removeEventListener?.("storage", refresh);
+    }
   };
 }
 

@@ -50,7 +50,9 @@ export class ScriptedSyncApi implements SyncApi {
     this.calls.push({ method, args });
     const queued = this.#failures.get(method);
     const failure = queued?.shift() ?? this.#alwaysFail.get(method);
-    if (failure === "transport") throw new SyncTransportError("no network");
+    if (failure === "transport") {
+      throw new SyncTransportError("no network");
+    }
     if (failure !== undefined) {
       throw new SyncRequestError(failure.code, API_ERROR_CODES[failure.code], `simulated ${failure.code}`, failure.details);
     }

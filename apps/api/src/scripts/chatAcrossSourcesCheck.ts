@@ -119,13 +119,19 @@ function locateQuote(segments: readonly TranscriptSegment[], quote: string): num
   const starts: Array<{ offset: number; startMs: number }> = [];
   for (const segment of segments) {
     const text = normalised(segment.text);
-    if (text.length === 0) continue;
-    if (joined.length > 0) joined += " ";
+    if (text.length === 0) {
+      continue;
+    }
+    if (joined.length > 0) {
+      joined += " ";
+    }
     starts.push({ offset: joined.length, startMs: segment.startMs });
     joined += text;
   }
   const found = joined.indexOf(normalised(quote));
-  if (found === -1) return null;
+  if (found === -1) {
+    return null;
+  }
   return starts.filter((start) => start.offset <= found).at(-1)?.startMs ?? null;
 }
 
@@ -150,7 +156,9 @@ async function loadLibrary(dataDir: string): Promise<Library> {
       Overview,
       OVERVIEW_MIGRATIONS,
     );
-    if (read.status !== "read") throw new Error(`overview ${row.id} did not read: ${read.status}`);
+    if (read.status !== "read") {
+      throw new Error(`overview ${row.id} did not read: ${read.status}`);
+    }
     const key = sourceKey(read.record.source);
     const text =
       key === null
@@ -180,7 +188,9 @@ async function loadLibrary(dataDir: string): Promise<Library> {
   const projects = new Map<string, LibraryProject>();
   for (const row of raw.projects ?? []) {
     const read = readStoredRecord(stampSchemaVersion(row.body as Record<string, unknown>, row.schemaVersion), Project, PROJECT_MIGRATIONS);
-    if (read.status !== "read" || read.record.archivedAt !== null) continue;
+    if (read.status !== "read" || read.record.archivedAt !== null) {
+      continue;
+    }
     projects.set(read.record.id, {
       project: read.record,
       members: members
@@ -230,7 +240,9 @@ async function loadQuestions(dataDir: string, library: Library): Promise<{ locat
   for (const folder of ["ov267", "write"]) {
     for (const id of await readdir(join(dataDir, folder)).catch(() => [] as string[])) {
       const text = await readFile(join(dataDir, folder, id, "questions.json"), "utf-8").catch(() => null);
-      if (text === null) continue;
+      if (text === null) {
+        continue;
+      }
       const set = JSON.parse(text) as { overviewId: string; questions: Array<Omit<Question, "expected" | "home">> };
       for (const question of set.questions) {
         questions.push({ ...question, id: `${set.overviewId.slice(0, 8)}.${question.id}`, expected: [set.overviewId], home: null });
@@ -266,11 +278,15 @@ function nearestHome(library: Library, overviewId: string): string {
   const own = library.claimVectors.get(overviewId) ?? [];
   let best = { id: "", similarity: -2 };
   for (const [id, vectors] of library.claimVectors) {
-    if (id === overviewId) continue;
+    if (id === overviewId) {
+      continue;
+    }
     for (const left of own) {
       for (const right of vectors) {
         const similarity = cosine(left, right);
-        if (similarity > best.similarity) best = { id, similarity };
+        if (similarity > best.similarity) {
+          best = { id, similarity };
+        }
       }
     }
   }
@@ -311,7 +327,9 @@ interface RetrievalRow {
 
 async function retrieval(dataDir: string, outPath: string): Promise<void> {
   const apiKey = process.env["OPENAI_API_KEY"];
-  if (!apiKey) throw new Error("OPENAI_API_KEY is needed for the question and passage embeddings");
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is needed for the question and passage embeddings");
+  }
   const library = await loadLibrary(dataDir);
   const { located, dropped } = await loadQuestions(dataDir, library);
   console.error(`${library.overviews.size} overviews, ${located.length} questions located, dropped: ${dropped.join(", ") || "none"}`);
@@ -321,7 +339,11 @@ async function retrieval(dataDir: string, outPath: string): Promise<void> {
   const questionVectors = await cachedEmbeddings(join(dataDir, "embeddings", "questions.json"), queries, apiKey);
 
   const passagesOf = new Map<string, Passage[]>();
-  for (const entry of library.overviews.values()) if (entry.segments !== null) passagesOf.set(entry.id, transcriptPassages(entry.segments));
+  for (const entry of library.overviews.values()) {
+    if (entry.segments !== null) {
+      passagesOf.set(entry.id, transcriptPassages(entry.segments));
+    }
+  }
   const passageTexts = [...passagesOf.values()].flat().map((passage) => passage.text);
   const passageVectors = await cachedEmbeddings(join(dataDir, "embeddings", "passages.json"), passageTexts, apiKey);
   const hours = [...library.overviews.values()].reduce((total, entry) => total + (entry.segments?.at(-1)?.endMs ?? 0), 0) / 3_600_000;
@@ -430,16 +452,24 @@ const termsOf = (text: string): string[] =>
 function keywordIndex(library: Library) {
   const docs: Array<{ overviewId: string; passage: Passage; terms: Map<string, number>; length: number }> = [];
   for (const entry of library.overviews.values()) {
-    if (entry.segments === null) continue;
+    if (entry.segments === null) {
+      continue;
+    }
     for (const passage of transcriptPassages(entry.segments)) {
       const terms = new Map<string, number>();
       const words = termsOf(passage.text);
-      for (const word of words) terms.set(word, (terms.get(word) ?? 0) + 1);
+      for (const word of words) {
+        terms.set(word, (terms.get(word) ?? 0) + 1);
+      }
       docs.push({ overviewId: entry.id, passage, terms, length: words.length });
     }
   }
   const frequency = new Map<string, number>();
-  for (const doc of docs) for (const term of doc.terms.keys()) frequency.set(term, (frequency.get(term) ?? 0) + 1);
+  for (const doc of docs) {
+    for (const term of doc.terms.keys()) {
+      frequency.set(term, (frequency.get(term) ?? 0) + 1);
+    }
+  }
   const average = docs.reduce((total, doc) => total + doc.length, 0) / docs.length;
   const K1 = 1.2;
   const B = 0.75;
@@ -451,7 +481,9 @@ function keywordIndex(library: Library) {
         let score = 0;
         for (const term of terms) {
           const count = doc.terms.get(term);
-          if (count === undefined) continue;
+          if (count === undefined) {
+            continue;
+          }
           const df = frequency.get(term)!;
           const idf = Math.log(1 + (docs.length - df + 0.5) / (df + 0.5));
           score += idf * ((count * (K1 + 1)) / (count + K1 * (1 - B + (B * doc.length) / average)));
@@ -512,7 +544,9 @@ async function keywordStore(library: Library) {
   const overviewOf = new Map<string, string>();
   for (const entry of library.overviews.values()) {
     const key = sourceKey(entry.overview.source);
-    if (key === null || entry.segments === null || videoOf.has(entry.id)) continue;
+    if (key === null || entry.segments === null || videoOf.has(entry.id)) {
+      continue;
+    }
     videoOf.set(entry.id, key);
     overviewOf.set(key, entry.id);
     const body = makeStoredTranscript({ videoId: VideoId.parse(key), segments: entry.segments });
@@ -611,8 +645,12 @@ function arms(): Map<string, Arm> {
   const pinned = (count: number) => (row: RetrievalRow) => {
     const pins = row.expected.slice(0, Math.min(row.expected.length, count));
     for (const id of row.claimOrder) {
-      if (pins.length >= count) break;
-      if (!pins.includes(id)) pins.push(id);
+      if (pins.length >= count) {
+        break;
+      }
+      if (!pins.includes(id)) {
+        pins.push(id);
+      }
     }
     return pins;
   };
@@ -762,7 +800,9 @@ async function answer(
   options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
 ) {
   const apiKey = process.env["OPENAI_API_KEY"];
-  if (!options.dryRun && !apiKey) throw new Error("OPENAI_API_KEY is needed");
+  if (!options.dryRun && !apiKey) {
+    throw new Error("OPENAI_API_KEY is needed");
+  }
   const library = await loadLibrary(dataDir);
   const { located } = await loadQuestions(dataDir, library);
   const retrievalRows = (JSON.parse(await readFile(retrievalPath, "utf-8")) as { rows: RetrievalRow[] }).rows;
@@ -789,11 +829,12 @@ async function answer(
       .sort((left, right) => right.similarity - left.similarity)
       .slice(0, 8);
     const chosen = new Map<string, Passage[]>();
-    for (const { id, passage } of scored)
+    for (const { id, passage } of scored) {
       chosen.set(
         id,
         [...(chosen.get(id) ?? []), passage].sort((a, b) => a.startMs - b.startMs),
       );
+    }
     return chosen;
   };
   // The keyword shape: the eight minutes that best match the question's words, by BM25 over the
@@ -822,7 +863,9 @@ async function answer(
     const chosen = new Map<string, Passage[]>();
     for (const hit of hits) {
       const overviewId = store!.overviewOf.get(hit.videoId);
-      if (overviewId === undefined) continue;
+      if (overviewId === undefined) {
+        continue;
+      }
       const held = chosen.get(overviewId) ?? [];
       chosen.set(
         overviewId,
@@ -844,15 +887,25 @@ async function answer(
       continue;
     }
     const arm = all.get(armName);
-    if (arm === undefined) throw new Error(`no arm ${armName}: ${[...all.keys()].join(", ")}`);
+    if (arm === undefined) {
+      throw new Error(`no arm ${armName}: ${[...all.keys()].join(", ")}`);
+    }
     for (let run = 1; run <= options.runs; run += 1) {
       for (const row of retrievalRows) {
         const question = byId.get(row.id);
-        if (question === undefined) continue;
-        if (options.only !== null && !new RegExp(options.only).test(question.kind)) continue;
-        if (seen.has(key(arm.name, run, row.id))) continue;
+        if (question === undefined) {
+          continue;
+        }
+        if (options.only !== null && !new RegExp(options.only).test(question.kind)) {
+          continue;
+        }
+        if (seen.has(key(arm.name, run, row.id))) {
+          continue;
+        }
         const ownId = arm.name === "own" && question.expected.length === 1 ? question.expected[0]! : row.home;
-        if (arm.name === "own" && (question.kind === "notInLibrary" || question.kind === "applyAcross")) continue;
+        if (arm.name === "own" && (question.kind === "notInLibrary" || question.kind === "applyAcross")) {
+          continue;
+        }
         const home = library.overviews.get(ownId)!;
         const kind = chatSourceKind(home.overview);
         const homePassages = home.segments === null ? [] : transcriptPassages(home.segments);
@@ -903,7 +956,9 @@ async function answer(
             `ov307-${arm.name}-${run}-${row.id}`,
           );
           let raw = "";
-          for await (const piece of stream.pieces) raw += piece;
+          for await (const piece of stream.pieces) {
+            raw += piece;
+          }
           const reply = scoredReply(ChatReply.parse(JSON.parse(raw)));
           const usage = stream.usage();
           const own = arm.name === "own";
@@ -963,7 +1018,9 @@ async function answer(
         }
         done.push(turn);
         spent += turn.costDollars;
-        if (done.length % 10 === 0) await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
+        if (done.length % 10 === 0) {
+          await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
+        }
         console.error(
           `${arm.name} r${run} ${row.id} ${turn.failed ? "FAILED" : `$${turn.costDollars.toFixed(5)} cited ${turn.citedOthers.join(",") || "-"}`}`,
         );
@@ -1007,7 +1064,9 @@ function score(
       ? null
       : question.moments.every((moment) => {
           const source = sources.find((candidate) => candidate.overviewId === moment.overviewId);
-          if (source === undefined) return false;
+          if (source === undefined) {
+            return false;
+          }
           return source.passages.some(
             (passage) =>
               cited.has(`${source.label}.${passage.id}`) &&
@@ -1120,7 +1179,9 @@ async function mapArm(
   options: { runs: number; budget: number; dryRun: boolean; spent: number; apiKey: string },
 ): Promise<number> {
   const withKeyPoints = armName === "map-keypoints";
-  if (!withKeyPoints && armName !== "map-compact") throw new Error(`no arm ${armName}`);
+  if (!withKeyPoints && armName !== "map-compact") {
+    throw new Error(`no arm ${armName}`);
+  }
   const questions = (JSON.parse(await readFile(join(dataDir, "synthesis.json"), "utf-8")) as { questions: SynthesisQuestion[] }).questions;
   const resolve = (prefix: string) => [...library.overviews.keys()].find((id) => id.startsWith(prefix)) ?? prefix;
   const map = libraryMap(library, withKeyPoints);
@@ -1136,15 +1197,22 @@ async function mapArm(
   }
   for (let run = 1; run <= options.runs; run += 1) {
     for (const question of questions) {
-      if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
+      if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) {
+        continue;
+      }
       if (spent >= options.budget) {
         console.error(`budget of $${options.budget} reached at $${spent.toFixed(4)}`);
         break;
       }
       const core = question.core.map(resolve);
       const relevant = new Set([...core, ...question.relevant.map(resolve)]);
-      if (question.recipesRelevant)
-        for (const entry of library.overviews.values()) if (entry.overview.recipe !== null) relevant.add(entry.id);
+      if (question.recipesRelevant) {
+        for (const entry of library.overviews.values()) {
+          if (entry.overview.recipe !== null) {
+            relevant.add(entry.id);
+          }
+        }
+      }
       const startedAt = Date.now();
       let turn: MapTurn;
       try {
@@ -1157,7 +1225,9 @@ async function mapArm(
           `ov307-${armName}`,
         );
         let raw = "";
-        for await (const piece of stream.pieces) raw += piece;
+        for await (const piece of stream.pieces) {
+          raw += piece;
+        }
         const reply = scoredReply(ChatReply.parse(JSON.parse(raw)));
         const usage = stream.usage();
         const ids = [...new Set(reply.overviewParts)];
@@ -1327,13 +1397,17 @@ function projectMaterial(
     const entry = library.overviews.get(id)!;
     let body: string;
     if (options.whole) {
-      for (const { part, index: at } of overviewParts(entry.overview)) partIds.add(`${label}.${overviewPartId(part, at)}`);
+      for (const { part, index: at } of overviewParts(entry.overview)) {
+        partIds.add(`${label}.${overviewPartId(part, at)}`);
+      }
       body = `## [${label}]\n\n${overviewMarkdown(entry.overview, { partIds: true }).replace(PART_ID, (_, part: string) => `[${label}.${part}] `)}`;
     } else {
       body = briefLine(label, entry);
     }
     const passages = options.passages?.get(id) ?? [];
-    for (const passage of passages) partIds.add(`${label}.${passage.id}`);
+    for (const passage of passages) {
+      partIds.add(`${label}.${passage.id}`);
+    }
     const minutes =
       passages.length === 0
         ? ""
@@ -1397,7 +1471,9 @@ async function projectChat(
   options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
 ): Promise<void> {
   const apiKey = process.env["OPENAI_API_KEY"];
-  if (!options.dryRun && !apiKey) throw new Error("OPENAI_API_KEY is needed");
+  if (!options.dryRun && !apiKey) {
+    throw new Error("OPENAI_API_KEY is needed");
+  }
   const library = await loadLibrary(dataDir);
   const file = JSON.parse(await readFile(join(dataDir, "projects.json"), "utf-8")) as {
     questions: ProjectQuestion[];
@@ -1422,7 +1498,9 @@ async function projectChat(
     : new Map<string, number[]>();
   const closestMembers = (question: ProjectQuestion, members: string[]): string[] => {
     const vector = vectors.get(question.question.trim().toLowerCase());
-    if (vector === undefined) return members;
+    if (vector === undefined) {
+      return members;
+    }
     const best = (id: string) => Math.max(...(library.claimVectors.get(id) ?? []).map((claim) => cosine(vector, claim)), -1);
     return [...members].sort((left, right) => best(right) - best(left));
   };
@@ -1432,8 +1510,12 @@ async function projectChat(
     const questions: ProjectQuestion[] = pinned ? atQuestions : file.questions;
     for (let run = 1; run <= options.runs; run += 1) {
       for (const question of questions) {
-        if (options.only !== null && !new RegExp(options.only).test(question.id)) continue;
-        if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
+        if (options.only !== null && !new RegExp(options.only).test(question.id)) {
+          continue;
+        }
+        if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) {
+          continue;
+        }
         const entry = projectOf(question.project);
         let messages: PromptMessage[];
         let citedOf: (reply: ScoredReply) => { cited: string[]; invalid: string[] };
@@ -1467,17 +1549,19 @@ async function projectChat(
         } else {
           const whole = armName === "project-full";
           const keywordArm = armName === "project-map+keyword8";
-          if (!["project-full", "project-map", "project-map-nopurpose", "project-map+keyword8"].includes(armName))
+          if (!["project-full", "project-map", "project-map-nopurpose", "project-map+keyword8"].includes(armName)) {
             throw new Error(`no arm ${armName}`);
+          }
           let passages: Map<string, Passage[]> | null = null;
           if (keywordArm) {
             const within: Library = { ...library, overviews: new Map(entry.members.map((id) => [id, library.overviews.get(id)!])) };
             passages = new Map();
-            for (const { overviewId, passage } of keywordIndex(within).passages(question.question, "", 8))
+            for (const { overviewId, passage } of keywordIndex(within).passages(question.question, "", 8)) {
               passages.set(
                 overviewId,
                 [...(passages.get(overviewId) ?? []), passage].sort((a, b) => a.startMs - b.startMs),
               );
+            }
           }
           const material = projectMaterial(library, entry, { whole, purpose: armName !== "project-map-nopurpose", passages });
           messages = [
@@ -1494,10 +1578,12 @@ async function projectChat(
         }
         const characters = messages.reduce((total, message) => total + message.content.length, 0);
         if (options.dryRun) {
-          if (process.env["SHOW"] === question.id && run === 1)
+          if (process.env["SHOW"] === question.id && run === 1) {
             console.log(messages.map((m) => `=== ${m.role}\n${m.content}`).join("\n\n"));
-          if (run === 1)
+          }
+          if (run === 1) {
             console.log(`${armName} ${question.id}: ${entry.members.length} members, about ${Math.round(characters / 4)} prompt tokens`);
+          }
           ceiling += (characters / 4) * (0.125 / 1_000_000) + (700 * price.perMillion.output) / 1_000_000;
           continue;
         }
@@ -1526,9 +1612,12 @@ async function projectChat(
               : { name: "chat_reply", schema: CHAT_REPLY_SCHEMA, maxTokens: Number(process.env["MAX_TOKENS"]) },
           );
           let raw = "";
-          for await (const piece of stream.pieces) raw += piece;
-          if (stream.finishReason() === "length")
+          for await (const piece of stream.pieces) {
+            raw += piece;
+          }
+          if (stream.finishReason() === "length") {
             throw new Error(`cut off at the cap, ${stream.usage()?.outputTokens ?? "?"} output tokens`);
+          }
           const reply = scoredReply(ChatReply.parse(JSON.parse(raw)));
           const usage = stream.usage();
           const { cited, invalid } = citedOf(reply);
@@ -1676,7 +1765,9 @@ interface StructuredAnswer {
 // the paragraphs and lists, its sources every id the section names. The intro's sources join as a point.
 function asPoints(json: unknown): StructuredAnswer {
   const sections = (json as { sections: Array<Record<string, unknown>> }).sections;
-  if (sections.every((section) => Array.isArray(section["points"]))) return json as StructuredAnswer;
+  if (sections.every((section) => Array.isArray(section["points"]))) {
+    return json as StructuredAnswer;
+  }
   const shared = json as ChatReply;
   return {
     intro: shared.intro,
@@ -1750,11 +1841,15 @@ async function completeJson(
     }),
     signal: AbortSignal.timeout(180_000),
   });
-  if (!response.ok) throw new Error(`The provider answered ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`The provider answered ${response.status}`);
+  }
   const body = (await response.json()) as { choices: Array<{ message: { content: string | null }; finish_reason: string }> };
   const usage = tokenUsageOf("openai", body);
   const choice = body.choices[0]!;
-  if (choice.finish_reason === "length") throw Object.assign(new Error("cut off at the answer cap"), { usage });
+  if (choice.finish_reason === "length") {
+    throw Object.assign(new Error("cut off at the answer cap"), { usage });
+  }
   return { json: JSON.parse(choice.message.content ?? ""), usage };
 }
 
@@ -1827,7 +1922,9 @@ async function twoPass(
   options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
 ): Promise<void> {
   const apiKey = process.env["OPENAI_API_KEY"];
-  if (!options.dryRun && !apiKey) throw new Error("OPENAI_API_KEY is needed");
+  if (!options.dryRun && !apiKey) {
+    throw new Error("OPENAI_API_KEY is needed");
+  }
   const library = await loadLibrary(dataDir);
   const resolve = (prefix: string) => [...library.overviews.keys()].find((id) => id.startsWith(prefix)) ?? prefix;
   const synthesis = (JSON.parse(await readFile(join(dataDir, "synthesis.json"), "utf-8")) as { questions: SynthesisQuestion[] }).questions;
@@ -1845,11 +1942,17 @@ async function twoPass(
   let ceiling = 0;
 
   for (const armName of options.arms) {
-    if (armName !== "structured-map" && armName !== "two-pass" && armName !== "shipped") throw new Error(`no arm ${armName}`);
+    if (armName !== "structured-map" && armName !== "two-pass" && armName !== "shipped") {
+      throw new Error(`no arm ${armName}`);
+    }
     for (let run = 1; run <= options.runs; run += 1) {
       for (const question of questions) {
-        if (options.only !== null && !new RegExp(options.only).test(question.id)) continue;
-        if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) continue;
+        if (options.only !== null && !new RegExp(options.only).test(question.id)) {
+          continue;
+        }
+        if (done.some((turn) => turn.arm === armName && turn.run === run && turn.id === question.id)) {
+          continue;
+        }
         const shipped = armName === "shipped" ? shippedSystem(library, question.scope) : null;
         const system = shipped ?? twoPassSystem(library, question.scope);
         if (options.dryRun) {
@@ -1858,7 +1961,9 @@ async function twoPass(
             armName === "two-pass"
               ? tokens * (0.125 / 1e6) + tokens * (0.01 / 1e6) + 12_000 * (0.125 / 1e6) + 1_600 * (price.perMillion.output / 1e6)
               : tokens * (0.125 / 1e6) + 1_500 * (price.perMillion.output / 1e6);
-          if (run === 1) console.log(`${armName} ${question.id}: about ${Math.round(tokens)} map tokens`);
+          if (run === 1) {
+            console.log(`${armName} ${question.id}: about ${Math.round(tokens)} map tokens`);
+          }
           continue;
         }
         if (spent >= options.budget) {
@@ -1871,14 +1976,18 @@ async function twoPass(
         let picked: string[] = [];
         const partIds = new Set<string>();
         const texts = new Map<string, string>();
-        for (const [label, id] of system.labels) texts.set(label, briefLine(label, library.overviews.get(id)!));
+        for (const [label, id] of system.labels) {
+          texts.set(label, briefLine(label, library.overviews.get(id)!));
+        }
         let turn: TwoPassTurn;
         try {
           const messages: PromptMessage[] = [{ role: "system", content: system.text }];
           if (shipped?.mode === "whole") {
             for (const [label, id] of system.labels) {
               const entry = library.overviews.get(id)!;
-              for (const { part, index } of overviewParts(entry.overview)) partIds.add(`${label}.${overviewPartId(part, index)}`);
+              for (const { part, index } of overviewParts(entry.overview)) {
+                partIds.add(`${label}.${overviewPartId(part, index)}`);
+              }
               texts.set(label, `${texts.get(label)}\n${overviewMarkdown(entry.overview)}`);
             }
           }
@@ -1904,7 +2013,9 @@ async function twoPass(
               .slice(0, PICKS);
             const whole = picked.map((label) => {
               const entry = library.overviews.get(system.labels.get(label)!)!;
-              for (const { part, index } of overviewParts(entry.overview)) partIds.add(`${label}.${overviewPartId(part, index)}`);
+              for (const { part, index } of overviewParts(entry.overview)) {
+                partIds.add(`${label}.${overviewPartId(part, index)}`);
+              }
               const markdown = overviewMarkdown(entry.overview, { partIds: true }).replace(
                 PART_ID,
                 (_, part: string) => `[${label}.${part}] `,

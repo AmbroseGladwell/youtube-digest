@@ -14,7 +14,9 @@ async function* decodedChunks(body: ReadableStream<Uint8Array>, mostBytes: numbe
   try {
     for (let read = await reader.read(); !read.done; read = await reader.read()) {
       bytes += read.value.byteLength;
-      if (bytes > mostBytes) return;
+      if (bytes > mostBytes) {
+        return;
+      }
       yield decoder.decode(read.value, { stream: true });
     }
     yield decoder.decode();
@@ -31,11 +33,17 @@ export async function fetchFeedEpisode(
   mostBytes = MOST_FEED_BYTES,
 ): Promise<FeedRead> {
   const answer = await fetchPublicWeb(feedUrl, { accept: FEED });
-  if (answer.status === "failed") return { status: "failed", reason: answer.reason === "no-answer" ? "no-answer" : "no-public-feed" };
-  if (answer.response.body === null) return { status: "failed", reason: "feed-unreadable" };
+  if (answer.status === "failed") {
+    return { status: "failed", reason: answer.reason === "no-answer" ? "no-answer" : "no-public-feed" };
+  }
+  if (answer.response.body === null) {
+    return { status: "failed", reason: "feed-unreadable" };
+  }
   try {
     const feed = await readFeedEpisode(decodedChunks(answer.response.body as ReadableStream<Uint8Array>, mostBytes), isWanted);
-    if (feed.show.title === null && feed.itemsRead === 0) return { status: "failed", reason: "feed-unreadable" };
+    if (feed.show.title === null && feed.itemsRead === 0) {
+      return { status: "failed", reason: "feed-unreadable" };
+    }
     return { status: "feed", feed };
   } catch {
     return { status: "failed", reason: "no-answer" };

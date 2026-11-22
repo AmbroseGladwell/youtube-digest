@@ -20,7 +20,9 @@ function directoryOver(answers: Record<string, unknown>) {
     async (url, headers) => {
       asked.push({ url, headers });
       const path = new URL(url).pathname.replace("/api/1.0/", "");
-      if (!(path in answers)) throw new Error(`unexpected ${path}`);
+      if (!(path in answers)) {
+        throw new Error(`unexpected ${path}`);
+      }
       return answers[path];
     },
     () => NOW,

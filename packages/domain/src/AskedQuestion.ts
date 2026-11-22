@@ -26,7 +26,9 @@ export function foldAskedQuestions(winner: readonly AskedQuestion[], loser: read
   const latest = new Map<string, AskedQuestion>();
   for (const ask of [...winner, ...loser]) {
     const held = latest.get(ask.question);
-    if (held === undefined || ask.askedAt > held.askedAt) latest.set(ask.question, ask);
+    if (held === undefined || ask.askedAt > held.askedAt) {
+      latest.set(ask.question, ask);
+    }
   }
   return [...latest.values()].slice(0, MOST_FOLLOW_UP_QUESTIONS);
 }

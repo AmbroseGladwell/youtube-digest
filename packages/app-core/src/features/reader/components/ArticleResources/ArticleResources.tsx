@@ -28,15 +28,20 @@ const siteOf = (href: string): string => new URL(href).hostname.replace(/^www\./
 export function resourcesPreview(resources: readonly ArticleResource[]): string {
   const names = resources.slice(0, PREVIEW_NAMES).map(({ text }) => text);
   const more = resources.length - names.length;
-  if (more > 0) return `${names.join(", ")} and ${more} more`;
+  if (more > 0) {
+    return `${names.join(", ")} and ${more} more`;
+  }
   return names.join(" and ");
 }
 
 function explanation(source: WebSource, oneChapter: boolean, beside: boolean, several: boolean): string {
   const names = several ? "Names open the resource in a new tab." : "The name opens it in a new tab.";
-  if (oneChapter) return `${names} “Where the article shares it” opens the article on ${sourceName(source)} at that place.`;
-  if (beside)
+  if (oneChapter) {
+    return `${names} “Where the article shares it” opens the article on ${sourceName(source)} at that place.`;
+  }
+  if (beside) {
     return `${several ? "Names open" : "The name opens"} in a new tab. “From” links move the article beside this panel to the place it was shared.`;
+  }
   return `${names} “From” links open the article on ${sourceName(source)} at the place it was shared.`;
 }
 
@@ -46,7 +51,9 @@ export function ArticleResources({ source, article, onPage, compact }: ArticleRe
   const [open, setOpen] = useState(false);
   const listId = useId();
   const resources = article.resources ?? [];
-  if (resources.length === 0) return null;
+  if (resources.length === 0) {
+    return null;
+  }
 
   const several = resources.length > 1;
   const oneChapter = article.chapters.length === 1;

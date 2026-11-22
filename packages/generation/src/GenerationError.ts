@@ -40,8 +40,14 @@ export function providerFailure(status: number, body: string): GenerationError {
   const detail = body.slice(0, 500);
   // 401 is the common refusal; 403 is a key that exists but is not allowed to do this, and
   // reads the same way to a reader holding it.
-  if (status === 401 || status === 403) return new ProviderKeyRefusedError(detail);
-  if (outOfCredit(status, body)) return new ProviderOutOfCreditError(status, detail);
-  if (refusesModel(status)) return new ModelRefusedError(status, detail);
+  if (status === 401 || status === 403) {
+    return new ProviderKeyRefusedError(detail);
+  }
+  if (outOfCredit(status, body)) {
+    return new ProviderOutOfCreditError(status, detail);
+  }
+  if (refusesModel(status)) {
+    return new ModelRefusedError(status, detail);
+  }
   return new ProviderRequestError(status, detail);
 }

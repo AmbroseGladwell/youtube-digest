@@ -50,8 +50,12 @@ export interface GenerateOverviewFormProps {
 // for a video, or a link that is neither.
 export function playlistTargetOf(url: string): PlaylistTarget | null {
   const link = youTubeLink(url);
-  if (link?.kind === "playlist") return { kind: "playlist", playlistId: link.playlistId };
-  if (link?.kind === "unfollowable") return { kind: "unfollowable", list: link.list, videoUrl: link.videoUrl };
+  if (link?.kind === "playlist") {
+    return { kind: "playlist", playlistId: link.playlistId };
+  }
+  if (link?.kind === "unfollowable") {
+    return { kind: "unfollowable", list: link.list, videoUrl: link.videoUrl };
+  }
   return null;
 }
 
@@ -73,7 +77,9 @@ export function GenerateOverviewForm({
   const takeLink = (value: string) => {
     onUrlChange(value);
     const target = playlistsAvailable ? playlistTargetOf(value) : null;
-    if (target !== null) onPlaylist(target, value);
+    if (target !== null) {
+      onPlaylist(target, value);
+    }
   };
   const activeVideoUrl = useActiveVideoUrl();
   const watchedTranscript = useWatchedTranscriptQuery();

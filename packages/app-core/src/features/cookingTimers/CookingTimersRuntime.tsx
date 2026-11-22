@@ -68,7 +68,9 @@ export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimePr
 
   const anyTimer = timers.length > 0;
   useEffect(() => {
-    if (!anyTimer) return;
+    if (!anyTimer) {
+      return;
+    }
     const tick = () => {
       const at = Date.now();
       setNow(at);
@@ -85,7 +87,9 @@ export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimePr
 
   const anyRinging = timers.some(isRinging);
   useEffect(() => {
-    if (!anyRinging) return;
+    if (!anyRinging) {
+      return;
+    }
     const ring = () => void playTimerSound(chosenSound.current);
     ring();
     const interval = setInterval(ring, timerSoundEveryMs(chosenSound.current));
@@ -97,13 +101,17 @@ export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimePr
   useEffect(() => {
     if (anyRinging) {
       const { status, track } = engine.getSnapshot();
-      if (track === null || (status !== "playing" && status !== "buffering")) return;
+      if (track === null || (status !== "playing" && status !== "buffering")) {
+        return;
+      }
       engine.pause();
       setHeld({ overviewId: track.overviewId, time: engine.getTime() });
       return;
     }
     const was = heldRef.current;
-    if (was === null) return;
+    if (was === null) {
+      return;
+    }
     setHeld(null);
     const { status, track } = engine.getSnapshot();
     if (track?.overviewId === was.overviewId && status === "paused" && Math.abs(engine.getTime() - was.time) < SAME_PLACE_SECONDS) {
@@ -113,7 +121,9 @@ export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimePr
 
   const anyRunning = timers.some((timer) => !isRinging(timer));
   useEffect(() => {
-    if (!anyRunning) return;
+    if (!anyRunning) {
+      return;
+    }
     const ask = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener("beforeunload", ask);
     return () => window.removeEventListener("beforeunload", ask);
@@ -130,10 +140,14 @@ export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimePr
       const by = ending(timer);
       return by === null ? [] : [{ timer, by }];
     });
-    if (ended.length === 0) return;
+    if (ended.length === 0) {
+      return;
+    }
     const gone = new Set(ended.map(({ timer }) => timer.id));
     setTimers((current) => current.filter((timer) => !gone.has(timer.id)));
-    for (const { timer, by } of ended) analytics.current(timer).timerEnded({ by, rang: isRinging(timer) });
+    for (const { timer, by } of ended) {
+      analytics.current(timer).timerEnded({ by, rang: isRinging(timer) });
+    }
   }, []);
 
   const value = useMemo<CookingTimers>(() => {

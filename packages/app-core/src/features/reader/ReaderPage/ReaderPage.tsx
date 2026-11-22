@@ -298,7 +298,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const player = usePlayer();
   const episode = useEpisodeEngine(overview?.source ?? null);
   useEffect(() => {
-    if (!recipeCopied) return;
+    if (!recipeCopied) {
+      return;
+    }
     const hide = window.setTimeout(() => setRecipeCopied(false), 4000);
     return () => window.clearTimeout(hide);
   }, [recipeCopied]);
@@ -329,7 +331,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const opened = useRef<string | null>(null);
   const loaded = overviewQuery.data ?? null;
   useEffect(() => {
-    if (loaded === null || opened.current === overviewId) return;
+    if (loaded === null || opened.current === overviewId) {
+      return;
+    }
     opened.current = overviewId;
     reader.page.opened({
       answer: loaded.overview.watchAnyway?.answer ?? "none",
@@ -354,16 +358,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       return;
     }
     setPlayerDocked(true);
-    if (!notePlayer.playing) notePlayer.play("masthead");
+    if (!notePlayer.playing) {
+      notePlayer.play("masthead");
+    }
   };
 
   // Design 2: [ and ] step a line, now that the transport's arrows move fifteen seconds.
   const { stepLine } = notePlayer;
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "[" && event.key !== "]") return;
+      if (event.key !== "[" && event.key !== "]") {
+        return;
+      }
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
       event.preventDefault();
       reader.page.lineStepped({ direction: event.key === "]" ? "next" : "previous" });
       stepLine(event.key === "]" ? 1 : -1);
@@ -391,12 +401,19 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [chat.open]);
   // F6 moves between the note and the chat beside it, which isn't modal (310aq).
   useEffect(() => {
-    if (!chat.open) return;
+    if (!chat.open) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "F6" || chatColumn.current === null) return;
+      if (event.key !== "F6" || chatColumn.current === null) {
+        return;
+      }
       event.preventDefault();
-      if (chatColumn.current.contains(document.activeElement)) noteMain.current?.focus();
-      else chat.field.current?.focus();
+      if (chatColumn.current.contains(document.activeElement)) {
+        noteMain.current?.focus();
+      } else {
+        chat.field.current?.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -405,7 +422,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const [sheetRest, setSheetRest] = useState<SheetRest>("raised");
   const [sheetLine, setSheetLine] = useState<{ text: string; icon: StrokeIconName | null } | null>(null);
   useEffect(() => {
-    if (!chat.open) return;
+    if (!chat.open) {
+      return;
+    }
     setSheetRest("raised");
     setSheetLine(null);
   }, [chat.open]);
@@ -430,7 +449,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // The part is found once the note has switched tab, opened its folded steps or the reasons
   // it's dubious, and brought to just below the top with focus, the tint its only mark.
   useEffect(() => {
-    if (citedFollowed === null) return;
+    if (citedFollowed === null) {
+      return;
+    }
     let frames = 0;
     let frame = 0;
     const bring = () => {
@@ -455,15 +476,21 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   // The state is cleared so a reload or Back doesn't bring it again (OV-362).
   const arrivedAt = overview === null ? null : citedPlaceFromLocation(location.state);
   useEffect(() => {
-    if (overview === null || arrivedAt === null) return;
+    if (overview === null || arrivedAt === null) {
+      return;
+    }
     const found = citedOverviewPart(overview, arrivedAt);
     navigate(`${location.pathname}${location.search}`, {
       replace: true,
       state: { ...(location.state as object), [CITED_PLACE_STATE]: undefined },
     });
-    if (found === null) return;
+    if (found === null) {
+      return;
+    }
     const onTab: ReaderTab = found.part === "chapter" ? "Chapters" : "Overview";
-    if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
+    if (tab !== onTab && tabsShown.includes(onTab)) {
+      changeTab(onTab);
+    }
     setCitedPart({ part: found.part, index: found.index, followed: 1 });
   }, [overview === null, arrivedAt?.part, arrivedAt?.index]);
   // Escape on the part returns to the pill that led there, raising the sheet first on a phone
@@ -472,14 +499,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     const pill = citedPill.current;
     setSheetRest("raised");
     setSheetLine(null);
-    if (pill !== null && pill.isConnected) requestAnimationFrame(() => pill.focus());
+    if (pill !== null && pill.isConnected) {
+      requestAnimationFrame(() => pill.focus());
+    }
   };
   useEffect(() => {
-    if (citedFollowed === null) return;
+    if (citedFollowed === null) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       const focused = document.activeElement;
-      if (event.key !== "Escape" || !(focused instanceof HTMLElement) || focused.closest(CITED_PART_SELECTOR) === null) return;
-      if (citedPill.current === null || !citedPill.current.isConnected) return;
+      if (event.key !== "Escape" || !(focused instanceof HTMLElement) || focused.closest(CITED_PART_SELECTOR) === null) {
+        return;
+      }
+      if (citedPill.current === null || !citedPill.current.isConnected) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       backToAnswer();
@@ -549,7 +584,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     setOverviewState.mutate({ overviewId, patch: { favourite: !state.favourite } });
   };
   const toggleRead = (from: "masthead" | "actionsMenu" | "noteEnd") => {
-    if (!state.read) setReadAtNoteEnd(from === "noteEnd");
+    if (!state.read) {
+      setReadAtNoteEnd(from === "noteEnd");
+    }
     reader.overview.readSwitched({ read: !state.read, from });
     setOverviewState.mutate({ overviewId, patch: { read: !state.read } });
   };
@@ -620,9 +657,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   const chatSheet = chatAvailable && (isPanel || isPhone);
   // Beside the note, a question asked from it travels into the chat as it opens (310a-4).
   const askFrom = (question: string, from: "question" | "typed", element: HTMLElement | null) => {
-    if (question === "") return;
+    if (question === "") {
+      return;
+    }
     chat.ask(question, from);
-    if (chatBeside && element !== null) bubbleTravel(element, question);
+    if (chatBeside && element !== null) {
+      bubbleTravel(element, question);
+    }
   };
   const lowerSheet = (text: string, icon: StrokeIconName | null = null) => {
     setSheetRest("lowered");
@@ -630,16 +671,22 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   };
   const chatTranscriptAt = (positionMs: number) => {
     openTranscriptAt(positionMs);
-    if (chatSheet) lowerSheet(`Reading the transcript from ${formatTimestamp(positionMs)}`);
+    if (chatSheet) {
+      lowerSheet(`Reading the transcript from ${formatTimestamp(positionMs)}`);
+    }
   };
   const sourceWord = chatWords(chatSourceKind(overview)).noun;
   const chatPage = overview.source.kind === "web" ? { url: overview.source.url, onPage } : null;
   const followCitation = (range: TimeRange) => {
     reader.chat.citationFollowed({ to: "source" });
     setCitedPart(null);
-    if (tab !== "Overview") changeTab("Overview");
+    if (tab !== "Overview") {
+      changeTab("Overview");
+    }
     setCitedIndex(citedLineIndex(summaryLines, range.startMs));
-    if (chatSheet && seekVideo !== null) lowerSheet(`Playing ${formatTimeRange(range.startMs, range.endMs)} from the answer`);
+    if (chatSheet && seekVideo !== null) {
+      lowerSheet(`Playing ${formatTimeRange(range.startMs, range.endMs)} from the answer`);
+    }
   };
 
   const followOverviewPart = (view: Exclude<OverviewCitationView, { kind: "gone" }>, pill: HTMLButtonElement) => {
@@ -647,11 +694,15 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     reader.chat.citationFollowed({ to: "overview", part: view.part, ...(index === null ? {} : { index }) });
     setCitedIndex(null);
     const onTab: ReaderTab = view.part === "chapter" ? "Chapters" : "Overview";
-    if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
+    if (tab !== onTab && tabsShown.includes(onTab)) {
+      changeTab(onTab);
+    }
     citedPill.current = pill;
     setCitedPart({ part: view.part, index, followed: (citedPart?.followed ?? 0) + 1 });
     setCitedSaid(`Showing ${view.label} in the overview. Escape returns to the answer.`);
-    if (chatSheet) lowerSheet(`Showing ${view.label} from the answer`, "fileText");
+    if (chatSheet) {
+      lowerSheet(`Showing ${view.label} from the answer`, "fileText");
+    }
   };
 
   // An episode's note moves its own player: every time in it plays the episode (design 106p).
@@ -1076,9 +1127,13 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
             playing={sheetLine !== null}
             underMasthead={isPanel}
             onRestChange={(rest) => {
-              if (rest === "raised" && sheetLine?.icon === "fileText") backToAnswer();
+              if (rest === "raised" && sheetLine?.icon === "fileText") {
+                backToAnswer();
+              }
               setSheetRest(rest);
-              if (rest === "raised") setSheetLine(null);
+              if (rest === "raised") {
+                setSheetLine(null);
+              }
             }}
           >
             <ChatPanel

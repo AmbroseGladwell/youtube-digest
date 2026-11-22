@@ -28,8 +28,14 @@ export const FOLLOW_UP_ASSISTANTS: Record<FollowUpAssistant, FollowUpAssistantLi
 // itself. Null for any other client.
 export function connectionAssistant(clientName: string | null): FollowUpAssistant | null {
   const name = clientName?.toLowerCase() ?? "";
-  if (name.includes("claude")) return "claude";
-  if (name.includes("chatgpt") || name.includes("openai")) return "chatgpt";
-  if (name.includes("gemini")) return "gemini";
+  if (name.includes("claude")) {
+    return "claude";
+  }
+  if (name.includes("chatgpt") || name.includes("openai")) {
+    return "chatgpt";
+  }
+  if (name.includes("gemini")) {
+    return "gemini";
+  }
   return null;
 }

@@ -48,7 +48,9 @@ export function QueuePage() {
 
   useEffect(() => heading.current?.focus({ preventScroll: true }), []);
   useEffect(() => {
-    if (chosen === null) return;
+    if (chosen === null) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         analytics.queue.choose.cancelled();
@@ -62,16 +64,22 @@ export function QueuePage() {
   const toggle = (videoId: VideoId) =>
     setChosen((current) => {
       const next = new Set(current ?? []);
-      if (next.has(videoId)) next.delete(videoId);
-      else next.add(videoId);
+      if (next.has(videoId)) {
+        next.delete(videoId);
+      } else {
+        next.add(videoId);
+      }
       return next;
     });
   const chooseAll = (videoIds: VideoId[], choose: boolean) =>
     setChosen((current) => {
       const next = new Set(current ?? []);
       for (const videoId of videoIds) {
-        if (choose) next.add(videoId);
-        else next.delete(videoId);
+        if (choose) {
+          next.add(videoId);
+        } else {
+          next.delete(videoId);
+        }
       }
       return next;
     });
@@ -86,8 +94,11 @@ export function QueuePage() {
       className={chosen === null ? styles.secondary : styles.ghost}
       aria-pressed={chosen !== null}
       onClick={() => {
-        if (chosen === null) analytics.queue.choose.started();
-        else analytics.queue.choose.cancelled();
+        if (chosen === null) {
+          analytics.queue.choose.started();
+        } else {
+          analytics.queue.choose.cancelled();
+        }
         setChosen(chosen === null ? new Set() : null);
       }}
       data-testid={queuePageTestIds.chooseButton}
@@ -137,7 +148,9 @@ export function QueuePage() {
     );
   };
   useEffect(() => {
-    if (confirmingClear) confirmTitle.current?.focus();
+    if (confirmingClear) {
+      confirmTitle.current?.focus();
+    }
   }, [confirmingClear]);
 
   const intro = isPanel

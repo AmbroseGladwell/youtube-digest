@@ -36,8 +36,12 @@ export async function checkVideoKind(
   },
 ): Promise<CheckedVideoKind> {
   const known = await kinds.kindOf(videoId);
-  if (known !== null) return { noteKind: known, transcript: null };
-  if (generator === null || service === null) return UNCHECKED;
+  if (known !== null) {
+    return { noteKind: known, transcript: null };
+  }
+  if (generator === null || service === null) {
+    return UNCHECKED;
+  }
   const signedOut = !("accountId" in caller);
   if (signedOut && !(await kinds.reserveSignedOutCheck(now))) {
     log.warn(apiLogLines.videos.signedOutKindChecksSpent());
@@ -47,9 +51,13 @@ export async function checkVideoKind(
     .resolve(videoId, caller, log)
     .then((answer) => answer.transcript)
     .catch(() => null);
-  if (transcript === null || transcript.segments.length === 0) return UNCHECKED;
+  if (transcript === null || transcript.segments.length === 0) {
+    return UNCHECKED;
+  }
   const payer: CostPayer = signedOut ? "signed-out" : { accountId: caller.accountId };
   const noteKind = await generator.kindCheck(payer, kindSampleOfVideo({ video, transcript: transcript.segments }), log).catch(() => null);
-  if (noteKind !== null) await kinds.remember(now, videoId, noteKind);
+  if (noteKind !== null) {
+    await kinds.remember(now, videoId, noteKind);
+  }
   return { noteKind, transcript };
 }

@@ -34,7 +34,9 @@ const ProjectParams = z.object({ projectId: ProjectId });
 const LibraryQuestion = ChatQuestionRequest.pick({ conversationId: true, text: true, pins: true, setAside: true });
 
 async function* serverSentEvents(events: AsyncIterable<ChatStreamEvent>): AsyncGenerator<string> {
-  for await (const event of events) yield `data: ${JSON.stringify(event)}\n\n`;
+  for await (const event of events) {
+    yield `data: ${JSON.stringify(event)}\n\n`;
+  }
 }
 
 // The reader asks, and the answer streams back as server-sent events; the server writes the
@@ -66,7 +68,9 @@ export function chatRoutes(
         .send(Readable.from(serverSentEvents(events)));
     } catch (error) {
       const retryAfter = isApiError(error) ? error.details?.retryAfterSeconds : undefined;
-      if (typeof retryAfter === "number") reply.header("retry-after", String(retryAfter));
+      if (typeof retryAfter === "number") {
+        reply.header("retry-after", String(retryAfter));
+      }
       throw error;
     }
   };
@@ -74,7 +78,9 @@ export function chatRoutes(
   // A chat over the whole library, or on a project's page: answered in sections (OV-353).
   const askOver = async (owner: LibraryChatOwner, request: FastifyRequest, reply: FastifyReply) => {
     const question = parseOrThrow(LibraryQuestion, request.body, "The question");
-    if (libraryAnswerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
+    if (libraryAnswerer === null) {
+      throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
+    }
     const { accountId } = request.session!;
     return streamed(reply, async () =>
       libraryAnswerer.ask({ accountId, plan: await accountPlan(sql, accountId) }, owner, question, request.log),
@@ -90,7 +96,9 @@ export function chatRoutes(
     const { overviewId } = parseOrThrow(OverviewParams, request.params, "The overview");
     bindLogContext(request, reply, { overviewId });
     const question = parseOrThrow(ChatQuestionRequest, request.body, "The question");
-    if (answerer === null) throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
+    if (answerer === null) {
+      throw new ApiError("unavailable", "This server doesn't answer questions on its own key");
+    }
     const { accountId } = request.session!;
     return streamed(reply, async () =>
       answerer.ask(
@@ -132,7 +140,9 @@ export function chatRoutes(
   app.delete("/chat-records/:id", async (request, reply) => {
     const { id } = parseOrThrow(RecordParams, request.params, "The conversation");
     const owner = chatOwnerOfId(id);
-    if (owner?.kind === "overview") bindLogContext(request, reply, { overviewId: owner.id });
+    if (owner?.kind === "overview") {
+      bindLogContext(request, reply, { overviewId: owner.id });
+    }
     return deleteChat(id, request, reply);
   });
 }

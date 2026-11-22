@@ -4,7 +4,9 @@ export function retagged(tags: readonly string[], from: ReadonlySet<string>, to:
   const result: string[] = [];
   for (const tag of tags) {
     const next = from.has(tag) ? to : tag;
-    if (next !== null && !result.includes(next)) result.push(next);
+    if (next !== null && !result.includes(next)) {
+      result.push(next);
+    }
   }
   return result;
 }

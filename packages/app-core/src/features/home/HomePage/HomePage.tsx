@@ -64,8 +64,12 @@ export function HomePage({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) {
     return <Navigate to={Routes.onboarding()} replace />;
   }
   if (isPanel) {
-    if (!accountNeeded) return <CapturePage />;
-    if (readAccountSeen() && !isStartAsked(location.state)) return <SignedOutGate panel />;
+    if (!accountNeeded) {
+      return <CapturePage />;
+    }
+    if (readAccountSeen() && !isStartAsked(location.state)) {
+      return <SignedOutGate panel />;
+    }
     return (
       <div className={`${styles.root} ${styles.panel}`} data-testid={homePageTestIds.root}>
         <StartHero />

@@ -63,9 +63,15 @@ export function overviewParts(overview: Overview): OverviewPartItem[] {
     );
     add("step", overview.sourceSteps?.items.map(({ text }) => text) ?? []);
     add("howToApply", overview.howToApply?.items ?? []);
-    if (overview.selling !== null && overview.selling.type !== "none") add("selling", [overview.selling.detail]);
-    if (overview.watchAnyway !== null) add("watchAnyway", [overview.watchAnyway.reason]);
-    if (overview.article?.readAnyway) add("watchAnyway", [overview.article.readAnyway.reason]);
+    if (overview.selling !== null && overview.selling.type !== "none") {
+      add("selling", [overview.selling.detail]);
+    }
+    if (overview.watchAnyway !== null) {
+      add("watchAnyway", [overview.watchAnyway.reason]);
+    }
+    if (overview.article?.readAnyway) {
+      add("watchAnyway", [overview.article.readAnyway.reason]);
+    }
   }
   add(
     "chapter",
@@ -96,7 +102,9 @@ export interface OverviewPartCitation {
 // part, else the part's section alone (index null), else nothing when the section is gone.
 export function citedOverviewPart(overview: Overview, citation: OverviewPartCitation): { part: OverviewPart; index: number | null } | null {
   const inPart = overviewParts(overview).filter(({ part }) => part === citation.part);
-  if (inPart.length === 0) return null;
+  if (inPart.length === 0) {
+    return null;
+  }
   const same = (item: OverviewPartItem) => overviewPartHash(item.text) === citation.textHash;
   const atPlace = inPart.find(({ index }) => index === citation.index);
   const found = atPlace !== undefined && same(atPlace) ? atPlace : inPart.find(same);

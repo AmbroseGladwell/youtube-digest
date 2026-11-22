@@ -21,7 +21,9 @@ export function ReaderTabs({ active, panelId, tabId, onChange, tabs = READER_TAB
   const indicator = useTabIndicator(active);
   const analytics = useOverviewPageAnalytics();
   const choose = (tab: ReaderTab) => {
-    if (tab !== active) analytics.tabs.switched({ tab: readerTabChoice(tab) });
+    if (tab !== active) {
+      analytics.tabs.switched({ tab: readerTabChoice(tab) });
+    }
     onChange(tab);
   };
 

@@ -11,7 +11,9 @@ const words = (text: string) => text.toLowerCase().match(/[a-z]+/g) ?? [];
 
 function slot(word: string): number {
   let hash = 0;
-  for (const letter of word) hash = (hash * 31 + letter.charCodeAt(0)) % 1_000_003;
+  for (const letter of word) {
+    hash = (hash * 31 + letter.charCodeAt(0)) % 1_000_003;
+  }
   return CONCEPT_DIMENSIONS + (hash % (EMBEDDING_DIMENSIONS - CONCEPT_DIMENSIONS));
 }
 

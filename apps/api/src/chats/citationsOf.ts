@@ -40,13 +40,17 @@ export function overviewCitationsOf(ids: readonly string[], labels: ReadonlyMap<
   for (const id of new Set(ids)) {
     const [, label, item] = LABELLED_ID.exec(id) ?? [];
     const entry = label === undefined ? undefined : labels.get(label);
-    if (entry === undefined) continue;
+    if (entry === undefined) {
+      continue;
+    }
     const { overviewId, title, brief } = entry;
     const found =
       item === undefined || brief === true
         ? undefined
         : overviewParts(entry.overview).find(({ part, index }) => overviewPartId(part, index) === item);
-    if (item !== undefined && brief !== true && found === undefined) continue;
+    if (item !== undefined && brief !== true && found === undefined) {
+      continue;
+    }
     cited.push({
       overviewId,
       title,

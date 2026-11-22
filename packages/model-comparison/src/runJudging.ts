@@ -29,7 +29,9 @@ export function judgingPairs(
     .flatMap((record) => {
       const reference = passed.find((other) => other.videoId === record.videoId && nameOf(other) === baseline);
       const fetched = transcripts.get(record.videoId);
-      if (reference === undefined || fetched === undefined) return [];
+      if (reference === undefined || fetched === undefined) {
+        return [];
+      }
       return [
         {
           fetched,
@@ -51,7 +53,9 @@ export function promptPairs(
     .flatMap((record) => {
       const reference = passedBaselines.find((other) => other.videoId === record.videoId && nameOf(other) === nameOf(record));
       const fetched = transcripts.get(record.videoId);
-      if (reference === undefined || fetched === undefined) return [];
+      if (reference === undefined || fetched === undefined) {
+        return [];
+      }
       return [
         {
           fetched,

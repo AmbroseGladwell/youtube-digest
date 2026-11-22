@@ -18,7 +18,9 @@ export async function heldOverviewOf(
 ): Promise<HeldOverview | null> {
   const [overviews, unreadable] = await Promise.all([store.listOverviews(), store.listUnreadable()]);
   const readable = overviews.find((overview) => sourceKey(overview.source) === key);
-  if (readable !== undefined) return { id: readable.id, readable: true };
+  if (readable !== undefined) {
+    return { id: readable.id, readable: true };
+  }
   const quarantined = unreadable.find(
     ({ kind, salvaged }) => kind === "overview" && salvaged?.source != null && sourceKey(salvaged.source) === key,
   );

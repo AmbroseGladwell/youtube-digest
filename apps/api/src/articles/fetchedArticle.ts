@@ -10,7 +10,9 @@ let parse: ReturnType<typeof createArticleParser> | null = null;
 // Parsing takes CPU that would stop every other reader's requests, so it happens on a worker
 // (docs/features/pasted-article-links.md, "Parsing").
 export async function fetchedArticle(page: FetchedPage): Promise<ArticleRead> {
-  if (page.status !== "page") return page;
+  if (page.status !== "page") {
+    return page;
+  }
   parse ??= createArticleParser({
     workerUrl: new URL("./articleParseWorker.js", import.meta.url),
     timeoutMs: PARSE_TIMEOUT_MS,

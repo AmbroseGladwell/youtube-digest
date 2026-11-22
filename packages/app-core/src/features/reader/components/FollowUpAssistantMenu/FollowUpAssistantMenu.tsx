@@ -46,7 +46,7 @@ export interface FollowUpAssistantMenuProps {
 type Option = "here" | FollowUpAssistant;
 
 function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowUpAssistant; connected: boolean; continueIn: boolean }) {
-  if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null)
+  if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null) {
     return (
       <>
         <span className={styles.connected}>
@@ -56,10 +56,12 @@ function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowU
         · reads this note and its transcript
       </>
     );
-  if (continueIn)
+  }
+  if (continueIn) {
     return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
       ? "Copies this conversation; you paste it in"
       : "Opens with this conversation filled in";
+  }
   return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
     ? "Copies the question and this note; you paste it in"
     : "Gets this note in the link";
@@ -98,14 +100,20 @@ export function FollowUpAssistantMenu({
   useDismissOnOutside(!asSheet, onClose, menu, inside);
 
   useEffect(() => {
-    if (asSheet && sheet.current !== null && !sheet.current.open) sheet.current.showModal();
+    if (asSheet && sheet.current !== null && !sheet.current.open) {
+      sheet.current.showModal();
+    }
     options.current[focusedAt]?.focus({ preventScroll: true });
-    if (!asSheet) menu.current?.scrollIntoView?.({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    if (!asSheet) {
+      menu.current?.scrollIntoView?.({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    }
   }, [asSheet, focusedAt]);
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = options.current.indexOf(document.activeElement as HTMLButtonElement);
-    if (current === -1) return;
+    if (current === -1) {
+      return;
+    }
     const last = choices.length - 1;
     const target = {
       ArrowDown: current === last ? 0 : current + 1,
@@ -115,7 +123,9 @@ export function FollowUpAssistantMenu({
       Home: 0,
       End: last,
     }[event.key];
-    if (target === undefined) return;
+    if (target === undefined) {
+      return;
+    }
     event.preventDefault();
     options.current[target]?.focus();
   };
@@ -207,7 +217,9 @@ export function FollowUpAssistantMenu({
     </div>
   );
 
-  if (!asSheet) return body;
+  if (!asSheet) {
+    return body;
+  }
   return createPortal(
     <dialog
       ref={sheet}
@@ -218,7 +230,9 @@ export function FollowUpAssistantMenu({
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === sheet.current) onClose();
+        if (event.target === sheet.current) {
+          onClose();
+        }
       }}
       data-testid={followUpAssistantMenuTestIds.sheet}
     >

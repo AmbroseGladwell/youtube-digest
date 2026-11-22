@@ -15,16 +15,22 @@ async function readActiveVideoUrl(): Promise<string | null> {
 
 async function refresh(): Promise<void> {
   const next = await readActiveVideoUrl();
-  if (next === videoUrl) return;
+  if (next === videoUrl) {
+    return;
+  }
   videoUrl = next;
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 const onActivated = () => void refresh();
 
 // YouTube navigates without a page load, so a new video is a URL change on an open tab.
 const onUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-  if (changeInfo.url !== undefined || changeInfo.status === "complete") void refresh();
+  if (changeInfo.url !== undefined || changeInfo.status === "complete") {
+    void refresh();
+  }
 };
 
 export const chromeActiveVideoSource: ActiveVideoSource = {

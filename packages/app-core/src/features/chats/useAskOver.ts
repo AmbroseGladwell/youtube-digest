@@ -61,7 +61,9 @@ export function useAskOver(owner: AskOwner, api?: ChatApi) {
   const ask = useCallback(
     async (conversationId: string, question: string, from: AskOverFrom, extras: Omit<AskExtras, "searchLibrary">) => {
       const chatApi = api ?? (apiUrl === null ? null : createFetchChatApi({ baseUrl: apiUrl, token: connection.token }));
-      if (chatApi === null || inFlight.current !== null) return;
+      if (chatApi === null || inFlight.current !== null) {
+        return;
+      }
       const controller = new AbortController();
       inFlight.current = controller;
       const asked: AskOwner = ownerId === null ? { kind: "library" } : { kind: "project", id: ownerId };
@@ -84,13 +86,19 @@ export function useAskOver(owner: AskOwner, api?: ChatApi) {
           controller.signal,
           (event) =>
             setState((current) => {
-              if (current.status !== "answering") return current;
-              if (event.type === "picking") return { ...current, picking: "choosing" };
+              if (current.status !== "answering") {
+                return current;
+              }
+              if (event.type === "picking") {
+                return { ...current, picking: "choosing" };
+              }
               if (event.type === "picked") {
                 analytics.ask.chat.picked({ scope, overviews: event.overviews.length });
                 return { ...current, picking: "reading", picked: event.overviews };
               }
-              if (event.type === "sources") return { ...current, sources: { pinned: event.pinned, found: event.found } };
+              if (event.type === "sources") {
+                return { ...current, sources: { pinned: event.pinned, found: event.found } };
+              }
               return { ...current, sections: [...current.sections, event.section] };
             }),
         );
@@ -103,13 +111,14 @@ export function useAskOver(owner: AskOwner, api?: ChatApi) {
           withAnswer(current ?? [], ownerId === null ? {} : { projectId: ownerId }, outcome.chatId, outcome.messages),
         );
         const answer = outcome.messages.find((message) => message.from === "answer");
-        if (answer !== undefined && answer.from === "answer")
+        if (answer !== undefined && answer.from === "answer") {
           analytics.ask.chat.answered({
             scope,
             sections: answer.sections?.sections.length ?? 0,
             overviewCitations: new Set(answer.citations.flatMap((citation) => ("overviewId" in citation ? [citation.overviewId] : [])))
               .size,
           });
+        }
         void queryClient.invalidateQueries({ queryKey: chatKeys.usage(accountId) });
         syncNow();
         setState(IDLE);
@@ -129,7 +138,9 @@ export function useAskOver(owner: AskOwner, api?: ChatApi) {
         analytics.ask.chat.waited({ scope, wait: wait.kind });
         setState({ status: "waiting", conversationId, question, wait });
       } finally {
-        if (inFlight.current === controller) inFlight.current = null;
+        if (inFlight.current === controller) {
+          inFlight.current = null;
+        }
       }
     },
     [api, apiUrl, connection.token, ownerId, scope, queryClient, analytics, accountId, syncNow],

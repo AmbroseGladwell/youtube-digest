@@ -65,7 +65,9 @@ export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, ap
   const ask = useCallback(
     async (conversationId: string, question: string, from: AskedFrom, extras: AskExtras = NO_EXTRAS) => {
       const chatApi = api ?? (apiUrl === null ? null : createFetchChatApi({ baseUrl: apiUrl, token: connection.token }));
-      if (chatApi === null || inFlight.current !== null) return;
+      if (chatApi === null || inFlight.current !== null) {
+        return;
+      }
       const controller = new AbortController();
       inFlight.current = controller;
       const chatId = chatRecordId(overviewId, conversationId);
@@ -88,12 +90,16 @@ export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, ap
           controller.signal,
           (event) =>
             setState((current) => {
-              if (current.status !== "answering") return current;
+              if (current.status !== "answering") {
+                return current;
+              }
               if (event.type === "sources") {
                 analytics.reader.chat.sourcesAdded({ overviewId, pinned: event.pinned.length, found: event.found.length });
                 return { ...current, sources: { pinned: event.pinned, found: event.found } };
               }
-              if (event.type === "section") return { ...current, sections: [...current.sections, event.section] };
+              if (event.type === "section") {
+                return { ...current, sections: [...current.sections, event.section] };
+              }
               return current;
             }),
         );
@@ -133,10 +139,14 @@ export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, ap
           setState({ status: "failed", conversationId, question });
           return;
         }
-        if (wait.kind !== "noSource") analytics.reader.chat.waited({ overviewId, about, wait: wait.kind });
+        if (wait.kind !== "noSource") {
+          analytics.reader.chat.waited({ overviewId, about, wait: wait.kind });
+        }
         setState({ status: "waiting", conversationId, question, wait });
       } finally {
-        if (inFlight.current === controller) inFlight.current = null;
+        if (inFlight.current === controller) {
+          inFlight.current = null;
+        }
       }
     },
     [api, apiUrl, connection.token, overviewId, about, queryClient, analytics, accountId, syncNow],

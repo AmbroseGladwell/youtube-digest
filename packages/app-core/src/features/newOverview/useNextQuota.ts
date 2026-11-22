@@ -25,7 +25,9 @@ function useQuotaContext(): NextQuotaContext | null {
     onlyMyKey: settings?.onlyMyKey ?? false,
   });
 
-  if (!signedIn) return null;
+  if (!signedIn) {
+    return null;
+  }
   return {
     order,
     usage: usage.data !== undefined ? { status: "known", data: usage.data } : { status: usage.isError ? "unreachable" : "checking" },
@@ -42,6 +44,8 @@ export function useNextQuota(): NextQuota | null {
 export function useLeftThisMonth(): { left: number; resetsOn: string | null } | null {
   const context = useQuotaContext();
   const left = context === null ? null : leftThisMonthOf(context);
-  if (context === null || left === null) return null;
+  if (context === null || left === null) {
+    return null;
+  }
   return { left, resetsOn: context.usage.status === "known" ? context.usage.data.resetsOn : null };
 }

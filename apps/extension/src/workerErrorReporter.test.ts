@@ -14,7 +14,9 @@ const makeReporter = (destination: ErrorDestination | null, options: { failing?:
     now: () => new Date("2026-10-01T09:00:00.000Z"),
     createApi: ({ apiUrl, token }) => ({
       send: async (batch, sendOptions) => {
-        if (failing) throw new Error("Simulated: offline");
+        if (failing) {
+          throw new Error("Simulated: offline");
+        }
         sent.push({ apiUrl, token, batch, keepalive: sendOptions?.keepalive });
       },
     }),

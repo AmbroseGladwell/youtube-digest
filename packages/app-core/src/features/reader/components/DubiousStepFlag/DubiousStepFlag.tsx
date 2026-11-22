@@ -26,7 +26,9 @@ export function DubiousStepFlag({ reason, saidAtMs }: DubiousStepFlagProps) {
         aria-expanded={open}
         aria-controls={reasonId}
         onClick={() => {
-          if (!open) analytics.sourceSteps.dubiousOpened();
+          if (!open) {
+            analytics.sourceSteps.dubiousOpened();
+          }
           setOpen(!open);
         }}
         data-testid={dubiousStepFlagTestIds.flag}

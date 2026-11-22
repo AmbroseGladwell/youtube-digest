@@ -70,7 +70,9 @@ export function RecipeMethod({
   const reachedLine = useRef<HTMLLIElement | null>(null);
   const reachedStep = cooking?.reachedStep ?? null;
   useEffect(() => {
-    if (reachedStep !== null) reachedLine.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    if (reachedStep !== null) {
+      reachedLine.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    }
   }, [reachedStep]);
   const cookable = cooking !== null && recipe.steps.length > 0;
   const placeStep = cooking?.placeStep ?? null;

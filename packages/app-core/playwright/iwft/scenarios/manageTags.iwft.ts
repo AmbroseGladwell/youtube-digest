@@ -11,7 +11,9 @@ const AGENTS = titled("Agents", ["ai-saas", "ai"]);
 const NUCLEAR = titled("Nuclear", ["nuclear", "energy"]);
 
 const seedLibrary = (backendSimulator: BackendSimulator) => {
-  for (const overview of [SIDE_PROJECT, CHROME, TOOLS, AGENTS, NUCLEAR]) backendSimulator.overviews.seed(overview);
+  for (const overview of [SIDE_PROJECT, CHROME, TOOLS, AGENTS, NUCLEAR]) {
+    backendSimulator.overviews.seed(overview);
+  }
 };
 
 const tagsOf = async (backendSimulator: BackendSimulator, overview: { id: Parameters<BackendSimulator["overviews"]["get"]>[0] }) =>

@@ -55,7 +55,9 @@ function commonFields(input: GenerationInput, output: GeneratedRecipeVideoOutput
 // Null when no ingredient survives the amount check, so the video gets its ordinary note.
 export function assembleRecipeVideoOverview(input: GenerationInput, output: GeneratedRecipeVideoOutput, meta: Meta): Overview | null {
   const recipe = output.recipe === null ? null : videoRecipe(input, output.recipe);
-  if (recipe === null || output.recipe === null) return null;
+  if (recipe === null || output.recipe === null) {
+    return null;
+  }
   return Overview.parse({
     ...commonFields(input, output, meta),
     bigPicture: null,
@@ -188,7 +190,9 @@ function resolveRange(
   input: GenerationInput,
   range: { startSegmentIndex: number; endSegmentIndex: number } | null,
 ): { startMs: number; endMs: number } | null {
-  if (!range) return null;
+  if (!range) {
+    return null;
+  }
   const start = input.transcript[range.startSegmentIndex];
   const end = input.transcript[range.endSegmentIndex];
   if (!start || !end) {

@@ -81,7 +81,9 @@ const audioPath = (videoId: string, side: Side) => join(audioDirectory, `${safeP
 const secondsPath = (videoId: string, side: Side) => join(audioDirectory, `${safePathPart(videoId)}-${side}.json`);
 
 async function narrate(videoId: string, side: Side, overview: Overview): Promise<void> {
-  if (await exists(secondsPath(videoId, side))) return;
+  if (await exists(secondsPath(videoId, side))) {
+    return;
+  }
   const narration = await renderNarration(values.tts!, overview);
   await mkdir(audioDirectory, { recursive: true });
   await writeFile(audioPath(videoId, side), narration.audio);
@@ -108,7 +110,9 @@ const send = (response: ServerResponse, status: number, type: string, body: stri
 const server = createServer(async (request, response) => {
   try {
     const url = request.url ?? "/";
-    if (request.method === "GET" && url === "/") return send(response, 200, "text/html; charset=utf-8", blindListenPageHtml());
+    if (request.method === "GET" && url === "/") {
+      return send(response, 200, "text/html; charset=utf-8", blindListenPageHtml());
+    }
 
     if (request.method === "GET" && url === "/api/next") {
       const picked = await picks.all();
@@ -142,14 +146,18 @@ const server = createServer(async (request, response) => {
     const audio = url.match(/^\/audio\/([\w-]+)\/(A|B)$/);
     if (request.method === "GET" && audio) {
       const showing = shown.get(audio[1]!);
-      if (showing === undefined) return send(response, 404, "text/plain", "unknown pair; reload the page");
+      if (showing === undefined) {
+        return send(response, 404, "text/plain", "unknown pair; reload the page");
+      }
       const side: Side = (audio[2] === "A") === showing.newWasA ? "new" : "old";
       return send(response, 200, "audio/mp4", await readFile(audioPath(showing.pair.videoId, side)));
     }
 
     if (request.method === "POST" && url === "/api/pick") {
       let body = "";
-      for await (const chunk of request) body += chunk;
+      for await (const chunk of request) {
+        body += chunk;
+      }
       const { token, choice, reason } = JSON.parse(body) as { token?: string; choice?: ListenSide; reason?: string };
       const showing = token === undefined ? undefined : shown.get(token);
       if (showing === undefined || !["A", "B", "tie"].includes(choice ?? "")) {

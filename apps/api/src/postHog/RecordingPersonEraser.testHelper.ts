@@ -14,7 +14,9 @@ export function makeRecordingPersonEraser(): RecordingPersonEraser {
     absent: new Set(),
     failing: false,
     erase: async (distinctId) => {
-      if (eraser.failing) throw new Error("Simulated: PostHog is down");
+      if (eraser.failing) {
+        throw new Error("Simulated: PostHog is down");
+      }
       eraser.erased.push(distinctId);
       return eraser.absent.has(distinctId) ? "absent" : "queued";
     },

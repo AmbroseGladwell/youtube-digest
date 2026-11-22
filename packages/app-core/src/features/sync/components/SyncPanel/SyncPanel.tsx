@@ -102,7 +102,9 @@ export function SyncPanel() {
               type="button"
               className={styles.signOutButton}
               onClick={() => {
-                if (sync.signingOut) return;
+                if (sync.signingOut) {
+                  return;
+                }
                 analytics.settings.sync.signOutChosen({ signedOutAtServer: false });
                 void signOut();
               }}

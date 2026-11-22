@@ -18,7 +18,9 @@ export function SettingsSection({ id, title, intro, focusOnArrival, children }: 
 
   useEffect(() => {
     // The voice section scrolls the reader's voice into view itself; focus must not undo it.
-    if (focusOnArrival) heading.current?.focus({ preventScroll: true });
+    if (focusOnArrival) {
+      heading.current?.focus({ preventScroll: true });
+    }
   }, [focusOnArrival]);
 
   return (

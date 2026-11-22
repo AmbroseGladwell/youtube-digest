@@ -106,7 +106,9 @@ function useJumpLine(jumps: number): { shown: boolean; announced: boolean } {
   const [announced, setAnnounced] = useState(false);
   const first = useRef(jumps);
   useEffect(() => {
-    if (jumps === first.current) return;
+    if (jumps === first.current) {
+      return;
+    }
     setShown(true);
     setAnnounced(true);
     const hide = window.setTimeout(() => setShown(false), JUMP_LINE_SHOWN_MS);

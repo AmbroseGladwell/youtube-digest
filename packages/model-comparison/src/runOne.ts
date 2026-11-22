@@ -43,7 +43,9 @@ export const comparisonInput = (fetched: FetchedTranscript): GenerationInput => 
 export function measuredCost(model: ComparedModel, calls: MeteredCall[]): number | null {
   const price = priceOf(model);
   const answered = calls.filter((call) => call.status >= 200 && call.status < 300);
-  if (price === undefined || answered.some((call) => call.usage === null)) return null;
+  if (price === undefined || answered.some((call) => call.usage === null)) {
+    return null;
+  }
   return answered.reduce((total, call) => total + costInDollars(price, call.usage!), 0);
 }
 
@@ -85,7 +87,9 @@ export async function runGeneration({
     try {
       const raw = await inner(request);
       const answered = request.schema.safeParse(raw);
-      if (answered.success) noteKind = (answered.data as { noteKind: NoteKind }).noteKind;
+      if (answered.success) {
+        noteKind = (answered.data as { noteKind: NoteKind }).noteKind;
+      }
       return raw;
     } finally {
       checkCalls.push(...metered.calls.slice(before));

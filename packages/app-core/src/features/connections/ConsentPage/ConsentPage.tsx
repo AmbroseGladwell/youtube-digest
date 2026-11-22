@@ -41,7 +41,9 @@ const isCode = (error: unknown, code: string) => isSyncRequestError(error) && er
 function useOnce(when: boolean, record: () => void): void {
   const recorded = useRef(false);
   useEffect(() => {
-    if (!when || recorded.current) return;
+    if (!when || recorded.current) {
+      return;
+    }
     recorded.current = true;
     record();
   }, [when, record]);
@@ -77,7 +79,9 @@ export function ConsentPage() {
   const plan = signedIn ? session.data?.plan : undefined;
 
   useEffect(() => {
-    if (loaded) heading.current?.focus();
+    if (loaded) {
+      heading.current?.focus();
+    }
   }, [loaded, sent]);
   useOnce(loaded, analytics.mcp.consentScreen.shown);
 
@@ -108,21 +112,27 @@ export function ConsentPage() {
   const { title, label, sub } = consentHeading(clientName);
 
   const answer = (decision: ConsentDecision) => {
-    if (plan === undefined) return;
+    if (plan === undefined) {
+      return;
+    }
     setDeciding(decision);
     decide.mutate(
       { requestId, approve: decision === "approve", plan },
       {
         onError: (error) => {
           setDeciding(null);
-          if (isCode(error, "unauthenticated")) void session.refetch();
+          if (isCode(error, "unauthenticated")) {
+            void session.refetch();
+          }
         },
       },
     );
   };
 
   const askForLink = (email: string, resend: boolean = false) => {
-    if (knownApiUrl === null) return;
+    if (knownApiUrl === null) {
+      return;
+    }
     analytics.account.signIn.linkRequested({ intent: "signIn", from: "consentScreen", resend });
     setRefused(null);
     requestLink.mutate(

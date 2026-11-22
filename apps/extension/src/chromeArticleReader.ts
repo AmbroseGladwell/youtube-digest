@@ -31,7 +31,9 @@ async function runReader(tabId: number, name: string, args: unknown[]): Promise<
 export async function readArticleInTab(tabId: number): Promise<ArticleRead> {
   try {
     const read = ArticleRead.safeParse(await runReader(tabId, ARTICLE_READER_GLOBAL, []));
-    if (!read.success) return NOTHING_READABLE;
+    if (!read.success) {
+      return NOTHING_READABLE;
+    }
     return read.data.status === "failed" && read.data.reason === "nothing-readable" && (await isStillLoading(tabId))
       ? NOT_LOADED
       : read.data;

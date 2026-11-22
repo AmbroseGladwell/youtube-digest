@@ -65,14 +65,18 @@ export function ChatSheet({
 
   // The sheet is portalled above the app's bar, so it reads the masthead's height where it stands.
   useLayoutEffect(() => {
-    if (!underMasthead || anchor.current === null) return;
+    if (!underMasthead || anchor.current === null) {
+      return;
+    }
     const height = getComputedStyle(anchor.current).getPropertyValue("--masthead-height").trim();
     setMastheadTop(height === "" ? null : height);
   }, [underMasthead]);
 
   useLayoutEffect(() => {
     const element = sheet.current;
-    if (element === null) return;
+    if (element === null) {
+      return;
+    }
     const measure = () => setHeight(element.offsetHeight);
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
@@ -82,8 +86,12 @@ export function ChatSheet({
 
   const start = (event: PointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
-    if (target.closest("[data-sheet-grab]") === null && (target.closest("[data-sheet-drag]") === null || target.closest("button") !== null))
+    if (
+      target.closest("[data-sheet-grab]") === null &&
+      (target.closest("[data-sheet-drag]") === null || target.closest("button") !== null)
+    ) {
       return;
+    }
     (event.target as Element).setPointerCapture?.(event.pointerId);
     drag.current = {
       pointerId: event.pointerId,
@@ -98,9 +106,13 @@ export function ChatSheet({
 
   const move = (event: PointerEvent<HTMLElement>) => {
     const current = drag.current;
-    if (current === null || event.pointerId !== current.pointerId) return;
+    if (current === null || event.pointerId !== current.pointerId) {
+      return;
+    }
     const delta = event.clientY - current.startY;
-    if (!current.moved && Math.abs(delta) < DRAG_START_PX) return;
+    if (!current.moved && Math.abs(delta) < DRAG_START_PX) {
+      return;
+    }
     const elapsed = Math.max(1, event.timeStamp - current.lastAt);
     drag.current = {
       ...current,
@@ -114,11 +126,14 @@ export function ChatSheet({
 
   const end = (event: PointerEvent<HTMLElement>) => {
     const current = drag.current;
-    if (current === null || event.pointerId !== current.pointerId) return;
+    if (current === null || event.pointerId !== current.pointerId) {
+      return;
+    }
     drag.current = null;
     justDragged.current = current.moved;
-    if (current.moved)
+    if (current.moved) {
       onRestChange(restAfterDrag(resistedOffset(current.startOffset + event.clientY - current.startY, travel), travel, current.velocity));
+    }
     setDragOffset(null);
   };
 

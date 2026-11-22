@@ -15,7 +15,9 @@ export function createFetchShareApi(options: FetchShareApiOptions): ShareApi {
     // is getting what they asked for.
     stop: async (token) => {
       await request("DELETE", `/shares/${encodeURIComponent(token)}`, Share.nullable()).catch((error: unknown) => {
-        if (isSyncRequestError(error) && error.code === "not_found") return null;
+        if (isSyncRequestError(error) && error.code === "not_found") {
+          return null;
+        }
         throw error;
       });
     },

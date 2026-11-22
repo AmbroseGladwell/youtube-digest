@@ -9,7 +9,9 @@ export class EmptyAnswerError extends Error {}
 export class AnswerCutOffError extends Error {}
 
 export function assertWhole(stream: { finishReason: () => string | null }): void {
-  if (stream.finishReason() === "length") throw new AnswerCutOffError("the reply ran into its token cap");
+  if (stream.finishReason() === "length") {
+    throw new AnswerCutOffError("the reply ran into its token cap");
+  }
 }
 
 // What a failed answer's log line names: the error's class, and the provider's status when it gave one.

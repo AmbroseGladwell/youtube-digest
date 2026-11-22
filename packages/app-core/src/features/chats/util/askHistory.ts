@@ -16,17 +16,26 @@ export function askHistoryGroups(chats: readonly Chat[], now: Date): AskHistoryG
   const today = startOfDay(now);
   const labelOf = (chat: Chat) => {
     const day = startOfDay(new Date(lastActive(chat)));
-    if (day >= today) return "Today";
-    if (day >= today - DAY_MS) return "Yesterday";
-    if (day >= today - 7 * DAY_MS) return "Previous 7 days";
+    if (day >= today) {
+      return "Today";
+    }
+    if (day >= today - DAY_MS) {
+      return "Yesterday";
+    }
+    if (day >= today - 7 * DAY_MS) {
+      return "Previous 7 days";
+    }
     return "Earlier";
   };
   const groups: AskHistoryGroup[] = [];
   for (const chat of [...chats].sort((a, b) => lastActive(b).localeCompare(lastActive(a)))) {
     const label = labelOf(chat);
     const group = groups.at(-1);
-    if (group?.label === label) group.chats.push(chat);
-    else groups.push({ label, chats: [chat] });
+    if (group?.label === label) {
+      group.chats.push(chat);
+    } else {
+      groups.push({ label, chats: [chat] });
+    }
   }
   return groups;
 }

@@ -40,7 +40,9 @@ export function DeleteProjectDialog({ name, overviews, assistantConnected, onDel
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={deleteProjectDialogTestIds.root}
     >

@@ -77,15 +77,23 @@ export function podcastRoutes(
   },
 ): void {
   const accountCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
-    if (request.session === null) throw new ApiError("unauthenticated", "Sign in to make an overview");
+    if (request.session === null) {
+      throw new ApiError("unauthenticated", "Sign in to make an overview");
+    }
     return { accountId: request.session.accountId, plan: await planOf(request.session.accountId) };
   };
   // The check alone runs signed out, on a trial the server issued.
   const checkCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
-    if (request.session !== null) return accountCallerOf(request);
+    if (request.session !== null) {
+      return accountCallerOf(request);
+    }
     const trialToken = request.headers[TRIAL_TOKEN_HEADER];
-    if (typeof trialToken !== "string") throw new ApiError("unauthenticated", "Sign in, or start a trial, to check an episode");
-    if (!(await trials.isKnown(trialToken))) throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
+    if (typeof trialToken !== "string") {
+      throw new ApiError("unauthenticated", "Sign in, or start a trial, to check an episode");
+    }
+    if (!(await trials.isKnown(trialToken))) {
+      throw new ApiError("unauthenticated", "This trial isn't known here", { trial: "unknown" });
+    }
     return { address: request.clientAddress };
   };
 
@@ -149,7 +157,9 @@ export function podcastRoutes(
           reply.header("retry-after", String(error.retryAfterSeconds));
           throw new ApiError("too_many_requests", error.message, { retryAfterSeconds: error.retryAfterSeconds, daily: true });
         }
-        if (!(error instanceof TranscriptFetchError)) throw error;
+        if (!(error instanceof TranscriptFetchError)) {
+          throw error;
+        }
         const unconfirmed = error instanceof MatchUnconfirmedError;
         request.log.info(
           apiLogLines.podcasts.transcript({
@@ -181,7 +191,9 @@ export function podcastRoutes(
       const caller = await checkCallerOf(request);
       // Where nothing can be transcribed, the card has nothing to say, so the feed isn't read and
       // no YouTube search is spent: Create looks for the words as it always has.
-      if (transcriptions === null) return { words: "unknown" };
+      if (transcriptions === null) {
+        return { words: "unknown" };
+      }
       const startedAt = clock().getTime();
       const checked = await checkTranscript({ feedUrl: body.feedUrl, guid: body.guid, youTube: youTubeAskOf(body), log: request.log });
       const answer: TranscriptCheck =
@@ -210,7 +222,9 @@ export function podcastRoutes(
       preHandler: rateLimitHook(rateLimits.transcriptionPerAddress, (request) => request.clientAddress, clock),
     },
     async (request, reply): Promise<PodcastTranscription> => {
-      if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
+      if (transcriptions === null) {
+        throw new ApiError("unavailable", "Episodes can't be transcribed here");
+      }
       const { feedUrl, guid } = parseOrThrow(TranscriptionBody, request.body, "The episode");
       const caller = await accountCallerOf(request);
       const started = await transcriptions.start(feedUrl, guid, caller, request.log);
@@ -246,11 +260,15 @@ export function podcastRoutes(
 
   // Asked after every few seconds while the reader waits, so held only to the address limit.
   app.get("/podcasts/transcription/:id", async (request): Promise<PodcastTranscription> => {
-    if (transcriptions === null) throw new ApiError("unavailable", "Episodes can't be transcribed here");
+    if (transcriptions === null) {
+      throw new ApiError("unavailable", "Episodes can't be transcribed here");
+    }
     const { id } = parseOrThrow(TranscriptionParams, request.params, "The transcription");
     const caller = await accountCallerOf(request);
     const transcription = await transcriptions.status(id, caller);
-    if (transcription === null) throw new ApiError("not_found", "No such transcription");
+    if (transcription === null) {
+      throw new ApiError("not_found", "No such transcription");
+    }
     return transcription;
   });
 }

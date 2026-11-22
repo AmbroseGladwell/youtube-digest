@@ -14,7 +14,9 @@ export function useTypingSettled(text: string, send: () => void, delayMs: number
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (text === initial.current || text.trim() === "") return;
+    if (text === initial.current || text.trim() === "") {
+      return;
+    }
     const timer = setTimeout(() => {
       pending.current = null;
       latest.current();
@@ -22,12 +24,16 @@ export function useTypingSettled(text: string, send: () => void, delayMs: number
     pending.current = timer;
     return () => {
       clearTimeout(timer);
-      if (pending.current === timer) pending.current = null;
+      if (pending.current === timer) {
+        pending.current = null;
+      }
     };
   }, [text, delayMs]);
 
   return useCallback(() => {
-    if (pending.current === null) return;
+    if (pending.current === null) {
+      return;
+    }
     clearTimeout(pending.current);
     pending.current = null;
     latest.current();

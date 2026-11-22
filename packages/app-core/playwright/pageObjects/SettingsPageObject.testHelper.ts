@@ -127,8 +127,11 @@ export class SettingsPageObject extends PageObject {
       const inPage = this.page.getByTestId(settingsPageTestIds.settingsLink);
       // In the panel the page draws no link of its own and the bar holds it throughout
       // (design 205d-2).
-      if ((await inPage.count()) > 0) await inPage.click();
-      else await this.page.getByTestId(appShellTestIds.backLink).click();
+      if ((await inPage.count()) > 0) {
+        await inPage.click();
+      } else {
+        await this.page.getByTestId(appShellTestIds.backLink).click();
+      }
       await this.verifyListIsShown(true);
       return this;
     });

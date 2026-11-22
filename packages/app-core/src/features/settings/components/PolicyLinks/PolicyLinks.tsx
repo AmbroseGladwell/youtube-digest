@@ -10,7 +10,9 @@ import { policyLinksTestIds } from "./PolicyLinksTestIds.js";
 export function PolicyLinks() {
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";
-  if (apiUrl === null) return null;
+  if (apiUrl === null) {
+    return null;
+  }
   const target = opensElsewhere ? { target: "_blank", rel: "noreferrer" } : {};
 
   return (

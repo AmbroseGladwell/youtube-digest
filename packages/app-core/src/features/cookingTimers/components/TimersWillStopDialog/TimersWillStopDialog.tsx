@@ -27,12 +27,16 @@ export function TimersWillStopDialog({ open, heading, copy, onStay, onGo }: Time
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
+    if (element === null) {
+      return;
+    }
     if (open && !element.open) {
       element.showModal();
       stay.current?.focus();
     }
-    if (!open && element.open) element.close();
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (

@@ -30,9 +30,13 @@ export function useEpisodeTab(): EpisodeTab | null {
   const show = url !== null && isPodcastShowLink(url);
   const podcast = usePodcastLink(url === null || show ? "" : url);
 
-  if (url === null || !podcast.available) return null;
+  if (url === null || !podcast.available) {
+    return null;
+  }
   const tab = { url, on: podcastPlatform(url) === "apple" ? "Apple Podcasts" : "Spotify", retry: podcast.retry };
-  if (show) return { ...tab, status: "show" };
+  if (show) {
+    return { ...tab, status: "show" };
+  }
 
   const link = podcast.link;
   switch (link.status) {
@@ -46,7 +50,9 @@ export function useEpisodeTab(): EpisodeTab | null {
     case "unreachable":
       return { ...tab, status: "unreachable" };
     case "failed": {
-      if (link.reason === "not-an-episode") return { ...tab, status: "show" };
+      if (link.reason === "not-an-episode") {
+        return { ...tab, status: "show" };
+      }
       const copy = podcastLinkFailureCopy(link.reason, link.showName);
       // The tab is the link, so there's no different one to paste; only trying again is offered.
       return { ...tab, status: "failed", copy: copy.way === "tryAgain" ? copy : { ...copy, way: null, wayLabel: null } };

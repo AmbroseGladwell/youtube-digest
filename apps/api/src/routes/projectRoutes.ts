@@ -112,8 +112,12 @@ export function projectRoutes(app: FastifyInstance, records: RecordsRepository):
           { kind: "overview", id: overviewId },
         ],
         decide: (current, _held, [project, overview]) => {
-          if (!isLive(project ?? null)) throw new ApiError("not_found", "No such project");
-          if (adding && overview?.deleted === true) throw new ApiError("not_found", "No such overview");
+          if (!isLive(project ?? null)) {
+            throw new ApiError("not_found", "No such project");
+          }
+          if (adding && overview?.deleted === true) {
+            throw new ApiError("not_found", "No such overview");
+          }
           return decideMerge(
             "projectMember",
             current,

@@ -24,7 +24,9 @@ export function useHowToApplySlot(overview: Overview | null, besideSteps: boolea
       ),
     };
   }
-  if (!besideSteps || !hasItems || settings === undefined) return null;
+  if (!besideSteps || !hasItems || settings === undefined) {
+    return null;
+  }
   const known = composeReaderContext(settings.aboutYou, settings.learned) !== null;
   return {
     section: HOW_TO_APPLY_SECTION,

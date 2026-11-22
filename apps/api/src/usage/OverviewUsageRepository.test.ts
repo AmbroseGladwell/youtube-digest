@@ -19,7 +19,9 @@ test("a reserved slot counts, and a released one is given back", async () => {
   const reservation = await usage.reserve(testApp.clock.now, accountId, "ours", overviewQuotas.free.ours);
   const held = await usage.usage(testApp.clock.now, accountId, "free");
   assert.equal(reservation.reserved, true);
-  if (reservation.reserved) await usage.release(reservation.month, accountId, "ours");
+  if (reservation.reserved) {
+    await usage.release(reservation.month, accountId, "ours");
+  }
   const released = await usage.usage(testApp.clock.now, accountId, "free");
 
   assert.equal(held.ours.used, 1);
@@ -84,7 +86,9 @@ test("a slot taken before midnight on the last day is given back to the month it
 
   testApp.clock.advance(60 * 1000);
   await usage.reserve(testApp.clock.now, accountId, "ours", overviewQuotas.free.ours);
-  if (reservation.reserved) await usage.release(reservation.month, accountId, "ours");
+  if (reservation.reserved) {
+    await usage.release(reservation.month, accountId, "ours");
+  }
   const october = await usage.usage(testApp.clock.now, accountId, "free");
   testApp.clock.now = new Date("2026-09-15T00:00:00.000Z");
   const september = await usage.usage(testApp.clock.now, accountId, "free");

@@ -71,7 +71,9 @@ const openingOf = (text: string): string => {
 
 const placeOf = (overview: Overview, part: OverviewPart, index: number): ArticlePlace | undefined => {
   const article = overview.article;
-  if (article === null) return undefined;
+  if (article === null) {
+    return undefined;
+  }
   const chapter = part === "chapter" ? index : part === "keyPoint" ? article.keyPointChapters[index] : null;
   return chapter === null || chapter === undefined ? undefined : article.chapters[chapter]?.place;
 };
@@ -87,7 +89,9 @@ export function overviewCitationViews(overview: Overview, citations: readonly Ch
   const citedTwice = (part: OverviewPart) => cited.filter((citation) => citation.part === part).length > 1;
   return cited.map((citation): OverviewCitationView => {
     const landed = citedOverviewPart(overview, citation);
-    if (landed === null) return { kind: "gone", part: citation.part, section: sectionOf(citation.part, overview) };
+    if (landed === null) {
+      return { kind: "gone", part: citation.part, section: sectionOf(citation.part, overview) };
+    }
     if (landed.index === null) {
       return {
         kind: "changed",

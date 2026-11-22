@@ -34,7 +34,9 @@ export function DeleteOverviewsDialog({ count, onDelete, onClose }: DeleteOvervi
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={deleteOverviewsDialogTestIds.root}
     >

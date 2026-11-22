@@ -33,7 +33,9 @@ function scriptedFetch(handle: (request: YouTubeFetchRequest, clientName: string
 
 const happyPath = () =>
   scriptedFetch((request, clientName) => {
-    if (request.url.includes("timedtext")) return ok(JSON3_WRITTEN);
+    if (request.url.includes("timedtext")) {
+      return ok(JSON3_WRITTEN);
+    }
     return ok(clientName === "WEB" ? makeMetadataResponse() : makePlayerResponse());
   });
 
@@ -75,8 +77,12 @@ test("a machine-heard track is reported as machine-heard", async () => {
   const written = makePlayerResponse();
   const tracks = written.captions!.playerCaptionsTracklistRenderer!.captionTracks!;
   const { youTubeFetch } = scriptedFetch((request, clientName) => {
-    if (request.url.includes("timedtext")) return ok(JSON3_WRITTEN);
-    if (clientName === "WEB") return ok(makeMetadataResponse());
+    if (request.url.includes("timedtext")) {
+      return ok(JSON3_WRITTEN);
+    }
+    if (clientName === "WEB") {
+      return ok(makeMetadataResponse());
+    }
     return ok(
       makePlayerResponse({
         captions: { playerCaptionsTracklistRenderer: { captionTracks: [tracks[1]!] } },
@@ -93,8 +99,12 @@ test("a machine-heard track is reported as machine-heard", async () => {
 
 test("a stale client falls through to the next one rather than failing the fetch", async () => {
   const { youTubeFetch, countOf } = scriptedFetch((request, clientName) => {
-    if (request.url.includes("timedtext")) return ok(JSON3_WRITTEN);
-    if (clientName === "ANDROID") return { status: 400, body: "" };
+    if (request.url.includes("timedtext")) {
+      return ok(JSON3_WRITTEN);
+    }
+    if (clientName === "ANDROID") {
+      return { status: 400, body: "" };
+    }
     return ok(clientName === "WEB" ? makeMetadataResponse() : makePlayerResponse());
   });
 
@@ -109,8 +119,12 @@ test("a stale client falls through to the next one rather than failing the fetch
 
 test("a video with no captions does not try the next client, which would find none either", async () => {
   const { youTubeFetch, countOf } = scriptedFetch((request, clientName) => {
-    if (request.url.includes("timedtext")) return ok(JSON3_WRITTEN);
-    if (clientName === "WEB") return ok(makeMetadataResponse());
+    if (request.url.includes("timedtext")) {
+      return ok(JSON3_WRITTEN);
+    }
+    if (clientName === "WEB") {
+      return ok(makeMetadataResponse());
+    }
     return ok(makePlayerResponse({ captions: undefined }));
   });
 
@@ -165,8 +179,12 @@ test("a rate limit is reported as one, so it is retried rather than treated as a
 
 test("a publish date that cannot be had leaves the note without one, rather than failing it", async () => {
   const { youTubeFetch } = scriptedFetch((request, clientName) => {
-    if (request.url.includes("timedtext")) return ok(JSON3_WRITTEN);
-    if (clientName === "WEB") return { status: 500, body: "" };
+    if (request.url.includes("timedtext")) {
+      return ok(JSON3_WRITTEN);
+    }
+    if (clientName === "WEB") {
+      return { status: 500, body: "" };
+    }
     return ok(makePlayerResponse());
   });
 
@@ -195,9 +213,15 @@ test("every failure leaves a TranscriptFetchError, never a raw throw from the fe
 // second client's player error, which points a reader at the wrong request entirely.
 test("a caption failure is reported as one, not as the next client's player failure", async () => {
   const { youTubeFetch } = scriptedFetch((request, clientName) => {
-    if (request.url.includes("timedtext")) return { status: 403, body: "" };
-    if (clientName === "WEB") return ok(makeMetadataResponse());
-    if (clientName === "IOS") return { status: 403, body: "" };
+    if (request.url.includes("timedtext")) {
+      return { status: 403, body: "" };
+    }
+    if (clientName === "WEB") {
+      return ok(makeMetadataResponse());
+    }
+    if (clientName === "IOS") {
+      return { status: 403, body: "" };
+    }
     return ok(makePlayerResponse());
   });
 

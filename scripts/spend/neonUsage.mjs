@@ -25,7 +25,9 @@ export function neonRowsOf({ date, project, branches }) {
 
 async function readJson(fetch, url, apiKey) {
   const response = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" } });
-  if (!response.ok) throw new ProviderReadError(`Neon answered ${response.status}`);
+  if (!response.ok) {
+    throw new ProviderReadError(`Neon answered ${response.status}`);
+  }
   return response.json();
 }
 

@@ -27,7 +27,9 @@ export function SharedPageAnalyticsRuntime({ token, children }: { token: string;
 
   useEffect(() => {
     const flushOnHide = () => {
-      if (document.visibilityState === "hidden") void queue.flush({ keepalive: true });
+      if (document.visibilityState === "hidden") {
+        void queue.flush({ keepalive: true });
+      }
     };
     const flushOnLeave = () => void queue.flush({ keepalive: true });
     document.addEventListener("visibilitychange", flushOnHide);

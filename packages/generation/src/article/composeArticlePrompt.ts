@@ -69,7 +69,9 @@ const keyPointsCoverThePiece = (input: ArticleGenerationInput) => (output: Recor
 
 const readAnywayNamesRealChapters = (output: Record<string, unknown>, ctx: z.RefinementCtx) => {
   const read = output.readAnyway as ReadAnywayOutput | undefined;
-  if (read === undefined) return;
+  if (read === undefined) {
+    return;
+  }
   const path = ["readAnyway", "chapterIndexes"];
   if (read.answer === "partial" && read.chapterIndexes.length === 0) {
     ctx.addIssue({ code: "custom", path, message: "a partial answer names the chapters worth reading" });

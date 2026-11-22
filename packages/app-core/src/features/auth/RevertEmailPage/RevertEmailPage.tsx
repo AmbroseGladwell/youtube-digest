@@ -49,7 +49,9 @@ export function RevertEmailPage() {
   const started = useRef<string | null>(null);
 
   useEffect(() => {
-    if (token === null || started.current === token) return;
+    if (token === null || started.current === token) {
+      return;
+    }
     started.current = token;
     revert.mutate(
       { apiUrl, token },

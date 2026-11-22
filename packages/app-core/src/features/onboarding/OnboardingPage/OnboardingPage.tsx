@@ -101,7 +101,9 @@ const SHARES_BEING_SAVED = new Set<string>();
 export function OnboardingPage() {
   const [progress, update] = useOnboardingProgress();
   const leaving = useRef(false);
-  if (progress === null) return leaving.current ? null : <Navigate to={Routes.home()} replace />;
+  if (progress === null) {
+    return leaving.current ? null : <Navigate to={Routes.home()} replace />;
+  }
   return (
     <Onboarding
       progress={progress}
@@ -142,7 +144,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const step = progress.step;
   const scroller = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    if (scroller.current !== null) scroller.current.scrollTop = 0;
+    if (scroller.current !== null) {
+      scroller.current.scrollTop = 0;
+    }
   }, [step]);
   const share = progress.share;
   const sample = share?.sample ?? false;
@@ -161,7 +165,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const playlist = usePlaylistLookupQuery(link?.kind === "playlist" ? link.playlistId : null);
   const firstVideo = playlist.data?.entries.find((entry) => entry.availability === "available") ?? null;
   useEffect(() => {
-    if (progress.sourceKey === null && firstVideo !== null) update({ sourceKey: SourceKey.parse(firstVideo.videoId) });
+    if (progress.sourceKey === null && firstVideo !== null) {
+      update({ sourceKey: SourceKey.parse(firstVideo.videoId) });
+    }
   }, [progress.sourceKey, firstVideo, update]);
 
   const stored = useQuery({
@@ -177,7 +183,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const tagged = found === null ? {} : { kind: onboardingKindOf(found) };
   const asked = useTopicSuggestions(found, kind, share === null && !signedIn);
   const offered = useMemo((): OnboardingTopicSuggestions | null => {
-    if (found === null || kind === null) return null;
+    if (found === null || kind === null) {
+      return null;
+    }
     return asked.status === "answered"
       ? { noun, names: asked.result.starter, newTopic: asked.result.newTopic, by: "model" }
       : {
@@ -219,8 +227,11 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const startAgain = () => {
     onLeave();
     update(null);
-    if (share === null || share.sample) void navigate(Routes.home(), { replace: true });
-    else globalThis.location.assign(Routes.sharedOverview(share.token));
+    if (share === null || share.sample) {
+      void navigate(Routes.home(), { replace: true });
+    } else {
+      globalThis.location.assign(Routes.sharedOverview(share.token));
+    }
   };
 
   const finish = (overviewId: string) => {
@@ -238,7 +249,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   const afterAnalytics = steps[indexOf("analytics") + 1] ?? "account";
   useEffect(() => {
-    if (step === "analytics" && analyticsAnswered) update({ step: afterAnalytics });
+    if (step === "analytics" && analyticsAnswered) {
+      update({ step: afterAnalytics });
+    }
   }, [step, analyticsAnswered, afterAnalytics, update]);
 
   // A shared copy or sample goes into the account once there is one; a sample waits for the
@@ -246,10 +259,16 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const { refetch: refetchStored } = stored;
   const answersIn = libraryMove.answersIn === accountId;
   useEffect(() => {
-    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount) return;
-    if (share.sample && !answersIn) return;
+    if (share === null || !signedIn || openLibraryAccountId !== accountId || inAccount) {
+      return;
+    }
+    if (share.sample && !answersIn) {
+      return;
+    }
     const saving = `${accountId}:${share.token}`;
-    if (SHARES_BEING_SAVED.has(saving)) return;
+    if (SHARES_BEING_SAVED.has(saving)) {
+      return;
+    }
     SHARES_BEING_SAVED.add(saving);
     void (async () => {
       if ((await overviewStore.getOverview(share.snapshot.note.id)) === null) {
@@ -264,7 +283,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   // Signed in from the account screen: a link's run goes to the wait; signed in some other way with
   // nothing to carry on with, onboarding has nothing to do.
   useEffect(() => {
-    if (!signedIn) return;
+    if (!signedIn) {
+      return;
+    }
     if (progress.overviewId === null && (progress.way === null || kind === null) && share === null) {
       onLeave();
       update(null);
@@ -275,13 +296,17 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   }, [signedIn, progress.overviewId, progress.way, kind, share, step, update, navigate, onLeave]);
 
   useEffect(() => {
-    if (!signedIn || progress.way === null || progress.landed !== null) return;
+    if (!signedIn || progress.way === null || progress.landed !== null) {
+      return;
+    }
     const landedWith = progress.overviewId !== null ? "ready" : failed ? "failed" : "writing";
     analytics.onboarding.account.landed({ ...tagged, way: progress.way, overview: landedWith });
     update({ landed: { at: Date.now(), overview: landedWith, arrived: false } });
   }, [signedIn, progress.way, progress.landed, progress.overviewId, failed, analytics, update]);
   useEffect(() => {
-    if (!inAccount || progress.landed === null || progress.landed.arrived) return;
+    if (!inAccount || progress.landed === null || progress.landed.arrived) {
+      return;
+    }
     analytics.onboarding.overview.arrived({ ...tagged, seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
     update({ landed: { ...progress.landed, arrived: true } });
   }, [inAccount, progress.landed, step, analytics, update]);
@@ -289,7 +314,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   // A shared copy or sample has nothing to wait for: it opens as soon as it's in the account.
   const opened = useRef(false);
   useEffect(() => {
-    if (share === null || !inAccount || progress.overviewId === null || opened.current) return;
+    if (share === null || !inAccount || progress.overviewId === null || opened.current) {
+      return;
+    }
     opened.current = true;
     finish(progress.overviewId);
   });
@@ -297,19 +324,25 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   // The way in is the account screen's own until the reader switches it, so a sign-in landing
   // knows it came from here.
   useEffect(() => {
-    if (step === "account" && progress.way === null) update({ way: "createAccount", mayWrite: true });
+    if (step === "account" && progress.way === null) {
+      update({ way: "createAccount", mayWrite: true });
+    }
   }, [step, progress.way, update]);
 
   const shown = useRef<string | null>(null);
   useEffect(() => {
-    if (shown.current === step) return;
+    if (shown.current === step) {
+      return;
+    }
     shown.current = step;
     analytics.onboarding.step.shown({ ...tagged, step });
   }, [step, analytics]);
 
   const heardFailure = useRef(-1);
   useEffect(() => {
-    if (!failed || heardFailure.current === attempt) return;
+    if (!failed || heardFailure.current === attempt) {
+      return;
+    }
     heardFailure.current = attempt;
     analytics.onboarding.overview.failed({ ...tagged, step, afterAccount: signedIn });
   }, [failed, attempt, step, signedIn, analytics]);
@@ -318,7 +351,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
     setSavingTopics(true);
     try {
       for (const name of chosen) {
-        if (topics.some((topic) => sameTopicName(topic.name, name))) continue;
+        if (topics.some((topic) => sameTopicName(topic.name, name))) {
+          continue;
+        }
         const starter = STARTER_TOPICS.find((topic) => sameTopicName(topic.name, name));
         await createTopic.mutateAsync(
           starter === undefined ? { name, overviews: [] } : { name: starter.name, description: starter.description, overviews: [] },
@@ -395,8 +430,11 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
 
   const skip = () => {
     analytics.onboarding.step.skipped({ ...tagged, step });
-    if (step === "stepsForYou" || step === "aboutYou") go("account");
-    else next();
+    if (step === "stepsForYou" || step === "aboutYou") {
+      go("account");
+    } else {
+      next();
+    }
   };
 
   const screen = (() => {
@@ -511,7 +549,9 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
             focus={aboutYou.focus[0] ?? null}
             onTryAgain={() => tryAgain("account")}
             onOpen={() => {
-              if (progress.overviewId !== null) finish(progress.overviewId);
+              if (progress.overviewId !== null) {
+                finish(progress.overviewId);
+              }
             }}
           />
         );
@@ -519,9 +559,15 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   })();
 
   const aside = (() => {
-    if (!wide) return null;
-    if (step === "topics") return <OnboardingProjectsCard />;
-    if (step === "account") return <OnboardingAccountSide saved={savedCard("account")} />;
+    if (!wide) {
+      return null;
+    }
+    if (step === "topics") {
+      return <OnboardingProjectsCard />;
+    }
+    if (step === "account") {
+      return <OnboardingAccountSide saved={savedCard("account")} />;
+    }
     if (step === "aboutYou" && found !== null) {
       return (
         <section className={styles.paneCard} aria-label="Your overview, once you're in">
@@ -537,8 +583,11 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
   const back = () => {
     analytics.onboarding.step.backChosen({ ...tagged, step });
     const before = steps[indexOf(step) - 1];
-    if (before === undefined || (before === "analytics" && analyticsAnswered)) startAgain();
-    else update({ step: before });
+    if (before === undefined || (before === "analytics" && analyticsAnswered)) {
+      startAgain();
+    } else {
+      update({ step: before });
+    }
   };
 
   return (

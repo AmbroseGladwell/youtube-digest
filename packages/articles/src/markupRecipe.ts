@@ -30,10 +30,16 @@ const isLink = (heading: Element): boolean => {
 };
 
 const partNamed = (heading: Element): Part | null => {
-  if (isLink(heading) || isPageFurniture(heading)) return null;
+  if (isLink(heading) || isPageFurniture(heading)) {
+    return null;
+  }
   const name = tidied(heading.textContent).toLowerCase().replace(/[:.]$/, "");
-  if (INGREDIENTS_HEADING.test(name)) return "ingredients";
-  if (METHOD_HEADING.test(name)) return "method";
+  if (INGREDIENTS_HEADING.test(name)) {
+    return "ingredients";
+  }
+  if (METHOD_HEADING.test(name)) {
+    return "method";
+  }
   return null;
 };
 
@@ -42,7 +48,9 @@ const isList = (element: Element): boolean => element.tagName === "UL" || elemen
 const containerOf = (heading: Element): Element => {
   const headingText = tidied(heading.textContent);
   let container = heading.parentElement!;
-  while (tidied(container.textContent) === headingText && container.parentElement !== null) container = container.parentElement;
+  while (tidied(container.textContent) === headingText && container.parentElement !== null) {
+    container = container.parentElement;
+  }
   return container;
 };
 
@@ -54,19 +62,31 @@ const sectionUnder = (document: Document, heading: Element, part: Part): Section
   const written: RecipeStep[] = [];
   let group: string | null = null;
   for (let node = walker.nextNode() as Element | null; node !== null; node = walker.nextNode() as Element | null) {
-    if (heading.contains(node)) continue;
-    if (isPageFurniture(node)) break;
+    if (heading.contains(node)) {
+      continue;
+    }
+    if (isPageFurniture(node)) {
+      break;
+    }
     const nodeLevel = levelOf(node);
     if (nodeLevel !== null) {
-      if (nodeLevel <= level || partNamed(node) !== null) break;
+      if (nodeLevel <= level || partNamed(node) !== null) {
+        break;
+      }
       const name = tidied(node.textContent);
       group = part === "method" && name !== "" && !NUMBERED_STEP.test(name) ? name : null;
       continue;
     }
     const text = tidied(node.textContent);
-    if (text === "") continue;
-    if (node.tagName === "LI" && ![...node.children].some(isList)) listed.push({ text, group });
-    if (node.tagName === "P" && node.closest("li") === null) written.push({ text, group });
+    if (text === "") {
+      continue;
+    }
+    if (node.tagName === "LI" && ![...node.children].some(isList)) {
+      listed.push({ text, group });
+    }
+    if (node.tagName === "P" && node.closest("li") === null) {
+      written.push({ text, group });
+    }
   }
   return { part, heading, items: listed.length > 0 || part === "ingredients" ? listed : written };
 };
@@ -89,7 +109,9 @@ const theOnly = (sections: Section[]): Section | null => {
 // The recipe a page shows when it declares none: an ingredients heading over a list, and a
 // method heading over steps (docs/features/recipe-notes.md, "Read from the page itself").
 export function markupRecipe(document: Document): Recipe | null {
-  if (document.body === null) return null;
+  if (document.body === null) {
+    return null;
+  }
   const sections = [...document.body.querySelectorAll("h1, h2, h3, h4, h5, h6")]
     .flatMap((heading) => {
       const part = partNamed(heading);
@@ -98,8 +120,12 @@ export function markupRecipe(document: Document): Recipe | null {
     .filter(holdsTogether);
   const ingredients = theOnly(sections.filter(({ part }) => part === "ingredients"));
   const method = theOnly(sections.filter(({ part }) => part === "method"));
-  if (ingredients === null || method === null) return null;
-  if (sections.indexOf(method) < sections.indexOf(ingredients)) return null;
+  if (ingredients === null || method === null) {
+    return null;
+  }
+  if (sections.indexOf(method) < sections.indexOf(ingredients)) {
+    return null;
+  }
   return {
     ingredients: ingredients.items.map(({ text }) => text),
     steps: method.items,

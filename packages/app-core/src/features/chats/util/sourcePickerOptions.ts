@@ -64,17 +64,24 @@ export function sourcePickerOptions({
 // The title in pieces, each typed word marked where it appears, for the picker to set in bold.
 export function markedPieces(text: string, query: string): Array<{ text: string; marked: boolean }> {
   const words = wordsOf(query);
-  if (words.length === 0) return [{ text, marked: false }];
+  if (words.length === 0) {
+    return [{ text, marked: false }];
+  }
   const lower = text.toLowerCase();
   const marked = new Array<boolean>(text.length).fill(false);
   for (const word of words) {
-    for (let at = lower.indexOf(word); at !== -1; at = lower.indexOf(word, at + word.length)) marked.fill(true, at, at + word.length);
+    for (let at = lower.indexOf(word); at !== -1; at = lower.indexOf(word, at + word.length)) {
+      marked.fill(true, at, at + word.length);
+    }
   }
   const pieces: Array<{ text: string; marked: boolean }> = [];
   for (let index = 0; index < text.length; index += 1) {
     const last = pieces.at(-1);
-    if (last !== undefined && last.marked === marked[index]) last.text += text[index];
-    else pieces.push({ text: text[index]!, marked: marked[index]! });
+    if (last !== undefined && last.marked === marked[index]) {
+      last.text += text[index];
+    } else {
+      pieces.push({ text: text[index]!, marked: marked[index]! });
+    }
   }
   return pieces;
 }
@@ -83,7 +90,9 @@ export function markedPieces(text: string, query: string): Array<{ text: string;
 export function atQueryOf(text: string, caret: number): { start: number; query: string } | null {
   const before = text.slice(0, caret);
   const at = before.lastIndexOf("@");
-  if (at === -1 || (at > 0 && !/\s/.test(before[at - 1]!))) return null;
+  if (at === -1 || (at > 0 && !/\s/.test(before[at - 1]!))) {
+    return null;
+  }
   const query = before.slice(at + 1);
   return /\n/.test(query) || query.length > 60 ? null : { start: at, query };
 }

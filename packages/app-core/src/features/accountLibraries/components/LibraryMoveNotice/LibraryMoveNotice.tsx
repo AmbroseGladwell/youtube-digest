@@ -10,7 +10,9 @@ import { libraryMoveNoticeTestIds } from "./LibraryMoveNoticeTestIds.js";
 export function LibraryMoveNotice({ panel = false }: { panel?: boolean }) {
   const { move, dismiss } = useLibraryMove();
   const analytics = useAnalytics();
-  if (move === null) return null;
+  if (move === null) {
+    return null;
+  }
   const copy = libraryMoveCopy(move);
 
   return (

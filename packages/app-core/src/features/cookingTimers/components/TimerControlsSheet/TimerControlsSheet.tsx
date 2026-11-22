@@ -33,11 +33,19 @@ function useWayBack(timer: CookingTimer | null): WayBack {
     enabled: timer !== null && scope === "reader",
     refetchOnMount: "always",
   });
-  if (timer === null) return "unknown";
-  if (scope === "sharedPage") return "step";
-  if (query.isPending || query.isFetching) return "unknown";
+  if (timer === null) {
+    return "unknown";
+  }
+  if (scope === "sharedPage") {
+    return "step";
+  }
+  if (query.isPending || query.isFetching) {
+    return "unknown";
+  }
   const recipe = query.data?.overview.recipe ?? null;
-  if (recipe === null) return "gone";
+  if (recipe === null) {
+    return "gone";
+  }
   return recipeActions(recipe.steps)[timer.source.action]?.text === timer.actionText ? "step" : "start";
 }
 
@@ -47,12 +55,16 @@ export function TimerControlsSheet({ timer, onClose, onLeaving }: TimerControlsS
   const wayBack = useWayBack(timer);
 
   const goBack = (landed: "step" | "start") => {
-    if (timer === null) return;
+    if (timer === null) {
+      return;
+    }
     timers.eventsFor(timer).backToStep({ landed });
     onLeaving?.();
     onClose();
     timers.requestCook({ recipe: timer.source.recipe, action: timer.source.action, actionText: timer.actionText });
-    if (timers.scope === "reader") void navigate(Routes.overview(timer.source.recipe as OverviewId));
+    if (timers.scope === "reader") {
+      void navigate(Routes.overview(timer.source.recipe as OverviewId));
+    }
   };
 
   const back =

@@ -14,7 +14,9 @@ const onlyPlaylist = (captures: readonly QueuedCapture[]): QueuedCapture["fromPl
 // The pace never changes by making videos now, and the words say so (95af–95ai).
 function paceStays(captures: readonly QueuedCapture[], paceOf: PaceOf): string {
   const playlist = onlyPlaylist(captures);
-  if (playlist === null) return "Paces stay as they are.";
+  if (playlist === null) {
+    return "Paces stay as they are.";
+  }
   const pace = paceOf(playlist.id);
   return paceDailyLimit(pace) === 0
     ? `The rest of ${playlist.title} keep waiting for you.`
@@ -44,7 +46,9 @@ export function chosenBarLine(
   allowance: MonthAllowance | null = null,
 ): string {
   const made = madeNowOf(captures.length, allowance);
-  if (allowance === null || made === captures.length) return `${madeInOrder(captures, orderOf)} ${paceStays(captures, paceOf)}`;
+  if (allowance === null || made === captures.length) {
+    return `${madeInOrder(captures, orderOf)} ${paceStays(captures, paceOf)}`;
+  }
   const rest = captures.length - made;
   return (
     `You have ${made.toLocaleString("en-GB")} left this month, so ${made.toLocaleString("en-GB")} ${made === 1 ? "is" : "are"} made now ` +

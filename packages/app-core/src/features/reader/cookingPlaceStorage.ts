@@ -18,7 +18,9 @@ export function readCookingPlace(
 ): CookingPlace | null {
   try {
     const parsed = CookingPlace.safeParse(JSON.parse(storage.getItem(PLACE_PREFIX + overviewId) ?? "null"));
-    if (!parsed.success || now - parsed.data.leftAt > COOKING_PLACE_KEPT_MS) return null;
+    if (!parsed.success || now - parsed.data.leftAt > COOKING_PLACE_KEPT_MS) {
+      return null;
+    }
     return parsed.data;
   } catch {
     return null;
@@ -27,8 +29,11 @@ export function readCookingPlace(
 
 export function writeCookingPlace(overviewId: OverviewId, place: CookingPlace | null, storage: Storage = globalThis.localStorage): void {
   try {
-    if (place === null) storage.removeItem(PLACE_PREFIX + overviewId);
-    else storage.setItem(PLACE_PREFIX + overviewId, JSON.stringify(place));
+    if (place === null) {
+      storage.removeItem(PLACE_PREFIX + overviewId);
+    } else {
+      storage.setItem(PLACE_PREFIX + overviewId, JSON.stringify(place));
+    }
   } catch {
     // A device that won't store it starts again from step 1.
   }

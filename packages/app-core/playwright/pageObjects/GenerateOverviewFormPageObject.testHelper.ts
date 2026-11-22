@@ -109,7 +109,9 @@ export class GenerateOverviewFormPageObject extends PageObject {
     this.step(`verifyLimitMessage ${title}`, async () => {
       const ids = generateOverviewFormTestIds.limitMessage;
       await expect(this.get(ids.title)).toHaveText(title);
-      if (body !== undefined) await expect(this.get(ids.body)).toHaveText(body);
+      if (body !== undefined) {
+        await expect(this.get(ids.body)).toHaveText(body);
+      }
       await expect(this.get(ids.root).getByRole("link")).toHaveText(actions);
       await expect(this.get(ids.foot)).toHaveText("Everything you've already made keeps working.");
       await this.expectToHaveCount(generateOverviewFormTestIds.generateButton, 0);

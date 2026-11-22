@@ -35,14 +35,18 @@ for (const windowS of WINDOWS_S) {
       source.questions.questions.map((question) => question.question),
     );
     source.questions.questions.forEach((question, index) => {
-      if (question.kind === "notInSource") return;
+      if (question.kind === "notInSource") {
+        return;
+      }
       const moments = question.quotes.map((quote) => locateQuote(source.fetched.transcript, quote) ?? -1);
       for (const count of COUNTS) {
         const key = `${windowS}s top ${count}`;
         const retrieved = closestPassages(passages, embedded.vectors, queries.vectors[index] ?? [], count);
         const hit = everyMomentCovered(retrieved, moments);
         asked.set(key, (asked.get(key) ?? 0) + 1);
-        if (hit) found.set(key, (found.get(key) ?? 0) + 1);
+        if (hit) {
+          found.set(key, (found.get(key) ?? 0) + 1);
+        }
         const kindKey = `${key} ${question.kind}`;
         const tally = byKind.get(kindKey) ?? { found: 0, asked: 0 };
         byKind.set(kindKey, { found: tally.found + (hit ? 1 : 0), asked: tally.asked + 1 });
@@ -71,4 +75,6 @@ for (const windowS of WINDOWS_S) {
   }
 }
 console.log("");
-for (const line of lines) console.log(line);
+for (const line of lines) {
+  console.log(line);
+}

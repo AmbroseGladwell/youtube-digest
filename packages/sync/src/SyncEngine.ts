@@ -96,14 +96,18 @@ export class SyncEngine {
   // pulled with the feed (docs/features/transcript-storage.md).
   async fetchTranscript(videoId: string): Promise<StoredTranscript | null> {
     const transcript = await this.#api.getTranscript(videoId);
-    if (transcript !== null) await this.#storage.keepTranscript(transcript);
+    if (transcript !== null) {
+      await this.#storage.keepTranscript(transcript);
+    }
     return transcript;
   }
 
   // Something that could make room happened, such as a new plan: every waiting overview is
   // asked about again at once.
   retryWaiting(): void {
-    if (this.#waitingUntil.size === 0) return;
+    if (this.#waitingUntil.size === 0) {
+      return;
+    }
     this.#waitingUntil.clear();
     void this.sync();
   }
@@ -126,7 +130,9 @@ export class SyncEngine {
   start({ intervalMs = 60_000, journalDebounceMs = 250 }: SyncEngineSchedule = {}): () => void {
     let debounce: ReturnType<typeof setTimeout> | null = null;
     const soon = () => {
-      if (debounce !== null) clearTimeout(debounce);
+      if (debounce !== null) {
+        clearTimeout(debounce);
+      }
       debounce = setTimeout(() => {
         debounce = null;
         void this.sync();
@@ -141,7 +147,9 @@ export class SyncEngine {
       interval ??= setInterval(onWake, intervalMs);
     };
     const pause = () => {
-      if (interval !== null) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
       interval = null;
     };
     const onVisibility = () => {
@@ -154,7 +162,9 @@ export class SyncEngine {
     };
 
     const stopJournal = this.#storage.onJournaled(soon);
-    if (!hidden()) poll();
+    if (!hidden()) {
+      poll();
+    }
     globalThis.addEventListener?.("online", onWake);
     globalThis.document?.addEventListener("visibilitychange", onVisibility);
     void this.sync();
@@ -162,7 +172,9 @@ export class SyncEngine {
     return () => {
       stopJournal();
       pause();
-      if (debounce !== null) clearTimeout(debounce);
+      if (debounce !== null) {
+        clearTimeout(debounce);
+      }
       globalThis.removeEventListener?.("online", onWake);
       globalThis.document?.removeEventListener("visibilitychange", onVisibility);
     };
@@ -186,10 +198,14 @@ export class SyncEngine {
       }
       if (!belowFloor) {
         const stopped = await this.#push();
-        if (stopped !== null) return this.#stop(stopped.reason, stopped.detail);
+        if (stopped !== null) {
+          return this.#stop(stopped.reason, stopped.detail);
+        }
       }
       const stopped = await this.#pull();
-      if (stopped !== null) return this.#stop(stopped.reason, stopped.detail);
+      if (stopped !== null) {
+        return this.#stop(stopped.reason, stopped.detail);
+      }
     } catch (error) {
       return this.#stop("failed", describe(error));
     }
@@ -202,7 +218,9 @@ export class SyncEngine {
   async #push(): Promise<{ reason: StopReason; detail: string } | null> {
     for (;;) {
       const pass = await this.#pushPass();
-      if (pass !== "folded") return pass;
+      if (pass !== "folded") {
+        return pass;
+      }
     }
   }
 
@@ -234,8 +252,12 @@ export class SyncEngine {
           break;
         case "held": {
           const folded = await this.#fold(entry, outcome.by);
-          if (folded === "folded") return "folded";
-          if (folded !== null) return folded;
+          if (folded === "folded") {
+            return "folded";
+          }
+          if (folded !== null) {
+            return folded;
+          }
           blocked.add(key);
           break;
         }
@@ -245,7 +267,9 @@ export class SyncEngine {
           break;
         case "waiting": {
           const until = Date.parse(outcome.until);
-          if (Number.isFinite(until)) this.#waitingUntil.set(key, until);
+          if (Number.isFinite(until)) {
+            this.#waitingUntil.set(key, until);
+          }
           blocked.add(key);
           break;
         }
@@ -258,8 +282,12 @@ export class SyncEngine {
 
   #stillWaiting(key: string): boolean {
     const until = this.#waitingUntil.get(key);
-    if (until === undefined) return false;
-    if (until > this.#now().getTime()) return true;
+    if (until === undefined) {
+      return false;
+    }
+    if (until > this.#now().getTime()) {
+      return true;
+    }
     this.#waitingUntil.delete(key);
     return false;
   }
@@ -270,7 +298,9 @@ export class SyncEngine {
   // parked, counted, with the reason (docs/features/one-overview-per-video.md).
   async #fold(entry: OutboxEntry, winnerId: string): Promise<{ reason: StopReason; detail: string } | "folded" | null> {
     const stopped = await this.#pull();
-    if (stopped !== null) return stopped;
+    if (stopped !== null) {
+      return stopped;
+    }
     const fold = await this.#storage.foldOverview(entry.id, winnerId);
     if (fold === null) {
       await this.#storage.park(entry.key, HELD_ELSEWHERE);
@@ -296,9 +326,13 @@ export class SyncEngine {
         return { reason: stopReasonFor(error) ?? "failed", detail: describe(error) };
       }
       await this.#storage.applyChanges(page.changes, page.next);
-      if (page.changes.length > 0) this.#onApplied?.(page.changes);
+      if (page.changes.length > 0) {
+        this.#onApplied?.(page.changes);
+      }
       since = page.next;
-      if (!page.more) return null;
+      if (!page.more) {
+        return null;
+      }
     }
   }
 
@@ -323,7 +357,9 @@ export class SyncEngine {
 
   #publish(patch: Partial<SyncStatus>): SyncStatus {
     this.#status = { ...this.#status, ...patch };
-    for (const listener of this.#listeners) listener(this.#status);
+    for (const listener of this.#listeners) {
+      listener(this.#status);
+    }
     return this.#status;
   }
 }

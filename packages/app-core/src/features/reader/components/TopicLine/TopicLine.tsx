@@ -53,8 +53,11 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
   const busy = setOverviewTopics.isPending || createTopic.isPending;
 
   const toggle = (topicId: TopicId) => {
-    if (overview.topicIds.includes(topicId)) analytics.topics.removed({ topicId });
-    else analytics.topics.added({ topicId });
+    if (overview.topicIds.includes(topicId)) {
+      analytics.topics.removed({ topicId });
+    } else {
+      analytics.topics.added({ topicId });
+    }
     setOverviewTopics.mutate({
       overview,
       topicIds: overview.topicIds.includes(topicId) ? overview.topicIds.filter((id) => id !== topicId) : [...overview.topicIds, topicId],

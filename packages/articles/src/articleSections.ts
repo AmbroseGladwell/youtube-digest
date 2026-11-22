@@ -31,8 +31,12 @@ export function articleSections(body: HTMLElement, title: string, pageUrl: strin
       }
     } else if (!hasBlockInside(element)) {
       const text = clean(element.textContent);
-      if (text === "") continue;
-      if (sections.length === 0) sections.push({ heading: null, anchor: null, blocks: [], links: [] });
+      if (text === "") {
+        continue;
+      }
+      if (sections.length === 0) {
+        sections.push({ heading: null, anchor: null, blocks: [], links: [] });
+      }
       const section = sections.at(-1)!;
       for (const link of articleLinks(element, pageUrl)) {
         if (!linked.has(link.href)) {
@@ -49,7 +53,9 @@ export function articleSections(body: HTMLElement, title: string, pageUrl: strin
     .map(({ heading, anchor, blocks, links }) => ({ heading, anchor, text: blocks.join("\n\n"), links }));
   const whole = clean(body.textContent);
   const keptWords = kept.reduce((total, { text }) => total + wordCount(text), 0);
-  if (keptWords >= wordCount(whole) * TOO_MUCH_LOST) return kept;
+  if (keptWords >= wordCount(whole) * TOO_MUCH_LOST) {
+    return kept;
+  }
   return whole === ""
     ? []
     : [

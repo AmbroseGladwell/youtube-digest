@@ -32,7 +32,9 @@ export interface PlayerBarContext {
 // Summary section is headed Premise.
 export function sectionHeadingAt(lines: NoteLine[], index: number): string {
   for (let at = Math.min(index, lines.length - 1); at >= 0; at -= 1) {
-    if (lines[at]!.heading) return lines[at]!.text;
+    if (lines[at]!.heading) {
+      return lines[at]!.text;
+    }
   }
   return lines[0]?.section ?? "";
 }

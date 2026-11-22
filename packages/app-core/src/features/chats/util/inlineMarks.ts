@@ -26,7 +26,9 @@ export function inlineMarks(text: string, { open = "plain" }: { open?: "bold" | 
   let italicFrom = 0;
   let buffer = "";
   const flush = () => {
-    if (buffer !== "") pieces.push({ text: buffer, bold, italic, code: false });
+    if (buffer !== "") {
+      pieces.push({ text: buffer, bold, italic, code: false });
+    }
     buffer = "";
   };
 
@@ -81,8 +83,16 @@ export function inlineMarks(text: string, { open = "plain" }: { open?: "bold" | 
   flush();
 
   // Once whole, a mark that never closed was never a mark: what followed it reads as plain text.
-  if (!streaming && bold) for (const piece of pieces.slice(boldFrom)) piece.bold = false;
-  if (!streaming && italic) for (const piece of pieces.slice(italicFrom)) piece.italic = false;
+  if (!streaming && bold) {
+    for (const piece of pieces.slice(boldFrom)) {
+      piece.bold = false;
+    }
+  }
+  if (!streaming && italic) {
+    for (const piece of pieces.slice(italicFrom)) {
+      piece.italic = false;
+    }
+  }
   return pieces.filter((piece) => piece.text !== "");
 }
 

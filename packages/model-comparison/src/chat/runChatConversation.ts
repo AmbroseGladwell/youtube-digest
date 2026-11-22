@@ -55,7 +55,9 @@ const PROVIDER: Provider = "openai";
 
 export async function runChatConversation(setup: ConversationSetup): Promise<ChatConversationRecord> {
   const price = priceOf({ provider: PROVIDER, model: setup.model });
-  if (price === undefined) throw new Error(`no price for ${setup.model}`);
+  if (price === undefined) {
+    throw new Error(`no price for ${setup.model}`);
+  }
   const uncached = (usage: TokenUsage) =>
     costInDollars(price, {
       uncachedInputTokens: promptTokensOf(usage),

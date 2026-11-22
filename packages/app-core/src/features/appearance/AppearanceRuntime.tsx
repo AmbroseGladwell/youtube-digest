@@ -17,7 +17,9 @@ export function AppearanceRuntime({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const followAnotherTab = (event: StorageEvent) => {
-      if (event.key === APPEARANCE_STORAGE_KEY) applyAppearance(readAppearance());
+      if (event.key === APPEARANCE_STORAGE_KEY) {
+        applyAppearance(readAppearance());
+      }
     };
     window.addEventListener("storage", followAnotherTab);
     return () => window.removeEventListener("storage", followAnotherTab);

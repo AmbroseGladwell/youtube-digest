@@ -25,7 +25,9 @@ export function overviewUsageRoutes(
     const plan = await accountPlan(sql, accountId);
     const now = clock();
     const overviews = await usage.usage(now, accountId, plan);
-    if (transcriptions === null) return overviews;
+    if (transcriptions === null) {
+      return overviews;
+    }
     return { ...overviews, transcription: await transcriptions.usage(now, { accountId, plan }) };
   });
 }

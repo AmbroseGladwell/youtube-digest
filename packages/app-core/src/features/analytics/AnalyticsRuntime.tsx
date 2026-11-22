@@ -39,8 +39,11 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
   const optedOut = useSettingsQuery().data?.analyticsOptOut ?? false;
 
   useEffect(() => {
-    if (connected) forgetAnonymousId();
-    else mintAnonymousId();
+    if (connected) {
+      forgetAnonymousId();
+    } else {
+      mintAnonymousId();
+    }
   }, [connected, consent]);
 
   const sessionApi = useMemo<EventsApi | null>(
@@ -56,14 +59,20 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
 
   const [queue] = useState(() => {
     const sender = (): Sender | null => {
-      if (latest.current.signedIn) return latest.current.sessionApi === null ? null : { api: latest.current.sessionApi };
+      if (latest.current.signedIn) {
+        return latest.current.sessionApi === null ? null : { api: latest.current.sessionApi };
+      }
       const { consent: answered } = analyticsConsentSnapshot();
       const anonymousId = answered?.anonymousId ?? null;
-      if (latest.current.anonymousApi === null || !consentAllowsSharing(answered) || anonymousId === null) return null;
+      if (latest.current.anonymousApi === null || !consentAllowsSharing(answered) || anonymousId === null) {
+        return null;
+      }
       return { api: latest.current.anonymousApi, anonymousId };
     };
     const mode = (): AnalyticsSendMode => {
-      if (sender() !== null) return "send";
+      if (sender() !== null) {
+        return "send";
+      }
       const unanswered = !latest.current.signedIn && !consentAnswered(analyticsConsentSnapshot().consent);
       return unanswered && latest.current.anonymousApi !== null ? "hold" : "discard";
     };
@@ -82,7 +91,9 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
       void queue.flush({ keepalive: true });
     };
     const flushOnHide = () => {
-      if (document.visibilityState === "hidden") flushErrorsThenEvents();
+      if (document.visibilityState === "hidden") {
+        flushErrorsThenEvents();
+      }
     };
     const flushOnLeave = flushErrorsThenEvents;
     document.addEventListener("visibilitychange", flushOnHide);

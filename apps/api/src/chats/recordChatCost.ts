@@ -20,7 +20,9 @@ export async function recordChatCost(
   detail: string,
   log: FastifyBaseLogger,
 ): Promise<ChatCost> {
-  if (usage === null) return { inputTokens: 0, cachedShare: null, outputTokens: 0, costDollars: null };
+  if (usage === null) {
+    return { inputTokens: 0, cachedShare: null, outputTokens: 0, costDollars: null };
+  }
   const price = priceOf(chatModel);
   const inputTokens = promptTokensOf(usage);
   const costDollars = price === undefined ? null : costInDollars(price, usage);

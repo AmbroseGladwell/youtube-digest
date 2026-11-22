@@ -10,7 +10,9 @@
     saved = {};
   }
   const root = document.documentElement;
-  if (THEMES.indexOf(saved.theme) !== -1) root.setAttribute("data-theme", saved.theme);
+  if (THEMES.indexOf(saved.theme) !== -1) {
+    root.setAttribute("data-theme", saved.theme);
+  }
   if (saved.accentColour !== "orange" && ACCENTS.indexOf(saved.accentColour) !== -1) {
     root.setAttribute("data-accent", saved.accentColour);
     const links = document.querySelectorAll("link[data-accent-href]");

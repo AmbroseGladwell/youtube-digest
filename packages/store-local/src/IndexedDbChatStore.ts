@@ -51,6 +51,8 @@ export class IndexedDbChatStore implements ChatStore {
       existing !== undefined &&
       (await appendPendingWrite(transaction, { kind: "chat", id, updatedAt: new Date().toISOString(), change: { op: "delete" } }));
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 }

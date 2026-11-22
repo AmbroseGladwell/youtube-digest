@@ -24,7 +24,9 @@ export function LibraryQueueGroup() {
   const paced = pacedSummary(queue);
 
   // Folded only while the strip is there to unfold it from.
-  if ((queue.folded && queue.strip !== null) || (waitingCount === 0 && queue.attention.length === 0)) return null;
+  if ((queue.folded && queue.strip !== null) || (waitingCount === 0 && queue.attention.length === 0)) {
+    return null;
+  }
 
   return (
     <section className={styles.root} id={GROUP_ID} aria-labelledby={`${GROUP_ID}-heading`} data-testid={libraryQueueGroupTestIds.root}>

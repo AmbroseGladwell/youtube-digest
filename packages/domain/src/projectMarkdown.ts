@@ -44,7 +44,9 @@ export function verdictSpread(overviews: readonly Overview[]): VerdictSpread {
       continue;
     }
     spread[verdict.novelty] += 1;
-    if (verdict.dubious) spread.dubious += 1;
+    if (verdict.dubious) {
+      spread.dubious += 1;
+    }
   }
   return spread;
 }
@@ -75,7 +77,9 @@ function overviewLine({ overview, read, addedBy }: ProjectOverview): string {
 
 function stepsOf({ overview }: ProjectOverview): string | null {
   const items = overview.howToApply?.items ?? [];
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return null;
+  }
   return [`### ${overview.source.title} (id ${overview.id})`, ...items.map((item) => `- ${item}`)].join("\n");
 }
 
@@ -104,7 +108,9 @@ export function projectMarkdown(project: Project, items: readonly ProjectOvervie
   if (shown.length > 0) {
     sections.push(`## Overviews\n\n${shown.map(overviewLine).join("\n")}`);
     const steps = shown.map(stepsOf).filter((block) => block !== null);
-    if (steps.length > 0) sections.push(`## How to apply, from each overview\n\n${steps.join("\n\n")}`);
+    if (steps.length > 0) {
+      sections.push(`## How to apply, from each overview\n\n${steps.join("\n\n")}`);
+    }
   }
   return `${sections.join("\n\n")}\n`;
 }

@@ -35,25 +35,35 @@ export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey
 
   useEffect(() => {
     const button = firstDismiss.current;
-    if (newest === 0 || button === null) return;
+    if (newest === 0 || button === null) {
+      return;
+    }
     screen.current = button.closest("dialog");
-    if (!button.closest("[role=alert]")?.contains(document.activeElement)) before.current = document.activeElement;
+    if (!button.closest("[role=alert]")?.contains(document.activeElement)) {
+      before.current = document.activeElement;
+    }
     button.focus({ preventScroll: true });
   }, [newest]);
 
   useEffect(() => {
     const active = document.activeElement;
-    if (active !== null && active !== document.body) return;
+    if (active !== null && active !== document.body) {
+      return;
+    }
     if (firstDismiss.current !== null || screen.current !== null) {
       (firstDismiss.current ?? screen.current)?.focus({ preventScroll: true });
       return;
     }
     const back = before.current;
     before.current = null;
-    if (back instanceof HTMLElement && back.isConnected) back.focus({ preventScroll: true });
+    if (back instanceof HTMLElement && back.isConnected) {
+      back.focus({ preventScroll: true });
+    }
   }, [ids]);
 
-  if (ringing.length === 0) return null;
+  if (ringing.length === 0) {
+    return null;
+  }
   const only = ringing.length === 1 ? ringing[0]! : null;
 
   return (

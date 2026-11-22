@@ -140,7 +140,9 @@ const transcriptBlocks = (passages: readonly Passage[]): string => passages.map(
 // and as a user message: a second system message is folded into the first, and the transcript
 // is then no longer the cached prefix a new conversation reads (OV-313's probe).
 export function otherChatsPrompt(kind: ChatSourceKind, others: OtherChatsInPrompt): string | null {
-  if (others.conversations.length === 0) return null;
+  if (others.conversations.length === 0) {
+    return null;
+  }
   return `# The reader's other conversations about this ${kind}
 
 Earlier conversations the reader had about the same ${kind}. Use them when the question refers to something the reader asked, decided or was told there, and list as sources the ids (such as c1.m3) of the messages you used. They are not the source: ${answeredFromOverviewAlone(kind) ? "anything about the " + kind + " must still cite the overview's items" : `anything about what the ${kind} says must still cite transcript passages`}, and an answer that rests only on these conversations has inSource false.

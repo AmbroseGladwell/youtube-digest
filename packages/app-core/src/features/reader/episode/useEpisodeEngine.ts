@@ -23,16 +23,22 @@ export function useEpisodeEngine(source: Source | null): EpisodeEngine | null {
             createMedia: () => new Audio(),
             onStart: () => {
               const { status } = narration.getSnapshot();
-              if (status === "playing" || status === "buffering") narration.pause();
+              if (status === "playing" || status === "buffering") {
+                narration.pause();
+              }
             },
           }),
     [audioUrl, playbackId, narration],
   );
 
   useEffect(() => {
-    if (engine === null) return;
+    if (engine === null) {
+      return;
+    }
     const stop = narration.subscribe(() => {
-      if (narration.getSnapshot().status === "playing" && engine.getSnapshot().status === "playing") engine.pause();
+      if (narration.getSnapshot().status === "playing" && engine.getSnapshot().status === "playing") {
+        engine.pause();
+      }
     });
     return () => {
       stop();

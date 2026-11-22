@@ -63,10 +63,14 @@ const cited = (message: ChatMessage, kind: "startMs" | "part") =>
 // Said once an answer is final. One that cites the overview isn't a decline, though the source
 // didn't cover it (319k), and on an article or a recipe page that is every answer (OV-320).
 function announcementOf(message: ChatMessage, words: ChatWords): string {
-  if (message.from !== "answer") return "";
+  if (message.from !== "answer") {
+    return "";
+  }
   const moments = cited(message, "startMs");
   const parts = cited(message, "part");
-  if (!message.inSource && parts === 0) return `${words.notCovered}: ${message.text}`;
+  if (!message.inSource && parts === 0) {
+    return `${words.notCovered}: ${message.text}`;
+  }
   const citedLine = [
     moments === 0 ? null : plural(moments, "moment"),
     parts === 0 ? null : `${plural(parts, "part")} of the overview`,
@@ -166,7 +170,9 @@ export const ChatPanel = ({
       setAnnouncement("Writing an answer");
       setArrivedAt(null);
     }
-    if (ask.status === "stopped") setAnnouncement("Stopped");
+    if (ask.status === "stopped") {
+      setAnnouncement("Stopped");
+    }
     if (was.status === "answering" && ask.status === "idle" && was.conversationId === conversationId) {
       const answer = messages[latestAnswerAt];
       if (answer !== undefined) {
@@ -179,7 +185,9 @@ export const ChatPanel = ({
   // Each conversation opens at its latest question, or at the message a citation named, outlined
   // for a moment with focus on it (design 310x).
   useEffect(() => {
-    if (view !== "conversation") return;
+    if (view !== "conversation") {
+      return;
+    }
     if (focusedMessage !== null) {
       const at = questionAt(messages, focusedMessage);
       const target = body.current?.querySelector<HTMLElement>(`[data-message="${at}"]`);
@@ -196,13 +204,16 @@ export const ChatPanel = ({
     const element = body.current;
     const questions = element?.querySelectorAll<HTMLElement>(`[data-testid="${chatPanelTestIds.question}"]`);
     const latest = questions?.[questions.length - 1];
-    if (element !== null && element !== undefined && latest !== undefined)
+    if (element !== null && element !== undefined && latest !== undefined) {
       element.scrollTop += latest.getBoundingClientRect().top - element.getBoundingClientRect().top - 12;
+    }
     return undefined;
   }, [view, conversationId, focusedMessage, pending?.status === "answering" ? pending.question : null]);
 
   useEffect(() => {
-    if (said === null) return;
+    if (said === null) {
+      return;
+    }
     const timer = setTimeout(() => setSaid(null), SAID_MS);
     return () => clearTimeout(timer);
   }, [said]);
@@ -233,14 +244,21 @@ export const ChatPanel = ({
 
   const send = (question: string, from: "question" | "typed") => {
     panel.ask(question.trim(), from);
-    if (from === "typed") setDraft("");
+    if (from === "typed") {
+      setDraft("");
+    }
   };
 
   const keyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.key !== "Escape" || event.defaultPrevented) return;
+    if (event.key !== "Escape" || event.defaultPrevented) {
+      return;
+    }
     event.preventDefault();
-    if (answering) panel.stop();
-    else panel.close();
+    if (answering) {
+      panel.stop();
+    } else {
+      panel.close();
+    }
   };
 
   return (

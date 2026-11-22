@@ -13,7 +13,9 @@ export function SignOutNotice() {
   const surface = useSurface();
   const isPanel = useIsPanel();
   const notice = sync.signOutNotice;
-  if (notice === null) return null;
+  if (notice === null) {
+    return null;
+  }
   const copy = signOutNoticeCopy(notice, surface);
 
   return (

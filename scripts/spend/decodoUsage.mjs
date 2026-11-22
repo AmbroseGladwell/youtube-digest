@@ -39,7 +39,9 @@ export async function decodoUsage({ apiKey, fetch, dates }) {
         page,
       }),
     });
-    if (!response.ok) throw new ProviderReadError(`Decodo answered ${response.status}`);
+    if (!response.ok) {
+      throw new ProviderReadError(`Decodo answered ${response.status}`);
+    }
     const body = await response.json();
     data.push(...body.data);
     pages = body.metadata.total_pages;

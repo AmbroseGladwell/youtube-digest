@@ -49,7 +49,9 @@ export function fallbackCauseOf(error: unknown): FallbackCause | null {
   if (isSyncRequestError(error)) {
     switch (error.code) {
       case "too_many_requests":
-        if (error.details?.quota === "our-key-daily") return "busy";
+        if (error.details?.quota === "our-key-daily") {
+          return "busy";
+        }
         return SPENT_QUOTAS.has(String(error.details?.quota)) ? "quota-spent" : null;
       case "generation_failed":
         return FallbackCause.safeParse(error.details?.fallback).data ?? null;
@@ -93,7 +95,9 @@ export async function makeOverviewOnKeys(
 }
 
 async function onOurKey(api: Pick<GenerationApi, "generate"> | null, input: OverviewInput, meta: OverviewMeta): Promise<Overview> {
-  if (api === null) throw new Error("An overview is made on us only with an account.");
+  if (api === null) {
+    throw new Error("An overview is made on us only with an account.");
+  }
   const { filedProjectIds, ...overview } = await api.generate({ overviewId: meta.id, input });
   meta.onProjectsFiled?.(filedProjectIds);
   return overview;
@@ -110,7 +114,9 @@ async function onOwnKey(
   try {
     await api?.reserve(meta.id);
   } catch (error) {
-    if (fallbackCauseOf(error) === "quota-spent") throw error;
+    if (fallbackCauseOf(error) === "quota-spent") {
+      throw error;
+    }
   }
   try {
     return await generateOverviewOf(own.client, input, meta, meta.onProjectsFiled ? { projectsFiled: meta.onProjectsFiled } : {});

@@ -24,9 +24,15 @@ export function PlansModal({ open, plan, onClose }: PlansModalProps) {
   const phone = useIsPhone();
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
   const cards = phone ? [...PLAN_CARDS].reverse() : PLAN_CARDS;
 

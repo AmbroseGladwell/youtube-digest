@@ -13,7 +13,9 @@ export class PlansModalPageObject extends PageObject {
     this.step("verifyCardsRead", async () => {
       await expect(this.get(plansModalTestIds.root).locator(`[data-testid^="plans-modal-card-"]`)).toHaveCount(cards.length);
       for (const { plan, lines } of cards) {
-        for (const line of lines) await expect(this.get(plansModalTestIds.card(plan))).toContainText(line);
+        for (const line of lines) {
+          await expect(this.get(plansModalTestIds.card(plan))).toContainText(line);
+        }
       }
     });
 

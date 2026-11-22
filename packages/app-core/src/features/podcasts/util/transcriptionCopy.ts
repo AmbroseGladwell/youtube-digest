@@ -26,8 +26,12 @@ export interface TranscriptionNotice {
 
 // What else transcribes more, for a plan that has somewhere to go (design 305h).
 const moreOf = (plan: Plan): { upsell: string; route: TranscriptionStopRoute } => {
-  if (plan === "free") return { upsell: "BYO Plus transcribes 15 hours a month, Plus 30.", route: "plans" };
-  if (plan === "byo-plus") return { upsell: "Plus transcribes 30 hours a month.", route: "plus" };
+  if (plan === "free") {
+    return { upsell: "BYO Plus transcribes 15 hours a month, Plus 30.", route: "plans" };
+  }
+  if (plan === "byo-plus") {
+    return { upsell: "Plus transcribes 30 hours a month.", route: "plus" };
+  }
   return { upsell: "30 is the most any plan gives, so there’s no upgrade for this.", route: null };
 };
 
@@ -130,9 +134,13 @@ export const transcriptionCopy = {
 
   // 305e: beside the step, never a percentage, in whole minutes.
   progress: (state: "starting" | "transcribing", episodeSeconds: number | null, transcribingForMs: number): string => {
-    if (state === "starting") return "Starting…";
+    if (state === "starting") {
+      return "Starting…";
+    }
     const minutes = transcribeMinutes(episodeSeconds);
-    if (minutes === null) return "This takes a few minutes";
+    if (minutes === null) {
+      return "This takes a few minutes";
+    }
     const left = Math.ceil(minutes - transcribingForMs / 60_000);
     return left <= 1 ? "Almost done" : `About ${left} min left`;
   },

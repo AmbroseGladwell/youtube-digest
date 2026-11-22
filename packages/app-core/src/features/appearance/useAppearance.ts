@@ -6,6 +6,8 @@ import { readAppearance, type Appearance } from "./appearanceStorage.js";
 // copy stand in, so the page doesn't jump (docs/features/appearance.md, "Signed out").
 export function useAppearance(): Appearance {
   const settings = useSettingsQuery().data;
-  if (settings === undefined) return readAppearance();
+  if (settings === undefined) {
+    return readAppearance();
+  }
   return { theme: settings.theme, accentColour: settings.accentColour };
 }

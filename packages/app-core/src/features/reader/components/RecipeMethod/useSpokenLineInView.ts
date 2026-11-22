@@ -6,9 +6,13 @@ export function useSpokenLineInView<Element extends HTMLElement>(speaking: boole
   const line = useRef<Element | null>(null);
   useEffect(() => {
     const element = line.current;
-    if (!speaking || activeIndex === null || element === null) return;
+    if (!speaking || activeIndex === null || element === null) {
+      return;
+    }
     const { top, bottom } = element.getBoundingClientRect();
-    if (top >= window.innerHeight * 0.15 && bottom <= window.innerHeight * 0.7) return;
+    if (top >= window.innerHeight * 0.15 && bottom <= window.innerHeight * 0.7) {
+      return;
+    }
     element.scrollIntoView({ block: "center", behavior: "instant" });
   }, [speaking, activeIndex]);
   return line;

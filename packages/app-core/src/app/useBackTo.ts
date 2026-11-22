@@ -13,7 +13,9 @@ export function useBackTo(to: string): (event: MouseEvent<HTMLAnchorElement>) =>
   const previous = usePreviousPathname();
 
   return (event) => {
-    if (previous !== to || !plainClick(event)) return;
+    if (previous !== to || !plainClick(event)) {
+      return;
+    }
     event.preventDefault();
     void navigate(-1);
   };

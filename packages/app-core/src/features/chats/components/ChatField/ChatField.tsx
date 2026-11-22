@@ -39,10 +39,16 @@ export const ChatField = ({
   const ready = value.trim() !== "" && !answering;
 
   const keyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (onPickerKey?.(event)) return;
-    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    if (onPickerKey?.(event)) {
+      return;
+    }
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) {
+      return;
+    }
     event.preventDefault();
-    if (ready) onSend();
+    if (ready) {
+      onSend();
+    }
   };
 
   return (

@@ -43,14 +43,18 @@ export function summariseJudging(judgments: readonly JudgeRecord[], picks: reado
     const byDimension = Object.fromEntries(
       [...JUDGE_DIMENSIONS, "overall" as const].map((dimension) => {
         const tally = emptyTally();
-        for (const record of judged) tally[record.results![dimension]] += 1;
+        for (const record of judged) {
+          tally[record.results![dimension]] += 1;
+        }
         return [dimension, tally];
       }),
     ) as CandidateJudging["byDimension"];
 
     const myPicks = picks.filter((pick) => pick.candidate === candidate);
     const pickTally = emptyTally();
-    for (const pick of myPicks) pickTally[pick.result] += 1;
+    for (const pick of myPicks) {
+      pickTally[pick.result] += 1;
+    }
     const compared = myPicks.filter((pick) => overallByPair.has(pairKey(pick.videoId, pick.candidate)));
 
     return {

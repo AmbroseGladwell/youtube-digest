@@ -35,7 +35,9 @@ function idInYouTubeUrl(input: string): string | null {
     return null;
   }
 
-  if (!YOUTUBE_HOSTS.has(parsed.hostname)) return null;
+  if (!YOUTUBE_HOSTS.has(parsed.hostname)) {
+    return null;
+  }
   const host = stripHostPrefix(parsed.hostname);
 
   if (host === "youtu.be") {
@@ -44,7 +46,9 @@ function idInYouTubeUrl(input: string): string | null {
   }
 
   const watchId = parsed.searchParams.get("v");
-  if (watchId) return watchId;
+  if (watchId) {
+    return watchId;
+  }
 
   return VIDEO_PATH.exec(parsed.pathname)?.[1] ?? null;
 }
@@ -69,9 +73,15 @@ export type YouTubeLink =
   | { kind: "unfollowable"; list: UnfollowableList; videoUrl: string | null };
 
 function unfollowableList(listId: string): UnfollowableList | null {
-  if (listId === "WL") return "watchLater";
-  if (listId === "LL" || listId === "LM") return "liked";
-  if (listId.startsWith("RD")) return "mix";
+  if (listId === "WL") {
+    return "watchLater";
+  }
+  if (listId === "LL" || listId === "LM") {
+    return "liked";
+  }
+  if (listId.startsWith("RD")) {
+    return "mix";
+  }
   return null;
 }
 
@@ -84,7 +94,9 @@ export function youTubeLink(input: string): YouTubeLink | null {
   } catch {
     return null;
   }
-  if (!YOUTUBE_HOSTS.has(parsed.hostname)) return null;
+  if (!YOUTUBE_HOSTS.has(parsed.hostname)) {
+    return null;
+  }
 
   const videoUrl = canonicalYouTubeUrl(input);
   const listId = parsed.searchParams.get("list");
@@ -93,7 +105,9 @@ export function youTubeLink(input: string): YouTubeLink | null {
   }
 
   const unfollowable = unfollowableList(listId);
-  if (unfollowable === "mix") return { kind: "unfollowable", list: "mix", videoUrl };
+  if (unfollowable === "mix") {
+    return { kind: "unfollowable", list: "mix", videoUrl };
+  }
   if (unfollowable !== null) {
     return videoUrl === null ? { kind: "unfollowable", list: unfollowable, videoUrl: null } : { kind: "video", videoUrl };
   }

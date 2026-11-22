@@ -28,7 +28,9 @@ export function sideBySideHtml(runName: string, records: readonly RunRecord[], t
       const runs = records
         .filter((record) => record.videoId === id)
         .sort((left, right) => `${left.provider}:${left.model}`.localeCompare(`${right.provider}:${right.model}`));
-      if (runs.length === 0) return "";
+      if (runs.length === 0) {
+        return "";
+      }
       return `<article>
 <h2><a href="${escapeHtml(fetched.video.url)}">${escapeHtml(fetched.video.title)}</a></h2>
 <p class="meta">${escapeHtml(fetched.video.channel)} · ${formatTimestamp(fetched.video.durationMs ?? fetched.transcript.at(-1)?.endMs ?? 0)} · ${fetched.transcript.length} segments${fetched.generated ? " · auto-captions" : ""}</p>

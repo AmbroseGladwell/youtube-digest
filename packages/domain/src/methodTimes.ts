@@ -55,13 +55,21 @@ const NOT_A_WAIT = /\b(?:within|every|each)\s+(?:about\s+|roughly\s+|around\s+)?
 
 const numberValue = (written: string): number => {
   const text = written.trim().toLowerCase();
-  if (text in NUMBER_WORDS) return NUMBER_WORDS[text]!;
+  if (text in NUMBER_WORDS) {
+    return NUMBER_WORDS[text]!;
+  }
   const mixed = /^(\d+)\s+(\d)\/(\d)$/.exec(text);
-  if (mixed !== null) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  if (mixed !== null) {
+    return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  }
   const fraction = /^(\d+)\/(\d)$/.exec(text);
-  if (fraction !== null) return Number(fraction[1]) / Number(fraction[2]);
+  if (fraction !== null) {
+    return Number(fraction[1]) / Number(fraction[2]);
+  }
   const glyph = /^(\d+(?:\.\d+)?)?\s?([¼½¾⅓⅔])?$/u.exec(text);
-  if (glyph === null) return Number.NaN;
+  if (glyph === null) {
+    return Number.NaN;
+  }
   return (glyph[1] === undefined ? 0 : Number(glyph[1])) + (glyph[2] === undefined ? 0 : FRACTION_VALUES[glyph[2]]!);
 };
 
@@ -82,7 +90,9 @@ interface Found {
 const read = (text: string, match: RegExpExecArray): Found | null => {
   const start = match.index;
   let end = start + match[0].length;
-  if (/^half\s+an\s+hour$/i.test(match[0])) return { start, end, seconds: [1800], unit: "hour" };
+  if (/^half\s+an\s+hour$/i.test(match[0])) {
+    return { start, end, seconds: [1800], unit: "hour" };
+  }
   const unit = unitOf(match[4] ?? match[5]!);
   const half = halfOf(match[0]);
   const upper = match[3] === undefined ? null : numberValue(match[3]) + half;
@@ -198,12 +208,20 @@ const wordsBefore = (text: string): Word[] => {
 
 const isCommand = (words: readonly Word[], at: number): boolean => {
   const word = words[at]!;
-  if (BASE_OF.get(word.text) !== word.text) return false;
+  if (BASE_OF.get(word.text) !== word.text) {
+    return false;
+  }
   for (let before = at; before >= 0; before -= 1) {
-    if (words[before]!.afterBreak) return true;
+    if (words[before]!.afterBreak) {
+      return true;
+    }
     const previous = words[before - 1]!.text;
-    if (LEADS_A_COMMAND.has(previous)) return true;
-    if (!previous.endsWith("ly")) return false;
+    if (LEADS_A_COMMAND.has(previous)) {
+      return true;
+    }
+    if (!previous.endsWith("ly")) {
+      return false;
+    }
   }
   return true;
 };
@@ -215,11 +233,15 @@ const isCommand = (words: readonly Word[], at: number): boolean => {
 export function timerName(before: string): string | null {
   const words = wordsBefore(before.replace(SENTENCE_START, ""));
   for (let at = words.length - 1; at >= 0; at -= 1) {
-    if (isCommand(words, at)) return capitalised(words[at]!.text);
+    if (isCommand(words, at)) {
+      return capitalised(words[at]!.text);
+    }
   }
   for (let at = words.length - 1; at >= 0; at -= 1) {
     const base = BASE_OF.get(words[at]!.text);
-    if (base !== undefined) return capitalised(base);
+    if (base !== undefined) {
+      return capitalised(base);
+    }
   }
   return null;
 }
@@ -232,13 +254,23 @@ export function methodTimes(text: string): MethodTime[] {
   const times: MethodTime[] = [];
   let from = 0;
   for (const match of text.matchAll(SPAN)) {
-    if (match.index < from) continue;
+    if (match.index < from) {
+      continue;
+    }
     const found = read(text, match);
-    if (found === null) continue;
+    if (found === null) {
+      continue;
+    }
     from = found.end;
-    if (NOT_A_WAIT.test(text.slice(0, found.start))) continue;
-    if (found.seconds.some((seconds) => seconds < 1 || seconds > MOST_SECONDS)) continue;
-    if (found.seconds.length === 2 && found.seconds[1]! <= found.seconds[0]!) continue;
+    if (NOT_A_WAIT.test(text.slice(0, found.start))) {
+      continue;
+    }
+    if (found.seconds.some((seconds) => seconds < 1 || seconds > MOST_SECONDS)) {
+      continue;
+    }
+    if (found.seconds.length === 2 && found.seconds[1]! <= found.seconds[0]!) {
+      continue;
+    }
     times.push({ start: found.start, end: found.end, seconds: found.seconds, name: timerName(text.slice(0, found.start)) });
   }
   return times;

@@ -66,7 +66,9 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
   }, []);
 
   useEffect(() => {
-    if (step.kind === "failed") heading.current?.focus();
+    if (step.kind === "failed") {
+      heading.current?.focus();
+    }
   }, [step.kind]);
 
   const runDeletion = () => {
@@ -83,7 +85,9 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
   };
 
   const askToVerify = (resend: boolean) => {
-    if (!resend) setStep({ kind: "explain", checking: true, refused: null });
+    if (!resend) {
+      setStep({ kind: "explain", checking: true, refused: null });
+    }
     requestVerification.mutate("deleteAccount", {
       onSuccess: (asked) => {
         if (!asked.required) {
@@ -96,7 +100,9 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
       },
       onError: (error) => {
         const refused = askProblem(error, new Date());
-        if (refused.kind === "limited") analytics.settings.sync.deleteAccountRefused({ reason: "limited" });
+        if (refused.kind === "limited") {
+          analytics.settings.sync.deleteAccountRefused({ reason: "limited" });
+        }
         if (resend) {
           setProblem({ kind: refused.kind === "limited" ? "limited" : "other", message: refused.message });
           return;
@@ -115,10 +121,14 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
       aria-labelledby={HEADING_ID}
       onCancel={(event) => {
         event.preventDefault();
-        if (closable) onClose();
+        if (closable) {
+          onClose();
+        }
       }}
       onClick={(event) => {
-        if (event.target === dialog.current && closable) onClose();
+        if (event.target === dialog.current && closable) {
+          onClose();
+        }
       }}
       data-testid={deleteAccountDialogTestIds.root}
       data-step={step.kind}

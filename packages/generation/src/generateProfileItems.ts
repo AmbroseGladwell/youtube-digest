@@ -36,7 +36,9 @@ const listed = (items: readonly string[]) => (items.length === 0 ? "none" : item
 function sourceOf(indices: readonly number[], overviews: ProfilePassInput["overviews"]): string {
   const tally = new Map<string, number>();
   for (const index of indices) {
-    for (const topic of overviews[index]?.topics ?? []) tally.set(topic, (tally.get(topic) ?? 0) + 1);
+    for (const topic of overviews[index]?.topics ?? []) {
+      tally.set(topic, (tally.get(topic) ?? 0) + 1);
+    }
   }
   const topic = [...tally.entries()].sort(([, a], [, b]) => b - a)[0]?.[0];
   return topic === undefined ? `From ${indices.length} overviews` : `From ${indices.length} overviews on ${topic.toLowerCase()}`;
@@ -66,7 +68,9 @@ export async function generateProfileItems(client: GenerationClient, input: Prof
   const held = new Set([...input.learned, ...input.removed].map(learnedItemKey));
   return parsed.data.items.flatMap(({ text, overviewIndices }) => {
     const indices = [...new Set(overviewIndices)].filter((index) => index < input.overviews.length);
-    if (indices.length < MIN_OVERVIEWS_BEHIND_AN_ITEM || held.has(learnedItemKey(text))) return [];
+    if (indices.length < MIN_OVERVIEWS_BEHIND_AN_ITEM || held.has(learnedItemKey(text))) {
+      return [];
+    }
     held.add(learnedItemKey(text));
     return [{ text: text.trim(), source: sourceOf(indices, input.overviews) }];
   });

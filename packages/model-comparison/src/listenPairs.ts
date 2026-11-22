@@ -15,7 +15,9 @@ function latestPassedByVideo(runs: readonly RunRecord[]): Map<string, Overview> 
   const latest = new Map<string, RunRecord & { overview: Overview }>();
   for (const record of runs.filter(passed)) {
     const held = latest.get(record.videoId);
-    if (held === undefined || record.startedAt > held.startedAt) latest.set(record.videoId, record);
+    if (held === undefined || record.startedAt > held.startedAt) {
+      latest.set(record.videoId, record);
+    }
   }
   return new Map([...latest].map(([videoId, record]) => [videoId, record.overview]));
 }
@@ -34,6 +36,8 @@ export const nextListenPair = (pairs: readonly ListenPair[], picks: readonly Lis
   pairs.find((pair) => !picks.some((pick) => pick.videoId === pair.videoId)) ?? null;
 
 export function preferenceOf(side: ListenSide, newWasA: boolean): ListenPreference {
-  if (side === "tie") return "tie";
+  if (side === "tie") {
+    return "tie";
+  }
   return (side === "A") === newWasA ? "new" : "old";
 }

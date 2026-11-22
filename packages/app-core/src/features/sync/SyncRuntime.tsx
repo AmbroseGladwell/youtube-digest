@@ -52,7 +52,9 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   useEffect(() => {
     const signedIn = connected && !wasConnected.current;
     wasConnected.current = connected;
-    if (!signedIn) return;
+    if (!signedIn) {
+      return;
+    }
     setSignOutNotice(null);
     setOpening(true);
   }, [connected]);
@@ -97,8 +99,12 @@ export function SyncRuntime({ children }: { children: ReactNode }) {
   // A new plan can make room for an overview the last month refused (tiers.md, "Counting").
   useEffect(() => {
     const changed = lastPlan.current !== null && plan !== null && plan !== lastPlan.current;
-    if (plan !== null) lastPlan.current = plan;
-    if (changed) engine.current?.engine.retryWaiting();
+    if (plan !== null) {
+      lastPlan.current = plan;
+    }
+    if (changed) {
+      engine.current?.engine.retryWaiting();
+    }
   }, [plan]);
 
   const value = useMemo(

@@ -15,7 +15,9 @@ export function RegenerateArticleDialog({ url, onClose }: RegenerateArticleDialo
   const dialog = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
-    if (dialog.current && !dialog.current.open) dialog.current.showModal();
+    if (dialog.current && !dialog.current.open) {
+      dialog.current.showModal();
+    }
   }, []);
 
   return (
@@ -28,7 +30,9 @@ export function RegenerateArticleDialog({ url, onClose }: RegenerateArticleDialo
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={regenerateArticleDialogTestIds.root}
     >

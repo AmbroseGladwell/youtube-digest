@@ -81,11 +81,15 @@ async function loadSource(source: CoverageSource): Promise<LoadedSource | null> 
 
 async function fetchArticle(url: string): Promise<ExtractedArticle> {
   const response = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (compatible; overview-model-comparison)" } });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
   const dom = new JSDOM(await response.text(), { url });
   try {
     const read = readArticle(dom.window.document, url);
-    if (read.status !== "read") throw new Error(`not readable: ${read.reason}`);
+    if (read.status !== "read") {
+      throw new Error(`not readable: ${read.reason}`);
+    }
     return read.article;
   } finally {
     dom.window.close();
@@ -125,7 +129,9 @@ if (!values["measure-only"]) {
       `$${(record.costDollars ?? 0).toFixed(4)} (spent $${spent.toFixed(4)} of $${budgetDollars.toFixed(2)})`,
     log,
   });
-  if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
+  if (outcome.stoppedForBudget) {
+    log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
+  }
 }
 
 const records = new Map(

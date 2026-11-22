@@ -25,7 +25,9 @@ export interface EventRoutesOptions {
 export function eventRoutes(app: FastifyInstance, { sink, records, clock }: EventRoutesOptions): void {
   const optedOut = async (accountId: AccountId): Promise<boolean> => {
     const settings = await records.read(accountId, "settings", SETTINGS_RECORD_ID);
-    if (settings === null || settings.deleted) return false;
+    if (settings === null || settings.deleted) {
+      return false;
+    }
     return (settings.body as { analyticsOptOut?: unknown } | null)?.analyticsOptOut === true;
   };
 

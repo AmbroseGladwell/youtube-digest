@@ -61,7 +61,9 @@ test("a well-formed response from the client assembles into a valid Overview", a
 test("a kind already checked before the account is used, and the check isn't asked again", async () => {
   const asked: string[] = [];
   const client: GenerationClient = async (request) => {
-    if ("noteKind" in request.schema.shape) asked.push("kind check");
+    if ("noteKind" in request.schema.shape) {
+      asked.push("kind check");
+    }
     return {
       inOneLine: "A short description.",
       bigPicture: "",

@@ -42,8 +42,11 @@ export function HeadImage({ source, full, className, onToggle, ref, carriesFrom 
   const setButton = useCallback(
     (element: HTMLButtonElement | null) => {
       morph.current = element;
-      if (typeof ref === "function") ref(element);
-      else if (ref) ref.current = element;
+      if (typeof ref === "function") {
+        ref(element);
+      } else if (ref) {
+        ref.current = element;
+      }
     },
     [morph, ref],
   );

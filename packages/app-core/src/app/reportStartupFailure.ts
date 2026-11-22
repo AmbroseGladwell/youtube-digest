@@ -35,7 +35,9 @@ export async function reportStartupFailure(
   try {
     const connection = readSyncConnection(storage);
     const apiUrl = surface === "extension" ? (connection.apiUrl ?? defaultApiUrl) : (globalThis.location?.origin ?? null);
-    if (apiUrl === null) return;
+    if (apiUrl === null) {
+      return;
+    }
     const context: AnalyticsContext = {
       surface,
       layout,

@@ -20,9 +20,15 @@ export function FollowPlaylistDialog({ pasted, onClose }: FollowPlaylistDialogPr
 
   useEffect(() => {
     const element = dialog.current;
-    if (!element) return;
-    if (pasted !== null && !element.open) element.showModal();
-    if (pasted === null && element.open) element.close();
+    if (!element) {
+      return;
+    }
+    if (pasted !== null && !element.open) {
+      element.showModal();
+    }
+    if (pasted === null && element.open) {
+      element.close();
+    }
   }, [pasted]);
 
   return (

@@ -18,7 +18,9 @@ const streaming = (events: ChatStreamEvent[], cuts = 7) => {
     return new Response(
       new ReadableStream({
         start(controller) {
-          for (let start = 0; start < text.length; start += cuts) controller.enqueue(encoder.encode(text.slice(start, start + cuts)));
+          for (let start = 0; start < text.length; start += cuts) {
+            controller.enqueue(encoder.encode(text.slice(start, start + cuts)));
+          }
           controller.close();
         },
       }),

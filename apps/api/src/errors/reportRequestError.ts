@@ -12,7 +12,9 @@ export interface RequestErrorReporting {
 // Only a 500 comes here: a 4xx is the server working, and stays a log line
 // (docs/architecture/errors-and-logs.md, "The server's own errors").
 export function reportRequestError({ errorSink, clock }: RequestErrorReporting, request: FastifyRequest, error: unknown): void {
-  if (errorSink === null) return;
+  if (errorSink === null) {
+    return;
+  }
   const serverError = toServerError(error, {
     caughtBy: "request",
     request: {

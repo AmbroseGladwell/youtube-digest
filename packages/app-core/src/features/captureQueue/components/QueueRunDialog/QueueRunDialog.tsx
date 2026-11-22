@@ -25,9 +25,15 @@ export function QueueRunDialog({ making, open, onClose }: QueueRunDialogProps) {
 
   useEffect(() => {
     const element = dialog.current;
-    if (!element) return;
-    if (shown && !element.open) element.showModal();
-    if (!shown && element.open) element.close();
+    if (!element) {
+      return;
+    }
+    if (shown && !element.open) {
+      element.showModal();
+    }
+    if (!shown && element.open) {
+      element.close();
+    }
   }, [shown]);
 
   return (

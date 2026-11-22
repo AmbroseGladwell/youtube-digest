@@ -290,7 +290,9 @@ describe("onboarding's run, before and after the account", () => {
         checkEpisode: check,
         podcast: async (request) => {
           written(request.transcribe);
-          if (firstTry === "none" && request.transcribe === undefined) throw noWords();
+          if (firstTry === "none" && request.transcribe === undefined) {
+            throw noWords();
+          }
           return makeOverview();
         },
       } as Pick<OnboardingMakers, "readPodcast" | "checkEpisode" | "podcast"> as OnboardingMakers;

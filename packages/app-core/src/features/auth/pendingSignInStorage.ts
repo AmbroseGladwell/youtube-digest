@@ -4,7 +4,9 @@ const STORAGE_KEY = "overview.pendingSignIn.v1";
 
 export function readPendingSignIn(storage: Storage = globalThis.localStorage): PendingSignIn | null {
   const raw = storage.getItem(STORAGE_KEY);
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     const parsed = PendingSignIn.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : null;

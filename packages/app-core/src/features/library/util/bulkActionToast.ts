@@ -51,6 +51,8 @@ export function bulkActionToast(
   action: BulkAction,
   { writes, failed }: { writes: number; failed: number },
 ): { text: string; done: boolean } {
-  if (failed === 0) return { text: doneText(action), done: true };
+  if (failed === 0) {
+    return { text: doneText(action), done: true };
+  }
   return { text: failedText(action, `${failed} of ${writes}`), done: false };
 }

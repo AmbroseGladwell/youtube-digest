@@ -40,29 +40,44 @@ export function useActionSwipe(onUp: () => void, onDown: () => void, enabled: bo
     dragging,
     handlers: {
       onPointerDown: (event) => {
-        if (!enabled || (event.pointerType === "mouse" && event.button !== 0)) return;
-        if ((event.target as HTMLElement).closest("button, a, [data-swipe-ignore]")) return;
+        if (!enabled || (event.pointerType === "mouse" && event.button !== 0)) {
+          return;
+        }
+        if ((event.target as HTMLElement).closest("button, a, [data-swipe-ignore]")) {
+          return;
+        }
         start.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
         event.currentTarget.setPointerCapture?.(event.pointerId);
       },
       onPointerMove: (event) => {
         const from = start.current;
-        if (from === null || from.id !== event.pointerId) return;
+        if (from === null || from.id !== event.pointerId) {
+          return;
+        }
         const dx = event.clientX - from.x;
         const dy = event.clientY - from.y;
-        if (Math.abs(dy) <= Math.abs(dx)) return;
+        if (Math.abs(dy) <= Math.abs(dx)) {
+          return;
+        }
         setDragging(true);
         setDragY(Math.max(-DRAG_MOST_PX, Math.min(DRAG_MOST_PX, dy * DRAG_RESISTANCE)));
       },
       onPointerUp: (event) => {
         const from = start.current;
-        if (from === null || from.id !== event.pointerId) return;
+        if (from === null || from.id !== event.pointerId) {
+          return;
+        }
         const dx = event.clientX - from.x;
         const dy = event.clientY - from.y;
         reset();
-        if (Math.abs(dy) < SWIPE_PX || Math.abs(dy) < Math.abs(dx) * MOSTLY_VERTICAL) return;
-        if (dy < 0) onUp();
-        else onDown();
+        if (Math.abs(dy) < SWIPE_PX || Math.abs(dy) < Math.abs(dx) * MOSTLY_VERTICAL) {
+          return;
+        }
+        if (dy < 0) {
+          onUp();
+        } else {
+          onDown();
+        }
       },
       onPointerCancel: reset,
     },

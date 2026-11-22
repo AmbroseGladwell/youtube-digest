@@ -65,7 +65,9 @@ export function useRecipeVoice(
   // The engine stops at the line's end itself; this only forgets a stop the voice has gone past,
   // by a seek or by reaching the end.
   useEffect(() => {
-    if (stopAfter === null) return;
+    if (stopAfter === null) {
+      return;
+    }
     if (ended || activeIndex > stopAfter) {
       setStop(null);
       engine.stopAfterLine(null);
@@ -74,11 +76,15 @@ export function useRecipeVoice(
 
   const ingredients = stretchOf(lines, INGREDIENTS_SECTION);
   const method = stretchOf(lines, METHOD_SECTION);
-  if (track === null || ingredients === null) return null;
+  if (track === null || ingredients === null) {
+    return null;
+  }
 
   const within = (stretch: Stretch) => activeIndex >= stretch.first && activeIndex <= stretch.last;
   const voiceOf = (stretch: Stretch | null): RecipeListVoice => {
-    if (stretch === null) return NO_VOICE;
+    if (stretch === null) {
+      return NO_VOICE;
+    }
     const here = within(stretch);
     const reading = playing && here;
     return {
@@ -97,7 +103,9 @@ export function useRecipeVoice(
       },
       onSelect: (index) => {
         analytics.readAlong.lineChosen();
-        if (stopAfter !== stretch.last) setStopAfter(null);
+        if (stopAfter !== stretch.last) {
+          setStopAfter(null);
+        }
         notePlayer.selectLine(stretch.first + index);
       },
     };
@@ -117,7 +125,9 @@ export function useRecipeVoice(
     release: () => setStopAfter(null),
     methodAction: method !== null && within(method) ? activeIndex - method.first : null,
     readAction: (action) => {
-      if (method === null) return;
+      if (method === null) {
+        return;
+      }
       const line = method.first + action;
       engine.load(track, line);
       engine.seekLine(line);
@@ -125,7 +135,9 @@ export function useRecipeVoice(
       engine.play("readAloud");
     },
     holdAt: (action) => {
-      if (method === null) return;
+      if (method === null) {
+        return;
+      }
       engine.load(track, method.first + action);
       engine.pause();
       engine.seekLine(method.first + action);

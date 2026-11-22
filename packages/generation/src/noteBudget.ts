@@ -62,7 +62,9 @@ export function positionsInTheFinalStretch(positionWords: readonly number[]): Re
   const final = new Set<number>();
   let before = 0;
   positionWords.forEach((words, index) => {
-    if (before >= total * FINAL_STRETCH) final.add(index);
+    if (before >= total * FINAL_STRETCH) {
+      final.add(index);
+    }
     before += words;
   });
   return final;

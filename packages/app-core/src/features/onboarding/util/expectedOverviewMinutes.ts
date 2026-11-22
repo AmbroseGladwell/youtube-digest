@@ -22,7 +22,9 @@ export function expectedOverviewMinutes(source: Source): ExpectedMinutes | null 
       : source.durationMs === null
         ? null
         : Math.round((source.durationMs / 60_000) * SPOKEN_WORDS_PER_MINUTE);
-  if (sourceWords === null || sourceWords <= 0) return null;
+  if (sourceWords === null || sourceWords <= 0) {
+    return null;
+  }
   const budget = noteBudget(source.kind === "web" ? "written" : "spoken", sourceWords);
   const words = budget.keyPoints * budget.wordsPerKeyPoint + budget.bigPictureWords + FIXED_SECTION_WORDS;
   return {

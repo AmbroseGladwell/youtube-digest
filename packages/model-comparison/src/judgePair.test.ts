@@ -33,7 +33,9 @@ function openAiReplying(body: unknown, status = 200) {
   const sent: string[] = [];
   const http = (async (url: string, init: RequestInit) => {
     sent.push(`${url} ${String(init.body)}`);
-    if (status !== 200) return new Response("down", { status });
+    if (status !== 200) {
+      return new Response("down", { status });
+    }
     return new Response(
       JSON.stringify({
         choices: [{ message: { content: JSON.stringify(body) } }],

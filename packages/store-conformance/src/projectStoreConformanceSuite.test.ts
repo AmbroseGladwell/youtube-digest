@@ -27,18 +27,26 @@ class InMemoryProjectStore implements ProjectStore {
   }
 
   async createProject(project: Project) {
-    if (!this.#projects.has(project.id)) this.#projects.set(project.id, project);
+    if (!this.#projects.has(project.id)) {
+      this.#projects.set(project.id, project);
+    }
   }
 
   async updateProject(id: ProjectId, patch: ProjectPatch) {
     const project = this.#projects.get(id);
     const given = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
-    if (project !== undefined) this.#projects.set(id, { ...project, ...given });
+    if (project !== undefined) {
+      this.#projects.set(id, { ...project, ...given });
+    }
   }
 
   async deleteProject(id: ProjectId) {
     this.#projects.delete(id);
-    for (const [key, member] of this.#members) if (member.projectId === id) this.#members.delete(key);
+    for (const [key, member] of this.#members) {
+      if (member.projectId === id) {
+        this.#members.delete(key);
+      }
+    }
   }
 
   async listMembers() {
@@ -54,8 +62,9 @@ class InMemoryProjectStore implements ProjectStore {
   }
 
   async fileIntoProject(projectId: ProjectId, overviewId: OverviewId) {
-    if (!this.#members.has(projectMemberId(projectId, overviewId)))
+    if (!this.#members.has(projectMemberId(projectId, overviewId))) {
       this.#change(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_FILING }));
+    }
   }
 
   async removeFromProject(projectId: ProjectId, overviewId: OverviewId) {
@@ -65,13 +74,17 @@ class InMemoryProjectStore implements ProjectStore {
   }
 
   async turnDownForProject(projectId: ProjectId, overviewId: OverviewId) {
-    if (this.#members.has(projectMemberId(projectId, overviewId))) return;
+    if (this.#members.has(projectMemberId(projectId, overviewId))) {
+      return;
+    }
     this.#change(projectId, overviewId, (at) => ({ addedAt: at, addedBy: BY_READER }));
     this.#change(projectId, overviewId, (at) => ({ removedAt: at }));
   }
 
   #change(projectId: ProjectId, overviewId: OverviewId, change: (at: string) => Record<string, unknown>) {
-    if (!this.#projects.has(projectId)) return;
+    if (!this.#projects.has(projectId)) {
+      return;
+    }
     const id = projectMemberId(projectId, overviewId);
     const existing = this.#members.get(id);
     const base = existing ?? { id, projectId, overviewId, removedAt: null };

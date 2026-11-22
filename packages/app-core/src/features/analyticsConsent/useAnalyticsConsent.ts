@@ -19,9 +19,13 @@ export function analyticsConsentSnapshot(): AnalyticsConsentState {
 }
 
 function update(next: AnalyticsConsentState): void {
-  if (next.consent !== analyticsConsentSnapshot().consent) writeAnalyticsConsent(next.consent);
+  if (next.consent !== analyticsConsentSnapshot().consent) {
+    writeAnalyticsConsent(next.consent);
+  }
   snapshot = next;
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function subscribe(listener: () => void): () => void {
@@ -52,14 +56,18 @@ export function declineAnalyticsConsent(now: Date = new Date()): { declined: boo
 // next reader signed out here gets a new one (docs/features/analytics-consent.md).
 export function forgetAnonymousId(): void {
   const state = analyticsConsentSnapshot();
-  if (state.consent?.anonymousId == null) return;
+  if (state.consent?.anonymousId == null) {
+    return;
+  }
   update({ ...state, consent: { ...state.consent, anonymousId: null } });
 }
 
 export function mintAnonymousId(): void {
   const state = analyticsConsentSnapshot();
   const { consent } = state;
-  if (consent === null || !consentAllowsSharing(consent) || consent.anonymousId !== null) return;
+  if (consent === null || !consentAllowsSharing(consent) || consent.anonymousId !== null) {
+    return;
+  }
   update({ ...state, consent: { ...consent, anonymousId: crypto.randomUUID() } });
 }
 

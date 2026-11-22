@@ -27,7 +27,9 @@ const result = (check: string, area: CheckArea, problems: string[]): CheckResult
 
 const rangeProblem = (label: string, item: SegmentRangeShape | null | undefined, segments: number): string[] => {
   const range = item ? segmentRangeOf(item) : null;
-  if (range === null) return [];
+  if (range === null) {
+    return [];
+  }
   if (range.startSegmentIndex > range.endSegmentIndex) {
     return [`${label} runs backwards, ${range.startSegmentIndex} to ${range.endSegmentIndex}`];
   }
@@ -93,7 +95,9 @@ export function unsupportedNumbers(prose: readonly string[], sources: readonly s
 function longestChapterShare(output: GeneratedOutput, fetched: FetchedTranscript): number {
   const starts = output.chapters.map((chapter) => fetched.transcript[chapter.startSegmentIndex]?.startMs ?? 0);
   const endMs = fetched.transcript.at(-1)?.endMs ?? 0;
-  if (endMs === 0) return 0;
+  if (endMs === 0) {
+    return 0;
+  }
   const lengths = starts.map((start, index) => (starts[index + 1] ?? endMs) - start);
   return Math.max(0, ...lengths) / endMs;
 }

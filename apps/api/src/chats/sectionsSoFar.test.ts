@@ -14,7 +14,9 @@ const reply = JSON.stringify({
 
 test("a section is read once its closing brace arrives, never before, whatever braces its strings hold", () => {
   const seen: number[] = [];
-  for (let end = 0; end <= reply.length; end += 1) seen.push(sectionsSoFar(reply.slice(0, end)).length);
+  for (let end = 0; end <= reply.length; end += 1) {
+    seen.push(sectionsSoFar(reply.slice(0, end)).length);
+  }
   const first = seen.indexOf(1);
   const second = seen.indexOf(2);
   assert.ok(first > reply.indexOf("Scope") && first < reply.indexOf("Money"));

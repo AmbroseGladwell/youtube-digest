@@ -39,7 +39,9 @@ a new project, role or occasion just to hang a question on. These count
 towards the ${MOST_FOLLOW_UP_QUESTIONS}, best first; they are shown one in each ${FOLLOW_UP_QUESTIONS_SHOWN} beside the others.`;
 
 const readerFit = (source: QuestionedSource, readerContext: string | null, describedAbove: boolean): string => {
-  if (readerContext === null) return "";
+  if (readerContext === null) {
+    return "";
+  }
   return describedAbove
     ? `\n\n${readerQuestions(source)} The reader is described under How to apply.`
     : `\n\nAbout the reader, for fit: ${readerContext}\n\n${readerQuestions(source)}`;
@@ -86,7 +88,9 @@ export const resolvedFollowUpQuestions = (aboutSource: string[], forReader: stri
     const reader = readers.shift();
     const set = sources.splice(0, reader === undefined ? FOLLOW_UP_QUESTIONS_SHOWN : FOLLOW_UP_QUESTIONS_SHOWN - 1);
     const questions = set.map((question) => ({ question, forReader: false }));
-    if (reader !== undefined) questions.splice(1, 0, { question: reader, forReader: true });
+    if (reader !== undefined) {
+      questions.splice(1, 0, { question: reader, forReader: true });
+    }
     resolved.push(...questions);
   }
   return resolved.slice(0, MOST_FOLLOW_UP_QUESTIONS);

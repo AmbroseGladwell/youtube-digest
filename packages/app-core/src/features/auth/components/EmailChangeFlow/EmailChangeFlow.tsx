@@ -49,7 +49,9 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
   const askToVerify = (resend: boolean) => {
     requestVerification.mutate(undefined, {
       onSuccess: (asked) => {
-        if (!resend) analytics.settings.sync.verificationAsked({ required: asked.required });
+        if (!resend) {
+          analytics.settings.sync.verificationAsked({ required: asked.required });
+        }
         if (!asked.required) {
           setStep({ kind: "newEmail" });
           return;
@@ -64,13 +66,17 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
           current.kind === "starting" ? { kind: "verifying", expiresAt: new Date(0).toISOString(), sentAt: 0 } : current,
         );
         setProblem({ kind: refused.kind === "limited" ? "limited" : "other", message: refused.message });
-        if (refused.kind === "limited") analytics.settings.sync.verificationRefused({ reason: "limited" });
+        if (refused.kind === "limited") {
+          analytics.settings.sync.verificationRefused({ reason: "limited" });
+        }
       },
     });
   };
 
   useEffect(() => {
-    if (started.current) return;
+    if (started.current) {
+      return;
+    }
     started.current = true;
     askToVerify(false);
     // The ask runs once, when the row opens.
@@ -78,13 +84,17 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
   }, []);
 
   useEffect(() => {
-    if (step.kind === "newEmail") newEmailField.current?.focus();
+    if (step.kind === "newEmail") {
+      newEmailField.current?.focus();
+    }
   }, [step.kind]);
 
   const askForCode = (email: string, resend: boolean) => {
     requestChange.mutate(email, {
       onSuccess: (asked) => {
-        if (!resend) analytics.settings.sync.emailChangeAsked();
+        if (!resend) {
+          analytics.settings.sync.emailChangeAsked();
+        }
         setProblem(null);
         setAskRefused(null);
         setStatus(resend ? `Sent a new code to ${email}.` : null);
@@ -102,7 +112,9 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
         } else {
           setAskRefused(refused);
         }
-        if (refused.kind === "limited") analytics.settings.sync.emailChangeRefused({ reason: "limited" });
+        if (refused.kind === "limited") {
+          analytics.settings.sync.emailChangeRefused({ reason: "limited" });
+        }
       },
     });
   };
@@ -169,7 +181,9 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
                 const refused = codeProblem(error, expiresAt, new Date());
                 setProblem(refused);
                 setStatus(null);
-                if (refused.kind !== "other") analytics.settings.sync.verificationRefused({ reason: refused.kind });
+                if (refused.kind !== "other") {
+                  analytics.settings.sync.verificationRefused({ reason: refused.kind });
+                }
               },
             })
           }
@@ -207,7 +221,9 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
               value={newEmail}
               onChange={(event) => {
                 setNewEmail(event.target.value);
-                if (refused !== null && refused.kind !== "limited") setAskRefused(null);
+                if (refused !== null && refused.kind !== "limited") {
+                  setAskRefused(null);
+                }
               }}
               aria-invalid={refused !== null}
               aria-describedby={refused === null ? `${ids}-hint` : `${ids}-error`}
@@ -308,7 +324,9 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
               const refused = codeProblem(error, expiresAt, new Date());
               setProblem(refused);
               setStatus(null);
-              if (refused.kind !== "other") analytics.settings.sync.emailChangeRefused({ reason: refused.kind });
+              if (refused.kind !== "other") {
+                analytics.settings.sync.emailChangeRefused({ reason: refused.kind });
+              }
             },
           })
         }

@@ -10,9 +10,15 @@ import type { LibraryFilters } from "../types/LibraryFilters.js";
 export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilters): boolean {
   const { state } = entry;
 
-  if (filters.status === "read" && !state.read) return false;
-  if (filters.status === "unread" && state.read) return false;
-  if (filters.favourite && !state.favourite) return false;
+  if (filters.status === "read" && !state.read) {
+    return false;
+  }
+  if (filters.status === "unread" && state.read) {
+    return false;
+  }
+  if (filters.favourite && !state.favourite) {
+    return false;
+  }
 
   const query = filters.query.trim().toLowerCase();
 
@@ -28,12 +34,24 @@ export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilte
   }
 
   const { overview } = entry;
-  if (filters.source !== "all" && librarySourceOf(overview) !== filters.source) return false;
-  if (filters.topicId !== "all" && !overview.topicIds.includes(filters.topicId)) return false;
-  if (filters.novelty !== "all" && overview.verdict?.novelty !== filters.novelty) return false;
-  if (filters.dubious && !overview.verdict?.dubious) return false;
-  if (filters.tag !== null && !overview.tags.includes(filters.tag) && !state.userTags.includes(filters.tag)) return false;
-  if (query && !searchHaystackOf(overview).includes(query)) return false;
+  if (filters.source !== "all" && librarySourceOf(overview) !== filters.source) {
+    return false;
+  }
+  if (filters.topicId !== "all" && !overview.topicIds.includes(filters.topicId)) {
+    return false;
+  }
+  if (filters.novelty !== "all" && overview.verdict?.novelty !== filters.novelty) {
+    return false;
+  }
+  if (filters.dubious && !overview.verdict?.dubious) {
+    return false;
+  }
+  if (filters.tag !== null && !overview.tags.includes(filters.tag) && !state.userTags.includes(filters.tag)) {
+    return false;
+  }
+  if (query && !searchHaystackOf(overview).includes(query)) {
+    return false;
+  }
 
   return true;
 }

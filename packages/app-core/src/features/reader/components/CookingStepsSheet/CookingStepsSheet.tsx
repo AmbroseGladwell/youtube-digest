@@ -25,9 +25,15 @@ export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, me
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (
@@ -40,10 +46,14 @@ export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, me
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       onKeyDown={(event) => {
-        if (event.key !== "Escape") return;
+        if (event.key !== "Escape") {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         onClose();

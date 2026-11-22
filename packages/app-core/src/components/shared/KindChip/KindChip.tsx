@@ -10,7 +10,9 @@ export interface KindChipProps {
 // verdict first and the kind when it looks for it.
 export function KindChip({ overview }: KindChipProps) {
   const label = kindChip(overview);
-  if (label === null) return null;
+  if (label === null) {
+    return null;
+  }
   return (
     <span className={styles.root} data-testid={kindChipTestIds.root}>
       {label}

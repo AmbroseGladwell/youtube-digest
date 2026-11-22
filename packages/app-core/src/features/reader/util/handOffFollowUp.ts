@@ -9,7 +9,9 @@ export function handOffFollowUp(handOff: FollowUpHandOff): Promise<boolean> {
 }
 
 export function copyText(text: string): Promise<boolean> {
-  if (typeof navigator === "undefined" || navigator.clipboard?.writeText === undefined) return Promise.resolve(false);
+  if (typeof navigator === "undefined" || navigator.clipboard?.writeText === undefined) {
+    return Promise.resolve(false);
+  }
   return navigator.clipboard.writeText(text).then(
     () => true,
     () => false,

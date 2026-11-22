@@ -121,7 +121,9 @@ export function ReaderMasthead({
   const cited = useCitedOverviewPart();
   const citedDubious = cited?.part === "dubiousClaim" ? cited.followed : null;
   useEffect(() => {
-    if (citedDubious !== null) setExplainingDubious(true);
+    if (citedDubious !== null) {
+      setExplainingDubious(true);
+    }
   }, [citedDubious]);
   const dubiousClaimCount = overview.verdict?.dubiousClaims?.length ?? 0;
   const dubiousLabel = dubiousClaimCount > 1 ? `${dubiousClaimCount} dubious claims` : "Dubious claim";
@@ -147,8 +149,11 @@ export function ReaderMasthead({
   };
   const setHeader = (element: HTMLElement | null) => {
     header.current = element;
-    if (typeof ref === "function") ref(element);
-    else if (ref) ref.current = element;
+    if (typeof ref === "function") {
+      ref(element);
+    } else if (ref) {
+      ref.current = element;
+    }
   };
 
   return (

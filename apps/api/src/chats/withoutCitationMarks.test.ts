@@ -14,7 +14,9 @@ test("drops the ids an answer wrote into its text, in every form the harness run
     ["As you said before [c1.m3], start small.", "As you said before, start small."],
     ["Misbehaviour to punish. [p96, p158, p160]", "Misbehaviour to punish."],
   ];
-  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
+  for (const [answer, shown] of seen) {
+    assert.equal(withoutCitationMarks(answer), shown);
+  }
 });
 
 test("drops a mark whatever separates its ids, and a bracket left holding only separators", () => {
@@ -25,7 +27,9 @@ test("drops a mark whatever separates its ids, and a bracket left holding only s
     ["Take 3–5 g a day (p3 and kp2), then stop.", "Take 3–5 g a day, then stop."],
     ["Take 3–5 g a day. [p3;]", "Take 3–5 g a day."],
   ];
-  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
+  for (const [answer, shown] of seen) {
+    assert.equal(withoutCitationMarks(answer), shown);
+  }
 });
 
 test("leaves brackets that are prose alone", () => {
@@ -73,7 +77,9 @@ test("drops another overview's label and its items' ids (OV-355)", () => {
     ["The lentil curry fits best [S7].", "The lentil curry fits best."],
     ["Start with beans (S2.step1, p4), then greens.", "Start with beans, then greens."],
   ];
-  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer), shown);
+  for (const [answer, shown] of seen) {
+    assert.equal(withoutCitationMarks(answer), shown);
+  }
 });
 
 test("drops a library or project overview's label and its items' ids (OV-353)", () => {
@@ -81,6 +87,8 @@ test("drops a library or project overview's label and its items' ids (OV-353)", 
     ["Charge from day one (O3.kp2).", "Charge from day one."],
     ["Most start small [O1, O4].", "Most start small."],
   ];
-  for (const [answer, shown] of seen) assert.equal(withoutCitationMarks(answer, { library: true }), shown);
+  for (const [answer, shown] of seen) {
+    assert.equal(withoutCitationMarks(answer, { library: true }), shown);
+  }
   assert.equal(withoutCitationMarks("Breathe in oxygen (O2) slowly."), "Breathe in oxygen (O2) slowly.");
 });

@@ -15,7 +15,9 @@ export async function reserveChatMessage(
   log: FastifyBaseLogger,
 ): Promise<Extract<ChatReservation, { reserved: true }>> {
   const reservation = await usage.reserve(askedAt, accountId, plan, dailyMessages);
-  if (reservation.reserved) return reservation;
+  if (reservation.reserved) {
+    return reservation;
+  }
   if (reservation.quota === "our-key-daily") {
     log.warn(apiLogLines.chat.dailyCapSpent({ limit: dailyMessages }));
     throw new ApiError("too_many_requests", "We've answered as many questions as we can today. Try again tomorrow.", {

@@ -21,12 +21,16 @@ const itemOf = (item: unknown) => (typeof item === "string" ? { text: item, sour
 
 function listItemsWithSources(record: unknown): unknown {
   const chat = record as { messages?: Array<Record<string, unknown>> };
-  if (!Array.isArray(chat.messages)) return record;
+  if (!Array.isArray(chat.messages)) {
+    return record;
+  }
   return {
     ...chat,
     messages: chat.messages.map((message) => {
       const sections = message.sections as { sections?: Array<{ numbered?: unknown[]; bullets?: unknown[] }> } | undefined;
-      if (sections === undefined || !Array.isArray(sections.sections)) return message;
+      if (sections === undefined || !Array.isArray(sections.sections)) {
+        return message;
+      }
       return {
         ...message,
         sections: {
@@ -49,19 +53,25 @@ interface PointsSection {
 
 function sectionsAsLists(record: unknown): unknown {
   const chat = record as { messages?: Array<Record<string, unknown>> };
-  if (!Array.isArray(chat.messages)) return record;
+  if (!Array.isArray(chat.messages)) {
+    return record;
+  }
   return {
     ...chat,
     messages: chat.messages.map((message) => {
       const sections = message.sections as { sections?: PointsSection[] } | undefined;
-      if (sections === undefined || !Array.isArray(sections.sections)) return message;
+      if (sections === undefined || !Array.isArray(sections.sections)) {
+        return message;
+      }
       return {
         ...message,
         sections: {
           ...sections,
           introSources: [],
           sections: sections.sections.map((section) => {
-            if (!Array.isArray(section.points)) return section;
+            if (!Array.isArray(section.points)) {
+              return section;
+            }
             const citations = section.points.flatMap((point) => point.citations ?? []);
             const unique = citations.filter(
               (citation, index) => citations.findIndex((each) => JSON.stringify(each) === JSON.stringify(citation)) === index,

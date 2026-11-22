@@ -48,7 +48,9 @@ const query = (params: Record<string, string>) => new URLSearchParams(params).to
 // YouTube keeps a private or deleted video in the playlist with its title replaced, and
 // says which only through these two markers (docs/features/playlists.md).
 function availabilityOf(title: string, privacyStatus: string | undefined): PlaylistEntryAvailability {
-  if (privacyStatus === "private") return "private";
+  if (privacyStatus === "private") {
+    return "private";
+  }
   if (title === "Deleted video" || privacyStatus === undefined || privacyStatus === "privacyStatusUnspecified") {
     return "deleted";
   }
@@ -94,7 +96,9 @@ export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey:
           },
           PlaylistItemsResponse,
         );
-        if (items === null) break;
+        if (items === null) {
+          break;
+        }
         for (const { snippet, status } of items.items) {
           const thumbnails = snippet.thumbnails ?? {};
           entries.push({
@@ -107,7 +111,9 @@ export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey:
           });
         }
         pageToken = items.nextPageToken;
-        if (pageToken === undefined) break;
+        if (pageToken === undefined) {
+          break;
+        }
       }
 
       log.info(apiLogLines.playlists.read({ units, entries: entries.length }));

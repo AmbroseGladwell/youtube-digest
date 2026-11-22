@@ -21,9 +21,15 @@ export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps)
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (
@@ -36,7 +42,9 @@ export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps)
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={timersListSheetTestIds.root}
     >

@@ -11,10 +11,14 @@ export function htmlToText(html: string): string {
         text += chunk;
       },
       onopentag(name) {
-        if (BREAKS.has(name)) text += "\n";
+        if (BREAKS.has(name)) {
+          text += "\n";
+        }
       },
       onclosetag(name) {
-        if (BREAKS.has(name)) text += "\n";
+        if (BREAKS.has(name)) {
+          text += "\n";
+        }
       },
     },
     { decodeEntities: true },

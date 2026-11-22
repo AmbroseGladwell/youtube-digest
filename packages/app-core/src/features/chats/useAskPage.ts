@@ -47,14 +47,20 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
 
   const goTo = (at: { project: ProjectId | null; chat: string | null }) => {
     resetNext();
-    if (at.chat === null) setFresh(newConversationId());
+    if (at.chat === null) {
+      setFresh(newConversationId());
+    }
     navigate(Routes.ask(at));
   };
 
   const ask = (question: string, from: AskOverFrom) => {
     const text = question.trim();
-    if (text === "") return;
-    if (chatParam === null) navigate(Routes.ask({ project: projectId, chat: conversationId }), { replace: true });
+    if (text === "") {
+      return;
+    }
+    if (chatParam === null) {
+      navigate(Routes.ask({ project: projectId, chat: conversationId }), { replace: true });
+    }
     void asking.ask(conversationId, text, from, {
       pins: {
         overviews: pinned.flatMap((item) => (item.kind === "overview" ? [item.id] : [])),
@@ -66,7 +72,9 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
   };
 
   const pin = (item: PinnedItem) => {
-    if (pinned.length + liveSources.length >= MAX_CHAT_PINS || pinned.some((each) => each.id === item.id)) return;
+    if (pinned.length + liveSources.length >= MAX_CHAT_PINS || pinned.some((each) => each.id === item.id)) {
+      return;
+    }
     setPinned((current) => [...current, item]);
     setRemoved((current) => current.filter((id) => id !== item.id));
     analytics.ask.chat.sourcePinned({ scope, kind: item.kind });
@@ -100,13 +108,17 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
   commitLater.current = commitDelete;
   useEffect(
     () => () => {
-      if (stillDeleting.current !== null) commitLater.current(stillDeleting.current);
+      if (stillDeleting.current !== null) {
+        commitLater.current(stillDeleting.current);
+      }
     },
     [],
   );
 
   useEffect(() => {
-    if (deleting === null) return;
+    if (deleting === null) {
+      return;
+    }
     const timer = setTimeout(() => {
       commitDelete(deleting);
       setDeleting(null);
@@ -128,13 +140,19 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
   };
 
   const deleteConversation = (gone: Chat) => {
-    if (deleting !== null) commitDelete(deleting);
+    if (deleting !== null) {
+      commitDelete(deleting);
+    }
     setDeleting(gone);
-    if (gone.id === chat?.id) goTo({ project: projectId, chat: null });
+    if (gone.id === chat?.id) {
+      goTo({ project: projectId, chat: null });
+    }
   };
 
   const undoDelete = () => {
-    if (deleting !== null) analytics.ask.drawer.deleteUndone({ scope: askScopeOfChat(deleting) });
+    if (deleting !== null) {
+      analytics.ask.drawer.deleteUndone({ scope: askScopeOfChat(deleting) });
+    }
     setDeleting(null);
   };
 

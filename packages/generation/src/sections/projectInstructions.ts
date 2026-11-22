@@ -8,7 +8,9 @@ const projectLine = ({ name, purpose }: FilingProject): string =>
 // always did, and the schema grows only for those who have some (docs/features/projects.md,
 // "Filing as an overview is made").
 export function projectInstructions(projects: readonly FilingProject[], source: "video" | "article"): string {
-  if (projects.length === 0) return "";
+  if (projects.length === 0) {
+    return "";
+  }
   return `
 
 ## Projects
@@ -24,7 +26,9 @@ project that isn't listed.`;
 }
 
 export function projectSchemaShape(projects: readonly FilingProject[]): z.ZodRawShape {
-  if (projects.length === 0) return {};
+  if (projects.length === 0) {
+    return {};
+  }
   const names = [...new Set(projects.map((project) => project.name))] as [string, ...string[]];
   return { matchedProjectNames: z.array(z.enum(names)) };
 }

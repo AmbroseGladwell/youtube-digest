@@ -53,7 +53,9 @@ export function useNewProject(takenNames: string[]) {
                 }
                 setAdding(null);
                 adding.onDone?.({ name: project.name });
-                if (adding.from === "rail" || adding.from === "index") void navigate(Routes.project(project.id));
+                if (adding.from === "rail" || adding.from === "index") {
+                  void navigate(Routes.project(project.id));
+                }
               },
             },
           )

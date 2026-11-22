@@ -39,7 +39,9 @@ export async function runProfilePassIfDue({
   now = () => new Date(),
 }: ProfilePassDeps): Promise<boolean> {
   const passAsks = madeOn === "own" && own !== null ? "own" : madeOn === "ours" && api !== null ? "ours" : null;
-  if (passAsks === null) return false;
+  if (passAsks === null) {
+    return false;
+  }
   const counted = analytics.settings.personalisation;
   try {
     const [settings, overviews, topics] = await Promise.all([
@@ -52,7 +54,9 @@ export async function runProfilePassIfDue({
       countAtLastPass: settings.overviewsAtLastProfilePass,
       keepLearning: settings.keepLearning,
     };
-    if (!profilePassIsDue(schedule)) return false;
+    if (!profilePassIsDue(schedule)) {
+      return false;
+    }
     await settingsStore.update({ overviewsAtLastProfilePass: overviews.length });
 
     const recent = [...overviews].sort((a, b) => b.savedAt.localeCompare(a.savedAt)).slice(0, PROFILE_PASS_RECENT_OVERVIEWS);
@@ -72,7 +76,9 @@ export async function runProfilePassIfDue({
     };
     const items: ProfilePassItem[] = passAsks === "own" ? await generateProfileItems(own!, input) : (await api!.profilePass(input)).items;
     counted.profilePassRan({ added: items.length, key: passAsks });
-    if (items.length === 0) return true;
+    if (items.length === 0) {
+      return true;
+    }
 
     const learnedAt = now().toISOString();
     const learned: LearnedItems = Object.fromEntries(

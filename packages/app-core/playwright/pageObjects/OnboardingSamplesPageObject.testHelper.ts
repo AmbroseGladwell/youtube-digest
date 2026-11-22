@@ -20,8 +20,9 @@ export class OnboardingSamplesPageObject extends PageObject {
 
   verifyMoreReads = (label: "More samples" | "Fewer samples" | null) =>
     this.step(`verifyMoreReads ${label}`, async () => {
-      if (label === null) await this.expectNotToBeVisible(onboardingSamplesTestIds.more);
-      else {
+      if (label === null) {
+        await this.expectNotToBeVisible(onboardingSamplesTestIds.more);
+      } else {
         await expect(this.get(onboardingSamplesTestIds.more)).toHaveText(label);
         await expect(this.get(onboardingSamplesTestIds.more)).toHaveAttribute("aria-expanded", String(label === "Fewer samples"));
       }

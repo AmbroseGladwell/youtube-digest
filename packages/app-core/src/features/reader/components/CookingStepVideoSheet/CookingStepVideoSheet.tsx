@@ -24,9 +24,15 @@ export function CookingStepVideoSheet({ open, videoId, step, range, onClose }: C
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (
@@ -39,7 +45,9 @@ export function CookingStepVideoSheet({ open, videoId, step, range, onClose }: C
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {

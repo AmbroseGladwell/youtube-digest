@@ -30,7 +30,9 @@ test.describe("Chat across sources", () => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const home = titled(STEW, "2026-11-10T09:00:00.000Z");
     const dinner = { ...makeProject({ name: "Dinner Recipes" }), archivedAt: null };
-    for (const overview of [soup, plants, home]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [soup, plants, home]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.projects.seed(dinner);
     backendSimulator.projects.seedMember(makeProjectMember(dinner, soup.id));
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -109,7 +111,9 @@ test.describe("Chat across sources", () => {
       titled(PLANTS, "2026-11-03T09:00:00.000Z"),
       titled(CURRY, "2026-11-04T09:00:00.000Z"),
     ];
-    for (const overview of [...others, titled(STEW, "2026-11-10T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [...others, titled(STEW, "2026-11-10T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const library = await launcher.launchExpectingLibrary(SIGNED_IN);
     const reader = await library.nthCard(0).openReader();
     await reader.chat.openFromMenu();
@@ -219,7 +223,9 @@ test.describe("Chat across sources", () => {
       titled(SOUP, "2026-11-04T09:00:00.000Z"),
       titled(CURRY, "2026-11-05T09:00:00.000Z"),
     ];
-    for (const overview of [...found, titled(STEW, "2026-11-10T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [...found, titled(STEW, "2026-11-10T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.chats.answerWith({
       text: "Have **a large handful** of beans a day.",
       found: found.map((overview) => ({ overviewId: overview.id, title: overview.source.title })),

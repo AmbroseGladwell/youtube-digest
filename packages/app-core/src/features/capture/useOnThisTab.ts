@@ -43,7 +43,9 @@ export function useOnThisTab(): OnThisTab | null {
   latestSubject.current = subject;
 
   useEffect(() => {
-    if (dismissedFor !== null && dismissedFor !== subject) setDismissedFor(null);
+    if (dismissedFor !== null && dismissedFor !== subject) {
+      setDismissedFor(null);
+    }
   }, [dismissedFor, subject]);
 
   if (!isPanel || open === null || subject === null || dismissedFor === subject) {
@@ -51,7 +53,9 @@ export function useOnThisTab(): OnThisTab | null {
   }
   if (activeVideoUrl !== null) {
     const videoId = extractYouTubeVideoId(activeVideoUrl);
-    if (videoId === null || sourceKey(open.source) === videoId) return null;
+    if (videoId === null || sourceKey(open.source) === videoId) {
+      return null;
+    }
     return {
       kind: "video",
       held: overviewForVideoUrl(entries, activeVideoUrl),
@@ -60,11 +64,17 @@ export function useOnThisTab(): OnThisTab | null {
       dismiss: () => setDismissedFor(latestSubject.current),
     };
   }
-  if (offeredPage === null) return null;
+  if (offeredPage === null) {
+    return null;
+  }
   // A Spotify or Apple tab is read on home, where its offer says what the address holds (106k).
   if (isPlatformPodcastLink(offeredPage.url)) {
-    if (isPodcastShowLink(offeredPage.url)) return null;
-    if (open.source.kind === "podcast" && keptSharedLink(open.source.sharedFrom) === keptSharedLink(offeredPage.url)) return null;
+    if (isPodcastShowLink(offeredPage.url)) {
+      return null;
+    }
+    if (open.source.kind === "podcast" && keptSharedLink(open.source.sharedFrom) === keptSharedLink(offeredPage.url)) {
+      return null;
+    }
     return { kind: "episode", held: null, videoUrl: null, page: offeredPage, dismiss: () => setDismissedFor(latestSubject.current) };
   }
   if (open.source.kind === "web" && open.source.url === canonicalArticleUrl(offeredPage.url, null)) {

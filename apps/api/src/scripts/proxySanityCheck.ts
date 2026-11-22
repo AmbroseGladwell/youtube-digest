@@ -44,7 +44,9 @@ try {
     ),
   );
 } catch (error) {
-  if (!(error instanceof TranscriptFetchError)) throw error;
+  if (!(error instanceof TranscriptFetchError)) {
+    throw error;
+  }
   console.error(`\n${error.failure}: ${error.message} (${bytes}B, ${Date.now() - startedAt}ms)`);
   process.exitCode = 2;
 } finally {

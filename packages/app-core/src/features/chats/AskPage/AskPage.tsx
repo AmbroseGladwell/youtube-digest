@@ -98,7 +98,9 @@ export function AskPage() {
   const starters = empty ? askStarters({ overviews: entries, projects, members, topics }, project) : [];
 
   useEffect(() => {
-    if (opened.current) return;
+    if (opened.current) {
+      return;
+    }
     opened.current = true;
     analytics.ask.page.opened({ from: projectId === null ? "topBar" : "project", scope });
   }, [analytics, projectId, scope]);
@@ -109,7 +111,9 @@ export function AskPage() {
   }, [page.conversationId]);
 
   useEffect(() => {
-    if (said === null) return;
+    if (said === null) {
+      return;
+    }
     const timer = setTimeout(() => setSaid(null), SAID_MS);
     return () => clearTimeout(timer);
   }, [said]);
@@ -121,11 +125,17 @@ export function AskPage() {
     previous.current = state;
     if (state.status === "answering") {
       const wasPicking = was.status === "answering" ? was.picking : null;
-      if (state.picking === "choosing" && wasPicking !== "choosing") setAnnouncement("Choosing which overviews to read");
-      else if (state.picking === "reading" && wasPicking !== "reading") setAnnouncement(`Reading ${overviews(state.picked.length)}`);
-      else if (was.status !== "answering" && state.picking === null) setAnnouncement("Writing an answer");
+      if (state.picking === "choosing" && wasPicking !== "choosing") {
+        setAnnouncement("Choosing which overviews to read");
+      } else if (state.picking === "reading" && wasPicking !== "reading") {
+        setAnnouncement(`Reading ${overviews(state.picked.length)}`);
+      } else if (was.status !== "answering" && state.picking === null) {
+        setAnnouncement("Writing an answer");
+      }
     }
-    if (state.status === "stopped") setAnnouncement("Stopped");
+    if (state.status === "stopped") {
+      setAnnouncement("Stopped");
+    }
     if (was.status === "answering" && state.status === "idle") {
       setAnnouncement("Answer ready");
       setArrivedAt(latestAnswerAt);
@@ -140,7 +150,7 @@ export function AskPage() {
     questions[questions.length - 1]?.scrollIntoView({ block: "start" });
   }, [asking, page.conversationId]);
 
-  if (!isConnected(connection))
+  if (!isConnected(connection)) {
     return (
       <main className={styles.root} data-testid={askPageTestIds.root}>
         <div className={styles.signedOut} data-testid={askPageTestIds.signedOut}>
@@ -151,11 +161,14 @@ export function AskPage() {
         </div>
       </main>
     );
+  }
 
   const say = (text: string, done: boolean) => setSaid({ text, done, key: Date.now() });
   const send = (question: string, from: "typed" | "starter") => {
     page.ask(question, from);
-    if (from === "typed") setDraft("");
+    if (from === "typed") {
+      setDraft("");
+    }
   };
 
   const toast =
@@ -241,11 +254,15 @@ export function AskPage() {
           sheet={isPhone}
           trigger={drawerButton}
           onNew={() => {
-            if (isPhone) setDrawerOpen(false);
+            if (isPhone) {
+              setDrawerOpen(false);
+            }
             page.newConversation();
           }}
           onOpen={(chat) => {
-            if (isPhone) setDrawerOpen(false);
+            if (isPhone) {
+              setDrawerOpen(false);
+            }
             page.openConversation(chat);
           }}
           onDelete={page.deleteConversation}
@@ -265,7 +282,9 @@ export function AskPage() {
               aria-label="Show conversations"
               aria-expanded={drawerOpen}
               onClick={() => {
-                if (!drawerOpen) analytics.ask.drawer.opened();
+                if (!drawerOpen) {
+                  analytics.ask.drawer.opened();
+                }
                 setDrawerOpen(!drawerOpen);
               }}
               data-testid={askPageTestIds.drawerButton}

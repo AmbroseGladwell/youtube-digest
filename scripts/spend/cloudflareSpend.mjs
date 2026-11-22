@@ -28,7 +28,9 @@ export function cloudflareCostRowsOf({ dates, usage }) {
   const totals = new Map();
   for (const charge of usage) {
     const date = charge.ChargePeriodStart.slice(0, 10);
-    if (!wanted.has(date)) continue;
+    if (!wanted.has(date)) {
+      continue;
+    }
     const area = areaOfService(charge.ServiceFamilyName);
     const key = `${date}|${area}`;
     const total = totals.get(key) ?? { date, provider: "cloudflare", environment: "unsplit", area, dollars: 0, source: "bill" };
@@ -43,7 +45,9 @@ export function cloudflareUsageRowsOf({ dates, storage, operations }) {
   const wanted = new Set(dates);
   const totals = new Map();
   const add = (date, bucketName, unit, quantity) => {
-    if (!wanted.has(date)) return;
+    if (!wanted.has(date)) {
+      return;
+    }
     const environment = environmentOfBucket(bucketName);
     const key = `${date}|${environment}|${unit}`;
     const total = totals.get(key) ?? {
@@ -59,15 +63,20 @@ export function cloudflareUsageRowsOf({ dates, storage, operations }) {
     total.quantity += quantity;
     totals.set(key, total);
   };
-  for (const group of storage)
+  for (const group of storage) {
     add(group.dimensions.date, group.dimensions.bucketName, "storage_gb", (group.max.payloadSize + group.max.metadataSize) / GB);
-  for (const group of operations) add(group.dimensions.date, group.dimensions.bucketName, "r2_requests", group.sum.requests);
+  }
+  for (const group of operations) {
+    add(group.dimensions.date, group.dimensions.bucketName, "r2_requests", group.sum.requests);
+  }
   return [...totals.values()];
 }
 
 async function readCloudflare(fetch, url, apiToken, init = {}) {
   const response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${apiToken}`, "content-type": "application/json" } });
-  if (!response.ok) throw new ProviderReadError(`Cloudflare answered ${response.status}`);
+  if (!response.ok) {
+    throw new ProviderReadError(`Cloudflare answered ${response.status}`);
+  }
   const body = await response.json();
   if (body.success === false || (Array.isArray(body.errors) && body.errors.length > 0)) {
     const [first] = body.errors ?? [];

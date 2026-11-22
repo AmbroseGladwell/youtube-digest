@@ -26,7 +26,9 @@ const below = (header: HTMLElement, title: HTMLElement): HTMLElement[] => {
   }
   const onPage: HTMLElement[] = [];
   for (let next = header.nextElementSibling; next !== null; next = next.nextElementSibling) {
-    if (getComputedStyle(next).position !== "fixed") onPage.push(next as HTMLElement);
+    if (getComputedStyle(next).position !== "fixed") {
+      onPage.push(next as HTMLElement);
+    }
   }
   return [title, ...inHead, ...onPage];
 };
@@ -44,7 +46,9 @@ export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): 
     const header = parts.header.current;
     const image = parts.image.current;
     const title = parts.title.current;
-    if (first === null || header === null || image === null || title === null) return;
+    if (first === null || header === null || image === null || title === null) {
+      return;
+    }
 
     if (prefersReducedMotion()) {
       header.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FADE_IN_MS, easing: "linear" });
@@ -87,7 +91,9 @@ export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): 
   return () => {
     const image = parts.image.current;
     const title = parts.title.current;
-    if (image === null || title === null) return;
+    if (image === null || title === null) {
+      return;
+    }
     before.current = { image: image.getBoundingClientRect(), titleTop: title.getBoundingClientRect().top };
   };
 }

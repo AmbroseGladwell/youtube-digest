@@ -89,7 +89,9 @@ const FIXED_GROUPS: Record<Exclude<AboutYouSection, "focus">, readonly Suggestio
 };
 
 export function aboutYouSuggestionGroups(section: AboutYouSection, topicNames: readonly string[]): readonly SuggestionGroup[] {
-  if (section !== "focus") return FIXED_GROUPS[section];
+  if (section !== "focus") {
+    return FIXED_GROUPS[section];
+  }
   const fromTopics = STARTER_TOPICS.filter(({ name }) => topicNames.some((topic) => sameTopicName(topic, name))).map(
     ({ name, suggestions, example }): SuggestionGroup => ({ name: `From ${name}`, entries: suggestions, example }),
   );

@@ -51,7 +51,9 @@ function resolveFilters(library: Library, { topic, project, ...filters }: Librar
   }
   if (project !== undefined) {
     const found = resolveProject(library, project);
-    if (!isProject(found)) return found;
+    if (!isProject(found)) {
+      return found;
+    }
     resolved = { ...resolved, inProject: new Set(projectOverviews(library, found.id).map(({ overview }) => overview.id)) };
   }
   return resolved;

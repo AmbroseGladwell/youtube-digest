@@ -116,7 +116,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
 
   return useCallback(
     async (request: PodcastRunRequest, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> => {
-      if (knownApiUrl === null) throw new Error("Episodes are read through our server, and there isn't one here");
+      if (knownApiUrl === null) {
+        throw new Error("Episodes are read through our server, and there isn't one here");
+      }
       const api = createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token });
       const from = options.from ?? "dialog";
       const episodeMinutes = {
@@ -130,7 +132,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           const words = await transcribeEpisode(api, episode, {
             isCancelled: options.isCancelled,
             onProgress: (progress: TranscriptionProgress) => {
-              if (progress === "transcribing" && startedAt === null) startedAt = Date.now();
+              if (progress === "transcribing" && startedAt === null) {
+                startedAt = Date.now();
+              }
               onTranscription?.(progress);
             },
           });
@@ -143,8 +147,12 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           });
           return words;
         } catch (error) {
-          if (error instanceof TranscriptionFailedError) analytics.capture.episodeTranscription.failed({ from, reason: error.reason });
-          if (error instanceof TranscriptionRefusedError) analytics.capture.episodeTranscription.failed({ from, reason: error.refusal });
+          if (error instanceof TranscriptionFailedError) {
+            analytics.capture.episodeTranscription.failed({ from, reason: error.reason });
+          }
+          if (error instanceof TranscriptionRefusedError) {
+            analytics.capture.episodeTranscription.failed({ from, reason: error.refusal });
+          }
           throw error;
         }
       };
@@ -154,8 +162,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
           request.transcribe !== undefined
             ? transcribe(episode, onTranscription)
             : podcastTranscript(api, episode, youTubeFetch).catch((error: unknown) => {
-                if (error instanceof EpisodeNeedsTranscribingError)
+                if (error instanceof EpisodeNeedsTranscribingError) {
                   analytics.capture.episodeTranscription.asked({ from, ...episodeMinutes });
+                }
                 throw error;
               }),
         {
@@ -234,7 +243,9 @@ function useOverviewMaker(apiKeys: ApiKeys) {
         settingsStore,
         analytics,
       }).then((ran) => {
-        if (ran) void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+        if (ran) {
+          void queryClient.invalidateQueries({ queryKey: settingsKeys.all });
+        }
       });
       return overview;
     },

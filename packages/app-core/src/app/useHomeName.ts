@@ -10,6 +10,8 @@ export type HomeName = "This video" | "This page" | "Home";
 export function useHomeName(): HomeName {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
-  if (activeVideoUrl !== null) return "This video";
+  if (activeVideoUrl !== null) {
+    return "This video";
+  }
   return isOfferedPage(activePage) ? "This page" : "Home";
 }

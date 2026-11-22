@@ -101,7 +101,9 @@ export async function judgeStepsCarried({
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
 }: JudgeStepsCarriedOptions): Promise<StepsJudgeRecord> {
-  if (judge.provider === writer.provider) throw new Error(`a judge from ${writer.provider} would be judging its own provider's note`);
+  if (judge.provider === writer.provider) {
+    throw new Error(`a judge from ${writer.provider} would be judging its own provider's note`);
+  }
   const metered = meteredFetch(judge.provider, http, now);
   const client = createGenerationClient({ ...judge, apiKey: keys[judge.provider] ?? "", http: metered.http });
   const began = now();
@@ -110,9 +112,12 @@ export async function judgeStepsCarried({
   let labels: CarriedLabels | null = null;
   try {
     const parsed = CarriedLabels.safeParse(await client(stepsCarriedPrompt(overview, items)));
-    if (!parsed.success) throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
-    if (parsed.data.items.length !== items.length)
+    if (!parsed.success) {
+      throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    }
+    if (parsed.data.items.length !== items.length) {
       throw new Error(`the judge's answer gave ${parsed.data.items.length} verdicts for ${items.length} items`);
+    }
     labels = parsed.data;
   } catch (thrown) {
     outcome =

@@ -4,8 +4,12 @@ import { sourceKey, type Source, type VideoSource } from "@overview/domain";
 // video's shape, keyed by its source key as its transcript is stored (podcastTranscript.ts),
 // and pointing at the link the reader shared. A page has no times.
 export function timedSource(source: Source): VideoSource | null {
-  if (source.kind === "youtube") return source;
-  if (source.kind === "web") return null;
+  if (source.kind === "youtube") {
+    return source;
+  }
+  if (source.kind === "web") {
+    return null;
+  }
   return {
     id: sourceKey(source),
     url: source.sharedFrom,

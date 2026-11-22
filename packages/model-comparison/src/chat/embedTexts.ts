@@ -28,7 +28,9 @@ export async function embedTexts(apiKey: string, texts: readonly string[]): Prom
       body: JSON.stringify({ model: EMBEDDING.model, input: texts.slice(start, start + BATCH) }),
       signal: AbortSignal.timeout(60_000),
     });
-    if (!response.ok) throw new Error(`OpenAI embeddings answered ${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+      throw new Error(`OpenAI embeddings answered ${response.status}: ${await response.text()}`);
+    }
     const parsed = EmbeddingsResponse.parse(await response.json());
     tokens += parsed.usage.total_tokens;
     vectors.push(...parsed.data.sort((left, right) => left.index - right.index).map((item) => item.embedding));

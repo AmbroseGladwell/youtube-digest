@@ -71,15 +71,21 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const advance = useRef(() => {});
   advance.current = () => setFront((front + 1) % n, { manual: false });
   useEffect(() => {
-    if (!cycling) return;
+    if (!cycling) {
+      return;
+    }
     const next = setTimeout(() => advance.current(), CYCLE_MS);
     return () => clearTimeout(next);
   }, [cycling, front]);
 
   useEffect(() => {
-    if (!failed) return;
+    if (!failed) {
+      return;
+    }
     setPaused(true);
-    if (pressed.current !== null) cards.current[pressed.current]?.focus();
+    if (pressed.current !== null) {
+      cards.current[pressed.current]?.focus();
+    }
   }, [failed]);
 
   const toggleAll = () => {
@@ -97,23 +103,31 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   };
 
   const choose = (index: number) => {
-    if (Date.now() - draggedAt.current < 300) return;
+    if (Date.now() - draggedAt.current < 300) {
+      return;
+    }
     pressed.current = index;
     void open(samples[index]!, index);
   };
 
   const onPointerDown = (event: PointerEvent) => {
-    if (layout !== "deck") return;
+    if (layout !== "deck") {
+      return;
+    }
     pointer.current = { x: event.clientX, y: event.clientY, horizontal: null };
   };
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const p = pointer.current;
-    if (p === null) return;
+    if (p === null) {
+      return;
+    }
     const dx = event.clientX - p.x;
     const dy = event.clientY - p.y;
     if (p.horizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
       p.horizontal = Math.abs(dx) > Math.abs(dy);
-      if (p.horizontal) event.currentTarget.setPointerCapture?.(event.pointerId);
+      if (p.horizontal) {
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+      }
     }
     if (p.horizontal) {
       setDrag(dx);
@@ -123,12 +137,16 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const onPointerUp = (event: PointerEvent) => {
     const p = pointer.current;
     pointer.current = null;
-    if (p === null || !p.horizontal) return;
+    if (p === null || !p.horizontal) {
+      return;
+    }
     draggedAt.current = Date.now();
     const dx = event.clientX - p.x;
     setDrag(null);
     setHold(false);
-    if (Math.abs(dx) > SWIPE_PX) setFront((front + 1) % n, { manual: true, fling: dx < 0 ? -1 : 1 });
+    if (Math.abs(dx) > SWIPE_PX) {
+      setFront((front + 1) % n, { manual: true, fling: dx < 0 ? -1 : 1 });
+    }
   };
 
   const dragging = drag !== null && layout === "deck";
@@ -153,7 +171,9 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
       onMouseLeave={() => setHold(false)}
       onFocus={() => setHold(true)}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setHold(false);
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setHold(false);
+        }
       }}
       data-testid={sampleDeckTestIds.root}
     >
@@ -295,8 +315,9 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
               className={styles.round}
               aria-label={playing ? "Pause samples" : "Play samples"}
               onClick={() => {
-                if (playing) setPaused(true);
-                else {
+                if (playing) {
+                  setPaused(true);
+                } else {
                   setPaused(false);
                   setUserPlay(true);
                 }
@@ -366,7 +387,9 @@ function placement(o: {
   const behind = (deep: boolean) => {
     p.transform = deep ? "translate(18px, -18px) rotate(2.2deg)" : "translate(8px, -8px) rotate(1deg)";
     p.background = deep ? "var(--surface)" : "color-mix(in srgb, var(--card), var(--surface) 40%)";
-    if (deep) p.shadow = "none";
+    if (deep) {
+      p.shadow = "none";
+    }
     p.innerOpacity = 0;
     p.hidden = true;
   };
@@ -418,8 +441,9 @@ function placement(o: {
     p.hidden = true;
     p.z = 11;
     p.opacity = 0;
-    if (!reduced)
+    if (!reduced) {
       p.transform = fling ? `translate(${fling * 440}px, 36px) rotate(${fling * 16}deg)` : "translate(-48px, 16px) rotate(-6deg)";
+    }
     return p;
   }
   behind(true);

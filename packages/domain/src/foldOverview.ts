@@ -42,7 +42,9 @@ export function foldOverviewState(winner: FoldableState, loser: FoldableState): 
 export function changedFields<T extends object>(before: T, after: T): Partial<T> {
   const changed: Partial<T> = {};
   for (const key of Object.keys(after) as Array<keyof T>) {
-    if (!sameValue(before[key], after[key])) changed[key] = after[key];
+    if (!sameValue(before[key], after[key])) {
+      changed[key] = after[key];
+    }
   }
   return changed;
 }

@@ -21,8 +21,11 @@ export function useTranscriptSearch(blocks: TranscriptBlock[]): TranscriptSearch
     const grouped = new Map<number, TranscriptMatch[]>();
     for (const match of matches) {
       const existing = grouped.get(match.blockIndex);
-      if (existing) existing.push(match);
-      else grouped.set(match.blockIndex, [match]);
+      if (existing) {
+        existing.push(match);
+      } else {
+        grouped.set(match.blockIndex, [match]);
+      }
     }
     return grouped;
   }, [matches]);

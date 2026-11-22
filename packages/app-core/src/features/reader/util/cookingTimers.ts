@@ -35,8 +35,12 @@ export interface CookingTimerStart {
 const MINUTE_MS = 60_000;
 
 export const timeLeftMs = (timer: CookingTimer, now: number): number => {
-  if (timer.rangAt !== null) return 0;
-  if (timer.endsAt !== null) return Math.max(0, timer.endsAt - now);
+  if (timer.rangAt !== null) {
+    return 0;
+  }
+  if (timer.endsAt !== null) {
+    return Math.max(0, timer.endsAt - now);
+  }
   return timer.leftMs ?? 0;
 };
 
@@ -62,7 +66,9 @@ export function adjustedTimer(timer: CookingTimer, minutes: number, now: number)
   }
   const left = timeLeftMs(timer, now) + change;
   const totalMs = Math.max(timer.totalMs + change, MINUTE_MS);
-  if (left <= 0) return { ...timer, totalMs, endsAt: null, leftMs: null, rangAt: now };
+  if (left <= 0) {
+    return { ...timer, totalMs, endsAt: null, leftMs: null, rangAt: now };
+  }
   return timer.endsAt === null ? { ...timer, totalMs, leftMs: left } : { ...timer, totalMs, endsAt: now + left };
 }
 

@@ -14,7 +14,9 @@ async function pull(): Promise<void> {
       return;
     }
     pending = reply.videoUrl;
-    for (const listener of listeners) listener();
+    for (const listener of listeners) {
+      listener();
+    }
   } catch {
     // No worker to answer. There is nothing waiting that we could act on either.
   }

@@ -18,7 +18,9 @@ export function captureQueueStripCopy(strip: CaptureQueueStrip, compact: boolean
     case "making": {
       const title = `Making ${strip.position} of ${strip.total}`;
       const tomorrow = `${strip.tomorrow.toLocaleString("en-GB")} continue tomorrow`;
-      if (strip.tomorrow === 0) return { title, meta: `${strip.step} · ${strip.title}` };
+      if (strip.tomorrow === 0) {
+        return { title, meta: `${strip.step} · ${strip.title}` };
+      }
       return compact ? { title, meta: tomorrow } : { title, meta: `${strip.step} · ${strip.title}`, after: `· ${tomorrow}` };
     }
     case "paused":

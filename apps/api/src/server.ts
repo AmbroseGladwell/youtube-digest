@@ -69,7 +69,9 @@ try {
 }
 const applied = await runMigrations(sql, {
   before: migrationSteps((folds) => {
-    for (const fold of folds) logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
+    for (const fold of folds) {
+      logger.info(apiLogLines.startup.duplicateOverviewsFolded(fold));
+    }
   }),
 });
 const transcriptService = config.transcriptService === null ? null : createTranscriptServiceSetup(config.transcriptService);

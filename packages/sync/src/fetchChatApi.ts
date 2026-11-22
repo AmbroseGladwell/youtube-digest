@@ -16,7 +16,9 @@ async function* serverSentEvents(body: ReadableStream<Uint8Array>): AsyncGenerat
         .filter((line) => line.startsWith("data:"))
         .map((line) => line.slice(5).trimStart())
         .join("\n");
-      if (data !== "") yield JSON.parse(data);
+      if (data !== "") {
+        yield JSON.parse(data);
+      }
     }
   }
 }
@@ -33,21 +35,33 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
   ): Promise<ChatOutcome> => {
     const prepared = call("POST", path, { body: question, ...(signal === undefined ? {} : { signal }) });
     const response = await sendApiCall(prepared);
-    if (!response.ok) throw await refusalOf(response, prepared.requestId);
-    if (response.body === null) throw new SyncTransportError("The answer arrived with no body", { requestId: prepared.requestId });
+    if (!response.ok) {
+      throw await refusalOf(response, prepared.requestId);
+    }
+    if (response.body === null) {
+      throw new SyncTransportError("The answer arrived with no body", { requestId: prepared.requestId });
+    }
     let outcome: ChatOutcome | null = null;
     try {
       for await (const raw of serverSentEvents(response.body)) {
         const event = ChatStreamEvent.parse(raw);
-        if (event.type === "text") onText(event.text);
-        else if (event.type === "answered" || event.type === "failed") outcome = event;
-        else onProgress?.(event);
+        if (event.type === "text") {
+          onText(event.text);
+        } else if (event.type === "answered" || event.type === "failed") {
+          outcome = event;
+        } else {
+          onProgress?.(event);
+        }
       }
     } catch (error) {
-      if (signal?.aborted === true) throw error;
+      if (signal?.aborted === true) {
+        throw error;
+      }
       throw new SyncTransportError("The answer stopped arriving", { cause: error, requestId: prepared.requestId });
     }
-    if (outcome === null) throw new SyncTransportError("The answer ended without settling", { requestId: prepared.requestId });
+    if (outcome === null) {
+      throw new SyncTransportError("The answer ended without settling", { requestId: prepared.requestId });
+    }
     return outcome;
   };
   return {

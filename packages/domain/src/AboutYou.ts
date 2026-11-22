@@ -21,7 +21,9 @@ const STANDS_ALONE = new Set(["retired", "mid-career", "between jobs", "new in t
 const HAS_ITS_OWN_START = /^(a|an|the|my|our) /i;
 
 const withArticle = (section: AboutYouSection, entry: string): string => {
-  if (section !== "who" || STANDS_ALONE.has(entry) || HAS_ITS_OWN_START.test(entry)) return entry;
+  if (section !== "who" || STANDS_ALONE.has(entry) || HAS_ITS_OWN_START.test(entry)) {
+    return entry;
+  }
   return `${/^[aeiou]/i.test(entry) ? "an" : "a"} ${entry}`;
 };
 

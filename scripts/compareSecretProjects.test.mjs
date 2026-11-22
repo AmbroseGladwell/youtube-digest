@@ -28,7 +28,9 @@ test("a key held by one project alone is never shared", () => {
 
 test("the printed table carries letters and the shared flag, never a value or a digest", () => {
   const printed = formatComparison(Object.keys(projects), compareSecretProjects(projects));
-  for (const secret of Object.values(projects).flat()) assert.ok(!printed.includes(secret.value));
+  for (const secret of Object.values(projects).flat()) {
+    assert.ok(!printed.includes(secret.value));
+  }
   assert.match(printed, /BREVO_API_KEY\s+A\s+A\s+-\s+SHARED/);
   assert.doesNotMatch(printed, /[0-9a-f]{16}/);
 });

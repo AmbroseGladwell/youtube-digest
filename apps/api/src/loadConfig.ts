@@ -210,7 +210,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   try {
     logs = otlpLogsConfig(data, { postHog, environment: data.ANALYTICS_ENVIRONMENT });
   } catch (error) {
-    if (error instanceof OtlpLogsConfigError) throw new ConfigError(error.message);
+    if (error instanceof OtlpLogsConfigError) {
+      throw new ConfigError(error.message);
+    }
     throw error;
   }
   return {

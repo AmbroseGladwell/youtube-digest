@@ -15,7 +15,9 @@ export function useScreenAwake(wanted: boolean): boolean {
     let sentinel: WakeLockSentinel | null = null;
     let stopped = false;
     const ask = () => {
-      if (document.visibilityState !== "visible" || (sentinel !== null && !sentinel.released)) return;
+      if (document.visibilityState !== "visible" || (sentinel !== null && !sentinel.released)) {
+        return;
+      }
       wakeLock
         .request("screen")
         .then((granted) => {
@@ -26,7 +28,9 @@ export function useScreenAwake(wanted: boolean): boolean {
           sentinel = granted;
           setHeld(true);
           granted.addEventListener("release", () => {
-            if (!stopped) setHeld(false);
+            if (!stopped) {
+              setHeld(false);
+            }
           });
         })
         .catch(() => setHeld(false));

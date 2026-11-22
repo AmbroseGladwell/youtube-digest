@@ -93,7 +93,9 @@ function fakeCloudflare({ status = 200, errors = [], billable = usage } = {}) {
       authorization: init.headers.Authorization,
       body: init.body ? JSON.parse(init.body) : null,
     });
-    if (status !== 200) return { ok: false, status };
+    if (status !== 200) {
+      return { ok: false, status };
+    }
     return {
       ok: true,
       json: async () =>

@@ -117,13 +117,19 @@ export const OPENING_LINE = -1;
 // lines one for one; a share made then keeps playing its audio.
 const lineStartsOf = (render: ReadyNarration, track: PlayerTrack): number[] | null => {
   const { lineStartsSeconds } = render;
-  if (track.opening !== null && lineStartsSeconds.length === track.lines.length + 1) return lineStartsSeconds.slice(1);
-  if (lineStartsSeconds.length === track.lines.length) return lineStartsSeconds;
+  if (track.opening !== null && lineStartsSeconds.length === track.lines.length + 1) {
+    return lineStartsSeconds.slice(1);
+  }
+  if (lineStartsSeconds.length === track.lines.length) {
+    return lineStartsSeconds;
+  }
   return null;
 };
 
 const sameTrack = (a: PlayerTrack | null, b: PlayerTrack) => {
-  if (a === null || a.overviewId !== b.overviewId || a.lines.length !== b.lines.length) return false;
+  if (a === null || a.overviewId !== b.overviewId || a.lines.length !== b.lines.length) {
+    return false;
+  }
   const aScript = scriptOf(a);
   const bScript = scriptOf(b);
   return a.lines.every((line, index) => line.text === b.lines[index]!.text && aScript[index] === bScript[index]);
@@ -203,7 +209,9 @@ export class PlayerEngine {
   // A shell that signs in or out mid-note hands over a new API; a note nobody has pressed
   // play on yet is looked at again with it.
   setApi(api: NarrationApi | null): void {
-    if (api === this.#api) return;
+    if (api === this.#api) {
+      return;
+    }
     this.#api = api;
     const { track, status } = this.#snapshot;
     const pacerAtRest = this.#snapshot.source === "pacer" && status !== "playing";
@@ -217,7 +225,9 @@ export class PlayerEngine {
   // The reader chose another voice. A note nobody has pressed play on is looked at again,
   // so the bar can offer to re-record it; one already under way carries on as it is.
   setVoice(voice: NarrationVoice): void {
-    if (voice === this.#snapshot.voice) return;
+    if (voice === this.#snapshot.voice) {
+      return;
+    }
     this.#set({ voice });
     const { track, status, source } = this.#snapshot;
     if (track !== null && status === "ready" && source === "audio" && this.#api !== null) {
@@ -231,15 +241,23 @@ export class PlayerEngine {
   // only once it has landed is the narration in the older voice thrown away.
   reRecord(): void {
     const { track, narratedVoice, voice, status } = this.#snapshot;
-    if (track === null || narratedVoice === null || narratedVoice === voice || status === "preparing") return;
-    if (status === "playing" || status === "buffering") this.pause();
-    if (status === "ended") this.#time = 0;
+    if (track === null || narratedVoice === null || narratedVoice === voice || status === "preparing") {
+      return;
+    }
+    if (status === "playing" || status === "buffering") {
+      this.pause();
+    }
+    if (status === "ended") {
+      this.#time = 0;
+    }
     this.#replacing = this.#render?.key ?? null;
     this.#requestRender();
   }
 
   load(track: PlayerTrack, startLine = 0): void {
-    if (sameTrack(this.#snapshot.track, track)) return;
+    if (sameTrack(this.#snapshot.track, track)) {
+      return;
+    }
     this.#endListen("switchedNote");
     this.#teardown();
     this.#begin(track, startLine);
@@ -260,8 +278,11 @@ export class PlayerEngine {
 
   notePageClosed(overviewId: OverviewId): void {
     const open = (this.#openNotes.get(overviewId) ?? 1) - 1;
-    if (open > 0) this.#openNotes.set(overviewId, open);
-    else this.#openNotes.delete(overviewId);
+    if (open > 0) {
+      this.#openNotes.set(overviewId, open);
+    } else {
+      this.#openNotes.delete(overviewId);
+    }
     this.#set({});
   }
 
@@ -272,16 +293,24 @@ export class PlayerEngine {
 
   toggle(from: PlaybackFrom): void {
     const { status } = this.#snapshot;
-    if (status === "playing" || status === "buffering") this.pause();
-    else if (status === "preparing") this.cancel();
-    else this.play(from);
+    if (status === "playing" || status === "buffering") {
+      this.pause();
+    } else if (status === "preparing") {
+      this.cancel();
+    } else {
+      this.play(from);
+    }
   }
 
   // A listen begun is timed to its first sound; one carried on from paused is not.
   play(from: PlaybackFrom): void {
     const { track, status, source } = this.#snapshot;
-    if (track === null || status === "playing" || status === "preparing") return;
-    if (status === "ended") this.#time = 0;
+    if (track === null || status === "playing" || status === "preparing") {
+      return;
+    }
+    if (status === "ended") {
+      this.#time = 0;
+    }
     this.#press = status === "paused" ? null : { at: this.#clock(), from, prepared: false };
     if (status === "failed" || status === "busy") {
       this.#requestRender();
@@ -300,9 +329,14 @@ export class PlayerEngine {
 
   pause(): void {
     const { status, source } = this.#snapshot;
-    if (status !== "playing" && status !== "buffering") return;
-    if (source === "pacer") this.#stopPacer();
-    else this.#media?.pause();
+    if (status !== "playing" && status !== "buffering") {
+      return;
+    }
+    if (source === "pacer") {
+      this.#stopPacer();
+    } else {
+      this.#media?.pause();
+    }
     this.#set({ status: "paused" });
     this.#armStop();
   }
@@ -310,20 +344,26 @@ export class PlayerEngine {
   // The render carries on without anyone waiting for it, so the bar goes back to saying
   // what the server has, which is usually that it is still on its way.
   cancel(): void {
-    if (this.#snapshot.status !== "preparing") return;
+    if (this.#snapshot.status !== "preparing") {
+      return;
+    }
     this.#press = null;
     this.#generation += 1;
     this.#replacing = null;
     this.#clearPreparing();
     this.#set({ status: "ready", preparing: null });
-    if (this.#api !== null && this.#snapshot.source === "audio") this.#peek(true);
+    if (this.#api !== null && this.#snapshot.source === "audio") {
+      this.#peek(true);
+    }
   }
 
   // The pacer, chosen: meanwhile while audio is still being made (1d), instead once it has
   // failed (1i) or there was no room to ask (1j).
   readAlong(): void {
     const { status, track } = this.#snapshot;
-    if (track === null) return;
+    if (track === null) {
+      return;
+    }
     const meanwhile = status === "preparing";
     const line = this.getLine();
     if (!meanwhile) {
@@ -341,11 +381,17 @@ export class PlayerEngine {
 
   seek(seconds: number): void {
     const { track, timings, status } = this.#snapshot;
-    if (track === null) return;
+    if (track === null) {
+      return;
+    }
     this.#cutRun();
     this.#time = Math.min(Math.max(seconds, 0), timings.durationSeconds);
-    if (this.#mediaIsCurrent()) this.#media!.currentTime = this.#time;
-    if (status === "ended") this.#set({ status: "paused" });
+    if (this.#mediaIsCurrent()) {
+      this.#media!.currentTime = this.#time;
+    }
+    if (status === "ended") {
+      this.#set({ status: "paused" });
+    }
     this.#armStop();
     this.#emitTime();
   }
@@ -374,7 +420,9 @@ export class PlayerEngine {
 
   cycleRate(): void {
     const next = PLAYER_RATES[(PLAYER_RATES.indexOf(this.#snapshot.rate) + 1) % PLAYER_RATES.length]!;
-    if (this.#media !== null) this.#media.playbackRate = next;
+    if (this.#media !== null) {
+      this.#media.playbackRate = next;
+    }
     this.#set({ rate: next });
     this.#armStop();
   }
@@ -388,7 +436,9 @@ export class PlayerEngine {
 
   // Out of sight, a listen still playing carries on, as on a locked phone; one paused is left.
   pageHidden(): void {
-    if (this.#snapshot.status === "paused") this.#endListen("left");
+    if (this.#snapshot.status === "paused") {
+      this.#endListen("left");
+    }
   }
 
   pageLeft(): void {
@@ -412,7 +462,9 @@ export class PlayerEngine {
       narratedVoice: null,
     });
     this.#emitTime();
-    if (signedIn) this.#peek();
+    if (signedIn) {
+      this.#peek();
+    }
   }
 
   // After a cancel the bar already knows the audio can be asked for, so a peek that fails
@@ -424,12 +476,16 @@ export class PlayerEngine {
     api
       .peek(this.#script(), this.#snapshot.voice)
       .then((found) => {
-        if (generation !== this.#generation) return;
+        if (generation !== this.#generation) {
+          return;
+        }
         this.#pollFailures = 0;
         this.#onPeeked(found, generation);
       })
       .catch((error: unknown) => {
-        if (generation !== this.#generation) return;
+        if (generation !== this.#generation) {
+          return;
+        }
         const reason = this.#pacerReasonFor(error);
         if (quiet && reason !== "signedOut") {
           this.#set({ availability: "onFirstPlay", preparing: null });
@@ -456,24 +512,32 @@ export class PlayerEngine {
       this.#set({ availability: "ready", preparing: null, narratedVoice: found!.voice });
       return;
     }
-    if (this.#snapshot.availability !== "ready") this.#set({ availability: "onFirstPlay", preparing: null });
+    if (this.#snapshot.availability !== "ready") {
+      this.#set({ availability: "onFirstPlay", preparing: null });
+    }
   }
 
   // Unlike an interactive wait, checks that fail are not a failure anybody sees: after a few,
   // or after two minutes of the render not landing, the bar goes back to 1b, and pressing
   // play asks again.
   #watch({ voice, render: watched }: VoicedNarration, generation: number): void {
-    if (generation !== this.#generation || this.#api === null) return;
+    if (generation !== this.#generation || this.#api === null) {
+      return;
+    }
     this.#watchChecks += 1;
     this.#api
       .status(watched.key)
       .then((render) => {
-        if (generation !== this.#generation) return;
+        if (generation !== this.#generation) {
+          return;
+        }
         this.#pollFailures = 0;
         this.#onPeeked({ voice, render }, generation);
       })
       .catch((error: unknown) => {
-        if (generation !== this.#generation) return;
+        if (generation !== this.#generation) {
+          return;
+        }
         if (isSyncRequestError(error) && error.code === "unauthenticated") {
           this.#fallBackToPacer("signedOut", false);
           return;
@@ -510,7 +574,9 @@ export class PlayerEngine {
       .request(this.#script(), voice, "interactive")
       .then((render) => this.#onRender(render, generation, voice))
       .catch((error: unknown) => {
-        if (generation !== this.#generation) return;
+        if (generation !== this.#generation) {
+          return;
+        }
         this.#replacing = null;
         this.#clearPreparing();
         // The day's new narration is spent: reading along still works, so the reader gets
@@ -524,16 +590,22 @@ export class PlayerEngine {
           return;
         }
         const reason = this.#pacerReasonFor(error);
-        if (reason === "unavailable") this.#warnRequestFailed(error);
+        if (reason === "unavailable") {
+          this.#warnRequestFailed(error);
+        }
         this.#fallBackToPacer(reason, true);
       });
   }
 
   #onRender(render: NarrationRender, generation: number, voice: NarrationVoice): void {
-    if (generation !== this.#generation) return;
+    if (generation !== this.#generation) {
+      return;
+    }
     this.#pollFailures = 0;
     if (render.status === "queued" || render.status === "rendering") {
-      if (this.#press !== null) this.#press.prepared = true;
+      if (this.#press !== null) {
+        this.#press.prepared = true;
+      }
       const { preparing } = this.#snapshot;
       this.#set({ preparing: { step: render.status, long: preparing?.long ?? false } });
       this.#pollTimer = setTimeout(() => this.#poll(render.key, generation, voice), POLL_INTERVAL_MS);
@@ -564,12 +636,16 @@ export class PlayerEngine {
   }
 
   #poll(key: string, generation: number, voice: NarrationVoice): void {
-    if (generation !== this.#generation || this.#api === null) return;
+    if (generation !== this.#generation || this.#api === null) {
+      return;
+    }
     this.#api
       .status(key)
       .then((render) => this.#onRender(render, generation, voice))
       .catch((error: unknown) => {
-        if (generation !== this.#generation) return;
+        if (generation !== this.#generation) {
+          return;
+        }
         if (isSyncRequestError(error) && error.code === "unauthenticated") {
           this.#clearPreparing();
           this.#fallBackToPacer("signedOut", true);
@@ -588,7 +664,9 @@ export class PlayerEngine {
   #discardReplaced(key: string): void {
     const replaced = this.#replacing;
     this.#replacing = null;
-    if (replaced !== null && replaced !== key) this.#api?.discard(replaced).catch(() => undefined);
+    if (replaced !== null && replaced !== key) {
+      this.#api?.discard(replaced).catch(() => undefined);
+    }
   }
 
   #renderGaveUp(): void {
@@ -606,7 +684,9 @@ export class PlayerEngine {
   #adopt(render: ReadyNarration, line = this.getLine()): boolean {
     const track = this.#snapshot.track;
     const lineStarts = track ? lineStartsOf(render, track) : null;
-    if (lineStarts === null) return false;
+    if (lineStarts === null) {
+      return false;
+    }
     this.#render = render;
     const timings: LineTimings = { lineStarts, durationSeconds: render.durationSeconds };
     this.#retime(timings);
@@ -641,7 +721,9 @@ export class PlayerEngine {
     this.#render = null;
     this.#usePacerTimings(line);
     this.#set({ source: "pacer", pacerReason: reason, preparing: null, status: "ready", narratedVoice: null });
-    if (start) this.#startPacer();
+    if (start) {
+      this.#startPacer();
+    }
   }
 
   #warnRequestFailed(error: unknown): void {
@@ -659,7 +741,9 @@ export class PlayerEngine {
   }
 
   #stopTime(): number | null {
-    if (this.#stopLine === null) return null;
+    if (this.#stopLine === null) {
+      return null;
+    }
     return this.#snapshot.timings.lineStarts[this.#stopLine + 1] ?? null;
   }
 
@@ -673,10 +757,14 @@ export class PlayerEngine {
   }
 
   #armStop(): void {
-    if (this.#stopTimer !== null) clearTimeout(this.#stopTimer);
+    if (this.#stopTimer !== null) {
+      clearTimeout(this.#stopTimer);
+    }
     this.#stopTimer = null;
     const stopAt = this.#stopTime();
-    if (stopAt === null || this.#snapshot.status !== "playing") return;
+    if (stopAt === null || this.#snapshot.status !== "playing") {
+      return;
+    }
     const wait = (stopAt - STOP_AHEAD_SECONDS - this.#now()) / this.#snapshot.rate;
     this.#stopTimer = setTimeout(() => this.#reachStop(), Math.max(0, wait * 1000));
   }
@@ -684,7 +772,9 @@ export class PlayerEngine {
   #reachStop(): void {
     this.#stopTimer = null;
     const stopAt = this.#stopTime();
-    if (stopAt === null) return;
+    if (stopAt === null) {
+      return;
+    }
     if (this.#now() < stopAt - STOP_AHEAD_SECONDS - STOP_TIMER_SLACK_SECONDS) {
       this.#armStop();
       return;
@@ -693,14 +783,18 @@ export class PlayerEngine {
     this.#stopLine = null;
     this.pause();
     this.#time = at;
-    if (this.#mediaIsCurrent()) this.#media!.currentTime = at;
+    if (this.#mediaIsCurrent()) {
+      this.#media!.currentTime = at;
+    }
     this.#emitTime();
   }
 
   #startPacer(): void {
     this.#stopPacer();
     const { durationSeconds } = this.#snapshot.timings;
-    if (this.#time >= durationSeconds) this.#time = 0;
+    if (this.#time >= durationSeconds) {
+      this.#time = 0;
+    }
     this.#set({ status: "playing" });
     this.#armStop();
     this.#pacerTimer = setInterval(() => {
@@ -722,7 +816,9 @@ export class PlayerEngine {
   }
 
   #stopPacer(): void {
-    if (this.#pacerTimer !== null) clearInterval(this.#pacerTimer);
+    if (this.#pacerTimer !== null) {
+      clearInterval(this.#pacerTimer);
+    }
     this.#pacerTimer = null;
   }
 
@@ -737,12 +833,16 @@ export class PlayerEngine {
         }
       });
       media.addEventListener("waiting", () => {
-        if (!media.paused) this.#fromMedia("buffering");
+        if (!media.paused) {
+          this.#fromMedia("buffering");
+        }
       });
       media.addEventListener("ended", () => this.#fromMedia("ended"));
       media.addEventListener("error", () => this.#fromMedia("failed"));
       media.addEventListener("timeupdate", () => {
-        if (!this.#mediaIsCurrent()) return;
+        if (!this.#mediaIsCurrent()) {
+          return;
+        }
         const before = this.#time;
         this.#time = media.currentTime;
         this.#heard(before, this.#time);
@@ -762,7 +862,9 @@ export class PlayerEngine {
   // after the tap is over, so the element is started on something silent while the tap
   // is still happening, and swapped for the narration when it lands.
   #unlockMedia(): void {
-    if (this.#unlocked) return;
+    if (this.#unlocked) {
+      return;
+    }
     this.#unlocked = true;
     const media = this.#ensureMedia();
     media.src = silentWavDataUri();
@@ -787,7 +889,9 @@ export class PlayerEngine {
       this.#mediaSrc = url;
     }
     // A second seek to where a pending one is going can leave Chromium waiting for good (OV-278).
-    if (media.currentTime !== this.#time) media.currentTime = this.#time;
+    if (media.currentTime !== this.#time) {
+      media.currentTime = this.#time;
+    }
     media.playbackRate = this.#snapshot.rate;
     this.#unlocked = true;
     return media;
@@ -798,32 +902,46 @@ export class PlayerEngine {
     this.#set({ status: "playing" });
     this.#armStop();
     media.play().catch(() => {
-      if (this.#mediaIsCurrent() && media.paused) this.#set({ status: "paused" });
+      if (this.#mediaIsCurrent() && media.paused) {
+        this.#set({ status: "paused" });
+      }
     });
   }
 
   #fromMedia(status: PlayerStatus): void {
-    if (!this.#mediaIsCurrent()) return;
+    if (!this.#mediaIsCurrent()) {
+      return;
+    }
     if (status === "ended") {
       const { durationSeconds } = this.#snapshot.timings;
       this.#heard(this.#time, durationSeconds);
       this.#time = durationSeconds;
     }
     this.#set({ status });
-    if (status === "playing") this.#sounded("audio");
-    if (status === "ended") this.#endListen("finished");
+    if (status === "playing") {
+      this.#sounded("audio");
+    }
+    if (status === "ended") {
+      this.#endListen("finished");
+    }
     this.#watchForStall();
     this.#armStop();
     this.#emitTime();
   }
 
   #watchForStall(): void {
-    if (this.#stallTimer !== null) clearTimeout(this.#stallTimer);
+    if (this.#stallTimer !== null) {
+      clearTimeout(this.#stallTimer);
+    }
     this.#stallTimer = null;
-    if (this.#snapshot.status !== "buffering") return;
+    if (this.#snapshot.status !== "buffering") {
+      return;
+    }
     this.#stallTimer = setTimeout(() => {
       this.#stallTimer = null;
-      if (this.#snapshot.status !== "buffering" || !this.#mediaIsCurrent()) return;
+      if (this.#snapshot.status !== "buffering" || !this.#mediaIsCurrent()) {
+        return;
+      }
       const media = this.#media!;
       const here = media.currentTime;
       media.currentTime = here;
@@ -833,28 +951,39 @@ export class PlayerEngine {
   #sounded(source: PlayerSource): void {
     this.#reportFirstSound(source);
     const { track } = this.#snapshot;
-    if (this.#listen !== null || track === null) return;
+    if (this.#listen !== null || track === null) {
+      return;
+    }
     this.#listen = { heard: [], run: null };
     this.#onListenStarted({ overviewId: track.overviewId, source });
   }
 
   #heard(from: number, to: number): void {
     const listen = this.#listen;
-    if (listen === null || to < from) return;
-    if (listen.run === null) listen.run = [from, to];
-    else listen.run[1] = Math.max(listen.run[1], to);
+    if (listen === null || to < from) {
+      return;
+    }
+    if (listen.run === null) {
+      listen.run = [from, to];
+    } else {
+      listen.run[1] = Math.max(listen.run[1], to);
+    }
   }
 
   #cutRun(): void {
     const listen = this.#listen;
-    if (listen === null || listen.run === null) return;
+    if (listen === null || listen.run === null) {
+      return;
+    }
     listen.heard.push(listen.run);
     listen.run = null;
   }
 
   #percentHeard(listen: Listen): number {
     const { durationSeconds } = this.#snapshot.timings;
-    if (durationSeconds <= 0) return 0;
+    if (durationSeconds <= 0) {
+      return 0;
+    }
     const stretches = [...listen.heard, ...(listen.run === null ? [] : [listen.run])].sort((a, b) => a[0] - b[0]);
     let heard = 0;
     let reached = Number.NEGATIVE_INFINITY;
@@ -868,7 +997,9 @@ export class PlayerEngine {
   #endListen(reason: ListenEnd): void {
     const listen = this.#listen;
     const { track, source } = this.#snapshot;
-    if (listen === null || track === null) return;
+    if (listen === null || track === null) {
+      return;
+    }
     this.#listen = null;
     this.#onListenEnded({
       overviewId: track.overviewId,
@@ -888,15 +1019,21 @@ export class PlayerEngine {
   #reportFirstSound(source: PlayerSource): void {
     const press = this.#press;
     const { track } = this.#snapshot;
-    if (press === null || track === null) return;
+    if (press === null || track === null) {
+      return;
+    }
     this.#press = null;
     const waitMs = Math.min(Math.max(Math.round(this.#clock() - press.at), 0), MAX_FIRST_SOUND_WAIT_MS);
     this.#onFirstSound({ overviewId: track.overviewId, waitMs, from: press.from, source, prepared: press.prepared });
   }
 
   #clearPreparing(): void {
-    if (this.#pollTimer !== null) clearTimeout(this.#pollTimer);
-    if (this.#longTimer !== null) clearTimeout(this.#longTimer);
+    if (this.#pollTimer !== null) {
+      clearTimeout(this.#pollTimer);
+    }
+    if (this.#longTimer !== null) {
+      clearTimeout(this.#longTimer);
+    }
     this.#pollTimer = null;
     this.#longTimer = null;
   }
@@ -905,7 +1042,9 @@ export class PlayerEngine {
     this.#press = null;
     this.#stopLine = null;
     this.#armStop();
-    if (this.#stallTimer !== null) clearTimeout(this.#stallTimer);
+    if (this.#stallTimer !== null) {
+      clearTimeout(this.#stallTimer);
+    }
     this.#stallTimer = null;
     this.#generation += 1;
     this.#clearPreparing();
@@ -921,19 +1060,27 @@ export class PlayerEngine {
   // A press that comes to rest before any sound is a press that made none.
   #set(patch: Partial<PlayerSnapshot>): void {
     const { status } = patch;
-    if (status === "paused" || status === "ended" || status === "failed" || status === "busy") this.#press = null;
+    if (status === "paused" || status === "ended" || status === "failed" || status === "busy") {
+      this.#press = null;
+    }
     const next = { ...this.#snapshot, ...patch };
     this.#snapshot = { ...next, docked: this.#dockedAfter(next) };
-    for (const listener of this.#listeners) listener();
+    for (const listener of this.#listeners) {
+      listener();
+    }
   }
 
   #dockedAfter({ track, status }: PlayerSnapshot): boolean {
-    if (track === null || this.#openNotes.has(track.overviewId)) return false;
+    if (track === null || this.#openNotes.has(track.overviewId)) {
+      return false;
+    }
     const sameTrack = this.#snapshot.track?.overviewId === track.overviewId;
     return SOUNDING.has(status) || (sameTrack && this.#snapshot.docked);
   }
 
   #emitTime(): void {
-    for (const listener of this.#timeListeners) listener();
+    for (const listener of this.#timeListeners) {
+      listener();
+    }
   }
 }

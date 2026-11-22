@@ -5,7 +5,9 @@ import { PageObject } from "./PageObject.testHelper.js";
 export class LearnedNoticePageObject extends PageObject {
   verifyOffers = (...items: string[]) =>
     this.step(`verifyOffers ${items.join(", ")}`, async () => {
-      for (const item of items) await this.expectToBeVisible(learnedNoticeTestIds.item(item));
+      for (const item of items) {
+        await this.expectToBeVisible(learnedNoticeTestIds.item(item));
+      }
     });
 
   verifyReads = (text: string) => this.step(`verifyReads ${text}`, () => expect(this.get(learnedNoticeTestIds.root)).toContainText(text));

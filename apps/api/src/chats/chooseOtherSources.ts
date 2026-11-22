@@ -86,7 +86,9 @@ export async function chooseOtherSources(
     );
     const ids = members.map((member) => member.overviewId).filter((id) => live.has(id));
     const whole = ids.length <= PINNED_PROJECT_WHOLE ? ids : await closestOf(meaningSearch, accountId, question.text, ids);
-    for (const overviewId of whole) candidates.push({ overviewId, how: "pinned", projectId: project.id });
+    for (const overviewId of whole) {
+      candidates.push({ overviewId, how: "pinned", projectId: project.id });
+    }
     for (const overviewId of ids.filter((id) => !whole.includes(id))) {
       candidates.push({ overviewId, how: "pinned", projectId: project.id, brief: true });
     }
@@ -119,7 +121,9 @@ export async function chooseOtherSources(
   const seen = new Set<string>();
   for (const candidate of wanted) {
     const overview = overviews.get(candidate.overviewId);
-    if (overview === undefined || seen.has(candidate.overviewId)) continue;
+    if (overview === undefined || seen.has(candidate.overviewId)) {
+      continue;
+    }
     seen.add(candidate.overviewId);
     added.push({
       label: `S${nextLabel + added.length}`,

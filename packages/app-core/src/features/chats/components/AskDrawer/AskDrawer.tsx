@@ -39,7 +39,9 @@ export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger,
   // A conversation's menu opens below its ⋯, or above it when the drawer has no room below, as for
   // the last in a phone's sheet (OV-362).
   useLayoutEffect(() => {
-    if (menuFor === null) return;
+    if (menuFor === null) {
+      return;
+    }
     const item = menu.current?.parentElement?.getBoundingClientRect();
     const box = root.current?.getBoundingClientRect();
     const height = menu.current?.offsetHeight ?? 0;

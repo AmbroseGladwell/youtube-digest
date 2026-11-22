@@ -20,9 +20,13 @@ export function libraryViewState(searchParams: URLSearchParams, kept: Iterable<s
 }
 
 export function libraryViewFromState(state: unknown): SteppedLibraryView | null {
-  if (typeof state !== "object" || state === null) return null;
+  if (typeof state !== "object" || state === null) {
+    return null;
+  }
   const { libraryView, kept } = state as { libraryView?: unknown; kept?: unknown };
-  if (typeof libraryView !== "string") return null;
+  if (typeof libraryView !== "string") {
+    return null;
+  }
   const keptIds = Array.isArray(kept) ? kept.filter((id): id is string => typeof id === "string") : [];
   return {
     view: parseLibraryView(new URLSearchParams(libraryView)),

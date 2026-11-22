@@ -34,8 +34,12 @@ test("a name is only ever a whole feature, screen and action", () => {
 
 test("an overview's own events carry its id on the reader, and leave it to the server on a shared link", () => {
   for (const [name, definition] of everyEvent) {
-    if (name.startsWith("reader.")) assert.ok("overviewId" in definition.props, name);
-    if (name.startsWith("sharedPage.")) assert.ok(!("overviewId" in definition.props), name);
+    if (name.startsWith("reader.")) {
+      assert.ok("overviewId" in definition.props, name);
+    }
+    if (name.startsWith("sharedPage.")) {
+      assert.ok(!("overviewId" in definition.props), name);
+    }
   }
   assert.ok(isAnalyticsEventName("reader.tabs.switched"));
   assert.ok(isAnalyticsEventName("sharedPage.tabs.switched"));

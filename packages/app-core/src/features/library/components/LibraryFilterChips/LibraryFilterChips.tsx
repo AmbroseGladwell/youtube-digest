@@ -23,7 +23,9 @@ export function LibraryFilterChips({ chips, onRemove, onMore }: LibraryFilterChi
   useLayoutEffect(() => {
     const rowElement = row.current;
     const measureElement = measure.current;
-    if (!rowElement || !measureElement) return;
+    if (!rowElement || !measureElement) {
+      return;
+    }
     const fit = () => {
       const widths = [...measureElement.querySelectorAll<HTMLElement>("[data-chip]")].map((chip) => chip.offsetWidth);
       const more = measureElement.querySelector<HTMLElement>("[data-more]")?.offsetWidth ?? 0;

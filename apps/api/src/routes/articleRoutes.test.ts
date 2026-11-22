@@ -85,7 +85,9 @@ test("signed out, a trial reads a few links, whether or not they can be read, th
   const device = await makeTrialDevice(testApp);
 
   const read = [];
-  for (let n = 0; n < TRIAL_READS; n += 1) read.push((await device.readArticle(URL_OF_PAGE)).statusCode);
+  for (let n = 0; n < TRIAL_READS; n += 1) {
+    read.push((await device.readArticle(URL_OF_PAGE)).statusCode);
+  }
   const next = await device.readArticle(URL_OF_PAGE);
 
   assert.deepEqual(
@@ -103,7 +105,9 @@ test("new tokens from one address read no more that day, while another address d
   const testApp = await appServing({ status: "failed", reason: "blocked" }, logger);
   for (let spent = 0; spent < TRIAL_READS_PER_ADDRESS_DAILY; spent += TRIAL_READS) {
     const device = await makeTrialDevice(testApp);
-    for (let n = 0; n < TRIAL_READS; n += 1) await device.readArticle(URL_OF_PAGE);
+    for (let n = 0; n < TRIAL_READS; n += 1) {
+      await device.readArticle(URL_OF_PAGE);
+    }
   }
 
   const privateWindow = await makeTrialDevice(testApp);

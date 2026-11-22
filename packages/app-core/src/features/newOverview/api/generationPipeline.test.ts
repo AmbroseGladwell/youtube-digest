@@ -85,7 +85,9 @@ const makeDeps = ({ held = true }: { held?: boolean } = {}) => {
     isReady: async () => true,
     resolve: async () => {
       clock += ms;
-      if (answer === "throws") throw new Error("Simulated: the rung failed");
+      if (answer === "throws") {
+        throw new Error("Simulated: the rung failed");
+      }
       return answer === "no-answer" ? null : { video: VIDEO, transcript: stored.segments, generated: false };
     },
   });
@@ -468,7 +470,9 @@ describe("filing into projects", () => {
   const filingDeps = async (settings: Partial<Settings> = {}) => {
     const { deps, inputs, saved, hold } = makeDeps();
     const projectStore = new InMemoryProjectStore();
-    for (const project of [kitchen, launch, shed]) await projectStore.createProject(project);
+    for (const project of [kitchen, launch, shed]) {
+      await projectStore.createProject(project);
+    }
     let counted: number | undefined;
     const filing: GenerationPipelineDeps = {
       ...deps,

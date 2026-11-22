@@ -31,7 +31,9 @@ const [mode, ...rest] = process.argv.slice(2);
 
 const readOnlyPool = () => {
   const url = process.env["DATABASE_URL"];
-  if (!url) throw new Error("DATABASE_URL is needed");
+  if (!url) {
+    throw new Error("DATABASE_URL is needed");
+  }
   return new pg.Pool({ connectionString: url, options: "-c default_transaction_read_only=on", max: 1 });
 };
 
@@ -48,7 +50,9 @@ const sqlOf = (pool: pg.Pool): SqlClient => ({
 
 async function assertReadOnly(sql: SqlClient) {
   const [row] = await sql.query<{ transaction_read_only: string }>("show transaction_read_only");
-  if (row?.transaction_read_only !== "on") throw new Error("the connection is not read only");
+  if (row?.transaction_read_only !== "on") {
+    throw new Error("the connection is not read only");
+  }
 }
 
 async function overviewsOf(sql: SqlClient, accountId: string) {
@@ -59,7 +63,9 @@ async function overviewsOf(sql: SqlClient, accountId: string) {
   const byId = new Map<string, Overview>();
   for (const row of rows) {
     const read = readStoredRecord(stampSchemaVersion(row.body ?? {}, row.schema_version), Overview, OVERVIEW_MIGRATIONS);
-    if (read.status === "read") byId.set(row.id, read.record);
+    if (read.status === "read") {
+      byId.set(row.id, read.record);
+    }
   }
   return byId;
 }
@@ -69,7 +75,9 @@ async function questions(email: string, out: string) {
   try {
     await assertReadOnly(sql);
     const [account] = await sql.query<{ id: string }>("select id from accounts where email = $1", [email.trim().toLowerCase()]);
-    if (account === undefined) throw new Error("no account for that email");
+    if (account === undefined) {
+      throw new Error("no account for that email");
+    }
     const overviews = await overviewsOf(sql, account.id);
     const rows = await sql.query<{ id: string; schema_version: number; body: unknown }>(
       "select id, schema_version, body from records where account_id = $1 and kind = 'chat' and not deleted",
@@ -78,10 +86,14 @@ async function questions(email: string, out: string) {
     const asked: Asked[] = [];
     for (const row of rows) {
       const read = readStoredRecord(stampSchemaVersion(row.body ?? {}, row.schema_version), Chat, CHAT_MIGRATIONS);
-      if (read.status !== "read" || read.record.overviewId === undefined) continue;
+      if (read.status !== "read" || read.record.overviewId === undefined) {
+        continue;
+      }
       const home = read.record.overviewId;
       for (const message of read.record.messages) {
-        if (message.from !== "reader") continue;
+        if (message.from !== "reader") {
+          continue;
+        }
         asked.push({
           accountId: account.id,
           chatId: row.id,
@@ -101,12 +113,16 @@ async function questions(email: string, out: string) {
 
 async function embed(file: string) {
   const apiKey = process.env["OPENAI_API_KEY"];
-  if (!apiKey) throw new Error("OPENAI_API_KEY is needed");
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is needed");
+  }
   const asked = JSON.parse(await readFile(file, "utf8")) as Asked[];
   const embedded = await createOpenAiEmbedder({ apiKey, http: fetch }).embed(asked.map((each) => each.question.trim().toLowerCase()));
   asked.forEach((each, index) => {
     const vector = embedded.vectors[index];
-    if (vector !== undefined) each.vector = vector;
+    if (vector !== undefined) {
+      each.vector = vector;
+    }
   });
   await writeFile(file, JSON.stringify(asked));
   console.log(`${embedded.tokens} tokens embedded`);
@@ -122,7 +138,9 @@ async function score(file: string, out: string) {
     const titles = new Map<string, Map<string, Overview>>();
     const results = [];
     for (const each of asked) {
-      if (each.vector === undefined) continue;
+      if (each.vector === undefined) {
+        continue;
+      }
       const overviews = titles.get(each.accountId) ?? (await overviewsOf(sql, each.accountId));
       titles.set(each.accountId, overviews);
       const home = overviews.get(each.home);
@@ -142,7 +160,9 @@ async function score(file: string, out: string) {
         [...overviews.values()].map((overview) => [String(sourceKey(overview.source)), overview.source.title]),
       );
       const best = new Map<string, number>();
-      for (const hit of hits) best.set(hit.videoId, Math.max(best.get(hit.videoId) ?? 0, hit.score));
+      for (const hit of hits) {
+        best.set(hit.videoId, Math.max(best.get(hit.videoId) ?? 0, hit.score));
+      }
       const byWords = [...best].map(([videoId, value]) => ({ title: keyOf.get(videoId) ?? videoId, score: Number(value.toFixed(3)) }));
       results.push({ question: each.question, home: each.homeTitle, storedFound: each.found, byMeaning, byWords });
     }
@@ -153,10 +173,13 @@ async function score(file: string, out: string) {
   }
 }
 
-if (mode === "questions" && rest.length === 2) await questions(rest[0]!, rest[1]!);
-else if (mode === "embed" && rest.length === 1) await embed(rest[0]!);
-else if (mode === "score" && rest.length === 2) await score(rest[0]!, rest[1]!);
-else {
+if (mode === "questions" && rest.length === 2) {
+  await questions(rest[0]!, rest[1]!);
+} else if (mode === "embed" && rest.length === 1) {
+  await embed(rest[0]!);
+} else if (mode === "score" && rest.length === 2) {
+  await score(rest[0]!, rest[1]!);
+} else {
   console.error(
     "usage: foundRelevanceCheck.js questions <email> <questions.json> | embed <questions.json> | score <questions.json> <out.json>",
   );

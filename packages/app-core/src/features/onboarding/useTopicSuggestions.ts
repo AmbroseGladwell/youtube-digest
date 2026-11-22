@@ -24,7 +24,9 @@ export function useTopicSuggestions(found: OnboardingFound | null, kind: Onboard
 
   useEffect(() => {
     const { found, kind } = latest.current;
-    if (!ask || apiUrl === null || found === null || kind === null || key === null) return;
+    if (!ask || apiUrl === null || found === null || kind === null || key === null) {
+      return;
+    }
     let cancelled = false;
     const noun = kind.noun("video", found);
     createTrialGenerationApi({ baseUrl: apiUrl })
@@ -34,16 +36,22 @@ export function useTopicSuggestions(found: OnboardingFound | null, kind: Onboard
         text: found.about.slice(0, TEXT_CHARACTERS),
       })
       .then((result) => {
-        if (!cancelled) setAnswer({ key, asked: { status: "answered", result } });
+        if (!cancelled) {
+          setAnswer({ key, asked: { status: "answered", result } });
+        }
       })
       .catch(() => {
-        if (!cancelled) setAnswer({ key, asked: { status: "failed" } });
+        if (!cancelled) {
+          setAnswer({ key, asked: { status: "failed" } });
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [ask, apiUrl, key]);
 
-  if (!ask || apiUrl === null) return { status: "notAsked" };
+  if (!ask || apiUrl === null) {
+    return { status: "notAsked" };
+  }
   return answer !== null && answer.key === key ? answer.asked : { status: "pending" };
 }

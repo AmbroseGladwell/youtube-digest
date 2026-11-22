@@ -254,7 +254,9 @@ test("deleting an overview takes it out of every project", async () => {
   const account = await makeAccount(testApp);
   const [first, second] = [await withProject(account), await withProject(account)];
   const [doomed, kept] = [await withOverview(account), await withOverview(account)];
-  for (const project of [first, second]) await member(account, project.id, doomed.id, { addedAt: UPDATED_AT });
+  for (const project of [first, second]) {
+    await member(account, project.id, doomed.id, { addedAt: UPDATED_AT });
+  }
   await member(account, first.id, kept.id, { addedAt: UPDATED_AT });
 
   await account.inject({ method: "DELETE", url: `/api/overviews/${doomed.id}` });

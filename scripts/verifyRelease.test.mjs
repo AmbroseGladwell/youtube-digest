@@ -16,7 +16,9 @@ function releaseZip({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) {
   const files = { "manifest.json": manifest, "build.json": build };
   const names = [];
   for (const [name, value] of Object.entries(files)) {
-    if (value === null) continue;
+    if (value === null) {
+      continue;
+    }
     writeFileSync(path.join(root, name), JSON.stringify(value));
     names.push(name);
   }
@@ -78,7 +80,9 @@ test("the keyed zip passes only when it carries the store's own key", () => {
     assert.throws(() => check(stripped, { key: KEY }), /carries no key, so it would load under a directory-derived id/);
     assert.throws(() => check(wrong, { key: KEY }), /a key that is not the store's/);
   } finally {
-    for (const zip of [keyed, stripped, wrong]) rmSync(zip.root, { recursive: true, force: true });
+    for (const zip of [keyed, stripped, wrong]) {
+      rmSync(zip.root, { recursive: true, force: true });
+    }
   }
 });
 

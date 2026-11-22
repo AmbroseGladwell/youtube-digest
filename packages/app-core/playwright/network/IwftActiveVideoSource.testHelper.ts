@@ -20,6 +20,8 @@ export class IwftActiveVideoSource implements ActiveVideoSource {
 
   watchAnother = (videoUrl: string | null): void => {
     this.videoUrl = videoUrl;
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      listener();
+    }
   };
 }

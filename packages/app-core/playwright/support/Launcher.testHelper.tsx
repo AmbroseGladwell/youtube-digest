@@ -179,7 +179,9 @@ export class Launcher {
     });
 
   private mountApp = async (options: LaunchOptions): Promise<void> => {
-    if (options.plan !== undefined) this.backendSimulator.auth.accountIsOn(options.plan);
+    if (options.plan !== undefined) {
+      this.backendSimulator.auth.accountIsOn(options.plan);
+    }
     await this.backendSimulator.handleNetworking();
     await this.mount(<IwftAppRoot />, {
       hooksConfig: {

@@ -77,10 +77,16 @@ export const createProject = mcpTool({
         },
         ...adding.map((overviewId) => projectMemberWrite(project.id, overviewId, "add", by, now)),
       ]);
-      for (const outcome of written) if (outcome !== null) logRecordWritten(log, outcome);
+      for (const outcome of written) {
+        if (outcome !== null) {
+          logRecordWritten(log, outcome);
+        }
+      }
     } catch (error) {
       const refusal = projectWriteRefusal(error);
-      if (refusal !== null) return refusal;
+      if (refusal !== null) {
+        return refusal;
+      }
       throw error;
     }
 

@@ -25,7 +25,9 @@ export async function seedVoiceSamples({ renders, samples, store, now }: SeedVoi
   const current = NarrationVoice.options.map((voice) => ({ voice, key: audioKey(VOICE_SAMPLE_LINES, voice) }));
   const queued: NarrationVoice[] = [];
   for (const { voice, key } of current) {
-    if ((await renders.get(key))?.status === "ready") continue;
+    if ((await renders.get(key))?.status === "ready") {
+      continue;
+    }
     await renders.enqueue({
       key,
       voice,

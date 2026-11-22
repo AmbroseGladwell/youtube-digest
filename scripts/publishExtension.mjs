@@ -134,7 +134,9 @@ export function publishProblem(published) {
 export function acceptedProblem(status, version) {
   const submitted = status.submittedItemRevisionStatus;
   const published = status.publishedItemRevisionStatus;
-  if (versionsOf(published).includes(version)) return null;
+  if (versionsOf(published).includes(version)) {
+    return null;
+  }
   if (submitted === undefined || submitted === null) {
     return `the store holds no submitted revision of ${version} after the publish`;
   }
@@ -169,7 +171,9 @@ export function storeApi({ credentials, fetch: doFetch = fetch }) {
   let token = null;
 
   const authorized = async () => {
-    if (token !== null) return token;
+    if (token !== null) {
+      return token;
+    }
     const answer = await answerOf(
       await doFetch(TOKEN_URL, {
         method: "POST",
@@ -222,11 +226,15 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // An upload the store is still unpacking answers IN_PROGRESS and finishes asynchronously, so
 // the item's own status is what says how it ended.
 async function settledUpload(api, started, { wait = sleep } = {}) {
-  if (started.uploadState !== "IN_PROGRESS") return started;
+  if (started.uploadState !== "IN_PROGRESS") {
+    return started;
+  }
   for (let attempt = 0; attempt < UPLOAD_POLL_ATTEMPTS; attempt += 1) {
     await wait(UPLOAD_POLL_MS);
     const status = await api.status();
-    if (status.lastAsyncUploadState === "IN_PROGRESS") continue;
+    if (status.lastAsyncUploadState === "IN_PROGRESS") {
+      continue;
+    }
     const versions = versionsOf(status.submittedItemRevisionStatus);
     return { uploadState: status.lastAsyncUploadState, crxVersion: versions.at(-1) ?? started.crxVersion };
   }
@@ -236,7 +244,9 @@ async function settledUpload(api, started, { wait = sleep } = {}) {
 export async function publishExtension({ api, zip, version, log = console.log, wait = sleep }) {
   const before = await api.status();
   const decision = submissionDecision(before, version);
-  if (decision.problem !== undefined) throw new Error(decision.problem);
+  if (decision.problem !== undefined) {
+    throw new Error(decision.problem);
+  }
   if (!decision.publish) {
     log(`chrome web store: nothing to submit, because ${decision.reason}`);
     return { submitted: false, reason: decision.reason };
@@ -245,17 +255,25 @@ export async function publishExtension({ api, zip, version, log = console.log, w
 
   const upload = await settledUpload(api, await api.upload(zip), { wait });
   const refused = uploadProblem(upload, version);
-  if (refused !== null) throw new Error(`the package was not taken: ${refused}`);
+  if (refused !== null) {
+    throw new Error(`the package was not taken: ${refused}`);
+  }
   log(`chrome web store: the store took ${upload.crxVersion}`);
 
   const published = await api.publish();
-  for (const line of warningLines(published)) log(`chrome web store warning: ${line}`);
+  for (const line of warningLines(published)) {
+    log(`chrome web store warning: ${line}`);
+  }
   const rejected = publishProblem(published);
-  if (rejected !== null) throw new Error(`the submission was not accepted: ${rejected}`);
+  if (rejected !== null) {
+    throw new Error(`the submission was not accepted: ${rejected}`);
+  }
 
   const after = await api.status();
   const unproven = acceptedProblem(after, version);
-  if (unproven !== null) throw new Error(`the submission cannot be confirmed: ${unproven}`);
+  if (unproven !== null) {
+    throw new Error(`the submission cannot be confirmed: ${unproven}`);
+  }
   const state = stateOf(after.submittedItemRevisionStatus) ?? stateOf(after.publishedItemRevisionStatus);
   log(`chrome web store: the store holds ${version} in ${state}`);
   return { submitted: true, state };
@@ -268,7 +286,9 @@ function reportCredentials(env) {
       `::warning::${missing.join(", ")} ${missing.length === 1 ? "isn't" : "aren't"} set, so the extension wasn't submitted to the Chrome Web Store`,
     );
   }
-  if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `ready=${missing.length === 0}\n`);
+  if (env.GITHUB_OUTPUT) {
+    appendFileSync(env.GITHUB_OUTPUT, `ready=${missing.length === 0}\n`);
+  }
   return missing.length === 0;
 }
 
@@ -288,7 +308,9 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     }
     const version = given ?? JSON.parse(readFileSync(path.join(rootDir, "package.json"), "utf8")).version;
     const missing = missingCredentials(process.env);
-    if (missing.length > 0) throw new Error(`${missing.join(", ")} missing from the environment`);
+    if (missing.length > 0) {
+      throw new Error(`${missing.join(", ")} missing from the environment`);
+    }
     const manifest = JSON.parse(readFileSync(path.join(rootDir, "apps/extension/manifest.json"), "utf8"));
     if (typeof manifest.key !== "string" || manifest.key === "") {
       throw new Error("manifest.json carries no key, so there is no store item to submit to");

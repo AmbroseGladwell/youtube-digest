@@ -10,7 +10,9 @@ export interface PageMeta {
 const FEED_TYPES = new Set(["application/rss+xml", "application/atom+xml", "application/xml", "text/xml"]);
 
 const absolute = (href: string | undefined, base: string): string | null => {
-  if (href === undefined || href.trim() === "") return null;
+  if (href === undefined || href.trim() === "") {
+    return null;
+  }
   try {
     const url = new URL(href.trim(), base);
     return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
@@ -33,19 +35,31 @@ export function pageMeta(html: string, pageUrl: string): PageMeta {
       onopentag(name, attributes) {
         if (name === "meta") {
           const key = (attributes.property ?? attributes.name ?? "").trim().toLowerCase();
-          if (key !== "" && attributes.content !== undefined && !meta.has(key)) meta.set(key, attributes.content.trim());
+          if (key !== "" && attributes.content !== undefined && !meta.has(key)) {
+            meta.set(key, attributes.content.trim());
+          }
         }
         if (name === "link") {
           const rel = (attributes.rel ?? "").toLowerCase().split(/\s+/);
           const type = (attributes.type ?? "").trim().toLowerCase();
-          if (rel.includes("alternate") && FEED_TYPES.has(type)) feedUrl ??= absolute(attributes.href, pageUrl);
-          if (rel.includes("canonical")) canonicalUrl ??= absolute(attributes.href, pageUrl);
+          if (rel.includes("alternate") && FEED_TYPES.has(type)) {
+            feedUrl ??= absolute(attributes.href, pageUrl);
+          }
+          if (rel.includes("canonical")) {
+            canonicalUrl ??= absolute(attributes.href, pageUrl);
+          }
         }
-        if (name === "title" && title === null) inTitle = true;
-        if (name === "body") parser.pause();
+        if (name === "title" && title === null) {
+          inTitle = true;
+        }
+        if (name === "body") {
+          parser.pause();
+        }
       },
       ontext(chunk) {
-        if (inTitle) titleText += chunk;
+        if (inTitle) {
+          titleText += chunk;
+        }
       },
       onclosetag(name) {
         if (name === "title" && inTitle) {

@@ -22,7 +22,9 @@ export function useDeleteChatMutation() {
       return { previous };
     },
     onError: (_error, { listKey }, context) => {
-      if (context !== undefined) queryClient.setQueryData(listKey, context.previous);
+      if (context !== undefined) {
+        queryClient.setQueryData(listKey, context.previous);
+      }
     },
     onSettled: (_data, _error, { listKey }) => {
       void queryClient.invalidateQueries({ queryKey: listKey });

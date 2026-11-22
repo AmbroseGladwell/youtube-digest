@@ -25,7 +25,9 @@ export function pacedQueue(
   const takenToday = new Map<string, number>();
 
   for (const capture of waiting) {
-    if (capture.chosenAt !== null) continue;
+    if (capture.chosenAt !== null) {
+      continue;
+    }
     const limit = paceDailyLimit(paceOf(capture));
     if (limit === 0) {
       forYou.push(capture);

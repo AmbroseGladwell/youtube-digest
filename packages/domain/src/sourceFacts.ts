@@ -14,8 +14,12 @@ export const domainOf = (url: string): string => new URL(url).hostname.replace(/
 
 // Who the piece is from: the channel, or the site, or failing that its address.
 export const sourceName = (source: Source): string => {
-  if (source.kind === "youtube") return source.channel;
-  if (source.kind === "podcast") return source.showName;
+  if (source.kind === "youtube") {
+    return source.channel;
+  }
+  if (source.kind === "podcast") {
+    return source.showName;
+  }
   return source.siteName ?? domainOf(source.url);
 };
 
@@ -27,9 +31,15 @@ export type PodcastPlatform = "spotify" | "apple" | "page";
 
 export function podcastPlatform(sharedFrom: string): PodcastPlatform {
   const link = parsePodcastLink(sharedFrom);
-  if (link === null) return "page";
-  if (link.platform === "apple" || link.platform === "apple-show") return "apple";
-  if (link.platform === "page") return "page";
+  if (link === null) {
+    return "page";
+  }
+  if (link.platform === "apple" || link.platform === "apple-show") {
+    return "apple";
+  }
+  if (link.platform === "page") {
+    return "page";
+  }
   return "spotify";
 }
 
@@ -54,8 +64,12 @@ const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "ar
 const KIND_CHIP: Record<Exclude<Source["kind"], "youtube">, string> = { web: "Article", podcast: "Podcast" };
 
 const knownLength = (source: Source): string | null => {
-  if (source.kind === "web") return `${articleReadMinutes(source.wordCount)} min`;
-  if (source.kind === "podcast") return source.durationMs ? recipeMinutes(Math.round(source.durationMs / 60_000)) : null;
+  if (source.kind === "web") {
+    return `${articleReadMinutes(source.wordCount)} min`;
+  }
+  if (source.kind === "podcast") {
+    return source.durationMs ? recipeMinutes(Math.round(source.durationMs / 60_000)) : null;
+  }
   return source.durationMs ? formatClock(source.durationMs / 1000) : null;
 };
 
@@ -72,7 +86,9 @@ export function sourceLength(source: Source): string {
 // The chip a library row leads with. A video is most of the library and says so in its meta
 // line, so it has none; any other kind does, and a recipe keeps its yield (design 232a, 232f).
 export function kindChip(note: { source: Source; recipe?: RecipeNote | null | undefined }): string | null {
-  if (note.recipe != null) return note.recipe.yield === null ? "Recipe" : `Recipe · ${note.recipe.yield}`;
+  if (note.recipe != null) {
+    return note.recipe.yield === null ? "Recipe" : `Recipe · ${note.recipe.yield}`;
+  }
   return note.source.kind === "youtube" ? null : KIND_CHIP[note.source.kind];
 }
 

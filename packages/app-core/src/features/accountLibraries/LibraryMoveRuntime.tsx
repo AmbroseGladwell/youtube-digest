@@ -40,7 +40,9 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
   const moveInto = useCallback(
     (into: string) =>
       (async () => {
-        if (openLibrary === null) return;
+        if (openLibrary === null) {
+          return;
+        }
         const left = await openLibrary(null, { shown: false });
         try {
           await moveAnswersInto(left.stores, stores);
@@ -52,7 +54,9 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
             void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
             void queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
           }
-          if (result.moved + result.alreadyThere === 0) return;
+          if (result.moved + result.alreadyThere === 0) {
+            return;
+          }
           moveReadingPositions(result.sourceKeys, into);
           void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
           void queryClient.invalidateQueries({ queryKey: topicKeys.all });
@@ -68,7 +72,9 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (accountId === null || openLibrary === null || !pulled || tried.current.has(accountId)) return;
+    if (accountId === null || openLibrary === null || !pulled || tried.current.has(accountId)) {
+      return;
+    }
     tried.current.add(accountId);
     moving.current = moving.current.then(() => moveInto(accountId));
   }, [accountId, openLibrary, pulled, moveInto]);

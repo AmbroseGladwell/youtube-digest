@@ -46,7 +46,9 @@ export interface TestAccount {
 // overviews than a month allows is not stopped by a quota it isn't about.
 export async function letInOverview({ sql, clock }: Pick<TestApp, "sql" | "clock">, accountId: AccountId, body: unknown): Promise<void> {
   const id = typeof body === "object" && body !== null ? (body as { id?: unknown }).id : undefined;
-  if (typeof id !== "string") return;
+  if (typeof id !== "string") {
+    return;
+  }
   await sql.query(
     `insert into overview_reservations (account_id, overview_id, source, reserved_at)
      values ($1, $2, 'own', $3::timestamptz) on conflict do nothing`,

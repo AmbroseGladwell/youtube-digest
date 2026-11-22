@@ -12,11 +12,15 @@ export function makeRecordingEventSink(): RecordingEventSink {
     links: [],
     failing: false,
     capture: async (events, source) => {
-      if (sink.failing) throw new Error("Simulated: the analytics service is down");
+      if (sink.failing) {
+        throw new Error("Simulated: the analytics service is down");
+      }
       sink.captured.push({ events, source });
     },
     link: async (accountId, anonymousId) => {
-      if (sink.failing) throw new Error("Simulated: the analytics service is down");
+      if (sink.failing) {
+        throw new Error("Simulated: the analytics service is down");
+      }
       sink.links.push({ accountId, anonymousId });
     },
   };

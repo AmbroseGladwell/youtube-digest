@@ -93,7 +93,9 @@ export async function extractActionableItems({
   let items: ActionableItem[] | null = null;
   try {
     const parsed = ExtractedItems.safeParse(await client(actionableItemsPrompt(source)));
-    if (!parsed.success) throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    if (!parsed.success) {
+      throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    }
     items = parsed.data.items.map(placed(source));
   } catch (thrown) {
     outcome =

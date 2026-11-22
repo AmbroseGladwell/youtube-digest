@@ -44,7 +44,9 @@ export function useSaveFromShare(): (token: ShareToken, snapshot: SharedOverview
 // would have been. Without topics, or if the pass fails, it's saved unsorted
 // (docs/features/onboarding.md, "Try a sample").
 async function sortedInto(api: GenerationApi, overview: Overview, topics: readonly Topic[]): Promise<Overview["topicIds"]> {
-  if (topics.length === 0) return [];
+  if (topics.length === 0) {
+    return [];
+  }
   const names = await api
     .topics({
       title: overview.source.title,

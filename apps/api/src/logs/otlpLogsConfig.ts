@@ -30,9 +30,13 @@ const DEFAULT_SERVICE_NAME = "overview-api";
 const keyValueList = (raw: string | undefined, name: string): Record<string, string> => {
   const entries: Array<[string, string]> = [];
   for (const pair of (raw ?? "").split(",")) {
-    if (pair.trim() === "") continue;
+    if (pair.trim() === "") {
+      continue;
+    }
     const at = pair.indexOf("=");
-    if (at <= 0) throw new OtlpLogsConfigError(`${name} must be key=value pairs separated by commas`);
+    if (at <= 0) {
+      throw new OtlpLogsConfigError(`${name} must be key=value pairs separated by commas`);
+    }
     entries.push([decodeURIComponent(pair.slice(0, at).trim()), decodeURIComponent(pair.slice(at + 1).trim())]);
   }
   return Object.fromEntries(entries);
@@ -46,7 +50,9 @@ export function otlpLogsConfig(
   env: OtlpLogsEnv,
   { postHog, environment }: { postHog: PostHogLogsFallback | null; environment: string },
 ): OtlpLogsConfig | null {
-  if (env.OTEL_LOGS_EXPORTER?.trim() === "none") return null;
+  if (env.OTEL_LOGS_EXPORTER?.trim() === "none") {
+    return null;
+  }
   const protocol = env.OTEL_EXPORTER_OTLP_LOGS_PROTOCOL ?? env.OTEL_EXPORTER_OTLP_PROTOCOL;
   if (protocol !== undefined && protocol.trim() !== "http/json") {
     throw new OtlpLogsConfigError(`OTEL_EXPORTER_OTLP_LOGS_PROTOCOL is ${protocol}, and only http/json is supported`);
@@ -56,7 +62,9 @@ export function otlpLogsConfig(
     env.OTEL_EXPORTER_OTLP_LOGS_ENDPOINT ??
     (env.OTEL_EXPORTER_OTLP_ENDPOINT === undefined ? undefined : `${env.OTEL_EXPORTER_OTLP_ENDPOINT.replace(/\/+$/, "")}/v1/logs`);
   const endpoint = named ?? (postHog === null ? null : `${postHog.host.replace(/\/+$/, "")}/i/v1/logs`);
-  if (endpoint === null) return null;
+  if (endpoint === null) {
+    return null;
+  }
   try {
     new URL(endpoint);
   } catch {

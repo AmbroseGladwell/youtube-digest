@@ -39,7 +39,9 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
     return {
       report: (thrown, source, { handled = false } = {}) => {
         if (typeof thrown === "object" && thrown !== null) {
-          if (reported.has(thrown)) return;
+          if (reported.has(thrown)) {
+            return;
+          }
           reported.add(thrown);
         }
         queue.record(toClientError(thrown, { source, handled, trail: trail.entries(), at: new Date() }));
@@ -55,7 +57,9 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
     const onError = (event: ErrorEvent) => reporter.report(event.error ?? event.message, "uncaught");
     const onRejection = (event: PromiseRejectionEvent) => reporter.report(event.reason, "unhandledRejection");
     const flushOnHide = () => {
-      if (document.visibilityState === "hidden") void queue.flush({ keepalive: true });
+      if (document.visibilityState === "hidden") {
+        void queue.flush({ keepalive: true });
+      }
     };
     const flushOnLeave = () => void queue.flush({ keepalive: true });
     globalThis.addEventListener("error", onError);

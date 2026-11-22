@@ -34,8 +34,11 @@ export function useTimerSoundSample() {
       const lengthMs = timerSoundSeconds(sound) * 1000;
       const tick = setInterval(() => {
         const progress = (Date.now() - startedAt) / lengthMs;
-        if (progress >= 1) stop();
-        else setPlayback({ sound, progress });
+        if (progress >= 1) {
+          stop();
+        } else {
+          setPlayback({ sound, progress });
+        }
       }, TICK_MS);
       playing.current = { stop: playTimerSound(sound, { vibrate: false }), tick };
       setPlayback({ sound, progress: 0 });

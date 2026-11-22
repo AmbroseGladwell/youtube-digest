@@ -47,7 +47,9 @@ const guardedLookup =
 
 export async function readBodyText(response: Response, mostBytes: number): Promise<string | null> {
   const reader = response.body?.getReader();
-  if (reader === undefined) return "";
+  if (reader === undefined) {
+    return "";
+  }
   const chunks: Uint8Array[] = [];
   let bytes = 0;
   for (let read = await reader.read(); !read.done; read = await reader.read()) {
@@ -80,8 +82,12 @@ export function createPublicWebFetch({
   const dispatcher: Dispatcher = new Agent({ connect: { lookup: guardedLookup(isAllowedAddress) } });
 
   const mayVisit = ({ protocol, port, hostname, username, password }: URL): boolean => {
-    if (protocol !== "http:" && protocol !== "https:") return false;
-    if (username !== "" || password !== "" || !allowedPorts.includes(port)) return false;
+    if (protocol !== "http:" && protocol !== "https:") {
+      return false;
+    }
+    if (username !== "" || password !== "" || !allowedPorts.includes(port)) {
+      return false;
+    }
     const host = hostname.replace(/^\[|\]$/g, "");
     return isIP(host) === 0 || isAllowedAddress(host);
   };
@@ -91,7 +97,9 @@ export function createPublicWebFetch({
     try {
       let url = new URL(link);
       for (let hop = 0; hop <= MOST_REDIRECTS; hop += 1) {
-        if (!mayVisit(url)) return { status: "failed", reason: "closed" };
+        if (!mayVisit(url)) {
+          return { status: "failed", reason: "closed" };
+        }
         const response = await undiciFetch(url, {
           dispatcher,
           signal,
@@ -104,10 +112,18 @@ export function createPublicWebFetch({
           url = new URL(location, url);
           continue;
         }
-        if (!response.ok) await response.body?.cancel();
-        if (REFUSED_STATUSES.has(response.status)) return { status: "failed", reason: "blocked" };
-        if (MISSING_STATUSES.has(response.status)) return { status: "failed", reason: "missing" };
-        if (!response.ok) return { status: "failed", reason: "no-answer" };
+        if (!response.ok) {
+          await response.body?.cancel();
+        }
+        if (REFUSED_STATUSES.has(response.status)) {
+          return { status: "failed", reason: "blocked" };
+        }
+        if (MISSING_STATUSES.has(response.status)) {
+          return { status: "failed", reason: "missing" };
+        }
+        if (!response.ok) {
+          return { status: "failed", reason: "no-answer" };
+        }
         return { status: "answered", url: url.href, response };
       }
       return { status: "failed", reason: "no-answer" };

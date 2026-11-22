@@ -7,8 +7,11 @@ export class OnboardingNextStepsPageObject extends PageObject {
   verifyOffers = (steps: Array<"own" | "extension" | "ai">) =>
     this.step(`verifyOffers ${steps.join(", ")}`, async () => {
       for (const step of ["own", "extension", "ai"] as const) {
-        if (steps.includes(step)) await this.expectToBeVisible(onboardingNextStepsTestIds.card(step));
-        else await this.expectNotToBeVisible(onboardingNextStepsTestIds.card(step));
+        if (steps.includes(step)) {
+          await this.expectToBeVisible(onboardingNextStepsTestIds.card(step));
+        } else {
+          await this.expectNotToBeVisible(onboardingNextStepsTestIds.card(step));
+        }
       }
     });
 

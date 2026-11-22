@@ -13,7 +13,9 @@ export interface ChatStreamedTextProps {
 // While it streams, the answer's last word is held back until it is whole, and a fence's backticks
 // until they are three, so no marker ever shows.
 function blocksSoFar(text: string, whole: boolean): AnswerBlock[] {
-  if (whole) return answerBlocks(text);
+  if (whole) {
+    return answerBlocks(text);
+  }
   const blocks = answerBlocks(text.replace(/`{1,2}$/, ""));
   const last = blocks.at(-1);
   if (last?.kind === "paragraph" && !/\s$/.test(text)) {

@@ -78,7 +78,9 @@ export function AppShell() {
   const gated = accountNeeded && (pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
   const signedIn = sync.connected;
   useEffect(() => {
-    if (signedIn) markAccountSeen();
+    if (signedIn) {
+      markAccountSeen();
+    }
   }, [signedIn]);
   const libraryMoved = useLibraryMove().move !== null;
   // With a note open and the tab moved on under it, the band says so (design 205e).
@@ -121,7 +123,9 @@ export function AppShell() {
   useLayoutEffect(() => {
     const leaving = backInBar ? brandLink.current : barBackLink.current;
     const arriving = backInBar ? barBackLink.current : brandLink.current;
-    if (leaving !== null && document.activeElement === leaving) arriving?.focus({ preventScroll: true });
+    if (leaving !== null && document.activeElement === leaving) {
+      arriving?.focus({ preventScroll: true });
+    }
   }, [backInBar]);
 
   // Design 205c-2: in the panel + New is a way to paste a link, not a place to watch a
@@ -129,14 +133,18 @@ export function AppShell() {
   // the panel back to home, which is where creating from the offer would have left it.
   const panelRunStarted = newOverview.run !== null && newOverview.dialogOpen && isPanel;
   useEffect(() => {
-    if (!panelRunStarted) return;
+    if (!panelRunStarted) {
+      return;
+    }
     newOverview.close();
     void navigate(Routes.home(), { replace: true });
   }, [panelRunStarted, newOverview, navigate]);
 
   const panelOpened = useRef(false);
   useEffect(() => {
-    if (!isPanel || panelOpened.current) return;
+    if (!isPanel || panelOpened.current) {
+      return;
+    }
     panelOpened.current = true;
     analytics.extension.sidePanel.opened();
   }, [isPanel, analytics]);

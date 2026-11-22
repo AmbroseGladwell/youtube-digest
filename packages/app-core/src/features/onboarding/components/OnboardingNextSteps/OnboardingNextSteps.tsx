@@ -22,7 +22,9 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
   const analytics = useAnalytics();
   const extensionOffered = useExtensionOffered();
   const [nextSteps, setNextSteps] = useState(readNextSteps);
-  if (nextSteps === null || nextSteps.overviewId !== overviewId) return null;
+  if (nextSteps === null || nextSteps.overviewId !== overviewId) {
+    return null;
+  }
 
   const shown = (step: NextStep) => !nextSteps.dismissed.includes(step) && (extensionOffered || step !== "extension");
   const dismiss = (step: NextStep) => {
@@ -32,7 +34,9 @@ export function OnboardingNextSteps({ overviewId }: { overviewId: OverviewId }) 
     setNextSteps(next);
   };
   const ownShown = nextSteps.sample && shown("own");
-  if (!ownShown && !shown("extension") && !shown("ai")) return null;
+  if (!ownShown && !shown("extension") && !shown("ai")) {
+    return null;
+  }
 
   return (
     <section className={styles.root} aria-label="Next steps" data-testid={onboardingNextStepsTestIds.root}>
@@ -93,7 +97,9 @@ function TryYourOwn({ onDismiss }: { onDismiss: () => void }) {
   const { ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
   const headingId = useId();
   const fieldId = useId();
-  if (!ready || limit !== null) return null;
+  if (!ready || limit !== null) {
+    return null;
+  }
   return (
     <section className={`${styles.card} ${styles.own}`} aria-labelledby={headingId} data-testid={onboardingNextStepsTestIds.card("own")}>
       <DismissButton label="Now try your own" onDismiss={onDismiss} step="own" />

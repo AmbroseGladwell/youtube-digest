@@ -115,9 +115,15 @@ export async function finishAccountDeletion(
   }
 
   const erase = async (status: ErasureStepStatus, distinctId: string | null, step: string): Promise<ErasureStepStatus> => {
-    if (status !== "pending" && status !== "failed" && status !== "not_configured") return status;
-    if (distinctId === null) return "skipped";
-    if (personEraser === null) return "not_configured";
+    if (status !== "pending" && status !== "failed" && status !== "not_configured") {
+      return status;
+    }
+    if (distinctId === null) {
+      return "skipped";
+    }
+    if (personEraser === null) {
+      return "not_configured";
+    }
     try {
       const answer = await withinTime(personEraser.erase(distinctId), stepTimeoutMs, step);
       return answer === "absent" ? "skipped" : "queued";

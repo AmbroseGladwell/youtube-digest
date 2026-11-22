@@ -70,9 +70,13 @@ class FakeMedia extends EventTarget implements PlayerMedia {
   holdSound = false;
 
   play = (): Promise<void> => {
-    if (this.blockPlay) return Promise.reject(new Error("NotAllowedError"));
+    if (this.blockPlay) {
+      return Promise.reject(new Error("NotAllowedError"));
+    }
     this.paused = false;
-    if (!this.holdSound) this.sound();
+    if (!this.holdSound) {
+      this.sound();
+    }
     return Promise.resolve();
   };
 

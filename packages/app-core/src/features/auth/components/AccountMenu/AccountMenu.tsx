@@ -35,7 +35,9 @@ export function AccountMenu() {
   // Signing out stops the timers, which belong to this account's recipes (design 288ag).
   const signOut = () =>
     new Promise<void>((resolve) => {
-      if (willStop.count > 0) setOpen(false);
+      if (willStop.count > 0) {
+        setOpen(false);
+      }
       willStop.ask(signOutCopy(willStop.count), "signedOut", () => void signOutNow().then(resolve));
     });
   const { connection } = useSyncConnection();
@@ -49,12 +51,16 @@ export function AccountMenu() {
   // does focus come back to the button.
   const refocusIfNothingElseIs = () =>
     requestAnimationFrame(() => {
-      if (document.activeElement === document.body) trigger.current?.focus();
+      if (document.activeElement === document.body) {
+        trigger.current?.focus();
+      }
     });
 
   const close = (refocus: boolean) => {
     setOpen(false);
-    if (refocus) trigger.current?.focus();
+    if (refocus) {
+      trigger.current?.focus();
+    }
   };
 
   const analytics = useAnalytics();
@@ -79,11 +85,17 @@ export function AccountMenu() {
       event.preventDefault();
       all[(index + all.length) % all.length]?.focus();
     };
-    if (event.key === "ArrowDown") move(at + 1);
-    else if (event.key === "ArrowUp") move(at - 1);
-    else if (event.key === "Home") move(0);
-    else if (event.key === "End") move(all.length - 1);
-    else if (event.key === "Tab") dismiss(false);
+    if (event.key === "ArrowDown") {
+      move(at + 1);
+    } else if (event.key === "ArrowUp") {
+      move(at - 1);
+    } else if (event.key === "Home") {
+      move(0);
+    } else if (event.key === "End") {
+      move(all.length - 1);
+    } else if (event.key === "Tab") {
+      dismiss(false);
+    }
   };
 
   const openMenu = (focus: "first" | "last") => {

@@ -29,11 +29,16 @@ export class EpisodeWordSourcesRepository implements EpisodeWordSources {
       "select via, url, type, video_id, found_at from podcast_transcript_sources where episode_key = $1",
       [key],
     );
-    if (row === undefined) return null;
+    if (row === undefined) {
+      return null;
+    }
     const foundAt = new Date(row.found_at);
-    if (row.via === "tag" && row.url !== null && row.type !== null)
+    if (row.via === "tag" && row.url !== null && row.type !== null) {
       return { source: { via: "tag", url: row.url, type: row.type }, foundAt };
-    if (row.via === "youtube" && row.video_id !== null) return { source: { via: "youtube", videoId: row.video_id }, foundAt };
+    }
+    if (row.via === "youtube" && row.video_id !== null) {
+      return { source: { via: "youtube", videoId: row.video_id }, foundAt };
+    }
     return null;
   }
 

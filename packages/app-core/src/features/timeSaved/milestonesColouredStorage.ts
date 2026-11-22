@@ -6,7 +6,9 @@ const MilestonesColoured = z.array(z.string());
 function read(storage: Storage): string[] {
   try {
     const raw = storage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      return [];
+    }
     const parsed = MilestonesColoured.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : [];
   } catch {

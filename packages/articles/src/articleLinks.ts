@@ -15,14 +15,18 @@ const isNamed = (text: string): boolean =>
   text.replace(/[^\p{L}]/gu, "").length >= FEWEST_LETTERS && text.split(" ").length <= MOST_WORDS && !UNNAMED.test(text);
 
 function outboundHref(href: string | null, pageUrl: string): string | null {
-  if (href === null || href.startsWith("#")) return null;
+  if (href === null || href.startsWith("#")) {
+    return null;
+  }
   let url: URL;
   try {
     url = new URL(href, pageUrl);
   } catch {
     return null;
   }
-  if (url.protocol !== "https:" || PICTURE.test(url.pathname)) return null;
+  if (url.protocol !== "https:" || PICTURE.test(url.pathname)) {
+    return null;
+  }
   const page = new URL(pageUrl);
   url.hash = "";
   const samePlace = url.origin === page.origin && url.pathname === page.pathname;

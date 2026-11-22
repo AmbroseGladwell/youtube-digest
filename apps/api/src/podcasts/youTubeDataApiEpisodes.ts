@@ -85,7 +85,9 @@ const ISO_DURATION = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
 
 export function isoDurationSeconds(duration: string | undefined): number | null {
   const parts = ISO_DURATION.exec(duration ?? "");
-  if (parts === null) return null;
+  if (parts === null) {
+    return null;
+  }
   const [days, hours, minutes, seconds] = parts.slice(1).map((part) => Number(part ?? 0));
   const total = days! * 86_400 + hours! * 3_600 + minutes! * 60 + seconds!;
   return total > 0 ? total : null;
@@ -109,7 +111,9 @@ export function youTubeDataApiEpisodes({
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   const videos = async (ids: readonly string[]): Promise<Upload[]> => {
-    if (ids.length === 0) return [];
+    if (ids.length === 0) {
+      return [];
+    }
     const answer = await get(
       "videos",
       { part: "snippet,contentDetails", id: ids.join(","), maxResults: String(PAGE_SIZE) },
@@ -118,7 +122,9 @@ export function youTubeDataApiEpisodes({
     const byId = new Map((answer?.items ?? []).map((video) => [video.id, video]));
     return ids.flatMap((id) => {
       const video = byId.get(id);
-      if (video === undefined) return [];
+      if (video === undefined) {
+        return [];
+      }
       return [
         {
           videoId: id,
@@ -169,7 +175,9 @@ export function youTubeDataApiEpisodes({
       const results = (searched?.items ?? []).flatMap(({ id, snippet }) =>
         id.videoId === undefined ? [] : [{ videoId: id.videoId, ...snippet }],
       );
-      if (results.length === 0) return none();
+      if (results.length === 0) {
+        return none();
+      }
       units += 1;
       const channelOf = new Map(results.map((result) => [result.videoId, result]));
       const listed: SearchedVideo[] = (await videos(results.map((result) => result.videoId))).flatMap((upload) => {
@@ -177,7 +185,9 @@ export function youTubeDataApiEpisodes({
         return result === undefined ? [] : [{ ...upload, channelId: result.channelId, channelTitle: result.channelTitle }];
       });
       const byVideo = searchedVideoMatch(episode, listed, (video) => publishedNearItsDate(episode, video.publishedAt, today));
-      if (byVideo !== null) return found(byVideo, byVideo.channelTitle, "title");
+      if (byVideo !== null) {
+        return found(byVideo, byVideo.channelTitle, "title");
+      }
 
       const named = [
         ...new Map(
@@ -186,7 +196,9 @@ export function youTubeDataApiEpisodes({
             .map((result) => [result.channelId, { id: result.channelId, title: result.channelTitle }]),
         ).values(),
       ].slice(0, CHANNELS_TRIED);
-      if (named.length === 0) return none();
+      if (named.length === 0) {
+        return none();
+      }
       units += 1;
       const details = await get("channels", { part: "contentDetails", id: named.map((channel) => channel.id).join(",") }, ChannelsResponse);
       const uploadsOf = new Map((details?.items ?? []).map((channel) => [channel.id, channel.contentDetails.relatedPlaylists.uploads]));
@@ -199,40 +211,58 @@ export function youTubeDataApiEpisodes({
       for (const channel of channels) {
         const first = await page(channel, null);
         const byTitle = titleMatch(episode, first.uploads);
-        if (byTitle !== null) return found(byTitle, channel.title, "title");
+        if (byTitle !== null) {
+          return found(byTitle, channel.title, "title");
+        }
         firstPages.push({ channel, ...first });
       }
 
       const [showChannel] = firstPages;
-      if (showChannel === undefined) return none();
+      if (showChannel === undefined) {
+        return none();
+      }
       const uploads = [...showChannel.uploads];
       let next = showChannel.next;
       for (let more = 0; more < MORE_PAGES && next !== null; more += 1) {
         const following = await page(showChannel.channel, next);
         const byTitle = titleMatch(episode, following.uploads);
-        if (byTitle !== null) return found(byTitle, showChannel.channel.title, "title");
+        if (byTitle !== null) {
+          return found(byTitle, showChannel.channel.title, "title");
+        }
         uploads.push(...following.uploads);
         next = following.next;
       }
 
-      if (episode.keywords.length < FEWEST_KEYWORDS || episode.publishedAt === null) return none();
+      if (episode.keywords.length < FEWEST_KEYWORDS || episode.publishedAt === null) {
+        return none();
+      }
       const scored = uploads
         .filter((upload) => sameByDescription(episode, upload, today))
         .slice(0, MOST_DESCRIPTIONS_READ)
         .map((upload) => ({ upload, share: descriptionShare(episode.keywords, upload.description) }))
         .sort((a, b) => b.share - a.share);
       const [best, runnerUp] = scored;
-      if (best === undefined || best.share < DESCRIPTION_WORDS_SHARED) return none();
-      if (runnerUp !== undefined && runnerUp.share > best.share - DESCRIPTION_LEAD) return none();
+      if (best === undefined || best.share < DESCRIPTION_WORDS_SHARED) {
+        return none();
+      }
+      if (runnerUp !== undefined && runnerUp.share > best.share - DESCRIPTION_LEAD) {
+        return none();
+      }
       return found(best.upload, showChannel.channel.title, "description");
     },
 
     // Whether one video is the episode, by the same rules, from its own details: one unit.
     async confirm(episode, videoId) {
       const [upload] = await videos([videoId]);
-      if (upload === undefined) return null;
-      if (titleMatch(episode, [upload]) !== null) return "title";
-      if (episode.keywords.length < FEWEST_KEYWORDS) return null;
+      if (upload === undefined) {
+        return null;
+      }
+      if (titleMatch(episode, [upload]) !== null) {
+        return "title";
+      }
+      if (episode.keywords.length < FEWEST_KEYWORDS) {
+        return null;
+      }
       return sameByDescription(episode, upload, now()) && descriptionShare(episode.keywords, upload.description) >= DESCRIPTION_WORDS_SHARED
         ? "description"
         : null;

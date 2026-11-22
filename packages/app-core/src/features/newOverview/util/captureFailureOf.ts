@@ -21,10 +21,20 @@ const ARTICLE_FAILURE = {
 // (docs/architecture/analytics.md, "What an event may carry"). Once the transcript is in
 // hand, whatever fails is the generation, however its client chose to throw.
 export function captureFailureOf(error: unknown, { transcriptResolved }: { transcriptResolved: boolean }): CaptureFailure {
-  if (error instanceof ArticleReadError) return ARTICLE_FAILURE[error.failure.reason];
-  if (error instanceof TranscriptFetchError) return error.failure;
-  if (error instanceof NoTranscriptSourceError) return "noTranscriptSource";
-  if (error instanceof ChosenModelFailedError) return "model-refused";
-  if (error instanceof GenerationError || transcriptResolved) return "generation";
+  if (error instanceof ArticleReadError) {
+    return ARTICLE_FAILURE[error.failure.reason];
+  }
+  if (error instanceof TranscriptFetchError) {
+    return error.failure;
+  }
+  if (error instanceof NoTranscriptSourceError) {
+    return "noTranscriptSource";
+  }
+  if (error instanceof ChosenModelFailedError) {
+    return "model-refused";
+  }
+  if (error instanceof GenerationError || transcriptResolved) {
+    return "generation";
+  }
   return "unknown";
 }

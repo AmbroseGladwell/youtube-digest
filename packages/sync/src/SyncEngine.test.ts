@@ -179,7 +179,9 @@ test("a cycle asked for while one is running runs once afterwards, not once per 
   const third = engine.sync();
   await Promise.all([first, second, third]);
   await new Promise((resolve) => setTimeout(resolve, 0));
-  while (engine.status.phase === "syncing") await new Promise((resolve) => setTimeout(resolve, 0));
+  while (engine.status.phase === "syncing") {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 
   assert.equal(api.callsTo("handshake").length, 2);
 });

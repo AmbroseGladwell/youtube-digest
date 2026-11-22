@@ -14,7 +14,9 @@ function elementHolding(document: Document, quote: string): Element | null {
     text += collapsed(node.textContent ?? "");
   }
   const found = text.indexOf(wanted);
-  if (found === -1) return null;
+  if (found === -1) {
+    return null;
+  }
   const nodeIndex = starts.findLastIndex((start) => start <= found);
   return nodes[nodeIndex]?.parentElement ?? null;
 }

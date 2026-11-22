@@ -67,18 +67,24 @@ export function CodeStep({
   }, [heading]);
 
   useEffect(() => {
-    if (sentAt === null) return;
+    if (sentAt === null) {
+      return;
+    }
     setNow(Date.now());
     const timer = setInterval(() => {
       const current = Date.now();
       setNow(current);
-      if (secondsLeft(sentAt, current) === 0) clearInterval(timer);
+      if (secondsLeft(sentAt, current) === 0) {
+        clearInterval(timer);
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [sentAt]);
 
   useEffect(() => {
-    if (problem !== null) field.current?.focus();
+    if (problem !== null) {
+      field.current?.focus();
+    }
   }, [problem]);
 
   const shown = empty ? "Enter the code from the email." : problem;

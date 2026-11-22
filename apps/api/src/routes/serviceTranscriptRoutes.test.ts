@@ -37,7 +37,9 @@ const readers = new WeakMap<TestApp, Map<string, Promise<TestAccount>>>();
 const askAs = async (testApp: TestApp, videoId: string, reader = "first") => {
   const byName = readers.get(testApp) ?? new Map<string, Promise<TestAccount>>();
   readers.set(testApp, byName);
-  if (!byName.has(reader)) byName.set(reader, makeAccount(testApp));
+  if (!byName.has(reader)) {
+    byName.set(reader, makeAccount(testApp));
+  }
   const account = await byName.get(reader)!;
   return account.inject({ method: "POST", url: `/api/service-transcripts/${videoId}` });
 };
@@ -197,7 +199,9 @@ test("a signed-in reader is counted by account at its plan's cap, not by address
 
 async function spend(testApp: TestApp, accountId: AccountId, keySource: "ours" | "own", count: number) {
   const usage = new OverviewUsageRepository(testApp.sql);
-  for (let made = 0; made < count; made += 1) await usage.reserve(testApp.clock.now, accountId, keySource, count);
+  for (let made = 0; made < count; made += 1) {
+    await usage.reserve(testApp.clock.now, accountId, keySource, count);
+  }
 }
 
 test("an account with no overview left this month on either key is refused, with the reset date", async () => {

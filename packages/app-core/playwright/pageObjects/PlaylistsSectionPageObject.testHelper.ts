@@ -54,7 +54,9 @@ export class PlaylistsSectionPageObject extends PageObject {
       const chosen = this.page
         .getByRole("menu", { name: `${title} for ${subject}` })
         .getByRole("menuitemradio", { name: new RegExp(`^${option}`) });
-      if (detail !== undefined) await expect(chosen).toContainText(detail);
+      if (detail !== undefined) {
+        await expect(chosen).toContainText(detail);
+      }
       await chosen.click();
     });
 

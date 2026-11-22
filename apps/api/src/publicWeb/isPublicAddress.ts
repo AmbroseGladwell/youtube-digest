@@ -37,6 +37,8 @@ for (const [network, prefix] of [
 // (docs/features/pasted-article-links.md, "What the server will fetch").
 export function isPublicAddress(address: string): boolean {
   const family = isIP(address);
-  if (family === 0) return false;
+  if (family === 0) {
+    return false;
+  }
   return !closed.check(address, family === 4 ? "ipv4" : "ipv6");
 }

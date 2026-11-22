@@ -50,7 +50,9 @@ export async function runPersonalPass({
   let overview: Overview | null = null;
   try {
     let { raw, parsed } = await attempt();
-    if (!parsed.success) ({ raw, parsed } = await attempt(correctionRequest(raw, parsed.error)));
+    if (!parsed.success) {
+      ({ raw, parsed } = await attempt(correctionRequest(raw, parsed.error)));
+    }
     if (parsed.success) {
       overview = personalisedOverview(shared, profile, parsed.data as unknown as PersonalOutput);
       outcome = attempts.length === 1 ? "passed-first" : "passed-after-retry";

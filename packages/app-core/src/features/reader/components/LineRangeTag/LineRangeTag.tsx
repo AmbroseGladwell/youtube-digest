@@ -139,8 +139,11 @@ export function LineRangeTag({
           className={`${styles.playChip} ${watchAnyway ? styles.playChipRange : ""} ${playing ? styles.tagPlaying : ""}`}
           onClick={() => {
             followed("skip");
-            if (watchAnyway) seek(range.startMs, range.endMs);
-            else seek(range.startMs);
+            if (watchAnyway) {
+              seek(range.startMs, range.endMs);
+            } else {
+              seek(range.startMs);
+            }
           }}
           aria-label={watchAnyway ? `Play ${stretch}` : `Play the episode from ${start}`}
           data-testid={lineRangeTagTestIds.playChip}

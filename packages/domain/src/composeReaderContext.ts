@@ -12,7 +12,9 @@ export function composeReaderContext(aboutYou: AboutYou, learned: LearnedItems =
   const fitted: string[] = [];
   for (const { text } of noticedLearnedItems(learned)) {
     const line = learnedLine([...fitted, text]);
-    if (sentence.length + 1 + line.length > MAX_READER_CONTEXT_LENGTH) break;
+    if (sentence.length + 1 + line.length > MAX_READER_CONTEXT_LENGTH) {
+      break;
+    }
     fitted.push(text);
   }
   const context = [sentence, fitted.length === 0 ? "" : learnedLine(fitted)].filter((part) => part !== "").join(" ");

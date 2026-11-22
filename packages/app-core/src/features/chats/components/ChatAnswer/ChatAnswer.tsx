@@ -196,13 +196,14 @@ export function ChatAnswer({
       )}
       {conversationsOf(citations).map(({ chatId, message }) => {
         const cited = conversationOf(chatId);
-        if (cited === null)
+        if (cited === null) {
           return (
             <p key={chatId} className={styles.deletedConversation} data-testid={chatAnswerTestIds.deletedConversation}>
               <StrokeIcon name="chat" size={14} />
               From a conversation you deleted
             </p>
           );
+        }
         return (
           <button
             key={chatId}
@@ -349,7 +350,9 @@ export function ChatSourcesMenu({
       className={styles.sourcesHost}
       ref={root}
       onKeyDown={(event) => {
-        if (event.key !== "Escape" || !open) return;
+        if (event.key !== "Escape" || !open) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         setOpen(false);
@@ -360,7 +363,9 @@ export function ChatSourcesMenu({
         className={styles.sourcesButton}
         aria-expanded={open}
         onClick={() => {
-          if (!open) onOpened?.(count);
+          if (!open) {
+            onOpened?.(count);
+          }
           setOpen(!open);
         }}
         data-testid={chatAnswerTestIds.sources}
@@ -387,7 +392,9 @@ export function ChatSourcesMenu({
 function ShowOnPageLink({ page, place }: { page: ChatPage; place: ArticlePlace }) {
   if (page.onPage !== null) {
     const { onPage } = page;
-    if (onPage.statusOf(place) === "missing") return null;
+    if (onPage.statusOf(place) === "missing") {
+      return null;
+    }
     return (
       <button type="button" className={styles.onPage} onClick={() => onPage.show(place)} data-testid={chatAnswerTestIds.showOnPage}>
         Show on the page

@@ -5,7 +5,9 @@ const STORAGE_KEY = SYNC_CONNECTION_STORAGE_KEY;
 
 export function readSyncConnection(storage: Storage = globalThis.localStorage): SyncConnection {
   const raw = storage.getItem(STORAGE_KEY);
-  if (!raw) return DEFAULT_SYNC_CONNECTION;
+  if (!raw) {
+    return DEFAULT_SYNC_CONNECTION;
+  }
   try {
     const parsed = SyncConnection.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : DEFAULT_SYNC_CONNECTION;

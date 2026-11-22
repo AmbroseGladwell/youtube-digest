@@ -51,8 +51,12 @@ function fallbackBody(payload: SharePayload): string {
 }
 
 function wayOut({ source, recipe }: SharedNote): string {
-  if (source.kind === "youtube") return "Watch on YouTube";
-  if (source.kind === "podcast") return openPodcastLabel(source.sharedFrom);
+  if (source.kind === "youtube") {
+    return "Watch on YouTube";
+  }
+  if (source.kind === "podcast") {
+    return openPodcastLabel(source.sharedFrom);
+  }
   return `${recipe == null ? "Read the article" : "Open the recipe"} on ${sourceName(source)}`;
 }
 

@@ -21,8 +21,11 @@ export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tok
     const samples: Sample[] = [];
     for (const token of tokens) {
       const snapshot = await live(token);
-      if (snapshot === null) request.log.warn(apiLogLines.shares.sampleMissing());
-      else samples.push({ token, note: snapshot.note });
+      if (snapshot === null) {
+        request.log.warn(apiLogLines.shares.sampleMissing());
+      } else {
+        samples.push({ token, note: snapshot.note });
+      }
     }
     return { samples };
   });
@@ -30,7 +33,9 @@ export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tok
   app.get("/samples/:token", { config: { public: true } }, async (request) => {
     const { token } = parseOrThrow(Params, request.params, "The sample");
     const snapshot = tokens.includes(token) ? await live(token) : null;
-    if (snapshot === null) throw new ApiError("not_found", "There's no sample with that token");
+    if (snapshot === null) {
+      throw new ApiError("not_found", "There's no sample with that token");
+    }
     return snapshot;
   });
 }

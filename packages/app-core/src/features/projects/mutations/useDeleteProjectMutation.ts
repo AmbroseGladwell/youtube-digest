@@ -30,7 +30,9 @@ export function useDeleteProjectMutation() {
       return { previousProjects, previousMembers };
     },
     onError: (_error, _variables, context) => {
-      if (!context) return;
+      if (!context) {
+        return;
+      }
       queryClient.setQueryData(projectKeys.list(), context.previousProjects);
       queryClient.setQueryData(projectKeys.members(), context.previousMembers);
     },

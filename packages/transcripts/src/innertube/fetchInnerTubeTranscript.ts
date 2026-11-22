@@ -34,7 +34,9 @@ async function metadataResponse(
   videoId: string,
   client: InnerTubeClientConfig | null,
 ): Promise<PlayerResponse | undefined> {
-  if (client === null) return undefined;
+  if (client === null) {
+    return undefined;
+  }
   return requestPlayerResponse(youTubeFetch, videoId, client).catch(() => undefined);
 }
 
@@ -60,7 +62,9 @@ export async function fetchInnerTubeTranscript(
       const failed = asInnerTubeError(error);
       playerError ??= failed;
       // Another client will not make a removed video exist.
-      if (!isWorthAnotherSource(failed.failure)) throw failed;
+      if (!isWorthAnotherSource(failed.failure)) {
+        throw failed;
+      }
       continue;
     }
 
@@ -88,7 +92,9 @@ export async function fetchInnerTubeTranscript(
     } catch (error) {
       const failed = asInnerTubeError(error);
       captionError ??= failed;
-      if (!isWorthAnotherSource(failed.failure)) throw failed;
+      if (!isWorthAnotherSource(failed.failure)) {
+        throw failed;
+      }
     }
   }
 

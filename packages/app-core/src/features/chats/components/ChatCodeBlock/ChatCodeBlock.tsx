@@ -12,7 +12,9 @@ const COPIED_MS = 2000;
 export function ChatCodeBlock({ language, code }: { language: string; code: string }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
-    if (!copied) return;
+    if (!copied) {
+      return;
+    }
     const timer = setTimeout(() => setCopied(false), COPIED_MS);
     return () => clearTimeout(timer);
   }, [copied]);

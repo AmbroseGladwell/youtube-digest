@@ -41,7 +41,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
 
   const overviewId = track?.overviewId ?? null;
   useEffect(() => {
-    if (overviewId === null) return;
+    if (overviewId === null) {
+      return;
+    }
     engine.notePageOpened(overviewId);
     return () => engine.notePageClosed(overviewId);
   }, [engine, overviewId]);
@@ -67,7 +69,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
   );
 
   const takeOver = () => {
-    if (track !== null && !current) engine.load(track, restingLine);
+    if (track !== null && !current) {
+      engine.load(track, restingLine);
+    }
   };
   const lines = track?.lines ?? [];
   const activeIndex = current ? engineLine : restingLine;
@@ -83,7 +87,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
     selectLine,
     selectSection: (section) => {
       const index = lines.findIndex((line) => line.section === section);
-      if (index !== -1) selectLine(index);
+      if (index !== -1) {
+        selectLine(index);
+      }
     },
     stepLine: (delta) => selectLine(activeIndex + delta),
     main: (from) => {
@@ -95,7 +101,9 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
       engine.play(from);
     },
     pause: () => {
-      if (current) engine.pause();
+      if (current) {
+        engine.pause();
+      }
     },
   };
 }

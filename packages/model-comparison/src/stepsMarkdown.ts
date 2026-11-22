@@ -91,11 +91,14 @@ export function stepsMarkdown(notes: readonly StepsNote[], runName: string): str
           note.items !== "no steps" && note.items !== "not listed" ? note.items.filter((item) => item.verdict === verdict) : [];
         const line = (item: { text: string; place: string | null }) => `- ${item.text}${item.place ? ` (${item.place})` : ""}`;
         lines.push("", `**Missing:** ${by("missing").length === 0 ? "none" : ""}`, ...by("missing").map(line));
-        if (by("partly").length > 0) lines.push("", "**Partly:**", ...by("partly").map(line));
+        if (by("partly").length > 0) {
+          lines.push("", "**Partly:**", ...by("partly").map(line));
+        }
         lines.push("", `Carried: ${by("carried").length} of ${note.items.length}`);
       }
-      if (note.claims.length > 0)
+      if (note.claims.length > 0) {
         lines.push("", `**Counts or times in the reason:** ${note.claims.map((claim) => `"${claim}"`).join(", ")}`);
+      }
       return lines.join("\n");
     });
 

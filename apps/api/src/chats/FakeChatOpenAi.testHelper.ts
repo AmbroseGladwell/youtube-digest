@@ -46,7 +46,9 @@ export function makeFakeChatOpenAi(...answers: FakeChatAnswer[]): FakeChatOpenAi
       return new Response(
         new ReadableStream({
           start(controller) {
-            for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+            for (const chunk of chunks) {
+              controller.enqueue(encoder.encode(chunk));
+            }
             controller.close();
           },
         }),

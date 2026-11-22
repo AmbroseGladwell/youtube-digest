@@ -19,13 +19,17 @@ const readLive = (): PendingSignIn | null => {
 };
 
 function getSnapshot(): PendingSignIn | null {
-  if (snapshot === undefined) snapshot = readLive();
+  if (snapshot === undefined) {
+    snapshot = readLive();
+  }
   return snapshot;
 }
 
 function refresh(): void {
   snapshot = readLive();
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function subscribe(listener: () => void): () => void {
@@ -33,7 +37,9 @@ function subscribe(listener: () => void): () => void {
   globalThis.addEventListener?.("storage", refresh);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) globalThis.removeEventListener?.("storage", refresh);
+    if (listeners.size === 0) {
+      globalThis.removeEventListener?.("storage", refresh);
+    }
   };
 }
 

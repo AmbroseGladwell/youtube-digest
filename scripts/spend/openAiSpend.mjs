@@ -57,7 +57,9 @@ export function openAiRowsOf({ projects, buckets }) {
 
 async function readJson(fetch, url, adminKey) {
   const response = await fetch(url, { headers: { Authorization: `Bearer ${adminKey}`, Accept: "application/json" } });
-  if (!response.ok) throw new ProviderReadError(`OpenAI answered ${response.status}`);
+  if (!response.ok) {
+    throw new ProviderReadError(`OpenAI answered ${response.status}`);
+  }
   return response.json();
 }
 

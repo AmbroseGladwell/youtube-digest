@@ -72,7 +72,9 @@ export function ProjectHead({
   const backLink = useLentBackLink({ to: Routes.projects(), label: "All projects", follow: backToProjects });
 
   useEffect(() => {
-    if (!copied) return;
+    if (!copied) {
+      return;
+    }
     const hide = window.setTimeout(() => setCopied(false), 2400);
     return () => window.clearTimeout(hide);
   }, [copied]);
@@ -93,7 +95,9 @@ export function ProjectHead({
   };
 
   useEffect(() => {
-    if (purposeAsked > 0) startPurpose(editButton);
+    if (purposeAsked > 0) {
+      startPurpose(editButton);
+    }
   }, [purposeAsked]);
 
   return (
@@ -120,7 +124,9 @@ export function ProjectHead({
         <NameEditor
           name={project.name}
           onSave={(name) => {
-            if (name !== project.name) onRename(name);
+            if (name !== project.name) {
+              onRename(name);
+            }
             finishEditing(() => setRenaming(false));
           }}
           onCancel={() => finishEditing(() => setRenaming(false))}
@@ -147,7 +153,9 @@ export function ProjectHead({
           assistantConnected={assistantConnected}
           assistantWrote={project.purpose !== null && project.purposeBy?.by === "assistant" ? project.purposeBy.name : null}
           onSave={(purpose) => {
-            if (purpose !== project.purpose) onPurpose(purpose);
+            if (purpose !== project.purpose) {
+              onPurpose(purpose);
+            }
             finishEditing(() => setEditingPurpose(false));
           }}
           onCancel={() => finishEditing(() => setEditingPurpose(false))}
@@ -313,7 +321,9 @@ function NameEditor({ name, onSave, onCancel }: { name: string; onSave: (name: s
   useEffect(() => field.current?.select(), []);
   const trimmed = value.trim();
   const save = () => {
-    if (trimmed !== "") onSave(trimmed);
+    if (trimmed !== "") {
+      onSave(trimmed);
+    }
   };
   return (
     <div className={styles.editor}>

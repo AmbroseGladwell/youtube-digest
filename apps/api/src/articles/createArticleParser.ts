@@ -27,7 +27,9 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
   let nextId = 0;
 
   const settle = (read: ArticleRead) => {
-    if (current === null) return;
+    if (current === null) {
+      return;
+    }
     clearTimeout(current.timer);
     current.job.resolve(read);
     current = null;
@@ -43,15 +45,21 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
   const startWorker = (): Worker => {
     const started = new Worker(workerUrl, { resourceLimits: { maxOldGenerationSizeMb: heapLimitMb } });
     started.on("message", ({ id, read }: { id: number; read: ArticleRead }) => {
-      if (started === worker && current?.job.id === id) settle(read);
+      if (started === worker && current?.job.id === id) {
+        settle(read);
+      }
     });
     started.on("error", () => {
-      if (started !== worker) return;
+      if (started !== worker) {
+        return;
+      }
       replaceWorker();
       settle(UNFINISHED);
     });
     started.on("exit", () => {
-      if (started !== worker) return;
+      if (started !== worker) {
+        return;
+      }
       worker = null;
       settle(UNFINISHED);
     });
@@ -60,9 +68,13 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
   };
 
   const next = () => {
-    if (current !== null) return;
+    if (current !== null) {
+      return;
+    }
     const job = waiting.shift();
-    if (job === undefined) return;
+    if (job === undefined) {
+      return;
+    }
     worker ??= startWorker();
     const timer = setTimeout(() => {
       replaceWorker();

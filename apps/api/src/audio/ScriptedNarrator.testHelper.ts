@@ -49,7 +49,9 @@ export function makeMemoryAudioStore(): MemoryAudioStore {
       return files.get(key) ?? null;
     },
     async delete(key) {
-      if (store.failingDeletes) throw new Error("Simulated: R2 is unreachable");
+      if (store.failingDeletes) {
+        throw new Error("Simulated: R2 is unreachable");
+      }
       files.delete(key);
     },
   };

@@ -6,10 +6,16 @@ const DAY_MS = 24 * HOUR_MS;
 
 export function formatSyncedAgo(lastSyncedAt: string, now: Date): string {
   const elapsed = now.getTime() - new Date(lastSyncedAt).getTime();
-  if (elapsed < MINUTE_MS) return "Synced just now";
+  if (elapsed < MINUTE_MS) {
+    return "Synced just now";
+  }
   const format = new Intl.RelativeTimeFormat("en", { numeric: "always" });
-  if (elapsed < HOUR_MS) return `Synced ${format.format(-Math.floor(elapsed / MINUTE_MS), "minute")}`;
-  if (elapsed < DAY_MS) return `Synced ${format.format(-Math.floor(elapsed / HOUR_MS), "hour")}`;
+  if (elapsed < HOUR_MS) {
+    return `Synced ${format.format(-Math.floor(elapsed / MINUTE_MS), "minute")}`;
+  }
+  if (elapsed < DAY_MS) {
+    return `Synced ${format.format(-Math.floor(elapsed / HOUR_MS), "hour")}`;
+  }
   return `Synced ${format.format(-Math.floor(elapsed / DAY_MS), "day")}`;
 }
 

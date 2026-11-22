@@ -10,10 +10,16 @@ const count = (value: number, one: string, many: string) => `${value.toLocaleStr
 
 export function checkedAgo(checkedAt: string, now: Date): string {
   const elapsed = now.getTime() - new Date(checkedAt).getTime();
-  if (elapsed < MINUTE_MS) return "Checked just now";
+  if (elapsed < MINUTE_MS) {
+    return "Checked just now";
+  }
   const format = new Intl.RelativeTimeFormat("en", { numeric: "always" });
-  if (elapsed < HOUR_MS) return `Checked ${format.format(-Math.floor(elapsed / MINUTE_MS), "minute")}`;
-  if (elapsed < DAY_MS) return `Checked ${format.format(-Math.floor(elapsed / HOUR_MS), "hour")}`;
+  if (elapsed < HOUR_MS) {
+    return `Checked ${format.format(-Math.floor(elapsed / MINUTE_MS), "minute")}`;
+  }
+  if (elapsed < DAY_MS) {
+    return `Checked ${format.format(-Math.floor(elapsed / HOUR_MS), "hour")}`;
+  }
   return `Checked ${format.format(-Math.floor(elapsed / DAY_MS), "day")}`;
 }
 
@@ -41,8 +47,12 @@ export function followedPlaylistFacts(playlist: FollowedPlaylist, waiting: numbe
 }
 
 export function unavailableLine(playlist: FollowedPlaylist): string | null {
-  if (playlist.unavailable === "private") return "Now private on YouTube, so we can’t check it for new videos.";
-  if (playlist.unavailable === "gone") return "Gone from YouTube, so we can’t check it for new videos.";
+  if (playlist.unavailable === "private") {
+    return "Now private on YouTube, so we can’t check it for new videos.";
+  }
+  if (playlist.unavailable === "gone") {
+    return "Gone from YouTube, so we can’t check it for new videos.";
+  }
   return null;
 }
 

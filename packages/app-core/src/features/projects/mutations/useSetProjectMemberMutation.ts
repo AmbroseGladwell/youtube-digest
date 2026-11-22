@@ -20,7 +20,9 @@ export const applyProjectMemberChange = (
 ): ProjectMember[] => {
   const id = projectMemberId(projectId, overviewId);
   const others = members.filter((member) => member.id !== id);
-  if (!inProject) return others;
+  if (!inProject) {
+    return others;
+  }
   const held = members.find((member) => member.id === id);
   return [...others, held ?? { id, projectId, overviewId, addedAt: now, addedBy: BY_READER, removedAt: null }];
 };
@@ -42,7 +44,9 @@ export function useSetProjectMemberMutation() {
       return { previous };
     },
     onError: (_error, _variables, context) => {
-      if (context) queryClient.setQueryData(projectKeys.members(), context.previous);
+      if (context) {
+        queryClient.setQueryData(projectKeys.members(), context.previous);
+      }
     },
     onSettled: () => {
       if (queryClient.isMutating({ mutationKey: projectKeys.all }) === 1) {

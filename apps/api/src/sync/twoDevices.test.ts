@@ -251,7 +251,9 @@ test("the feed is pulled page by page, and the cursor ends where the feed does",
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
   const laptop = await makeDevice(testApp, account);
-  for (let i = 0; i < 5; i += 1) await laptop.overviews.saveOverview(makeOverview({ source: distinctVideo() }));
+  for (let i = 0; i < 5; i += 1) {
+    await laptop.overviews.saveOverview(makeOverview({ source: distinctVideo() }));
+  }
   await laptop.sync();
   const phone = await makeDevice(testApp, account, { pageSize: 2 });
 

@@ -17,9 +17,15 @@ export function CookingIngredientsSheet({ open, onClose, children }: CookingIngr
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (
@@ -32,7 +38,9 @@ export function CookingIngredientsSheet({ open, onClose, children }: CookingIngr
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       onKeyDown={(event) => {
         if (event.key === "i" || event.key === "I" || event.key === "Escape") {

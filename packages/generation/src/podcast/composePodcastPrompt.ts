@@ -39,8 +39,11 @@ export function composePodcastPrompt(input: PodcastGenerationInput, kind: Podcas
   const shape: Record<string, z.ZodType> = {};
   for (const section of sections) {
     const sectionShape = section.schemaShape(input);
-    if (section.key === "structural") Object.assign(shape, sectionShape);
-    else shape[section.key] = z.object(sectionShape);
+    if (section.key === "structural") {
+      Object.assign(shape, sectionShape);
+    } else {
+      shape[section.key] = z.object(sectionShape);
+    }
   }
   return {
     systemPrompt: OPENING + WRITING_RULES + sections.map((section) => inPodcastWords(section.prompt(input))).join("\n"),

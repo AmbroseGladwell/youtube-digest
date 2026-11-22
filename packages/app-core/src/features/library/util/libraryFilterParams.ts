@@ -31,14 +31,30 @@ export function parseLibraryFilters(searchParams: URLSearchParams): LibraryFilte
 export function applyLibraryFilterPatch(current: URLSearchParams, patch: Partial<LibraryFilters>): URLSearchParams {
   const next = new URLSearchParams(current);
 
-  if ("source" in patch) setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);
-  if ("topicId" in patch) setOrDelete(next, "topic", patch.topicId === "all" ? undefined : patch.topicId);
-  if ("novelty" in patch) setOrDelete(next, "verdict", patch.novelty === "all" ? undefined : patch.novelty);
-  if ("status" in patch) setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);
-  if ("favourite" in patch) setOrDelete(next, "fav", patch.favourite ? "1" : undefined);
-  if ("dubious" in patch) setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
-  if ("tag" in patch) setOrDelete(next, "tag", patch.tag ?? undefined);
-  if ("query" in patch) setOrDelete(next, "q", patch.query || undefined);
+  if ("source" in patch) {
+    setOrDelete(next, "source", patch.source === "all" ? undefined : patch.source);
+  }
+  if ("topicId" in patch) {
+    setOrDelete(next, "topic", patch.topicId === "all" ? undefined : patch.topicId);
+  }
+  if ("novelty" in patch) {
+    setOrDelete(next, "verdict", patch.novelty === "all" ? undefined : patch.novelty);
+  }
+  if ("status" in patch) {
+    setOrDelete(next, "status", patch.status === "all" ? undefined : patch.status);
+  }
+  if ("favourite" in patch) {
+    setOrDelete(next, "fav", patch.favourite ? "1" : undefined);
+  }
+  if ("dubious" in patch) {
+    setOrDelete(next, "dubious", patch.dubious ? "1" : undefined);
+  }
+  if ("tag" in patch) {
+    setOrDelete(next, "tag", patch.tag ?? undefined);
+  }
+  if ("query" in patch) {
+    setOrDelete(next, "q", patch.query || undefined);
+  }
 
   return next;
 }

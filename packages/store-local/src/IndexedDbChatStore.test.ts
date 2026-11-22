@@ -101,7 +101,9 @@ test("an overview's chats go with it, whether it is deleted here or its tombston
   const store = new IndexedDbChatStore(db);
   const overviews = new IndexedDbOverviewStore(db);
   const [deletedHere, deletedThere, kept] = [makeOverview(), makeOverview(), makeOverview()];
-  for (const overview of [deletedHere, deletedThere, kept]) await overviews.saveOverview(overview);
+  for (const overview of [deletedHere, deletedThere, kept]) {
+    await overviews.saveOverview(overview);
+  }
   const [here, there, other] = [deletedHere, deletedThere, kept].map((overview) => chat(overview.id, "2026-11-15T10:00:00.000Z"));
   await storage.applyChanges([pulled(here!, 1), pulled(there!, 2), pulled(other!, 3)], 3);
 

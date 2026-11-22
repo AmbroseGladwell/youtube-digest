@@ -13,7 +13,9 @@ const nodeFetch: YouTubeFetch = async (request) => {
 const videoIdOf = (url: string) => {
   const parsed = new URL(url);
   const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v");
-  if (!id) throw new Error(`no video id in ${url}`);
+  if (!id) {
+    throw new Error(`no video id in ${url}`);
+  }
   return id;
 };
 

@@ -33,10 +33,18 @@ const IRREGULAR: Record<string, string> = { leaf: "leaves", loaf: "loaves", half
 
 const plural = (word: string): string => {
   const lower = word.toLowerCase();
-  if (IRREGULAR[lower]) return IRREGULAR[lower]!;
-  if (/s$/i.test(word)) return word;
-  if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
-  if (/(?:ch|sh|x|z|tomato|potato|mango)$/i.test(word)) return `${word}es`;
+  if (IRREGULAR[lower]) {
+    return IRREGULAR[lower]!;
+  }
+  if (/s$/i.test(word)) {
+    return word;
+  }
+  if (/[^aeiou]y$/i.test(word)) {
+    return `${word.slice(0, -1)}ies`;
+  }
+  if (/(?:ch|sh|x|z|tomato|potato|mango)$/i.test(word)) {
+    return `${word}es`;
+  }
   return `${word}s`;
 };
 
@@ -46,10 +54,18 @@ const SINGULAR: Record<string, string> = Object.fromEntries(Object.entries(IRREG
 // ("asparagus", "watercress") stays as it is.
 const singular = (word: string): string => {
   const lower = word.toLowerCase();
-  if (SINGULAR[lower]) return SINGULAR[lower]!;
-  if (!/s$/i.test(word) || /(?:ss|us|is)$/i.test(word)) return word;
-  if (/[^aeiou]ies$/i.test(word)) return `${word.slice(0, -3)}y`;
-  if (/(?:ches|shes|xes|zes|tomatoes|potatoes|mangoes)$/i.test(word)) return word.slice(0, -2);
+  if (SINGULAR[lower]) {
+    return SINGULAR[lower]!;
+  }
+  if (!/s$/i.test(word) || /(?:ss|us|is)$/i.test(word)) {
+    return word;
+  }
+  if (/[^aeiou]ies$/i.test(word)) {
+    return `${word.slice(0, -3)}y`;
+  }
+  if (/(?:ches|shes|xes|zes|tomatoes|potatoes|mangoes)$/i.test(word)) {
+    return word.slice(0, -2);
+  }
   return word.slice(0, -1);
 };
 
@@ -148,7 +164,9 @@ const withoutNotes = (text: string): string => {
   let rest = text;
   for (let group = rest.match(BRACKET); group !== null; group = rest.match(BRACKET)) {
     const inside = group[1]!;
-    if (!PER_ITEM.test(inside) && ANY_NUMBER.test(inside.replace(NOTE_REFERENCE, "").replace(CUT_SIZE, ""))) return rest;
+    if (!PER_ITEM.test(inside) && ANY_NUMBER.test(inside.replace(NOTE_REFERENCE, "").replace(CUT_SIZE, ""))) {
+      return rest;
+    }
     rest = `${rest.slice(0, group.index)}${rest.slice(group.index! + group[0].length)}`;
   }
   const cut = rest.replace(CUT_INTO, " into");
@@ -161,11 +179,17 @@ const LEAD_IN = /^((?:the\s+)?(?:juice|zest|zest and juice|juice and zest|seeds|
 const parseNumber = (text: string): number => {
   const trimmed = text.trim();
   const vulgarTail = trimmed.match(new RegExp(`^(\\d+(?:[.,]\\d+)?)?\\s*([${VULGAR_CLASS}])$`));
-  if (vulgarTail) return Number((vulgarTail[1] ?? "0").replace(",", ".")) + VULGAR[vulgarTail[2]!]!;
+  if (vulgarTail) {
+    return Number((vulgarTail[1] ?? "0").replace(",", ".")) + VULGAR[vulgarTail[2]!]!;
+  }
   const mixed = trimmed.match(/^(\d+)(?:\s+|-)(\d+)\/(\d+)$/);
-  if (mixed) return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  if (mixed) {
+    return Number(mixed[1]) + Number(mixed[2]) / Number(mixed[3]);
+  }
   const fraction = trimmed.match(/^(\d+)\/(\d+)$/);
-  if (fraction) return Number(fraction[1]) / Number(fraction[2]);
+  if (fraction) {
+    return Number(fraction[1]) / Number(fraction[2]);
+  }
   return Number(trimmed.replace(",", "."));
 };
 
@@ -193,10 +217,14 @@ const formatNumber = (value: number, unit: Unit | null): string => {
   const rest = value - whole;
   let best = FRACTIONS[0]!;
   for (const fraction of FRACTIONS) {
-    if (Math.abs(fraction[0] - rest) < Math.abs(best[0] - rest)) best = fraction;
+    if (Math.abs(fraction[0] - rest) < Math.abs(best[0] - rest)) {
+      best = fraction;
+    }
   }
   const total = best[0] === 1 ? whole + 1 : whole;
-  if (total === 0 && best[1] === "") return value >= 1 ? String(Math.round(value)) : "⅛";
+  if (total === 0 && best[1] === "") {
+    return value >= 1 ? String(Math.round(value)) : "⅛";
+  }
   return `${total === 0 ? "" : total}${best[1]}`;
 };
 
@@ -230,16 +258,26 @@ const offBy = (parts: Part[], ml: number): number =>
 // the bigger size.
 function measured(value: number, unit: Unit): Part[] {
   const ml = value * unit.size;
-  if (unit === UNITS.cup && value < 1 / 4 - 1e-9) return measured(ml / UNITS.tbsp!.size, UNITS.tbsp!);
-  if (unit === UNITS.tbsp && value < 1 - 1e-9) return measured(ml / UNITS.tsp!.size, UNITS.tsp!);
-  if (unit === UNITS.tsp && value < 1 / 8 - 1e-9) return [{ amount: 1, unit: UNITS.pinch! }];
+  if (unit === UNITS.cup && value < 1 / 4 - 1e-9) {
+    return measured(ml / UNITS.tbsp!.size, UNITS.tbsp!);
+  }
+  if (unit === UNITS.tbsp && value < 1 - 1e-9) {
+    return measured(ml / UNITS.tsp!.size, UNITS.tsp!);
+  }
+  if (unit === UNITS.tsp && value < 1 / 8 - 1e-9) {
+    return [{ amount: 1, unit: UNITS.pinch! }];
+  }
   const single: Part[] = [{ amount: nearest(value, unit), unit }];
-  if (offBy(single, ml) <= NEAR_ENOUGH) return single;
+  if (offBy(single, ml) <= NEAR_ENOUGH) {
+    return single;
+  }
   const spoons = unit === UNITS.cup ? [UNITS.tbsp!, UNITS.tsp!] : [UNITS.tsp!];
   const firsts = sizesNear(value, unit).filter((size) => size < value && (unit !== UNITS.tbsp || Number.isInteger(size)));
   const pairs = firsts.flatMap((first) => {
     const leftMl = (value - first) * unit.size;
-    if (unit === UNITS.cup && leftMl >= UNITS.cup.size / 4) return [];
+    if (unit === UNITS.cup && leftMl >= UNITS.cup.size / 4) {
+      return [];
+    }
     return spoons.flatMap((spoon) => {
       const left = leftMl / spoon.size;
       const amounts = new Set(spoon === UNITS.tbsp ? [Math.floor(left), Math.ceil(left), nearest(left, spoon)] : [nearest(left, spoon)]);
@@ -281,7 +319,9 @@ const unitNamed = (text: string): { unit: keyof typeof UNITS; length: number } |
   const measure = text.match(SPOON_MEASURE)?.[0] ?? "";
   for (const [pattern, unit] of UNIT_WORDS) {
     const match = text.slice(measure.length).match(pattern);
-    if (match && (measure === "" || UNITS[unit]!.system === "both")) return { unit, length: measure.length + match[0].length };
+    if (match && (measure === "" || UNITS[unit]!.system === "both")) {
+      return { unit, length: measure.length + match[0].length };
+    }
   }
   return null;
 };
@@ -302,7 +342,9 @@ const withNoun = (rest: string, agree: (word: string) => string): string => {
       (PREPARED_HOW.test(word) || (PREPARED.test(word) && (index === words.length - 1 || /^(?:and|or|then)$/i.test(words[index + 1]![0])))),
   );
   const noun = words[prepared === -1 ? words.length - 1 : prepared - 1];
-  if (noun === undefined || !/^[a-z]+$/i.test(noun[0])) return rest;
+  if (noun === undefined || !/^[a-z]+$/i.test(noun[0])) {
+    return rest;
+  }
   const at = noun.index!;
   return `${rest.slice(0, at)}${agree(noun[0])}${rest.slice(at + noun[0].length)}`;
 };
@@ -310,9 +352,13 @@ const withNoun = (rest: string, agree: (word: string) => string): string => {
 // "1½ cups", "1 cup": a unit written as a word agrees with its new amount; "tbsp" and "g" don't change.
 const agreeing = (unitText: string, many: boolean): string => {
   const word = unitText.match(/[a-z]+$/i)?.[0] ?? "";
-  if (!/^[a-z]{3,}$/i.test(word) || /^(?:tsps?|tbsps?|tbs|lbs?|kg|qts?|pts?|gal)$/i.test(word)) return unitText;
+  if (!/^[a-z]{3,}$/i.test(word) || /^(?:tsps?|tbsps?|tbs|lbs?|kg|qts?|pts?|gal)$/i.test(word)) {
+    return unitText;
+  }
   const space = unitText.slice(0, unitText.length - word.length);
-  if (many) return space + plural(word);
+  if (many) {
+    return space + plural(word);
+  }
   return space + singular(word);
 };
 
@@ -343,13 +389,21 @@ const inDigits = (text: string): string => text.replace(SPELLED_AMOUNT, (word) =
 const STICK_OF_BUTTER = /^\s*(?:of\s+)?(?:(?:unsalted|salted|softened|cold|melted)\s+)*butter\b/i;
 
 const target = (unit: Unit, grams: number, units: RecipeUnits): Unit => {
-  if (units === "asWritten" || unit.system === "both" || unit.system === units) return unit;
+  if (units === "asWritten" || unit.system === "both" || unit.system === units) {
+    return unit;
+  }
   if (unit.kind === "weight") {
-    if (units === "metric") return grams >= 1000 ? UNITS.kg! : UNITS.g!;
+    if (units === "metric") {
+      return grams >= 1000 ? UNITS.kg! : UNITS.g!;
+    }
     return grams >= UNITS.lb!.size ? UNITS.lb! : UNITS.oz!;
   }
-  if (units === "metric") return grams >= 1000 ? UNITS.l! : UNITS.ml!;
-  if (grams >= UNITS.cup!.size / 4) return UNITS.cup!;
+  if (units === "metric") {
+    return grams >= 1000 ? UNITS.l! : UNITS.ml!;
+  }
+  if (grams >= UNITS.cup!.size / 4) {
+    return UNITS.cup!;
+  }
   return grams >= UNITS.tbsp!.size ? UNITS.tbsp! : UNITS.tsp!;
 };
 
@@ -357,14 +411,20 @@ const target = (unit: Unit, grams: number, units: RecipeUnits): Unit => {
 // only within their kind, a tin's size stays as sold, and anything else stays as written
 // (design 144y–144ab, docs/features/recipe-notes.md).
 export function adjustIngredient(line: string, factor: number, units: RecipeUnits): AdjustedIngredient {
-  if (factor === 1 && units === "asWritten") return { kind: "asWritten", line };
+  if (factor === 1 && units === "asWritten") {
+    return { kind: "asWritten", line };
+  }
 
   const lead = line.match(LEAD_IN)?.[1] ?? "";
   const body = inDigits(line.slice(lead.length));
   const amount = body.match(AMOUNT);
-  if (amount === null) return { kind: "unreadable", line };
+  if (amount === null) {
+    return { kind: "unreadable", line };
+  }
   const both = inBothSystems(line, lead, body, factor, units);
-  if (both !== null) return both;
+  if (both !== null) {
+    return both;
+  }
 
   let rest = body.slice(amount[0].length);
   const low = parseNumber(amount[1]!);
@@ -379,7 +439,9 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
 
   const spaced = rest.match(/^\s*/)![0];
   const named = pack === null ? unitNamed(rest.slice(spaced.length)) : null;
-  if (named === null && pack === null && PACK_WORD.test(rest)) return { kind: "unreadable", line };
+  if (named === null && pack === null && PACK_WORD.test(rest)) {
+    return { kind: "unreadable", line };
+  }
   const afterUnit = named === null ? rest : rest.slice(spaced.length + named.length);
   if (named !== null && PACK_WORD.test(afterUnit)) {
     return high === null
@@ -387,7 +449,9 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
       : { kind: "unreadable", line };
   }
   const packSized = named === null && pack === null && PACK_SIZE.test(afterUnit);
-  if (ANY_NUMBER.test(withoutNotes(packSized ? afterUnit.replace(PACK_SIZE, "") : afterUnit))) return { kind: "unreadable", line };
+  if (ANY_NUMBER.test(withoutNotes(packSized ? afterUnit.replace(PACK_SIZE, "") : afterUnit))) {
+    return { kind: "unreadable", line };
+  }
 
   const from = named === null ? null : UNITS[named.unit]!;
   const gramsEach =
@@ -423,7 +487,9 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
         : `${to.system === "metric" && to !== UNITS.l ? "" : " "}${many ? to.plural : to.singular}`;
   const shown = inKitchenSizes ? partsText(measured(newLow, to), from, pageUnitText) : `${amountText}${unitShown}`;
   const moved = Math.abs(newLow - low) > 1e-9 || !unitUnchanged || (high !== null && Math.abs((newHigh ?? 0) - high) > 1e-9);
-  if (!moved) return { kind: "same", line };
+  if (!moved) {
+    return { kind: "same", line };
+  }
 
   const counted = from === null && pack === null && high === null;
   const tail =
@@ -454,10 +520,14 @@ interface Measure {
 // "150g", "150–200g", "50g–100g", and "1lb 2oz", which is one amount in two units of a kind.
 const measureAt = (text: string): Measure | null => {
   const amount = text.match(AMOUNT);
-  if (amount === null) return null;
+  if (amount === null) {
+    return null;
+  }
   const spaced = text.slice(amount[0].length).match(/^\s*/)![0];
   const named = unitNamed(text.slice(amount[0].length + spaced.length));
-  if (named === null) return null;
+  if (named === null) {
+    return null;
+  }
   const unit = UNITS[named.unit]!;
   const unitText = text.slice(amount[0].length, amount[0].length + spaced.length + named.length);
   let length = amount[0].length + unitText.length;
@@ -486,9 +556,13 @@ const measureAt = (text: string): Measure | null => {
 function inBothSystems(line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null {
   const first = measureAt(body);
   const slash = first === null ? null : body.slice(first.text.length).match(/^\s*\/\s*/);
-  if (first === null || slash === null) return null;
+  if (first === null || slash === null) {
+    return null;
+  }
   const second = measureAt(body.slice(first.text.length + slash[0].length));
-  if (second === null) return null;
+  if (second === null) {
+    return null;
+  }
   const tail = body.slice(first.text.length + slash[0].length + second.text.length);
   const metric = [first, second].filter(({ unit }) => unit.system === "metric");
   if (metric.length !== 1 || ANY_NUMBER.test(withoutNotes(tail)) || PACK_WORD.test(tail)) {
@@ -502,9 +576,12 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
   const other = first === grams ? second : first;
   const usUnit = target(grams.unit, grams.low * factor * grams.unit.size, "us");
   const inUs = () => {
-    if (other.unit.system === "both" || other.unit === usUnit || other.unit.kind !== grams.unit.kind) return scaled(other);
-    if (grams.high === null && isMeasured(usUnit))
+    if (other.unit.system === "both" || other.unit === usUnit || other.unit.kind !== grams.unit.kind) {
+      return scaled(other);
+    }
+    if (grams.high === null && isMeasured(usUnit)) {
       return partsText(measured((grams.low * factor * grams.unit.size) / usUnit.size, usUnit), null, "");
+    }
     const value = (amount: number) => formatNumber((amount * factor * grams.unit.size) / usUnit.size, usUnit);
     const many = (grams.low * factor * grams.unit.size) / usUnit.size > 1 || grams.high !== null;
     return `${value(grams.low)}${grams.high === null ? "" : `–${value(grams.high)}`} ${many ? usUnit.plural : usUnit.singular}`;
@@ -519,7 +596,9 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
 }
 
 const pluralTaken = (before: string, after: string): { from: string; to: string } | null => {
-  if (before === after) return null;
+  if (before === after) {
+    return null;
+  }
   const was = before.split(/\s+/);
   const now = after.split(/\s+/);
   const at = was.findIndex((word, index) => word !== now[index]);
@@ -529,8 +608,12 @@ const pluralTaken = (before: string, after: string): { from: string; to: string 
 // "400g can chopped tomatoes" doubled is "2 × 400g cans chopped tomatoes": the can is sold at
 // its size, so what scales is how many of them, written the way "2 × 400g tins" already is.
 function packsOf(line: string, lead: string, size: string, afterSize: string, factor: number): AdjustedIngredient {
-  if (ANY_NUMBER.test(withoutNotes(afterSize))) return { kind: "unreadable", line };
-  if (factor === 1) return { kind: "same", line };
+  if (ANY_NUMBER.test(withoutNotes(afterSize))) {
+    return { kind: "unreadable", line };
+  }
+  if (factor === 1) {
+    return { kind: "same", line };
+  }
   const word = afterSize.match(LEADING_PACK_WORD)!;
   const tail = afterSize.slice(word[0].length);
   const singular = word[2]!.replace(/s$/i, "");
@@ -550,13 +633,17 @@ export const adjustedText = (adjusted: AdjustedIngredient): string =>
 // where there isn't one, and the reader gets a multiplier instead (design 144aa).
 export function yieldCount(yieldText: string | null): number | null {
   const match = yieldText?.match(/^\D{0,20}?(\d+)(?!\s*[-–]\s*\d)/);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
   const count = Number(match[1]);
   return count > 0 ? count : null;
 }
 
 // "8 servings" for "4 servings" doubled; a bare "6" reads "Makes 12".
 export function servingsLabel(yieldText: string, count: number): string {
-  if (!/[a-z]/i.test(yieldText)) return `Makes ${count}`;
+  if (!/[a-z]/i.test(yieldText)) {
+    return `Makes ${count}`;
+  }
   return yieldText.replace(/\d+/, String(count));
 }

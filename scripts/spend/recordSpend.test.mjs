@@ -13,7 +13,9 @@ function memoryStore({ failPut = false, corrupt = false } = {}) {
   return {
     objects,
     async put(key, text) {
-      if (failPut) throw new Error(`R2 refused to store ${key}: 403`);
+      if (failPut) {
+        throw new Error(`R2 refused to store ${key}: 403`);
+      }
       objects.set(key, text);
     },
     async get(key) {
@@ -230,7 +232,9 @@ test("a range of more than 180 days, or a backwards one, is refused", async () =
 
 const storeWith = (days) => {
   const store = memoryStore();
-  for (const [date, rows] of Object.entries(days)) store.objects.set(`daily/${date}.csv`, spendCsv(rows, AT));
+  for (const [date, rows] of Object.entries(days)) {
+    store.objects.set(`daily/${date}.csv`, spendCsv(rows, AT));
+  }
   return store;
 };
 

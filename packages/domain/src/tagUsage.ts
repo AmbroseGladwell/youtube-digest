@@ -7,7 +7,9 @@ export interface TagCount {
 export function tagUsage(tagLists: Iterable<readonly string[]>): TagCount[] {
   const counts = new Map<string, number>();
   for (const tags of tagLists) {
-    for (const tag of new Set(tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    for (const tag of new Set(tags)) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
   }
   return [...counts]
     .map(([tag, count]) => ({ tag, count }))

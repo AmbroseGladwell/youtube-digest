@@ -19,7 +19,9 @@ export function projectMemberWrite(
     id,
     requires: [{ kind: "project", id: projectId }],
     decide: (current, _held, [project]) => {
-      if (project == null || project.deleted) throw new ApiError("not_found", "No such project");
+      if (project == null || project.deleted) {
+        throw new ApiError("not_found", "No such project");
+      }
       const at = memberChangeTime(current?.deleted === false ? (current.body ?? undefined) : undefined, now);
       return decideMerge(
         "projectMember",

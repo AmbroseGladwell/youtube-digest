@@ -29,7 +29,9 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
 
   useEffect(() => {
     const element = dialog.current;
-    if (element && !element.open) element.showModal();
+    if (element && !element.open) {
+      element.showModal();
+    }
   }, []);
 
   const trimmed = name.trim();
@@ -38,7 +40,9 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!creatable) return;
+    if (!creatable) {
+      return;
+    }
     onCreate({ name: trimmed, purpose: purpose.trim() === "" ? null : purpose.trim() });
   };
 
@@ -52,7 +56,9 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={newProjectDialogTestIds.root}
     >

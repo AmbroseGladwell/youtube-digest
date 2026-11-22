@@ -13,7 +13,9 @@ if (!url) {
 function videoIdOf(videoUrl: string): string {
   const parsed = new URL(videoUrl);
   const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v");
-  if (!id) throw new Error(`no video id in ${videoUrl}`);
+  if (!id) {
+    throw new Error(`no video id in ${videoUrl}`);
+  }
   return id;
 }
 

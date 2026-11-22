@@ -35,7 +35,9 @@ const isInside = (span: PositionSpan, units: number): boolean => span.start >= 0
 
 function chapterBounds(chapterStarts: readonly number[], units: number): PositionSpan[] {
   const starts = [...new Set(chapterStarts.filter((start) => start >= 0 && start < units))].sort((a, b) => a - b);
-  if (starts.length === 0) return units === 0 ? [] : [{ start: 0, end: units - 1 }];
+  if (starts.length === 0) {
+    return units === 0 ? [] : [{ start: 0, end: units - 1 }];
+  }
   return starts.map((start, index) => ({ start: index === 0 ? 0 : start, end: (starts[index + 1] ?? units) - 1 }));
 }
 
@@ -45,7 +47,9 @@ function largestUncoveredStretch(unitWords: readonly number[], covered: readonly
   let runWords = 0;
   for (let index = 0; index <= unitWords.length; index += 1) {
     if (index < unitWords.length && !covered[index]) {
-      if (runStart === -1) runStart = index;
+      if (runStart === -1) {
+        runStart = index;
+      }
       runWords += unitWords[index]!;
       continue;
     }

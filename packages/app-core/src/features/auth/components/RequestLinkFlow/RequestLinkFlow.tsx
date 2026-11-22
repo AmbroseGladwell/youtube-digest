@@ -184,7 +184,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
       { apiUrl: pending.apiUrl, email: pending.email, code },
       {
         onSuccess: (signedIn) => {
-          if (signedIn.surface === "web") land(pending.apiUrl, signedIn, returnTo);
+          if (signedIn.surface === "web") {
+            land(pending.apiUrl, signedIn, returnTo);
+          }
         },
         onError: (error) => setCodeRefused(authFailureMessage(error, CODE_SPENT)),
       },
@@ -272,7 +274,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
         initialServerUrl={knownServer}
         onConnect={(code, serverUrl) => {
           const apiUrl = serverUrl ?? knownServer;
-          if (apiUrl !== null) connectWithCode(apiUrl, code);
+          if (apiUrl !== null) {
+            connectWithCode(apiUrl, code);
+          }
         }}
       />
     );
@@ -327,7 +331,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
           refused={refused}
           onSubmit={({ email, firstName, serverUrl }: EmailLinkFormValues) => {
             const apiUrl = serverUrl ?? knownServer;
-            if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
+            if (apiUrl !== null) {
+              ask(apiUrl, email, intent, firstName, false);
+            }
           }}
         />
       </AuthScreen>
@@ -403,7 +409,9 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
         refused={refused}
         onSubmit={({ email, firstName, serverUrl }: EmailLinkFormValues) => {
           const apiUrl = serverUrl ?? knownServer;
-          if (apiUrl !== null) ask(apiUrl, email, intent, firstName, false);
+          if (apiUrl !== null) {
+            ask(apiUrl, email, intent, firstName, false);
+          }
         }}
       />
       {!creating && <PolicyLinks />}

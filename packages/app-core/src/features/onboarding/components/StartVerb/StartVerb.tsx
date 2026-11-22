@@ -11,7 +11,9 @@ export function StartVerb({ verb }: { verb: string }) {
   const clear = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (verb === shown.verb) return;
+    if (verb === shown.verb) {
+      return;
+    }
     setShown((now) => ({ verb, previous: now.verb, turn: now.turn + 1 }));
     clearTimeout(clear.current ?? undefined);
     clear.current = setTimeout(() => setShown((now) => ({ ...now, previous: null })), ROLL_MS + 40);

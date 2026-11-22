@@ -91,24 +91,34 @@ export function useOnboardingRun({
   const setRun = (next: OnboardingRun | ((current: OnboardingRun) => OnboardingRun)) =>
     setState((current) => ({ key, run: typeof next === "function" ? next(current.run) : next }));
   const readArticle = async (url: string) => {
-    if (tabId !== null && pages !== null && (await pageAccessFor(pages, url))) return pages.read(tabId);
-    if (knownApiUrl === null) throw new Error("There's no server to read that link through.");
+    if (tabId !== null && pages !== null && (await pageAccessFor(pages, url))) {
+      return pages.read(tabId);
+    }
+    if (knownApiUrl === null) {
+      throw new Error("There's no server to read that link through.");
+    }
     return createTrialArticleApi({ baseUrl: knownApiUrl }).read(url);
   };
   const readVideo = async (videoId: string) => {
-    if (knownApiUrl === null) throw new Error("There's no server to read that link through.");
+    if (knownApiUrl === null) {
+      throw new Error("There's no server to read that link through.");
+    }
     return signedIn
       ? createFetchVideoApi({ baseUrl: knownApiUrl, token: connection.token }).read(videoId)
       : createTrialVideoApi({ baseUrl: knownApiUrl }).read(videoId);
   };
   const readPodcast = async (url: string) => {
-    if (knownApiUrl === null) throw new Error("There's no server to read that link through.");
+    if (knownApiUrl === null) {
+      throw new Error("There's no server to read that link through.");
+    }
     return libraryAccountIdOf(connection) !== null
       ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token }).read(url)
       : createTrialPodcastApi({ baseUrl: knownApiUrl }).read(url);
   };
   const checkEpisode = async (episode: PodcastEpisode) => {
-    if (knownApiUrl === null) throw new Error("There's no server to check that episode through.");
+    if (knownApiUrl === null) {
+      throw new Error("There's no server to check that episode through.");
+    }
     const api =
       libraryAccountIdOf(connection) !== null
         ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token })
@@ -153,7 +163,9 @@ export function useOnboardingRun({
 
   useEffect(() => {
     maySpendNow.current = maySpend;
-    if (maySpend) releaseSpending.current?.();
+    if (maySpend) {
+      releaseSpending.current?.();
+    }
     if (maySpend && state.run.phase === "waiting" && readAt.current !== null) {
       latest.current.analytics.onboarding.spend.released({
         ...(state.run.found === null ? {} : { kind: onboardingKindOf(state.run.found) }),
@@ -166,13 +178,17 @@ export function useOnboardingRun({
 
   useEffect(() => {
     const kind = latest.current.source;
-    if (target === null || kind === null) return;
+    if (target === null || kind === null) {
+      return;
+    }
     let cancelled = false;
     setRun(FETCHING);
     latest.current.analytics.capture.newOverview.started({ from: "onboarding" });
     const spending = new Promise<void>((resolve) => {
       releaseSpending.current = resolve;
-      if (maySpendNow.current) resolve();
+      if (maySpendNow.current) {
+        resolve();
+      }
     });
 
     // Every maker that writes is called after `spending` settles, so the library is the account's.
@@ -193,22 +209,36 @@ export function useOnboardingRun({
         waitToSpend: () => spending,
         transcribe: transcribeNow.current,
         onTranscription: (progress) => {
-          if (cancelled) return;
+          if (cancelled) {
+            return;
+          }
           setRun((current) => {
-            if (current.transcription?.state === "transcribing") return current;
-            if (progress === "transcribing") return { ...current, transcription: { state: "transcribing", since: Date.now() } };
+            if (current.transcription?.state === "transcribing") {
+              return current;
+            }
+            if (progress === "transcribing") {
+              return { ...current, transcription: { state: "transcribing", since: Date.now() } };
+            }
             return { ...current, transcription: { state: "starting" } };
           });
         },
         onSourceWords: (words) => {
-          if (!cancelled) setRun((current) => ({ ...current, sourceWords: words }));
+          if (!cancelled) {
+            setRun((current) => ({ ...current, sourceWords: words }));
+          }
         },
         onWriting: () => {
-          if (!cancelled) setRun((current) => ({ ...current, writingStarted: true }));
+          if (!cancelled) {
+            setRun((current) => ({ ...current, writingStarted: true }));
+          }
         },
         onFound: (found) => {
-          if (cancelled) return;
-          if (!maySpendNow.current) readAt.current = Date.now();
+          if (cancelled) {
+            return;
+          }
+          if (!maySpendNow.current) {
+            readAt.current = Date.now();
+          }
           latest.current.onFound(found);
           setRun((current) =>
             current.phase === "fetching" ? { ...FETCHING, phase: maySpendNow.current ? "writing" : "waiting", found } : current,
@@ -216,12 +246,16 @@ export function useOnboardingRun({
         },
       })
       .then((overview) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         latest.current.onMade(overview);
         setRun((current) => ({ ...current, phase: "ready", found: foundIn(overview), overview, failure: null }));
       })
       .catch((error: unknown) => {
-        if (cancelled || error instanceof GenerationCancelledError || error instanceof EpisodeCannotBeMadeError) return;
+        if (cancelled || error instanceof GenerationCancelledError || error instanceof EpisodeCannotBeMadeError) {
+          return;
+        }
         setRun((current) => ({ ...current, phase: "failed", failure: onboardingFailureOf(error) }));
       });
 

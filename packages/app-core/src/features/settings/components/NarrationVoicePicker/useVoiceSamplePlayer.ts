@@ -29,12 +29,16 @@ export function useVoiceSamplePlayer() {
       audio.current = sample;
       const current = () => audio.current === sample;
       const finish = () => {
-        if (!current()) return;
+        if (!current()) {
+          return;
+        }
         audio.current = null;
         setPlayback(null);
       };
       sample.addEventListener("timeupdate", () => {
-        if (current()) setPlayback({ voice, seconds: sample.currentTime, durationSeconds });
+        if (current()) {
+          setPlayback({ voice, seconds: sample.currentTime, durationSeconds });
+        }
       });
       sample.addEventListener("ended", finish);
       sample.addEventListener("error", finish);

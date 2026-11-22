@@ -5,12 +5,16 @@ const openingOf = (field: string) => new RegExp(String.raw`^\s*\{\s*"${field}"\s
 // waits for the next chunk.
 export function answerSoFar(partialJson: string, field = "answer"): string {
   const opening = openingOf(field).exec(partialJson);
-  if (opening === null) return "";
+  if (opening === null) {
+    return "";
+  }
   const start = opening[0].length;
   let end = start;
   while (end < partialJson.length && partialJson[end] !== '"') {
     const step = partialJson[end] !== "\\" ? 1 : partialJson[end + 1] === "u" ? 6 : 2;
-    if (end + step > partialJson.length) break;
+    if (end + step > partialJson.length) {
+      break;
+    }
     end += step;
   }
   try {

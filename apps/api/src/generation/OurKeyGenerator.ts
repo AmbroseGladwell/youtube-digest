@@ -273,7 +273,9 @@ export class OurKeyGenerator {
 
   async #recordCost(calls: MeteredCall[], payer: CostPayer, detail: string, log: FastifyBaseLogger): Promise<void> {
     const { inputTokens, outputTokens, costDollars } = meteredUsageOf(calls);
-    if (costDollars === null || calls.every((call) => call.usage === null)) return;
+    if (costDollars === null || calls.every((call) => call.usage === null)) {
+      return;
+    }
     const { costs, clock } = this.#options;
     await costs.recordOrLog(
       clock(),

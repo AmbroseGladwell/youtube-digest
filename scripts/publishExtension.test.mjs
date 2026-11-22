@@ -212,7 +212,9 @@ test("an upload still being unpacked is waited out, and the item's own status se
   const api = {
     status: async () => {
       reads += 1;
-      if (reads === 1) return published("0.3.0");
+      if (reads === 1) {
+        return published("0.3.0");
+      }
       const lastAsyncUploadState = states.shift() ?? "SUCCEEDED";
       return {
         ...published("0.3.0"),

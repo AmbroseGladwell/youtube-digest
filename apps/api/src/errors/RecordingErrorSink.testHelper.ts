@@ -13,11 +13,15 @@ export function makeRecordingErrorSink(): RecordingErrorSink {
     serverErrors: [],
     failing: false,
     capture: async (errors, source) => {
-      if (sink.failing) throw new Error("Simulated: the error tracker is down");
+      if (sink.failing) {
+        throw new Error("Simulated: the error tracker is down");
+      }
       sink.captured.push({ errors, source });
     },
     captureServerError: async (error) => {
-      if (sink.failing) throw new Error("Simulated: the error tracker is down");
+      if (sink.failing) {
+        throw new Error("Simulated: the error tracker is down");
+      }
       sink.serverErrors.push(error);
     },
   };

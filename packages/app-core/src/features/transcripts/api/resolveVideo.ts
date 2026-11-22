@@ -30,8 +30,12 @@ const warnIfDegraded = (
   failures: TranscriptSourceFailure[],
   answeredBy: TranscriptSourceFailure["tier"] | null,
 ) => {
-  if (answeredBy !== null && !failures.some(({ outcome }) => outcome === "failed")) return;
-  if (failures.length === 0) return;
+  if (answeredBy !== null && !failures.some(({ outcome }) => outcome === "failed")) {
+    return;
+  }
+  if (failures.length === 0) {
+    return;
+  }
   deps.warn?.({
     name: "transcriptFellThrough",
     passed: failures.map(({ tier, outcome, error }) => ({
@@ -62,7 +66,9 @@ export async function resolveVideo(pastedUrl: string, deps: VideoResolutionDeps)
   const cached = await (stopwatch
     ? stopwatch.time("stored", () => readCachedVideo(url, deps.transcriptStore), answeredOrNot)
     : readCachedVideo(url, deps.transcriptStore));
-  if (cached) return { ...cached, source: "stored" };
+  if (cached) {
+    return { ...cached, source: "stored" };
+  }
 
   const context: TranscriptSourceContext = {
     readHeldTranscript: (videoId) => deps.transcriptStore.getTranscript(videoId),
@@ -100,7 +106,9 @@ export async function resolveVideo(pastedUrl: string, deps: VideoResolutionDeps)
 // The one place a resolved video is written back, so every rung completes a record that
 // was stored before metadata was kept (docs/features/watching-detection.md).
 async function saveResolved(resolved: ResolvedVideo, transcriptStore: TranscriptStore): Promise<void> {
-  if (resolved.video.id === null) return;
+  if (resolved.video.id === null) {
+    return;
+  }
   await transcriptStore.saveTranscript({
     videoId: resolved.video.id,
     segments: resolved.transcript,
@@ -114,10 +122,14 @@ async function saveResolved(resolved: ResolvedVideo, transcriptStore: Transcript
 // describes the video, but the url is what the reader's timestamp links point at.
 async function readCachedVideo(url: string, transcriptStore: TranscriptStore): Promise<ResolvedVideo | null> {
   const parsedId = parseVideoId(url);
-  if (parsedId === null) return null;
+  if (parsedId === null) {
+    return null;
+  }
 
   const stored: StoredTranscript | null = await transcriptStore.getTranscript(parsedId);
-  if (!stored?.video) return null;
+  if (!stored?.video) {
+    return null;
+  }
 
   return { video: { ...stored.video, url }, transcript: stored.segments, generated: stored.generated };
 }

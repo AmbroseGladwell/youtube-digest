@@ -221,7 +221,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
   );
   const { ask } = willStop;
   useEffect(() => {
-    if (blocker.state !== "blocked") return;
+    if (blocker.state !== "blocked") {
+      return;
+    }
     ask(
       {
         sentence: "Going on opens The Overview, and timers on this shared page don’t come with you.",
@@ -615,7 +617,9 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
           if (action === "readAlong" || action === "readAlongInstead" || action === "readAlongMeanwhile") {
             player.readAlong();
           }
-          if (action === "tryAgain") notePlayer.play("playerBar");
+          if (action === "tryAgain") {
+            notePlayer.play("playerBar");
+          }
         }}
         onReRecord={() => undefined}
       />

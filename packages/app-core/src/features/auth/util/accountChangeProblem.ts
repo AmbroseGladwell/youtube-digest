@@ -25,7 +25,9 @@ const retryAfter = (details: Record<string, unknown> | undefined): number =>
 // The server answers one `link_invalid` for a wrong, spent or expired code; which it was
 // is told from the ask's own expiry, which this device knows.
 export function codeProblem(error: unknown, expiresAt: string | null, now: Date): CodeProblem {
-  if (isSyncTransportError(error)) return { kind: "other", message: UNREACHABLE };
+  if (isSyncTransportError(error)) {
+    return { kind: "other", message: UNREACHABLE };
+  }
   if (isSyncRequestError(error)) {
     switch (error.code) {
       case "link_invalid":
@@ -49,7 +51,9 @@ export interface AskProblem {
 }
 
 export function askProblem(error: unknown, now: Date): AskProblem {
-  if (isSyncTransportError(error)) return { kind: "other", message: UNREACHABLE };
+  if (isSyncTransportError(error)) {
+    return { kind: "other", message: UNREACHABLE };
+  }
   if (isSyncRequestError(error)) {
     switch (error.code) {
       case "too_many_requests":

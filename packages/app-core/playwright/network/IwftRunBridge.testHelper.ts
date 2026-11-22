@@ -27,6 +27,8 @@ export class IwftRunBridge implements RunBridge {
   // What pressing the injected button on the page amounts to, from app-core's side.
   requestOverview = (videoUrl: string): void => {
     this.pending = videoUrl;
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      listener();
+    }
   };
 }

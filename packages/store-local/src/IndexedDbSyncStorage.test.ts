@@ -233,7 +233,9 @@ test("a pulled record with a pending local write to it shows the local write on 
   await store.saveOverview(overview);
   await store.setOverviewState(overview.id, { read: true });
   for (const entry of await storage.listPending()) {
-    if (entry.kind === "overview") await storage.acknowledge(entry.key, { rev: 1 });
+    if (entry.kind === "overview") {
+      await storage.acknowledge(entry.key, { rev: 1 });
+    }
   }
 
   await storage.applyChanges(
@@ -723,7 +725,9 @@ test("a project or an overview deleted on another device takes its membership re
   const [doomedOverview, keptOverview] = [OverviewId.parse(randomUUID()), OverviewId.parse(randomUUID())];
   for (const project of [doomedProject, keptProject]) {
     await projects.createProject(project);
-    for (const overviewId of [doomedOverview, keptOverview]) await projects.addToProject(project.id, overviewId);
+    for (const overviewId of [doomedOverview, keptOverview]) {
+      await projects.addToProject(project.id, overviewId);
+    }
   }
 
   await storage.applyChanges(

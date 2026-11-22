@@ -65,7 +65,9 @@ test.describe("Ask", () => {
   }) => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
-    for (const overview of [plants, stew, titled(CURRY, "2026-11-05T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, titled(CURRY, "2026-11-05T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.chats.answerWith({
       text: "Beans and greens come up again and again.",
       citations: [cite(plants), cite(stew)],
@@ -117,7 +119,9 @@ test.describe("Ask", () => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const dinner = { ...makeProject({ name: "Dinner Recipes" }), archivedAt: null };
-    for (const overview of [plants, stew]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.projects.seed(dinner);
     backendSimulator.projects.seedMember(makeProjectMember(dinner, plants.id));
     backendSimulator.projects.seedMember(makeProjectMember(dinner, stew.id));
@@ -265,7 +269,9 @@ test.describe("Ask", () => {
     plants.source.title = PLANTS;
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
-    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, curry]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const beans: ChatCitation = {
       overviewId: plants.id,
       title: PLANTS,
@@ -314,8 +320,9 @@ test.describe("Ask", () => {
   });
 
   test("in the empty page the @ picker opens below the field, where there's room", async ({ launcher, backendSimulator }) => {
-    for (const [index, title] of [PLANTS, STEW, CURRY].entries())
+    for (const [index, title] of [PLANTS, STEW, CURRY].entries()) {
       backendSimulator.overviews.seedSynced(titled(title, `2026-11-0${index + 3}T09:00:00.000Z`));
+    }
     await launcher.launchExpectingLibrary(SIGNED_IN);
     const ask = await launcher.appShell.openAsk();
 

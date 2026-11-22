@@ -28,15 +28,20 @@ const withSettingsLinks = (text: string): ReactNode =>
 
 export function MarkedPieceView({ piece, className }: { piece: MarkedPiece; className?: string | undefined }) {
   let node: ReactNode = piece.code ? <code className={styles.code}>{piece.text}</code> : withSettingsLinks(piece.text);
-  if (piece.href !== undefined)
+  if (piece.href !== undefined) {
     node = (
       <a className={styles.link} href={piece.href} target="_blank" rel="noopener noreferrer" data-testid={chatMarkedTextTestIds.link}>
         {node}
         <span className={styles.hidden}> (opens in a new tab)</span>
       </a>
     );
-  if (piece.italic) node = <em>{node}</em>;
-  if (piece.bold) node = <strong>{node}</strong>;
+  }
+  if (piece.italic) {
+    node = <em>{node}</em>;
+  }
+  if (piece.bold) {
+    node = <strong>{node}</strong>;
+  }
   return className === undefined ? <>{node}</> : <span className={className}>{node}</span>;
 }
 

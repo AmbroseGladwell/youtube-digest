@@ -27,7 +27,9 @@ export function useShowOnPage(source: WebSource | null): ShowOnPage | null {
 
   const show = useCallback(
     (place: ArticlePlace) => {
-      if (pages === null || beside === null || source === null) return;
+      if (pages === null || beside === null || source === null) {
+        return;
+      }
       void pages.showPlace(beside.tabId, place).then((found) => {
         if (found === null) {
           window.open(articlePlaceUrl(source.url, place), "_blank", "noopener");
@@ -41,7 +43,9 @@ export function useShowOnPage(source: WebSource | null): ShowOnPage | null {
     [pages, beside, source],
   );
 
-  if (beside === null) return null;
+  if (beside === null) {
+    return null;
+  }
   return {
     beside,
     show,

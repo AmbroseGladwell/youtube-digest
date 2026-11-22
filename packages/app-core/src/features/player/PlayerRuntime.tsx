@@ -44,7 +44,9 @@ export function PlayerRuntime({ children }: { children: ReactNode }) {
   useEffect(() => {
     const flush = () => void latestAnalytics.current.flush({ keepalive: true });
     const onVisibilityChange = () => {
-      if (document.visibilityState !== "hidden") return;
+      if (document.visibilityState !== "hidden") {
+        return;
+      }
       engine.pageHidden();
       flush();
     };
@@ -61,7 +63,9 @@ export function PlayerRuntime({ children }: { children: ReactNode }) {
   }, [engine]);
 
   useEffect(() => {
-    if (!connected) engine.endSession();
+    if (!connected) {
+      engine.endSession();
+    }
   }, [engine, connected]);
   useEffect(() => engine.setApi(api), [engine, api]);
   useEffect(() => engine.setVoice(voice), [engine, voice]);

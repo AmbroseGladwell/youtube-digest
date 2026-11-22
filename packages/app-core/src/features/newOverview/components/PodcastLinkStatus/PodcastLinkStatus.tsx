@@ -128,7 +128,9 @@ export function EpisodeWordsNote({
 
 // The line under the episode's facts: checking for its words, then whether it needs transcribing.
 const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string | null => {
-  if (words.state === "checking") return "Checking for a transcript…";
+  if (words.state === "checking") {
+    return "Checking for a transcript…";
+  }
   const action = episodeActionOf(words);
   return action.kind === "transcribe" ? transcriptionCopy.needs(episodeSeconds) : null;
 };

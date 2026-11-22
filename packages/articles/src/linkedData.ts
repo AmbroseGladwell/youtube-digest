@@ -3,8 +3,12 @@ export type JsonObject = Record<string, unknown>;
 export const isObject = (value: unknown): value is JsonObject => typeof value === "object" && value !== null && !Array.isArray(value);
 
 const flattened = (value: unknown): JsonObject[] => {
-  if (Array.isArray(value)) return value.flatMap(flattened);
-  if (!isObject(value)) return [];
+  if (Array.isArray(value)) {
+    return value.flatMap(flattened);
+  }
+  if (!isObject(value)) {
+    return [];
+  }
   return [value, ...flattened(value["@graph"])];
 };
 

@@ -37,7 +37,9 @@ test("a remove then a later add puts it back, whichever arrives first", () => {
   const changes = [add("2026-11-12T10:00:00.000Z"), remove("2026-11-12T11:00:00.000Z"), add("2026-11-12T12:00:00.000Z")];
   const orders = [changes, [changes[2]!, changes[0]!, changes[1]!], [changes[1]!, changes[2]!, changes[0]!]];
   const results = orders.map(applyAll);
-  for (const result of results) assert.deepEqual(result, results[0]);
+  for (const result of results) {
+    assert.deepEqual(result, results[0]);
+  }
   assert.ok(membership(results[0]!));
 });
 

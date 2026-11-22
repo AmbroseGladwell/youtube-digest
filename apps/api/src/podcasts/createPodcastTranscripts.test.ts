@@ -56,12 +56,18 @@ function ladderOver(
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
     const answer = web[link];
-    if (answer === undefined) return { status: "failed", reason: "missing" };
-    if (answer === "down") return { status: "failed", reason: "no-answer" };
+    if (answer === undefined) {
+      return { status: "failed", reason: "missing" };
+    }
+    if (answer === "down") {
+      return { status: "failed", reason: "no-answer" };
+    }
     return { status: "answered", url: link, response: new Response(answer.body, { headers: { "content-type": answer.type } }) };
   };
   const ready = podcastSourceKey(EPISODE).then((key) => {
-    if (known !== null) sources.set(key, { source: known, foundAt: knownSince });
+    if (known !== null) {
+      sources.set(key, { source: known, foundAt: knownSince });
+    }
   });
   const podcastTranscripts = createPodcastTranscripts({
     fetchPublicWeb,

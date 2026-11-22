@@ -9,6 +9,8 @@ export const isDesktopChrome = (
     : (navigator as { userAgentData?: UserAgentDataLike }),
 ): boolean => {
   const data = agent?.userAgentData;
-  if (data === undefined || data.mobile !== false) return false;
+  if (data === undefined || data.mobile !== false) {
+    return false;
+  }
   return (data.brands ?? []).some(({ brand }) => brand === "Google Chrome");
 };

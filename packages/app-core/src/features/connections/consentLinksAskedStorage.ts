@@ -6,7 +6,9 @@ const KEPT_FOR_MS = 60 * 60 * 1000;
 function read(storage: Storage): ConsentLinksAsked {
   try {
     const raw = storage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      return [];
+    }
     const parsed = ConsentLinksAsked.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : [];
   } catch {

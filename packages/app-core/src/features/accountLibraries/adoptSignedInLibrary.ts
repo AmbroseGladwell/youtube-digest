@@ -28,16 +28,22 @@ export async function adoptSignedInLibrary({
   timeoutMs = ASK_LIMIT_MS,
 }: AdoptSignedInLibraryOptions): Promise<string | null> {
   const connection = readSyncConnection(storage);
-  if (!isConnected(connection) || connection.accountId !== null) return null;
+  if (!isConnected(connection) || connection.accountId !== null) {
+    return null;
+  }
 
   const limit = new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs));
   const session = await Promise.race([readSession(connection).catch(() => null), limit]);
-  if (session === null) return null;
+  if (session === null) {
+    return null;
+  }
 
   await moveDatabase(session.accountId);
 
   const now = readSyncConnection(storage);
-  if (now.apiUrl !== connection.apiUrl || now.accountId !== null) return null;
+  if (now.apiUrl !== connection.apiUrl || now.accountId !== null) {
+    return null;
+  }
   writeSyncConnection({ ...now, accountId: session.accountId }, storage);
   adoptReadingPositions(session.accountId, storage);
   return session.accountId;

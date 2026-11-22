@@ -38,7 +38,9 @@ const refusal = async (attempt: Promise<unknown>): Promise<string> => {
   try {
     await attempt;
   } catch (error) {
-    if (isApiError(error)) return error.code;
+    if (isApiError(error)) {
+      return error.code;
+    }
     throw error;
   }
   throw new Error("the write was not refused");

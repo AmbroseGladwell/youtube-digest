@@ -48,7 +48,9 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
   const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
   const suggestedKey = suggested.join("\u0000");
   useEffect(() => {
-    if (!touched && suggestedKey !== "") setChosenHere(suggestedKey.split("\u0000"));
+    if (!touched && suggestedKey !== "") {
+      setChosenHere(suggestedKey.split("\u0000"));
+    }
   }, [touched, suggestedKey]);
   const isSuggested = (name: string) => suggested.some((offered) => sameTopicName(offered, name));
   const popular = [...POPULAR, ...STARTER_TOPICS.map((topic) => topic.name)]
@@ -62,8 +64,12 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
   const pick = (event: FormEvent) => {
     event.preventDefault();
     const name = typing.trim();
-    if (name === "") return;
-    if (!has(name)) setChosen((current) => [...current, name]);
+    if (name === "") {
+      return;
+    }
+    if (!has(name)) {
+      setChosen((current) => [...current, name]);
+    }
     setTyping("");
     field.current?.focus();
   };

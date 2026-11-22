@@ -10,7 +10,9 @@ const storageKeyFor = (accountId: string | null): string => (accountId === null 
 function readAll(accountId: string | null, storage: Storage): ReadingPositions {
   try {
     const raw = storage.getItem(storageKeyFor(accountId));
-    if (!raw) return [];
+    if (!raw) {
+      return [];
+    }
     return ReadingPositions.safeParse(JSON.parse(raw)).data ?? [];
   } catch {
     return [];
@@ -50,7 +52,9 @@ export function forgetReadingPosition(videoId: string, accountId: string | null,
 export function moveReadingPositions(videoIds: readonly string[], toAccountId: string, storage: Storage = globalThis.localStorage): void {
   for (const videoId of videoIds) {
     const startMs = readReadingPosition(videoId, null, storage);
-    if (startMs === null) continue;
+    if (startMs === null) {
+      continue;
+    }
     if (readReadingPosition(videoId, toAccountId, storage) === null) {
       writeReadingPosition(videoId, startMs, toAccountId, storage);
     }
@@ -62,7 +66,9 @@ export function moveReadingPositions(videoIds: readonly string[], toAccountId: s
 // remembered was the account's, and moves under it with the library.
 export function adoptReadingPositions(accountId: string, storage: Storage = globalThis.localStorage): void {
   const positions = readAll(null, storage);
-  if (positions.length === 0) return;
+  if (positions.length === 0) {
+    return;
+  }
   for (const { videoId, startMs } of [...positions].reverse()) {
     if (readReadingPosition(videoId, accountId, storage) === null) {
       writeReadingPosition(videoId, startMs, accountId, storage);

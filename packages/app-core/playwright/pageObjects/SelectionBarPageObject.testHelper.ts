@@ -18,7 +18,9 @@ export class SelectionBarPageObject extends PageObject {
     this.step(`verifyActionsAreNamed ${names.join(", ")}`, async () => {
       const buttons = this.get(selectionBarTestIds.root).getByRole("button");
       await expect(buttons).toHaveCount(names.length);
-      for (const [index, name] of names.entries()) await expect(buttons.nth(index)).toHaveAccessibleName(name);
+      for (const [index, name] of names.entries()) {
+        await expect(buttons.nth(index)).toHaveAccessibleName(name);
+      }
     });
 
   verifyIsEnabled = (enabled: boolean) =>
