@@ -1,4 +1,5 @@
 @use "./tokens.scss";
+@use "./stickyFade.scss";
 
 * {
   box-sizing: border-box;
@@ -84,13 +85,7 @@ a:hover {
     height: var(--sticky-fade-height);
     pointer-events: none;
     opacity: 0;
-    background: linear-gradient(
-      var(--ground),
-      color-mix(in srgb, var(--ground) 85%, transparent) 33%,
-      color-mix(in srgb, var(--ground) 45%, transparent) 62%,
-      color-mix(in srgb, var(--ground) 15%, transparent) 84%,
-      transparent
-    );
+    @include stickyFade.fade-gradient(var(--ground));
   }
 
   // The fallback, and the reduced-motion path: the blanket rule at the foot of this file

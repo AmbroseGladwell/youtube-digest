@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { Chat } from "@overview/domain";
+import { CutText } from "../../../../components/shared/CutText/CutText.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { conversationLine, firstQuestionOf, lastActive } from "../../util/conversationLine.js";
 import styles from "./ChatConversationList.module.scss";
@@ -55,7 +56,7 @@ export function ChatConversationList({ chats, openChatId, now, onNew, onOpen, on
               onClick={() => onOpen(chat)}
               data-testid={chatConversationListTestIds.open}
             >
-              <span className={styles.title}>{firstQuestionOf(chat)}</span>
+              <CutText text={firstQuestionOf(chat)} className={styles.title} />
               <span className={styles.meta} data-testid={chatConversationListTestIds.meta}>
                 {conversationLine(chat, now)}
               </span>

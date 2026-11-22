@@ -798,7 +798,9 @@ From the hand-off's pages, built for the panel beside the note and the phone she
   - A link opens in a new tab, and says so to a screen reader. Only http(s) addresses become links;
     for any other, the words stay and the address goes.
   - A fenced block is a monospace block on the surface tint, naming its language, with Copy. It
-    scrolls sideways and can be reached by keyboard.
+    scrolls sideways and can be reached by keyboard. That includes a block inside a section's
+    numbered or bulleted item: an item holding a fence is drawn as paragraphs and blocks, and any
+    other item stays inline (OV-372).
   - Raw HTML stays text.
   - While an answer streams, an open mark or fence shows as it will be, never its markers.
     A half-written link shows its words alone.
@@ -869,10 +871,19 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   overviews' chips by relation, then the line from `stats` (`askStatsLine`: "From 5 of your 208
   overviews", "From 5 of this project's 83 overviews"), then Copy and "Sources N". Each section
   lands whole.
-- **The drawer** (`AskDrawer`, top left) holds New chat and every library and project conversation,
-  never an overview's (`askChatsQuery`: the library's, then each project's).
+- **The drawer** (`AskDrawer`, top left) holds New chat and every conversation on the device: the
+  library's, each project's and each overview's (OV-363; `askChatsQuery` over
+  `ChatStore.listEveryChat`, leaving out a deleted project's).
   - It's grouped Today, Yesterday, Previous 7 days and Earlier (`askHistoryGroups`). Each item
-    shows its first question and its scope, "Your library" or the project's name.
+    shows its first question and its scope: "Your library", the project's name or the overview's
+    title, on one line. A question cut off shows in full in a tip on hover or keyboard focus,
+    and on touch only while pressed and held, a press that doesn't then open it (`CutText`, OV-371), as do the overview's Conversations list and the chat panel's title. There's no thumbnail (owner, 22 Nov 2026: no Design round).
+  - A library or project conversation opens on the Ask page. An overview's opens on that overview,
+    with chat open on that conversation (owner, 22 Nov 2026): the link carries the conversation id
+    in its state (`conversationFromLocation`), the overview page opens it once chat is offered and
+    the conversation is on the device, then clears the state so a reload or Back doesn't open it
+    again. Chat's `opened` event says `from: "askDrawer"`.
+  - Deleting a conversation from either list refreshes both, the overview's own and the drawer's.
   - Its ⋯ (on hover, on focus and on the open one; always on touch) has only Delete conversation.
     There's no Rename, because the title is the first question.
   - Deleting has Undo for six seconds, and the delete is made when the toast goes or the reader
@@ -880,7 +891,18 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - On the web (354t-4) it's a raised 280px column down the left of the page, full height. The
     button that opens it is at the page's far left, with a panel icon, and the drawer closes with
     its own button.
-  - On a phone it's a bottom sheet over a scrim.
+  - Close and New chat stay pinned at its top as the list scrolls, with the fade under the bar in
+    the drawer's own surface once it has scrolled (OV-371; `fade-under-the-bar.md`, whose
+    gradient is now the `fade-gradient` mixin in `theme/stickyFade.scss`). The drawer doesn't use
+    `data-sticky-fade` itself, since only the lowest band keeps that fade and it would take it
+    from the masthead.
+  - Opening and closing slide: on the web its width opens from the left with what's inside held
+    at the open width, and on a phone the sheet rises over a fading scrim. Closing plays it
+    backwards. It doesn't slide when it starts open, or with reduced motion (OV-371).
+  - On the web it starts open whenever the Ask page opens (owner, 22 Nov 2026, OV-370); closed,
+    it stays closed until the page is opened again. `drawer.opened` counts only the reader opening
+    it.
+  - On a phone it's a bottom sheet over a scrim, and starts closed.
   - The ⋯ menu (354t-6) is 220px and right-aligned. It opens below the ⋯, or above it when there's
     no room below, as for the last conversation in a phone's sheet (OV-362).
 - **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation.
@@ -889,7 +911,8 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - `chat.*`: asked (typed or a starter, new conversation, pins and set aside counted), picked (how
     many), answered (sections, overviews cited), answerFailed, waited, stopped, answerCopied,
     sourcesMenuOpened, readOpened, sourcePinned, sourceRemoved, overviewFollowed and plansFollowed.
-  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone.
+  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone. The last
+    three carry `scope`: library, project or overview (OV-363).
 
 ## Over MCP
 

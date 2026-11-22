@@ -36,6 +36,12 @@ export class IndexedDbChatStore implements ChatStore {
     return chats.sort((left, right) => left.startedAt.localeCompare(right.startedAt));
   }
 
+  async listEveryChat(): Promise<Chat[]> {
+    const store = this.#db.transaction(CHATS_STORE, "readonly").objectStore(CHATS_STORE);
+    const chats = (await promisifyRequest<unknown[]>(store.getAll())).flatMap(readable);
+    return chats.sort((left, right) => left.startedAt.localeCompare(right.startedAt));
+  }
+
   async getChat(id: string): Promise<Chat | null> {
     const store = this.#db.transaction(CHATS_STORE, "readonly").objectStore(CHATS_STORE);
     const raw = await promisifyRequest<unknown>(store.get(id));
