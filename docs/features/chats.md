@@ -303,7 +303,7 @@ can refuse before the answer starts, so a refusal is an ordinary JSON error:
 | The overview isn't held, or the conversation was deleted   | 404 `not_found`              |                                                                                                    |
 | A video or episode with no transcript kept                 | 422 `transcript_unavailable` | `chat: "no-source"`                                                                                |
 | The conversation has `MAX_CHAT_QUESTIONS` questions        | 400 `invalid_request`        | `conversation: "full"`                                                                             |
-| The month's, the day's or the global day's allowance spent | 429 `too_many_requests`      | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
+| The month's, the day's or the global day's usage spent (or, `scope: "library"`, too little left for a library question) | 429 `too_many_requests`      | `quota`, `retryAfterSeconds`, `resetsOn` for the month (`tiers.md`, "Questions about an overview") |
 | No key on this server                                      | 503 `unavailable`            |                                                                                                    |
 | The provider failed before answering                       | 502 `generation_failed`      |                                                                                                    |
 
@@ -770,14 +770,20 @@ what is raised in it on `--surface` and, in light, a soft shadow (`--shadow-chat
   link at the top goes back to the citation. One since deleted reads "From a conversation you
   deleted", muted, not a link. That a new conversation can see the others is said once, in its
   empty state, and otherwise only by these citations.
-- **What's left and the waits** (design 310ab–310ai): nothing shows while more than ten questions are
-  left this month; at ten or fewer a muted line under the field says how many, "on us". The list's
-  foot always says "84 of 100 questions left this month, on us. More on 1 December.", and Settings ›
-  Plan has a cell for it beside the overviews. A wait takes the field's place (`ChatWaitBlock`,
-  copy in `chatWaitCopy`), with the questions above it hidden: a spent month names when it's back
-  and offers only plans that give more (Free: See plans; BYO Plus: See Plus; Plus: nothing); the
-  day's limit and everyone's day say tomorrow and offer nothing. A month already spent shows its
-  wait as chat opens, from `/api/chat-usage`. At 50 questions a conversation offers New
+- **The meter and the waits** (OV-376, designs 376a–376i; 310ae–310ai before it): chat is counted
+  in usage (`tiers.md`, "Chat usage"), so readers see a share, never a count. Under half used
+  nothing shows under the field. From half, `ChatMeterLine` adds one quiet line under it, a 44 ×
+  4px bar and "60% of chat used · Resets 1 December", rounded down to tens (`chatMeterOf`). From
+  90% it takes the alert colour in whole percent, at most 100, with See plans or See Plus where a
+  plan gives more, and is announced once; the bar is hidden from assistive tech. Settings › Plan
+  always shows the full meter ("Chat, on us", "% used", an 8px bar, and "Questions about one
+  overview use the least; questions across your library use more.", or "Nearly used up" from
+  90%). A wait takes the field's place (`ChatWaitBlock`, copy in `chatWaitCopy`), with the
+  questions above it hidden: "You’ve used this month’s chat" says when it's back, that overviews
+  keep working, and offers only plans that give more (Free: See plans; BYO Plus: See Plus; Plus:
+  nothing); the day's limit and everyone's day say tomorrow in usage words and offer nothing. A
+  month already spent shows its wait as chat opens, from `/api/chat-usage` (`spentWaitOf`).
+  `reader.chat.meterShown` and `ask.chat.meterShown` report each state once, by plan. At 50 questions a conversation offers New
   conversation in the field's place, and its header adds "· 50 questions". Offline, the field
   gives way to "You're offline"; past conversations stay readable. No words four seconds after
   asking says "Still working on it…"; words stopping for six say the connection is slow
@@ -940,7 +946,10 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - On a phone it's a bottom sheet over a scrim, and starts closed.
   - The ⋯ menu (354t-6) is 220px and right-aligned. It opens below the ⋯, or above it when there's
     no room below, as for the last conversation in a phone's sheet (OV-362).
-- **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation.
+- **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation. The
+  meter line sits under the field on the Ask page too (376g), and when a library question won't
+  fit but an overview question would, "Not enough chat left for a library question" takes the
+  field's place and says questions about one overview still work until the reset (376h).
 - **Events**, `ask.*`, never the question, the answer, a title or which project:
   - `page.opened`: from the top bar or a project, and over what.
   - `chat.*`: asked (typed or a starter, new conversation, pins and set aside counted), picked (how

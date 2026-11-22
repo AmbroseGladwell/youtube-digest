@@ -13,10 +13,12 @@ export interface PlanCard {
   price: string;
   ourKey: string;
   ownKey: string;
-  questions: string;
+  chat: string;
   transcribing: string;
   note: string;
 }
+
+const typicalQuestions = (count: number) => `About ${count.toLocaleString("en-GB")} typical questions a month`;
 
 export const PLAN_CARDS: PlanCard[] = [
   {
@@ -24,7 +26,7 @@ export const PLAN_CARDS: PlanCard[] = [
     price: "£0",
     ourKey: "5 a month",
     ownKey: "10 a month",
-    questions: `${chatAllowances.free.toLocaleString("en-GB")} a month`,
+    chat: typicalQuestions(chatAllowances.free),
     transcribing: "5 hr a month",
     note: "Comes with every account.",
   },
@@ -33,7 +35,7 @@ export const PLAN_CARDS: PlanCard[] = [
     price: "£4.99 a month",
     ourKey: "10 a month",
     ownKey: "200 a month",
-    questions: `${chatAllowances["byo-plus"].toLocaleString("en-GB")} a month`,
+    chat: typicalQuestions(chatAllowances["byo-plus"]),
     transcribing: "15 hr a month",
     note: "Cheaper, for a reader who already pays an AI provider.",
   },
@@ -42,7 +44,7 @@ export const PLAN_CARDS: PlanCard[] = [
     price: "£7.99 a month",
     ourKey: "50 a month",
     ownKey: "200 a month",
-    questions: `${chatAllowances.plus.toLocaleString("en-GB")} a month`,
+    chat: typicalQuestions(chatAllowances.plus),
     transcribing: "30 hr a month",
     note: "For a reader who would rather not hold a key at all.",
   },

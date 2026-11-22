@@ -80,8 +80,8 @@ const PlanCardItem = ({ card, yours }: PlanCardItemProps) => {
           <dd>{card.ownKey}</dd>
         </div>
         <div>
-          <dt>Questions, on us</dt>
-          <dd>{card.questions}</dd>
+          <dt>Chat, on us</dt>
+          <dd>{card.chat}</dd>
         </div>
         <div>
           <dt>Transcribing episodes</dt>
