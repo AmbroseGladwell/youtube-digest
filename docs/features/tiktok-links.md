@@ -95,22 +95,23 @@ what the vendor's answer says it charged.
 The routes answer `unavailable` until `SCRAPECREATORS_API_KEY` is set. The startup log says
 which (`api.startup.tiktok`). The key is a secret:
 
-1. The owner registers at ScrapeCreators and puts the key in Bitwarden, in `overview-dev` and
-   `overview-prod`.
-2. Only then does `SCRAPECREATORS_API_KEY="${SCRAPECREATORS_API_KEY}"` go into `.env.tpl` and
-   `.env.prod.tpl`. A placeholder Bitwarden doesn't carry refuses the whole render (`secrets.md`).
-3. `task deploy:secrets` puts it into Fly.
+1. The key is in Bitwarden, in `overview-dev` and `overview-prod` (22 Nov 2026).
+2. `.env.tpl` and `.env.prod.tpl` carry `SCRAPECREATORS_API_KEY`.
+3. `task deploy:secrets` puts it into Fly, which switches TikTok on in production.
 
-## What is not yet checked
+## Checked against the vendor
 
-These need a real key, and the first live call should check them:
+Checked with a real key on 22 Nov 2026, through the built reader and with direct calls:
 
-- **The length's unit.** `aweme_detail.video.duration` is read as milliseconds, as TikTok's
-  own API counts it and as the vendor's sample suggests. Their docs don't say outright.
-- **Short links.** The docs don't say whether `vm.tiktok.com` links are followed. If they aren't,
-  they come back as a failure, and following the redirect ourselves is a one-request fix.
-- **What a failure costs.** The docs give each call as one credit and "no transcript" as none.
-  The tally records whatever the answer says it charged.
+- **The length is in milliseconds.** `aweme_detail.video.duration` was 80,600 for an 80-second
+  video (and `music.duration` was 80).
+- **The words are WebVTT** in `transcript`, with `cla_info.caption_infos[].is_auto_generated: true`
+  for TikTok's own track. A video without captions answers `transcript: null` and still costs one
+  credit, for its details.
+- **A missing video** answers 404 `Video not found`, with `credits_charged: 0`.
+- **Not yet seen:** a real `vm.tiktok.com` short link. The docs don't say whether the vendor follows
+  one, and none was to hand. If it doesn't, it comes back as a failure, and following the redirect
+  ourselves is a one-request fix.
 
 ## Who may ask
 

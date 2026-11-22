@@ -58,7 +58,7 @@ const FAILURE_BY_STATUS: Record<number, TikTokReadFailure> = { 400: "not-a-video
 
 const urlOrNull = (value: string | undefined): string | null => (z.url().safeParse(value).success ? value! : null);
 
-// Milliseconds, as TikTok counts it (docs/features/tiktok-links.md, "What is not yet checked").
+// Milliseconds, checked live (docs/features/tiktok-links.md, "Checked against the vendor").
 const secondsOf = (milliseconds: number | undefined): number | null =>
   milliseconds !== undefined && milliseconds > 0 ? Math.max(1, Math.round(milliseconds / 1000)) : null;
 
