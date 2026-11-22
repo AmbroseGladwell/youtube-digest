@@ -8,7 +8,7 @@ import { useAskQuestion, type AskedFrom, type AskExtras } from "./useAskQuestion
 import { conversationSources } from "./util/conversationSources.js";
 import { firstQuestionOf, lastActive } from "./util/conversationLine.js";
 
-type OpenedFrom = AskedFrom | "menu" | "conversationsLink" | "receipt";
+type OpenedFrom = AskedFrom | "menu" | "conversationsLink" | "receipt" | "askDrawer";
 
 export type ChatView = "conversation" | "list";
 
@@ -182,6 +182,15 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     focusField();
   };
 
+  // Arriving from the Ask drawer with one of this overview's conversations (OV-363).
+  const arriveAtConversation = (chat: Chat) => {
+    goTo(idOf(chat));
+    if (!open) {
+      show("askDrawer");
+    }
+    focusField();
+  };
+
   // The latest conversation a question was asked in, for its receipt under the note (310d).
   const answeredHere = (question: string): { at: string; onOpen: () => void } | null => {
     let found: { at: string; chat: Chat } | null = null;
@@ -283,6 +292,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     openLatest,
     openList,
     openConversation,
+    arriveAtConversation,
     answeredHere,
     followConversation,
     goBack,

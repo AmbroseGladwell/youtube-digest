@@ -26,6 +26,7 @@ import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { chatWords } from "../../util/chatWords.js";
 import { byRelation, citationKey } from "../../util/chatSourceGroups.js";
+import { holdsCodeBlock } from "../../util/answerBlocks.js";
 import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
@@ -254,6 +255,18 @@ export const ChatAnswer = ({
   );
 };
 
+// A list item's text, inline, or as paragraphs and code blocks when it holds a fence (OV-372).
+const ChatItemText = ({ text }: { text: string }) => {
+  if (!holdsCodeBlock(text)) {
+    return <ChatMarkedText text={text} />;
+  }
+  return (
+    <div className={styles.itemBlocks} data-testid={chatAnswerTestIds.itemBlocks}>
+      <ChatAnswerText text={text} />
+    </div>
+  );
+};
+
 // OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
 // sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
 export const ChatAnswerSectionsView = ({
@@ -293,7 +306,7 @@ export const ChatAnswerSectionsView = ({
             <ol className={styles.list}>
               {section.numbered.map((item, at) => (
                 <li key={at}>
-                  <ChatMarkedText text={item.text} />
+                  <ChatItemText text={item.text} />
                   {chipsOf !== undefined && item.sources.length > 0 && (
                     <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
                       {row(item.sources)}
@@ -307,7 +320,7 @@ export const ChatAnswerSectionsView = ({
             <ul className={styles.list}>
               {section.bullets.map((item, at) => (
                 <li key={at}>
-                  <ChatMarkedText text={item.text} />
+                  <ChatItemText text={item.text} />
                   {chipsOf !== undefined && item.sources.length > 0 && (
                     <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
                       {row(item.sources)}

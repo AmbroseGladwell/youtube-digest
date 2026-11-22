@@ -1,3 +1,4 @@
+import { createMigratedTestPglite } from "./createMigratedTestPglite.testHelper.js";
 import { createTestPglite } from "./createTestPglite.testHelper.js";
 import type { Embedder } from "../meaning/Embedder.js";
 import type { FastifyBaseLogger, FastifyInstance } from "fastify";
@@ -96,8 +97,10 @@ export const createTestApp = async (
     podcastWeb,
   }: TestAppOptions = {},
 ): Promise<TestApp> => {
-  const sql = createPgliteSqlClient(createTestPglite());
-  await runMigrations(sql, { before: migrationSteps(), ...(migrationsUpTo === undefined ? {} : { upTo: migrationsUpTo }) });
+  const sql = createPgliteSqlClient(migrationsUpTo === undefined ? await createMigratedTestPglite() : createTestPglite());
+  if (migrationsUpTo !== undefined) {
+    await runMigrations(sql, { before: migrationSteps(), upTo: migrationsUpTo });
+  }
   const clock: TestClock = {
     now: new Date("2026-09-26T09:00:00.000Z"),
     advance(ms) {

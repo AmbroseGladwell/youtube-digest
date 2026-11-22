@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { chatConversationId, chatOwner, chatRecordId, MAX_CHAT_PINS, type Chat, type OverviewId, type ProjectId } from "@overview/domain";
 import type { AskOwner } from "@overview/sync";
 import { Routes } from "../../app/Routes.js";
+import { CONVERSATION_STATE } from "../reader/util/conversationFromLocation.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { chatKeys } from "./chatKeys.js";
 import { useDeleteChatMutation } from "./mutations/useDeleteChatMutation.js";
@@ -13,11 +14,12 @@ import { conversationSources } from "./util/conversationSources.js";
 
 const newConversationId = (): string => crypto.randomUUID();
 
-export const askScopeOfChat = (chat: Chat): "library" | "project" => (chatOwner(chat).kind === "project" ? "project" : "library");
+export const askScopeOfChat = (chat: Chat): "library" | "project" | "overview" => chatOwner(chat).kind;
 
 // The Ask page (OV-354, page 3): one conversation over the library or a project at a time, named
-// in the address so it survives a reload; the drawer's history of every library and project
-// conversation, a deleted one undoable for six seconds; and what the next question pins.
+// in the address so it survives a reload; the drawer's history of every conversation, an
+// overview's opening on that overview (OV-363), a deleted one undoable for six seconds; and what
+// the next question pins.
 export const useAskPage = (projectId: ProjectId | null, chatParam: string | null) => {
   const owner: AskOwner = projectId === null ? { kind: "library" } : { kind: "project", id: projectId };
   const scope = askScopeOf(owner);
@@ -129,6 +131,10 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
   const openConversation = (opened: Chat) => {
     const of = chatOwner(opened);
     analytics.ask.drawer.conversationOpened({ scope: askScopeOfChat(opened) });
+    if (of.kind === "overview") {
+      navigate(Routes.overview(of.id), { state: { [CONVERSATION_STATE]: chatConversationId(opened.id) } });
+      return;
+    }
     goTo({ project: of.kind === "project" ? (of.id as ProjectId) : null, chat: chatConversationId(opened.id) });
     focusField();
   };

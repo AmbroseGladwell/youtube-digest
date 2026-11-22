@@ -111,6 +111,7 @@ export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, ap
         queryClient.setQueryData<Chat[]>(chatKeys.list(overviewId), (current) =>
           withAnswer(current ?? [], { overviewId }, outcome.chatId, outcome.messages),
         );
+        void queryClient.invalidateQueries({ queryKey: chatKeys.asked() });
         const answer = outcome.messages.find((message) => message.from === "answer");
         if (answer !== undefined && answer.from === "answer") {
           analytics.reader.chat.answered({

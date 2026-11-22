@@ -127,7 +127,7 @@ const owned = (owner: { projectId?: string }, startedAt: string): Chat => {
     : { ...rest, id: chatRecordId({ kind: "project", id: owner.projectId }, conversation), projectId: ProjectId.parse(owner.projectId) };
 };
 
-test("a project's chats are listed by the project, and the library's are those with no owner (OV-353)", async () => {
+test("a project's chats are listed by the project, the library's are those with no owner (OV-353), and every chat is listed oldest first (OV-363)", async () => {
   const db = await openTestDatabase();
   const store = new IndexedDbChatStore(db);
   const projectId = randomUUID();
@@ -146,6 +146,10 @@ test("a project's chats are listed by the project, and the library's are those w
     [library.id],
   );
   assert.equal(library.id.startsWith("library:"), true);
+  assert.deepEqual(
+    (await store.listEveryChat()).map(({ id }) => id),
+    [about.id, library.id, project.id],
+  );
 });
 
 test("a project's chats go with it, whether it is deleted here or its tombstone is pulled", async () => {
