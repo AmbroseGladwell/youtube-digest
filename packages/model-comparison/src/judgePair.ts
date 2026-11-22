@@ -9,8 +9,7 @@ import type { CandidateResult, JudgeOutcome, JudgeRecord } from "./JudgeRecord.j
 
 export const BASELINE_MODEL = "anthropic:claude-opus-5-5";
 
-// docs/architecture/model-comparison.md, "Who judges": never a model from either note's
-// provider, first choice first.
+// Never either note's provider: docs/architecture/model-comparison.md, "Quality: the judge".
 export const JUDGES: readonly string[] = ["openai:gpt-6.1-sol", "gemini:gemini-3.1-pro-preview", "anthropic:claude-opus-5-5"];
 
 export const judgeFor = (baseline: ComparedModel, candidate: ComparedModel): ComparedModel => {

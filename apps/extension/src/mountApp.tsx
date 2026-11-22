@@ -36,21 +36,16 @@ export interface MountOptions {
   youTubeFetch?: YouTubeFetch | null;
 }
 
-// The one thing an extension page can do about being out of date that a web page cannot:
-// take the reader to where Chrome updates it (docs/features/record-migrations.md).
+// The one thing an extension page can do about being out of date: take the reader to Chrome's updater.
 const openExtensionsPage: AppUpdate = {
   label: "Open extensions",
   apply: () => void chrome.tabs.create({ url: "chrome://extensions" }),
 };
 
-// Chrome writes update_url into the manifest it hands back for an extension installed from
-// the Web Store, and leaves it out for one loaded unpacked. It is the only signal for this
-// that costs no permission, which matters: a permission added for a cosmetic question is a
-// permission to justify at review (docs/architecture/store-listing.md).
+// Chrome sets update_url only for a Web Store install, the one signal that costs no permission.
 const loadedUnpacked = (): boolean => chrome.runtime.getManifest().update_url === undefined;
 
-// A hash router, not a browser one: an extension document is a packaged file, so a pushed
-// path like /overviews/<id> resolves to nothing and the panel 404s on reload.
+// A hash router: an extension document is a packaged file, so a pushed path 404s on reload.
 export const mountApp = async ({
   layout = "full",
   activeVideo = null,
@@ -77,8 +72,7 @@ export const mountApp = async ({
     return { accountId, stores, close };
   };
 
-  // Once, for an install signed in before each account had a library of its own. A failure
-  // leaves the library where it was, to be tried again next start.
+  // Once, for an install signed in before accounts had libraries; a failure is retried next start.
   try {
     await adoptSignedInLibrary({
       surface: "extension",

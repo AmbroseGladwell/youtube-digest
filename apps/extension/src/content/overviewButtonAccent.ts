@@ -20,8 +20,7 @@ export const mixColours = (base: string, over: string, amount: number): string =
 
 const ringOf = (hex: string, alpha: number) => `rgba(${channels(hex).join(",")},${alpha})`;
 
-// Design 135k: today's recipe with the accent in the orange's place. Orange itself stays the
-// hand-set values in overviewButtonStyles.ts.
+// Design 135k: the accent in the orange's place; orange keeps overviewButtonStyles.ts's hand-set values.
 export const overviewButtonAccent = (accentColour: AccentColour, dark: boolean): OverviewButtonAccent => {
   const palette = ACCENT_PALETTES[accentColour];
   if (dark) {

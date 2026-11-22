@@ -29,8 +29,7 @@ export class OverviewButton {
     this.element.id = OVERVIEW_BUTTON_ID;
     this.element.type = "button";
 
-    // Neither is touched again: which of them shows is the stylesheet's job, off the
-    // one state attribute.
+    // Which one shows is the stylesheet's job, off the one state attribute.
     const mark = document.createElement("span");
     mark.className = "ovb-mark";
     mark.innerHTML = MARK;
@@ -40,8 +39,7 @@ export class OverviewButton {
 
     this.#label = document.createElement("span");
     this.#label.className = "ovb-label";
-    // The label is the only thing that reports a finished run to anyone not watching the
-    // pill, so it is announced rather than silently swapped.
+    // The label is all that reports a finished run to anyone not watching the pill.
     this.#label.setAttribute("aria-live", "polite");
 
     this.#bar = document.createElement("span");
@@ -91,8 +89,7 @@ export class OverviewButton {
       kind === "generating" && startedAt !== null ? `${LABEL.generating} · ${elapsedLabel(startedAt, Date.now())}` : LABEL[kind];
   }
 
-  // Ticked from the run's own startedAt rather than counted up from zero here, so a
-  // panel opened late still shows how long the run has actually been going.
+  // From the run's own startedAt, so a panel opened late still shows the run's real length.
   #runClock(): void {
     this.#stopClock();
     if (this.#state.kind !== "generating" || this.#state.startedAt === null) {

@@ -1,8 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { youTubeOriginRule } from "./youTubeOriginRule.js";
 
-// The rule is read by Chrome, not by us, so what is worth holding is its scope: it strips
-// a request header, and must reach nothing but our own calls to YouTube.
 beforeAll(() => {
   globalThis.chrome = {
     declarativeNetRequest: {

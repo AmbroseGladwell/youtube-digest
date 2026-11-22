@@ -5,8 +5,7 @@ import type { PlayerResponse } from "./PlayerResponse.js";
 
 const UNAVAILABLE = "unavailable";
 
-// lengthSeconds is a string, and "0" for anything live. VideoSource.durationMs is
-// positive-or-null, so a live stream has no duration rather than a duration of nothing.
+// "0" for anything live, which has no duration rather than a duration of nothing.
 const durationMs = (lengthSeconds: string | undefined): number | null => {
   const seconds = Number(lengthSeconds);
   return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : null;
@@ -17,8 +16,7 @@ const publishedAt = (raw: string | undefined): string | null => {
   return Number.isNaN(parsed) ? null : new Date(parsed).toISOString();
 };
 
-// YouTube's own resolved thumbnails, widest first. Never assembled from the video id:
-// the rule in packages/domain/src/VideoSource.ts outlives the source it was written for.
+// Never assembled from the video id: the rule in packages/domain/src/VideoSource.ts.
 const widestThumbnail = (response: PlayerResponse): string | null => {
   const thumbnails = response.videoDetails?.thumbnail?.thumbnails ?? [];
   const widest = thumbnails.reduce<{ url: string; width: number } | null>(

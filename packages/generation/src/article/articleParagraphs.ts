@@ -9,8 +9,7 @@ export interface ArticleParagraph {
   place: ArticlePlace;
 }
 
-// The article numbered the way a transcript is, so the model names a paragraph and code
-// decides where that is. Only a section's first paragraph can use the heading's id.
+// The model names a paragraph and code finds it; only a section's first paragraph takes the heading's id.
 export const articleParagraphs = ({ sections }: ExtractedArticle): ArticleParagraph[] =>
   sections
     .flatMap(({ heading, anchor, text }) =>

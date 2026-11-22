@@ -106,8 +106,7 @@ const theOnly = (sections: Section[]): Section | null => {
   return first !== undefined && sections.every((section) => sameItems(section, first)) ? first : null;
 };
 
-// The recipe a page shows when it declares none: an ingredients heading over a list, and a
-// method heading over steps (docs/features/recipe-notes.md, "Read from the page itself").
+// docs/features/recipe-notes.md, "Read from the page itself".
 export const markupRecipe = (document: Document): Recipe | null => {
   if (document.body === null) {
     return null;

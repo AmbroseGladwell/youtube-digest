@@ -1,8 +1,6 @@
 import type { PlayerResponse } from "./PlayerResponse.js";
 
-// Trimmed from a real ANDROID player response for tL9Lw250spc, not written to look
-// plausible: the shapes that surprise (kind absent rather than null on a written track,
-// lengthSeconds a string, webp thumbnails widest-last) are the ones worth keeping.
+// Trimmed from a real ANDROID response, keeping the shapes that surprise.
 export const FIXTURE_VIDEO_ID = "tL9Lw250spc";
 
 export const CAPTION_BASE_URL = "https://www.youtube.com/api/timedtext?v=tL9Lw250spc&ei=2ECva&lang=en&fmt=srv3";
@@ -37,8 +35,7 @@ export const makePlayerResponse = (overrides: Partial<PlayerResponse> = {}): Pla
   };
 };
 
-// The WEB client answers UNPLAYABLE and carries no caption tracks, but it is the only one
-// that carries a publish date (docs/features/transcript-retrieval.md).
+// The WEB client is unplayable and has no captions, but alone carries a publish date.
 export const makeMetadataResponse = (publishDate = "2026-07-25T10:29:09-07:00"): PlayerResponse => {
   return {
     playabilityStatus: { status: "UNPLAYABLE" },
@@ -46,8 +43,7 @@ export const makeMetadataResponse = (publishDate = "2026-07-25T10:29:09-07:00"):
   };
 };
 
-// Two written cues and one machine-heard, in the shapes json3 actually emits: a segless
-// window-definition event, a rolling append, and a whitespace-only cue.
+// Two written cues and one machine-heard, in the shapes json3 actually emits.
 export const JSON3_WRITTEN = JSON.stringify({
   events: [
     { tStartMs: 0, dDurationMs: 2706, segs: [{ utf8: "How much LSD should\nyou give an elephant?" }] },

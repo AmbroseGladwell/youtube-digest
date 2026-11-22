@@ -3,10 +3,7 @@ import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// A defence against accident, not against an adversarial interpreter sharing the shell: a
-// tool call that would print a secret into the model's context is refused. The list of
-// files and names comes from the templates, so it needs no upkeep
-// (docs/conventions/secrets.md).
+// Against accident, not an adversary: docs/conventions/secrets.md, "The guards, and what each honestly covers".
 
 const ALWAYS_GENERATED = [".env", ".env.local"];
 const ALWAYS_SECRET = ["BWS_ACCESS_TOKEN"];
@@ -102,8 +99,7 @@ export const harvest = (projectDir) => {
 
 const unquote = (token) => token.replace(/^['"]|['"]$/g, "");
 
-// Whitespace splits tokens only outside quotes, so a quoted sentence that happens to name
-// a file is one string literal and not a path.
+// Split only outside quotes, so a quoted sentence that names a file is one literal, not a path.
 const splitTokens = (stage) => {
   const tokens = [];
   let current = "";
@@ -172,8 +168,7 @@ const mentionsSecretName = (tokens, secretNames) => {
   return null;
 };
 
-// set -euo pipefail sets options; set alone lists every variable. The same for export and
-// declare, which dump only with -p.
+// set -euo pipefail sets options while bare set lists every variable; export and declare dump only with -p.
 const dumpsEnvironment = (first, rest) => {
   if (first === "env" || first === "printenv" || first === "set") {
     return rest.length === 0;
@@ -212,8 +207,7 @@ const decideStage = (stage, { generatedFiles, secretNames }) => {
   return null;
 };
 
-// Splits a command line into pipelines and each pipeline into stages, at separators that
-// are outside quotes: a semicolon inside a string is text, not a second command.
+// Separators inside quotes are text: a semicolon in a string is not a second command.
 export const pipelines = (command) => {
   const result = [];
   let stages = [];
@@ -288,9 +282,7 @@ export const decide = ({ toolName, toolInput }, harvested) => {
   return null;
 };
 
-// What a pipeline that has touched a secret may end in: something that answers a
-// question about the text without repeating it. The first version of this guard allowed
-// any pipe at all, and a head into cut put part of a key into the conversation.
+// Sinks answer about the text without repeating it; once, head into cut leaked part of a key.
 const SINKS = new Set(["wc", "sha256sum", "shasum", "md5", "md5sum", "cmp", "true", "test", "["]);
 
 const printsBwsValues = (tokens) => {

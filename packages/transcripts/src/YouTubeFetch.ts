@@ -10,8 +10,5 @@ export interface YouTubeFetchResponse {
   body: string;
 }
 
-// A plain string body rather than a stream, because this crosses
-// chrome.runtime.sendMessage and has to survive a structured clone. Supplying this is how
-// a shell lends its CORS exemption to code that has none
-// (docs/features/transcript-retrieval.md).
+// A string body, since it crosses chrome.runtime.sendMessage and must survive a structured clone.
 export type YouTubeFetch = (request: YouTubeFetchRequest) => Promise<YouTubeFetchResponse>;

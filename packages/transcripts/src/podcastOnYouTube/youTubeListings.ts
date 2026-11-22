@@ -51,9 +51,7 @@ export const clockSeconds = (value: string): number | null => {
     .reduce((total, part) => total * 60 + Number(part), 0);
 };
 
-// YouTube's own page data, read loosely: these are the web client's screens, not an API, so a
-// field that moves reads as nothing found rather than as an error
-// (docs/features/podcast-on-youtube.md, "What is read from YouTube").
+// docs/features/podcast-on-youtube.md, "What is read from YouTube".
 export const channelsIn = (searchResponse: unknown): ListedChannel[] => {
   return everyValueAt(searchResponse, "channelRenderer").flatMap((channel) =>
     isObject(channel) && typeof channel.channelId === "string" ? [{ channelId: channel.channelId, title: text(channel.title) }] : [],
@@ -91,7 +89,6 @@ export interface ListedVideo extends ListedUpload {
   channelTitle: string;
 }
 
-// A video search's results, with the channel each is on.
 export const videosIn = (searchResponse: unknown): ListedVideo[] => {
   return everyValueAt(searchResponse, "videoRenderer").flatMap((video) => {
     const upload = fromVideoRenderer(video);

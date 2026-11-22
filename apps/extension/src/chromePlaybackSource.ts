@@ -1,10 +1,7 @@
 import { isYouTubeUrl, type PlaybackPosition, type PlaybackSource } from "@overview/app-core";
 import { isPlaybackReport, PLAYBACK_REPORT } from "./playbackReport.js";
 
-// Where the transcript's "follow playback" gets its position from
-// (docs/features/following-playback.md). The player is in the page, so something of ours
-// has to be in the page too — but only while the panel is open on a video, and only to
-// read `currentTime` off the <video> element and hand it back.
+// docs/features/following-playback.md, "What now touches the page, and how little".
 let position: PlaybackPosition | null = null;
 const listeners = new Set<() => void>();
 
@@ -19,17 +16,14 @@ const publish = (next: PlaybackPosition | null): void => {
   }
 };
 
-// Serialized and run in the tab, so it closes over nothing and reads its own constants
-// from the arguments (docs/features/following-playback.md).
+// Serialized and run in the tab, so it closes over nothing and takes its constants as arguments.
 const reportPlayback = (reportType: string, everyMs: number, giveUpAfter: number): void => {
   interface Reporting {
     __overviewPlaybackStop__?: () => void;
   }
   const page = window as Window & Reporting;
 
-  // YouTube's own class for the main player. A watch page can hold several <video>
-  // elements — an ad, a hovered preview — and the first one is not reliably the one
-  // being watched. The fallback is for the day that class is renamed.
+  // A watch page can hold several videos, an ad or a hovered preview; the fallback is for a renamed class.
   const mainVideo = () => document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector("video");
 
   let lastSentAt = 0;
@@ -52,11 +46,7 @@ const reportPlayback = (reportType: string, everyMs: number, giveUpAfter: number
         positionMs: Math.floor(video.currentTime * 1000),
         playing: !video.paused,
       })
-      // Counted rather than inferred from the send failing: the extension has other
-      // runtime listeners, and whether an unanswered message rejects or resolves depends
-      // on which of them happen to be alive. An explicit acknowledgement from the reader
-      // is the only reliable sign anyone is still listening
-      // (docs/features/following-playback.md).
+      // Counted: whether an unanswered message rejects depends on which other listeners are alive.
       .then((acknowledged) => {
         unacknowledged = acknowledged === true ? 0 : unacknowledged + 1;
       })
@@ -70,9 +60,7 @@ const reportPlayback = (reportType: string, everyMs: number, giveUpAfter: number
       });
   };
 
-  // Always, even when the listeners are already attached: a paused video emits no
-  // timeupdate, so a panel opening on one — or coming back to the tab — would otherwise
-  // see nothing at all until somebody pressed play.
+  // Always: a paused video emits no timeupdate, so a panel opening on one would otherwise see nothing.
   send(true);
 
   if (page.__overviewPlaybackStop__) {
@@ -97,9 +85,7 @@ const reportPlayback = (reportType: string, everyMs: number, giveUpAfter: number
   };
 };
 
-// Serialized into the tab like the reporter above, and the only thing here that writes
-// to the page. It sets one property on the player and reads nothing
-// (docs/features/following-playback.md).
+// docs/features/following-playback.md, "One thing that writes to the player".
 const seekPlayback = (positionMs: number): void => {
   const video = document.querySelector<HTMLVideoElement>("video.html5-main-video") ?? document.querySelector("video");
   if (video) {
@@ -128,8 +114,7 @@ const seekInActiveTab = async (positionMs: number): Promise<void> => {
       args: [positionMs],
     });
   } catch {
-    // No host permission for this page, or it went away mid-seek. The video simply does
-    // not move; the range beside the button is still there to navigate by.
+    // No host permission, or the page went away mid-seek: the video simply doesn't move.
   }
 };
 
@@ -146,8 +131,7 @@ const injectIntoActiveTab = async (): Promise<void> => {
       args: [PLAYBACK_REPORT, REPORT_EVERY_MS, GIVE_UP_AFTER_MISSES],
     });
   } catch {
-    // No host permission for this page, or it went away mid-injection. Reporting
-    // nothing is the same as a shell that cannot see a player at all.
+    // No host permission, or the page went away mid-injection: the same as no player at all.
     publish(null);
   }
 };

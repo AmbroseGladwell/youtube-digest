@@ -2,9 +2,7 @@ import { WatchAnyway } from "@overview/domain";
 import type { PromptSection } from "../PromptSection.js";
 import { segmentRangeFields } from "../sections/segmentRangeFields.js";
 
-// Watch it anyway, forked rather than reworded: its yes is about what a video shows, and an episode
-// has nothing to show. It keeps the key and the shape, so a podcast note's answer sits where a
-// video's does (docs/features/podcast-notes.md, "Listen to it anyway").
+// Forked, not reworded: docs/features/podcast-notes.md, "Listen to it anyway".
 export const listenAnywaySection: PromptSection = {
   title: "Listen to it anyway",
   key: "watchAnyway",

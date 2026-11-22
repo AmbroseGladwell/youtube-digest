@@ -33,8 +33,7 @@ export interface ActionableItemsRecord {
   costDollars: number | null;
 }
 
-// What a reader would have to do, in the source's own terms, never what we would advise:
-// How to apply is ours, and this list is the source's (OV-250, OV-251).
+// The source's own terms, never our advice: How to apply is ours, this list is the source's (OV-250).
 const SYSTEM_PROMPT = `You read the text of a video or article, given as numbered units, and list what it tells
 the reader to do: every step of a process or protocol, every instruction, and every rule of
 thumb the source gives for acting. List them in the source's order, each as one plain sentence in

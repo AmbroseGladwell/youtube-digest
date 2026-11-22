@@ -1,5 +1,4 @@
-// Trimmed from real WEB-client answers recorded on 12 Nov 2026 (a channel search, a channel's
-// Videos tab and its next page), keeping only the nesting each field is read through.
+// Trimmed from real WEB-client answers, 12 Nov 2026, keeping only the nesting each field is read through.
 
 export const searchAnswer = (...channels: { channelId: string; title: string }[]) => ({
   contents: {
@@ -71,7 +70,6 @@ export interface VideoRow extends UploadRow {
   channelTitle: string;
 }
 
-// A search filtered to videos: each result a videoRenderer with the channel it is on.
 export const videoSearchAnswer = (...videos: VideoRow[]) => ({
   contents: {
     twoColumnSearchResultsRenderer: {

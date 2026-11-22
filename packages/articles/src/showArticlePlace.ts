@@ -21,8 +21,7 @@ const elementHolding = (document: Document, quote: string): Element | null => {
   return nodes[nodeIndex]?.parentElement ?? null;
 };
 
-// Moves the page beside the panel, and says whether the place was there (design 77y). A quote
-// can cross inline elements, so it is matched over the page's text rather than one node's.
+// A quote can cross inline elements, so it is matched over the page's text (design 77y).
 export const showArticlePlace = (document: Document, { anchor, quote }: ArticlePlace): boolean => {
   const target = (anchor === null ? null : document.getElementById(anchor)) ?? elementHolding(document, quote);
   target?.scrollIntoView({ block: "center" });

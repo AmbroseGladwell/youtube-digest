@@ -31,9 +31,7 @@ ${transcript}
 Why they saved it: ${input.captureReason ?? "not said"}`;
 };
 
-// The video note's sections in a podcast's words, with Listen to it anyway in place of Watch it
-// anyway. A podcast has no recipe note: one that teaches a dish gets the default note
-// (docs/features/podcast-notes.md).
+// No recipe note for an episode: docs/features/podcast-notes.md, "The kind check".
 export const composePodcastPrompt = (input: PodcastGenerationInput, kind: PodcastNoteKind = "default"): ComposedPrompt => {
   const sections = enabledSections(input, kind).map((section) => (section.key === "watchAnyway" ? listenAnywaySection : section));
   const shape: Record<string, z.ZodType> = {};

@@ -14,9 +14,7 @@ interface Json3Event {
   segs?: Json3Segment[];
 }
 
-// A 200 with no events at all is what a caption URL looks like once it has been gated,
-// which is the source being turned away rather than a video without captions
-// (docs/features/transcript-retrieval.md).
+// No events at all is a gated caption URL: the source turned away, not a video without captions.
 export const mapJson3ToSegments = (body: string): TranscriptSegment[] => {
   let parsed: { events?: Json3Event[] };
   try {
@@ -38,9 +36,7 @@ export const mapJson3ToSegments = (body: string): TranscriptSegment[] => {
       continue;
     }
 
-    // endMs is the start plus YouTube's own duration, never the next cue's start and
-    // never a length inferred from the words. A cue with no duration is a cue we were
-    // not told the length of (docs/prototype/constraints.md).
+    // docs/prototype/constraints.md, "Never let a model count, measure or time anything".
     segments.push(
       TranscriptSegment.parse({
         text,

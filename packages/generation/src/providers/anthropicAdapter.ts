@@ -6,8 +6,7 @@ import { usableModels } from "./usableModels.js";
 const BASE_URL = "https://api.anthropic.com/v1";
 const MAX_TOKENS = 16000;
 
-// Unenforced, Claude can wrap the object in a code fence or add a sentence after it, so the
-// first whole object is taken. Anything malformed inside it still fails the parse.
+// Unenforced, Claude may fence the object or add a sentence after it.
 const firstJsonObject = (text: string): string => {
   const start = text.indexOf("{");
   if (start === -1) {
@@ -34,11 +33,7 @@ const firstJsonObject = (text: string): string => {
   return text.slice(start);
 };
 
-// The header Anthropic requires before it will answer a browser at all, and the reason
-// the key can live on the device rather than behind a server of ours
-// (docs/architecture/v1-architecture-decisions.md, Model D). It is sent by hand rather
-// than by the SDK: the SDK's own browser opt-in is the same header, and five of the six
-// providers need no SDK at all.
+// Sent by hand: it's the header Anthropic requires before it answers a browser at all.
 const headers = (apiKey: string) => ({
   "content-type": "application/json",
   "x-api-key": apiKey,
@@ -46,10 +41,7 @@ const headers = (apiKey: string) => ({
   "anthropic-dangerous-direct-browser-access": "true",
 });
 
-// Claude compiles an enforced schema into a grammar and refuses one past an internal size
-// limit it doesn't publish. The schema is then given in the prompt instead, as DeepSeek is
-// always given it, and the correction pass catches what enforcement would have
-// (docs/features/overview-generation-decisions.md, "When Claude refuses the schema").
+// docs/features/overview-generation-decisions.md, "The schema has to fit Claude's grammar".
 const GRAMMAR_REFUSED = /compiled grammar is too large|schema is too complex/i;
 
 export const anthropicAdapter: ProviderAdapter = {
@@ -85,9 +77,7 @@ export const anthropicAdapter: ProviderAdapter = {
     if (textBlock === undefined || typeof textBlock.text !== "string") {
       throw new GenerationError("Claude's response had no text content to parse");
     }
-    // Not the SDK's parse helper: docs/features/overview-generation-decisions.md, "Key points".
-    // A response that is nearly right is what the correction pass needs, and parse throws
-    // the whole of it away.
+    // Not the SDK's parse helper: it throws away the nearly right answer the correction pass needs.
     return JSON.parse(firstJsonObject(textBlock.text));
   },
 

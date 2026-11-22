@@ -19,8 +19,7 @@ export interface ActionJudgmentSummary {
   emptyMissed: number;
 }
 
-// The one number the owner asked for: something a reader can start on, true to the video,
-// not wrong about them, within reach, and worth doing.
+// The one number the owner asked for.
 export const isPracticalAndHelpful = (action: JudgedAction): boolean =>
   action.concrete === "concrete" &&
   action.grounding !== "contradicts-video" &&

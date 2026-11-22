@@ -1,5 +1,4 @@
-// Runs before first paint, when the settings store cannot have answered yet. Mirrors
-// applyAppearance.ts, and is the same file in both shells (docs/features/appearance.md, "No flash").
+// Mirrors applyAppearance.ts, same file in both shells: docs/features/appearance.md, "No flash".
 (function () {
   const THEMES = ["light", "dark"];
   const ACCENTS = ["orange", "gold", "lime", "emerald", "teal", "sky", "violet", "raspberry"];

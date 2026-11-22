@@ -3,8 +3,6 @@ import assert from "node:assert/strict";
 import { z } from "zod";
 import { providerJsonSchema, type JsonSchema } from "./providerJsonSchema.js";
 
-// The schemas here are nested a few levels and every lookup is an index access, so one
-// reader that fails loudly beats a hundred non-null assertions.
 const at = (schema: JsonSchema, ...path: string[]): JsonSchema => {
   let node = schema;
   for (const step of path) {

@@ -99,7 +99,6 @@ const fetchArticle = async (url: string): Promise<ExtractedArticle> => {
 const sourceIdOf = (loaded: LoadedSource) =>
   loaded.kind === "video" ? (loaded.fetched.video.id ?? loaded.fetched.video.url) : loaded.article.url;
 
-// One kind alone, so a change to only articles' prompt is measured without paying for videos.
 const chosenSources = values.kind === undefined ? COVERAGE_SET : COVERAGE_SET.filter((source) => source.kind === values.kind);
 const loaded = (await Promise.all(chosenSources.map(loadSource))).filter((source): source is LoadedSource => source !== null);
 const store = runDirectoryStore(comparisonPaths.run(values.run));

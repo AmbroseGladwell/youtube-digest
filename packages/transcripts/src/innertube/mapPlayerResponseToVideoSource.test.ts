@@ -18,8 +18,6 @@ test("the video's own fields map across, and the url is the caller's rather than
 test("duration is the video's own length, not the end of its captions", () => {
   const video = mapPlayerResponseToVideoSource(makePlayerResponse(), URL);
 
-  // The last written caption of this video ends at 2127200ms, which is what a
-  // caption-derived duration would report (docs/features/transcript-retrieval.md).
   assert.notEqual(video.durationMs, 2127200);
   assert.equal(video.durationMs, 2132000);
 });

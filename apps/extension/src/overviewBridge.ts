@@ -1,7 +1,4 @@
-// The protocol the injected button, the service worker and the side panel speak. Three
-// documents, one conversation: the page asks for a run, the panel does it, and the
-// worker is the only one of the three that is always alive to carry the answer back
-// (docs/features/injected-button.md).
+// docs/features/injected-button.md, "Three documents, one conversation".
 
 export const BridgeMessage = {
   REQUEST_OVERVIEW: "overview/request-overview",
@@ -17,8 +14,7 @@ export type ButtonStateKind = "idle" | "generating" | "ready";
 
 export interface ButtonState {
   kind: ButtonStateKind;
-  // The moment the run started, measured by whoever started it. The button ticks its own
-  // clock from this rather than being sent a duration (docs/prototype/constraints.md).
+  // docs/prototype/constraints.md, "Never let a model count, measure or time anything".
   startedAt: number | null;
   progressFraction: number;
 }

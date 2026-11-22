@@ -16,21 +16,17 @@ export const CHATS_STORE = "chats";
 export const CHATS_BY_OVERVIEW_INDEX = "byOverview";
 export const CHATS_BY_PROJECT_INDEX = "byProject";
 
-// This device's own: what it has seen of each followed playlist, and what it has queued
-// from them (docs/features/playlists.md, docs/features/capture-queue.md).
+// This device's own: docs/features/capture-queue.md, "On this device, for now".
 export const PLAYLIST_CHECKS_STORE = "playlistChecks";
 export const CAPTURE_QUEUE_STORE = "captureQueue";
 
-// The client half of sync, kept beside the records so that a write and its journal entry
-// can share one transaction (docs/features/sync-client.md).
+// Beside the records, so a write and its journal entry share one transaction.
 export const OUTBOX_STORE = "outbox";
 export const SYNC_REVISIONS_STORE = "syncRevisions";
 export const SYNC_META_STORE = "syncMeta";
 export const SYNC_ENROLLED_KEY = "enrolled";
-// Separate from the records' flag so a library enrolled before transcripts were synced
-// still journals the ones it holds, once (docs/features/transcript-storage.md).
+// Apart from the records' flag, so a library enrolled before transcripts synced journals them once.
 export const SYNC_TRANSCRIPTS_ENROLLED_KEY = "transcriptsEnrolled";
 export const SYNC_CURSOR_KEY = "cursor";
-// The kinds the cursor was pulled with. A cursor is only good for those, so a library that
-// learns a new kind pulls again from the start (docs/features/sync-client.md).
+// A cursor is only good for its kinds: docs/features/sync-client.md, "What comes down".
 export const SYNC_CURSOR_KINDS_KEY = "cursorKinds";

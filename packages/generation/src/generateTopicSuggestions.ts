@@ -12,9 +12,7 @@ import { GenerationError } from "./GenerationError.js";
 const SUGGESTED_AT_MOST = 3;
 const NEW_TOPIC_WORDS = 4;
 
-// The starter topics a source about to be written belongs under, and at most one more specific
-// interest it's clearly about, offered on onboarding's topics screen before there's an account
-// (docs/features/onboarding.md, "Suggested topics"). Offered, never chosen: the reader picks.
+// Offered before the account, never chosen: docs/features/onboarding.md, "Suggested topics".
 export const generateTopicSuggestions = async (client: GenerationClient, input: TopicSuggestionInput): Promise<TopicSuggestionResult> => {
   const names = STARTER_TOPICS.map((topic) => topic.name) as [string, ...string[]];
   const Output = z.object({

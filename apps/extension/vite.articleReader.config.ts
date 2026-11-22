@@ -4,8 +4,7 @@ import { defineConfig } from "vite";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Its own bundle, so Readability reaches a page only when a reader asks for that page and
-// never loads with the injected button (docs/features/article-extraction.md).
+// Its own bundle, so Readability reaches only a page the reader asks for, never with the button.
 export default defineConfig({
   build: {
     target: "esnext",

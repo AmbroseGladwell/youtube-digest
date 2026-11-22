@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { extensionIdFrom, extensionOriginFrom } from "./extensionId.mjs";
 
-// The id openssl and shasum derive for this key, so the two derivations agree.
 const PUBLIC_KEY =
   "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArj8I82fIpokYLDFL69EWUc9BxI+OyrbeYWclPfvr/Z6UWBowbIR5NHwbJyv59IdCyYLI+KBkcsZoti6bw1aoXk8+KeXlxacbLzauqGvN3BDjRkZUkzdpdyjU6mHNxBj1dsyKgD98SY0vPajnd2LzBk2EO6T6AdjQ8G56g4LqS3t3UoaYIS6+tQ/jEJJbNPwqrrOJiMQb1QMHyWUGk51TFSriCGrvfpuHIwsx4Hjyi3Jr17WQPzQpowXH8xVybNxkyg9EdkfMlQjaNsaS+SR6GrxeLLO/Leq4OXSYmwVO6BRDtN5jGJ/qZESQE2/K5/OId4pk8/fcbWMBFhpzlV4yyQIDAQAB";
 

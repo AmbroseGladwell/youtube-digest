@@ -1,9 +1,7 @@
 import { formatTimestamp } from "@overview/domain";
 import type { FetchedTranscript } from "@overview/transcripts";
 
-// A source as the steps check reads it: numbered units of its text, and where each one is, so
-// the check works the same on a transcript's segments now and an article's sentences later
-// (OV-251; the position space OV-202's coverage measure already takes).
+// Numbered units, so the check reads a transcript's segments and an article's sentences alike (OV-251).
 export interface StepsSource {
   sourceId: string;
   title: string;

@@ -23,9 +23,7 @@ export interface WorkerErrorReporter {
 const MINUTE_MS = 60 * 1000;
 const SEMVER = /^\d+\.\d+\.\d+$/;
 
-// The worker can be stopped between any two messages, so each error is sent the moment it
-// is caught, on its own and with keepalive, rather than held for a batch
-// (docs/architecture/errors-and-logs.md, "The service worker").
+// Sent at once, with keepalive: docs/architecture/errors-and-logs.md, "The service worker".
 export const createWorkerErrorReporter = ({
   readDestination,
   defaultApiUrl,

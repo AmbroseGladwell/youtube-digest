@@ -101,8 +101,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     ];
   }
 
-  // A note carries its video's transcript to the account; a transcript fetched only because
-  // a video was open stays on this device (docs/features/transcript-storage.md).
+  // docs/features/transcript-storage.md, "Following the reader across devices".
   async saveOverview(overview: Overview) {
     const now = new Date();
     const record = stampStoredRecord(overview, CURRENT_OVERVIEW_SCHEMA_VERSION, now);
@@ -116,8 +115,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
       change: { op: "replace", record },
     });
     const key = sourceKey(overview.source);
-    // A page has no transcript; a video's captions and an episode's words go to the account as its
-    // own copy, so its other devices read the same words (docs/features/transcript-storage.md).
+    // A page has no transcript: docs/features/transcript-storage.md, "Following the reader across devices".
     if (journaled && key !== null && overview.source.kind !== "web") {
       await appendPendingWrite(transaction, {
         kind: "transcript",
@@ -183,9 +181,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     );
   }
 
-  // The state row goes with the overview, as it does on the server: ids are never reused,
-  // so a surviving state would be a permanent orphan (docs/features/sync-api.md). Its
-  // membership records and chats go too, and the server's delete takes them, so they are not journaled.
+  // docs/features/sync-api.md, "Deletes are tombstones, and an overview takes its state with it".
   async deleteOverview(id: OverviewId) {
     const transaction = this.#db.transaction(
       [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, ...JOURNALLED_STORES],
@@ -266,9 +262,7 @@ export class IndexedDbOverviewStore implements OverviewStore {
     );
   }
 
-  // The patch is merged into the stored record rather than into a parsed one: zod strips
-  // the keys it does not know and object spread keeps them, so parsing on the write path
-  // is what would delete a newer client's fields (docs/features/record-migrations.md).
+  // Merged unparsed: docs/features/record-migrations.md, "Writes are field-scoped, not whole-record".
   #writable(kind: "overview" | "overviewState", id: string, raw: unknown, migrations: readonly RecordMigration[]): Record<string, unknown> {
     const migrated = migrateStoredRecord(raw, migrations);
     if (migrated.status === "unreadable") {

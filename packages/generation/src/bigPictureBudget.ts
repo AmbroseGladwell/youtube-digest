@@ -10,8 +10,7 @@ const TARGETS: ReadonlyArray<readonly [upToWords: number, targetWords: number]> 
 
 const ROOM_OVER_THE_TARGET = 1.25;
 
-// Sized from the source's measured length, so a short clip grows no preamble and a long
-// interview earns a paragraph (docs/features/overview-generation-decisions.md, "The big picture").
+// Why it grows with length: docs/features/overview-generation-decisions.md, "The big picture".
 export const bigPictureBudget = (sourceWords: number): number => TARGETS.find(([upToWords]) => sourceWords <= upToWords)![1];
 
 export const mostBigPictureWords = (targetWords: number): number =>

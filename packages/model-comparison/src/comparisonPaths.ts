@@ -14,7 +14,6 @@ export const comparisonPaths = {
   transcripts: join(dataDirectory, "transcripts"),
   transcriptsOf: (set: TranscriptSetName) => join(dataDirectory, set === "main" ? "transcripts" : `transcripts-${set}`),
   run: (name: string) => join(dataDirectory, "runs", name),
-  // A source's actionable items, one list per judge in its own folder, shared by every run (OV-251).
   actionableItems: join(dataDirectory, "actionable-items"),
   stepsJudgments: (name: string) => join(dataDirectory, "steps-judgments", name),
   kindChecks: (name: string) => join(dataDirectory, "kind-checks", name),

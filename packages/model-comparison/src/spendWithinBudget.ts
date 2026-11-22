@@ -17,8 +17,7 @@ export interface SpendOutcome {
   stoppedForBudget: boolean;
 }
 
-// Lanes run side by side, each one task at a time, so a lane is one model and the budget
-// can be overshot by at most one task per lane (docs/architecture/model-comparison.md).
+// One task at a time per lane, so the budget is overshot by at most one task per lane.
 export const spendWithinBudget = async <R extends Spend>(options: BudgetedSpend<R>): Promise<SpendOutcome> => {
   let spentDollars = options.spentDollars;
   let stoppedForBudget = false;

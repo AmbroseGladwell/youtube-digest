@@ -21,7 +21,6 @@ export interface ModelSummary {
   unpricedRuns: number;
   meanCostDollars: number | null;
   costPerTwentyMinutesDollars: number | null;
-  // The kind check's share, from the runs that made one (OV-275).
   kindChecked: number;
   recipeNotes: number;
   meanKindCheckCostDollars: number | null;

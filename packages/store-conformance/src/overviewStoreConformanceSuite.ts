@@ -11,10 +11,7 @@ import {
 } from "@overview/domain";
 import { makeOverview } from "./makeOverview.js";
 
-// A store that can be handed a record it did not write is the only kind that can be asked
-// whether it runs the migration chain on read. Implementations that cannot do that (an
-// API client behind a network, say) leave the hook out and skip those checks
-// (docs/features/record-migrations.md).
+// Left out by a store that can't be handed a record it didn't write, such as an API client.
 export interface OverviewStoreUnderTest {
   store: OverviewStore;
   seedRawOverview?: ((raw: unknown) => Promise<void>) | undefined;

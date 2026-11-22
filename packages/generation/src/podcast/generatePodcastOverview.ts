@@ -10,9 +10,7 @@ import { filedProjectIds } from "../sections/projectInstructions.js";
 import type { PodcastGenerationInput } from "./PodcastGenerationInput.js";
 import type { OverviewMeta } from "../OverviewMeta.js";
 
-// The kind is checked as for a video. A recipe episode gets the default note, since a recipe note
-// is built from a page's or a video's stated amounts, which an episode has neither of
-// (docs/features/podcast-notes.md).
+// No recipe note for an episode: docs/features/podcast-notes.md, "The kind check".
 export const generatePodcastOverview = async (
   client: GenerationClient,
   input: PodcastGenerationInput,

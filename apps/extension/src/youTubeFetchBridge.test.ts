@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedYouTubeUrl, isYouTubeFetchMessage, isYouTubeFetchReply, YOUTUBE_FETCH } from "./youTubeFetchBridge.js";
 
-// The worker's message handler is reachable by any content script on any page the
-// extension runs in. Without the allowlist the extension is an open CORS proxy for
-// everything in host_permissions (docs/features/transcript-retrieval.md).
 describe("isAllowedYouTubeUrl", () => {
   it("allows the YouTube origins the extension holds permissions for", () => {
     expect(isAllowedYouTubeUrl("https://www.youtube.com/youtubei/v1/player")).toBe(true);

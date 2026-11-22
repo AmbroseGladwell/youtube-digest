@@ -8,8 +8,7 @@ export interface RecordStore<T> {
 
 export const safePathPart = (part: string): string => part.replace(/[^\w.-]/g, "_");
 
-// One JSON file per record, in one folder per group, so a record can be read on its own
-// and a run that dies halfway keeps everything it finished.
+// One file per record, so a run that dies halfway keeps everything it finished.
 export const jsonRecordStore = <T>(directory: string, pathOf: (record: T) => string): RecordStore<T> => {
   return {
     async all() {

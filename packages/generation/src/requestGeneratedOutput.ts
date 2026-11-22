@@ -23,7 +23,6 @@ export const correctionRequest = (previous: unknown, error: z.ZodError): string 
   ].join("\n");
 };
 
-// Asks once, and once more with what was wrong, before giving up.
 export const requestGeneratedOutput = async <Output>(client: GenerationClient, prompt: ComposedPrompt): Promise<Output> => {
   const { systemPrompt, userMessage, schema } = prompt;
 

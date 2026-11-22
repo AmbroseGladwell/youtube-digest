@@ -1,8 +1,6 @@
 import type { YouTubeFetchRequest, YouTubeFetchResponse } from "@overview/app-core";
 
-// The panel asks, the worker fetches. The worker is the only document whose
-// host_permissions exempt it from CORS for youtube.com, and the only one that is always
-// there to be asked (docs/features/transcript-retrieval.md).
+// docs/features/transcript-retrieval.md, "Which document actually holds the privilege".
 export const YOUTUBE_FETCH = "overview/youtube-fetch";
 
 export interface YouTubeFetchMessage {
@@ -10,8 +8,7 @@ export interface YouTubeFetchMessage {
   request: YouTubeFetchRequest;
 }
 
-// A reply rather than a rejection, because a throw inside a sendMessage handler reaches
-// the caller as an opaque lastError with nothing in it to act on.
+// A reply, not a rejection: a throw in a sendMessage handler reaches the caller as an opaque lastError.
 export type YouTubeFetchReply = { ok: true; response: YouTubeFetchResponse } | { ok: false; message: string };
 
 export const isYouTubeFetchMessage = (message: unknown): message is YouTubeFetchMessage =>
@@ -24,10 +21,7 @@ export const isYouTubeFetchMessage = (message: unknown): message is YouTubeFetch
 export const isYouTubeFetchReply = (reply: unknown): reply is YouTubeFetchReply =>
   typeof reply === "object" && reply !== null && typeof (reply as { ok?: unknown }).ok === "boolean";
 
-// This handler is reachable by any content script on any page the extension runs in, so
-// without it the extension is an open CORS proxy for everything the extension has been
-// granted — every provider origin a reader has added a key for included
-// (docs/features/byo-providers.md). It is a security boundary, not caution.
+// docs/features/transcript-retrieval.md, "The allowlist is a security boundary".
 const ALLOWED_ORIGINS = new Set(["https://www.youtube.com", "https://m.youtube.com"]);
 
 export const isAllowedYouTubeUrl = (url: string): boolean => {

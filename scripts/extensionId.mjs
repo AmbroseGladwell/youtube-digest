@@ -3,10 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// Chrome's id for an extension is the first half of the SHA-256 of its public key, spelt
-// in the letters a to p instead of hex digits. The key comes from the Web Store once a
-// draft has been uploaded; with it in the manifest, every unpacked build has the store's
-// id too (docs/architecture/deploy.md, "The extension").
+// Chrome's id: the first half of the key's SHA-256, spelt a to p instead of hex.
 export const extensionIdFrom = (publicKey) => {
   const hex = createHash("sha256").update(Buffer.from(publicKey, "base64")).digest("hex").slice(0, 32);
   return hex.replace(/[0-9a-f]/g, (digit) => String.fromCharCode(97 + parseInt(digit, 16)));

@@ -1,9 +1,7 @@
 import type { RunBridge, RunReport } from "@overview/app-core";
 import { BridgeMessage, isRequestOverview } from "./overviewBridge.js";
 
-// The panel's end of the injected button's conversation. The worker holds the request
-// because it is the only one of the three documents that is always alive; this pulls it
-// across as soon as there is a panel to act on it (docs/features/injected-button.md).
+// docs/features/injected-button.md, "Three documents, one conversation".
 let pending: string | null = null;
 const listeners = new Set<() => void>();
 
@@ -18,12 +16,11 @@ const pull = async (): Promise<void> => {
       listener();
     }
   } catch {
-    // No worker to answer. There is nothing waiting that we could act on either.
+    // No worker to answer, so nothing is waiting.
   }
 };
 
-// A press while the panel is already open opens nothing, so the worker says so out loud
-// rather than the panel finding out at its next mount.
+// A press while the panel is already open opens nothing, so the worker says so out loud.
 const onMessage = (message: unknown) => {
   if (isRequestOverview(message)) {
     void pull();

@@ -5,8 +5,7 @@ import { httpFailure, innerTubeError } from "./innerTubeFailure.js";
 import { mapJson3ToSegments } from "./mapJson3ToSegments.js";
 import type { CaptionTrack } from "./PlayerResponse.js";
 
-// baseUrl already carries fmt=srv3. Appending another fmt is ignored and XML comes back,
-// so the parameter is replaced (docs/features/transcript-retrieval.md).
+// baseUrl carries fmt=srv3, and a second fmt is ignored and returns XML, so it is replaced.
 export const json3Url = (baseUrl: string): string => {
   const url = new URL(baseUrl);
   url.searchParams.set("fmt", "json3");

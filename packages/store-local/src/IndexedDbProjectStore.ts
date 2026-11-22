@@ -36,8 +36,7 @@ type MemberChange = (at: string) => Record<string, unknown>;
 const PUT_IN: MemberChange = (at) => ({ addedAt: at, addedBy: BY_READER });
 const TAKEN_OUT: MemberChange = (at) => ({ removedAt: at });
 
-// Which membership records a change may write: any, only one already here, or only one this
-// device has never had, so filing never undoes the reader's removal.
+// Filing writes only records this device never had, so it never undoes the reader's removal.
 type Writes = "any" | "existing" | "new";
 
 export class IndexedDbProjectStore implements ProjectStore {
@@ -85,8 +84,7 @@ export class IndexedDbProjectStore implements ProjectStore {
     await this.#finish(transaction, journaled);
   }
 
-  // Merged into the stored record rather than a parsed one, so a newer client's fields
-  // survive (docs/features/record-migrations.md).
+  // Merged unparsed: docs/features/record-migrations.md, "Writes are field-scoped, not whole-record".
   async updateProject(id: ProjectId, patch: ProjectPatch): Promise<void> {
     const now = new Date();
     const transaction = this.#db.transaction([PROJECTS_STORE, ...JOURNALLED_STORES], "readwrite");
@@ -106,8 +104,7 @@ export class IndexedDbProjectStore implements ProjectStore {
     await this.#finish(transaction, journaled);
   }
 
-  // Its membership records and its chats go with it here and now; on the server the delete takes
-  // them with it, so they are not journaled one by one (docs/features/projects.md).
+  // Not journaled one by one: the server's delete takes them with it.
   async deleteProject(id: ProjectId): Promise<void> {
     const transaction = this.#db.transaction([PROJECTS_STORE, PROJECT_MEMBERS_STORE, CHATS_STORE, ...JOURNALLED_STORES], "readwrite");
     const projects = transaction.objectStore(PROJECTS_STORE);

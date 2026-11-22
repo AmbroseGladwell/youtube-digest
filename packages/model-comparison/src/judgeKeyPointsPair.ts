@@ -13,8 +13,7 @@ const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): Candidat
   return (winner === "A") === candidateIsA ? "win" : "loss";
 };
 
-// Judged once in each order. A side wins a dimension only when both orders agree, so a
-// judge that leans towards whichever note it reads first scores a tie, not a win.
+// Both orders must agree, so a judge leaning towards whichever note it reads first scores a tie.
 export const combineOrders = (candidateFirst: KeyPointsAnswer, candidateSecond: KeyPointsAnswer): KeyPointsResults => {
   return Object.fromEntries(
     [...KEY_POINT_DIMENSIONS, "overall" as const].map((dimension) => {

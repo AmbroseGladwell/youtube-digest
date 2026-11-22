@@ -16,9 +16,7 @@ const runPostHogCli = (args, env) => {
   execFileSync("npx", ["--no-install", "posthog-cli", ...args], { cwd: REPO_ROOT, env, stdio: "inherit" });
 };
 
-// A build's maps go to PostHog's error tracking, tied to this release, and never ship: the
-// bundle is injected with each chunk's id first, so the injected copy is the one served
-// (docs/architecture/errors-and-logs.md, "Source maps"). With no key the maps are only deleted.
+// docs/architecture/errors-and-logs.md, "Source maps".
 export const uploadSourceMaps = ({ dir, releaseName, env = process.env, run = runPostHogCli, log = console.log }) => {
   const maps = mapsIn(dir);
   const apiKey = env.POSTHOG_CLI_API_KEY?.trim();

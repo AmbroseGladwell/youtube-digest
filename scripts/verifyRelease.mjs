@@ -27,9 +27,7 @@ const keyProblem = (manifest, key) => {
   return manifest.key === key ? null : "its manifest carries a key that is not the store's";
 };
 
-// The zip about to be attached to a release is the one built from the commit being
-// deployed, at the version being tagged, or the release does not happen
-// (docs/architecture/deploy.md, "Tags and releases").
+// docs/architecture/deploy.md, "The extension".
 export const verifyRelease = ({ zipPath, version, commit, key = null }) => {
   const shortCommit = commit.slice(0, SHORT_SHA_LENGTH);
   const manifest = readJsonFromZip(zipPath, "manifest.json");

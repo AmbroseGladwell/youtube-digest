@@ -11,16 +11,11 @@ const UPLOAD_SCOPE = "https://www.googleapis.com/auth/chromewebstore";
 const UPLOAD_POLL_ATTEMPTS = 40;
 const UPLOAD_POLL_MS = 15_000;
 
-// The two values the store's API needs, both GitHub's rather than Bitwarden's, because a
-// runner can only read GitHub's secrets (docs/conventions/secrets.md's exception, as
-// FLY_API_TOKEN already is). A service account rather than an installed OAuth client: v2
-// takes one, and it has no consent screen to leave in testing, where Google expires a
-// refresh token after seven days (docs/architecture/store-listing.md).
+// docs/architecture/store-listing.md, "The API credentials".
 export const CREDENTIAL_NAMES = ["CHROME_PUBLISHER_ID", "CHROME_SERVICE_ACCOUNT_KEY"];
 
 const TOKEN_LIFETIME_SECONDS = 3600;
 
-// The JSON key Google Cloud issues, which carries far more than is needed here.
 export const serviceAccountFrom = (raw) => {
   let key;
   try {
@@ -41,7 +36,6 @@ export const serviceAccountFrom = (raw) => {
   return { clientEmail, privateKey };
 };
 
-// What the assertion claims: this account, asking for this scope, for an hour.
 export const assertionClaim = ({ clientEmail, now }) => {
   const issued = Math.floor(now / 1000);
   return {
@@ -55,8 +49,7 @@ export const assertionClaim = ({ clientEmail, now }) => {
 
 const base64url = (value) => Buffer.from(value).toString("base64url");
 
-// A service account proves itself by signing its own claim rather than by holding a token
-// somebody minted for it, which is the whole reason it cannot quietly expire.
+// Signing its own claim, rather than holding a minted token, is why it can't quietly expire.
 export const signedAssertion = ({ clientEmail, privateKey, now = Date.now() }) => {
   const body = [
     base64url(JSON.stringify({ alg: "RS256", typ: "JWT" })),
@@ -81,9 +74,7 @@ const versionsOf = (revision) =>
 
 const spell = (versions) => (versions.length === 0 ? "(no version)" : versions.join(", "));
 
-// What to do with the item as the store currently holds it: the version already published is
-// nothing to do, and a submission already in review is not something to overwrite from CI
-// (docs/architecture/store-listing.md, "What CI does").
+// docs/architecture/store-listing.md, "What CI does".
 export const submissionDecision = (status, version) => {
   if (status.takenDown === true) {
     return { publish: false, problem: "the store has taken the item down; the dashboard says why" };
@@ -111,8 +102,7 @@ export const submissionDecision = (status, version) => {
   return { publish: true, reason: `the store publishes ${spell(versionsOf(published))}` };
 };
 
-// The store answers an upload with the state it reached and the version it read out of the
-// manifest inside the zip, and both have to be the release's before anything is submitted.
+// Both the state and the version read from the zip must be the release's before anything is submitted.
 export const uploadProblem = (upload, version) => {
   if (upload.uploadState !== "SUCCEEDED") {
     return `the store left the upload in ${upload.uploadState ?? "(no state)"}`;
@@ -129,8 +119,7 @@ export const publishProblem = (published) => {
   return SUBMITTED_STATES.has(published.state) ? null : `the store put the submission in ${published.state ?? "(no state)"}`;
 };
 
-// Read back rather than believed: a publish call that answered is not a submission the store
-// says it holds (CLAUDE.md, "Verify before reporting").
+// Read back rather than believed (CLAUDE.md, "Verify before reporting").
 export const acceptedProblem = (status, version) => {
   const submitted = status.submittedItemRevisionStatus;
   const published = status.publishedItemRevisionStatus;
@@ -164,8 +153,6 @@ const answerOf = async (response, what) => {
   }
 };
 
-// The store's API over fetch, kept behind this seam so the orchestration below can be tested
-// without one (scripts/publishExtension.test.mjs).
 export const storeApi = ({ credentials, fetch: doFetch = fetch }) => {
   const name = itemPath({ publisherId: credentials.CHROME_PUBLISHER_ID, itemId: credentials.itemId });
   let token = null;
@@ -223,8 +210,7 @@ export const storeApi = ({ credentials, fetch: doFetch = fetch }) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// An upload the store is still unpacking answers IN_PROGRESS and finishes asynchronously, so
-// the item's own status is what says how it ended.
+// An upload still unpacking answers IN_PROGRESS, so the item's own status says how it ended.
 const settledUpload = async (api, started, { wait = sleep } = {}) => {
   if (started.uploadState !== "IN_PROGRESS") {
     return started;
@@ -300,8 +286,7 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     process.exit(2);
   }
   try {
-    // Saying so and skipping, rather than failing main over a secret nobody has set yet:
-    // the deploy that made the release still happened (docs/architecture/deploy.md).
+    // Skipped, not failed: the deploy that made the release still happened.
     if (mode === "credentials") {
       reportCredentials(process.env);
       process.exit(0);

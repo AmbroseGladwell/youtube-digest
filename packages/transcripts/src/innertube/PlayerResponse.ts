@@ -3,16 +3,14 @@ import { z } from "zod";
 export const CaptionTrack = z.object({
   baseUrl: z.string().min(1),
   languageCode: z.string().optional(),
-  // Present and "asr" only on a machine-heard track. This is the whole of what decides
-  // StoredTranscript.generated (docs/features/transcript-retrieval.md).
+  // Present and "asr" only on a machine-heard track, which alone decides StoredTranscript.generated.
   kind: z.string().nullish(),
   vssId: z.string().optional(),
 });
 
 export type CaptionTrack = z.infer<typeof CaptionTrack>;
 
-// Only the fields that are read. Modelling the whole payload would make every unrelated
-// change upstream look like drift.
+// Only the fields read, so an unrelated change upstream never looks like drift.
 export const PlayerResponse = z.object({
   playabilityStatus: z.object({ status: z.string().optional(), reason: z.string().optional() }).optional(),
   videoDetails: z

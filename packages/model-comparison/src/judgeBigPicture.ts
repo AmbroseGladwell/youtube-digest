@@ -69,7 +69,7 @@ export interface JudgeBigPictureOptions {
   now?: () => number;
 }
 
-// A judge from another provider than the writer, as for the actions (docs/architecture/model-comparison.md).
+// Never the writer's provider: docs/architecture/model-comparison.md, "Quality: the judge".
 export const judgeBigPicture = async ({
   videoId,
   overview,

@@ -29,8 +29,7 @@ ${transcript}
 Why they saved it: ${input.captureReason ?? "not said"}`;
 };
 
-// Only a long video is held to its whole length, so a short one's note and retries stay as
-// they were (docs/features/overview-generation-decisions.md, "One note budget").
+// Why only a long video: docs/features/overview-generation-decisions.md, "One note budget".
 export const keyPointsCoverALongVideo =
   (input: GenerationInput, noun = "video") =>
   (output: Record<string, unknown>, ctx: z.RefinementCtx) => {

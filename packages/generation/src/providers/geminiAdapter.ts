@@ -4,17 +4,15 @@ import { providerJsonSchema } from "../providerJsonSchema.js";
 
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
-// The key goes in a header rather than the query string Google's own examples use: a URL
-// carrying a secret is a URL that ends up in a log, a referrer or a bug report.
+// A header, not the query string: a URL carrying a secret ends up in logs.
 const headers = (apiKey: string) => ({ "content-type": "application/json", "x-goog-api-key": apiKey });
 
-// Gemini names a model "models/gemini-3.6" in its catalogue and takes "gemini-3.6" in a
-// call. One spelling is stored and shown; this is where the other one is added and removed.
-const bare = (name: string) => (name.startsWith("models/") ? name.slice("models/".length) : name);
+const MODELS_PREFIX = "models/";
+const withoutModelsPrefix = (name: string) => (name.startsWith(MODELS_PREFIX) ? name.slice(MODELS_PREFIX.length) : name);
 
 export const geminiAdapter: ProviderAdapter = {
   async generate(call: ProviderCall, request: GenerationRequest, http: typeof fetch): Promise<unknown> {
-    const response = await http(`${BASE_URL}/models/${encodeURIComponent(bare(call.model))}:generateContent`, {
+    const response = await http(`${BASE_URL}/models/${encodeURIComponent(withoutModelsPrefix(call.model))}:generateContent`, {
       method: "POST",
       headers: headers(call.apiKey),
       body: JSON.stringify({
@@ -22,9 +20,7 @@ export const geminiAdapter: ProviderAdapter = {
         contents: [{ role: "user", parts: [{ text: request.userMessage }] }],
         generationConfig: {
           responseMimeType: "application/json",
-          // responseJsonSchema, not responseSchema: the older field takes an OpenAPI
-          // subset that cannot express a nullable object, which most of the optional
-          // sections are.
+          // Not responseSchema, whose OpenAPI subset can't express a nullable object.
           responseJsonSchema: providerJsonSchema(request.schema),
         },
       }),
@@ -53,11 +49,9 @@ export const geminiAdapter: ProviderAdapter = {
       models?: { name?: unknown; supportedGenerationMethods?: unknown }[];
     };
     const listed = body.models ?? [];
-    // Google says outright which models answer a generateContent call, so nothing here is
-    // judged by its name.
     const usable = listed
       .filter((model) => Array.isArray(model.supportedGenerationMethods) && model.supportedGenerationMethods.includes("generateContent"))
-      .map((model) => (typeof model.name === "string" ? bare(model.name) : ""))
+      .map((model) => (typeof model.name === "string" ? withoutModelsPrefix(model.name) : ""))
       .filter((id) => id !== "");
     return { usable: [...new Set(usable)].sort(), unusable: listed.length - usable.length };
   },

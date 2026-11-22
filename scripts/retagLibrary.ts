@@ -11,8 +11,7 @@ import { generateTags } from "@overview/generation";
 import { createFetchSyncApi, type SyncApi } from "@overview/sync";
 import { generationClientFromEnv } from "./generationClientFromEnv.js";
 
-// The one-off re-tag of a library made before tags were reused: oldest first, each note
-// offered the tags the ones before it ended up with (docs/features/tag-reuse.md).
+// docs/features/tag-reuse.md, "Re-tagging the library that came before".
 const USAGE = "usage: OVERVIEW_API_URL=<url> OVERVIEW_TOKEN=<session> task secrets:run -- npx tsx scripts/retagLibrary.ts [--write]";
 
 const baseUrl = process.env.OVERVIEW_API_URL;

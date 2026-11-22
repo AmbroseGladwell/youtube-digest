@@ -9,8 +9,7 @@ export const SuggestedTopicShape = z.object({
 });
 export type SuggestedTopicShape = z.infer<typeof SuggestedTopicShape>;
 
-// Every tag costs tokens on every overview, so only the most used are sent
-// (docs/features/tag-reuse.md).
+// docs/features/tag-reuse.md, "The model is offered the reader's tags".
 export const TAG_VOCABULARY_CAP = 60;
 
 export const GeneratedTags = z.array(Tag).min(3).max(MAX_TAGS);

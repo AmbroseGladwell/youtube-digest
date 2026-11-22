@@ -29,10 +29,7 @@ const releaseVersion = (rootDir) => {
   return version;
 };
 
-// What a build knows about itself, baked in by Vite: the one version number the root
-// package.json carries, the commit it was made from, and whether the tree had uncommitted
-// changes. BUILD_COMMIT stands in for git where there is no checkout, which is the Docker
-// image (docs/architecture/deploy.md, "The version").
+// BUILD_COMMIT stands in for git where there is no checkout: the Docker image.
 export const buildStamp = ({ env = process.env, cwd = process.cwd(), rootDir = REPO_ROOT } = {}) => {
   const version = releaseVersion(rootDir);
   const fromEnv = env.BUILD_COMMIT?.trim();

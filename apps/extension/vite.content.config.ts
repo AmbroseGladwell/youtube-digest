@@ -4,9 +4,7 @@ import { defineConfig } from "vite";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// A second build, because a content script cannot be an ES module and the rest of this
-// extension is one. Everything it needs is in the bundle, so the output is a classic
-// script with nothing to import (docs/features/injected-button.md).
+// docs/features/injected-button.md, "Two builds, because a content script cannot be a module".
 export default defineConfig({
   build: {
     target: "esnext",

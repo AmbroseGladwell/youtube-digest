@@ -9,8 +9,7 @@ export interface EpisodeToFind {
   keywords: readonly string[];
 }
 
-// Each threshold was measured against a control of every episode matched to another show's
-// channel (docs/features/podcast-on-youtube.md, "How sure a match is").
+// docs/features/podcast-on-youtube.md, "How sure a match is".
 const TITLE_WORDS_SHARED = 0.8;
 const TITLE_LENGTH_SLACK = { seconds: 180, share: 0.1 };
 const CANDIDATE_LENGTH_SLACK = { seconds: 90, share: 0.03 };
@@ -39,16 +38,14 @@ interface LengthSlack {
 const lengthWithin = (episode: number | null, upload: number | null, slack: LengthSlack): boolean =>
   episode !== null && upload !== null && Math.abs(episode - upload) <= Math.max(slack.seconds, slack.share * episode);
 
-// "Part 2" and "Part 1" share every word but one. A number on one side only is fine, since
-// shows drop the episode number on YouTube; a different number on each side is another episode.
+// Shows drop the episode number on YouTube; a different number on each side is another episode.
 const numbersDisagree = (a: readonly string[], b: readonly string[]): boolean => {
   const numbersOf = (words: readonly string[]) => new Set(words.filter((word) => /^\d+$/.test(word)));
   const [left, right] = [numbersOf(a), numbersOf(b)];
   return [...left].some((number) => !right.has(number)) && [...right].some((number) => !left.has(number));
 };
 
-// The episode's title, nearly word for word, on an upload of nearly its length. A clip has the
-// title and not the length, so it is never taken for the episode.
+// A clip has the title but not the length, so it is never taken for the episode.
 export const titleMatch = <Upload extends ListedUpload>(episode: EpisodeToFind, uploads: readonly Upload[]): Upload | null => {
   const words = titleWords(episode.title);
   if (words.length < 2) {
@@ -73,7 +70,6 @@ export const retitledLengthMatches = (episode: EpisodeToFind, uploadSeconds: num
 
 export const daysAgo = (iso: string, now: Date): number => (now.getTime() - Date.parse(iso)) / DAY_MS;
 
-// Listed around the episode's date, by YouTube's rounded "3 weeks ago".
 export const listedNearItsDate = (episode: EpisodeToFind, upload: ListedUpload, now: Date): boolean => {
   const age = upload.age === null ? null : ageInDays(upload.age);
   if (episode.publishedAt === null || age === null) {
@@ -83,13 +79,11 @@ export const listedNearItsDate = (episode: EpisodeToFind, upload: ListedUpload, 
   return episodeDaysAgo >= age.fewest - CANDIDATE_DAYS_SLACK && episodeDaysAgo <= age.most + CANDIDATE_DAYS_SLACK;
 };
 
-// Published within three days of the episode, by an exact date.
 export const publishedNearItsDate = (episode: EpisodeToFind, publishedAt: string | null, now: Date): boolean =>
   episode.publishedAt !== null &&
   publishedAt !== null &&
   Math.abs(daysAgo(publishedAt, now) - daysAgo(episode.publishedAt, now)) <= MOST_DAYS_APART;
 
-// Uploads that could be the episode under another title: its length, and listed around its date.
 export const retitledCandidates = (episode: EpisodeToFind, uploads: readonly ListedUpload[], now: Date): ListedUpload[] =>
   uploads.filter(
     (upload) =>
@@ -107,17 +101,13 @@ const nameWords = (name: string): string[] =>
     .split(":")[0]!
     .match(/[a-z0-9]+/g) ?? [];
 
-// The channel is the show's own: most of the show's name, before any subtitle, in the channel's.
 export const namesTheShow = (channelTitle: string, showName: string): boolean => {
   const show = nameWords(showName);
   const channelWords = new Set(nameWords(channelTitle));
   return show.length > 0 && show.filter((word) => channelWords.has(word)).length / show.length >= CHANNEL_NAME_WORDS_SHARED;
 };
 
-// Among a video search's results, from any channel: the episode's title and length, and, off the
-// show's own channel, its date too, since a short title can recur on another show. This finds a
-// show published on its publisher's channel ("New York Times Podcasts" for The Daily), which the
-// channel route never reaches (docs/features/podcast-on-youtube.md, "How it finds the episode").
+// docs/features/podcast-on-youtube.md, "How it finds the episode".
 export const searchedVideoMatch = <Video extends ListedUpload & { channelTitle: string }>(
   episode: EpisodeToFind,
   videos: readonly Video[],

@@ -7,9 +7,7 @@ import { isDeepStrictEqual } from "node:util";
 
 const UNRELEASED_VERSION = "0.0.0";
 
-// The zip the Web Store takes: the built extension with its manifest's key removed, since
-// the store refuses a key on a new item and needs it on no upload
-// (docs/architecture/deploy.md, "The extension").
+// The store refuses a key on a new item: docs/architecture/deploy.md, "The extension".
 export const storeManifest = (manifest) => {
   if (manifest.version === undefined || manifest.version === UNRELEASED_VERSION) {
     throw new Error(
@@ -55,10 +53,7 @@ const zipWithManifest = ({ distDir, releaseDir, zipPath, manifest }) => {
   return { zipPath, files };
 };
 
-// Two zips, because the store's and a person's needs are opposite: the store refuses a
-// manifest with a key, and a build loaded unpacked without one gets an id derived from
-// its directory, which the API does not vouch for (docs/architecture/deploy.md,
-// "The extension").
+// Two zips, the store's without a key and a person's with one: docs/architecture/deploy.md, "The extension".
 export const packExtension = ({ distDir, releaseDir }) => {
   const manifestPath = path.join(distDir, "manifest.json");
   if (!existsSync(manifestPath)) {

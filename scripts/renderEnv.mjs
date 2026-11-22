@@ -4,10 +4,7 @@ import { fileURLToPath } from "node:url";
 const PLACEHOLDER = /("?)\$\{([A-Z][A-Z0-9_]*)\}("?)/g;
 const UNQUOTABLE = /["\\\r\n]/;
 
-// ${NAME} becomes the value of NAME from the environment. Each one sits in double quotes, since
-// both readers, `fly secrets import` and Node's --env-file, cut an unquoted value at a "#"; a value
-// the quotes cannot carry intact, and a template naming a variable that is not there, are refused
-// whole rather than rendered wrong (docs/conventions/secrets.md, "Quoting").
+// docs/conventions/secrets.md, "How a value gets where it is needed".
 export const renderEnvTemplate = (template, env) => {
   const missing = new Set();
   const unquoted = new Set();

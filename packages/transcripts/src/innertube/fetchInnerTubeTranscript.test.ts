@@ -209,8 +209,6 @@ test("every failure leaves a TranscriptFetchError, never a raw throw from the fe
   );
 });
 
-// A caption failure that cascades and then hits a turned-away client used to surface the
-// second client's player error, which points a reader at the wrong request entirely.
 test("a caption failure is reported as one, not as the next client's player failure", async () => {
   const { youTubeFetch } = scriptedFetch((request, clientName) => {
     if (request.url.includes("timedtext")) {

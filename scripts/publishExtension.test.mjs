@@ -25,7 +25,6 @@ const revision = (state, ...versions) => ({
 
 const published = (...versions) => ({ publishedItemRevisionStatus: revision("PUBLISHED", ...versions) });
 
-// A store that takes the upload, accepts the submission, and then says it holds it.
 const happyStore = (overrides = {}) => {
   const calls = [];
   const api = {

@@ -20,14 +20,11 @@ export const gitHistory = {
   changed: (from, to) => !gitSucceeds(["diff", "--quiet", from, to, "--", TTS_PATH]),
 };
 
-// What each machine says it is running: the commit the last deploy stamped on its env.
 export const deployedCommitsOf = (machines) => {
   return machines.map((machine) => machine?.config?.env?.DEPLOYED_COMMIT ?? null);
 };
 
-// Whether HEAD's services/tts differs from what is live, judged against the live commit
-// rather than the previous push, because CI cancels superseded runs on main
-// (docs/architecture/deploy.md, "The TTS service").
+// Against the live commit, not the last push: docs/architecture/deploy.md, "The TTS service".
 export const ttsDeployDecision = ({ deployedCommits, head, git = gitHistory }) => {
   const known = [...new Set(deployedCommits)];
   if (deployedCommits.length === 0) {
@@ -54,8 +51,7 @@ export const ttsDeployDecision = ({ deployedCommits, head, git = gitHistory }) =
     : { deploy: false, reason: `${TTS_PATH} is unchanged since the live ${short(live)}` };
 };
 
-// The pool is as many machines as the API runs renders at once, so the API's own setting is
-// its size (docs/architecture/deploy.md, "The TTS service").
+// docs/architecture/deploy.md, "The TTS service".
 export const poolSizeOf = (apiFlyToml) => {
   const match = apiFlyToml.match(/^\s*TTS_CONCURRENCY\s*=\s*"(\d+)"/m);
   if (match === null) {
@@ -64,8 +60,7 @@ export const poolSizeOf = (apiFlyToml) => {
   return Number(match[1]);
 };
 
-// A deploy that retries can leave the machines it created on an earlier try behind, so the
-// count is checked as well as the commit (docs/architecture/deploy.md, "The TTS service").
+// A retried deploy can leave machines behind, so the count is checked too.
 export const verifyTtsDeploy = ({ deployedCommits, head, poolSize }) => {
   const behind = deployedCommits.filter((commit) => commit !== head).length;
   if (deployedCommits.length === 0 || behind > 0) {

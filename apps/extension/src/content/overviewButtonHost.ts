@@ -10,11 +10,7 @@ const isVisible = (element: Element | null): element is HTMLElement => {
   return style.display !== "none" && style.visibility !== "hidden";
 };
 
-// YouTube keeps hidden copies of its responsive action toolbar in the DOM, so a plain
-// querySelector can hand back a 0x0 one and the button lands somewhere nobody can see
-// it. Every candidate is measured instead. Both this and the selector list are taken
-// from the reference extension, which carries the scar
-// (docs/features/injected-button.md).
+// docs/features/injected-button.md, "Placing it in a row that keeps moving".
 export const findOverviewButtonHost = (): HTMLElement | null => {
   for (const actionRow of document.querySelectorAll("ytd-watch-metadata #actions-inner")) {
     if (!isVisible(actionRow)) {

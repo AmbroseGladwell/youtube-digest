@@ -27,8 +27,7 @@ export const TRANSCRIPT_SET: readonly TranscriptSetEntry[] = [
   { url: "https://www.youtube.com/watch?v=TOk-DUDmN6E", chosenFor: "2 h 22 min parliamentary hearing, many speakers" },
 ];
 
-// For the readers harness only (OV-236): the main set is business-heavy, and a parent
-// saves parenting videos. Kept apart so the model comparison's set never changes.
+// Readers harness only (OV-236), kept apart so the model comparison's set never changes.
 export const PARENTING_SET: readonly TranscriptSetEntry[] = [
   { url: "https://www.youtube.com/watch?v=FwA43CfdJNY", chosenFor: "11 min talking head, life with a third child" },
   { url: "https://www.youtube.com/watch?v=PHpPtdk9rco", chosenFor: "14 min stage talk, repair after yelling" },
@@ -39,8 +38,7 @@ export const PARENTING_SET: readonly TranscriptSetEntry[] = [
   { url: "https://www.youtube.com/watch?v=xzqhunEabs0", chosenFor: "100 min interview, firm parenting and newborn life" },
 ];
 
-// OV-122: recipe videos, with two that cook or talk about recipes without teaching one, to
-// measure what the recipe section costs and check it stays null where it should.
+// OV-122: two cook without teaching a recipe, to check the recipe section stays null.
 export const RECIPE_SET: readonly TranscriptSetEntry[] = [
   { url: "https://www.youtube.com/watch?v=snknj91IWv0", chosenFor: "2 min recipe test, no amounts said, no list in the description" },
   { url: "https://www.youtube.com/watch?v=zTJPmMJwRzM", chosenFor: "hash browns, a single recipe from a chef's channel" },

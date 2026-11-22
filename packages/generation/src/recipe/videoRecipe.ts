@@ -13,10 +13,7 @@ const comparable = (text: string): string =>
 export const descriptionOf = (input: Pick<GenerationInput, "video">): string =>
   input.video.fullDescription ?? input.video.description ?? "";
 
-// The model found the recipe, since a video has no structured data, so code checks every amount
-// against what the description and the video state, reads the times and yield only where the
-// description labels them, and places each step by its segments (docs/features/recipe-notes.md,
-// "Recipe videos"). Null when no ingredient survives, so the video keeps its ordinary note.
+// docs/features/recipe-notes.md, "Recipe videos".
 export const videoRecipe = (input: GenerationInput, generated: GeneratedRecipe): Recipe | null => {
   const description = descriptionOf(input);
   const stated = statedNumbersIn([description, input.transcript.map(({ text }) => text).join(" ")]);

@@ -4,8 +4,7 @@ import type { PromptSection } from "../PromptSection.js";
 export const HOW_TO_APPLY_TARGET_WORDS = 30;
 export const HOW_TO_APPLY_MAX_WORDS = 40;
 
-// OV-236: fitting to the reader is wanted, inventing a life for them isn't. Measured in
-// docs/architecture/model-comparison.md, "Different readers". Articles share it (OV-238).
+// docs/architecture/model-comparison.md, "OV-236: fit what they do, don't invent, 8 Nov 2026".
 const FIT = `Fit each step to what they already do and the limits they live with: their
 time, the people around them, the work and plans they already have. Never give them a new
 project, role or occasion just to hang a step on. "On your next 5 sales calls, ask how

@@ -1,6 +1,4 @@
-// A watch-anyway reason may say the note covers the video. It may not count or time it: a model
-// can't measure, and "four simple instructions" or "much of the running time" is exactly that
-// (docs/prototype/constraints.md). Flagged by code, reported, never scored (OV-251).
+// A model can't measure, so a reason that counts or times is flagged by code, never scored (OV-251).
 const NUMBER_WORDS = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozen|twenty|thirty|forty|fifty|hundred";
 const CLAIMS: RegExp[] = [
   /\b\d+(?:[.,]\d+)?(?:%|\s*(?:percent|per cent|minutes?|mins?|seconds?|hours?|steps?|instructions?|points?|tips?|rules?|things?|parts?)\b)?/gi,

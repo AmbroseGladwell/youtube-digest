@@ -13,9 +13,7 @@ import { followUpQuestionsSection, recipeFollowUpQuestionsSection } from "./sect
 import type { PromptSection } from "./PromptSection.js";
 import type { GenerationInput } from "./GenerationInput.js";
 
-// Every kind takes its sections from this one list, so the note a kind shares with the
-// others can't drift apart from theirs (docs/features/overview-generation-decisions.md,
-// "The kind check").
+// One list for every kind: docs/features/overview-generation-decisions.md, "The kind check".
 const REGISTRY: Record<NoteKind, PromptSection[]> = {
   default: [
     coreSection,
@@ -41,8 +39,7 @@ const REGISTRY: Record<NoteKind, PromptSection[]> = {
   recipe: [recipeVideoCoreSection, chaptersSection, filingSection, recipeSection, recipeFollowUpQuestionsSection],
 };
 
-// With the steps switched off, a process note is written as a default one, so its key points
-// and How to apply aren't told to leave steps to a block it won't have (docs/features/source-steps.md).
+// Steps off, a process note is written as a default one: docs/features/source-steps.md, "On the note".
 export const writtenKind = (input: GenerationInput, kind: NoteKind): NoteKind =>
   kind === "process" && !input.sectionsEnabled.steps ? "default" : kind;
 

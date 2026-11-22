@@ -4,12 +4,10 @@ export const MOST_LINKS_OFFERED = 60;
 
 export interface OfferedLink extends PageLink {
   index: number;
-  // Numbered as articleParagraphs numbers it, across the whole piece.
   articleParagraph: number;
 }
 
-// Numbered across the piece, so the model names a link and code copies it. Past the cap a
-// long read's citations are cut rather than the prompt grown (docs/features/article-resources.md).
+// Why long reads lose links past the cap: docs/features/article-resources.md, "The model points, code copies".
 export const offeredLinks = ({ sections }: Pick<ExtractedArticle, "sections">): OfferedLink[] => {
   let before = 0;
   return sections
