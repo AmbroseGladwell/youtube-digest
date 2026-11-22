@@ -69,14 +69,22 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm test --workspace apps/extension
 
+  # node --test splits by file across the shards. It reads --test-shard only before the file
+  # pattern, so the job runs node itself rather than appending the flag to npm test.
   unit-api:
-    name: unit (api)
+    name: unit (api ${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: npm test --workspace apps/api
+      - run: npm run build --workspace apps/api
+      - working-directory: apps/api
+        run: node --test --test-force-exit --test-shard=${{ matrix.shard }}/2 "dist/**/*.test.js"
 
   unit-tooling:
     name: unit (tooling)
