@@ -349,6 +349,8 @@ answer. A reply with no answer fails as `EmptyAnswerError`.
 under that switch: the reader's key is only used to make overviews
 (`OWN_KEY_FOR_OVERVIEWS_ONLY`).
 
+Every kind of chat (an overview, a project, the library) takes one message of the allowance per question, however many passes the answer takes; the message is reserved before anything is asked.
+
 ## Measured through the endpoint
 
 `apps/api/src/scripts/chatHarnessCheck.ts` runs the real endpoint in process, on an in-memory
@@ -391,6 +393,10 @@ What still costs is the first question about an overview whose transcript hasn't
 about in the last 30 minutes, the cache's lifetime on Chat Completions (`spend.md`): about $0.004
 on a source that long, $0.002 at 89 minutes. Every later question, in any conversation about it,
 is about a tenth of that.
+
+Run from `apps/api` after a build: `node --env-file=../../.env dist/scripts/chatHarnessCheck.js <OV-267 chat data dir> <out.json> [long-only <questions> | profile | product]`. With no mode it runs OV-267's question set and a worst case of 30-question conversations on a source over two hours with another conversation sent. `long-only` skips the question set and asks each long conversation only its first few questions, enough to see whether a second conversation reads the transcript from the cache. `profile` (OV-343) asks every source's questions twice, with nothing known about the reader and with the harness's `READER` profile, plus two questions about the reader; code scores the source rules and the "what do you know" one. `product` (OV-342) asks every source the `PRODUCT` questions: ones a general assistant would answer by offering a photo, a link or the web, one about the rest of the library, and one about where onboarding's answers go, scored by `productRight`. A source with no `transcript.json` is a web page, answered from its overview alone, and every answer is checked for numbers the overview does not hold; the long-source part needs two sources with transcripts.
+
+`chatCacheProbe.ts` is run from `apps/api` after a build as `node dist/scripts/chatCacheProbe.js <a sources/<id> dir with transcript.json>`: each probe follows the first within seconds on one `prompt_cache_key` and reports what OpenAI says it read and wrote.
 
 ## Citing the overview
 

@@ -219,6 +219,8 @@ Continue, a starter one with its description and a typed one with none.
 "You can update this anytime in Settings." and the line on where it goes. Wide, the pane shows
 their card, the topics picked and Personalised once the sentence has something in it.
 
+The fixed allowance (`FIXED_SECTION_WORDS`, 370) covers what a reader reads beside the key points and big picture the budget sizes: premise, core claim, How to apply, the steps, the verdict. Measured 20 Nov 2026 over the 60 overviews saved since 12 Nov: a median of 374 words beyond the budget, half between 164 and 478.
+
 ## The account
 
 **The account screen** (327l) holds the way in itself (`RequestLinkFlow`'s `onboarding` variant):

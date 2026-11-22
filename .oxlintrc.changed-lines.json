@@ -4,7 +4,6 @@
   "ignorePatterns": ["prototype/**", "samples/**", "**/dist/**"],
   "jsPlugins": ["./scripts/oxlint/overviewPlugin.mjs"],
   "rules": {
-    "overview/no-long-comment": "error",
     "overview/no-repeated-string": ["error", { "acrossFiles": true }]
   },
   "overrides": [

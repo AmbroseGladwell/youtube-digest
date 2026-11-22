@@ -44,6 +44,8 @@ They are the reason several screens exist.
 | What each key last reported it could reach | `features/apiKeys/ModelCatalogue.ts` |
 | Chrome's per-provider permission | `features/apiKeys/ProviderPermissionContext.ts`, `apps/extension/src/chromeProviderPermissions.ts` |
 
+Keys are kept one per provider the reader has added, not as one active key, so a reader comparing two providers need not fetch the first out of a password manager again (design 110c). The first key saved becomes the provider generation runs on, and later keys never change it: a reader adding a second provider to compare has not asked for the next overview to be made with it (design 110d).
+
 ## Four adapters, not six
 
 OpenAI, DeepSeek, xAI and Mistral all speak OpenAI's chat-completions dialect, so they
@@ -84,6 +86,8 @@ So anything unrecognised is offered.
 **When the catalogue call fails the picker shows the models we know and says so in one
 muted line.** Not an error: the key works, only the list is missing. The "everything else"
 group is dropped rather than shown empty.
+
+`KNOWN_MODELS` is a model we have actually pointed at a transcript, so it can carry a description and a rough price; everything else a key can reach is offered by its raw id with neither (design 110e). The list is the floor the picker falls back to (design 110h). Ids were checked against each provider's documentation on 11 October 2026; prices are approximate US dollars per million tokens, used only for the one rough figure the picker shows, never to bill.
 
 ## The one genuinely new failure
 

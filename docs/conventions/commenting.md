@@ -5,6 +5,9 @@ comments. Before writing one, do one of these instead:
 
 - **Name it so the comment is unnecessary.** A variable, function, or type name
   that states the "what" removes the need to restate it next to it.
+- **Extract it, and name the extraction.** A block that needs a comment to say
+  what it does is a small `const` function whose name says it, called from where
+  the block was. A magic value is a named `const`.
 - **Encode the "why" in a test.** A test that fails when an invariant breaks is
   stronger than a comment asserting the invariant holds — the comment can go
   stale silently, the test can't.
@@ -19,8 +22,10 @@ bug, a spec quirk) with no other home. If you're about to write more than one
 line explaining *why*, that reasoning belongs in a doc instead.
 
 The linter holds the line: `overview/no-long-comment` refuses a comment of more than
-one line, and any TODO or FIXME, on every line a change adds or edits
-(`lint-and-format.md`, "Rules on the lines a change adds").
+one line, and any TODO or FIXME, everywhere (`lint-and-format.md`).
+
+A one-line comment that restates the code next to it goes too: `// Save the
+record` above `saveRecord(record)` says nothing the code doesn't (OV-377).
 
 ## How this relates to `docs/reference/coding-conventions/commenting.md`
 

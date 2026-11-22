@@ -85,6 +85,7 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `max-depth: 3` | No block nested more than three deep inside a function. Past that, a guard returns early, a filter replaces a `continue`, or the inner part becomes a function with a name. |
 | `max-nested-callbacks: 3` (4 in tests) | No more than three callbacks inside each other. A test's `describe`, `it` and one callback already make three, so tests get a fourth. |
 | `no-nested-ternary` | A ternary has one condition. Past that, a union becomes a `Record` lookup, a return becomes `if`/`return` guards, a value becomes a named helper, and JSX becomes a helper or a small component. |
+| `overview/no-long-comment` | A comment is one line at most, and never a TODO or FIXME (`commenting.md`). Tool directives such as `@ts-expect-error` and `oxlint-disable` don't count. It ran on changed lines only until OV-377 cleared the 2,507 older ones. |
 | `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
 
 ### Type-aware rules
@@ -108,16 +109,15 @@ there when no built-in rule holds the pattern.
 
 ### Rules on the lines a change adds
 
-Two rules would fail on thousands of existing lines, so they check only the lines a change
+One rule would fail on many existing lines, so it checks only the lines a change
 adds or edits. Nothing gets worse, and older lines are cleaned up in batches of their own.
-`.oxlintrc.changed-lines.json` holds them, and `scripts/oxlint/lintChangedLines.mjs` keeps only
+`.oxlintrc.changed-lines.json` holds it, and `scripts/oxlint/lintChangedLines.mjs` keeps only
 the problems on new lines. The pre-commit hook checks what's staged. CI and `task lint` check
 everything the branch adds since it left `origin/main`. A line moved unchanged within a file
 doesn't count as new; editing it does.
 
 | Rule | What it holds |
 |---|---|
-| `overview/no-long-comment` | A comment is one line at most, and never a TODO or FIXME (`commenting.md`). Tool directives such as `@ts-expect-error` and `oxlint-disable` don't count. |
 | `overview/no-repeated-string` | A string written twice in one file is a const at the top of the file. A URL, path, storage key, header or event name (a string with no spaces) that another product file also has is exported once, from the module that owns it. Copy shared between screens isn't: two screens that say "Try again" may change apart. Off in tests, where repeating a fixture reads better. |
 
 `no-repeated-string` leaves out strings that are usually a string union's members rather than
