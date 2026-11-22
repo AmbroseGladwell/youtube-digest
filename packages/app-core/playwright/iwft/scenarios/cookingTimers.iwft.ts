@@ -21,6 +21,7 @@ const SIGNED_IN = {
 };
 
 const MINUTE = 60_000;
+const SETTLE_MS = 1_000;
 
 const sentEvents = async (page: Page, events: () => { name: string }[], name: string) => {
   await page.clock.fastForward(MINUTE);
@@ -48,6 +49,7 @@ test.beforeEach(async ({ page, launcher, backendSimulator }) => {
   await library.nthCard(0).openReader();
   await page.getByTestId("RecipeMethod.cook").click();
   await expect(page.getByTestId("CookingMode.root")).toBeVisible();
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + SETTLE_MS);
 });
 
 test("a time in the step starts a timer that stays in view and counts down as the reader moves on", async ({ page, backendSimulator }) => {
@@ -197,7 +199,7 @@ test("leaving with a timer running asks keep or stop: Keep running is focused, K
   await page.getByTestId("CookingMode.done").click();
   await expect(page.getByTestId("CookingLeaveSheet.heading")).toHaveText("Keep the boil timer running?");
   await expect(page.getByTestId("CookingLeaveSheet.sentence")).toHaveText(
-    /^1[45]:\d\d left\. It carries on beside the player while you read, and rings wherever you are in the app\.$/,
+    /^15:00 left\. It carries on beside the player while you read, and rings wherever you are in the app\.$/,
   );
   await expect(page.getByTestId("CookingLeaveSheet.keep")).toBeFocused();
   await expect(page.getByTestId("CookingLeaveSheet.keep")).toHaveText("Keep running");
