@@ -453,15 +453,17 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
   }, [citedFollowed, citedPartName]);
   // A citation of this overview's item followed from another chat or the Ask page lands here with
   // the item in the link's state: the note opens at it, tinted, as a citation in its own chat does.
-  // The state is cleared so a reload or Back doesn't bring it again (OV-362).
+  // The state is cleared in place, without a navigation, so a reload or Back doesn't bring it again
+  // and the router's scroll restoration doesn't take the page back to the top (OV-362, OV-368).
   const arrivedAt = overview === null ? null : citedPlaceFromLocation(location.state);
+  const arrivalTaken = useRef<string | null>(null);
   useEffect(() => {
-    if (overview === null || arrivedAt === null) return;
+    if (overview === null || arrivedAt === null || arrivalTaken.current === location.key) return;
+    arrivalTaken.current = location.key;
     const found = citedOverviewPart(overview, arrivedAt);
-    navigate(`${location.pathname}${location.search}`, {
-      replace: true,
-      state: { ...(location.state as object), [CITED_PLACE_STATE]: undefined },
-    });
+    const history = window.history.state as { usr?: Record<string, unknown> } | null;
+    if (history?.usr !== undefined)
+      window.history.replaceState({ ...history, usr: { ...history.usr, [CITED_PLACE_STATE]: undefined } }, "");
     if (found === null) return;
     const onTab: ReaderTab = found.part === "chapter" ? "Chapters" : "Overview";
     if (tab !== onTab && tabsShown.includes(onTab)) changeTab(onTab);
