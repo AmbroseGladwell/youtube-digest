@@ -10,8 +10,7 @@ import {
 import type { PromptSection } from "../PromptSection.js";
 import { segmentRangeFields } from "./segmentRangeFields.js";
 
-// What a source tells its audience to do, carried whole, so "the overview covers it" is true
-// when Watch it anyway says so. Measured by OV-251's steps check (docs/features/source-steps.md).
+// docs/features/source-steps.md, "Measured".
 export const sourceStepsInstructions = (source: "video" | "article", where: string) => `
 ## The steps it gives
 Whenever the ${source} tells me to do something concrete: a protocol, a

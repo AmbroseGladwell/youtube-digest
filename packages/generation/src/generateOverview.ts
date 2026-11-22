@@ -9,19 +9,14 @@ import { requestGeneratedOutput, type GenerationClient } from "./requestGenerate
 import { filedProjectIds } from "./sections/projectInstructions.js";
 import type { OverviewMeta } from "./OverviewMeta.js";
 
-// Lets a caller tell the kind check's calls apart from the note's, so each can be costed on
-// its own (docs/architecture/unit-economics.md).
+// Costed apart: docs/architecture/unit-economics.md, "What is recorded".
 export interface GenerationObserver {
   kindChecked?(kind: NoteKind): void;
-  // Which of the reader's projects the overview was filed into. Beside the overview rather than
-  // on it, since an overview never lists its projects (docs/features/projects.md).
+  // Beside the overview, never on it: docs/features/projects.md, "Filing as an overview is made".
   projectsFiled?(projectIds: ProjectId[]): void;
 }
 
-// The kind is decided first, so the note's schema carries only that kind's sections; a
-// recipe the video turns out not to hold falls back to the default note, and a process note is the
-// default one with the steps the source gives
-// (docs/features/overview-generation-decisions.md, "The kind check").
+// Why the kind goes first: docs/features/overview-generation-decisions.md, "The kind check".
 export const generateOverview = async (
   client: GenerationClient,
   input: GenerationInput,

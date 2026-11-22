@@ -31,9 +31,6 @@ const pieceNode = (piece: IngredientPiece, index: number, us: boolean): ReactNod
   return <Fragment key={index}>{piece.text}</Fragment>;
 };
 
-// The method's words, with the amounts it repeats from adjusted ingredients adjusted too (231c)
-// and its oven temperatures in Fahrenheit for US units (150ak), each marked as a changed
-// ingredient amount is.
 export const OvenText = ({ text, us, amounts = [] }: OvenTextProps) => {
   if (!us && amounts.length === 0) {
     return <>{text}</>;

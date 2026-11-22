@@ -7,7 +7,6 @@ import type { Topic } from "./Topic.js";
 import { DEFAULT_OVERVIEW_STATE, type OverviewState } from "./OverviewState.js";
 import { OverviewId, TopicId, VideoId } from "./Brands.js";
 
-// Test-only reference implementation, not exported - real stores live elsewhere.
 class InMemoryOverviewStore implements OverviewStore {
   #overviews = new Map<OverviewId, Overview>();
   #topics = new Map<TopicId, Topic>();

@@ -11,8 +11,7 @@ export interface TimedSqlClientOptions {
   now?: () => number;
 }
 
-// The statement is the code's own text, logged without its parameters, which are the
-// reader's data (docs/architecture/errors-and-logs.md, "The database").
+// Never the parameters: docs/architecture/errors-and-logs.md, "The database".
 const statementOf = (text: string) => text.replace(/\s+/g, " ").trim().slice(0, STATEMENT_LOGGED_CHARACTERS);
 
 export const timedSqlClient = (

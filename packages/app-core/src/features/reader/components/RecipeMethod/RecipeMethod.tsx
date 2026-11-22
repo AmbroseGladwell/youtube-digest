@@ -19,25 +19,18 @@ import { citedPartProps, useCitedOverviewPart } from "../../../chats/CitedOvervi
 
 export interface RecipeMethodProps {
   recipe: RecipeNote;
-  // The voice moves through these, so its place is an action and the tint a sentence (design 150ac).
   actions: readonly RecipeAction[];
   source: Source;
-  // Said once above step 1 when the ingredients were adjusted: what in the method followed them.
   note: string | null;
   voice: RecipeListVoice | null;
   cooking: RecipeCooking | null;
-  // On a phone the way into cooking runs full width under the heading (design 150b).
   stacked: boolean;
   usTemperatures: boolean;
   methodAmounts: readonly MethodAmount[];
-  // A video's step ends with its moment (design 122g); nothing for a page's.
   renderMoment?: ((step: number) => ReactNode) | undefined;
-  // The step the video beside the panel is in, tinted but never scrolled to (122i).
   playingStep?: number | null | undefined;
 }
 
-// The way into cooking step by step (designs 150a, 150w): from step 1, or from where the reader
-// left it, whose step stays tinted until they go on.
 export interface RecipeCooking {
   placeStep: number | null;
   reachedStep: number | null;
@@ -64,9 +57,7 @@ const stepTestId = (active: boolean, reached: boolean): string => {
   return active ? recipeMethodTestIds.activeStep : recipeMethodTestIds.step;
 };
 
-// Designs 144g and 144u: a numbered list whose numbering carries on through the page's own
-// groups, so "step 9" means one thing. Where the method stayed on the page, a copy shared before
-// OV-159 and one saved from it, the heading keeps its count and the page is one link away.
+// Numbering carries on through the page's groups, so "step 9" means one thing.
 export const RecipeMethod = ({
   recipe,
   actions,

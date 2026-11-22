@@ -16,14 +16,11 @@ export interface FilterPanelProps {
   onChange: (patch: Partial<LibraryFilters>) => void;
   onNewTopic: () => void;
   onManageTags: () => void;
-  // The Projects group, under Show in the rail and the sheet (docs/features/projects.md).
   projects?: ReactNode;
 }
 
 const MORE_PANEL_ID = "FilterPanel-more";
 
-// Closed, the row still says what is set, so a hidden filter is never a surprise
-// ("OV-34 2 Milestones" 34ab, "OV-84 2 Library Filter" 84h).
 const moreSummary = (filters: LibraryFilters): string => {
   const verdict = [...(filters.novelty === "all" ? [] : [NOVELTY_LABEL[filters.novelty]]), ...(filters.dubious ? ["Dubious only"] : [])];
   return [
@@ -35,7 +32,6 @@ const moreSummary = (filters: LibraryFilters): string => {
 
 export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) => {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
-  // A tag arriving from a note opens the group the tag is in (84g).
   const [moreShown, setMoreShown] = useState(filters.tag !== null);
   const [shownForTag, setShownForTag] = useState(filters.tag);
   if (shownForTag !== filters.tag) {

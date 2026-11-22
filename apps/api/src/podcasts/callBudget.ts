@@ -1,8 +1,4 @@
-// A directory sees our server's address, not each reader's, so every call this process makes to it
-// shares one budget: at most `perMinute` in any 60 seconds, a call over it waiting its turn up to
-// `mostWaitMs`, then giving up as no answer. Answers are kept as long as `keepMs` allows, so a show
-// looked up again is not asked again (docs/features/podcast-links.md, "The directories";
-// OV-297, OV-294).
+// Why every call shares one budget: docs/features/podcast-links.md, "The directories".
 export interface CallBudgetOptions {
   perMinute: number;
   mostWaitMs: number;
@@ -63,9 +59,7 @@ export const callBudget = <Rest extends unknown[]>(
 
 const HOUR_MS = 60 * 60_000;
 
-// Well under Apple's ~20 a minute, since a deploy can briefly run two machines. A show's episode
-// list changes as it publishes, so it is kept an hour; a search for a show's name, a day.
-// Apple's Search API is "limited to approximately 20 calls per minute".
+// Under Apple's "approximately 20 calls per minute", since a deploy can briefly run two machines.
 export const APPLE_BUDGET: CallBudgetOptions = {
   perMinute: 15,
   mostWaitMs: 15_000,
@@ -74,9 +68,7 @@ export const APPLE_BUDGET: CallBudgetOptions = {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
 
-// Podcast Index tunes its limits without publishing them, so this is a polite guess, and a call
-// that would wait more than a moment goes to Apple instead. Its terms suggest "a good caching
-// strategy": a show's episodes are kept an hour, a search a day.
+// Why these numbers: docs/features/podcast-links.md, "The directories".
 export const PODCAST_INDEX_BUDGET: CallBudgetOptions = {
   perMinute: 20,
   mostWaitMs: 2_000,

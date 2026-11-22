@@ -31,8 +31,7 @@ ${asContent(sample.opening)}
   };
 };
 
-// An answer that still breaks its schema after the retry routes to the default note, which is
-// complete for any source; a provider failure is a failed overview like any other.
+// A broken answer routes to the default note, which is complete for any source.
 export const checkNoteKind = async (client: GenerationClient, sample: KindSample): Promise<NoteKind> => {
   try {
     const { noteKind } = await requestGeneratedOutput<{ noteKind: NoteKind }>(client, composeKindCheckPrompt(sample));

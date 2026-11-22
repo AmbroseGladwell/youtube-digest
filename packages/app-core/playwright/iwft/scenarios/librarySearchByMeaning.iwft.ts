@@ -18,7 +18,6 @@ const seed = (backendSimulator: BackendSimulator) => {
   return { founders, bread };
 };
 
-// Word matches first, then the closest few by meaning (docs/features/search-by-meaning.md).
 test.describe("searching the library by meaning", () => {
   test("an overview that uses none of the words is listed as close in meaning", async ({ launcher, backendSimulator }) => {
     const { founders } = seed(backendSimulator);

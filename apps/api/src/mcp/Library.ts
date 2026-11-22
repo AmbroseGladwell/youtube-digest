@@ -5,8 +5,7 @@ export interface LibraryEntry {
   state: OverviewState | null;
 }
 
-// Every membership record, including those whose overview was taken out: the latest change
-// to one is what "last changed" counts (docs/features/projects.md).
+// Removed members count to "last changed": docs/features/projects.md, "The reader's screens".
 export interface Library {
   entries: LibraryEntry[];
   topics: Topic[];

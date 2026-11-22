@@ -1,12 +1,10 @@
 import { isYouTubeUrl, type ActiveVideoSource } from "@overview/app-core";
 
-// The side panel belongs to one window, so the video in front of it is that window's
-// active tab (docs/features/watching-detection.md).
+// The side panel belongs to one window, so its video is that window's active tab.
 let videoUrl: string | null = null;
 const listeners = new Set<() => void>();
 
-// pendingUrl covers a tab that has come to the front before its navigation commits, which
-// a tab opened from another app does (docs/features/watching-detection.md).
+// pendingUrl covers a tab brought to the front before its navigation commits, as one opened from an app is.
 const readActiveVideoUrl = async (): Promise<string | null> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || tab?.pendingUrl;

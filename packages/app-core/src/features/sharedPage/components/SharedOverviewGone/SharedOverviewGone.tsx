@@ -8,8 +8,7 @@ export interface SharedOverviewGoneProps {
   state: "revoked" | "unknown";
 }
 
-// Design 30g. The page says what happened and nothing about what was there: not the title,
-// not the verdict, not who shared it (docs/features/sharing.md).
+// Says what happened and nothing about what was there: not the title, the verdict or who shared it.
 const COPY = {
   revoked: {
     heading: "This overview is no longer shared",

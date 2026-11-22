@@ -7,7 +7,7 @@ import { lastMessageAt, readChats } from "./readChats.js";
 import { readLibrary } from "./readLibrary.js";
 import { isProject, resolveProject } from "./resolveProject.js";
 
-// As a listing of overviews pages (docs/features/mcp-connector.md, "The context budget").
+// Why 50: docs/features/mcp-connector.md, "The context budget".
 const CHATS_PAGE_SIZE = 50;
 const FIRST_QUESTION_LENGTH = 160;
 

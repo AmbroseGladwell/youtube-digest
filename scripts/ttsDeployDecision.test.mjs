@@ -7,7 +7,6 @@ const OLD = "a".repeat(40);
 const LIVE = "b".repeat(40);
 const HEAD = "c".repeat(40);
 
-// A straight line of history, OLD → LIVE → HEAD, with services/tts changed or not between LIVE and HEAD.
 const line = ({ ttsChanged = false, known = [OLD, LIVE, HEAD] } = {}) => ({
   exists: (commit) => known.includes(commit),
   isAncestor: (older, newer) => known.indexOf(older) !== -1 && known.indexOf(older) <= known.indexOf(newer),

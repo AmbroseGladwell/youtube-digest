@@ -8,8 +8,6 @@ export interface SampleApiAccess {
   apiUrl: string;
 }
 
-// Null in a shell with no server to ask, where Start offers no samples
-// (docs/features/onboarding.md, "Try a sample").
 export const useSampleApi = (): SampleApiAccess | null => {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();

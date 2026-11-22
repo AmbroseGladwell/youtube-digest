@@ -31,7 +31,7 @@ export interface PlannedScope {
   filtered: boolean;
 }
 
-// Code, never the model, keeps the scope (docs/features/chats.md, "Two passes on the map").
+// Code, never the model, keeps the scope: docs/features/chats.md, "Library and project chat".
 export const planScope = (
   filters: ChatPlan["filters"],
   labels: ReadonlyMap<string, Overview>,

@@ -28,17 +28,13 @@ const tokenOf = (request: FastifyRequest): ShareToken | null => {
   return ShareToken.safeParse(token).data ?? null;
 };
 
-// The shared copy's own document, outside /api and outside the session plugin. The head is
-// written here so a preview in Messages or Slack has something to read; the page itself is
-// the app in read-only mode, booting from the copy already in the document
-// (docs/features/sharing.md).
+// The API writes the document, the app renders the page: docs/features/sharing.md, "The page".
 export const sharePagePlugin = async (app: FastifyInstance, options: SharePagePluginOptions): Promise<void> => {
   const { shares, appUrl, staticRoot, clock } = options;
   const shell = staticRoot === null ? null : await readFile(join(staticRoot, "index.html"), "utf8");
   const limit = rateLimitHook(rateLimits.sharePagePerAddress, (request) => request.clientAddress, clock);
 
-  // A mistyped link and a link that was never issued are the same thing to the person
-  // holding it, so both get the page rather than the API's envelope.
+  // A mistyped link and one never issued are the same to its holder, so both get the page.
   const gone = (reply: FastifyReply, state: Missing) => {
     reply.request.log.info(apiLogLines.shares.pageMissing({ state }));
     const { status, title } = GONE[state];
@@ -76,11 +72,7 @@ export const sharePagePlugin = async (app: FastifyInstance, options: SharePagePl
       );
   });
 
-  // Peeked rather than read, here and for the audio: a service unfurling a link fetches the
-  // page, then the card, and sometimes the audio, and one visit should count once.
-  //
-  // The card is drawn per request rather than stored, so replacing the copy behind a link
-  // leaves nothing stale to invalidate.
+  // Peeked, so one unfurl counts one visit: docs/features/sharing.md, "Counting".
   app.get("/:token/card.png", { preHandler: limit }, async (request, reply) => {
     const token = tokenOf(request);
     const found = token === null ? null : await shares.peek(token);
@@ -96,8 +88,7 @@ export const sharePagePlugin = async (app: FastifyInstance, options: SharePagePl
       .send(await shareCardPng(found.snapshot.note));
   });
 
-  // og:audio wants one stable address per link. The bytes live where every other render
-  // does, content-addressed and already public, so this only says where.
+  // One stable address for og:audio: docs/features/sharing.md, "The audio".
   app.get("/:token/audio.mp3", { preHandler: limit }, async (request, reply) => {
     const token = tokenOf(request);
     const found = token === null ? null : await shares.peek(token);

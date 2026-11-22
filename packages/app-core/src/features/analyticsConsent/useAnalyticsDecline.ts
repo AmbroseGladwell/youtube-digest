@@ -5,7 +5,7 @@ import { useAnalyticsContext } from "../analytics/useAnalyticsContext.js";
 import { declineAnalyticsConsent } from "./useAnalyticsConsent.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 
-// docs/features/analytics-consent.md, "A no is counted with no id".
+// Posted only when a decline: docs/features/analytics-consent.md, "Analytics and logging".
 export const useAnalyticsDecline = (): (() => void) => {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();

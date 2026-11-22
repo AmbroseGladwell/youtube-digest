@@ -13,8 +13,7 @@ import { authFailureMessage, CODE_SPENT } from "../util/authFailureMessage.js";
 import { connectExtensionPageTestIds } from "./ConnectExtensionPageTestIds.js";
 import { useSignOut } from "../../accountLibraries/useSignOut.js";
 
-// The web app, already signed in, mints a code over its own session so the extension
-// beside it signs in without a second email (docs/features/sign-in.md).
+// No second email for the extension: docs/features/sign-in.md, "Connecting the extension from the web app".
 export const ConnectExtensionPage = () => {
   const surface = useSurface();
   const navigate = useNavigate();

@@ -21,18 +21,13 @@ export interface CreateTopicOptions {
 }
 
 export interface OverviewStore {
-  // Null means no such record. A record that is present and cannot be read throws an
-  // UnreadableRecordError instead, because those are different things
-  // (docs/features/record-migrations.md).
+  // Null is no record; an unreadable one throws (docs/features/record-migrations.md).
   getOverview(id: OverviewId): Promise<Overview | null>;
   listOverviews(query?: OverviewQuery): Promise<Overview[]>;
-  // What listOverviews left out, so that nothing the store holds can go missing without
-  // being counted (docs/features/record-migrations.md).
+  // So nothing the store holds goes missing uncounted (docs/features/record-migrations.md).
   listUnreadable(): Promise<UnreadableRecord[]>;
   saveOverview(overview: Overview): Promise<void>;
-  // The app's whole read-modify-write surface, named rather than expressed as a whole
-  // record: parsing on read is what makes saving a spread of a parsed overview lossy
-  // (docs/features/record-migrations.md).
+  // Named writes, since saving a spread of a parsed overview is lossy (docs/features/record-migrations.md).
   setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]): Promise<void>;
   setOverviewCaptureReason(overviewId: OverviewId, captureReason: string | null): Promise<void>;
   // A merge, rename or delete rewrites the note's tags in place (docs/features/tag-reuse.md).

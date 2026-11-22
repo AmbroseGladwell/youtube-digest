@@ -24,8 +24,7 @@ rest of the structure.`;
 const GOOD_BIG_PICTURE =
   "Parents get conflicting advice about screens, and the question underneath is whether the harm comes from the screen itself or from what it pushes out, such as sleep and play. It also covers how to talk to a teenager about their phone.";
 
-// Only a process note has a steps block for its key points to leave the steps to
-// (docs/features/source-steps.md).
+// docs/features/source-steps.md, "Only on a process note".
 const LEAVE_STEPS_TO_THE_BLOCK = `Steps the video tells me to follow go in The steps it gives, below, and
 are never repeated here: a key point keeps the idea or the reason behind
 them, and leaves the steps to that list.

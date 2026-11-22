@@ -18,8 +18,6 @@ const unreadableRecord = (overrides: Partial<UnreadableRecord> = {}): Unreadable
   ...overrides,
 });
 
-// A library that shows two and holds three is the prototype's eleven missing notes with a
-// new address (docs/features/record-migrations.md).
 test("a record that cannot be read sits in the library where the reader left it", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(
     makeOverview({
@@ -56,9 +54,6 @@ test("opening it explains what happened and offers the video rather than a retry
   await deadEnd.verifyOffersWayBack();
 });
 
-// A record from the future is the app's fault rather than the data's, and regenerating it
-// would write this client's version over a newer one
-// (docs/features/record-migrations.md).
 test("a record from a newer version says so, and is not offered a way to overwrite it", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedUnreadable(unreadableRecord({ reason: "future-version", schemaVersion: 99 }));
   const library = await launcher.launchExpectingLibrary();

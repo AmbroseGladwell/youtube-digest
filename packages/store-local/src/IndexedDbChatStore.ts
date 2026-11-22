@@ -17,8 +17,7 @@ const chatsRequestFor = (store: IDBObjectStore, owner: ChatOwner): IDBRequest<un
   return owner.kind === "project" ? store.index(CHATS_BY_PROJECT_INDEX).getAll(owner.id) : store.getAll();
 };
 
-// Chats arrive through sync, written by the server; the only thing a device does to one is
-// delete it (docs/features/chats.md).
+// A device only ever deletes one: docs/features/chats.md, "The server writes it".
 export class IndexedDbChatStore implements ChatStore {
   #db: IDBDatabase;
   #onJournaled: (() => void) | undefined;
@@ -28,7 +27,7 @@ export class IndexedDbChatStore implements ChatStore {
     this.#onJournaled = onJournaled;
   }
 
-  // The library's chats have no owner, so no index holds them: they are the ones left over.
+  // The library's chats have no owner, so no index holds them.
   async listChats(owner: ChatOwner): Promise<Chat[]> {
     const store = this.#db.transaction(CHATS_STORE, "readonly").objectStore(CHATS_STORE);
     const request = chatsRequestFor(store, owner);

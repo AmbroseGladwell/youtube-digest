@@ -30,8 +30,6 @@ test("a second run applies nothing, so starting the server twice is safe", async
   await sql.close();
 });
 
-// Two branches each taking the next free number is how one of them gets skipped in
-// production without a word.
 test("two migrations with one version refuse to run, rather than skipping one", async () => {
   const dir = await mkdtemp(join(tmpdir(), "migrations-"));
   await writeFile(join(dir, "V0001__first.sql"), "create table first_one (id int)");

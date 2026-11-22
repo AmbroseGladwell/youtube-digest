@@ -16,10 +16,6 @@ export interface MilestoneStackProps {
 const UNDO_SHOWN_MS = 6_000;
 const PLATES = 2;
 
-// Design 34ab and 34ah: one card under the filters, or, when one save crossed several,
-// a stack shortest first with the next ones peeking out underneath in their own colours.
-// × brings the next forward; the last × leaves a moment to undo it
-// (docs/features/time-saved.md, "When a milestone shows").
 export const MilestoneStack = ({ milestones, minutes, onLineChosen, onDismiss, onUndo }: MilestoneStackProps) => {
   const [dismissedHere, setDismissedHere] = useState(0);
   const [undoable, setUndoable] = useState<MilestoneId | null>(null);

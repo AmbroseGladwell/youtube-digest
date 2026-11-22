@@ -3,9 +3,7 @@ import { z } from "zod";
 export const TOPIC_SUGGESTION_TEXT_CHARACTERS = 4000;
 export const TOPIC_SUGGESTION_NEW_NAME_CHARACTERS = 40;
 
-// A source about to be written, matched against onboarding's starter topics before there's an
-// account, with at most one new topic named where none of them is a good home for it
-// (docs/features/onboarding.md, "Suggested topics").
+// Before an account, naming at most one new topic: docs/features/onboarding.md, "Suggested topics".
 export const TopicSuggestionInput = z.object({
   title: z.string().min(1).max(500),
   kind: z.enum(["video", "article", "recipe"]),

@@ -15,8 +15,7 @@ const useText = (used: Date, now: Date, timeZone: string | undefined): string =>
   return dayKey(used, timeZone) === dayKey(now, timeZone) ? "Used today" : `Last used ${dayMonth(used, timeZone)}`;
 };
 
-// The server marks a connection used at most once an hour, so nothing finer than the hour
-// is said about it (docs/features/mcp-connector.md, "Tokens").
+// Nothing finer than the hour: docs/features/mcp-connector.md, "Tokens".
 export const connectionUseLine = (
   { createdAt, lastUsedAt }: Pick<Connection, "createdAt" | "lastUsedAt">,
   now: Date,

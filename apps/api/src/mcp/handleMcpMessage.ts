@@ -38,8 +38,7 @@ export type McpReply = { kind: "accepted" } | { kind: "response"; body: JsonRpcR
 export interface McpCallContext extends McpToolContext {
   connectionId: string;
   assistant: McpAssistant;
-  // Whether the connection's scope lets it read what is known about the reader
-  // (docs/features/mcp-connector.md, "Scopes").
+  // From the connection's scope: docs/features/mcp-connector.md, "Scopes".
   readsProfile: boolean;
 }
 
@@ -69,8 +68,7 @@ const instructionsFor = (context: McpCallContext) =>
 const allowed = (tool: McpTool, context: McpCallContext) =>
   (!tool.writes || context.writes) && (!tool.readsProfile || context.readsProfile);
 
-// A tool the connection's scope does not allow is not offered, rather than offered and
-// refused (CLAUDE.md, "Degrade visibly").
+// Not offered rather than offered and refused: docs/features/mcp-connector.md, "Scopes".
 const toolsFor = (context: McpCallContext) => mcpTools.filter((tool) => allowed(tool, context));
 
 const refusal = (tool: McpTool) =>
@@ -180,9 +178,7 @@ const answer = async (method: string, params: unknown, context: McpCallContext):
   }
 };
 
-// Stateless Streamable HTTP: every request is answered as one JSON body, and nothing is
-// ever sent unasked, so a notification or a client's response needs only accepting
-// (docs/features/mcp-connector.md, "The endpoint").
+// Stateless, so a notification needs only accepting: docs/features/mcp-connector.md, "The endpoint".
 export const handleMcpMessage = async (message: unknown, context: McpCallContext): Promise<McpReply> => {
   if (Array.isArray(message)) {
     return { kind: "response", body: jsonRpcError(null, JSON_RPC_ERRORS.invalidRequest, "Batches are not supported") };

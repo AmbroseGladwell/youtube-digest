@@ -4,8 +4,6 @@ import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { onboardingSourceOf } from "./onboardingSources.js";
 import { startOnboarding } from "./useOnboardingProgress.js";
 
-// Start, wherever it sits: a link to any kind of source we read begins onboarding, anything
-// else is refused (designs 46a and 46n). Says whether the link was taken.
 export const useStartOnboarding = (): ((link: string, tabId?: number) => boolean) => {
   const navigate = useNavigate();
   const analytics = useAnalytics();

@@ -4,7 +4,7 @@ import { connectionReadsProfile, connectionWrites } from "./connectionScope.js";
 
 const iso = (value: string | Date): string => new Date(value).toISOString();
 
-// A connection whose every token has lapsed can do nothing, so it is not listed as one.
+// A connection whose every token has lapsed can do nothing, so it is not listed.
 export const listConnections = async (sql: SqlClient, accountId: string, now: Date): Promise<Connection[]> => {
   const rows = await sql.query<{
     id: string;

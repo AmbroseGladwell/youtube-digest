@@ -1,9 +1,7 @@
 import type { OverviewState, UnreadableRecord } from "@overview/domain";
 import type { OverviewWithState } from "./OverviewWithState.js";
 
-// A record the library holds, readable or not. An unreadable one is still one of the
-// reader's own notes and still sits where they left it, so it travels with the readable
-// ones rather than in a list of its own (docs/features/record-migrations.md).
+// An unreadable record is still the reader's own note, so it stays where they left it.
 export type LibraryEntry =
   | ({ kind: "overview" } & OverviewWithState)
   | { kind: "unreadable"; record: UnreadableRecord; state: OverviewState };

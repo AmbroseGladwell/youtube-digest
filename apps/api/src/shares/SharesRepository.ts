@@ -75,9 +75,7 @@ export interface SharedOverviewRef {
   stopped: boolean;
 }
 
-// A live link per overview, and every link ever made kept afterwards so a revoked one can
-// still answer honestly. Stopping does not delete the row, it marks it, which is what lets
-// /s/<token> say "no longer shared" rather than 404 (docs/features/sharing.md).
+// A stopped link is marked, not deleted: docs/features/sharing.md, "The link".
 export class SharesRepository {
   #sql: SqlClient;
   #clock: () => Date;
@@ -87,9 +85,7 @@ export class SharesRepository {
     this.#clock = clock;
   }
 
-  // Replaces the copy behind a live link, or mints a new one. A link the reader stopped is
-  // never revived: sharing again after stopping is a new link, so anyone holding the old
-  // one stays stopped.
+  // A stopped link is never revived: docs/features/sharing.md, "The link".
   async put({ accountId, overviewId, snapshot, contentHash }: PutShareInput): Promise<ShareRow> {
     const now = this.#clock();
     const rows = await this.#sql.query<RawShare>(
@@ -124,8 +120,7 @@ export class SharesRepository {
     return rows.length > 0;
   }
 
-  // Null for a token nobody was ever given; "revoked" for one that was turned off. The page
-  // tells those two apart, and the counter only moves for a copy that was actually served.
+  // Null for a token never given, "revoked" for a stopped one: docs/features/sharing.md, "410, not 404".
   async readAndCount(token: string): Promise<PublishedShare | "revoked" | null> {
     const rows = await this.#sql.query<RawPublished>(
       `update shares set views = views + (case when revoked_at is null then 1 else 0 end)
@@ -136,15 +131,13 @@ export class SharesRepository {
     return published(rows[0]);
   }
 
-  // The same read without counting a visit, for the card and the audio a link preview
-  // fetches after the page it has already counted.
+  // For the card and audio a preview fetches after the page: docs/features/sharing.md, "Counting".
   async peek(token: string): Promise<PublishedShare | "revoked" | null> {
     const rows = await this.#sql.query<RawPublished>("select snapshot, shared_at, revoked_at, views from shares where token = $1", [token]);
     return published(rows[0]);
   }
 
-  // Which overview a shared page's events are about, read without counting a visit. A
-  // stopped link still answers, so what its visitors do next is counted too.
+  // A stopped link still answers, so what its visitors do next is counted too.
   async overviewFor(token: string): Promise<SharedOverviewRef | null> {
     const rows = await this.#sql.query<{ overview_id: string; revoked_at: Date | null }>(
       "select overview_id, revoked_at from shares where token = $1",

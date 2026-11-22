@@ -12,11 +12,7 @@ import { authFailureMessage, LINK_SPENT } from "../util/authFailureMessage.js";
 import styles from "./SignInPage.module.scss";
 import { signInPageTestIds } from "./SignInPageTestIds.js";
 
-// /sign-in is both where the bar's Sign in goes and where a magic link lands, so asking,
-// waiting, being signed in and a spent link all live at one address. A link's token is
-// spent by one POST to this page's origin: a web link signs this browser in and goes to
-// the library; an extension link shows the code and signs nothing in here
-// (docs/features/sign-in.md).
+// Magic links land here too, so asking, waiting, signed in and a spent link share one address.
 export const SignInPage = () => {
   const { hash, search } = useLocation();
   const signIn = useSignInMutation();

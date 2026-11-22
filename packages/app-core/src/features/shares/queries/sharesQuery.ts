@@ -9,8 +9,7 @@ export const sharesQueryOptions = (api: ShareApi | null) =>
     queryKey: shareKeys.list,
     queryFn: (): Promise<Share[]> => (api === null ? Promise.resolve([]) : api.list()),
     enabled: api !== null,
-    // Never served stale: the view count and whether the copy is still current are the
-    // two things the reader opens this to find out (docs/features/sharing.md).
+    // Why never stale: docs/features/sharing.md, "Making and managing a link".
     staleTime: 0,
   });
 

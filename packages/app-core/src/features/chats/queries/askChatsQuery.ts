@@ -3,8 +3,6 @@ import { chatOwner, type ChatStore, type ProjectStore } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { chatKeys } from "../chatKeys.js";
 
-// The Ask drawer's conversations as this device holds them: the library's, each project's and
-// each overview's (OV-363), archived ones too. A deleted project's are left out.
 export const askChatsQueryOptions = (chatStore: ChatStore, projectStore: ProjectStore) =>
   queryOptions({
     queryKey: chatKeys.asked(),

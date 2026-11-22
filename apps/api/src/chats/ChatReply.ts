@@ -3,9 +3,7 @@ import { z } from "zod";
 const SourceRef = z.object({ id: z.string(), relation: z.string() });
 const ListItem = z.object({ text: z.string(), sources: z.array(z.string()) });
 
-// Every chat's reply, whatever its scope (OV-354; owner, 21 Nov 2026): an intro that alone answers a
-// simple question, sections only where they help, a takeaway, and every source as an id with how it
-// relates. inSource and generalKnowledge are an overview chat's; a library chat sets them false.
+// Why every scope shares this shape: docs/features/chats.md, "One shape for every answer".
 export const ChatReply = z.object({
   intro: z.string(),
   introSources: z.array(SourceRef),
@@ -32,7 +30,6 @@ const SOURCE_REF = {
   properties: { id: { type: "string" }, relation: { type: "string" } },
 } as const;
 
-// A list item names the ids it rests on, so a list of overviews carries a chip after each (OV-362).
 const LIST_ITEM = {
   type: "object",
   additionalProperties: false,
@@ -40,8 +37,7 @@ const LIST_ITEM = {
   properties: { text: { type: "string" }, sources: { type: "array", items: { type: "string" } } },
 } as const;
 
-// intro first, so its text can be streamed while the sections are still to come; each section
-// arrives whole.
+// Why intro comes first: docs/features/chats.md, "One shape for every answer".
 export const CHAT_REPLY_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -77,15 +73,15 @@ export interface CitedIds {
   inSource: boolean;
 }
 
-// The ids a reply cites, by kind, as code turns them into places: transcript passages (p12, and
-// another overview's minutes, S2.p14), other chats' messages (c1.m3), and everything else an item of
-// an overview (step2, S2.kp1, O3).
+const TRANSCRIPT_PASSAGE_ID = /^(S\d+\.)?p\d+$/;
+const CHAT_MESSAGE_ID = /^c\d+\.m\d+$/;
+
 export const citedIds = (ids: readonly string[], inSource: boolean): CitedIds => {
   const unique = [...new Set(ids)];
   return {
-    passages: unique.filter((id) => /^(S\d+\.)?p\d+$/.test(id)),
-    chatMessages: unique.filter((id) => /^c\d+\.m\d+$/.test(id)),
-    overviewParts: unique.filter((id) => !/^(S\d+\.)?p\d+$/.test(id) && !/^c\d+\.m\d+$/.test(id)),
+    passages: unique.filter((id) => TRANSCRIPT_PASSAGE_ID.test(id)),
+    chatMessages: unique.filter((id) => CHAT_MESSAGE_ID.test(id)),
+    overviewParts: unique.filter((id) => !TRANSCRIPT_PASSAGE_ID.test(id) && !CHAT_MESSAGE_ID.test(id)),
     inSource,
   };
 };
@@ -98,7 +94,6 @@ export const allIds = (reply: ChatReply): string[] => [
   ]),
 ];
 
-// The shape every chat's prompt asks for, the same whatever its scope.
 export const ANSWER_SHAPE_RULES = `Answer in this shape, structured only where it helps:
 - intro: the answer itself. A simple question is answered by the intro alone, in two to five plain sentences: leave sections empty and takeaway empty, and list in introSources the ids it rests on.
 - sections: only when the question has parts, or the answer compares or lists several things. Each has a short heading, one or two short paragraphs, a numbered list where order matters or bullets where it doesn't (otherwise leave both empty), and sources: every id the section rests on.

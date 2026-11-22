@@ -21,9 +21,7 @@ export type AnalyticsRecorder = Pick<AnalyticsQueue, "record" | "flush">;
 
 type Props = Record<string, string | number | boolean>;
 
-// analytics.mcp.consentScreen.approved(): one method per event in the catalogue, by feature,
-// then screen, then action, so a call site can only name an event that exists with the
-// properties it declares (docs/architecture/analytics.md, "Adding an event").
+// One method per catalogued event: docs/architecture/analytics.md, "Adding an event".
 export const createAnalytics = (recorder: AnalyticsRecorder): Analytics => {
   const methodsFor = (feature: string, screen: string, events: object) =>
     Object.fromEntries(

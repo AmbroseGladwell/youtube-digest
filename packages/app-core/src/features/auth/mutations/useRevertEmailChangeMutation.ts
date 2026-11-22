@@ -8,8 +8,7 @@ export interface RevertEmailChangeVariables {
   token: string;
 }
 
-// Public, like signing in by a link: the page that the mail's button opens holds no
-// session, and every session is about to end anyway (docs/features/account-changes.md).
+// Public: the page the mail's button opens holds no session, and every session is about to end.
 export const useRevertEmailChangeMutation = (createApi?: (baseUrl: string) => AuthApi) => {
   const surface = useClientSurface();
   const api = createApi ?? ((baseUrl: string) => createFetchAuthApi({ baseUrl, surface }));

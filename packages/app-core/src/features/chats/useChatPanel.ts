@@ -12,7 +12,6 @@ type OpenedFrom = AskedFrom | "menu" | "conversationsLink" | "receipt" | "askDra
 
 export type ChatView = "conversation" | "list";
 
-// Where a followed citation came from, to go back to it at the citation (design 310x).
 export interface CameFrom {
   conversationId: string;
   title: string;
@@ -21,7 +20,6 @@ export interface CameFrom {
 
 export const UNDO_DELETE_MS = 6000;
 
-// Something the reader added with "@" for the next question (OV-354, page 1).
 export type PinnedItem =
   | { kind: "overview"; id: OverviewId; title: string }
   | { kind: "project"; id: ProjectId; title: string; count: number };
@@ -45,10 +43,7 @@ export interface FollowedConversation {
   message: number;
 }
 
-// Chat beside an overview's note (designs 310d, 310q–310x): a question or the note's field asks
-// in a new conversation when the panel is closed and in the open one when it is; the menu's
-// Chat reopens the latest. The list of conversations sits behind the header's count, and a
-// conversation deleted there can be undone for six seconds before the delete is made.
+// Behaviour beside the note: docs/features/chats.md, "Beside the note (design 310a, 310d–310p)".
 export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
   const stored = useChatsQuery(overviewId).data ?? [];
   const asking = useAskQuestion(overviewId, about);
@@ -60,8 +55,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
   const [cameFrom, setCameFrom] = useState<CameFrom | null>(null);
   const [focusedMessage, setFocusedMessage] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<Chat | null>(null);
-  // What the next question sends besides the conversation's sources (OV-354): new pins, sources
-  // the reader removed, and Search my library when they changed it here.
   const [pinned, setPinned] = useState<PinnedItem[]>([]);
   const [removed, setRemoved] = useState<OverviewId[]>([]);
   const [searchChoice, setSearchChoice] = useState<boolean | null>(null);
@@ -85,7 +78,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     setAside: removed,
     searchLibrary,
   });
-  // A source removed only leaves the next question; one pinned again comes back (page 2).
   const pin = (item: PinnedItem) => {
     if (pinned.length + sources.live.length >= MAX_CHAT_PINS || pinned.some((each) => each.id === item.id)) {
       return;
@@ -199,7 +191,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     focusField();
   };
 
-  // Arriving from the Ask drawer with one of this overview's conversations (OV-363).
   const arriveAtConversation = (chat: Chat) => {
     goTo(idOf(chat));
     if (!open) {
@@ -208,7 +199,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     focusField();
   };
 
-  // The latest conversation a question was asked in, for its receipt under the note (310d).
   const answeredHere = (question: string): AnsweredHere | null => {
     let found: { at: string; chat: Chat } | null = null;
     for (const chat of chats) {
@@ -225,8 +215,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     return { at, onOpen: () => openConversation(chat) };
   };
 
-  // Following an answer's citation of another conversation: that one opens at the message it
-  // cited, with a way back to this one at the citation (design 310x).
   const followConversation = (chatId: string, message: number, from: FollowedConversation) => {
     const cited = chats.find((chat) => chat.id === chatId);
     if (cited === undefined) {
@@ -259,8 +247,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
     focusField();
   };
 
-  // Gone from the list at once; the delete is made when Undo's six seconds are up, or at once
-  // if another is deleted first (design 310t).
   const deleteConversation = (chat: Chat) => {
     if (deleting !== null) {
       commitDelete(deleting);
@@ -282,7 +268,6 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
   const askingHere = asking.state.status !== "idle" && asking.state.conversationId === conversationId ? asking.state.question : null;
   const title = panelTitle(view, current, askingHere);
 
-  // The server keeps no text for this overview: chat hides rather than offering what can't work.
   const noSource = asking.state.status === "waiting" && asking.state.wait.kind === "noSource";
 
   return {

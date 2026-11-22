@@ -121,7 +121,6 @@ const judgedLines = (judge: string, summaries: readonly ActionJudgmentSummary[])
   ];
 };
 
-// Each reader's actions from the earlier run beside this run's, labelled in the same calls.
 export const beforeAndAfterLines = (summaries: readonly ActionJudgmentSummary[]): string[] => {
   const byName = new Map(summaries.map((summary) => [summary.reader, summary]));
   const pairs = summaries.flatMap((after) => {

@@ -16,8 +16,6 @@ const verifyNothingAsks = async (page: Page) => {
   await test.expect(page.getByRole("button", { name: /^(Allow|No thanks)$/ })).toHaveCount(0);
 };
 
-// OV-101: onboarding's screen (design 46b) is the only place a reader without an account is
-// asked; the library and the panel's home have no strip (docs/features/analytics-consent.md).
 test.describe("nowhere but onboarding asks", () => {
   test("Start asks nothing until a link is given, and sends nothing", async ({ launcher, backendSimulator, page }) => {
     await launcher.launch({ sync: true, ...NEVER_ASKED });

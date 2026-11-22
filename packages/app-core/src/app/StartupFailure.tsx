@@ -4,10 +4,7 @@ export interface StartupFailureProps {
   blocked: boolean;
 }
 
-// What a shell renders when the local database could not be opened at all, so there are no
-// stores to give the app. Two cases, because the reader can act on one of them: a blocked
-// open is another window holding an older version, which closing that window fixes, and
-// everything else is a storage failure they can only retry (docs/features/error-state.md).
+// Why two cases: docs/features/error-state.md, "The two startup failures use it too".
 export const StartupFailure = ({ blocked }: StartupFailureProps) => {
   return blocked ? (
     <ErrorState

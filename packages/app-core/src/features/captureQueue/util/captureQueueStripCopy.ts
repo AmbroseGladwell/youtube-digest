@@ -7,12 +7,10 @@ import { monthHoldStripMeta } from "./monthHoldCopy.js";
 export interface CaptureQueueStripCopy {
   title: string;
   meta: string | null;
-  // Said after the meta, quieter: what waits on a pace while the rest is made (95ab).
+  // Muted, after the meta: what waits on a pace while the rest is made.
   after?: string;
 }
 
-// Design 27k's words for each state, wide and compact (27n, 27o), with 95ac's for a queue
-// waiting on its playlists' paces.
 export const captureQueueStripCopy = (strip: CaptureQueueStrip, compact: boolean): CaptureQueueStripCopy => {
   switch (strip.kind) {
     case "making": {

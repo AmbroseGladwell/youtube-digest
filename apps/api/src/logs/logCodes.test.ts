@@ -42,8 +42,6 @@ const sourceFiles = (dir: string): string[] =>
     return entry.name.endsWith(".ts") && !entry.name.includes(".test.") && !entry.name.includes("testHelper") ? [path] : [];
   });
 
-// The runtime check above only sees the lines a test happens to reach, so the source is
-// checked too: a new line without a catalogue entry fails here rather than in PostHog.
 test("no log call writes a message of its own instead of a line from the catalogue", () => {
   const offenders: string[] = [];
   for (const path of sourceFiles("src")) {

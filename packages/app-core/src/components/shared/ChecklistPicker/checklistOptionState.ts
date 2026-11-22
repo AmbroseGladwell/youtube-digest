@@ -16,7 +16,7 @@ export interface OptionHolding {
   held: number;
 }
 
-// "Home on all 3 · Money on 1" (168as).
+// "Home on all 3 · Money on 1"
 export const sharedChecklistFoot = (options: OptionHolding[], of: number, none: string): string => {
   const held = options.filter((option) => option.held > 0);
   if (held.length === 0) {

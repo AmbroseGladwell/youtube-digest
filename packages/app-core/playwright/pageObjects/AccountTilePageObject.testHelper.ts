@@ -5,8 +5,6 @@ import { emailChangeFlowTestIds } from "../../src/features/auth/components/Email
 import { nameEditorTestIds } from "../../src/features/auth/components/NameEditor/NameEditorTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The "Signed in as" tile in Settings › Account & sync: the name and the email, and every
-// step of changing either (docs/features/account-changes.md).
 export class AccountTilePageObject extends PageObject {
   verifyIsShown = (): Promise<AccountTilePageObject> =>
     this.step("verifyIsShown", async () => {
@@ -29,8 +27,6 @@ export class AccountTilePageObject extends PageObject {
         ? this.expectToBeVisible(accountTileTestIds.changeEmailButton)
         : this.expectToHaveCount(accountTileTestIds.changeEmailButton, 0),
     );
-
-  // The name.
 
   clickChangeName = () => this.step("clickChangeName", () => this.click(accountTileTestIds.changeNameButton));
 
@@ -60,8 +56,6 @@ export class AccountTilePageObject extends PageObject {
 
   verifyNameStatusReads = (pattern: RegExp) =>
     this.step(`verifyNameStatusReads ${pattern.source}`, () => expect(this.get(accountTileTestIds.nameStatus)).toHaveText(pattern));
-
-  // The email.
 
   clickChangeEmail = () => this.step("clickChangeEmail", () => this.click(accountTileTestIds.changeEmailButton));
 

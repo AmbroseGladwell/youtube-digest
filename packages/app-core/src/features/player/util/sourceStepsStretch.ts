@@ -1,7 +1,5 @@
 import { SOURCE_STEPS_SECTION, type NoteLine } from "@overview/domain";
 
-// Where the steps a source gives run in the narration, as line indexes: from the block's
-// heading up to the first line after it, or null when nothing follows (design 250f).
 export interface SourceStepsStretch {
   first: number;
   after: number | null;

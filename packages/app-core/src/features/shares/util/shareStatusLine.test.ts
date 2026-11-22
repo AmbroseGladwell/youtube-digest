@@ -14,9 +14,7 @@ describe("shareStatusLine", () => {
     expect(shareStatusLine("2026-08-04T11:00:00.000Z", 0)).toBe("Shared 4 Aug · 0 views");
   });
 
-  // en-GB abbreviates September to four letters, and the saved date beside it on the same
-  // screen does the same, so the two agree.
-  it("abbreviates a month the way the rest of the app does", () => {
+  it("abbreviates September to four letters, as the saved date beside it does", () => {
     expect(shareStatusLine("2026-09-30T11:00:00.000Z", 3)).toBe("Shared 30 Sept · 3 views");
   });
 });

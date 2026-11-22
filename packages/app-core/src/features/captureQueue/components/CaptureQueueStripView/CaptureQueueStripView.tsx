@@ -11,8 +11,7 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 export interface CaptureQueueStripViewProps {
   strip: CaptureQueueStrip;
   compact: boolean;
-  // The library's queue group folded into this strip: the count of problems rides along and
-  // the strip offers to unfold it (design 27i-2). Null where there is no group to unfold.
+  // Null where there is no library queue group folded into the strip.
   folded: { attention: number; onUnfold: () => void } | null;
   onPause: () => void;
   onResume: () => void;
@@ -32,8 +31,6 @@ const LEAD: Record<CaptureQueueStrip["kind"], StrokeIconName | null> = {
   done: "check",
 };
 
-// Design 27k: the queue in the generation strip's slot and shape (3c), one state at a time.
-// Its words are a polite live region, so progress is heard without taking focus.
 export const CaptureQueueStripView = ({ strip, compact, folded, onPause, onResume, onDetails, onDismiss }: CaptureQueueStripViewProps) => {
   const analytics = useAnalytics();
   const copy = captureQueueStripCopy(strip, compact);

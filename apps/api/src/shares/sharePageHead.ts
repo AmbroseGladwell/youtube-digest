@@ -11,9 +11,7 @@ export interface SharePageHeadInput {
 const meta = (attribute: "property" | "name", key: string, content: string) =>
   `<meta ${attribute}="${key}" content="${escapeHtml(content)}">`;
 
-// The head a link preview reads, and the only reason this page is a document the server
-// writes rather than a route the app owns. noindex because a shared copy is for the people
-// the reader sent it to, and nothing here names the sharer (docs/features/sharing.md).
+// What a link preview reads, and why noindex: docs/features/sharing.md, "The head".
 export const sharePageHead = ({ note, token, appUrl, hasNarration }: SharePageHeadInput): string => {
   const { title, description } = sharePreview(note);
   const url = new URL(sharePath(token), appUrl).toString();
@@ -35,8 +33,7 @@ export const sharePageHead = ({ note, token, appUrl, hasNarration }: SharePageHe
   ].join("\n    ");
 };
 
-// A link the reader turned off, and one that was never issued, both answer with a page
-// rather than a bare status. Neither says anything about the overview that was there.
+// Says nothing about the overview that was there: docs/features/sharing.md, "410, not 404".
 export const goneHead = (what: string): string => {
   return [`<title>${escapeHtml(what)} · The Overview</title>`, meta("name", "robots", "noindex, nofollow")].join("\n    ");
 };

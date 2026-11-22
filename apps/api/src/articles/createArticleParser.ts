@@ -23,8 +23,7 @@ export interface ParsedArticleMessage {
   read: ArticleRead;
 }
 
-// One warm worker, one page at a time, replaced whenever a page outruns the limit or the
-// worker fails (docs/features/pasted-article-links.md, "Parsing").
+// Why one warm worker, replaced on a timeout: docs/features/pasted-article-links.md, "Parsing".
 export const createArticleParser = ({ workerUrl, timeoutMs, heapLimitMb }: ArticleParserOptions): ArticleParser => {
   const waiting: Job[] = [];
   let worker: Worker | null = null;

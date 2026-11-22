@@ -4,8 +4,7 @@ const LIBRARY_ACCOUNT = "overview/library-account";
 
 const StoredLibraryAccount = z.string().nullable();
 
-// The worker has no localStorage to read the connection from, so the pages tell it which
-// library they have open (docs/features/account-libraries.md).
+// The worker has no localStorage, so the pages tell it which library they have open.
 export const writeLibraryAccount = (accountId: string | null): Promise<void> =>
   chrome.storage.local.set({ [LIBRARY_ACCOUNT]: accountId }).catch(() => undefined);
 

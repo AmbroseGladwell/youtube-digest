@@ -15,18 +15,13 @@ import { ChosenModelFailedError, failedOnTheModel } from "./ChosenModelFailedErr
 
 export interface OverviewKeys {
   order: KeySource[];
-  // The reader's own key, when they have one on this device.
   own: { provider: Provider; model: string; client: GenerationClient } | null;
-  // Our server, for a signed-in reader: our key, and the reservations an own-key overview
-  // takes on the account's month. Null signed out, where nothing is made on us (OV-327).
+  // Null signed out, where nothing is made on us (OV-327).
   api: GenerationApi | null;
-  // Our key's provider and model, as our server says them, for analytics. Null when it
-  // didn't say.
   ourModel?: { provider: Provider; model: ModelId } | null;
 }
 
-// A key about to be tried, and the provider and model it will make the overview with. The
-// last one before a run settles made it, or failed it (OV-255).
+// The last attempt before a run settles is the one that made or failed it (OV-255).
 export interface GenerationAttempt {
   key: GenerationKey;
   provider: Provider | undefined;
@@ -37,14 +32,12 @@ export interface OverviewMeta {
   id: OverviewId;
   savedAt: string;
   onAttempt?: ((attempt: GenerationAttempt) => void) | undefined;
-  // Which of the reader's projects the key that made it filed it into.
   onProjectsFiled?: ((projectIds: ProjectId[]) => void) | undefined;
 }
 
 const SPENT_QUOTAS = new Set(["ours", "own"]);
 
-// Why a key couldn't make the overview, when that is a reason to try the next one. Null is
-// a failure the reader has to see, such as a refused key (design 110f).
+// Null is a failure the reader has to see, such as a refused key, rather than a reason to try the next.
 export const fallbackCauseOf = (error: unknown): FallbackCause | null => {
   if (isSyncRequestError(error)) {
     switch (error.code) {
@@ -64,10 +57,7 @@ export const fallbackCauseOf = (error: unknown): FallbackCause | null => {
   return fallbackReasonOf(error);
 };
 
-// The overview made on the first key that can, saying which one and why any before it were
-// passed over (docs/architecture/tiers.md, "Which key an overview uses"). Each attempt
-// counts on its own key and gives its slot back when it fails, so a fallback counts once,
-// on the key that made it.
+// docs/architecture/tiers.md, "Which key an overview uses".
 export const makeOverviewOnKeys = async (
   { order, own, api, ourModel = null }: OverviewKeys,
   input: OverviewInput,
@@ -109,8 +99,7 @@ const onOwnKey = async (
   input: OverviewInput,
   meta: OverviewMeta,
 ): Promise<Overview> => {
-  // Only a spent quota stops the reader's own key. Offline, or with the server down, the
-  // overview is made anyway and its push reserves when it goes (docs/features/sync-client.md).
+  // Only a spent quota stops the own key: offline, the overview is made and its push reserves.
   try {
     await api?.reserve(meta.id);
   } catch (error) {

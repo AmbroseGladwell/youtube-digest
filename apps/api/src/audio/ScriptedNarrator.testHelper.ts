@@ -6,7 +6,6 @@ export interface ScriptedNarrator extends Narrator {
   failNext(message: string): void;
 }
 
-// A TTS service that says each line in one second, and fails when told to.
 export const makeScriptedNarrator = (): ScriptedNarrator => {
   const failures: string[] = [];
   const requests: NarrationRequest[] = [];
@@ -33,7 +32,6 @@ export const makeScriptedNarrator = (): ScriptedNarrator => {
 
 export interface MemoryAudioStore extends AudioStore {
   files: Map<string, Buffer>;
-  // The next deletes fail the way R2 would while it is unreachable.
   failingDeletes: boolean;
 }
 

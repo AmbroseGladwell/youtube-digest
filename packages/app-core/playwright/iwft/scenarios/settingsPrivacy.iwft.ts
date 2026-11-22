@@ -23,10 +23,7 @@ const SIGNED_OUT_EXPLANATION =
 
 const storedConsent = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("overview.analyticsConsent.v1") ?? "null"));
 
-// Designs 62d–62i: one switch for analytics, between Plan and About
-// (docs/features/analytics-consent.md, "Settings › Privacy").
 test.describe("signed out", () => {
-  // Design 62d.
   test("Privacy sits between Plan and About, says nothing is chosen, and keeps error reports apart", async ({ launcher }) => {
     await launcher.launch({ ...NEVER_ASKED, build: BUILD });
     const settings = await launcher.appShell.openSettings();
@@ -51,7 +48,6 @@ test.describe("signed out", () => {
     await settings.privacySection.verifyPolicyLinks(/^https?:\/\/[^/]+/, false);
   });
 
-  // Design 62e.
   test("turning it on is the same yes as onboarding's: a new id, and sent under it", async ({ launcher, backendSimulator, page }) => {
     await launcher.launch(NEVER_ASKED);
     const settings = await launcher.appShell.openSettings();
@@ -72,7 +68,6 @@ test.describe("signed out", () => {
     test.expect(backendSimulator.analytics.batches().every(({ anonymousId }) => anonymousId === consent.anonymousId)).toBe(true);
   });
 
-  // Design 62f: withdrawing.
   test("turning it off sends what the yes recorded, then deletes the id and sends nothing more", async ({
     launcher,
     backendSimulator,
@@ -97,7 +92,6 @@ test.describe("signed out", () => {
     test.expect(backendSimulator.analytics.declines()).toEqual([]);
   });
 
-  // Design 62g.
   test("a no is shown with its date, and turning it on makes a new id rather than reusing one", async ({ launcher, page }) => {
     await launcher.launch(SAID_NO);
     const settings = await launcher.appShell.openSettings();
@@ -123,7 +117,6 @@ test.describe("signed out", () => {
 });
 
 test.describe("signed in", () => {
-  // Design 62h.
   test("on across the account's devices by default, and off is kept on the account and stops sending", async ({
     launcher,
     backendSimulator,
@@ -161,7 +154,6 @@ test.describe("signed in", () => {
   });
 });
 
-// Design 62i.
 test("About links the privacy policy and the terms under the version", async ({ launcher, page }) => {
   await launcher.launch({ build: BUILD });
   const settings = await launcher.appShell.openSettings();

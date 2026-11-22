@@ -11,10 +11,7 @@ export interface ShareUsage {
   switchTo: (on: boolean) => Promise<void>;
 }
 
-// The one switch in Settings › Privacy. Signed out it is the same answer onboarding records;
-// signed in it is the account's opt-out, which syncs and the server enforces. Turning it off
-// sends the switch's own event first, so what was recorded under the yes goes out before the
-// id is deleted (docs/features/analytics-consent.md, "Settings › Privacy").
+// Turning it off sends its own event first, so what the yes recorded goes out before the id is deleted.
 export const useShareUsageState = (): ShareUsageState => {
   const { connected } = useSync();
   const { consent } = useAnalyticsConsent();

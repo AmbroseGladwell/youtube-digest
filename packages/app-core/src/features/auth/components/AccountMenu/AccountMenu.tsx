@@ -20,9 +20,6 @@ import { useExtensionOffered } from "../../../../util/useExtensionOffered.js";
 
 const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.connectExtension(), Routes.settings()]);
 
-// Design 9j–9n and 10a: one person button in the bar in place of Settings and Sign in.
-// What it holds follows what this device can do and who it is signed in as
-// (docs/features/sign-in.md, "The account menu").
 export const AccountMenu = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -32,7 +29,7 @@ export const AccountMenu = () => {
   const sync = useSync();
   const signOutNow = useSignOut();
   const willStop = useTimersWillStop();
-  // Signing out stops the timers, which belong to this account's recipes (design 288ag).
+  // Signing out stops the timers, which belong to this account's recipes.
   const signOut = () =>
     new Promise<void>((resolve) => {
       if (willStop.count > 0) {
@@ -47,8 +44,7 @@ export const AccountMenu = () => {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
 
-  // The page a sign-out lands on may take focus itself (design 47b); only when it hasn't
-  // does focus come back to the button.
+  // The page a sign-out lands on may take focus itself; only when it hasn't does focus come back.
   const refocusIfNothingElseIs = () =>
     requestAnimationFrame(() => {
       if (document.activeElement === document.body) {

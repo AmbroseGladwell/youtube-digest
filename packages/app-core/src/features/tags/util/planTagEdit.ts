@@ -1,7 +1,6 @@
 import { retagged, withTagAlias, type OverviewId, type TagAliases } from "@overview/domain";
 import type { OverviewWithState } from "../../overviews/types/OverviewWithState.js";
 
-// Merge, rename and delete are one operation: some tags become one tag, or none.
 export interface TagEdit {
   from: string[];
   to: string | null;
@@ -20,8 +19,7 @@ export interface TagEditPlan {
 
 export interface PlannedTagEdit {
   apply: TagEditPlan;
-  // The exact state before, written back as it was, so Undo needs no inverse edit
-  // ("OV-84 3 Manage Tags" 84m).
+  // The exact state before, written back as it was, so Undo needs no inverse edit.
   undo: TagEditPlan;
   overviewsChanged: number;
 }
@@ -62,7 +60,6 @@ export const planTagEdit = (entries: readonly OverviewWithState[], aliases: TagA
   };
 };
 
-// The plan as the caches should read once it lands, for the optimistic paint.
 export const applyTagEditPlan = <T extends OverviewWithState>(entry: T, plan: TagEditPlan): T => {
   const write = plan.writes.find(({ overviewId }) => overviewId === entry.overview.id);
   if (write === undefined) {

@@ -1,4 +1,4 @@
-// Every change to what is counted, oldest first (docs/features/analytics-consent.md).
+// Oldest first: docs/features/analytics-consent.md, "When what is counted changes".
 export interface PurposesChange {
   version: number;
 }

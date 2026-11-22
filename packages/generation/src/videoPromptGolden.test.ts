@@ -43,10 +43,7 @@ const fingerprint = (value: GenerationInput, kind: NoteKind) => {
     .slice(0, 16);
 };
 
-// The video prompts byte for byte as they stood before podcasts forked them, so a podcast's
-// wording can never leak into a video's note (docs/features/podcast-notes.md, "Videos unchanged").
-// A deliberate change to the video prompt updates these, in a PR that says so.
-test("the video prompts are exactly as they were", () => {
+test("the video prompts are exactly as they were before podcasts forked them", () => {
   assert.deepEqual(
     {
       short: fingerprint(input(20, 120_000), "default"),

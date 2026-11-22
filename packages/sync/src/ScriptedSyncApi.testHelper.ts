@@ -18,8 +18,6 @@ export interface ApiCall {
 
 type Failure = { code: ApiErrorCode; details?: Record<string, unknown> } | "transport";
 
-// A server that answers from a script: every call is recorded, any call can be told to
-// fail once or always, and the feed is whatever pages the test queued.
 export class ScriptedSyncApi implements SyncApi {
   calls: ApiCall[] = [];
   handshakeAnswer: Handshake = { minSupportedClientVersion: 1, currentClientVersion: CLIENT_VERSION };

@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { FirstName } from "./FirstName.js";
 
-// What a signed-in reader can change about their account without proving an inbox: the
-// name. Null clears it, and every screen falls back to the address
-// (docs/features/account-changes.md).
+// The name, changeable without proving an inbox; null clears it (docs/features/account-changes.md).
 export const AccountUpdate = z.object({
   firstName: FirstName.nullable(),
 });

@@ -107,8 +107,7 @@ const ConfigEnv = z
     path: ["R2_BUCKET"],
     message: "R2 or AUDIO_DIR is required when TTS_URL is set: rendered narration has to be kept somewhere",
   })
-  // The token alone leaves transcribing off, so it can go into the deploy's secrets before the
-  // address does without stopping the server; the address alone can't work.
+  // The token alone is allowed so the secret can deploy before the address; the address alone cannot work.
   .refine((env) => env.STT_URL === undefined || env.STT_TOKEN !== undefined, {
     path: ["STT_TOKEN"],
     message: "STT_TOKEN is required when STT_URL is set: the transcriber refuses a call without its token",
@@ -128,16 +127,10 @@ const ConfigEnv = z
 
 export type MailConfig = { transport: "log" } | { transport: "brevo"; brevoApiKey: string; from: string };
 
-// Narration is on only when there is a TTS service to call and somewhere to keep what it
-// makes; otherwise /api/audio says it is unavailable (docs/features/tts-pre-rendered-speech.md).
 export type AudioStoreConfig = ({ kind: "r2" } & R2Settings) | { kind: "file"; dir: string };
 
-// Our own server fetching transcripts: off unless asked for, and through the proxy only
-// when one is configured (docs/architecture/server-side-transcripts.md).
 export type TranscriptServiceConfig = { proxyUrl: string | null; proxyDailyFetches: number } | null;
 
-// Overviews made on our key, through our server: on only when there is a key to make them
-// with, and never more a UTC day than the global cap (docs/architecture/tiers.md, "Counting").
 export type OurKeyConfig = {
   apiKey: string;
   dailyGenerations: number;
@@ -146,15 +139,9 @@ export type OurKeyConfig = {
 
 export type AudioConfig = { ttsUrl: string; concurrency: number; store: AudioStoreConfig } | null;
 
-// Episodes transcribed on our GPU host, on only when both its address and its token are set
-// (docs/features/speech-to-text.md).
 export type SpeechToTextConfig = { url: string; token: string; concurrency: number } | null;
 
-// Analytics are forwarded only when there is a PostHog project to forward them to;
-// otherwise /api/events logs them and stops (docs/architecture/analytics.md). Erasing a
-// deleted account's records there is on exactly when the personal key is set, so the project
-// id can ship in fly.toml ahead of the secret rather than refusing startup, as R2's bucket
-// does (docs/features/account-deletion.md, "Erasure at PostHog").
+// Why the project id may ship before the key: docs/features/account-deletion.md, "Erasure at PostHog".
 export interface AnalyticsConfig {
   environment: "development" | "production";
   postHog: { apiKey: string; host: string } | null;
@@ -169,26 +156,17 @@ export interface Config {
   allowedOrigins: string[];
   appUrl: string;
   mail: MailConfig;
-  // The built web app to serve outside /api, or null to serve none (docs/architecture/deploy.md).
   staticRoot: string | null;
   clientIpHeader: string | null;
   audio: AudioConfig;
   transcriptService: TranscriptServiceConfig;
   speechToText: SpeechToTextConfig;
   ourKey: OurKeyConfig;
-  // The YouTube Data API key playlists are read with, or null to read none
-  // (docs/features/playlists.md).
   youTubeApiKey: string | null;
-  // The Podcast Index key a Spotify link's show is looked up with before Apple's directory, or
-  // null to ask Apple's alone (docs/features/podcast-links.md, "The directories").
   podcastIndex: PodcastIndexKey | null;
-  // The house account's live shares Start offers as samples, in order, or none to offer none
-  // (docs/features/onboarding.md, "Try a sample").
   sampleShareTokens: ShareToken[];
-  // Where a reader writes when a mail's own way out cannot help (docs/features/account-changes.md).
   supportEmail: string;
   analytics: AnalyticsConfig;
-  // Where the server's own log lines are shipped as well as stdout, or null for stdout only.
   logs: OtlpLogsConfig | null;
 }
 

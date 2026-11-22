@@ -1,6 +1,4 @@
-// The video sections' wording, said of an episode. Applied to the podcast prompt alone, so a video's
-// prompt is never touched by it, and a test fails when a section gains a video word this table
-// doesn't cover (docs/features/podcast-notes.md, "A small fork").
+// Applied to the podcast prompt alone: docs/features/podcast-notes.md, "A small fork".
 const PODCAST_WORDS: readonly (readonly [RegExp, string])[] = [
   [/\bA video\b/g, "An episode"],
   [/\ba video\b/g, "an episode"],

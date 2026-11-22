@@ -1,9 +1,6 @@
 import { libraryEntrySavedAt, type LibraryEntry } from "../types/LibraryEntry.js";
 
-// Newest saved first: the library's default order and the reader's Previous/Next, which
-// does not follow a sort chosen in the library (docs/features/library-sort.md). A record
-// whose saved date did not survive sorts last: an unknown date cannot claim a position
-// (docs/features/record-migrations.md).
+// Unknown dates last: docs/features/library-sort.md, "A record that can't claim a position sorts last".
 export const orderLibraryEntriesBySavedAt = <T extends LibraryEntry>(entries: T[]): T[] => {
   return [...entries].sort((a, b) => {
     const left = libraryEntrySavedAt(a);

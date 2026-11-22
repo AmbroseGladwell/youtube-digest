@@ -3,10 +3,7 @@ import { z } from "zod";
 export const ConsentAnswer = z.enum(["share", "dontShare"]);
 export type ConsentAnswer = z.infer<typeof ConsentAnswer>;
 
-// What a reader without an account said about analytics, when, and to which list of
-// what is counted. Kept on the device whoever signs in, because the choice belongs to the
-// browser or install; the anonymous id exists only while the answer is yes and no one is
-// signed in (docs/features/analytics-consent.md).
+// Kept whoever signs in: docs/features/analytics-consent.md, "The record".
 export const AnalyticsConsent = z.object({
   answer: ConsentAnswer,
   answeredAt: z.iso.datetime(),

@@ -10,9 +10,7 @@ const DEFAULT_LANG = "en";
 const inLanguage = (tracks: CaptionTrack[], lang: string): CaptionTrack | undefined =>
   tracks.find((track) => track.languageCode === lang) ?? tracks.find((track) => track.languageCode?.startsWith(`${lang}-`));
 
-// A human-written track is preferred over a machine-heard one in any language, because
-// what generated records is whether anyone wrote it (docs/features/transcript-retrieval.md).
-// Translations are never chosen: a translation is not the video's own words.
+// Written beats machine-heard in any language, and a translation is never the video's own words.
 export const selectCaptionTrack = (tracks: readonly CaptionTrack[], options: SelectCaptionTrackOptions): CaptionTrack | null => {
   const lang = options.lang ?? DEFAULT_LANG;
   const written = tracks.filter((track) => track.kind !== "asr");

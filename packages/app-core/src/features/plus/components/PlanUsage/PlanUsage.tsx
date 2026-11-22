@@ -17,7 +17,6 @@ interface Cell {
   label: string;
   count: string;
   aside?: ReactNode;
-  // Beside the label, as the transcribing row's episodes are (design 305m).
   tally?: string;
   wide?: boolean;
 }
@@ -25,9 +24,6 @@ interface Cell {
 const FREE = PLAN_CARDS[0]!;
 const FREE_ACCOUNT = `A free account makes ${FREE.ourKey} on us and ${FREE.ownKey} on your own key, and keeps them on every device.`;
 
-// This month's counts above the plan cards (designs 95d–95h): one cell per quota on an
-// account. Signed out there is nothing to count, since overviews need an account
-// (docs/architecture/tiers.md, "Signed out"), so it offers one.
 export const PlanUsage = (props: PlanUsageProps) => {
   if (!props.signedIn) {
     return (
@@ -95,8 +91,6 @@ export const PlanUsage = (props: PlanUsageProps) => {
   );
 };
 
-// Design 305m: transcribing as its own full-width row under the overviews, counted in hours and
-// minutes of audio, with the episodes it went on and a line on what it's for.
 const transcribingCell = (transcription: TranscriptionUsage, resetsOn: string): Cell => {
   const left = Math.max(0, transcription.limitSeconds - transcription.usedSeconds);
   return {

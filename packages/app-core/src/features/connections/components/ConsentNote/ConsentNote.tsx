@@ -8,8 +8,6 @@ export interface ConsentNoteProps {
   body: string;
 }
 
-// Which device a link should be opened on, before it is sent and after it has landed
-// (design 58e, 58f).
 export const ConsentNote = ({ icon, title, body }: ConsentNoteProps) => {
   return (
     <div className={styles.root} data-testid={consentNoteTestIds.root}>

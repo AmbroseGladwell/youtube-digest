@@ -6,8 +6,7 @@ import { useKnownApiUrl } from "../../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
 import { generationKeys } from "../generationKeys.js";
 
-// The signed-in account's plan and this month's counts on each key, as the server keeps
-// them. Signed out there is no account to ask about.
+// Signed out there is no account to ask about.
 export const useOverviewUsageQuery = () => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();

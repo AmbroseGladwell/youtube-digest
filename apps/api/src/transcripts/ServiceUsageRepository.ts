@@ -22,10 +22,7 @@ export const secondsToNextUsageDay = (now: Date): number => {
   return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
 };
 
-// One row per UTC day and caller for what our own service fetched, and one global row per
-// day for what went through the proxy and how many bytes it carried. Kept in Postgres
-// rather than memory because a restart must not hand out a second day's budget
-// (docs/architecture/server-side-transcripts.md).
+// In Postgres, not memory, so a restart can't hand out a second day's budget.
 export class ServiceUsageRepository {
   #sql: SqlClient;
 
@@ -33,9 +30,7 @@ export class ServiceUsageRepository {
     this.#sql = sql;
   }
 
-  // A slot is held for the fetch and given back unless a transcript was stored, so a video
-  // with no captions, or a fetch that failed, costs the caller nothing
-  // (docs/architecture/server-side-transcripts.md, "Limits").
+  // Why a slot is given back unless stored: docs/architecture/server-side-transcripts.md, "Limits".
   async reserveFetch(now: Date, caller: string, limit: number): Promise<FetchReservation> {
     if (limit < 1) {
       return { reserved: false, used: 0, limit };

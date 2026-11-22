@@ -12,8 +12,7 @@ export type RecipeStep = z.infer<typeof RecipeStep>;
 
 const Minutes = z.number().int().positive().nullable();
 
-// Copied from the source, never converted or estimated, so an ingredient stays the one string
-// the source wrote and a time the page didn't give stays null (docs/features/recipe-notes.md).
+// Copied from the source, never converted or estimated (docs/features/recipe-notes.md).
 export const Recipe = z.object({
   ingredients: z.array(z.string().min(1)).min(1),
   steps: z.array(RecipeStep).min(1),
@@ -21,8 +20,7 @@ export const Recipe = z.object({
   cookMinutes: Minutes,
   totalMinutes: Minutes,
   yield: z.string().nullable(),
-  // Which ingredient lines a video said rather than its description listed, found by code.
-  // Absent on a page's recipe, so a shared copy's hash doesn't move (design 122c).
+  // Found by code; absent on a page's recipe, so a shared copy's hash doesn't move (design 122c).
   ingredientsSaid: z.array(z.int().nonnegative()).optional(),
 });
 export type Recipe = z.infer<typeof Recipe>;

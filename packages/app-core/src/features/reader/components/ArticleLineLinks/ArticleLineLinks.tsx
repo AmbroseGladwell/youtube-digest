@@ -18,7 +18,6 @@ export interface ArticleLineLinksProps {
   line: NoteLine;
   source: WebSource;
   article: ArticleDetails;
-  // Beside the article these move the page, and drop the icon that says they leave (77r).
   onPage: ShowOnPage | null;
 }
 
@@ -51,9 +50,6 @@ const PlaceLink = ({ chapter, source, onPage, className, testId, label, children
   );
 };
 
-// What a line of an article's note points at: its chapter, in the slot where a video's line
-// shows a timestamp, and at the end of Read it anyway the parts named and the full article
-// with its cost (designs 77o, 77s–77v).
 export const ArticleLineLinks = ({ line, source, article, onPage }: ArticleLineLinksProps) => {
   const leaving = onPage === null && <StrokeIcon name="openOut" size={13} />;
 

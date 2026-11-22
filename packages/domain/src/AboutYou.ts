@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// The reader's sentence, in parts (design 141a). Each part holds as many entries as fit, so
-// nobody is boxed into one role (docs/features/personalisation.md).
+// The reader's sentence in parts, each holding as many entries as fit (docs/features/personalisation.md).
 export const ABOUT_YOU_SECTIONS = ["who", "time", "focus"] as const;
 export type AboutYouSection = (typeof ABOUT_YOU_SECTIONS)[number];
 
@@ -16,12 +15,11 @@ export const EMPTY_ABOUT_YOU: AboutYou = { who: [], time: [], focus: [] };
 
 export const MAX_ABOUT_YOU_SECTION_LENGTH = 120;
 
-// What stops a role taking an article: "I'm retired", not "I'm a retired".
-const STANDS_ALONE = new Set(["retired", "mid-career", "between jobs", "new in town"]);
+const ROLES_TAKING_NO_ARTICLE = new Set(["retired", "mid-career", "between jobs", "new in town"]);
 const HAS_ITS_OWN_START = /^(a|an|the|my|our) /i;
 
 const withArticle = (section: AboutYouSection, entry: string): string => {
-  if (section !== "who" || STANDS_ALONE.has(entry) || HAS_ITS_OWN_START.test(entry)) {
+  if (section !== "who" || ROLES_TAKING_NO_ARTICLE.has(entry) || HAS_ITS_OWN_START.test(entry)) {
     return entry;
   }
   return `${/^[aeiou]/i.test(entry) ? "an" : "a"} ${entry}`;
@@ -53,8 +51,7 @@ const joinerOf = (index: number, count: number): string => {
   return index === count - 1 ? ", and " : ", ";
 };
 
-// Empty sections are left out, so what is read back and what is sent are always a whole
-// sentence: "I'm a dad, and right now I'm focusing on sleep."
+// Empty sections are left out, so what is read back and sent is always a whole sentence.
 export const aboutYouSentenceParts = (aboutYou: AboutYou): AboutYouSentencePart[] => {
   const clauses = CLAUSES.filter(({ section }) => aboutYou[section].length > 0);
   const parts = clauses.flatMap(({ section, lead }, index) => {

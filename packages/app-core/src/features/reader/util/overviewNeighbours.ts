@@ -11,11 +11,7 @@ export interface OverviewNeighbours {
   nextId: string | null;
 }
 
-// An unreadable record is in the library, so it is in the sequence: skipping it would be
-// the silent drop at navigation scale (docs/features/record-migrations.md). Opened from the
-// list, it walks that list's view, keeping the overview in hand and every one already passed
-// even once they no longer match, as marking one read does to an unread list
-// (docs/features/library-view.md).
+// Why passed overviews stay in the sequence: docs/features/library-view.md, "The reader steps through it".
 export const overviewNeighbours = (
   entries: LibraryEntry[],
   overviewId: string,

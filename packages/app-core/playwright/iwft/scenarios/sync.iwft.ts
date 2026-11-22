@@ -27,8 +27,6 @@ const heldBackRecord = (id: string): UnreadableRecord => ({
   salvaged: { savedAt: "2026-09-15T00:00:00.000Z", source: null },
 });
 
-// A control that cannot work is worse than no control (CLAUDE.md): a shell with no sync
-// storage shows nothing about sync at all.
 test("a shell that cannot sync shows no sync controls", async ({ launcher }) => {
   await launcher.launch();
   const settings = await launcher.appShell.openSettings();
@@ -68,8 +66,6 @@ test("signing out tells the server and asks to sign in again", async ({ launcher
   test.expect(backendSimulator.getCallCount(EndpointKey.SESSION_DELETE)).toBe(1);
 });
 
-// An app whose every control fails at the end is worse than an honest wall in front of it
-// (docs/features/record-migrations.md, "Below the write floor is a wall").
 test("below the server's write floor the web app is walled off with a reload", async ({ launcher, backendSimulator }) => {
   backendSimulator.sync.setMinSupportedClientVersion(CLIENT_VERSION + 1);
 
@@ -90,8 +86,6 @@ test("the extension's wall points at where Chrome updates it, since it cannot re
   await wall.verifyOffersNoAction();
 });
 
-// The soft prompt fires on encounter, not on the handshake: only when records are actually
-// being held back (docs/features/record-migrations.md).
 test("records from a newer version raise a banner with the count, and a reload on the web", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedUnreadable(heldBackRecord("7c9e6f3a-1b2d-4e5f-8a9b-0c1d2e3f4a5b"));
   backendSimulator.overviews.seedUnreadable(heldBackRecord("8d0f7a4b-2c3e-4f6a-9b0c-1d2e3f4a5b6c"));

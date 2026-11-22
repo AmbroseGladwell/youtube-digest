@@ -51,8 +51,7 @@ const toEpisode = (item: z.infer<typeof Item>): DirectoryEpisode => ({
   durationSeconds: item.duration == null || item.duration <= 0 ? null : Math.round(item.duration),
 });
 
-// Every request is signed: the key, its secret and the time, hashed together, with the time sent
-// beside it and accepted within three minutes of theirs (Podcast Index's API docs).
+// Podcast Index accepts a signed time within three minutes of its own clock.
 export const podcastIndexHeaders = ({ apiKey, apiSecret }: PodcastIndexKey, now: Date): Record<string, string> => {
   const date = String(Math.floor(now.getTime() / 1000));
   return {
@@ -62,8 +61,7 @@ export const podcastIndexHeaders = ({ apiKey, apiSecret }: PodcastIndexKey, now:
   };
 };
 
-// The open podcast directory, asked before Apple's on a Spotify link: a show by its exact title,
-// and its newest episodes' guids (docs/features/podcast-links.md, "The directories"; OV-294, OV-303).
+// Why it's asked first, by exact title: docs/features/podcast-links.md, "The directories".
 export const podcastIndexDirectory = (
   key: PodcastIndexKey,
   fetchSignedJson: FetchSignedJson,

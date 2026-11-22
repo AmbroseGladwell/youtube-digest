@@ -12,10 +12,7 @@ export interface LibraryUnreadableCardProps {
   readerState: LibraryViewState;
 }
 
-// A sibling of LibraryOverviewCard rather than a mode of it: none of the fields that card
-// is made of survive, and it carries no read or favourite control, because marking read
-// something that cannot be read is absurd. It links to the reader like any other card, so
-// the path needs no special case (docs/features/record-migrations.md).
+// No read control: docs/features/record-migrations.md, "What the library does with one".
 export const LibraryUnreadableCard = ({ record, entering = false, onOpen, readerState }: LibraryUnreadableCardProps) => {
   const heldBack = record.reason === "future-version";
   const readerPath = Routes.overview(record.id);

@@ -32,7 +32,6 @@ const serviceApp = async (
 
 const saying = (lines: LogLine[], msg: string) => lines.filter((line) => line.msg === msg);
 
-// Each named reader is an account of its own, made the first time it asks.
 const readers = new WeakMap<TestApp, Map<string, Promise<TestAccount>>>();
 const askAs = async (testApp: TestApp, videoId: string, reader = "first") => {
   const byName = readers.get(testApp) ?? new Map<string, Promise<TestAccount>>();

@@ -1,6 +1,4 @@
-// What one US cup of a dry ingredient weighs, from King Arthur's ingredient weight chart, so
-// Metric can say "120g plain flour" where the page says "1 cup". Only ingredients a table can
-// answer for: rice flour, chickpea flour or "1 cup sugar snap peas" find nothing and stay in ml.
+// One US cup of a dry ingredient by weight, from King Arthur's chart; unmatched ones stay in ml.
 const WEIGHTS: Array<[RegExp, number]> = [
   [/\bself[- ]?(?:raising|rising)\b.*\bflour\b/, 113],
   [/\b(?:almond (?:flour|meal)|ground almonds)\b/, 96],

@@ -12,13 +12,10 @@ export interface CookingStepVideoSheetProps {
   onClose: () => void;
 }
 
-// YouTube's own player starts and stops at whole seconds, so the stretch is the step's
-// segments rounded outwards and never cut short.
+// YouTube's player takes whole seconds, so the stretch is rounded outwards and never cut short.
 const embedUrl = (videoId: string, { startMs, endMs }: TimeRange) =>
   `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?start=${Math.floor(startMs / 1000)}&end=${Math.ceil(endMs / 1000)}&autoplay=1&rel=0`;
 
-// Design 122m: the step's part of the video in a sheet over the step, which stops at the step's
-// end. The voice waits; closing the sheet goes back to the step.
 export const CookingStepVideoSheet = ({ open, videoId, step, range, onClose }: CookingStepVideoSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
 

@@ -17,8 +17,7 @@ const tallyOf = (results: readonly CandidateResult[]): Tally => ({
 
 const percent = (rate: number | null) => (rate === null ? "–" : `${Math.round(rate * 100)}%`);
 
-// The first answer had the candidate as A, the second as B, so the same letter twice means
-// the judge picked by position rather than by note.
+// The candidate is A first and B second, so the same letter twice is a pick by position.
 export const sameLetterBothOrders = (record: KeyPointsJudgeRecord): boolean =>
   record.candidateFirst !== null &&
   record.candidateSecond !== null &&

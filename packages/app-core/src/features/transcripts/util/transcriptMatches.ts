@@ -1,9 +1,7 @@
 import type { TranscriptBlock } from "@overview/domain";
 import type { TranscriptMatch } from "../types/TranscriptMatch.js";
 
-// A literal, case-insensitive substring search over the merged blocks, not a regular
-// expression: the box says "Search words or phrases", and a transcript is full of
-// characters a regex would read as syntax.
+// Literal, not a regex: a transcript is full of characters a regex would read as syntax.
 export const transcriptMatches = (blocks: TranscriptBlock[], query: string): TranscriptMatch[] => {
   const needle = query.trim().toLowerCase();
   if (needle === "") {

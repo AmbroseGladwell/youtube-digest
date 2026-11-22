@@ -71,11 +71,9 @@ import { onboardingKindOf } from "../util/onboardingKindOf.js";
 import styles from "./OnboardingPage.module.scss";
 import { onboardingPageTestIds } from "./OnboardingPageTestIds.js";
 
-// The questions offer Skip beside the stepper; a moment offers it beside its button (327d, 327e).
-const SKIPPABLE: readonly OnboardingStep[] = ["topics", "aboutYou"];
-// Six segments: Start, analytics, your link, topics, About you and the account. A moment shows the
-// segment of the screen before it, and the wait has none (327a).
-const SEGMENTS = 6;
+const STEPS_SKIPPED_BESIDE_STEPPER: readonly OnboardingStep[] = ["topics", "aboutYou"];
+// Start, analytics, your link, topics, About you, account; a moment shows the screen before's (327a).
+const STEPPER_SEGMENTS = 6;
 const SEGMENT_OF: Readonly<Record<OnboardingStep, number | null>> = {
   analytics: 2,
   video: 3,
@@ -87,11 +85,10 @@ const SEGMENT_OF: Readonly<Record<OnboardingStep, number | null>> = {
   account: 6,
   wait: null,
 };
-// A copy saved from a shared page, or a sample, is already made: nothing to check, nothing to wait for.
+// A shared copy or sample is already made: nothing to check, nothing to wait for.
 const FROM_SHARE_STEPS = ONBOARDING_STEPS.filter((step) => step !== "video" && step !== "wait");
 const AFTER_THE_ANSWERS = ONBOARDING_STEPS.indexOf("account");
-// Held outside the page, which remounts while signing in, so a copy is never saved, reserved and
-// sorted twice at once.
+// Outside the page, which remounts while signing in, so a copy is never saved twice at once.
 const SHARES_BEING_SAVED = new Set<string>();
 
 const codeSuggestionBy = (status: AskedTopicSuggestions["status"]): OnboardingTopicSuggestions["by"] => {
@@ -129,11 +126,7 @@ const readerPlaceOf = (surface: Surface, phone: boolean): ReaderPlace => {
   return phone ? "phone" : "computer";
 };
 
-// Onboarding around the reader's first link (designs 327a–327m): read for free, shown back to
-// them, then the moments and questions that make it theirs, the account, and the wait while it's
-// written. Where they are is kept on the device, so a reload or the sign-in link in another tab
-// carries on. The run lives above the router (OnboardingRunRuntime), so neither unmounts it
-// (docs/features/onboarding.md).
+// Why the run lives above the router: docs/features/onboarding.md, "The run lives in one tab".
 export const OnboardingPage = () => {
   const [progress, update] = useOnboardingProgress();
   const leaving = useRef(false);
@@ -215,8 +208,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
   const overview: Overview | null = stored.data ?? run.overview ?? sharedCopy;
   const found = run.found ?? (overview === null ? null : foundIn(overview));
   const noun = found !== null && kind !== null ? kind.noun("video", found) : "video";
-  // Every onboarding event after Start says what the link turned out to be (327s).
-  const tagged = found === null ? {} : { kind: onboardingKindOf(found) };
+  const linkKindProps = found === null ? {} : { kind: onboardingKindOf(found) };
   const asked = useTopicSuggestions(found, kind, share === null && !signedIn);
   const offered = useMemo((): OnboardingTopicSuggestions | null => {
     if (found === null || kind === null) {
@@ -231,7 +223,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
           by: codeSuggestionBy(asked.status),
         };
   }, [found, kind, asked, noun]);
-  // Held once the topics screen shows them, so a late answer never moves chips under the reader.
+  // Held once shown, so a late answer never moves chips under the reader.
   const [held, setHeld] = useState<OnboardingTopicSuggestions | null>(null);
   useEffect(() => {
     setHeld((current) => (step !== "topics" ? null : (current ?? offered)));
@@ -259,7 +251,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
   const go = (next: OnboardingStep) =>
     update({ step: next, ...(ONBOARDING_STEPS.indexOf(next) >= AFTER_THE_ANSWERS ? { mayWrite: true } : {}) });
   const next = () => go(steps[indexOf(step) + 1] ?? "account");
-  // From a shared page, leaving goes back to the page; a sample came from Start, so it goes back there.
+  // A sample came from Start, so it goes back there; a shared copy goes back to its page.
   const startAgain = () => {
     onLeave();
     update(null);
@@ -272,7 +264,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
 
   const finish = (overviewId: string) => {
     analytics.onboarding.finished.revealed({
-      ...tagged,
+      ...linkKindProps,
       way: progress.way ?? "signIn",
       from: finishedFrom(share),
     });
@@ -290,8 +282,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     }
   }, [step, analyticsAnswered, afterAnalytics, update]);
 
-  // A shared copy or sample goes into the account once there is one; a sample waits for the
-  // topics picked here, since it's sorted into them.
+  // A sample waits for the topics picked here, since it's sorted into them.
   const { refetch: refetchStored } = stored;
   const answersIn = libraryMove.answersIn === accountId;
   useEffect(() => {
@@ -316,8 +307,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     });
   }, [share, signedIn, openLibraryAccountId, accountId, inAccount, answersIn, overviewStore, saveFromShare, refetchStored]);
 
-  // Signed in from the account screen: a link's run goes to the wait; signed in some other way with
-  // nothing to carry on with, onboarding has nothing to do.
+  // Signed in with nothing to carry on with, onboarding has nothing to do.
   useEffect(() => {
     if (!signedIn) {
       return;
@@ -336,18 +326,21 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
       return;
     }
     const landedWith = landedOverview(progress.overviewId !== null, failed);
-    analytics.onboarding.account.landed({ ...tagged, way: progress.way, overview: landedWith });
+    analytics.onboarding.account.landed({ ...linkKindProps, way: progress.way, overview: landedWith });
     update({ landed: { at: Date.now(), overview: landedWith, arrived: false } });
   }, [signedIn, progress.way, progress.landed, progress.overviewId, failed, analytics, update]);
   useEffect(() => {
     if (!inAccount || progress.landed === null || progress.landed.arrived) {
       return;
     }
-    analytics.onboarding.overview.arrived({ ...tagged, seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)), step });
+    analytics.onboarding.overview.arrived({
+      ...linkKindProps,
+      seconds: Math.max(0, Math.round((Date.now() - progress.landed.at) / 1000)),
+      step,
+    });
     update({ landed: { ...progress.landed, arrived: true } });
   }, [inAccount, progress.landed, step, analytics, update]);
 
-  // A shared copy or sample has nothing to wait for: it opens as soon as it's in the account.
   const opened = useRef(false);
   useEffect(() => {
     if (share === null || !inAccount || progress.overviewId === null || opened.current) {
@@ -357,8 +350,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     finish(progress.overviewId);
   });
 
-  // The way in is the account screen's own until the reader switches it, so a sign-in landing
-  // knows it came from here.
+  // So a sign-in landing knows it came from here.
   useEffect(() => {
     if (step === "account" && progress.way === null) {
       update({ way: "createAccount", mayWrite: true });
@@ -371,7 +363,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
       return;
     }
     shown.current = step;
-    analytics.onboarding.step.shown({ ...tagged, step });
+    analytics.onboarding.step.shown({ ...linkKindProps, step });
   }, [step, analytics]);
 
   const heardFailure = useRef(-1);
@@ -380,7 +372,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
       return;
     }
     heardFailure.current = attempt;
-    analytics.onboarding.overview.failed({ ...tagged, step, afterAccount: signedIn });
+    analytics.onboarding.overview.failed({ ...linkKindProps, step, afterAccount: signedIn });
   }, [failed, attempt, step, signedIn, analytics]);
 
   const saveTopics = async (chosen: string[]) => {
@@ -400,7 +392,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     }
     const suggested = [...(suggestions?.names ?? []), ...(suggestions?.newTopic ? [suggestions.newTopic] : [])];
     analytics.onboarding.topics.continued({
-      ...tagged,
+      ...linkKindProps,
       suggestedBy: suggested.length === 0 ? "none" : (suggestions?.by ?? "none"),
       picked: chosen.filter((name) => STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
       typed: chosen.filter((name) => !STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name))).length,
@@ -414,7 +406,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
   const saveAboutYou = async (answer: AboutYou) => {
     await updateSettings.mutateAsync(aboutYouPatch(answer));
     analytics.onboarding.aboutYou.continued({
-      ...tagged,
+      ...linkKindProps,
       who: answer.who.length,
       time: answer.time.length,
       focus: answer.focus.length,
@@ -425,12 +417,10 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
 
   const personal = !aboutYouIsEmpty(aboutYou);
   const tryAgain = (from: "account" | "readFailure") => {
-    analytics.onboarding.overview.retried({ ...tagged, from });
+    analytics.onboarding.overview.retried({ ...linkKindProps, from });
     retry();
   };
 
-  // Their card with their answers: on About you the count of topics, what's inside and where it's
-  // kept (327i); on the account each topic and the pills (327l).
   const savedCard = (where: "aboutYou" | "account"): ReactNode =>
     found === null || kind === null ? null : (
       <>
@@ -461,7 +451,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     );
 
   const skip = () => {
-    analytics.onboarding.step.skipped({ ...tagged, step });
+    analytics.onboarding.step.skipped({ ...linkKindProps, step });
     if (step === "stepsForYou" || step === "aboutYou") {
       go("account");
     } else {
@@ -507,11 +497,11 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
             failed={failed}
             onLooksRight={next}
             onDifferentLink={() => {
-              analytics.onboarding.video.differentLinkChosen(tagged);
+              analytics.onboarding.video.differentLinkChosen(linkKindProps);
               startAgain();
             }}
             onChooseVideo={(videoId) => {
-              analytics.onboarding.video.differentVideoChosen(tagged);
+              analytics.onboarding.video.differentVideoChosen(linkKindProps);
               update({ sourceKey: SourceKey.parse(videoId), overviewId: null });
             }}
           />
@@ -558,7 +548,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
                 intent={intent}
                 onboarding={{
                   onSwitchIntent: (way) => {
-                    analytics.onboarding.account.chosen({ ...tagged, way });
+                    analytics.onboarding.account.chosen({ ...linkKindProps, way });
                     setIntent(way);
                     update({ way });
                   },
@@ -613,7 +603,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
 
   const segment = SEGMENT_OF[step];
   const back = () => {
-    analytics.onboarding.step.backChosen({ ...tagged, step });
+    analytics.onboarding.step.backChosen({ ...linkKindProps, step });
     const before = steps[indexOf(step) - 1];
     if (before === undefined || (before === "analytics" && analyticsAnswered)) {
       startAgain();
@@ -649,14 +639,14 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
                   </button>
                 )}
                 <span className={styles.segments} aria-hidden="true" data-testid={onboardingPageTestIds.segments}>
-                  {Array.from({ length: SEGMENTS }, (_, index) => (
+                  {Array.from({ length: STEPPER_SEGMENTS }, (_, index) => (
                     <span key={index} className={index < segment ? styles.segmentDone : styles.segment} />
                   ))}
                 </span>
                 <span className={styles.stepCount} data-testid={onboardingPageTestIds.stepCount}>
-                  Step {segment} of {SEGMENTS}
+                  Step {segment} of {STEPPER_SEGMENTS}
                 </span>
-                {SKIPPABLE.includes(step) && (
+                {STEPS_SKIPPED_BESIDE_STEPPER.includes(step) && (
                   <button type="button" className={styles.skip} onClick={skip} data-testid={onboardingPageTestIds.skip}>
                     Skip
                   </button>

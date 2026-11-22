@@ -6,8 +6,6 @@ export type ConsentDecision = "approve" | "decline";
 
 export interface ConsentAnswerProps {
   host: string;
-  // Whether the assistant asked to mark overviews as well as read them, and to read what is
-  // known about the reader (docs/features/mcp-connector.md, "Scopes").
   writes: boolean;
   readsProfile: boolean;
   deciding: ConsentDecision | null;
@@ -40,8 +38,6 @@ const permissionsAsked = (writes: boolean, readsProfile: boolean): Permission[] 
   NO_KEYS,
 ];
 
-// What approving grants, then the answer. Both answers leave for the assistant, so the only
-// thing after a press is a pending state (design 58a, 58c).
 export const ConsentAnswer = ({ host, writes, readsProfile, deciding, onDecide }: ConsentAnswerProps) => {
   const pendingLabel = deciding === "approve" ? `Sending you back to ${host}…` : "Declining…";
 

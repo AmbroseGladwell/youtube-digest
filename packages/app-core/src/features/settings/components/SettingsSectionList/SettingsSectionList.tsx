@@ -13,8 +13,7 @@ export interface SettingsSectionListProps {
   stacked: boolean;
 }
 
-// Design OV-51 51a and 51d: each row carries its section's current value, so most visits
-// end here.
+// Each row carries its section's current value, so most visits end here.
 export const SettingsSectionList = ({ sections, current, stacked }: SettingsSectionListProps) => {
   const analytics = useAnalytics();
   return (

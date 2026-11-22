@@ -10,8 +10,6 @@ export interface DeleteProjectDialogProps {
   onClose: () => void;
 }
 
-// Overviews stay, the assistant loses the brief, and archiving is offered instead; Cancel
-// takes the focus ("OV-168 3 Adding and Making" 168z).
 export const DeleteProjectDialog = ({ name, overviews, assistantConnected, onDelete, onClose }: DeleteProjectDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);

@@ -10,8 +10,7 @@ export type OAuthErrorCode =
   | "invalid_client_metadata"
   | "server_error";
 
-// The protocol's own error shape, not the /api envelope: these routes are called by
-// assistants that speak OAuth, not by our clients (docs/features/mcp-connector.md).
+// OAuth's own error shape, not the /api envelope: docs/features/mcp-connector.md, "The routes".
 export class OAuthError extends Error {
   readonly code: OAuthErrorCode;
   readonly status: number;

@@ -22,8 +22,6 @@ const addsOf = (overviews: Adding["overviews"]) => {
   return overviews.length === 1 ? { title: overviews[0]!.title } : { count: overviews.length };
 };
 
-// The create dialog and what follows it: from the rail or the index it opens the new
-// project's page; from a picker it adds the overviews and stays where it is (168x).
 export const useNewProject = (takenNames: string[]) => {
   const [adding, setAdding] = useState<Adding | null>(null);
   const create = useCreateProjectMutation();

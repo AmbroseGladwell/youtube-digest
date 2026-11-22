@@ -9,11 +9,7 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(", ");
 
-// A sheet that covers the page has to hold the keyboard too: tabbing past its last
-// control otherwise walks into the library behind it, where the reader can see nothing
-// of where they are. Tab and Shift+Tab wrap inside the sheet while it is open, and
-// closing it hands focus back to whatever opened it
-// (docs/features/stone-theme.md, "The filter sheet").
+// Why a covering sheet holds the keyboard: docs/features/stone-theme.md, "The filter sheet".
 export const useFocusTrap = (active: boolean, containerRef: RefObject<HTMLElement | null>): void => {
   useEffect(() => {
     const container = containerRef.current;
@@ -22,8 +18,7 @@ export const useFocusTrap = (active: boolean, containerRef: RefObject<HTMLElemen
     }
 
     const opener = document.activeElement as HTMLElement | null;
-    // Read afresh on every Tab: the sheet's own controls change as filters are applied,
-    // and a list that has grown or shrunk would otherwise wrap at the wrong element.
+    // Read afresh on every Tab: the sheet's controls change as filters are applied.
     const focusable = () =>
       Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
         (element) => element.offsetWidth > 0 || element.offsetHeight > 0,

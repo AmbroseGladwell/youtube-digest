@@ -6,12 +6,9 @@ import { recipePageLinkTestIds } from "./RecipePageLinkTestIds.js";
 
 export interface RecipePageLinkProps {
   source: Source;
-  // Beside the recipe the link moves that page to its top rather than opening a tab (144l).
   onPage: ShowOnPage | null;
 }
 
-// The end of the Summary: the page itself, with what reading it costs (design 144c), or the
-// video, with its length (122a).
 export const RecipePageLink = ({ source, onPage }: RecipePageLinkProps) => {
   if (source.kind === "youtube") {
     return (
@@ -21,7 +18,7 @@ export const RecipePageLink = ({ source, onPage }: RecipePageLinkProps) => {
       </a>
     );
   }
-  // An episode the kind check calls a recipe gets the default note (podcast-notes.md).
+  // An episode the kind check calls a recipe gets the default note.
   if (source.kind === "podcast") {
     return null;
   }

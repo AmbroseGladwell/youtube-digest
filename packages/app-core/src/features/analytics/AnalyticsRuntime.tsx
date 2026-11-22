@@ -23,11 +23,7 @@ interface Sender {
   anonymousId?: string;
 }
 
-// Inside the sync runtime: a signed-in reader's usage goes over their own session unless
-// their account turned sharing off, and a reader without an account's only once they have
-// said yes, under the anonymous id that yes made (docs/architecture/analytics.md, "Who is
-// counted"). Until they answer it waits in memory, so onboarding's first screens are counted
-// on a yes (docs/features/analytics-consent.md, "Before an answer").
+// Who is sent and when: docs/architecture/analytics.md, "Who is counted".
 export const AnalyticsRuntime = ({ children }: { children: ReactNode }) => {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;

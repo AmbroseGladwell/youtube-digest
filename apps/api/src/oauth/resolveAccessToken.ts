@@ -7,13 +7,11 @@ export interface ConnectionAccess {
   connectionId: string;
   accountId: AccountId;
   scope: string;
-  // The name the assistant registered with, which it chose: logged only as one of a few
-  // assistants (mcpAssistant), never as written.
+  // Chosen by the assistant, so logged only as mcpAssistant's few names, never as written.
   clientName: string | null;
 }
 
-// Any signed-in account can connect an assistant, so a live token is the whole check
-// (docs/architecture/tiers.md; docs/features/mcp-connector.md).
+// A live token is the whole check, as any account can connect (docs/architecture/tiers.md).
 export const resolveAccessToken = async (sql: SqlClient, token: string, now: Date): Promise<ConnectionAccess | null> => {
   const [row] = await sql.query<{
     id: string;

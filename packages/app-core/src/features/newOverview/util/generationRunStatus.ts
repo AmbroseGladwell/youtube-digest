@@ -10,9 +10,7 @@ export interface GenerationRunStatus {
   isFailed: boolean;
 }
 
-// The one-line version of the progress list, for the status strip. The fraction counts
-// finished steps and credits the running one with half of its own, so the rule only ever
-// advances on something that actually happened.
+// The running step counts as half done, so the rule only advances on something that happened.
 export const generationRunStatus = (run: NewOverviewRun): GenerationRunStatus => {
   const steps = generationRunSteps(run);
   const done = steps.filter((step) => step.state === "done").length;

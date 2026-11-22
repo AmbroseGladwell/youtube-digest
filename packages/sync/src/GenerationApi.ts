@@ -12,8 +12,6 @@ import type {
   TrialToken,
 } from "@overview/domain";
 
-// Overviews made on our key through our server, and the account's monthly counts on each
-// key (docs/architecture/tiers.md).
 export interface GenerationApi {
   status(): Promise<OurKeyGenerationStatus>;
   usage(): Promise<OverviewUsage>;

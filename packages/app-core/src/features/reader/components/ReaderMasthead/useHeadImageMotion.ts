@@ -18,7 +18,6 @@ export interface HeadImageMotionParts {
 }
 
 // Everything under the title moves by the same amount, so it is measured once on the title.
-// Fixed parts, like the player bar, are left where they are.
 const below = (header: HTMLElement, title: HTMLElement): HTMLElement[] => {
   const inHead: HTMLElement[] = [];
   for (let next = title.nextElementSibling; next !== null; next = next.nextElementSibling) {
@@ -33,10 +32,7 @@ const below = (header: HTMLElement, title: HTMLElement): HTMLElement[] => {
   return [title, ...inHead, ...onPage];
 };
 
-// Design 151l and 151m: the image grows from its own top-left corner as a transform measured
-// from where it was, so the page doesn't reflow on the way; the text below slides with it
-// and who it's from fades in at its new place. Reduced motion swaps at once and crossfades
-// the head.
+// A transform measured from where the image was, so the page doesn't reflow on the way.
 export const useHeadImageMotion = (full: boolean, parts: HeadImageMotionParts): (() => void) => {
   const before = useRef<Before | null>(null);
 

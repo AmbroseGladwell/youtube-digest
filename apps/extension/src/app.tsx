@@ -1,7 +1,5 @@
 import { chromeYouTubeFetcher } from "./chromeYouTubeFetcher.js";
 import { mountApp } from "./mountApp.js";
 
-// The full page has no tab beside it, but a pasted URL should still take the free
-// caption path: it is the same privileged origin as the panel
-// (docs/features/transcript-retrieval.md).
+// A pasted URL still takes the free caption path: the full page is the same privileged origin as the panel.
 void mountApp({ youTubeFetch: chromeYouTubeFetcher });

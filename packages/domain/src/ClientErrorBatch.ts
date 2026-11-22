@@ -11,7 +11,6 @@ export const MAX_CLIENT_ERROR_BATCH = 10;
 export const MAX_ERROR_FRAMES = 30;
 export const MAX_ERROR_TRAIL = 20;
 
-// Where the app caught it, which says as much about a failure as its stack does.
 export const ClientErrorSource = z.enum([
   "uncaught",
   "unhandledRejection",
@@ -24,8 +23,7 @@ export const ClientErrorSource = z.enum([
 ]);
 export type ClientErrorSource = z.infer<typeof ClientErrorSource>;
 
-// A stack frame cut down to the app's own code: a function name and a path inside the
-// bundle, never a page's address (docs/architecture/errors-and-logs.md, "What an error may carry").
+// Never a page's address: docs/architecture/errors-and-logs.md, "What an error may carry".
 export const ClientErrorFrame = z
   .object({
     function: z

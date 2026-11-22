@@ -63,7 +63,7 @@ test("a copy with no narration offers no audio to unfurl", async () => {
   await app.close();
 });
 
-test("nothing the reader wrote for themselves is in the page", async () => {
+test("nothing the reader wrote for themselves is in the page, but tags travel with the note", async () => {
   const { app, account } = await reader();
   const made = await publish(
     account,
@@ -87,8 +87,6 @@ test("nothing the reader wrote for themselves is in the page", async () => {
   assert.equal(response.body.includes("Read before the Thursday review."), false);
   assert.equal(JSON.stringify(payload).includes("captureReason"), false);
   assert.equal(JSON.stringify(payload).includes("topicIds"), false);
-  // Tags travel with the note rather than with the reader: the design's own "Kept private"
-  // list does not claim otherwise, and a copy without them could not be saved at all.
   assert.match(JSON.stringify(payload), /energy-policy/);
   await app.close();
 });

@@ -51,8 +51,7 @@ const commonFields = (input: GenerationInput, output: GeneratedRecipeVideoOutput
   };
 };
 
-// A recipe video's note is its recipe, with the chapters a video has (docs/features/recipe-notes.md).
-// Null when no ingredient survives the amount check, so the video gets its ordinary note.
+// Null when no ingredient survives the amount check: docs/features/recipe-notes.md, "Recipe videos".
 export const assembleRecipeVideoOverview = (input: GenerationInput, output: GeneratedRecipeVideoOutput, meta: Meta): Overview | null => {
   const recipe = output.recipe === null ? null : videoRecipe(input, output.recipe);
   if (recipe === null || output.recipe === null) {
@@ -145,15 +144,13 @@ interface MsRange {
   endMs: number;
 }
 
-// A stretch a line merely points at: one that doesn't fit the transcript loses its jump
-// rather than failing the overview (docs/features/novelty-scale.md).
+// A range that doesn't fit the transcript loses its jump rather than failing the overview.
 const resolveOptionalRange = (input: GenerationInput, range: SegmentRange | null): MsRange | null => {
   const fits = range !== null && range.startSegmentIndex <= range.endSegmentIndex && range.endSegmentIndex < input.transcript.length;
   return fits ? resolveRange(input, range) : null;
 };
 
-// Each chapter ends where the next begins, and the last where the words do, not where
-// the video does (docs/features/chapters.md).
+// The last chapter ends where the words do, not where the video does.
 const resolveChapters = (input: GenerationInput, chapters: ChapterShape[]): Chapter[] => {
   const segmentAt = (index: number) => {
     const segment = input.transcript[index];

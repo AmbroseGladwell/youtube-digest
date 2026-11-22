@@ -18,15 +18,9 @@ const unnameAll = (region: HTMLElement) => {
   }
 };
 
-// A view-transition name for one library row: unique on the page, and a valid identifier
-// whatever an unreadable record's id holds.
 export const libraryRowGlideName = (id: string) => `library-row-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
-// "OV-84 4 Chip Motion" 84s: a filter or sort change as one movement. Rows that stay glide to
-// their new places, rows that go fade where they were, new ones fade in, and the chip row
-// opens or closes with them (libraryTransitions.scss). The names exist only for the length
-// of the transition, so a route transition still sees one pane. Scrolled down into the list,
-// the change lands at once and the page goes back to the top instead.
+// What glides, and when: docs/features/tag-reuse.md, "The glide (84s, "OV-84 4 Chip Motion")".
 export const useLibraryGlide = (region: RefObject<HTMLElement | null>, viewKey: string) => {
   const settle = useRef<(() => void) | null>(null);
 

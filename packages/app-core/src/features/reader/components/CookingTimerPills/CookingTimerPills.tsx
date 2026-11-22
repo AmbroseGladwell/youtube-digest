@@ -9,7 +9,6 @@ import { cookingTimerPillsTestIds } from "./CookingTimerPillsTestIds.js";
 export interface CookingTimerPillsProps {
   times: readonly MethodTime[];
   action: number;
-  // This recipe's running timer from a time, if any (the recipe is the caller's to add).
   runningFrom: (source: Omit<CookingTimerSource, "recipe">) => CookingTimer | undefined;
   onStart: (time: MethodTime, index: number, seconds: number) => void;
   onOpen: (id: number) => void;
@@ -17,8 +16,6 @@ export interface CookingTimerPillsProps {
   firstKey: ReactNode;
 }
 
-// Designs 284a–284f: a "Start a timer" row under the action, one pill per time, a range as its
-// two ends with "or" between, and a started pill shown as running.
 export const CookingTimerPills = ({ times, action, runningFrom, onStart, onOpen, firstPill, firstKey }: CookingTimerPillsProps) => {
   if (times.length === 0) {
     return null;

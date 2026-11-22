@@ -1,5 +1,4 @@
-// A note's tags with some replaced by one, or removed when it is null. Order is kept, and a
-// tag the note already had is not repeated.
+// Order kept, and a tag the note already had isn't repeated.
 export const retagged = (tags: readonly string[], from: ReadonlySet<string>, to: string | null): string[] => {
   const result: string[] = [];
   for (const tag of tags) {

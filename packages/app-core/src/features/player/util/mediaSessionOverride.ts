@@ -17,8 +17,6 @@ export const onMediaSessionOverride = (listener: () => void): (() => void) => {
   return () => listeners.delete(listener);
 };
 
-// Cooking step by step gives the headphone and lock-screen buttons other meanings while it is
-// open (design 150u); the player's own come back when it closes.
 export const overrideMediaSession = (override: MediaSessionOverride): (() => void) => {
   current = override;
   listeners.forEach((listener) => listener());

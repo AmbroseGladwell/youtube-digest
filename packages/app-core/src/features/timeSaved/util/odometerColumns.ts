@@ -16,9 +16,6 @@ const steps = (from: number, to: number): number[] => {
 
 const capped = (rows: number[]): number[] => (rows.length > MAX_ROWS ? [rows[0]!, ...rows.slice(-(MAX_ROWS - 1))] : rows);
 
-// The strips a rolling total turns through, minutes first and carrying into tens and then
-// hours like a mechanical counter. Each strip lists the digits it passes from the old value
-// to the new, top to bottom in the direction it travels (docs/features/time-saved.md).
 export const odometerColumns = (from: number, to: number): OdometerColumn[] => {
   const up = to >= from;
   const ordered = (rows: number[]) => (up ? rows : [...rows].reverse()).map(String);

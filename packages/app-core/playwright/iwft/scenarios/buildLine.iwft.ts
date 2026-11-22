@@ -2,9 +2,6 @@ import { test } from "../../support/fixtures.testHelper.js";
 
 const BUILD = { version: "0.1.0", commit: "30bb95a", dirty: false };
 
-// The line at the foot of Settings that says which build this is, so the web app and the
-// extension can be checked against each other at a glance (docs/architecture/deploy.md,
-// "The version").
 test("settings say which version this is, and the commit it was built from", async ({ launcher }) => {
   await launcher.launch({ build: BUILD });
   const settings = await launcher.appShell.openSettings();

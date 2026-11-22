@@ -10,27 +10,21 @@ import styles from "./ErrorState.module.scss";
 import { errorStateTestIds } from "./ErrorStateTestIds.js";
 import { PageLink } from "../PageLink/PageLink.js";
 
-// A recovery action does something here; a departure leaves the app entirely. Both take
-// the pill, because the distinction the screen is built on is between an action and
-// navigation, and leaving for the video is an action (docs/features/record-migrations.md).
+// A departure takes the pill too: leaving for the video is an action, not navigation.
 export type ErrorStateAction = { label: string; onSelect: () => void } | { label: string; href: string };
 
 export interface ErrorStateProps {
-  // Which dead end this is, for counting what readers do on it; the title is copy.
+  // For counting what readers do on this dead end; the title is copy.
   screen: ErrorScreen;
   title: string;
   body?: ReactNode;
   action?: ErrorStateAction | undefined;
   back?: boolean | undefined;
-  // The failure the screen is showing, reported once (docs/architecture/errors-and-logs.md).
+  // Reported once.
   error?: unknown;
 }
 
-// Design turn 19's one dead-end screen. A recovery action is a pill and navigation is the
-// back link the rest of the app already uses, so the two are never mistaken for each
-// other and a one-action screen doesn't read as having lost its pair. Which actions a
-// case offers is the caller's to say, because offering the wrong one is the harm this
-// screen exists to avoid (docs/features/error-state.md).
+// Which actions a case offers is the caller's to say: offering the wrong one is the harm this screen avoids.
 export const ErrorState = ({ screen, title, body, action, back = false, error }: ErrorStateProps) => {
   const isPanel = useIsPanel();
   const analytics = useAnalytics();

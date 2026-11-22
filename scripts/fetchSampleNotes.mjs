@@ -5,10 +5,7 @@ import { fileURLToPath } from "node:url";
 const SAMPLES_URL = "https://theoverviewapp.com/api/samples";
 const DESTINATION = "packages/app-core/playwright/store/sampleNotes.json";
 
-// The store's screenshots are taken of the house account's samples, so their content is
-// whatever Start is offering today (docs/architecture/store-listing.md, "The screenshots").
-// A sample whose share has gone is left out of the answer by the API, not nulled, so the only
-// thing to check is that something came back at all.
+// The API leaves out a sample whose share has gone, so the only check is that something came back.
 export const notesFrom = (answer) => {
   const samples = answer?.samples;
   if (!Array.isArray(samples) || samples.length === 0) {

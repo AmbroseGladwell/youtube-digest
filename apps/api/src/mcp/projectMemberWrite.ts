@@ -4,8 +4,7 @@ import { decideMerge } from "../records/decideMerge.js";
 import type { WriteOperation } from "../records/RecordsRepository.js";
 import { serverClientContext } from "../versions/serverClientContext.js";
 
-// An assistant's add or removal, dated by the server's clock and never later than the
-// membership record's last change: an assistant is never asked the time (CLAUDE.md).
+// Dated by the server's clock, never the assistant's: docs/features/mcp-connector.md, "Projects".
 export const projectMemberWrite = (
   projectId: string,
   overviewId: string,

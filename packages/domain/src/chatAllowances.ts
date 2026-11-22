@@ -1,7 +1,6 @@
 import type { Plan } from "./Plan.js";
 
-// Chat messages a UTC month per account, all on our key, set on 16 Nov 2026; apart from
-// the overview quotas, so chatting never spends an overview (docs/architecture/tiers.md).
+// Set 16 Nov 2026, apart from overview quotas so chatting never spends one (docs/architecture/tiers.md).
 export const chatAllowances = {
   free: 100,
   "byo-plus": 500,

@@ -74,8 +74,7 @@ const wholeStated = (
   return matched.toLowerCase().includes("dozen") || dozenArticle !== undefined ? 12 : 100;
 };
 
-// Every number a text states, in digits or in words, so "two and a half cups" and "2½ cups" state
-// the same amount. Read in code, never by a model (docs/prototype/constraints.md).
+// docs/prototype/constraints.md, "Never let a model count, measure or time anything".
 export const numbersStated = (text: string): number[] => {
   const found: number[] = [];
   for (const match of text.matchAll(DIGITS)) {
@@ -116,8 +115,7 @@ export interface StatedAmounts {
   amountsDropped: number;
 }
 
-// A line whose amount nobody stated keeps its name and loses the amount: "1 tsp salt" becomes
-// "salt" (docs/features/recipe-notes.md, "Recipe videos").
+// An unstated amount is dropped and the name kept: docs/features/recipe-notes.md, "Recipe videos".
 export const withStatedAmounts = (lines: readonly string[], stated: StatedNumbers): StatedAmounts => {
   let amountsDropped = 0;
   const ingredients = lines.flatMap((line) => {

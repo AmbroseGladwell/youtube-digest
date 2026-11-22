@@ -5,15 +5,7 @@ import sampleNotes from "./sampleNotes.json" with { type: "json" };
 
 export const WATCHED_URL = "https://www.youtube.com/watch?v=storeShotVideo";
 
-// The notes the store's screenshots show are the house account's samples, the same ones Start
-// offers and the home page shows, so nothing invented is put in front of a real channel's name
-// and nothing shown here is not already public (docs/features/onboarding.md, "Try a sample").
-//
-// sampleNotes.json is `GET /api/samples` as it stood, committed so the shots come out the same
-// every time and a change to them is a diff. Refresh it with `task store:samples`.
-//
-// A sample arrives as a share payload, which leaves out the six fields below because a share
-// never carries them. They come back as their empty values so the record is a whole Overview.
+// A share never carries the six fields below, so they come back empty to make a whole Overview.
 const whole = (note: unknown): OverviewRecord =>
   Overview.parse({
     captureReason: null,
@@ -37,14 +29,11 @@ const titled = (fragment: string): OverviewRecord => {
   return found;
 };
 
-// The two notes the assistant shot's conversation names. They are quoted as titles rather
-// than rendered, so looking them up is what keeps the quote true: refresh the samples and
-// drop either one, and that shot fails rather than citing a note nobody has.
+// Looked up, not written out, so a refresh that drops either one fails the shot.
 export const theSellingNote = (): OverviewRecord => titled("AI Operating System");
 export const theDataNote = (): OverviewRecord => titled("software engineering is changing");
 
-// Most of them are read, so the running total is a figure worth showing rather than the few
-// minutes two notes come to (docs/features/time-saved.md).
+// Most are read, so the running total is worth showing.
 const READ = 6;
 
 export const storeLibrary = (backendSimulator: BackendSimulator): OverviewRecord[] => {

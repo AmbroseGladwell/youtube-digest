@@ -26,9 +26,6 @@ const updatedLabel = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 });
 
-// One long-form layout for the privacy policy and the terms: a heading that takes focus on
-// arrival, the date the text last changed, a contents list of the sections, and the sections
-// themselves, each an h2 (docs/features/legal-pages.md).
 export const LegalPage = ({ title, updatedOn, intro, sections, otherPage }: LegalPageProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
 

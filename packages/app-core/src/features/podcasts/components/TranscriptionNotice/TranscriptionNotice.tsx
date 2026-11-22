@@ -16,15 +16,12 @@ export interface TranscriptionNoticeProps {
   secondary?: TranscriptionNoticeAction | null;
   route?: TranscriptionStopRoute;
   foot?: string | null;
-  // After Create the notice replaces the steps, so it takes focus; under a pasted link it leaves
-  // focus in the field the reader is typing in.
+  // After Create the notice replaces the steps; under a pasted link focus stays where the reader types.
   takeFocus?: boolean;
   onFollowed?: (() => void) | undefined;
 }
 
-// A stop or a question about transcribing an episode, in place of the action it replaces: a
-// heading, what happened and what's left, and the ways that exist. Stops are alerts, and after
-// Create take focus to their first action, as 95i (design 305, Notes: Accessibility).
+// Stops are alerts, and after Create take focus to their first action (design 305, Notes: Accessibility).
 export const TranscriptionNotice = ({
   notice,
   primary = null,

@@ -15,9 +15,7 @@ export interface SharedPageEventRoutesOptions {
   clock: () => Date;
 }
 
-// With or without an account, and only sharedPage.* events. The token never leaves this
-// handler: the overview it names is added to each event instead (docs/architecture/analytics.md,
-// "The shared page").
+// The token never leaves this handler: docs/architecture/analytics.md, "The shared page".
 export const sharedPageEventRoutes = (app: FastifyInstance, { shares, sink, clock }: SharedPageEventRoutesOptions): void => {
   app.post<{ Params: { token: string } }>(
     "/shares/:token/events",

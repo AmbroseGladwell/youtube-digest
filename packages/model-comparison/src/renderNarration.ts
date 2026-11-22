@@ -11,7 +11,7 @@ interface JsonResponse {
   text: string;
 }
 
-// node:http rather than fetch: a long note renders for more than fetch's five-minute header timeout on a laptop CPU.
+// node:http, not fetch: a long note renders past fetch's five-minute header timeout on a laptop CPU.
 const postJson = (url: URL, body: string): Promise<JsonResponse> =>
   new Promise((resolve, reject) => {
     const sent = request(url, { method: "POST", headers: { "content-type": "application/json" } }, (response) => {

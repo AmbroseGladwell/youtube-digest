@@ -66,9 +66,7 @@ export const parseServerStack = (stack: string | undefined, root: string): Serve
   return frames;
 };
 
-// Anything the server threw, as it may leave the process: the message redacted by the same
-// rules a client's is, and paths made relative to where the server runs
-// (docs/architecture/errors-and-logs.md, "The server's own errors").
+// What may leave the process: docs/architecture/errors-and-logs.md, "The server's own errors".
 export const toServerError = (thrown: unknown, { caughtBy, request, at, root = process.cwd() }: ToServerErrorOptions): ServerError => {
   const error = thrown instanceof Error ? thrown : null;
   const message = messageOf(error, thrown);

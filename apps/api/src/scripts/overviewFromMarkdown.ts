@@ -14,10 +14,7 @@ import {
   type WatchAnswer,
 } from "@overview/domain";
 
-// An overview's items back from overviewMarkdown, so chatHarnessCheck can put the library's real
-// notes in the prompt (OV-319): a video's, an article's chapters and Read it anyway?, and a
-// recipe page's figures, ingredients and method (OV-320). It reads only what the chat prompt
-// shows; an article's resources and which chapter each key point came from aren't in it.
+// Reads back only what the chat prompt shows, for chatHarnessCheck (OV-319, OV-320).
 
 const clockMs = (clock: string) => clock.split(":").reduce((total, part) => total * 60 + Number(part), 0) * 1000;
 const LINK = /\[(\d+(?::\d+)+)(?:–(\d+(?::\d+)+))?\]\([^)]*\)/;

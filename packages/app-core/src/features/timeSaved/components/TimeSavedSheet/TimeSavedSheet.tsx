@@ -16,9 +16,6 @@ const HEADING_ID = "TimeSavedSheet-heading";
 
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
 
-// Design 34ai: the figure, how it is counted, the way to the next milestone, the ones
-// already reached, and what was left out. A centred card on a desktop and a bottom sheet
-// on a phone, like the other dialogs (docs/features/time-saved.md, "Counted honestly").
 export const TimeSavedSheet = ({ open, summary, onClose }: TimeSavedSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const { minutes } = summary;

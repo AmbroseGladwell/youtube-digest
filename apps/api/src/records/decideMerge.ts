@@ -19,10 +19,7 @@ export interface MergeRequest {
 
 const spread = (base: Record<string, unknown>, patch: Record<string, unknown>) => ({ ...base, ...patch });
 
-// The stored body is migrated to the caller's version before the patch is merged into it,
-// never parsed: parsing would strip a newer client's fields, and merging into an
-// unmigrated body would be undone by the chain on the next read
-// (docs/features/sync-api.md, docs/features/record-migrations.md).
+// Why: docs/features/sync-api.md, "A merge migrates first, then merges, and never parses".
 export const decideMerge = (
   kind: RecordKind,
   current: StoredRecord | null,

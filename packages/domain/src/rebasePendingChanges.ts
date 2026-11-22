@@ -3,10 +3,7 @@ import { mergeProjectMember } from "./ProjectMember.js";
 import type { OutboxEntry } from "./OutboxEntry.js";
 import { stampUpdatedAt } from "./storedUpdatedAt.js";
 
-// A record pulled from the feed while this device still has unpushed writes to it: the
-// local writes go back on top, in order, so the library never shows an edit as undone
-// between the pull and the push that will carry it. Null means a pending delete, which
-// the pull must not resurrect (docs/features/sync-client.md).
+// Local writes go back on top; null is a pending delete not to resurrect (docs/features/sync-client.md).
 export const rebasePendingChanges = (remote: Record<string, unknown>, pending: readonly OutboxEntry[]): Record<string, unknown> | null => {
   let record: Record<string, unknown> | null = remote;
   for (const entry of pending) {

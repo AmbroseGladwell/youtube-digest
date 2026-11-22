@@ -4,8 +4,6 @@ import type { HeadBackLink } from "../../app/BackLinkHandoffContext.js";
 const passedUnder = (entry: IntersectionObserverEntry): boolean =>
   !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0);
 
-// True once the note's back link has scrolled under the sticky band, false again once it
-// comes back out, judged at the band's lower edge (design 167c).
 export const useBackInBar = (band: HTMLElement | null, link: HeadBackLink | null, enabled: boolean): boolean => {
   const [backInBar, setBackInBar] = useState(false);
 
@@ -14,8 +12,7 @@ export const useBackInBar = (band: HTMLElement | null, link: HeadBackLink | null
       setBackInBar(false);
       return;
     }
-    // A page that draws no link of its own has nothing to scroll under the band, so the
-    // slot carries it for as long as the page is open (design 205d-2).
+    // A page that draws no link of its own lends the slot its link for as long as it is open.
     const element = link.element;
     if (element === null) {
       setBackInBar(true);

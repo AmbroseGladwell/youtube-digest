@@ -35,7 +35,7 @@ const SAID_MS = 3000;
 
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
 
-// --motion-travel, the drawer's slide in and out.
+// Matches --motion-travel, the drawer's slide.
 const DRAWER_MOTION_MS = 260;
 
 interface WaitFacts {
@@ -80,11 +80,6 @@ const pickingPhaseOf = (picking: "choosing" | "reading", text: string, sectionCo
   return text === "" && sectionCount === 0 ? "reading" : "read";
 };
 
-// OV-354, pages 3 and 4: Ask, a top-level page over the whole library, or one project when opened
-// from it. No header and no close; the top bar is the way back. Empty, the field sits centred under
-// the heading with three starter questions made by code; asked, the conversation runs above it
-// with the picking wait and answers in sections. The drawer holds every library and project
-// conversation (docs/features/chats.md, "The Ask page").
 export const AskPage = () => {
   const [params] = useSearchParams();
   const parsedProject = ProjectId.safeParse(params.get("project"));
@@ -100,9 +95,7 @@ export const AskPage = () => {
   const topics = useTopicsQuery().data ?? [];
   const library = useOverviewsWithStateQuery().data;
   const [draft, setDraft] = useState("");
-  // On the web the drawer starts open beside the page; on a phone, where it is a sheet over it, closed (OV-370).
   const [drawerOpen, setDrawerOpen] = useState(() => !isPhone);
-  // Closing plays the opening backwards, so the drawer stays for its time on the way out (OV-371).
   const [drawerLeaving, setDrawerLeaving] = useState(false);
   const [drawerArrives, setDrawerArrives] = useState(false);
   const [announcement, setAnnouncement] = useState("");
@@ -178,7 +171,7 @@ export const AskPage = () => {
     return () => clearTimeout(timer);
   }, [said]);
 
-  // Each step said once, politely; the titles are never read out one by one (page 3).
+  // Each step announced once; the titles are never read out one by one (page 3).
   const previous = useRef(state);
   useEffect(() => {
     const was = previous.current;
@@ -204,8 +197,7 @@ export const AskPage = () => {
     }
   }, [state, latestAnswerAt]);
 
-  // A question just sent, or a conversation just opened, scrolls its latest question to the top once.
-  // The answer then reads down from there and is never followed to its end (OV-362).
+  // Scrolled once to the latest question, so the answer reads down from it and isn't followed (OV-362).
   const asking = pending?.status === "answering" ? pending.question : null;
   useEffect(() => {
     const questions = document.querySelectorAll<HTMLElement>(`[data-testid="${askPageTestIds.question}"]`);

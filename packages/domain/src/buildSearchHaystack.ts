@@ -1,9 +1,7 @@
 import { sourceName } from "./sourceFacts.js";
 import type { Overview } from "./Overview.js";
 
-// Logic ported from prototype/index_template.html's haystack() (CLAUDE.md: port the
-// logic, not the file) — concatenate everything a reader might search by into one
-// lowercased blob, checked with a plain substring match.
+// Ported from prototype/index_template.html's haystack(), for a plain substring match.
 export const buildSearchHaystack = (overview: Overview): string => {
   return [
     overview.source.title,

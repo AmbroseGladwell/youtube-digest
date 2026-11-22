@@ -17,12 +17,11 @@ export interface GenerationInput {
   readerContext: string | null;
   sectionsEnabled: SectionsEnabled;
   existingTopics: Topic[];
-  // Empty when the reader has none, or has switched filing into them off.
   existingProjects: FilingProject[];
   pastClaims: ClaimSummary[];
-  // Every tag in the reader's library, most used first.
+  // Most used first: docs/features/tag-reuse.md, "The model is offered the reader's tags".
   existingTags: TagCount[];
   tagAliases: TagAliases;
-  // Already checked before the account (OV-327), so writing skips its own check.
+  // Checked before the account (OV-327), so writing skips its own check.
   noteKind?: NoteKind | undefined;
 }

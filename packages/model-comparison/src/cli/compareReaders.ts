@@ -62,8 +62,7 @@ if (!apiKey) {
 
 const runDirectory = comparisonPaths.run(values.run);
 const stores = new Map(SPREAD_READERS.map((reader) => [reader.name, runDirectoryStore(join(runDirectory, reader.name))]));
-// Only readers who saw the reader context, and only those the earlier run has: nobody's
-// prompt has no fit line, so its actions can't differ between the runs.
+// Nobody's prompt has no fit line, so its actions can't differ between the runs.
 const beforeReaders: readonly SpreadReader[] =
   values.against === undefined
     ? []

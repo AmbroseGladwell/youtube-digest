@@ -83,12 +83,13 @@ export interface LibraryChatAnswererOptions {
   clock: () => Date;
   sleep?: (ms: number) => Promise<void>;
   wholeCharacters?: number;
-  // A large project's keyword minutes (OV-352); without them, none are sent.
   passages?: TranscriptPassagesRepository | null;
   transcripts?: TranscriptsRepository | null;
 }
 
 export type LibraryChatOwner = Exclude<ChatOwner, { kind: "overview" }>;
+
+const TRANSCRIPT_MINUTE_ID = /\.p\d+$/;
 
 const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] => {
   return rows.flatMap((row) => {
@@ -166,8 +167,7 @@ export class LibraryChatAnswerer {
     const marksMessage = marksBlock(material.labels, marks);
     const history = conversation?.messages ?? [];
     const asked = history.flatMap((message) => (message.from === "reader" ? [message] : []));
-    // Pins (OV-354): what the reader added with "@" is read whole with that question, beside the
-    // picks. One outside the project gets a label after the map's, fixed for the conversation.
+    // Pins: docs/features/chats.md, "Library and project chat".
     const pastSources = asked.flatMap((message) => message.sources ?? []);
     const wasSetAside = new Set(asked.flatMap((message) => message.setAside ?? []));
     const pinnedNow = await this.#pinned(accountId, question.pins ?? { overviews: [], projects: [] });
@@ -342,10 +342,9 @@ export class LibraryChatAnswerer {
               },
             ]),
         );
-        // An overview's id or item (O3, O3.kp2), or a minute of its transcript (O3.p14).
         const cite = (ids: readonly string[]): ChatCitation[] => [
           ...overviewCitationsOf(
-            ids.filter((id) => !/\.p\d+$/.test(id)),
+            ids.filter((id) => !TRANSCRIPT_MINUTE_ID.test(id)),
             citable,
           ),
           ...[...new Set(ids)].flatMap((id) => minuteLabels.get(id) ?? []),
@@ -353,7 +352,6 @@ export class LibraryChatAnswerer {
         const sectionOf = (section: ChatReplySection) =>
           structuredAnswer({ intro: "", introSources: [], sections: [section], takeaway: "" }, cite, { library: true }).sections[0]!;
 
-        // OV-352: a large project also sends the 8 best minutes of its members' transcripts.
         const found =
           material.mode === "map" && owner.kind === "project" && passageIndex != null
             ? await keywordMinutes({ passages: passageIndex, records }, accountId, question.text, { within: memberKeys }, log)
@@ -476,7 +474,7 @@ export class LibraryChatAnswerer {
         );
         yield { type: "failed", message: CHAT_FAILED };
       } finally {
-        // The reader stopped, or went, before the answer was stored: as an overview's chat does.
+        // Stopped before the answer was stored: docs/features/chats.md, "Asking".
         if (!settled) {
           await stream?.pieces.return(undefined);
           await release();
@@ -487,8 +485,6 @@ export class LibraryChatAnswerer {
     return answer();
   }
 
-  // What the reader pinned: overviews, and a project's members, the most recently added 8 of a large
-  // one, as an overview's chat caps them. Only live ones.
   async #pinned(accountId: AccountId, pins: Pins): Promise<Overview[]> {
     const { records } = this.#options;
     const members: string[] = [];
@@ -512,8 +508,7 @@ export class LibraryChatAnswerer {
       : readAll(await this.#options.records.readLive(accountId, "overview", [...new Set(ids)]), Overview, OVERVIEW_MIGRATIONS);
   }
 
-  // The overviews a question is over, oldest saved first so a new save lands at the end of the
-  // cached map, and the counts its answer shows, worked out here.
+  // Oldest saved first, so a new save lands at the end of the cached map.
   async #scope(accountId: AccountId, owner: LibraryChatOwner): Promise<ResolvedScope> {
     const { records } = this.#options;
     const oldestFirst = (overviews: Overview[]) => [...overviews].sort((left, right) => left.savedAt.localeCompare(right.savedAt));
@@ -568,7 +563,6 @@ export class LibraryChatAnswerer {
   }
 }
 
-// An overview cited by several points is one citation of each place, and of the whole only once.
 const uniqueCitations = (citations: readonly ChatCitation[]): ChatCitation[] => {
   const seen = new Set<string>();
   return citations.filter((citation) => {

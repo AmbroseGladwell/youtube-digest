@@ -7,7 +7,6 @@ import { consentSignInCardTestIds } from "../../src/features/connections/compone
 import { consentPageTestIds } from "../../src/features/connections/ConsentPage/ConsentPageTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The page an assistant sends a reader to, /connect/<id> (docs/features/mcp-connector.md).
 export class ConsentPageObject extends PageObject {
   verifyIsShown = (): Promise<ConsentPageObject> =>
     this.step("verifyIsShown", async () => {

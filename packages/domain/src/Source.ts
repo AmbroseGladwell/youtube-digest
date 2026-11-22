@@ -7,8 +7,7 @@ import { VideoSource } from "./VideoSource.js";
 export const YouTubeSource = VideoSource.extend({ kind: z.literal("youtube") });
 export type YouTubeSource = z.infer<typeof YouTubeSource>;
 
-// What an overview is of. Each kind carries the fields it has, so a new kind joins this union
-// and the compiler names every reader that assumed a video (docs/features/source-identity.md).
+// A new kind joins the union and the compiler names every reader (docs/features/source-identity.md).
 export const WebSource = z.object({
   kind: z.literal("web"),
   id: SourceKey,
@@ -23,10 +22,7 @@ export const WebSource = z.object({
 });
 export type WebSource = z.infer<typeof WebSource>;
 
-// One episode of a show, as its own feed names it: the identity is the feed's, never the Apple or
-// Spotify page it was shared from. `sharedFrom` is that page, the link this reader pasted: the
-// overview's way out, since a reader who came from Spotify goes back to Spotify
-// (docs/features/podcast-screens.md).
+// The feed's identity; sharedFrom is the pasted page, the way back (docs/features/podcast-screens.md).
 export const PodcastSource = z.object({
   kind: z.literal("podcast"),
   id: SourceKey,
@@ -46,8 +42,7 @@ export type PodcastSource = z.infer<typeof PodcastSource>;
 export const Source = z.discriminatedUnion("kind", [YouTubeSource, WebSource, PodcastSource]);
 export type Source = z.infer<typeof Source>;
 
-// A hash of the canonical address, so the id is short, safe in a path, and the same for every
-// reader of the page (docs/features/source-identity.md).
+// Short, path-safe and the same for every reader (docs/features/source-identity.md).
 export const articleSourceId = async (url: string): Promise<SourceKey> => {
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(url));
   const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -74,10 +69,7 @@ export const youTubeSource = ({ fullDescription: _forGenerationOnly, ...video }:
 
 const SHARER_PARAMETERS = /^(si|utm_.+|context|nd|_branch_match_id|_branch_referrer)$/;
 
-// The link a reader pasted, as kept for the way back: Spotify's `si=` is a token tied to the
-// account that shared it, and a shared overview shows its sharer's link, so it and the campaign
-// parameters are dropped. A `spotify:` address becomes the web page it names
-// (docs/features/podcast-screens.md).
+// Spotify's si= ties to the sharer's account, so it and campaign params go (docs/features/podcast-screens.md).
 export const keptSharedLink = (link: string): string => {
   const uri = /^spotify:(episode|show):([A-Za-z0-9]{22})$/.exec(link.trim());
   if (uri !== null) {

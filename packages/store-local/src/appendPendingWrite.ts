@@ -4,10 +4,7 @@ import { promisifyRequest } from "./promisifyRequest.js";
 
 export const JOURNALLED_STORES = [OUTBOX_STORE, SYNC_META_STORE];
 
-// Whether a write is journaled is a fact about the database, not about which store
-// class wrote it: an enrolled library journals every write, in the same transaction as
-// the write, and a library that was never enrolled journals nothing
-// (docs/features/sync-client.md).
+// docs/features/sync-client.md, "What a local write leaves behind".
 export const appendPendingWrite = async (transaction: IDBTransaction, write: PendingWrite): Promise<boolean> => {
   const enrolled = await promisifyRequest(transaction.objectStore(SYNC_META_STORE).get(SYNC_ENROLLED_KEY));
   if (enrolled !== true) {

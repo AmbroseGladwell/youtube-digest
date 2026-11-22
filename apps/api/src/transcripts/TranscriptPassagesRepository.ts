@@ -10,8 +10,6 @@ const STOPWORDS = new Set(
 );
 const MOST_TERMS = 12;
 
-// A question's words worth searching for: lower-cased letters and digits, without the words every
-// question has, at most a dozen. Postgres stems them, as it stemmed the passages.
 export const keywordTermsOf = (question: string): string[] => {
   const words = question
     .toLowerCase()
@@ -25,8 +23,7 @@ export const keywordTermsOf = (question: string): string[] => {
 export interface KeywordHit {
   videoId: string;
   passage: Passage;
-  // The passage with the minute either side, which OV-352 measured: 54 of 68 answers cited the
-  // right moment with them, against 45 without.
+  // OV-352 measured it: 54 of 68 answers cited the right moment with the minute either side, 45 without.
   around: Passage[];
   score: number;
 }
@@ -37,10 +34,7 @@ export interface SearchOptions {
   within?: readonly string[] | null;
 }
 
-// The account's transcripts as minute passages under a full-text index, searched by the
-// question's words. Postgres's ts_rank knows nothing of how rare a word is, so each word is
-// weighted by its inverse document frequency over this account's passages, as BM25 weights it:
-// the rare word that names the detail counts for more than the word every minute has (OV-352).
+// Rarity weights: docs/features/transcript-storage.md, "A search index of the minutes (OV-352)".
 export class TranscriptPassagesRepository {
   #sql: SqlClient;
 
@@ -48,7 +42,7 @@ export class TranscriptPassagesRepository {
     this.#sql = sql;
   }
 
-  // Run inside the transcript's own write, so the index never lags the transcript it is cut from.
+  // Run inside the transcript's own write, so the index never lags it.
   static async index(tx: SqlClient, accountId: AccountId, videoId: string, transcript: StoredTranscript): Promise<void> {
     await tx.query("delete from transcript_passages where account_id = $1 and video_id = $2", [accountId, videoId]);
     const passages = transcriptPassages(transcript.segments).filter((passage) => passage.text.length > 0);
@@ -70,7 +64,6 @@ export class TranscriptPassagesRepository {
     );
   }
 
-  // Transcripts kept before the index existed, or whose index went missing, cut on first search.
   async backfill(accountId: AccountId): Promise<number> {
     const rows = await this.#sql.query<{ video_id: string; body: unknown }>(
       `select t.video_id, t.body from account_transcripts t
@@ -90,9 +83,7 @@ export class TranscriptPassagesRepository {
     return indexed;
   }
 
-  // The best passages for the question's words, from the given transcripts only when `within` is
-  // set, never from those in `except`. Only transcripts of the account's live overviews are kept,
-  // so a passage never outlives the note it came with.
+  // Only live overviews' transcripts count, so a passage never outlives the note it came with.
   async search(accountId: AccountId, question: string, { limit, except = [], within = null }: SearchOptions): Promise<KeywordHit[]> {
     const terms = keywordTermsOf(question);
     if (terms.length === 0 || limit <= 0) {
@@ -133,7 +124,6 @@ export class TranscriptPassagesRepository {
     });
   }
 
-  // A hit's words, cut again from its transcript the way they were indexed.
   async #passagesOf(accountId: AccountId, videoIds: readonly string[]): Promise<Map<string, Passage[]>> {
     if (videoIds.length === 0) {
       return new Map();

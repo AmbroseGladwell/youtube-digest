@@ -24,10 +24,6 @@ export interface GenerationStatusStripProps {
   onReadOverview: (overview: Overview) => void;
 }
 
-// Design 3c: the run, once it has left the dialog, as one line on a surface card under
-// the bar — a mark, the label, then step, clock and title receding to the muted ink —
-// with a brand-orange bar at its foot while it runs. Ready, it moves to the stone tint
-// and offers the one action that makes something (docs/features/stone-theme.md).
 export const GenerationStatusStrip = ({ run, onDetails, onDismiss, onReadOverview }: GenerationStatusStripProps) => {
   const status = generationRunStatus(run);
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);

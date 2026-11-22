@@ -7,9 +7,6 @@ import { howToApplyLineTestIds } from "../components/HowToApplyLine/HowToApplyLi
 import type { NoteSectionSlot } from "../components/ReadAlongNote/ReadAlongNote.js";
 import { isRevealedSample } from "../../onboarding/nextStepsStorage.js";
 
-// A sample has no version written for the reader, so it says so (155j). Beside the steps a source
-// gives, How to apply says whose it is: a Personalised tag when we know the reader, and the way
-// to tell us when we don't (designs 250a, 250p).
 export const useHowToApplySlot = (overview: Overview | null, besideSteps: boolean): NoteSectionSlot | null => {
   const settings = useSettingsQuery().data;
   const hasItems = (overview?.howToApply?.items.length ?? 0) > 0;

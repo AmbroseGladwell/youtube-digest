@@ -10,13 +10,10 @@ import { chatSheetTestIds } from "./ChatSheetTestIds.js";
 export interface ChatSheetProps {
   rest: SheetRest;
   label: string;
-  // What the lowered sheet says: the conversation, and what's playing from it if anything (310o).
   loweredTitle: string;
   loweredLine: string;
-  // A part of the overview being shown carries the note's mark (319t).
   loweredIcon?: StrokeIconName | null;
   playing: boolean;
-  // In the extension's panel the sheet starts under its masthead; on a phone 64px down.
   underMasthead: boolean;
   onRestChange: (rest: SheetRest) => void;
   children: ReactNode;
@@ -41,11 +38,7 @@ interface Drag {
   moved: boolean;
 }
 
-// Design 310g, 310h, 310o, 310r: on a phone and in the extension's panel, chat is a sheet from the
-// bottom. The handle or the header drags it, following the finger with resistance past either
-// rest; let go, it springs to the nearer, or where it was flicked. Raised it is a modal dialog
-// holding focus; lowered to its header it leaves the page usable, and a citation followed lowers
-// it to say what's playing.
+// How the sheet moves: docs/features/chats.md, "Beside the note (design 310a, 310d–310p)".
 export const ChatSheet = ({
   rest,
   label,

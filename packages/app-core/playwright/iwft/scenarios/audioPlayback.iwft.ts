@@ -39,8 +39,7 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },
 };
 
-// On Plus our key goes first, so a note made here is one ours made, and is narrated ahead
-// (docs/architecture/tiers.md, "What an own-key overview costs us").
+// On Plus our key goes first, so a note made here is narrated ahead.
 const ON_OUR_KEY = {
   sync: true,
   syncConnection: { ...SIGNED_IN.syncConnection, accountId: SIMULATED_ACCOUNT_ID },
@@ -550,7 +549,7 @@ const listens = (backendSimulator: BackendSimulator) =>
     .filter(({ name }) => name === "player.playback.started" || name === "player.playback.ended")
     .map(({ name, props }) => ({ name, props }));
 
-// Short enough that a listen reaches its end within the test, long enough for the bar to be seen playing.
+// Short enough that a listen ends within the test, long enough for the bar to be seen playing.
 const QUICK_SECONDS_PER_LINE = 0.5;
 
 test("a listen played to its end is counted as finished with all of the note heard, and the opening it had", async ({

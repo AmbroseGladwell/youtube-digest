@@ -7,36 +7,19 @@ import { useAccountNeeded } from "../accountLibraries/useAccountNeeded.js";
 import { useServiceTranscriptStatusQuery } from "../transcripts/queries/serviceTranscriptStatusQuery.js";
 import { useOurKeyStatusQuery } from "./queries/ourKeyStatusQuery.js";
 
-// Richer than the yes/no it used to be, because the design asks three different questions
-// of it. A transcript no longer has one source, so "have you pasted both keys" was already
-// the wrong question: a shell that can reach YouTube needs nothing more
-// (docs/features/transcript-retrieval.md), nor does a reader whose server fetches them
-// itself (docs/architecture/server-side-transcripts.md). And a key is now per provider, so
-// "do you have a key" and "do you have the key you chose" are two questions with different
-// answers and different ways out (design 110g).
+// Why this asks several questions: docs/features/transcript-retrieval.md, "What generation now requires".
 export interface GenerationReadiness {
   ready: boolean;
-  // The provider this account generates with, which follows the reader between devices.
   provider: Provider;
-  // Whether this device holds that provider's key. False with other keys present is the
-  // state design 110g draws: chosen elsewhere, unusable here.
   hasChosenKey: boolean;
-  // A provider this device could generate with instead, so the dead end has a way out
-  // that does not need a password manager. Null when there is no key here at all.
+  // Null when this device holds no key at all.
   fallback: Provider | null;
-  // Whether an overview can be made on our key: it needs a server that makes them. A reader
-  // with no key of their own is then ready all the same (docs/architecture/tiers.md, "Which
-  // key an overview uses"). Signed out it is onboarding's one overview, on the device's trial.
+  // docs/architecture/tiers.md, "Which key an overview uses".
   ourKeyUsable: boolean;
   needsTranscriptSource: boolean;
-  // Signed out where this shell can make an account: no overview is made or seen until
-  // there is one, whatever keys it holds (docs/architecture/tiers.md, "Signed out"). A shell
-  // with no server has no account to offer, and keeps making overviews on the reader's key.
+  // docs/architecture/tiers.md, "Signed out".
   accountNeeded: boolean;
-  // Whether the questions above have answers yet. Two of them are network queries, and
-  // until they answer, `ready` is false for want of knowing rather than for want of a key.
-  // Anything that acts on a reader's press has to wait for this, or it decides on a guess
-  // (docs/features/injected-button.md, "Pressed before the answers are in").
+  // Until true, `ready` is false for want of knowing, so anything acting on a press must wait.
   settled: boolean;
 }
 

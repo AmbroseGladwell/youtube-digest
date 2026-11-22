@@ -6,8 +6,7 @@ export interface RecipeLineChoiceProps {
   children: ReactNode;
 }
 
-// The keyboard's way to a recipe line's tap, as the note's lines have (ReadAlongNote): the
-// row takes the pointer, and this takes focus, Enter and Space.
+// The row takes the pointer; this takes focus, Enter and Space, as ReadAlongNote's lines do.
 export const RecipeLineChoice = ({ active, onChoose, children }: RecipeLineChoiceProps) => {
   return (
     <span

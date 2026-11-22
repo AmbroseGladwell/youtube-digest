@@ -77,8 +77,6 @@ test("the chapters tab lists each stretch of the video with its range, title and
   await reader.verifyChapterSummariesRead(CHAPTERS.map((chapter) => chapter.summary));
 });
 
-// The wide reader has no player to move, so a chapter links out to YouTube at its start,
-// the way the rail's jump link already does.
 test("on the wide reader a chapter's range links out to YouTube at its start", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
@@ -148,8 +146,6 @@ test("Transcript opens the transcript at the chapter's start, marked and in view
   await reader.verifyActiveTabIs("Chapters");
 });
 
-// A chapter is a stretch, not a point: marking only the block it starts in says where it
-// begins and never where it ends (docs/features/chapters.md, "Opened from a chapter").
 test("Transcript marks every block of the chapter, named once at the top of the run", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, {
     chapters: [
@@ -183,8 +179,6 @@ test("choosing the Transcript tab yourself opens it at the top, with nothing mar
   await reader.verifyNoTranscriptBlockIsTargeted();
 });
 
-// Opening the transcript somewhere is scrolling away from the video, the same as
-// searching is, so the following stands down and offers itself back.
 test("opening the transcript from a chapter stands the following down", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panelWatching);
@@ -271,8 +265,7 @@ test("a note whose transcript had nothing to split says that instead", async ({ 
   await reader.verifyChaptersNoteReads(/nothing to split/);
 });
 
-// The fixture answers with segment indices; the ranges below are the transcript's own
-// times, and the last chapter ends with the last caption rather than the video.
+// The fixture answers with segment indices, and the last chapter ends with the last caption.
 test("a freshly generated overview has chapters timed from its transcript", async ({ launcher }) => {
   const home = await launcher.launch({ apiKeys: API_KEYS });
   await home.verifyShowsFirstRunHero();

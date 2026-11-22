@@ -3,14 +3,7 @@ import { extractYouTubeVideoId } from "../../newOverview/util/parseYouTubeUrl.js
 import { readableEntries, type LibraryEntry } from "../types/LibraryEntry.js";
 import { orderLibraryEntriesBySavedAt } from "./orderLibraryEntriesBySavedAt.js";
 
-// Matched on the video's own id rather than on the url, because youtu.be/X and
-// watch?v=X&t=30 are the same video and the stored url is whichever one was pasted
-// (docs/features/transcript-storage.md, "Where the video id comes from"). The newest
-// note wins: a re-run leaves the older one in the library.
-//
-// It lives with the overviews rather than in either caller: the panel's capture screen
-// and the injected button ask the same question, and both ask it to avoid paying for a
-// video twice (docs/features/injected-button.md).
+// Why by video id: docs/features/transcript-storage.md, "Where the video id comes from".
 export const overviewForVideoUrl = (entries: LibraryEntry[], videoUrl: string | null): Overview | null => {
   if (videoUrl === null) {
     return null;
@@ -23,8 +16,7 @@ export const overviewForVideoUrl = (entries: LibraryEntry[], videoUrl: string | 
   return match?.overview ?? null;
 };
 
-// Before Create the tab's address is all there is, so this catches the ordinary case and the
-// run's check on the page's own canonical address catches the rest.
+// The run's check on the page's own canonical address catches what the tab's address misses.
 export const overviewForPageUrl = (entries: LibraryEntry[], pageUrl: string): Overview | null => {
   const wanted = canonicalArticleUrl(pageUrl, null);
   const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(

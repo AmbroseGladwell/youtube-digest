@@ -49,8 +49,6 @@ const useOnce = (when: boolean, record: () => void): void => {
   }, [when, record]);
 };
 
-// Where an assistant sends a reader to answer its request (design 58,
-// docs/features/mcp-connector.md, "The consent screen").
 export const ConsentPage = () => {
   const requestId = useParams()[RouteParams.requestId] ?? "";
   const location = useLocation();

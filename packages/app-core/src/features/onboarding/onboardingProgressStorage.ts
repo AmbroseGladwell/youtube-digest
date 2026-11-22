@@ -28,31 +28,25 @@ const onTodaysStep = (raw: unknown): unknown => {
 };
 
 const OnboardingProgressShape = z.object({
-  // What the reader gave Start, and what is being made from it once that's known: the link's
-  // own video, the playlist video they chose, or the article it was read as.
+  // The key is of what's made from the link, once known: a playlist's chosen video, say.
   link: z.string(),
   sourceKey: SourceKey.nullable(),
-  // The panel's tab the link came from, read in the browser rather than by our server.
   tabId: z.number().int().nullable().catch(null),
   step: OnboardingStep,
-  // The topics chosen, so going back to the screen shows them; made on Continue.
+  // Kept so going back shows them; the topics are made on Continue.
   topics: z.array(z.string()).catch([]),
   // Writing waits until About you is answered or skipped, or the reader leaves the questions.
   mayWrite: z.boolean(),
   overviewId: OverviewId.nullable(),
-  // The tab whose run makes the overview: the one that started onboarding, until another tab finds
-  // it gone and takes the run over. Null when nothing is run, as for a share.
+  // docs/features/onboarding.md, "The run lives in one tab".
   runner: z.string().nullable().catch(null),
   way: AuthIntent.nullable(),
-  // The sign-in from the account screen has landed: when, what the overview was doing then, and
-  // whether its arrival in the account has been counted since (docs/features/onboarding.md, "Analytics").
+  // Kept so a page that comes back counts each once: docs/features/onboarding.md, "Analytics".
   landed: z
     .object({ at: z.number(), overview: z.enum(["ready", "writing", "failed"]), arrived: z.boolean() })
     .nullable()
     .catch(null),
-  // A copy saved from a shared page, or a sample chosen at Start, is the first overview, so
-  // nothing is made: it goes into the account once there is one, let in uncounted through its
-  // link (docs/features/onboarding.md, "From a shared page" and "Try a sample").
+  // Already made, so nothing is generated: docs/features/onboarding.md, "From a shared page".
   share: z
     .object({ token: ShareToken, snapshot: SharedOverview, sample: z.boolean().catch(false) })
     .nullable()
@@ -64,9 +58,6 @@ export type OnboardingProgress = z.infer<typeof OnboardingProgressShape>;
 export const ONBOARDING_PROGRESS_STORAGE_KEY = "overview.onboarding.v1";
 const STORAGE_KEY = ONBOARDING_PROGRESS_STORAGE_KEY;
 
-// Where this device is in onboarding, so a reload or the sign-in link opened in another tab
-// picks up at the same screen. The device's own, before there is an account to keep it on
-// (docs/features/onboarding.md, "Leaving and coming back").
 export const readOnboardingProgress = (storage: Storage = globalThis.localStorage): OnboardingProgress | null => {
   try {
     const raw = storage.getItem(STORAGE_KEY);

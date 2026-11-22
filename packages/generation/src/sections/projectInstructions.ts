@@ -4,9 +4,7 @@ import type { FilingProject, ProjectId } from "@overview/domain";
 const projectLine = ({ name, purpose }: FilingProject): string =>
   purpose === null ? `- "${name}" (only a name)` : `- "${name}": ${purpose}`;
 
-// Left out of the prompt and the schema with no projects, so a reader without any sends what they
-// always did, and the schema grows only for those who have some (docs/features/projects.md,
-// "Filing as an overview is made").
+// docs/features/projects.md, "Filing as an overview is made".
 export const projectInstructions = (projects: readonly FilingProject[], source: "video" | "article"): string => {
   if (projects.length === 0) {
     return "";

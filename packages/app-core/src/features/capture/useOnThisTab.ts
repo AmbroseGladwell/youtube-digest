@@ -14,18 +14,13 @@ import { readableEntries } from "../overviews/types/LibraryEntry.js";
 
 export interface OnThisTab {
   kind: "video" | "page" | "episode";
-  // The note the library already holds for what the tab has moved on to, if it holds one.
   held: Overview | null;
   videoUrl: string | null;
   page: ActivePage | null;
   dismiss: () => void;
 }
 
-// Whether the tab in front of the panel holds something we could take that isn't what the
-// open note is about (design 205e). On a note only: settings and the queue aren't about a
-// video, so there is nothing for the tab to have moved away from, and home is already the
-// offer. Matched on the video's own id rather than the url, the rule
-// docs/features/extension-panel.md gives for "Already in the library".
+// When this shows: docs/features/extension-panel.md, "The line under the bar".
 export const useOnThisTab = (): OnThisTab | null => {
   const isPanel = useIsPanel();
   const onOverview = useMatch(Routes.overview(`:${RouteParams.overviewId}`));
@@ -37,7 +32,6 @@ export const useOnThisTab = (): OnThisTab | null => {
 
   const offeredPage = activeVideoUrl === null && isOfferedPage(activePage) ? activePage : null;
   const subject = activeVideoUrl ?? offeredPage?.url ?? null;
-  // Dismissed for one subject, not for ever: moving the tab on again asks afresh (205e-4).
   const [dismissedFor, setDismissedFor] = useState<string | null>(null);
   const latestSubject = useRef(subject);
   latestSubject.current = subject;

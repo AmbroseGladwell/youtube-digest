@@ -6,25 +6,19 @@ import { chatSourceChipTestIds } from "./ChatSourceChipTestIds.js";
 
 export interface ChatSourceChipProps {
   title: string;
-  // "Key point 6", "3:21": the place cited, after the title.
   detail?: string | undefined;
-  // How many more it rests on: "+2". The accessible name lists them all.
   more?: readonly string[] | undefined;
   imageUrl?: string | null | undefined;
   wide?: boolean | undefined;
   icon?: StrokeIconName | undefined;
-  // Quiet: the row above the field, a surface tint with no ring. Outline: everywhere else.
   quiet?: boolean | undefined;
   deleted?: boolean | undefined;
   to?: string | undefined;
-  // What the link carries to the page it opens, such as the item a citation names (OV-362).
   state?: unknown;
   onFollow?: (() => void) | undefined;
-  // A place in this overview's own note: a button that moves the page, not a link.
   onPress?: ((chip: HTMLButtonElement) => void) | undefined;
   onRemove?: (() => void) | undefined;
   label: string;
-  // Words after the title for the deleted state; "deleted" unless the place says otherwise.
   deletedDetail?: string | undefined;
   testId?: string | undefined;
 }
@@ -75,8 +69,6 @@ const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, testId }:
   );
 };
 
-// OV-354, page 2: every reference in the chat is the same chip, 28px, a mini thumbnail, the title
-// cut with an ellipsis, then the place it names and "+n". One deleted since is muted and not a link.
 export const ChatSourceChip = ({
   title,
   detail,

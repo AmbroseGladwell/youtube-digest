@@ -17,7 +17,6 @@ export interface GeneratedOutput {
   keyPoints: GeneratedTimedText[];
   chapters: ChapterShape[];
   matchedTopicNames: string[];
-  // Absent when the reader had no projects to match against.
   matchedProjectNames?: string[];
   suggestedTopic: SuggestedTopicShape | null;
   tags: string[];
@@ -33,7 +32,7 @@ export interface GeneratedOutput {
     detail: string;
     compromisesContent: boolean;
   };
-  // Absent on any note but a process one (docs/features/source-steps.md).
+  // Process notes only: docs/features/source-steps.md, "Only on a process note".
   sourceSteps?: Array<GeneratedTimedText & { dubious: boolean; dubiousReason: string }>;
   howToApply?: {
     items: string[];

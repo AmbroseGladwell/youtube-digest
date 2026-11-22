@@ -5,10 +5,7 @@ import { readOnboardingProgress } from "../../onboarding/onboardingProgressStora
 import { startAsked } from "../../onboarding/startAsked.js";
 import { RequestLinkFlow } from "../components/RequestLinkFlow/RequestLinkFlow.js";
 
-// Where there are accounts, no new one skips onboarding: every Create account goes to Start, or
-// back to onboarding already under way, whose account screen holds the form. Start is home's,
-// asked for even in a panel whose home leads with signing back in. A shell with no server
-// keeps design 9b's own page (docs/features/onboarding.md, "Every Create account").
+// Why every Create account goes to Start: docs/features/onboarding.md, "Every Create account".
 export const CreateAccountPage = () => {
   const accountNeeded = useAccountNeeded();
   if (!accountNeeded) {

@@ -4,7 +4,6 @@ import { connectionsSectionTestIds } from "../../src/features/connections/compon
 import { connectorSetupTestIds } from "../../src/features/connections/components/ConnectorSetup/ConnectorSetupTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Settings › Connections (docs/features/mcp-connector.md).
 export class ConnectionsSectionPageObject extends PageObject {
   verifyListsConnections = (names: string[]) =>
     this.step(`verifyListsConnections ${names.join(", ")}`, () =>

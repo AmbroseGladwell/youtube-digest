@@ -13,7 +13,6 @@ import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
 import { Routes } from "../../../src/app/Routes.js";
 import { makeOverview, makeOverviewState } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-// Questions opening the reader's assistant, as OV-266 built them; answered here is chat.iwft.ts.
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },

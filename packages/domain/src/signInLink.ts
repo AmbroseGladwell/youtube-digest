@@ -1,10 +1,6 @@
 import { isConsentPath } from "./consentPath.js";
 
-// The link in the email points at the web app, which consumes the token with a POST: a
-// GET that signed in would be spent by the first mail scanner to follow it. The token
-// rides in the fragment so that the server serving the page never sees it in a request
-// line or a log. A link asked for from the consent screen returns there once it has
-// signed in (docs/features/sign-in.md).
+// Spent by a POST, the token in the fragment, away from logs (docs/features/sign-in.md).
 export const SIGN_IN_PATH = "/sign-in";
 
 const TOKEN_PARAM = "token";

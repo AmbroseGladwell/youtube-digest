@@ -6,8 +6,6 @@ import { transcriptKeys } from "../transcriptKeys.js";
 
 type FetchTranscript = ((videoId: VideoId) => Promise<StoredTranscript | null>) | null;
 
-// The local store first, then the account's copy on the server, so a transcript fetched on
-// one device reads on every other (docs/features/transcript-storage.md).
 export const transcriptQueryOptions = (transcriptStore: TranscriptStore, videoId: VideoId | null, fetchTranscript: FetchTranscript) =>
   queryOptions({
     queryKey: transcriptKeys.detail(videoId, fetchTranscript !== null),

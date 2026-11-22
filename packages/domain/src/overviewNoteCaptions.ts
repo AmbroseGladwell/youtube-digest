@@ -3,9 +3,7 @@ import { hasChapterLinks, KEY_POINTS_SECTION } from "./overviewNoteLines.js";
 import type { SharedNote } from "./SharedNote.js";
 import { sourceName } from "./sourceFacts.js";
 
-// Text that belongs to a section but is never a line of it: shown after the section's last
-// line, never tapped, tinted, spoken or timed (docs/features/novelty-scale.md, "What it is
-// judged against").
+// Never tapped, tinted, spoken or timed: docs/features/novelty-scale.md, "What it is judged against".
 export const overviewNoteCaptions = (overview: SharedNote): Record<string, string> => {
   return {
     ...(overview.verdict ? { Verdict: NOVELTY_BASIS } : {}),

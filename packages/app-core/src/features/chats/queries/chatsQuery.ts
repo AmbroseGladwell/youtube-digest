@@ -3,8 +3,6 @@ import type { ChatStore, OverviewId } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
 import { chatKeys } from "../chatKeys.js";
 
-// An overview's conversations as this device holds them, oldest first: the server writes
-// them and sync brings them here (docs/features/chats.md).
 export const chatsQueryOptions = (chatStore: ChatStore, overviewId: OverviewId) =>
   queryOptions({
     queryKey: chatKeys.list(overviewId),

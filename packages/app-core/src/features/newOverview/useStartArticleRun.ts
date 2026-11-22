@@ -7,15 +7,14 @@ export interface ArticleRunOptions {
   from: CaptureEntry;
   overviewId?: OverviewId | undefined;
   captureReason?: string | null | undefined;
-  // Known not to be needed, so Chrome isn't asked outside a click: right-click grants its own
-  // access, and a reload only follows a read that got in.
+  // Right-click grants its own access, and a reload only follows a read that got in.
   accessInHand?: boolean;
   oneTimeAccess?: boolean;
-  // Whether Chrome will put up its box, known from the access check the panel already made.
+  // Whether Chrome will put up its permission box.
   willAsk?: boolean;
 }
 
-// Call it from the click: requestAccess spends the gesture (docs/features/article-panel.md).
+// Call it from the click: requestAccess spends the gesture (docs/features/article-panel.md, "Asking Chrome").
 export const useStartArticleRun = () => {
   const pages = useArticlePages();
   const { startArticle } = useNewOverviewRunController();

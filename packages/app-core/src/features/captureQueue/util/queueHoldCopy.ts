@@ -3,9 +3,7 @@ import type { QueueHold } from "../types/QueueHold.js";
 
 const count = (n: number) => n.toLocaleString("en-GB");
 
-// One pattern for every limit the queue waits at, with a different reason and resume time;
-// the extension is named only where it would be a way around
-// (docs/features/capture-queue.md, "Waiting at a limit").
+// Where the extension is named: docs/features/capture-queue.md, "Waiting at a limit".
 export const queueHoldStripMeta = (hold: QueueHold, waiting: number, viaExtension: boolean): string => {
   const time = resumeTimeText(new Date(hold.resumesAt));
   const continues = `${waiting === 1 ? "it continues" : "these continue"} after ${time}`;

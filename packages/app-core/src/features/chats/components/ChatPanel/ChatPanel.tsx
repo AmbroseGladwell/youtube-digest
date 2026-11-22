@@ -43,7 +43,6 @@ export interface ChatPanelProps {
   panel: ReturnType<typeof useChatPanel>;
   overview: Overview;
   video: VideoSource | null;
-  // An article's or a recipe page's own page, for its links (OV-320); null for a video or episode.
   page: ChatPage | null;
   compact: boolean;
   onCitationFollowed: (range: TimeRange) => void;
@@ -54,16 +53,14 @@ export interface ChatPanelProps {
 const SAID_MS = 4000;
 const OUTLINE_MS = 1600;
 
-// The line under the field shows only when this few are left (design 310ab).
-const FEW_LEFT = 10;
+const MOST_LEFT_SHOWN = 10;
 
 const plural = (count: number, one: string) => `${count} ${count === 1 ? one : `${one}s`}`;
 
 const cited = (message: ChatMessage, kind: "startMs" | "part") =>
   message.from === "answer" ? message.citations.filter((each) => kind in each).length : 0;
 
-// Said once an answer is final. One that cites the overview isn't a decline, though the source
-// didn't cover it (319k), and on an article or a recipe page that is every answer (OV-320).
+// An answer citing the overview isn't announced as a decline, though the source didn't cover it (319k).
 const announcementOf = (message: ChatMessage, words: ChatWords): string => {
   if (message.from !== "answer") {
     return "";
@@ -80,8 +77,8 @@ const announcementOf = (message: ChatMessage, words: ChatWords): string => {
   return `Answer: ${message.text}${citedLine.length === 0 ? "" : ` ${citedLine.join(" and ")} cited.`}`;
 };
 
-// The reader's question a cited message belongs to: itself, or the question its answer answered.
-const questionAt = (messages: readonly ChatMessage[], message: number) => (messages[message]?.from === "answer" ? message - 1 : message);
+const questionIndexFor = (messages: readonly ChatMessage[], message: number) =>
+  messages[message]?.from === "answer" ? message - 1 : message;
 
 interface WaitState {
   online: boolean;
@@ -105,10 +102,6 @@ const shownWaitOf = ({ online, full, refused, pending, left, usage }: WaitState)
   return left === 0 && usage !== null ? { kind: "month", resetsOn: usage.resetsOn } : null;
 };
 
-// Design 310a, 310i–310x: chat about one overview, beside its note. The conversation scrolls on
-// its own above the field; the overview's questions sit just above the field until the reader
-// types; an answer streams in under three dots, each word fading in, and is announced once, when final.
-// The header's ⋯ holds the overview's other conversations and Continue in (design 324x).
 export const ChatPanel = ({
   panel,
   overview,
@@ -198,14 +191,12 @@ export const ChatPanel = ({
     }
   }, [ask, conversationId, messages, latestAnswerAt, kind]);
 
-  // Each conversation opens at its latest question, or at the message a citation named, outlined
-  // for a moment with focus on it (design 310x).
   useEffect(() => {
     if (view !== "conversation") {
       return;
     }
     if (focusedMessage !== null) {
-      const at = questionAt(messages, focusedMessage);
+      const at = questionIndexFor(messages, focusedMessage);
       const target = body.current?.querySelector<HTMLElement>(`[data-message="${at}"]`);
       if (target !== undefined && target !== null) {
         target.scrollIntoView({ block: "center" });
@@ -215,8 +206,7 @@ export const ChatPanel = ({
         return () => clearTimeout(timer);
       }
     }
-    // The latest question at the top of the panel, once: an answer then reads down from it and is
-    // never followed to its end (OV-362).
+    // Scrolled once to the latest question, so the answer reads down from it and isn't followed (OV-362).
     const element = body.current;
     const questions = element?.querySelectorAll<HTMLElement>(`[data-testid="${chatPanelTestIds.question}"]`);
     const latest = questions?.[questions.length - 1];
@@ -575,7 +565,7 @@ export const ChatPanel = ({
               onStop={panel.stop}
             />
           )}
-          {wait === null && left !== null && left > 0 && left <= FEW_LEFT && (
+          {wait === null && left !== null && left > 0 && left <= MOST_LEFT_SHOWN && (
             <p className={styles.left} data-testid={chatPanelTestIds.left}>
               <b>{left}</b> {left === 1 ? "question" : "questions"} left this month, on us
             </p>

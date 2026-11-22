@@ -16,9 +16,7 @@ export interface NextQuotaContext {
   usage: { status: "checking" | "unreachable" } | { status: "known"; data: OverviewUsage };
 }
 
-// The quota the next overview will use, walking the key order the way makeOverviewOnKeys
-// does (docs/architecture/tiers.md, "Which key an overview uses"). Null where no key can make
-// one, which the key prompt answers instead.
+// Walks the key order as makeOverviewOnKeys does; null where no key can make one.
 export const nextQuotaOf = ({ order, usage }: NextQuotaContext): NextQuota | null => {
   if (order.length === 0) {
     return null;
@@ -40,8 +38,7 @@ export const nextQuotaOf = ({ order, usage }: NextQuotaContext): NextQuota | nul
   return { kind: "spent", spent, resetsOn };
 };
 
-// Every overview the order can still make this month, on any key: what a backfill or a
-// choice in the queue can spend before the rest waits for the month. Null while unknown.
+// What a backfill or a queue choice can spend before the rest waits for the month.
 export const leftThisMonthOf = ({ order, usage }: NextQuotaContext): number | null => {
   if (usage.status !== "known") {
     return null;

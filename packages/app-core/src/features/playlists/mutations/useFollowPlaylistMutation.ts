@@ -10,15 +10,12 @@ import { knownVideoIds } from "../util/knownVideoIds.js";
 export interface FollowPlaylistVariables {
   lookup: PlaylistLookup;
   backfill: boolean;
-  // The pace a playlist is followed at, and the order its videos are made in. One already
-  // followed keeps its own; those are changed in Settings (docs/features/playlists.md).
+  // One already followed keeps its own, changed in Settings.
   pace: PlaylistPace;
   order: PlaylistOrder;
 }
 
-// Following records the playlist for every device and marks everything in it as seen here,
-// so only what is added later is queued on its own. The backfill, when asked for, queues
-// what is already there (docs/features/playlists.md, "Following").
+// docs/features/playlists.md, "Following".
 export const useFollowPlaylistMutation = () => {
   const { followedPlaylistStore, captureQueueStore, overviewStore } = useStores();
   const queryClient = useQueryClient();
@@ -57,8 +54,7 @@ export const useFollowPlaylistMutation = () => {
       await captureQueueStore.enqueue(captures);
       return { queued: captures.filter((capture) => capture.status === "waiting").length };
     },
-    // The queue reads the playlist's pace before it sees the videos, so none is made as if it
-    // had no pace.
+    // The queue reads the pace before it sees the videos, so none is made as if it had no pace.
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: playlistKeys.followed() });
       await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });

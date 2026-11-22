@@ -23,13 +23,7 @@ const OtherOverviewCitationPlace = z
   })
   .strict();
 
-// Where an answer found what it says, worked out by code from the ids the model cited, never
-// stated by the model: a stretch of a video or episode, a paragraph of an article, a message in
-// another chat about the same overview, an item of the overview itself, with a hash of its
-// text so a regenerated overview can tell whether it still holds it, or another of the reader's
-// overviews, or an item of it (OV-355). Another overview's title is copied in by code, so the
-// citation still names it once that overview is deleted (docs/features/chats.md;
-// CLAUDE.md, "Never let a model count, measure or time anything").
+// Worked out by code from the ids the model cited, never stated by it (docs/features/chats.md).
 export const ChatCitation = z.union([
   z.object({ startMs: z.number().int().nonnegative(), endMs: z.number().int().nonnegative() }).strict(),
   z.object({ paragraph: z.number().int().nonnegative() }).strict(),
@@ -42,13 +36,7 @@ export type OtherOverviewCitation = Extract<ChatCitation, { overviewId: string }
 
 export const MAX_SOURCE_RELATION_LENGTH = 40;
 
-// Every chat's answer, structured where it helps, whatever its scope (OV-354, page 4; owner, 21
-// Nov 2026): an intro, which alone answers a simple question, then sections, each a bold heading,
-// short paragraphs, a numbered list where order matters and bullets where it doesn't, and
-// underneath, everything it draws on with how it relates (backing it, or the side it takes when it
-// compares), then a takeaway. A list item names its own sources, so a list of overviews has a chip
-// after each (OV-362). Every source is cited by code from the ids the model gave
-// (docs/features/chats.md, "One shape for every answer").
+// docs/features/chats.md, "One shape for every answer".
 const ChatSourceRelation = z.object({ citation: ChatCitation, relation: z.string().max(MAX_SOURCE_RELATION_LENGTH) });
 
 export const ChatListItem = z.object({ text: z.string(), sources: z.array(ChatCitation) });
@@ -71,8 +59,7 @@ export const ChatAnswerSections = z.object({
 });
 export type ChatAnswerSections = z.infer<typeof ChatAnswerSections>;
 
-// What a section's sources are called when they back it rather than taking a side. Answers before
-// OV-362 stored "Supports", which reads either way round, so it shows as this too.
+// Answers before OV-362 stored "Supports", which reads either way round, so it shows as this too.
 export const BACKING_RELATION = "Based on";
 export const relationLabel = (relation: string): string => (relation === "Supports" || relation === "" ? BACKING_RELATION : relation);
 
@@ -91,10 +78,7 @@ export const ChatScopeStats = z.object({
 });
 export type ChatScopeStats = z.infer<typeof ChatScopeStats>;
 
-// Another of the reader's overviews that went into a conversation with a question: pinned by the
-// reader with "@" (on its own or as part of a project) or found by search. Its label is fixed for
-// the rest of the conversation, so each question rebuilds the earlier ones' sources exactly and the
-// prompt only ever grows at its end (docs/features/chats.md, "Other overviews").
+// Labels are fixed for the conversation: docs/features/chats.md, "Other overviews".
 export const ChatSource = z.object({
   label: z.string().regex(/^S[1-9]\d*$/),
   overviewId: OverviewId,
@@ -108,7 +92,7 @@ export type ChatSource = z.infer<typeof ChatSource>;
 const MessageText = z.string().min(1).max(MAX_CHAT_MESSAGE_LENGTH);
 
 export const ChatMessage = z.discriminatedUnion("from", [
-  // sources went in with this question; setAside names the labels the reader took out with it.
+  // setAside names the labels the reader took out with this question.
   z.object({
     from: z.literal("reader"),
     text: MessageText,
@@ -125,8 +109,7 @@ export const ChatMessage = z.discriminatedUnion("from", [
       .max(MAX_CHAT_MINUTES)
       .optional(),
   }),
-  // inSource is false when the source doesn't say. Another chat and the overview are never the
-  // source: an answer resting only on the overview is "From the overview", read off its citations.
+  // Never the source: another chat, or the overview, read off as "From the overview".
   z.object({
     from: z.literal("answer"),
     text: MessageText,
@@ -140,12 +123,7 @@ export const ChatMessage = z.discriminatedUnion("from", [
 ]);
 export type ChatMessage = z.infer<typeof ChatMessage>;
 
-// One conversation. Its owner is the overview or the project it belongs to, or neither for a chat
-// over the whole library; the owner decides where it is listed and what it goes with (OV-353). A
-// flat field each, never an owner object, because the device's index and the server's sweeps read
-// the stored body as it is. Its own record, never a field of the overview, which is replaced
-// wholesale when it is made again (CLAUDE.md, the read and favourite lesson). The server writes
-// it; a device only reads it or deletes it (docs/features/chats.md).
+// Flat owner fields, its own record, written only by the server (docs/features/chats.md).
 export const Chat = z
   .object({
     id: z.string().min(1),
@@ -172,8 +150,7 @@ export const chatOwner = (chat: Pick<Chat, "overviewId" | "projectId">): ChatOwn
   return { kind: "library" };
 };
 
-// An overview's chats start with its id, as they always have; a project's and the library's with
-// a word no overview id can be, so each owner's chats are found by the start of their ids.
+// A project's and the library's prefix is a word no overview id can be, so ids find their owner.
 export const chatOwnerPrefix = (owner: ChatOwner): string => {
   if (owner.kind === "overview") {
     return `${owner.id}:`;

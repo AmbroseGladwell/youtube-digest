@@ -4,11 +4,7 @@ import { anthropicAdapter } from "./providers/anthropicAdapter.js";
 import { geminiAdapter } from "./providers/geminiAdapter.js";
 import { openAiCompatibleAdapter } from "./providers/openAiCompatibleAdapter.js";
 
-// DeepSeek is the one provider with no structured-output mode: it has JSON mode and
-// nothing else, so the shape is taught in the prompt and checked on the way back. That is
-// not a special case bolted on — generateOverview already re-asks once when an answer
-// breaks its own rules, because structured outputs never enforced the array caps either
-// (docs/features/overview-generation-decisions.md). DeepSeek leans on it harder.
+// docs/features/byo-providers.md, "The schema is the same object for all five, and words for the sixth".
 const ADAPTERS: Record<Provider, ProviderAdapter> = {
   anthropic: anthropicAdapter,
   gemini: geminiAdapter,

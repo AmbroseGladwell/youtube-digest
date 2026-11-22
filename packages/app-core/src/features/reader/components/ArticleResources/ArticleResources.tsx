@@ -15,9 +15,7 @@ import { articleResourcesTestIds } from "./ArticleResourcesTestIds.js";
 export interface ArticleResourcesProps {
   source: WebSource;
   article: ArticleDetails;
-  // Beside the article "From" moves the page and drops the arrow, as chapter links do (203l).
   onPage: ShowOnPage | null;
-  // The panel and a phone set the names and whys one size down (203l–203n).
   compact: boolean;
 }
 
@@ -45,8 +43,6 @@ const explanation = (source: WebSource, oneChapter: boolean, beside: boolean, se
   return `${names} “From” links open the article on ${sourceName(source)} at the place it was shared.`;
 };
 
-// The links the piece points to, last in the note and closed to start (designs 203a–203n). The
-// heading row is the one control; closed, a line names the first two so there's a reason to open it.
 export const ArticleResources = ({ source, article, onPage, compact }: ArticleResourcesProps) => {
   const [open, setOpen] = useState(false);
   const listId = useId();

@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// The extension's session: the one time its bearer token is handed over
-// (docs/features/sign-in.md).
+// The one time the extension's bearer token is handed over (docs/features/sign-in.md).
 export const LinkedSession = z.object({
   token: z.string().min(1),
   accountId: z.string(),

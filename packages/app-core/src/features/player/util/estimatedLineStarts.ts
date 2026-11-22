@@ -5,8 +5,7 @@ export interface LineTimings {
   durationSeconds: number;
 }
 
-// The pacer's clock: each line held for as long as it would take to say. Only ever shown
-// with a ~, because nobody measured it (docs/prototype/constraints.md).
+// Only ever shown with a ~, because nobody measured it: docs/features/audio-player.md, "The pacer".
 export const estimatedLineStarts = (lines: NoteLine[]): LineTimings => {
   const { lineSeconds, totalSeconds } = noteTiming(lines);
   let elapsed = 0;
@@ -18,8 +17,6 @@ export const estimatedLineStarts = (lines: NoteLine[]): LineTimings => {
   return { lineStarts, durationSeconds: totalSeconds };
 };
 
-// Where a section starts, as a share of the whole: the scrubber's notches. The note's own
-// first section starts at nothing, so it has no notch.
 export const sectionStartFractions = (lines: NoteLine[], timings: LineTimings): number[] => {
   if (timings.durationSeconds <= 0) {
     return [];

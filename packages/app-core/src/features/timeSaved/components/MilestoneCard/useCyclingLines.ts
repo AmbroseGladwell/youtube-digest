@@ -9,8 +9,7 @@ export interface CyclingLine {
   turn: number;
 }
 
-// Long enough to read the line at an easy pace, never so short it flickers or so long the
-// card looks stuck (docs/features/time-saved.md, "The lines").
+// Why these bounds: docs/features/time-saved.md, "The lines".
 export const lineDurationMs = (line: string): number => Math.min(13_000, Math.max(6_000, 3_000 + line.split(/\s+/).length * 330));
 
 export const useCyclingLines = (lines: readonly string[], paused: boolean) => {

@@ -6,8 +6,7 @@ import { matchesLibraryFilters } from "./matchesLibraryFilters.js";
 
 export const MEANING_RESULTS = 5;
 
-// After the word matches, the closest few that no word found, each still inside the other
-// filters (docs/features/search-by-meaning.md, "Word and meaning together").
+// Why word matches lead: docs/features/search-by-meaning.md, "Word and meaning together".
 export const meaningEntries = (
   entries: LibraryEntry[],
   filters: LibraryFilters,

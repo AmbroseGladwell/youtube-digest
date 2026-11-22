@@ -3,7 +3,6 @@ export interface MarkedPiece {
   bold: boolean;
   italic: boolean;
   code: boolean;
-  // A link's address: only ever http or https.
   href?: string;
 }
 
@@ -12,11 +11,7 @@ const PARTIAL_LINK = /^\[[^\]\n]*(?:\]\([^)\s]*)?$/;
 const SAFE_HREF = /^https?:\/\//i;
 const WORD = /[\p{L}\p{N}]/u;
 
-// An answer's inline Markdown (OV-362, OV-364): **bold**, *italics* or _italics_, `code` and
-// [links](https://…), in pieces with the markers gone. Nothing else is read: raw HTML stays text. A
-// mark still open at the end is shown as it will be while the answer streams in, and as plain text
-// once it is whole; a link only half written shows its words alone. A link to anything but http(s)
-// keeps its words and drops the address.
+// The rules: docs/features/chats.md, "Inside an overview's chat (OV-354, pages 1, 2 and 5)".
 export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | "plain" } = {}): MarkedPiece[] => {
   const streaming = open === "bold";
   const pieces: MarkedPiece[] = [];
@@ -82,7 +77,6 @@ export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | 
   }
   flush();
 
-  // Once whole, a mark that never closed was never a mark: what followed it reads as plain text.
   if (!streaming && bold) {
     for (const piece of pieces.slice(boldFrom)) {
       piece.bold = false;
@@ -96,7 +90,6 @@ export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | 
   return pieces.filter((piece) => piece.text !== "");
 };
 
-// The same, word by word, for an answer whose words fade in as they arrive.
 export const markedWords = (words: readonly string[], whole: boolean): MarkedPiece[] => {
   return inlineMarks(words.join(""), { open: whole ? "plain" : "bold" }).flatMap((piece) =>
     piece.code || piece.href !== undefined ? [piece] : (piece.text.match(/\S+\s*|\s+/g) ?? []).map((word) => ({ ...piece, text: word })),

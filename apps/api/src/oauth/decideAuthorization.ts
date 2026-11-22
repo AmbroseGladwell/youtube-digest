@@ -14,8 +14,7 @@ export interface DecideAuthorizationOptions {
   now: Date;
 }
 
-// One statement decides and reads, so a request can be decided once: a second answer finds
-// nothing left to update.
+// One statement decides and reads, so a request can be decided once.
 export const decideAuthorization = async (
   sql: SqlClient,
   { id, accountId, approve, urls, now }: DecideAuthorizationOptions,

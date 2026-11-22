@@ -9,9 +9,6 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import type { Page } from "@playwright/test";
 import type { Launcher } from "../../support/Launcher.testHelper.js";
 
-// Start offers samples, so a new reader can begin onboarding without leaving to find a link,
-// and every Create account goes through onboarding (docs/features/onboarding.md, "Try a sample";
-// designs 155a–155l).
 const VIDEO = makeOverview({
   source: { ...makeOverview().source, title: "Why Sleep Debt Is Real", channel: "Sleep Lab", durationMs: 754_000 },
   inOneLine: "A sleep researcher on what a week of short nights does.",
@@ -28,15 +25,13 @@ const signedOut = { sync: true, analyticsConsent: makeAnalyticsConsent({ answer:
 
 const ADA = { firstName: "Ada", email: SIMULATED_EMAIL, code: "ABCD-EFGH" };
 
-// The deck opens on a random card each visit (327b); a test that needs to know which pins it,
-// as a fraction of the way through the deck.
+// The deck opens on a random card each visit (327b), so a test pins it as a fraction through.
 const deckOpensAt = (page: Page, fraction = 0) =>
   page.evaluate((at) => {
     const random = Math.random;
     Math.random = () => at + random() * 0.01;
   }, fraction);
 
-// A sample has nothing to wait for: it opens as soon as it's in the new account.
 const throughToTheSample = async (launcher: Launcher) => {
   const onboarding = await launcher.onboardingPage.verifyIsShown();
   await onboarding.skipToAccount();
@@ -333,8 +328,6 @@ test("Create account with onboarding under way carries on at the same screen", a
 test.describe("in the panel", () => {
   const signedOutPanel = { ...signedOut, defaultApiUrl: "https://sync.test", youTubeFetch: true, activeVideoUrl: VIDEO_URL };
 
-  // 205g: the panel's samples are the phone's deck, under Make my overview and Sign in,
-  // rather than the rows the panel used to draw.
   test("Start offers the samples as the deck, and See all lays them out", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
     await deckOpensAt(page);
@@ -350,7 +343,6 @@ test.describe("in the panel", () => {
     await launcher.sampleDeck.verifyLaidOut([VIDEO_NAME, ARTICLE_NAME, RECIPE_NAME]);
   });
 
-  // Beside a video the headline follows the tab and holds, so only the deck cycles (205g-2).
   test("beside a video the headline follows the tab rather than the deck", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
     await deckOpensAt(page, 0.5);
@@ -366,8 +358,6 @@ test.describe("in the panel", () => {
     await start.verifyHeadlineReads("Watch Less,");
   });
 
-  // With nothing on the tab there is no subject, so the headline goes back to following the
-  // deck, exactly as on the web (155l).
   test("with nothing on the tab the headline follows the deck's front card", async ({ launcher, backendSimulator, page }) => {
     backendSimulator.startSamples.offer(VIDEO, ARTICLE, RECIPE);
     await deckOpensAt(page);
@@ -393,8 +383,6 @@ test.describe("in the panel", () => {
     await launcher.sampleDeck.verifySaysItCouldntOpen();
   });
 
-  // 205g-4: the gate's Create an account opens home, which is Start, with no way back to
-  // itself. The lone back chevron 205d-5 drew is retired with it.
   test("once the device has had an account, Create account opens Start, and a sample leads to an account", async ({ launcher }) => {
     await launcher.launchPanel({ ...signedOutPanel, accountSeen: true });
     await launcher.signedOutGate.verifyIsShown();

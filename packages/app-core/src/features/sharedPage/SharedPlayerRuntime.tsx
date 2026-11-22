@@ -9,9 +9,7 @@ export interface SharedPlayerRuntimeProps {
   children: ReactNode;
 }
 
-// A player of its own, over the copy's own narration rather than the account's. It shadows
-// the app-wide one for this route, which has none of the app's chrome and nothing playing
-// behind it (docs/features/sharing.md).
+// Shadows the app-wide player: this route has none of the app's chrome and nothing playing behind it.
 export const SharedPlayerRuntime = ({ narration, children }: SharedPlayerRuntimeProps) => {
   const [engine] = useState(
     () =>

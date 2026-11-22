@@ -22,8 +22,7 @@ export const PUBLIC_WEB_USER_AGENT = "TheOverview/1.0 (fetches a link a reader p
 
 class ClosedAddressError extends Error {}
 
-// The address is checked at the moment of connecting, on what the connection will really use,
-// because a name checked first can answer differently the second time.
+// Checked on connecting, because a name checked first can answer differently the second time.
 const guardedLookup =
   (isAllowed: (address: string) => boolean): LookupFunction =>
   (hostname, options, callback) => {
@@ -71,9 +70,7 @@ export const readBodyText = async (response: Response, mostBytes: number): Promi
   return decoder.decode(Buffer.concat(chunks));
 };
 
-// Fetches an address chosen by a stranger: the checks here are the whole of what stops it
-// reaching anything but the public web (docs/features/pasted-article-links.md). No cookies or
-// credentials are ever sent. The caller reads the body, within the same time limit.
+// The guards: docs/features/pasted-article-links.md, "What the server will fetch".
 export const createPublicWebFetch = ({
   isAllowedAddress = isPublicAddress,
   allowedPorts = WEB_PORTS,

@@ -6,8 +6,7 @@ export interface ConsentAddressCardProps {
   host: string;
 }
 
-// The one thing on the screen the assistant cannot make up, so it outranks the name
-// (design 58a).
+// The one thing on the screen the assistant cannot make up, so it outranks the name.
 export const ConsentAddressCard = ({ host }: ConsentAddressCardProps) => {
   return (
     <div className={styles.root} data-testid={consentAddressCardTestIds.root}>

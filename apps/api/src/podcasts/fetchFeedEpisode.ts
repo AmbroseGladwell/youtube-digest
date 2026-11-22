@@ -25,7 +25,6 @@ const decodedChunks = async function* (body: ReadableStream<Uint8Array>, mostByt
   }
 };
 
-// docs/features/podcast-links.md, "Reading a feed"
 export const fetchFeedEpisode = async (
   fetchPublicWeb: ReturnType<typeof createPublicWebFetch>,
   feedUrl: string,

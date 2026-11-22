@@ -1,8 +1,6 @@
 import { SHARE_PAYLOAD_ELEMENT_ID, SharePayload } from "@overview/domain";
 
-// The copy the API inlined in the document. Anything else — no element, unreadable JSON, a
-// shape this build does not know — is treated as a link that goes nowhere rather than as a
-// crash, because the person holding it can do nothing about either (docs/features/sharing.md).
+// Anything unreadable is a link that goes nowhere, not a crash: its holder can do nothing about it.
 export const readSharePayload = (doc: Document = document): SharePayload => {
   const element = doc.getElementById(SHARE_PAYLOAD_ELEMENT_ID);
   if (element === null) {

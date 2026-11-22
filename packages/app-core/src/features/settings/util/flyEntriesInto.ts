@@ -16,8 +16,7 @@ export const measureEntries = (sheet: HTMLElement | null, entries: readonly stri
   });
 };
 
-// Design 141i: each new entry lifts from the closing sheet and travels to its section. A
-// copy on the document, because the sheet it left is already gone.
+// Each entry flies as a copy on the document, because the sheet it left is already gone.
 export const flyEntriesInto = (flights: readonly EntryFlight[], section: HTMLElement): void => {
   if (prefersReducedMotion()) {
     return;

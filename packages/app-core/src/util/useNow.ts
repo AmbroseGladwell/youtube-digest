@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-// The clock, read again every interval, for anything shown or hidden by the time.
 export const useNow = (intervalMs: number): number => {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

@@ -13,16 +13,13 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface KeyPromptNoteProps {
   readiness: GenerationReadiness;
-  // The words under the heading. The home hero and the dialog name the six providers; the
-  // extension's capture screen keeps the full standing note (designs 110k, 110l, 110m).
   detail: string;
   from: "home" | "dialog" | "panel";
   testIds: KeyPromptNoteTestIds;
   onFollowed?: () => void;
 }
 
-// The one block every surface outside Settings shows in place of its generate button. A
-// button that cannot work is replaced, never disabled (design 110k).
+// Shown in place of a generate button: one that cannot work is replaced, never disabled.
 export const KeyPromptNote = ({ readiness, detail, from, testIds, onFollowed }: KeyPromptNoteProps) => {
   const analytics = useAnalytics();
   const updateSettings = useUpdateSettingsMutation();

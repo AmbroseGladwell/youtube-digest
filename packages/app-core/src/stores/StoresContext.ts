@@ -18,14 +18,11 @@ export interface Stores {
   captureQueueStore: CaptureQueueStore;
   projectStore: ProjectStore;
   chatStore: ChatStore;
-  // Null is a shell whose library cannot sync at all, and every sync control hides itself
-  // rather than offering something that cannot work (docs/features/sync-client.md).
+  // Null in a shell whose library cannot sync, and every sync control then hides itself.
   syncStorage: SyncStorage | null;
 }
 
-// No default: which backend answers OverviewStore/SettingsStore (local IndexedDB today,
-// a synced API for a signed-in paid tier later) is a decision the mounting shell makes,
-// not app-core (docs/architecture/v1-architecture-decisions.md's swappable-store model).
+// No default: which backend answers the stores is the mounting shell's decision, not app-core's.
 const StoresContext = createContext<Stores | null>(null);
 
 export const StoresProvider = StoresContext.Provider;

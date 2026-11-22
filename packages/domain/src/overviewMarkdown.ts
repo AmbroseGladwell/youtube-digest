@@ -15,8 +15,7 @@ import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 
 const READ_ANYWAY_ANSWER = { yes: "Yes", no: "No", partial: "Just part of it" } as const;
 
-// An episode's moment is its time alone: a link into the feed's audio would land wherever that
-// listen's ads put it (docs/features/podcast-notes.md, "Times and the episode's audio").
+// docs/features/podcast-notes.md, "Times and the episode's audio".
 const moment = (videoUrl: string | null, startMs: number, label = formatTimestamp(startMs)) =>
   videoUrl === null ? label : `[${label}](${youtubeTimestampUrl(videoUrl, startMs)})`;
 
@@ -40,9 +39,7 @@ const lengthFactOf = (overview: Overview): string | null => {
   return noteSourceLength(overview);
 };
 
-// The note as it reads outside the app: every section the reader sees, with each moment
-// a link into the video, and never the spoken script (docs/features/mcp-connector.md). With
-// partIds, each item a chat answer can cite starts with its id, as overviewParts lists them.
+// Never the spoken script (docs/features/mcp-connector.md); partIds prefixes each citable item.
 export const overviewMarkdown = (overview: Overview, { partIds = false, partIdPrefix = "" } = {}): string => {
   const id = (part: OverviewPart, index = 0) => (partIds ? `[${partIdPrefix}${overviewPartId(part, index)}] ` : "");
   const { source: video } = overview;

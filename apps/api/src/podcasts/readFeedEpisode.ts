@@ -20,8 +20,7 @@ export interface FeedShow {
   imageUrl: string | null;
 }
 
-// The notes of the episodes beside the wanted one, newest first, which say what the show repeats
-// in every episode (docs/features/podcast-on-youtube.md, "An episode's own words").
+// Why neighbours' notes are kept: docs/features/podcast-on-youtube.md, "An episode's own words".
 export interface FeedEpisode {
   show: FeedShow;
   item: FeedItem | null;
@@ -74,8 +73,7 @@ const emptyItem = (): FeedItem => ({
   chaptersUrl: null,
 });
 
-// Reads a feed as it arrives and stops soon after the first item that is wanted, since feeds run
-// to tens of megabytes and list the newest first (docs/features/podcast-links.md).
+// Why a feed is read as it arrives: docs/features/podcast-links.md, "Reading a feed".
 export const readFeedEpisode = async (chunks: AsyncIterable<string>, isWanted: (item: FeedItem) => boolean): Promise<FeedEpisode> => {
   const show: FeedShow = { title: null, imageUrl: null };
   let item: FeedItem | null = null;

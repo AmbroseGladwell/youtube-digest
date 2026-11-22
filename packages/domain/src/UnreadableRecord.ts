@@ -1,7 +1,6 @@
 import { salvageOverview, type SalvagedOverview } from "./SalvagedOverview.js";
 
-// future-version is the stale client and resolves when the app updates; the other two are
-// the record, and stay until a migration is written (docs/features/record-migrations.md).
+// future-version clears on update; the others need a migration (docs/features/record-migrations.md).
 export type UnreadableReason = "future-version" | "unmigratable" | "invalid";
 
 export type UnreadableRecordKind =

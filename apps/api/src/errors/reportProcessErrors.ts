@@ -18,8 +18,6 @@ const FATAL_LINES = {
   unhandledRejection: apiLogLines.process.unhandledRejection,
 } as const;
 
-// What Node does with an error nothing caught, which is stop, but reported before it does
-// (docs/architecture/errors-and-logs.md, "The server's own errors").
 export const reportProcessErrors = ({ errorSink, log, clock, exit, process: emitter = process }: ProcessErrorReporting): void => {
   let exiting = false;
   const onFatal = (caughtBy: Exclude<ServerError["caughtBy"], "request">) => (error: unknown) => {

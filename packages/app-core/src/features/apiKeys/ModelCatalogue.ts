@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { Provider } from "@overview/domain";
 
-// What one provider last told us its key could reach, and when. Kept on the device beside
-// the key that fetched it: it is an answer about that key, and it would be wrong on
-// another device holding a different one.
+// Device-local beside its key: an answer about that key, wrong on a device holding another.
 export const ModelCatalogue = z.object({
   usable: z.array(z.string()),
   unusable: z.number().int(),
@@ -16,9 +14,6 @@ type Catalogues = z.infer<typeof Catalogues>;
 
 const STORAGE_KEY = "overview.modelCatalogues.v1";
 
-// Design 110e: refetched when the picker opens and the list is older than a day. A model
-// list is not something a reader should have to ask us to refresh, and it is not something
-// worth a call every time the picker opens either.
 export const CATALOGUE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 export const catalogueIsStale = (catalogue: ModelCatalogue, now: Date): boolean =>

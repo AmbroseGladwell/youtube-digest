@@ -78,10 +78,7 @@ export interface PodcastRoutesOptions {
   clock: () => Date;
 }
 
-// An account, and never the link, the feed or the episode in a log: what someone listens to is
-// theirs. Signed out, onboarding reads the episode on the trial's reads and checks whether it has
-// words, before an account; finding the words and transcribing wait for one (OV-327,
-// docs/features/podcast-links.md, docs/features/podcast-transcripts.md, docs/features/onboarding.md).
+// Why nothing about the episode is logged: docs/features/podcast-links.md, "The route".
 export const podcastRoutes = (
   app: FastifyInstance,
   { readEpisode, resolveTranscript, checkTranscript, planOf, trials, transcriptions, clock }: PodcastRoutesOptions,
@@ -188,8 +185,7 @@ export const podcastRoutes = (
     },
   );
 
-  // Whether an episode's words can be found, asked as its link is read so the card can say it needs
-  // transcribing before Create; no words are fetched and nothing is counted (designs 305c, 305c-2).
+  // So the card can say it needs transcribing before Create; fetches no words, counts nothing.
   app.post(
     "/podcasts/transcript/check",
     {
@@ -199,8 +195,7 @@ export const podcastRoutes = (
     async (request): Promise<TranscriptCheck> => {
       const body = parseOrThrow(TranscriptBody, request.body, "The episode");
       const caller = await checkCallerOf(request);
-      // Where nothing can be transcribed, the card has nothing to say, so the feed isn't read and
-      // no YouTube search is spent: Create looks for the words as it always has.
+      // Nothing transcribable leaves the card nothing to say, so no feed read or YouTube search.
       if (transcriptions === null) {
         return { words: "unknown" };
       }

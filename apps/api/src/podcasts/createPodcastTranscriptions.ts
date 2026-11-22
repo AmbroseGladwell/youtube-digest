@@ -11,14 +11,12 @@ import type { TranscriptionQueue } from "./TranscriptionQueue.js";
 
 const HOUR = 3600;
 
-// Hours of audio transcribed a month: a guard against misuse more than a cost, at about a cent an
-// hour (OV-305, 16 Nov 2026).
+// A guard against misuse more than a cost, at about a cent an hour (OV-305).
 export const transcriptionHours = { free: 5, "byo-plus": 15, plus: 30 } as const satisfies Record<Plan, number>;
 export const LONGEST_EPISODE_SECONDS = 4 * HOUR;
 // A feed's length is the publisher's word, so the audio itself may run a little past it.
 const MEASURED_SLACK_SECONDS = 10 * 60;
-// What is held for an episode whose feed gives no length, settled to the audio's own once done.
-const UNKNOWN_LENGTH_SECONDS = HOUR;
+const HELD_SECONDS_WITHOUT_FEED_LENGTH = HOUR;
 
 export type TranscriptionStart =
   | { status: "started"; transcription: PodcastTranscription }
@@ -28,7 +26,6 @@ export type TranscriptionStart =
   | { status: "feed-unreadable" }
   | { status: "not-in-feed" };
 
-// What the episode's feed says, as read for the transcript check.
 export interface EpisodeAudio {
   sourceKey: string;
   durationSeconds: number | null;
@@ -42,8 +39,7 @@ export interface PodcastTranscriptionsOptions {
   clock: () => Date;
 }
 
-// Signed out, only the check is asked, and onboarding's episode is transcribed once the reader has
-// an account: a new one, on Free (OV-327).
+// Why signed out counts as Free: docs/features/speech-to-text.md, "The server rung".
 const limitSecondsOf = (caller: ServiceCaller): number => transcriptionHours["accountId" in caller ? caller.plan : "free"] * HOUR;
 
 const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): PodcastTranscription => {
@@ -56,17 +52,13 @@ const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): Pod
   return { status: job.status === "transcribing" ? "transcribing" : "waiting", id: job.id, episodeSeconds };
 };
 
-// The last podcast rung, asked only by a reader who chose it once every other rung had failed:
-// the episode's own audio, transcribed for them alone. The episode is read again from its feed,
-// so the audio sent to the GPU host is the feed's own, never one a caller names
-// (docs/features/speech-to-text.md, "The server rung").
+// Why the audio sent is the feed's own: docs/features/speech-to-text.md, "The server rung".
 export const createPodcastTranscriptions = ({ fetchPublicWeb, jobs, queue, clock }: PodcastTranscriptionsOptions) => {
   const usage = async (now: Date, caller: ServiceCaller): Promise<TranscriptionUsage> => ({
     ...(await jobs.usage(now, callerKey(caller))),
     limitSeconds: limitSecondsOf(caller),
   });
 
-  // Said before the reader chooses, from the feed already read for the check; nothing is held.
   const offer = async (episode: EpisodeAudio, caller: ServiceCaller): Promise<TranscriptionOffer> => {
     if (episode.audioUrl === null) {
       return { status: "no-audio" };
@@ -105,7 +97,7 @@ export const createPodcastTranscriptions = ({ fetchPublicWeb, jobs, queue, clock
     const now = clock();
     const key = callerKey(caller);
     const limitSeconds = limitSecondsOf(caller);
-    const reserveSeconds = Math.min(episodeSeconds ?? UNKNOWN_LENGTH_SECONDS, LONGEST_EPISODE_SECONDS);
+    const reserveSeconds = Math.min(episodeSeconds ?? HELD_SECONDS_WITHOUT_FEED_LENGTH, LONGEST_EPISODE_SECONDS);
     const asked = await jobs.request({
       id: randomUUID(),
       caller: key,

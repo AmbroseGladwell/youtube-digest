@@ -18,11 +18,7 @@ const WEB_NOTE = "Sign in with your email, and this browser keeps your library i
 const EXTENSION_NOTE =
   "Sign in with your email, and the extension keeps your library in step with the web app and every other device you sign in on.";
 
-// Hidden entirely when the shell cannot sync: a control that cannot work is worse than no
-// control (CLAUDE.md). Signed in, it is design 51a's two tiles, who and whether in step;
-// signed out, it points at the sign-in and create-account pages rather than being a second
-// place to ask for a link. While an account row is open its Save is the only orange on the
-// screen, so Sync now steps down until it closes (design 14a).
+// While an account row is open its Save is the only orange on the screen, so Sync now steps down.
 export const SyncPanel = () => {
   const analytics = useAnalytics();
   const sync = useSync();

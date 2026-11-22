@@ -28,7 +28,6 @@ export const makePlayerResponseFixture = (overrides: Record<string, unknown> = {
   };
 };
 
-// The WEB client carries no caption tracks and is asked for one thing only.
 export const makeMicroformatFixture = (publishDate = "2026-01-01T00:00:00-00:00") => {
   return {
     playabilityStatus: { status: "UNPLAYABLE" },
@@ -46,11 +45,7 @@ export const makeJson3Fixture = () => {
   };
 };
 
-// What our own server hands back for the fixture video. It fetches through InnerTube too,
-// so this is the same player response and captions run through the same mapping, and the
-// reader's transcript tab does not depend on which rung fetched them.
-// Another video than the fixture's own is the same captions under its own id and title, so
-// a queue can be made of several (docs/features/capture-queue.md).
+// Our server fetches through InnerTube too, so it maps the same player response and captions.
 export const makeServiceTranscriptFixture = (videoId: string = IWFT_VIDEO_ID, title?: string): StoredTranscript => {
   const url = `https://www.youtube.com/watch?v=${videoId}`;
   const video = mapPlayerResponseToVideoSource(

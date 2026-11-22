@@ -38,7 +38,7 @@ const stepItemsOf = (
       }));
 };
 
-// Joined by code from what the two passes recorded, never estimated (docs/prototype/constraints.md).
+// docs/prototype/constraints.md, "Never let a model count, measure or time anything".
 export const stepsNotes = (
   runs: readonly RunRecord[],
   sources: ReadonlyMap<string, StepsSource>,

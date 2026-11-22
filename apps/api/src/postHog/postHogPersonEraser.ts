@@ -15,9 +15,7 @@ interface PersonsPage {
   results?: Array<{ id: string }>;
 }
 
-// The person is looked up by the distinct id we sent events under, then deleted with its
-// events. Deleting is asynchronous on PostHog's side, so a 204 means queued
-// (docs/features/account-deletion.md, "Erasure at PostHog").
+// A 204 means queued: docs/features/account-deletion.md, "Erasure at PostHog".
 export const createPostHogPersonEraser = ({
   personalApiKey,
   projectId,

@@ -21,7 +21,6 @@ export type CookingVoice = "reading" | "paused" | "waiting" | "loading" | "textO
 export type CookingEntry = "heading" | "summary" | "bar" | "carryOn" | "timer";
 
 export interface CookingMode {
-  // The recipe being cooked, as its timers name it (OV-288).
   recipe: string;
   recipeTitle: string;
   open: boolean;
@@ -31,7 +30,6 @@ export interface CookingMode {
   firstScreen: boolean;
   hint: boolean;
   place: CookingPlace | null;
-  // The step the reader had reached when they left, for the note to show (design 150w).
   reachedStep: number | null;
   timers: CookingTimers;
   toggleMute: (by: "button" | "key") => void;
@@ -79,8 +77,7 @@ const voiceOf = ({ status, source }: PlayerSnapshot, canNarrate: boolean, paused
   return paused ? "paused" : "waiting";
 };
 
-// Cooking a recipe step by step (OV-150, designs 150a–150au): one action on screen, read once,
-// and then the voice waits for the reader. docs/features/recipe-notes.md, "Cooking step by step".
+// The design: docs/features/recipe-notes.md, "Cooking step by step".
 export const useCookingMode = ({ overviewId, title, steps, actions, recipeVoice, snapshot, analytics }: CookingModeInput): CookingMode => {
   const engine = usePlayer();
   const [open, setOpen] = useState(false);
@@ -159,8 +156,6 @@ export const useCookingMode = ({ overviewId, title, steps, actions, recipeVoice,
     go(target);
   };
 
-  // A timer's "Back to step" (design 288s): opens this recipe's mode at the action the timer came
-  // from, or at the start if that action's words have changed since (edge case 4).
   const request = timers.cookRequest;
   const startRef = useRef(start);
   startRef.current = start;

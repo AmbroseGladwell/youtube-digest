@@ -8,8 +8,7 @@ const paragraphsOf = (prose: string): AnswerBlock[] =>
     .filter((paragraph) => paragraph.trim() !== "")
     .map((paragraph) => ({ kind: "paragraph", text: paragraph.trim() }));
 
-// An answer's text as it is drawn (OV-364): paragraphs, one a line, and fenced code blocks, which
-// keep their lines. A fence still open at the end is a code block already while the answer streams.
+// A fence still open at the end is already a code block while the answer streams (OV-364).
 export const answerBlocks = (text: string): AnswerBlock[] => {
   const blocks: AnswerBlock[] = [];
   let from = 0;

@@ -8,7 +8,7 @@ import { projectEmptyTestIds } from "./ProjectEmptyTestIds.js";
 
 export interface ProjectEmptyProps {
   name: string;
-  // An assistant that can change the library: a read-only one counts as none here.
+  // A read-only assistant counts as none here.
   assistantWrites: boolean;
   writerName: string | null;
   // Saved overviews that might fit sit above, so this offers the other ways to fill it.
@@ -18,9 +18,6 @@ export interface ProjectEmptyProps {
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-// An empty project takes the list's place: with an assistant that can fill it, a prompt to
-// give it; without, the two ways to add by hand ("OV-168 3 Adding and Making" 168aa, 168ab).
-// Under suggestions, the same as the ways to go further ("OV-318 1" 318a, 318d).
 export const ProjectEmpty = ({ name, assistantWrites, writerName, afterSuggestions, onPromptCopied }: ProjectEmptyProps) => {
   const [copied, setCopied] = useState(false);
   const prompt = fillProjectPrompt(name);

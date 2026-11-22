@@ -14,9 +14,7 @@ export interface ResendLinkButtonProps {
 const secondsLeft = (sentAt: number, now: number): number =>
   Math.max(0, Math.ceil((sentAt + MAGIC_LINK_COOLDOWN_SECONDS * 1000 - now) / 1000));
 
-// The server sends nothing inside its one-a-minute cooldown, so the button waits it out
-// with a clock rather than offering a send that would silently do nothing
-// (docs/features/sign-in.md).
+// Why it waits out the minute: docs/features/sign-in.md, "Waiting for the code".
 export const ResendLinkButton = ({ sentAt, sending, label = "Send another link", onResend }: ResendLinkButtonProps) => {
   const [now, setNow] = useState(() => Date.now());
   const waiting = secondsLeft(sentAt, now);

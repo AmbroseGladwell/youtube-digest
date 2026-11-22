@@ -3,16 +3,13 @@ export interface SystemShare {
   url: string;
 }
 
-// navigator.share exists on a phone and in almost nothing else, and it throws when the
-// reader dismisses the sheet, which is not a failure. Where it is absent the dialog puts
-// Copy link in the primary slot instead of offering a control that cannot work
-// (docs/features/sharing.md).
 export const canShareToSystem = (): boolean => typeof navigator.share === "function";
 
 export const shareToSystem = async (share: SystemShare): Promise<void> => {
   try {
     await navigator.share(share);
   } catch (error) {
+    // Dismissing the system sheet throws, and is not a failure.
     if (error instanceof DOMException && error.name === "AbortError") {
       return;
     }

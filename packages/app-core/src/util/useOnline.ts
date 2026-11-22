@@ -9,7 +9,7 @@ const subscribe = (changed: () => void) => {
   };
 };
 
-// Whether the browser says it has a connection. True where it can't say.
+// True where the browser can't say.
 export const useOnline = (): boolean =>
   useSyncExternalStore(
     subscribe,

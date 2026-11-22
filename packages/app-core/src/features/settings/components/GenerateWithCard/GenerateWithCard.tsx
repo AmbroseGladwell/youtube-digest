@@ -8,8 +8,6 @@ import { generateWithCardTestIds } from "./GenerateWithCardTestIds.js";
 export interface GenerateWithCardProps {
   provider: Provider;
   models: ModelByProvider;
-  // The providers this device holds a key for, most recently chosen first is not needed:
-  // the order is the list's own.
   held: Provider[];
   onChoose: (provider: Provider) => void;
   onAddKeyFor: (provider: Provider) => void;
@@ -18,9 +16,7 @@ export interface GenerateWithCardProps {
 const pairLabel = (provider: Provider, models: ModelByProvider) =>
   `${PROVIDER_LABEL[provider]} · ${modelLabel(provider, modelFor(models, provider))}`;
 
-// What generation runs on, above the list rather than marked inside it, so that the split
-// the feature introduces is visible: the choice follows the reader between devices and the
-// keys do not (design 110b, Q2).
+// Above the list, not marked in it, to show the choice follows the reader between devices and keys don't.
 export const GenerateWithCard = ({ provider, models, held, onChoose, onAddKeyFor }: GenerateWithCardProps) => {
   const surface = useSurface();
   const here = deviceWord(surface, useIsPhone());
@@ -46,8 +42,6 @@ export const GenerateWithCard = ({ provider, models, held, onChoose, onAddKeyFor
           ))}
         </select>
       ) : (
-        // With one key the choice is a plain line, not a control: there is nothing to
-        // choose between (design 110b).
         <p className={styles.choice} data-testid={generateWithCardTestIds.choice}>
           {pairLabel(provider, models)}
         </p>
@@ -67,8 +61,7 @@ export const GenerateWithCard = ({ provider, models, held, onChoose, onAddKeyFor
             the key here too, or generate with a key {here} already has.
           </p>
           <div className={styles.ways}>
-            {/* Focus lands on the first, which is the way out that keeps the reader's
-                choice rather than changing it everywhere (design 110g). */}
+            {/* Focus lands on the way out that keeps the reader's choice, not the one changing it everywhere. */}
             <button
               type="button"
               className={styles.addKey}
@@ -78,8 +71,7 @@ export const GenerateWithCard = ({ provider, models, held, onChoose, onAddKeyFor
             >
               {addKeyLabel(provider)}
             </button>
-            {/* Hidden rather than disabled when there is no other key here: a control that
-                cannot work is worse than no control (docs/prototype/decisions.md). */}
+            {/* Hidden rather than disabled with no other key here (CLAUDE.md, "degrade visibly"). */}
             {fallback !== null && (
               <button
                 type="button"

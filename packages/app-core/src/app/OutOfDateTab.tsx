@@ -1,10 +1,6 @@
 import { ErrorState } from "../components/shared/ErrorState/ErrorState.js";
 
-// What a shell renders in place of the app once another context has upgraded the database
-// underneath it: the connection closed itself so that upgrade could proceed, so every
-// store call from here on would throw. It replaces the whole tree rather than sitting
-// inside the shell, because there is no working app left to sit in — and it offers only a
-// reload, which is the one thing that does fix it (docs/features/error-state.md).
+// Replaces the whole tree once another context upgraded the database: every store call would now throw.
 export const OutOfDateTab = () => {
   return (
     <ErrorState

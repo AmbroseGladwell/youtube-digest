@@ -4,23 +4,7 @@ export const OVERVIEW_BUTTON_ID = "overview-injected-button";
 
 const STYLE_ID = "overview-injected-button-style";
 
-// Design 18a and 18c, transcribed. The pill is YouTube's own — a faint top-to-bottom
-// lift and a hairline edge, in both schemes — and the only thing that is ours is the
-// mark. YouTube puts `dark` on <html>, which is why the scheme needs no JavaScript.
-//
-// 40px tall, where the design draws 36: matching the row is the whole point of this
-// treatment, and the row has since grown. The radius is half the height or it stops
-// being a pill (docs/features/injected-button.md).
-//
-// Both inset lines are half the design's opacity — the top highlight also at half its
-// thickness. Drawn as given, the pill was the brightest thing in the action row, which
-// is the opposite of what the quietest of the three treatments is for.
-//
-// The accent hairline on the ready pill is not reduced with them: there it is carrying
-// a state rather than describing an edge.
-//
-// The ready hover is the one value 18c does not draw; it is 18b's hover on the same
-// accent pill rather than something invented (docs/features/injected-button.md).
+// Design 18a and 18c, adjusted: docs/features/injected-button.md, "The quietest of the three, on purpose".
 const CSS = `
 #${OVERVIEW_BUTTON_ID} {
   position: relative;

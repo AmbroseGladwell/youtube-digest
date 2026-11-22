@@ -14,19 +14,16 @@ export const Project = z.object({
   purpose: ProjectPurpose,
   createdAt: z.iso.datetime(),
   createdBy: ProjectAuthor,
-  // Who wrote the purpose as it stands, so the page can say an assistant wrote it until the
-  // reader saves their own (docs/features/projects.md, "The project page").
+  // So the page can say an assistant wrote it: docs/features/projects.md, "Two synced kinds".
   purposeBy: ProjectAuthor.nullable(),
   archivedAt: z.iso.datetime().nullable(),
 });
 export type Project = z.infer<typeof Project>;
 
-// Only the reader edits a project once it exists, so a purpose edited carries the reader as
-// its author (docs/features/projects.md).
+// Only the reader edits a project once it exists (docs/features/projects.md).
 export const ProjectPatch = Project.pick({ name: true, purpose: true, purposeBy: true, archivedAt: true }).partial();
 export type ProjectPatch = z.infer<typeof ProjectPatch>;
 
-// What generation is told about a project to file an overview under it: never who made it or
-// when (docs/features/projects.md, "Filing as an overview is made").
+// Never who made it or when: docs/features/projects.md, "Filing as an overview is made".
 export const FilingProject = Project.pick({ id: true, name: true, purpose: true });
 export type FilingProject = z.infer<typeof FilingProject>;

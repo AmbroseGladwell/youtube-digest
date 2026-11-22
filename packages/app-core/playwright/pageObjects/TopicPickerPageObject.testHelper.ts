@@ -42,8 +42,7 @@ export class TopicPickerPageObject extends PageObject {
       expect(this.get(topicPickerTestIds.option(name))).toHaveAttribute("aria-pressed", String(picked)),
     );
 
-  // Measured once the entrance has settled: the sheet travels its own height, so reading it
-  // mid-flight reports wherever it had got to.
+  // Measured once settled: mid-flight the sheet reports wherever it had got to.
   verifyRestsOnTheWindowFoot = () =>
     this.step("verifyRestsOnTheWindowFoot", () =>
       expect(async () => {

@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-// A finished note matched against the reader's own topics, for an overview they didn't make:
-// a sample saved into a new account (docs/features/onboarding.md, "Try a sample"). It needs no
-// transcript, and never invents a topic.
+// Never invents a topic: docs/features/onboarding.md, "Try a sample".
 export const TopicMatchInput = z.object({
   title: z.string(),
   source: z.string(),

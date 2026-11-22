@@ -14,11 +14,7 @@ import { SourceSteps } from "./SourceSteps.js";
 import { Verdict } from "./Verdict.js";
 import { WatchAnyway } from "./WatchAnyway.js";
 
-// The overview as someone without an account reads it: every field of Overview except the
-// three the reader wrote for themselves. It is spelled out rather than derived from
-// Overview by omission, so a field added to Overview is not in a shared copy until someone
-// puts it here on purpose; sharedNoteFields.test.ts fails the moment the two drift
-// (docs/features/sharing.md).
+// Spelled out, not derived, so a new Overview field is shared only on purpose (docs/features/sharing.md).
 export const SharedNote = z
   .object({
     id: OverviewId,
@@ -37,11 +33,9 @@ export const SharedNote = z
     howToApply: HowToApply.nullable(),
     watchAnyway: WatchAnyway.nullable(),
     chapters: Chapters.nullable(),
-    // Absent rather than null on a video, so a copy's content hash doesn't move
-    // (docs/features/source-identity.md, "Shares").
+    // Absent on a video, so a copy's hash doesn't move: docs/features/source-identity.md, "Shares".
     article: ArticleDetails.nullish(),
-    // Absent on anything but a recipe, for the same reason. Copies shared before OV-159 have
-    // an empty method (docs/features/recipe-notes.md, "Sharing").
+    // Absent unless a recipe, for the same reason: docs/features/recipe-notes.md, "Sharing".
     recipe: RecipeNote.nullish(),
     keyPoints: z.array(KeyPoint).max(MOST_KEY_POINTS),
   })
@@ -50,14 +44,5 @@ export type SharedNote = z.infer<typeof SharedNote>;
 
 export const SHARED_NOTE_FIELDS = Object.keys(SharedNote.shape).sort();
 
-// What a shared copy never carries, listed where the snapshot builder and its test can both
-// read it: the reason is the reader's own words, topics are their filing, the playlist is
-// their own list, which key made it is between them and us, whether it began as a sample is
-// theirs too, the questions to ask next are written for them (docs/features/follow-up-questions.md),
-// and read and favourite state was never on this record to begin with
-// (docs/prototype/decisions.md).
-//
-// Tags are not among them, and the dialog's own "Kept private" list does not claim they
-// are: they are written with the note rather than by the reader, the reader's own Overview
-// tab prints them, and a copy without them is not a whole overview (docs/features/sharing.md).
+// docs/features/sharing.md, "What is in a shared copy, and what is not".
 export const PRIVATE_OVERVIEW_FIELDS = ["captureReason", "topicIds", "fromPlaylist", "madeOn", "fromSample", "followUpQuestions"] as const;

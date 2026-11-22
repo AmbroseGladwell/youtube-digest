@@ -1,8 +1,6 @@
 import type { CaptureOutcome, CaptureStep, CaptureStepOutcome, CaptureTimedStep, ClientTimingReport } from "@overview/domain";
 
-// Every number here is a delta of one real clock on the device, taken around the step as
-// it ran: nothing is estimated, and a step never begun has no entry
-// (docs/architecture/errors-and-logs.md, "Client timings").
+// One real clock's deltas, never estimates: docs/architecture/errors-and-logs.md, "Client timings".
 export class CaptureStopwatch {
   readonly #now: () => number;
   readonly #startedAt: number;

@@ -24,7 +24,6 @@ const VideosResponse = z.object({
   ),
 });
 
-// Null where YouTube lists no such video; a failure to ask throws.
 export type VideoReader = (videoId: VideoId) => Promise<VideoSource | null>;
 
 export interface YouTubeDataApiVideoReaderOptions {
@@ -32,8 +31,7 @@ export interface YouTubeDataApiVideoReaderOptions {
   youTubeFetch: YouTubeFetch;
 }
 
-// One videos.list call on our key, a single quota unit and no model: enough for onboarding's card
-// before there's an account (docs/features/onboarding.md, "Signed out sees no overviews").
+// One quota unit and no model, so onboarding can show its card before there's an account.
 export const youTubeDataApiVideoReader = ({ apiKey, youTubeFetch }: YouTubeDataApiVideoReaderOptions): VideoReader => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
   return async (videoId) => {

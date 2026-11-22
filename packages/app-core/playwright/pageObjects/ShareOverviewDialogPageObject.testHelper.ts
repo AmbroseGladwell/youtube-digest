@@ -60,7 +60,5 @@ export class ShareOverviewDialogPageObject extends PageObject {
 
   clickDone = () => this.step("clickDone", () => this.click(shareOverviewDialogTestIds.doneButton));
 
-  // What the reader actually ends up with in their clipboard, which is the point of the
-  // whole feature and the one thing a click on Copy cannot prove on its own.
   readClipboard = (): Promise<string> => this.step("readClipboard", () => this.page.evaluate(() => navigator.clipboard.readText()));
 }

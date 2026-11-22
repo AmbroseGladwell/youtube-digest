@@ -7,22 +7,16 @@ export type PushOutcome =
   | { result: "written"; rev: number }
   | { result: "gone" }
   | { result: "sent" }
-  // The account already holds an overview of this one's video, under the id named: an
-  // outcome to resolve, not a failure to park (docs/features/one-overview-per-video.md).
+  // An outcome to resolve, not a failure to park (docs/features/one-overview-per-video.md).
   | { result: "held"; by: string }
-  // A new overview past the account's own-key quota: neither parked nor sent, it waits in
-  // the outbox and goes once the month turns (docs/features/account-libraries.md).
+  // Past the own-key quota: it waits in the outbox until the month turns.
   | { result: "waiting"; until: string }
   | { result: "stuck"; failure: OutboxFailure }
   | { result: "stopped"; reason: StopReason; detail: string };
 
 const REPLACE_ATTEMPTS = 3;
 
-// One outbox entry onto the route it belongs to. A whole-record write over a record the
-// server already holds is retried with the revision the server names, because a
-// regeneration is the reader's deliberate act and the last local write wins, as it does
-// in the local store. A field write to a record the server no longer has is done with:
-// the tombstone will arrive on the next pull (docs/features/sync-client.md).
+// Revisions, tombstones and what is retried: docs/features/sync-client.md.
 export const pushPendingWrite = async (
   api: SyncApi,
   entry: OutboxEntry,
@@ -99,8 +93,7 @@ const send = async (
 
 const written = ({ rev }: WrittenRecord): PushOutcome => ({ result: "written", rev });
 
-// A transcript is not a field of a record, so a 404 for one is a server without the route,
-// not a tombstone on its way down.
+// A transcript isn't a field of a record, so its 404 means a server without the route.
 const isFieldWrite = ({ change }: OutboxEntry): boolean => change.op !== "replace" && change.op !== "transcript";
 
 // Only a refusal about this record's own revision names one worth retrying with.
@@ -129,12 +122,7 @@ const replaceWithRetry = async (
   }
 };
 
-// A second overview of a video the account holds is refused naming the first; the caller
-// folds this one into it rather than resending (docs/features/one-overview-per-video.md).
-// One the server holds no reservation for, moved in on sign-in or queued before this
-// client reserved, takes a slot on the month and goes again: on our key when the server
-// made it in a signed-out trial, on the reader's own otherwise
-// (docs/architecture/tiers.md, "Reserving on the reader's own key").
+// A held video is folded; an unreserved overview takes a slot and goes again (docs/architecture/tiers.md).
 const createOverview = async (api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> => {
   const create = () => replaceWithRetry((ifMatch) => api.createOverview(record, ifMatch), knownRev);
   try {
@@ -188,8 +176,7 @@ const deleteFor = (api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | nu
 
 const createTopic = (api: SyncApi, record: Record<string, unknown>): Promise<PushOutcome> => createOnce(() => api.createTopic(record));
 
-// Topics and projects are created once. One the server already holds under this id is this
-// same record, pushed before and not acknowledged in time; there is nothing to replace.
+// One the server already holds under this id is this same record, pushed before and not acknowledged.
 const createOnce = async (create: () => Promise<WrittenRecord>): Promise<PushOutcome> => {
   try {
     return written(await create());

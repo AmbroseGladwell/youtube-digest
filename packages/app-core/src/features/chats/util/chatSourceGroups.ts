@@ -1,6 +1,5 @@
 import { relationLabel, type ChatAnswerSections, type ChatCitation } from "@overview/domain";
 
-// One key per place cited, so the same place is listed once.
 export const citationKey = (citation: ChatCitation): string => {
   if ("chatId" in citation) {
     return `c:${citation.chatId}`;
@@ -11,7 +10,6 @@ export const citationKey = (citation: ChatCitation): string => {
   return "startMs" in citation ? `t:${citation.startMs}` : `p:${JSON.stringify(citation)}`;
 };
 
-// Each section's sources grouped by how they relate, in the order the relations first appear.
 export const byRelation = (sources: ChatAnswerSections["introSources"]) => {
   const groups = new Map<string, ChatCitation[]>();
   for (const { citation, relation } of sources) {

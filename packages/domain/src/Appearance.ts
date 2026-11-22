@@ -15,8 +15,6 @@ export const THEME_MODE_NAMES: Record<ThemeMode, string> = {
   dark: "Dark",
 };
 
-// How big the image at the top of a note is drawn, on every note that has one
-// (docs/features/stone-theme.md, "The head's image").
 export const HEAD_IMAGE_SIZES = ["small", "full"] as const;
 export const HeadImageSize = z.enum(HEAD_IMAGE_SIZES);
 export type HeadImageSize = z.infer<typeof HeadImageSize>;

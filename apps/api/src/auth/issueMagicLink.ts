@@ -11,7 +11,7 @@ export const MAGIC_LINK_COOLDOWN_MS = MAGIC_LINK_COOLDOWN_SECONDS * 1000;
 export interface IssuedMagicLink {
   email: string;
   token: string;
-  // Only a web link carries one: an extension link already leads to a code of its own.
+  // Web links only: an extension link already leads to a code of its own.
   code: string | null;
   expiresAt: string;
 }
@@ -26,10 +26,7 @@ export interface IssueMagicLinkOptions {
   now: Date;
 }
 
-// One link per address per minute, so a public endpoint that sends mail cannot be turned
-// on someone's inbox. Inside the cooldown nothing is issued and the caller answers exactly
-// as if it had been. A spent link only holds the cooldown: it is never mailed and can never
-// sign in (docs/features/sign-in.md).
+// Why one link per address per minute: docs/features/sign-in.md, "Decisions, and why".
 export const issueMagicLink = async (
   sql: SqlClient,
   { email: rawEmail, surface, intent, firstName, anonymousId, spent, now }: IssueMagicLinkOptions,

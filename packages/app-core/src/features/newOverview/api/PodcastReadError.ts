@@ -1,6 +1,5 @@
 import type { PodcastReadFailure } from "@overview/domain";
 
-// Our server read the link and said why it isn't an episode we can use (designs 106d–106f).
 export class PodcastReadError extends Error {
   readonly reason: PodcastReadFailure;
   readonly showName: string | null;
@@ -13,8 +12,7 @@ export class PodcastReadError extends Error {
   }
 }
 
-// The episode was found, but no words for it were, so nothing could be written (design 106h);
-// `transcribable` where our server would transcribe it, if the reader chooses (design 305c-2).
+// `transcribable` where our server would transcribe it, if the reader chooses.
 export class PodcastNoTranscriptError extends Error {
   readonly transcribable: boolean;
   readonly episodeSeconds: number | null;

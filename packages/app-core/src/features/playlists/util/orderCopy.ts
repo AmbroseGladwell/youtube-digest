@@ -13,8 +13,7 @@ const ORDER_IN_A_SENTENCE: Record<PlaylistOrder, string> = {
   playlistOrder: "in the playlist’s order",
 };
 
-// The preview already counts what will be made, so the order says only what it means
-// (docs/features/playlists.md, "An order for each playlist").
+// The preview already counts what will be made, so the order says only what it means.
 const ORDER_MEANING: Record<PlaylistOrder, string> = {
   oldestFirst: "The one you added longest ago is made first.",
   newestFirst: "The one you added most recently is made first.",
@@ -29,7 +28,6 @@ export const orderMeaning = (order: PlaylistOrder): string => {
   return ORDER_MEANING[order];
 };
 
-// What choosing an order in Settings would do to the videos already waiting on it.
 export const orderWaitEffect = (order: PlaylistOrder, waiting: number): string => {
   if (waiting === 0) {
     return ORDER_MEANING[order];
@@ -37,7 +35,6 @@ export const orderWaitEffect = (order: PlaylistOrder, waiting: number): string =
   return `The ${formatCount(waiting)} waiting are made ${ORDER_IN_A_SENTENCE[order]}`;
 };
 
-// What a change did, said once in the row it was made in.
 export const orderChangedLine = (order: PlaylistOrder, waiting: number): string => {
   const now = `Now ${ORDER_IN_A_SENTENCE[order]}.`;
   if (waiting === 0) {

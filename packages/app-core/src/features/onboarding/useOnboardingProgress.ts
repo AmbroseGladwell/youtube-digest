@@ -8,8 +8,7 @@ import {
   type OnboardingProgress,
 } from "./onboardingProgressStorage.js";
 
-// One snapshot for the tab, as useSyncConnection keeps: the run's runtime above the router and
-// the page both read it, and a write by either has to reach the other in the same tab.
+// One snapshot per tab, so the runtime's and the page's writes reach each other.
 const listeners = new Set<() => void>();
 let snapshot: OnboardingProgress | null | undefined;
 
@@ -47,8 +46,7 @@ export const writeProgress = (progress: OnboardingProgress | null): void => {
   refresh();
 };
 
-// The home page's link starts onboarding on the screen after Start (design 46a). The run is
-// this tab's.
+// Starts on the screen after Start, with the run this tab's (design 46a).
 export const startOnboarding = (link: string, key: SourceKey | null, tabId: number | null = null): void => {
   writeProgress({
     link,
@@ -65,8 +63,7 @@ export const startOnboarding = (link: string, key: SourceKey | null, tabId: numb
   });
 };
 
-// Save to my overviews on a shared page, or a sample chosen at Start, starts onboarding with
-// the copy as its overview: already made, so there is nothing to wait for and no video to check.
+// The copy is already made, so there is nothing to wait for and no video to check.
 export const startOnboardingFromShare = (token: ShareToken, snapshot: SharedOverview, sample = false): void => {
   writeProgress({
     link: sourceUrl(snapshot.note.source),
@@ -83,8 +80,7 @@ export const startOnboardingFromShare = (token: ShareToken, snapshot: SharedOver
   });
 };
 
-// Onboarding's progress, written through as it changes and read again when another tab
-// changes it: the sign-in link opens in a tab of its own.
+// Read again when another tab changes it: the sign-in link opens in a tab of its own.
 export const useOnboardingProgress = () => {
   const progress = useSyncExternalStore(subscribe, getSnapshot);
 

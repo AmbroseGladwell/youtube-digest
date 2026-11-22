@@ -4,12 +4,10 @@ import { useOverviewSyncedQuery } from "./queries/overviewSyncedQuery.js";
 import { useSync } from "./SyncContext.js";
 import { useSyncConnection } from "./useSyncConnection.js";
 
-// Null where this shell cannot sync at all, so the item hides. Otherwise either the note's
-// address in the web app, or why it has none yet.
+// Null where this shell cannot sync at all, so the item hides.
 export type OverviewInWebApp = { href: string } | { reason: string } | null;
 
-// The server a device syncs with also serves the web app (docs/architecture/deploy.md), so
-// a note's address there is known once the server holds it (docs/features/extension-panel.md).
+// Why the address waits for the server to hold the note: docs/features/extension-panel.md, "Open in web app".
 export const useOverviewInWebApp = (overviewId: OverviewId): OverviewInWebApp => {
   const sync = useSync();
   const { connection } = useSyncConnection();

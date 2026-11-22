@@ -21,8 +21,6 @@ describe("blockAtPosition", () => {
     expect(blockAtPosition(BLOCKS, 10_000)).toBe(1);
   });
 
-  // The gap between two blocks is a stretch of dropped annotation or silence, and the
-  // reader is still on the last thing that was said (docs/features/transcript-storage.md).
   it("stays on the last block passed while the position is in a gap between two", () => {
     expect(blockAtPosition(BLOCKS, 27_000)).toBe(1);
   });

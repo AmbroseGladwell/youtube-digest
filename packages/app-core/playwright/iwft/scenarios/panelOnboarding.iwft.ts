@@ -6,8 +6,6 @@ import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import type { OnboardingPageObject } from "../../pageObjects/OnboardingPageObject.testHelper.js";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-// Onboarding in the extension's side panel (docs/features/onboarding.md, designs 46n–46q and
-// 205g–205g-4, where Start became the web's own).
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const VIDEO_TITLE = "The Simulated Video";
 const signedOutPanel = {
@@ -129,8 +127,6 @@ test("signed out on a device that has had an account, the panel offers signing b
   await launcher.homePage.verifyStartIsAbsent();
 });
 
-// Designs 205g and 205g-4: signed out, the panel is the web's Start, Sign in stands under
-// Make my overview as a peer, and nothing anywhere offers to create an account instead.
 test("beside a video, Start offers it with the tab's own verb, and Sign in as a peer", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   await launcher.launchPanel(signedOutPanelAnswered);
@@ -174,9 +170,7 @@ test("the gate's Sign in keeps no way back to the gate", async ({ launcher }) =>
   await launcher.appShell.verifyBarNeverOffersTheWayBack();
 });
 
-// Beside something the offer takes the field's place, and the different link brings it back.
-// A pasted link has no tab to read, so our server reads it. Seeded readable: with no answer the
-// simulator says it read nothing, and the read-failure screen raced the video screen (OV-213).
+// Seeded readable: unanswered, the read-failure screen raced the video screen (OV-213).
 test("beside a video, a different link can still be pasted", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.articles.answerWith({ status: "read", article: PAGE_ARTICLE });
@@ -191,7 +185,6 @@ test("beside a video, a different link can still be pasted", async ({ launcher, 
   await launcher.onboardingPage.verifyVideoTitle(PAGE_TITLE);
 });
 
-// Drawn tall: at 720 the panel scrolls rather than squeezing the deck (205g).
 test("below 720 the panel scrolls", async ({ launcher, backendSimulator, page }) => {
   backendSimulator.startSamples.offer(
     makeOverview({ source: { ...makeOverview().source, title: "A Sample" } }),

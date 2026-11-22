@@ -19,8 +19,7 @@ export interface SeededVoiceSamples {
   deleted: string[];
 }
 
-// One sample of the same passage per offered voice, through the same queue as a note
-// (docs/features/narration-voice.md, "The samples").
+// Why one sample per voice: docs/features/narration-voice.md, "The samples".
 export const seedVoiceSamples = async ({ renders, samples, store, now }: SeedVoiceSamplesOptions): Promise<SeededVoiceSamples> => {
   const current = NarrationVoice.options.map((voice) => ({ voice, key: audioKey(VOICE_SAMPLE_LINES, voice) }));
   const queued: NarrationVoice[] = [];

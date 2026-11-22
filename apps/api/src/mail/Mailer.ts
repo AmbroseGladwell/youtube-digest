@@ -1,13 +1,11 @@
 import type { AuthSurface, VerificationPurpose } from "@overview/domain";
 
-// "createAccount" only when there is no account yet: an address that already has one is
-// sent the ordinary sign-in mail whatever it asked for (docs/features/sign-in.md).
+// When "createAccount" is honoured: docs/features/sign-in.md, "Which mail an address gets".
 export type MagicLinkPurpose = "signIn" | "createAccount";
 
 export interface MagicLinkMail {
   to: string;
   link: string;
-  // A web mail's code, for signing in a browser other than the one the link opens in.
   code: string | null;
   surface: AuthSurface;
   purpose: MagicLinkPurpose;
@@ -15,11 +13,6 @@ export interface MagicLinkMail {
   expiresAt: string;
 }
 
-// The mails besides a link: a code to the current address before a sensitive change, a code
-// to a new address, the mail a new address gets instead when it already has an account, the
-// notice the old address gets after a change, with its way back
-// (docs/features/account-changes.md), and the mail an address with no account gets instead
-// of a sign-in link (docs/features/sign-in.md).
 export type AccountMail =
   | { kind: "verificationCode"; to: string; code: string; expiresAt: string; supportEmail: string; purpose: VerificationPurpose }
   | { kind: "emailChangeCode"; to: string; code: string; expiresAt: string }

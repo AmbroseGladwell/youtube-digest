@@ -68,8 +68,6 @@ const ownClient =
 const refusal = (code: ApiErrorCode, details?: Record<string, unknown>) =>
   new SyncRequestError(code, API_ERROR_CODES[code], `simulated ${code}`, details);
 
-// Our server as the device meets it: each call recorded, our key answering with the
-// overview it made or the refusal it was told to give, reservations likewise.
 const fakeServer = ({ generate, reserve }: { generate?: Error; reserve?: Error } = {}) => {
   const calls: string[] = [];
   const api: GenerationApi = {

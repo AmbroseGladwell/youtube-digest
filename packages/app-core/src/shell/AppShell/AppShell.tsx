@@ -46,7 +46,7 @@ import { OnThisTabLine } from "../../features/capture/components/OnThisTabLine/O
 import { useOnThisTab } from "../../features/capture/useOnThisTab.js";
 
 const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
-// Where the note's head uses the phone arrangement and scrolls away (ReaderMasthead.module.scss).
+// Mirrors the breakpoint in ReaderMasthead.module.scss.
 const HEAD_SCROLLS_AWAY_QUERY = "(max-width: 61.9375rem)";
 
 export const AppShell = () => {
@@ -63,17 +63,13 @@ export const AppShell = () => {
     [mastheadHeight.measured],
   );
   const trail = useHistoryTrail();
-  // The app's one NavLink, which PageLink can't stand in for because the active styling is
-  // NavLink's (docs/features/page-transitions.md).
+  // For the app's one NavLink, which PageLink can't stand in for: the active styling is NavLink's.
   const animateNavigation = useShouldAnimateNavigation();
   const sync = useSync();
   const onAuthPage = pathname === Routes.signIn() || pathname === Routes.createAccount();
   const belowWriteFloor = sync.status.phase === "unsupported";
   const onHome = pathname === Routes.home();
-  // Signed out where there are accounts, every page that would show an overview shows the
-  // way to an account instead; home is onboarding's Start, or in the panel once this device has
-  // had an account, the way back to it (docs/architecture/tiers.md, "Signed out";
-  // docs/features/onboarding.md).
+  // Why signed out sees no overviews: docs/architecture/tiers.md, "Signed out".
   const accountNeeded = useAccountNeeded();
   const gated = accountNeeded && (pathname === Routes.queue() || pathname.startsWith(Routes.overview("")));
   const signedIn = sync.connected;
@@ -83,22 +79,16 @@ export const AppShell = () => {
     }
   }, [signedIn]);
   const libraryMoved = useLibraryMove().move !== null;
-  // With a note open and the tab moved on under it, the band says so (design 205e).
   const onThisTab = useOnThisTab();
 
-  // paneTransitions.scss keys the way in and the way back off this, and it has to be on
-  // the root: ::view-transition-* pseudo-elements can't see an attribute further down. A
-  // layout effect lands it inside the router's own DOM update, which is the moment the
-  // browser takes the "after" snapshot.
+  // On the root, the only place ::view-transition-* can see; set before the browser's "after" snapshot.
   const previousPathname = useRef(pathname);
   useLayoutEffect(() => {
     document.documentElement.dataset.navDirection = navigationDirection(previousPathname.current, pathname);
     previousPathname.current = pathname;
   }, [pathname]);
 
-  // The shell is the one component that survives every navigation, so the run it owns can
-  // outlive both the dialog it was started from and the page it was started on
-  // (docs/features/overview-redesign.md, "Generating in the background").
+  // Why the shell owns the run: docs/features/overview-redesign.md, "Generating in the background".
   const newOverview = useNewOverviewRun();
   const analytics = useAnalytics();
   const isPhone = useIsPhone();
@@ -108,14 +98,10 @@ export const AppShell = () => {
   });
   const [queueDetailsOpen, setQueueDetailsOpen] = useState(false);
 
-  // Design OV-167 (167a–167c): once the page's own back link has scrolled under the band,
-  // the brand slot holds that link instead (docs/features/back-within-reach.md).
   const [headBackLink, setHeadBackLink] = useState<HeadBackLink | null>(null);
   const handoff = useMemo(() => ({ register: setHeadBackLink }), []);
   const headScrollsAway = useMediaQuery(HEAD_SCROLLS_AWAY_QUERY);
-  // The panel gets the phone's hand-off: the slot takes the page's own link once that
-  // link passes under the band (205h). Not by width — Chrome lets the reader drag the
-  // panel wider and it stays the panel, keeping its own arrangement (205w).
+  // Why the panel hands off at any width: docs/features/back-within-reach.md, "What was built".
   const handoffLive = headBackLink !== null && (isPanel || headScrollsAway);
   const backInBar = useBackInBar(band, headBackLink, handoffLive);
   const brandLink = useRef<HTMLAnchorElement>(null);
@@ -128,9 +114,7 @@ export const AppShell = () => {
     }
   }, [backInBar]);
 
-  // Design 205c-2: in the panel + New is a way to paste a link, not a place to watch a
-  // run. Home is the run's own page there, so starting one closes the dialog and hands
-  // the panel back to home, which is where creating from the offer would have left it.
+  // In the panel, home is the run's own page, so starting a run from + New hands the panel back there.
   const panelRunStarted = newOverview.run !== null && newOverview.dialogOpen && isPanel;
   useEffect(() => {
     if (!panelRunStarted) {
@@ -149,13 +133,10 @@ export const AppShell = () => {
     analytics.extension.sidePanel.opened();
   }, [isPanel, analytics]);
 
-  // The injected YouTube button's end of that same run
-  // (docs/features/injected-button.md).
   useRunBridgeExchange(newOverview);
   useArticleMenuRequest(newOverview);
 
-  // Held here rather than in the dialog so the captions are already in hand by the time
-  // the dialog is opened at all (docs/features/watching-detection.md).
+  // Held here rather than in the dialog, so the captions are in hand before the dialog opens.
   useWatchedTranscriptQuery();
 
   const readOverview = (overview: Overview) => {
@@ -163,8 +144,7 @@ export const AppShell = () => {
     void navigate(Routes.overview(overview.id), { viewTransition: shouldAnimateNavigation() });
   };
 
-  // Onboarding brings its own head, with nothing to navigate to until there is an account
-  // (docs/features/onboarding.md).
+  // Onboarding brings its own head, with nothing to navigate to until there is an account.
   if (pathname === Routes.onboarding()) {
     return (
       <NewOverviewRunProvider value={newOverview}>
@@ -370,9 +350,7 @@ export const AppShell = () => {
 
               <ScrollRestoration />
 
-              {/* In the panel the dialog is only ever open: left mounted it would put a
-                  second copy of the run's progress in the page, which is the panel's own
-                  (design 205c-2). */}
+              {/* Unmounted in the panel when closed, or the run's progress would show twice. */}
               {!accountNeeded && (!isPanel || newOverview.dialogOpen) && (
                 <NewOverviewDialog
                   open={newOverview.dialogOpen}

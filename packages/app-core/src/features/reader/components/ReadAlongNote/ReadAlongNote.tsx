@@ -19,7 +19,6 @@ import { useFollowTheVoice } from "./useFollowTheVoice.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 
-// Something a section carries beside its heading and under it.
 export interface NoteSectionSlot {
   section: string;
   beside: ReactNode;
@@ -29,28 +28,20 @@ export interface NoteSectionSlot {
 export interface ReadAlongNoteProps {
   lines: NoteLine[];
   activeIndex: number;
-  // Whether the note is being read aloud right now. The page follows the voice and
-  // nothing else: a note opened in silence stays where it was opened.
   speaking: boolean;
   onSelectLine: (index: number) => void;
   captions?: Record<string, string>;
   sectionSlot?: NoteSectionSlot | null;
   renderRange?: (line: NoteLine, range: TimeRange, active: boolean) => ReactNode;
   renderLineEnd?: (line: NoteLine) => ReactNode;
-  // The line whose stretch holds the playhead of the video beside the panel (design 250e).
   playingIndex?: number | null;
-  // The line holding a moment a chat answer cited, tinted and brought into view (design 310n).
   citedIndex?: number | null;
 }
 
-// Design 250m: past eight steps, the first five and a way to show the rest. Most lists are six
-// to eight long and show whole.
 const MOST_STEPS_SHOWN_WHOLE = 8;
 const STEPS_SHOWN_FIRST = 5;
 
-// Design 4a numbers the key points rather than bulleting them, so each list line carries
-// its place in its own section. Counted here, from the lines, and never spoken: the mark
-// stays out of `text` (docs/features/stone-theme.md, "The single overview").
+// Counted here rather than kept in `text`, so the number is never spoken.
 const numberListLines = (lines: NoteLine[]): Array<number | null> => {
   let count = 0;
   return lines.map((line) => {
@@ -65,8 +56,7 @@ const numberListLines = (lines: NoteLine[]): Array<number | null> => {
   });
 };
 
-// The part of the overview each section's lines are, so a chat answer citing one can lead to it
-// (OV-319). The premise, big picture and core claim are never cited.
+// The premise, big picture and core claim are never cited, so they have no part.
 const SECTION_PART: Record<string, OverviewPart> = {
   Verdict: "verdict",
   [KEY_POINTS_SECTION]: "keyPoint",
@@ -74,7 +64,6 @@ const SECTION_PART: Record<string, OverviewPart> = {
   [HOW_TO_APPLY_SECTION]: "howToApply",
   "What it sells": "selling",
   [WATCH_ANYWAY_SECTION]: "watchAnyway",
-  // An article's answer to the same question (OV-320).
   [READ_ANYWAY_SECTION]: "watchAnyway",
 };
 
@@ -132,8 +121,7 @@ export const ReadAlongNote = ({
   const follow = useFollowTheVoice(speaking);
   const root = useRef<HTMLDivElement | null>(null);
 
-  // The rest of a long list opens by itself for the voice, the playhead, or the browser's
-  // find-in-page, and stays in the page while shut so every step can be found.
+  // Shut steps stay in the page, hidden until found, so find-in-page still reaches every step.
   const stepIndexes = lines.flatMap((line, index) => (line.section === SOURCE_STEPS_SECTION && !line.heading ? [index] : []));
   const beyondFirst = stepIndexes.length > MOST_STEPS_SHOWN_WHOLE ? stepIndexes.slice(STEPS_SHOWN_FIRST) : [];
   const [stepsShown, setStepsShown] = useState(false);
@@ -286,8 +274,6 @@ export const ReadAlongNote = ({
         );
       })}
 
-      {/* The way back to the line being read, the transcript's own way back worded for a
-          voice instead of a clock, sitting above the player bar rather than on it. */}
       {follow.offered && (
         <button type="button" className={styles.followButton} onClick={followTheVoice} data-testid={readAlongNoteTestIds.followButton}>
           <span className={styles.followButtonMark} aria-hidden="true" />

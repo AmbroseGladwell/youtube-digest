@@ -5,8 +5,7 @@ import { pairKey, type JudgingPair } from "./runJudging.js";
 
 const videoIdOf = (pair: JudgingPair) => pair.fetched.video.id ?? pair.fetched.video.url;
 
-// Pairs the judge has already decided come first, because a pick is only useful for
-// calibration when there is a judgment to compare it with.
+// A pick only calibrates when there is a judgment to compare it with.
 export const nextBlindPair = (
   pairs: readonly JudgingPair[],
   picks: readonly BlindPick[],
@@ -47,8 +46,7 @@ export interface BlindSetOptions {
   limit?: number | undefined;
 }
 
-// A hash, not a shuffle, so the same flags offer the same pairs every time the page is
-// started, and picks made in one sitting count towards the set in the next.
+// A hash, not a shuffle, so the same flags offer the same pairs and picks carry across sittings.
 export const blindPairSet = (pairs: readonly JudgingPair[], { candidates, limit }: BlindSetOptions): JudgingPair[] => {
   const rank = (pair: JudgingPair) =>
     createHash("sha256")

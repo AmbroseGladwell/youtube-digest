@@ -13,9 +13,7 @@ const readable = (rows: ReadonlyArray<StoredChatRow>): Chat[] =>
     return read.status === "read" ? [read.record] : [];
   });
 
-// Apart from readLibrary, so only the calls that need conversations pay to read them. A
-// deleted conversation is never read (docs/features/mcp-connector.md, "Chats"). With overview
-// ids, only the chats those overviews own.
+// Apart from readLibrary so only calls that need chats pay for them: docs/features/mcp-connector.md, "Chats".
 export const readChats = async (sql: SqlClient, accountId: AccountId, overviewIds?: readonly string[]): Promise<Chat[]> => {
   const rows = await sql.query<{ schema_version: number; body: Record<string, unknown> }>(
     overviewIds === undefined

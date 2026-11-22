@@ -17,16 +17,13 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface ReaderPlayerBarProps {
   view: PlayerBarView;
-  // The state the view was built from, which is what the main button's press is counted under.
   status: PlayerStatus;
   time: number;
   lines: NoteLine[];
   lineStarts: number[];
   durationSeconds: number;
-  // Design 1b: the panel's bar carries the favourite, since its head has no room for it;
-  // the web's head has it and the bar does not (design 1a).
+  // Only the panel's bar carries it, as the panel's head has no room for it.
   favourite: { on: boolean; onToggle: () => void } | null;
-  // A shell that cannot sign in is not offered the link (CLAUDE.md, degrade visibly).
   canSignIn: boolean;
   onMain: () => void;
   onSkip: (deltaSeconds: number) => void;
@@ -34,8 +31,6 @@ export interface ReaderPlayerBarProps {
   onCycleRate: () => void;
   onAction: (action: Exclude<PlayerBarAction, "signIn">) => void;
   onReRecord: () => void;
-  // Cooking step by step from the action the voice is on, while it is in a recipe's method
-  // (design 150b).
   onCookFromHere: (() => void) | null;
 }
 
@@ -64,9 +59,7 @@ const MainIcon = ({ kind }: { kind: PlayerBarView["main"]["kind"] }) => {
   }
 };
 
-// Design Player.dc.html 1a–1l: the floating card on the web reader, and the same parts
-// as grid areas in the panel and on a phone. The label line is the only live region; the
-// clock beside it is not announced, or a screen reader would read it four times a second.
+// Only the label line is live: an announced clock would be read four times a second.
 export const ReaderPlayerBar = ({
   view,
   status,
@@ -91,7 +84,6 @@ export const ReaderPlayerBar = ({
     analytics.playerBar.reRecordChosen();
     onReRecord();
   };
-  // Design 250f: while the voice is in the steps a source gives, a way past them to what follows.
   const steps = sourceStepsStretch(lines);
   const pastSteps = steps?.after == null ? undefined : lineStarts[steps.after];
   const skipSteps =

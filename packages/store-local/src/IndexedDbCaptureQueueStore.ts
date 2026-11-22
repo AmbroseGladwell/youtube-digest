@@ -3,8 +3,7 @@ import { CAPTURE_QUEUE_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 import { promisifyTransaction } from "./promisifyTransaction.js";
 
-// Never journaled: the queue is this device's own until OV-11 syncs it
-// (docs/features/capture-queue.md).
+// Never journaled: docs/features/capture-queue.md, "On this device, for now".
 export class IndexedDbCaptureQueueStore implements CaptureQueueStore {
   #db: IDBDatabase;
 

@@ -10,12 +10,7 @@ export interface SavedLocallyNoteState {
   dismiss: () => void;
 }
 
-// Design 16b's rule, in one place: the note is the moment of loss, so it appears only on an
-// overview that has just been written, only in the panel that wrote it, and only while the
-// overview really is local — syncing belongs to the account, not to a plan
-// (docs/architecture/tiers.md). A device that has not heard back is not told its overview is
-// local. Dismissing it is permanent — an unasked-for prompt that comes back is worse than
-// one that never appeared (docs/features/plus-upsell.md).
+// When the note shows: docs/features/plus-upsell.md, "16b — after a capture".
 export const useSavedLocallyNote = (justGenerated: boolean): SavedLocallyNoteState => {
   const isPanel = useIsPanel();
   const sync = useSync();

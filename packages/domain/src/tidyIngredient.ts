@@ -1,6 +1,4 @@
-// Some recipe plugins wrap an ingredient's note in brackets when the note already has its own:
-// "flour ((cake flour OK too, Note 1))", "butter (, cut into cubes)". The outer pair goes, and a
-// note that starts with a comma follows the name as one would have written it.
+// Some recipe plugins double-bracket a note: "flour ((cake flour OK too))", "butter (, cut)".
 export const tidyIngredient = (line: string): string => {
   let text = line;
   for (let open = text.indexOf("("); open !== -1; open = text.indexOf("(", open + 1)) {

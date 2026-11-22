@@ -22,8 +22,7 @@ those sources; --relist lists them again (after a change to the listing prompt);
 judges their notes again (after a change to the judging prompt); --list-only
 lists without judging, to check the lists before paying to judge against them.`;
 
-// A third provider, so it never reads a note its own provider wrote, for either writer, and one
-// list per source keeps every run comparable (owner, 11 Nov 2026).
+// A third provider, so it never reads a note its own provider wrote (owner, 11 Nov 2026).
 const DEFAULT_JUDGE = "gemini:gemini-3.1-pro-preview";
 const LANES = 4;
 
@@ -51,7 +50,6 @@ const isChosen = (sourceId: string) => chosen === null || chosen.has(sourceId);
 
 const { runs, byVideo } = await loadComparison(values.run);
 const sources = new Map([...byVideo].map(([id, fetched]) => [id, videoStepsSource(fetched)]));
-// The store reads one folder per group, so each judge's lists sit in a folder of its own.
 const store = jsonRecordStore<ActionableItemsRecord>(
   comparisonPaths.actionableItems,
   (record) => `${safePathPart(record.judge)}/${safePathPart(record.sourceId)}.json`,

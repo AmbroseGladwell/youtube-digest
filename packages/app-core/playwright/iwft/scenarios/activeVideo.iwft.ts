@@ -7,7 +7,6 @@ import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 const WATCHED_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const ANOTHER_WATCHED_URL = "https://www.youtube.com/watch?v=anotherVideoId";
 const API_KEYS = ANTHROPIC_KEY;
-// The panel of a browser that can reach YouTube, which is what an extension always is.
 const PANEL = { apiKeys: API_KEYS, surface: "extension", activeVideoUrl: WATCHED_URL, youTubeFetch: true } as const;
 
 test("the side panel opens on the video in front of it, and that link is the one it generates from", async ({ launcher }) => {
@@ -58,8 +57,7 @@ test("the captions for the video in front of the panel are fetched before anyone
 }) => {
   await launcher.launch(PANEL);
 
-  // The store, not the call count: the fetch firing is not the same moment as the
-  // captions being held.
+  // The store, not the call count: the fetch firing is not the moment the captions are held.
   await expect.poll(() => backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID))).not.toBeNull();
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
@@ -132,7 +130,6 @@ test("a video the panel already looked up costs one metadata call, not one for i
   await dialog.form.clickGenerate();
   await dialog.clickReadOverview();
 
-  // One player call served the look-up and the note, and the captions were fetched once.
   expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(1);
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 });

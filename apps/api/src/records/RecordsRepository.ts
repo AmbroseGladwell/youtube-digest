@@ -18,11 +18,8 @@ export interface WriteOutcome {
 export interface WriteOperation {
   kind: RecordKind;
   id: string;
-  // The video an overview being written is of. The decision is handed the live overview
-  // under another id that already holds it, if there is one, so it can refuse a second
-  // (docs/features/one-overview-per-video.md).
+  // So the decision can refuse a second: docs/features/one-overview-per-video.md, "The server is the arbiter".
   sourceKey?: string | null;
-  // Other records the decision depends on, read in the same transaction as this one.
   requires?: ReadonlyArray<{ kind: RecordKind; id: string }>;
   decide: (current: StoredRecord | null, held: StoredRecord | null, required: Array<StoredRecord | null>) => WriteDecision;
 }
@@ -35,17 +32,12 @@ export interface ChangesPage {
 
 export const RECORD_COLUMNS = "kind, id, schema_version, rev, seq, updated_at, deleted, body";
 
-// Every write allocates the account's next seq first, and that update row-locks the
-// account for the rest of the transaction: one account's writes commit in seq order, so a
-// puller can never advance past a seq that is still in flight
-// (docs/features/sync-api.md).
 export class RecordsRepository {
   #sql: SqlClient;
   #clock: () => Date;
   #overviewsWritten: () => void;
 
-  // `overviewsWritten` runs once a write that changed an overview has committed, which is
-  // what wakes the embedding worker (docs/features/search-by-meaning.md, "The queue").
+  // Wakes the embedding worker: docs/features/search-by-meaning.md, "The queue".
   constructor(sql: SqlClient, clock: () => Date, overviewsWritten: () => void = () => undefined) {
     this.#sql = sql;
     this.#clock = clock;
@@ -109,8 +101,7 @@ export class RecordsRepository {
     });
   }
 
-  // Only the kinds the caller knows: a client built before a kind refuses a page that holds
-  // one (docs/features/sync-api.md, "A kind a client was built before").
+  // Why only the caller's kinds: docs/features/sync-api.md, "A kind a client was built before".
   async listChanges(accountId: AccountId, since: number, limit: number, kinds: readonly RecordKind[]): Promise<ChangesPage> {
     const rows = await this.#sql.query<RecordRow>(
       `select ${RECORD_COLUMNS} from records
@@ -126,7 +117,6 @@ export class RecordsRepository {
     };
   }
 
-  // A pattern in SQL's LIKE syntax, over ids of one kind that are not tombstoned.
   async listLiveIds(accountId: AccountId, kind: RecordKind, idPattern: string): Promise<string[]> {
     const rows = await this.#sql.query<{ id: string }>(
       `select id from records where account_id = $1 and kind = $2 and not deleted and id like $3 order by seq`,
@@ -147,7 +137,6 @@ export class RecordsRepository {
     return this.#get(this.#sql, accountId, kind, id);
   }
 
-  // The live overviews of these sources, as each overview's source key is stored beside it.
   async liveOverviewsOfSources(accountId: AccountId, sourceKeys: readonly string[]): Promise<StoredRecord[]> {
     if (sourceKeys.length === 0) {
       return [];

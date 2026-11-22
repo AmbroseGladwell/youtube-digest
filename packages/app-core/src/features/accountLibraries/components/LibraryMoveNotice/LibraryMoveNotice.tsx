@@ -5,8 +5,6 @@ import { libraryMoveCopy } from "../../util/libraryMoveCopy.js";
 import styles from "./LibraryMoveNotice.module.scss";
 import { libraryMoveNoticeTestIds } from "./LibraryMoveNoticeTestIds.js";
 
-// Design 47e: told once, after the fact, in the strip slot. It goes by itself after ten
-// seconds, the bar running down and holding while the pointer or focus is on it, or with ×.
 export const LibraryMoveNotice = ({ panel = false }: { panel?: boolean }) => {
   const { move, dismiss } = useLibraryMove();
   const analytics = useAnalytics();

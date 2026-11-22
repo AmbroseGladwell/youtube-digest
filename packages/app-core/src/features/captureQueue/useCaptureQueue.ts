@@ -68,12 +68,9 @@ export interface QueueMaking {
 }
 
 export interface CaptureQueueController {
-  // Whether this shell can follow playlists at all; without a server nothing is offered.
+  // False without a server, so nothing about playlists is offered.
   available: boolean;
-  // Every video still waiting, each playlist's in the order the reader chose for it, and the
-  // same videos sorted by their playlists' paces: what can be made now, what continues
-  // tomorrow, and what waits for the reader to choose it (docs/features/capture-queue.md,
-  // "Waiting on a pace").
+  // How waiting splits by pace: docs/features/capture-queue.md, "Waiting on a pace".
   waiting: QueuedCapture[];
   ready: QueuedCapture[];
   tomorrow: QueuedCapture[];
@@ -87,19 +84,15 @@ export interface CaptureQueueController {
   paused: boolean;
   folded: boolean;
   needsKey: boolean;
-  // Waiting at a limit, until it resets or the extension connects; nothing is asked meanwhile
-  // (docs/features/capture-queue.md, "Waiting at a limit"). The month's limit wins over the
-  // others, and over every pace.
+  // When the queue holds, and until when: docs/features/capture-queue.md, "Waiting at a limit".
   hold: QueueHold | null;
-  // What ran out, when the queue waits for the month: the ways round it the strip and the
-  // page offer.
+  // Set only while the month's limit holds, for the ways round it the strip and page offer.
   limit: LimitMessage | null;
-  // Whether the extension would be a way around a hold here: a shell with no free rung.
+  // True in a shell with no free rung, where the extension would get round a hold.
   viaExtension: boolean;
   setPaused: (paused: boolean) => void;
   setFolded: (folded: boolean) => void;
   remove: (videoId: VideoId) => void;
-  // Made next, past their playlist's pace, which stays as it is.
   makeNow: (videoIds: readonly VideoId[]) => Promise<void>;
   removeMany: (videoIds: readonly VideoId[]) => Promise<void>;
   retry: (videoId: VideoId) => void;
@@ -108,11 +101,6 @@ export interface CaptureQueueController {
   dismissStrip: () => void;
 }
 
-// The queue on this device: on opening it checks every followed playlist for what is new,
-// then makes what waits one video at a time, each playlist in the order the reader chose for
-// it, while the app is open. A run the reader starts goes first
-// (docs/features/capture-queue.md). Owned by the AppShell, like the reader's own run, so it
-// outlives every navigation.
 export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean }): CaptureQueueController => {
   const { overviewStore, followedPlaylistStore, captureQueueStore } = useStores();
   const accountId = useLibraryAccountId();
@@ -146,8 +134,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
 
   useEffect(() => setPreferences(readCaptureQueuePreferences(accountId)), [accountId]);
 
-  // A video made while it waited, by hand or on another device, is not waiting for anything,
-  // so it is neither shown nor counted, and leaves the queue (docs/features/capture-queue.md).
+  // Why made videos leave: docs/features/capture-queue.md, "One at a time, in the playlist's order".
   const made = useMemo(() => madeAlready(queue.data ?? [], overviews.data ?? []), [queue.data, overviews.data]);
   const items = useMemo(() => (queue.data ?? []).filter((capture) => !made.has(capture.videoId)), [queue.data, made]);
   const madeKey = [...made].join(" ");
@@ -216,8 +203,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     (capture) => madeToday(capture.fromPlaylist.id),
   );
 
-  // Said once a day for each playlist that has made all its pace allows, while the rest of
-  // the queue carries on.
+  // Warned once a day for each playlist that has made all its pace allows.
   const reachedPace = useRef(new Set<string>());
   const stillMaking = new Set(paced.ready.map((capture) => capture.fromPlaylist.id));
   const pacedPlaylists = [...new Set(paced.tomorrow.map((capture) => capture.fromPlaylist.id))]
@@ -253,9 +239,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     [accountId],
   );
 
-  // Checking on opening (docs/features/playlists.md, "Checking on opening").
-  // Each followed playlist once per opening, including one another device follows that
-  // arrives with a pull after the app opened.
+  // Each playlist once per opening: docs/features/playlists.md, "Checking on opening".
   const libraryKey = `${accountId ?? ""}|${playlistApi?.apiUrl ?? ""}`;
   useEffect(() => {
     if (playlistApi === null || !followed.isSuccess) {
@@ -420,8 +404,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     [savePreferences],
   );
 
-  // At the month's limit the queue carries on when a key or a plan gives it room, and asks
-  // for the counts again as the month turns.
+  // What resumes the month's hold: docs/features/capture-queue.md, "At the month's limit".
   const keyed = `${providersWithKeys(apiKeys).join(",")}|${onlyMyKey}`;
   const lastKeyed = useRef(keyed);
   const lastPlan = useRef(plan);
@@ -437,9 +420,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
       resume(via);
     }
   }, [keyed, plan]);
-  // Each wait is logged once as it begins and once as it ends, whichever way it was learned:
-  // from a refusal, or from the month's counts (docs/features/capture-queue.md, "Waiting at a
-  // limit").
+  // Logged as it begins and ends: docs/features/capture-queue.md, "Waiting at a limit".
   const loggedHold = useRef<QueueHold | null>(null);
   useEffect(() => {
     const previous = loggedHold.current;
@@ -473,8 +454,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     return () => clearTimeout(timer);
   }, [monthHold, queryClient]);
 
-  // The hold ends by itself when the limit resets, or at once when an extension connects and
-  // can fetch instead; a shell that always had one is not a connection.
+  // When a hold ends: docs/features/capture-queue.md, "Waiting at a limit".
   const persistedHold = preferences.hold;
   useEffect(() => {
     if (persistedHold === null) {
@@ -493,8 +473,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
   }, [youTubeFetch, resume]);
 
   const next = paced.ready[0] ?? null;
-  // Nothing is made until the month's counts are known, so a queue opened at the limit never
-  // asks before it knows; a server that can't be asked still enforces the limit itself.
+  // Why nothing is made before the counts: docs/features/capture-queue.md, "At the month's limit".
   const countsKnown = nextQuota?.kind !== "checking";
   const canMake =
     !preferences.paused &&
@@ -512,8 +491,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     }
   }, [canMake, next, make]);
 
-  // A finished batch says so once, then the next one counts from one again. One that left
-  // problems keeps saying so until the reader dismisses it.
+  // A batch that left problems keeps saying so until dismissed, so only a clean one says done.
   const finished = batch !== null && making === null && paced.ready.length === 0;
   useEffect(() => {
     if (!finished || attention.length > 0) {
@@ -543,8 +521,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
     [making, captureQueueStore, refresh],
   );
 
-  // Its place in its playlist's order is kept, so a video the reader tries again runs next
-  // rather than after everything already waiting (docs/features/capture-queue.md).
+  // Why a retry keeps its place: docs/features/capture-queue.md, "Needs attention".
   const retry = useCallback(
     (videoId: VideoId) => {
       const capture = items.find((each) => each.videoId === videoId);

@@ -16,8 +16,7 @@ const PLUS_UPSELL = "Get more overviews with Plus";
 
 export interface UsageLine {
   parts: string[];
-  // The link to Settings › Plan the line ends with, if any. The panel leaves it out, unless
-  // the line has a plan to mention.
+  // The panel leaves it out unless the line has a plan to mention.
   link: "Plan" | "See plans" | null;
 }
 
@@ -26,10 +25,7 @@ export interface UsageLineOptions {
   plan?: Plan | null;
 }
 
-// Design 95b, and 95c where it's narrow, with the key order flipped for everyone but Plus
-// (decided on OV-131): only the quota the next overview will use. Falling back to our key on
-// Free or BYO Plus, it mentions Plus once (95m): an upsell names only a plan that makes more
-// on the key this overview uses (decided on OV-131).
+// An upsell names only a plan that makes more on the key this overview uses (OV-131).
 export const usageLineOf = (next: NextQuota, { narrow = false, plan = null }: UsageLineOptions = {}): UsageLine => {
   const planLink = narrow ? null : "Plan";
   switch (next.kind) {
@@ -59,7 +55,6 @@ export const usageLineOf = (next: NextQuota, { narrow = false, plan = null }: Us
   }
 };
 
-// The Settings row beside Plan: the plan, and what's left of the next quota (design 95d).
 export const planRowCount = (next: NextQuota | null): string | null => {
   if (next === null) {
     return null;

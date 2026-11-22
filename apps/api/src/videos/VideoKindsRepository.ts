@@ -2,12 +2,10 @@ import { NoteKind, type VideoId } from "@overview/domain";
 import type { SqlClient } from "../db/SqlClient.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 
-// The kind check before an account, across every signed-out device in a UTC day, beside each
-// device's own reads (docs/features/onboarding.md, "The recipe video check").
+// The cap's reason: docs/features/onboarding.md, "Nothing paid before the account".
 export const SIGNED_OUT_KIND_CHECKS_DAILY = 300;
 
-// A video's kind, checked once on our key for whoever pastes it first: the kind is the video's,
-// not the reader's, so a link anyone has pasted costs nothing again.
+// The kind is the video's, not the reader's, so a link anyone has pasted costs nothing again.
 export class VideoKindsRepository {
   #sql: SqlClient;
 

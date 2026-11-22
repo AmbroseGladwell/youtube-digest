@@ -16,7 +16,7 @@ export class GenerateOverviewFormPageObject extends PageObject {
 
   fillUrl = (url: string) => this.step(`fillUrl ${url}`, () => this.get(generateOverviewFormTestIds.urlInput).fill(url));
 
-  // A paste, rather than typing, which is what the field checks a link on.
+  // A paste, not typing, is what the field checks a link on.
   pasteUrl = (url: string) =>
     this.step(`pasteUrl ${url}`, async () => {
       const input = this.get(generateOverviewFormTestIds.urlInput);
@@ -95,7 +95,6 @@ export class GenerateOverviewFormPageObject extends PageObject {
       await this.expectToHaveCount(generateOverviewFormTestIds.watchingNote, 0);
     });
 
-  // What's left of the quota the next overview will use (design 95b).
   verifyUsageLineReads = (text: string) =>
     this.step(`verifyUsageLineReads ${text}`, () => expect(this.get(generateOverviewFormTestIds.usageLine.root)).toHaveText(text));
 
@@ -104,7 +103,6 @@ export class GenerateOverviewFormPageObject extends PageObject {
 
   clickUsagePlanLink = () => this.step("clickUsagePlanLink", () => this.click(generateOverviewFormTestIds.usageLine.planLink));
 
-  // What ran out, in Generate's place, with only the ways round it (designs 95i–95o).
   verifyLimitMessage = ({ title, body, actions }: { title: string; body?: string; actions: string[] }) =>
     this.step(`verifyLimitMessage ${title}`, async () => {
       const ids = generateOverviewFormTestIds.limitMessage;

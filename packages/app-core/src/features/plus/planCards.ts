@@ -1,8 +1,6 @@
 import { chatAllowances } from "@overview/domain";
 
-// What each plan gives, written once (docs/architecture/tiers.md, design 95d–95h). The paid
-// plans sell volume, never features: sync, narration with every voice, the MCP connection and
-// chat all belong to the free account, so what a reader runs out of is overviews and questions.
+// Paid plans sell volume, never features: docs/architecture/tiers.md, "The tiers".
 
 export const EVERY_ACCOUNT_INCLUDES = [
   "Your library synced to the web app and every device",
@@ -12,13 +10,10 @@ export const EVERY_ACCOUNT_INCLUDES = [
 
 export interface PlanCard {
   name: string;
-  // The price as the plans modal shows it (327ah); provisional, in GBP.
   price: string;
   ourKey: string;
   ownKey: string;
-  // Questions about an overview a month, always on us (OV-310).
   questions: string;
-  // Hours of audio a month, shown where the server transcribes episodes (design 305m).
   transcribing: string;
   note: string;
 }

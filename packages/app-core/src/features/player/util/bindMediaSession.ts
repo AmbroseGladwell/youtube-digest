@@ -4,9 +4,7 @@ import { currentMediaSessionOverride, onMediaSessionOverride } from "./mediaSess
 
 const POSITION_REPORT_MS = 5000;
 
-// The lock screen, Now Playing and headphone buttons, which are designed through this
-// rather than drawn (docs/features/audio-player.md). Seek ±15 s and no track buttons: iOS
-// shows skip buttons only when there is no previous or next track to offer instead.
+// Why no track buttons: docs/features/audio-player.md, "iOS and the lock screen".
 export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
   const session = typeof navigator === "undefined" ? undefined : navigator.mediaSession;
   if (session === undefined || typeof MediaMetadata === "undefined") {
@@ -86,8 +84,6 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
     setHandler(action, handler);
   }
 
-  // Track buttons exist only while something gives them a meaning, so iOS keeps its skip buttons
-  // the rest of the time.
   const applyOverride = () => {
     const override = currentMediaSessionOverride();
     setHandler("nexttrack", override === null ? null : () => override.onNext());
@@ -109,11 +105,7 @@ export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
     stopTime();
     stopOverride();
     for (const [action] of handlers) {
-      try {
-        session.setActionHandler(action, null);
-      } catch {
-        // As above.
-      }
+      setHandler(action, null);
     }
   };
 };

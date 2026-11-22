@@ -13,9 +13,7 @@ const INK = "#151618";
 const MUTED = "#5f5c57";
 const ACCENT = "#b03c12";
 
-// The mark's own ink sits in a 32-unit box spanning x 7–25 and y 5.5–27.5, so it is 18 wide
-// by 22 tall. The store wants 96px of artwork inside a 128px square, which means scaling by
-// the taller side and centring what is left (docs/architecture/store-listing.md).
+// The mark's ink spans x 7–25 and y 5.5–27.5 of its 32-unit box.
 export const markBox = { x: 7, y: 5.5, width: 18, height: 22 };
 
 export const artworkFit = ({ canvas, artwork, box = markBox }) => {

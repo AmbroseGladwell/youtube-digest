@@ -37,11 +37,7 @@ const VIDEOS_TAB = "EgZ2aWRlb3PyBgQKAjoA";
 const CHANNELS_TRIED = 3;
 const MORE_PAGES = 5;
 
-// The same episode on YouTube, whose captions cost nothing: first among a video search for its
-// title, on any channel by its title, length and date; then on the show's own channel by its title
-// and length, or, where the upload was retitled, by its description and date. Null when the
-// episode isn't there or can't be told apart from its neighbours, since a confident wrong match
-// is worse than none (docs/features/podcast-on-youtube.md). At most 15 requests.
+// docs/features/podcast-on-youtube.md, "How it finds the episode".
 export const findEpisodeOnYouTube = async (
   youTubeFetch: YouTubeFetch,
   episode: EpisodeToFind,

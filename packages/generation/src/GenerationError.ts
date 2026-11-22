@@ -1,8 +1,6 @@
 export class GenerationError extends Error {}
 
-// Told apart from every other failure because the screen that reports it is different: a
-// refused key keeps the reader on the row they are filling in, with the key still in the
-// field (design 110f). Anything else is a generation that failed.
+// Its own class: a refused key keeps the reader on its row, the key still in the field (design 110f).
 export class ProviderKeyRefusedError extends GenerationError {}
 
 export class ProviderRequestError extends GenerationError {
@@ -14,32 +12,24 @@ export class ProviderRequestError extends GenerationError {
   }
 }
 
-// A key the provider accepts, on an account with nothing left to spend. Each provider says
-// so its own way, so it is told apart here rather than read from a status alone
-// (docs/architecture/tiers.md, "Which key an overview uses").
+// Each provider says it its own way: docs/architecture/tiers.md, "Which key an overview uses".
 export class ProviderOutOfCreditError extends ProviderRequestError {}
 
-// The provider read the request and turned it down for the model it named: a model it
-// doesn't have, or one whose limits the request goes past, such as a structured-output
-// grammar too large for it. A reader on their own key can choose any model their provider
-// lists, so this is told apart from a provider that is down (OV-247).
+// Not a provider that is down: a reader's own key may name any model its provider lists (OV-247).
 export class ModelRefusedError extends ProviderRequestError {}
 
-// The model's answer still broke the schema after its one corrective retry.
 export class SchemaFailureError extends GenerationError {}
 
 // A timeout and a rate limit say nothing about the model, so neither is a refusal of it.
 const refusesModel = (status: number): boolean => status >= 400 && status < 500 && status !== 408 && status !== 429;
 
-// OpenAI answers 429 with `insufficient_quota`; Anthropic answers 400 with a message about
-// the credit balance; DeepSeek, and anything else that uses it, 402 Payment Required.
+// OpenAI: 429 insufficient_quota; Anthropic: 400 about the credit balance; DeepSeek and the rest: 402.
 const outOfCredit = (status: number, body: string): boolean =>
   status === 402 || (status === 429 && body.includes("insufficient_quota")) || (status === 400 && /credit balance is too low/i.test(body));
 
 export const providerFailure = (status: number, body: string): GenerationError => {
   const detail = body.slice(0, 500);
-  // 401 is the common refusal; 403 is a key that exists but is not allowed to do this, and
-  // reads the same way to a reader holding it.
+  // 403 is a key that exists but isn't allowed this, which reads the same way to the reader holding it.
   if (status === 401 || status === 403) {
     return new ProviderKeyRefusedError(detail);
   }

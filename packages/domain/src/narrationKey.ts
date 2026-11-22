@@ -1,13 +1,9 @@
-// Must match RENDER_VERSION in services/tts/src/overview_tts/render_script.py, which refuses
-// any other; bump both when what a render makes changes without the words changing
-// (docs/features/tts-pre-rendered-speech.md, "The service").
+// Must match RENDER_VERSION in services/tts/src/overview_tts/render_script.py; bump both together.
 export const NARRATION_RENDER_VERSION = 1;
 
 export const NARRATION_KEY_PATTERN = /^[0-9a-f]{64}$/;
 
-// What the key is a hash of. The server hashes it with node:crypto; a client that wants to
-// ask whether narration exists without queueing any hashes the same text with WebCrypto
-// (docs/features/tts-pre-rendered-speech.md, "The API side").
+// Hashed by server and WebCrypto alike: docs/features/tts-pre-rendered-speech.md, "The API side".
 export const narrationKeySource = (lines: readonly string[], voice: string, renderVersion: number = NARRATION_RENDER_VERSION): string => {
   return JSON.stringify([renderVersion, voice, lines]);
 };

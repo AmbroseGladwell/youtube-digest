@@ -17,11 +17,10 @@ export const transcribedAudio = (overrides: Partial<TranscribedAudio> = {}): Tra
 export interface ScriptedTranscriber extends Transcriber {
   submitted: { audioUrl: string; maxSeconds: number }[];
   cancelled: string[];
-  // What the host answers next, in order; the last answer repeats once the script runs out.
+  // The last answer repeats once the script runs out.
   script: (HostJobState | Error)[];
 }
 
-// A GPU host that answers each status with the next line of its script.
 export const makeScriptedTranscriber = (
   script: (HostJobState | Error)[] = [{ state: "running" }, { state: "done", result: transcribedAudio() }],
 ): ScriptedTranscriber => {

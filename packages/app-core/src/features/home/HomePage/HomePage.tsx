@@ -47,18 +47,11 @@ import { isStartAsked } from "../../onboarding/startAsked.js";
 import { useTypingSettled } from "../../analytics/useTypingSettled.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 
-// Home is the library everywhere but the side panel, where it is the one video the
-// panel is beside (docs/features/extension-panel.md).
-// Signed out where there are accounts, home is onboarding's Start, in the panel as on the
-// web (205g), or, once this device has had an account, the way back into it unless Create
-// account asked for Start (docs/features/onboarding.md).
 export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) => {
   const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
   const location = useLocation();
-  // Onboarding under way on this device carries on where it was, signed out or just signed
-  // in from its account screen, with the overview made or still on its way
-  // (docs/features/onboarding.md, "The account").
+  // Why onboarding under way carries on: docs/features/onboarding.md, "The account".
   const onboarding = readOnboardingProgress();
   if (onboarding !== null && (accountNeeded || onboarding.overviewId !== null || onboarding.way !== null)) {
     return <Navigate to={Routes.onboarding()} replace />;
@@ -149,10 +142,7 @@ const SignedInHome = ({ place }: { place: LibraryPlace }) => {
   );
 };
 
-// Design 2b/2c: the empty library has one job, which is to take a link. The field is the
-// same run + New starts — it hands the URL to the shell's run and opens the dialog on the
-// progress it makes — so there is one pipeline and one place a run lives
-// (docs/features/stone-theme.md, "First run").
+// Same run as + New, so one pipeline: docs/features/stone-theme.md, "What was built".
 const FirstRunHero = () => {
   const { readiness, ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
   const analytics = useAnalytics();
@@ -242,12 +232,6 @@ const FirstRunHero = () => {
 // Fewer than this and there's no deck to cycle, so the samples are plain rows (155l).
 const DECK_LEAST = 3;
 
-// Design 46a: signed out, the same hero is onboarding's Start. A link we can read goes
-// straight on to the questions while its overview is made, or a sample starts them around one
-// already made. Nothing else is offered: no overview is made or seen without an account
-// (docs/features/onboarding.md).
-// In the panel it is the same screen compressed (205g): the tab is the subject, the headline's
-// verb follows it, and Sign in stands under Make my overview as a peer rather than a line.
 const StartHero = () => {
   const isPanel = useIsPanel();
   const subject = useStartSubject();
@@ -276,8 +260,7 @@ const StartHero = () => {
     setRefused(!startOnboarding(url));
   };
 
-  // Beside something, the offer takes the field's place; "Or paste a different link" swaps
-  // them back, so there is one way in on screen at a time.
+  // One way in on screen at a time: the offer takes the field's place until "paste a different link".
   const offered = subject !== null && !pasting;
   const deckVerb = shownFirst === null || samples.length < DECK_LEAST ? DEFAULT_START_VERB : sampleFacts(shownFirst.note).verb;
   const samplesAside = () => {
@@ -377,11 +360,9 @@ interface HeroProps {
   verb?: ReactNode;
   note?: ReactNode;
   aside?: ReactNode;
-  // Start's samples grow when there are too few for a deck and they're laid out as a list,
-  // so the text stays at the top (155b). The deck is a fixed card, so it stays centred.
+  // A list of samples grows, so the text stays at the top; the fixed deck stays centred (155b).
   alignTop?: boolean;
-  // The panel is one narrow column with no room for the extension's own aside, and the
-  // extension is where it already is (205g).
+  // The panel's one column has no room for the aside, and the reader is in the extension already.
   panel?: boolean;
 }
 
@@ -451,9 +432,7 @@ const Hero = ({
   );
 };
 
-// The design's own sample, so the first thing a new reader sees is what comes back. It is
-// illustration, labelled as such, and every number in it is the design's rather than a
-// measurement of anything (docs/prototype/constraints.md).
+// Illustration: every number in it is the design's, not a measurement (docs/prototype/constraints.md).
 const ExampleOverview = () => {
   return (
     <aside className={styles.example} aria-label="Example overview" data-testid={homePageTestIds.exampleOverview}>

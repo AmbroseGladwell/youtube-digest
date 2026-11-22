@@ -8,9 +8,7 @@ export const SHARING_OFF =
 export const NOTHING_KNOWN =
   "The Overview knows nothing about this reader yet: they haven't written an About you sentence, and nothing has been learned from their overviews. Don't guess at one.";
 
-// What the reader wrote and what the profile pass learned, each learned item with what it rests
-// on. An item the reader hasn't been shown yet, or removed, is never handed over: nothing joins
-// what an assistant sees unseen (docs/features/mcp-connector.md, "The profile").
+// Unseen or removed items are never handed over: docs/features/mcp-connector.md, "The profile".
 export const getProfile = mcpTool({
   name: "get_profile",
   title: "Read what is known about the reader",

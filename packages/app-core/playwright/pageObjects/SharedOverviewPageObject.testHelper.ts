@@ -65,8 +65,6 @@ export class SharedOverviewPageObject extends PageObject {
       await this.expectToBeVisible(makeYourOwnAsideTestIds.root);
     });
 
-  // Signed in, nothing on the page offers an account: the head leads back to their own
-  // overviews, and the aside that sells one is not drawn.
   verifyRecognisesTheReader = () =>
     this.step("verifyRecognisesTheReader", async () => {
       await this.expectToBeVisible(sharedPageHeaderTestIds.libraryButton);
@@ -84,7 +82,6 @@ export class SharedOverviewPageObject extends PageObject {
       await expect(button).toBeEnabled();
     });
 
-  // The strip belongs to the text it switches, so its left edge is the note's left edge.
   verifyTabsAlignWithTheNote = () =>
     this.step("verifyTabsAlignWithTheNote", async () => {
       const tabs = (await this.get(readerTabsTestIds.root).boundingBox())!;
@@ -92,8 +89,6 @@ export class SharedOverviewPageObject extends PageObject {
       expect(Math.round(tabs.x)).toBe(Math.round(note.x));
     });
 
-  // Scrolling must not put the note over the head: the head stays, and the strip rests
-  // against it rather than sliding past.
   verifyHeaderStaysAboveTheTabs = () =>
     this.step("verifyHeaderStaysAboveTheTabs", async () => {
       await this.page.mouse.wheel(0, 600);
@@ -146,7 +141,6 @@ export class SharedOverviewPageObject extends PageObject {
       expect(await this.page.content()).not.toContain(text);
     });
 
-  // OV-295: a shared link carries the overview, not the source's words.
   verifyTranscriptOffersOwnCopy = (label: string) =>
     this.step(`verifyTranscriptOffersOwnCopy ${label}`, async () => {
       await this.expectToBeVisible(sharedTranscriptPromptTestIds.root);

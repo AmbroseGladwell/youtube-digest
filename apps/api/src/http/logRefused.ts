@@ -1,8 +1,7 @@
 import type { FastifyRequest } from "fastify";
 import { apiLogLines } from "@overview/domain";
 
-// The details a refusal sends that are ids, numbers and enums, never a validation detail,
-// which can quote what was sent.
+// Ids, numbers and enums only, never a validation detail, which can quote what was sent.
 const LOGGED_DETAILS = new Set([
   "kind",
   "rev",

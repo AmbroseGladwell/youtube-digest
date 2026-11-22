@@ -38,8 +38,7 @@ export const useTranscriptSearch = (blocks: TranscriptBlock[]): TranscriptSearch
       setQueryState(next);
       setCurrentIndex(0);
     },
-    // Wraps, because the counter reads "4/4" and the only thing left to offer there is
-    // the first one again.
+    // Wraps: at "4/4" the only thing left to offer is the first one again.
     step: (delta) => setCurrentIndex((index) => (matches.length === 0 ? 0 : (index + delta + matches.length) % matches.length)),
     matchesInBlock: (blockIndex) => byBlock.get(blockIndex) ?? [],
   };

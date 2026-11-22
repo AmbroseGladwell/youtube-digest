@@ -8,10 +8,7 @@ export type ChatReservation =
   | { reserved: true; day: string; used: number; limit: number }
   | { reserved: false; quota: "month" | "day" | "our-key-daily"; used: number; limit: number };
 
-// One row per account and UTC day; the month is the sum of its days. A message is reserved
-// before it is asked and given back if it fails, so it counts once, when it is answered.
-// Under the account's row lock, so two questions at once can't both take the last one.
-// The global day lives beside overviews' in our_key_usage (docs/architecture/tiers.md).
+// Reserved before asking, under the account's row lock, so two questions can't both take the last one.
 export class ChatUsageRepository {
   #sql: SqlClient;
 

@@ -10,8 +10,6 @@ const callCost = (10_000 * 4 + 2_000 * 20) / 1_000_000;
 const checkUsage = { input_tokens: 800, output_tokens: 10 };
 const checkCost = (800 * 4 + 10 * 20) / 1_000_000;
 
-// Answers the kind check with the given kind apart from the queue; every other call takes
-// the next answer.
 const anthropicReplying = (...answers: unknown[]) => {
   return anthropicCheckingAs("default", ...answers);
 };

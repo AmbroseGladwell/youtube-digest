@@ -3,14 +3,10 @@ import { GenerationError, providerFailure } from "../GenerationError.js";
 import { providerJsonSchema } from "../providerJsonSchema.js";
 import { usableModels } from "./usableModels.js";
 
-// Four of the six speak OpenAI's chat-completions dialect: OpenAI itself, DeepSeek, xAI
-// and Mistral. They differ in one thing that matters, whether they will take a schema, so
-// that is the only thing this takes as an option.
+// docs/features/byo-providers.md, "Four adapters, not six".
 export interface OpenAiCompatibleOptions {
   baseUrl: string;
-  // "schema" is enforced by the provider; "prose" is DeepSeek, which has JSON mode and no
-  // schema at all, so the shape is taught in the prompt and checked on the way back by
-  // generateOverview's existing correction pass.
+  // "prose" is DeepSeek: JSON mode and no schema, so the shape is taught in the prompt.
   structure: "schema" | "prose";
   // OpenAI's newer models refuse max_tokens outright; the others document only max_tokens.
   tokenLimitField: "max_tokens" | "max_completion_tokens";
@@ -25,8 +21,7 @@ export const openAiCompatibleAdapter = ({ baseUrl, structure, tokenLimitField }:
       const system =
         structure === "schema"
           ? request.systemPrompt
-          : // DeepSeek's JSON mode requires the word "json" in the prompt, and the shape has
-            // to arrive the same way. The schema is the same object the others are sent.
+          : // DeepSeek's JSON mode requires the word "json" in the prompt.
             `${request.systemPrompt}\n\nReply with one json object and nothing else. It must match this JSON schema exactly:\n${JSON.stringify(schema)}`;
 
       const response = await http(`${baseUrl}/chat/completions`, {
@@ -73,9 +68,7 @@ export const openAiCompatibleAdapter = ({ baseUrl, structure, tokenLimitField }:
       const listed = body.data ?? [];
       const ids = listed.filter((model): model is { id: string } => typeof model.id === "string");
 
-      // Mistral is the one in this family that says outright what each model can do. The
-      // rest are judged by name, which is why the ones we are unsure of are offered rather
-      // than hidden.
+      // Why the rest are judged by name: docs/features/byo-providers.md, "Which models are offered".
       const saysSo = ids.filter((model) => typeof (model as { capabilities?: unknown }).capabilities === "object");
       if (saysSo.length === ids.length && ids.length > 0) {
         const usable = ids

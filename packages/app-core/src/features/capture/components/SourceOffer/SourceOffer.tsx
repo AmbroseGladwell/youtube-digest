@@ -4,11 +4,9 @@ import styles from "./SourceOffer.module.scss";
 import { sourceOfferTestIds } from "./SourceOfferTestIds.js";
 
 export interface SourceOfferProps {
-  // The channel for a video, the site for a page.
   source: string;
   title: string;
   words?: number | null;
-  // Named once the page is read, never before: we don't read a page until Create (144o).
   recipe?: { ingredients: number; steps: number } | null;
   video?: boolean;
 }
@@ -32,11 +30,7 @@ const kindLabelOf = (video: boolean, recipe: OfferedRecipe): string => {
   return recipe === null ? "Article" : "Recipe";
 };
 
-// Designs 77ab–77ae and 205f: what's being offered, so the reader can tell it's the right
-// thing. One card for a video and a page alike, which is what makes the panel's home read
-// as one screen with a changing subject rather than several screens. Before Create that is
-// only what the tab says: we promise not to read a page until then, and a video's length
-// is not drawn here either.
+// Only what the tab says before Create: docs/features/article-panel.md, "Nothing is read before Create".
 export const SourceOffer = ({ source, title, words = null, recipe = null, video = false }: SourceOfferProps) => {
   const facts = factsOf(video, recipe, words);
 

@@ -6,9 +6,7 @@ import { VideoSource } from "./VideoSource.js";
 export const VideoReadFailure = z.enum(["not-found", "unavailable"]);
 export type VideoReadFailure = z.infer<typeof VideoReadFailure>;
 
-// The card, and where it could be checked, the video's kind and the transcript the check was
-// made from, so the device keeps that one fetch for the overview (docs/features/onboarding.md,
-// "The recipe video check"). Null where the check didn't run: the video note's own check decides.
+// Keeps the check's one fetch for the overview: docs/features/recipe-notes.md, "Recipe videos".
 export const VideoRead = z.discriminatedUnion("status", [
   z.object({
     status: z.literal("read"),

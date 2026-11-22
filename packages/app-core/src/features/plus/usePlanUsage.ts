@@ -8,8 +8,6 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { DEFAULT_PROVIDER } from "@overview/domain";
 import type { PlanUsageProps } from "./components/PlanUsage/PlanUsage.js";
 
-// What Settings › Plan counts: the account's month signed in, an offer of one signed out
-// where this shell can make one, and nothing where it can't.
 export const usePlanUsage = (): PlanUsageProps | null => {
   const { connection } = useSyncConnection();
   const accountsAvailable = useSync().available;

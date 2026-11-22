@@ -2,9 +2,7 @@ import type { AccountId } from "../auth/AccountId.js";
 import type { RecordKind } from "./RecordKind.js";
 import type { RecordsRepository } from "./RecordsRepository.js";
 
-// Every live record of one kind whose id matches a pattern in SQL's LIKE syntax. Run after a
-// parent's tombstone has committed, and on every retry of it, so a child written before the
-// parent went is caught; a child's own write refuses a parent that is gone, so none can follow.
+// Run after the parent's tombstone commits, and on each retry, to catch a child written before it went.
 export const tombstoneLiveRecords = async (
   records: RecordsRepository,
   accountId: AccountId,

@@ -5,8 +5,7 @@ export interface Page<T> {
   next: string | null;
 }
 
-// The cursor is an offset into the list as it stands now: a library that changes between
-// calls can shift a page by one, which an assistant reading it can live with.
+// An offset into the list as it stands: a library changing between calls can shift a page by one.
 export const pageOf = <T>(items: T[], cursor: string | undefined, size: number): Page<T> => {
   const first = cursor === undefined ? 0 : Math.min(Number(cursor), items.length);
   const end = first + size;

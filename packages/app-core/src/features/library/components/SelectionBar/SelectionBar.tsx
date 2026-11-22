@@ -6,12 +6,9 @@ import { selectionBarTestIds } from "./SelectionBarTestIds.js";
 
 export interface SelectionBarProps {
   count: number;
-  // A phone's bar is icons alone, each named for a screen reader: the count is on the count
-  // line already.
   iconsOnly: boolean;
   allRead: boolean;
   allFavourite: boolean;
-  // On a project's page, the bar can take them out of it.
   projectName: string | null;
   onAddToProject: () => void;
   onAddToTopic: () => void;
@@ -33,7 +30,6 @@ interface Action {
 
 const icon = (name: StrokeIconName) => <StrokeIcon name={name} size={16} />;
 
-// Five actions, the orange one first, Delete last in warning ink ("OV-168 5" 168az, 168bb).
 export const SelectionBar = ({
   count,
   iconsOnly,

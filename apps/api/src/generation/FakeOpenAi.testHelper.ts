@@ -58,9 +58,7 @@ export interface FakeOpenAi {
 const USAGE = { prompt_tokens: 1200, completion_tokens: 300, prompt_tokens_details: { cached_tokens: 200, cache_write_tokens: 800 } };
 export const KIND_CHECK_USAGE = { prompt_tokens: 400, completion_tokens: 10 };
 
-// OpenAI's chat completions as our key would meet them: a video's kind check is answered
-// "default" apart from the queue, and every other call takes the next answer, the last
-// one repeating.
+// A kind check answers "default"; other calls take the next answer, the last repeating.
 export const makeFakeOpenAi = (...answers: FakeOpenAiAnswer[]): FakeOpenAi => {
   const fake: FakeOpenAi = {
     answers: answers.length === 0 ? ["valid"] : answers,

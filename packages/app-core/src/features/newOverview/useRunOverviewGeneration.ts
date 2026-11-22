@@ -34,19 +34,12 @@ import { settingsKeys } from "../settings/settingsKeys.js";
 import { keyOrderFor } from "./util/keyOrderFor.js";
 import { generationKeys } from "./generationKeys.js";
 
-// Named for the provider the reader chose, not for a provider in particular: on a device
-// that holds no key for it, this is the message behind design 110g's dead end.
 export const missingKeyMessage = (provider: keyof typeof PROVIDER_SHORT_LABEL): string =>
   `Add your ${PROVIDER_SHORT_LABEL[provider]} API key first.`;
 
 type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptStore"> & Partial<Pick<Stores, "projectStore">>;
 
-// One generation with everything this shell has to make it: the transcript rungs it can
-// ask, the reader's own key and model for the provider they chose, our key, in the order
-// the plan sets, and the library to save into. Nothing is made signed out where there are accounts
-// (docs/architecture/tiers.md, "Signed out"). Shared by a run the reader starts and by the
-// capture queue (docs/features/capture-queue.md). The library is the one shown, unless the
-// run brings its own.
+// Nothing is made signed out where there are accounts: docs/architecture/tiers.md, "Signed out".
 export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
@@ -102,10 +95,7 @@ export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
   );
 };
 
-// An episode's words come through our server, on the account; the reader's
-// extension searches YouTube for the episode on their own connection when it can
-// (docs/features/podcast-on-youtube.md). Or its audio is transcribed, as the reader chose, with the
-// events of that measured here, wherever the run was started (docs/features/speech-to-text.md).
+// A transcription's events are measured here, wherever the run was started.
 export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const analytics = useAnalytics();

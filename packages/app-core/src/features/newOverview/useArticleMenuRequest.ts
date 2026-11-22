@@ -6,17 +6,14 @@ import { Routes } from "../../app/Routes.js";
 import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import type { NewOverviewRunController } from "./useNewOverviewRun.js";
 
-// The right-click route. It lives beside the run, as the injected button's does, because the
-// panel can be anywhere when the menu is chosen, or not yet open. The menu's click granted
-// activeTab, so nothing is asked and the run goes straight to reading (design 77ag).
+// docs/features/article-panel.md, "Right-click".
 export const useArticleMenuRequest = ({ startArticle }: Pick<NewOverviewRunController, "startArticle">): void => {
   const pages = useArticlePages();
   const navigate = useNavigate();
   const readiness = useGenerationReadiness();
 
   useEffect(() => {
-    // As the injected button: the menu opens the panel, so the request is waiting before
-    // readiness has answers (useGenerationReadiness, `settled`).
+    // As the injected button: the menu opens the panel before readiness has answers.
     if (pages === null || !readiness.settled) {
       return;
     }

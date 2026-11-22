@@ -1,7 +1,6 @@
 import styles from "./PastedLink.module.scss";
 import { pastedLinkTestIds } from "./PastedLinkTestIds.js";
 
-// The link the reader gave, kept in view above what the app made of it (design 27b, 27g).
 export const PastedLink = ({ url }: { url: string }) => {
   return (
     <div className={styles.root}>

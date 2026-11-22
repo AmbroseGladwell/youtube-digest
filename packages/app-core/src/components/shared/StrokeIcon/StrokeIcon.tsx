@@ -97,8 +97,6 @@ export interface StrokeIconProps {
   size?: number;
 }
 
-// The stone design's icons are stroked line work rather than typed glyphs, all on one
-// 24-unit grid at a 2.25 stroke (docs/features/stone-theme.md).
 const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   minus: <path d="M5 12h14" />,
   mic: (

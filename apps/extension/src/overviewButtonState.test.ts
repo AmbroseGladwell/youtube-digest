@@ -34,8 +34,6 @@ describe("overviewButtonState", () => {
     expect(state).toEqual({ kind: "generating", startedAt: 1_000_000, progressFraction: 0.25 });
   });
 
-  // The panel follows the tab in front of it, so the run it is reporting is often for a
-  // different video than the one this button is sitting on.
   it("ignores a run on another video", () => {
     const state = overviewButtonState({
       videoId: VIDEO_ID,
@@ -60,13 +58,10 @@ describe("overviewButtonState", () => {
     expect(overviewButtonState({ videoId: VIDEO_ID, report, held: false }).kind).toBe("ready");
   });
 
-  // Without this the button would say "Overview" on a video already written up, which
-  // makes it a one-press way to pay for the same video twice.
   it("is ready on arrival at a video the library already holds", () => {
     expect(overviewButtonState({ videoId: VIDEO_ID, report: null, held: true }).kind).toBe("ready");
   });
 
-  // The panel carries the error, where it can actually be read.
   it("goes back to offering a run after one fails", () => {
     const report = reportOn(VIDEO_ID, { status: "failed" });
 
@@ -79,9 +74,6 @@ describe("overviewButtonState", () => {
     expect(overviewButtonState({ videoId: VIDEO_ID, report, held: true }).kind).toBe("ready");
   });
 
-  // A library that could not be read has not said "no overview" — and the two answers
-  // cost different things to get wrong: a wrong "ready" costs a click, a wrong invite
-  // costs a whole generation (docs/features/record-migrations.md).
   it("does not invite a run when the library could not say whether it holds one", () => {
     expect(overviewButtonState({ videoId: VIDEO_ID, report: null, held: null }).kind).toBe("ready");
   });

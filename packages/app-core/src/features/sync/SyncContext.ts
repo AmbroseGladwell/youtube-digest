@@ -5,31 +5,24 @@ import type { SignOutNotice } from "./types/SignOutNotice.js";
 import type { SignOutOptions } from "./types/SignOutOutcome.js";
 
 export interface SyncState {
-  // Whether this shell can sync at all. False hides every sync control.
+  // False where this shell cannot sync at all, and every sync control hides.
   available: boolean;
-  // Whether this device is signed in to a server.
   connected: boolean;
   status: SyncStatus;
   syncNow: () => void;
-  // Runs one last cycle, tells the server to end the session, then signs this device out
-  // whether or not it answered (docs/features/account-libraries.md).
+  // Always completes, whatever the server answers: docs/features/account-libraries.md, "Sign-out".
   signOut: (options?: SignOutOptions) => Promise<void>;
   signingOut: boolean;
-  // The account is gone from the server: stops the engine with no last cycle, since there
-  // is nothing left to send to, and signs this device out (docs/features/account-deletion.md).
+  // No last cycle, since a deleted account has nothing left to send to.
   leaveDeletedAccount: () => void;
-  // What the last sign-out could not send, until the reader dismisses it.
   signOutNotice: SignOutNotice | null;
   dismissSignOutNotice: () => void;
   // Just signed in, and the account's library has not finished its first cycle.
   opening: boolean;
-  // Asks the server for a transcript this device does not hold. Null when not signed in.
+  // Null when not signed in.
   fetchTranscript: ((videoId: VideoId) => Promise<StoredTranscript | null>) | null;
-  // Overviews made on this device that were folded into the account's copy of the same
-  // video since this tab opened, latest last, so an open page can follow and the reader
-  // can be told (docs/features/one-overview-per-video.md).
+  // Latest last: docs/features/one-overview-per-video.md, "The client resolves the refusal".
   folds: OverviewFold[];
-  // The latest fold the reader has not yet been told about.
   foldNotice: OverviewFold | null;
   dismissFoldNotice: () => void;
 }

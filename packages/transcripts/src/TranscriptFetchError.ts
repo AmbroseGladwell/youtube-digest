@@ -7,14 +7,11 @@ export interface TranscriptFetchErrorOptions {
   retryAfterSeconds?: number;
 }
 
-// retryable is derived rather than passed, so a caller cannot name a failure and then
-// contradict it (docs/features/transcript-retrieval.md).
+// Derived, so a caller can't name a failure and then contradict it.
 export class TranscriptFetchError extends Error {
   readonly failure: TranscriptFetchFailure;
   readonly retryable: boolean;
   readonly sourceId: string | null;
-  // When a source that turned the request away for now can be asked again, in seconds,
-  // when it said so.
   readonly retryAfterSeconds: number | null;
 
   constructor(message: string, options: TranscriptFetchErrorOptions) {

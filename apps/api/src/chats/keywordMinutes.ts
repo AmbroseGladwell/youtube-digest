@@ -17,8 +17,6 @@ import { transcriptPassages, type Passage } from "./transcriptPassages.js";
 
 export const KEYWORD_MINUTES = 8;
 
-// The minutes of one overview's transcript a question was sent: the best keyword hits in it, each
-// with the minute either side.
 export interface OverviewMinutes {
   overviewId: OverviewId;
   overview: Overview;
@@ -35,9 +33,7 @@ export interface KeywordMinutesFilter {
   within?: readonly string[] | null;
 }
 
-// The 8 best minutes for a question's words across the account's transcripts, each with its
-// neighbours, grouped by the live overview they belong to, best first (OV-352). Search failing never
-// stops the answer: it goes on without minutes, and the log says so.
+// Why a failed search never stops the answer: docs/features/chats.md, "Details from other transcripts".
 export const keywordMinutes = async (
   { passages, records }: KeywordMinutesDeps,
   accountId: AccountId,
@@ -79,8 +75,7 @@ export const keywordMinutes = async (
   return [...grouped.values()].map((minutes) => ({ ...minutes, passages: minutes.passages.sort((a, b) => a.startMs - b.startMs) }));
 };
 
-// Every minute of these overviews' transcripts, cut again, so an earlier question's minutes rebuild
-// as they were sent. A transcript gone since leaves its overview out.
+// Cut again, so an earlier question's minutes rebuild as they were sent.
 export const transcriptMinutes = async (
   transcripts: TranscriptsRepository,
   accountId: AccountId,

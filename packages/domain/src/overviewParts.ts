@@ -38,10 +38,7 @@ const PART_ID_PREFIX: Record<OverviewPart, string> = {
 export const overviewPartId = (part: OverviewPart, index: number): string =>
   SINGLE_PARTS.has(part) ? PART_ID_PREFIX[part] : `${PART_ID_PREFIX[part]}${index + 1}`;
 
-// The items of an overview a chat answer can cite, each as overviewMarkdown shows it with
-// `partIds`, so the ids the model sees are exactly these (docs/features/chats.md, "Citing the
-// overview"). An article's chapters are its chapters, and its Read it anyway? its watchAnyway, so
-// a chat about an article needs no new kind of citation (OV-320).
+// Exactly the ids the model sees: docs/features/chats.md, "Citing the overview".
 export const overviewParts = (overview: Overview): OverviewPartItem[] => {
   const items: OverviewPartItem[] = [];
   const add = (part: OverviewPart, texts: readonly string[]) => texts.forEach((text, index) => items.push({ part, index, text }));
@@ -80,8 +77,7 @@ export const overviewParts = (overview: Overview): OverviewPartItem[] => {
   return items;
 };
 
-// FNV-1a, 32 bits: enough to tell whether the item at a cited place is still the one cited,
-// and the same on the server and every client without an async digest.
+// FNV-1a, 32 bits: the same on server and every client, without an async digest.
 export const overviewPartHash = (text: string): string => {
   let hash = 0x811c9dc5;
   for (const char of text.trim()) {
@@ -102,9 +98,7 @@ export interface CitedPart {
   index: number | null;
 }
 
-// Where a citation of the overview lands now. A regenerated overview keeps its id but can move
-// or rewrite its items: the item that still has the cited text, wherever it moved within its
-// part, else the part's section alone (index null), else nothing when the section is gone.
+// The item still holding the cited text, else its section (index null), else null.
 export const citedOverviewPart = (overview: Overview, citation: OverviewPartCitation): CitedPart | null => {
   const inPart = overviewParts(overview).filter(({ part }) => part === citation.part);
   if (inPart.length === 0) {

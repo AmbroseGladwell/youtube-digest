@@ -6,8 +6,6 @@ import { useSurface } from "../../app/SurfaceContext.js";
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 
-// What every event and error in a batch has in common (docs/architecture/analytics.md,
-// "What an event may carry").
 export const useAnalyticsContext = (): AnalyticsContext => {
   const surface = useSurface();
   const layout = useLayout();

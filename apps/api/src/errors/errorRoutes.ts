@@ -8,8 +8,7 @@ import type { ErrorSink } from "./ErrorSink.js";
 
 const ERRORS_BODY_LIMIT_BYTES = 64 * 1024;
 
-// With or without an account: an error is operational, not usage
-// (docs/architecture/errors-and-logs.md, "Who is reported").
+// With or without an account: docs/architecture/errors-and-logs.md, "Who is reported".
 export const errorRoutes = (app: FastifyInstance, sink: ErrorSink | null, clock: () => Date): void => {
   app.post(
     "/errors",
@@ -33,8 +32,7 @@ export const errorRoutes = (app: FastifyInstance, sink: ErrorSink | null, clock:
           }),
         );
       }
-      // Logged and nothing more: a degraded moment the app carried on through is the
-      // system's story, not an issue to triage (docs/architecture/errors-and-logs.md, "Client warnings").
+      // Logged only: docs/architecture/errors-and-logs.md, "Client warnings".
       for (const { at: _at, ...warning } of warnings.map(readClientWarning)) {
         const { requestId, ...logged } = "requestId" in warning ? warning : { ...warning, requestId: undefined };
         request.log.warn(
@@ -46,8 +44,7 @@ export const errorRoutes = (app: FastifyInstance, sink: ErrorSink | null, clock:
           }),
         );
       }
-      // The steps are keyed by name so a slow one can be filtered on, as in
-      // `clientTiming.steps.model.ms` (docs/architecture/errors-and-logs.md, "Client timings").
+      // Keyed by name to filter on: docs/architecture/errors-and-logs.md, "Client timings".
       for (const { at: _at, name, steps, ...timing } of timings.map(readClientTiming)) {
         request.log.info(
           apiLogLines.client[name]({

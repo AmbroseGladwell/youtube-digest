@@ -1,8 +1,5 @@
 import type { AnalyticsConsent } from "../types/AnalyticsConsent.js";
 
-// Who the switch in Settings › Privacy speaks for: a reader without an account, whose answer
-// is consent kept on this device, or an account, whose switch is an opt-out kept on the
-// account (docs/features/analytics-consent.md, "Settings › Privacy").
 export type ShareUsageState =
   | { signedIn: false; consent: AnalyticsConsent | null; outdated: boolean }
   | { signedIn: true; optedOut: boolean; changedAt: string | null };
@@ -21,7 +18,6 @@ export const shareUsageOn = (state: ShareUsageState): boolean => {
   return state.signedIn ? !state.optedOut : state.consent?.answer === "share" && !state.outdated;
 };
 
-// Design 62d–62h: the line under "Analytics", which is the switch's description.
 export const shareUsageStatus = (state: ShareUsageState, now: Date): string => {
   if (state.signedIn) {
     const since = state.changedAt === null ? "" : ` since ${sinceDay(state.changedAt, now)}`;

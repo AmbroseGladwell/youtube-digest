@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 
-// The line being read stays on screen while the narration is in this list, as the note's do.
 // A line already comfortably in view is left alone, so the page doesn't jump per line.
 export const useSpokenLineInView = <Element extends HTMLElement>(speaking: boolean, activeIndex: number | null) => {
   const line = useRef<Element | null>(null);

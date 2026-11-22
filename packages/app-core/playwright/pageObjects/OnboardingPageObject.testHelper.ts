@@ -49,7 +49,6 @@ export class OnboardingPageObject extends PageObject {
       if (heading === undefined) {
         return;
       }
-      // The account step's heading is the sign-in form's own (327l).
       const focused = step === "account" ? this.get(authScreenTestIds.title) : this.page.getByRole("heading", { level: 1 });
       await expect(focused).toHaveText(heading);
       await expect(focused).toBeFocused();
@@ -81,8 +80,6 @@ export class OnboardingPageObject extends PageObject {
       await expect(this.get(onboardingAnalyticsTestIds.policyLink)).toHaveAttribute("target", "_blank");
     });
 
-  // From wherever the questions start (analytics if it's asked, Your link for a link, topics for a
-  // shared copy or sample), on through every screen to the account, skipping what can be skipped.
   skipToAccount = () =>
     this.step("skipToAccount", async () => {
       const first = this.get(onboardingAnalyticsTestIds.root)
@@ -107,7 +104,6 @@ export class OnboardingPageObject extends PageObject {
       await this.verifyOnScreen("account", CREATE_ACCOUNT_TITLE);
     });
 
-  // Your link (327c): the reader's own link read back to them before anything is written.
   #yourLink = (testId: string) => this.get(onboardingYourLinkTestIds.root).getByTestId(testId);
 
   verifyVideoTitle = (title: string) =>
@@ -202,7 +198,6 @@ export class OnboardingPageObject extends PageObject {
 
   transcribe = () => this.step("transcribe", () => this.click(onboardingReadFailureTestIds.transcribe));
 
-  // The moments (327d, 327g, 327h): one screen each, with nothing to answer.
   continueFromSaving = () => this.step("continueFromSaving", () => this.click(onboardingSavingMomentTestIds.next));
 
   verifyOffersTheExtension = (offered: boolean) =>
@@ -222,7 +217,6 @@ export class OnboardingPageObject extends PageObject {
 
   addContextAboutYou = () => this.step("addContextAboutYou", () => this.click(onboardingStepsMomentTestIds.addContext));
 
-  // Topics (327e).
   pickTopics = (...names: string[]) =>
     this.step(`pickTopics ${names.join(", ")}`, async () => {
       for (const name of names) {
@@ -297,14 +291,12 @@ export class OnboardingPageObject extends PageObject {
   verifyTopicFieldHasFocus = () =>
     this.step("verifyTopicFieldHasFocus", () => expect(this.get(onboardingTopicsTestIds.typeField)).toBeFocused());
 
-  // About you (327i).
   get sentence() {
     return new AboutYouSentencePageObject(this.testContext);
   }
 
   continueFromAboutYou = () => this.step("continueFromAboutYou", () => this.click(onboardingAboutYouTestIds.continue));
 
-  // The account (327l): the form in place, then the code in its place.
   get accountForm(): SignInPageObject {
     return new SignInPageObject(this.testContext);
   }
@@ -348,7 +340,6 @@ export class OnboardingPageObject extends PageObject {
       await form.typeCode(code);
     });
 
-  // The wait (327m): each stage is a real event of the run, and it ends on Open your overview.
   verifyWaitStage = (index: number, { state, text }: { state: "waiting" | "running" | "done"; text: string | RegExp }) =>
     this.step(`verifyWaitStage ${index} ${state}`, async () => {
       const stage = this.get(onboardingWaitTestIds.stage(index));
@@ -369,7 +360,6 @@ export class OnboardingPageObject extends PageObject {
   verifyAsksToKeepTheTab = (asked: boolean) =>
     this.step(`verifyAsksToKeepTheTab ${asked}`, () => this.expectToHaveCount(onboardingWaitTestIds.keepTab, asked ? 1 : 0));
 
-  // Three where the extension can be added (appearance, the extension, your AI), two elsewhere.
   verifyWaitOffersSetups = (count: number) =>
     this.step(`verifyWaitOffersSetups ${count}`, async () => {
       await this.expectToBeVisible(onboardingSetupsTestIds.root);
@@ -398,8 +388,7 @@ export class OnboardingPageObject extends PageObject {
   verifyPageHasNoText = (text: string) =>
     this.step(`verifyPageHasNoText ${text}`, () => expect(this.get(onboardingPageTestIds.root)).not.toContainText(text));
 
-  // OV-210 (210a–210k): below the brand row one area scrolls, and each step's foot is pinned to
-  // its bottom. The foot is the sticky element nearest the step's Continue.
+  // The foot is the sticky element nearest the step's Continue (OV-210).
   #scroller = () => this.get(onboardingPageTestIds.scroller);
   #foot = (continueTestId: string) =>
     this.get(continueTestId).evaluate((button) => {
@@ -421,7 +410,6 @@ export class OnboardingPageObject extends PageObject {
   verifyContinueIsInView = (continueTestId: string) =>
     this.step(`verifyContinueIsInView ${continueTestId}`, () => expect(this.get(continueTestId)).toBeInViewport({ ratio: 1 }));
 
-  // Nothing of the step may show beneath the foot while it is pinned.
   verifyFootSitsOnTheWindowsEdge = (continueTestId: string) =>
     this.step("verifyFootSitsOnTheWindowsEdge", async () => {
       const { bottom } = await this.#foot(continueTestId);

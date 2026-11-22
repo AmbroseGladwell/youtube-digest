@@ -42,19 +42,7 @@ import { createOpenAiEmbedder } from "../meaning/createOpenAiEmbedder.js";
 import { MEANING_FLOOR } from "../meaning/MeaningSearch.js";
 import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
 
-// OV-307: chat across sources. Over one reader's whole library (exportChatLibrary), does search
-// by meaning find the overview that answers a question, and what does an answer cost and how
-// good is it when the closest few, or overviews the reader pins, go in beside the one the chat
-// is about (docs/architecture/in-app-chat.md, "Chat across sources").
-//
-//   node dist/scripts/chatAcrossSourcesCheck.js retrieval <data dir> <out.json>
-//   node dist/scripts/chatAcrossSourcesCheck.js answer <data dir> <retrieval.json> <out.json> --arms a,b --runs 2 --budget 3 [--dry-run]
-//   node dist/scripts/chatAcrossSourcesCheck.js twopass <data dir> <out.json> --arms structured-map,two-pass,shipped --runs 1 --budget 1 [--dry-run]
-//   node dist/scripts/chatAcrossSourcesCheck.js project <data dir> <out.json> --arms a,b --runs 2 --budget 1 [--dry-run]
-//
-// retrieval spends only embeddings: the questions, and every transcript's minute passages for the
-// passage-vector arm, each cached in the data dir. Ranking by claims is ClaimEmbeddingsRepository's
-// own query on an in-memory Postgres holding the exported vectors, so it is search as it runs.
+// What it measures: docs/architecture/in-app-chat.md, "Chat across sources"; to run, "Running it again".
 
 type Kind = "inOverview" | "transcriptOnly" | "twoMoments" | "notInSource" | "applyAcross" | "notInLibrary";
 
@@ -272,8 +260,7 @@ const loadQuestions = async (dataDir: string, library: Library): Promise<{ locat
   return { located, dropped };
 };
 
-// The overview nearest the one that answers, by best pair of claims: where a reader plausibly is
-// when they ask about the other.
+// Where a reader plausibly is when asking about the answering overview: its nearest by claims.
 const nearestHome = (library: Library, overviewId: string): string => {
   const own = library.claimVectors.get(overviewId) ?? [];
   let best = { id: "", similarity: -2 };
@@ -432,11 +419,7 @@ const retrievalMarkdown = (rows: RetrievalRow[]): string => {
   ].join("\n");
 };
 
-// --- keyword search over the kept transcripts ---
-
-// The card's open question: before any vectors, would words find what claim search misses? BM25
-// over the same minute passages, a source scoring as its best passage. Nothing is stored or paid
-// for; Postgres full-text search would be the built version.
+// Would words find what claim search misses? BM25 over minute passages; nothing stored or paid for.
 const STOPWORDS = new Set(
   "a an and are as at be been but by can could did do does doing for from had has have he her his how i if in into is it its just me my of on or our out she so than that the their them then there these they this to up was we were what when where which who why will with would you your about after all also any because before being both did does each few more most much no not now only other over own same should some such too under until very via what whom yours say says said tell told saved video videos overview overviews episode".split(
     " ",
@@ -535,7 +518,6 @@ const keyword = async (dataDir: string, retrievalPath: string): Promise<void> =>
   }
 };
 
-// The library's transcripts in Postgres, indexed by the shipped repository (OV-352).
 const keywordStore = async (library: Library) => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps() });
@@ -561,9 +543,7 @@ const keywordStore = async (library: Library) => {
   return { sql, repository, videoOf, overviewOf, indexMs: performance.now() - started };
 };
 
-// OV-352: the shipped keyword search, Postgres full text over stored minute passages, against the
-// harness's BM25: where it ranks each question's source, and how long a search takes, with the
-// alternative of reading every transcript and scoring it per question timed beside it.
+// OV-352's shipped Postgres keyword search, ranked and timed against the harness's BM25.
 const pgKeyword = async (dataDir: string, retrievalPath: string): Promise<void> => {
   const library = await loadLibrary(dataDir);
   const { located } = await loadQuestions(dataDir, library);
@@ -618,8 +598,6 @@ const pgKeyword = async (dataDir: string, retrievalPath: string): Promise<void> 
   }
 };
 
-// The reply as the scoring below reads it, from the shape every chat now gives (OV-354): its text
-// flattened, and its ids by kind.
 const textsOf = (items: readonly { text: string }[]) => items.map((item) => item.text);
 
 type ScoredReply = CitedIds & { answer: string; generalKnowledge: boolean };
@@ -639,8 +617,6 @@ const scoredReply = (reply: ChatReply): ScoredReply => ({
     .join("\n"),
   generalKnowledge: reply.generalKnowledge,
 });
-
-// --- answering ---
 
 interface Arm {
   name: string;
@@ -664,8 +640,7 @@ const arms = (): Map<string, Arm> => {
   const search = (count: number) => (row: RetrievalRow) => row.claimOrder.slice(0, count);
   const list: Arm[] = [
     { name: "home", pick: () => [], transcripts: false },
-    // OV-354: each question asked in the chat of the overview it is about, scored on its own
-    // transcript: the shipped prompt's own citing, as OV-267 measured it.
+    // OV-354: asked in its own overview's chat and scored on its own transcript, as OV-267 measured.
     { name: "own", pick: () => [], transcripts: false },
     { name: "search3-full", pick: search(3), transcripts: true },
     { name: "search3-overviews", pick: search(3), transcripts: false },
@@ -820,8 +795,7 @@ const answer = async (
   const closestNeeded = options.arms.some((name) => all.get(name)?.transcripts === "closest");
   const questionVectors = closestNeeded ? await vectorCache("questions.json") : new Map<string, number[]>();
   const passageVectors = closestNeeded ? await vectorCache("passages.json") : new Map<string, number[]>();
-  // The passage-vector shape: the eight minutes of transcript closest to the question anywhere
-  // in the library but this chat's own source, each going in with its overview.
+  // Passage-vector shape: the 8 minutes closest to the question anywhere but this chat's own source.
   const closestPassages = (question: Located, home: string): Map<string, Passage[]> => {
     const vector = questionVectors.get(question.question.trim().toLowerCase())!;
     const scored = [...library.overviews.values()]
@@ -844,8 +818,7 @@ const answer = async (
     }
     return chosen;
   };
-  // The keyword shape: the eight minutes that best match the question's words, by BM25 over the
-  // transcripts already kept, chosen the same way and sent the same way.
+  // Keyword shape: the 8 minutes best matching the question's words, by BM25 over kept transcripts.
   const keywords = options.arms.some((name) => ["keyword", "keywordNeighbours"].includes(String(all.get(name)?.transcripts)))
     ? keywordIndex(library)
     : null;
@@ -1115,8 +1088,6 @@ const score = (
   };
 };
 
-// --- an empty chat over the whole library ---
-
 interface SynthesisQuestion {
   id: string;
   question: string;
@@ -1144,8 +1115,7 @@ interface MapTurn {
   ms: number;
 }
 
-// Every overview the reader saved, compact enough to send whole: the material for a question no
-// one overview answers ("what do my saved overviews have in common?").
+// For a question no one overview answers ("what do my saved overviews have in common?").
 const libraryMap = (library: Library, withKeyPoints: boolean): { text: string; labels: Map<string, string>; partIds: Set<string> } => {
   const labels = new Map<string, string>();
   const partIds = new Set<string>();
@@ -1341,8 +1311,6 @@ const answerMarkdown = (turns: AnswerTurn[]): string => {
   ].join("\n");
 };
 
-// --- a project: its own chat, and pinned with "@" in an overview's chat ---
-
 type ProjectKind = "synthesis" | "detail" | "purpose" | "outside" | "atProject";
 
 interface ProjectQuestion {
@@ -1388,9 +1356,7 @@ const briefLine = (label: string, entry: LibraryOverview) =>
     .filter((line) => line !== "")
     .join("\n");
 
-// A project page's chat: its overviews whole, or compact as in the library map, with the
-// reader's purpose for it or without, and with the minutes of its transcripts that best match
-// the question's words or without.
+// Overviews whole or as a map, with or without the reader's purpose and keyword minutes.
 const projectMaterial = (
   library: Library,
   { project, members }: LibraryProject,
@@ -1443,8 +1409,7 @@ ${blocks.join("\n\n")}`;
   return { text, labels, partIds };
 };
 
-// "@" a project in an overview's chat: a small project goes in whole, as pins do; a larger one
-// sends its closest few whole and the rest in brief, so the prompt stays bounded.
+// A small project goes in whole; a larger one sends its closest few whole and the rest in brief.
 const pinnedProjectBlock = (
   library: Library,
   { project, members }: LibraryProject,
@@ -1718,8 +1683,6 @@ const projectMarkdown = (turns: ProjectTurn[]): string => {
   ].join("\n");
 };
 
-// --- structured answers, and a second pass that reads the chosen overviews whole ---
-
 const STRUCTURED_ANSWER_TOKENS = 2_000;
 const PICKS = 5;
 // Luna's reasoning counts against the cap, and broad questions reason longest: 300 cut off 4 in 17.
@@ -1768,8 +1731,7 @@ interface StructuredAnswer {
   takeaway: string;
 }
 
-// The shared reply shape (OV-354) scored as the older points were: each section one point, its text
-// the paragraphs and lists, its sources every id the section names. The intro's sources join as a point.
+// The OV-354 reply scored as the older points: each section one point, the intro's sources one more.
 const asPoints = (json: unknown): StructuredAnswer => {
   const sections = (json as { sections: Array<Record<string, unknown>> }).sections;
   if (sections.every((section) => Array.isArray(section["points"]))) {
@@ -1876,8 +1838,7 @@ const addUsage = (left: TokenUsage | null, right: TokenUsage | null): TokenUsage
 
 const contentWords = (text: string) => termsOf(text).filter((word) => word.length > 4);
 
-// The library or a project as the compact map, with one system message that serves both passes,
-// so the second pass reads the map from the cache.
+// One system message serves both passes, so the second pass reads the map from the cache.
 const twoPassSystem = (library: Library, scope: string): { text: string; labels: Map<string, string>; order: string[] } => {
   const project = scope === "library" ? null : [...library.projects.values()].find((entry) => entry.project.id.startsWith(scope))!;
   const order = project === null ? [...library.overviews.keys()] : project.members;

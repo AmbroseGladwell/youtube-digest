@@ -66,7 +66,6 @@ const page = (title: string): WebSource => ({
   wordCount: 2300,
 });
 
-// The prompt is the Markdown, so reading one back must write the same Markdown again.
 const rewritten = (overview: Overview) => {
   const markdown = overviewMarkdown(overview, { partIds: true });
   const again = overviewMarkdown({ ...overview, ...overviewFromMarkdown(overviewMarkdown(overview)) } as Overview, { partIds: true });

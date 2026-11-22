@@ -2,9 +2,7 @@ import { ApiError } from "../http/ApiError.js";
 import type { RecordKind } from "../records/RecordKind.js";
 import type { ClientContext } from "./ClientContext.js";
 
-// A client may write to a record it can read, and no further: enforced here against the
-// stored record's version rather than trusted to the client
-// (docs/features/record-migrations.md).
+// Why: docs/features/record-migrations.md, "A client may write to a record it can read".
 export const assertRecordWritable = (kind: RecordKind, storedSchemaVersion: number, client: ClientContext): void => {
   const clientSchemaVersion = client.schemaVersions[kind];
   if (storedSchemaVersion > clientSchemaVersion) {

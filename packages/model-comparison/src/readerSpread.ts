@@ -43,8 +43,7 @@ export const wordOverlap = (left: readonly string[], right: readonly string[]): 
   return shared / (leftWords.size + rightWords.size - shared);
 };
 
-// A video counts only once every reader's overview passed, so each pair is compared over
-// the same videos and a failure can't pass for a difference.
+// Only videos every reader passed, so a failure can't pass for a difference.
 export const actionsByVideo = (runs: ReadonlyMap<string, readonly RunRecord[]>): Map<string, ActionsByReader> => {
   const readers = [...runs.keys()];
   const byVideo = new Map<string, Map<string, readonly string[]>>();
@@ -61,8 +60,7 @@ export const actionsByVideo = (runs: ReadonlyMap<string, readonly RunRecord[]>):
   return new Map([...byVideo].filter(([, actions]) => readers.every((name) => actions.has(name))));
 };
 
-// Two empty lists agree, but saying nothing to two readers is no evidence the context was
-// ignored, so they are counted apart and left out of the overlap.
+// Empty pairs agree but prove nothing, so they are counted apart from the overlap.
 export const readerSpread = (readers: readonly string[], byVideo: ReadonlyMap<string, ActionsByReader>): ReaderSpread => {
   const videos = [...byVideo.values()];
   const pairs = readers.flatMap((left, index) =>
@@ -119,8 +117,7 @@ export interface SpreadReader {
   cues: { sentence: readonly string[]; learned: readonly string[] };
 }
 
-// How often a reader's actions draw on what we know of them, against how often actions
-// written for nobody hit the same words by chance: the baseline the count has to beat.
+// Against actions written for nobody, the chance baseline the count has to beat.
 export const contextUse = (reader: SpreadReader, nobody: string, byVideo: ReadonlyMap<string, ActionsByReader>): ContextUse => {
   const all = [...reader.cues.sentence, ...reader.cues.learned];
   const theirs = [...byVideo.values()].map((actions) => actions.get(reader.name) ?? []);

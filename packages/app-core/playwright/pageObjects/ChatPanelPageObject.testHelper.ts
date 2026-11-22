@@ -23,7 +23,6 @@ import { readAlongNoteTestIds } from "../../src/features/reader/components/ReadA
 import { PageObject } from "./PageObject.testHelper.js";
 import { SettingsPageObject } from "./SettingsPageObject.testHelper.js";
 
-// Chat about one overview, beside its note on the web (OV-310; docs/features/chats.md).
 export class ChatPanelPageObject extends PageObject {
   private panel = () => this.page.getByTestId(chatPanelTestIds.root);
   private field = () => this.panel().getByTestId(chatFieldTestIds.input);
@@ -131,7 +130,6 @@ export class ChatPanelPageObject extends PageObject {
       this.click(this.answers().nth(answer).getByTestId(chatCitationPillTestIds.pill).nth(citation)),
     );
 
-  // The whole row under an answer, overview pills then video pills, by their visible words (319c).
   verifyCitationRowReads = (index: number, texts: string[]) =>
     this.step(`verifyCitationRowReads ${index} ${texts.join(" | ")}`, () =>
       expect(this.answers().nth(index).getByTestId(chatAnswerTestIds.citations).locator(":scope > *")).toHaveText(texts),
@@ -146,7 +144,6 @@ export class ChatPanelPageObject extends PageObject {
       }
     });
 
-  // An article's key point or chapter pill has a link to its place on the page beside it (OV-320).
   verifyShowOnPageLinks = (index: number, hrefs: string[]) =>
     this.step(`verifyShowOnPageLinks ${index} ${hrefs.join(" | ")}`, async () => {
       const links = this.answers().nth(index).getByTestId(chatAnswerTestIds.showOnPage);
@@ -156,7 +153,6 @@ export class ChatPanelPageObject extends PageObject {
       }
     });
 
-  // A decline on an article or a recipe page offers the page itself.
   verifyReadOnPageLinksTo = (index: number, href: string | null) =>
     this.step(`verifyReadOnPageLinksTo ${index} ${href}`, () =>
       href === null
@@ -190,7 +186,6 @@ export class ChatPanelPageObject extends PageObject {
       expect(this.answers().nth(answer).getByTestId(chatOverviewCitationTestIds.pill).nth(citation)).toBeFocused(),
     );
 
-  // Another of the reader's overviews an answer drew on (OV-355).
   verifyOtherOverviewCitationsNamed = (index: number, names: string[]) =>
     this.step(`verifyOtherOverviewCitationsNamed ${index} ${names.join(" | ")}`, async () => {
       const links = this.answers().nth(index).getByTestId(chatOtherOverviewCitationTestIds.link);
@@ -219,7 +214,6 @@ export class ChatPanelPageObject extends PageObject {
       await expect(gone.getByRole("button")).toHaveCount(0);
     });
 
-  // The part of the note a citation led to: tinted, focused, and the only one (319n).
   verifyOverviewPartCited = (text: string) =>
     this.step(`verifyOverviewPartCited ${text}`, async () => {
       const cited = this.page.locator('[data-cited-part="true"]');
@@ -467,7 +461,6 @@ export class ChatPanelPageObject extends PageObject {
 
   pressF6 = () => this.step("pressF6", () => this.page.keyboard.press("F6"));
 
-  // OV-354: the "@" picker, the row above the field and what each question drew on.
   openPickerWithButton = () => this.step("openPickerWithButton", () => this.click(this.panel().getByTestId(chatFieldTestIds.at)));
 
   verifyPickerOffers = (titles: string[]) =>
@@ -535,8 +528,6 @@ export class ChatPanelPageObject extends PageObject {
       await expect(row.getByRole("button", { name: /^Remove/ })).toHaveCount(0);
     });
 
-  // OV-362: past two chips the row folds into "+N", whose menu lists every one.
-  // OV-364: an answer's inline code, links and code blocks, the same in every chat.
   verifyMarkdownRead = (answer: number, { code, links, blocks }: { code: string[]; links: string[]; blocks: string[] }) =>
     this.step(`verifyMarkdownRead ${answer}`, async () => {
       const root = this.answers().nth(answer);

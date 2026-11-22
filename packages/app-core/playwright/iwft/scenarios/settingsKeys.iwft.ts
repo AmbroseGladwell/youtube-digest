@@ -18,9 +18,6 @@ test("a key added on the settings page unlocks the dialog's generate form", asyn
   await dialog.form.verifyGenerateButtonEnabled();
 });
 
-// The first key saved becomes what generation runs on; later ones never change it, because
-// a reader adding a second provider to compare has not asked for their next overview to be
-// made with it (design 110d).
 test("the first key becomes the choice, and a second one does not take it", async ({ launcher }) => {
   await launcher.launch();
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
@@ -45,8 +42,6 @@ test("a key the provider refuses is not saved, and says so on its own row", asyn
   await settings.apiKeysPanel.verifyNoKeyHeld("openai");
 });
 
-// Design 110i: removing the key in use moves generation to another key this device holds,
-// and the overviews it made are untouched.
 test("removing the key in use moves generation to another key this device holds", async ({ launcher }) => {
   await launcher.launch({ apiKeys: keysFor("anthropic", "openai") });
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
@@ -67,8 +62,6 @@ test("the form's own settings link lands on the keys section, and closes the dia
   await launcher.appShell.newOverviewDialog.verifyIsHidden();
 });
 
-// Nothing but one provider key is ever asked for: the extension fetches captions itself,
-// and the web app asks our server (docs/features/transcript-retrieval.md).
 test("a web reader writes with one provider key alone, because our server fetches the transcript", async ({ launcher }) => {
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_KEY });
 

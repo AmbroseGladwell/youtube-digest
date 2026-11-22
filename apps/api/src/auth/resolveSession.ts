@@ -28,8 +28,7 @@ export interface ResolveSessionOptions {
   sessionTtlDays: number;
 }
 
-// A sliding expiry, slid at most once an hour so a busy client is not rewriting the row on
-// every request (docs/architecture/api.md).
+// Slid at most once an hour: docs/architecture/api.md, "Auth".
 export const resolveSession = async (
   sql: SqlClient,
   token: string,

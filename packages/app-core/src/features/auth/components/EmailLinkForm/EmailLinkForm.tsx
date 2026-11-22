@@ -20,24 +20,19 @@ export interface EmailLinkFormProps {
   submitLabel: string;
   initialEmail?: string;
   initialFirstName?: string | null;
-  // The web app's server is its own origin. The extension knows the one it was built for
-  // and can be pointed at another (docs/architecture/deploy.md, "The extension").
+  // Why only the extension asks: docs/architecture/deploy.md, "The extension".
   askForServer?: "never" | "always" | "onRequest";
   initialServerUrl?: string | null;
   note: string | null;
-  // Small print read before the button, directly above it (design 62j).
   aboveSubmit?: ReactNode;
   switchLink?: ReactNode;
   sending: boolean;
   refused: string | null;
   onSubmit: (values: EmailLinkFormValues) => void;
-  // Onboarding's account step (327l): no hint beside the name, the button the form's width, and
-  // the note's first sentence leading it with a tick.
+  // Onboarding's account step: no name hint, a full-width button, the note led by a tick.
   onboarding?: boolean;
 }
 
-// Checked here before anything is sent (design 9i); what the server refuses is said in
-// the same place.
 export const EmailLinkForm = ({
   intent,
   submitLabel,
@@ -67,9 +62,7 @@ export const EmailLinkForm = ({
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    // A name is optional: nullable in the column, optional in MagicLinkRequest, and written
-    // only when given. An empty or blank field is no name rather than a problem, and the
-    // input's maxLength is what keeps a given one inside FirstName.
+    // A blank name is no name, not a problem; the input's maxLength keeps a given one inside FirstName.
     const name = FirstName.safeParse(firstName);
     if (!looksLikeEmail(email)) {
       setProblem({ field: "email", message: "That doesn't look like a full email address." });

@@ -1,9 +1,7 @@
 import type { RecordMigration } from "./RecordMigration.js";
 import { currentSchemaVersion } from "./currentSchemaVersion.js";
 
-// Derivable: a playlist followed before there were paces was made as its videos came, so it
-// keeps doing so. Only playlists followed afterwards start at the reader's default
-// (docs/features/playlists.md, "A pace for each playlist").
+// Earlier follows keep their pace: docs/features/playlists.md, "A pace for each playlist".
 const keepEarlierFollowsAsTheyCome: RecordMigration = {
   newSchemaVersion: 2,
   alterRecord: (record) => {
@@ -14,9 +12,7 @@ const keepEarlierFollowsAsTheyCome: RecordMigration = {
   },
 };
 
-// Derivable: a playlist followed before there was an order was made oldest first, because
-// that was the only order there was (docs/features/playlists.md, "An order for each
-// playlist").
+// Earlier follows were oldest first: docs/features/playlists.md, "An order for each playlist".
 const keepEarlierFollowsOldestFirst: RecordMigration = {
   newSchemaVersion: 3,
   alterRecord: (record) => {

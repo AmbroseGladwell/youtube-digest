@@ -2,8 +2,7 @@ export type ByteRange = { start: number; end: number } | "unsatisfiable" | null;
 
 const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/;
 
-// One range, inclusive, as Safari asks for media: `bytes=0-1`, `bytes=500-`, `bytes=-500`.
-// null means serve the whole file; several ranges are answered whole, which RFC 9110 allows.
+// One inclusive range as Safari asks; null serves the whole file, and several ranges get it whole (RFC 9110).
 export const byteRange = (header: string | undefined, size: number): ByteRange => {
   if (header === undefined) {
     return null;

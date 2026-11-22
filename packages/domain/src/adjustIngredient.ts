@@ -11,8 +11,7 @@ export type AdjustedIngredient =
   | { kind: "asWritten"; line: string }
   // Read, but nothing about it moved: a 1× line, or one already in the units asked for.
   | { kind: "same"; line: string }
-  // `written` is the amount as the page gave it, and `plural` the noun that took its plural, so
-  // the method can find the same amount and say it the same way (OV-231).
+  // written and plural let the method find the same amount and say it the same way (OV-231).
   | { kind: "adjusted"; pieces: IngredientPiece[]; packAsSold: boolean; written: string; plural: { from: string; to: string } | null }
   // No amount we can read, or more than one, so it stays exactly as the page wrote it.
   | { kind: "unreadable"; line: string };
@@ -50,8 +49,7 @@ const plural = (word: string): string => {
 
 const SINGULAR: Record<string, string> = Object.fromEntries(Object.entries(IRREGULAR).map(([one, many]) => [many, one]));
 
-// "2 large eggs" halved is "1 large egg". A word that ends in s but isn't a plural
-// ("asparagus", "watercress") stays as it is.
+// "2 large eggs" halved is "1 large egg"; "asparagus" ends in s but stays.
 const singular = (word: string): string => {
   const lower = word.toLowerCase();
   if (SINGULAR[lower]) {
@@ -151,9 +149,7 @@ const PACK_WORD = new RegExp(`^\\s*(?:${PACK_WORDS})\\b`, "i");
 const LEADING_PACK_WORD = new RegExp(`^(\\s*)(${PACK_WORDS})\\b`, "i");
 // "1 small tub (200g)": the bracket is the tub's size as sold, not a second amount.
 const PACK_SIZE = new RegExp(`\\b(?:${PACK_WORDS})\\s*\\(\\s*${NUMBER}\\s*[a-z]*\\s*\\)`, "i");
-// "(Note 3)", "(cut into 1.5cm / 1/2” cubes)", "(50 - 55g / 2 oz each)": a bracket whose only
-// numbers point at a note, size a cut or weigh one of the items is a note, and doesn't scale.
-// After a comma (", cut into 1.5cm cubes"), or after "into", the same notes need no bracket.
+// A bracket or after-comma note citing a note, sizing a cut or weighing one item doesn't scale.
 const NOTE_REFERENCE = /\bnotes?\s*#?\s*\d+(?:\s*(?:,|&|and)\s*\d+)*/gi;
 const CUT_SIZE = new RegExp(`${NUMBER}\\s*(?:cm|mm|in|inch|inches|"|”|″)(?![a-z])`, "gi");
 const PER_ITEM = /\beach\s*$/i;
@@ -235,8 +231,7 @@ const formatNumber = (value: number, unit: Unit | null): string => {
   return `${total === 0 ? "" : total}${best[1]}`;
 };
 
-// The sizes a kitchen has: cups in quarters and thirds, tablespoons whole or halved, teaspoons
-// down to an eighth. Never a third of a spoon (OV-298).
+// Kitchen sizes, never a third of a spoon: docs/features/recipe-notes.md, "Servings and units".
 const MEASURES: Array<[Unit, number[]]> = [
   [UNITS.cup!, [0, 1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4]],
   [UNITS.tbsp!, [0, 1 / 2]],
@@ -258,11 +253,7 @@ const nearest = (value: number, unit: Unit): number =>
 const offBy = (parts: Part[], ml: number): number =>
   Math.abs(parts.reduce((sum, { amount, unit }) => sum + amount * unit.size, 0) - ml) / ml;
 
-// "⅜ cup" is "¼ cup + 2 tbsp", "⅝ tsp" is "½ tsp + ⅛ tsp" and "⅛ cup" is "2 tbsp": a scaled
-// amount said in sizes a cook can measure (OV-298), and less than ⅛ tsp is a pinch, which is
-// ¹⁄₁₆ tsp. One size within 5% is enough. Otherwise a
-// size and a spoon: within 5% first, then in the bigger spoon, in whole tablespoons, the closer,
-// the bigger size.
+// "⅜ cup" is "¼ cup + 2 tbsp": docs/features/recipe-notes.md, "Servings and units" (OV-298).
 const measured = (value: number, unit: Unit): Part[] => {
   const ml = value * unit.size;
   if (unit === UNITS.cup && value < 1 / 4 - 1e-9) {
@@ -341,9 +332,7 @@ const unitNamed = (text: string): NamedUnit | null => {
 const PREPARED_HOW = /^(?:finely|roughly|thinly|thickly|coarsely|lightly|freshly|very|well)$/i;
 const PREPARED = /^[a-z]{3,}ed$/i;
 
-// "1 small garlic clove, grated" doubled is "2 small garlic cloves, grated": the noun is the
-// last word before the first comma or bracket, or before how it's prepared where there's no
-// comma ("1 onion finely chopped"). A noun we can't find stays as written rather than a guess.
+// The noun is the last word before a comma, bracket or preparation; one not found stays as written.
 const withNoun = (rest: string, agree: (word: string) => string): string => {
   const end = rest.search(/[,(;]/);
   const head = end === -1 ? rest : rest.slice(0, end);
@@ -464,9 +453,7 @@ const agreedTailOf = (counted: boolean, low: number, newLow: number, afterUnit: 
   return counted && low > 1 && newLow <= 1 ? withNoun(afterUnit, singular) : afterUnit;
 };
 
-// Arithmetic on an amount we can read at the start of a line, never a guess: units move
-// only within their kind, a tin's size stays as sold, and anything else stays as written
-// (design 144y–144ab, docs/features/recipe-notes.md).
+// Arithmetic on a readable leading amount, never a guess (design 144y–144ab).
 export const adjustIngredient = (line: string, factor: number, units: RecipeUnits): AdjustedIngredient => {
   if (factor === 1 && units === "asWritten") {
     return { kind: "asWritten", line };
@@ -581,11 +568,7 @@ const measureAt = (text: string): Measure | null => {
   return { text: text.slice(0, length), low, high, unit, unitText };
 };
 
-// "200ml/7fl oz stock" is one amount written in both systems (OV-241). As written scales both
-// halves and Metric keeps the metric half. US keeps the page's other half where it is already in
-// the unit US would choose, or a spoon; British fl oz, or ounces past a pound, are converted from
-// the metric half as any metric line is, into cups or pounds (owner, 12 Nov 2026). "60g / 1/4 cup
-// butter" is a weight the author has already put as a volume, so US keeps the cup (owner, 14 Nov 2026).
+// "200ml/7fl oz" is one amount in both systems: docs/features/recipe-notes.md, "Servings and units".
 const inBothSystems = (line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null => {
   const first = measureAt(body);
   const slash = first === null ? null : body.slice(first.text.length).match(/^\s*\/\s*/);
@@ -649,8 +632,7 @@ const pluralTaken = (before: string, after: string): PluralSwap | null => {
   return at === -1 ? null : { from: was[at]!.replace(/[^a-z]/gi, ""), to: now[at]!.replace(/[^a-z]/gi, "") };
 };
 
-// "400g can chopped tomatoes" doubled is "2 × 400g cans chopped tomatoes": the can is sold at
-// its size, so what scales is how many of them, written the way "2 × 400g tins" already is.
+// "400g can" doubled is "2 × 400g cans": a can is sold at its size, so the count scales.
 const packsOf = (line: string, lead: string, size: string, afterSize: string, factor: number): AdjustedIngredient => {
   if (ANY_NUMBER.test(withoutNotes(afterSize))) {
     return { kind: "unreadable", line };
@@ -673,8 +655,7 @@ const packsOf = (line: string, lead: string, size: string, afterSize: string, fa
 export const adjustedText = (adjusted: AdjustedIngredient): string =>
   adjusted.kind === "adjusted" ? adjusted.pieces.map(({ text }) => text).join("") : adjusted.line;
 
-// The number at the front of a yield, "4" of "4 servings", that servings step from. Null
-// where there isn't one, and the reader gets a multiplier instead (design 144aa).
+// Null where there's no leading number, and the reader gets a multiplier (design 144aa).
 export const yieldCount = (yieldText: string | null): number | null => {
   const match = yieldText?.match(/^\D{0,20}?(\d+)(?!\s*[-–]\s*\d)/);
   if (!match) {

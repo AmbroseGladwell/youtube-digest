@@ -26,8 +26,6 @@ const rangeKindOf = (section: NoteLine["section"]): RangeKind => {
   return section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut";
 };
 
-// What a line of the note points at, for the tag at its end. One of the steps a source gives
-// names its number, counted from the note's lines (design 250d).
 export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): NoteLineRange => {
   if (line.section === SOURCE_STEPS_SECTION) {
     const steps = lines.filter((each) => each.section === SOURCE_STEPS_SECTION && !each.heading);
@@ -49,12 +47,8 @@ import { lineRangeTagTestIds } from "./LineRangeTagTestIds.js";
 
 export interface LineRangeTagProps {
   kind: RangeKind;
-  // The words the stretch belongs to, repeated at the top of the phone's sheet.
   about: string;
-  // A method step, or one of the steps a source gives, names itself in the tag's label,
-  // "Step 4 at 4:12" (designs 122g, 250d).
   step?: number;
-  // The video beside the panel is inside this stretch (designs 122i, 250e).
   playing?: boolean;
   range: TimeRange;
   video: VideoSource;
@@ -62,8 +56,7 @@ export interface LineRangeTagProps {
   asSheet: boolean;
   canReadTranscript: boolean;
   onOpenTranscriptAt: (positionMs: number) => void;
-  // An episode's note: the time is a play chip that jumps the episode's own player, and Listen
-  // to it anyway's range plays and stops at its end (designs 106p, 106s).
+  // An episode's: the time jumps the episode's own player instead of linking out.
   direct?: boolean;
 }
 
@@ -309,7 +302,6 @@ export const LineRangeTag = ({
   );
 };
 
-// "8 min", how long a range plays before it stops (design 106s).
 const rangeLength = ({ startMs, endMs }: TimeRange): string => {
   const minutes = Math.max(1, Math.round((endMs - startMs) / 60_000));
   return `${minutes} min`;

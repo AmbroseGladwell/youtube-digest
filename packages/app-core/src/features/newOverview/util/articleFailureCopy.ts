@@ -10,11 +10,7 @@ export interface ArticleFailureCopy {
   wayLabel: string | null;
 }
 
-// Designs 77ai–77al. Each title says what happened, not what the reader did, and each body
-// says that the month's count is untouched, which holds because nothing is reserved until
-// the page has been read. The site's own name is only known if the page gave it. The last
-// three reasons of no-access's group come from our server, so only a pasted link meets them
-// (pastedLinkFailureCopy.ts).
+// Each body says the month's count is untouched: nothing is reserved until the page has been read.
 export const articleFailureCopy = (failure: ArticleFailure, url: string): ArticleFailureCopy => {
   const host = domainOf(url);
   const site = failure.siteName ?? host;

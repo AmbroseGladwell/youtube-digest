@@ -59,7 +59,6 @@ export const makeOverviewState = (overviewId: string, overrides: Partial<Overvie
   ...overrides,
 });
 
-// An episode shared from Spotify, with a key point and a chapter at times in it.
 export const makePodcastOverview = (overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
     source: {
@@ -178,7 +177,6 @@ export const makeRecipeOverview = (overrides: Partial<Overview> = {}): Overview 
     ...overrides,
   });
 
-// A recipe video, modelled on the jollof test (designs 122a–122u).
 export const makeRecipeVideoOverview = (overrides: Partial<Overview> = {}): Overview => {
   const video = makeOverview();
   return makeOverview({

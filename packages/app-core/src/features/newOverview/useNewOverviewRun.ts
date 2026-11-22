@@ -33,7 +33,6 @@ import type { PodcastRunRequest } from "./api/generationPipeline.js";
 export interface StartOverviewRunOptions {
   from: CaptureEntry;
   overviewId?: OverviewId | undefined;
-  // A regeneration's reason box starts with the reason the overview already has.
   captureReason?: string | null | undefined;
 }
 
@@ -41,23 +40,19 @@ export interface ArticleRunRequest extends StartOverviewRunOptions {
   url: string;
   title: string;
   site: string;
-  // Asked for inside the click, since Chrome refuses it anywhere else, and settled here.
+  // Asked for inside the click, since Chrome refuses it anywhere else.
   access: Promise<boolean>;
   asking: boolean;
   oneTimeAccess: boolean;
-  // Read by our server from a pasted link, not from a page beside the panel.
   fetched?: boolean;
   read: () => Promise<ArticleRead>;
 }
 
 export interface NewOverviewRunController {
   run: NewOverviewRun | null;
-  // Set instead of a run when the library already holds the video asked for: the dialog
-  // offers to open it rather than spending another generation on it.
   held: AlreadyHeld | null;
   dialogOpen: boolean;
-  // A link handed over by another paste field, which the dialog opens on: the home page's
-  // field passes a playlist link here rather than starting a run (docs/features/playlists.md).
+  // The home page's field passes a playlist link here: docs/features/playlists.md, "Pasting a link".
   prefill: string | null;
   open: () => void;
   openWith: (url: string) => void;
@@ -65,8 +60,6 @@ export interface NewOverviewRunController {
   start: (url: string, options: StartOverviewRunOptions) => void;
   startArticle: (request: ArticleRunRequest) => void;
   startPodcast: (request: PodcastRunRequest & StartOverviewRunOptions) => void;
-  // The last episode's run again, transcribing its audio: the reader chose it after Create, or
-  // tries a failed transcription again (designs 305c-2, 305k).
   transcribePodcast: () => void;
   dismiss: () => void;
   setCaptureReason: (captureReason: string) => void;
@@ -80,9 +73,7 @@ const noteKindOf = (overview: Overview): "recipe" | "process" | "default" => {
   return overview.sourceSteps != null ? "process" : "default";
 };
 
-// Owned by the AppShell, which is the one component that stays mounted across every
-// navigation: that is what lets a generation outlive the dialog it was started from
-// without a second app-wide context (docs/conventions/frontend-architecture-guide.md 4.1).
+// Owned by the AppShell, which stays mounted, so a generation outlives the dialog that started it.
 export const useNewOverviewRun = (): NewOverviewRunController => {
   const { apiKeys } = useApiKeys();
   const { overviewStore } = useStores();
@@ -95,14 +86,11 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [prefill, setPrefill] = useState<string | null>(null);
   const runIdRef = useRef(0);
-  // The draft is read by the pipeline at the moment it writes the record, and by a blur
-  // after the record exists, so both need the latest keystroke rather than a render's.
+  // The pipeline and a later blur both need the latest keystroke, not a render's.
   const draftRef = useRef("");
   const latestRun = useRef<NewOverviewRun | null>(null);
   latestRun.current = run;
 
-  // Whatever has been typed by now, put onto a record that already exists. Returns the
-  // record as it will read once the write lands, or the same one when nothing changed.
   const commitDraftOnto = useCallback(
     (overview: Overview): Overview => {
       const captureReason = captureReasonFromDraft(draftRef.current);
@@ -115,9 +103,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [mutateCaptureReason],
   );
 
-  // A regeneration names the id it writes under and is the reader's deliberate act; any
-  // other request for a video the library already holds opens what it holds instead
-  // (docs/features/one-overview-per-video.md).
+  // docs/features/one-overview-per-video.md, "Prevention: not generating what is already here".
   const alreadyHeld = useCallback(
     async (url: string, options: StartOverviewRunOptions): Promise<AlreadyHeld | null> => {
       if (options.overviewId !== undefined) {
@@ -133,8 +119,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     [overviewStore],
   );
 
-  // The callbacks are stable because the status strip's self-dismiss timer depends on
-  // them: a fresh identity every render would restart the countdown on every re-render.
+  // Stable callbacks: the status strip's self-dismiss timer would restart on every new identity.
   const generate = useCallback(
     (
       url: string,
@@ -154,8 +139,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
       let personalised = false;
       let projectsFiled: number | undefined;
       let attempt: GenerationAttempt | null = null;
-      // A video capture's duration is the timing's own, so the two agree; an article's is
-      // measured here, as it is not timed (docs/architecture/errors-and-logs.md, "Client timings").
+      // A video's duration is the timing's own, so the two agree; an article isn't timed.
       let timing: ClientTimingReport | null = null;
       const durationMs = () => timing?.totalMs ?? Date.now() - startedAt;
       let writingAt: number | null = null;
@@ -307,8 +291,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         {
           onSuccess: (overview) => {
             if (isCurrent()) {
-              // A keystroke between the pipeline's read and this callback is the one the
-              // record would otherwise miss.
+              // Catches a keystroke between the pipeline's read and this callback.
               const saved = commitDraftOnto(overview);
               analytics.capture.newOverview.finished({
                 overviewId: saved.id,
@@ -439,8 +422,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
     setRun((current) => (current === null ? null : { ...current, captureReason }));
   }, []);
 
-  // Before the record exists there is nothing to write to: the pipeline will read the
-  // draft when it saves. After, the field saves on blur, with nothing to confirm.
+  // Before the record exists the pipeline reads the draft when it saves.
   const commitCaptureReason = useCallback(() => {
     const overview = latestRun.current?.overview ?? null;
     if (overview === null) {

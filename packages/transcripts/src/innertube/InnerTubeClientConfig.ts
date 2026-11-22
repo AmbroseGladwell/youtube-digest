@@ -4,15 +4,12 @@ export const InnerTubeClientConfig = z.object({
   clientName: z.string().min(1),
   clientVersion: z.string().min(1),
   userAgent: z.string().min(1),
-  // Merged into context.client, for the fields a given client insists on.
   extraContext: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type InnerTubeClientConfig = z.infer<typeof InnerTubeClientConfig>;
 
-// Tried in order. WEB is absent on purpose: its caption URLs have been PO-token-gated
-// since mid-2025 and come back empty, which reads as "no captions" rather than as an
-// error (docs/features/transcript-retrieval.md).
+// No WEB: its caption URLs are PO-token-gated and come back empty, which reads as "no captions".
 export const DEFAULT_CAPTION_CLIENTS: readonly InnerTubeClientConfig[] = [
   {
     clientName: "ANDROID",
@@ -27,8 +24,7 @@ export const DEFAULT_CAPTION_CLIENTS: readonly InnerTubeClientConfig[] = [
   },
 ];
 
-// The mobile clients carry caption tracks but no microformat, and the web clients carry
-// microformat but no caption tracks. publishedAt is the only thing this is asked for.
+// Only the web clients carry the microformat that holds publishedAt.
 export const DEFAULT_METADATA_CLIENT: InnerTubeClientConfig = {
   clientName: "WEB",
   clientVersion: "2.20260306.01.00",

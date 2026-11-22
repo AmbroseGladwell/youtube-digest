@@ -1,7 +1,5 @@
 import type { MilestoneId } from "@overview/domain";
 
-// Five per milestone, three comedy then two facts, in the order the card cycles them
-// ("OV-34 4 Lines and Motion"; docs/features/time-saved.md).
 export const MILESTONE_LINES: Record<MilestoneId, readonly string[]> = {
   "30m": [
     "About as long as it takes to find the end of the sellotape, lose it again, and settle for a stapler.",

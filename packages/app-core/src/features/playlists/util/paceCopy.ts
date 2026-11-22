@@ -19,7 +19,6 @@ const PACE_IN_A_SENTENCE: Record<PlaylistPace, string> = {
 const MONTH_DAYS = 30;
 const DAYS_BEFORE_MONTHS = 60;
 
-// How long a backfill takes at a pace, rounded up to whole days and read in months past 60.
 export const paceSpan = (days: number): string => {
   if (days <= 1) {
     return "a day";
@@ -30,8 +29,7 @@ export const paceSpan = (days: number): string => {
   return `${formatCount(Math.round(days / MONTH_DAYS))} months`;
 };
 
-// What following at a pace would do with this playlist, worked out in code
-// (docs/features/playlists.md, "The preview").
+// docs/features/playlists.md, "The preview".
 export const paceConsequence = (pace: PlaylistPace, toMake: number, backfill: boolean): string => {
   const limit = paceDailyLimit(pace);
   if (limit === 0) {
@@ -51,7 +49,6 @@ export const paceConsequence = (pace: PlaylistPace, toMake: number, backfill: bo
   return `${formatCount(toMake)} videos at ${limit} a day: about ${paceSpan(Math.ceil(toMake / limit))}.`;
 };
 
-// What choosing a pace in Settings would do to the videos already waiting on it (95y).
 export const paceWaitEffect = (pace: PlaylistPace, waiting: number): string => {
   if (waiting === 0) {
     return paceConsequence(pace, 0, false);
@@ -69,7 +66,6 @@ export const paceWaitEffect = (pace: PlaylistPace, waiting: number): string => {
   return `${formatCount(waiting)} waiting at ${limit} a day: about ${paceSpan(Math.ceil(waiting / limit))}`;
 };
 
-// What a change did, said once in the row it was made in.
 export const paceChangedLine = (pace: PlaylistPace, waiting: number, madeToday: number): string => {
   const now = `Now ${PACE_IN_A_SENTENCE[pace]}.`;
   if (waiting === 0) {
@@ -92,8 +88,7 @@ export const paceInASentence = (pace: PlaylistPace): string => {
   return PACE_IN_A_SENTENCE[pace];
 };
 
-// What the month's allowance means for a backfill it can't cover, before anything runs (95s,
-// and 95v with a pace). Null when it covers the lot, or when nothing here would spend it.
+// Null when the allowance covers the lot, or when nothing here would spend it (95s, 95v).
 export const allowanceLine = (pace: PlaylistPace | null, toMake: number, left: number, resetsOn: string): string | null => {
   const limit = pace === null ? null : paceDailyLimit(pace);
   if (limit === 0 || toMake <= left) {

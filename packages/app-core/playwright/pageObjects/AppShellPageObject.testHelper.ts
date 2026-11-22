@@ -56,25 +56,17 @@ export class AppShellPageObject extends PageObject {
     return new StaleClientBannerPageObject(this.testContext);
   }
 
-  // The wall stands in for the pane, so it is the shell's to find
-  // (docs/features/record-migrations.md, "Below the write floor is a wall").
   get writeFloorWall(): ErrorStatePageObject {
     return new ErrorStatePageObject(this.testContext, this.get(appShellTestIds.pane));
   }
 
-  // paneTransitions.scss is a stylesheet and can't be asserted on, but it keys every rule
-  // off this one attribute, so this is where the way in and the way back are actually held.
+  // paneTransitions.scss keys every rule off this attribute, so it is what can be asserted.
   verifyNavigationDirection = (direction: NavigationDirection) =>
     this.step(`verifyNavigationDirection ${direction}`, () =>
       expect(this.page.locator("html")).toHaveAttribute("data-nav-direction", direction),
     );
 
-  // A view transition paints its snapshots into the browser's top layer, so nothing in the
-  // page's own tree records that one ran; its pseudo-element animations are the only sign
-  // (docs/features/page-transitions.md). The recorder is installed before the navigation and
-  // read after it, rather than polled against a deadline: under the whole suite's load a
-  // round-trip to the page can easily take longer than a 260ms animation, and a watcher that
-  // arrives late cannot tell "it never ran" from "I missed it".
+  // Recorded, not polled: docs/features/page-transitions.md, "How it's tested".
   verifyNavigationAnimates = <T>(go: () => Promise<T>): Promise<T> =>
     this.step("verifyNavigationAnimates", async () => {
       const arrived = await this.whileRecordingTransitions(go);
@@ -89,8 +81,6 @@ export class AppShellPageObject extends PageObject {
       return arrived.result;
     });
 
-  // Design OV-170: the row's thumbnail and the note's head are one object, which exists only
-  // as an `overview-image` snapshot group for the length of the journey.
   verifyImageCarriesAcross = <T>(go: () => Promise<T>): Promise<T> =>
     this.step("verifyImageCarriesAcross", async () => {
       const arrived = await this.whileRecordingTransitions(go);
@@ -98,8 +88,7 @@ export class AppShellPageObject extends PageObject {
       return arrived.result;
     });
 
-  // The pane's own transition still runs here, so this asks for the image's group alone
-  // rather than for any transition at all.
+  // The pane's own transition still runs, so this asks for the image's group alone.
   verifyImageDoesNotCarryAcross = <T>(go: () => Promise<T>): Promise<T> =>
     this.step("verifyImageDoesNotCarryAcross", async () => {
       const arrived = await this.whileRecordingTransitions(go);
@@ -107,9 +96,7 @@ export class AppShellPageObject extends PageObject {
       return arrived.result;
     });
 
-  // Design OV-170 170h, "The pane while it runs": the 10px slide is dropped for this one
-  // journey, so the pane's own snapshot crossfades rather than travelling. Which keyframes
-  // are playing is the only place that difference exists.
+  // Which keyframes play is the only place the dropped slide shows.
   verifyThePaneKeyframesAre = <T>(wanted: string, go: () => Promise<T>): Promise<T> =>
     this.step(`verifyThePaneKeyframesAre ${wanted}`, async () => {
       const arrived = await this.whileRecordingTransitions(go);
@@ -132,19 +119,9 @@ export class AppShellPageObject extends PageObject {
       )
       .toBe(false);
 
-  // The app opens every one of these through document.startViewTransition, so that is what
-  // is listened to. Whether a navigation asked for one at all is counted, which is the whole
-  // question for a link that was missing the flag; what it painted is read at `ready`, which
-  // settles when the pseudo-element tree exists and its animations have been built. The two
-  // are kept apart because `ready` never settles for a transition the next navigation skips,
-  // and that says nothing about whether this one was asked for. Sampling instead — a requestAnimationFrame loop over
-  // document.getAnimations() — records nothing in a backgrounded window, which is most of
-  // them when the suite runs in parallel, and a real transition then reads as none at all.
-  // `animationstart` is no use either: it does not fire for view-transition pseudo-elements.
+  // Counted, then read at ready: docs/features/page-transitions.md, "How it's tested".
   private whileRecordingTransitions = async <T>(go: () => Promise<T>): Promise<{ result: T; seen: string[]; opened: number }> => {
-    // React Router skips a transition that is still running when the next navigation starts,
-    // and a skipped one never reaches `ready`. Waiting for quiet first keeps each assertion
-    // about its own journey rather than the tail of the one before it.
+    // A transition still running is skipped by the next and never reaches ready, so wait for quiet.
     await this.verifyNoTransitionIsRunning();
     await this.page.evaluate(() => {
       const seen: string[] = [];
@@ -194,8 +171,6 @@ export class AppShellPageObject extends PageObject {
     return { result, seen: taken.seen, opened: taken.opened };
   };
 
-  // Design 205c: the panel's bar is the phone's — the brand slot, + New and the account
-  // menu — and still has no section nav, there being one video rather than a library.
   verifyIsParedBackToThePanel = () =>
     this.step("verifyIsParedBackToThePanel", async () => {
       await this.expectToBeVisible(appShellTestIds.brand);
@@ -215,9 +190,7 @@ export class AppShellPageObject extends PageObject {
 
   clickBrand = () => this.step("clickBrand", () => this.click(appShellTestIds.brand));
 
-  // Design OV-167: one slot, two links, and only the one shown reaches the keyboard or a
-  // screen reader. Both are named "All overviews", so the count of reachable links with
-  // that name is what says whose turn it is (docs/features/back-within-reach.md).
+  // Both links share a name, so the count of reachable ones says whose turn it is.
   verifyBarHoldsTheBrand = (label = "All overviews") =>
     this.step(`verifyBarHoldsTheBrand ${label}`, async () => {
       await expect(this.get(appShellTestIds.brand)).not.toHaveAttribute("inert");
@@ -232,8 +205,6 @@ export class AppShellPageObject extends PageObject {
       await expect(this.page.getByRole("link", { name: label, exact: true })).toHaveCount(2);
     });
 
-  // Where the page draws no link of its own, the bar holds the only one there is, named
-  // after what home is about (designs 205d-2 and 205g-4).
   verifyBarIsTheOnlyWayBack = (label: string) =>
     this.step(`verifyBarIsTheOnlyWayBack ${label}`, async () => {
       await expect(this.get(appShellTestIds.backLink)).not.toHaveAttribute("inert");
@@ -268,8 +239,7 @@ export class AppShellPageObject extends PageObject {
       await expect(this.get(appShellTestIds.brand)).not.toHaveAttribute("inert");
     });
 
-  // Tapped where it is: a locator click would first scroll the stuck bar "into view", which
-  // is the top of the page, and the head's own link coming back would hand the slot back.
+  // Tapped in place: a locator click would scroll the stuck bar to the top and hand the slot back.
   clickBackInBar = (): Promise<LibraryPageObject> =>
     this.step("clickBackInBar", async () => {
       await this.tapBackInBar();
@@ -310,8 +280,6 @@ export class AppShellPageObject extends PageObject {
   verifyNewOverviewHasFocus = () =>
     this.step("verifyNewOverviewHasFocus", () => expect(this.get(appShellTestIds.newOverviewButton)).toBeFocused());
 
-  // The bar's + New is the web's pill everywhere but a touch-sized full layout, where it
-  // grows to the 44px target (docs/features/extension-panel.md, "+ New joins the panel's bar").
   verifyNewOverviewButtonIsTheWebsSize = () =>
     this.step("verifyNewOverviewButtonIsTheWebsSize", async () =>
       expect(await this.newOverviewButtonSizing()).toEqual({ minHeight: "auto", paddingInline: "14px" }),
@@ -342,7 +310,6 @@ export class AppShellPageObject extends PageObject {
       return new AskPagePageObject(this.testContext).verifyIsShown();
     });
 
-  // OV-362: on a phone, Ask and + New are 44px round icons whose tooltip names them on hover.
   verifyIconButtonWithTip = (which: "ask" | "new", tip: string) =>
     this.step(`verifyIconButtonWithTip ${which}`, async () => {
       const button = this.get(which === "ask" ? appShellTestIds.askButton : appShellTestIds.newOverviewButton);

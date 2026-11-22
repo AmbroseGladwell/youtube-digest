@@ -7,8 +7,6 @@ const PARSE_HEAP_LIMIT_MB = 160;
 
 let parse: ReturnType<typeof createArticleParser> | null = null;
 
-// Parsing takes CPU that would stop every other reader's requests, so it happens on a worker
-// (docs/features/pasted-article-links.md, "Parsing").
 export const fetchedArticle = async (page: FetchedPage): Promise<ArticleRead> => {
   if (page.status !== "page") {
     return page;

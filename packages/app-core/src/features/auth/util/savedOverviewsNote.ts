@@ -8,10 +8,7 @@ const WHERE: Record<LibraryPlace, string> = {
   extension: "saved in the extension",
 };
 
-// What joining an account does to the library already here: signing in moves it into the
-// account, one overview per video, and the account's copy is kept where both have one
-// (docs/features/account-libraries.md, design 47h). A new account holds nothing to clash
-// with, so creating one says nothing about it. Nothing to say about an empty library.
+// A new account holds nothing to clash with, so creating one says nothing about the library.
 export const savedOverviewsNote = (count: number, intent: AuthIntent, place: LibraryPlace): string | null => {
   if (count <= 0) {
     return null;

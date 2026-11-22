@@ -2,17 +2,13 @@ import type { NarrationVoice } from "@overview/domain";
 import type { LineTimings } from "../util/estimatedLineStarts.js";
 import type { PlayerTrack } from "./PlayerTrack.js";
 
-// Design Player.dc.html, section 1: every state the bar draws.
+// Every state the bar draws: docs/features/audio-player.md, "The states".
 export type PlayerStatus = "ready" | "preparing" | "playing" | "paused" | "buffering" | "ended" | "failed" | "busy";
 
-// Narrated audio, or the pacer walking the note at an estimated pace.
 export type PlayerSource = "audio" | "pacer";
 
-// Why the pacer is running rather than audio, which is what its label says (1k, 1l, 1d).
 export type PacerReason = "signedOut" | "unavailable" | "dailyCap" | "meanwhile" | "chosen";
 
-// Before the first press: whether the audio exists (1a), is made on first play (1b), or is
-// already on its way because something else asked for it (OV-44, 44a).
 export type NarrationAvailability = "checking" | "ready" | "onFirstPlay" | "preparing";
 
 export type PreparingStep = "queued" | "rendering";
@@ -23,19 +19,12 @@ export interface PlayerSnapshot {
   source: PlayerSource;
   pacerReason: PacerReason | null;
   availability: NarrationAvailability;
-  // What the server said while a render is waited on, or watched while availability is
-  // preparing.
   preparing: { step: PreparingStep; long: boolean } | null;
-  // Measured by the renderer while the source is audio; estimated from the words for the
-  // pacer and for audio that does not exist yet.
   timings: LineTimings;
   rate: number;
-  // The reader's chosen voice, and the voice of the narration the bar has found, which is
-  // an older one when the note was narrated before the reader chose another
-  // (docs/features/narration-voice.md, "Old audio").
+  // narratedVoice differs from voice for older audio: docs/features/narration-voice.md, "Old audio".
   voice: NarrationVoice;
   narratedVoice: NarrationVoice | null;
-  // Whether the mini-player holds the track: it has sounded while its note's page was not
-  // open, and stays held until it stops or that page opens (OV-333).
+  // When it is set and cleared: docs/features/audio-player.md, "Which note the bar is about".
   docked: boolean;
 }

@@ -15,7 +15,6 @@ export interface OnboardingYourLinkProps {
   linkKind: OnboardingLinkKind;
   link: string;
   found: OnboardingFound | null;
-  // The playlist the link named, which starts with its first video; null for any other link.
   playlist: PlaylistLookup | null;
   failed: boolean;
   onLooksRight: () => void;
@@ -30,10 +29,7 @@ const sourceCardSize = (hasPlaylist: boolean, isPanel: boolean): "small" | "comp
   return isPanel ? "compact" : "row";
 };
 
-// Design 327c, and 327s–327v by kind: their own link, read for free, as the proof of what they'll
-// get, so they can say it's the wrong one before anything is written. One centred column on every
-// width; a playlist adds a choice of its videos. The heading takes focus again when the read
-// changes what it's called.
+// Shown before anything is written, so the reader can say it's the wrong one (327c, 327s–327v).
 export const OnboardingYourLink = ({
   kind,
   linkKind,

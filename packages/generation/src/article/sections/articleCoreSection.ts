@@ -8,7 +8,6 @@ import { paragraphIndex } from "./paragraphIndex.js";
 
 const { inOneLine, ...afterInOneLine } = CoreFields.shape;
 
-// Only with the steps switched on, since otherwise there is no list to leave them to.
 const LEAVE_STEPS_TO_THE_LIST = `Steps the piece tells me to follow go in The steps it gives, below, and
 are never repeated here: a key point keeps the idea or the reason behind
 them, and leaves the steps to that list.

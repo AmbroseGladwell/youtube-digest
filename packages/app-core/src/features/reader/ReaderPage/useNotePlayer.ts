@@ -6,7 +6,6 @@ import type { PlayerTrack } from "../../player/types/PlayerTrack.js";
 import { estimatedLineStarts } from "../../player/util/estimatedLineStarts.js";
 
 export interface NotePlayer {
-  // Whether the app's player holds this note, rather than another one or nothing.
   current: boolean;
   snapshot: PlayerSnapshot;
   time: number;
@@ -15,7 +14,6 @@ export interface NotePlayer {
   selectLine: (index: number) => void;
   selectSection: (section: string) => void;
   stepLine: (delta: number) => void;
-  // The bar's main button and the masthead's Listen come here, saying which they were.
   main: (from: PlaybackFrom) => void;
   play: (from: PlaybackFrom) => void;
   pause: () => void;
@@ -24,11 +22,7 @@ export interface NotePlayer {
 const isBusyElsewhere = (snapshot: PlayerSnapshot) =>
   snapshot.track !== null && snapshot.docked && snapshot.status !== "ready" && snapshot.status !== "ended";
 
-// One note's view of the app-wide player (docs/features/audio-player.md, "Which note the
-// bar is about"). A note opened while nothing is playing is loaded straight away, so its bar
-// can say whether its audio exists, and so is one opened while another note waits paused out
-// of sight; one opened while the mini-player holds another note keeps a reading mark of its
-// own, and takes the player over only when play is pressed on it.
+// When a note takes the player over: docs/features/audio-player.md, "Which note the bar is about".
 export const useNotePlayer = (track: PlayerTrack | null): NotePlayer => {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();

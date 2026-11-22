@@ -1,9 +1,7 @@
 import type { NoteLine, OverviewId, SharedNote } from "@overview/domain";
 import { overviewNoteLines, spokenOpening, sourceName, sourceImage } from "@overview/domain";
 
-// What the player plays and what the lock screen names: one note, its lines, and the
-// video it came from. The opening is narrated before the first line and shown nowhere
-// (docs/features/tts-pre-rendered-speech.md, "The spoken script").
+// The opening is narrated but shown nowhere: docs/features/tts-pre-rendered-speech.md, "The spoken script".
 export interface PlayerTrack {
   overviewId: OverviewId;
   title: string;
@@ -13,8 +11,7 @@ export interface PlayerTrack {
   lines: NoteLine[];
 }
 
-// Takes SharedNote so a shared copy makes the same track from the same fields: none of
-// the three an Overview has on top of it is played or named (docs/features/sharing.md).
+// Takes SharedNote so a shared copy makes the same track as the overview it was shared from.
 export const playerTrackFor = (overview: SharedNote, lines: NoteLine[] = overviewNoteLines(overview)): PlayerTrack => {
   return {
     overviewId: overview.id,

@@ -125,8 +125,7 @@ export class SettingsPageObject extends PageObject {
   clickBackToSettings = (): Promise<SettingsPageObject> =>
     this.step("clickBackToSettings", async () => {
       const inPage = this.page.getByTestId(settingsPageTestIds.settingsLink);
-      // In the panel the page draws no link of its own and the bar holds it throughout
-      // (design 205d-2).
+      // In the panel the page draws no link of its own and the bar holds it throughout.
       if ((await inPage.count()) > 0) {
         await inPage.click();
       } else {
@@ -165,7 +164,6 @@ export class SettingsPageObject extends PageObject {
       await expect(yours).toContainText(name);
     });
 
-  // This month's counts above the plan cards, one cell per quota (designs 95d–95h).
   verifyPlanUsagePeriodReads = (text: string) =>
     this.step(`verifyPlanUsagePeriodReads ${text}`, () => expect(this.get(planUsageTestIds.period)).toHaveText(text));
 

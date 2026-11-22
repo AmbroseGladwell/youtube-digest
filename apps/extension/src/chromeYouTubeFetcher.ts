@@ -1,9 +1,7 @@
 import type { YouTubeFetch } from "@overview/app-core";
 import { YOUTUBE_FETCH, isYouTubeFetchReply } from "./youTubeFetchBridge.js";
 
-// A throw here is an unrecognised failure, which withSingleRetry treats as worth one
-// retry — right, because a worker that was asleep and failed to wake is the textbook
-// transient (docs/features/transcript-retrieval.md).
+// A throw gets one retry, right for a worker that failed to wake.
 export const chromeYouTubeFetcher: YouTubeFetch = async (request) => {
   const reply = (await chrome.runtime.sendMessage({ type: YOUTUBE_FETCH, request })) as unknown;
 

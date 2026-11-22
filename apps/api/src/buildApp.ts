@@ -99,14 +99,10 @@ export interface AppConfig {
   minSupportedClientVersion: number;
   sessionTtlDays: number;
   allowedOrigins: string[];
-  // Where the web app is served from: the origin a magic link opens, and the origin the
-  // session cookie is Secure on when it is https (docs/features/sign-in.md).
   appUrl: string;
   staticRoot: string | null;
-  // The header a trusted proxy puts the caller's address in, or null to use the socket's.
   clientIpHeader: string | null;
   sampleShareTokens: readonly ShareToken[];
-  // Where a reader writes when a mail's own way out cannot help (docs/features/account-changes.md).
   supportEmail: string;
 }
 
@@ -118,38 +114,27 @@ export interface AudioSetup {
   runWorkers: boolean;
 }
 
-// Our own server fetching transcripts, the last rung; absent, it says it is unavailable
-// (docs/architecture/server-side-transcripts.md).
 export interface TranscriptServiceSetup {
   fetches: ServiceFetches;
   proxyDailyFetches: number;
 }
 
-// Overviews made on our key; absent, /api/generations says it is unavailable
-// (docs/architecture/tiers.md).
 export interface OurKeySetup {
   apiKey: string;
   dailyGenerations: number;
   dailyChatMessages: number;
   http: typeof fetch;
-  // A test hands in its own, so a provider's retry waits take no time.
   sleep?: (ms: number) => Promise<void>;
 }
 
-// Search by meaning; absent, a search matches by word only and says so
-// (docs/features/search-by-meaning.md).
 export interface MeaningSetup {
   embedder: Embedder;
-  // Off in tests, which drain the queue themselves rather than race a background worker.
   runWorkers: boolean;
 }
 
-// Episodes transcribed on our GPU host; absent, no episode is offered transcription
-// (docs/features/speech-to-text.md).
 export interface SpeechToTextSetup {
   transcriber: Transcriber;
   concurrency: number;
-  // Off in tests, which drain the queue themselves; `sleep` replaces the wait between polls.
   runWorkers: boolean;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -165,26 +150,16 @@ export interface BuildAppOptions {
   meaning?: MeaningSetup | null;
   fetchArticlePage?: ((url: string) => Promise<FetchedPage>) | undefined;
   readPodcastEpisode?: ((link: string) => Promise<PodcastRead>) | undefined;
-  // What every podcast fetch goes through; a test hands in a scripted web.
   podcastWeb?: ReturnType<typeof createPublicWebFetch> | undefined;
   podcastIndex?: ShowDirectory | null;
   youTubeEpisodes?: YouTubeEpisodes | null;
-  // Reads YouTube playlists for anyone following one; absent, /api/playlists says it is
-  // unavailable (docs/features/playlists.md).
   playlistReader?: PlaylistReader | null;
-  // Reads a video's card on our YouTube key; absent, onboarding finds the video once it has an account.
   videoReader?: VideoReader | null;
-  // Where checked analytics events are passed on to; absent, they are only logged.
   eventSink?: EventSink | null;
-  // Where checked client errors are passed on to; absent, they are only logged.
   errorSink?: ErrorSink | null;
-  // Who erases a deleted account's records at PostHog; absent, the deletion records that
-  // the step could not run (docs/features/account-deletion.md).
   personEraser?: PersonEraser | null;
   clock?: () => Date;
-  // The server's pino instance (createLogger); absent, nothing is logged, which is what tests want.
   logger?: FastifyBaseLogger | null;
-  // A query or transaction at least this long is logged as slow.
   slowQueryMs?: number;
 }
 
@@ -200,9 +175,7 @@ declare module "fastify" {
   }
 }
 
-// Hook order inside /api is address limit, parse, floor, session, account limit: a flood is
-// refused before it costs a database round trip, and a client below the floor is told to
-// update before it is told to sign in (docs/architecture/api.md).
+// Why the hooks run in this order: docs/architecture/api.md, "Versions on the wire".
 export const buildApp = async ({
   config,
   sql: untimedSql,

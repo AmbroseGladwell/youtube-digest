@@ -2,10 +2,7 @@ import { ProviderOutOfCreditError, ProviderRequestError, SchemaFailureError } fr
 
 export type FallbackReason = "out-of-credit" | "provider-down" | "schema-failure";
 
-// Why a failed generation may move to the next key, or null when it must not. A refused key
-// never moves: the reader sees the key problem and fixes it, rather than a broken key going
-// unnoticed while it spends ours (docs/architecture/tiers.md, "Which key an overview uses").
-// A spent quota is the server's to say, not the provider's, so it isn't decided here.
+// Which failures move to the next key: docs/architecture/tiers.md, "Which key an overview uses".
 export const fallbackReasonOf = (error: unknown): FallbackReason | null => {
   if (error instanceof ProviderOutOfCreditError) {
     return "out-of-credit";

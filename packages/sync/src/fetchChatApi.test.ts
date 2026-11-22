@@ -8,8 +8,7 @@ const OVERVIEW = "0b8f5f5a-3c2e-4f51-8a43-6a1d7c2e9f10";
 const QUESTION = { conversationId: "5d1c3e8a-0f4b-4a52-9c3e-2b7a1d9e6f01", text: "How much?" };
 const AT = "2026-11-16T10:00:00.000Z";
 
-// The server's stream cut at awkward places: inside an event and across two.
-const streaming = (events: ChatStreamEvent[], cuts = 7) => {
+const streamCutInsideAndAcrossEvents = (events: ChatStreamEvent[], cuts = 7) => {
   const sent: Array<{ url: string; init: RequestInit }> = [];
   const text = events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join("");
   const fetch = async (input: string | URL | Request, init: RequestInit = {}): Promise<Response> => {
@@ -41,7 +40,11 @@ const answeredEvent: ChatStreamEvent = {
 };
 
 test("an answer arrives a piece at a time, then settles as stored", async () => {
-  const { sent, fetch } = streaming([{ type: "text", text: "Three " }, { type: "text", text: "grams." }, answeredEvent]);
+  const { sent, fetch } = streamCutInsideAndAcrossEvents([
+    { type: "text", text: "Three " },
+    { type: "text", text: "grams." },
+    answeredEvent,
+  ]);
   const pieces: string[] = [];
 
   const outcome = await createFetchChatApi({ baseUrl: "https://overview.example", fetch }).ask(OVERVIEW, QUESTION, (text) =>
@@ -56,7 +59,7 @@ test("an answer arrives a piece at a time, then settles as stored", async () => 
 });
 
 test("a failure while answering settles as failed, and a stream that never settles is a transport error", async () => {
-  const failed = streaming([
+  const failed = streamCutInsideAndAcrossEvents([
     { type: "text", text: "Thr" },
     { type: "failed", message: "Something went wrong answering that." },
   ]);
@@ -68,7 +71,7 @@ test("a failure while answering settles as failed, and a stream that never settl
     },
   );
 
-  const cut = streaming([{ type: "text", text: "Thr" }]);
+  const cut = streamCutInsideAndAcrossEvents([{ type: "text", text: "Thr" }]);
   await assert.rejects(
     createFetchChatApi({ baseUrl: "https://o.example", fetch: cut.fetch }).ask(OVERVIEW, QUESTION, () => undefined),
     SyncTransportError,
@@ -109,7 +112,7 @@ test("the month's allowance is read with what's used and when it resets", async 
 test("a question over the library or a project goes to its own route, and says what it picks as it goes", async () => {
   const PROJECT = "7c2e9f10-0b8f-4f51-8a43-6a1d3c2e5f5a";
   const picked: ChatStreamEvent = { type: "picked", overviews: [{ overviewId: OVERVIEW as never, title: "Eat more plants" }] };
-  const library = streaming([{ type: "picking" }, picked, { type: "text", text: "Mostly beans." }, answeredEvent]);
+  const library = streamCutInsideAndAcrossEvents([{ type: "picking" }, picked, { type: "text", text: "Mostly beans." }, answeredEvent]);
   const progress: unknown[] = [];
 
   await createFetchChatApi({ baseUrl: "https://o.example", fetch: library.fetch }).askOver(
@@ -119,7 +122,7 @@ test("a question over the library or a project goes to its own route, and says w
     undefined,
     (event) => progress.push(event),
   );
-  const project = streaming([answeredEvent]);
+  const project = streamCutInsideAndAcrossEvents([answeredEvent]);
   await createFetchChatApi({ baseUrl: "https://o.example", fetch: project.fetch }).askOver(
     { kind: "project", id: PROJECT as never },
     QUESTION,

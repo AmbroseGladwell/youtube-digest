@@ -17,7 +17,7 @@ export interface IssueTokensOptions {
   now: Date;
 }
 
-// The only place a connection's raw tokens exist: handed back once, kept as hashes.
+// Handed back once, kept as hashes: docs/features/mcp-connector.md, "Tokens".
 export const issueTokens = async (sql: SqlClient, { connectionId, scope, now }: IssueTokensOptions): Promise<TokenResponse> => {
   const access = generateToken();
   const refresh = generateToken();

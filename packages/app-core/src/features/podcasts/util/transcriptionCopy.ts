@@ -4,10 +4,9 @@ import { resetDate } from "../../newOverview/util/usageLine.js";
 const HOUR = 3600;
 const A_FEW_MINUTES = "a few minutes";
 
-// "1 hr 56 min", as an episode's length reads (design 305, Notes: Copy).
 export const audioLength = (seconds: number): string => recipeMinutes(Math.max(0, Math.round(seconds / 60)));
 
-// About a minute of waiting for each hour of audio, measured on 16 Nov 2026, in whole minutes.
+// About a minute of waiting for each hour of audio, measured on 16 Nov 2026.
 export const transcribeMinutes = (episodeSeconds: number | null): number | null =>
   episodeSeconds === null ? null : Math.max(1, Math.ceil(episodeSeconds / HOUR));
 
@@ -37,7 +36,6 @@ interface MoreTranscriptionOffer {
   route: TranscriptionStopRoute;
 }
 
-// What else transcribes more, for a plan that has somewhere to go (design 305h).
 const moreOf = (plan: Plan): MoreTranscriptionOffer => {
   if (plan === "free") {
     return { upsell: "BYO Plus transcribes 15 hours a month, Plus 30.", route: "plans" };
@@ -48,13 +46,10 @@ const moreOf = (plan: Plan): MoreTranscriptionOffer => {
   return { upsell: "30 is the most any plan gives, so there’s no upgrade for this.", route: null };
 };
 
-// Every word a reader reads about transcribing an episode: "transcribing" is the noun throughout,
-// never minutes, credits or the provider (designs 305c–305k).
+// "Transcribing" is the noun throughout, never minutes, credits or the provider.
 export const transcriptionCopy = {
-  // 305c: on the card, once the check says the episode has no words.
   needs: (episodeSeconds: number | null): string => `Needs transcribing · ${about(episodeSeconds)}`,
 
-  // 305c and 305c-2: under the action, what choosing it uses.
   uses: (episodeSeconds: number | null, usage: TranscriptionUsage | null): string => {
     const left = usage === null ? null : `your ${audioLength(leftOf(usage))} transcribing left`;
     if (episodeSeconds === null) {
@@ -67,13 +62,12 @@ export const transcriptionCopy = {
       : `Uses ${audioLength(episodeSeconds)} of ${left}, and one overview`;
   },
 
-  // 305d: nothing is spent.
   free: (why: Extract<TranscriptionOffer, { status: "free" }>["why"]): string =>
     why === "transcribed"
       ? "You transcribed this episode before, so it uses no transcribing time."
       : "You’re already transcribing this episode, so this joins it and uses no more time.",
 
-  // 305c-2: asked after Create, when the check couldn't tell.
+  // Asked after Create, when the check couldn't tell.
   ask: (episodeSeconds: number | null): TranscriptionNotice => {
     const minutes = transcribeMinutes(episodeSeconds);
     const takes = takesOf(minutes);
@@ -83,7 +77,6 @@ export const transcriptionCopy = {
     };
   },
 
-  // 305h and 305j: the stop that takes the action's place.
   stop: (
     offer: Extract<TranscriptionOffer, { status: "not-enough" | "too-long" }>,
     plan: Plan,
@@ -114,7 +107,6 @@ export const transcriptionCopy = {
     };
   },
 
-  // 305k: each way it can fail, none of them counted.
   failed: (reason: TranscriptionFailure | "no-audio"): TranscriptionNotice & { retry: boolean } => {
     const counted = "Nothing was counted: no transcribing time and no overview.";
     if (reason === "no-transcriber") {
@@ -145,7 +137,7 @@ export const transcriptionCopy = {
     };
   },
 
-  // 305e: beside the step, never a percentage, in whole minutes.
+  // Never a percentage.
   progress: (state: "starting" | "transcribing", episodeSeconds: number | null, transcribingForMs: number): string => {
     if (state === "starting") {
       return "Starting…";

@@ -12,8 +12,6 @@ const NEVER_MADE = ShareToken.parse("sampleNeverMade1");
 const signedOut = (app: TestApp, url: string) =>
   app.app.inject({ method: "GET", url, headers: { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) } });
 
-// The house account shares an overview, and the link is given the token config lists, which a
-// real share would have been minted with.
 const shareAs = async (app: TestApp, house: TestAccount, token: ShareToken, title: string): Promise<void> => {
   const overview = makeOverview({ source: { ...makeOverview().source, title } });
   const made: Share = (

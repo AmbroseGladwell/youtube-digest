@@ -2,8 +2,7 @@ import { z } from "zod";
 
 export type NarrationAccent = "american" | "british";
 
-// The English voices worth offering from Kokoro v1.0: graded C or better by Kokoro, and no
-// novelty voices (docs/features/narration-voice.md, "The shortlist").
+// Kokoro v1.0 English voices graded C or better: docs/features/narration-voice.md, "The shortlist".
 export const NARRATION_VOICES = {
   af_alloy: { name: "Alloy", accent: "american" },
   af_aoede: { name: "Aoede", accent: "american" },

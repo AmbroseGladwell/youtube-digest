@@ -3,8 +3,6 @@ import type { ArticleFailure } from "../api/ArticleReadError.js";
 import { CHROME_EXTENSION_URL } from "../../../util/chromeExtensionUrl.js";
 import type { ArticleFailureCopy } from "./articleFailureCopy.js";
 
-// Where the reader could read it themselves: already in the extension, on a computer that
-// could have it, or on a phone that can't.
 export type ReaderPlace = "extension" | "computer" | "phone";
 
 export interface PastedLinkFailureCopy extends ArticleFailureCopy {
@@ -50,9 +48,7 @@ const elsewhere = (url: string, place: ReaderPlace, title: string, why: string):
   }
 };
 
-// Designs 77an–77aq: says why in the publisher's terms, then sends the reader to the one place
-// it can work. What failed here failed on our server, so the reader's own browser may still
-// get in.
+// What failed here failed on our server, so the reader's own browser may still get in.
 export const pastedLinkFailureCopy = (failure: ArticleFailure, url: string, place: ReaderPlace): PastedLinkFailureCopy => {
   const site = failure.siteName ?? domainOf(url);
   switch (failure.reason) {

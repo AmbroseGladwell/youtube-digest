@@ -11,13 +11,12 @@ export interface AuthScreenProps {
   lead?: ReactNode;
   compactTitle?: boolean;
   testId?: string | undefined;
-  // Inside another screen, as onboarding's account step holds it (327l): no page padding of its own.
+  // Inside another screen, as onboarding's account step holds it: no page padding of its own.
   embedded?: boolean;
   children?: ReactNode;
 }
 
-// Design 9's one column and 10's panel: every step of signing in is this screen with a
-// different heading, so the heading takes focus whenever a step arrives.
+// Every sign-in step is this screen with a new heading, so the heading takes focus on arrival.
 export const AuthScreen = ({ title, icon, kicker, lead, compactTitle = false, testId, embedded = false, children }: AuthScreenProps) => {
   const isPanel = useIsPanel();
   const heading = useRef<HTMLHeadingElement | null>(null);

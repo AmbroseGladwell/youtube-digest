@@ -7,17 +7,11 @@ export interface EmailContent {
   html: string;
 }
 
-// Design OV-88. The extension's mail says where the code will appear, because the tab the
-// link opens is not the thing that asked (docs/features/sign-in.md).
-// A web mail also carries a code, for when the mail is read somewhere other than the browser
-// that asked (docs/features/sign-in.md, "A code in the web mail").
+// Why the web mail leads with a code: docs/features/sign-in.md, "A code in the web mail".
 export const magicLinkEmail = (mail: MagicLinkMail): EmailContent => {
   return mail.code !== null && mail.surface === "web" ? codeFirstEmail({ ...mail, code: mail.code }) : linkFirstEmail(mail);
 };
 
-// Design 327l-3: the code in the subject, so it can be read from the notification, then first in
-// the mail, selectable in one tap, and the link as the backup (docs/features/sign-in.md, "A code
-// in the web mail").
 const codeFirstEmail = ({ link, code, purpose, firstName }: MagicLinkMail & { code: string }): EmailContent => {
   const creating = purpose === "createAccount";
   const siteUrl = new URL(link).origin;

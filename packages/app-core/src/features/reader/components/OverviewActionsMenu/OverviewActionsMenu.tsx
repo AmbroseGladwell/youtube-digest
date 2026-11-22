@@ -12,24 +12,18 @@ export interface OverviewActionsMenuProps {
   hasReason: boolean;
   read: boolean;
   source: Source;
-  // Recipes only (design 144r): the page's recipe as it stands on screen, with its source.
   recipe: { onCopy: () => void; onPrint: () => void } | null;
-  // Absent where there is no account to share under, which is how the item hides itself
-  // rather than offering a control that cannot work (docs/features/sharing.md).
+  // Null with no account to share under, so the item hides rather than offering a dead control.
   onShare: (() => void) | null;
-  // Articles only (design 13). A note we can't remake right here says so in its label, by
-  // the ellipsis, and explains before anything happens.
   regenerate: { asksFirst: boolean; onChoose: () => void } | null;
-  // Design 6h: the panel's menu offers the web app instead of read state and deletion.
   compact: boolean;
   webApp: OverviewInWebApp;
   onEditTopics: () => void;
   onEditReason: () => void;
   onToggleRead: () => void;
-  // Null where there is no library to keep projects in; otherwise how many it's in (168r).
+  // Null when signed out, with no library to keep projects in.
   projects: { count: number; onAdd: () => void } | null;
   onDelete: () => void;
-  // Where chat is offered on this surface (design 310e): reopens the latest conversation.
   onChat?: (() => void) | null;
 }
 
@@ -40,8 +34,6 @@ interface WayOut {
   copyLabel: string;
 }
 
-// The way back to the source, in its own words. An episode's goes where the reader came from:
-// "Listen on Spotify", and the link copied is that one too (design 106n).
 const wayOut = (source: Source, recipe: boolean): WayOut => {
   if (source.kind === "podcast") {
     return { open: "openEpisode", openLabel: openPodcastLabel(source.sharedFrom), copy: "copyEpisodeLink", copyLabel: "Copy episode link" };
@@ -64,7 +56,6 @@ const wayOut = (source: Source, recipe: boolean): WayOut => {
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-// Design 4b/6h: everything about the note that is not reading it.
 export const OverviewActionsMenu = ({
   topicCount,
   hasReason,
@@ -258,9 +249,6 @@ export const OverviewActionsMenu = ({
               {way.copyLabel}
             </button>
           )}
-          {/* Design 6h: only the panel has a web app elsewhere to open the note in, and
-              design 205b-2 ends the panel's menu with Delete as the phone's does, so in the
-              panel both are here and Delete is last either way. */}
           {compact &&
             webApp !== null &&
             ("href" in webApp ? (

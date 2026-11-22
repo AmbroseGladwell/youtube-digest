@@ -21,15 +21,13 @@ export interface QueueRowProps {
   position: number | null;
   step?: string;
   progress?: number;
-  // When a held video continues, written out (docs/features/capture-queue.md, "Waiting at a limit").
   resumeTime?: string | undefined;
   dense?: boolean;
   // A row grouped under its playlist doesn't name the playlist again.
   showFrom?: boolean;
   onRemove?: () => void;
-  // Made next, past its playlist's pace (95af).
   onMakeNow?: () => void;
-  // Choosing several: the row's actions give way to a checkbox (95ag).
+  // While choosing several, a checkbox replaces the row's actions.
   choice?: { checked: boolean; onToggle: () => void };
 }
 
@@ -53,10 +51,6 @@ const statusText = (state: Exclude<QueueRowState, "making">, resumeTime: string 
   return STATUS[state];
 };
 
-// Design 27i–27j: a video that isn't an overview yet doesn't pretend to be one. No raised
-// tile but the one being made, a faded thumbnail, no verdict or topic, and its status in
-// words, so the difference never rests on colour. A video waiting on its pace is waiting,
-// not failed: muted, never warning ink (95aa).
 export const QueueRow = ({
   capture,
   state,

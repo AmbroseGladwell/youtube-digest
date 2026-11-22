@@ -12,8 +12,7 @@ const percent = (part: number, whole: number) => (whole === 0 ? "n/a" : `${part}
 
 const judgmentKey = (writer: string, videoId: string) => `${writer}:${videoId}`;
 
-// The deletion test is the acceptance property (OV-225): a big picture that loses nothing
-// when removed has failed, and a high rate means the prompt's split is not landing.
+// The deletion test is the acceptance property (OV-225): a big picture that loses nothing has failed.
 export const bigPictureMarkdown = (
   runs: readonly RunRecord[],
   judgments: readonly BigPictureJudgeRecord[],

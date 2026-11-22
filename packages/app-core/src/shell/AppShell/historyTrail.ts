@@ -5,9 +5,7 @@ export interface HistoryEntry {
   pathname: string;
 }
 
-// The entries this session has walked, and where in them the reader is now. The router
-// only tells us the current location and how it was reached, so what lies behind it is
-// kept here (docs/features/back-within-reach.md, "Back in history, or home").
+// Why kept here: docs/features/back-within-reach.md, "Back in history, or home".
 export interface HistoryTrail {
   entries: readonly HistoryEntry[];
   index: number;

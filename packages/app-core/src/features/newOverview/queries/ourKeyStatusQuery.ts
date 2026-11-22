@@ -6,9 +6,7 @@ import { generationKeys } from "../generationKeys.js";
 
 const UNAVAILABLE: OurKeyGenerationStatus = { available: false };
 
-// Whether our server makes overviews on our key, so a reader with no key of their own is
-// offered Create only when it can work. A server that can't be asked is one that won't
-// (docs/architecture/tiers.md, "Generating on our key").
+// A server that can't be asked is taken as one that won't make overviews on our key.
 export const ourKeyStatusQueryOptions = (apiUrl: string | null) =>
   queryOptions({
     queryKey: generationKeys.ourKeyStatus(apiUrl),

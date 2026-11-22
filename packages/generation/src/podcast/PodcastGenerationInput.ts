@@ -1,9 +1,7 @@
 import type { PodcastSource, VideoSource } from "@overview/domain";
 import type { GenerationInput } from "../GenerationInput.js";
 
-// A podcast episode's note is the video note in a podcast's words, so it carries the episode as the
-// sections already read a video: the show as the channel, the episode's notes as the description
-// (docs/features/podcast-notes.md, "A small fork").
+// The show as the channel, the notes as the description: docs/features/podcast-notes.md, "A small fork".
 export interface PodcastGenerationInput extends GenerationInput {
   podcast: PodcastSource;
 }

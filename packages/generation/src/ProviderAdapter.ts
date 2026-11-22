@@ -11,10 +11,7 @@ export interface ProviderCall {
   model: string;
 }
 
-// What a provider says its key can reach. The split is the picker's (design 110e): the
-// ones that could write an overview are offered by name, and the rest — image, audio,
-// embedding and moderation models — are counted rather than listed, because a reader
-// scrolling past sixty of them to reach a model they can use is the failure.
+// Usable ones by name, the rest counted: docs/features/byo-providers.md, "Which models are offered".
 export interface ModelListing {
   usable: string[];
   unusable: number;

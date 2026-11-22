@@ -61,9 +61,7 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
   const transcriptDone = run.transcriptWords !== null;
   const overviewDone = run.overview !== null;
 
-  // Design 106g: finding the episode is done before Create, and looking for a transcript is a
-  // stage of its own, since it's the one that fails for half of episodes. It never says where
-  // the words came from.
+  // Looking for a transcript is its own stage: docs/features/podcast-screens.md, "Making one".
   if (run.podcast !== null) {
     const wordsFound = run.podcast.words !== null;
     const { transcription, durationSeconds } = run.podcast;
@@ -73,8 +71,7 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
       detail: durationSeconds === null ? "Found" : recipeMinutes(Math.round(durationSeconds / 60)),
       state: "done",
     };
-    // Design 305e: transcribing is a step of its own, between looking and writing, only when it's
-    // needed; its estimate counts down in whole minutes from the audio's length.
+    // Transcribing is its own step only when needed, its estimate counting down in whole minutes.
     const looking: GenerationStep[] =
       transcription === null
         ? [

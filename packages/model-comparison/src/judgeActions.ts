@@ -108,8 +108,7 @@ export const actionJudgePrompt = (fetched: FetchedTranscript, readers: readonly 
   };
 };
 
-// Every action labelled exactly once and every empty reader answered, or the answer is a
-// failure: a count that skipped some actions would read as a rate over all of them.
+// A count that skipped some actions would read as a rate over all of them.
 export const resolveAnswer = (
   readers: readonly ReaderActions[],
   answer: ActionJudgeAnswer,

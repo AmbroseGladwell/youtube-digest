@@ -9,17 +9,14 @@ import styles from "./AskDrawer.module.scss";
 import { askDrawerTestIds } from "./AskDrawerTestIds.js";
 
 export interface AskDrawerProps {
-  // Sliding in when the reader opens it, out when they close it, or still when it starts open (OV-371).
   motion: "arriving" | "still" | "leaving";
   chats: readonly Chat[];
   openChatId: string | null;
   now: Date;
-  // A project's name for its conversations' scope line, or null once it is deleted.
   projectName: (projectId: string) => string | null;
-  // An overview's title for its conversations' scope line, or null when it isn't on this device.
   overviewTitle: (overviewId: string) => string | null;
   sheet: boolean;
-  // The button that opens it, so pressing it again closes it rather than reopening it.
+  // Passed so pressing it again closes the drawer rather than reopening it.
   trigger: RefObject<HTMLElement | null>;
   onNew: () => void;
   onOpen: (chat: Chat) => void;
@@ -27,11 +24,6 @@ export interface AskDrawerProps {
   onClose: () => void;
 }
 
-// OV-354, page 3 (354t-4 to 354t-7): New chat and every conversation, the library's, projects' and
-// overviews' (OV-363), grouped by when it was last asked in, each with its first question and its
-// scope: "Your library", the project's name or the overview's title. Each has a ⋯ whose only
-// item is Delete conversation; there's no Rename, because the title is the first question. On the
-// web a raised column down the left of the page; on a phone a bottom sheet.
 export const AskDrawer = ({
   motion,
   chats,
@@ -51,13 +43,9 @@ export const AskDrawer = ({
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [menuUp, setMenuUp] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  // On the web the drawer is a column beside the page, closed with its own button; as a sheet it
-  // closes on a tap outside it.
   useDismissOnOutside(sheet && menuFor === null, onClose, root, trigger);
   useDismissOnOutside(menuFor !== null, () => setMenuFor(null), menu);
 
-  // A conversation's menu opens below its ⋯, or above it when the drawer has no room below, as for
-  // the last in a phone's sheet (OV-362).
   useLayoutEffect(() => {
     if (menuFor === null) {
       return;

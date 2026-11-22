@@ -8,9 +8,7 @@ import type { ApiKeys } from "../../apiKeys/ApiKeys.js";
 import type { PodcastRunRequest, RunOverviewGenerationOptions } from "../api/generationPipeline.js";
 import { useRunArticleGeneration, useRunOverviewGeneration, useRunPodcastGeneration } from "../useRunOverviewGeneration.js";
 
-// The progress and cancellation callbacks travel as variables rather than as hook
-// arguments so that the run they belong to is fixed at mutate() time: a second run
-// started later must not be able to write into the first one's state.
+// Callbacks are variables, fixed at mutate() time, so a later run can't write into this one's state.
 export type GenerateOverviewVariables = RunOverviewGenerationOptions &
   ({ url: string } | { readArticle: () => Promise<ArticleRead> } | { podcast: PodcastRunRequest });
 
@@ -36,9 +34,7 @@ export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
       return generate(url, options);
     },
     onSuccess: (overview) => {
-      // Only our key's overviews are narrated ahead: one on the reader's own key renders when
-      // it is first played, so what narration costs follows what is listened to
-      // (docs/architecture/tiers.md, "What an own-key overview costs us").
+      // Only ours is narrated ahead: docs/architecture/tiers.md, "What an own-key overview costs us".
       if (overview.madeOn?.key === "ours") {
         player.prepare(playerTrackFor(overview));
       }

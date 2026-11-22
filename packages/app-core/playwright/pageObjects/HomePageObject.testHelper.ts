@@ -13,8 +13,6 @@ export class HomePageObject extends PageObject {
       return this;
     });
 
-  // Signed out, the hero is onboarding's Start: it makes the first overview, and offers
-  // nothing that needs keys (design 46a).
   verifyShowsExampleOverview = (shown: boolean) =>
     this.step(`verifyShowsExampleOverview ${shown}`, () =>
       shown ? this.expectToBeVisible(homePageTestIds.exampleOverview) : this.expectToHaveCount(homePageTestIds.exampleOverview, 0),
@@ -33,8 +31,6 @@ export class HomePageObject extends PageObject {
       return this;
     });
 
-  // Design 155l: the headline's verb follows the deck's front card, or in the panel what the
-  // tab holds (205g-2, 205g-3). "with The Overview" never moves.
   verifyHeadlineReads = (verb: string) =>
     this.step(`verifyHeadlineReads ${verb}`, () =>
       expect(this.get(homePageTestIds.heroTitle)).toHaveText(new RegExp(`^${verb}\\s*with The Overview$`)),
@@ -45,8 +41,6 @@ export class HomePageObject extends PageObject {
       expect(this.get(homePageTestIds.hero).locator("p").first()).toHaveText(standfirst),
     );
 
-  // 205g-2 and 205g-3: beside something, Start shows the same offer card as signed in, and
-  // never its length or reading time.
   verifyOffers = ({ site, title }: { site: string; title: string }) =>
     this.step(`verifyOffers ${title}`, async () => {
       await expect(this.get(sourceOfferTestIds.site)).toHaveText(site);
@@ -63,7 +57,6 @@ export class HomePageObject extends PageObject {
 
   verifyOffersNoPasteLink = () => this.step("verifyOffersNoPasteLink", () => this.expectToHaveCount(homePageTestIds.pasteLink, 0));
 
-  // 205g: Sign in is a peer of Make my overview rather than a line of small type.
   verifyOffersSignIn = () => this.step("verifyOffersSignIn", () => this.expectToBeVisible(homePageTestIds.signIn));
 
   signIn = () => this.step("signIn", () => this.click(homePageTestIds.signIn));
@@ -97,7 +90,6 @@ export class HomePageObject extends PageObject {
 
   verifyOffersNoExtension = () => this.step("verifyOffersNoExtension", () => this.expectToHaveCount(homePageTestIds.getExtensionLink, 0));
 
-  // The hero's own field (design 2b): the same run + New starts, taken from the page.
   verifyHeroFieldDisabled = () =>
     this.step("verifyHeroFieldDisabled", async () => {
       await expect(this.get(homePageTestIds.urlInput)).toBeDisabled();
@@ -128,8 +120,6 @@ export class HomePageObject extends PageObject {
       await this.expectToHaveCount(homePageTestIds.generateButton, 0);
     });
 
-  // The hero carries the same dead end as Settings, so a reader meets it where they tried
-  // to generate (design 110k).
   verifyKeyPromptDeadEnd = () =>
     this.step("verifyKeyPromptDeadEnd", async () => {
       await this.expectToBeVisible(homePageTestIds.keyPrompt.heading);

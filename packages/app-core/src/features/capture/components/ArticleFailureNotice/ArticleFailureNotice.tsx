@@ -5,13 +5,11 @@ import { articleFailureNoticeTestIds } from "./ArticleFailureNoticeTestIds.js";
 export interface ArticleFailureNoticeProps {
   copy: ArticleFailureCopy;
   onWay: () => void;
-  // The way forward leaves the app, as a pasted link's does (designs 77an, 77ao).
   href?: string | null;
   after?: string | null;
 }
 
-// Designs 77ai–77al: the error pattern, with one way forward where there is one. Trying again
-// has to be a press, because asking Chrome again needs one.
+// Trying again has to be a press, because asking Chrome again needs one.
 export const ArticleFailureNotice = ({ copy, onWay, href = null, after = null }: ArticleFailureNoticeProps) => {
   const quiet = copy.way === "tryAgain" || copy.way === "tryAnother";
   return (

@@ -7,15 +7,13 @@ export type NextStep = z.infer<typeof NextStep>;
 export const NextSteps = z.object({
   overviewId: OverviewId,
   dismissed: z.array(NextStep).catch([]),
-  // Onboarding ended on a sample: written for anyone, and followed by Now try your own (155j, 155k).
   sample: z.boolean().catch(false),
 });
 export type NextSteps = z.infer<typeof NextSteps>;
 
 const STORAGE_KEY = "overview.nextSteps.v1";
 
-// The next steps under onboarding's overview, and which of them were dismissed: this device's
-// own, since they follow the reveal it saw (docs/features/onboarding.md, "The reveal").
+// The device's own, since the steps follow the reveal it saw.
 export const readNextSteps = (storage: Storage = globalThis.localStorage): NextSteps | null => {
   try {
     const raw = storage.getItem(STORAGE_KEY);
@@ -37,7 +35,6 @@ export const writeNextSteps = (nextSteps: NextSteps, storage: Storage = globalTh
   }
 };
 
-// The overview onboarding ended on was a sample.
 export const isRevealedSample = (overviewId: string | null): boolean => {
   const held = readNextSteps();
   return overviewId !== null && held !== null && held.overviewId === overviewId && held.sample;

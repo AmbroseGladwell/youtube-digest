@@ -3,10 +3,7 @@ import { shareContentHash, shareSnapshot, type Share } from "@overview/domain";
 import { useOverviewsWithStateQuery } from "../overviews/queries/overviewsWithStateQuery.js";
 import { readableEntries } from "../overviews/types/LibraryEntry.js";
 
-// Which of these links show a copy the reader has since edited. The same comparison the
-// dialog makes, over the whole list, so Settings can badge a row without asking the server
-// anything it does not already know (docs/features/sharing.md). A link whose overview this
-// device does not hold is not badged: nothing here can say whether it changed.
+// A link whose overview this device does not hold is not badged: nothing here can say it changed.
 export const useEditedShares = (shares: Share[]): ReadonlySet<string> => {
   const library = useOverviewsWithStateQuery().data;
   const [edited, setEdited] = useState<ReadonlySet<string>>(new Set());

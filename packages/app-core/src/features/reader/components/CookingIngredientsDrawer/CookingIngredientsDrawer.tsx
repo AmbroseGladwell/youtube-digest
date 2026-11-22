@@ -12,10 +12,7 @@ export interface CookingIngredientsDrawerProps {
   children: ReactNode;
 }
 
-// Designs 190a–190k: on the wide web the ingredients are a second column beside the step, not
-// a layer over it. A plain region, so nothing is modal and no key is trapped; the keys are the
-// cooking screen's. The mode opens with it open, already in place and leaving focus on the step;
-// only a reader opening it moves focus in (docs/features/recipe-notes.md, "Cooking step by step").
+// Not modal, so no key is trapped: docs/features/recipe-notes.md, "Cooking step by step".
 export const CookingIngredientsDrawer = ({ id, open, asked, onClose, onSettled, children }: CookingIngredientsDrawerProps) => {
   const aside = useRef<HTMLElement | null>(null);
 

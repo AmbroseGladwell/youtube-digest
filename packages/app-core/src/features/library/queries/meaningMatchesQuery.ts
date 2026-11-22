@@ -15,8 +15,7 @@ export interface MeaningMatchesParams {
   query: string;
 }
 
-// Only a signed-in library has embeddings on our server; anywhere else the search stays
-// word-only and offers nothing about meaning (docs/features/search-by-meaning.md).
+// Signed in only: docs/features/search-by-meaning.md, "In the library".
 export const meaningMatchesQueryOptions = (
   { apiUrl, accountId, token, query }: MeaningMatchesParams,
   api: MeaningSearchApi | null = apiUrl === null ? null : createFetchMeaningSearchApi({ baseUrl: apiUrl, token }),

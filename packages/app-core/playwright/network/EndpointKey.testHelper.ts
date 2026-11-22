@@ -1,18 +1,8 @@
-// Generation talks to providers straight from the browser, and the extension's shell lends
-// it a fetch that reaches YouTube (docs/features/transcript-retrieval.md) — so these are
-// the endpoints the IWFT network layer intercepts. The rest are our own API: the sync
-// server's read side (docs/features/sync-client.md), the shared transcript cache
-// (docs/features/shared-transcript-cache.md), our own server fetching transcripts
-// (docs/architecture/server-side-transcripts.md), sign-in (docs/features/sign-in.md)
-// narration (docs/features/audio-player.md), connecting an assistant
-// (docs/features/mcp-connector.md), sharing (docs/features/sharing.md), analytics
-// (docs/architecture/analytics.md) and errors (docs/architecture/errors-and-logs.md).
 export const EndpointKey = {
   INNERTUBE_PLAYER: "INNERTUBE_PLAYER",
   YOUTUBE_TIMEDTEXT: "YOUTUBE_TIMEDTEXT",
   ANTHROPIC_MESSAGES: "ANTHROPIC_MESSAGES",
-  // Asked the moment a key is saved: it is both the check that the key works and where the
-  // model picker's list comes from (docs/features/byo-providers.md).
+  // Asked when a key is saved: both the key check and the model picker's list.
   PROVIDER_MODELS: "PROVIDER_MODELS",
   SYNC_HANDSHAKE: "SYNC_HANDSHAKE",
   SYNC_CHANGES: "SYNC_CHANGES",
@@ -27,10 +17,7 @@ export const EndpointKey = {
   SESSION_LINK_CODE: "SESSION_LINK_CODE",
   SESSION_DELETE: "SESSION_DELETE",
   SESSION_READ: "SESSION_READ",
-  // The account's own changes: the name, the code to the current address, the code to a
-  // new one, and the old address's way back (docs/features/account-changes.md).
   SESSION_ACCOUNT: "SESSION_ACCOUNT",
-  // Deleting the account, under the verified session (docs/features/account-deletion.md).
   SESSION_ACCOUNT_DELETE: "SESSION_ACCOUNT_DELETE",
   SESSION_VERIFICATION: "SESSION_VERIFICATION",
   SESSION_VERIFICATION_CONFIRM: "SESSION_VERIFICATION_CONFIRM",
@@ -49,7 +36,6 @@ export const EndpointKey = {
   SHARE_LIST: "SHARE_LIST",
   SHARE_CREATE: "SHARE_CREATE",
   SHARE_STOP: "SHARE_STOP",
-  // Start's samples, and the whole copy of the one chosen (docs/features/onboarding.md).
   SAMPLES: "SAMPLES",
   SAMPLE: "SAMPLE",
   EVENTS: "EVENTS",
@@ -57,10 +43,7 @@ export const EndpointKey = {
   SHARED_PAGE_EVENTS: "SHARED_PAGE_EVENTS",
   ERRORS: "ERRORS",
   PLAYLIST_LOOKUP: "PLAYLIST_LOOKUP",
-  // Overviews close in meaning to a library search (docs/features/search-by-meaning.md).
   MEANING_SEARCH: "MEANING_SEARCH",
-  // Overviews made on our key, the account's month on each key, the reservations an
-  // own-key overview takes, and the signed-out trial's token (docs/architecture/tiers.md).
   OUR_KEY_STATUS: "OUR_KEY_STATUS",
   OUR_KEY_GENERATE: "OUR_KEY_GENERATE",
   PROFILE_PASS: "PROFILE_PASS",

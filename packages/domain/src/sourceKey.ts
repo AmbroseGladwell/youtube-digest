@@ -5,8 +5,7 @@ export interface SourceReference {
   id: string | null;
 }
 
-// The one string every store keys an item by. V0024's source_key column spells the same rule
-// in SQL, and a test holds the two together (docs/features/source-identity.md).
+// V0024's source_key column spells the same rule in SQL (docs/features/source-identity.md).
 export const sourceKey = ({ kind, id }: SourceReference): SourceKey | null => {
   if (id === null) {
     return null;
@@ -16,8 +15,7 @@ export const sourceKey = ({ kind, id }: SourceReference): SourceKey | null => {
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
-// Read loosely rather than parsed: the body may be at any version, before or after `video`
-// became `source`.
+// Read loosely: the body may be from before or after video became source.
 export const storedSourceKey = (body: unknown): SourceKey | null => {
   if (!isObject(body)) {
     return null;

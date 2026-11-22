@@ -10,7 +10,7 @@ import type { ProjectSummary } from "../../util/projectSummaries.js";
 import { projectPickerTestIds } from "./ProjectPickerTestIds.js";
 
 export interface ProjectPickerProps {
-  // Active projects, last changed first.
+  // Last changed first.
   summaries: ProjectSummary[];
   // How many of the overviews being filed each project holds, out of `of`.
   holding: (projectId: ProjectId) => number;

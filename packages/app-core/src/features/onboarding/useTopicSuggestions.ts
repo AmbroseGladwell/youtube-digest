@@ -19,9 +19,7 @@ export type AskedTopicSuggestions =
   | { status: "failed" }
   | { status: "notAsked" };
 
-// Asked of the model on the device's trial as soon as the source is found, so the answer is
-// usually back before the reader reaches the topics screen. Not asked for a sample or a shared copy,
-// or with no server to ask (docs/features/onboarding.md, "Suggested topics").
+// Asked as soon as the source is found: docs/features/onboarding.md, "Suggested topics".
 export const useTopicSuggestions = (found: OnboardingFound | null, kind: OnboardingSource | null, ask: boolean): AskedTopicSuggestions => {
   const apiUrl = useKnownApiUrl();
   const [answer, setAnswer] = useState<{ key: string; asked: AskedTopicSuggestions } | null>(null);

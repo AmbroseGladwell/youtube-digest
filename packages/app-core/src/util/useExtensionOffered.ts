@@ -3,8 +3,7 @@ import { useIsPanel } from "../app/LayoutContext.js";
 import { useClientSurface } from "../app/SurfaceContext.js";
 import { isDesktopChrome } from "./isDesktopChrome.js";
 
-// The Chrome extension is offered only where it can be added: the web app in desktop Chrome.
-// Never on a phone, in another browser, or in the extension itself (its panel or its tab).
+// Offered only where it can be added: the web app in desktop Chrome.
 export const useExtensionOffered = (): boolean => {
   const isPanel = useIsPanel();
   const surface = useClientSurface();

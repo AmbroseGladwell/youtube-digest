@@ -7,15 +7,11 @@ export const VISIBLE_CHIPS = 2;
 
 export interface ChatChipRowProps {
   chips: readonly ReactNode[];
-  // What the hidden chips are, for "+N"'s accessible name: every title, never just a count.
   hiddenLabels: readonly string[];
   align?: "start" | "end";
   testId?: string;
 }
 
-// OV-362: a row of source chips that never runs long. Two show, then "+N", which opens a menu of
-// every one, as the row above the field does (OV-354, page 1). Used for a section's sources by
-// relation, a list item's, Pinned, Found for you and what a library answer read.
 export const ChatChipRow = ({ chips, hiddenLabels, align = "start", testId }: ChatChipRowProps) => {
   const [open, setOpen] = useState(false);
   const host = useRef<HTMLSpanElement | null>(null);

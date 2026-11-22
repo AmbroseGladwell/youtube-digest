@@ -4,8 +4,6 @@ import type { LibrarySort } from "../types/LibrarySort.js";
 
 type Compare = (a: LibraryEntry, b: LibraryEntry) => number;
 
-// An entry without the key sorts last whichever way the list runs: an unknown date or
-// title cannot claim a position (docs/features/record-migrations.md).
 const unknownLast =
   <K>(key: (entry: LibraryEntry) => K | null, compare: (left: K, right: K) => number): Compare =>
   (a, b) => {

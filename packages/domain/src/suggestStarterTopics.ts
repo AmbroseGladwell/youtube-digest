@@ -14,9 +14,7 @@ const termScore = (title: string, text: string, term: string): number => {
   return mentions(text, term) ? 1 : 0;
 };
 
-// The starter topics a source looks like it belongs under, from its title and text, matched in
-// code: free and instant, so suggesting costs no call before an account (OV-176). A word in the
-// title counts double; a topic needs a title word, or two words in the text, to be offered.
+// Matched in code, free and instant, so it costs no call before an account (OV-176).
 export const suggestStarterTopics = (title: string, text: string): string[] => {
   return STARTER_TOPICS.map((topic, order) => {
     const terms = [topic.name, ...topic.keywords];

@@ -1,14 +1,6 @@
 import { PROVIDERS, type Provider } from "./Provider.js";
 
-// A model we have actually pointed at a transcript, so it can carry a description and a
-// rough price. Everything else a reader's key can reach is offered too, by its raw id and
-// with neither (design 110e). This list is a floor, not the catalogue: the real list is
-// fetched from the provider with the reader's own key, and this is what the picker falls
-// back to when that call fails (design 110h).
-//
-// Ids checked against each provider's own documentation on 11 October 2026. Prices are
-// approximate, per million tokens, in US dollars — the currency all six price and bill in.
-// They exist only to drive the one rough figure the picker shows, never to bill anyone.
+// A floor, not the catalogue: docs/features/byo-providers.md, "Which models are offered".
 export interface KnownModel {
   id: string;
   label: string;
@@ -16,8 +8,7 @@ export interface KnownModel {
   pricePerMillion: { input: number; output: number };
 }
 
-// A non-empty tuple per provider, so that the fallback list cannot be emptied: it is what
-// the picker shows when the provider will not list its own models.
+// Non-empty, so the fallback for a provider that won't list its models can't be emptied.
 export const KNOWN_MODELS: Record<Provider, readonly [KnownModel, ...KnownModel[]]> = {
   anthropic: [
     {
@@ -105,9 +96,7 @@ export const KNOWN_MODELS: Record<Provider, readonly [KnownModel, ...KnownModel[
   ],
 };
 
-// The first of each provider's known models is what a newly saved key starts on, so a
-// reader who never opens the picker is on the one we would have recommended (design 110d,
-// "we picked GPT-5.1 to start").
+// The first known model is what a newly saved key starts on (design 110d).
 export const DEFAULT_MODEL: Record<Provider, string> = Object.fromEntries(
   PROVIDERS.map((provider) => [provider, KNOWN_MODELS[provider][0].id] as const),
 ) as Record<Provider, string>;
@@ -115,15 +104,9 @@ export const DEFAULT_MODEL: Record<Provider, string> = Object.fromEntries(
 export const knownModel = (provider: Provider, id: string): KnownModel | undefined =>
   KNOWN_MODELS[provider].find((model) => model.id === id);
 
-// What a model is called when it has a name we know, and its raw id when it does not — the
-// id is what the provider itself lists it under (design 110e).
 export const modelLabel = (provider: Provider, id: string): string => knownModel(provider, id)?.label ?? id;
 
-// One 20-minute video: a transcript of roughly 3,000 words with the prompt around it, and
-// an overview of roughly 1,100 words back. Measured from the samples rather than guessed,
-// and deliberately one number rather than a per-video calculation — the figure is
-// introduced as "roughly" and a precise-looking one would be a lie
-// (CLAUDE.md, "Never let a model count, measure or time anything").
+// One 20-minute video, measured from the samples; one rough figure on purpose (docs/prototype/constraints.md).
 export const OVERVIEW_TOKENS = { input: 5000, output: 1500 };
 
 export const estimatedOverviewCents = (model: KnownModel): number => {

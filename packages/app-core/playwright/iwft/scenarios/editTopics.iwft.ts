@@ -127,8 +127,6 @@ test("escape closes the picker and hands the line back read-only", async ({ laun
   await reader.verifyFiledUnder(["energy", "politics"]);
 });
 
-// Both of these and the picker's own Escape run through one useDismissOnOutside, so the
-// uncovered halves are what would let a change to it break something quietly.
 test("a pointer down outside the picker closes it, the same way Escape does", async ({ launcher, backendSimulator }) => {
   const { reader } = await openReader(launcher, backendSimulator);
   const picker = await reader.editTopics();
@@ -164,7 +162,6 @@ test("on a phone the same control arrives as a sheet, and Done closes it", async
   await picker.verifyIsNotShown();
 });
 
-// Design 46r: a starter topic's description is a quiet hint; a topic made by hand has none.
 test("a topic with a description shows it as a hint under its name", async ({ launcher, backendSimulator }) => {
   const { reader } = await openReader(launcher, backendSimulator);
   const picker = await reader.editTopics();

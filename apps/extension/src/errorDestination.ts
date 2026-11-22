@@ -8,9 +8,7 @@ const StoredErrorDestination = z.object({
   token: z.string().min(1).nullable(),
 });
 
-// Session storage, not local: it is held in memory and gone when the browser closes, and
-// content scripts can't read it, which nothing here may change
-// (docs/architecture/errors-and-logs.md, "The service worker").
+// Session, not local: docs/architecture/errors-and-logs.md, "The service worker".
 export const writeErrorDestination = (destination: ErrorDestination): void =>
   void chrome.storage.session.set({ [ERROR_DESTINATION]: destination }).catch(() => undefined);
 

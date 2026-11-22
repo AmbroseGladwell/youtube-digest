@@ -47,8 +47,7 @@ export const generationRoutes = (app: FastifyInstance, { generator, trials, sql,
     return status;
   });
 
-  // Signed out, a device asks for its trial token before it reads its first link or asks for
-  // topic suggestions; the trial makes nothing (docs/architecture/tiers.md, "Signed out").
+  // Why signed out gets a trial token: docs/architecture/tiers.md, "Signed out".
   app.post(
     "/trials",
     {
@@ -91,8 +90,7 @@ export const generationRoutes = (app: FastifyInstance, { generator, trials, sql,
     return result;
   });
 
-  // Signed out, onboarding's topics screen asks before there's an account, on the device's trial
-  // and capped apart from its one overview (docs/features/onboarding.md, "Suggested topics").
+  // Why suggestions run signed out: docs/features/onboarding.md, "Suggested topics".
   const trialTokenOf = (request: { headers: Record<string, unknown> }): string | null => {
     const token = request.headers[TRIAL_TOKEN_HEADER];
     return typeof token === "string" ? token : null;

@@ -34,9 +34,7 @@ const outboundHref = (href: string | null, pageUrl: string): string | null => {
   return samePlace || siteIndex ? null : url.href;
 };
 
-// The links a block names in its own words. A link that only says "here", opens a picture, points
-// back into the same page or to the site's front page, or sits in the page's furniture, is not one
-// a reader would follow from a note (docs/features/article-resources.md).
+// Not one a reader would follow: "here", a picture, the same page, the front page, or page furniture.
 export const articleLinks = (block: Element, pageUrl: string): ArticleLink[] => {
   return [...block.querySelectorAll("a[href]")].flatMap((anchor) => {
     const text = clean(anchor.textContent);

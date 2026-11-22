@@ -8,8 +8,6 @@ export interface R2Settings {
   secretAccessKey: string;
 }
 
-// R2 through its S3 API, signed per request; the bucket is private and only this server
-// holds a key to it (docs/features/tts-pre-rendered-speech.md, "The API side").
 export const createR2AudioStore = (
   { accountId, bucket, accessKeyId, secretAccessKey }: R2Settings,
   fetchImpl: typeof fetch = fetch,

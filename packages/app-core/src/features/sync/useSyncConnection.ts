@@ -7,8 +7,7 @@ export interface UseSyncConnectionResult {
   setConnection: (connection: SyncConnection) => void;
 }
 
-// One shared snapshot, as useApiKeys keeps: the settings panel writes it and the sync
-// runtime, mounted above every page, has to see the write in the same tab.
+// Shared, so the sync runtime above every page sees the settings panel's write in the same tab.
 const listeners = new Set<() => void>();
 let snapshot: SyncConnection | null = null;
 

@@ -23,69 +23,45 @@ import type { SyncConnectionInput } from "../../src/features/sync/types/SyncConn
 import type { PendingSignIn } from "../../src/features/auth/types/PendingSignIn.js";
 import type { InMemoryStoreRead } from "./InMemoryOverviewStore.testHelper.js";
 
-// Playwright Component Testing serializes props/hooksConfig across the Node<->browser
-// boundary as plain JSON — a live store instance built in the Node test process can't
-// survive that trip. Seed data goes in as plain objects instead; playwright/index.tsx's
-// beforeMount hook builds the real (browser-side) in-memory stores from it, and writes
-// apiKeys to localStorage the same way — page.addInitScript() only applies to a
-// navigation that hasn't happened yet, which mount() doesn't reliably trigger.
+// Plain JSON only: CT serializes hooksConfig, so index.tsx's beforeMount builds the stores from it.
 export interface IwftHooksConfig {
   seedOverviews?: Overview[];
   seedStates?: OverviewState[];
   seedTopics?: Topic[];
-  // Records the store holds and cannot read, for the quarantine's own scenarios
-  // (docs/features/record-migrations.md).
   seedUnreadable?: UnreadableRecord[];
   seedTranscripts?: StoredTranscript[];
   seedSettings?: Partial<Settings>;
-  // Playlists this library follows, what this device has seen of them, and its queue
-  // (docs/features/playlists.md, docs/features/capture-queue.md).
   seedFollowedPlaylists?: FollowedPlaylist[];
   seedPlaylistChecks?: PlaylistCheck[];
   seedQueue?: QueuedCapture[];
   seedProjects?: Project[];
   seedProjectMembers?: ProjectMember[];
-  // Store reads told to throw, for the dead-end screen's own scenarios.
   failingReads?: InMemoryStoreRead[];
   apiKeys?: ApiKeys;
-  // Whether this shell can sync at all, and the server and token it was given, if any
-  // (docs/features/sync-client.md).
   syncAvailable?: boolean;
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
   signedOutTrial?: SignedOutTrial;
-  // What this device said about analytics; null is never asked
-  // (docs/features/analytics-consent.md).
+  // Null is never asked.
   analyticsConsent?: AnalyticsConsent | null;
-  // This device has been signed in to an account before (design 46q).
   accountSeen?: boolean;
   surface?: Surface;
-  // Whether the browser says it is desktop Chrome, where the extension can be added. Absent is
-  // desktop Chrome; false is a phone (src/util/useExtensionOffered.ts).
+  // Absent is desktop Chrome; false is a phone.
   desktopChrome?: boolean;
   layout?: AppLayout;
-  // The server this shell was built for, filled into the panel before anything is typed.
   defaultApiUrl?: string;
   serverSwitchable?: boolean;
-  // What this shell's build knows about itself; absent is a shell that was told nothing.
+  // Absent is a shell that was told nothing.
   build?: AppBuild;
   // Absent is a shell that can't see tabs; null is one that can, seeing no video.
   activeVideoUrl?: string | null;
   // Absent is a shell with no tabs to read, which is the web app.
   articlePages?: IwftArticlePagesConfig;
-  // Absent is a shell that can't see the player; null is one that can, with nothing to
-  // report yet (docs/features/following-playback.md).
+  // Absent is a shell that can't see the player; null is one that can, with nothing to report yet.
   playback?: PlaybackPosition | null;
-  // Whether this shell has a page with an injected button on it
-  // (docs/features/injected-button.md).
   runBridge?: boolean;
-  // Whether this shell can reach YouTube at all. The web app cannot, and that is a
-  // browser rule rather than a setting (docs/features/transcript-retrieval.md).
+  // The web app can't reach YouTube: a browser rule, not a setting.
   youTubeFetch?: boolean;
-  // Whether this shell hands where errors go to a worker, as the extension does
-  // (docs/architecture/errors-and-logs.md, "The service worker").
   errorDestinationMirror?: boolean;
-  // Whether this shell hands the accent to a worker, as the extension does
-  // (docs/features/appearance.md, "The logo").
   accentMirror?: boolean;
 }

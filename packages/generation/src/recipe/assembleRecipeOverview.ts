@@ -13,8 +13,7 @@ export interface GeneratedRecipeOutput {
   readerQuestions: string[];
 }
 
-// Everything in the recipe is the page's, copied by code; only the summary and the line come
-// from the model (docs/features/recipe-notes.md).
+// docs/features/recipe-notes.md, "Code reads the recipe, never a model".
 export const assembleRecipeOverview = (
   input: ArticleGenerationInput,
   recipe: Recipe,

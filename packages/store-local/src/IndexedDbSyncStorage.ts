@@ -147,10 +147,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
     return records === true && transcripts === true;
   }
 
-  // Everything the library already holds becomes a pending write, at this client's own
-  // version, because no client ever writes at any other. What this client cannot read it
-  // cannot push either; that stays quarantined and counted where it is
-  // (docs/features/sync-client.md).
+  // docs/features/sync-client.md, "Enrolment: the first sync pushes everything".
   async enrol(): Promise<void> {
     const transaction = this.#db.transaction(ENROLMENT_STORES, "readwrite");
     const meta = transaction.objectStore(SYNC_META_STORE);
@@ -175,8 +172,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
     await promisifyTransaction(transaction);
   }
 
-  // Only the transcripts behind a note, and none already waiting to be sent: captions kept
-  // because a video was open stay on this device (docs/features/transcript-storage.md).
+  // Only a note's transcripts: docs/features/transcript-storage.md, "Following the reader across devices".
   async #transcriptWrites(transaction: IDBTransaction): Promise<PendingWrite[]> {
     const [overviews, transcripts, pending] = await Promise.all([
       promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
@@ -272,10 +268,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
     return known?.rev ?? null;
   }
 
-  // One transaction: the winner is re-filed and journaled field by field, as a reader's
-  // own edits would be; the loser, its state and its pending writes go, and its transcript
-  // write is re-pointed at the winner, which is of the same video. Nothing is touched when
-  // the winner is not here to fold onto, or cannot be read (docs/features/one-overview-per-video.md).
+  // docs/features/one-overview-per-video.md, "The client resolves the refusal".
   async foldOverview(from: string, into: string): Promise<OverviewFold | null> {
     const transaction = this.#db.transaction(
       [OVERVIEWS_STORE, OVERVIEW_STATES_STORE, PROJECT_MEMBERS_STORE, OUTBOX_STORE, SYNC_META_STORE],
@@ -350,7 +343,6 @@ export class IndexedDbSyncStorage implements SyncStorage {
     return { from, into };
   }
 
-  // The loser's projects become the winner's, as the reader's own adds made now.
   async #moveMembers(transaction: IDBTransaction, from: string, into: string, now: Date): Promise<Set<string>> {
     const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
     const moved = new Set<string>();
@@ -393,10 +385,7 @@ export class IndexedDbSyncStorage implements SyncStorage {
     await promisifyTransaction(transaction);
   }
 
-  // One transaction for the page and the cursor after it, so a crash between the two
-  // cannot leave a record applied and then pulled again, or a cursor past a record that
-  // never landed. Pending local writes go back on top of what was pulled
-  // (docs/features/sync-client.md).
+  // One transaction for a page and its cursor: docs/features/sync-client.md, "What comes down".
   async applyChanges(changes: RecordChange[], next: number): Promise<void> {
     const transaction = this.#db.transaction([...EVERY_STORE, ...FOLLOWING_STORES], "readwrite");
     const pending = groupPending(await promisifyRequest<OutboxEntry[]>(transaction.objectStore(OUTBOX_STORE).getAll()));
@@ -474,9 +463,7 @@ const readable = (kind: SyncedRecordKind, raw: unknown): Record<string, unknown>
   return migrated.status === "migrated" ? migrated.record : null;
 };
 
-// An undated record predates the stamp. The server needs a date on every write, so the
-// record's own creation date stands in, and the moment of enrolment where there is none
-// (docs/features/sync-metadata.md, "Absent means older than everything").
+// docs/features/sync-metadata.md, "It rides beside `schemaVersion`, and zod removes it again".
 const writtenAt = (raw: Record<string, unknown>, creationKey: string | null, now: Date): Date => {
   const stamped = storedUpdatedAt(raw);
   if (stamped !== null) {
@@ -508,8 +495,7 @@ const wholeRecordWrite = (
   ];
 };
 
-// Only the membership record of an overview still in its project is sent: one taken out
-// never needs to reach the server, which has never heard of it.
+// One taken out never needs to reach a server that has never heard of it.
 const memberWrite = (raw: unknown, now: Date): PendingWrite[] => {
   const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
   if (read.status !== "read" || !isInProject(read.record) || !isObject(raw)) {
@@ -526,7 +512,7 @@ const memberWrite = (raw: unknown, now: Date): PendingWrite[] => {
   ];
 };
 
-// The server tombstones them too, but not in the overview's or project's own write, so they may come down later.
+// The server tombstones them in a write of their own, so they may still come down later.
 const forgetChats = async (transaction: IDBTransaction, index: string, ownerId: string): Promise<void> => {
   const chats = transaction.objectStore(CHATS_STORE);
   for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(index).getAllKeys(ownerId))) {
@@ -580,8 +566,7 @@ const settingsWrite = (raw: unknown, now: Date): PendingWrite[] => {
   ];
 };
 
-// What this device had seen of a playlist, and what it still had waiting from it. A video
-// that needs the reader's attention stays until they dismiss it (docs/features/playlists.md).
+// What needs attention stays until dismissed: docs/features/playlists.md, "Unfollowing".
 const forgetFollowing = async (transaction: IDBTransaction, playlistId: string): Promise<void> => {
   transaction.objectStore(PLAYLIST_CHECKS_STORE).delete(playlistId);
   const queue = transaction.objectStore(CAPTURE_QUEUE_STORE);

@@ -37,17 +37,14 @@ export interface GenerateOverviewFormProps {
   onUrlChange: (url: string) => void;
   onSubmit: (url: string) => void;
   onCancel: () => void;
-  // A playlist link, or one that can't be followed, goes to the playlist flow instead
-  // (docs/features/playlists.md, "Pasting a link").
+  // docs/features/playlists.md, "Pasting a link".
   onPlaylist: (target: PlaylistTarget, pastedUrl: string) => void;
   generationError?: RunError | null;
-  // Whether the dialog holding the form is open, so a limit message can take focus as it
-  // comes into view.
+  // So a limit message can take focus as it comes into view.
   active?: boolean;
 }
 
-// What a link means once it is complete: a playlist to look up, or one to refuse. Null
-// for a video, or a link that is neither.
+// Null for a video, or a link that is neither.
 export const playlistTargetOf = (url: string): PlaylistTarget | null => {
   const link = youTubeLink(url);
   if (link?.kind === "playlist") {
@@ -95,8 +92,7 @@ export const GenerateOverviewForm = ({
   const limit = useLimitMessage();
   const next = useNextQuota();
   const plan = useOverviewUsageQuery().data?.plan ?? DEFAULT_PLAN;
-  // A Free or BYO Plus reader at the limit meets the wall when they try to save (327aa); Plus keeps
-  // the note, since the wall's way on is Plus.
+  // Plus keeps the note at the limit, since the wall's way on is Plus.
   const walled = limit !== null && plan !== "plus" && next?.kind === "spent" ? next : null;
   const [wallShown, setWallShown] = useState(false);
   const [plansOpen, setPlansOpen] = useState(false);

@@ -8,22 +8,18 @@ import { liveShareFor } from "./util/liveShareFor.js";
 import { narrationForShare } from "./util/narrationForShare.js";
 
 export interface OverviewShare {
-  // False when this shell has no account to share under: every sharing control hides.
+  // False without an account, and every sharing control hides.
   available: boolean;
   share: Share | null;
-  // The copy behind the link was made from a different note than the one held here.
+  // The shared copy was made from a different note than the one held here.
   edited: boolean;
-  // The copy behind the link has no audio, and the reader now has some to give it.
+  // The shared copy has no audio, and the reader now has some to give it.
   audioMissing: boolean;
-  // Asks the server again. Called when the dialog opens, because the view count and
-  // whether the copy is current are what the reader opened it to see.
+  // Called when the dialog opens: docs/features/sharing.md, "Making and managing a link".
   refresh: () => void;
 }
 
-// What the ⋯ menu and the dialog read. The hash is computed here rather than fetched: the
-// server holds the hash of what it stored, and the reader's own copy is hashed by the same
-// function, so the two can be compared without sending the overview anywhere
-// (docs/features/sharing.md).
+// Why the hash is computed here: docs/features/sharing.md, "Edited since sharing".
 export const useOverviewShare = (overview: Overview | null): OverviewShare => {
   const api = useShareApi();
   const narrationApi = useNarrationApi();

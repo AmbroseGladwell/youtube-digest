@@ -12,7 +12,6 @@ export interface OverviewUsageRoutesOptions {
   clock: () => Date;
 }
 
-// The month's overviews, and its transcribing where this server transcribes episodes.
 export const overviewUsageRoutes = (app: FastifyInstance, { usage, transcriptions, sql, clock }: OverviewUsageRoutesOptions): void => {
   app.get("/overview-usage", async (request): Promise<OverviewUsage> => {
     const { accountId } = request.session!;

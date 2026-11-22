@@ -1,14 +1,10 @@
 import { FOLLOW_UP_ASSISTANTS, type FollowUpAssistant } from "./FollowUpAssistant.js";
 
-// Just under the longest link the owner has seen Claude and ChatGPT fill in from whole, about
-// 51,000 characters (14 November 2026). Past it a link may arrive cut short, so the prompt is
-// copied instead.
+// Under the ~51,000 characters owner-tested on 14 Nov 2026; longer links may arrive cut short.
 export const MOST_PREFILL_URL_LENGTH = 50_000;
 
 export type FollowUpHandOff = { kind: "prefill"; url: string } | { kind: "copyThenOpen"; url: string; text: string };
 
-// How a question reaches the assistant: in the link that opens it when it can be filled in that
-// way and the link isn't too long, otherwise copied for the reader to paste into it.
 export const followUpHandOff = (assistant: FollowUpAssistant, prompt: string): FollowUpHandOff => {
   const { openUrl, prefillParam } = FOLLOW_UP_ASSISTANTS[assistant];
   if (prefillParam !== null) {

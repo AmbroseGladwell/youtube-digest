@@ -38,11 +38,7 @@ const NOBODY: readonly SpreadReader[] = [
   { name: "nobody-again", readerContext: null, cues: NO_CUES },
 ];
 
-// Composed the way the app composes a real reader's, and chosen to share as little as
-// possible. "nobody" runs twice, and the two copies are the noise floor any difference
-// between readers has to beat (docs/architecture/model-comparison.md, "Different readers").
-// A reader's cues are the words an action would use if it drew on that part of the
-// context: a proxy, counted by code, and only as good as the list.
+// "nobody" runs twice as the noise floor: docs/architecture/model-comparison.md, "Different readers".
 const BROAD: readonly SpreadReader[] = [
   reader(
     "parent",
@@ -128,8 +124,7 @@ export type ReaderSet = keyof typeof READER_SETS;
 
 export const SPREAD_READERS: readonly SpreadReader[] = READER_SETS.broad;
 
-// A reader's actions from an earlier run, judged in the same call as this run's, so a
-// prompt change is compared under one bar: the judge's labels shift from run to run.
+// Judged in the same call as this run's, since the judge's labels shift from run to run.
 export const BEFORE = "@before";
 export const asBefore = (reader: SpreadReader): SpreadReader => ({ ...reader, name: `${reader.name}${BEFORE}` });
 

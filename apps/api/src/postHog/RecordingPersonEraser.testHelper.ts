@@ -1,9 +1,7 @@
 import type { PersonEraser } from "./PersonEraser.js";
 
 export interface RecordingPersonEraser extends PersonEraser {
-  // Every distinct id the app asked to have erased, in order.
   erased: string[];
-  // Ids PostHog never held a person for.
   absent: Set<string>;
   failing: boolean;
 }

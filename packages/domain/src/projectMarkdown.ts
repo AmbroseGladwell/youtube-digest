@@ -28,8 +28,7 @@ const FRESHEST_FIRST: readonly Novelty[] = ["original", "fresh_angle", "common_k
 
 const freshness = ({ verdict }: Overview): number => (verdict === null ? FRESHEST_FIRST.length : FRESHEST_FIRST.indexOf(verdict.novelty));
 
-// Fresher verdicts first, then newest saved, so an assistant reading a page at a time meets
-// what is least likely to be known already (docs/features/projects.md, "get_project").
+// Least likely known first: docs/features/projects.md, "get_project, and projectMarkdown".
 export const projectOrder = <T extends { overview: Overview }>(items: readonly T[]): T[] => {
   return [...items].sort(
     (left, right) => freshness(left.overview) - freshness(right.overview) || right.overview.savedAt.localeCompare(left.overview.savedAt),
@@ -90,10 +89,7 @@ const stepsOf = ({ overview }: ProjectOverview): string | null => {
   return [`### ${overview.source.title} (id ${overview.id})`, ...items.map((item) => `- ${item}`)].join("\n");
 };
 
-// A project as a brief: its purpose, what is in it counted in code, its overviews freshest
-// first, and every How to apply step in one place. The same text an assistant gets from
-// get_project and the reader copies, so the two never differ. With a page, the counts still
-// cover the whole project and only the listing is cut (docs/features/projects.md).
+// What get_project gives and the reader copies; a page cuts only the listing (docs/features/projects.md).
 export const projectMarkdown = (project: Project, items: readonly ProjectOverview[], page?: ProjectPage): string => {
   const ordered = projectOrder(items);
   const shown = page === undefined ? ordered : ordered.slice(page.from, page.from + page.count);

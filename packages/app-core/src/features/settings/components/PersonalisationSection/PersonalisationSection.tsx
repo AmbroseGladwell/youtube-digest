@@ -51,8 +51,6 @@ const SettingSwitch = ({ testId, label, hint, on, onSwitch }: SettingSwitchProps
   );
 };
 
-// What we know about you, the sections an overview can leave out, then filing into projects (design 141k;
-// docs/features/personalisation.md).
 export const PersonalisationSection = () => {
   const settings = useSettingsQuery().data;
   const sectionsEnabled = settings?.sectionsEnabled ?? DEFAULT_SECTIONS_ENABLED;

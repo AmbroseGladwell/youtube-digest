@@ -5,7 +5,6 @@ export type MilestoneTile =
   | { milestone: Milestone; state: "next"; toGo: number; from: number }
   | { milestone: Milestone; state: "ahead"; toGo: number };
 
-// Design 34aj (docs/features/time-saved.md, "Settings › Milestones").
 export const milestoneTiles = (marks: MilestoneMarks, minutes: number): MilestoneTile[] => {
   const next = MILESTONES.find((milestone) => milestone.minutes > minutes);
   return MILESTONES.map((milestone, index) => {
@@ -21,7 +20,6 @@ export const milestoneTiles = (marks: MilestoneMarks, minutes: number): Mileston
 
 export const reachedCount = (minutes: number): number => MILESTONES.filter((milestone) => milestone.minutes <= minutes).length;
 
-// "13 min to go" under an hour, "5h 13m to go" after.
 export const timeToGo = (minutes: number): string => `${minutes < 60 ? `${minutes} min` : formatTimeSaved(minutes)} to go`;
 
 export const spokenTimeToGo = (minutes: number): string => `${spokenTimeSaved(minutes)} to go`;
@@ -29,7 +27,6 @@ export const spokenTimeToGo = (minutes: number): string => `${spokenTimeSaved(mi
 // en-US for the month alone: en-GB spells September "Sept", and the design says "14 Sep".
 const MONTH = new Intl.DateTimeFormat("en-US", { month: "short" });
 
-// "2 Aug", with the year once it is not this one.
 export const formatReachedOn = (iso: string, now: Date): string => {
   const date = new Date(iso);
   const dayMonth = `${date.getDate()} ${MONTH.format(date)}`;

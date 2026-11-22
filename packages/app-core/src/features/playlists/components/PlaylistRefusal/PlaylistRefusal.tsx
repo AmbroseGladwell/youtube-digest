@@ -42,13 +42,11 @@ const COPY: Record<PlaylistRefusalReason, { title: string; body: string }> = {
 export interface PlaylistRefusalProps {
   reason: PlaylistRefusalReason;
   stacked: boolean;
-  // The one recovery that can work for this reason, when there is one.
   action: { label: string; onSelect: () => void; busy?: boolean } | null;
   onPasteAnother: () => void;
 }
 
-// The error-state pattern (design 19, 27g): a short orange bar, a plain title, the reason,
-// then the recovery. Recovery first where it stacks.
+// Recovery first where it stacks (design 19, 27g).
 export const PlaylistRefusal = ({ reason, stacked, action, onPasteAnother }: PlaylistRefusalProps) => {
   const { title, body } = COPY[reason];
   return (

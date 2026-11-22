@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { wrapToWidth } from "./wrapToWidth.js";
 
-// One unit of width per character, so a test can say what fits without a font.
 const measure = (line: string) => line.length;
 
 test("a title that fits stays on one line", () => {

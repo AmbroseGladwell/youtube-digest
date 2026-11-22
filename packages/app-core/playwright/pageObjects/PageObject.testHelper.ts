@@ -37,8 +37,7 @@ export abstract class PageObject {
   protected expectNotToBeVisible = (testId: string) => expect(this.get(testId)).not.toBeVisible();
   protected expectToHaveCount = (testId: string, count: number) => expect(this.get(testId)).toHaveCount(count);
 
-  // Reads the generated box, not the attribute: every band carries the attribute and a
-  // stylesheet picks between them (docs/features/fade-under-the-bar.md).
+  // Reads the generated box: every band carries the attribute and a stylesheet picks between them.
   private stickyFades = () =>
     this.page.evaluate(() =>
       [...document.querySelectorAll("[data-sticky-fade]")].map((band) => {
@@ -81,9 +80,6 @@ export abstract class PageObject {
       expect((await this.stickyFades()).map((band) => band.band)).toEqual(testIds);
     });
 
-  // What the fade's height is capped by: scrolled to its own anchor, a heading comes to rest
-  // its scroll margin below the viewport's top, which has to clear the band and the fade
-  // under it (docs/features/fade-under-the-bar.md).
   verifyAnchorsClearTheFade = (testId: string) =>
     this.step(`verifyAnchorsClearTheFade ${testId}`, async () => {
       const band = await this.page.evaluate(() => {

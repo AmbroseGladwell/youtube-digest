@@ -18,11 +18,7 @@ import { playlistKeys } from "../playlists/playlistKeys.js";
 import { captureQueueKeys } from "../captureQueue/captureQueueKeys.js";
 import type { LibraryMove } from "./types/LibraryMove.js";
 
-// Signed in, once the account's library has pulled, what this device made without an
-// account moves into it, one overview per video, along with what onboarding asked. It runs on every start that finds the
-// no-account library holding something, which is also how a move that stopped is finished,
-// and again when asked, for onboarding's overview landing after the account exists; moves
-// run one after another, never together (docs/features/account-libraries.md, "The move on sign-in").
+// Moves run one after another, never together: docs/features/account-libraries.md, "The move on sign-in".
 export const LibraryMoveRuntime = ({ children }: { children: ReactNode }) => {
   const accountId = useLibraryAccountId();
   const stores = useStores();

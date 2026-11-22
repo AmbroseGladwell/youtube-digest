@@ -4,14 +4,11 @@ import { sourceKey } from "./sourceKey.js";
 
 export interface HeldOverview {
   id: string;
-  // False for a record this app cannot read: it is still one the reader owns, and offering
-  // to generate it again is offering to buy it twice (docs/features/record-migrations.md).
+  // Unreadable is still owned, and regenerating would buy it twice (docs/features/record-migrations.md).
   readable: boolean;
 }
 
-// Whether a library already holds an overview of a source, quarantined records included, by
-// their salvaged source. Null is "no", never "could not tell": a store that cannot answer
-// throws (docs/features/one-overview-per-video.md).
+// Quarantined records included; a store that can't tell throws (docs/features/one-overview-per-video.md).
 export const heldOverviewOf = async (
   store: Pick<OverviewStore, "listOverviews" | "listUnreadable">,
   key: SourceKey | string,

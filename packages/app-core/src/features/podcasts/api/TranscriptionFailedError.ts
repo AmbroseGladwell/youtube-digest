@@ -1,7 +1,6 @@
 import type { TranscriptionFailure } from "@overview/domain";
 
-// A transcription the reader chose that ended without words, which counted nothing (design 305k).
-// `no-audio` is a feed that offered none to transcribe.
+// Counts nothing; `no-audio` is a feed that offered no audio to transcribe.
 export class TranscriptionFailedError extends Error {
   readonly reason: TranscriptionFailure | "no-audio";
 

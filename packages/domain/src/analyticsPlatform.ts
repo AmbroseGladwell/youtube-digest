@@ -5,8 +5,7 @@ interface NavigatorWithUserAgentData {
   userAgentData?: { platform?: string };
 }
 
-// The operating system in one word, from what the browser says about itself: never the
-// device, the browser build or anything finer.
+// One word, never the device, the browser build or anything finer.
 export const analyticsPlatform = (navigator: NavigatorWithUserAgentData | undefined): AnalyticsPlatform => {
   const said = `${navigator?.userAgentData?.platform ?? ""} ${navigator?.userAgent ?? ""}`.toLowerCase();
   if (said.includes("android")) {

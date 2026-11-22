@@ -32,8 +32,6 @@ export interface OnboardingWaitProps {
   setups: ReactNode;
 }
 
-// The logo mark as each stage's loader (design 327r): OverviewMark's ring and underline, the ring
-// an arc that turns while the stage runs, then closed, filled and ticked.
 const StageMark = ({ state }: { state: WaitStageState }) => {
   return (
     <svg

@@ -7,8 +7,7 @@ import { OVERVIEW_BUTTON_ID } from "./overviewButtonStyles.js";
 
 const RECONCILE_DELAY_MS = 80;
 const RESIZE_DELAY_MS = 120;
-// Long enough that a slow panel is not cut off, short enough that a press nothing
-// answered does not sit there claiming to be working.
+// Long enough for a slow panel, short enough that an unanswered press doesn't claim to be working.
 const CONFIRM_WITHIN_MS = 10_000;
 
 let button: OverviewButton | null = null;
@@ -20,8 +19,6 @@ let confirmTimer: ReturnType<typeof setTimeout> | null = null;
 const currentVideoId = (): string | null =>
   window.location.pathname === "/watch" ? new URL(window.location.href).searchParams.get("v") : null;
 
-// Every state the button is told about arrives here, which is also where waiting for a
-// press to be answered stops.
 const applyState = (state: ButtonState): void => {
   if (confirmTimer !== null) {
     clearTimeout(confirmTimer);
@@ -40,8 +37,7 @@ const readState = async (videoId: string): Promise<void> => {
       applyState(state);
     }
   } catch {
-    // The worker is asleep or the extension was reloaded under us. Idle is the honest
-    // answer: it offers the run rather than claiming anything about one.
+    // The worker is asleep or the extension reloaded; idle offers the run rather than claiming one.
     applyState(IDLE_BUTTON_STATE);
   }
 };
@@ -51,12 +47,7 @@ const press = (): void => {
     return;
   }
 
-  // A ready button is opening the note the library already holds, not starting work, so
-  // it says nothing new. Otherwise the spinner shows at once so the press does not read
-  // as a miss — but with no startedAt, because nothing has started yet and a clock
-  // ticking on a press that was declined would be timing a run that does not exist. The
-  // clock begins when the panel reports the run's own startedAt
-  // (docs/features/injected-button.md).
+  // docs/features/injected-button.md, "Four states, and where each one's facts come from".
   const showedPending = button.kind !== "ready";
   if (showedPending) {
     button.setState({ kind: "generating", startedAt: null, progressFraction: 0 });
@@ -72,8 +63,7 @@ const press = (): void => {
 
   void chrome.runtime
     .sendMessage({ type: BridgeMessage.REQUEST_OVERVIEW, videoUrl: window.location.href })
-    // Only what this press put up comes back down. A ready button whose message failed
-    // is still ready — the note is in the library either way.
+    // Only what this press put up comes back down; a ready button stays ready.
     .catch(() => {
       if (showedPending) {
         applyState(IDLE_BUTTON_STATE);
@@ -128,10 +118,7 @@ const scheduleReconcile = (delay: number = RECONCILE_DELAY_MS): void => {
   }, delay);
 };
 
-// YouTube's own navigation event is the cheap signal; the observer is the safety net for
-// the action row arriving later than it. The early-out matters — YouTube mutates the
-// watch page constantly, and rescheduling a timer on every one of those is work for
-// nothing once the button is already placed.
+// The early-out matters: YouTube mutates the watch page constantly.
 const observeRebuilds = () => {
   new MutationObserver(() => {
     if (button?.element.isConnected === true && currentVideoId() === watchedVideoId) {
@@ -151,8 +138,7 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 window.addEventListener("yt-navigate-finish", () => scheduleReconcile());
-// The visible action row changes at YouTube's breakpoints, which can strand the button
-// in a copy that is no longer the one on screen.
+// The visible action row changes at YouTube's breakpoints, which can strand the button in a hidden copy.
 window.addEventListener("resize", () => scheduleReconcile(RESIZE_DELAY_MS));
 
 reconcile();

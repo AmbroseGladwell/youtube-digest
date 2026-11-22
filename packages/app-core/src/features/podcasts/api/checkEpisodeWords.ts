@@ -2,10 +2,7 @@ import type { PodcastEpisode, TranscriptCheck } from "@overview/domain";
 import type { PodcastApi } from "@overview/sync";
 import { findEpisodeOnYouTube, type YouTubeFetch } from "@overview/transcripts";
 
-// Whether an episode's words can be found, asked as its link is read, fetching none (design 305c).
-// Our server answers for a remembered source and the feed's tag first. Then the reader's extension
-// looks on YouTube on their own connection, as Create would; without one, our server searches,
-// which spends one of the app's daily searches (owner, 16 Nov 2026).
+// Without an extension our server searches, which spends one of the app's daily searches.
 export const checkEpisodeWords = async (
   api: Pick<PodcastApi, "checkTranscript">,
   episode: PodcastEpisode,

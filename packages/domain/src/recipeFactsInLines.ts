@@ -34,8 +34,7 @@ const theOnlyValue = <T>(values: T[]): T | null => {
   return first !== undefined && values.every((value) => value === first) ? first : null;
 };
 
-// The times and yield a source labels as text, a recipe page's or a video's description, read in
-// code and never worked out (docs/features/recipe-notes.md, "Read from the page itself").
+// Read in code, never worked out: docs/features/recipe-notes.md, "Read from the page itself".
 export const recipeFactsInLines = (lines: readonly string[]): Facts => {
   const times: Record<Time, number[]> = { prepMinutes: [], cookMinutes: [], totalMinutes: [] };
   const yields: string[] = [];

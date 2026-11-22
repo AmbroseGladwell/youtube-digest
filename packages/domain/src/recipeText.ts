@@ -21,8 +21,7 @@ export interface RecipeTextInput {
   methodAmounts?: readonly MethodAmount[];
 }
 
-// Copy recipe: the page's recipe only, with where it came from, and never our summary. Plain
-// text with "-" and numbers, so it pastes cleanly anywhere (design 144r).
+// The page's recipe only, never our summary, in plain text that pastes anywhere (design 144r).
 export const recipeText = ({ title, from, url, recipe, ingredients, adjusted, methodAmounts = [] }: RecipeTextInput): string => {
   const figures = recipeFigures(recipe);
   const head = [

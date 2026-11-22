@@ -10,11 +10,7 @@ export interface ChatSystemPromptOptions {
   reader?: string | null;
 }
 
-// OV-267's fullTranscript shape, which cited the right moment on 46 of 48 questions and
-// declined all 24 the source didn't answer, with the overview's items given ids so an answer
-// can cite them too (OV-319). It is the first message and never changes within a
-// conversation, so every follow-up reads it from the cache (docs/architecture/in-app-chat.md).
-// The overview comes from overviewMarkdown with partIds.
+// Why the whole transcript, first and unchanging: docs/architecture/in-app-chat.md, "Quality per shape".
 export const chatSystemPrompt = (
   kind: ChatSourceKind,
   overview: string,
@@ -33,9 +29,7 @@ Nothing is known about the reader yet: they haven't written an About you sentenc
 - Never assume anything about them.
 - When they ask what you know about them, say nothing yet, and that they can tell The Overview about themselves in Settings › Personalisation, so answers and How to apply fit them.`;
 
-// OV-343: the reader context generation gives How to apply (composeReaderContext), so chat
-// fits answers to the same person the note was written for. Last in the system message, so a
-// changed profile leaves the transcript's cached prefix whole.
+// Last in the system message, so a changed profile leaves the transcript's cached prefix whole.
 const readerBlock = (kind: ChatSourceKind, reader: string): string => {
   const noun = NOUN[kind];
   return `# The reader
@@ -76,8 +70,7 @@ ${overview}
 ${transcriptBlocks(passages)}`;
 };
 
-// "Never let a model count, measure or time anything" (docs/prototype/constraints.md): amounts
-// for other servings come from the recipe's own scaler (OV-231), never from the answer.
+// docs/prototype/constraints.md, "Never let a model count, measure or time anything".
 const AMOUNTS_RULE =
   "- Never work out an amount yourself: never scale a quantity, change the number of servings, or convert a unit, weight or temperature. Give the recipe's own amounts and cite them, and when the question wants other amounts, say the servings control above the ingredients changes them.";
 
@@ -88,9 +81,7 @@ interface BeyondSourceRulesOptions {
   cited: string;
 }
 
-// OV-329: a fair question the source doesn't cover gets a short answer from general knowledge,
-// said to be from beyond it, rather than a refusal. The app labels it from its citations, never
-// from generalKnowledge, which only tells a general answer from a decline in the log line.
+// Why general knowledge rather than a refusal: docs/features/chats.md, "Beyond the source".
 const beyondSourceRules = ({ noun, material, decline, cited }: BeyondSourceRulesOptions): string => {
   const opening = decline.charAt(0).toUpperCase() + decline.slice(1);
   return `- When neither ${material} answers the question but it is a fair question about the ${noun}'s subject (why something works, what something means, whether two things go together), begin with "${opening}." and then answer briefly from general knowledge. Set inSource to false, leave ${cited} empty, and set generalKnowledge to true.
@@ -100,8 +91,7 @@ const beyondSourceRules = ({ noun, material, decline, cited }: BeyondSourceRules
 - Set generalKnowledge to false whenever the whole answer comes from the material.`;
 };
 
-// OV-342: left to guess, the model offered to read a photo of a label, and doubted that the
-// overview's similar overviews were in the reader's own library.
+// Why the model is told about the app: docs/features/chats.md, "Knowing the product".
 const productBlock = (kind: ChatSourceKind, material: string, verdict: boolean): string => {
   const parts = !verdict
     ? ""
@@ -117,8 +107,6 @@ You are the chat inside The Overview, the app where the reader saved this ${NOUN
 
 const NOUN: Record<ChatSourceKind, string> = { video: "video", episode: "episode", article: "article", recipe: "recipe page" };
 
-// An article or a recipe page: we keep no page text (OV-295), so the overview, and a recipe
-// page's recipe, are all an answer can come from (OV-320).
 const overviewOnlyPrompt = (kind: "article" | "recipe", overview: string): string => {
   const noun = NOUN[kind];
   const decline = kind === "recipe" ? "the recipe doesn't cover it" : "the overview of this article doesn't cover it";
@@ -148,9 +136,7 @@ ${overview}`;
 
 const transcriptBlocks = (passages: readonly Passage[]): string => passages.map(passageBlock).join("\n");
 
-// After the transcript, so a new message in another chat leaves the transcript's cache whole,
-// and as a user message: a second system message is folded into the first, and the transcript
-// is then no longer the cached prefix a new conversation reads (OV-313's probe).
+// A user message after the transcript: a second system message would fold in and break the cache (OV-313).
 export const otherChatsPrompt = (kind: ChatSourceKind, others: OtherChatsInPrompt): string | null => {
   if (others.conversations.length === 0) {
     return null;

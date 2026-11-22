@@ -4,8 +4,6 @@ import { useClientSurface } from "../../app/SurfaceContext.js";
 import { useSync } from "../sync/SyncContext.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 
-// The auth API for the session this device holds: the extension's bearer, or the web
-// app's cookie. Null when this device is not signed in to a server.
 export const useSessionAuthApi = (): AuthApi | null => {
   const sync = useSync();
   const { connection } = useSyncConnection();

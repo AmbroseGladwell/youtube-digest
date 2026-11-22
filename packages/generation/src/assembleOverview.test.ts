@@ -329,8 +329,6 @@ test("chapters take their times from the transcript, each ending where the next 
   ]);
 });
 
-// A wordless outro is not part of any chapter, and a wordless intro is not either: the
-// first chapter starts at the first caption, wherever that falls.
 test("the chapters span the words, not the video: the first starts and the last ends with the captions", () => {
   const overview = assembleOverview(
     {

@@ -21,10 +21,7 @@ export interface AskPageTarget {
   chat: string | null;
 }
 
-// The Ask page (OV-354, page 3): one conversation over the library or a project at a time, named
-// in the address so it survives a reload; the drawer's history of every conversation, an
-// overview's opening on that overview (OV-363), a deleted one undoable for six seconds; and what
-// the next question pins.
+// What the page holds: docs/features/chats.md, "The Ask page (OV-354, pages 3 and 4)".
 export const useAskPage = (projectId: ProjectId | null, chatParam: string | null) => {
   const owner: AskOwner = projectId === null ? { kind: "library" } : { kind: "project", id: projectId };
   const scope = askScopeOf(owner);

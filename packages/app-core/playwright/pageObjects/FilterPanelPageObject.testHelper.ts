@@ -4,7 +4,7 @@ import { PageObject } from "./PageObject.testHelper.js";
 import { ManageTagsDialogPageObject } from "./ManageTagsDialogPageObject.testHelper.js";
 
 export class FilterPanelPageObject extends PageObject {
-  // Verdict is folded under More filters, so reaching one of its rows opens that first.
+  // Verdict is folded under More filters, so that opens first.
   clickNoveltyChip = (novelty: string) =>
     this.step(`clickNoveltyChip ${novelty}`, async () => {
       await this.openMoreFilters();
@@ -73,8 +73,7 @@ export class FilterPanelPageObject extends PageObject {
 
   clickStatusChip = (status: string) => this.step(`clickStatusChip ${status}`, () => this.click(filterPanelTestIds.statusChip(status)));
 
-  // By name rather than by id: a topic the reader has just accepted was minted by the
-  // store, so the test never learns its id.
+  // By name: a topic just accepted was minted by the store, so the test never learns its id.
   verifyOffersTopic = (name: string) =>
     this.step(`verifyOffersTopic ${name}`, () => expect(this.topicGroup().getByText(name, { exact: true })).toBeVisible());
 

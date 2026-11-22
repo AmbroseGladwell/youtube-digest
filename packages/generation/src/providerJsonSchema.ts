@@ -2,18 +2,12 @@ import { z } from "zod";
 
 export type JsonSchema = Record<string, unknown>;
 
-// What every provider's structured-output mode agrees on. Everything else a Zod schema
-// produces — the caps, the bounds, the string formats — is unsupported by at least one of
-// them, and sending it is a 400 rather than a stricter model.
+// Everything else is unsupported by at least one provider, and sending it is a 400.
 const KEPT = new Set(["type", "description", "enum", "const"]);
 
 const isObject = (value: unknown): value is JsonSchema => typeof value === "object" && value !== null && !Array.isArray(value);
 
-// The leftovers are not dropped, they are said in words. docs/features/overview-generation-decisions.md
-// records that this is already how the array cap reaches the model: structured outputs do
-// not enforce it, the prompt and the correction pass do. Keeping the behaviour identical
-// across six providers is the point — the overview format was tuned against a model that
-// could read its own caps in the description.
+// docs/features/byo-providers.md, "The schema is the same object for all five, and words for the sixth".
 const describeUnsupported = (schema: JsonSchema, leftovers: JsonSchema): void => {
   const entries = Object.entries(leftovers);
   if (entries.length === 0) {
@@ -54,9 +48,7 @@ const transform = (node: unknown): JsonSchema => {
     out.properties = Object.fromEntries(
       Object.entries(isObject(properties) ? properties : {}).map(([key, value]) => [key, transform(value)]),
     );
-    // Required everywhere and nothing extra: OpenAI's strict mode refuses a schema that
-    // leaves either open, and the others are content with it. A field that may be absent
-    // is already modelled as a nullable one throughout the prompt sections.
+    // OpenAI's strict mode refuses a schema that leaves either open.
     out.required = Array.isArray(required) ? required : Object.keys(out.properties as JsonSchema);
     out.additionalProperties = false;
   }
@@ -69,9 +61,7 @@ const transform = (node: unknown): JsonSchema => {
   return out;
 };
 
-// One shape for all five providers that accept a schema. The sixth, DeepSeek, has no
-// schema mode at all and is given this same object inside the prompt instead
-// (docs/features/byo-providers.md).
+// docs/features/byo-providers.md, "The schema is the same object for all five, and words for the sixth".
 export const providerJsonSchema = (schema: z.ZodObject<z.ZodRawShape>): JsonSchema => {
   return transform(z.toJSONSchema(schema, { io: "output" }));
 };

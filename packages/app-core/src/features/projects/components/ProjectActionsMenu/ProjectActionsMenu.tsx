@@ -13,7 +13,6 @@ export interface ProjectActionsMenuProps {
   onDelete: () => void;
 }
 
-// The reader-only actions; only Delete asks first ("OV-168 2 The Project Page" 168k).
 export const ProjectActionsMenu = ({ archived, onRename, onEditPurpose, onArchive, onDelete, ref: trigger }: ProjectActionsMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);

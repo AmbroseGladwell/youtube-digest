@@ -47,7 +47,6 @@ after(() => {
   server.close();
 });
 
-// The test's server is on loopback, so this one opens loopback and nothing else.
 const fetchHere = createArticlePageFetcher({
   isAllowedAddress: (address) => address === "127.0.0.1",
   allowedPorts: [String(port)],

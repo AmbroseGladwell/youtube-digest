@@ -9,9 +9,6 @@ export interface CookingIngredientsSheetProps {
   children: ReactNode;
 }
 
-// Designs 150ah, 150ai: on a phone and in the panel, the note's own list as a sheet over the
-// step, as written or as the reader adjusted it. Opening it pauses nothing; servings and units
-// belong to the note, before cooking. The wide web gets CookingIngredientsDrawer instead.
 export const CookingIngredientsSheet = ({ open, onClose, children }: CookingIngredientsSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
 

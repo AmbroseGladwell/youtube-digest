@@ -1,8 +1,6 @@
 import { DEFAULT_CAPTION_CLIENTS, fetchInnerTubeTranscript, TranscriptFetchError, type YouTubeFetch } from "@overview/transcripts";
 
-// No key and no .env: the point of this path is that it costs nothing. What it proves,
-// and what no fixture can, is that the client versions in InnerTubeClientConfig still
-// work against the real endpoint (docs/features/transcript-retrieval.md).
+// No key and no .env: this proves the client versions still work against the real endpoint, for free.
 const url = process.argv[2];
 if (!url) {
   console.error("usage: node packages/transcripts/scripts/innerTubeSanityCheck.ts <youtube-url>");
@@ -30,8 +28,7 @@ const youTubeFetch: YouTubeFetch = async (request) => {
 
 console.error(`clients: ${DEFAULT_CAPTION_CLIENTS.map((c) => `${c.clientName}/${c.clientVersion}`).join(", ")}`);
 
-// A named failure is an answer, not a crash: "no captions" and "removed by the uploader"
-// are things this script exists to be able to report.
+// A named failure is an answer this script exists to report, not a crash.
 const result = await fetchInnerTubeTranscript(youTubeFetch, videoId, url, {}).catch((error: unknown) => {
   if (error instanceof TranscriptFetchError) {
     console.error(`\n${error.failure}: ${error.message}`);
@@ -49,8 +46,7 @@ console.log(
       segmentCount: result.transcript.length,
       firstSegments: result.transcript.slice(0, 3),
       lastSegments: result.transcript.slice(-2),
-      // Printed together because they are different measurements of the same video, and
-      // the gap between them is the reason durationMs is not taken from the captions.
+      // Side by side because their gap is why durationMs is never taken from the captions.
       durationMs: result.video.durationMs,
       lastCaptionEndsMs: last?.endMs ?? null,
       bytesOverTheWire: bytes,

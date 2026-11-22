@@ -31,14 +31,10 @@ test("a run started from the page is reported back to it, from running through t
 
   const reports = await launcher.readRunReports();
   expect(reports.filter((report) => report !== null).map((report) => report.videoUrl)).toContain(WATCHED_URL);
-  // The run is dismissed as the panel opens the note, and the page is told so: a button
-  // still saying "Creating" after the run is gone would be reporting a run nobody has.
+  // A button still saying "Creating" after the run is gone would report a run nobody has.
   expect(reports.at(-1)).toBeNull();
 });
 
-// The press opens the panel, so it arrives before the queries behind readiness have
-// answered. Deciding then sent a reader with an allowance to Settings for a key they do not
-// need, and the 5 minute staleTime hid it whenever the panel was already open.
 test("a press that arrives before our key has answered waits, rather than asking for a key", async ({ launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.simulateEndpointStalled(EndpointKey.OUR_KEY_STATUS);
@@ -58,8 +54,6 @@ test("a press that arrives before our key has answered waits, rather than asking
   await capture.waitForReader();
 });
 
-// Design 17d: the press cannot spend anything without the keys that would pay for it,
-// so it lands on the page that fixes that instead of failing.
 test("without keys the press goes to Settings rather than starting a run that cannot work", async ({ launcher, backendSimulator }) => {
   await launcher.launchPanel({ activeVideoUrl: WATCHED_URL, runBridge: true });
 
@@ -69,13 +63,9 @@ test("without keys the press goes to Settings rather than starting a run that ca
   expect(backendSimulator.getCallCount(EndpointKey.ANTHROPIC_MESSAGES)).toBe(0);
   expect(backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(0);
 
-  // The page has to be told, or the button it drew on the press keeps claiming a run
-  // that was never started.
   expect(await launcher.readRunReports()).toEqual([null, null]);
 });
 
-// Signed out where there are accounts, nothing is made on either key, so the press goes to
-// creating one (docs/architecture/tiers.md, "Signed out").
 test("signed out, the press goes to the panel's Start, whatever keys the device holds", async ({ launcher, backendSimulator }) => {
   await launcher.launchPanel({ ...panel, sync: true });
 
@@ -86,9 +76,6 @@ test("signed out, the press goes to the panel's Start, whatever keys the device 
   expect(await launcher.readRunReports()).toEqual([null, null]);
 });
 
-// The button reads "Overview ready" on a video already written up, and pressing it has
-// to open that note. Starting a second run would make the page's own control the one
-// place in the app that pays for the same video twice.
 test("pressing it on a video already in the library opens that note and buys nothing", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
@@ -101,10 +88,7 @@ test("pressing it on a video already in the library opens that note and buys not
     },
   });
   const capture = await launcher.launchPanel(panel);
-  // Settled before the press, not sampled beside it: the panel buys the captions of the
-  // video in front of it on its own (docs/features/watching-detection.md), and a
-  // baseline read while that is still in flight counts the prefetch as the press's
-  // spend. What the press must add is nothing.
+  // Settled first: the panel prefetches the front video's captions, which a baseline would count.
   await expect.poll(() => backendSimulator.getCallCount(EndpointKey.YOUTUBE_TIMEDTEXT)).toBe(1);
 
   await launcher.pressInjectedButton(WATCHED_URL);

@@ -7,10 +7,7 @@ import { otherChatsInPrompt } from "../chats/otherChatsInPrompt.js";
 import { streamChatCompletion, type PromptMessage } from "../chats/streamChatCompletion.js";
 import { transcriptPassages } from "../chats/transcriptPassages.js";
 
-// OV-313: which prompt shapes read a transcript another request cached. Each probe follows the
-// first within seconds, on one prompt_cache_key, and reports what OpenAI says it read and wrote.
-//
-//   node dist/scripts/chatCacheProbe.js <a sources/<id> dir with transcript.json>
+// OV-313's probe: docs/features/chats.md, "Measured through the endpoint".
 
 const main = async () => {
   const [directory] = process.argv.slice(2);

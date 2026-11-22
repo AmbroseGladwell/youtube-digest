@@ -21,15 +21,9 @@ export interface TopicLineProps {
   onEditingChange: (editing: boolean) => void;
 }
 
-// The phone's sheet is fixed to the window, and AppShell's pane carries a
-// view-transition-name, which makes it the containing block every fixed descendant
-// resolves against. The sheet therefore leaves the subtree; the popover, positioned
-// against the line itself, does not (docs/features/topic-filing.md).
+// AppShell's pane has a view-transition-name, making it the containing block of a fixed sheet.
 const sheet = (isPhone: boolean, content: ReactNode) => (isPhone ? createPortal(content, document.body) : content);
 
-// Design 14a/14b/14c: reading, this is the topics the overview is in and nothing else. The
-// editing half is disclosed by the picker, so the line is editable exactly while the picker
-// is open (docs/features/topic-filing.md).
 export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps) => {
   const topicsQuery = useTopicsQuery();
   const libraryQuery = useOverviewsWithStateQuery();

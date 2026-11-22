@@ -13,8 +13,7 @@ export interface ArticleFromUrlOptions {
   captureReason?: string | null | undefined;
 }
 
-// An article we hold only the link to, read again by our server inside the run
-// (docs/features/pasted-article-links.md). Null where there's no account on a server to fetch through.
+// Null where there's no account on a server to fetch through.
 export const useStartArticleFromUrl = () => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();

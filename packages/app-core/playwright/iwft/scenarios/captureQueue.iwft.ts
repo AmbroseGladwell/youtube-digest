@@ -44,7 +44,6 @@ const queued = (videoId: string, title: string, overrides: Partial<QueuedCapture
   ...overrides,
 });
 
-// Following, with this device having already seen what the playlist held before.
 const followingWithSeen = (backendSimulator: BackendSimulator, seen: string[]) => {
   backendSimulator.playlists.seedFollowed(followed());
   backendSimulator.playlists.seedCheck({
@@ -131,9 +130,6 @@ test("a video tried again keeps its place and runs before what was already waiti
   await queue.verifyWaitingStatuses(["Waiting for an API key", "Waiting for an API key"]);
 });
 
-// The definition of done for OV-107: past our server's daily cap the queue waits visibly, with
-// the reason and the resume time, offers no dead Try again, and carries on by itself after
-// the reset (docs/features/capture-queue.md, "Waiting at a limit").
 test("past our server's daily cap, the queue waits with the reason and resume time, and resumes by itself after the reset", async ({
   page,
   launcher,
@@ -172,8 +168,7 @@ test("past our server's daily cap, the queue waits with the reason and resume ti
     ]);
 
   backendSimulator.transcripts.serviceAnswersAgain();
-  // The laptop lid closed for the evening and opened after the reset, rather than every
-  // timer in between firing.
+  // The lid closed for the evening and opened after the reset, not every timer in between firing.
   await page.clock.fastForward(CAP_RESETS_IN_SECONDS * 1000);
 
   await expect.poll(async () => (await backendSimulator.overviewStore.listOverviews()).length).toBe(2);

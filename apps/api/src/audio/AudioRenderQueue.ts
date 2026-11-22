@@ -24,8 +24,6 @@ export interface AudioRenderQueueOptions {
   runWorkers: boolean;
 }
 
-// Up to `concurrency` workers, one per TTS machine the pool can start, each taking the next
-// job until none is left (docs/features/tts-pre-rendered-speech.md, "The API side").
 export class AudioRenderQueue {
   #options: AudioRenderQueueOptions;
   #active = 0;

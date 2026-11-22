@@ -21,12 +21,9 @@ const COULD_NOT_LOAD_TRANSCRIPT = "Couldn't load this note's transcript";
 export interface ChaptersPanelProps {
   chapters: Chapter[] | null;
   video: VideoSource;
-  // A transcript the caller already holds — the shared page's own copy, which travels with
-  // the shared overview rather than being read out of a store the visitor has not got
-  // (docs/features/sharing.md). Absent, the panel reads the reader's own store.
+  // The shared page's own copy, as its visitor has no store; absent, the reader's store is read.
   held?: StoredTranscript | null;
   onOpenTranscriptAt: (positionMs: number) => void;
-  // A recipe video's steps, so each chapter names the ones it covers (design 122j).
   steps?: readonly RecipeStep[];
 }
 
@@ -47,8 +44,6 @@ const noTranscriptReasonOf = (held: StoredTranscript | null | undefined, load: T
 
 const chapterNumber = (index: number) => String(index + 1).padStart(2, "0");
 
-// How far through the current chapter the player is, from the player's own position and
-// the chapter's own bounds — a measurement, not an estimate (docs/prototype/constraints.md).
 const throughChapter = (chapter: Chapter, positionMs: number): number => {
   const length = chapter.endMs - chapter.startMs;
   if (length <= 0) {
@@ -57,8 +52,6 @@ const throughChapter = (chapter: Chapter, positionMs: number): number => {
   return Math.min(100, Math.max(0, Math.round(((positionMs - chapter.startMs) / length) * 100)));
 };
 
-// Design 3a: the chapter the video is inside sits on the raised card with an orange
-// range and a thin bar through it; the chapters before it drop to the muted ink.
 export const ChaptersPanel = ({ chapters, video, held, onOpenTranscriptAt, steps = [] }: ChaptersPanelProps) => {
   const isPanel = useIsPanel();
   const seek = useSeekPlayback(video.id);
@@ -174,9 +167,7 @@ interface ChapterRangeProps {
   linksOut: boolean;
 }
 
-// The range is the control, as the transcript's times are: a player beside the panel
-// is moved, the wide reader links out to YouTube, and a panel whose tab has moved on
-// prints the range as plain text (docs/features/chapters.md).
+// What the range does where: docs/features/chapters.md, "What a range is, on each surface".
 const ChapterRange = ({ chapter, video, seek, linksOut }: ChapterRangeProps) => {
   const label = formatTimeRange(chapter.startMs, chapter.endMs);
   const analytics = useOverviewPageAnalytics();

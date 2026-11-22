@@ -5,8 +5,7 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { ShareApiProvider } from "./ShareApiContext.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 
-// Inside the sync runtime, because a shared link belongs to an account and is found again
-// through its session (docs/features/sharing.md).
+// Inside the sync runtime, because a shared link belongs to an account and is found through its session.
 export const ShareRuntime = ({ children }: { children: ReactNode }) => {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;

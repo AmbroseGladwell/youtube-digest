@@ -8,9 +8,7 @@ import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 import { createPostHogPersonEraser } from "../postHog/postHogPersonEraser.js";
 
-// Retries every deletion whose steps after the commit did not all finish: narration files
-// R2 refused, or PostHog erasures that failed or had nothing configured to run them
-// (docs/features/account-deletion.md, "When a step fails").
+// docs/features/account-deletion.md, "The order, and what the reader is promised".
 let config;
 try {
   config = loadConfig();
@@ -19,10 +17,7 @@ try {
   process.exit(1);
 }
 
-// Which database, and whether the erasure can run at all: "no unfinished deletions" means
-// nothing unless you know it was production that was looked in, and a row cannot be finished
-// while the key is missing. The host and database name are named; no credential is
-// (docs/features/account-deletion.md, "When a step fails").
+// Why it names the database and the erasure first: same section; never a credential.
 const { hostname, pathname } = new URL(config.databaseUrl);
 console.error(`Looking in ${pathname.replace(/^\//, "")} on ${hostname}.`);
 console.error(

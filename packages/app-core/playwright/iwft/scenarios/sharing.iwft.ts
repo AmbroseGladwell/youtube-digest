@@ -20,8 +20,6 @@ const titled = (title = TITLE, overrides: Partial<Overview> = {}): Overview =>
     ...overrides,
   });
 
-// The card's definition of done, end to end: a reader shares an overview, gets a link they
-// can send, and turning it off says so straight away (docs/features/sharing.md).
 test("a reader makes a link, copies it, and stops sharing", async ({ launcher, backendSimulator, page }) => {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   backendSimulator.overviews.seed(titled());
@@ -59,8 +57,6 @@ test("the menu offers sharing only where there is an account to share under", as
   await reader.verifyMenuHasNoShare();
 });
 
-// Design 30a: the menu's own Copy link is the video's, and is renamed so the two are not
-// mistaken for each other once a share link exists.
 test("the menu's copy item says which link it copies", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -90,8 +86,6 @@ test("a copy made from an earlier note says so, and offers to replace it behind 
   await again.verifyLinkReads(made!.url);
 });
 
-// Narration is left out of the edited check on purpose, so audio rendered after sharing
-// needs its own way onto the link, or the recipient never hears it (docs/features/sharing.md).
 test("audio rendered after sharing is offered to the copy, and added behind the same link", async ({ launcher, backendSimulator }) => {
   const overview = titled();
   backendSimulator.overviews.seed(overview);
@@ -117,9 +111,6 @@ test("audio rendered after sharing is offered to the copy, and added behind the 
   test.expect(backendSimulator.shares.snapshot(made!.token)?.narration).not.toBeNull();
 });
 
-// The reason, the topics and read state are the reader's own and are not in the copy, so
-// changing one is not a reason to tell them the link has gone stale
-// (docs/features/sharing.md).
 test("editing the reason is not an edit to the shared copy", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(titled());
   const library = await launcher.launchExpectingLibrary(SIGNED_IN);
@@ -189,8 +180,6 @@ test("Settings says plainly when nothing is shared", async ({ launcher, backendS
   await panel.verifySaysNothingIsShared();
 });
 
-// A shared link carries the overview, never the source's words: those are each reader's own
-// (OV-295, docs/features/sharing.md).
 test("a transcript the reader holds never travels with the copy", async ({ launcher, backendSimulator }) => {
   const overview = titled();
   backendSimulator.overviews.seed(overview);

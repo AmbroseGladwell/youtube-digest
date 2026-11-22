@@ -10,8 +10,7 @@ export interface NoteBudgetProps {
 
 const UNBUDGETED: NoteBudgetProps = { sourceWords: undefined, keyPoints: undefined, keyPointCeiling: undefined, chapters: undefined };
 
-// Counts only, so the budget's dials can be read against real notes. A recipe page has no key
-// points and is on no budget (docs/features/overview-generation-decisions.md, "One note budget").
+// A recipe page is on no budget: docs/features/overview-generation-decisions.md, "One note budget".
 export const noteBudgetProps = (overview: Overview, sourceWords: number | null, headedParts = 0): NoteBudgetProps => {
   if (sourceWords === null || overview.keyPoints.length === 0) {
     return UNBUDGETED;

@@ -27,9 +27,7 @@ const dollarsOf = (embedder: Embedder, tokens: number) => (tokens * embedder.dol
 
 const textHash = (model: string, text: string) => createHash("sha256").update(`${model}\n${text}`).digest("hex");
 
-// Woken by a write and once at start, never on a timer, so an idle server lets Neon suspend
-// (docs/features/search-by-meaning.md, "The queue"). What is pending is derived from the
-// records themselves, so an overview written while the worker was down is found at start.
+// Never on a timer: docs/features/search-by-meaning.md, "The queue".
 export class EmbeddingQueue {
   #options: EmbeddingQueueOptions;
   #running = false;

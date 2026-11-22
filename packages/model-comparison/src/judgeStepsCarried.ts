@@ -27,9 +27,7 @@ export interface StepsJudgeRecord {
   costDollars: number | null;
 }
 
-// "Partly" is narrow on purpose (owner, 11 Nov 2026): the note has the action but drops a
-// condition, a quantity or the reason that would change what a reader does. Missing is the
-// headline the report leads with.
+// "Partly" is narrow on purpose (owner, 11 Nov 2026); missing is the headline the report leads with.
 const SYSTEM_PROMPT = `You check whether a note about a video or article carries what the source tells the
 reader to do. You get the note, then a numbered list of the source's actionable items.
 
@@ -46,8 +44,7 @@ when to stop"), then one verdict:
 
 Judge only what the note says. Do not credit what a reader might infer or already know.`;
 
-// Everything the note shows a reader that could carry an action. The watch-anyway reason is
-// left out: it is the claim being checked, not part of what it claims to cover.
+// The watch-anyway reason is left out: it is the claim being checked.
 export const noteText = (overview: Overview): string => {
   const section = (heading: string, lines: readonly string[]) =>
     lines.length === 0 ? [] : [`## ${heading}`, ...lines.map((line) => `- ${line}`)];
@@ -90,7 +87,7 @@ export interface JudgeStepsCarriedOptions {
   now?: () => number;
 }
 
-// The judge never reads a note its own provider wrote (docs/architecture/model-comparison.md).
+// Never the writer's provider: docs/architecture/model-comparison.md, "Quality: the judge".
 export const judgeStepsCarried = async ({
   videoId,
   overview,

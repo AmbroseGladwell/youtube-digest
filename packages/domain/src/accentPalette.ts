@@ -1,5 +1,4 @@
-// Free of zod and everything else, so the script on every YouTube page can take it alone
-// (docs/features/appearance.md, "The logo").
+// Dependency-free for the YouTube page script: docs/features/appearance.md, "The logo".
 
 // In wheel order, the order Settings shows them (design 135a).
 export const ACCENT_COLOURS = ["orange", "gold", "lime", "emerald", "teal", "sky", "violet", "raspberry"] as const;
@@ -34,8 +33,7 @@ export interface AccentPalette {
   onAction: string;
 }
 
-// tokens.scss holds the same values for the app; these reach what its stylesheet cannot.
-// accentContrast.test.ts holds the two together and measures every pairing.
+// tokens.scss mirrors these; accentContrast.test.ts holds the two together.
 export const ACCENT_PALETTES: Record<AccentColour, AccentPalette> = {
   orange: {
     light: {

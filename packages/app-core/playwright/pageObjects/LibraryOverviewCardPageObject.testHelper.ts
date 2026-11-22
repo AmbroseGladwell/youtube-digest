@@ -49,11 +49,9 @@ export class LibraryOverviewCardPageObject extends PageObject {
   clickFavourite = () => this.step("clickFavourite", () => this.click(libraryOverviewCardTestIds.favouriteButton));
   clickMarkRead = () => this.step("clickMarkRead", () => this.click(libraryOverviewCardTestIds.readButton));
 
-  // What a screen reader is given: the figure in full, where the chip itself abbreviates.
   verifySavedChipSays = (text: string) =>
     this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));
 
-  // What the reader sees, which the spoken line above would otherwise cover for.
   verifySavedChipFigureReads = (text: string) =>
     this.step(`verifySavedChipFigureReads ${text}`, () => expect(this.get(savedChipTestIds.figure)).toHaveText(text));
 
@@ -69,10 +67,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
       expect(this.get(libraryOverviewCardTestIds.readButton)).toHaveAttribute("aria-pressed", String(isRead)),
     );
 
-  // On a phone the actions sit under the text rather than beside it, so their left edge
-  // has to be the title's. It is a grid column rather than a padding, and the widths that
-  // have to add up — the thumbnail column, its gap, and three touch-sized pills — are set
-  // in three different places, so nothing else would notice them drifting apart.
+  // The widths that must add up are set in three places, so nothing else would notice them drift.
   verifyActionsLineUpWithTheTitle = () =>
     this.step("verifyActionsLineUpWithTheTitle", async () => {
       const title = (await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!;
@@ -96,9 +91,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
       }
     });
 
-  // A row's tile is its whole resting appearance, so it is read off the laid-out element
-  // rather than asserted as a class: the point is what is painted, not which rule painted
-  // it (docs/features/stone-theme.md, "The tile").
+  // Read off the laid-out element: what matters is what is painted, not which rule painted it.
   private chrome = () =>
     this.card.evaluate((row) => {
       const style = getComputedStyle(row);
@@ -111,8 +104,6 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   private static readonly TRANSPARENT = "rgba(0, 0, 0, 0)";
 
-  // At rest a row already sits on a surface with a shadow, and it is never transformed:
-  // the lift under the pointer is the shadow deepening, not the row moving.
   verifyRestsOnItsTile = () =>
     this.step("verifyRestsOnItsTile", () =>
       expect(async () => {
@@ -148,9 +139,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
 
   titleLeftEdge = async () => Math.round((await this.get(libraryOverviewCardTestIds.titleLink).boundingBox())!.x);
 
-  // Against the row rather than a hardcoded width: what matters is that the title has the
-  // whole of it, which is the thing a stray thumbnail column would take away. A pixel count
-  // would also move every time the row's own padding or border did.
+  // Against the row, not a pixel count, which would move with the row's own padding or border.
   verifyKindChipReads = (kind: string) =>
     this.step(`verifyKindChipReads ${kind}`, () => expect(this.get(kindChipTestIds.root)).toHaveText(kind));
 
@@ -162,10 +151,7 @@ export class LibraryOverviewCardPageObject extends PageObject {
   verifyMetaReads = (meta: string) =>
     this.step(`verifyMetaReads ${meta}`, () => expect(this.get(libraryOverviewCardTestIds.meta)).toHaveText(meta));
 
-  // The circle and the pill beside it are one row of controls, so they have to agree on a
-  // height and an edge. They got there separately — one sized to the reader's player bar,
-  // one to its own type — and the heart's outline was derived from its ink, so it drifted
-  // every time that ink was retuned.
+  // Sized separately and the heart's outline derived from its ink, so the two drifted apart.
   verifyActionsAgreeOnHeightAndEdge = () =>
     this.step("verifyActionsAgreeOnHeightAndEdge", async () => {
       const read = this.get(libraryOverviewCardTestIds.readButton);

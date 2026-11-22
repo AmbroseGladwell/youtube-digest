@@ -8,10 +8,7 @@ import styles from "./PlaylistFromLine.module.scss";
 import { playlistFromLineTestIds } from "./PlaylistFromLineTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
-// Design 27t–27u: where the overview came from, on the byline's scale so it reads as
-// provenance rather than verdict. The name opens the playlist on YouTube and Manage opens
-// Settings while it is followed. Unfollowed, Manage goes; gone from YouTube, the name is
-// plain text. Stored on the overview, so it survives unfollowing and syncs.
+// Stored on the overview, so it survives unfollowing and syncs (27t–27u).
 export const PlaylistFromLine = ({ overview }: { overview: Overview }) => {
   return overview.fromPlaylist === null ? null : <FromLine overview={overview} origin={overview.fromPlaylist} />;
 };

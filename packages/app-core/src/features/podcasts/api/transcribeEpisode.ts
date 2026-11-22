@@ -42,10 +42,7 @@ const refusalOf = (error: unknown): Error => {
   return error;
 };
 
-// The episode's own audio transcribed on our GPU host, which the reader chose: asked for once, then
-// asked after every few seconds until the words are ready. Waiting for a card and transcribing are
-// told apart, since only the second is the minute the words take (design 305e). Asking again for
-// one transcribed in the last day, or on its way, joins it and costs nothing.
+// Why waiting and transcribing are told apart: docs/features/speech-to-text.md, "The choice".
 export const transcribeEpisode = async (
   api: Pick<PodcastApi, "transcribe" | "transcription">,
   episode: PodcastEpisode,

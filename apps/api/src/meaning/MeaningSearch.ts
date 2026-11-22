@@ -3,8 +3,7 @@ import type { AccountCostsRepository } from "../costs/AccountCostsRepository.js"
 import type { ClaimEmbeddingsRepository, MeaningMatch } from "./ClaimEmbeddingsRepository.js";
 import type { Embedder } from "./Embedder.js";
 
-// No similarity separates a right match from a wrong one cleanly (OV-229's spike), so this
-// only drops what is plainly unrelated; the closest few are what a reader is shown.
+// No similarity cleanly separates right from wrong (OV-229), so this drops only the plainly unrelated.
 export const MEANING_FLOOR = 0.3;
 const CANDIDATES = 50;
 const CACHED_QUERIES = 500;

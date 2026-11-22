@@ -1,7 +1,3 @@
-// The sections of a sectioned answer that have arrived whole, while the rest of the reply is still
-// arriving as JSON: each element of the "sections" array whose closing brace has come, read in
-// order. A section still being written waits for the next chunk (docs/features/chats.md, "Library
-// and project chat").
 export const sectionsSoFar = (partialJson: string): unknown[] => {
   const key = partialJson.search(/"sections"\s*:\s*\[/);
   if (key === -1) {

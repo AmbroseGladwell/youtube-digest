@@ -15,10 +15,7 @@ export interface PlansModalProps {
   onClose: () => void;
 }
 
-// Design 327ah: one modal for every way to the plans: the wall's Get Plus and See every plan, and
-// the nudge's See plans. Every plan has every feature, so the cards differ only in their figures.
-// Choosing a paid plan goes to checkout once billing exists (OV-18); until then the buttons say so
-// rather than going nowhere. On a phone Plus comes first, so the recommended plan is in view.
+// On a phone Plus comes first, so the recommended plan is in view (design 327ah).
 export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const phone = useIsPhone();

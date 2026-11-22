@@ -12,8 +12,7 @@ import { isPlatformPodcastLink, usePodcastLink } from "./usePodcastLink.js";
 import { pastedLinkState } from "./util/pastedLinkState.js";
 import { transcribeChoiceOf } from "../podcasts/util/episodeActionOf.js";
 
-// A pasted link handed to the shell's run, which opens the dialog on the progress it makes:
-// one pipeline, wherever the field sits (docs/features/stone-theme.md, "First run").
+// One pipeline wherever the field sits: the shell's dialog opens on the progress the run makes.
 export const useStartFromLink = () => {
   const readiness = useGenerationReadiness();
   const controller = useNewOverviewRunController();

@@ -155,8 +155,6 @@ export const ReaderPage = () => {
 };
 
 const CHAT_OPEN_MS = 320;
-// How long following a citation waits for its part to appear: a tab switch, the folded steps or
-// the dubious reasons opening. Past it, the part's section, if any, is brought into view.
 const MAX_FRAMES_TO_FIND = 20;
 
 const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
@@ -186,12 +184,9 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const savedLocallyNote = useSavedLocallyNote(wasJustGenerated(location.state));
   const onetimeHost = oneTimeAccessHost(location.state);
   const savedPhase = useSavedOnRead(overviewId, overviewQuery.data?.state.read);
-  // The chip comes in where the reader is looking: above the end of the note when marked
-  // read from there, in the head from anywhere else (docs/features/time-saved.md).
+  // Why the chip moves to the note's end: docs/features/time-saved.md, "Every day".
   const [readAtNoteEnd, setReadAtNoteEnd] = useState(false);
 
-  // A chapter opens the transcript at its start; choosing the tab yourself opens it at
-  // the top, so the target is cleared by every other route to it.
   const changeTab = (next: ReaderTab) => {
     setTranscriptOpenAtMs(null);
     setTab(next);
@@ -203,8 +198,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     setTab("Transcript");
   };
 
-  // The line lives on the Overview tab, so asking to edit it from any other tab brings
-  // that tab back first.
   const editReason = () => {
     changeTab("Overview");
     setEditingReason(true);
@@ -235,12 +228,11 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     [recipe, scale, recipeUnits],
   );
   const shownIngredients = useMemo(() => adjustment?.lines.map(adjustedText) ?? [], [adjustment]);
-  // The reader's switch hides the steps on every overview, as well as leaving them out of new ones.
   const sectionsEnabled = useSettingsQuery().data?.sectionsEnabled;
   const stepsOn = sectionsEnabled?.steps ?? true;
   const resourcesOn = sectionsEnabled?.resources ?? true;
   const followUpQuestionsOn = sectionsEnabled?.followUpQuestions ?? true;
-  // A recipe is narrated as shown, so adjusted amounts are what is heard (OV-148).
+  // A recipe is narrated as shown, so adjusted amounts are what is heard.
   const lines = useMemo(
     () =>
       overview
@@ -281,9 +273,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     lines.some(({ section }) => section === SOURCE_STEPS_SECTION),
   );
   const captureReason = overview?.captureReason ?? null;
-  // A video can be remade from anywhere. We keep no copy of an article, so it is read again:
-  // from the page beside the panel, where the reader may be signed in, or else by our server
-  // from its link; with neither, the menu explains (docs/features/article-panel.md, "Regenerating").
+  // Where an article is read again from: docs/features/article-panel.md, "Regenerating".
   const regenerateFor = () => {
     if (webPage !== null) {
       return {
@@ -365,10 +355,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     });
   }, [loaded, overviewId, reader, stepsOn]);
 
-  // Design 2d: the panel's Listen plays straight away and docks the bar; the Plus prompt
-  // it used to raise is retired, since audio is open to every account
-  // (docs/features/audio-player.md). Docking is its own state rather than a read of
-  // playing: pausing from the bar must not take the bar away.
+  // Docking isn't a read of playing: pausing from the bar must not take the bar away.
   const listen = () => {
     recipeVoice?.release();
     reader.overview.listenPressed({ listening: !playerDocked });
@@ -383,7 +370,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     }
   };
 
-  // Design 2: [ and ] step a line, now that the transport's arrows move fifteen seconds.
   const { stepLine } = notePlayer;
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -407,7 +393,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const chatColumn = useRef<HTMLDivElement | null>(null);
   const [chatLeaving, setChatLeaving] = useState(false);
   const chatWasOpen = useRef(false);
-  // Closing plays the opening backwards (310a): the chat stays for its 320ms on the way out.
   useEffect(() => {
     const was = chatWasOpen.current;
     chatWasOpen.current = chat.open;
@@ -419,7 +404,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     const timer = setTimeout(() => setChatLeaving(false), CHAT_OPEN_MS);
     return () => clearTimeout(timer);
   }, [chat.open]);
-  // F6 moves between the note and the chat beside it, which isn't modal (310aq).
   useEffect(() => {
     if (!chat.open) {
       return;
@@ -448,12 +432,10 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     setSheetRest("raised");
     setSheetLine(null);
   }, [chat.open]);
-  // A part of the overview an answer's citation was followed to stays tinted until another
-  // citation is followed or chat closes (designs 319n–319v).
   const [citedPart, setCitedPart] = useState<CitedOverviewPart | null>(null);
   const [citedSaid, setCitedSaid] = useState("");
   const citedPill = useRef<HTMLButtonElement | null>(null);
-  // Closing chat clears the tint; arriving with chat closed doesn't (OV-362).
+  // Closing chat clears the tint; arriving with chat closed doesn't.
   const citedChatOpen = useRef(chat.open);
   useEffect(() => {
     if (chat.open || !citedChatOpen.current) {
@@ -466,8 +448,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   }, [chat.open]);
   const citedFollowed = citedPart?.followed ?? null;
   const citedPartName = citedPart?.part ?? null;
-  // The part is found once the note has switched tab, opened its folded steps or the reasons
-  // it's dubious, and brought to just below the top with focus, the tint its only mark.
   useEffect(() => {
     if (citedFollowed === null) {
       return;
@@ -491,10 +471,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     frame = requestAnimationFrame(bring);
     return () => cancelAnimationFrame(frame);
   }, [citedFollowed, citedPartName]);
-  // A citation of this overview's item followed from another chat or the Ask page lands here with
-  // the item in the link's state: the note opens at it, tinted, as a citation in its own chat does.
-  // The state is cleared in place, without a navigation, so a reload or Back doesn't bring it again
-  // and the router's scroll restoration doesn't take the page back to the top (OV-362, OV-368).
   const arrivedAt = overview === null ? null : citedPlaceFromLocation(location.state);
   const arrivalTaken = useRef<string | null>(null);
   useEffect(() => {
@@ -503,6 +479,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     }
     arrivalTaken.current = location.key;
     const found = citedOverviewPart(overview, arrivedAt);
+    // Cleared without navigating, so the router's scroll restoration doesn't jump back to the top.
     const history = window.history.state as { usr?: Record<string, unknown> } | null;
     if (history?.usr !== undefined) {
       window.history.replaceState({ ...history, usr: { ...history.usr, [CITED_PLACE_STATE]: undefined } }, "");
@@ -516,8 +493,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     }
     setCitedPart({ part: found.part, index: found.index, followed: 1 });
   }, [overview === null, arrivedAt?.part, arrivedAt?.index]);
-  // Escape on the part returns to the pill that led there, raising the sheet first on a phone
-  // or in the panel; a second Escape, in chat, closes it (319w).
   const backToAnswer = () => {
     const pill = citedPill.current;
     setSheetRest("raised");
@@ -545,13 +520,8 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [citedFollowed]);
-  // Chat sits beside the note on the web (design 310a), and is a sheet on a phone and in the
-  // extension's panel (310g, 310h).
   const chatAvailable =
     chatOffered({ signedIn: isConnected(connection), sharedUnsaved: false, synced: synced.data === true }) && !chat.noSource;
-  // One of this overview's conversations opened from the Ask drawer lands here with it open in
-  // chat, once chat is offered and the conversation is on the device. The state is cleared so a
-  // reload or Back doesn't open it again (OV-363).
   const arrivedConversation = conversationFromLocation(location.state);
   useEffect(() => {
     if (arrivedConversation === null || !chatAvailable) {
@@ -579,10 +549,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     );
   }
 
-  // Try again is withheld from a record that fails to parse deterministically: retrying
-  // it returns the same screen, and the reader who concludes the app is broken and clears
-  // site data destroys what a later migration would have recovered
-  // (docs/features/error-state.md).
+  // Why an unreadable record gets no Try again: docs/features/error-state.md, "What is wired".
   if (overviewQuery.isError) {
     if (isUnreadableRecordError(overviewQuery.error)) {
       return <UnreadableOverview record={overviewQuery.error.record} />;
@@ -600,8 +567,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   }
 
   if (!overviewQuery.data || !overview) {
-    // The copy made here was folded into the account's while this page was open
-    // (docs/features/one-overview-per-video.md).
     const folded = sync.folds.find((fold) => fold.from === overviewId);
     if (folded !== undefined) {
       return <Navigate to={Routes.overview(folded.into)} replace />;
@@ -643,7 +608,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     savedPhase !== "hidden" && timeSaved.kind === "counted" && timeSaved.minutes > 0
       ? { minutes: timeSaved.minutes, leaving: savedPhase === "leaving" }
       : null;
-  // While the narration is in a recipe's list, the bar says where (design 144t).
   const noteBarView = playerBarView(notePlayer.snapshot, notePlayer.time, { read: state.read });
   const barView =
     recipeVoice?.nowReading == null
@@ -696,7 +660,6 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
 
   const chatBeside = chatAvailable && !isPanel && !isPhone;
   const chatSheet = chatAvailable && (isPanel || isPhone);
-  // Beside the note, a question asked from it travels into the chat as it opens (310a-4).
   const askFrom = (question: string, from: "question" | "typed", element: HTMLElement | null) => {
     if (question === "") {
       return;
@@ -746,14 +709,12 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     }
   };
 
-  // An episode's note moves its own player: every time in it plays the episode (design 106p).
-  // A part of the overview a chat answer led to is tinted wherever it is drawn (OV-319).
-  const withEpisode = (page: ReactNode) => {
+  const withPlaybackAndCitedPart = (page: ReactNode) => {
     const cited = <CitedOverviewPartContext.Provider value={citedPart}>{page}</CitedOverviewPartContext.Provider>;
     return episode === null ? cited : <PlaybackProvider value={episode.playback}>{cited}</PlaybackProvider>;
   };
 
-  return withEpisode(
+  return withPlaybackAndCitedPart(
     <OverviewAnalyticsProvider value={overviewAnalytics}>
       <div
         className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}
@@ -990,9 +951,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
             {tab === "Chapters" && webArticle !== null && <ArticleChaptersPanel {...webArticle} onPage={onPage} />}
           </div>
 
-          {/* Where the library's order takes you next. At the foot rather than on the bar:
-            the next note is a thing to want once this one is read (design 4a has no
-            stepper, and the panel has no list to step through). */}
+          {/* At the foot, not on the bar: the next note is a thing to want once this one is read. */}
           {!isPanel && neighbours.position !== null && (
             <nav className={styles.foot} aria-label="Neighbouring overviews">
               {neighbours.previousId ? (

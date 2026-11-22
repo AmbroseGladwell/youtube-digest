@@ -4,9 +4,7 @@ import type { Settings } from "./Settings.js";
 
 export const MAX_READER_CONTEXT_LENGTH = 600;
 
-// What generation reads as the reader context (docs/features/personalisation.md). The prompt
-// only ever gives it to How to apply. Learned items the reader has been shown follow the
-// sentence, newest first, for as many as fit under the cap; the sentence always fits.
+// Shown learned items follow the sentence, newest first, as fit (docs/features/personalisation.md).
 export const composeReaderContext = (aboutYou: AboutYou, learned: LearnedItems = {}): string | null => {
   const sentence = aboutYouSentence(aboutYou);
   const fitted: string[] = [];
@@ -23,8 +21,7 @@ export const composeReaderContext = (aboutYou: AboutYou, learned: LearnedItems =
 
 const learnedLine = (items: readonly string[]) => `Also: ${items.join("; ")}.`;
 
-// The old line is written beside the parts for clients from before them
-// (docs/features/personalisation.md, "The old line").
+// docs/features/personalisation.md, "The old line".
 export const aboutYouPatch = (aboutYou: AboutYou): Pick<Settings, "aboutYou" | "readerContext"> => ({
   aboutYou,
   readerContext: composeReaderContext(aboutYou),

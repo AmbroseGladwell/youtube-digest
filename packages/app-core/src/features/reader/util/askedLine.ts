@@ -4,7 +4,6 @@ const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
 const DAY_MS = 24 * HOUR_MS;
 
-// How long ago, as a question's receipt says it: "just now", "5 minutes ago".
 export const askedAgo = (askedAt: string, now: Date): string => {
   const elapsed = now.getTime() - new Date(askedAt).getTime();
   const format = new Intl.RelativeTimeFormat("en", { numeric: "always" });
@@ -20,10 +19,8 @@ export const askedAgo = (askedAt: string, now: Date): string => {
   return format.format(-Math.floor(elapsed / DAY_MS), "day");
 };
 
-// Design 266aj: which assistant a question was taken to, and how long ago.
 export const askedLine = ({ assistant, askedAt }: AskedQuestion, now: Date): string => {
   return `Asked in ${FOLLOW_UP_ASSISTANTS[assistant].name} · ${askedAgo(askedAt, now)}`;
 };
 
-// Design 310d: a question answered in the app, linking to its conversation.
 export const answeredHereLine = (at: string, now: Date): string => `Answered here · ${askedAgo(at, now)}`;

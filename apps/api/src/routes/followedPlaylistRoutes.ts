@@ -10,8 +10,7 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 
 const Params = z.object({ id: PlaylistId });
 
-// A followed playlist is replaced whole, as an overview is: a device that checks it may
-// learn it went private, and says so for every device (docs/features/playlists.md).
+// Why it is replaced whole: docs/features/playlists.md, "Checking on opening".
 export const followedPlaylistRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.post("/followed-playlists", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The followed playlist");

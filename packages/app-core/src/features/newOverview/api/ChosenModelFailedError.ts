@@ -1,9 +1,7 @@
 import type { Provider } from "@overview/domain";
 import { ModelRefusedError, SchemaFailureError } from "@overview/generation";
 
-// The reader's own key reached its provider, and the model they chose couldn't make the
-// overview, which they can change in Settings. The provider's own words stay on `cause`,
-// for logs, and never reach the screen (OV-247).
+// The provider's own words stay on `cause`, for logs, and never reach the screen (OV-247).
 export class ChosenModelFailedError extends Error {
   readonly provider: Provider;
   readonly model: string;

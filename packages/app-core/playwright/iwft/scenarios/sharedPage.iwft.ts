@@ -110,9 +110,6 @@ test("a document with no copy in it is a link that goes nowhere, not a broken pa
   await launcher.sharedOverviewPage.verifySaysLinkGoesNowhere();
 });
 
-// A visitor who saves the copy is onboarded around it: the moments and questions, then the
-// account, and the copy is their first overview, opened as soon as it's in the account
-// (docs/features/onboarding.md, "From a shared page").
 test("saving starts onboarding around the copy, which opens once the account is made, with no wait", async ({
   launcher,
   backendSimulator,
@@ -142,7 +139,6 @@ test("saving starts onboarding around the copy, which opens once the account is 
 
   const reader = await launcher.readerPage.verifyIsShown();
   await reader.verifyTitle(TITLE);
-  // The copy is now this reader's own overview, and carries none of the sharer's reason.
   await reader.verifyHasNoReason();
   expect(backendSimulator.ourKey.generations()).toEqual([]);
   expect(backendSimulator.ourKey.reservations()).toEqual([{ overviewId: overview.id, shareToken: TOKEN }]);
@@ -185,9 +181,6 @@ test("a link pasted beside the copy starts onboarding with it, and one it can't 
   await onboarding.verifyOnScreen("video", "Here’s what’s in the video you saved.");
 });
 
-// A reader who is already signed in has a library behind them, so the page offers the way
-// back to it rather than the way to an account (docs/features/sharing.md, "A reader who is
-// signed in").
 test("a reader who is signed in is recognised: the head leads to their overviews, and nothing offers them an account", async ({
   launcher,
 }) => {
@@ -254,8 +247,6 @@ test("making an overview from the page's head goes to Start", async ({ launcher 
   await launcher.homePage.verifyShowsStart();
 });
 
-// The page is the reader's layout, so the chrome that holds it together has to behave the
-// same way: the strip belongs to its text, and the head does not let the note past it.
 test("the tab strip lines up with the note, and the head stays above it", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());
@@ -266,8 +257,6 @@ test("the tab strip lines up with the note, and the head stays above it", async 
   await page.verifyHeaderStaysAboveTheTabs();
 });
 
-// Nothing on this page can move a video, so the stretch worth watching is a link to it
-// rather than a skip (docs/features/following-playback.md).
 test("the stretch worth watching offers a way into the video at that moment", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());

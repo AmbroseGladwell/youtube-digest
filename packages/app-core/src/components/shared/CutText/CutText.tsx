@@ -6,14 +6,11 @@ const LONG_PRESS_MS = 500;
 
 export interface CutTextProps {
   text: string;
-  // The caller's own line styles, which cut the text with an ellipsis or a line clamp.
   className: string | undefined;
   testId?: string;
 }
 
-// Text cut to its lines shows the whole of it in a tip: on hover or keyboard focus with a mouse,
-// and only while pressed and held on touch, where the press doesn't then count as a tap (OV-371).
-// The text is already in the page, so the tip is hidden from screen readers.
+// The tip is hidden from screen readers because the whole text is already in the page.
 export const CutText = ({ text, className, testId }: CutTextProps) => {
   const element = useRef<HTMLSpanElement | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

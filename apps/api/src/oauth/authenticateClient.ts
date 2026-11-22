@@ -35,8 +35,7 @@ const presented = (authorization: string | undefined, body: Record<string, unkno
 
 const sameHash = (secret: string, hash: string): boolean => timingSafeEqual(Buffer.from(hashToken(secret)), Buffer.from(hash));
 
-// A public client proves nothing here and PKCE does that job instead; a confidential one
-// must present the secret it was given, by either transport (docs/features/mcp-connector.md).
+// A public client proves nothing and PKCE does: docs/features/mcp-connector.md, "Registering a client".
 export const authenticateClient = async (
   sql: SqlClient,
   authorization: string | undefined,

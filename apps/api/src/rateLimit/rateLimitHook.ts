@@ -6,8 +6,7 @@ import type { RateLimit } from "./RateLimit.js";
 
 export type RateLimitKey = (request: FastifyRequest) => string | null;
 
-// A request with no key is not counted by this limit: an unauthenticated request has no
-// account, and a malformed body has no address to count against (docs/architecture/api.md).
+// No key, no count: an unauthenticated request has no account, and a malformed body no address.
 export const rateLimitHook = (rateLimit: RateLimit, keyOf: RateLimitKey, clock: () => Date) => {
   const limiter = new FixedWindowLimiter(rateLimit);
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {

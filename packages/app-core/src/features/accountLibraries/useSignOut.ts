@@ -4,10 +4,7 @@ import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 import { useSync } from "../sync/SyncContext.js";
 import { usePlayer } from "../player/PlayerContext.js";
 
-// Sign-out, counted: the outcome and any listen it ends are recorded and sent while the
-// session can still carry them, since a signed-out reader sends nothing
-// (docs/architecture/analytics.md, "Who is counted"), and a last sync given up on is warned
-// of under the same session.
+// Counted first, as signed out sends nothing: docs/architecture/analytics.md, "Who is counted".
 export const useSignOut = (): (() => Promise<void>) => {
   const sync = useSync();
   const analytics = useAnalytics();

@@ -11,8 +11,6 @@ export interface ChatWaitBlockProps {
   onPlansFollowed: () => void;
 }
 
-// Design 310ad–310ah, OV-104's at-limit pattern: the wait takes the field's place, names what ran
-// out and when it's back, and offers only routes that exist. Announced politely; focus stays put.
 export const ChatWaitBlock = ({ copy, onNewConversation, onPlansFollowed }: ChatWaitBlockProps) => {
   const { icon, heading, body, action } = copy;
   return (

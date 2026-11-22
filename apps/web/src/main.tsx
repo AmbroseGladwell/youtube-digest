@@ -21,8 +21,7 @@ const main = async () => {
     throw new Error("index.html is missing its #root element");
   }
 
-  // The root is made before the database is opened, so the callback below has something to
-  // render into: it fires long after mount, whenever another tab or the worker upgrades.
+  // Made before the database opens: the upgrade callback fires long after mount and needs a root.
   const root = createRoot(container);
 
   const openLibrary: OpenLibrary = async (accountId, { shown = true } = {}) => {
@@ -33,8 +32,7 @@ const main = async () => {
     return { accountId, stores, close };
   };
 
-  // Once, for an install signed in before each account had a library of its own. A failure
-  // leaves the library where it was, to be tried again next start.
+  // Once, for an install signed in before accounts had libraries; a failure is retried next start.
   try {
     await adoptSignedInLibrary({
       surface: "web",

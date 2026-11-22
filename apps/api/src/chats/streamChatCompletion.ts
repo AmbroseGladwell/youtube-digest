@@ -15,12 +15,10 @@ export interface ChatCompletionSetup {
 }
 
 export interface ChatCompletionStream {
-  // The reply's JSON text, piece by piece.
   pieces: AsyncGenerator<string>;
-  // Known once pieces is done; null if the provider never said.
+  // Known once pieces is done.
   usage: () => TokenUsage | null;
-  // "length" when the reply ran into its cap: Luna's reasoning counts, so a reply can be cut off
-  // before a word of it is written.
+  // "length" when the reply ran into its cap, which Luna's reasoning can fill before a word is written.
   finishReason: () => string | null;
 }
 
@@ -36,13 +34,9 @@ export class ChatProviderError extends Error {
 const RETRIED_STATUSES = new Set([429, 500, 502, 503, 504]);
 const RETRY_WAITS_MS = [1_000, 3_000];
 const LONGEST_RETRY_WAIT_MS = 5_000;
-// Luna's reasoning counts against the cap: at 1,000, OV-307's "score my desserts against these
-// reflexes" was cut off before a word, every time (OV-353). The prompt sets an answer's length; the
-// cap only bounds the worst case, about $0.002 at Luna's output price.
+// Why 4,000: docs/features/chats.md, "Library and project chat".
 export const MAX_ANSWER_TOKENS = 4_000;
 
-// What the reply must look like and how long it may run: an overview's chat by default; a library
-// or project chat picks with one schema and answers in sections with another (OV-353).
 export interface ReplyShape {
   name: string;
   schema: object;
@@ -51,8 +45,6 @@ export interface ReplyShape {
 
 const CHAT_REPLY: ReplyShape = { name: "chat_reply", schema: CHAT_REPLY_SCHEMA, maxTokens: MAX_ANSWER_TOKENS };
 
-// A refusal for now (a rate limit, an overloaded provider) is asked again after a wait,
-// quietly, before anything has streamed; anything else, or a third refusal, fails.
 export const streamChatCompletion = async (
   { apiKey, http, sleep, retried }: ChatCompletionSetup,
   messages: readonly PromptMessage[],

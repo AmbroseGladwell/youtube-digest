@@ -1,5 +1,4 @@
-// The mark, in currentColor so the ground it sits on decides: the shell paints it in
-// --mark, and the shared page's own head does the same (docs/features/stone-theme.md).
+// In currentColor, so the ground it sits on decides its colour.
 export const OverviewMark = ({ size = 22 }: { size?: number }) => {
   return (
     <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true" style={{ display: "block", flex: "none" }}>

@@ -140,7 +140,6 @@ test("a Spotify episode missing from a public show's feed is not found, rather t
   });
 });
 
-// Podcast Index, scripted: its parsing is podcastIndexDirectory.test.ts's.
 const podcastIndexOver = (answer: "knows the show" | "doesn't know it" | "fails") => {
   const asked: string[] = [];
   const directory: ShowDirectory = {

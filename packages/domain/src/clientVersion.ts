@@ -1,19 +1,13 @@
-// One number a client says about itself on the wire. Bumped deliberately when a migration
-// registry moves or the contract changes in a way the write floor must be able to exclude,
-// not on every release (docs/architecture/api.md).
+// Bumped only when the write floor must be able to exclude a change (docs/architecture/api.md).
 export const CLIENT_VERSION = 29;
 
-// The first client that reserves an overview before pushing it as new. The server refuses an
-// unreserved new overview only from clients at or past it, so the gate holds for everyone
-// once the write floor reaches it (docs/architecture/tiers.md, "Counting").
+// The first client that reserves before pushing: docs/architecture/tiers.md, "Counting".
 export const FIRST_RESERVING_CLIENT_VERSION = 7;
 
 export const CLIENT_VERSION_HEADER = "x-client-version";
 
-// Which shell sent a request, an AuthSurface, so the server's logs can tell the web app's
-// calls from the extension's. Only ever logged, never trusted for a decision.
+// Only ever logged, never trusted for a decision.
 export const CLIENT_SURFACE_HEADER = "x-client-surface";
 
-// The first client that reads a citation of another overview and the stream's sources event. An
-// older one is answered from its own overview alone, as before (docs/features/chats.md).
+// Older clients are answered from their own overview alone (docs/features/chats.md).
 export const FIRST_ACROSS_SOURCES_CLIENT_VERSION = 25;

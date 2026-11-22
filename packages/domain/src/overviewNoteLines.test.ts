@@ -114,7 +114,6 @@ test("gives every key point and every action its own tappable line", () => {
   assert.equal(lines.filter((line) => line.section === "How to apply" && !line.heading).length, 2);
 });
 
-// The note's two list-shaped sections, and only those: the prose sections stay prose.
 test("bullets the key points and the actions, leaving the mark out of the text", () => {
   const lines = overviewNoteLines(
     makeOverview({
@@ -174,9 +173,6 @@ test("carries the selling and watch-anyway answers as prose once they exist", ()
   assert.ok(texts.includes("Watch it anyway?: Skip the video, the overview covers it. The note carries it."));
 });
 
-// The jump control is rendered after the whole note, which only puts it under the
-// watch-it-anyway paragraph for as long as that is the last section built
-// (docs/features/following-playback.md).
 test("builds watch it anyway last, which is what the jump control sits under", () => {
   const lines = overviewNoteLines(
     makeOverview({

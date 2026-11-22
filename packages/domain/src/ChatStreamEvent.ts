@@ -2,11 +2,7 @@ import { z } from "zod";
 import { OverviewId } from "./Brands.js";
 import { ChatAnswerSections, ChatMessage, ChatSource } from "./Chat.js";
 
-// What the answer's stream carries, one server-sent event each: the other overviews this question
-// added to the conversation, when it added any, then the answer's text as it arrives, then the two
-// messages as they were stored, or a failure that stored nothing (docs/features/chats.md, "Asking").
-// A library or project chat says it is choosing, then which overviews it chose and is reading,
-// then streams its intro as text and each section once it is whole (OV-353).
+// The order events come in: docs/features/chats.md, "Asking".
 export const ChatStreamEvent = z.discriminatedUnion("type", [
   z.object({ type: z.literal("picking") }),
   z.object({

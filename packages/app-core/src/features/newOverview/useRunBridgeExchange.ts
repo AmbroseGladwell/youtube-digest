@@ -11,12 +11,7 @@ import type { NewOverviewRunController } from "./useNewOverviewRun.js";
 import { runReportFor } from "./util/runReportFor.js";
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 
-// Both halves of the injected button's conversation, together because they are one
-// exchange: the page asks for a run, and every change to the run it asked for goes back
-// so the button can paint it (docs/features/injected-button.md).
-//
-// It lives beside the run rather than on the page the request lands on, because the
-// panel can be anywhere when the button is pressed.
+// docs/features/injected-button.md, "Three documents, one conversation".
 export const useRunBridgeExchange = (controller: NewOverviewRunController): void => {
   const bridge = useRunBridge();
   const navigate = useNavigate();
@@ -30,17 +25,12 @@ export const useRunBridgeExchange = (controller: NewOverviewRunController): void
     bridge?.report(run === null ? null : runReportFor(run));
   }, [bridge, run]);
 
-  // Read back rather than taken as a dependency: a request that ends in no new run has
-  // to restate what is true, and re-subscribing on every tick of a running one would
-  // drop requests arriving mid-run.
+  // Read back, not a dependency: re-subscribing on every tick of a run would drop requests mid-run.
   const currentRun = useRef(run);
   currentRun.current = run;
 
   useEffect(() => {
-    // Nothing is taken from the bridge until readiness has answers. The press opens the
-    // panel, so it arrives before the queries behind `ready` have returned, and acting then
-    // sends a reader with an allowance to Settings for a key they do not need. The effect
-    // runs again when readiness settles, and the request is still waiting.
+    // The press opens the panel before the queries behind `ready` return, so it waits for them.
     if (bridge === null || !readiness.settled) {
       return;
     }
@@ -48,9 +38,7 @@ export const useRunBridgeExchange = (controller: NewOverviewRunController): void
     const restateCurrentRun = () => bridge.report(currentRun.current === null ? null : runReportFor(currentRun.current));
 
     const act = async (videoUrl: string) => {
-      // Asked before anything is started, because the button says "Overview ready" on a
-      // video the library already holds and pressing it must read that note rather than
-      // buy the video a second time (docs/features/injected-button.md).
+      // Checked first: pressing "Overview ready" must open the held note, not buy the video again.
       const held = overviewForVideoUrl(await queryClient.fetchQuery(overviewsWithStateQueryOptions(overviewStore)), videoUrl);
       if (held !== null) {
         analytics.extension.injectedButton.pressed({ outcome: "openedHeld" });
@@ -78,8 +66,7 @@ export const useRunBridgeExchange = (controller: NewOverviewRunController): void
       void navigate(Routes.home());
     };
 
-    // A request made while the panel was closed is waiting by the time it mounts, so the
-    // first read is immediate rather than left to the next notification.
+    // A request made while the panel was closed is already waiting when it mounts.
     const take = () => {
       const videoUrl = bridge.takeRequest();
       if (videoUrl !== null) {

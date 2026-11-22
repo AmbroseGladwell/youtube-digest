@@ -12,9 +12,7 @@ const fahrenheit = (celsius: number): number => {
   return celsius >= OVEN_FROM_CELSIUS ? Math.round(exact / DIAL_STEP) * DIAL_STEP : Math.round(exact);
 };
 
-// US units turn the method's Celsius into Fahrenheit, fan figures included, and nothing else in
-// it (design 150ak, owner 3 Nov 2026). Oven figures land on the 25° marks of a dial, as the usual
-// tables do: 180°C is 350°F, 220°C is 425°F. Arithmetic in code, never a model's guess.
+// Celsius only, landing on a dial's 25° marks, in code (design 150ak, owner 3 Nov 2026).
 export const usOvenTemperatures = (text: string): TemperaturePiece[] => {
   const pieces: TemperaturePiece[] = [];
   let from = 0;

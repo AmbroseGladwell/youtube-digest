@@ -12,8 +12,7 @@ export interface TagsInput {
 
 const TagsOutput = z.object({ tags: GeneratedTags });
 
-// Tags for a note that already exists, from the note rather than the transcript: the one-off
-// re-tag of a library made before tags were reused (docs/features/tag-reuse.md).
+// docs/features/tag-reuse.md, "Re-tagging the library that came before".
 export const generateTags = async (client: GenerationClient, input: TagsInput): Promise<string[]> => {
   const { overview } = input;
   const raw = await client({

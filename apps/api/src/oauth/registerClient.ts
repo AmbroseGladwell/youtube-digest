@@ -17,9 +17,7 @@ export interface RegisteredClient {
   token_endpoint_auth_method: string;
 }
 
-// Dynamic registration is open, as MCP clients expect: a client is only a name and where to
-// send the reader back, and it can read nothing until a reader approves it
-// (docs/features/mcp-connector.md, "Registering a client").
+// Open registration: docs/features/mcp-connector.md, "Registering a client".
 export const registerClient = async (sql: SqlClient, registration: ClientRegistration, now: Date): Promise<RegisteredClient> => {
   const refused = registration.redirect_uris.find((uri) => !isAllowedRedirectUri(uri));
   if (refused !== undefined) {

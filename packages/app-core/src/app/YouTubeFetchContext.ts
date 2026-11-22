@@ -1,9 +1,7 @@
 import { createContext, useContext } from "react";
 import type { YouTubeFetch } from "@overview/transcripts";
 
-// Injected by the shell, because app-core can't read chrome.* and a web origin has no
-// exemption from CORS for youtube.com. A shell that supplies none has no free caption
-// path, and the rung built on it is simply absent (docs/features/transcript-retrieval.md).
+// Injected because app-core can't read chrome.* and a web origin can't reach youtube.com past CORS.
 const YouTubeFetchContext = createContext<YouTubeFetch | null>(null);
 
 export const YouTubeFetchProvider = YouTubeFetchContext.Provider;

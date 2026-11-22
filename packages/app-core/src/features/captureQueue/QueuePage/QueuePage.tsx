@@ -28,11 +28,6 @@ const introFor = (isPanel: boolean, isPhone: boolean): string => {
     : "Videos from playlists you follow, made one at a time, each playlist in the order you chose for it, while The Overview is open on this computer. A playlist with a pace makes up to its number a day. Close The Overview and the queue waits; it continues next time you open it.";
 };
 
-// Design 27j–27o: what is being made, what waits in order, and what needs the reader, on a
-// page of its own. The queue is this device's until OV-11, so the page says where it runs
-// rather than promising it happens anywhere (docs/features/capture-queue.md). Design
-// 95aa–95aj: what waits on a pace, or for the reader, by playlist after it, with Make now on
-// each and Choose for several.
 export const QueuePage = () => {
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();

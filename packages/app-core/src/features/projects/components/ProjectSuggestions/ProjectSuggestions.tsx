@@ -33,8 +33,6 @@ export interface ProjectSuggestionsProps {
   onAddPurpose: () => void;
 }
 
-// Saved overviews that might fit a project, found by meaning from its name and what it's for:
-// lighter than a library row, still an overview ("OV-318 3" 318m, 318n).
 export const ProjectSuggestions = ({
   id,
   projectName,

@@ -4,14 +4,12 @@ import { dubiousStepFlagTestIds } from "../../src/features/reader/components/Dub
 import { howToApplyLineTestIds } from "../../src/features/reader/components/HowToApplyLine/HowToApplyLineTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The steps a source gives, on the reader page or a shared copy (design OV-250).
 export class SourceStepsPageObject extends PageObject {
   private stepLines = () =>
     this.get(readAlongNoteTestIds.line)
       .or(this.get(readAlongNoteTestIds.activeLine))
       .filter({ has: this.page.getByTestId(readAlongNoteTestIds.stepNumber) });
 
-  // Beside the numbered steps, the other lists are marked with a dot rather than a number.
   verifyOtherListsAreDotted = (dotted: boolean) =>
     this.step(`verifyOtherListsAreDotted ${dotted}`, async () => {
       const marks = this.get(readAlongNoteTestIds.bullet);

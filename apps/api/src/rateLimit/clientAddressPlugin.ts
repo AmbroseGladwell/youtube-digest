@@ -11,9 +11,7 @@ declare module "fastify" {
   }
 }
 
-// Behind Fly's proxy the socket is the proxy, so the caller's address is the header the
-// proxy sets and a client cannot. Unconfigured, the socket is the caller
-// (docs/architecture/api.md, "Rate limits").
+// Why a proxy header names the caller: docs/architecture/api.md, "Rate limits".
 export const clientAddressPlugin = fp<ClientAddressPluginOptions>(async (app, { clientIpHeader }) => {
   app.decorateRequest("clientAddress", "");
   app.addHook("onRequest", async (request) => {

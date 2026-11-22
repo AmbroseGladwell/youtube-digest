@@ -10,8 +10,6 @@ export interface SignOutNoticeCopy {
 
 const changes = (count: number): string => (count === 1 ? "1 change" : `${count} changes`);
 
-// Designs 47d-2 and 47d-3: what is waiting leads, the reason first when it is known, and
-// what the server refused is its own line because nothing will send it.
 export const signOutNoticeCopy = ({ pending, stuck, offline, deleted = false }: SignOutNotice, surface: Surface): SignOutNoticeCopy => {
   if (deleted) {
     return { lead: "Your account is deleted.", then: "This device and your others are signed out.", stuck: null };

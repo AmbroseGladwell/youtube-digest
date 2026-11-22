@@ -5,9 +5,7 @@ export interface ShareOverviewInput {
   narration: SharedNarration | null;
 }
 
-// Making, listing and stopping the links a reader has given out
-// (docs/features/sharing.md). `share` both makes a link and replaces the copy behind one
-// that already exists, because to the reader those are the same act.
+// `share` both makes a link and replaces the copy behind one: to the reader they're the same act.
 export interface ShareApi {
   list(): Promise<Share[]>;
   share(input: ShareOverviewInput): Promise<Share>;

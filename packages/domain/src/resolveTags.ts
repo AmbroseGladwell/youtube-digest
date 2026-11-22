@@ -7,9 +7,7 @@ export interface TagVocabulary {
   aliases: TagAliases;
 }
 
-// The model's tags as the reader's library spells them. A singular or plural is folded only
-// onto a tag that already exists, because a blanket rule mangles words like news and
-// analytics (docs/features/tag-reuse.md).
+// Plurals fold only onto existing tags; a blanket rule mangles "news" (docs/features/tag-reuse.md).
 export const resolveTags = (raw: readonly string[], { known, aliases }: TagVocabulary): string[] => {
   const resolved: string[] = [];
   for (const candidate of raw) {

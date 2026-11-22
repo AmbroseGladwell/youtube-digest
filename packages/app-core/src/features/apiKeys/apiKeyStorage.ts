@@ -4,9 +4,7 @@ import { ApiKeys, DEFAULT_API_KEYS } from "./ApiKeys.js";
 const STORAGE_KEY = "overview.apiKeys.v2";
 const ANTHROPIC_ONLY_STORAGE_KEY = "overview.apiKeys.v1";
 
-// What the one-provider build wrote. Read once, on the first read after the upgrade, and
-// left where it is: a reader who goes back to an older build should still find their key
-// (docs/features/byo-providers.md).
+// Read once and left in place: docs/features/byo-providers.md, "Migrations".
 const AnthropicOnlyApiKeys = z.object({ anthropicApiKey: z.string().nullable() });
 
 const parse = (raw: string, schema: z.ZodType): unknown => {
@@ -32,8 +30,6 @@ export const readApiKeys = (storage: Storage = globalThis.localStorage): ApiKeys
   if (!parsed.success || parsed.data.anthropicApiKey === null) {
     return DEFAULT_API_KEYS;
   }
-  // No date: the older build never recorded when the key was added, and the row says
-  // nothing rather than guessing.
   return { keys: { anthropic: { key: parsed.data.anthropicApiKey, addedAt: null } } };
 };
 

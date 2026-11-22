@@ -8,10 +8,7 @@ import { useSyncConnection } from "../sync/useSyncConnection.js";
 
 type WebSignedIn = Extract<SignedIn, { surface: "web" }>;
 
-// A browser the server has just signed in, by a link or by the code from its mail: this
-// device connects to the account, and the page lands once the account's library is the one
-// open, so whatever comes next, onboarding included, reads the account's library rather than
-// the one being left (docs/features/sign-in.md, docs/features/account-libraries.md).
+// Lands once the account's library is open, so what comes next reads it, not the one being left.
 export const useWebSignInLanding = () => {
   const navigate = useNavigate();
   const { setConnection } = useSyncConnection();

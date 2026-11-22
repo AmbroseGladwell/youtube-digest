@@ -5,8 +5,7 @@ import { measureText } from "./measureText.js";
 import { BODY_FONT_FAMILY, FONT_FILES, TITLE_FONT_FAMILY } from "./shareFonts.js";
 import { wrapToWidth } from "./wrapToWidth.js";
 
-// 1200×630 is what every unfurler crops to, and twice the 600×315 the design draws
-// (OV-30 Shared Page, 30i).
+// What every unfurler crops to, and twice the design's 600×315 (OV-30 Shared Page, 30i).
 export const CARD_WIDTH = 1200;
 export const CARD_HEIGHT = 630;
 
@@ -35,15 +34,13 @@ const CONTENT_WIDTH = CARD_WIDTH - PADDING_X * 2;
 const text = (content: string, x: number, y: number, size: number, family: string, fill: string) =>
   `<text x="${x}" y="${y}" font-family="${family}" font-size="${size}" fill="${fill}">${escapeHtml(content)}</text>`;
 
-// The mark as the favicon draws it, in its own coordinate space.
-const mark = (x: number, y: number) =>
+const faviconMark = (x: number, y: number) =>
   `<svg x="${x}" y="${y}" width="${MARK_SIZE}" height="${MARK_SIZE}" viewBox="0 0 32 32">` +
   `<circle cx="16" cy="14.5" r="7.5" fill="none" stroke="${ACCENT}" stroke-width="3"/>` +
   `<rect x="7" y="25" width="18" height="2.5" fill="${ACCENT}"/>` +
   `</svg>`;
 
-// Everything on the card comes from the shared copy, which is why it can be drawn from the
-// snapshot alone and never goes stale (docs/features/sharing.md).
+// Drawn from the snapshot alone, so it never goes stale: docs/features/sharing.md, "The card image".
 export const shareCardSvg = (note: SharedNote): string => {
   const titleLines = wrapToWidth({
     text: note.source.title,
@@ -65,7 +62,7 @@ export const shareCardSvg = (note: SharedNote): string => {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}">`,
     `<rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="${FIELD}"/>`,
-    mark(PADDING_X, BRAND_BASELINE - MARK_SIZE + 8),
+    faviconMark(PADDING_X, BRAND_BASELINE - MARK_SIZE + 8),
     text("The Overview", PADDING_X + MARK_SIZE + 14, BRAND_BASELINE, BRAND_SIZE, TITLE_FONT_FAMILY, INK),
     ...titles,
     text(metaLine, PADDING_X, META_BASELINE, META_SIZE, BODY_FONT_FAMILY, QUIET_INK),

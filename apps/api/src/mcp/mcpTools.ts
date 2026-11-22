@@ -84,8 +84,7 @@ interface McpSearch extends LibrarySearch {
   notes: string[];
 }
 
-// Degrade visibly: when meaning cannot be matched, the assistant is told it is reading word
-// matches only, rather than handed a shorter list that looks complete.
+// Degrade visibly: the assistant is told when it is reading word matches only.
 const searchEntries = async (
   entries: LibraryEntry[],
   filters: ResolvedFilters,
@@ -122,8 +121,6 @@ const pageFooter = (page: Page<unknown>, noun: string): string[] => {
   return lines;
 };
 
-// Degrade visibly: a record this server cannot read is left out, and the assistant is
-// told so rather than handed a library that silently looks smaller.
 const unreadableNote = (library: Library): string[] =>
   library.unreadable === 0 ? [] : [`${library.unreadable} saved overview(s) could not be read by this server and are left out.`];
 

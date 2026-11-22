@@ -5,8 +5,7 @@ import { migrationSteps } from "../db/migrationSteps.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { ConfigError, loadConfig } from "../loadConfig.js";
 
-// A session with no mail involved, for scripts and a first day: the token goes to stdout
-// alone, so a shell can capture it (docs/architecture/api.md).
+// The token alone goes to stdout, so a shell can capture it: docs/architecture/api.md, "Auth".
 const email = process.argv[2];
 if (!email) {
   console.error("usage: npm run mint-session -- <email>");

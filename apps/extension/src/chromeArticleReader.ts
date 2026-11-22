@@ -25,9 +25,7 @@ const runReader = async (tabId: number, name: string, args: unknown[]): Promise<
   return frame?.result;
 };
 
-// Works on a page the reader granted through chromePageAccess, or one activeTab opened
-// (docs/features/article-extraction.md). A half-loaded page reads as thin, and that is not
-// the page's fault, so it is named as what it is.
+// A half-loaded page reads as thin through no fault of its own, so it is named as what it is.
 export const readArticleInTab = async (tabId: number): Promise<ArticleRead> => {
   try {
     const read = ArticleRead.safeParse(await runReader(tabId, ARTICLE_READER_GLOBAL, []));
@@ -42,7 +40,7 @@ export const readArticleInTab = async (tabId: number): Promise<ArticleRead> => {
   }
 };
 
-// Null is "we could not get into the page to look", which is not "the place has gone".
+// Null is "we couldn't get into the page to look", not "the place has gone".
 export const showArticlePlaceInTab = async (tabId: number, place: ArticlePlace): Promise<boolean | null> => {
   try {
     return (await runReader(tabId, ARTICLE_PLACE_GLOBAL, [place])) === true;

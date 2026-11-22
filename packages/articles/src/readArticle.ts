@@ -11,9 +11,7 @@ const MOST_WORDS_PER_SENTENCE_OF_PROSE = 60;
 
 const wordsPerSentence = (text: string): number => wordCount(text) / Math.max(text.match(/[.!?]["”’)]?(\s|$)/g)?.length ?? 1, 1);
 
-// Readability takes the document apart as it reads, so it is handed a copy: this one is the
-// page in the reader's tab. isProbablyReaderable looks for paragraphs, so prose laid out
-// with line breaks has to qualify another way (docs/features/article-extraction.md).
+// Readability takes the document apart as it reads, and this one is the page in the reader's tab.
 export const readArticle = (document: Document, pageUrl: string): ArticleRead => {
   const metadata = articleMetadata(document, pageUrl);
   const parsed = new Readability(document.cloneNode(true) as Document).parse();

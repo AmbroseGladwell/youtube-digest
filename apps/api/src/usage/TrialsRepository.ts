@@ -10,10 +10,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type TrialReadReservation = { reserved: true } | { reserved: false; reason: "unknown" | "spent" | "address-spent"; used: number };
 
-// The signed-out trial: a token issued to the device, so onboarding can read the reader's link,
-// and suggest topics for it, before there's an account. It makes nothing (OV-327). Reads are
-// counted against the token and, separately, against the address it asks from, whose hash is
-// kept a week.
+// Reads count against the token and, separately, the address it asks from, whose hash is kept a week.
 export class TrialsRepository {
   #sql: SqlClient;
 
@@ -35,8 +32,7 @@ export class TrialsRepository {
     return rows.length > 0;
   }
 
-  // A read is counted whether or not the page can be read, since fetching it is the work. The
-  // token's slot first, then the address's day; a refusal from the address gives the token's back.
+  // Counted whether or not the page reads, since fetching is the work; an address refusal returns the token's slot.
   async reserveRead(now: Date, token: string, address: string): Promise<TrialReadReservation> {
     const tokenHash = hashToken(token);
     const [held] = await this.#sql.query<{ reads: number }>(

@@ -5,13 +5,11 @@ import { OnboardingHeading } from "../OnboardingHeading/OnboardingHeading.js";
 import styles from "./OnboardingTopics.module.scss";
 import { onboardingTopicsTestIds } from "./OnboardingTopicsTestIds.js";
 
-// Topics suggested from the source (OV-176, 175b): starter ones, and at most one new one.
 export interface OnboardingTopicSuggestions {
   noun: string;
   names: readonly string[];
   newTopic: string | null;
-  // Matched in code while the model's answer was still on its way, because it failed, or because
-  // the model wasn't asked (a sample, a shared copy, no server).
+  // "code-only" when the model wasn't asked: a sample, a shared copy, no server.
   by: "model" | "code-pending" | "code-failed" | "code-only";
 }
 
@@ -19,20 +17,18 @@ export interface OnboardingTopicsProps {
   chosen: readonly string[];
   suggestions: OnboardingTopicSuggestions | null;
   saving: boolean;
-  // Under the chips on a narrow screen: the topics-and-projects card the wide pane shows (327f-p).
+  // The wide pane's topics-and-projects card, under the chips on a narrow screen (327f-p).
   below?: ReactNode;
   onContinue: (chosen: string[]) => void;
 }
 
-// "Popular" (327e), Finance for the design's Money; the rest of the 27 open in place.
+// Finance stands for the design's Money (327e).
 const POPULAR = ["Business", "Tech", "Travel", "Finance", "Science", "Design", "Food", "Career"];
 const POPULAR_SHOWN = 8;
 
 const isStarter = (name: string) => STARTER_TOPICS.some((topic) => sameTopicName(topic.name, name));
 
-// Design 327e: up to three suggested for this source, pre-ticked, eight popular, and the rest of the
-// 27 on See all, with anything else typed in there. Nothing is made until Continue, so pressing a
-// chip off again leaves nothing behind (docs/features/onboarding.md, "Starter topics").
+// Nothing is made until Continue, so pressing a chip off again leaves nothing behind.
 export const OnboardingTopics = ({ chosen: initiallyChosen, suggestions, saving, below, onContinue }: OnboardingTopicsProps) => {
   const [chosen, setChosenHere] = useState<string[]>([...initiallyChosen]);
   const [touched, setTouched] = useState(initiallyChosen.length > 0);

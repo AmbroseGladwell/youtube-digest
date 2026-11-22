@@ -4,8 +4,7 @@ import { wordCount } from "./wordCount.js";
 
 export const RECIPE_SUMMARY_MOST_WORDS = 90;
 
-// What a recipe's note has in place of the argument-shaped fields: our one paragraph, and the
-// page's recipe as the page wrote it (docs/features/recipe-notes.md).
+// Our one paragraph, and the recipe as the page wrote it (docs/features/recipe-notes.md).
 export const RecipeNote = Recipe.extend({
   summary: z
     .string()

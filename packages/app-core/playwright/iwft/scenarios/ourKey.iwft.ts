@@ -3,8 +3,6 @@ import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimu
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-// Which key an overview is made on, and what the reader is told (docs/architecture/tiers.md,
-// "Which key an overview uses").
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },

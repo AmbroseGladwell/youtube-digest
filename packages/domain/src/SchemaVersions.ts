@@ -21,8 +21,7 @@ export const SYNCED_RECORD_KINDS: readonly SyncedRecordKind[] = [
   "chat",
 ];
 
-// Zero for a kind the client was built before, so the server never sends it one
-// (docs/features/sync-api.md, "A kind a client was built before").
+// Zero for an unknown kind: docs/features/sync-api.md, "A kind a client was built before".
 export type SchemaVersions = Record<SyncedRecordKind, number>;
 
 export const UNKNOWN_KIND_SCHEMA_VERSION = 0;

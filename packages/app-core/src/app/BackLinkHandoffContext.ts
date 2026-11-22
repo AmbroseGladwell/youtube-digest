@@ -1,9 +1,6 @@
 import { createContext, useContext, type MouseEvent } from "react";
 
-// A page's own back link, lent to the shell so the bar's brand slot can take over once
-// the link has scrolled under the bar (docs/features/back-within-reach.md). A page with no
-// head to scroll away lends the link without drawing one, and the slot holds it from the
-// first frame: `element` is null there (design 205d-2).
+// `element` is null for a page that lends its link without drawing one: the slot holds it from the start.
 export interface HeadBackLink {
   element: HTMLElement | null;
   to: string;

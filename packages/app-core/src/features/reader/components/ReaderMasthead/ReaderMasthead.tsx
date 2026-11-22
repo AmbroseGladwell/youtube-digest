@@ -29,15 +29,11 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 export interface ReaderMastheadProps {
   overview: Overview;
   metaParts: string[];
-  // The "Saved you" chip, while the page holds it after Mark read.
   savedChip: { minutes: number; leaving: boolean } | null;
   read: boolean;
   favourite: boolean;
   playing: boolean;
   editingTopics: boolean;
-  // The panel. Design 205b makes its reader the phone's, so this no longer changes the
-  // head's arrangement: it names the way back after the tab and keeps the ⋯ menu's own
-  // panel items (docs/features/extension-panel.md).
   compact: boolean;
   webApp: OverviewInWebApp;
   listening: boolean;
@@ -52,22 +48,13 @@ export interface ReaderMastheadProps {
   recipeActions: OverviewActionsMenuProps["recipe"];
   onDelete: () => void;
   onChat?: (() => void) | null;
-  // Null where there is no library to keep projects in (signed out).
+  // Null when signed out, with no library to keep projects in.
   projects: { line: ReactNode; count: number; openPicker: (from: "menu") => void } | null;
   ref?: Ref<HTMLElement> | undefined;
 }
 
-// Boolean(...), not !== null: an overview saved before publishedAt existed has no such
-// key at all (see OverviewThumbnail, and v1-architecture-decisions.md's swappable-store
-// model, which reads back whatever was written).
 const savedOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
-// Design 4a, 5c and 6d: one head, three arrangements. The back link, the actions, the
-// menu and the title block are laid out by grid area, so the desktop's top bar, the
-// phone's action row under the title and the panel's Listen beside ⋯ are one DOM order
-// (docs/features/stone-theme.md, "The single overview").
-// Design 77o: each part drops out when the page didn't give it.
-// A recipe's read time sits on its link to the page instead (design 144a).
 const articleByline = (source: WebSource, saved: string, recipe: boolean): string =>
   [
     ...(source.author === null ? [] : [`By ${source.author}`]),
@@ -111,8 +98,6 @@ export const ReaderMasthead = ({
   const analytics = useReaderAnalytics();
   const backToLibrary = useBackTo(Routes.home());
   const homeName = useHomeName();
-  // In the panel home is the tab, so the way back is named after what the tab holds now
-  // (design 205c); everywhere else it is the library.
   const backLabel = compact ? homeName : "All overviews";
   const headBackLink = useLentBackLink({
     to: Routes.home(),
@@ -124,7 +109,6 @@ export const ReaderMasthead = ({
   });
   const dubiousFlag = useRef<HTMLButtonElement | null>(null);
   const [explainingDubious, setExplainingDubious] = useState(false);
-  // A chat answer citing why it's dubious opens the reasons to it (design 319q).
   const cited = useCitedOverviewPart();
   const citedDubious = cited?.part === "dubiousClaim" ? cited.followed : null;
   useEffect(() => {
@@ -190,9 +174,6 @@ export const ReaderMasthead = ({
         >
           <FavouriteIcon filled={favourite} />
         </button>
-        {/* One Listen, two jobs: in the panel it docks the player at the foot of the
-            window, everywhere else it reads the note where it stands
-            (docs/features/audio-player.md). */}
         <button
           type="button"
           className={`${styles.listen} ${(compact ? listening : playing) ? styles.listenActive : ""}`}
@@ -226,9 +207,6 @@ export const ReaderMasthead = ({
       </div>
 
       <div className={styles.head}>
-        {/* Design 147s: the library row's tile leads the head with only who it's from
-            beside it. Without an image, once it fails, or at full width (151b), the lead
-            lays out as the head always did, under the image. */}
         <div className={`${styles.lead} ${full ? styles.leadFull : ""}`}>
           {overview.source.kind === "podcast" ? (
             <EpisodeArt source={overview.source} className={`${styles.art} ${compact ? styles.artCompact : ""}`} />

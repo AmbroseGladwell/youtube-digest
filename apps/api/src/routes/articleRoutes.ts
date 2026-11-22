@@ -17,9 +17,7 @@ export interface ArticleRoutesOptions {
   clock: () => Date;
 }
 
-// An account, or signed out a trial token reading onboarding's link, and never the link in a
-// log: what someone reads is theirs. The text goes back to the device and isn't kept
-// (docs/features/pasted-article-links.md).
+// Why the link never reaches a log: docs/features/pasted-article-links.md, "Being an honest visitor".
 export const articleRoutes = (app: FastifyInstance, { fetchPage, trials, clock }: ArticleRoutesOptions): void => {
   app.post(
     "/articles/read",

@@ -48,9 +48,6 @@ test("coming back to a transcript opens it where you were, not at the top", asyn
   await reader.verifyTranscriptBlockAtTheRestingLineReads(wasReading!);
 });
 
-// The reference implementation's one improvement on ours, adopted: a position you were
-// reading ahead at is restored with the following off, so the player does not yank the
-// transcript away from it (docs/features/following-playback.md).
 test("in the panel the restored position wins over the player, and the following is offered back", async ({
   launcher,
   backendSimulator,
@@ -119,7 +116,6 @@ test("the position is the video's own: another video's transcript opens at the t
   await reader.verifyTranscriptIsAtTheTop();
 });
 
-// A chapter names where to open, and that beats where you had got to.
 test("opening the transcript from a chapter goes to the chapter, not to where you left off", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({

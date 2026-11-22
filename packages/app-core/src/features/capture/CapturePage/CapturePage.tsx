@@ -89,9 +89,6 @@ const captionsNoteText = (fetching: boolean, captionsHeld: boolean): string => {
     : "Fetches the transcript, then writes the overview.";
 };
 
-// The side panel's home: the video or article in front of it (docs/features/extension-panel.md,
-// docs/features/article-panel.md). There is no + New: the page is the offer to take what's
-// beside it, and it becomes the run's own progress while the run is going.
 export const CapturePage = () => {
   const navigate = useNavigate();
   const activeVideoUrl = useActiveVideoUrl();
@@ -110,8 +107,7 @@ export const CapturePage = () => {
   const limit = useLimitMessage();
   const next = useNextQuota();
   const plan = useOverviewUsageQuery().data?.plan ?? DEFAULT_PLAN;
-  // The panel's offer page becomes the wall for a Free or BYO Plus reader at the limit, so the
-  // Overview button never fails silently (327ac).
+  // At the limit the offer page becomes the wall, so the Overview button never fails silently (327ac).
   const walled = limit !== null && plan !== "plus" && next?.kind === "spent" ? next : null;
   const [plansOpen, setPlansOpen] = useState(false);
   const timeSaved = timeSavedSummary(readableEntries(overviewsQuery.data ?? []));
@@ -139,8 +135,7 @@ export const CapturePage = () => {
     void pages.hasAccess(oneTimeUrl).then((granted) => land(granted ? null : domainOf(oneTimeUrl)));
   }, [finished, oneTimeUrl, pages, dismiss, navigate]);
 
-  // The panel has no dialog to say "you already have this" in: the overview it holds is
-  // the answer, so it opens (docs/features/one-overview-per-video.md, "Prevention").
+  // The panel has no "you already have this" dialog: the overview it holds is the answer, so it opens.
   const held = controller.held;
   useEffect(() => {
     if (held === null) {
@@ -150,8 +145,7 @@ export const CapturePage = () => {
     void navigate(Routes.overview(held.overviewId), { replace: true, state: ALREADY_MADE });
   }, [held, dismiss, navigate]);
 
-  // A failure belongs to the page it happened on, and "not an article" has no button: going
-  // to another page is the way forward, so that is what clears it.
+  // "Not an article" has no button: going to another page is the way forward, so that clears it.
   const failedOn = run?.article?.failure != null ? run.url : null;
   useEffect(() => {
     if (failedOn !== null && activePage !== null && activePage.url !== failedOn) {
@@ -159,8 +153,7 @@ export const CapturePage = () => {
     }
   }, [failedOn, activePage, dismiss]);
 
-  // Design 106j: an episode with no words stays on its tab's offer, in place of Create, until the
-  // tab moves on; nothing was made or kept, so there is nothing to clear but the run.
+  // Nothing was made or kept, so moving the tab on clears only the run (design 106j).
   const episodeWithoutWords =
     episodeTab !== null && run !== null && run.podcast !== null && run.error?.kind === "podcastNoTranscript" && run.url === episodeTab.url;
   const noWordsOn = run?.podcast != null && run.error?.kind === "podcastNoTranscript" ? run.url : null;
@@ -171,17 +164,13 @@ export const CapturePage = () => {
   }, [noWordsOn, activePage, dismiss]);
 
   const analytics = useAnalytics();
-  // Design 305c: what Create does for the tab's episode once its words are checked for.
   const episodeAction = episodeTab?.status === "found" ? episodeActionOf(episodeTab.words) : null;
   const readOverview = (overviewId: Overview["id"]) => {
     analytics.capture.panel.readChosen({ overviewId });
     void navigate(Routes.overview(overviewId), { viewTransition: shouldAnimateNavigation() });
   };
 
-  // Only ever a first overview. Writing a second over one already held was offered here and
-  // never worked for a video: the run carried no overview id, so the server refused it under
-  // the one-per-video rule and the client folded onto the note already there. Regenerating
-  // belongs with the note being regenerated, not in front of someone who has not read it.
+  // Only a first overview: regenerating belongs with the note, not before someone has read it.
   const createOverview = () => {
     if (activeVideoUrl !== null) {
       analytics.capture.panel.createChosen({ again: false });
@@ -266,13 +255,11 @@ export const CapturePage = () => {
       : overviewForPageUrl(overviewsQuery.data ?? [], offeredPage.url);
   const heldId = episodeTab?.status === "held" ? episodeTab.overviewId : (alreadyHeld?.id ?? null);
   const nothingToTake = activeVideoUrl === null && offeredPage === null && episodeTab === null;
-  // A show's page, an episode we can't use, or one with no words has nothing to make here.
   const episodeStopped =
     episodeTab !== null &&
     (episodeWithoutWords || episodeTab.status === "show" || episodeTab.status === "failed" || episodeTab.status === "unreachable");
   const captionsHeld = !watchedTranscript.isFetching && watchedTranscript.data != null;
-  // Known before Create because noticing the video fetches its captions anyway
-  // (docs/features/watching-detection.md); with no free rung there is no card to draw.
+  // Known before Create: noticing the video fetches its captions anyway (docs/features/watching-detection.md).
   const watchedVideo = activeVideoUrl === null ? null : (watchedTranscript.data ?? null);
 
   const queueStripOrNotice = () => {

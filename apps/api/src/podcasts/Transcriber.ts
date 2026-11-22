@@ -12,7 +12,7 @@ export const TranscribedAudio = z.object({
 });
 export type TranscribedAudio = z.infer<typeof TranscribedAudio>;
 
-// What the GPU host says of one job: `waiting` for a card, `running` once the worker has started.
+// `waiting` is for a GPU card; `running` is once the worker has started.
 export const HostJobState = z.discriminatedUnion("state", [
   z.object({ state: z.literal("waiting") }),
   z.object({ state: z.literal("running") }),
@@ -21,8 +21,6 @@ export const HostJobState = z.discriminatedUnion("state", [
 ]);
 export type HostJobState = z.infer<typeof HostJobState>;
 
-// The GPU host behind the speech-to-text rung (services/stt/modal_app.py): a job is submitted,
-// asked after until it ends, and cancelled when the reader's wait runs out.
 export interface Transcriber {
   submit(audioUrl: string, maxSeconds: number): Promise<string>;
   status(callId: string): Promise<HostJobState>;

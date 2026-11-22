@@ -37,7 +37,6 @@ const revert = (testApp: TestApp, token: string) =>
     payload: { token },
   });
 
-// A session made now is fresh, so the step-up is skipped; one made a while ago is not.
 const staleSession = async (testApp: TestApp, email = OLD): Promise<TestSession> => {
   const session = await makeSession(testApp.sql, { email, now: testApp.clock.now });
   testApp.clock.advance(16 * MINUTE_MS);

@@ -4,16 +4,13 @@ import { recipeMinutes, type TranscriptCheck } from "@overview/domain";
 const FREE_HOURS = 5;
 
 export interface EpisodeWordsNotice {
-  // What Looks right agrees to, said on the card.
   notice: string | null;
-  // Why the episode can't be made, in place of Looks right.
   stop: string | null;
 }
 
 const NOTHING: EpisodeWordsNotice = { notice: null, stop: null };
 
-// Designs 327v–327w-4: what the transcript check found, said on Your link before anything is used,
-// so Looks right carries the consent to transcribe and the wait never asks.
+// Said before anything is used, so Looks right carries the consent to transcribe (327v–327w-4).
 export const episodeWordsNotice = (check: TranscriptCheck | null | undefined, durationMs: number | null): EpisodeWordsNotice => {
   if (check == null || check.words === "found") {
     return NOTHING;

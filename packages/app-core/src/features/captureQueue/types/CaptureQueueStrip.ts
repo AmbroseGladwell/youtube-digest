@@ -1,7 +1,6 @@
 import type { QueueHold } from "./QueueHold.js";
 import type { LimitMessage } from "../../newOverview/util/limitMessage.js";
 
-// The one strip the queue shows, in the generation strip's slot (design 27k).
 export type CaptureQueueStrip =
   | { kind: "making"; position: number; total: number; step: string; title: string; progress: number; tomorrow: number }
   | { kind: "paused"; waiting: number }

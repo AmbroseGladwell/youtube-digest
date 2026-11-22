@@ -5,8 +5,7 @@ import { blockAtPosition } from "../../../transcripts/util/blockAtPosition.js";
 import { scrollToRestingLine } from "./scrollToRestingLine.js";
 
 export interface FollowPlayback {
-  // -1 when the player has not reported, when the shell cannot see one, and before the
-  // first block begins.
+  // -1 when the player hasn't reported, the shell can't see one, or before the first block.
   currentBlockIndex: number;
   following: boolean;
   offered: boolean;
@@ -15,15 +14,9 @@ export interface FollowPlayback {
   stop: () => void;
 }
 
-// The transcript moves with the video the panel is beside, the block being spoken coming
-// to rest under the sticky head rather than in the middle of the window, which on the
-// panel is behind it (docs/features/following-playback.md).
 export interface FollowPlaybackOptions {
-  // True while a remembered reading position is about to be restored. The follow must
-  // not scroll over it in the same frame, and it stays off afterwards until the reader
-  // asks for it back (docs/features/reading-position.md).
+  // While a restore is pending: docs/features/reading-position.md, "Restoring, and the follow".
   held?: boolean;
-  // The panel's sticky head, which is what the block being spoken comes to rest under.
   head: HTMLElement | null;
 }
 

@@ -7,10 +7,7 @@ import type { SharesRepository } from "../shares/SharesRepository.js";
 
 const Params = z.object({ token: ShareToken });
 
-// Start's samples, in the order config lists them. Each is a live share, so it's replaced or
-// stopped the way any share is, and one that isn't live is left out rather than offered
-// broken. Reading one counts no visit: it's Start's, not a page someone was sent
-// (docs/features/onboarding.md, "Try a sample").
+// Why only live shares, and no visit counted: docs/features/onboarding.md, "Try a sample".
 export const sampleRoutes = (app: FastifyInstance, shares: SharesRepository, tokens: readonly ShareToken[]): void => {
   const live = async (token: ShareToken): Promise<SharedOverview | null> => {
     const share = await shares.peek(token);

@@ -8,8 +8,7 @@ export interface UsePendingSignInResult {
   setPending: (pending: PendingSignIn | null) => void;
 }
 
-// One shared snapshot, as useSyncConnection keeps: the sign-in page writes it and the
-// account menu in the bar has to see the write at once.
+// One shared snapshot, so the account menu sees the sign-in page's write at once.
 const listeners = new Set<() => void>();
 let snapshot: PendingSignIn | null | undefined;
 

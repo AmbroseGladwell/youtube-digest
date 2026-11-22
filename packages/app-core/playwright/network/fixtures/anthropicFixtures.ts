@@ -1,7 +1,4 @@
-// The shape generateOverview() expects back from the model — GeneratedOutput from
-// @overview/generation, matching every optional section since DEFAULT_SECTIONS_ENABLED
-// turns them all on. Not imported as a type here to keep this file dependency-free of
-// generation's internals; it's a plain fixture object the network layer serializes.
+// GeneratedOutput's shape, untyped so this fixture doesn't depend on generation's internals.
 export const makeGeneratedOutputFixture = (overrides: Record<string, unknown> = {}) => {
   return {
     inOneLine: "A simulated creator explains one claim and one technique.",
@@ -41,9 +38,7 @@ export const makeGeneratedOutputFixture = (overrides: Record<string, unknown> = 
   };
 };
 
-// What a provider sends back when asked what the reader's key can reach. Anthropic's
-// shape, which OpenAI, DeepSeek, xAI and Mistral share; Gemini's differs and has its own
-// scenario rather than its own fixture.
+// Anthropic's shape, shared by OpenAI, DeepSeek, xAI and Mistral; Gemini's has its own scenario.
 export const makeModelListResponse = (ids: string[] = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"]) => {
   return { data: ids.map((id) => ({ id, type: "model", display_name: id })) };
 };

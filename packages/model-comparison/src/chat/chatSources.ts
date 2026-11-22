@@ -9,7 +9,7 @@ export interface ChatSource {
   chosenFor: string;
 }
 
-// docs/architecture/in-app-chat.md, "The sources".
+// docs/architecture/in-app-chat.md, "How it was measured".
 export const CHAT_SOURCES: readonly ChatSource[] = [
   { overviewId: "41cc60f4-40ec-43e8-9ed4-f90f79bae944", chosenFor: "10 min narrated explainer with studies, health" },
   { overviewId: "7f10c0dc-87f5-42fe-a9cd-acf7488e2db7", chosenFor: "conference talk with case studies, business" },

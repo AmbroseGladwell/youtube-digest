@@ -9,10 +9,7 @@ export const SESSION_VERIFICATION_TTL_MS = SESSION_VERIFICATION_TTL_MINUTES * MI
 export const FRESH_SESSION_MS = FRESH_SESSION_MINUTES * MINUTE_MS;
 const COOLDOWN_MS = MAGIC_LINK_COOLDOWN_SECONDS * 1000;
 
-// A session that was made or verified in the last fifteen minutes has already proved its
-// inbox: a code to the account's own address would ask the same thing twice. The verified
-// time is read here rather than with every session, so the request path that every call
-// takes never depends on this slice's column (docs/features/account-changes.md).
+// A fresh session has proved its inbox: docs/features/account-changes.md, "The email, in four steps".
 export const isSessionVerified = async (sql: SqlClient, session: Session, now: Date): Promise<boolean> => {
   const since = (at: string) => now.getTime() - new Date(at).getTime();
   if (since(session.createdAt) < FRESH_SESSION_MS) {
@@ -28,7 +25,7 @@ export interface IssuedVerification {
   expiresAt: string;
 }
 
-// Null inside the cooldown: the last code is still live and nothing new goes out.
+// Null inside the cooldown, while the last code is still live.
 export const issueSessionVerification = async (sql: SqlClient, sessionId: string, now: Date): Promise<IssuedVerification | null> => {
   const recent = await sql.query<{ id: string }>(
     "select id from session_verifications where session_id = $1 and created_at > $2::timestamptz limit 1",
@@ -46,7 +43,6 @@ export const issueSessionVerification = async (sql: SqlClient, sessionId: string
   return { code: formatLinkCode(code), expiresAt };
 };
 
-// One statement spends the code, and only a code made for this very session counts.
 export const confirmSessionVerification = async (sql: SqlClient, sessionId: string, code: string, now: Date): Promise<boolean> => {
   const rows = await sql.query<{ id: string }>(
     `update session_verifications set consumed_at = $3::timestamptz

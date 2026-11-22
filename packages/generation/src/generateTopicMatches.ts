@@ -3,9 +3,7 @@ import type { TopicMatchInput } from "@overview/domain";
 import type { GenerationClient } from "./requestGeneratedOutput.js";
 import { GenerationError } from "./GenerationError.js";
 
-// Which of the reader's own topics a finished note belongs under, zero or more, matched against
-// their list and never added to: the same rule the note's own filing follows
-// (docs/features/topic-filing.md), for a note made for someone else.
+// Matched against the reader's own topics, never added to them, as the note's own filing is.
 export const generateTopicMatches = async (client: GenerationClient, input: TopicMatchInput): Promise<string[]> => {
   const names = input.topics.map((topic) => topic.name) as [string, ...string[]];
   const TopicMatchOutput = z.object({ matchedTopicNames: z.array(z.enum(names)) });

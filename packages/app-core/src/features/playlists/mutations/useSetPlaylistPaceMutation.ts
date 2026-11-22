@@ -16,8 +16,7 @@ interface SetPlaylistPaceContext {
 export const applyPace = (followed: FollowedPlaylistWithCheck[], { playlist, pace }: SetPlaylistPaceVariables) =>
   followed.map((each) => (each.playlist.id === playlist.id ? { ...each, playlist: { ...each.playlist, pace } } : each));
 
-// Saved as soon as it is chosen, for every device; the queue takes the new pace straight
-// away (docs/features/playlists.md, "A pace for each playlist").
+// docs/features/playlists.md, "A pace for each playlist".
 export const useSetPlaylistPaceMutation = () => {
   const { followedPlaylistStore } = useStores();
   const queryClient = useQueryClient();

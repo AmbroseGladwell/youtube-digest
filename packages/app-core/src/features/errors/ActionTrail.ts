@@ -1,8 +1,6 @@
 import { MAX_ERROR_TRAIL, type AnalyticsEventName, type ClientErrorTrailEntry } from "@overview/domain";
 
-// The last few things the reader did, by name, held in memory only and kept whether or not
-// they are signed in: it leaves the device only attached to an error
-// (docs/architecture/errors-and-logs.md, "The client").
+// Leaves the device only attached to an error: docs/architecture/errors-and-logs.md, "The client".
 export class ActionTrail {
   readonly #now: () => Date;
   #entries: ClientErrorTrailEntry[] = [];

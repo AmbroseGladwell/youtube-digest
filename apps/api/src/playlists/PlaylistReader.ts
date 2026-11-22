@@ -10,8 +10,7 @@ export class PlaylistUnavailableError extends Error {
   }
 }
 
-// Reads a public or unlisted playlist whole. A private or missing one throws
-// PlaylistUnavailableError (docs/features/playlists.md, "Looking a playlist up").
+// A private or missing playlist throws PlaylistUnavailableError.
 export interface PlaylistReader {
   read(playlistId: PlaylistId, log: FastifyBaseLogger): Promise<PlaylistLookup>;
 }

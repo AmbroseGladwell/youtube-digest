@@ -11,7 +11,7 @@ export const PodcastTranscriptLink = z.object({
 });
 export type PodcastTranscriptLink = z.infer<typeof PodcastTranscriptLink>;
 
-// One episode as its show's own feed describes it (docs/features/podcast-links.md).
+// As its show's own feed describes it (docs/features/podcast-links.md).
 export const PodcastEpisode = z.object({
   feedUrl: z.url(),
   guid: z.string().min(1),
@@ -23,8 +23,7 @@ export const PodcastEpisode = z.object({
   pageUrl: z.url().nullable(),
   imageUrl: z.url().nullable(),
   notes: z.string(),
-  // Its notes' own words, less what the show repeats in every episode, for telling a retitled
-  // upload apart (docs/features/podcast-on-youtube.md).
+  // Less what every episode repeats, to tell a retitled upload apart (docs/features/podcast-on-youtube.md).
   notesKeywords: z.array(z.string()),
   transcripts: z.array(PodcastTranscriptLink),
   chaptersUrl: z.url().nullable(),

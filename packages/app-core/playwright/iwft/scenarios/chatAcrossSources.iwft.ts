@@ -20,7 +20,6 @@ const SOUP = "Chorizo & chickpea soup";
 const PLANTS = "Eat more plants";
 const CURRY = "One-pot prawn & lentil curry";
 
-// OV-354, pages 1, 2 and 4: inside an overview's chat.
 test.describe("Chat across sources", () => {
   test("typing @ offers projects and the newest overviews, filters by title, and Enter pins one, which the question sends and shows above it", async ({
     launcher,

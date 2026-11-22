@@ -2,10 +2,7 @@ import { AboutYou, aboutYouIsEmpty, EMPTY_ABOUT_YOU } from "./AboutYou.js";
 import type { RecordMigration } from "./RecordMigration.js";
 import { currentSchemaVersion } from "./currentSchemaVersion.js";
 
-// Derivable: a settings record written before there was more than one provider was,
-// necessarily, an Anthropic one, and the model it names is the Anthropic model
-// (docs/features/byo-providers.md). The old `model` is dropped rather than kept beside the
-// new pair, because a client reading both would have two answers to one question.
+// Before providers everything was Anthropic; the old model goes (docs/features/byo-providers.md).
 const moveTheOneModelUnderItsProvider: RecordMigration = {
   newSchemaVersion: 2,
   alterRecord: (record) => {
@@ -21,9 +18,7 @@ const moveTheOneModelUnderItsProvider: RecordMigration = {
   },
 };
 
-// Derivable: the old line becomes an entry the reader can see and edit (design 141, notes). A
-// client from before the sentence can still write the line, so an empty sentence takes it
-// again and one the reader has filled is left alone.
+// An empty sentence takes the old line again; a filled one is left alone (design 141).
 const moveTheLineIntoTheSentence: RecordMigration = {
   newSchemaVersion: 3,
   alterRecord: (record) => {

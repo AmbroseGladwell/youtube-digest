@@ -13,9 +13,7 @@ export interface PlaylistLinkChoiceProps {
   onPlaylist: () => void;
 }
 
-// Design 27a: a watch link that also carries a playlist replaces Generate with the two
-// things it could mean, so nothing on the screen guesses. "Just this video" carries on as
-// before.
+// Both things a watch link with a playlist could mean, so nothing on the screen guesses (27a).
 export const PlaylistLinkChoice = ({ playlistId, disabled, stacked, onVideo, onPlaylist }: PlaylistLinkChoiceProps) => {
   const analytics = useAnalytics();
   const lookup = usePlaylistLookupQuery(playlistId);

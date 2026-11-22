@@ -9,9 +9,7 @@ import { writeCatalogue } from "./ModelCatalogue.js";
 import { useProviderPermissions } from "./ProviderPermissionContext.js";
 import { useApiKeys } from "./useApiKeys.js";
 
-// Saving is two beats, and the second one can fail: the key is checked and the model list
-// fetched in the same call, because the only honest check that a key works is using it
-// (design 110d). Chrome's permission, where there is one, comes before both.
+// Why saving is two beats: docs/features/byo-providers.md, "Which models are offered".
 export type AddKeyState =
   | { step: "idle" }
   | { step: "permission" }
@@ -44,9 +42,7 @@ export const useAddProviderKey = (provider: Provider) => {
       setState({ step: "checking" });
       try {
         const listing = await listProviderModels(provider, key);
-        // The first key saved becomes what generation runs on; later ones never change it
-        // (design 110d). A reader who adds a second provider to compare has not asked for
-        // their next overview to be made with it.
+        // Only the first key becomes the choice: docs/features/byo-providers.md, "The shape of it".
         const becameChoice = providersWithKeys(apiKeys).length === 0;
         const model = settingsQuery.data?.modelByProvider[provider] ?? DEFAULT_MODEL[provider];
 

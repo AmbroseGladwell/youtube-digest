@@ -232,9 +232,6 @@ const CAPTIONS: StoredTranscript = {
   fetchedAt: "2026-11-12T00:00:00.000Z",
 };
 
-// Our server's YouTube, scripted: what the Data API's check says of a video, what its search
-// finds, and the captions any video has. The matching rules themselves are
-// youTubeDataApiEpisodes.test.ts's.
 const youTubeOver = ({ confirms = null, finds = null }: { confirms?: "title" | "description" | null; finds?: string | null }) => {
   const calls: string[] = [];
   const episodes: YouTubeEpisodes = {

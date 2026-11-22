@@ -40,10 +40,7 @@ export const isArticleLink = (input: string): boolean => {
   }
 };
 
-// A pasted link is read as soon as it settles, so what it is, or why it can't be used, is known
-// before Generate; reading costs nothing against the month, and Generate spends this read rather
-// than fetching again (designs 77am–77ar). Null where there is no account on a server to fetch
-// through, which is what hides articles from the field.
+// docs/features/pasted-article-links.md, "Read on paste".
 export const useArticleLink = (url: string, from: "dialog" | "home") => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();

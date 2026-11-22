@@ -19,10 +19,7 @@ export interface CookingColumnScale {
   onDrawerSettled: () => void;
 }
 
-// The action's size steps down with the width of the column it sits in, measured off a gauge
-// laid out at the column's settled width (design 190g). Opening the drawer takes the smaller
-// size at the start; closing it takes the larger one only once the drawer has gone (190i), so
-// text never grows into a column that is still shrinking.
+// Closing the drawer grows the text only once it has gone, never into a column still shrinking.
 export const useCookingColumnScale = (drawerOpen: boolean): CookingColumnScale => {
   const [gauge, setGauge] = useState<HTMLElement | null>(null);
   const [width, setWidth] = useState<number | null>(null);

@@ -11,7 +11,6 @@ const onlyPlaylist = (captures: readonly QueuedCapture[]): QueuedCapture["fromPl
   return playlists.length === 1 ? playlists[0]! : null;
 };
 
-// The pace never changes by making videos now, and the words say so (95af–95ai).
 const paceStays = (captures: readonly QueuedCapture[], paceOf: PaceOf): string => {
   const playlist = onlyPlaylist(captures);
   if (playlist === null) {
@@ -23,8 +22,6 @@ const paceStays = (captures: readonly QueuedCapture[], paceOf: PaceOf): string =
     : `${playlist.title} stays at ${paceInASentence(pace)}.`;
 };
 
-// Chosen videos are made in the order their playlist is made in, so the bar names it where
-// there is one playlist to name (docs/features/playlists.md, "An order for each playlist").
 const madeInOrder = (captures: readonly QueuedCapture[], orderOf: OrderOf): string => {
   const playlist = onlyPlaylist(captures);
   return playlist === null ? "Made next, in each playlist’s order." : `Made next, ${orderInASentence(orderOf(playlist.id))}.`;
@@ -35,7 +32,6 @@ export interface MonthAllowance {
   resetsOn: string;
 }
 
-// How many of the chosen the month's allowance makes now; the rest wait for the month (95ah).
 export const madeNowOf = (chosen: number, allowance: MonthAllowance | null): number =>
   allowance === null ? chosen : Math.min(chosen, allowance.left);
 

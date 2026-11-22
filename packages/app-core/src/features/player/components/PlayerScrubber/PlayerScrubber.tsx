@@ -18,7 +18,6 @@ export interface PlayerScrubberProps {
   onSeek: (seconds: number) => void;
 }
 
-// Design 2a: the line a drag will land on, named the way the note names it.
 const landingLabel = (lines: NoteLine[], index: number, seconds: number): string => {
   const heading = sectionHeadingAt(lines, index);
   if (lines[index]?.heading) {
@@ -61,14 +60,11 @@ const keyTarget = (key: string, time: number, durationSeconds: number): number |
   }
 };
 
-// Design 1e and 2a: a thumb, a notch where each section starts, and a drag that snaps to
-// the nearest line start. From the keyboard it is a slider that moves five seconds a step.
 export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds, onSeek }: PlayerScrubberProps) => {
   const track = useRef<HTMLDivElement | null>(null);
   const [landing, setLanding] = useState<{ index: number; seconds: number } | null>(null);
   const { fill, tone, thumb } = view.track;
   const percent = landing === null || durationSeconds <= 0 ? view.track.percent : (landing.seconds / durationSeconds) * 100;
-  // Design 250f: the steps a source gives as an outlined span, so they can be seen coming.
   const steps = sourceStepsStretch(lines);
   const stepsFrom = steps === null ? undefined : lineStarts[steps.first];
   const stepsTo = steps?.after == null ? durationSeconds : lineStarts[steps.after];

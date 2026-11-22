@@ -8,8 +8,6 @@ export interface PlaylistApiAccess {
   apiUrl: string;
 }
 
-// Null in a shell with no server to ask, where nothing about playlists is offered
-// (docs/features/playlists.md, "Looking a playlist up").
 export const usePlaylistApi = (): PlaylistApiAccess | null => {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();

@@ -123,8 +123,6 @@ test("a provider that is simply down is not reported as a bad key", async () => 
   await assert.rejects(() => listProviderModels("openai", "sk", http), ProviderRequestError);
 });
 
-// Each provider's own error body, in the shape its API documents for an account with no
-// credit left.
 const OUT_OF_CREDIT = {
   openai: {
     status: 429,

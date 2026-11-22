@@ -6,9 +6,7 @@ const QUOTED_PATTERN = /"([^"]*)"|'([^']*)'|`([^`]*)`|“([^”]*)”|‘([^’]
 const IDENTIFIER = /^[A-Za-z_$][\w$]{0,39}$/;
 const ID_LIKE_PATTERN = /\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z0-9_-]{8,}\b|\b\d{6,}\b/g;
 
-// What an error says, with anything that could be the reader's own (a URL, an address, a
-// quoted title, a video id) replaced by what kind of thing it was, so the same failure
-// reads the same for every reader (docs/architecture/errors-and-logs.md, "What an error may carry").
+// docs/architecture/errors-and-logs.md, "What an error may carry".
 export const redactErrorMessage = (message: string): string => {
   const redacted = message
     .replace(URL_PATTERN, "<url>")

@@ -26,12 +26,11 @@ export class ProjectsRailGroupPageObject extends PageObject {
     this.step(`verifyRowMatchesTopicRow ${name} ${topicId}`, async () => {
       const { height, fontSize, padding } = await this.measure(projectsRailGroupTestIds.project(name));
       const topic = await this.measure(filterPanelTestIds.topicChip(topicId));
-      // Heights are compared to a hundredth of a pixel: where a row lands can leave sub-pixel noise.
+      // To a hundredth of a pixel: where a row lands can leave sub-pixel noise.
       expect(height).toBeCloseTo(topic.height, 2);
       expect({ fontSize, padding }).toEqual({ fontSize: topic.fontSize, padding: topic.padding });
     });
 
-  // "Show all N topics" and New topic share one shape; All projects takes it, underlined.
   verifyAllProjectsIsShapedLikeTheTopicsButtons = () =>
     this.step("verifyAllProjectsIsShapedLikeTheTopicsButtons", async () => {
       expect(await this.measure(projectsRailGroupTestIds.allProjectsLink)).toEqual(await this.measure(filterPanelTestIds.newTopicButton));
@@ -64,7 +63,6 @@ export class ProjectsRailGroupPageObject extends PageObject {
       return new ProjectHeadPageObject(this.testContext).verifyIsShown();
     });
 
-  // Choosing the open project again goes back to the whole library.
   leaveProject = (name: string) =>
     this.step(`leaveProject ${name}`, async () => {
       await this.click(projectsRailGroupTestIds.project(name));

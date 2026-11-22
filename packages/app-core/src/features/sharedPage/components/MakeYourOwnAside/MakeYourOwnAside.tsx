@@ -17,8 +17,7 @@ const PLUS = [
   "Your library synced across your devices",
 ];
 
-// Design 30e: the page is also the way in. The pasted link starts onboarding, as Start's does,
-// so the visitor is asked what shapes it before the account (docs/features/sharing.md).
+// Why the pasted link starts onboarding: docs/features/sharing.md, "The way in".
 export const MakeYourOwnAside = () => {
   const startOnboarding = useStartOnboarding();
   const [url, setUrl] = useState("");

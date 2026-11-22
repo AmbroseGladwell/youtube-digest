@@ -14,8 +14,7 @@ export interface PostHogCapture {
 
 export class PostHogDeliveryError extends Error {}
 
-// PostHog over its one batch call, with no SDK: its client would bring a queue and retries
-// the request path doesn't want (docs/architecture/analytics.md, "Where events go").
+// Why no SDK: docs/architecture/analytics.md, "Where events go".
 export const sendPostHogBatch = async (
   batch: PostHogCapture[],
   { apiKey, host, fetch: fetchImpl = globalThis.fetch, timeoutMs = 5_000 }: PostHogBatchOptions,

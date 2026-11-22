@@ -13,7 +13,6 @@ const API_KEYS = ANTHROPIC_KEY;
 
 const panel = { apiKeys: API_KEYS, activeVideoUrl: VIDEO_URL };
 
-// Long enough that everything below the chrome has somewhere to scroll to.
 const SEGMENTS: TranscriptSegment[] = Array.from({ length: 30 }, (_, index) =>
   makeCaptionRun([`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."], {
     startMs: index * 60_000,
@@ -21,8 +20,6 @@ const SEGMENTS: TranscriptSegment[] = Array.from({ length: 30 }, (_, index) =>
   }),
 ).flat();
 
-// The Overview tab has to overflow the panel before anything can be observed about what
-// holds still while it scrolls.
 const LONG_NOTE_POINTS = Array.from(
   { length: 30 },
   (_, index) => `Key point ${index}, written long enough to take a line of its own in the panel.`,
@@ -66,17 +63,13 @@ const seedNote = (backendSimulator: {
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
 };
 
-// Design 205b: the panel's reader is the phone's, so the head goes by with the note and
-// only the tabs hold against the bar. That is what leaves the note its room once the line
-// under the bar is there too (205e-5).
 test("the panel holds its tabs against the bar and lets the head scroll away", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
   const reader = await capture.openStoredOverview();
 
   await reader.verifyTabsAreBelowTheHead();
-  // Asserts the page actually moved, so the checks below cannot pass by nothing having
-  // scrolled at all.
+  // Asserts the page moved, so the checks below can't pass on nothing having scrolled.
   await reader.scrollTheNote();
   await reader.verifyPanelChromeStacks(false);
   await reader.verifyHeadBackLinkIsUnderTheBar();
@@ -93,8 +86,6 @@ test("on the transcript the tools stay up there with them", async ({ launcher, b
   await reader.verifyPanelChromeStacks(true);
 });
 
-// Listen docks the player at the foot of the window, not at the end of the note where it
-// would need scrolling to (docs/features/audio-player.md).
 test("Listen docks the player at the foot of the window rather than the end of the note", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
@@ -106,9 +97,7 @@ test("Listen docks the player at the foot of the window rather than the end of t
   await reader.verifyPlayerHoldsTheWindowFoot();
 });
 
-// The note this is seeded from carries all of these, so what the panel keeps is asserted
-// rather than passing on an empty fixture. Design 205b gives it the phone's head, dates
-// included, where the panel used to drop them for want of width.
+// Seeded with all of these, so what the panel keeps is asserted, not passed on an empty fixture.
 test("the panel keeps the judgement beside the topics, and the dates with it", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
@@ -143,8 +132,6 @@ test("the wide reader keeps all of it, having the width for it", async ({ launch
   await reader.verifyMastheadMentions(/Dubious claim/);
 });
 
-// At the panel's real width, a menu hung from the wrong edge leaves the window and one
-// trapped under the sticky head is painted over by the tabs.
 test("the actions menu opens inside the panel and over the tabs, not under them", async ({ launcher, backendSimulator, page }) => {
   await page.setViewportSize({ width: 400, height: 720 });
   seedNote(backendSimulator);

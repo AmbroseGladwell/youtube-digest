@@ -32,7 +32,6 @@ const ADD_CONTEXT = "Add context about you";
 export interface OnboardingStepsMomentProps {
   noun: "video" | "article" | "episode" | "recipe";
   onAddContext: () => void;
-  // Design 327d: Skip sits beside the button on a moment, not in the stepper.
   onSkip: () => void;
 }
 

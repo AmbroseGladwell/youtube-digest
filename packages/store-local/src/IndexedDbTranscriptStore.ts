@@ -2,10 +2,7 @@ import { StoredTranscript, readStoredRecord, type TranscriptStore, type VideoId 
 import { TRANSCRIPTS_STORE } from "./localDatabaseSchema.js";
 import { promisifyRequest } from "./promisifyRequest.js";
 
-// The one store that discards rather than quarantines: a transcript that cannot be read
-// is a cache miss costing one call to fill, not a note that took 30,000 tokens to write
-// (docs/features/record-migrations.md). The row is left where it is rather than deleted,
-// because a read that writes is not a read.
+// Discards, never quarantines: docs/features/record-migrations.md, "Not every store deserves the same treatment".
 export class IndexedDbTranscriptStore implements TranscriptStore {
   #db: IDBDatabase;
 

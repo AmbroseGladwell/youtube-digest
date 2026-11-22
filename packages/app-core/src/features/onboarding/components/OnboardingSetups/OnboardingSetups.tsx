@@ -44,12 +44,10 @@ export type OnboardingSetup = "appearance" | "extension" | "connect";
 
 export interface OnboardingSetupsProps {
   ready: boolean;
-  // A set-up the reader used, for the wait's analytics.
   onOpened?: ((setup: OnboardingSetup) => void) | undefined;
 }
 
-// Moment 4 (designs 327m, 327r-6): set-ups beside the wait, moved only by the reader. The
-// extension's card shows only where it can be added (useExtensionOffered).
+// Moved only by the reader (designs 327m, 327r-6).
 export const OnboardingSetups = ({ ready, onOpened }: OnboardingSetupsProps) => {
   const extensionShown = useExtensionOffered();
   const setups: readonly Setup[] = extensionShown ? ["appearance", "extension", "ai"] : ["appearance", "ai"];
@@ -121,8 +119,7 @@ export const OnboardingSetups = ({ ready, onOpened }: OnboardingSetupsProps) => 
   );
 };
 
-// Settings › Appearance's Theme and Accent colour (designs 135a–135d), painted by its own
-// stylesheet and saved the same way, so a choice here is the one Settings shows.
+// Saved the way Settings › Appearance saves, so a choice here is the one Settings shows (135a–135d).
 const AppearanceSetup = ({ onOpened }: { onOpened: () => void }) => {
   const saved = useAppearance();
   const updateSettings = useUpdateSettingsMutation();
@@ -243,8 +240,7 @@ const ExtensionSetup = ({ onOpened }: { onOpened: () => void }) => {
   );
 };
 
-// Each opens Settings › Connections in a new tab, so the run in this one carries on, with the
-// chosen assistant's steps already showing there (OV-301).
+// A new tab, so the run in this one carries on (OV-301).
 const ConnectSetup = ({ onOpened }: { onOpened: () => void }) => {
   const connectionsHref = useHref(Routes.settingsSection("connections"));
   const updateSettings = useUpdateSettingsMutation();

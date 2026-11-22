@@ -11,9 +11,6 @@ export interface AttentionRowProps {
   onDismiss: () => void;
 }
 
-// Design 27j–27l: Failed and Skipped spelled out in a tag as well as coloured, the reason in
-// words, and only the action that can work: a failed video can be tried again, a skipped one
-// only dismissed.
 export const AttentionRow = ({ capture, stacked, onRetry, onDismiss }: AttentionRowProps) => {
   const failed = capture.status === "failed";
   const gone = capture.problem === "deleted";

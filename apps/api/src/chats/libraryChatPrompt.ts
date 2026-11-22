@@ -5,16 +5,14 @@ import { ANSWER_SHAPE_RULES, CHAT_REPLY_SCHEMA } from "./ChatReply.js";
 import { NO_MARKS, type OverviewMarks } from "./planScope.js";
 import type { PromptMessage, ReplyShape } from "./streamChatCompletion.js";
 
-// About 20,000 tokens, counted in characters by code: below it the overviews go whole and one pass
-// answers, which covers small libraries and every recipe project OV-307 measured; above it, the map.
+// Why 20k tokens: docs/features/chats.md, "Library and project chat".
 export const WHOLE_CHARACTERS = 80_000;
 const RECIPE_INGREDIENTS_SHOWN = 12;
-// Luna's reasoning counts against the cap, and broad questions reason longest: 300 cut off 4 in 17,
-// and a 1,000-token overview answer was cut off by reasoning alone. The caps bound the worst case.
+// Luna's reasoning counts against each cap: docs/features/chats.md, "Library and project chat".
 const PICK_TOKENS = 2_000;
 const PLAN_TOKENS = 3_000;
 const SECTIONED_TOKENS = 4_000;
-// OV-373: an answer that places every overview in scope ran to 7,800 tokens for 89 of them.
+// An answer placing 89 overviews ran to 7,800 tokens (OV-373).
 const BROAD_TOKENS = 16_000;
 const WORDS_A_MINUTE = 238;
 
@@ -29,12 +27,10 @@ export const PICK_SHAPE: ReplyShape = {
   },
 };
 
-// The same reply every chat gives (OV-354), with room for a long, structured answer.
 export const SECTIONED_SHAPE: ReplyShape = { name: "chat_reply", maxTokens: SECTIONED_TOKENS, schema: CHAT_REPLY_SCHEMA };
 
 export const PickReply = z.object({ overviews: z.array(z.string()) });
 
-// An answer that has to cover many overviews, or every overview of a small library sent whole.
 export const BROAD_SHAPE: ReplyShape = { ...SECTIONED_SHAPE, maxTokens: BROAD_TOKENS };
 
 export const PLAN_SHAPE: ReplyShape = {
@@ -75,7 +71,6 @@ export interface LibraryChatContext {
 export interface LibraryChatMaterial {
   mode: "whole" | "map";
   system: string;
-  // O1, O2… in the order given, which the caller keeps oldest saved first so a new save lands at the end.
   labels: ReadonlyMap<string, Overview>;
 }
 
@@ -97,7 +92,6 @@ const lengthOf = (overview: Overview): string | null => {
   return kind === "article" || kind === "recipe" ? `${minutes} min read` : `${minutes} min`;
 };
 
-// OV-373: what a reader filters and ranks by, set by code, on one line under each title.
 export const factsLine = (overview: Overview, marks: OverviewMarks): string => {
   return [
     chatSourceKind(overview),
@@ -138,9 +132,7 @@ Rules:
 
 const FACTS = `Each overview also has a line of facts: its kind, its length, the day it was saved, how new its ideas are, whether its claims are dubious, whether it is worth watching anyway, and its topics. The reader's read and favourite marks come in a message of their own.`;
 
-// OV-307's two-pass system message, which found 20 of 22 core overviews with no point drifting from
-// its sources. The map serves both passes, so the second reads it from the cache. Below the
-// threshold the overviews go whole and the model answers at once.
+// Why whole, or two passes on the map: docs/features/chats.md, "Library and project chat".
 export const libraryChatMaterial = (
   scope: LibraryChatScope,
   overviews: readonly Overview[],
@@ -216,7 +208,6 @@ const scopeLines = (kept: readonly string[], { filtered, broad }: ScopeAsked): s
   return lines;
 };
 
-// A broad answer is told by code to place every kept overview (docs/features/chats.md, "Two passes on the map").
 export const scopeBlock = (kept: readonly string[], asked: ScopeAsked): PromptMessage => ({
   role: "user",
   content:
@@ -230,8 +221,6 @@ export const pickPrompt = (question: string): PromptMessage => ({
   content: `Choose the overviews whose full notes you need to answer this question: ${question}`,
 });
 
-// A large project's keyword minutes (OV-352): each a minute of a member's transcript with an id,
-// such as O3.p14, that a point lists in its sources.
 export const minutesBlock = (minutes: ReadonlyArray<readonly [string, Overview, readonly Passage[]]>): PromptMessage => ({
   role: "user",
   content: `Minutes of their transcripts that match the question's words. Each has an id (such as O3.p14); a point that rests on one lists it in its sources.\n\n${minutes

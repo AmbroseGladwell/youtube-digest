@@ -31,9 +31,8 @@ export interface OnboardingRun {
   found: OnboardingFound | null;
   overview: Overview | null;
   failure: OnboardingFailure | null;
-  // An episode being transcribed for the run, kept once done so the wait still says it was.
+  // Kept once done, so the wait still says the episode was transcribed.
   transcription: EpisodeTranscription | null;
-  // The wait's real events (327m): the words the source held once they're in, and writing begun.
   sourceWords: number | null;
   writingStarted: boolean;
 }
@@ -54,18 +53,12 @@ export interface UseOnboardingRunOptions {
   tabId: number | null;
   maySpend: boolean;
   attempt: number;
-  // An episode with no words is transcribed from its audio, as the reader chose (design 305c-2).
   transcribe?: TranscribeChoice | undefined;
   onFound: (found: OnboardingFound) => void;
   onMade: (overview: Overview) => void;
 }
 
-// Onboarding's one overview, of whatever kind the link is: read straight away, for free and signed
-// out on the device's trial, then held until the reader has an account and their answers are in
-// it, so nothing that costs anything runs before and the overview is written from those answers,
-// straight into the account's library. A page the panel was beside is read in the browser where
-// Chrome allows it, spending no trial read (docs/features/onboarding.md, "Nothing paid before the
-// account").
+// docs/features/onboarding.md, "Nothing paid before the account".
 export const useOnboardingRun = ({
   source,
   target,

@@ -8,8 +8,7 @@ export const CaptureQueuePreferences = z.object({
   paused: z.boolean().catch(false),
   folded: z.boolean().catch(false),
   hold: QueueHold.nullable().catch(null),
-  // The videos the reader chose to make now that were made today, so they stay off their
-  // playlist's pace (docs/features/capture-queue.md, "Waiting on a pace").
+  // Why chosen videos stay off the pace: docs/features/capture-queue.md, "Making waiting videos now".
   chosenToday: z
     .object({ day: z.string(), videoIds: z.array(z.string()) })
     .nullable()
@@ -21,9 +20,7 @@ export const DEFAULT_CAPTURE_QUEUE_PREFERENCES: CaptureQueuePreferences = { paus
 
 const storageKey = (accountId: string | null) => `overview.captureQueue.${accountId ?? NO_ACCOUNT}`;
 
-// Paused, folded into the strip, waiting at a limit and what was chosen today are this
-// device's own, kept per account and never synced. A hold whose time has passed, or an
-// earlier day's choices, are not read back (docs/features/capture-queue.md).
+// Device-only and per account: docs/features/capture-queue.md, "On this device, for now".
 export const readCaptureQueuePreferences = (
   accountId: string | null,
   storage: Storage = globalThis.localStorage,

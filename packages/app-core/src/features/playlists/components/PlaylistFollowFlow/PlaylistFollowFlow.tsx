@@ -67,8 +67,6 @@ const refusalFor = (target: PlaylistTarget, lookup: ReturnType<typeof usePlaylis
   return lookup.data !== undefined && lookup.data.entries.length === 0 ? "empty" : null;
 };
 
-// A pasted playlist, from lookup to following (designs 27b–27h): a short honest wait, then
-// the preview, or the reason it can't be followed and what to do instead.
 export const PlaylistFollowFlow = ({
   target,
   pastedUrl,

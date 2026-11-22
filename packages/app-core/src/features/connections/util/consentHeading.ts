@@ -8,8 +8,7 @@ export interface ConsentHeading {
 
 const quoted = (name: string) => `“${name}” wants to read your overviews`;
 
-// The name is the assistant's own claim, so it sits in quotes beside a line saying so, and a
-// missing one leaves the heading nameless rather than filled in (design 58a, 58b).
+// The name is the assistant's own claim, so it is quoted, and a missing one is never filled in.
 export const consentHeading = (clientName: string | null): ConsentHeading => {
   const name = clientName?.trim() ?? "";
   if (name === "") {

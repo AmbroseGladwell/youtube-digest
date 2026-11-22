@@ -22,8 +22,7 @@ export class NewOverviewDialogPageObject extends PageObject {
 
   verifyIsHidden = () => this.step("verifyIsHidden", () => expect(this.get(newOverviewDialogTestIds.root)).toBeHidden());
 
-  // Design 205c-2, and a width media query rather than a prop, so the drawn box is what says
-  // which shape it took: a sheet spans the viewport and rests on its floor.
+  // A width media query, not a prop, chooses the shape, so the drawn box is what says which.
   verifyIsTheSheet = () =>
     this.step("verifyIsTheSheet", async () => {
       await this.expectToBeVisible(newOverviewDialogTestIds.handle);
@@ -42,8 +41,7 @@ export class NewOverviewDialogPageObject extends PageObject {
     });
 
   private panelAgainstViewport = async () => {
-    // The sheet's travel is on the <dialog> itself, so the resting box is only readable once
-    // the root's own animation has finished.
+    // The sheet's travel is on the <dialog> itself, so its box settles once that animation ends.
     await this.get(newOverviewDialogTestIds.root).evaluate((element) =>
       Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished)),
     );

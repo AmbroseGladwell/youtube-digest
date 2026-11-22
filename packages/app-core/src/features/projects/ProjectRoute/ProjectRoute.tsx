@@ -4,7 +4,6 @@ import { RouteParams } from "../../../app/Routes.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
 import { HomePage } from "../../home/HomePage/HomePage.js";
 
-// One project's page: the library with its main column given over to the project.
 export const ProjectRoute = () => {
   const parsed = ProjectId.safeParse(useParams()[RouteParams.projectId]);
   if (!parsed.success) {

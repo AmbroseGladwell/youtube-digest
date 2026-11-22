@@ -2,8 +2,7 @@ import type { StoredTranscript, VideoId } from "@overview/domain";
 
 export type TranscriptFault = "no-segments" | "no-words" | "times-out-of-order" | "another-video";
 
-// What makes a transcript unfit to share, checked before anything is kept
-// (docs/features/shared-transcript-cache.md, "What a contribution has to be").
+// The rules: docs/features/shared-transcript-cache.md, "What a contribution has to be".
 export const transcriptFault = (transcript: StoredTranscript, videoId: VideoId): TranscriptFault | null => {
   const { segments } = transcript;
   if (transcript.videoId !== videoId || (transcript.video?.id != null && transcript.video.id !== videoId)) {

@@ -8,8 +8,7 @@ import { useGenerationReadiness } from "./useGenerationReadiness.js";
 import { keyOrderFor } from "./util/keyOrderFor.js";
 import { leftThisMonthOf, nextQuotaOf, type NextQuota, type NextQuotaContext } from "./util/nextQuota.js";
 
-// What the month's counts mean for this device: the server's counts and the same key order a
-// run walks. Only an account is counted: signed out there is nothing to make here.
+// Only an account is counted: signed out there is nothing to make here.
 const useQuotaContext = (): NextQuotaContext | null => {
   const readiness = useGenerationReadiness();
   const { apiKeys } = useApiKeys();
@@ -34,7 +33,6 @@ const useQuotaContext = (): NextQuotaContext | null => {
   };
 };
 
-// The quota the next overview will use.
 export const useNextQuota = (): NextQuota | null => {
   const context = useQuotaContext();
   return context === null ? null : nextQuotaOf(context);
@@ -45,7 +43,6 @@ export interface LeftThisMonth {
   resetsOn: string | null;
 }
 
-// What's left this month on every key the next overviews could use, and when more come.
 export const useLeftThisMonth = (): LeftThisMonth | null => {
   const context = useQuotaContext();
   const left = context === null ? null : leftThisMonthOf(context);

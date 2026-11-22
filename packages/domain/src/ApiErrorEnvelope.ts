@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { API_ERROR_CODES } from "./ApiErrorCode.js";
 
-// What every failed /api response carries, so the client's API-backed store and the server
-// agree on one shape (docs/architecture/api.md).
+// One shape for every failed /api response, on client and server (docs/architecture/api.md).
 export const ApiErrorEnvelope = z.object({
   error: z.object({
     code: z.enum(Object.keys(API_ERROR_CODES) as [string, ...string[]]),

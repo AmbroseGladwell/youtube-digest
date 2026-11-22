@@ -5,16 +5,12 @@ import { overviewQuotas } from "./overviewQuotas.js";
 import { usageDay } from "../transcripts/ServiceUsageRepository.js";
 import { nextUsageMonth, usageMonth } from "./usageMonth.js";
 
-// The month is the one the slot was taken in, so a generation that started before midnight
-// on the last day gives back the month it counted against.
+// The slot's own month, so a generation started before midnight gives back the month it counted against.
 export type OverviewReservation =
   | { reserved: true; month: string; used: number; limit: number }
   | { reserved: false; used: number; limit: number };
 
-// One row per UTC month, account and key. A slot is reserved before generation and released
-// when it fails, so an overview counts once, when it succeeds; regenerating reserves again
-// (docs/architecture/tiers.md, "Counting"). Kept in Postgres, since a deploy that reset it
-// would spend real money twice.
+// How overviews are counted: docs/architecture/tiers.md, "Counting".
 export class OverviewUsageRepository {
   #sql: SqlClient;
 
@@ -63,8 +59,6 @@ export class OverviewUsageRepository {
     };
   }
 
-  // The global cap behind every plan, counted per UTC day: one slot per generation on our
-  // key, given back when it fails, like the proxy's budget.
   async reserveOurKeyDay(now: Date, limit: number): Promise<boolean> {
     if (limit < 1) {
       return false;

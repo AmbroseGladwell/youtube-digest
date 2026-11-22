@@ -1,11 +1,7 @@
 import type { PlaylistId, PlaylistOrder, QueuedCapture } from "@overview/domain";
 import { inPlaylistOrder } from "../../playlists/util/inPlaylistOrder.js";
 
-// Each playlist's waiting videos in that playlist's order, without moving them past anything
-// else: a playlist keeps the places in the queue it already holds, and only what sits in them
-// changes. So a playlist whose order the reader has just changed turns round on its own, and
-// every other playlist stays where it was (docs/features/playlists.md, "An order for each
-// playlist").
+// Why each playlist keeps its places: docs/features/playlists.md, "An order for each playlist".
 export const inQueueOrder = (waiting: readonly QueuedCapture[], orderOf: (playlistId: PlaylistId) => PlaylistOrder): QueuedCapture[] => {
   const places = new Map<PlaylistId, number[]>();
   waiting.forEach((capture, place) => {

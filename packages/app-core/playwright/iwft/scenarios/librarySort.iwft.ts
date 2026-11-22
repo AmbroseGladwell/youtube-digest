@@ -14,8 +14,6 @@ const unreadable = (salvaged: UnreadableRecord["salvaged"]): UnreadableRecord =>
   salvaged,
 });
 
-// Readable, salvaged and held back, with dates and titles that disagree about the order,
-// and one quarantined record whose date and title were both lost.
 const seedMixedLibrary = (backendSimulator: BackendSimulator) => {
   backendSimulator.overviews.seed(titled("Bravo video", "2026-09-16T00:00:00.000Z"));
   backendSimulator.overviews.seed(titled("Delta video", "2026-09-12T00:00:00.000Z"));

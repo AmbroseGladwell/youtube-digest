@@ -88,8 +88,7 @@ const STEP_COUNT_NAME = [
   ...["twenty", "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five"],
 ];
 
-// Counted from the list, never by the model (docs/prototype/constraints.md), and introduced as the
-// source's own, so a listener hears where the source ends and How to apply begins (design 250g).
+// Counted from the list, never by the model, and named as the source's own (design 250g).
 const sourceStepsHeading = (count: number, source: string) =>
   count === 1
     ? `The ${source} gives one step of its own.`
@@ -135,13 +134,7 @@ export interface ShownRecipeParts {
   steps?: boolean;
 }
 
-// Takes SharedNote rather than Overview because a shared copy has to build the same body
-// from the same fields, and the three the copy leaves out are ones this never read
-// (docs/features/sharing.md). An Overview is a SharedNote with more on it.
-// A recipe's ingredients can be read as the reader adjusted them, so what is heard is what is
-// on screen (docs/features/recipe-notes.md, "Reading aloud").
-// `steps: false` is the reader's switch: the block is hidden everywhere, and How to apply is
-// introduced as it was before the block.
+// SharedNote, so a shared copy builds the same body (docs/features/sharing.md); steps false hides the block.
 export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts = {}): NoteLine[] => {
   const lines: NoteLine[] = [];
 
@@ -155,8 +148,7 @@ export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts 
     }
   };
 
-  // A recipe's narration is the whole recipe, one section after another, so a single render
-  // has every part ready; each list's Read aloud plays its own stretch of it (OV-148).
+  // One render holds the whole recipe; each list's Read aloud plays its own stretch (OV-148).
   if (overview.recipe) {
     const { recipe } = overview;
     const ingredients = shown.ingredients ?? recipe.ingredients;

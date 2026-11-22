@@ -1,8 +1,7 @@
 import type { NoteKind, Overview, Provider } from "@overview/domain";
 import type { MeteredCall } from "@overview/generation";
 
-// "failed" is the model's doing and is part of the result; "errored" is the provider or
-// the network, and a later run tries it again.
+// "failed" is the model's doing and counts; "errored" is the provider or network, and is retried.
 export type RunOutcome = "passed-first" | "passed-after-retry" | "failed" | "errored";
 
 export interface RunRecord {
@@ -18,7 +17,6 @@ export interface RunRecord {
   costDollars: number | null;
   attempts: unknown[];
   overview: Overview | null;
-  // What the kind check answered and cost, apart from the note (OV-275). Absent on runs from
-  // before it, and on articles, which have no check.
+  // Absent on runs from before the kind check (OV-275), and on articles, which have no check.
   kindCheck?: { noteKind: NoteKind | null; costDollars: number | null };
 }

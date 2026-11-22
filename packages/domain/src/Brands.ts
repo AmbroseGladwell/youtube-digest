@@ -9,18 +9,14 @@ export type TopicId = z.infer<typeof TopicId>;
 export const ProjectId = z.uuid().brand("ProjectId");
 export type ProjectId = z.infer<typeof ProjectId>;
 
-// A platform's own id for the video, not a uuid we mint: it is
-// what makes one stored transcript answer for every note taken from the same video
-// (docs/features/transcript-storage.md).
+// The platform's id, so one transcript serves every note on it: docs/features/transcript-storage.md.
 export const VideoId = z.string().min(1).brand("VideoId");
 export type VideoId = z.infer<typeof VideoId>;
 
-// What every store keys an item by, from sourceKey. A YouTube key is its VideoId, unprefixed,
-// so the two are one type (docs/features/source-identity.md).
+// A YouTube key is its bare VideoId, so the two are one type (docs/features/source-identity.md).
 export const SourceKey = VideoId;
 export type SourceKey = VideoId;
 
-// YouTube's own id for a playlist: the value of a link's list= parameter
-// (docs/features/playlists.md).
+// The value of a link's list= parameter (docs/features/playlists.md).
 export const PlaylistId = z.string().min(1).brand("PlaylistId");
 export type PlaylistId = z.infer<typeof PlaylistId>;

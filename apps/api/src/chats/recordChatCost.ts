@@ -16,8 +16,6 @@ export interface RecordChatCostOptions {
   clock: () => Date;
 }
 
-// A call's tokens at list price into the account's cost tally, area chat, and what the log line
-// says of them (docs/architecture/unit-economics.md).
 export const recordChatCost = async (
   { costs, clock }: RecordChatCostOptions,
   accountId: AccountId,

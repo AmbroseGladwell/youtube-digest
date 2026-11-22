@@ -1,18 +1,14 @@
 export interface StarterTopic {
   name: string;
   description: string;
-  // "What you're focusing on" opens with these for the topics a reader picked (design 141h),
-  // and example is the "Your own" field's hint for that group.
+  // Opens "What you're focusing on" for picked topics (design 141h).
   suggestions: readonly string[];
   example: string;
-  // Words that suggest a source belongs under it, matched against its title and text when
-  // onboarding suggests topics for this video (docs/features/onboarding.md, "Suggested topics").
+  // docs/features/onboarding.md, "Suggested topics".
   keywords: readonly string[];
 }
 
-// The topics onboarding offers, in the order it shows them (docs/features/onboarding.md). A
-// description says what a topic includes, never what it leaves out: a reader picks only some
-// of them, and an overview can sit under several.
+// A description says what a topic includes, never what it leaves out (docs/features/onboarding.md).
 export const STARTER_TOPICS: readonly StarterTopic[] = [
   {
     name: "AI",

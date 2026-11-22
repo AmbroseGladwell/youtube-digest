@@ -12,7 +12,7 @@ export const articleReadMs = (words: number): number => (words / ARTICLE_WORDS_P
 
 export const domainOf = (url: string): string => new URL(url).hostname.replace(/^www\./, "");
 
-// Who the piece is from: the channel, or the site, or failing that its address.
+// The channel, or the site, or failing that its address.
 export const sourceName = (source: Source): string => {
   if (source.kind === "youtube") {
     return source.channel;
@@ -23,8 +23,7 @@ export const sourceName = (source: Source): string => {
   return source.siteName ?? domainOf(source.url);
 };
 
-// Where the overview's way out goes: the video, the page, or for an episode the link the reader
-// shared, never the feed's audio (docs/features/podcast-screens.md).
+// For an episode the shared link, never the feed's audio (docs/features/podcast-screens.md).
 export const sourceUrl = (source: Source): string => (source.kind === "podcast" ? source.sharedFrom : source.url);
 
 export type PodcastPlatform = "spotify" | "apple" | "page";
@@ -49,17 +48,15 @@ const OPEN_PODCAST: Record<PodcastPlatform, string> = {
   page: "Open the show’s page",
 };
 
-// "Listen on Spotify": the way back to where the reader came from (design 106n), in the words
-// Apple's and Spotify's own guidelines ask for (OV-297).
+// The way back, in the words Apple's and Spotify's guidelines ask for (design 106n, OV-297).
 export const openPodcastLabel = (sharedFrom: string): string => OPEN_PODCAST[podcastPlatform(sharedFrom)];
 
-// Where a recipe came from, as Copy and Print say it: "Kitchen with Ada on YouTube" (design 122r).
+// As Copy and Print say it: "Kitchen with Ada on YouTube" (design 122r).
 export const recipeFrom = (source: Source): string => (source.kind === "youtube" ? `${source.channel} on YouTube` : sourceName(source));
 
 export const sourceImage = (source: Source): string | null => (source.kind === "youtube" ? (source.thumbnailUrl ?? null) : source.imageUrl);
 
-// The words match the library's filter, so a reader connects the two. An episode is a podcast
-// on its chip and an episode by its length: "Podcast", "1 hr 56 min episode" (design 106l).
+// Matches the library's filter: "Podcast" on its chip, "1 hr 56 min episode" by length (design 106l).
 const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode" };
 const KIND_CHIP: Record<Exclude<Source["kind"], "youtube">, string> = { web: "Article", podcast: "Podcast" };
 
@@ -75,8 +72,7 @@ const knownLength = (source: Source): string | null => {
 
 const capitalised = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
 
-// "18:42 video", "14 min article", or "Video" when the length is not known: the kind is named
-// on every card, never by an icon alone, and a missing length is never guessed (OV-232).
+// The kind is always named, and a missing length is never guessed (OV-232).
 export const sourceLength = (source: Source): string => {
   const kind = SOURCE_KIND[source.kind];
   const length = knownLength(source);
@@ -88,8 +84,7 @@ export interface SourcedNote {
   recipe?: RecipeNote | null | undefined;
 }
 
-// The chip a library row leads with. A video is most of the library and says so in its meta
-// line, so it has none; any other kind does, and a recipe keeps its yield (design 232a, 232f).
+// None on a video, most of the library; a recipe keeps its yield (design 232a, 232f).
 export const kindChip = (note: SourcedNote): string | null => {
   if (note.recipe != null) {
     return note.recipe.yield === null ? "Recipe" : `Recipe · ${note.recipe.yield}`;
@@ -97,9 +92,7 @@ export const kindChip = (note: SourcedNote): string | null => {
   return note.source.kind === "youtube" ? null : KIND_CHIP[note.source.kind];
 };
 
-// A recipe names itself by the page's stated total, "1 hr 5 min recipe", or just "Recipe",
-// never by a sum of prep and cook (design 144m); a recipe video by its length, "14:32 recipe
-// video" (122n).
+// The page's stated total, never prep plus cook (design 144m); a recipe video by length (122n).
 export const noteSourceLength = (note: SourcedNote): string => {
   if (note.recipe != null && note.source.kind === "youtube") {
     return note.source.durationMs ? `${formatClock(note.source.durationMs / 1000)} recipe video` : "Recipe video";

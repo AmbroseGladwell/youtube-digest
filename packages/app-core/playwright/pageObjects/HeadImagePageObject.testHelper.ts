@@ -4,9 +4,6 @@ import { headImageTestIds } from "../../src/features/reader/components/HeadImage
 import type { TestContext } from "../support/TestContext.testHelper.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The image at the top of a note, on the reader's page and on a shared one: a button that
-// swaps it between the tile and the column's width (OV-151), measured against the head it
-// leads and the title under it.
 export class HeadImagePageObject extends PageObject {
   private readonly title: Locator;
 
@@ -27,7 +24,6 @@ export class HeadImagePageObject extends PageObject {
       expect(box.height).toBeCloseTo(height, 0);
     });
 
-  // Design 151b: full width is the reading column, which the title also spans.
   verifyIsFullWidth = () =>
     this.step("verifyIsFullWidth", async () => {
       const title = (await this.title.boundingBox())!;
@@ -37,8 +33,6 @@ export class HeadImagePageObject extends PageObject {
       expect(image.height).toBeCloseTo((image.width * 9) / 16, 0);
     });
 
-  // Design 151a and 151r: the image is a named button that says which way it will go, and
-  // still not a link; the picture inside it stays silent.
   verifyOffers = (size: "small" | "full") =>
     this.step(`verifyOffers ${size}`, async () => {
       const button = this.button();
@@ -51,10 +45,7 @@ export class HeadImagePageObject extends PageObject {
 
   clickImage = () => this.step("clickImage", () => this.button().click());
 
-  // Design 151l and 151m, read straight after the press: the image grows as a transform, or
-  // with reduced motion it swaps without moving.
-  // The grow starts once the press has re-rendered the head, which can be a moment after the
-  // click returns, so it is looked for until it shows rather than once.
+  // The grow starts once the press re-renders the head, which can lag the click, so it is polled.
   verifyGrows = (grows: boolean) =>
     this.step(`verifyGrows ${grows}`, async () => {
       const running = () => this.button().evaluate((button) => button.getAnimations().length);
@@ -90,8 +81,6 @@ export class HeadImagePageObject extends PageObject {
       }
     });
 
-  // Design 147s: who it's from sits beside the image, and the title starts under both at
-  // the image's left edge, so it keeps the column's whole measure.
   verifyLeadsWith = (who: Locator) =>
     this.step("verifyLeadsWith", async () => {
       const image = (await this.button().boundingBox())!;
@@ -104,7 +93,6 @@ export class HeadImagePageObject extends PageObject {
       expect(Math.round(title.x)).toBe(Math.round(image.x));
     });
 
-  // Design 151b: at full width who it's from goes back to its own line under the image.
   verifyAbove = (who: Locator) =>
     this.step("verifyAbove", async () => {
       await expect.poll(async () => who.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");

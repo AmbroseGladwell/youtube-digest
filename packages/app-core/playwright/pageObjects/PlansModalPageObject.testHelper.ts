@@ -3,7 +3,6 @@ import type { Plan } from "@overview/domain";
 import { plansModalTestIds } from "../../src/features/plus/components/PlansModal/PlansModalTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Every plan side by side, with paying for one not open yet (design 327ah).
 export class PlansModalPageObject extends PageObject {
   verifyIsShown = () => this.step("verifyIsShown", () => expect(this.get(plansModalTestIds.root)).toBeVisible());
 

@@ -16,8 +16,7 @@ const PASSED_OVER_OURS: Record<FallbackCause, string> = {
   "schema-failure": "our answer came back malformed",
 };
 
-// The one quiet line a fallback earns, and nothing for an overview the first key made
-// (docs/architecture/tiers.md, "Which key an overview uses").
+// Why only a fallback earns a line: docs/architecture/tiers.md, "Which key an overview uses".
 export const madeOnLine = (madeOn: MadeOn | null): string | null => {
   const fallback = madeOn?.fallback ?? null;
   if (madeOn === null || fallback === null) {

@@ -1,7 +1,6 @@
 import { isApiError } from "../http/ApiError.js";
 import { toolError, type McpToolOutcome } from "./McpTool.js";
 
-// A write the server refused for a reason the assistant can act on, said in words it can use.
 export const projectWriteRefusal = (error: unknown): McpToolOutcome | null => {
   if (!isApiError(error)) {
     return null;

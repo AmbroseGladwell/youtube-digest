@@ -1,8 +1,7 @@
 import type { TranscriptSegment } from "./TranscriptSegment.js";
 import type { TranscriptBlock } from "./TranscriptBlock.js";
 
-// Ported from zarazhangrui/youtube-digest's groupTranscriptEntries, logic not file
-// (CLAUDE.md). The limits, and what this drops from it, are in docs/features/transcript-storage.md.
+// Ported from youtube-digest's groupTranscriptEntries; limits in docs/features/transcript-storage.md.
 const LIMITS = {
   minChars: 180,
   idealChars: 180,
@@ -15,8 +14,7 @@ const LIMITS = {
 } as const;
 
 const SPEAKER_MARKER = /^\s*>>+\s*/;
-// Only the bracketed words that are never speech: a captioner may also bracket a speaker's
-// name (docs/features/transcript-storage.md), and that is theirs to keep.
+// A captioner may bracket a speaker's name, which stays (docs/features/transcript-storage.md).
 const NON_SPEECH = /\[[^\]]*\b(?:music|applause|applaud\w*|laugh\w*|cheer\w*)\b[^\]]*\]/gi;
 const CLOSERS = `["'’”»)\\]）】」』]*`;
 const SENTENCE_END = new RegExp(`[.!?。！？]${CLOSERS}$`);

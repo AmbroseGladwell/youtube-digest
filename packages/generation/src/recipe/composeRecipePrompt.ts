@@ -38,8 +38,7 @@ ${recipeBlock(recipe)}
 Why they saved it: ${input.captureReason ?? "not said"}`;
 };
 
-// A recipe's note is one paragraph of ours before the page's own recipe, which code copies
-// across: the model never restates a step, an amount or a time (docs/features/recipe-notes.md).
+// docs/features/recipe-notes.md, "Code reads the recipe, never a model".
 export const composeRecipePrompt = (input: ArticleGenerationInput, recipe: Recipe): ComposedPrompt => {
   const sections = [recipeCoreSection, articleFilingSection, recipePageFollowUpQuestionsSection];
   return {

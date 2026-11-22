@@ -1,7 +1,6 @@
 const STORAGE_KEY = "overview.accountSeen.v1";
 
-// Whether this device has been signed in to an account, so the panel signed out offers the way
-// back into it rather than onboarding's Start (design 46q). Only that it happened, never whose.
+// Only that an account was signed in here, never whose, so signed out can offer the way back in.
 export const readAccountSeen = (storage: Storage = globalThis.localStorage): boolean => {
   try {
     return storage.getItem(STORAGE_KEY) === "true";

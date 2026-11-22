@@ -8,9 +8,7 @@ import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { savedFromShare } from "./util/savedFromShare.js";
 
-// A shared copy into the library open now. The share's token goes to the server before the
-// copy is saved, so its push is let in uncounted rather than reserving a slot on the
-// reader's month (docs/architecture/tiers.md, "Reserving on the reader's own key").
+// The token goes first, so the push is let in uncounted rather than reserving a slot on the reader's month.
 export const useSaveFromShare = (): ((token: ShareToken, snapshot: SharedOverview, options?: { sample: boolean }) => Promise<Overview>) => {
   const { overviewStore, transcriptStore } = useStores();
   const queryClient = useQueryClient();
@@ -27,9 +25,7 @@ export const useSaveFromShare = (): ((token: ShareToken, snapshot: SharedOvervie
         await api.reserve(overview.id, token).catch(() => undefined);
       }
       await overviewStore.saveOverview(overview);
-      // The share carries the transcript (docs/features/sharing.md, "The transcript is in"),
-      // and a copy saved without it leaves the Transcript tab empty with no way to fill it:
-      // a transcript is keyed by video, so nothing else would ever fetch one for this note.
+      // A transcript is keyed by video, so nothing else would ever fetch one for this note.
       if (snapshot.transcript !== null) {
         await transcriptStore.saveTranscript(snapshot.transcript);
       }
@@ -40,9 +36,7 @@ export const useSaveFromShare = (): ((token: ShareToken, snapshot: SharedOvervie
   );
 };
 
-// A sample is sorted into the reader's own topics where it fits any, on us, as a note they made
-// would have been. Without topics, or if the pass fails, it's saved unsorted
-// (docs/features/onboarding.md, "Try a sample").
+// Why a sample is sorted, on us: docs/features/onboarding.md, "Try a sample".
 const sortedInto = async (api: GenerationApi, overview: Overview, topics: readonly Topic[]): Promise<Overview["topicIds"]> => {
   if (topics.length === 0) {
     return [];

@@ -1,7 +1,6 @@
 const IPV4_MAPPED = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i;
 
-// An IPv6 client usually holds a whole /64, so the /64 is what is counted
-// (docs/architecture/api.md, "Rate limits").
+// Why the /64: docs/architecture/api.md, "Rate limits".
 export const addressKey = (address: string): string => {
   const bare = address.trim().toLowerCase().replace(/%.*$/, "");
   const mapped = IPV4_MAPPED.exec(bare);

@@ -9,9 +9,8 @@ export interface PreviewChoiceLineProps<Choice extends string> {
   theDefault: Choice;
   labelOf: (choice: Choice) => string;
   resultOf: (choice: Choice) => string;
-  // What is being chosen, for the test ids and the radio group's name: "pace", "order".
+  // Also names the test ids and the radio group: "pace", "order".
   name: string;
-  // The two halves of the control's label: "Pace" for "Psychology".
   title: string;
   subject: string;
   icon: StrokeIconName;
@@ -19,9 +18,7 @@ export interface PreviewChoiceLineProps<Choice extends string> {
   onChange: (choice: Choice) => void;
 }
 
-// Design 95t–95v: the choice sits behind one line with Change, because the reader's default
-// needs no attention. Change opens the options in place as a radio group, each with its result
-// written out; choosing is immediate and there is no Done.
+// The reader's default needs no attention, so the choice sits behind one line with Change (95t–95v).
 export const PreviewChoiceLine = <Choice extends string>({
   choice,
   choices,

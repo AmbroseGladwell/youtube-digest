@@ -18,8 +18,7 @@ const nameWords = (tail: string): string[] =>
     .filter((word) => word.length >= 3 && !NOT_A_NAME.test(word))
     .map(singular);
 
-// The amounts the method can follow: each adjusted ingredient line's amount as the page wrote it,
-// with the words that name it. A tin sold at its size has nothing the method repeats.
+// A tin sold at its size has nothing the method repeats.
 export const methodAmounts = (ingredients: readonly string[], lines: readonly AdjustedIngredient[]): MethodAmount[] => {
   return lines.flatMap((line, index) => {
     if (line.kind !== "adjusted" || line.packAsSold) {
@@ -46,11 +45,7 @@ interface Edit {
   changed: boolean;
 }
 
-// A method number changes only where it repeats an ingredient line: the same amount as written,
-// followed by a word of that ingredient's name ("Put 100g plain flour" for "100g plain flour").
-// A share ("1 tbsp of the oil", "about 3 tbsp of the batter") is followed by "of", never a name,
-// so it stays as written: one may be part of the batch and the other per pancake, and code can't
-// tell which (design 231k, owner 8 Nov 2026). Times, sizes and counts of pieces never match.
+// Only a repeat of an ingredient line changes; a share ("of the oil") stays (design 231k).
 export const methodPieces = (text: string, amounts: readonly MethodAmount[]): IngredientPiece[] => {
   const edits: Edit[] = [];
   for (const amount of amounts) {

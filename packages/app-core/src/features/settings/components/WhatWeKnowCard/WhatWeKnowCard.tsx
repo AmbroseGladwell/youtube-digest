@@ -70,12 +70,7 @@ const SwitchRow = ({ title, hint, on, onSwitch, testId }: SwitchRowProps) => {
   );
 };
 
-// Designs 141k and 141l: the sentence as it reads, then in place with its sections editable,
-// what was learned and Keep learning. Listing an item shows it to the reader as the library's
-// notice does, so it is marked noticed and used from then on. It is what every overview from
-// now on is written for, so the card says where it goes on us. Where no key can run the pass,
-// learning isn't offered, but items already held stay readable and removable, since they're
-// still sent (docs/features/personalisation.md).
+// Why listing an item marks it noticed: docs/features/personalisation.md, "A profile that learns".
 export const WhatWeKnowCard = () => {
   const settings = useSettingsQuery().data;
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;

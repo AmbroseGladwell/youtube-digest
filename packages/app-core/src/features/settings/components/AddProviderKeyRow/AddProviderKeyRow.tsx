@@ -10,12 +10,11 @@ export interface AddProviderKeyRowProps {
   onOpen: () => void;
   onClose: () => void;
   onSaved: () => void;
-  // Named so the refusal can end by saying what still works (design 110f).
+  // Named so the refusal can end by saying what still works.
   inUseProvider: Provider | null;
 }
 
-// Each failure stays on the row it belongs to and says what did not change. Nothing turns
-// red; the words carry it (design 110f, part 3's standfirst).
+// Nothing turns red; the words say what did not change.
 const problemText = (state: AddKeyState, provider: Provider, inUseProvider: Provider | null): string | null => {
   const console = PROVIDER_CONSOLE[provider];
   switch (state.step) {
@@ -59,8 +58,6 @@ const statusText = (state: AddKeyState, provider: Provider): string | null => {
   }
 };
 
-// A quiet one-line row until it is opened, then the field, the way to make a key for a
-// reader who never has, and the one orange button on the screen (design 110d).
 export const AddProviderKeyRow = ({ provider, open, onOpen, onClose, onSaved, inUseProvider }: AddProviderKeyRowProps) => {
   const [key, setKey] = useState("");
   const { state, add, reset } = useAddProviderKey(provider);

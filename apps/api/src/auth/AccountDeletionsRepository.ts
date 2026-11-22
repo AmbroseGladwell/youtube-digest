@@ -3,9 +3,7 @@ import type { SqlClient } from "../db/SqlClient.js";
 export type NarrationStepStatus = "pending" | "done" | "skipped" | "not_configured" | "failed";
 export type ErasureStepStatus = "pending" | "queued" | "skipped" | "not_configured" | "failed";
 
-// The audit record of one deletion: what was captured before the rows went, and how each
-// step outside the transaction ended, so an unfinished erasure is visible rather than
-// assumed (docs/features/account-deletion.md).
+// So an unfinished erasure is visible, not assumed: docs/features/account-deletion.md, "The audit row".
 export interface AccountDeletion {
   id: string;
   accountId: string;

@@ -18,9 +18,7 @@ export const PROXY_PRICE = {
 };
 const BYTES_PER_GB = 1e9;
 
-// A daily safety cap per caller on cold fetches, well above normal use: it protects our
-// address's standing with YouTube, not our money (docs/architecture/server-side-transcripts.md,
-// "Limits").
+// Why a daily cap per caller: docs/architecture/server-side-transcripts.md, "Limits".
 export const serviceTranscriptQuotas = { address: 5, free: 50, "byo-plus": 100, plus: 100 } as const satisfies Record<
   "address" | Plan,
   number
@@ -61,10 +59,7 @@ const callerLogged = (caller: ServiceCaller) =>
     ? { caller: "account" as const, plan: caller.plan, accountId: caller.accountId }
     : { caller: "address" as const, plan: null };
 
-// The last rung: asked only once every rung a client holds has failed. It fetches the captions
-// for the reader who asked and keeps nothing for anyone else: their device keeps them, and
-// uploads them to their own account (OV-295). Readers asking for the same video at the same
-// moment share the one fetch in flight (docs/architecture/server-side-transcripts.md).
+// The steps of a request: docs/architecture/server-side-transcripts.md, "What happens on a request".
 export class ServiceTranscripts {
   #options: ServiceTranscriptsOptions;
   #inFlight = new Map<VideoId, Promise<ServiceAnswer>>();
@@ -83,9 +78,7 @@ export class ServiceTranscripts {
       throw missing.error;
     }
 
-    // A fetch already under way for this video is joined for free, never kept afterwards,
-    // and only the caller who started it holds a slot. Its cap is its own, so a joiner it
-    // refused asks again for itself.
+    // A joiner refused by the starter's cap asks again for itself.
     const running = this.#inFlight.get(videoId);
     if (running !== undefined) {
       try {

@@ -6,15 +6,11 @@ export interface LentBackLink {
   label: string;
   follow: (event: MouseEvent<HTMLAnchorElement>) => void;
   lent?: boolean;
-  // False where the page draws no link of its own and the bar holds it throughout, which
-  // is settings and its sections in the panel (design 205d-2). The returned ref goes
-  // nowhere then, and the shell is told there is no element to watch.
+  // False where the page draws no link of its own and the bar holds it throughout.
   inPage?: boolean;
 }
 
-// The ref goes on the page's own back link. Registered from an effect rather than a
-// callback ref: the router's Link merges refs into a new function every render, which
-// would detach and re-attach a callback ref, and set the shell's state, on each one.
+// An effect, not a callback ref: the router's Link merges refs anew each render, re-attaching a callback ref.
 export const useLentBackLink = ({ to, label, follow, lent = true, inPage = true }: LentBackLink): RefObject<HTMLAnchorElement | null> => {
   const handoff = useBackLinkHandoff();
   const latestFollow = useRef(follow);

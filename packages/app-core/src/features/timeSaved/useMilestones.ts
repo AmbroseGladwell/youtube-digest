@@ -25,11 +25,7 @@ export interface Milestones {
   undo: (id: MilestoneId) => void;
 }
 
-// Records a crossing the moment the total reaches a milestone, and a dismissal when ×
-// is pressed, both on the account's settings so they hold on every device. A signed-in
-// device waits for its first sync to finish before recording anything, so a library still
-// arriving from the server is not mistaken for milestones crossed just now
-// (docs/features/time-saved.md, "When a milestone shows").
+// Why it waits for the first sync: docs/features/time-saved.md, "When a milestone shows".
 export const useMilestones = (minutes: number, libraryLoaded: boolean): Milestones => {
   const settings = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();

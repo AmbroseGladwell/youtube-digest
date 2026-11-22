@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-// What the code to the account's own address is about to allow, so the mail can say so. The
-// verification it sets is the same either way (docs/features/account-deletion.md).
+// Only the mail differs; the verification is the same (docs/features/account-deletion.md).
 export const VerificationPurpose = z.enum(["emailChange", "deleteAccount"]);
 export type VerificationPurpose = z.infer<typeof VerificationPurpose>;
 

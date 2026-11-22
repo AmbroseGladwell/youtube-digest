@@ -10,7 +10,6 @@ import { ServiceUsageRepository } from "./ServiceUsageRepository.js";
 
 const videoIdNumbered = (n: number) => VideoId.parse(`vid${String(n).padStart(8, "0")}`);
 
-// Signed out, onboarding's video read is the one caller counted by address (OV-327).
 const serviceFor = async () => {
   const testApp = await createTestApp();
   const service = new ServiceTranscripts({

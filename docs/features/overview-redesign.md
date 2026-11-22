@@ -281,6 +281,10 @@ all real controls over that, which is why the bar is present rather than hidden 
 does not have is a waveform, a scrubber or per-line audio timings; those arrive with the
 TTS feature.
 
+### What a note line carries
+
+One tappable line of the read-along body. `section` is what the rail lists and what the player bar names as "Now reading"; `heading` lines are the uppercase kickers, spoken in narration as the section's cue. `bullet` belongs to the note format, not the rendering, so the section that builds the lines decides it, and the mark stays out of `text`, which the spoken script and word counts read. `range` is the stretch of the video a line is about, for the reader to jump to; narration never reads it. A `label` sits above the line's text and is never part of it: what the line is, not what it says. A heading's `chip` sits beside it, shown and never spoken (the Verdict's novelty label); its `aside` sits at the other end of the row, shown and never spoken (the steps block's "From the video, in its order"). A source step's `dubiousReason` says why the note doubts it, opened from a flag under the step and read after it (docs/features/source-steps.md). `spoken` is what narration says when it differs from what is shown, and an empty `spoken` is a line narration passes over (docs/features/tts-pre-rendered-speech.md).
+
 ## Shared utilities
 
 `src/util/` holds the three things more than one feature needs. `countWords` and

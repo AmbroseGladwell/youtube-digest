@@ -30,23 +30,18 @@ const errors = createWorkerErrorReporter({
 self.addEventListener("error", (event) => void errors.report(event.error ?? event.message));
 self.addEventListener("unhandledrejection", (event) => void errors.report(event.reason));
 
-// Top level, not onInstalled: this re-runs on every worker start, so the toolbar icon keeps
-// opening the panel even if the flag doesn't survive a profile restart or an update.
+// Top level, not onInstalled, so it re-runs on every worker start and survives a profile restart.
 void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Same reasoning as above: top level, so a rule lost to a profile restart or an update
-// comes back rather than the caption fetch silently 403ing.
+// Top level, so a rule lost to a restart or update comes back instead of caption fetches 403ing.
 void installYouTubeOriginRule();
 
-// Same again: Chrome forgets a setIcon when the profile closes, and onStartup is what wakes
-// the worker to put it back (docs/features/appearance.md, "The logo").
+// Chrome forgets a setIcon when the profile closes: docs/features/appearance.md, "The logo".
 void showAccentOnToolbar();
 chrome.runtime.onStartup.addListener(() => void showAccentOnToolbar());
 onAccentColourChanged(() => void showAccentOnToolbar());
 
-// A worker is killed between messages, so anything that has to outlive one goes to
-// session storage rather than a module variable — the request in particular is written
-// before the panel exists to read it (docs/features/injected-button.md).
+// Session storage outlives the worker: docs/features/injected-button.md, "Three documents, one conversation".
 const PENDING_REQUEST = "overview/pending-request";
 const LATEST_REPORT = "overview/latest-report";
 const PENDING_PAGE = "overview/pending-page";
@@ -70,10 +65,7 @@ const openCurrentLibrary = async (): Promise<IDBDatabase> => {
   return database;
 };
 
-// Existence checks see the whole store, quarantined records included: a record that
-// cannot be rendered is still one the reader owns, and offering to generate it again is
-// offering to buy it twice (docs/features/record-migrations.md). null is "could not tell",
-// which is not the same answer as "no".
+// Quarantined records count: offering to generate one again is offering to buy it twice.
 const holdsOverviewOf = async (videoId: string): Promise<boolean | null> => {
   try {
     const store = new IndexedDbOverviewStore(await openCurrentLibrary());
@@ -88,8 +80,7 @@ const stateFor = async (videoId: string, report: RunReport | null): Promise<Butt
   return overviewButtonState({ videoId, report, held: await holdsOverviewOf(videoId) });
 };
 
-// Every watch tab, because the panel belongs to a window and a run is for one video:
-// each button decides for itself whether the report is about the video it sits on.
+// Every watch tab: each button decides whether the report is about its video.
 const broadcast = async (report: RunReport | null): Promise<void> => {
   const tabs = await chrome.tabs.query({ url: "https://www.youtube.com/watch*" });
 
@@ -117,9 +108,7 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// The menu click is what grants activeTab and what lets the panel open, so the panel is opened
-// before the first await spends it. A video goes the injected button's way, since a run for
-// one needs no access to the page (docs/features/article-panel.md).
+// Opened before the first await spends the menu click's gesture: docs/features/article-panel.md, "Right-click".
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== PAGE_MENU_ITEM || tab?.id === undefined || tab.url === undefined) {
     return;
@@ -146,16 +135,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (isRequestOverview(message)) {
     const windowId = sender.tab?.windowId;
 
-    // Called before anything is awaited, because opening the panel is only allowed
-    // inside the user gesture that produced this message and the first await spends it.
-    // The request is written after, and the nudge below is what covers a panel that
-    // mounts before the write lands (docs/features/injected-button.md).
+    // Before any await: docs/features/injected-button.md, "Three documents, one conversation".
     const opening = windowId === undefined ? Promise.resolve() : chrome.sidePanel.open({ windowId }).catch(() => undefined);
 
     void (async () => {
       await chrome.storage.session.set({ [PENDING_REQUEST]: message.videoUrl });
-      // A panel that was already open is not opened again and would otherwise wait until
-      // its next mount to notice the request.
+      // A panel already open is not opened again, and would otherwise wait for its next mount.
       void chrome.runtime.sendMessage(message).catch(() => undefined);
       await opening;
       sendResponse({ opened: windowId !== undefined });

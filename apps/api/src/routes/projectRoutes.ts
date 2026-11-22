@@ -25,8 +25,7 @@ import { tombstoneProjectMembers } from "../records/tombstoneProjectMembers.js";
 const Params = z.object({ id: ProjectId });
 const MemberParams = z.object({ projectId: ProjectId, overviewId: OverviewId });
 const Patch = ProjectPatch.extend({ updatedAt: UpdatedAt });
-// The reader's add, or the device filing a new overview it made (docs/features/projects.md,
-// "Filing as an overview is made"). Never an assistant's, which only the connector marks.
+// The filing variant: docs/features/projects.md, "Filing as an overview is made".
 const MemberChange = z.union([
   z
     .object({
@@ -43,8 +42,7 @@ const MemberChange = z.union([
 
 const isLive = (record: StoredRecord | null): boolean => record !== null && !record.deleted;
 
-// A reader's own writes. What an assistant does goes through the connector, which marks it
-// as the assistant's (docs/features/projects.md).
+// An assistant's writes go through the connector instead: docs/features/projects.md, "Over MCP".
 export const projectRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.post("/projects", async (request, reply) => {
     const { schemaVersion, updatedAt, body } = parseOrThrow(StoredRecordBody, request.body, "The project");
@@ -96,8 +94,7 @@ export const projectRoutes = (app: FastifyInstance, records: RecordsRepository):
     return sendWritten(reply, project);
   });
 
-  // An overview can only be added to a project that is there, and never for an overview that is
-  // gone. One for an overview not pushed yet is allowed, since it may still be on its way.
+  // A member of an overview not pushed yet is allowed, since it may still be on its way.
   app.put("/projects/:projectId/members/:overviewId", async (request, reply) => {
     const { projectId, overviewId } = parseOrThrow(MemberParams, request.params, "The project member");
     const { updatedAt, ...change } = parseOrThrow(MemberChange, request.body, "The project member change");

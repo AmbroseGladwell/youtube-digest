@@ -28,9 +28,7 @@ export const seedLibrary = async (account: TestAccount, library: SampleLibrary):
   }
 };
 
-// An assistant connected to the reader's account the way Claude connects, talking to /mcp
-// with the access token it was given; asking for the read scope alone connects as every
-// connection from before the write scope did (docs/features/mcp-connector.md).
+// Scope "overviews:read" alone connects as every connection from before the write scope did.
 export const connectMcpClient = async (testApp: TestApp, account: TestAccount, scope?: string): Promise<McpClient> => {
   const assistant = await makeConnectingAssistant(testApp);
   const tokens = await assistant.connect(account, scope === undefined ? {} : { scope });

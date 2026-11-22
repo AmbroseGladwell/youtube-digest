@@ -7,8 +7,7 @@ const REFUSAL = JSON.stringify({
   },
 });
 
-// Answers Claude's enforced-schema request the way Claude did on OV-246, without sending it,
-// so a comparison measures the overviews the schema-in-prompt fallback writes.
+// Refused as Claude did on OV-246, so a run measures what the schema-in-prompt fallback writes.
 const urlOf = (input: string | URL | Request): string => {
   if (typeof input === "string") {
     return input;

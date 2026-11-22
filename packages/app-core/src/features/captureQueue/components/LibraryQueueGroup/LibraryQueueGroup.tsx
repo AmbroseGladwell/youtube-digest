@@ -13,8 +13,6 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 const GROUP_ID = "library-queue-group";
 const SHOWN_WAITING = 2;
 
-// Design 27i: pending videos together in a recessed group above the finished tiles, showing
-// what is being made and the next two. Folded, it lives in the strip instead (27i-2).
 export const LibraryQueueGroup = () => {
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();

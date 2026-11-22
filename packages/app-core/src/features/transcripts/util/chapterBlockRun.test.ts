@@ -26,8 +26,6 @@ describe("chapterBlockRun", () => {
     expect(chapterBlockRun(BLOCKS, { startMs: 0, endMs: 30_000 })).toEqual({ from: 0, to: 1 });
   });
 
-  // A chapter's last words run on into a block the next chapter also starts in, so both
-  // runs hold it. One chapter is marked at a time, so the overlap is never drawn.
   it("keeps a block the chapter ends part-way through", () => {
     expect(chapterBlockRun(BLOCKS, { startMs: 0, endMs: 35_000 })).toEqual({ from: 0, to: 2 });
     expect(chapterBlockRun(BLOCKS, { startMs: 35_000, endMs: 55_000 })).toEqual({ from: 2, to: 3 });

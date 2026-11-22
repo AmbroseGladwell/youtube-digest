@@ -21,9 +21,7 @@ const datesAgree = (a: string | null, b: string | null): boolean =>
 const lengthsAgree = (a: number | null, b: number | null): boolean =>
   a === null || b === null || Math.abs(a - b) <= Math.max(60, 0.02 * Math.max(a, b));
 
-// The same episode named from two places: the same title, and nothing known that disagrees.
-// A show that reruns an episode under its old title is told apart by the date
-// (docs/features/podcast-links.md, "Matching an episode").
+// Why a rerun is told apart by date: docs/features/podcast-links.md, "Matching an episode".
 export const sameEpisode = (wanted: EpisodeFacts, candidate: EpisodeFacts): boolean => {
   if (wanted.title === null || candidate.title === null) {
     return false;

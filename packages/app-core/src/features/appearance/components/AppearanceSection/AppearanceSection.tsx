@@ -41,8 +41,7 @@ const layoutSize = (isPanel: boolean, isPhone: boolean): string => {
   return isPhone ? "phone" : "wide";
 };
 
-// Native radios under the paint, so arrow keys move the choice and it applies as they move
-// (design 135d).
+// Native radios under the paint, so arrow keys move the choice and it applies as they move.
 export const AppearanceSection = () => {
   const saved = useAppearance();
   const updateSettings = useUpdateSettingsMutation();
@@ -80,7 +79,6 @@ export const AppearanceSection = () => {
     choose({ accentColour }, `Accent colour: ${ACCENT_COLOUR_NAMES[accentColour]}.`);
   };
 
-  // Design 151n: the same setting clicking the image writes, given a name and a way back.
   const chooseHeadImageSize = (size: HeadImageSize) => {
     analytics.settings.appearance.headImageChosen({ size });
     headImage.choose(size);

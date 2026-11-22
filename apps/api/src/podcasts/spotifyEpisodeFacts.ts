@@ -9,7 +9,6 @@ export interface SpotifyEpisodeFacts extends EpisodeFacts {
 const SHOW_IN_DESCRIPTION = /^Listen to this episode from (.+?) on Spotify\./;
 const SHOW_IN_OG_DESCRIPTION = /^(.+?) · Episode$/;
 
-// What a Spotify episode's page tells any link preview: no API key, no account.
 export const spotifyEpisodeFacts = ({ meta }: PageMeta): SpotifyEpisodeFacts | null => {
   const title = meta.get("og:title");
   if (title === undefined || title === "") {

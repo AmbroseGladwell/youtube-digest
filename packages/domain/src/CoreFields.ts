@@ -8,8 +8,7 @@ export const KeyPoint = z.object({
 });
 export type KeyPoint = z.infer<typeof KeyPoint>;
 
-// A long source's note can need ten; past that a list read aloud stops explaining and starts
-// listing (docs/features/overview-generation-decisions.md, "One note budget").
+// More, and a list read aloud just lists: docs/features/overview-generation-decisions.md, "One note budget".
 export const MOST_KEY_POINTS = 10;
 
 export const IN_ONE_LINE_TARGET_WORDS = 25;

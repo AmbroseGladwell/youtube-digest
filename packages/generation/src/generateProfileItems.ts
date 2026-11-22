@@ -44,8 +44,7 @@ const sourceOf = (indices: readonly number[], overviews: ProfilePassInput["overv
   return topic === undefined ? `From ${indices.length} overviews` : `From ${indices.length} overviews on ${topic.toLowerCase()}`;
 };
 
-// The model says what and which overviews; code counts them, drops what can't stand and writes
-// the source line (docs/prototype/constraints.md, docs/features/personalisation.md).
+// docs/prototype/constraints.md, "Never let a model count, measure or time anything".
 export const generateProfileItems = async (client: GenerationClient, input: ProfilePassInput): Promise<ProfilePassItem[]> => {
   const raw = await client({
     systemPrompt: SYSTEM_PROMPT,

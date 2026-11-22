@@ -38,11 +38,9 @@ export interface GeneratedArticleOutput {
     similarToIndices: number[];
   };
   selling?: unknown;
-  // Absent when the reader has switched the steps off.
   sourceSteps?: Array<{ text: string; dubious: boolean; dubiousReason: string }>;
   howToApply?: unknown;
   readAnyway?: { answer: string; reason: string; leftOut: string; chapterIndexes: number[] };
-  // Absent when the page links to nothing.
   resources?: Array<{ link: number; why: string }>;
   followUpQuestions: string[];
   readerQuestions: string[];

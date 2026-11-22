@@ -3,8 +3,6 @@ import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { useSettingsQuery } from "./queries/settingsQuery.js";
 
-// Whether any key can run the profile pass. Where none can, learning hides itself rather than
-// showing a switch that can't work (design 141l).
 export const useCanLearn = (): boolean => {
   const { hasChosenKey, ourKeyUsable } = useGenerationReadiness();
   const { connection } = useSyncConnection();

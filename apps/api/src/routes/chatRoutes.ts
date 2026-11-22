@@ -25,8 +25,8 @@ import type { RecordsRepository } from "../records/RecordsRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 
 const Params = z.object({ overviewId: OverviewId, conversationId: z.uuid() });
-// Any chat by its whole id, whatever owns it: an overview, a project or the library (OV-353).
-const RecordParams = z.object({
+const THE_CONVERSATION = "The conversation";
+const AnyChatIdParams = z.object({
   id: z.string().refine((id) => chatOwnerOfId(id) !== null && z.uuid().safeParse(chatConversationId(id)).success, "not a chat's id"),
 });
 const OverviewParams = z.object({ overviewId: OverviewId });
@@ -48,8 +48,7 @@ export interface ChatRoutesOptions {
   clock: () => Date;
 }
 
-// The reader asks, and the answer streams back as server-sent events; the server writes the
-// conversation, and the reader can only delete one (docs/features/chats.md).
+// Why the server writes the conversation: docs/features/chats.md, "The server writes it".
 export const chatRoutes = (app: FastifyInstance, { records, answerer, libraryAnswerer, usage, sql, clock }: ChatRoutesOptions): void => {
   const streamed = async (reply: FastifyReply, start: () => Promise<AsyncIterable<ChatStreamEvent>>) => {
     try {
@@ -67,7 +66,6 @@ export const chatRoutes = (app: FastifyInstance, { records, answerer, libraryAns
     }
   };
 
-  // A chat over the whole library, or on a project's page: answered in sections (OV-353).
   const askOver = async (owner: LibraryChatOwner, request: FastifyRequest, reply: FastifyReply) => {
     const question = parseOrThrow(LibraryQuestion, request.body, "The question");
     if (libraryAnswerer === null) {
@@ -124,13 +122,13 @@ export const chatRoutes = (app: FastifyInstance, { records, answerer, libraryAns
 
   // Clients up to 25 delete an overview's chat by its parts.
   app.delete("/chats/:overviewId/:conversationId", async (request, reply) => {
-    const { overviewId, conversationId } = parseOrThrow(Params, request.params, "The conversation");
+    const { overviewId, conversationId } = parseOrThrow(Params, request.params, THE_CONVERSATION);
     bindLogContext(request, reply, { overviewId });
     return deleteChat(chatRecordId(overviewId, conversationId), request, reply);
   });
 
   app.delete("/chat-records/:id", async (request, reply) => {
-    const { id } = parseOrThrow(RecordParams, request.params, "The conversation");
+    const { id } = parseOrThrow(AnyChatIdParams, request.params, THE_CONVERSATION);
     const owner = chatOwnerOfId(id);
     if (owner?.kind === "overview") {
       bindLogContext(request, reply, { overviewId: owner.id });

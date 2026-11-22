@@ -9,13 +9,11 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
 export interface UsageLineProps {
   testIds: UsageLineTestIds;
-  // The extension panel's capture screen, where the line drops the Plan link unless it has a
-  // plan to mention (designs 95c, 95m).
+  // The panel's capture screen, which drops the Plan link unless it has a plan to mention.
   narrow?: boolean;
   onPlanFollowed?: () => void;
 }
 
-// What's left of the quota the next overview will use, in words (designs 95b, 95c and 95m).
 export const UsageLine = ({ testIds, narrow = false, onPlanFollowed }: UsageLineProps) => {
   const next = useNextQuota();
   const plan = useOverviewUsageQuery().data?.plan ?? null;

@@ -4,8 +4,7 @@ const ACCENT_COLOUR = "overview/accent-colour";
 
 const isAccentColour = (value: unknown): value is AccentColour => ACCENT_COLOURS.some((accentColour) => accentColour === value);
 
-// The worker and the content script have no localStorage of the extension's to read, so the
-// pages tell them (docs/features/appearance.md, "The logo").
+// The worker and content script can't read the pages' localStorage: docs/features/appearance.md, "The logo".
 export const writeAccentColour = (accentColour: AccentColour): Promise<void> =>
   chrome.storage.local.set({ [ACCENT_COLOUR]: accentColour }).catch(() => undefined);
 

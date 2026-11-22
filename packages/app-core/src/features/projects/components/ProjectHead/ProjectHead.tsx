@@ -22,7 +22,7 @@ export interface ProjectHeadProps {
   summary: ProjectSummary;
   now: Date;
   assistantConnected: boolean;
-  // Signed in, so the Ask page can answer over the project (OV-354, page 3).
+  // Signed in, so the Ask page can answer over the project.
   askable?: boolean;
   nudged: boolean;
   onRename: (name: string) => void;
@@ -32,9 +32,8 @@ export interface ProjectHeadProps {
   onKeep: () => void;
   onDelete: () => void;
   onCopied: () => void;
-  // "4 overviews might fit", which opens them under the head ("OV-318 2" 318g).
   suggestionsLine?: { count: number; open: boolean; controls: string; onToggle: () => void } | null;
-  // Bumped to open What it's for from outside the head, as the suggestions' nudge does.
+  // Bumped to open What it's for from outside the head.
   purposeAsked?: number;
 }
 
@@ -42,9 +41,6 @@ const SPREAD: Novelty[] = ["original", "fresh_angle", "common_knowledge"];
 
 const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-// The top of a project's page: what it's for on the stone tint (1rem, 0.8rem on a phone),
-// counts from code, the verdict spread, then Copy as Markdown and ⋯
-// ("OV-168 2 The Project Page" 168f–168l, 168p, 168bd–168bf).
 export const ProjectHead = ({
   summary,
   now,

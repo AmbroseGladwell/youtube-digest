@@ -10,8 +10,6 @@ const DAY_MS = 86_400_000;
 
 const startOfDay = (when: Date) => new Date(when.getFullYear(), when.getMonth(), when.getDate()).getTime();
 
-// OV-354, page 3: the drawer's history, newest first, grouped Today, Yesterday, Previous 7 days and
-// Earlier by when each conversation was last asked in.
 export const askHistoryGroups = (chats: readonly Chat[], now: Date): AskHistoryGroup[] => {
   const today = startOfDay(now);
   const labelOf = (chat: Chat) => {

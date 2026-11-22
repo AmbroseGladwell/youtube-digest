@@ -12,9 +12,7 @@ export interface SteppedLibraryView {
   stepOn: (overviewId: string) => LibraryViewState;
 }
 
-// Carried in history state from the list to the reader, so Previous and Next walk the list
-// the reader opened it from, with every overview already passed kept in it
-// (docs/features/library-view.md, "The reader steps through it").
+// Why it rides in history state: docs/features/library-view.md, "The reader steps through it".
 export const libraryViewState = (searchParams: URLSearchParams, kept: Iterable<string> = []): LibraryViewState => {
   return { libraryView: searchParams.toString(), kept: [...new Set(kept)] };
 };

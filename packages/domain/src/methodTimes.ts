@@ -229,10 +229,7 @@ const isCommand = (words: readonly Word[], at: number): boolean => {
   return true;
 };
 
-// The verb a timer waits on: the nearest cooking verb before the time in its sentence, said as a command
-// ("…and rest it for 5 minutes"), else the nearest in any form ("until cooked, about 15
-// minutes"), from a short list held here (design 284g). A list misses some; the timer is then
-// named by its step instead.
+// The nearest cooking verb before the time, from a short list (design 284g); else null.
 export const timerName = (before: string): string | null => {
   const words = wordsBefore(before.replace(SENTENCE_START, ""));
   for (let at = words.length - 1; at >= 0; at -= 1) {
@@ -249,10 +246,7 @@ export const timerName = (before: string): string | null => {
   return null;
 };
 
-// The times an action gives, each as its span in the text and its length in seconds, and a
-// range as both its ends (owner, 12 Nov 2026). Code reads them, never a model
-// (docs/prototype/constraints.md). A time that isn't a wait ("within 30 minutes", "every 5
-// minutes") and anything over a day are left alone.
+// Code reads them, never a model; non-waits and over-a-day times are skipped (docs/prototype/constraints.md).
 export const methodTimes = (text: string): MethodTime[] => {
   const times: MethodTime[] = [];
   let from = 0;

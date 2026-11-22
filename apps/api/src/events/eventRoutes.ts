@@ -19,9 +19,7 @@ export interface EventRoutesOptions {
   clock: () => Date;
 }
 
-// Signed in, under the session's account unless it turned sharing off; or with no account,
-// only when the batch carries the anonymous id the reader agreed to keep
-// (docs/features/analytics-consent.md).
+// Who may send events: docs/features/analytics-consent.md, "Three tiers".
 export const eventRoutes = (app: FastifyInstance, { sink, records, clock }: EventRoutesOptions): void => {
   const optedOut = async (accountId: AccountId): Promise<boolean> => {
     const settings = await records.read(accountId, "settings", SETTINGS_RECORD_ID);

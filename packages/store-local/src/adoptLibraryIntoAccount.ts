@@ -15,11 +15,7 @@ interface StoreContents {
   values: unknown[];
 }
 
-// An install signed in before accounts had libraries of their own keeps everything it held,
-// unsent writes and sync bookkeeping included, under that account; the no-account library
-// starts empty. Copied in one transaction and then cleared in another, so a run that stops
-// is finished by running it again: a second copy over the first writes the same keys, and a
-// copy from the cleared library writes nothing (docs/features/account-libraries.md).
+// docs/features/account-libraries.md, "Installs already signed in".
 export const adoptLibraryIntoAccount = async ({ accountId, indexedDB }: AdoptLibraryIntoAccountOptions): Promise<void> => {
   const from = await openLocalDatabase({ name: DATABASE_NAME, ...(indexedDB === undefined ? {} : { indexedDB }) });
   const into = await openLocalDatabase({

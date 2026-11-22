@@ -21,8 +21,6 @@ describe("elapsedLabel", () => {
     expect(after(671)).toBe("11:11");
   });
 
-  // A run started before the page's clock was set, or on another machine's clock, must
-  // not print a negative time on the pill.
   it("never counts backwards from a start in the future", () => {
     expect(elapsedLabel(START, START - 5000)).toBe("0:00");
   });

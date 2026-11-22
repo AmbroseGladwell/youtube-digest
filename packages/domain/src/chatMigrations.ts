@@ -76,20 +76,20 @@ const sectionsAsLists = (record: unknown): unknown => {
   };
 };
 
-// 2: a citation of the overview's own items (OV-319), which a client before it can't read.
-// 3: a citation of another of the reader's overviews (OV-355), likewise.
-// 4: a chat owned by a project or by no one, the library, and sectioned answers (OV-353).
-// 5: a citation of a minute of another overview's source (OV-352).
-// 6: sectioned answers as paragraphs and lists with sources by how they relate, and Search my
-//    library off (OV-354); an answer of points becomes bullets, each point's sources "Supports".
-// 7: a list item with its own sources (OV-362); an item before it cites nothing of its own.
+const allowOverviewItemCitations: RecordMigration = { newSchemaVersion: 2 };
+const allowOtherOverviewCitations: RecordMigration = { newSchemaVersion: 3 };
+const allowProjectAndLibraryChatsWithSections: RecordMigration = { newSchemaVersion: 4 };
+const allowSourceMinuteCitations: RecordMigration = { newSchemaVersion: 5 };
+const turnPointsIntoParagraphsAndLists: RecordMigration = { newSchemaVersion: 6, alterRecord: sectionsAsLists };
+const giveListItemsTheirOwnSources: RecordMigration = { newSchemaVersion: 7, alterRecord: listItemsWithSources };
+
 export const CHAT_MIGRATIONS: readonly RecordMigration[] = [
-  { newSchemaVersion: 2 },
-  { newSchemaVersion: 3 },
-  { newSchemaVersion: 4 },
-  { newSchemaVersion: 5 },
-  { newSchemaVersion: 6, alterRecord: sectionsAsLists },
-  { newSchemaVersion: 7, alterRecord: listItemsWithSources },
+  allowOverviewItemCitations,
+  allowOtherOverviewCitations,
+  allowProjectAndLibraryChatsWithSections,
+  allowSourceMinuteCitations,
+  turnPointsIntoParagraphsAndLists,
+  giveListItemsTheirOwnSources,
 ];
 
 export const CURRENT_CHAT_SCHEMA_VERSION = currentSchemaVersion(CHAT_MIGRATIONS);

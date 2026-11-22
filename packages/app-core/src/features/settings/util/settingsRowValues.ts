@@ -52,10 +52,7 @@ export const voiceRowValue = (voice: NarrationVoice): string => {
   return `${narrationVoiceName(voice)} · ${ACCENT_GROUP_LABELS[narrationAccent(voice)]}`;
 };
 
-// Design 110j: the model's name already says who made it, so the row spends its second
-// half on how many keys this device holds rather than repeating the provider. The state
-// where the choice arrived by sync and the key did not is said in words, because a count
-// cannot say it (design 110g).
+// A synced choice whose key isn't on this device is said in words, because a count can't say it.
 export const keysRowValue = (apiKeys: ApiKeys, provider: Provider, models: ModelByProvider): string => {
   const held = providersWithKeys(apiKeys);
   if (held.length === 0) {
@@ -69,8 +66,6 @@ export const keysRowValue = (apiKeys: ApiKeys, provider: Provider, models: Model
   return held.length === 1 ? `${name} · 1 key` : `${name} · ${held.length} keys`;
 };
 
-// "3 shared" or "None": the row says how many links are live without opening the section
-// (docs/features/sharing.md).
 export const sharedLinksRowValue = (count: number): string => {
   if (count === 0) {
     return "None";
@@ -93,8 +88,6 @@ const sectionsText = (on: number): string => {
   return on === 0 ? "Summary and key points only" : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
 };
 
-// Design 141m: the first section, what was learned, then sections. With learning off the row
-// says so in place of the sections.
 export const personalisationRowValue = (
   sectionsEnabled: SectionsEnabled,
   aboutYou: AboutYou,
@@ -122,7 +115,5 @@ export const aboutRowValue = (build: AppBuild): string => {
   return `Version ${build.version}`;
 };
 
-// Design 95d: the plan, then what's left of the quota the next overview will use; then, once some
-// were used this month, the transcribing left (design 305o).
 export const planRowValue = (plan: string, count: string | null, transcribingLeft: string | null = null): string =>
   [plan, count, transcribingLeft === null ? null : `${transcribingLeft} transcribing`].filter((part) => part !== null).join(" · ");

@@ -3,8 +3,7 @@ const SAMPLES = 800;
 
 let cached: string | null = null;
 
-// A tenth of a second of 8-bit silence, for starting the audio element inside a tap
-// (PlayerEngine's unlock). Built rather than inlined so the header's arithmetic is visible.
+// Why a silent start inside the tap: docs/features/audio-player.md, "iOS and the lock screen".
 export const silentWavDataUri = (): string => {
   if (cached !== null) {
     return cached;

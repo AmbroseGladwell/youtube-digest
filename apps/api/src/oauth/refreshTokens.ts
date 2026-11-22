@@ -21,8 +21,7 @@ export interface RefreshTokensOptions {
   now: Date;
 }
 
-// Refresh tokens rotate: each is spent once, and presenting a spent one means it was copied,
-// so the whole connection goes (OAuth 2.1 §4.3.1; docs/features/mcp-connector.md).
+// A spent refresh token presented again revokes the connection: docs/features/mcp-connector.md, "Tokens".
 export const refreshTokens = async (sql: SqlClient, { client, refreshToken, now }: RefreshTokensOptions): Promise<TokenGrant> => {
   return sql.transaction(async (tx) => {
     const tokenHash = hashToken(refreshToken);

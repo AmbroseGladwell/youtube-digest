@@ -14,7 +14,6 @@ export const playlistEntry = (videoId: string, title: string, addedAt: string, o
   ...overrides,
 });
 
-// The fixture video, added first, and a second one added a day later.
 export const psychologyPlaylist = (
   entries: PlaylistEntry[] = [
     playlistEntry(IWFT_VIDEO_ID, "The Simulated Video", "2026-09-01T09:00:00.000Z"),

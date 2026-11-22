@@ -7,14 +7,10 @@ import { scrollToRestingLine } from "./scrollToRestingLine.js";
 import { transcriptRestingLine } from "./transcriptRestingLine.js";
 
 export interface ReadingPosition {
-  // The block about to be scrolled back to, or -1: nothing remembered, the top, or a
-  // chapter asked for somewhere else.
   restoredBlockIndex: number;
   restoredRow: RefCallback<HTMLElement>;
   rows: RefCallback<HTMLElement>;
-  // Off while the transcript follows the video: a position the player chose is not one
-  // to come back to, and turning it off forgets the one held
-  // (docs/features/reading-position.md).
+  // Off while following: docs/features/reading-position.md, "Restoring, and the follow".
   setRemembering: (remembering: boolean) => void;
 }
 
@@ -56,8 +52,7 @@ export const useReadingPosition = (
     [videoId, accountId],
   );
 
-  // One measurement per frame at most, off the rows' own boxes; nothing here estimates
-  // where the reader is from the scroll offset.
+  // At most one measurement a frame, off the rows' own boxes, never estimated from the scroll offset.
   useEffect(() => {
     if (videoId === null) {
       return;
@@ -104,14 +99,12 @@ interface RestingRow {
   startMs: number;
 }
 
-// The line a block is put back on is the line one is read off, so a restore does not then
-// remember a different block than the one it restored. The block you are on is the first
-// one to start at the line rather than the nearest to it: a block still half behind the
-// head is not the one being read. A pixel of tolerance, because the scroll that put it
-// there lands on whole device pixels.
+const WHOLE_DEVICE_PIXEL_TOLERANCE = 1;
+
+// The first row to start at the line, not the nearest: one half behind the head isn't being read.
 const rowAtRestingLine = (container: HTMLElement, line: number): RestingRow | null => {
   const rows = Array.from(container.children);
-  const found = rows.findIndex((child) => child.getBoundingClientRect().top >= line - 1);
+  const found = rows.findIndex((child) => child.getBoundingClientRect().top >= line - WHOLE_DEVICE_PIXEL_TOLERANCE);
   const index = found === -1 ? rows.length - 1 : found;
   const row = rows[index];
   return row === undefined ? null : { index, startMs: Number((row as HTMLElement).dataset.startMs) };

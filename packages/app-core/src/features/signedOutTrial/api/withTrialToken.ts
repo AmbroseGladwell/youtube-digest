@@ -4,9 +4,6 @@ import { currentSignedOutTrial, forgetTrialToken, rememberTrialToken } from "../
 const isUnknownTrial = (error: unknown): boolean =>
   isSyncRequestError(error) && error.code === "unauthenticated" && error.details?.trial === "unknown";
 
-// Signed out, a call made on this device's trial: its token is asked for before the first such
-// call and kept, and asked for again when the server no longer knows it
-// (docs/architecture/tiers.md, "Counting").
 export const withTrialToken = async <T>(
   options: Omit<ApiRequesterOptions, "token" | "trialToken">,
   call: (trialToken: string) => Promise<T>,

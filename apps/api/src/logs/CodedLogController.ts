@@ -2,9 +2,7 @@ import { LogController } from "fastify";
 import type { FastifyBaseLogger, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { apiLogLines } from "@overview/domain";
 
-// Fastify writes a dozen lines of its own, several of them named by an error's message.
-// Every one is replaced here by a line from the catalogue, so nothing reaches PostHog
-// without a code (docs/architecture/errors-and-logs.md, "Logging codes").
+// Why every Fastify line is replaced: docs/architecture/errors-and-logs.md, "Logging codes".
 export class CodedLogController extends LogController {
   incomingRequest(request: FastifyRequest): void {
     if (this.isLogDisabled(request)) {
@@ -43,8 +41,7 @@ export class CodedLogController extends LogController {
     }
   }
 
-  // Never the path: it can hold a share token or a video id
-  // (docs/architecture/errors-and-logs.md, "What a log line may carry").
+  // Never the path: docs/architecture/errors-and-logs.md, "What a log line may carry".
   routeNotFound(request: FastifyRequest, reply: FastifyReply): void {
     if (this.isLogDisabled(request)) {
       return;

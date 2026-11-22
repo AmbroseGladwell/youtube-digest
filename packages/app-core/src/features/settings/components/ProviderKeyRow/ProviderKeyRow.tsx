@@ -13,9 +13,7 @@ export interface ProviderKeyRowProps {
   stored: StoredKey;
   inUse: boolean;
   models: ModelByProvider;
-  // Where generation goes if this key is the one in use and it is removed. Null when this
-  // device holds no other key, in which case the choice is left alone: another device may
-  // still hold it (design 110i).
+  // Null with no other key here: the choice is then left alone, as another device may still hold it.
   movesTo: Provider | null;
   onRemove: () => void;
   onChooseModel: () => void;
@@ -29,8 +27,6 @@ const addedOn = (stored: StoredKey): string => {
   return `Key ending ${keyEnding(stored)} · added ${added}`;
 };
 
-// One provider the reader has a key for: what it is, that it is the one in use, what the
-// key ends in, and the model it remembers (design 110c).
 export const ProviderKeyRow = ({ provider, stored, inUse, models, movesTo, onRemove, onChooseModel }: ProviderKeyRowProps) => {
   const [confirming, setConfirming] = useState(false);
   const here = deviceWord(useSurface(), useIsPhone());

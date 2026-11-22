@@ -99,7 +99,6 @@ export const ARTICLE_SOURCE: WebSource = {
   wordCount: 2300,
 };
 
-// An article's overview: key points from two chapters, and Read it anyway? saying no.
 export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
     source: ARTICLE_SOURCE,

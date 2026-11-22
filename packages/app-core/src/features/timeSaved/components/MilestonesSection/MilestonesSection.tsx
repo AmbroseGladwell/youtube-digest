@@ -27,7 +27,6 @@ const tileName = (tile: MilestoneTile, now: Date): string => {
     : `${tile.milestone.label}, reached ${formatReachedOn(tile.reachedAt, now)}`;
 };
 
-// Design 34aj and 34ak (docs/features/time-saved.md, "Settings › Milestones").
 export const MilestonesSection = () => {
   const overviews = useOverviewsWithStateQuery();
   const { minutes } = timeSavedSummary(readableEntries(overviews.data ?? []));

@@ -6,8 +6,7 @@ import { projectOverviews } from "./projectOverviews.js";
 import { readLibrary } from "./readLibrary.js";
 import { isProject, resolveProject } from "./resolveProject.js";
 
-// How to apply has at most three steps, so a page is at most 75 of them beside the listing
-// (docs/features/projects.md, "get_project").
+// Why 25: docs/features/mcp-connector.md, "The context budget".
 export const PROJECT_PAGE_SIZE = 25;
 
 export const getProject = mcpTool({

@@ -1,6 +1,6 @@
 import type { SqlClient } from "../db/SqlClient.js";
 
-// Deleting the connection takes every token it issued with it, so revoking is immediate.
+// Its tokens cascade, so revoking is immediate: docs/features/mcp-connector.md, "Tokens".
 export const deleteConnection = async (sql: SqlClient, id: string): Promise<void> => {
   await sql.query("delete from connections where id = $1", [id]);
 };

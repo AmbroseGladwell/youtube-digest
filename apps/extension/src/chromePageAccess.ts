@@ -8,8 +8,7 @@ export const pagePermission = (pageUrl: string): string | null => {
   }
 };
 
-// One site at a time, as chromeProviderPermissions asks for one provider. request() must be
-// called from a user gesture or Chrome refuses it (docs/features/article-extraction.md).
+// request() must be called from a user gesture or Chrome refuses it.
 export const chromePageAccess = {
   granted: async (pageUrl: string): Promise<boolean> => {
     const origin = pagePermission(pageUrl);

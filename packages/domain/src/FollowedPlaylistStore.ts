@@ -1,9 +1,7 @@
 import type { PlaylistId, VideoId } from "./Brands.js";
 import type { FollowedPlaylist } from "./FollowedPlaylist.js";
 
-// What this device has already seen of a followed playlist, so a reordered playlist does not
-// queue its old entries again. Never synced: each device checks for itself
-// (docs/features/playlists.md, "New entries").
+// Never synced, so each device checks for itself: docs/features/playlists.md, "New entries".
 export interface PlaylistCheck {
   playlistId: PlaylistId;
   seenVideoIds: VideoId[];

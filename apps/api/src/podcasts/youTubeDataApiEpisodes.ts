@@ -66,8 +66,7 @@ interface Channel {
 
 export interface YouTubeEpisodeSearch {
   found: EpisodeOnYouTube | null;
-  // What the search cost in the Data API's daily quota, search.list counted apart since it has
-  // its own, smaller allowance.
+  // search.list is counted apart, as it has its own, smaller allowance.
   units: number;
   searches: number;
 }
@@ -99,12 +98,7 @@ export interface YouTubeDataApiEpisodesOptions {
   now?: () => Date;
 }
 
-// The same episode on YouTube, found through the YouTube Data API on our key with one search: a
-// video search for its title, the episode among the results by its title, length and date on any
-// channel, then the show's own channel among the results, its uploads, and the episode there by
-// its title and length or, retitled, its description and date: the rules the extension's search
-// uses. Only its captions are read any other way, as no API offers them
-// (docs/features/podcast-on-youtube.md, "Our server's search"; OV-294, OV-304).
+// The steps and their quota: docs/features/podcast-on-youtube.md, "Our server's search".
 export const youTubeDataApiEpisodes = ({
   apiKey,
   youTubeFetch,
@@ -253,7 +247,6 @@ export const youTubeDataApiEpisodes = ({
       return found(best.upload, showChannel.channel.title, "description");
     },
 
-    // Whether one video is the episode, by the same rules, from its own details: one unit.
     async confirm(episode, videoId) {
       const [upload] = await videos([videoId]);
       if (upload === undefined) {

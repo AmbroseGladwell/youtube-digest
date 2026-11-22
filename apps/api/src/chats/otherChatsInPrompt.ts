@@ -1,7 +1,6 @@
 import type { Chat, ChatCitation } from "@overview/domain";
 
-// About 6,000 tokens, counted in characters by code: enough for a few whole conversations,
-// and a bound on what every question costs however much the reader has chatted.
+// About 6,000 tokens: a bound on what each question costs however much the reader has chatted.
 export const OTHER_CHATS_BUDGET_CHARACTERS = 24_000;
 
 export interface OtherChatsInPrompt {
@@ -14,9 +13,7 @@ export interface OtherChatsInPrompt {
   messages: number;
 }
 
-// The overview's other conversations, newest messages kept first until the budget is spent,
-// then laid out oldest first. Each message has an id the model can cite, which code turns
-// back into the chat and the message's place in it (docs/features/chats.md).
+// Why newest kept first: docs/features/chats.md, "Several chats, and one using another".
 export const otherChatsInPrompt = (others: readonly Chat[], budget = OTHER_CHATS_BUDGET_CHARACTERS): OtherChatsInPrompt => {
   const chats = [...others].sort((left, right) => left.startedAt.localeCompare(right.startedAt));
   const all = chats.flatMap((chat, chatIndex) => chat.messages.map((message, index) => ({ chatIndex, index, message })));

@@ -1,13 +1,12 @@
-// How a sign-out's last sync left things: what it couldn't send, what the server had
-// refused, whether the device was offline, and whether the sync was given up on.
 export interface SignOutOutcome {
   pending: number;
+  // Writes the server refused, which nothing will send again.
   stuck: number;
   offline: boolean;
   timedOut: boolean;
 }
 
 export interface SignOutOptions {
-  // Run with the session still alive, so what is recorded here can still be sent.
+  // Runs with the session still alive, so what it records can still be sent.
   beforeEndingSession?: (outcome: SignOutOutcome) => Promise<void>;
 }

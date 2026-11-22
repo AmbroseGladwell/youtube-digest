@@ -4,7 +4,6 @@ import { artworkFit, markBox } from "./storeAssets.mjs";
 
 test("the artwork fills the store's 96px and is centred in its 128px square", () => {
   const fit = artworkFit({ canvas: 128, artwork: 96 });
-  // The mark is taller than it is wide, so height is what meets the 96.
   assert.equal(Math.round(fit.height), 96);
   assert.equal(Math.round(fit.top), 16);
   assert.ok(fit.width < fit.height);

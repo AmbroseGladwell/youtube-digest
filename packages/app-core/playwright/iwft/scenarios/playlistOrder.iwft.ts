@@ -3,8 +3,7 @@ import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL, type BackendSimulator } from "../../network/BackendSimulator.testHelper.js";
 import { PSYCHOLOGY_ID, PSYCHOLOGY_URL, playlistEntry, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 
-// Signed in without a key, because events go over the reader's session and nothing should be
-// made while the order is being read (docs/architecture/analytics.md).
+// Signed in, because events go over the reader's session; no key, so nothing is made.
 const SIGNED_IN_WITHOUT_A_KEY = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
@@ -21,8 +20,7 @@ const VIDEOS = [
 const TITLES = VIDEOS.map((video) => video.title);
 const playlist = () => psychologyPlaylist(VIDEOS.map((video) => playlistEntry(video.id, video.title, video.addedAt)));
 
-// Queued in the playlist's own order, which is what following does, with another playlist's
-// video sitting between them to show that reordering one leaves the rest where they are.
+// Another playlist's video sits between them, to show reordering one leaves the rest in place.
 const queued = (index: number, queuedAt: string): QueuedCapture => ({
   videoId: VideoId.parse(VIDEOS[index]!.id),
   url: `https://www.youtube.com/watch?v=${VIDEOS[index]!.id}`,
@@ -70,9 +68,6 @@ const followingIn = (backendSimulator: BackendSimulator, order: PlaylistOrder) =
   });
 };
 
-// The definition of done for OV-206: the reader chooses the order when they follow, changes it
-// afterwards, and what is already waiting follows the change (docs/features/playlists.md, "An
-// order for each playlist").
 test("the preview follows in the reader's default order unless they change it, and the queue waits in the order chosen", async ({
   launcher,
   backendSimulator,

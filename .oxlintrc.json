@@ -22,6 +22,7 @@
     "import/no-cycle": "error",
     "react/jsx-no-useless-fragment": ["error", { "allowExpressions": true }],
     "overview/no-side-effect-ternary": "error",
+    "overview/no-long-comment": "error",
     "overview/no-inline-object-type": "error",
     "max-depth": ["error", 3],
     "max-nested-callbacks": ["error", 3],

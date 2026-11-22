@@ -2,7 +2,6 @@ import { expect } from "@playwright/experimental-ct-react";
 import { articleResourcesTestIds } from "../../src/features/reader/components/ArticleResources/ArticleResourcesTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The resources an article points to, last in its note, on the reader page or a shared copy (OV-203).
 export class ArticleResourcesPageObject extends PageObject {
   private toggle = () => this.get(articleResourcesTestIds.toggle);
 

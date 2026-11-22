@@ -11,10 +11,7 @@ export interface PlanState {
   recheck: () => void;
 }
 
-// The plan is the account's, as the server holds it, so a device with no session is on
-// Free. A signed-in device that has not heard back yet does not know its plan, and says so
-// rather than calling it Free (docs/features/plus-upsell.md). Nothing is gated on it: what
-// it will decide is how many overviews a month the account can make (tiers.md).
+// docs/features/plus-upsell.md, "The plan is the account's, and nothing is gated on it".
 export const usePlan = (): PlanState => {
   const sync = useSync();
   const session = useSessionQuery();

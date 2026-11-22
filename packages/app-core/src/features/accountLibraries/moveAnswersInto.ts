@@ -16,11 +16,7 @@ export interface AnswerStores {
   settingsStore: Pick<SettingsStore, "get" | "update">;
 }
 
-// What onboarding asked before there was an account: its topics, with their descriptions,
-// whether or not an overview is sorted under them yet, and About you, the voice and the
-// appearance. The account's own win; this device's apply only where the account has none.
-// Moved before the overviews, so a topic the move finds by name already carries its
-// description (docs/features/onboarding.md, "Into the account").
+// Why the account's answers win, and go first: docs/features/onboarding.md, "Into the account".
 export const moveAnswersInto = async (from: AnswerStores, into: AnswerStores): Promise<void> => {
   const [leavingTopics, accountTopics, leaving, held] = await Promise.all([
     from.overviewStore.listTopics(),

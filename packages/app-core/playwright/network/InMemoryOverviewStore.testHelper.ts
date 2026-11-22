@@ -12,10 +12,7 @@ import {
   UnreadableRecordError,
 } from "@overview/domain";
 
-// A fresh, browser-safe in-memory OverviewStore for IWFT runs — the conformance suite's
-// own reference implementation (packages/store-conformance) uses node:crypto, which
-// Vite won't bundle for a browser-mounted component, so this is a separate small copy
-// rather than a shared import.
+// Not the conformance suite's store: that uses node:crypto, which Vite won't bundle for the browser.
 export type InMemoryStoreRead = "overviews" | "topics";
 
 export class InMemoryOverviewStore implements OverviewStore {
@@ -124,7 +121,6 @@ export class InMemoryOverviewStore implements OverviewStore {
     }
   }
 
-  // Test-only seeding helpers — not part of the OverviewStore interface.
   failOn(read: InMemoryStoreRead): void {
     this.#failing.add(read);
   }
