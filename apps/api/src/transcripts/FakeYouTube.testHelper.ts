@@ -16,6 +16,7 @@ export interface FakeYouTube {
   requests: FakeYouTubeRequest[];
   answers: { direct: YouTubeAnswer; proxy: YouTubeAnswer };
   sessionsClosed: number;
+  captionsJson3?: string;
 }
 
 const ok = (body: unknown): YouTubeFetchResponse => ({
@@ -51,7 +52,7 @@ export const makeFakeYouTube = (answers: FakeYouTube["answers"] = { direct: "cap
       const videoId = request.body === undefined ? null : ((JSON.parse(request.body) as { videoId?: string }).videoId ?? null);
       fake.requests.push({ route: name, session, url: request.url, videoId });
       if (request.url.includes("timedtext")) {
-        return Promise.resolve(ok(JSON3_WRITTEN));
+        return Promise.resolve(ok(fake.captionsJson3 ?? JSON3_WRITTEN));
       }
       if (request.headers["X-YouTube-Client-Name"] === "WEB") {
         return Promise.resolve(ok(makeMetadataResponse()));

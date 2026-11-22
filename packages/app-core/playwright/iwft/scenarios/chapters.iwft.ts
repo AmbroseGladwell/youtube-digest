@@ -278,5 +278,5 @@ test("a freshly generated overview has chapters timed from its transcript", asyn
 
   await reader.verifyChapterCountReads("2 chapters");
   await reader.verifyChapterTitlesRead(["The greeting", "The claim and how to apply it"]);
-  await reader.verifyChapterRangesRead(["0:00–0:03", "0:03–0:10"]);
+  await reader.verifyChapterRangesRead(["0:00–0:03", "0:03–5:10"]);
 });
