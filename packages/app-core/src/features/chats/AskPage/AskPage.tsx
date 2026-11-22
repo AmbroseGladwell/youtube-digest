@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { MAX_CHAT_QUESTIONS, ProjectId, sourceImage, type ChatMessage, type Overview } from "@overview/domain";
+import { MAX_CHAT_QUESTIONS, ProjectId, sourceImage, type ChatMessage, type ChatUsage, type Overview } from "@overview/domain";
 import { Routes } from "../../../app/Routes.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -37,6 +37,48 @@ const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "ove
 
 // --motion-travel, the drawer's slide in and out.
 const DRAWER_MOTION_MS = 260;
+
+interface WaitFacts {
+  online: boolean;
+  asked: number;
+  refused: ShownWait | null;
+  left: number | null;
+  usage: ChatUsage | null;
+}
+
+const waitOf = ({ online, asked, refused, left, usage }: WaitFacts): ShownWait | null => {
+  if (!online) {
+    return { kind: "offline" };
+  }
+  if (asked >= MAX_CHAT_QUESTIONS) {
+    return { kind: "conversationFull" };
+  }
+  if (refused !== null) {
+    return refused;
+  }
+  return left === 0 && usage !== null ? { kind: "month", resetsOn: usage.resetsOn } : null;
+};
+
+const placeholderOf = (isPhone: boolean, scope: "library" | "project"): string => {
+  if (isPhone) {
+    return "Ask or @ to add sources";
+  }
+  return scope === "project" ? "Ask about this project or @ to add sources" : "Ask your library or @ to add sources";
+};
+
+const drawerMotionOf = (open: boolean, arrives: boolean): "arriving" | "still" | "leaving" => {
+  if (!open) {
+    return "leaving";
+  }
+  return arrives ? "arriving" : "still";
+};
+
+const pickingPhaseOf = (picking: "choosing" | "reading", text: string, sectionCount: number): "choosing" | "reading" | "read" => {
+  if (picking === "choosing") {
+    return "choosing";
+  }
+  return text === "" && sectionCount === 0 ? "reading" : "read";
+};
 
 // OV-354, pages 3 and 4: Ask, a top-level page over the whole library, or one project when opened
 // from it. No header and no close; the top bar is the way back. Empty, the field sits centred under
@@ -110,15 +152,7 @@ export const AskPage = () => {
   const asked = messages.filter((message) => message.from === "reader").length;
   const left = usage === null ? null : Math.max(0, usage.limit - usage.used);
   const refused = state.status === "waiting" && state.wait.kind !== "noSource" ? state.wait : null;
-  const wait: ShownWait | null = !online
-    ? { kind: "offline" }
-    : asked >= MAX_CHAT_QUESTIONS
-      ? { kind: "conversationFull" }
-      : refused !== null
-        ? refused
-        : left === 0 && usage !== null
-          ? { kind: "month", resetsOn: usage.resetsOn }
-          : null;
+  const wait = waitOf({ online, asked, refused, left, usage });
   const empty = messages.length === 0 && pending === null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const starters = empty ? askStarters({ overviews: entries, projects, members, topics }, project) : [];
@@ -197,21 +231,29 @@ export const AskPage = () => {
     }
   };
 
-  const toast =
-    page.deleting !== null ? (
-      <div key={page.deleting.id} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
-        <StrokeIcon name="check" size={17} />
-        Conversation deleted
-        <button type="button" className={styles.undo} onClick={page.undoDelete} data-testid={askPageTestIds.undo}>
-          Undo
-        </button>
-      </div>
-    ) : said !== null ? (
-      <div key={said.key} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
-        <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
-        {said.text}
-      </div>
-    ) : null;
+  const toastFor = (): ReactNode => {
+    if (page.deleting !== null) {
+      return (
+        <div key={page.deleting.id} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
+          <StrokeIcon name="check" size={17} />
+          Conversation deleted
+          <button type="button" className={styles.undo} onClick={page.undoDelete} data-testid={askPageTestIds.undo}>
+            Undo
+          </button>
+        </div>
+      );
+    }
+    if (said !== null) {
+      return (
+        <div key={said.key} className={styles.toast} role="status" data-testid={askPageTestIds.toast}>
+          <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
+          {said.text}
+        </div>
+      );
+    }
+    return null;
+  };
+  const toast = toastFor();
 
   const composer =
     wait !== null ? (
@@ -230,13 +272,7 @@ export const AskPage = () => {
         onRemoveSource={page.removeSource}
         onClear={page.clearSources}
         value={draft}
-        placeholder={
-          isPhone
-            ? "Ask or @ to add sources"
-            : scope === "project"
-              ? "Ask about this project or @ to add sources"
-              : "Ask your library or @ to add sources"
-        }
+        placeholder={placeholderOf(isPhone, scope)}
         answering={answering}
         large={empty}
         onChange={setDraft}
@@ -273,7 +309,7 @@ export const AskPage = () => {
     <main className={styles.root} data-testid={askPageTestIds.root}>
       {(drawerOpen || drawerLeaving) && (
         <AskDrawer
-          motion={drawerOpen ? (drawerArrives ? "arriving" : "still") : "leaving"}
+          motion={drawerMotionOf(drawerOpen, drawerArrives)}
           chats={page.chats}
           openChatId={page.chat?.id ?? null}
           now={now}
@@ -399,13 +435,7 @@ export const AskPage = () => {
                       {pending.status === "answering" && pending.picking !== null && (
                         <div className={styles.picking}>
                           <AskPickingWait
-                            phase={
-                              pending.picking === "choosing"
-                                ? "choosing"
-                                : pending.text === "" && pending.sections.length === 0
-                                  ? "reading"
-                                  : "read"
-                            }
+                            phase={pickingPhaseOf(pending.picking, pending.text, pending.sections.length)}
                             picked={pending.picked}
                             imageOf={imageOf}
                             holds={holds}

@@ -112,11 +112,12 @@ const TranscriptionStop = ({ error, episodeSeconds, onTranscribe, onNotNow, onFo
   }
   if (error.kind === "transcriptionFailed") {
     const failed = transcriptionCopy.failed(error.reason);
+    const differentLink = onNotNow === undefined ? null : { label: "Use a different link", onPress: onNotNow };
     return (
       <TranscriptionNotice
         notice={failed}
         primary={failed.retry && onTranscribe !== undefined ? { label: "Try again", onPress: onTranscribe } : null}
-        secondary={failed.retry ? notNow : onNotNow === undefined ? null : { label: "Use a different link", onPress: onNotNow }}
+        secondary={failed.retry ? notNow : differentLink}
         takeFocus
       />
     );

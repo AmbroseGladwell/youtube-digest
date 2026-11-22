@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
@@ -91,6 +91,20 @@ export interface LibraryPageProps {
 
 // A project's page starts from every overview in it (docs/features/projects.md).
 const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
+
+const selectionLineFor = (count: number, coarsePointer: boolean): string => {
+  if (count > 0) {
+    return `${count} selected`;
+  }
+  return coarsePointer ? "Tap to select" : "Click to select";
+};
+
+const searchPlaceholderFor = (filtered: boolean, sortedOnSheet: boolean): string => {
+  if (filtered) {
+    return "Search within these";
+  }
+  return sortedOnSheet ? "Search overviews" : "Search claims, channels, tags";
+};
 
 export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) => {
   const topicsQuery = useTopicsQuery();
@@ -293,7 +307,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const selectable = readableEntries(entries).length > 0;
   const allRead = selected.length > 0 && selected.every((entry) => entry.state.read);
   const allFavourite = selected.length > 0 && selected.every((entry) => entry.state.favourite);
-  const selectionLine = selected.length > 0 ? `${selected.length} selected` : coarsePointer ? "Tap to select" : "Click to select";
+  const selectionLine = selectionLineFor(selected.length, coarsePointer);
   const stopSelecting = () => {
     analytics.library.selection.stopped({ selected: selected.length, reason: "reader" });
     selection.stop();
@@ -460,12 +474,49 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       }}
     />
   );
-  const searchPlaceholder =
-    chips.length > 0
-      ? "Search within these"
-      : railIsSheet && sort !== DEFAULT_LIBRARY_VIEW.sort
-        ? "Search overviews"
-        : "Search claims, channels, tags";
+  const searchPlaceholder = searchPlaceholderFor(chips.length > 0, railIsSheet && sort !== DEFAULT_LIBRARY_VIEW.sort);
+  const listShown = place.kind !== "projects" && !projects.missing && !(place.kind === "project" && projects.current === null);
+  const notListed = (): ReactNode => {
+    if (place.kind === "projects") {
+      return projects.index;
+    }
+    return projects.missing ? <ErrorState screen="notFound" title="This project isn't here any more" back /> : null;
+  };
+  const listBody = (): ReactNode => {
+    if (visible.length === 0 && caughtUp) {
+      return (
+        <div className={styles.caughtUp} data-testid={libraryPageTestIds.caughtUp}>
+          <p className={styles.caughtUpTitle}>You're all caught up</p>
+          <p className={styles.caughtUpBody}>Every overview here is read.</p>
+          <button
+            type="button"
+            className={styles.caughtUpAction}
+            onClick={() => {
+              analytics.library.caughtUp.allShown();
+              showAll("caughtUp");
+            }}
+            data-testid={libraryPageTestIds.caughtUpShowAllButton}
+          >
+            Show all overviews
+          </button>
+        </div>
+      );
+    }
+    if (visible.length === 0) {
+      return (
+        closeInMeaning.length === 0 && (
+          <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
+            No overviews match these filters.
+          </p>
+        )
+      );
+    }
+    return (
+      <div className={styles.list} data-testid={libraryPageTestIds.list}>
+        {visible.map((entry, index) => row(entry, index))}
+      </div>
+    );
+  };
 
   return (
     <div className={styles.root} data-testid={libraryPageTestIds.root}>
@@ -530,11 +581,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
         </aside>
 
         <main className={styles.main} ref={main}>
-          {place.kind === "projects" ? (
-            projects.index
-          ) : projects.missing ? (
-            <ErrorState screen="notFound" title="This project isn't here any more" back />
-          ) : place.kind === "project" && projects.current === null ? null : (
+          {listShown ? (
             <>
               {projects.head ?? (
                 <div className={styles.listHead}>
@@ -668,34 +715,7 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
 
               {railIsSheet && projects.current === null && milestoneStack}
 
-              {projects.empty ??
-                (visible.length === 0 && caughtUp ? (
-                  <div className={styles.caughtUp} data-testid={libraryPageTestIds.caughtUp}>
-                    <p className={styles.caughtUpTitle}>You're all caught up</p>
-                    <p className={styles.caughtUpBody}>Every overview here is read.</p>
-                    <button
-                      type="button"
-                      className={styles.caughtUpAction}
-                      onClick={() => {
-                        analytics.library.caughtUp.allShown();
-                        showAll("caughtUp");
-                      }}
-                      data-testid={libraryPageTestIds.caughtUpShowAllButton}
-                    >
-                      Show all overviews
-                    </button>
-                  </div>
-                ) : visible.length === 0 ? (
-                  closeInMeaning.length === 0 && (
-                    <p className={styles.empty} data-testid={libraryPageTestIds.empty}>
-                      No overviews match these filters.
-                    </p>
-                  )
-                ) : (
-                  <div className={styles.list} data-testid={libraryPageTestIds.list}>
-                    {visible.map((entry, index) => row(entry, index))}
-                  </div>
-                ))}
+              {projects.empty ?? listBody()}
               {closeInMeaning.length > 0 && (
                 <section className={styles.meaning} aria-labelledby={meaningHeadingId} data-testid={libraryPageTestIds.meaningGroup}>
                   <h2 className={styles.meaningHeading} id={meaningHeadingId}>
@@ -757,6 +777,8 @@ export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                 />
               )}
             </>
+          ) : (
+            notListed()
           )}
         </main>
       </div>

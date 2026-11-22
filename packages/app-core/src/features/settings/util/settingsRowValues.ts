@@ -86,6 +86,13 @@ export interface LearningRowState {
 
 const NOT_LEARNING: LearningRowState = { canLearn: false, keepLearning: true, learnedCount: 0 };
 
+const sectionsText = (on: number): string => {
+  if (on === OVERVIEW_SECTIONS.length) {
+    return "Every section";
+  }
+  return on === 0 ? "Summary and key points only" : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
+};
+
 // Design 141m: the first section, what was learned, then sections. With learning off the row
 // says so in place of the sections.
 export const personalisationRowValue = (
@@ -94,12 +101,7 @@ export const personalisationRowValue = (
   { canLearn, keepLearning, learnedCount }: LearningRowState = NOT_LEARNING,
 ): string => {
   const on = OVERVIEW_SECTIONS.filter(({ section }) => sectionsEnabled[section]).length;
-  const sections =
-    on === OVERVIEW_SECTIONS.length
-      ? "Every section"
-      : on === 0
-        ? "Summary and key points only"
-        : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
+  const sections = sectionsText(on);
   const first = firstAboutYouText(aboutYou);
   const lead = first === null ? "About you not set" : capitalised(first);
   if (canLearn && !keepLearning) {

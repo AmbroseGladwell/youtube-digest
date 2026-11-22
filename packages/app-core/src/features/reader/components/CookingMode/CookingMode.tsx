@@ -207,6 +207,13 @@ const wakeLineFor = (awake: boolean, timing: boolean, web: boolean): string | nu
   return awake ? "Screen stays on while you cook" : "Keep this screen on to hear your timer";
 };
 
+const arrivalClassOf = (from: "below" | "above" | null): string | undefined => {
+  if (from === "below") {
+    return styles.fromBelow;
+  }
+  return from === "above" ? styles.fromAbove : "";
+};
+
 // Designs 150c–150au: the action being cooked, large, with the next one under it, and Next the
 // biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
 // web is a full-screen takeover with each control's key on it, where the ingredients open as a
@@ -587,7 +594,7 @@ export const CookingMode = ({
                 <div className={styles.stage}>
                   <div
                     key={mode.at}
-                    className={`${styles.main} ${arrival.from === "below" ? styles.fromBelow : arrival.from === "above" ? styles.fromAbove : ""} ${swipe.dragging ? styles.dragging : ""}`}
+                    className={`${styles.main} ${arrivalClassOf(arrival.from)} ${swipe.dragging ? styles.dragging : ""}`}
                     style={swipe.dragY === 0 ? undefined : { transform: `translateY(${swipe.dragY}px)` }}
                     {...swipe.handlers}
                     data-testid={cookingModeTestIds.swipeArea}

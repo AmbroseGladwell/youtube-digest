@@ -10,6 +10,19 @@ export interface QueueRowModel {
   resumeTime?: string;
 }
 
+const waitingState = (needsKey: boolean, held: boolean, chosen: boolean, first: boolean): QueueRowState => {
+  if (needsKey) {
+    return "noKey";
+  }
+  if (held) {
+    return "held";
+  }
+  if (chosen) {
+    return first ? "chosenNext" : "chosen";
+  }
+  return first ? "next" : "waiting";
+};
+
 // What the queue can make now, after the one being made, each with the words its row shows:
 // the first is Next, the rest Waiting, and a video the reader chose says so. Every one says
 // so when there is no key to make it with, and every one says when it continues while the queue waits at a limit. What waits on a pace is
@@ -31,17 +44,7 @@ export const waitingRows = (
     .filter((capture) => capture.videoId !== makingId)
     .map((capture, index) => ({
       capture,
-      state: queue.needsKey
-        ? "noKey"
-        : resumeTime !== undefined
-          ? "held"
-          : capture.chosenAt !== null
-            ? index === 0
-              ? "chosenNext"
-              : "chosen"
-            : index === 0
-              ? "next"
-              : "waiting",
+      state: waitingState(queue.needsKey, resumeTime !== undefined, capture.chosenAt !== null, index === 0),
       ...(resumeTime === undefined ? {} : { resumeTime }),
     }));
 };

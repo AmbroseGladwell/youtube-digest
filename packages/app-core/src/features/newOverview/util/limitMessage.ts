@@ -30,7 +30,19 @@ const PLUS = card("Plus");
 const OWN_KEY_MONTH: Record<Plan, string> = { free: FREE.ownKey, "byo-plus": BYO_PLUS.ownKey, plus: PLUS.ownKey };
 const PLAN_NAME: Record<Plan, string> = { free: "your free account", "byo-plus": "BYO Plus", plus: "Plus" };
 
-const onKey = (key: KeySource, first: boolean): string => (key === "ours" ? "on us" : first ? "on your own key" : "on your own");
+const onKey = (key: KeySource, first: boolean): string => {
+  if (key === "ours") {
+    return "on us";
+  }
+  return first ? "on your own key" : "on your own";
+};
+
+const quotaOf = (keys: Set<KeySource>): LimitQuota => {
+  if (keys.size === 2) {
+    return "both";
+  }
+  return keys.has("ours") ? "ours" : "own";
+};
 
 const madePhrase = (spent: SpentQuota[], plainOurs: boolean): string => {
   const [first, second] = spent;
@@ -50,7 +62,7 @@ export const limitMessageOf = (next: NextQuota | null, plan: Plan): LimitMessage
 
   const { spent, resetsOn } = next;
   const keys = new Set(spent.map((quota) => quota.key));
-  const quota: LimitQuota = keys.size === 2 ? "both" : keys.has("ours") ? "ours" : "own";
+  const quota = quotaOf(keys);
   const made = madePhrase(spent, quota === "ours" && plan !== "plus");
   const title = `You've made this month's ${made}. More on ${resetDate(resetsOn)}.`;
 

@@ -57,6 +57,16 @@ const refusalOf = (error: unknown): PlaylistRefusalReason => {
   return "lookupFailed";
 };
 
+const refusalFor = (target: PlaylistTarget, lookup: ReturnType<typeof usePlaylistLookupQuery>): PlaylistRefusalReason | null => {
+  if (target.kind === "unfollowable") {
+    return target.list;
+  }
+  if (lookup.isError) {
+    return refusalOf(lookup.error);
+  }
+  return lookup.data !== undefined && lookup.data.entries.length === 0 ? "empty" : null;
+};
+
 // A pasted playlist, from lookup to following (designs 27b–27h): a short honest wait, then
 // the preview, or the reason it can't be followed and what to do instead.
 export const PlaylistFollowFlow = ({
@@ -91,14 +101,7 @@ export const PlaylistFollowFlow = ({
     [overviews.data, queue.data],
   );
 
-  const refusal: PlaylistRefusalReason | null =
-    target.kind === "unfollowable"
-      ? target.list
-      : lookup.isError
-        ? refusalOf(lookup.error)
-        : lookup.data !== undefined && lookup.data.entries.length === 0
-          ? "empty"
-          : null;
+  const refusal = refusalFor(target, lookup);
 
   useEffect(() => {
     if (refusal !== null && refusal !== "empty") {
@@ -131,16 +134,19 @@ export const PlaylistFollowFlow = ({
     );
   };
 
+  const refusalAction = (reason: PlaylistRefusalReason) => {
+    if (reason === "mix" && target.kind === "unfollowable" && target.videoUrl !== null && onJustThisVideo !== null) {
+      return { label: "Just this video", onSelect: () => onJustThisVideo(target.videoUrl!) };
+    }
+    if (reason === "empty") {
+      return { label: "Follow it anyway", onSelect: () => followLookup(false), busy: follow.isPending };
+    }
+    return reason === "lookupFailed" ? { label: "Try again", onSelect: () => void lookup.refetch() } : null;
+  };
+
   const body = (() => {
     if (refusal !== null) {
-      const action =
-        refusal === "mix" && target.kind === "unfollowable" && target.videoUrl !== null && onJustThisVideo !== null
-          ? { label: "Just this video", onSelect: () => onJustThisVideo(target.videoUrl!) }
-          : refusal === "empty"
-            ? { label: "Follow it anyway", onSelect: () => followLookup(false), busy: follow.isPending }
-            : refusal === "lookupFailed"
-              ? { label: "Try again", onSelect: () => void lookup.refetch() }
-              : null;
+      const action = refusalAction(refusal);
       return <PlaylistRefusal reason={refusal} stacked={stacked} action={action} onPasteAnother={onPasteAnother} />;
     }
 

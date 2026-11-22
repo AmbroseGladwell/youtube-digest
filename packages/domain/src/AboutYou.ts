@@ -46,13 +46,20 @@ const CLAUSES: readonly { section: AboutYouSection; lead: string }[] = [
   { section: "focus", lead: "right now I'm focusing on" },
 ];
 
+const joinerOf = (index: number, count: number): string => {
+  if (index === 0) {
+    return "";
+  }
+  return index === count - 1 ? ", and " : ", ";
+};
+
 // Empty sections are left out, so what is read back and what is sent are always a whole
 // sentence: "I'm a dad, and right now I'm focusing on sleep."
 export const aboutYouSentenceParts = (aboutYou: AboutYou): AboutYouSentencePart[] => {
   const clauses = CLAUSES.filter(({ section }) => aboutYou[section].length > 0);
   const parts = clauses.flatMap(({ section, lead }, index) => {
     const opening = index === 0 ? `${lead.charAt(0).toUpperCase()}${lead.slice(1)}` : lead;
-    const joiner = index === 0 ? "" : index === clauses.length - 1 ? ", and " : ", ";
+    const joiner = joinerOf(index, clauses.length);
     return [
       { text: `${joiner}${opening} `, filled: false },
       { text: aboutYouSectionText(section, aboutYou[section]), filled: true },

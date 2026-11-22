@@ -46,8 +46,19 @@ const TranscriptBody = z
 const TranscriptionBody = z.object({ feedUrl: z.url().max(2048), guid: z.string().min(1).max(2048) });
 const TranscriptionParams = z.object({ id: z.uuid() });
 
-const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof TranscriptBody>): YouTubeAsk =>
-  youTubeVideoId !== undefined ? { videoId: youTubeVideoId } : searchYouTube === true ? { search: true } : null;
+const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof TranscriptBody>): YouTubeAsk => {
+  if (youTubeVideoId !== undefined) {
+    return { videoId: youTubeVideoId };
+  }
+  return searchYouTube === true ? { search: true } : null;
+};
+
+const askedOf = (youTube: YouTubeAsk): "check" | "search" | null => {
+  if (youTube === null) {
+    return null;
+  }
+  return "videoId" in youTube ? "check" : "search";
+};
 
 interface ResolvedTranscript {
   transcript: StoredTranscript;
@@ -164,7 +175,7 @@ export const podcastRoutes = (
           apiLogLines.podcasts.transcript({
             failure: error.failure,
             unconfirmed,
-            asked: youTube === null ? null : "videoId" in youTube ? "check" : "search",
+            asked: askedOf(youTube),
             ms: clock().getTime() - startedAt,
           }),
         );

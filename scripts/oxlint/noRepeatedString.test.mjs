@@ -6,7 +6,7 @@ import { ruleTester } from "./ruleTester.mjs";
 
 const repo = mkdtempSync(join(tmpdir(), "no-repeated-string-"));
 mkdirSync(join(repo, "src"));
-writeFileSync(join(repo, "src", "other.ts"), 'export const label = "Sign in again";\n');
+writeFileSync(join(repo, "src", "other.ts"), 'export const label = "Sign in again";\nexport const path = "/generations/profile";\n');
 writeFileSync(join(repo, "src", "other.test.ts"), 'expect(x).toBe("Only in a test");\n');
 
 ruleTester.run("no-repeated-string", noRepeatedString, {
@@ -21,12 +21,13 @@ ruleTester.run("no-repeated-string", noRepeatedString, {
     "const a = `/api/one`; const b = '/api/two';",
     { code: 'const mine = "Only in a test";', cwd: repo, filename: join(repo, "src", "here.ts"), options: [{ acrossFiles: true }] },
     { code: 'const mine = "Sign in again";', cwd: repo, filename: join(repo, "src", "here.ts") },
+    { code: 'const mine = "Sign in again";', cwd: repo, filename: join(repo, "src", "here.ts"), options: [{ acrossFiles: true }] },
   ],
   invalid: [
     { code: 'const a = "Open the recipe"; const b = "Open the recipe";', errors: [{ messageId: "repeated" }] },
     { code: 'fetch("/generations/profile"); fetch(`/generations/profile`); fetch("/generations/profile");', errors: 2 },
     {
-      code: 'const mine = "Sign in again";',
+      code: 'fetch("/generations/profile");',
       cwd: repo,
       filename: join(repo, "src", "here.ts"),
       options: [{ acrossFiles: true }],

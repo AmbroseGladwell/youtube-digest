@@ -16,6 +16,13 @@ const appended = (base: Record<string, unknown>, patch: Record<string, unknown>)
   messages: [...(Array.isArray(base.messages) ? base.messages : []), ...(patch.messages as unknown[])],
 });
 
+const ownerFieldOf = (owner: ChatOwner): Record<string, string> => {
+  if (owner.kind === "overview") {
+    return { overviewId: owner.id };
+  }
+  return owner.kind === "project" ? { projectId: owner.id } : {};
+};
+
 // The server writes a chat, since the answer is its own, and devices get it down the feed. Only
 // while its owner, an overview or a project, is there, so a chat can never outlive the sweep that
 // follows its owner's delete; a library chat has no owner to wait on. Never onto a conversation
@@ -28,7 +35,7 @@ export const appendChatMessages = async (
 ): Promise<WriteOutcome> => {
   const id = chatRecordId(owner, conversationId);
   const at = now.toISOString();
-  const ownerField = owner.kind === "overview" ? { overviewId: owner.id } : owner.kind === "project" ? { projectId: owner.id } : {};
+  const ownerField = ownerFieldOf(owner);
   const [written] = await records.write(accountId, [
     {
       kind: "chat",

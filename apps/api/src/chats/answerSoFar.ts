@@ -1,3 +1,10 @@
+const escapeStepAt = (partialJson: string, at: number): number => {
+  if (partialJson[at] !== "\\") {
+    return 1;
+  }
+  return partialJson[at + 1] === "u" ? 6 : 2;
+};
+
 const openingOf = (field: string) => new RegExp(String.raw`^\s*\{\s*"${field}"\s*:\s*"`);
 
 // The text of a reply's first field (its answer, or a sectioned answer's intro) while the reply
@@ -11,7 +18,7 @@ export const answerSoFar = (partialJson: string, field = "answer"): string => {
   const start = opening[0].length;
   let end = start;
   while (end < partialJson.length && partialJson[end] !== '"') {
-    const step = partialJson[end] !== "\\" ? 1 : partialJson[end + 1] === "u" ? 6 : 2;
+    const step = escapeStepAt(partialJson, end);
     if (end + step > partialJson.length) {
       break;
     }

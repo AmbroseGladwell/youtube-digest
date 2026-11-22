@@ -28,6 +28,13 @@ export type PinnedItem =
 
 const newConversationId = (): string => crypto.randomUUID();
 
+const panelTitle = (view: ChatView, current: Chat | undefined, askingHere: string | null): string => {
+  if (view === "list") {
+    return "Conversations";
+  }
+  return current !== undefined ? firstQuestionOf(current) : (askingHere ?? "New conversation");
+};
+
 export interface AnsweredHere {
   at: string;
   onOpen: () => void;
@@ -273,7 +280,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
 
   const current = chats.find((chat) => idOf(chat) === conversationId);
   const askingHere = asking.state.status !== "idle" && asking.state.conversationId === conversationId ? asking.state.question : null;
-  const title = view === "list" ? "Conversations" : current !== undefined ? firstQuestionOf(current) : (askingHere ?? "New conversation");
+  const title = panelTitle(view, current, askingHere);
 
   // The server keeps no text for this overview: chat hides rather than offering what can't work.
   const noSource = asking.state.status === "waiting" && asking.state.wait.kind === "noSource";

@@ -43,12 +43,15 @@ const STATUS: Record<Exclude<QueueRowState, "making" | "held" | "monthSpent">, s
   forYou: "Waiting for you",
 };
 
-const statusText = (state: Exclude<QueueRowState, "making">, resumeTime: string | undefined) =>
-  state === "held"
-    ? `Continues after ${resumeTime ?? "the limit resets"}`
-    : state === "monthSpent"
-      ? `Waiting for ${resumeTime ?? "next month"}`
-      : STATUS[state];
+const statusText = (state: Exclude<QueueRowState, "making">, resumeTime: string | undefined) => {
+  if (state === "held") {
+    return `Continues after ${resumeTime ?? "the limit resets"}`;
+  }
+  if (state === "monthSpent") {
+    return `Waiting for ${resumeTime ?? "next month"}`;
+  }
+  return STATUS[state];
+};
 
 // Design 27i–27j: a video that isn't an overview yet doesn't pretend to be one. No raised
 // tile but the one being made, a faded thumbnail, no verdict or topic, and its status in

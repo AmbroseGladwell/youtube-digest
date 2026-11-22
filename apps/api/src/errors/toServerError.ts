@@ -5,6 +5,26 @@ import type { ServerError, ServerErrorFrame, ServerErrorRequest } from "./ErrorS
 const V8_FRAME = /^\s*at (?:(.*?) \()?(.+?):(\d+):(\d+)\)?$/;
 const IDENTIFIER = /^[A-Za-z_$][\w$]{0,63}$/;
 
+const messageOf = (error: Error | null, thrown: unknown): string => {
+  if (error !== null) {
+    return error.message;
+  }
+  if (typeof thrown === "string") {
+    return thrown;
+  }
+  return "";
+};
+
+const typeOf = (error: Error | null): string => {
+  if (error === null) {
+    return "NonError";
+  }
+  if (IDENTIFIER.test(error.name)) {
+    return error.name;
+  }
+  return "Error";
+};
+
 export interface ToServerErrorOptions {
   caughtBy: ServerError["caughtBy"];
   request?: ServerErrorRequest;
@@ -51,10 +71,10 @@ export const parseServerStack = (stack: string | undefined, root: string): Serve
 // (docs/architecture/errors-and-logs.md, "The server's own errors").
 export const toServerError = (thrown: unknown, { caughtBy, request, at, root = process.cwd() }: ToServerErrorOptions): ServerError => {
   const error = thrown instanceof Error ? thrown : null;
-  const message = error !== null ? error.message : typeof thrown === "string" ? thrown : "";
+  const message = messageOf(error, thrown);
   return {
     caughtBy,
-    type: error !== null && IDENTIFIER.test(error.name) ? error.name : error !== null ? "Error" : "NonError",
+    type: typeOf(error),
     message: redactErrorMessage(message),
     frames: parseServerStack(error?.stack, root),
     ...(request === undefined ? {} : { request }),

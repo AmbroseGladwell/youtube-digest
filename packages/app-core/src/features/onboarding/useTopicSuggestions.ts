@@ -6,6 +6,13 @@ import type { OnboardingFound, OnboardingSource } from "./onboardingSources.js";
 
 const TEXT_CHARACTERS = 4000;
 
+const suggestionKindOf = (noun: string): "video" | "article" | "recipe" => {
+  if (noun === "recipe") {
+    return "recipe";
+  }
+  return noun === "video" ? "video" : "article";
+};
+
 export type AskedTopicSuggestions =
   | { status: "answered"; result: TopicSuggestionResult }
   | { status: "pending" }
@@ -32,7 +39,7 @@ export const useTopicSuggestions = (found: OnboardingFound | null, kind: Onboard
     createTrialGenerationApi({ baseUrl: apiUrl })
       .topicSuggestions({
         title: found.source.title,
-        kind: noun === "recipe" ? "recipe" : noun === "video" ? "video" : "article",
+        kind: suggestionKindOf(noun),
         text: found.about.slice(0, TEXT_CHARACTERS),
       })
       .then((result) => {

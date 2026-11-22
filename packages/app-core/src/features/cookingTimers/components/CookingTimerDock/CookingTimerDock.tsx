@@ -24,6 +24,13 @@ export interface CookingTimerDockProps {
 const tileLabel = (timer: CookingTimer, now: number) =>
   `${timerShortName(timer)} timer for ${timer.recipeTitle}, ${isPaused(timer) ? "paused, " : ""}${timeLeftWords(timeLeftMs(timer, now))} left`;
 
+const tileSuffix = (timer: CookingTimer, paused: boolean, solo: boolean): string => {
+  if (paused) {
+    return " · paused";
+  }
+  return solo ? ` · ${timer.recipeTitle}` : "";
+};
+
 // Where sound can't be counted on outside the mode (designs 288aa, 288ab).
 const soundLine = (panel: boolean, awake: boolean): string | null => {
   if (panel) {
@@ -100,7 +107,7 @@ export const CookingTimerDock = ({ children }: CookingTimerDockProps) => {
         <TimerRing leftMs={left} totalMs={timer.totalMs} paused={paused} size={solo ? 34 : 28} />
         <span className={styles.name} data-testid={cookingTimerDockTestIds.name}>
           {timerShortName(timer)}
-          {paused ? " · paused" : solo ? ` · ${timer.recipeTitle}` : ""}
+          {tileSuffix(timer, paused, solo)}
         </span>
         <span className={styles.time} data-testid={cookingTimerDockTestIds.time}>
           {timerClock(left)}
@@ -110,14 +117,12 @@ export const CookingTimerDock = ({ children }: CookingTimerDockProps) => {
   };
 
   const soonest = running[0];
-  return (
-    <div ref={root} className={styles.dock} data-testid={cookingTimerDockTestIds.root}>
-      {line !== null && (
-        <p className={styles.line} data-testid={cookingTimerDockTestIds.line}>
-          {line}
-        </p>
-      )}
-      {!any ? null : ringing.length > 0 ? (
+  const dockBody = (): ReactNode => {
+    if (!any) {
+      return null;
+    }
+    if (ringing.length > 0) {
+      return (
         <div className={styles.ringing}>
           <CookingTimerBanner
             ringing={ringing}
@@ -127,27 +132,45 @@ export const CookingTimerDock = ({ children }: CookingTimerDockProps) => {
             dismissKey={phone || panel ? null : <kbd className={styles.key}>Space</kbd>}
           />
         </div>
-      ) : running.length === 1 && soonest !== undefined ? (
-        tile(soonest, true)
-      ) : running.length > 1 && running.length <= SIDE_BY_SIDE ? (
+      );
+    }
+    if (running.length === 1 && soonest !== undefined) {
+      return tile(soonest, true);
+    }
+    if (running.length > 1 && running.length <= SIDE_BY_SIDE) {
+      return (
         <div className={styles.row} role="group" aria-label="Timers, soonest first">
           {running.map((timer) => tile(timer, false))}
         </div>
-      ) : soonest !== undefined ? (
-        <button
-          type="button"
-          className={`${styles.tile} ${styles.solo}`}
-          aria-label={`${running.length} timers. The soonest has ${timeLeftWords(timeLeftMs(soonest, now))} left`}
-          aria-haspopup="dialog"
-          onClick={() => setListing(true)}
-          data-testid={cookingTimerDockTestIds.folded}
-        >
-          <TimerRing leftMs={timeLeftMs(soonest, now)} totalMs={soonest.totalMs} paused={isPaused(soonest)} />
-          <span className={styles.name}>Timers</span>
-          <span className={styles.more}>+{running.length - 1}</span>
-          <span className={styles.time}>{timerClock(timeLeftMs(soonest, now))}</span>
-        </button>
-      ) : null}
+      );
+    }
+    if (soonest === undefined) {
+      return null;
+    }
+    return (
+      <button
+        type="button"
+        className={`${styles.tile} ${styles.solo}`}
+        aria-label={`${running.length} timers. The soonest has ${timeLeftWords(timeLeftMs(soonest, now))} left`}
+        aria-haspopup="dialog"
+        onClick={() => setListing(true)}
+        data-testid={cookingTimerDockTestIds.folded}
+      >
+        <TimerRing leftMs={timeLeftMs(soonest, now)} totalMs={soonest.totalMs} paused={isPaused(soonest)} />
+        <span className={styles.name}>Timers</span>
+        <span className={styles.more}>+{running.length - 1}</span>
+        <span className={styles.time}>{timerClock(timeLeftMs(soonest, now))}</span>
+      </button>
+    );
+  };
+  return (
+    <div ref={root} className={styles.dock} data-testid={cookingTimerDockTestIds.root}>
+      {line !== null && (
+        <p className={styles.line} data-testid={cookingTimerDockTestIds.line}>
+          {line}
+        </p>
+      )}
+      {dockBody()}
       {children}
       {listing && <TimersListSheet open onOpen={open} onClose={() => setListing(false)} />}
       {shownTimer !== null && <TimerControlsSheet timer={shownTimer} onClose={() => setShown(null)} />}

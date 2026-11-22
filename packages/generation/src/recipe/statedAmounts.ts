@@ -58,6 +58,22 @@ const parseDigits = (text: string): number => {
   return Number(trimmed);
 };
 
+const wholeStated = (
+  matched: string,
+  tens: string | undefined,
+  tensUnit: string | undefined,
+  unit: string | undefined,
+  dozenArticle: string | undefined,
+): number => {
+  if (tens !== undefined) {
+    return TENS_WORDS[tens.toLowerCase()]! + (tensUnit === undefined ? 0 : UNITS_WORDS[tensUnit.toLowerCase()]!);
+  }
+  if (unit !== undefined) {
+    return UNITS_WORDS[unit.toLowerCase()]!;
+  }
+  return matched.toLowerCase().includes("dozen") || dozenArticle !== undefined ? 12 : 100;
+};
+
 // Every number a text states, in digits or in words, so "two and a half cups" and "2½ cups" state
 // the same amount. Read in code, never by a model (docs/prototype/constraints.md).
 export const numbersStated = (text: string): number[] => {
@@ -72,14 +88,7 @@ export const numbersStated = (text: string): number[] => {
       found.push(FRACTION_WORDS[lone.toLowerCase()]!);
       continue;
     }
-    const whole =
-      tens !== undefined
-        ? TENS_WORDS[tens.toLowerCase()]! + (tensUnit === undefined ? 0 : UNITS_WORDS[tensUnit.toLowerCase()]!)
-        : unit !== undefined
-          ? UNITS_WORDS[unit.toLowerCase()]!
-          : match[0].toLowerCase().includes("dozen") || dozenArticle !== undefined
-            ? 12
-            : 100;
+    const whole = wholeStated(match[0], tens, tensUnit, unit, dozenArticle);
     if (fraction !== undefined) {
       found.push(whole * FRACTION_WORDS[fraction.toLowerCase()]!);
     } else {

@@ -159,6 +159,34 @@ const FirstRunHero = () => {
   const urlFieldId = useId();
   const linkName = article.available ? "YouTube, podcast or article link" : "YouTube link";
 
+  const keysLine = () => {
+    if (limit !== null) {
+      return <LimitMessageNote message={limit} from="home" testIds={homePageTestIds.limitMessage} />;
+    }
+    return ready ? (
+      <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
+        <StrokeIcon name="check" />
+        Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
+        <PageLink
+          to={Routes.settingsSection("keys")}
+          onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
+          data-testid={homePageTestIds.settingsLink}
+        >
+          Change keys
+        </PageLink>
+      </p>
+    ) : (
+      <div className={styles.keysNote} data-testid={homePageTestIds.keysNote}>
+        <span className={styles.keysIcon}>
+          <StrokeIcon name="key" size={17} />
+        </span>
+        <div className={styles.keysText}>
+          <KeyPromptNote testIds={homePageTestIds.keyPrompt} readiness={readiness} detail={keyPromptDetail(readiness)} from="home" />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Hero
       standfirst={`Paste a ${article.available ? "YouTube, podcast or article link" : "YouTube URL"}. Get a succinct overview, with the main premise, the big picture, key points, actionable steps and a verdict on if it's worth your time.`}
@@ -204,30 +232,7 @@ const FirstRunHero = () => {
         </p>
       )}
 
-      {limit !== null ? (
-        <LimitMessageNote message={limit} from="home" testIds={homePageTestIds.limitMessage} />
-      ) : ready ? (
-        <p className={styles.keysSaved} data-testid={homePageTestIds.keysSavedLine}>
-          <StrokeIcon name="check" />
-          Using your {PROVIDER_SHORT_LABEL[readiness.provider]} key ·{" "}
-          <PageLink
-            to={Routes.settingsSection("keys")}
-            onClick={() => analytics.capture.newOverviewForm.keysLinkFollowed({ from: "home" })}
-            data-testid={homePageTestIds.settingsLink}
-          >
-            Change keys
-          </PageLink>
-        </p>
-      ) : (
-        <div className={styles.keysNote} data-testid={homePageTestIds.keysNote}>
-          <span className={styles.keysIcon}>
-            <StrokeIcon name="key" size={17} />
-          </span>
-          <div className={styles.keysText}>
-            <KeyPromptNote testIds={homePageTestIds.keyPrompt} readiness={readiness} detail={keyPromptDetail(readiness)} from="home" />
-          </div>
-        </div>
-      )}
+      {keysLine()}
 
       {ready && limit === null && <UsageLine testIds={homePageTestIds.usageLine} />}
     </Hero>
@@ -275,6 +280,15 @@ const StartHero = () => {
   // them back, so there is one way in on screen at a time.
   const offered = subject !== null && !pasting;
   const deckVerb = shownFirst === null || samples.length < DECK_LEAST ? DEFAULT_START_VERB : sampleFacts(shownFirst.note).verb;
+  const samplesAside = () => {
+    if (samples.length >= DECK_LEAST) {
+      return <SampleDeck samples={deck} firstIndex={firstIndex} phone={phone} onFront={setFront} />;
+    }
+    if (samples.length > 0) {
+      return <OnboardingSamples samples={samples} />;
+    }
+    return isPanel ? null : <ExampleOverview />;
+  };
 
   return (
     <Hero
@@ -294,15 +308,7 @@ const StartHero = () => {
       }
       alignTop={samples.length > 0 && samples.length < DECK_LEAST}
       panel={isPanel}
-      aside={
-        samples.length >= DECK_LEAST ? (
-          <SampleDeck samples={deck} firstIndex={firstIndex} phone={phone} onFront={setFront} />
-        ) : samples.length > 0 ? (
-          <OnboardingSamples samples={samples} />
-        ) : isPanel ? null : (
-          <ExampleOverview />
-        )
-      }
+      aside={samplesAside()}
     >
       {offered ? (
         <div className={styles.offered}>
@@ -390,6 +396,40 @@ const Hero = ({
 }: HeroProps) => {
   const surface = useSurface();
   const extensionOffered = useExtensionOffered();
+  const extensionLine = () => {
+    if (panel) {
+      return null;
+    }
+    if (surface === "extension") {
+      return (
+        <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>
+          This is the extension's own library, kept separate from the web app's by the browser itself.
+        </p>
+      );
+    }
+    return extensionOffered ? (
+      <div className={styles.extensionRow}>
+        <span className={styles.youtubePill} aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="19" height="19" className={styles.youtubeMark}>
+            <circle cx="16" cy="14.5" r="7.5" fill="none" stroke="currentColor" strokeWidth="3" />
+            <rect x="7" y="25" width="18" height="2.5" fill="currentColor" />
+          </svg>
+          Overview
+        </span>
+        <p className={styles.heroAside}>Add content in 1 click with the extension.</p>
+        <a
+          className={styles.getExtension}
+          href={CHROME_EXTENSION_URL}
+          target="_blank"
+          rel="noopener"
+          data-testid={homePageTestIds.getExtensionLink}
+        >
+          Get the extension
+          <StrokeIcon name="arrowRight" size={14} />
+        </a>
+      </div>
+    ) : null;
+  };
   return (
     <div className={alignTop ? `${styles.hero} ${styles.heroTop}` : styles.hero} data-testid={homePageTestIds.hero}>
       <div className={styles.heroText}>
@@ -403,32 +443,7 @@ const Hero = ({
 
         {children}
 
-        {panel ? null : surface === "extension" ? (
-          <p className={styles.heroAside} data-testid={homePageTestIds.separateLibraryNote}>
-            This is the extension's own library, kept separate from the web app's by the browser itself.
-          </p>
-        ) : extensionOffered ? (
-          <div className={styles.extensionRow}>
-            <span className={styles.youtubePill} aria-hidden="true">
-              <svg viewBox="0 0 32 32" width="19" height="19" className={styles.youtubeMark}>
-                <circle cx="16" cy="14.5" r="7.5" fill="none" stroke="currentColor" strokeWidth="3" />
-                <rect x="7" y="25" width="18" height="2.5" fill="currentColor" />
-              </svg>
-              Overview
-            </span>
-            <p className={styles.heroAside}>Add content in 1 click with the extension.</p>
-            <a
-              className={styles.getExtension}
-              href={CHROME_EXTENSION_URL}
-              target="_blank"
-              rel="noopener"
-              data-testid={homePageTestIds.getExtensionLink}
-            >
-              Get the extension
-              <StrokeIcon name="arrowRight" size={14} />
-            </a>
-          </div>
-        ) : null}
+        {extensionLine()}
       </div>
 
       {aside}

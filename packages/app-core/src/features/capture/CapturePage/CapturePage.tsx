@@ -38,12 +38,12 @@ import { useCaptureQueueController } from "../../captureQueue/CaptureQueueContex
 import { CaptureQueueStripView } from "../../captureQueue/components/CaptureQueueStripView/CaptureQueueStripView.js";
 import { ArticleFailureNotice } from "../components/ArticleFailureNotice/ArticleFailureNotice.js";
 import { SourceOffer } from "../components/SourceOffer/SourceOffer.js";
-import { EpisodeOffer } from "../components/EpisodeOffer/EpisodeOffer.js";
+import { EpisodeOffer, type EpisodeOfferState } from "../components/EpisodeOffer/EpisodeOffer.js";
 import { EpisodeNoTranscript } from "../components/EpisodeNoTranscript/EpisodeNoTranscript.js";
 import { EpisodeWordsNote } from "../../newOverview/components/PodcastLinkStatus/PodcastLinkStatus.js";
 import { createLabelOf, episodeActionOf, transcribeChoiceOf } from "../../podcasts/util/episodeActionOf.js";
 import { isPlatformPodcastLink } from "../../newOverview/usePodcastLink.js";
-import { useEpisodeTab } from "../useEpisodeTab.js";
+import { useEpisodeTab, type EpisodeTabState } from "../useEpisodeTab.js";
 import { RecentOverviews } from "../components/RecentOverviews/RecentOverviews.js";
 import styles from "./CapturePage.module.scss";
 import { capturePageTestIds } from "./CapturePageTestIds.js";
@@ -68,6 +68,25 @@ const usePageAccess = (url: string | null): boolean | null => {
     };
   }, [pages, url]);
   return known?.url === url ? known.granted : null;
+};
+
+const episodeOfferOf = (tab: EpisodeTabState): EpisodeOfferState => {
+  if (tab.status === "found") {
+    return { status: "found", episode: tab.episode, words: tab.words };
+  }
+  if (tab.status === "held") {
+    return { status: "found", episode: tab.episode, words: null };
+  }
+  return tab.status === "reading" ? { status: "reading", host: tab.host } : { status: "show" };
+};
+
+const captionsNoteText = (fetching: boolean, captionsHeld: boolean): string => {
+  if (fetching) {
+    return "Fetching its captions now.";
+  }
+  return captionsHeld
+    ? "Its captions are already here, so generating won't buy them again."
+    : "Fetches the transcript, then writes the overview.";
 };
 
 // The side panel's home: the video or article in front of it (docs/features/extension-panel.md,
@@ -256,12 +275,9 @@ export const CapturePage = () => {
   // (docs/features/watching-detection.md); with no free rung there is no card to draw.
   const watchedVideo = activeVideoUrl === null ? null : (watchedTranscript.data ?? null);
 
-  return (
-    <div
-      className={`${styles.root} ${!libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
-      data-testid={capturePageTestIds.root}
-    >
-      {captureQueue.strip !== null ? (
+  const queueStripOrNotice = () => {
+    if (captureQueue.strip !== null) {
+      return (
         <CaptureQueueStripView
           strip={captureQueue.strip}
           compact
@@ -271,101 +287,123 @@ export const CapturePage = () => {
           onDetails={() => undefined}
           onDismiss={captureQueue.dismissStrip}
         />
-      ) : libraryMoved ? (
-        <LibraryMoveNotice panel />
-      ) : null}
-      <div className={styles.opening} data-testid={capturePageTestIds.opening}>
-        {episodeTab !== null ? (
-          episodeTab.status === "failed" ? (
-            <ArticleFailureNotice copy={episodeTab.copy} onWay={episodeTab.retry} />
-          ) : episodeTab.status === "unreachable" ? (
-            <p className={styles.note} role="alert" data-testid={capturePageTestIds.episodeUnreachable}>
-              We couldn’t check this episode just now.{" "}
-              <button type="button" className={styles.retry} onClick={episodeTab.retry}>
-                Try again
-              </button>
-            </p>
-          ) : (
-            <EpisodeOffer
-              on={episodeTab.on}
-              offer={
-                episodeTab.status === "found"
-                  ? { status: "found", episode: episodeTab.episode, words: episodeTab.words }
-                  : episodeTab.status === "held"
-                    ? { status: "found", episode: episodeTab.episode, words: null }
-                    : episodeTab.status === "reading"
-                      ? { status: "reading", host: episodeTab.host }
-                      : { status: "show" }
-              }
-            />
-          )
-        ) : offeredPage !== null ? (
-          <SourceOffer source={domainOf(offeredPage.url)} title={offeredPage.title} />
-        ) : watchedVideo !== null ? (
-          <SourceOffer source={watchedVideo.channel} title={watchedVideo.title} video />
-        ) : (
-          <div>
-            <h2 className={styles.title}>
-              Watch Less,
-              <br />
-              with <em className={styles.em}>The Overview</em>
-            </h2>
-            <p className={styles.standfirst} data-testid={capturePageTestIds.noVideoNote}>
-              Open a YouTube video or an article, and you can make an overview of it here.
-            </p>
-          </div>
-        )}
+      );
+    }
+    return libraryMoved ? <LibraryMoveNotice panel /> : null;
+  };
 
-        {heldId !== null ? (
-          <>
-            <button
-              type="button"
-              className={styles.primary}
-              onClick={() => readOverview(heldId)}
-              data-testid={capturePageTestIds.readOverviewButton}
-            >
-              Read overview
+  const openingOffer = () => {
+    if (episodeTab !== null) {
+      if (episodeTab.status === "failed") {
+        return <ArticleFailureNotice copy={episodeTab.copy} onWay={episodeTab.retry} />;
+      }
+      if (episodeTab.status === "unreachable") {
+        return (
+          <p className={styles.note} role="alert" data-testid={capturePageTestIds.episodeUnreachable}>
+            We couldn’t check this episode just now.{" "}
+            <button type="button" className={styles.retry} onClick={episodeTab.retry}>
+              Try again
             </button>
-            <p className={styles.note} data-testid={capturePageTestIds.alreadyInLibraryNote}>
-              Already in your library
-            </p>
-          </>
-        ) : episodeWithoutWords ? (
-          <EpisodeNoTranscript />
-        ) : episodeStopped ? null : episodeTab?.status === "found" && episodeAction?.kind === "stop" ? (
-          <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />
-        ) : walled !== null ? (
-          <>
-            <SoftWall
-              link={{
-                kicker: null,
-                title: episodeTab?.status === "found" ? episodeTab.episode.title : (offeredPage?.title ?? activeVideoUrl ?? "This link"),
-              }}
-              resetsOn={resetDate(walled.resetsOn, true)}
-              offerKey={plan === "free" && !readiness.hasChosenKey}
-              onSeePlans={() => {
-                analytics.capture.newOverviewForm.plansOpened({ from: "wall" });
-                setPlansOpen(true);
-              }}
-              onFollowed={() => undefined}
-            />
-            <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
-          </>
-        ) : limit !== null ? (
-          <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />
-        ) : (
-          !nothingToTake && (
-            <button
-              type="button"
-              className={styles.primary}
-              onClick={() => createOverview()}
-              disabled={!keysReady || episodeTab?.status === "reading" || episodeAction?.kind === "waiting"}
-              data-testid={capturePageTestIds.createButton}
-            >
-              {episodeAction === null ? "Create overview" : createLabelOf(episodeAction, "Create overview")}
-            </button>
-          )
-        )}
+          </p>
+        );
+      }
+      return <EpisodeOffer on={episodeTab.on} offer={episodeOfferOf(episodeTab)} />;
+    }
+    if (offeredPage !== null) {
+      return <SourceOffer source={domainOf(offeredPage.url)} title={offeredPage.title} />;
+    }
+    if (watchedVideo !== null) {
+      return <SourceOffer source={watchedVideo.channel} title={watchedVideo.title} video />;
+    }
+    return (
+      <div>
+        <h2 className={styles.title}>
+          Watch Less,
+          <br />
+          with <em className={styles.em}>The Overview</em>
+        </h2>
+        <p className={styles.standfirst} data-testid={capturePageTestIds.noVideoNote}>
+          Open a YouTube video or an article, and you can make an overview of it here.
+        </p>
+      </div>
+    );
+  };
+
+  const nextStep = () => {
+    if (heldId !== null) {
+      return (
+        <>
+          <button
+            type="button"
+            className={styles.primary}
+            onClick={() => readOverview(heldId)}
+            data-testid={capturePageTestIds.readOverviewButton}
+          >
+            Read overview
+          </button>
+          <p className={styles.note} data-testid={capturePageTestIds.alreadyInLibraryNote}>
+            Already in your library
+          </p>
+        </>
+      );
+    }
+    if (episodeWithoutWords) {
+      return <EpisodeNoTranscript />;
+    }
+    if (episodeStopped) {
+      return null;
+    }
+    if (episodeTab?.status === "found" && episodeAction?.kind === "stop") {
+      return <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />;
+    }
+    if (walled !== null) {
+      return (
+        <>
+          <SoftWall
+            link={{
+              kicker: null,
+              title: episodeTab?.status === "found" ? episodeTab.episode.title : (offeredPage?.title ?? activeVideoUrl ?? "This link"),
+            }}
+            resetsOn={resetDate(walled.resetsOn, true)}
+            offerKey={plan === "free" && !readiness.hasChosenKey}
+            onSeePlans={() => {
+              analytics.capture.newOverviewForm.plansOpened({ from: "wall" });
+              setPlansOpen(true);
+            }}
+            onFollowed={() => undefined}
+          />
+          <PlansModal open={plansOpen} plan={plan} onClose={() => setPlansOpen(false)} />
+        </>
+      );
+    }
+    if (limit !== null) {
+      return <LimitMessageNote message={limit} from="panel" testIds={capturePageTestIds.limitMessage} />;
+    }
+    return (
+      !nothingToTake && (
+        <button
+          type="button"
+          className={styles.primary}
+          onClick={() => createOverview()}
+          disabled={!keysReady || episodeTab?.status === "reading" || episodeAction?.kind === "waiting"}
+          data-testid={capturePageTestIds.createButton}
+        >
+          {episodeAction === null ? "Create overview" : createLabelOf(episodeAction, "Create overview")}
+        </button>
+      )
+    );
+  };
+
+  return (
+    <div
+      className={`${styles.root} ${!libraryMoved && captureQueue.strip === null ? "" : styles.withStrip}`}
+      data-testid={capturePageTestIds.root}
+    >
+      {queueStripOrNotice()}
+      <div className={styles.opening} data-testid={capturePageTestIds.opening}>
+        {openingOffer()}
+
+        {nextStep()}
 
         {episodeTab?.status === "found" && limit === null && episodeAction?.kind !== "stop" && (
           <EpisodeWordsNote words={episodeTab.words} episodeSeconds={episodeTab.episode.durationSeconds} />
@@ -382,11 +420,7 @@ export const CapturePage = () => {
 
         {activeVideoUrl !== null && heldId === null && keysReady && limit === null && (
           <p className={styles.note} data-testid={capturePageTestIds.captionsNote}>
-            {watchedTranscript.isFetching
-              ? "Fetching its captions now."
-              : captionsHeld
-                ? "Its captions are already here, so generating won't buy them again."
-                : "Fetches the transcript, then writes the overview."}
+            {captionsNoteText(watchedTranscript.isFetching, captionsHeld)}
           </p>
         )}
 

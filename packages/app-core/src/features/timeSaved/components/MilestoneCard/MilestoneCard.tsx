@@ -23,6 +23,20 @@ const SWIPE_DISTANCE = 44;
 const AXIS_LOCK_DISTANCE = 6;
 const ENTRANCE_ROLL_MINUTES = 6;
 
+const enterClassFor = (direction: number) => {
+  if (direction === 1) {
+    return styles.enterFromRight;
+  }
+  return direction === -1 ? styles.enterFromLeft : styles.enterRise;
+};
+
+const leaveClassFor = (direction: number) => {
+  if (direction === 1) {
+    return styles.leaveToLeft;
+  }
+  return direction === -1 ? styles.leaveToRight : styles.leaveRise;
+};
+
 interface Drag {
   x: number;
   y: number;
@@ -90,8 +104,8 @@ export const MilestoneCard = ({ milestone, minutes, reachedOn, dismiss, onLineCh
     hold("drag", false);
   };
 
-  const enterClass = line.direction === 1 ? styles.enterFromRight : line.direction === -1 ? styles.enterFromLeft : styles.enterRise;
-  const leaveClass = line.direction === 1 ? styles.leaveToLeft : line.direction === -1 ? styles.leaveToRight : styles.leaveRise;
+  const enterClass = enterClassFor(line.direction);
+  const leaveClass = leaveClassFor(line.direction);
 
   return (
     <div

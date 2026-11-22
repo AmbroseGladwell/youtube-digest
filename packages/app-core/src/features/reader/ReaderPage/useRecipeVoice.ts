@@ -112,16 +112,19 @@ export const useRecipeVoice = (
   };
 
   const position = (stretch: Stretch) => `${activeIndex - stretch.first + 1} of ${stretch.last - stretch.first + 1}`;
+  const nowReadingLine = (): string | null => {
+    if (!playing) {
+      return null;
+    }
+    if (method !== null && within(method)) {
+      return `Method · step ${(actions[activeIndex - method.first]?.step ?? 0) + 1} of ${stepCount}`;
+    }
+    return within(ingredients) ? `Ingredients · ${position(ingredients)}` : null;
+  };
   return {
     ingredients: voiceOf(ingredients),
     method: voiceOf(method),
-    nowReading: !playing
-      ? null
-      : method !== null && within(method)
-        ? `Method · step ${(actions[activeIndex - method.first]?.step ?? 0) + 1} of ${stepCount}`
-        : within(ingredients)
-          ? `Ingredients · ${position(ingredients)}`
-          : null,
+    nowReading: nowReadingLine(),
     release: () => setStopAfter(null),
     methodAction: method !== null && within(method) ? activeIndex - method.first : null,
     readAction: (action) => {

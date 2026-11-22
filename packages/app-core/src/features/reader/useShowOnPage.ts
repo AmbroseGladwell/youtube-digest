@@ -49,6 +49,11 @@ export const useShowOnPage = (source: WebSource | null): ShowOnPage | null => {
   return {
     beside,
     show,
-    statusOf: ({ quote }) => (missing.has(quote) ? "missing" : shown?.quote === quote ? shown.status : null),
+    statusOf: ({ quote }) => {
+      if (missing.has(quote)) {
+        return "missing";
+      }
+      return shown?.quote === quote ? shown.status : null;
+    },
   };
 };

@@ -147,6 +147,42 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
 
   const currentBlock = blocks[follow.currentBlockIndex] ?? null;
 
+  const headingLeadFor = (): ReactNode => {
+    if (openedFrom !== null) {
+      return (
+        <button
+          type="button"
+          className={styles.backToChapters}
+          onClick={() => {
+            analytics.transcript.backToChapters();
+            onBackToChapters();
+          }}
+          data-testid={transcriptPanelTestIds.backToChaptersButton}
+        >
+          <StrokeIcon name="arrowLeft" size={14} />
+          Back to chapters
+        </button>
+      );
+    }
+    if (follow.following) {
+      return (
+        <span className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
+          <span className={styles.followingMark} aria-hidden="true" />
+          Following the {timedNoun(video)}
+        </span>
+      );
+    }
+    if (follow.offered) {
+      return (
+        <span className={styles.notFollowing} data-testid={transcriptPanelTestIds.notFollowingNote}>
+          Not following · you scrolled away
+        </span>
+      );
+    }
+    return <span className={styles.label}>Full transcript</span>;
+  };
+  const headingLead = headingLeadFor();
+
   return (
     <div className={styles.root} data-testid={transcriptPanelTestIds.root}>
       <div className={styles.head} ref={setHead} data-sticky-fade="" data-testid={transcriptPanelTestIds.head}>
@@ -155,31 +191,7 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
               the video — the way back to the chapter that opened it, or whether it is
               following — and only a transcript with no player to follow is labelled. */}
           <p className={styles.heading}>
-            {openedFrom !== null ? (
-              <button
-                type="button"
-                className={styles.backToChapters}
-                onClick={() => {
-                  analytics.transcript.backToChapters();
-                  onBackToChapters();
-                }}
-                data-testid={transcriptPanelTestIds.backToChaptersButton}
-              >
-                <StrokeIcon name="arrowLeft" size={14} />
-                Back to chapters
-              </button>
-            ) : follow.following ? (
-              <span className={styles.following} data-testid={transcriptPanelTestIds.followingNote}>
-                <span className={styles.followingMark} aria-hidden="true" />
-                Following the {timedNoun(video)}
-              </span>
-            ) : follow.offered ? (
-              <span className={styles.notFollowing} data-testid={transcriptPanelTestIds.notFollowingNote}>
-                Not following · you scrolled away
-              </span>
-            ) : (
-              <span className={styles.label}>Full transcript</span>
-            )}
+            {headingLead}
             {transcript?.generated === true && (
               <span className={styles.sourceNote} data-testid={transcriptPanelTestIds.sourceNote}>
                 {machineTranscribedLabel(timedNoun(video))}
@@ -309,6 +321,15 @@ const TranscriptRows = ({
   // Design 2a: paragraphs the video has already passed drop to the muted ink, so the
   // eye finds the one being spoken by weight before it finds the card.
   const past = (index: number) => follow.currentBlockIndex !== -1 && index < follow.currentBlockIndex;
+  const rowRefOf = (opensRun: boolean, restored: boolean, current: boolean) => {
+    if (opensRun) {
+      return setTargetRow;
+    }
+    if (restored) {
+      return position.restoredRow;
+    }
+    return current ? follow.currentRow : undefined;
+  };
 
   return (
     <div className={styles.rows} ref={position.rows}>
@@ -322,7 +343,7 @@ const TranscriptRows = ({
           <div
             key={`${index}-${block.startMs}`}
             className={`${styles.row} ${current ? styles.rowCurrent : ""} ${target ? styles.rowTarget : ""} ${opensRun ? styles.rowTargetOpens : ""} ${closesRun ? styles.rowTargetCloses : ""} ${past(index) ? styles.rowPast : ""}`}
-            ref={opensRun ? setTargetRow : restored ? position.restoredRow : current ? follow.currentRow : undefined}
+            ref={rowRefOf(opensRun, restored, current)}
             data-current={current}
             data-target={target}
             data-start-ms={block.startMs}

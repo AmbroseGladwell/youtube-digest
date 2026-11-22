@@ -73,6 +73,29 @@ const OptionDetail = ({ assistant, connected, continueIn }: OptionDetailProps) =
     : "Gets this note in the link";
 };
 
+interface MenuTitleFlags {
+  continueIn: boolean;
+  firstTap: boolean;
+  offerHere: boolean;
+}
+
+const menuTitleOf = ({ continueIn, firstTap, offerHere }: MenuTitleFlags): string => {
+  if (continueIn) {
+    return CONTINUE_IN_TITLE;
+  }
+  if (firstTap) {
+    return ASK_IN_TITLE;
+  }
+  return offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
+};
+
+const menuPlacementClassOf = (asSheet: boolean, align: "centre" | "end"): string | undefined => {
+  if (asSheet) {
+    return styles.inSheet;
+  }
+  return align === "end" ? styles.alignEnd : "";
+};
+
 // Design 266s–266v: a menu under the tapped question, or a sheet on a phone and in the panel.
 // The assistants are a radio group with focus managed as ChoicePicker's; Escape or a tap
 // outside closes it with nothing remembered.
@@ -94,7 +117,7 @@ export const FollowUpAssistantMenu = ({
   onSetUpFollowed,
   onClose,
 }: FollowUpAssistantMenuProps) => {
-  const title = continueIn ? CONTINUE_IN_TITLE : firstTap ? ASK_IN_TITLE : offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
+  const title = menuTitleOf({ continueIn, firstTap, offerHere });
   const choices: readonly Option[] = offerHere ? ["here", ...FollowUpAssistant.options] : FollowUpAssistant.options;
   const checked: Option | null = offerHere && hereChosen ? "here" : chosen;
   const titleId = useId();
@@ -138,7 +161,7 @@ export const FollowUpAssistantMenu = ({
 
   const body = (
     <div
-      className={`${styles.menu} ${asSheet ? styles.inSheet : align === "end" ? styles.alignEnd : ""}`}
+      className={`${styles.menu} ${menuPlacementClassOf(asSheet, align)}`}
       ref={menu}
       role={asSheet ? undefined : "dialog"}
       aria-labelledby={titleId}

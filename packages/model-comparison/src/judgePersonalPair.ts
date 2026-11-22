@@ -100,8 +100,12 @@ ${partsB}`,
   };
 };
 
-const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult =>
-  winner === "tie" ? "tie" : (winner === "A") === candidateIsA ? "win" : "loss";
+const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult => {
+  if (winner === "tie") {
+    return "tie";
+  }
+  return (winner === "A") === candidateIsA ? "win" : "loss";
+};
 
 export interface JudgePersonalPairOptions {
   fetched: FetchedTranscript;

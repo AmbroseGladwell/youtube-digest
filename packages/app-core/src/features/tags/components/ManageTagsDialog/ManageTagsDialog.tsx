@@ -338,6 +338,16 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
+const renameStatus = (target: string | null, merges: boolean, tag: string, count: number): string => {
+  if (target === null) {
+    return REFUSED;
+  }
+  return merges
+    ? `#${target} already exists. Saving merges #${tag} into it: ` +
+        `${overviewsText(count)} ${count === 1 ? "moves" : "move"} to #${target}.`
+    : `Saves as #${target}`;
+};
+
 interface RenameRowProps {
   tag: string;
   draft: string;
@@ -358,13 +368,7 @@ const RenameRow = ({ tag, draft, count, exists, onDraft, onCancel, onSave }: Ren
   }, []);
   const target = normaliseTag(draft);
   const merges = target !== null && exists(target);
-  const status =
-    target === null
-      ? REFUSED
-      : merges
-        ? `#${target} already exists. Saving merges #${tag} into it: ` +
-          `${overviewsText(count)} ${count === 1 ? "moves" : "move"} to #${target}.`
-        : `Saves as #${target}`;
+  const status = renameStatus(target, merges, tag, count);
   const canSave = target !== null && target !== tag;
 
   return (

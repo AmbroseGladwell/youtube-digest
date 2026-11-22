@@ -1,4 +1,5 @@
 import { recipeActions, type OverviewId } from "@overview/domain";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
@@ -67,12 +68,18 @@ export const TimerControlsSheet = ({ timer, onClose, onLeaving }: TimerControlsS
     }
   };
 
-  const back =
-    timer === null || wayBack === "unknown" ? null : wayBack === "gone" ? (
-      <p className={styles.gone} data-testid={timerControlsSheetTestIds.gone}>
-        This note was deleted, so there’s no step to go back to. The timer carries on.
-      </p>
-    ) : (
+  const wayBackControl = (): ReactNode => {
+    if (timer === null || wayBack === "unknown") {
+      return null;
+    }
+    if (wayBack === "gone") {
+      return (
+        <p className={styles.gone} data-testid={timerControlsSheetTestIds.gone}>
+          This note was deleted, so there’s no step to go back to. The timer carries on.
+        </p>
+      );
+    }
+    return (
       <button type="button" className={styles.wayBack} onClick={() => goBack(wayBack)} data-testid={timerControlsSheetTestIds.wayBack}>
         <span className={styles.words}>
           <span className={styles.label}>{wayBack === "step" ? `Back to step ${timer.step + 1}` : "Open the recipe’s cooking mode"}</span>
@@ -81,6 +88,8 @@ export const TimerControlsSheet = ({ timer, onClose, onLeaving }: TimerControlsS
         <StrokeIcon name="arrowRight" size={18} />
       </button>
     );
+  };
+  const back = wayBackControl();
 
   return (
     <CookingTimerSheet

@@ -5,5 +5,8 @@ import type { ReaderPlace } from "./util/pastedLinkFailureCopy.js";
 export const useReaderPlace = (): ReaderPlace => {
   const surface = useSurface();
   const phone = useIsPhone();
-  return surface === "extension" ? "extension" : phone ? "phone" : "computer";
+  if (surface === "extension") {
+    return "extension";
+  }
+  return phone ? "phone" : "computer";
 };

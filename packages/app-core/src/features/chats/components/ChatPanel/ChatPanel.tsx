@@ -6,6 +6,7 @@ import {
   chatRecordId,
   chatSourceKind,
   type ChatMessage,
+  type ChatUsage,
   type Overview,
   type TimeRange,
   type VideoSource,
@@ -82,6 +83,28 @@ const announcementOf = (message: ChatMessage, words: ChatWords): string => {
 // The reader's question a cited message belongs to: itself, or the question its answer answered.
 const questionAt = (messages: readonly ChatMessage[], message: number) => (messages[message]?.from === "answer" ? message - 1 : message);
 
+interface WaitState {
+  online: boolean;
+  full: boolean;
+  refused: ShownWait | null;
+  pending: boolean;
+  left: number | null;
+  usage: ChatUsage | null;
+}
+
+const shownWaitOf = ({ online, full, refused, pending, left, usage }: WaitState): ShownWait | null => {
+  if (!online) {
+    return { kind: "offline" };
+  }
+  if (full) {
+    return { kind: "conversationFull" };
+  }
+  if (refused !== null && (refused.kind !== "conversationFull" || pending)) {
+    return refused;
+  }
+  return left === 0 && usage !== null ? { kind: "month", resetsOn: usage.resetsOn } : null;
+};
+
 // Design 310a, 310i–310x: chat about one overview, beside its note. The conversation scrolls on
 // its own above the field; the overview's questions sit just above the field until the reader
 // types; an answer streams in under three dots, each word fading in, and is announced once, when final.
@@ -126,15 +149,7 @@ export const ChatPanel = ({
   const full = asked >= MAX_CHAT_QUESTIONS;
   const left = usage === null ? null : Math.max(0, usage.limit - usage.used);
   const refused = ask.status === "waiting" && ask.wait.kind !== "noSource" ? ask.wait : null;
-  const wait: ShownWait | null = !online
-    ? { kind: "offline" }
-    : full
-      ? { kind: "conversationFull" }
-      : refused !== null && (refused.kind !== "conversationFull" || pending !== null)
-        ? refused
-        : left === 0 && usage !== null
-          ? { kind: "month", resetsOn: usage.resetsOn }
-          : null;
+  const wait: ShownWait | null = shownWaitOf({ online, full, refused, pending: pending !== null, left, usage });
   const others = chats.filter((each) => each !== chat).length;
   const questions = overview.followUpQuestions ?? [];
   const sets = Math.ceil(questions.length / FOLLOW_UP_QUESTIONS_SHOWN);
@@ -227,21 +242,26 @@ export const ChatPanel = ({
 
   const say = (text: string, done: boolean) => setSaid({ text, done, key: Date.now() });
 
-  const toast =
-    deleting !== null ? (
-      <div key={deleting.id} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
-        <StrokeIcon name="check" size={17} />
-        Conversation deleted
-        <button type="button" className={styles.undo} onClick={panel.undoDelete} data-testid={chatPanelTestIds.undo}>
-          Undo
-        </button>
-      </div>
-    ) : said !== null ? (
+  const toastFor = () => {
+    if (deleting !== null) {
+      return (
+        <div key={deleting.id} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
+          <StrokeIcon name="check" size={17} />
+          Conversation deleted
+          <button type="button" className={styles.undo} onClick={panel.undoDelete} data-testid={chatPanelTestIds.undo}>
+            Undo
+          </button>
+        </div>
+      );
+    }
+    return said === null ? null : (
       <div key={said.key} className={styles.toast} role="status" data-testid={chatPanelTestIds.toast}>
         <StrokeIcon name={said.done ? "check" : "alertCircle"} size={17} />
         {said.text}
       </div>
-    ) : null;
+    );
+  };
+  const toast = toastFor();
 
   const send = (question: string, from: "question" | "typed") => {
     panel.ask(question.trim(), from);
@@ -260,6 +280,171 @@ export const ChatPanel = ({
     } else {
       panel.close();
     }
+  };
+
+  const conversationBody = () => {
+    if (messages.length === 0 && pending === null) {
+      return (
+        <div className={styles.empty} data-testid={chatPanelTestIds.empty}>
+          <p className={styles.emptyHeading}>What would you like to know about this {words.noun}?</p>
+          <p className={styles.emptyLine}>
+            {words.answersFrom}
+            {others > 0 && ` It can see your ${plural(others, "other conversation")} about it.`}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <>
+        {cameFrom !== null && (
+          <button type="button" className={styles.back} onClick={panel.goBack} data-testid={chatPanelTestIds.back}>
+            <StrokeIcon name="chevronLeft" size={15} />
+            Back to “{cameFrom.title}”
+          </button>
+        )}
+        <ol className={styles.messages}>
+          {messages.map((message, index) =>
+            message.from === "reader" ? (
+              <Fragment key={index}>
+                <ChatDrewOn
+                  how="pinned"
+                  sources={(message.sources ?? []).filter((source) => source.how === "pinned")}
+                  overviewOf={overviewOf}
+                  onFollow={followSource}
+                />
+                <li
+                  className={`${styles.question} ${outlined === index ? styles.outlined : ""}`}
+                  tabIndex={-1}
+                  data-message={index}
+                  data-testid={chatPanelTestIds.question}
+                >
+                  {message.text}
+                </li>
+                <ChatDrewOn
+                  how="found"
+                  sources={(message.sources ?? []).filter((source) => source.how === "found")}
+                  overviewOf={overviewOf}
+                  onFollow={followSource}
+                />
+              </Fragment>
+            ) : (
+              <li
+                key={index}
+                data-message={index}
+                data-answer=""
+                {...(revealed === index ? { "data-revealed": "" } : {})}
+                onClick={() => setRevealed(index)}
+              >
+                <ChatAnswer
+                  text={message.text}
+                  inSource={message.inSource}
+                  citations={message.citations}
+                  about={kind}
+                  arrived={index === arrivedAt}
+                  page={page}
+                  video={video}
+                  overview={overview}
+                  onCitationFollowed={onCitationFollowed}
+                  onOverviewPartFollowed={onOverviewPartFollowed}
+                  onOpenTranscriptAt={onOpenTranscriptAt}
+                  conversationOf={conversationOf}
+                  onConversationFollowed={(cited, at) =>
+                    panel.followConversation(cited, at, { title: firstQuestion ?? "", message: index })
+                  }
+                  holdsOverview={holdsOverview}
+                  onOtherOverviewFollowed={(cited) =>
+                    analytics.reader.chat.citationFollowed({
+                      overviewId: overview.id,
+                      to: "otherOverview",
+                      ...(cited.item === null ? {} : { part: cited.item.part, index: cited.item.index }),
+                    })
+                  }
+                  sections={message.sections}
+                  imageOf={imageOf}
+                  onSourcesOpened={(sources) => analytics.reader.chat.sourcesMenuOpened({ overviewId: overview.id, sources })}
+                  actions={(sources) => (
+                    <ChatAnswerActions
+                      answer={message.text}
+                      latest={index === latestAnswerAt && pending === null}
+                      onSaid={say}
+                      onCopied={() => analytics.reader.chat.answerCopied({ overviewId: overview.id })}
+                      sources={sources}
+                    />
+                  )}
+                />
+              </li>
+            ),
+          )}
+          {pending !== null && (
+            <>
+              {pending.status === "answering" && pending.sources !== null && (
+                <ChatDrewOn how="pinned" sources={pending.sources.pinned} overviewOf={overviewOf} onFollow={followSource} />
+              )}
+              <li
+                className={styles.question}
+                {...(pending.status === "answering" ? { [ARRIVING_ATTRIBUTE]: "" } : {})}
+                data-testid={chatPanelTestIds.question}
+              >
+                {pending.question}
+              </li>
+              {pending.status === "answering" && pending.sources !== null && (
+                <ChatDrewOn how="found" sources={pending.sources.found} overviewOf={overviewOf} onFollow={followSource} />
+              )}
+              <li data-testid={chatPanelTestIds.pending}>
+                {(pending.status === "answering" || pending.status === "stopped") && (
+                  <div className={styles.streaming} aria-busy={pending.status === "answering"}>
+                    {pending.status === "answering" && streamedParagraphs(pending.text, false).length === 0 ? (
+                      <span className={styles.dots} aria-hidden="true" data-testid={chatPanelTestIds.dots}>
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                    ) : (
+                      <ChatStreamedText text={pending.text} whole={pending.status === "stopped"} />
+                    )}
+                    {pending.status === "answering" && pending.sections.length > 0 && (
+                      <div data-testid={chatPanelTestIds.streamedSections}>
+                        <ChatAnswerSectionsView sections={{ intro: "", introSources: [], sections: pending.sections }} />
+                      </div>
+                    )}
+                    {slowness === "noWordsYet" && (
+                      <p className={styles.status} data-testid={chatPanelTestIds.slow}>
+                        Still working on it…
+                      </p>
+                    )}
+                    {slowness === "stalled" && (
+                      <p className={styles.status} data-testid={chatPanelTestIds.slow}>
+                        <StrokeIcon name="wifiOff" size={14} />
+                        Connection is slow. It’ll carry on when it catches up.
+                      </p>
+                    )}
+                    {pending.status === "stopped" && (
+                      <p className={styles.status} data-testid={chatPanelTestIds.stopped}>
+                        Stopped. This one didn’t count.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {pending.status === "failed" && (
+                  <div className={styles.failure} role="alert" data-testid={chatPanelTestIds.failure}>
+                    <p>Something went wrong answering that. Try again in a while.</p>
+                    <button
+                      type="button"
+                      className={styles.pillButton}
+                      onClick={() => panel.ask(pending.question, "typed")}
+                      data-testid={chatPanelTestIds.tryAgain}
+                    >
+                      <StrokeIcon name="rotateCw" size={15} />
+                      Try again
+                    </button>
+                  </div>
+                )}
+              </li>
+            </>
+          )}
+        </ol>
+      </>
+    );
   };
 
   return (
@@ -318,164 +503,8 @@ export const ChatPanel = ({
             onOpen={panel.openConversation}
             onDelete={panel.deleteConversation}
           />
-        ) : messages.length === 0 && pending === null ? (
-          <div className={styles.empty} data-testid={chatPanelTestIds.empty}>
-            <p className={styles.emptyHeading}>What would you like to know about this {words.noun}?</p>
-            <p className={styles.emptyLine}>
-              {words.answersFrom}
-              {others > 0 && ` It can see your ${plural(others, "other conversation")} about it.`}
-            </p>
-          </div>
         ) : (
-          <>
-            {cameFrom !== null && (
-              <button type="button" className={styles.back} onClick={panel.goBack} data-testid={chatPanelTestIds.back}>
-                <StrokeIcon name="chevronLeft" size={15} />
-                Back to “{cameFrom.title}”
-              </button>
-            )}
-            <ol className={styles.messages}>
-              {messages.map((message, index) =>
-                message.from === "reader" ? (
-                  <Fragment key={index}>
-                    <ChatDrewOn
-                      how="pinned"
-                      sources={(message.sources ?? []).filter((source) => source.how === "pinned")}
-                      overviewOf={overviewOf}
-                      onFollow={followSource}
-                    />
-                    <li
-                      className={`${styles.question} ${outlined === index ? styles.outlined : ""}`}
-                      tabIndex={-1}
-                      data-message={index}
-                      data-testid={chatPanelTestIds.question}
-                    >
-                      {message.text}
-                    </li>
-                    <ChatDrewOn
-                      how="found"
-                      sources={(message.sources ?? []).filter((source) => source.how === "found")}
-                      overviewOf={overviewOf}
-                      onFollow={followSource}
-                    />
-                  </Fragment>
-                ) : (
-                  <li
-                    key={index}
-                    data-message={index}
-                    data-answer=""
-                    {...(revealed === index ? { "data-revealed": "" } : {})}
-                    onClick={() => setRevealed(index)}
-                  >
-                    <ChatAnswer
-                      text={message.text}
-                      inSource={message.inSource}
-                      citations={message.citations}
-                      about={kind}
-                      arrived={index === arrivedAt}
-                      page={page}
-                      video={video}
-                      overview={overview}
-                      onCitationFollowed={onCitationFollowed}
-                      onOverviewPartFollowed={onOverviewPartFollowed}
-                      onOpenTranscriptAt={onOpenTranscriptAt}
-                      conversationOf={conversationOf}
-                      onConversationFollowed={(cited, at) =>
-                        panel.followConversation(cited, at, { title: firstQuestion ?? "", message: index })
-                      }
-                      holdsOverview={holdsOverview}
-                      onOtherOverviewFollowed={(cited) =>
-                        analytics.reader.chat.citationFollowed({
-                          overviewId: overview.id,
-                          to: "otherOverview",
-                          ...(cited.item === null ? {} : { part: cited.item.part, index: cited.item.index }),
-                        })
-                      }
-                      sections={message.sections}
-                      imageOf={imageOf}
-                      onSourcesOpened={(sources) => analytics.reader.chat.sourcesMenuOpened({ overviewId: overview.id, sources })}
-                      actions={(sources) => (
-                        <ChatAnswerActions
-                          answer={message.text}
-                          latest={index === latestAnswerAt && pending === null}
-                          onSaid={say}
-                          onCopied={() => analytics.reader.chat.answerCopied({ overviewId: overview.id })}
-                          sources={sources}
-                        />
-                      )}
-                    />
-                  </li>
-                ),
-              )}
-              {pending !== null && (
-                <>
-                  {pending.status === "answering" && pending.sources !== null && (
-                    <ChatDrewOn how="pinned" sources={pending.sources.pinned} overviewOf={overviewOf} onFollow={followSource} />
-                  )}
-                  <li
-                    className={styles.question}
-                    {...(pending.status === "answering" ? { [ARRIVING_ATTRIBUTE]: "" } : {})}
-                    data-testid={chatPanelTestIds.question}
-                  >
-                    {pending.question}
-                  </li>
-                  {pending.status === "answering" && pending.sources !== null && (
-                    <ChatDrewOn how="found" sources={pending.sources.found} overviewOf={overviewOf} onFollow={followSource} />
-                  )}
-                  <li data-testid={chatPanelTestIds.pending}>
-                    {(pending.status === "answering" || pending.status === "stopped") && (
-                      <div className={styles.streaming} aria-busy={pending.status === "answering"}>
-                        {pending.status === "answering" && streamedParagraphs(pending.text, false).length === 0 ? (
-                          <span className={styles.dots} aria-hidden="true" data-testid={chatPanelTestIds.dots}>
-                            <span />
-                            <span />
-                            <span />
-                          </span>
-                        ) : (
-                          <ChatStreamedText text={pending.text} whole={pending.status === "stopped"} />
-                        )}
-                        {pending.status === "answering" && pending.sections.length > 0 && (
-                          <div data-testid={chatPanelTestIds.streamedSections}>
-                            <ChatAnswerSectionsView sections={{ intro: "", introSources: [], sections: pending.sections }} />
-                          </div>
-                        )}
-                        {slowness === "noWordsYet" && (
-                          <p className={styles.status} data-testid={chatPanelTestIds.slow}>
-                            Still working on it…
-                          </p>
-                        )}
-                        {slowness === "stalled" && (
-                          <p className={styles.status} data-testid={chatPanelTestIds.slow}>
-                            <StrokeIcon name="wifiOff" size={14} />
-                            Connection is slow. It’ll carry on when it catches up.
-                          </p>
-                        )}
-                        {pending.status === "stopped" && (
-                          <p className={styles.status} data-testid={chatPanelTestIds.stopped}>
-                            Stopped. This one didn’t count.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {pending.status === "failed" && (
-                      <div className={styles.failure} role="alert" data-testid={chatPanelTestIds.failure}>
-                        <p>Something went wrong answering that. Try again in a while.</p>
-                        <button
-                          type="button"
-                          className={styles.pillButton}
-                          onClick={() => panel.ask(pending.question, "typed")}
-                          data-testid={chatPanelTestIds.tryAgain}
-                        >
-                          <StrokeIcon name="rotateCw" size={15} />
-                          Try again
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                </>
-              )}
-            </ol>
-          </>
+          conversationBody()
         )}
       </div>
 

@@ -73,6 +73,13 @@ export interface NewOverviewRunController {
   commitCaptureReason: () => void;
 }
 
+const noteKindOf = (overview: Overview): "recipe" | "process" | "default" => {
+  if (overview.recipe != null) {
+    return "recipe";
+  }
+  return overview.sourceSteps != null ? "process" : "default";
+};
+
 // Owned by the AppShell, which is the one component that stays mounted across every
 // navigation: that is what lets a generation outlive the dialog it was started from
 // without a second app-wide context (docs/conventions/frontend-architecture-guide.md 4.1).
@@ -197,18 +204,22 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
         captureReason: draftRef.current,
       });
 
-      const what =
-        podcastRequest !== null
-          ? { podcast: podcastRequest }
-          : articleRequest === null
-            ? { url }
-            : {
-                readArticle: async (): Promise<ArticleRead> => {
-                  const allowed = await articleRequest.access;
-                  updateArticle({ asking: false });
-                  return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
-                },
-              };
+      const whatToRead = () => {
+        if (podcastRequest !== null) {
+          return { podcast: podcastRequest };
+        }
+        if (articleRequest === null) {
+          return { url };
+        }
+        return {
+          readArticle: async (): Promise<ArticleRead> => {
+            const allowed = await articleRequest.access;
+            updateArticle({ asking: false });
+            return allowed ? articleRequest.read() : { status: "failed", reason: "declined" };
+          },
+        };
+      };
+      const what = whatToRead();
 
       mutate(
         {
@@ -315,7 +326,7 @@ export const useNewOverviewRun = (): NewOverviewRunController => {
                 personalised,
                 recipeIngredients: saved.recipe?.ingredientsSaid === undefined ? undefined : saved.recipe.ingredients.length,
                 recipeIngredientsSaid: saved.recipe?.ingredientsSaid?.length,
-                noteKind: saved.recipe != null ? "recipe" : saved.sourceSteps != null ? "process" : "default",
+                noteKind: noteKindOf(saved),
                 ...noteBudgetProps(saved, sourceWords, sourceHeadings),
                 articleLinks,
                 articleResources: articleLinks === undefined ? undefined : (saved.article?.resources?.length ?? 0),

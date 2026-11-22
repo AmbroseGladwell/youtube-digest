@@ -33,8 +33,12 @@ const BODIES: Record<string, unknown> = {
   chat: { choices: [{ message: { content: JSON.stringify(answer) } }] },
 };
 
-const generationBody = (provider: string) =>
-  provider === "anthropic" ? BODIES.anthropic : provider === "gemini" ? BODIES.gemini : BODIES.chat;
+const generationBody = (provider: string) => {
+  if (provider === "anthropic") {
+    return BODIES.anthropic;
+  }
+  return provider === "gemini" ? BODIES.gemini : BODIES.chat;
+};
 
 test("every provider sends the key to its own origin and parses the answer back out", async () => {
   for (const provider of PROVIDERS) {

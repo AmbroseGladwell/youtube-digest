@@ -89,6 +89,30 @@ const linePlaces = (lines: NoteLine[]): Array<number | "section"> => {
   });
 };
 
+interface LineMarkerProps {
+  step: boolean;
+  hasSteps: boolean;
+  number: number | null | undefined;
+}
+
+const LineMarker = ({ step, hasSteps, number }: LineMarkerProps) => {
+  if (step) {
+    return (
+      <span className={styles.stepNumber} aria-hidden="true" data-testid={readAlongNoteTestIds.stepNumber}>
+        {number}
+      </span>
+    );
+  }
+  if (hasSteps) {
+    return <span className={styles.dot} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet} />;
+  }
+  return (
+    <span className={styles.bullet} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet}>
+      {number}.
+    </span>
+  );
+};
+
 export const ReadAlongNote = ({
   lines,
   activeIndex,
@@ -195,18 +219,7 @@ export const ReadAlongNote = ({
               {...(part === undefined ? {} : citedPartProps(cited, part, places[index]!))}
               data-testid={active ? readAlongNoteTestIds.activeLine : readAlongNoteTestIds.line}
             >
-              {line.bullet &&
-                (step ? (
-                  <span className={styles.stepNumber} aria-hidden="true" data-testid={readAlongNoteTestIds.stepNumber}>
-                    {numbers[index]}
-                  </span>
-                ) : stepIndexes.length > 0 ? (
-                  <span className={styles.dot} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet} />
-                ) : (
-                  <span className={styles.bullet} aria-hidden="true" data-testid={readAlongNoteTestIds.bullet}>
-                    {numbers[index]}.
-                  </span>
-                ))}
+              {line.bullet && <LineMarker step={step} hasSteps={stepIndexes.length > 0} number={numbers[index]} />}
               <span className={styles.lineBody}>
                 {line.label && (
                   <span className={styles.lineLabel} data-testid={readAlongNoteTestIds.lineLabel}>

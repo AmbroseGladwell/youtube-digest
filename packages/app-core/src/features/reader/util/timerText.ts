@@ -47,8 +47,15 @@ export const timeLeftWords = (ms: number): string => {
   return minutes % 60 === 0 ? plural(hours, "hour") : `${plural(hours, "hour")} ${plural(minutes % 60, "minute")}`;
 };
 
-export const timerAgo = (ms: number): string =>
-  ms < 10_000 ? "just now" : ms < 60_000 ? `${Math.floor(ms / 1000)} s ago` : `${Math.floor(ms / 60_000)} min ago`;
+export const timerAgo = (ms: number): string => {
+  if (ms < 10_000) {
+    return "just now";
+  }
+  if (ms < 60_000) {
+    return `${Math.floor(ms / 1000)} s ago`;
+  }
+  return `${Math.floor(ms / 60_000)} min ago`;
+};
 
 export const timerShortName = (timer: CookingTimer): string => timer.name ?? `Step ${timer.step + 1}`;
 

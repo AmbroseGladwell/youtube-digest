@@ -24,6 +24,13 @@ export interface ChatSheetProps {
 
 const DRAG_START_PX = 4;
 
+const scrimOpacityOf = (travel: number, raised: boolean, offset: number): number => {
+  if (travel === 0) {
+    return raised ? 1 : 0;
+  }
+  return Math.min(1, Math.max(0, 1 - offset / travel));
+};
+
 interface Drag {
   pointerId: number;
   startY: number;
@@ -137,7 +144,7 @@ export const ChatSheet = ({
     setDragOffset(null);
   };
 
-  const scrim = travel === 0 ? (raised ? 1 : 0) : Math.min(1, Math.max(0, 1 - offset / travel));
+  const scrim = scrimOpacityOf(travel, raised, offset);
 
   return (
     <>

@@ -71,7 +71,7 @@ import { ReaderNotice } from "../components/ReaderNotice/ReaderNotice.js";
 import { RegenerateArticleDialog } from "../components/RegenerateArticleDialog/RegenerateArticleDialog.js";
 import { useShowOnPage } from "../useShowOnPage.js";
 import { ReaderTabs } from "../components/ReaderTabs/ReaderTabs.js";
-import { CookingMode } from "../components/CookingMode/CookingMode.js";
+import { CookingMode, type CookingSurface } from "../components/CookingMode/CookingMode.js";
 import { RecipeIngredients } from "../components/RecipeIngredients/RecipeIngredients.js";
 import { RecipeMethod } from "../components/RecipeMethod/RecipeMethod.js";
 import { RecipePageLink } from "../components/RecipePageLink/RecipePageLink.js";
@@ -126,6 +126,20 @@ import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
 
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
+
+const cookingSurfaceOf = (isPanel: boolean, isPhone: boolean): CookingSurface => {
+  if (isPanel) {
+    return "panel";
+  }
+  return isPhone ? "phone" : "web";
+};
+
+const projectsWebAppOf = (isPanel: boolean, connected: boolean, apiUrl: string | null): string | null => {
+  if (!isPanel) {
+    return "here";
+  }
+  return connected ? apiUrl : null;
+};
 
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
@@ -204,16 +218,16 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const recipePage = overview?.source.kind === "web" && recipe !== null ? { source: overview.source, recipe } : null;
   const recipeNote = overview !== null && recipe !== null ? { source: overview.source, recipe } : null;
   const webPage = webArticle?.source ?? recipePage?.source ?? null;
-  const tabsShown =
-    recipePage !== null
-      ? ["Overview" as const]
-      : webArticle === null
-        ? recipeNote !== null && !overview?.chapters?.length
-          ? UNCHAPTERED_RECIPE_VIDEO_TABS
-          : READER_TABS
-        : webArticle.article.chapters.length > 1
-          ? ARTICLE_TABS
-          : ["Overview" as const];
+  const tabsShownFor = () => {
+    if (recipePage !== null) {
+      return ["Overview" as const];
+    }
+    if (webArticle === null) {
+      return recipeNote !== null && !overview?.chapters?.length ? UNCHAPTERED_RECIPE_VIDEO_TABS : READER_TABS;
+    }
+    return webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
+  };
+  const tabsShown = tabsShownFor();
   useEffect(() => setRecipeScale(null), [overviewId]);
   const scale = recipeScale ?? (recipe === null ? null : initialScale(recipe));
   const adjustment = useMemo(
@@ -270,31 +284,35 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   // A video can be remade from anywhere. We keep no copy of an article, so it is read again:
   // from the page beside the panel, where the reader may be signed in, or else by our server
   // from its link; with neither, the menu explains (docs/features/article-panel.md, "Regenerating").
-  const regenerate =
-    webPage !== null
-      ? {
-          asksFirst: onPage === null && startArticleFromUrl === null,
-          onChoose: () => {
-            if (onPage !== null) {
-              startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
-            } else if (startArticleFromUrl !== null) {
-              startArticleFromUrl(webPage.url, { from: "regenerate", title: webPage.title, overviewId, captureReason });
-            } else {
-              setExplainingRegenerate(true);
-              return;
-            }
-            void navigate(Routes.home(), { viewTransition: animateNavigation });
-          },
-        }
-      : video !== null
-        ? {
-            asksFirst: false,
-            onChoose: () => {
-              startRun(video.url, { from: "regenerate", overviewId, captureReason });
-              void navigate(Routes.home(), { viewTransition: animateNavigation });
-            },
+  const regenerateFor = () => {
+    if (webPage !== null) {
+      return {
+        asksFirst: onPage === null && startArticleFromUrl === null,
+        onChoose: () => {
+          if (onPage !== null) {
+            startArticleRun(onPage.beside, { from: "regenerate", overviewId, captureReason, willAsk: true });
+          } else if (startArticleFromUrl !== null) {
+            startArticleFromUrl(webPage.url, { from: "regenerate", title: webPage.title, overviewId, captureReason });
+          } else {
+            setExplainingRegenerate(true);
+            return;
           }
-        : null;
+          void navigate(Routes.home(), { viewTransition: animateNavigation });
+        },
+      };
+    }
+    if (video !== null) {
+      return {
+        asksFirst: false,
+        onChoose: () => {
+          startRun(video.url, { from: "regenerate", overviewId, captureReason });
+          void navigate(Routes.home(), { viewTransition: animateNavigation });
+        },
+      };
+    }
+    return null;
+  };
+  const regenerate = regenerateFor();
   const track = useMemo(() => (overview ? playerTrackFor(overview, lines) : null), [overview, lines]);
   const notePlayer = useNotePlayer(track);
   const player = usePlayer();
@@ -312,7 +330,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const webApp = useOverviewInWebApp(overviewId);
   const { connection } = useSyncConnection();
   const accountNeeded = useAccountNeeded();
-  const projects = useOverviewProjects(overview, !isPanel ? "here" : sync.connected ? connection.apiUrl : null);
+  const projects = useOverviewProjects(overview, projectsWebAppOf(isPanel, sync.connected, connection.apiUrl));
   const overviewShare = useOverviewShare(overview);
   const shareOverview = useShareOverviewMutation();
   const stopSharing = useStopSharingMutation();
@@ -1048,7 +1066,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
               steps={recipeNote.recipe.steps}
               actions={methodActions}
               actionNote={adjustment.actionNote}
-              surface={isPanel ? "panel" : isPhone ? "phone" : "web"}
+              surface={cookingSurfaceOf(isPanel, isPhone)}
               usTemperatures={recipeUnits === "us"}
               methodAmounts={adjustment.methodAmounts}
               videoId={video?.id ?? null}

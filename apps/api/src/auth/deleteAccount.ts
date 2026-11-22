@@ -19,6 +19,13 @@ export interface EraseAccountOptions {
   personEraser: PersonEraser | null;
 }
 
+const startingStatus = (hasWork: boolean, configured: boolean): "skipped" | "not_configured" | "pending" => {
+  if (!hasWork) {
+    return "skipped";
+  }
+  return configured ? "pending" : "not_configured";
+};
+
 // One transaction: what the later steps need is captured first, the audit row is written,
 // then everything under the account goes. The foreign keys cascade for every table but
 // three, which are deleted by hand here (docs/features/account-deletion.md, "What goes").
@@ -39,9 +46,9 @@ export const eraseAccount = async (
       accountId,
       anonymousId,
       narrationKeys: keys,
-      narration: keys.length === 0 ? "skipped" : narrationStore === null ? "not_configured" : "pending",
+      narration: startingStatus(keys.length !== 0, narrationStore !== null),
       postHogAccount: personEraser === null ? "not_configured" : "pending",
-      postHogAnonymous: anonymousId === null ? "skipped" : personEraser === null ? "not_configured" : "pending",
+      postHogAnonymous: startingStatus(anonymousId !== null, personEraser !== null),
       now,
     });
     await tx.query("delete from audio_renders where requested_by = $1", [accountId]);

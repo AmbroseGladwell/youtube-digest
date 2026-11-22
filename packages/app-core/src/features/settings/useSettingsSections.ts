@@ -78,6 +78,12 @@ export const useSettingsSections = (): SettingsSectionSummary[] => {
   const shareUsage = useShareUsageState();
   const followed = useFollowedPlaylistsQuery();
   const appearance = useAppearance();
+  const planValue = (): string => {
+    if (planStatus === "known") {
+      return planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota), transcribingLeftOf(usage.data?.transcription));
+    }
+    return planStatus === "checking" ? CHECKING_ROW_VALUE : UNREACHABLE_ROW_VALUE;
+  };
 
   return [
     ...(sync.available
@@ -92,12 +98,7 @@ export const useSettingsSections = (): SettingsSectionSummary[] => {
     {
       id: "plan",
       title: "Plan",
-      value:
-        planStatus === "known"
-          ? planRowValue(PLAN_LABEL[plan], planRowCount(nextQuota), transcribingLeftOf(usage.data?.transcription))
-          : planStatus === "checking"
-            ? CHECKING_ROW_VALUE
-            : UNREACHABLE_ROW_VALUE,
+      value: planValue(),
     },
     {
       id: "keys",

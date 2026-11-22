@@ -29,6 +29,52 @@ export interface ChatSourceChipProps {
   testId?: string | undefined;
 }
 
+interface ChipFaceProps {
+  body: ReactNode;
+  name: string;
+  deleted: boolean | undefined;
+  to: string | undefined;
+  state: unknown;
+  onFollow: (() => void) | undefined;
+  onPress: ((chip: HTMLButtonElement) => void) | undefined;
+  testId: string | undefined;
+}
+
+const ChipFace = ({ body, name, deleted, to, state, onFollow, onPress, testId }: ChipFaceProps) => {
+  if (deleted) {
+    return (
+      <span className={styles.face} data-testid={testId ?? chatSourceChipTestIds.deleted}>
+        {body}
+      </span>
+    );
+  }
+  if (onPress !== undefined) {
+    return (
+      <button
+        type="button"
+        className={styles.face}
+        aria-label={name}
+        onClick={(event) => onPress(event.currentTarget)}
+        data-testid={testId}
+      >
+        {body}
+      </button>
+    );
+  }
+  if (to !== undefined) {
+    return (
+      <PageLink className={styles.face} to={to} state={state} aria-label={name} onClick={onFollow} data-testid={testId}>
+        {body}
+      </PageLink>
+    );
+  }
+  return (
+    <span className={styles.face} role="img" aria-label={name} data-testid={testId}>
+      {body}
+    </span>
+  );
+};
+
 // OV-354, page 2: every reference in the chat is the same chip, 28px, a mini thumbnail, the title
 // cut with an ellipsis, then the place it names and "+n". One deleted since is muted and not a link.
 export const ChatSourceChip = ({
@@ -65,26 +111,9 @@ export const ChatSourceChip = ({
     </>
   );
   const name = more.length === 0 ? label : `${label}, and ${more.join(", ")}`;
-  const content = deleted ? (
-    <span className={styles.face} data-testid={testId ?? chatSourceChipTestIds.deleted}>
-      {body}
-    </span>
-  ) : onPress !== undefined ? (
-    <button type="button" className={styles.face} aria-label={name} onClick={(event) => onPress(event.currentTarget)} data-testid={testId}>
-      {body}
-    </button>
-  ) : to !== undefined ? (
-    <PageLink className={styles.face} to={to} state={state} aria-label={name} onClick={onFollow} data-testid={testId}>
-      {body}
-    </PageLink>
-  ) : (
-    <span className={styles.face} role="img" aria-label={name} data-testid={testId}>
-      {body}
-    </span>
-  );
   return (
     <span className={className} data-testid={chatSourceChipTestIds.chip}>
-      {content}
+      <ChipFace body={body} name={name} deleted={deleted} to={to} state={state} onFollow={onFollow} onPress={onPress} testId={testId} />
       {onRemove === undefined ? null : (
         <button
           type="button"

@@ -47,13 +47,30 @@ const afterOrdinal = (item: string) => {
 const KEY_POINT_LINKS = ["Then", "Also", "On top of that", "Next", "Beyond that"];
 const ACTION_LINKS = ["Then"];
 
+const linkFor = (index: number, count: number, middleLinks: string[]): string => {
+  if (index === 0) {
+    return "First";
+  }
+  return index === count - 1 ? "And finally" : middleLinks[(index - 1) % middleLinks.length]!;
+};
+
+const stepLinkFor = (index: number, count: number): string | null => {
+  if (count === 1) {
+    return null;
+  }
+  if (index === 0) {
+    return "First";
+  }
+  return index === count - 1 ? "Finally" : "Then";
+};
+
 // docs/features/tts-pre-rendered-speech.md, "The spoken script".
 const inOrder = (items: Body[], middleLinks: string[]): Body[] =>
   items.map((item, index) => {
     if (items.length === 1) {
       return item;
     }
-    const link = index === 0 ? "First" : index === items.length - 1 ? "And finally" : middleLinks[(index - 1) % middleLinks.length]!;
+    const link = linkFor(index, items.length, middleLinks);
     return { ...item, spoken: `${link}, ${afterOrdinal(item.text)}` };
   });
 
@@ -215,7 +232,7 @@ export const overviewNoteLines = (overview: SharedNote, shown: ShownRecipeParts 
     SOURCE_STEPS_SECTION,
     { text: SOURCE_STEPS_SECTION, spoken: sourceStepsHeading(steps.length, sourceWord), aside: `From the ${sourceWord}, in its order` },
     steps.map(({ text, range, dubiousReason }, index) => {
-      const link = steps.length === 1 ? null : index === 0 ? "First" : index === steps.length - 1 ? "Finally" : "Then";
+      const link = stepLinkFor(index, steps.length);
       const said = link === null ? text : `${link}, ${afterOrdinal(text)}`;
       const body = withRange({ text, range });
       if (dubiousReason !== null) {

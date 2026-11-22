@@ -36,6 +36,13 @@ export interface OnboardingWaitScreenProps {
   onOpen: () => void;
 }
 
+const phaseOf = (failed: boolean, ready: boolean): WaitPhase => {
+  if (failed) {
+    return "failed";
+  }
+  return ready ? "ready" : "running";
+};
+
 // Design 327m, live on page 7: the first paid screen. Each stage is a real event of the run (the
 // words found, writing begun, the overview in the account); only the line under the writing stage
 // is a timed script (docs/features/onboarding.md, "The wait").
@@ -55,7 +62,7 @@ export const OnboardingWaitScreen = ({
   const analytics = useAnalytics();
   const waitKind: WaitKind = found === null ? "video" : onboardingKindOf(found);
   const copy = WAIT_COPY[waitKind];
-  const phase: WaitPhase = failed ? "failed" : overview !== null ? "ready" : "running";
+  const phase: WaitPhase = phaseOf(failed, overview !== null);
   useKeepTabWhileRunning(phase, found?.source.title ?? "Your overview");
 
   // Known from the check before the account (327y-2), or found once the words turn out missing.
@@ -69,7 +76,10 @@ export const OnboardingWaitScreen = ({
       return found === null ? "running" : "done";
     }
     if (id === "write" || id === "prepareRecipe") {
-      return phase === "ready" ? "done" : writing ? "running" : "waiting";
+      if (phase === "ready") {
+        return "done";
+      }
+      return writing ? "running" : "waiting";
     }
     return sourceIn ? "done" : "running";
   };

@@ -21,6 +21,29 @@ const GEOMETRY = {
 
 type Layout = "deck" | "gather" | "list" | "stack";
 
+const DURATION_MS: Record<Layout, number> = { deck: 480, gather: 220, list: 420, stack: 420 };
+
+const stageTransition = (reduced: boolean, layout: Layout, n: number): string => {
+  if (reduced) {
+    return "none";
+  }
+  return layout === "list" ? `height ${420 + 60 + (n - 2) * 45}ms ${EASE}` : `height 420ms ${EASE} 120ms`;
+};
+
+const toggleLabel = (expanded: boolean, phone: boolean, n: number): string => {
+  if (expanded) {
+    return phone ? "One at a time" : "Show one at a time";
+  }
+  return phone ? `See all ${n}` : `See all ${n} samples`;
+};
+
+const innerTransition = (dragging: boolean, reduced: boolean): string => {
+  if (dragging) {
+    return "none";
+  }
+  return reduced ? "opacity 120ms linear" : `opacity 240ms ${EASE}`;
+};
+
 export interface SampleDeckProps {
   samples: readonly Sample[];
   // Where the deck opens; Start picks it at random each visit (327b).
@@ -155,7 +178,7 @@ export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDe
   };
 
   const dragging = drag !== null && layout === "deck";
-  const duration = layout === "deck" ? 480 : layout === "gather" ? 220 : 420;
+  const duration = DURATION_MS[layout];
   const width = layout === "list" ? g.listWidth : g.width;
   const motion = reduced
     ? "opacity 120ms linear"
@@ -164,7 +187,7 @@ export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDe
   const stageStyle: CSSProperties = {
     width,
     height: layout === "list" ? n * g.row + (n - 1) * GAP : g.height + TOP,
-    transition: reduced ? "none" : layout === "list" ? `height ${420 + 60 + (n - 2) * 45}ms ${EASE}` : `height 420ms ${EASE} 120ms`,
+    transition: stageTransition(reduced, layout, n),
   };
 
   return (
@@ -188,7 +211,7 @@ export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDe
         </h2>
         <button type="button" className={styles.toggle} aria-expanded={expanded} onClick={toggleAll} data-testid={sampleDeckTestIds.toggle}>
           {!phone && <StrokeIcon name={expanded ? "stack" : "layoutGrid"} size={14} />}
-          {expanded ? (phone ? "One at a time" : "Show one at a time") : phone ? `See all ${n}` : `See all ${n} samples`}
+          {toggleLabel(expanded, phone, n)}
         </button>
       </div>
       {failed && (
@@ -244,7 +267,7 @@ export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDe
                 className={styles.inner}
                 style={{
                   opacity: look.innerOpacity,
-                  transition: dragging ? "none" : reduced ? "opacity 120ms linear" : `opacity 240ms ${EASE}`,
+                  transition: innerTransition(dragging, reduced),
                   transitionDelay: `${layout === "list" && slot > 0 && !reduced ? look.delay + 160 : 0}ms`,
                 }}
               >

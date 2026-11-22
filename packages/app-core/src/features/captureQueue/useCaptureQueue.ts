@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { PlaylistId, PlaylistOrder, PlaylistPace, QueuedCapture, VideoId } from "@overview/domain";
+import type { PlaylistId, PlaylistOrder, PlaylistPace, PlaylistUnavailable, QueuedCapture, VideoId } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
 import { useYouTubeFetch } from "../../app/YouTubeFetchContext.js";
 import { useLibraryAccountId } from "../../stores/LibraryAccountContext.js";
@@ -47,6 +47,20 @@ const CHECKED_NOTICE_MS = 8_000;
 
 type ResumedVia = "reset" | "extension" | "key" | "plan";
 const DONE_NOTICE_MS = 10_000;
+
+const unavailableFor = (code: string | null): PlaylistUnavailable | null => {
+  if (code === "playlist_private") {
+    return "private";
+  }
+  return code === "playlist_not_found" ? "gone" : null;
+};
+
+const resumeTrigger = (keyChanged: boolean, planChanged: boolean): ResumedVia | null => {
+  if (keyChanged) {
+    return "key";
+  }
+  return planChanged ? "plan" : null;
+};
 
 export interface QueueMaking {
   capture: QueuedCapture;
@@ -288,7 +302,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
           }
         } catch (error) {
           const code = isSyncRequestError(error) ? error.code : null;
-          const unavailable = code === "playlist_private" ? "private" : code === "playlist_not_found" ? "gone" : null;
+          const unavailable = unavailableFor(code);
           if (unavailable !== null && playlist.unavailable !== unavailable) {
             await followedPlaylistStore.saveFollowed({ ...playlist, unavailable });
           }
@@ -412,7 +426,7 @@ export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean 
   const lastKeyed = useRef(keyed);
   const lastPlan = useRef(plan);
   useEffect(() => {
-    const via = keyed !== lastKeyed.current ? "key" : lastPlan.current !== null && plan !== lastPlan.current ? "plan" : null;
+    const via = resumeTrigger(keyed !== lastKeyed.current, lastPlan.current !== null && plan !== lastPlan.current);
     lastKeyed.current = keyed;
     lastPlan.current = plan;
     if (via === null) {

@@ -3,12 +3,19 @@ import { useEffect } from "react";
 import type { Overview } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { NewOverviewRun } from "../../types/NewOverviewRun.js";
-import { generationRunStatus } from "../../util/generationRunStatus.js";
+import { generationRunStatus, type GenerationRunStatus } from "../../util/generationRunStatus.js";
 import { useElapsedSeconds } from "../../useElapsedSeconds.js";
 import { READY_DISMISS_MS } from "./readyDismissMs.js";
 import styles from "./GenerationStatusStrip.module.scss";
 import { generationStatusStripTestIds } from "./GenerationStatusStripTestIds.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
+
+const stripStateOf = ({ isRunning, isReady }: GenerationRunStatus): "running" | "ready" | "failed" => {
+  if (isRunning) {
+    return "running";
+  }
+  return isReady ? "ready" : "failed";
+};
 
 export interface GenerationStatusStripProps {
   run: NewOverviewRun;
@@ -34,7 +41,7 @@ export const GenerationStatusStrip = ({ run, onDetails, onDismiss, onReadOvervie
     return () => clearTimeout(timer);
   }, [status.isReady, onDismiss]);
 
-  const state = status.isRunning ? "running" : status.isReady ? "ready" : "failed";
+  const state = stripStateOf(status);
 
   return (
     <div className={styles.root} role="status" aria-live="polite" data-state={state} data-testid={generationStatusStripTestIds.root}>

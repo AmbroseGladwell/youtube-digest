@@ -75,7 +75,10 @@ const numberValue = (written: string): number => {
 
 const unitOf = (word: string): Unit => {
   const first = word.toLowerCase()[0];
-  return first === "h" ? "hour" : first === "m" ? "minute" : "second";
+  if (first === "h") {
+    return "hour";
+  }
+  return first === "m" ? "minute" : "second";
 };
 
 const halfOf = (matched: string): number => (/and\s+a\s+half/i.test(matched) ? 0.5 : 0);

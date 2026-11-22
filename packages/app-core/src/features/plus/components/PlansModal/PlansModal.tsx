@@ -94,21 +94,23 @@ const PlanCardItem = ({ card, yours }: PlanCardItemProps) => {
       <p className={styles.note}>{card.note}</p>
       {yours ? (
         <span className={styles.current}>What you’re on now</span>
-      ) : plan === "free" ? null : (
-        <>
-          <button
-            type="button"
-            className={recommended ? styles.primary : styles.secondary}
-            disabled
-            aria-describedby={`plans-modal-billing-${plan}`}
-            data-testid={plansModalTestIds.choose(plan)}
-          >
-            {CHOOSE[plan]}
-          </button>
-          <span id={`plans-modal-billing-${plan}`} className={styles.soon}>
-            Paying for a plan opens soon.
-          </span>
-        </>
+      ) : (
+        plan !== "free" && (
+          <>
+            <button
+              type="button"
+              className={recommended ? styles.primary : styles.secondary}
+              disabled
+              aria-describedby={`plans-modal-billing-${plan}`}
+              data-testid={plansModalTestIds.choose(plan)}
+            >
+              {CHOOSE[plan]}
+            </button>
+            <span id={`plans-modal-billing-${plan}`} className={styles.soon}>
+              Paying for a plan opens soon.
+            </span>
+          </>
+        )
       )}
     </li>
   );

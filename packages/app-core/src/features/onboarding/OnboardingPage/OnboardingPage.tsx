@@ -39,7 +39,7 @@ import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { typedEntryCount } from "../../settings/util/aboutYouCopy.js";
 import { libraryAccountIdOf } from "../../sync/types/SyncConnection.js";
 import { useSyncConnection } from "../../sync/useSyncConnection.js";
-import { useSurface } from "../../../app/SurfaceContext.js";
+import { useSurface, type Surface } from "../../../app/SurfaceContext.js";
 import { useIsPhone } from "../../../util/useIsPhone.js";
 import { useMediaQuery } from "../../../util/useMediaQuery.js";
 import { OnboardingAboutYou } from "../components/OnboardingAboutYou/OnboardingAboutYou.js";
@@ -58,12 +58,13 @@ import { OnboardingTopics, type OnboardingTopicSuggestions } from "../components
 import { OnboardingYourLink } from "../components/OnboardingYourLink/OnboardingYourLink.js";
 import { OnboardingWaitScreen } from "../components/OnboardingWaitScreen/OnboardingWaitScreen.js";
 import { useContentBelow } from "../useContentBelow.js";
-import { useTopicSuggestions } from "../useTopicSuggestions.js";
+import { useTopicSuggestions, type AskedTopicSuggestions } from "../useTopicSuggestions.js";
 import type { OnboardingProgress } from "../onboardingProgressStorage.js";
 import { writeNextSteps } from "../nextStepsStorage.js";
 import { useOnboardingProgress, writeProgress } from "../useOnboardingProgress.js";
 import { useOnboardingRunState } from "../OnboardingRunContext.js";
 import { foundIn, onboardingSourceOf, onboardingSources } from "../onboardingSources.js";
+import type { ReaderPlace } from "../../newOverview/util/pastedLinkFailureCopy.js";
 import { onboardingFailureCopy } from "../util/onboardingFailureCopy.js";
 import { expectedOverviewMinutes } from "../util/expectedOverviewMinutes.js";
 import { onboardingKindOf } from "../util/onboardingKindOf.js";
@@ -92,6 +93,41 @@ const AFTER_THE_ANSWERS = ONBOARDING_STEPS.indexOf("account");
 // Held outside the page, which remounts while signing in, so a copy is never saved, reserved and
 // sorted twice at once.
 const SHARES_BEING_SAVED = new Set<string>();
+
+const codeSuggestionBy = (status: AskedTopicSuggestions["status"]): OnboardingTopicSuggestions["by"] => {
+  if (status === "failed") {
+    return "code-failed";
+  }
+  return status === "pending" ? "code-pending" : "code-only";
+};
+
+const finishedFrom = (share: OnboardingProgress["share"]): "link" | "sample" | "share" => {
+  if (share === null) {
+    return "link";
+  }
+  return share.sample ? "sample" : "share";
+};
+
+const landedOverview = (hasOverview: boolean, failed: boolean): NonNullable<OnboardingProgress["landed"]>["overview"] => {
+  if (hasOverview) {
+    return "ready";
+  }
+  return failed ? "failed" : "writing";
+};
+
+const answerTopics = (where: "aboutYou" | "account", topics: readonly string[]): ReactNode => {
+  if (where === "account") {
+    return topics.map((name) => <li key={name}>{name}</li>);
+  }
+  return topics.length > 0 ? <li>{topics.length === 1 ? "1 topic" : `${topics.length} topics`}</li> : null;
+};
+
+const readerPlaceOf = (surface: Surface, phone: boolean): ReaderPlace => {
+  if (surface === "extension") {
+    return "extension";
+  }
+  return phone ? "phone" : "computer";
+};
 
 // Onboarding around the reader's first link (designs 327a–327m): read for free, shown back to
 // them, then the moments and questions that make it theirs, the account, and the wait while it's
@@ -192,7 +228,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
           noun,
           names: suggestStarterTopics(found.source.title, found.about),
           newTopic: null,
-          by: asked.status === "failed" ? "code-failed" : asked.status === "pending" ? "code-pending" : "code-only",
+          by: codeSuggestionBy(asked.status),
         };
   }, [found, kind, asked, noun]);
   // Held once the topics screen shows them, so a late answer never moves chips under the reader.
@@ -238,7 +274,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     analytics.onboarding.finished.revealed({
       ...tagged,
       way: progress.way ?? "signIn",
-      from: share === null ? "link" : share.sample ? "sample" : "share",
+      from: finishedFrom(share),
     });
     libraryMove.dismiss();
     writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], sample });
@@ -299,7 +335,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
     if (!signedIn || progress.way === null || progress.landed !== null) {
       return;
     }
-    const landedWith = progress.overviewId !== null ? "ready" : failed ? "failed" : "writing";
+    const landedWith = landedOverview(progress.overviewId !== null, failed);
     analytics.onboarding.account.landed({ ...tagged, way: progress.way, overview: landedWith });
     update({ landed: { at: Date.now(), overview: landedWith, arrived: false } });
   }, [signedIn, progress.way, progress.landed, progress.overviewId, failed, analytics, update]);
@@ -401,11 +437,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
         <OnboardingSourceCard kind={kind} found={found} size="row" />
         {(progress.topics.length > 0 || personal) && (
           <ul className={styles.answers} aria-label="Your answers">
-            {where === "account" ? (
-              progress.topics.map((name) => <li key={name}>{name}</li>)
-            ) : progress.topics.length > 0 ? (
-              <li>{progress.topics.length === 1 ? "1 topic" : `${progress.topics.length} topics`}</li>
-            ) : null}
+            {answerTopics(where, progress.topics)}
             {personal && (
               <li className={styles.personal}>
                 <StrokeIcon name="check" size={11} />
@@ -457,7 +489,7 @@ const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
         if (readFailure !== null) {
           return (
             <OnboardingReadFailure
-              copy={onboardingFailureCopy(readFailure, progress.link, surface === "extension" ? "extension" : phone ? "phone" : "computer")}
+              copy={onboardingFailureCopy(readFailure, progress.link, readerPlaceOf(surface, phone))}
               link={progress.link}
               onTryAgain={() => tryAgain("readFailure")}
               onTranscribe={transcribe}

@@ -1,13 +1,19 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Routes } from "../../../../app/Routes.js";
-import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
+import { StrokeIcon, type StrokeIconName } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useStartArticleRun } from "../../../newOverview/useStartArticleRun.js";
 import { shouldAnimateNavigation } from "../../../../util/viewTransitions.js";
 import type { OnThisTab } from "../../useOnThisTab.js";
 import styles from "./OnThisTabLine.module.scss";
 import { onThisTabLineTestIds } from "./OnThisTabLineTestIds.js";
+
+const TAB_ICON: Record<OnThisTab["kind"], StrokeIconName> = {
+  video: "video",
+  episode: "mic",
+  page: "scrollText",
+};
 
 export interface OnThisTabLineProps {
   tab: OnThisTab;
@@ -54,7 +60,7 @@ export const OnThisTabLine = ({ tab, onStartVideo }: OnThisTabLineProps) => {
   return (
     <div className={styles.root} role="region" aria-label="On this tab" data-testid={onThisTabLineTestIds.root}>
       <span className={styles.icon} aria-hidden="true">
-        <StrokeIcon name={tab.kind === "video" ? "video" : tab.kind === "episode" ? "mic" : "scrollText"} size={14} />
+        <StrokeIcon name={TAB_ICON[tab.kind]} size={14} />
       </span>
       <span className={styles.message} data-testid={onThisTabLineTestIds.message}>
         Another {tab.kind} on this tab
