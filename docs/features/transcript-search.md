@@ -11,7 +11,7 @@ Built in two slices on one card:
 1. **The server**: the search over the reader's transcripts, `GET /api/search/transcripts` for
    the app, a `search_transcripts` MCP tool, and `get_transcript` reading a long transcript in
    parts.
-2. **The library**: a "Said in the video" group between word matches and meaning matches,
+2. **The library**: a "Said in the transcripts" group between word matches and meaning matches,
    opening the transcript at the moment.
 
 ## Where it runs
@@ -101,6 +101,35 @@ paragraph still being said then. A transcript that fits in one part reads exactl
 Its description and the server instructions say to find the moment with `search_transcripts`
 first.
 
+## In the library
+
+Typing in the library's search still filters overviews by word on the device. Once typing
+settles (`useSettledText`, as search by meaning does), the page asks `GET /api/search/transcripts`
+once for that text (`useTranscriptMatchesQuery`), signed in only, since only a signed-in library's
+transcripts are on our server.
+
+`transcriptEntries` keeps the overviews no word in their overview already matched and that pass
+every other filter, at most `TRANSCRIPT_ROWS` (10), and lists them under the word matches as
+**Said in the transcripts**, with "Your words aren't in these overviews, but they were said."
+Meaning matches come after and leave out anything already listed here, so a source said and
+close in meaning shows once, as said.
+
+**The row** is the ordinary library card with one more link under the title (no Design round;
+owner, 22 Nov 2026). It reads **"Said in the video at 1:02:05"** ("episode" for a podcast) in
+text, not only by colour, then the snippet with the words in `<mark>`. It borders on the left in
+the brand tint and the marks use the transcript panel's match colour. Following it opens the
+overview with the moment in history state (`TRANSCRIPT_MOMENT_STATE`): the reader opens the
+Transcript tab there, as "Read in transcript" does, and clears the state so going back and
+forward doesn't reopen it.
+
+When the search fails the page says "Couldn't search what was said in your videos and episodes
+just now." under the list, and lists word matches and meaning as before (degrade visibly).
+When no overview's words match, "No overviews match these filters" gives way to the group.
+
+**Analytics:** `library.search.transcriptMatched` counts, once per settled search, how many
+overviews only a transcript matched and whether the search failed; `library.overviewCard.opened`
+carries `from: "said"` for an open from the moment. Never the words.
+
 ## Logging
 
 `api.transcripts.searched`: where the search came from (`app` or `mcp`) and how many
@@ -109,8 +138,8 @@ overviews matched. **Never the query.**
 ## Privacy
 
 Nothing new is collected or sent anywhere: the search runs in our Postgres over the index
-chat already keeps. The privacy page's transcripts section now says an assistant can search
-the reader's copies and read one in parts (`legal-pages.md`, revision log, 22 Nov 2026).
+chat already keeps. The privacy page's transcripts section now says the library's search, with
+an account, looks in the reader's copies, and an assistant can search them and read one in parts (`legal-pages.md`, revision log, 22 Nov 2026).
 
 ## Testing
 
@@ -121,3 +150,7 @@ the reader's copies and read one in parts (`legal-pages.md`, revision log, 22 No
   common words only, and the log line.
 - `mcpTranscripts.test.ts`: the tool, one overview by id, an article's id, a transcript over
   two hours read in parts with no paragraph twice, and reading from a found moment.
+- `transcriptEntries.test.ts`, `transcriptMomentFromLocation.test.ts`, `fetchTranscriptSearchApi.test.ts`.
+- `librarySearchTranscripts.iwft.ts`: a word only the video said is listed as said, with its
+  moment and marked word, and opens the Transcript tab there; a source already found by its own
+  words, or said, isn't repeated (meaning included); a failed search says so.

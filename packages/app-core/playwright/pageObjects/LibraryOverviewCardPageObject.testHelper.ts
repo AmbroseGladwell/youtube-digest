@@ -29,6 +29,12 @@ export class LibraryOverviewCardPageObject extends PageObject {
       return new ReaderPageObject(this.testContext).verifyIsShown();
     });
 
+  openTheMomentSaid = (): Promise<ReaderPageObject> =>
+    this.step("openTheMomentSaid", async () => {
+      await this.click(libraryOverviewCardTestIds.saidLink);
+      return new ReaderPageObject(this.testContext).verifyIsShown();
+    });
+
   clickListen = () => this.step("clickListen", () => this.click(libraryOverviewCardTestIds.listenButton));
 
   verifyListenReads = (label: string) =>

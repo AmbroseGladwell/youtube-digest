@@ -24,6 +24,7 @@ import {
   chatRecordId,
 } from "@overview/domain";
 import { CITED_PLACE_STATE, citedPlaceFromLocation } from "../util/citedPlaceFromLocation.js";
+import { TRANSCRIPT_MOMENT_STATE, transcriptMomentFromLocation } from "../util/transcriptMomentFromLocation.js";
 import { CONVERSATION_STATE, conversationFromLocation } from "../util/conversationFromLocation.js";
 import { timedSource } from "../util/timedSource.js";
 import { useEpisodeEngine } from "../episode/useEpisodeEngine.js";
@@ -493,6 +494,21 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     }
     setCitedPart({ part: found.part, index: found.index, followed: 1 });
   }, [overview === null, arrivedAt?.part, arrivedAt?.index]);
+  const arrivedAtMoment = overview === null ? null : transcriptMomentFromLocation(location.state);
+  const momentTaken = useRef<string | null>(null);
+  useEffect(() => {
+    if (arrivedAtMoment === null || momentTaken.current === location.key) {
+      return;
+    }
+    momentTaken.current = location.key;
+    const history = window.history.state as { usr?: Record<string, unknown> } | null;
+    if (history?.usr !== undefined) {
+      window.history.replaceState({ ...history, usr: { ...history.usr, [TRANSCRIPT_MOMENT_STATE]: undefined } }, "");
+    }
+    if (tabsShown.includes("Transcript")) {
+      openTranscriptAt(arrivedAtMoment);
+    }
+  }, [arrivedAtMoment]);
   const backToAnswer = () => {
     const pill = citedPill.current;
     setSheetRest("raised");

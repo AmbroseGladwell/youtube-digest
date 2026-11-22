@@ -1229,6 +1229,13 @@ export const analyticsEvents = {
           available: z.boolean(),
         },
       ),
+      transcriptMatched: event(
+        "A library search came back from the reader's transcripts: how many overviews it added because their words were said, not written, and whether the search failed; never the words",
+        {
+          transcriptOnly: z.number().int().nonnegative(),
+          failed: z.boolean(),
+        },
+      ),
       cleared: event("The reader clears the library search"),
     },
     sortPill: {
@@ -1236,9 +1243,9 @@ export const analyticsEvents = {
       orderChosen: event("The reader picks an order for the library", { sort: LibrarySort }),
     },
     overviewCard: {
-      opened: event("The reader opens an overview from its library row", {
+      opened: event("The reader opens an overview from its library row; `said` is the moment a transcript match showed", {
         overviewId: OverviewId,
-        from: z.enum(["title", "thumbnail"]),
+        from: z.enum(["title", "thumbnail", "said"]),
       }),
       readSwitched: event("The reader marks a library row read or unread, to the state chosen", {
         overviewId: OverviewId,

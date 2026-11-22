@@ -100,6 +100,10 @@ first, each of which still has to pass every other filter. That is the simplest 
 that cannot surprise someone searching for a word they remember; a blended ranking was
 considered and turned down for exactly that reason.
 
+Since OV-346, words said in a transcript but not in its overview sit between the two: word
+matches, then **Said in the transcripts**, then meaning, which leaves out anything already
+said (`transcript-search.md`, "In the library").
+
 ## The route
 
 `GET /api/search/meaning?query=` (signed in, 1–400 characters, which holds a project's name and what it's for, `projects.md`, "Offering what's already saved") answers
