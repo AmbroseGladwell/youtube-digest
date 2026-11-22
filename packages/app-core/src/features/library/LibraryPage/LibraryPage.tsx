@@ -1,12 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { spokenTimeSaved, timeSavedSummary, type Overview, type OverviewId, type SelectionAction, type TopicId } from "@overview/domain";
 import { usePlayer, usePlayerSnapshot } from "../../player/PlayerContext.js";
 import { playerTrackFor } from "../../player/types/PlayerTrack.js";
 import { useCreateTopicMutation } from "../../overviews/mutations/useCreateTopicMutation.js";
 import { useSetOverviewStateMutation } from "../../overviews/mutations/useSetOverviewStateMutation.js";
 import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js";
-import { ClearFieldButton } from "../../../components/shared/ClearFieldButton/ClearFieldButton.js";
 import { StrokeIcon } from "../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Toast } from "../../../components/shared/Toast/Toast.js";
 import { useToast } from "../../../components/shared/Toast/useToast.js";
@@ -25,7 +23,14 @@ import { libraryOverviewCardTestIds } from "../components/LibraryOverviewCard/Li
 import { LibraryUnreadableCard } from "../components/LibraryUnreadableCard/LibraryUnreadableCard.js";
 import { appliedLibraryFilters } from "../util/appliedLibraryFilters.js";
 import { libraryFilterCounts } from "../util/libraryFilterCounts.js";
-import { applyLibraryFilterPatch, applyLibrarySort, applyLibraryView, isSameLibraryView } from "../util/libraryFilterParams.js";
+import {
+  applyLibraryFilterPatch,
+  applyLibrarySort,
+  applyLibraryView,
+  isSameLibraryView,
+  parseLibraryView,
+} from "../util/libraryFilterParams.js";
+import { LibrarySearch, type LibrarySearchText } from "../components/LibrarySearch/LibrarySearch.js";
 import { matchesLibraryFilters } from "../util/matchesLibraryFilters.js";
 import { meaningEntries } from "../util/meaningEntries.js";
 import { useMeaningMatchesQuery } from "../queries/meaningMatchesQuery.js";
@@ -78,6 +83,7 @@ const RAIL_SHEET_QUERY = "(max-width: 61.9375rem)";
 // A phone folds the search into an icon, so the row holds search, sort, Filters and select
 // ("OV-168 5" 168au), and its selection bar is icons alone.
 const PHONE_QUERY = "(max-width: 47.9375rem)";
+const QUERY_TO_URL_MS = 300;
 
 export interface LibraryPageProps {
   entries: LibraryEntry[];
@@ -90,6 +96,33 @@ const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
 export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
+  // The field's words lead and the URL follows once typing pauses, so a key never waits on
+  // the router (OV-292, docs/features/library-view.md, "Search").
+  const [query, setQuery] = useState(view.filters.query);
+  const [searchText, setSearchText] = useState<LibrarySearchText>({ text: query, revision: 0 });
+  const queryWrites = useRef<string[]>([]);
+  const showInSearch = (text: string) => setSearchText((shown) => ({ text, revision: shown.revision + 1 }));
+  const viewParams = query === view.filters.query ? searchParams : applyLibraryFilterPatch(searchParams, { query });
+  const writeView = (next: URLSearchParams) => {
+    const nextQuery = parseLibraryView(next).filters.query;
+    if (nextQuery !== view.filters.query) queryWrites.current.push(nextQuery);
+    change(next);
+  };
+  const settledTyping = useSettledText(query, QUERY_TO_URL_MS);
+  useEffect(() => {
+    if (settledTyping !== query || query === view.filters.query) return;
+    writeView(applyLibraryFilterPatch(searchParams, { query }));
+  }, [settledTyping]);
+  useEffect(() => {
+    const written = queryWrites.current.indexOf(view.filters.query);
+    if (written !== -1) {
+      queryWrites.current.splice(0, written + 1);
+      return;
+    }
+    if (view.filters.query === query) return;
+    setQuery(view.filters.query);
+    showInSearch(view.filters.query);
+  }, [view.filters.query]);
   const selection = useOverviewSelection(place.kind === "project" ? place.projectId : place.kind);
   const toast = useToast();
   const main = useRef<HTMLElement | null>(null);
@@ -104,14 +137,16 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const glide = useLibraryGlide(main, searchParams.toString());
   // Typing in the search narrows the list in place; every other change to the view glides
   // (useLibraryGlide).
-  const changeView = (next: URLSearchParams, { animate = true }: { animate?: boolean } = {}) => {
-    const apply = () => {
+  const changeView = (next: URLSearchParams) =>
+    glide(() => {
       setKeptIds(new Set());
-      change(next);
-    };
-    if (animate) glide(apply);
-    else apply();
-  };
+      const nextQuery = parseLibraryView(next).filters.query;
+      if (nextQuery !== query) {
+        setQuery(nextQuery);
+        showInSearch(nextQuery);
+      }
+      writeView(next);
+    });
   const setOverviewState = useSetOverviewStateMutation();
   const setOverviewTopics = useSetOverviewTopicsMutation();
   const deleteOverview = useDeleteOverviewMutation();
@@ -120,9 +155,6 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const selectButton = useRef<HTMLButtonElement | null>(null);
   const refocusSelect = useRef(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const searchInput = useRef<HTMLInputElement | null>(null);
-  const searchOpener = useRef<HTMLButtonElement | null>(null);
   const player = usePlayer();
   const playerSnapshot = usePlayerSnapshot();
 
@@ -146,10 +178,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const [manageTagsOpen, setManageTagsOpen] = useState(false);
   const [timeSavedOpen, setTimeSavedOpen] = useState(false);
   const analytics = useAnalytics();
-  const searchId = useId();
   const searchSettled = useRef(() => {});
-  useTypingSettled(view.filters.query, () => searchSettled.current());
-  const settledQuery = useSettledText(view.filters.query.trim());
+  useTypingSettled(query, () => searchSettled.current());
+  const settledQuery = useSettledText(query.trim());
   const meaningQuery = useMeaningMatchesQuery(settledQuery);
   const meaningSettled = useRef(() => {});
   const meaningHeadingId = useId();
@@ -204,24 +235,24 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     );
   }
 
-  const { filters, sort } = view;
+  const { sort } = view;
+  const filters = { ...view.filters, query };
   const topics = topicsQuery.data ?? [];
   const counts = libraryFilterCounts(entries);
   const applied = appliedLibraryFilters(filters, topics);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
     if (from !== null) recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
-    const typing = Object.keys(patch).length === 1 && "query" in patch;
-    changeView(applyLibraryFilterPatch(searchParams, patch), { animate: !typing });
+    changeView(applyLibraryFilterPatch(viewParams, patch));
   };
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
   const resetView = () => {
     analytics.library.view.reset({ applied: applied.length });
     recordLibraryFilterChange(analytics.library.filters, filters, defaultView.filters, "reset");
-    changeView(applyLibraryView(searchParams, defaultView));
+    changeView(applyLibraryView(viewParams, defaultView));
   };
   const keepInPlace = (overviewId: string) => setKeptIds((kept) => new Set(kept).add(overviewId));
-  const readerState = libraryViewState(searchParams, keptIds);
+  const readerState = libraryViewState(viewParams, keptIds);
   const caughtUp = filters.status === "unread" && counts.unread === 0;
   // The dot marks a view the reader changed, not the default's own Unread; the search says
   // itself, so it is not counted (84i, docs/features/tag-reuse.md).
@@ -398,30 +429,13 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       <span>saved</span>
     </button>
   );
-  const phoneSearch: "folded" | "open" | "kept" | undefined = !isPhone
-    ? undefined
-    : searchFocused
-      ? "open"
-      : filters.query !== ""
-        ? "kept"
-        : "folded";
-  // Focus moves inside the tap, so a phone raises its keyboard.
-  const openSearch = () => {
-    flushSync(() => setSearchFocused(true));
-    searchInput.current?.focus();
-  };
-  const closeSearch = () => {
-    if (filters.query !== "") changeFilters({ query: "" });
-    flushSync(() => setSearchFocused(false));
-    searchOpener.current?.focus();
-  };
   const sortControl = (
     <SortPill
       sort={sort}
       compact={railIsSheet}
       onChange={(next) => {
         analytics.library.sortPill.orderChosen({ sort: next });
-        changeView(applyLibrarySort(searchParams, next));
+        changeView(applyLibrarySort(viewParams, next));
       }}
     />
   );
@@ -526,102 +540,58 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
 
               {projects.empty === null && (
                 <>
-                  <div className={styles.searchRow} data-search={phoneSearch}>
-                    <div className={styles.search}>
-                      {phoneSearch === "folded" && (
-                        <button
-                          type="button"
-                          ref={searchOpener}
-                          className={styles.searchOpener}
-                          onClick={openSearch}
-                          aria-label="Search"
-                          data-testid={libraryPageTestIds.openSearchButton}
-                        >
-                          <StrokeIcon name="search" size={17} />
-                        </button>
-                      )}
-                      <span className={styles.searchIcon} aria-hidden="true">
-                        <StrokeIcon name="search" size={16} />
-                      </span>
-                      <input
-                        ref={searchInput}
-                        id={searchId}
-                        name="library-search"
-                        type="search"
-                        autoComplete="off"
-                        enterKeyHint="search"
-                        className={styles.searchInput}
-                        placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
-                        value={filters.query}
-                        onChange={(event) => changeFilters({ query: event.target.value })}
-                        onFocus={() => setSearchFocused(true)}
-                        onBlur={() => setSearchFocused(false)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Escape" && isPhone) {
-                            event.preventDefault();
-                            closeSearch();
+                  <LibrarySearch
+                    text={searchText}
+                    onType={(typed) => {
+                      setQuery(typed);
+                      setKeptIds((kept) => (kept.size === 0 ? kept : new Set()));
+                    }}
+                    onClearPressed={() => analytics.library.search.cleared()}
+                    isPhone={isPhone}
+                    placeholder={projects.current === null ? searchPlaceholder : `Search in ${projects.current.project.name}`}
+                  >
+                    {sortControl}
+                    <button
+                      type="button"
+                      className={styles.filterButton}
+                      onClick={() => {
+                        analytics.library.filterSheet.opened();
+                        setFiltersOpen(true);
+                      }}
+                      aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
+                      aria-expanded={filtersOpen}
+                      data-testid={libraryPageTestIds.filterButton}
+                    >
+                      <StrokeIcon name="filter" size={17} />
+                      {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+                    </button>
+                    {selectable && (
+                      <button
+                        ref={selectButton}
+                        type="button"
+                        className={styles.selectButton}
+                        onClick={() => {
+                          if (selection.selecting) {
+                            stopSelecting();
+                          } else {
+                            analytics.library.selection.started();
+                            selection.start();
                           }
                         }}
-                        tabIndex={phoneSearch === "folded" ? -1 : undefined}
-                        aria-label="Search overviews"
-                        data-testid={libraryPageTestIds.searchInput}
-                      />
-                      {(phoneSearch === "open" || phoneSearch === "kept" || (!isPhone && filters.query !== "")) && (
-                        <ClearFieldButton
-                          label={isPhone ? "Clear and close search" : "Clear search"}
-                          onClick={() => {
-                            analytics.library.search.cleared();
-                            if (isPhone) closeSearch();
-                            else changeFilters({ query: "" });
-                          }}
-                          testId={libraryPageTestIds.clearSearchButton}
-                        />
-                      )}
-                    </div>
-                    <div className={styles.searchControls} inert={phoneSearch === "open"}>
-                      {sortControl}
-                      <button
-                        type="button"
-                        className={styles.filterButton}
-                        onClick={() => {
-                          analytics.library.filterSheet.opened();
-                          setFiltersOpen(true);
-                        }}
-                        aria-label={changedFilters === 0 ? "Filters" : `Filters, ${changedFilters} changed`}
-                        aria-expanded={filtersOpen}
-                        data-testid={libraryPageTestIds.filterButton}
+                        aria-pressed={selection.selecting}
+                        aria-label={selection.selecting ? "Stop selecting" : "Select"}
+                        title={selection.selecting ? "Stop selecting" : "Select"}
+                        data-testid={libraryPageTestIds.selectButton}
                       >
-                        <StrokeIcon name="filter" size={17} />
-                        {changedFilters > 0 && <span className={styles.filterDot} aria-hidden="true" />}
+                        <span className={styles.selectIcon} aria-hidden="true">
+                          <StrokeIcon name="squareCheck" size={16} />
+                        </span>
+                        <span className={styles.stopIcon} aria-hidden="true">
+                          <StrokeIcon name="close" size={16} />
+                        </span>
                       </button>
-                      {selectable && (
-                        <button
-                          ref={selectButton}
-                          type="button"
-                          className={styles.selectButton}
-                          onClick={() => {
-                            if (selection.selecting) {
-                              stopSelecting();
-                            } else {
-                              analytics.library.selection.started();
-                              selection.start();
-                            }
-                          }}
-                          aria-pressed={selection.selecting}
-                          aria-label={selection.selecting ? "Stop selecting" : "Select"}
-                          title={selection.selecting ? "Stop selecting" : "Select"}
-                          data-testid={libraryPageTestIds.selectButton}
-                        >
-                          <span className={styles.selectIcon} aria-hidden="true">
-                            <StrokeIcon name="squareCheck" size={16} />
-                          </span>
-                          <span className={styles.stopIcon} aria-hidden="true">
-                            <StrokeIcon name="close" size={16} />
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    )}
+                  </LibrarySearch>
 
                   {selection.selecting && projects.current !== null && (
                     <p className={styles.selectionLine} aria-live="polite" data-testid={libraryPageTestIds.selectionLine}>
@@ -646,7 +616,7 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                     <p className={styles.viewSummary} aria-live="polite" data-testid={libraryPageTestIds.viewSummary}>
                       {libraryViewSummary(applied, sort)}
                     </p>
-                    {!isSameLibraryView(view, defaultView) && (
+                    {!isSameLibraryView({ filters, sort }, defaultView) && (
                       <button
                         type="button"
                         className={styles.viewAction}

@@ -318,6 +318,18 @@ test.describe("on a phone", () => {
     await page.setViewportSize({ width: 390, height: 760 });
   });
 
+  test("every key typed into the opened search stays, however fast it comes", async ({ launcher, backendSimulator }) => {
+    backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Kitchen renovation" } }));
+    backendSimulator.overviews.seed(makeOverview({ source: { ...makeOverview().source, title: "Compound interest" } }));
+
+    const library = await launcher.launchExpectingLibrary();
+    await library.typeInTheSearch("kitchen");
+
+    await library.verifySearchReads("kitchen");
+    await library.expectCardCountToBe(1);
+    await library.verifyTheAddressHoldsTheSearch("kitchen");
+  });
+
   test("search folds into an icon, opens across the row, keeps a query, and × folds it back", async ({ launcher, backendSimulator }) => {
     seed(backendSimulator);
     const library = await launcher.launchExpectingLibrary();

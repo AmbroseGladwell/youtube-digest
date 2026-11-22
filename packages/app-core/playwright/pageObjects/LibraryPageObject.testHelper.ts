@@ -1,5 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
 import { libraryPageTestIds } from "../../src/features/library/LibraryPage/LibraryPageTestIds.js";
+import { librarySearchTestIds } from "../../src/features/library/components/LibrarySearch/LibrarySearchTestIds.js";
 import { appShellTestIds } from "../../src/shell/AppShell/AppShellTestIds.js";
 import { libraryOverviewCardTestIds } from "../../src/features/library/components/LibraryOverviewCard/LibraryOverviewCardTestIds.js";
 import { libraryUnreadableCardTestIds } from "../../src/features/library/components/LibraryUnreadableCard/LibraryUnreadableCardTestIds.js";
@@ -91,26 +92,38 @@ export class LibraryPageObject extends PageObject {
   // On a phone the search is folded into an icon until it is opened ("OV-168 5" 168au).
   search = (query: string) =>
     this.step(`search ${query}`, async () => {
-      if (await this.get(libraryPageTestIds.openSearchButton).isVisible()) await this.click(libraryPageTestIds.openSearchButton);
-      await this.get(libraryPageTestIds.searchInput).fill(query);
+      if (await this.get(librarySearchTestIds.openButton).isVisible()) await this.click(librarySearchTestIds.openButton);
+      await this.get(librarySearchTestIds.input).fill(query);
     });
 
-  openSearch = () => this.step("openSearch", () => this.click(libraryPageTestIds.openSearchButton));
+  openSearch = () => this.step("openSearch", () => this.click(librarySearchTestIds.openButton));
+
+  // OV-292: `fill` sets the whole value at once, which hides a dropped key.
+  typeInTheSearch = (text: string) =>
+    this.step(`typeInTheSearch ${text}`, async () => {
+      if (await this.get(librarySearchTestIds.openButton).isVisible()) await this.click(librarySearchTestIds.openButton);
+      await this.get(librarySearchTestIds.input).pressSequentially(text, { delay: 0 });
+    });
+
+  verifyTheAddressHoldsTheSearch = (query: string) =>
+    this.step(`verifyTheAddressHoldsTheSearch ${query}`, () =>
+      expect.poll(() => new URL(this.page.url()).searchParams.get("q") ?? "").toBe(query),
+    );
 
   verifySearchIsFolded = (folded: boolean) =>
     this.step(`verifySearchIsFolded ${folded}`, async () => {
       if (folded) {
-        await this.expectToBeVisible(libraryPageTestIds.openSearchButton);
-        await expect(this.get(libraryPageTestIds.searchInput)).not.toBeVisible();
+        await this.expectToBeVisible(librarySearchTestIds.openButton);
+        await expect(this.get(librarySearchTestIds.input)).not.toBeVisible();
       } else {
-        await this.expectNotToBeVisible(libraryPageTestIds.openSearchButton);
-        await expect(this.get(libraryPageTestIds.searchInput)).toBeVisible();
+        await this.expectNotToBeVisible(librarySearchTestIds.openButton);
+        await expect(this.get(librarySearchTestIds.input)).toBeVisible();
       }
     });
 
   verifySearchIconIsCentred = () =>
     this.step("verifySearchIconIsCentred", async () => {
-      const opener = this.get(libraryPageTestIds.openSearchButton);
+      const opener = this.get(librarySearchTestIds.openButton);
       const pill = await opener.locator("..").boundingBox();
       const icon = await opener.locator("svg").boundingBox();
       const centre = (box: { x: number; y: number; width: number; height: number } | null) =>
@@ -118,11 +131,11 @@ export class LibraryPageObject extends PageObject {
       expect(centre(icon)).toEqual(centre(pill));
     });
 
-  verifySearchIsFocused = () => this.step("verifySearchIsFocused", () => expect(this.get(libraryPageTestIds.searchInput)).toBeFocused());
+  verifySearchIsFocused = () => this.step("verifySearchIsFocused", () => expect(this.get(librarySearchTestIds.input)).toBeFocused());
 
-  blurTheSearch = () => this.step("blurTheSearch", () => this.get(libraryPageTestIds.searchInput).blur());
+  blurTheSearch = () => this.step("blurTheSearch", () => this.get(librarySearchTestIds.input).blur());
 
-  pressEscapeInTheSearch = () => this.step("pressEscapeInTheSearch", () => this.get(libraryPageTestIds.searchInput).press("Escape"));
+  pressEscapeInTheSearch = () => this.step("pressEscapeInTheSearch", () => this.get(librarySearchTestIds.input).press("Escape"));
 
   startSelecting = () =>
     this.step("startSelecting", async () => {
@@ -167,17 +180,15 @@ export class LibraryPageObject extends PageObject {
   verifySelectButtonIsFocused = () =>
     this.step("verifySelectButtonIsFocused", () => expect(this.get(libraryPageTestIds.selectButton)).toBeFocused());
 
-  clearTheSearch = () => this.step("clearTheSearch", () => this.click(libraryPageTestIds.clearSearchButton));
+  clearTheSearch = () => this.step("clearTheSearch", () => this.click(librarySearchTestIds.clearButton));
 
   verifyOffersToClearTheSearch = (offered: boolean) =>
     this.step(`verifyOffersToClearTheSearch ${offered}`, () =>
-      offered
-        ? this.expectToBeVisible(libraryPageTestIds.clearSearchButton)
-        : this.expectNotToBeVisible(libraryPageTestIds.clearSearchButton),
+      offered ? this.expectToBeVisible(librarySearchTestIds.clearButton) : this.expectNotToBeVisible(librarySearchTestIds.clearButton),
     );
 
   verifySearchReads = (query: string) =>
-    this.step(`verifySearchReads ${query}`, () => expect(this.get(libraryPageTestIds.searchInput)).toHaveValue(query));
+    this.step(`verifySearchReads ${query}`, () => expect(this.get(librarySearchTestIds.input)).toHaveValue(query));
 
   scrollTheList = () =>
     this.step("scrollTheList", async () => {
@@ -338,7 +349,7 @@ export class LibraryPageObject extends PageObject {
 
   verifySearchPlaceholderReads = (placeholder: string) =>
     this.step(`verifySearchPlaceholderReads ${placeholder}`, () =>
-      expect(this.get(libraryPageTestIds.searchInput)).toHaveAttribute("placeholder", placeholder),
+      expect(this.get(librarySearchTestIds.input)).toHaveAttribute("placeholder", placeholder),
     );
 
   verifyCountReads = (count: string) =>

@@ -19,6 +19,24 @@ field by field, and so is a topic that no longer exists, and the cleaned view is
 back. Storage that is refused or corrupt reads as nothing saved. Switching account
 restores that account's view.
 
+## Search
+
+OV-292. The field's words lead and the URL follows. `LibrarySearch` keeps what is typed and
+hands each change to the page as a React transition, so a key is never held up by the list
+re-rendering. The page writes `q` once typing has paused for 300ms. Clearing it writes at
+once. Before this, every key wrote `q` built from the last render's params. Keys arriving
+faster than a render overwrote each other, so "kitchen" typed with no gap became "n". Any
+other change to the view (a chip, Reset, sort) is built from the words in the field, not
+from the URL, so a query that hasn't reached the URL yet isn't lost. A `q` that changes
+without the page writing it (a link) replaces the field's words. The match reads each
+overview's search text from a cache keyed on the record (`searchHaystackOf`), so typing
+doesn't rebuild every overview's text on every key.
+
+On a phone, opening and closing the search re-renders only `LibrarySearch`, not the page.
+The pill's width changes at once, and a `clip-path` animates the growth from the icon's
+circle, so no frame of the animation lays out the row again. Closing keeps the wide box
+until the clip has folded, then narrows it.
+
 ## Show all, Reset, caught up
 
 On a wide screen a line over the list states the view in text ("Showing: Unread · Newest
