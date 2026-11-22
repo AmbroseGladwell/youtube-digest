@@ -45,11 +45,18 @@ With this many chapters, make each one plainly different from the ones
 beside it: if two neighbouring summaries could be swapped without anyone
 noticing, say what actually changes between them.`;
 
+const TOO_SHORT_TO_SPLIT = `
+## Chapters
+This is too short to split into chapters: give an empty list.`;
+
 export const chaptersSection: PromptSection = {
   title: "Chapters",
   key: "structural",
   prompt: (input) => {
     const budget = transcriptBudget(input);
+    if (budget.mostChapters === 0) {
+      return TOO_SHORT_TO_SPLIT;
+    }
     return `
 ## Chapters
 Split the video into chapters at the points where its subject actually
@@ -74,7 +81,7 @@ time: the segment number is the position.`;
     });
     return {
       chapters:
-        input.transcript.length === 0
+        input.transcript.length === 0 || transcriptBudget(input).mostChapters === 0
           ? z.array(chapterShape).max(0)
           : z
               .array(chapterShape)

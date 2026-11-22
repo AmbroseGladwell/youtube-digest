@@ -41,3 +41,20 @@ export const providerFailure = (status: number, body: string): GenerationError =
   }
   return new ProviderRequestError(status, detail);
 };
+
+export type NoSpeechReason = "too-few-words" | "nothing-to-summarise";
+
+const NO_SPEECH_MESSAGE: Record<NoSpeechReason, string> = {
+  "too-few-words": "There's no speech in this to make an overview from.",
+  "nothing-to-summarise": "This is music or sound rather than talk, so there's nothing to make an overview from.",
+};
+
+// Never moved to another key (docs/features/overview-generation-decisions.md, "One note budget").
+export class NoSpeechError extends GenerationError {
+  readonly reason: NoSpeechReason;
+
+  constructor(reason: NoSpeechReason) {
+    super(NO_SPEECH_MESSAGE[reason]);
+    this.reason = reason;
+  }
+}

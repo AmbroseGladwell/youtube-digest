@@ -111,7 +111,7 @@ one line in `legalIdentity.ts` or one sentence in a page:
 ## Does this change the texts?
 
 Every card is checked against this list before its PR opens (`CLAUDE.md`, "Working style",
-habit 4). A match means the page changes in the same PR, its `*_UPDATED_ON` moves, and a line
+habit 5). A match means the page changes in the same PR, its `*_UPDATED_ON` moves, and a line
 goes in the log below. No match means the PR says "No change to /privacy or /terms".
 
 A change touches the **privacy policy** when it:
@@ -148,6 +148,9 @@ match the pages' `*_UPDATED_ON`.
 
 | Date       | Page    | Card           | What changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | ---------- | ------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-22 | privacy | OV-346         | Transcripts: searching the library, with an account, also looks for the words in your own copies (slice 2). |
+| 2026-11-22 | privacy | OV-346         | Transcripts: an assistant you connected can search your own copies for words that were said, on our server over the existing index, and read one in parts; the search goes nowhere else. |
+| 2026-11-22 | privacy | OV-376         | The cost dashboard's monthly summary also carries how much of the month's chat an account used, and how much of that went on library or project questions, under the same coded id. |
 | 2026-11-22 | terms   | OV-376         | Asking about an overview: chat is counted in usage, not questions. Each answer uses the month's allowance in proportion to what it took, a library question uses more and needs enough left, and the app shows the share used and the reset date. Library and project questions are named. |
 | 2026-11-22 | privacy | OV-376         | Asking questions about an overview: the log line of an answered question also carries the usage it spent, its cost counted against the month's chat. |
 | 2026-11-22 | privacy | OV-373         | Asking questions about an overview: a question over the library or a project also sends each overview's line of facts (kind, length, day saved, novelty, topics) and which overviews the reader marked read or favourite; the log line counts how many overviews it looked across and how many of those were cited. |

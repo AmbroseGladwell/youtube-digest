@@ -60,7 +60,9 @@ test("a big picture over its length's target fails, and a short video's is never
 
   assert.deepEqual(failing(sixty, long), []);
   assert.deepEqual(failing(seventy, long), ["bigPictureWithinTarget"]);
-  assert.deepEqual(failing(seventy), []);
+  const short = makeFetchedTranscript();
+  short.transcript = short.transcript.map((segment, index) => (index === 4 ? segment : { ...segment, text: "A short line." }));
+  assert.deepEqual(failing(seventy, short), []);
 });
 
 test("a dubious claim or reason over its target fails", () => {

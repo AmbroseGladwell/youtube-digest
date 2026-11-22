@@ -8,6 +8,7 @@ export interface NoteBudget {
   wordsPerKeyPoint: number;
   mostChapters: number;
   long: boolean;
+  rangeAllowed: boolean;
   bigPictureWords: number;
 }
 
@@ -16,22 +17,29 @@ type Rows = ReadonlyArray<readonly [upToWords: number, budget: Omit<NoteBudget, 
 const LONG = 6000;
 
 const LONG_ROWS: Rows = [
-  [12000, { keyPoints: 8, wordsPerKeyPoint: 50, mostChapters: 14, long: true }],
-  [Number.POSITIVE_INFINITY, { keyPoints: MOST_KEY_POINTS, wordsPerKeyPoint: 60, mostChapters: 20, long: true }],
+  [12000, { keyPoints: 8, wordsPerKeyPoint: 50, mostChapters: 14, long: true, rangeAllowed: true }],
+  [Number.POSITIVE_INFINITY, { keyPoints: MOST_KEY_POINTS, wordsPerKeyPoint: 60, mostChapters: 20, long: true, rangeAllowed: true }],
 ];
 
 const ROWS: Record<SourceForm, Rows> = {
-  spoken: [[LONG, { keyPoints: 7, wordsPerKeyPoint: 40, mostChapters: 10, long: false }], ...LONG_ROWS],
+  spoken: [
+    [400, { keyPoints: 3, wordsPerKeyPoint: 25, mostChapters: 0, long: false, rangeAllowed: false }],
+    [1000, { keyPoints: 4, wordsPerKeyPoint: 30, mostChapters: 3, long: false, rangeAllowed: true }],
+    [LONG, { keyPoints: 7, wordsPerKeyPoint: 40, mostChapters: 10, long: false, rangeAllowed: true }],
+    ...LONG_ROWS,
+  ],
   written: [
-    [400, { keyPoints: 3, wordsPerKeyPoint: 25, mostChapters: 1, long: false }],
-    [1000, { keyPoints: 4, wordsPerKeyPoint: 30, mostChapters: 3, long: false }],
-    [2500, { keyPoints: 5, wordsPerKeyPoint: 40, mostChapters: 5, long: false }],
-    [LONG, { keyPoints: 6, wordsPerKeyPoint: 40, mostChapters: 7, long: false }],
+    [400, { keyPoints: 3, wordsPerKeyPoint: 25, mostChapters: 1, long: false, rangeAllowed: true }],
+    [1000, { keyPoints: 4, wordsPerKeyPoint: 30, mostChapters: 3, long: false, rangeAllowed: true }],
+    [2500, { keyPoints: 5, wordsPerKeyPoint: 40, mostChapters: 5, long: false, rangeAllowed: true }],
+    [LONG, { keyPoints: 6, wordsPerKeyPoint: 40, mostChapters: 7, long: false, rangeAllowed: true }],
     ...LONG_ROWS,
   ],
 };
 
 export const LEAST_KEY_POINTS = 3;
+
+export const NO_SPEECH_WORDS = 30;
 
 const ROOM_OVER_THE_TARGET = 1.25;
 const FINAL_STRETCH = 2 / 3;

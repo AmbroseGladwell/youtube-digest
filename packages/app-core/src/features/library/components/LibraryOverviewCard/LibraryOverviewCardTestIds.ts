@@ -8,4 +8,5 @@ export const libraryOverviewCardTestIds = {
   readButton: "LibraryOverviewCard.readButton",
   addedBy: "LibraryOverviewCard.addedBy",
   removeFromProjectButton: "LibraryOverviewCard.removeFromProjectButton",
+  saidLink: "LibraryOverviewCard.saidLink",
 };

@@ -63,11 +63,17 @@ import {
   type UnreadableRecord,
   type VideoId,
   youTubeSource,
+  type TranscriptSearchResponse,
 } from "@overview/domain";
 import { EndpointBehaviour, EndpointKey } from "./EndpointKey.testHelper.js";
 import type { IwftHooksConfig } from "./IwftHooksConfig.testHelper.js";
 import { makeArticleOverview, makeOverview, makeRecipeOverview } from "../../src/features/overviews/types/OverviewFactory.testHelper.js";
-import { makeAnthropicMessageResponse, makeGeneratedOutputFixture, makeModelListResponse } from "./fixtures/anthropicFixtures.js";
+import {
+  fittedToTheAsk,
+  makeAnthropicMessageResponse,
+  makeGeneratedOutputFixture,
+  makeModelListResponse,
+} from "./fixtures/anthropicFixtures.js";
 import {
   IWFT_VIDEO_ID,
   makeJson3Fixture,
@@ -294,6 +300,7 @@ export class BackendSimulator {
   #errorBatches: ClientErrorBatch[] = [];
   #playlists = new Map<string, PlaylistLookup | "private">();
   #meaningMatches = new Map<string, string[]>();
+  #transcriptMatches = new Map<string, TranscriptSearchResponse["matches"]>();
   #seedFollowed: FollowedPlaylist[] = [];
   #seedChecks: PlaylistCheck[] = [];
   #seedQueue: QueuedCapture[] = [];
@@ -417,7 +424,7 @@ export class BackendSimulator {
             body: makeAnthropicMessageResponse(
               route.request().postData()?.includes('"noteKind"')
                 ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
-                : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
+                : fittedToTheAsk(makeGeneratedOutputFixture(this.#generatedOutputOverrides), route.request().postData() ?? ""),
             ),
           };
         },
@@ -762,6 +769,16 @@ export class BackendSimulator {
           };
         },
         onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: meaning search failed" } } }),
+      }),
+    );
+
+    await this.#page.route("**/api/search/transcripts?*", (route) =>
+      this.#respond(route, EndpointKey.TRANSCRIPT_SEARCH, {
+        onDefault: () => {
+          const query = new URL(route.request().url()).searchParams.get("query") ?? "";
+          return { status: 200, body: { matches: this.#transcriptMatches.get(query) ?? [] } };
+        },
+        onError: () => ({ status: 503, body: { error: { code: "unavailable", message: "Simulated: transcript search failed" } } }),
       }),
     );
 
@@ -1881,6 +1898,12 @@ export class BackendSimulator {
   meaning = {
     seed: (query: string, overviewIds: string[]): void => {
       this.#meaningMatches.set(query, overviewIds);
+    },
+  };
+
+  transcriptSearch = {
+    seed: (query: string, matches: TranscriptSearchResponse["matches"]): void => {
+      this.#transcriptMatches.set(query, matches);
     },
   };
 

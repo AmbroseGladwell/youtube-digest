@@ -142,6 +142,9 @@ Five folders, five different questions.
   beside the library and keyed to the record's rev, a worker that is woken rather than polled,
   word matches first and the closest few by meaning after, the route the app calls, and why no
   search ever crosses accounts.
+- `transcript-search.md` — finding words said in a transcript but not in its overview: the
+  server search over chat's minute index, phrases and one-minute words, code-cut snippets and
+  moments, the `search_transcripts` tool, and `get_transcript` read in parts.
 - `pasted-article-links.md` — our server fetching a pasted link: what it will and won't reach, and
   what the field says.
 - `podcast-links.md` — an Apple, Spotify or show-page link turned into one episode of its show's
@@ -247,6 +250,9 @@ Five folders, five different questions.
 - `time-saved.md` — the running total of time saved by reading instead of watching: how it
   is counted and what it leaves out, the rolling figure and its breakdown, the "Saved you"
   moment, and the ten milestones with the rules for when each shows, stored on the account.
+- `tiktok-links.md` — a TikTok link turned into one video and its words: the extension reading the
+  reader's own tab, ScrapeCreators everywhere else, TikTok's auto-captions as the transcript,
+  failures by name, cost, and the terms question (OV-130).
 - `appearance.md` — Settings › Appearance: the theme and the eight accent colours on the
   account, what each role must clear and the test that holds it, why failure is a fixed
   `--alert`, the script that stops a flash, the signed-out rule, and where the logo follows

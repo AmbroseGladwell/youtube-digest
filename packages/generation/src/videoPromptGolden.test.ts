@@ -43,14 +43,25 @@ const fingerprint = (value: GenerationInput, kind: NoteKind) => {
     .slice(0, 16);
 };
 
-test("the video prompts are exactly as they were before podcasts forked them", () => {
+test("a video's prompts from 1,000 words up are exactly as they were before short clips got their own rows", () => {
   assert.deepEqual(
     {
-      short: fingerprint(input(20, 120_000), "default"),
-      process: fingerprint(input(20, 120_000), "process"),
-      recipe: fingerprint(input(20, 120_000), "recipe"),
+      default: fingerprint(input(100, 600_000), "default"),
+      process: fingerprint(input(100, 600_000), "process"),
+      recipe: fingerprint(input(100, 600_000), "recipe"),
       long: fingerprint(input(700, 4_200_000), "default"),
     },
-    { short: "cdb272b1b28b7ed3", process: "4a26ab32589fbdb7", recipe: "8af13fd180d30c68", long: "2ba9cddfdda41f18" },
+    { default: "0b87b096187b6ef6", process: "88e10f10b8dd9622", recipe: "b93cda506bfea321", long: "2ba9cddfdda41f18" },
+  );
+});
+
+test("a short clip's prompts are pinned, so they change only deliberately", () => {
+  assert.deepEqual(
+    {
+      default: fingerprint(input(20, 120_000), "default"),
+      process: fingerprint(input(20, 120_000), "process"),
+      recipe: fingerprint(input(20, 120_000), "recipe"),
+    },
+    { default: "4c425fd87fe4c42f", process: "14213eca0428f770", recipe: "9ab04d09a8567667" },
   );
 });

@@ -563,6 +563,13 @@ verifyScreenshot = (name, displayConfig, {
 - Stabilise before capturing: wait for fonts, clear hover and focus (opt back in
   explicitly when the hover/focus state *is* the subject), mask anything genuinely
   non-deterministic.
+- **In this project** there is no screenshot tier yet, so `verifyIsAccessible` (axe, WCAG A
+  and AA rules only, after finite animations settle) runs from `reflow.iwft.ts` instead,
+  beside the reflow checks: `verifyReflows`, `verifyControlsCanBeReached`, and
+  `verifyTextFollowsTheTextSetting`. Text size is the browser's real setting, set through
+  Chromium's `Page.setFontSizes` (`support/reflowConditions.testHelper.ts`), so `rem`
+  breakpoints move as they do for a reader. The setting is browser-wide: a fixture puts it
+  back after any test that changed it.
 - Run screenshots on **one platform only** (a Linux container). Font rendering differs
   per OS; skip with a log line elsewhere rather than producing false diffs.
 - Pin a `threshold` (~0.02) and a shared `stylePath` that neutralises animations and
@@ -779,7 +786,7 @@ the entire harness, and duplicating the config guarantees the two drift.
 - [ ] Screenshot states include loading and error.
 - [ ] Screenshots scoped to the component under test.
 - [ ] Analytics assertions where an event is business-critical.
-- [ ] Accessibility scanned (free, via `verifyScreenshot`).
+- [ ] Accessibility scanned: a new main screen or overlay is in `reflow.iwft.ts` (axe plus zoom, text size and phones).
 
 ---
 

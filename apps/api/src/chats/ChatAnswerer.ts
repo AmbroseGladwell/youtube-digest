@@ -297,7 +297,7 @@ export class ChatAnswerer {
         settled = true;
         const cost = await this.#recordCost(accountId, stream.usage(), "message", log);
         const usageUnits = chatUnitsOf(cost.costDollars ?? 0);
-        await usage.settle(reservation.day, accountId, usageUnits);
+        await usage.settle(reservation.day, accountId, usageUnits, "overview");
         log.info(
           apiLogLines.chat.answered({
             ...logged,

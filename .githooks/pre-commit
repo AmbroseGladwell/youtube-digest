@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Refuses a commit that stages a secret value, a lint error, a long stylesheet comment or an unformatted file
+# Refuses a commit that stages a secret value, a lint error, a long stylesheet comment, a px font size or an unformatted file
 # (docs/conventions/secrets.md, docs/conventions/lint-and-format.md).
 set -euo pipefail
 
@@ -21,6 +21,10 @@ while IFS= read -r -d '' file; do
 done < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.scss' '*.css')
 if [ "${#styles[@]}" -gt 0 ] && ! (cd "$root" && node scripts/checkStyleComments.mjs "${styles[@]}"); then
   echo "pre-commit: shorten the stylesheet comments above (docs/conventions/commenting.md)" >&2
+  exit 1
+fi
+if [ "${#styles[@]}" -gt 0 ] && ! (cd "$root" && node scripts/checkStyleFontSizes.mjs "${styles[@]}"); then
+  echo "pre-commit: set the font sizes above in rem (docs/conventions/frontend-architecture-guide.md)" >&2
   exit 1
 fi
 

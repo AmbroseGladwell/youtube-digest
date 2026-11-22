@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { chatUsageAllowances } from "@overview/domain";
 import { createPgliteSqlClient } from "../db/createPgliteSqlClient.js";
 import { runMigrations } from "../db/runMigrations.js";
 import { createTestPglite } from "../testing/createTestPglite.testHelper.js";
@@ -115,13 +116,63 @@ test("each day adds up every caller's cost by area and detail, signed out includ
   await sql.close();
 });
 
+test("each account's month of chat sums its questions and usage, the library's part, and the share of its plan's allowance (OV-376)", async () => {
+  const sql = await seeded();
+  await sql.query(
+    `insert into chat_usage (day, account_id, messages, units, library_units) values
+       ('2026-11-02', $1, 3, 7000, 5600), ('2026-11-09', $1, 1, 700, 0), ('2026-11-04', $2, 2, 14000, 0)`,
+    [READER, IDLE],
+  );
+
+  const rows = await sql.query<Record<string, unknown>>(
+    `select account, plan, questions::int, units::int, library_units::int, share
+     from cost_reports.chat_months where month = '2026-11-01' order by plan desc`,
+  );
+
+  assert.deepEqual(rows, [
+    {
+      account: await opaque(sql, READER),
+      plan: "plus",
+      questions: 4,
+      units: 7700,
+      library_units: 5600,
+      share: 7700 / chatUsageAllowances.plus,
+    },
+    {
+      account: await opaque(sql, IDLE),
+      plan: "free",
+      questions: 2,
+      units: 14000,
+      library_units: 0,
+      share: 14000 / chatUsageAllowances.free,
+    },
+  ]);
+  await sql.close();
+});
+
+test("the chat report divides by the same allowances the server enforces", async () => {
+  const sql = await seeded();
+  for (const plan of ["free", "byo-plus", "plus"] as const) {
+    await sql.query("update accounts set plan = $2 where id = $1", [READER, plan]);
+    await sql.query("delete from chat_usage");
+    await sql.query("insert into chat_usage (day, account_id, messages, units) values ('2026-11-02', $1, 1, $2)", [
+      READER,
+      chatUsageAllowances[plan],
+    ]);
+    const [row] = await sql.query<{ share: number }>("select share from cost_reports.chat_months");
+    assert.equal(row!.share, 1, plan);
+  }
+  await sql.close();
+});
+
 test("no report names an account by its id or its email", async () => {
   const sql = await seeded();
 
   const reports = await sql.query<{ row: string }>(
     `select row_to_json(l)::text as row from cost_reports.cost_lines l
      union all select row_to_json(m)::text from cost_reports.account_months m
-     union all select row_to_json(d)::text from cost_reports.cost_days d`,
+     union all select row_to_json(d)::text from cost_reports.cost_days d
+     union all select row_to_json(c)::text from cost_reports.chat_months c`,
   );
 
   for (const { row } of reports) {
@@ -156,6 +207,7 @@ test("the reader role can read the reports and no table behind them", async () =
   const readable = privileges.filter((relation) => relation.readable).map((relation) => relation.relation);
   assert.deepEqual(readable, [
     "cost_reports.account_months",
+    "cost_reports.chat_months",
     "cost_reports.cost_days",
     "cost_reports.cost_lines",
     "cost_reports.plan_accounts",

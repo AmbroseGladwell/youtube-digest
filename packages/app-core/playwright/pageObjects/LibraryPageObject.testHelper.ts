@@ -212,6 +212,15 @@ export class LibraryPageObject extends PageObject {
       expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
+  openFiltersWhereFolded = () =>
+    this.step("openFiltersWhereFolded", async () => {
+      if (await this.get(libraryPageTestIds.filterButton).isVisible()) {
+        await this.openFilters();
+      }
+    });
+
+  verifyFilterControlsCanBeReached = () => this.verifyControlsCanBeReached(this.get(libraryPageTestIds.rail));
+
   openFilters = () =>
     this.step("openFilters", async () => {
       await this.click(libraryPageTestIds.filterButton);
@@ -314,6 +323,30 @@ export class LibraryPageObject extends PageObject {
       expect(this.get(libraryPageTestIds.meaningGroup).getByTestId(libraryOverviewCardTestIds.titleLink)).toHaveText(
         titles.map((title) => new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)),
       ),
+    );
+
+  verifySaidInTranscriptsShows = (rows: Array<{ title: string; said: string; marked: string[] }>) =>
+    this.step(`verifySaidInTranscriptsShows ${rows.map((row) => row.title).join(", ")}`, async () => {
+      const group = this.get(libraryPageTestIds.saidGroup);
+      await expect(group.getByRole("heading", { level: 2 })).toHaveText("Said in the transcripts");
+      await expect(group.getByTestId(libraryOverviewCardTestIds.titleLink)).toHaveText(
+        rows.map((row) => new RegExp(`^${row.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)),
+      );
+      await expect(group.getByTestId(libraryOverviewCardTestIds.saidLink)).toHaveText(rows.map((row) => row.said));
+      await expect(group.locator("mark")).toHaveText(rows.flatMap((row) => row.marked));
+    });
+
+  verifyNoSaidInTranscripts = () => this.step("verifyNoSaidInTranscripts", () => this.expectToHaveCount(libraryPageTestIds.saidGroup, 0));
+
+  verifyTranscriptsUnavailable = () =>
+    this.step("verifyTranscriptsUnavailable", () => this.expectToBeVisible(libraryPageTestIds.transcriptsUnavailable));
+
+  openTheMomentSaid = (title: string): Promise<ReaderPageObject> =>
+    this.step(`openTheMomentSaid ${title}`, () =>
+      new LibraryOverviewCardPageObject(
+        this.testContext,
+        this.get(libraryPageTestIds.saidGroup).getByTestId(libraryOverviewCardTestIds.root).filter({ hasText: title }),
+      ).openTheMomentSaid(),
     );
 
   verifyNoCloseInMeaning = () => this.step("verifyNoCloseInMeaning", () => this.expectToHaveCount(libraryPageTestIds.meaningGroup, 0));

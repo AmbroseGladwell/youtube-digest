@@ -136,7 +136,10 @@ const sections: readonly LegalSection[] = [
           <strong>Your own copy.</strong> The words behind each of your overviews, a video's captions or an episode's transcript, are your
           copy. Your device keeps them, and with an account they are stored on our server under your account, so your other devices read the
           same words. They are never shown to another reader, and a shared link doesn't carry them. When you open an overview on a device
-          that doesn't have its words yet, our server fetches them for you and keeps them as your copy.
+          that doesn't have its words yet, our server fetches them for you and keeps them as your copy. With an account, searching your
+          library also looks for your words in these copies, and an assistant you connected can search them the same way and read one a part
+          at a time. That search runs on our server, over the search index described under asking questions below, and what it looks for
+          goes nowhere else.
         </p>
         <p>
           Captions the extension fetched only because a video was open in YouTube stay on your device and are never sent to us unless you
@@ -234,9 +237,10 @@ const sections: readonly LegalSection[] = [
           attempts that failed; the tokens used to make your library and your searches searchable by meaning, and their cost; and the bytes
           fetched through our transcript proxy for you. It holds amounts only, never what was sent or found. What a device without an
           account costs is tallied with no device or account on it. Once a day PostHog copies a monthly summary of the tally for our cost
-          dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions you made, under a
-          coded id that is neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by
-          kind of work, with no account or plan on it. When an account is deleted, the next day's copy leaves it out.
+          dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions you made, how much
+          of the month's chat you used and how much of that went on questions across your library or a project, under a coded id that is
+          neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by kind of work, with
+          no account or plan on it. When an account is deleted, the next day's copy leaves it out.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping

@@ -710,14 +710,36 @@ transcript (OV-106) takes the spoken rows with no budget of its own.
 
 | Up to words | Written | Spoken |
 |---|---|---|
-| 400 | 3 points × 25 words, 1 chapter | 7 × 40, 10 chapters |
-| 1,000 | 4 × 30, 3 | 7 × 40, 10 |
+| 400 | 3 points × 25 words, 1 chapter | 3 × 25, no chapters, no partial range |
+| 1,000 | 4 × 30, 3 | 4 × 30, 3 |
 | 2,500 | 5 × 40, 5 | 7 × 40, 10 |
 | 6,000 | 6 × 40, 7 | 7 × 40, 10 |
 | 12,000 | 8 × 50, 14 | 8 × 50, 14 |
 | beyond | 10 × 60, 20 | 10 × 60, 20 |
 
-**Up to 6,000 words nothing moved.** The owner's call: keep each kind's short rows as they
+**Short clips have their own rows (OV-130, 22 Nov 2026).** A 60-second clip was getting the seven
+points and the chapter a 30-minute video gets. The owner's call, for every spoken source and not
+only TikTok: up to 400 words (about two and a half minutes of speech) a note has three points of
+25 words, **no chapters**, and Watch it anyway is yes or no, never partial (`rangeAllowed`).
+Up to 1,000 words it has up to four points of 30 words and up to three chapters. Above that,
+nothing moved, and `videoPromptGolden.test.ts` pins it: a 1,200-word video's prompts are
+byte-for-byte what they were. A short YouTube note comes out shorter when regenerated, which is
+the point. The simulated model in the IWFT harness obeys a short clip's prompt as a real one must
+(`fittedToTheAsk`).
+
+**No speech.** A transcript under 30 words (`NO_SPEECH_WORDS`, counted in code) stops before any
+model is asked, as `NoSpeechError` with `too-few-words`. Over that, the kind check of a spoken
+source can also answer `nothing`, for song lyrics, chanting or noise over pictures, and the note
+is never asked for (`nothing-to-summarise`). That answer is the model's judgment of what the words
+are, never a count. The error never moves to another key, and our server answers it as `no_speech`
+(422) with the reason, which the client turns back into the same error. Until the design round
+(OV-130 slice 3), the reader sees the error's own sentence. It counts as `no-speech` in
+`capture.newOverview` failures. The measured TikToks set the floor: the shortest real talk was 71
+words, and the only clip under 30 was lyrics.
+
+**Measured on 15 real TikToks (22 Nov 2026),** through ScrapeCreators and on our key's model (GPT-6.1 Sol): news explainers, cooking clips, interviews and one music clip. 13 made notes, one had no captions, and the 7-second music clip (29 words of lyrics) stopped at the floor without a model call. 11 notes fell in the 400-word row and all kept to 3 points, no chapters and a yes-or-no answer. The 2 in the 1,000-word row had 4 points and 3 chapters. No point passed 25 words. Every note was right first time, with one kind check and one note call and no correction pass. The kinds were 10 default, 2 process and 1 recipe (a 30-second recipe clip, which got the recipe note). Watch it anyway was no 11 times and yes once, for a clip guessing sweets from CT scans, where the pictures are the content. A note cost about 1.9¢ on average and at most 2.8¢. The kind check's `nothing` answer wasn't reached: the only music clip was under the floor. One harness slip worth keeping: a TikTok caption can run past the 400 characters `VideoSource.description` allows, so the input built for a TikTok slices it as `episodeAsVideo` does, keeping the rest as `fullDescription`.
+
+**Up to 6,000 words nothing else moved.** OV-87's call (10 Nov): keep each kind's short rows as they
 were and raise only the ceiling for long sources. A spoken source's chapter ceiling of 10 is
 new, but sits above the "3 to 8" the prompt still asks for, so it bounds a runaway rather than
 shaping a note. The point's word ceiling is still the target plus a quarter, so 50 for 40.

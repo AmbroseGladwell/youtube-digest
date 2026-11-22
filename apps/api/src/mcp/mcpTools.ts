@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   NOVELTY_LABEL,
   apiLogLines,
+  formatTimestamp,
   OverviewId,
   StoredTranscript,
   overviewMarkdown,
@@ -30,11 +31,14 @@ import { readChats } from "./readChats.js";
 import { readLibrary } from "./readLibrary.js";
 import { isProject, resolveProject } from "./resolveProject.js";
 import { searchWithMeaning, type LibrarySearch, type ResolvedFilters } from "./searchLibrary.js";
+import { searchTranscripts } from "./searchTranscripts.js";
+import { blockIndexAt, millisecondsOf, TIMESTAMP, transcriptPage } from "./transcriptPage.js";
 
 // Why these sizes: docs/features/mcp-connector.md, "The context budget".
 export const LISTING_PAGE_SIZE = 50;
 export const OVERVIEWS_PER_CALL = 10;
 
+const OverviewIdInput = z.string().describe("The overview's id");
 const Cursor = z.string().regex(/^\d+$/).optional().describe("Where to carry on from: the cursor the previous call ended with");
 
 const topicNames = (topics: Topic[], entry: LibraryEntry) =>
@@ -205,7 +209,7 @@ const getOverview = mcpTool({
   title: "Read one overview",
   description:
     "Read one saved overview in full, as Markdown: premise, big picture (the question it engages and what else it covers, on longer sources), core claim, verdict (with why it is dubious, when it is), key points, how to apply, what it sells, whether to watch it anyway, chapters, and questions to ask next, written for this reader, which you can offer them. Every chapter links to its moment in the video, for citing. Ends by naming the reader's conversations about it in the app, if any, for get_chat.",
-  input: z.object({ id: z.string().describe("The overview's id") }),
+  input: z.object({ id: OverviewIdInput }),
   run: async ({ id }, { sql, accountId }) => {
     const library = await readLibrary(sql, accountId);
     const entry = library.entries.find((candidate) => candidate.overview.id === id);
@@ -260,9 +264,16 @@ const getTranscript = mcpTool({
   name: "get_transcript",
   title: "Read a transcript",
   description:
-    "Read the transcript behind one saved overview, the reader's own copy, each paragraph stamped with the time it was said. Use it for anything the overview doesn't cover or to check what was actually said, rather than finding a transcript on the web. Transcripts are long: read one at a time, not to survey many.",
-  input: z.object({ id: z.string().describe("The overview's id") }),
-  run: async ({ id }, { sql, accountId, transcripts }) => {
+    "Read the transcript behind one saved overview, the reader's own copy, each paragraph stamped with the time it was said. Use it for anything the overview doesn't cover or to check what was actually said, rather than finding a transcript on the web. To find where something was said, search_transcripts first, then read from its moment with `from`. A long transcript comes in parts: carry on with the cursor each part ends with. Read one transcript at a time, not to survey many.",
+  input: z.object({
+    id: OverviewIdInput,
+    from: z.string().regex(TIMESTAMP).optional().describe("Start at this time, such as 1:02:03 or 14:30"),
+    cursor: Cursor,
+  }),
+  run: async ({ id, from, cursor }, { sql, accountId, transcripts }) => {
+    if (from !== undefined && cursor !== undefined) {
+      return toolError("Pass either from or cursor, not both.");
+    }
     const parsedId = OverviewId.safeParse(id);
     const library = await readLibrary(sql, accountId);
     const entry = parsedId.success ? library.entries.find((candidate) => candidate.overview.id === parsedId.data) : undefined;
@@ -284,7 +295,22 @@ const getTranscript = mcpTool({
       return toolError(`No transcript is kept for this ${source.kind === "podcast" ? "episode" : "video"}.`);
     }
     const head = source.kind === "podcast" ? { title: source.title, channel: source.showName, url: source.sharedFrom } : source;
-    const text = transcriptPlainText(head, transcriptBlocks(transcript.data.segments));
+    const blocks = transcriptBlocks(transcript.data.segments);
+    const first = from === undefined ? Number(cursor ?? 0) : blockIndexAt(blocks, millisecondsOf(from)!);
+    const end = blocks.at(-1)?.endMs ?? 0;
+    if (first >= blocks.length && blocks.length > 0) {
+      return toolError(`Nothing is said after ${formatTimestamp(end)}, where this transcript ends.`);
+    }
+    const page = transcriptPage(blocks, first);
+    const shown = page.blocks;
+    const whole = first === 0 && page.next === null;
+    const where = whole
+      ? []
+      : [
+          `This part runs ${formatTimestamp(shown[0]!.startMs)}–${formatTimestamp(shown.at(-1)!.endMs)} of ${formatTimestamp(end)}.`,
+          ...(page.next === null ? [] : [`More follows: call again with cursor "${page.next}" for the next part.`]),
+        ];
+    const text = [transcriptPlainText(head, shown), ...where].join("\n");
     return {
       text: transcript.data.generated
         ? `${source.kind === "podcast" ? "Machine-transcribed" : "Machine-transcribed: the video had no captions of its own"}, so some words may be misheard.\n\n${text}`
@@ -300,6 +326,7 @@ export const mcpTools: readonly McpTool[] = [
   getOverview,
   getOverviews,
   getTranscript,
+  searchTranscripts,
   listChats,
   getChat,
   listProjects,

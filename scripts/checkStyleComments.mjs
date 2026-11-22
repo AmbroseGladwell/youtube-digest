@@ -22,7 +22,7 @@ const skipUrl = (text, start) => {
   return close === -1 ? text.length : close + 1;
 };
 
-const commentsIn = (text) => {
+export const commentsIn = (text) => {
   const comments = [];
   let at = 0;
   while (at < text.length) {

@@ -22,6 +22,8 @@ import { youTubeDataApiPlaylistReader } from "./playlists/youTubeDataApiPlaylist
 import { youTubeDataApiVideoReader } from "./videos/youTubeDataApiVideoReader.js";
 import { callBudget, PODCAST_INDEX_BUDGET } from "./podcasts/callBudget.js";
 import { fetchPodcastIndexJson, podcastIndexDirectory } from "./podcasts/podcastIndexDirectory.js";
+import { createScrapeCreatorsTikTok } from "./tiktok/createScrapeCreatorsTikTok.js";
+import { createTikTokReader } from "./tiktok/createTikTokReader.js";
 import { youTubeDataApiEpisodes } from "./podcasts/youTubeDataApiEpisodes.js";
 
 let config;
@@ -103,6 +105,10 @@ const app = await buildApp({
     config.podcastIndex === null
       ? null
       : podcastIndexDirectory(config.podcastIndex, callBudget(fetchPodcastIndexJson, PODCAST_INDEX_BUDGET)),
+  tiktokReader:
+    config.scrapeCreatorsApiKey === null
+      ? null
+      : createTikTokReader({ vendor: createScrapeCreatorsTikTok({ apiKey: config.scrapeCreatorsApiKey }) }),
   eventSink,
   errorSink,
   personEraser,
@@ -161,6 +167,13 @@ app.log.info(
     showDirectories: config.podcastIndex === null ? ["Apple"] : ["Podcast Index", "Apple"],
     youTubeSearch: config.youTubeApiKey === null ? "off: YOUTUBE_API_KEY is not set" : "YouTube Data API",
   }),
+);
+app.log.info(
+  apiLogLines.startup.tiktok(
+    config.scrapeCreatorsApiKey === null
+      ? { enabled: false, why: "SCRAPECREATORS_API_KEY is not set" }
+      : { enabled: true, source: "ScrapeCreators" },
+  ),
 );
 app.log.info(
   apiLogLines.startup.analytics(

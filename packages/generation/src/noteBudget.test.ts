@@ -14,11 +14,26 @@ test("a short article keeps the budget it had before", () => {
   assert.deepEqual(counts("written", 6000), { keyPoints: 6, wordsPerKeyPoint: 40, mostChapters: 7 });
 });
 
-test("a video up to 6,000 words keeps seven points of 40 words", () => {
-  for (const words of [0, 400, 2500, 6000]) {
+test("a short clip gets three short points and no chapters, and a few minutes of talk four points and up to three", () => {
+  for (const words of [0, 150, 400]) {
+    assert.deepEqual(counts("spoken", words), { keyPoints: 3, wordsPerKeyPoint: 25, mostChapters: 0 });
+  }
+  for (const words of [401, 1000]) {
+    assert.deepEqual(counts("spoken", words), { keyPoints: 4, wordsPerKeyPoint: 30, mostChapters: 3 });
+  }
+});
+
+test("a video from 1,000 to 6,000 words keeps seven points of 40 words", () => {
+  for (const words of [1001, 2500, 6000]) {
     assert.deepEqual(counts("spoken", words), { keyPoints: 7, wordsPerKeyPoint: 40, mostChapters: 10 });
   }
   assert.equal(mostWordsPerKeyPoint(noteBudget("spoken", 6000)), 50);
+});
+
+test("only a clip of 400 words or fewer is too short for a part worth watching", () => {
+  assert.equal(noteBudget("spoken", 400).rangeAllowed, false);
+  assert.equal(noteBudget("spoken", 401).rangeAllowed, true);
+  assert.equal(noteBudget("written", 300).rangeAllowed, true);
 });
 
 test("a long source of either form shares the long rows, up to ten points of 60 words", () => {

@@ -35,12 +35,18 @@ export const makeMicroformatFixture = (publishDate = "2026-01-01T00:00:00-00:00"
   };
 };
 
+// Past 1,000 words, so the simulated video gets the usual note (docs/features/overview-generation-decisions.md, "One note budget").
+export const THE_LONG_EXPLANATION = Array.from({ length: 110 }, () => "Then the creator explains the claim again in more detail.").join(
+  " ",
+);
+
 export const makeJson3Fixture = () => {
   return {
     events: [
       { tStartMs: 0, dDurationMs: 3000, segs: [{ utf8: "Hello and welcome to the simulated video." }] },
       { tStartMs: 3000, dDurationMs: 4000, segs: [{ utf8: "Here is the one claim this video makes." }] },
       { tStartMs: 7000, dDurationMs: 3000, segs: [{ utf8: "And here is how you could apply it." }] },
+      { tStartMs: 10_000, dDurationMs: 300_000, segs: [{ utf8: THE_LONG_EXPLANATION }] },
     ],
   };
 };

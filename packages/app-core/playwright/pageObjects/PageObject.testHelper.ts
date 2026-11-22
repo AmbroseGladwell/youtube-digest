@@ -1,6 +1,20 @@
 import { test, expect } from "@playwright/experimental-ct-react";
 import type { Locator, Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import type { TestContext } from "../support/TestContext.testHelper.js";
+import { DEFAULT_TEXT_SIZE, DOUBLED_TEXT_SIZE, setTextSize } from "../support/reflowConditions.testHelper.js";
+import {
+  MOST_OF_THE_SCREEN_BARS_MAY_COVER,
+  SMALLEST_GROWTH_AT_DOUBLED_TEXT,
+  SMALLEST_SCROLL_WINDOW,
+  clippedScrollPositions,
+  measureBarCover,
+  sampleTextSizes,
+  scrollWindowsTooShort,
+} from "../support/reflowMeasures.testHelper.js";
+
+const LONGEST_WAIT_FOR_ANIMATIONS_MS = 2_000;
+const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 const TEXT_LIKE_FIELDS =
   "input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=submit]):not([type=button]), textarea, select";
@@ -119,6 +133,84 @@ export abstract class PageObject {
     this.step("verifyPageDoesNotScrollSideways", async () => {
       const overflow = await this.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(0);
+    });
+
+  verifyReflows = () =>
+    this.step("verifyReflows", async () => {
+      const overflow = await this.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(
+        overflow,
+        "the page scrolls sideways: something holds a fixed width wider than the screen; let it wrap or shrink",
+      ).toBeLessThanOrEqual(0);
+      const cover = await this.page.evaluate(measureBarCover);
+      if (cover) {
+        expect(
+          cover.share,
+          `fixed and sticky bars cover ${Math.round(cover.share * 100)}% of the screen (${cover.bars.map((bar) => bar.bar).join(", ")}); on a short screen let them scroll away or fold`,
+        ).toBeLessThanOrEqual(MOST_OF_THE_SCREEN_BARS_MAY_COVER);
+      }
+    });
+
+  verifyControlsCanBeReached = (within: Locator) =>
+    this.step("verifyControlsCanBeReached", async () => {
+      const controls = await within
+        .locator("button, a[href], input, select, textarea, [role=menuitem], [role=option], [role=tab]")
+        .filter({ visible: true })
+        .all();
+      expect(controls.length).toBeGreaterThan(0);
+      const unreachable: string[] = [];
+      for (const control of controls) {
+        const before = await control.evaluate(clippedScrollPositions);
+        const reached = await control.click({ trial: true, timeout: 2_000 }).then(
+          () => true,
+          () => false,
+        );
+        const after = await control.evaluate(clippedScrollPositions);
+        if (!reached || before.join() !== after.join()) {
+          unreachable.push((await control.getAttribute("data-testid")) ?? (await control.innerText()).slice(0, 40));
+        }
+      }
+      expect(
+        unreachable,
+        "these controls can't be scrolled to or tapped: give the overlay a max-height in dvh and overflow-y: auto",
+      ).toEqual([]);
+      const tooShort = await within.evaluate(scrollWindowsTooShort, SMALLEST_SCROLL_WINDOW);
+      expect(tooShort, "this scroll area shows too little to use: let fixed parts around it shrink or scroll with it").toEqual([]);
+    });
+
+  verifyTextFollowsTheTextSetting = () =>
+    this.step("verifyTextFollowsTheTextSetting", async () => {
+      const viewport = this.page.viewportSize()!;
+      const before = await this.page.evaluate(sampleTextSizes, true);
+      await this.page.setViewportSize({ width: viewport.width * 2, height: viewport.height * 2 });
+      await setTextSize(this.page, DOUBLED_TEXT_SIZE);
+      const after = await this.page.evaluate(sampleTextSizes, false);
+      await setTextSize(this.page, DEFAULT_TEXT_SIZE);
+      await this.page.setViewportSize(viewport);
+      expect(before.length).toBeGreaterThan(0);
+      const stuck = before.flatMap((sample, at) => {
+        const grown = after[at];
+        return sample && grown && grown.size < sample.size * SMALLEST_GROWTH_AT_DOUBLED_TEXT ? [`${sample.text} (${sample.size}px)`] : [];
+      });
+      expect([...new Set(stuck)].slice(0, 10), "this text ignores the browser's text size: set font-size in rem, never px").toEqual([]);
+    });
+
+  verifyIsAccessible = (disabledRules: string[] = []) =>
+    this.step("verifyIsAccessible", async () => {
+      await this.page.evaluate((longestWait) => {
+        const finite = document.getAnimations().filter((animation) => animation.effect?.getTiming().iterations !== Infinity);
+        const settled = Promise.all(finite.map((animation) => animation.finished.catch(() => undefined)));
+        return Promise.race([settled, new Promise((resolve) => setTimeout(resolve, longestWait))]);
+      }, LONGEST_WAIT_FOR_ANIMATIONS_MS);
+      await expect(async () => {
+        const results = await new AxeBuilder({ page: this.page })
+          .withTags(WCAG_AA)
+          .disableRules(["scrollable-region-focusable", ...disabledRules])
+          .analyze();
+        expect(
+          results.violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`),
+        ).toEqual([]);
+      }).toPass({ timeout: 5_000 });
     });
 
   verifyFieldFontSizes = (check: (sizesInPx: number[]) => void) =>

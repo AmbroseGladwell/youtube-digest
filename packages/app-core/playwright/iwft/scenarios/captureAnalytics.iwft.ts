@@ -55,7 +55,7 @@ test("making an overview is counted from asking to reading it, with where it was
           howToApplyWritten: true,
           howToApplyItems: 1,
           personalised: false,
-          sourceWords: 23,
+          sourceWords: 1123,
           keyPoints: 3,
           keyPointCeiling: 7,
           chapters: 2,

@@ -7,6 +7,7 @@ import { checkNoteKind } from "./noteKind/checkNoteKind.js";
 import { kindSampleOfVideo } from "./noteKind/kindSampleOfVideo.js";
 import { requestGeneratedOutput, type GenerationClient } from "./requestGeneratedOutput.js";
 import { filedProjectIds } from "./sections/projectInstructions.js";
+import { refuseWithoutSpeech } from "./sections/transcriptBudget.js";
 import type { OverviewMeta } from "./OverviewMeta.js";
 
 // Costed apart: docs/architecture/unit-economics.md, "What is recorded".
@@ -23,6 +24,7 @@ export const generateOverview = async (
   meta: OverviewMeta,
   observer: GenerationObserver = {},
 ): Promise<Overview> => {
+  refuseWithoutSpeech(input);
   const kind = input.noteKind ?? (await checkNoteKind(client, kindSampleOfVideo(input)));
   observer.kindChecked?.(kind);
   if (kind === "recipe") {

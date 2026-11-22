@@ -42,7 +42,7 @@ test("each step reports what it produced, and there is no audio step because nob
 
   await dialog.verifySourceTitle("The Simulated Video");
   await dialog.verifyStepCountIs(2);
-  await dialog.verifyStepDetail("01", "Transcript fetched · 23 words");
+  await dialog.verifyStepDetail("01", "Transcript fetched · 1,123 words");
   await dialog.verifyStepState("01", "done");
   await dialog.verifyStepState("02", "running");
   await dialog.verifyElapsedIsShown();

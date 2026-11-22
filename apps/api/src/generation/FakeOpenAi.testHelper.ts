@@ -19,6 +19,8 @@ export const validAnswer = {
   howToApply: { items: ["do this"] },
 };
 
+const A_FEW_THOUSAND_WORDS = Array.from({ length: 1100 }, () => "word").join(" ");
+
 export const generationRequest = (overviewId: string): OurKeyGenerationRequest =>
   OurKeyGenerationRequest.parse({
     overviewId,
@@ -33,7 +35,7 @@ export const generationRequest = (overviewId: string): OurKeyGenerationRequest =
         publishedAt: null,
         thumbnailUrl: null,
       },
-      transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
+      transcript: [{ text: `Hello. ${A_FEW_THOUSAND_WORDS}`, startMs: 0, endMs: 1000 }],
       captureReason: null,
       readerContext: null,
       sectionsEnabled: { ...DEFAULT_SECTIONS_ENABLED, verdict: false, selling: false, watchAnyway: false },

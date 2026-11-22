@@ -1,6 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
 import { apiLogLines, type NoteKind, type StoredTranscript, type VideoId, type VideoSource } from "@overview/domain";
-import { kindSampleOfVideo } from "@overview/generation";
+import { kindSampleOfVideo, NO_SPEECH_WORDS, transcriptWords } from "@overview/generation";
 import type { CostPayer } from "../costs/AccountCostsRepository.js";
 import type { OurKeyGenerator } from "../generation/OurKeyGenerator.js";
 import type { ServiceCaller, ServiceTranscripts } from "../transcripts/ServiceTranscripts.js";
@@ -46,6 +46,9 @@ export const checkVideoKind = async (
     .catch(() => null);
   if (transcript === null || transcript.segments.length === 0) {
     return UNCHECKED;
+  }
+  if (transcriptWords({ transcript: transcript.segments }) < NO_SPEECH_WORDS) {
+    return { noteKind: null, transcript };
   }
   const payer: CostPayer = signedOut ? "signed-out" : { accountId: caller.accountId };
   const noteKind = await generator.kindCheck(payer, kindSampleOfVideo({ video, transcript: transcript.segments }), log).catch(() => null);
