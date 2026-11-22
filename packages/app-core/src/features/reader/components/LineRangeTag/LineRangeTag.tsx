@@ -69,7 +69,7 @@ const stickyChromeHeight = (element: HTMLElement) => {
 };
 
 // docs/features/novelty-scale.md, "The time is the handle".
-export function LineRangeTag({
+export const LineRangeTag = ({
   kind,
   about,
   step,
@@ -81,7 +81,7 @@ export function LineRangeTag({
   canReadTranscript,
   onOpenTranscriptAt,
   direct = false,
-}: LineRangeTagProps) {
+}: LineRangeTagProps) => {
   const [open, setOpen] = useState(false);
   const [upward, setUpward] = useState(false);
   const root = useRef<HTMLSpanElement | null>(null);
@@ -294,7 +294,7 @@ export function LineRangeTag({
       {open && portalled(asSheet, asSheet ? sheet : popover)}
     </span>
   );
-}
+};
 
 // "8 min", how long a range plays before it stops (design 106s).
 const rangeLength = ({ startMs, endMs }: TimeRange): string => {

@@ -7,7 +7,7 @@ export interface LineTimings {
 
 // The pacer's clock: each line held for as long as it would take to say. Only ever shown
 // with a ~, because nobody measured it (docs/prototype/constraints.md).
-export function estimatedLineStarts(lines: NoteLine[]): LineTimings {
+export const estimatedLineStarts = (lines: NoteLine[]): LineTimings => {
   const { lineSeconds, totalSeconds } = noteTiming(lines);
   let elapsed = 0;
   const lineStarts = lineSeconds.map((seconds) => {
@@ -16,11 +16,11 @@ export function estimatedLineStarts(lines: NoteLine[]): LineTimings {
     return start;
   });
   return { lineStarts, durationSeconds: totalSeconds };
-}
+};
 
 // Where a section starts, as a share of the whole: the scrubber's notches. The note's own
 // first section starts at nothing, so it has no notch.
-export function sectionStartFractions(lines: NoteLine[], timings: LineTimings): number[] {
+export const sectionStartFractions = (lines: NoteLine[], timings: LineTimings): number[] => {
   if (timings.durationSeconds <= 0) {
     return [];
   }
@@ -28,4 +28,4 @@ export function sectionStartFractions(lines: NoteLine[], timings: LineTimings): 
     const start = timings.lineStarts[index] ?? 0;
     return line.heading && start > 0 ? [start / timings.durationSeconds] : [];
   });
-}
+};

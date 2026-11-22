@@ -13,12 +13,12 @@ export interface GenerationClientOptions {
 // server of ours is in the path (docs/architecture/v1-architecture-decisions.md, Model D).
 // Every one of the six answers a cross-origin preflight, which is the only reason this
 // shape is available at all.
-export function createGenerationClient({
+export const createGenerationClient = ({
   provider,
   apiKey,
   model,
   http = globalThis.fetch.bind(globalThis),
-}: GenerationClientOptions): GenerationClient {
+}: GenerationClientOptions): GenerationClient => {
   const adapter = adapterFor(provider);
   return (request) => adapter.generate({ apiKey, model }, request, http);
-}
+};

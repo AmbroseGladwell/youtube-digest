@@ -114,7 +114,7 @@ const normalised = (text: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-function locateQuote(segments: readonly TranscriptSegment[], quote: string): number | null {
+const locateQuote = (segments: readonly TranscriptSegment[], quote: string): number | null => {
   let joined = "";
   const starts: Array<{ offset: number; startMs: number }> = [];
   for (const segment of segments) {
@@ -133,7 +133,7 @@ function locateQuote(segments: readonly TranscriptSegment[], quote: string): num
     return null;
   }
   return starts.filter((start) => start.offset <= found).at(-1)?.startMs ?? null;
-}
+};
 
 const cosine = (left: readonly number[], right: readonly number[]) => {
   let dot = 0;
@@ -147,7 +147,7 @@ const cosine = (left: readonly number[], right: readonly number[]) => {
   return dot / Math.sqrt(a * b);
 };
 
-async function loadLibrary(dataDir: string): Promise<Library> {
+const loadLibrary = async (dataDir: string): Promise<Library> => {
   const raw = JSON.parse(await readFile(join(dataDir, "library", "library.json"), "utf-8")) as Library["raw"];
   const overviews = new Map<string, LibraryOverview>();
   for (const row of raw.overviews) {
@@ -200,9 +200,9 @@ async function loadLibrary(dataDir: string): Promise<Library> {
     });
   }
   return { overviews, claimVectors, projects, raw };
-}
+};
 
-async function claimSearch(library: Library): Promise<(vector: number[]) => Promise<Array<{ overviewId: string; similarity: number }>>> {
+const claimSearch = async (library: Library): Promise<(vector: number[]) => Promise<Array<{ overviewId: string; similarity: number }>>> => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps() });
   await sql.query("insert into accounts (id, email) values ($1, 'reader@example.invalid')", [ACCOUNT]);
@@ -233,9 +233,9 @@ async function claimSearch(library: Library): Promise<(vector: number[]) => Prom
   const model = library.raw.embeddings[0]!.model;
   return async (vector) =>
     (await repository.closest(ACCOUNT, vector, model, library.overviews.size)).filter((match) => match.similarity >= MEANING_FLOOR);
-}
+};
 
-async function loadQuestions(dataDir: string, library: Library): Promise<{ located: Located[]; dropped: string[] }> {
+const loadQuestions = async (dataDir: string, library: Library): Promise<{ located: Located[]; dropped: string[] }> => {
   const questions: Question[] = [];
   for (const folder of ["ov267", "write"]) {
     for (const id of await readdir(join(dataDir, folder)).catch(() => [] as string[])) {
@@ -270,11 +270,11 @@ async function loadQuestions(dataDir: string, library: Library): Promise<{ locat
     located.push({ ...question, moments: moments as Located["moments"] });
   }
   return { located, dropped };
-}
+};
 
 // The overview nearest the one that answers, by best pair of claims: where a reader plausibly is
 // when they ask about the other.
-function nearestHome(library: Library, overviewId: string): string {
+const nearestHome = (library: Library, overviewId: string): string => {
   const own = library.claimVectors.get(overviewId) ?? [];
   let best = { id: "", similarity: -2 };
   for (const [id, vectors] of library.claimVectors) {
@@ -291,13 +291,13 @@ function nearestHome(library: Library, overviewId: string): string {
     }
   }
   return best.id;
-}
+};
 
-async function cachedEmbeddings(
+const cachedEmbeddings = async (
   path: string,
   texts: string[],
   apiKey: string,
-): Promise<{ vectors: Map<string, number[]>; tokens: number }> {
+): Promise<{ vectors: Map<string, number[]>; tokens: number }> => {
   const cached = new Map<string, number[]>(
     Object.entries(JSON.parse((await readFile(path, "utf-8").catch(() => "{}")) as string) as Record<string, number[]>),
   );
@@ -310,7 +310,7 @@ async function cachedEmbeddings(
     await writeFile(path, JSON.stringify(Object.fromEntries(cached)));
   }
   return { vectors: cached, tokens };
-}
+};
 
 interface RetrievalRow {
   id: string;
@@ -325,7 +325,7 @@ interface RetrievalRow {
   expectedSimilarity: number | null;
 }
 
-async function retrieval(dataDir: string, outPath: string): Promise<void> {
+const retrieval = async (dataDir: string, outPath: string): Promise<void> => {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is needed for the question and passage embeddings");
@@ -407,9 +407,9 @@ async function retrieval(dataDir: string, outPath: string): Promise<void> {
   console.error(
     `spent ${report.spent.dollars.toFixed(4)} on embeddings this run; ${report.library.transcriptHours} h of transcript in ${report.library.passages} passages`,
   );
-}
+};
 
-function retrievalMarkdown(rows: RetrievalRow[]): string {
+const retrievalMarkdown = (rows: RetrievalRow[]): string => {
   const kinds = [...new Set(rows.map((row) => row.kind))];
   const hit = (rank: number | null, depth: number) => rank !== null && rank <= depth;
   const line = (label: string, subset: RetrievalRow[]) =>
@@ -430,7 +430,7 @@ function retrievalMarkdown(rows: RetrievalRow[]): string {
       rows.filter((row) => row.kind !== "notInLibrary" && row.kind !== "notInSource"),
     ),
   ].join("\n");
-}
+};
 
 // --- keyword search over the kept transcripts ---
 
@@ -449,7 +449,7 @@ const termsOf = (text: string): string[] =>
     .filter((word) => word.length > 1 && !STOPWORDS.has(word))
     .map((word) => (word.length > 4 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word));
 
-function keywordIndex(library: Library) {
+const keywordIndex = (library: Library) => {
   const docs: Array<{ overviewId: string; passage: Passage; terms: Map<string, number>; length: number }> = [];
   for (const entry of library.overviews.values()) {
     if (entry.segments === null) {
@@ -497,9 +497,9 @@ function keywordIndex(library: Library) {
     sources: (query: string, home: string): string[] => [...new Set(scored(query, home).map((hit) => hit.overviewId))],
     passages: (query: string, home: string, count: number) => scored(query, home).slice(0, count),
   };
-}
+};
 
-async function keyword(dataDir: string, retrievalPath: string): Promise<void> {
+const keyword = async (dataDir: string, retrievalPath: string): Promise<void> => {
   const library = await loadLibrary(dataDir);
   const { located } = await loadQuestions(dataDir, library);
   const report = JSON.parse(await readFile(retrievalPath, "utf-8")) as { rows: RetrievalRow[] };
@@ -533,10 +533,10 @@ async function keyword(dataDir: string, retrievalPath: string): Promise<void> {
   for (const entry of rows.filter((candidate) => !hit(candidate.row.claimRank, 8))) {
     console.log(`claim miss ${entry.row.id}: keywords rank ${entry.keywordRank ?? "none"}, passage vectors rank ${entry.row.passageRank}`);
   }
-}
+};
 
 // The library's transcripts in Postgres, indexed by the shipped repository (OV-352).
-async function keywordStore(library: Library) {
+const keywordStore = async (library: Library) => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps() });
   await sql.query("insert into accounts (id, email) values ($1, 'reader@example.invalid')", [ACCOUNT]);
@@ -559,12 +559,12 @@ async function keywordStore(library: Library) {
   const started = performance.now();
   await repository.backfill(ACCOUNT);
   return { sql, repository, videoOf, overviewOf, indexMs: performance.now() - started };
-}
+};
 
 // OV-352: the shipped keyword search, Postgres full text over stored minute passages, against the
 // harness's BM25: where it ranks each question's source, and how long a search takes, with the
 // alternative of reading every transcript and scoring it per question timed beside it.
-async function pgKeyword(dataDir: string, retrievalPath: string): Promise<void> {
+const pgKeyword = async (dataDir: string, retrievalPath: string): Promise<void> => {
   const library = await loadLibrary(dataDir);
   const { located } = await loadQuestions(dataDir, library);
   const report = JSON.parse(await readFile(retrievalPath, "utf-8")) as { rows: RetrievalRow[] };
@@ -616,7 +616,7 @@ async function pgKeyword(dataDir: string, retrievalPath: string): Promise<void> 
   for (const entry of ranked.filter((candidate) => !hit(candidate.row.claimRank, 8))) {
     console.log(`claim miss ${entry.row.id}: Postgres rank ${entry.rank ?? "none"}`);
   }
-}
+};
 
 // The reply as the scoring below reads it, from the shape every chat now gives (OV-354): its text
 // flattened, and its ids by kind.
@@ -641,7 +641,7 @@ interface Arm {
   transcripts: boolean | "closest" | "keyword" | "keywordNeighbours" | "shipped";
 }
 
-function arms(): Map<string, Arm> {
+const arms = (): Map<string, Arm> => {
   const pinned = (count: number) => (row: RetrievalRow) => {
     const pins = row.expected.slice(0, Math.min(row.expected.length, count));
     for (const id of row.claimOrder) {
@@ -680,7 +680,7 @@ function arms(): Map<string, Arm> {
     },
   ];
   return new Map(list.map((arm) => [arm.name, arm]));
-}
+};
 
 interface OtherSource {
   label: string;
@@ -693,12 +693,12 @@ interface OtherSource {
 const PART_ID = /\[((?:verdict|sells|anyway)|(?:dubious|kp|step|apply|ing|method|ch)\d+)\] /g;
 
 // Overviews only, pinned or found, as the shipped chat sends them (OV-355).
-function shippedSourcesBlock(
+const shippedSourcesBlock = (
   library: Library,
   ids: string[],
   pinned: number,
   minutes: ReadonlyMap<string, Passage[]> = new Map(),
-): { text: string; sources: OtherSource[] } {
+): { text: string; sources: OtherSource[] } => {
   const chatSources = ids.map((id, index) => ({
     label: `S${index + 1}`,
     overviewId: id as OverviewId,
@@ -715,7 +715,7 @@ function shippedSourcesBlock(
       passages: minutes.get(source.overviewId) ?? [],
     })),
   };
-}
+};
 
 const otherSourceOf = (library: Library, id: string, label: string): OtherSource => {
   const entry = library.overviews.get(id)!;
@@ -731,11 +731,11 @@ const otherSourceOf = (library: Library, id: string, label: string): OtherSource
 const pinnedCount = (armName: string, others: string[]): number =>
   armName.startsWith("pinned1+") ? 1 : armName.startsWith("pinned") ? others.length : 0;
 
-function otherSourcesBlock(
+const otherSourcesBlock = (
   library: Library,
   ids: string[],
   wanted: boolean | ReadonlyMap<string, Passage[]>,
-): { text: string; sources: OtherSource[] } {
+): { text: string; sources: OtherSource[] } => {
   const transcripts = wanted !== false;
   const sources: OtherSource[] = [];
   const blocks = ids.map((id, index) => {
@@ -767,7 +767,7 @@ The reader saved these too. They are not what this chat is about, but the reader
 
 ${blocks.join("\n\n")}`;
   return { text, sources };
-}
+};
 
 interface AnswerTurn {
   arm: string;
@@ -793,12 +793,12 @@ interface AnswerTurn {
   ms: number;
 }
 
-async function answer(
+const answer = async (
   dataDir: string,
   retrievalPath: string,
   outPath: string,
   options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
-) {
+) => {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!options.dryRun && !apiKey) {
     throw new Error("OPENAI_API_KEY is needed");
@@ -1034,9 +1034,9 @@ async function answer(
   await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
   console.log(answerMarkdown(done));
   console.error(`spent $${spent.toFixed(4)} in all`);
-}
+};
 
-function score(
+const score = (
   arm: string,
   run: number,
   question: Located,
@@ -1048,7 +1048,7 @@ function score(
   usage: TokenUsage | null,
   price: NonNullable<ReturnType<typeof priceOf>>,
   ms: number,
-): AnswerTurn {
+): AnswerTurn => {
   const cited = new Set([...reply.passages, ...reply.overviewParts]);
   const citedSources = sources.filter((source) =>
     [...cited].some(
@@ -1106,7 +1106,7 @@ function score(
     followUpDollars: followUp === null ? 0 : costInDollars(price, followUp),
     ms,
   };
-}
+};
 
 // --- an empty chat over the whole library ---
 
@@ -1139,7 +1139,7 @@ interface MapTurn {
 
 // Every overview the reader saved, compact enough to send whole: the material for a question no
 // one overview answers ("what do my saved overviews have in common?").
-function libraryMap(library: Library, withKeyPoints: boolean): { text: string; labels: Map<string, string>; partIds: Set<string> } {
+const libraryMap = (library: Library, withKeyPoints: boolean): { text: string; labels: Map<string, string>; partIds: Set<string> } => {
   const labels = new Map<string, string>();
   const partIds = new Set<string>();
   const blocks = [...library.overviews.values()].map((entry, index) => {
@@ -1169,15 +1169,15 @@ Answer from the library below. Answer in up to eight short sentences, or a short
 
 ${blocks.join("\n\n")}`;
   return { text, labels, partIds };
-}
+};
 
-async function mapArm(
+const mapArm = async (
   dataDir: string,
   library: Library,
   outPath: string,
   armName: string,
   options: { runs: number; budget: number; dryRun: boolean; spent: number; apiKey: string },
-): Promise<number> {
+): Promise<number> => {
   const withKeyPoints = armName === "map-keypoints";
   if (!withKeyPoints && armName !== "map-compact") {
     throw new Error(`no arm ${armName}`);
@@ -1291,9 +1291,9 @@ async function mapArm(
   }
   console.log(mapMarkdown(done));
   return spent;
-}
+};
 
-function mapMarkdown(turns: MapTurn[]): string {
+const mapMarkdown = (turns: MapTurn[]): string => {
   return [
     "| Arm | Question | Run | Overviews cited | Topics among them | Ids not in the library | On the subject | Core overviews found | Prompt tokens | First message | Cached follow-up |",
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
@@ -1302,14 +1302,14 @@ function mapMarkdown(turns: MapTurn[]): string {
         `| ${turn.arm} | ${turn.id} | ${turn.run} | ${turn.failed ? "FAILED" : turn.cited.length} | ${turn.topicsCited} | ${turn.invalidIds.length} | ${turn.precision === null ? "—" : `${Math.round(turn.precision * 100)}%`} | ${turn.coreFound === null ? "—" : `${turn.coreFound}/${turn.coreTotal}`} | ${turn.inputTokens} | $${turn.costDollars.toFixed(5)} | $${turn.followUpDollars.toFixed(5)} |`,
     ),
   ].join("\n");
-}
+};
 
 const median = (values: number[]) => {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted.length === 0 ? 0 : sorted[Math.floor(sorted.length / 2)]!;
 };
 
-function answerMarkdown(turns: AnswerTurn[]): string {
+const answerMarkdown = (turns: AnswerTurn[]): string => {
   const armNames = [...new Set(turns.map((turn) => turn.arm))];
   const count = (subset: AnswerTurn[], test: (turn: AnswerTurn) => boolean | null) => {
     const scored = subset.filter((turn) => test(turn) !== null);
@@ -1332,7 +1332,7 @@ function answerMarkdown(turns: AnswerTurn[]): string {
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...rows,
   ].join("\n");
-}
+};
 
 // --- a project: its own chat, and pinned with "@" in an overview's chat ---
 
@@ -1384,11 +1384,11 @@ const briefLine = (label: string, entry: LibraryOverview) =>
 // A project page's chat: its overviews whole, or compact as in the library map, with the
 // reader's purpose for it or without, and with the minutes of its transcripts that best match
 // the question's words or without.
-function projectMaterial(
+const projectMaterial = (
   library: Library,
   { project, members }: LibraryProject,
   options: { whole: boolean; purpose: boolean; passages: ReadonlyMap<string, Passage[]> | null },
-): { text: string; labels: Map<string, string>; partIds: Set<string> } {
+): { text: string; labels: Map<string, string>; partIds: Set<string> } => {
   const labels = new Map<string, string>();
   const partIds = new Set<string>();
   const blocks = members.map((id, index) => {
@@ -1434,17 +1434,17 @@ Answer from the project below. Answer in up to eight short sentences, or a short
 
 ${blocks.join("\n\n")}`;
   return { text, labels, partIds };
-}
+};
 
 // "@" a project in an overview's chat: a small project goes in whole, as pins do; a larger one
 // sends its closest few whole and the rest in brief, so the prompt stays bounded.
-function pinnedProjectBlock(
+const pinnedProjectBlock = (
   library: Library,
   { project, members }: LibraryProject,
   home: string,
   closest: string[],
   capped: boolean,
-): { text: string; labelled: Map<string, string>; sources: OtherSource[] } {
+): { text: string; labelled: Map<string, string>; sources: OtherSource[] } => {
   const others = members.filter((id) => id !== home);
   const whole = !capped || others.length <= PINNED_WHOLE ? others : closest.filter((id) => others.includes(id)).slice(0, BRIEF_FULL);
   const ordered = [...whole, ...others.filter((id) => !whole.includes(id))];
@@ -1463,13 +1463,13 @@ function pinnedProjectBlock(
     labelled: new Map(chatSources.map((source) => [source.label, source.overviewId])),
     sources: chatSources.filter((source) => source.brief !== true).map((source) => otherSourceOf(library, source.overviewId, source.label)),
   };
-}
+};
 
-async function projectChat(
+const projectChat = async (
   dataDir: string,
   outPath: string,
   options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
-): Promise<void> {
+): Promise<void> => {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!options.dryRun && !apiKey) {
     throw new Error("OPENAI_API_KEY is needed");
@@ -1684,9 +1684,9 @@ async function projectChat(
   }
   console.log(projectMarkdown(done));
   console.error(`spent $${spent.toFixed(4)} in all`);
-}
+};
 
-function projectMarkdown(turns: ProjectTurn[]): string {
+const projectMarkdown = (turns: ProjectTurn[]): string => {
   const keys = [...new Set(turns.map((turn) => `${turn.arm}|${turn.project}`))];
   const count = (subset: ProjectTurn[], test: (turn: ProjectTurn) => boolean | null) => {
     const scored = subset.filter((turn) => test(turn) !== null);
@@ -1709,7 +1709,7 @@ function projectMarkdown(turns: ProjectTurn[]): string {
       )} | ${count(subset, (turn) => turn.gaveCount)} | ${subset.reduce((sum, turn) => sum + turn.invalidIds.length, 0)} |`;
     }),
   ].join("\n");
-}
+};
 
 // --- structured answers, and a second pass that reads the chosen overviews whole ---
 
@@ -1763,7 +1763,7 @@ interface StructuredAnswer {
 
 // The shared reply shape (OV-354) scored as the older points were: each section one point, its text
 // the paragraphs and lists, its sources every id the section names. The intro's sources join as a point.
-function asPoints(json: unknown): StructuredAnswer {
+const asPoints = (json: unknown): StructuredAnswer => {
   const sections = (json as { sections: Array<Record<string, unknown>> }).sections;
   if (sections.every((section) => Array.isArray(section["points"]))) {
     return json as StructuredAnswer;
@@ -1787,7 +1787,7 @@ function asPoints(json: unknown): StructuredAnswer {
     ],
     takeaway: shared.takeaway,
   };
-}
+};
 
 interface TwoPassQuestion {
   id: string;
@@ -1822,13 +1822,13 @@ interface TwoPassTurn {
   ms: number;
 }
 
-async function completeJson(
+const completeJson = async (
   apiKey: string,
   messages: PromptMessage[],
   schema: object,
   maxTokens: number,
   cacheKey: string,
-): Promise<{ json: unknown; usage: TokenUsage | null }> {
+): Promise<{ json: unknown; usage: TokenUsage | null }> => {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
@@ -1851,7 +1851,7 @@ async function completeJson(
     throw Object.assign(new Error("cut off at the answer cap"), { usage });
   }
   return { json: JSON.parse(choice.message.content ?? ""), usage };
-}
+};
 
 const addUsage = (left: TokenUsage | null, right: TokenUsage | null): TokenUsage | null =>
   left === null
@@ -1869,7 +1869,7 @@ const contentWords = (text: string) => termsOf(text).filter((word) => word.lengt
 
 // The library or a project as the compact map, with one system message that serves both passes,
 // so the second pass reads the map from the cache.
-function twoPassSystem(library: Library, scope: string): { text: string; labels: Map<string, string>; order: string[] } {
+const twoPassSystem = (library: Library, scope: string): { text: string; labels: Map<string, string>; order: string[] } => {
   const project = scope === "library" ? null : [...library.projects.values()].find((entry) => entry.project.id.startsWith(scope))!;
   const order = project === null ? [...library.overviews.keys()] : project.members;
   const labels = new Map(order.map((id, index) => [`O${index + 1}`, id]));
@@ -1898,13 +1898,13 @@ Rules:
 
 ${blocks.join("\n\n")}`;
   return { text, labels, order };
-}
+};
 
 // The shipped material (OV-353): whole while it fits, else the map, with the production prompt.
-function shippedSystem(
+const shippedSystem = (
   library: Library,
   scope: string,
-): { text: string; labels: Map<string, string>; order: string[]; mode: "whole" | "map" } {
+): { text: string; labels: Map<string, string>; order: string[]; mode: "whole" | "map" } => {
   const project = scope === "library" ? null : [...library.projects.values()].find((entry) => entry.project.id.startsWith(scope))!;
   const ids = project === null ? [...library.overviews.keys()] : project.members;
   const inOrder = ids.map((id) => library.overviews.get(id)!.overview);
@@ -1914,13 +1914,13 @@ function shippedSystem(
   const material = libraryChatMaterial(project === null ? { kind: "library" } : { kind: "project", project: project.project }, overviews);
   const labels = new Map([...material.labels].map(([label, overview]) => [label, overview.id as string]));
   return { text: material.system, labels, order: [...labels.values()], mode: material.mode };
-}
+};
 
-async function twoPass(
+const twoPass = async (
   dataDir: string,
   outPath: string,
   options: { arms: string[]; runs: number; budget: number; dryRun: boolean; only: string | null },
-): Promise<void> {
+): Promise<void> => {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!options.dryRun && !apiKey) {
     throw new Error("OPENAI_API_KEY is needed");
@@ -2135,9 +2135,9 @@ async function twoPass(
   }
   console.log(twoPassMarkdown(done));
   console.error(`spent $${spent.toFixed(4)} in all`);
-}
+};
 
-function twoPassMarkdown(turns: TwoPassTurn[]): string {
+const twoPassMarkdown = (turns: TwoPassTurn[]): string => {
   const arms = [...new Set(turns.map((turn) => turn.arm))];
   return [
     "| Arm | Answers | Cut off | Prompt tokens | Output tokens | Cost a question | Core found | Core in picks | Points | Without a source | Comparing 2+ | Bad ids | Weak overlap | Gave a count | Latency |",
@@ -2151,7 +2151,7 @@ function twoPassMarkdown(turns: TwoPassTurn[]): string {
       return `| ${arm} | ${all.length} | ${all.length - ok.length} | ${median(ok.map((turn) => turn.inputTokens))} | ${median(ok.map((turn) => turn.outputTokens))} | $${median(ok.map((turn) => turn.costDollars)).toFixed(5)} | ${core.length === 0 ? "—" : `${core.reduce((t, x) => t + x.coreFound!, 0)}/${core.reduce((t, x) => t + x.coreTotal, 0)}`} | ${picks.length === 0 ? "—" : `${picks.reduce((t, x) => t + x.coreInPicks!, 0)}/${picks.reduce((t, x) => t + x.coreTotal, 0)}`} | ${sum((turn) => turn.points)} | ${sum((turn) => turn.pointsWithoutSources)} | ${sum((turn) => turn.pointsComparing)} | ${sum((turn) => turn.invalidIds.length)} | ${sum((turn) => turn.weakPoints.length)} | ${ok.filter((turn) => turn.gaveCount).length} | ${(median(ok.map((turn) => turn.ms)) / 1000).toFixed(1)} s |`;
     }),
   ].join("\n");
-}
+};
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,

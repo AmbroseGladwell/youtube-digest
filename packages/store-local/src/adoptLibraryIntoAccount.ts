@@ -20,7 +20,7 @@ interface StoreContents {
 // starts empty. Copied in one transaction and then cleared in another, so a run that stops
 // is finished by running it again: a second copy over the first writes the same keys, and a
 // copy from the cleared library writes nothing (docs/features/account-libraries.md).
-export async function adoptLibraryIntoAccount({ accountId, indexedDB }: AdoptLibraryIntoAccountOptions): Promise<void> {
+export const adoptLibraryIntoAccount = async ({ accountId, indexedDB }: AdoptLibraryIntoAccountOptions): Promise<void> => {
   const from = await openLocalDatabase({ name: DATABASE_NAME, ...(indexedDB === undefined ? {} : { indexedDB }) });
   const into = await openLocalDatabase({
     name: localDatabaseName(accountId),
@@ -53,4 +53,4 @@ export async function adoptLibraryIntoAccount({ accountId, indexedDB }: AdoptLib
     from.close();
     into.close();
   }
-}
+};

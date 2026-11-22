@@ -29,7 +29,7 @@ const WAY = { addKey: "addKey", seePlans: "seePlans", seeByoPlus: "seePlans", se
 
 // What ran out, when it's back and the ways round it, in Generate's place (designs 95i–95o).
 // The link stays in the field, so a reader who adds a key carries on where they were.
-export function LimitMessageNote({ message, from, testIds, takeFocus = false, onFollowed }: LimitMessageNoteProps) {
+export const LimitMessageNote = ({ message, from, testIds, takeFocus = false, onFollowed }: LimitMessageNoteProps) => {
   const analytics = useAnalytics();
   const plan = useOverviewUsageQuery().data?.plan ?? DEFAULT_PLAN;
   const firstAction = useRef<HTMLAnchorElement>(null);
@@ -80,4 +80,4 @@ export function LimitMessageNote({ message, from, testIds, takeFocus = false, on
       </p>
     </div>
   );
-}
+};

@@ -7,7 +7,7 @@ interface UpdateSettingsContext {
   previous: Settings | undefined;
 }
 
-export function useUpdateSettingsMutation() {
+export const useUpdateSettingsMutation = () => {
   const { settingsStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -36,4 +36,4 @@ export function useUpdateSettingsMutation() {
       }
     },
   });
-}
+};

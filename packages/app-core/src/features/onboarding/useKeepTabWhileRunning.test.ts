@@ -6,10 +6,10 @@ import { useKeepTabWhileRunning } from "./useKeepTabWhileRunning.js";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-function Probe({ phase, title }: { phase: WaitPhase; title: string }) {
+const Probe = ({ phase, title }: { phase: WaitPhase; title: string }) => {
   useKeepTabWhileRunning(phase, title);
   return null;
-}
+};
 
 const unloadIsHeld = (): boolean => {
   const event = new Event("beforeunload", { cancelable: true });

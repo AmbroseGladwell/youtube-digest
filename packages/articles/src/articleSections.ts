@@ -20,7 +20,7 @@ const hasBlockInside = (element: Element): boolean => element.querySelector(BLOC
 
 // Blocks rather than the article's whole text, so a section can be pointed at. A page built
 // out of something else falls back to one section (docs/features/article-extraction.md).
-export function articleSections(body: HTMLElement, title: string, pageUrl: string): ArticleSection[] {
+export const articleSections = (body: HTMLElement, title: string, pageUrl: string): ArticleSection[] => {
   const sections: Array<{ heading: string | null; anchor: string | null; blocks: string[]; links: PageLink[] }> = [];
   const linked = new Set<string>();
   for (const element of body.querySelectorAll(BLOCKS)) {
@@ -66,4 +66,4 @@ export function articleSections(body: HTMLElement, title: string, pageUrl: strin
           links: uniqueLinks(articleLinks(body, pageUrl)).map((link) => ({ ...link, paragraph: 0 })),
         },
       ];
-}
+};

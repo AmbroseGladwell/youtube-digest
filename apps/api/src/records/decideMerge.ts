@@ -23,7 +23,12 @@ const spread = (base: Record<string, unknown>, patch: Record<string, unknown>) =
 // never parsed: parsing would strip a newer client's fields, and merging into an
 // unmigrated body would be undone by the chain on the next read
 // (docs/features/sync-api.md, docs/features/record-migrations.md).
-export function decideMerge(kind: RecordKind, current: StoredRecord | null, request: MergeRequest, client: ClientContext): WriteDecision {
+export const decideMerge = (
+  kind: RecordKind,
+  current: StoredRecord | null,
+  request: MergeRequest,
+  client: ClientContext,
+): WriteDecision => {
   const live = current !== null && !current.deleted ? current : null;
   const writeVersion = Math.min(client.schemaVersions[kind], CURRENT_SCHEMA_VERSIONS[kind]);
   const merge = request.merge ?? spread;
@@ -57,4 +62,4 @@ export function decideMerge(kind: RecordKind, current: StoredRecord | null, requ
   const merged = merge(base, request.patch);
   validateRecordBody(kind, merged, writeVersion);
   return { action: "upsert", body: merged, schemaVersion: writeVersion, updatedAt: request.updatedAt };
-}
+};

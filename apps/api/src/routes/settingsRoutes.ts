@@ -10,7 +10,7 @@ import { milestoneChanges } from "./milestoneChanges.js";
 
 const SettingsPatch = Settings.partial().extend({ sectionsEnabled: SectionsEnabled.partial().optional(), updatedAt: UpdatedAt }).strict();
 
-export function settingsRoutes(app: FastifyInstance, records: RecordsRepository): void {
+export const settingsRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.put("/settings", async (request, reply) => {
     const { updatedAt, ...patch } = parseOrThrow(SettingsPatch, request.body, "The settings patch");
     if (Object.keys(patch).length === 0) {
@@ -58,4 +58,4 @@ export function settingsRoutes(app: FastifyInstance, records: RecordsRepository)
     ]);
     return sendWritten(reply, written!);
   });
-}
+};

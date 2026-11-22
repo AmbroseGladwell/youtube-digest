@@ -2,7 +2,7 @@ import { isApiError } from "../http/ApiError.js";
 import { toolError, type McpToolOutcome } from "./McpTool.js";
 
 // A write the server refused for a reason the assistant can act on, said in words it can use.
-export function projectWriteRefusal(error: unknown): McpToolOutcome | null {
+export const projectWriteRefusal = (error: unknown): McpToolOutcome | null => {
   if (!isApiError(error)) {
     return null;
   }
@@ -15,4 +15,4 @@ export function projectWriteRefusal(error: unknown): McpToolOutcome | null {
     return toolError("That project was deleted a moment ago, so nothing was changed. list_projects names the projects there are.");
   }
   return null;
-}
+};

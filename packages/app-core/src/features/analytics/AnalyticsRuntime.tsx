@@ -28,7 +28,7 @@ interface Sender {
 // said yes, under the anonymous id that yes made (docs/architecture/analytics.md, "Who is
 // counted"). Until they answer it waits in memory, so onboarding's first screens are counted
 // on a yes (docs/features/analytics-consent.md, "Before an answer").
-export function AnalyticsRuntime({ children }: { children: ReactNode }) {
+export const AnalyticsRuntime = ({ children }: { children: ReactNode }) => {
   const { connected } = useSync();
   const { apiUrl, token } = useSyncConnection().connection;
   const knownApiUrl = useKnownApiUrl();
@@ -122,4 +122,4 @@ export function AnalyticsRuntime({ children }: { children: ReactNode }) {
     [queue, errors],
   );
   return <AnalyticsProvider value={analytics}>{children}</AnalyticsProvider>;
-}
+};

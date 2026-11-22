@@ -20,7 +20,7 @@ export interface CookingTimerSheetProps {
 
 // Designs 284q and 284r (owner, 12 Nov 2026): a running timer's own sheet, with Pause or Resume,
 // −1 min and +1 min in one row, and Cancel timer set apart under them.
-export function CookingTimerSheet({
+export const CookingTimerSheet = ({
   timer,
   now,
   onPause,
@@ -30,7 +30,7 @@ export function CookingTimerSheet({
   onClose,
   recipeTitle = null,
   wayBack = null,
-}: CookingTimerSheetProps) {
+}: CookingTimerSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const open = timer !== null;
 
@@ -134,4 +134,4 @@ export function CookingTimerSheet({
       )}
     </dialog>
   );
-}
+};

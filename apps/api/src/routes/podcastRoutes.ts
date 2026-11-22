@@ -55,7 +55,7 @@ type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transc
 // theirs. Signed out, onboarding reads the episode on the trial's reads and checks whether it has
 // words, before an account; finding the words and transcribing wait for one (OV-327,
 // docs/features/podcast-links.md, docs/features/podcast-transcripts.md, docs/features/onboarding.md).
-export function podcastRoutes(
+export const podcastRoutes = (
   app: FastifyInstance,
   {
     readEpisode,
@@ -75,7 +75,7 @@ export function podcastRoutes(
     trials: TrialsRepository;
     clock: () => Date;
   },
-): void {
+): void => {
   const accountCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
     if (request.session === null) {
       throw new ApiError("unauthenticated", "Sign in to make an overview");
@@ -271,4 +271,4 @@ export function podcastRoutes(
     }
     return transcription;
   });
-}
+};

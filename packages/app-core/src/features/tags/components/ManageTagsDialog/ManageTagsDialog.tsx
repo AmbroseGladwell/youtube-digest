@@ -33,7 +33,7 @@ const carrying = (entries: OverviewWithState[], tags: readonly string[]) =>
 
 // Design 84j–84n: pick tags, then merge, rename or delete them. Every change lands at once and
 // offers Undo until the dialog closes, rather than asking first (docs/features/tag-reuse.md).
-export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogProps) {
+export const ManageTagsDialog = ({ open, entries, onClose }: ManageTagsDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const headingId = useId();
   const analytics = useAnalytics().library.manageTags;
@@ -328,19 +328,19 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
       )}
     </dialog>
   );
-}
+};
 
-function CloseButton({ onClose }: { onClose: () => void }) {
+const CloseButton = ({ onClose }: { onClose: () => void }) => {
   return (
     <button type="button" className={styles.close} onClick={onClose} aria-label="Close" data-testid={manageTagsDialogTestIds.closeButton}>
       <StrokeIcon name="close" size={16} />
     </button>
   );
-}
+};
 
 // 84l: the row becomes a field that says what it will save as, refuses a name with nothing
 // in it, and turns into a merge when the name is taken.
-function RenameRow({
+const RenameRow = ({
   tag,
   draft,
   count,
@@ -356,7 +356,7 @@ function RenameRow({
   onDraft: (draft: string) => void;
   onCancel: () => void;
   onSave: (target: string) => void;
-}) {
+}) => {
   const statusId = useId();
   const row = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
@@ -408,10 +408,10 @@ function RenameRow({
       </p>
     </li>
   );
-}
+};
 
 // 84k: which name the merged tags keep, most used first and chosen already, or a new one.
-function MergeStep({
+const MergeStep = ({
   headingId,
   tags,
   keep,
@@ -435,7 +435,7 @@ function MergeStep({
   onBack: () => void;
   onClose: () => void;
   onMerge: (target: string) => void;
-}) {
+}) => {
   const target = keep === NEW_NAME ? normaliseTag(newName) : keep;
   const others = tags.length - 1;
   const tagged = target === null ? 0 : countTagged([...tags.map(({ tag }) => tag), target]);
@@ -529,4 +529,4 @@ function MergeStep({
       </div>
     </form>
   );
-}
+};

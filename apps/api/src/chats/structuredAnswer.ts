@@ -14,7 +14,7 @@ type SourceRef = ChatReply["introSources"][number];
 
 // How a source relates: the side it takes, as the model put it in a few words, cut at a word
 // rather than mid-word, or "Based on" when it backs the section (OV-362).
-export function relationOf(relation: string): string {
+export const relationOf = (relation: string): string => {
   const said = relation.trim();
   if (said === "" || /^supports?\b/i.test(said)) {
     return BACKING_RELATION;
@@ -25,7 +25,7 @@ export function relationOf(relation: string): string {
   const cut = said.slice(0, MAX_SOURCE_RELATION_LENGTH + 1);
   const atWord = cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:.–—-]+$/, "");
   return atWord === "" ? said.slice(0, MAX_SOURCE_RELATION_LENGTH) : atWord;
-}
+};
 
 // Chat never writes an em dash (OV-362): the prompt says so, and this catches the ones it writes
 // anyway, as a comma, or a full stop's worth of comma where it opened a clause.
@@ -34,11 +34,11 @@ export const withoutDashes = (text: string): string => text.replace(/\s*—\s*/g
 // The reply as it is stored and shown, the same for every chat (OV-354): text without any ids the
 // model wrote into it, and each source cited by code, an id it wasn't given dropped. A source citing
 // two places, such as an overview's item and its minute, gives one chip for each.
-export function structuredAnswer(
+export const structuredAnswer = (
   reply: Pick<ChatReply, "intro" | "introSources" | "sections" | "takeaway">,
   cite: (ids: readonly string[]) => ChatCitation[],
   { library = false }: { library?: boolean } = {},
-): ChatAnswerSections {
+): ChatAnswerSections => {
   const clean = (text: string) => outsideCode(text, (prose) => withoutDashes(withoutCitationMarks(prose, { library })));
   const sourcesOf = (refs: readonly SourceRef[]) => {
     const seen = new Set<string>();
@@ -84,10 +84,10 @@ export function structuredAnswer(
     })),
     takeaway: clean(reply.takeaway),
   };
-}
+};
 
 // The answer as one text: what copy, a hand-off and the next question's history read.
-export function flattenedAnswer(sections: ChatAnswerSections): string {
+export const flattenedAnswer = (sections: ChatAnswerSections): string => {
   return [
     sections.intro,
     ...sections.sections.map((section) =>
@@ -103,4 +103,4 @@ export function flattenedAnswer(sections: ChatAnswerSections): string {
     .filter((part) => part.trim() !== "")
     .join("\n\n")
     .slice(0, MAX_CHAT_MESSAGE_LENGTH);
-}
+};

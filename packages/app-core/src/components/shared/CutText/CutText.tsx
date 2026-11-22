@@ -14,7 +14,7 @@ export interface CutTextProps {
 // Text cut to its lines shows the whole of it in a tip: on hover or keyboard focus with a mouse,
 // and only while pressed and held on touch, where the press doesn't then count as a tap (OV-371).
 // The text is already in the page, so the tip is hidden from screen readers.
-export function CutText({ text, className, testId }: CutTextProps) {
+export const CutText = ({ text, className, testId }: CutTextProps) => {
   const element = useRef<HTMLSpanElement | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cut, setCut] = useState(false);
@@ -35,12 +35,12 @@ export function CutText({ text, className, testId }: CutTextProps) {
 
   useEffect(() => () => clearPress(), []);
 
-  function clearPress() {
+  const clearPress = () => {
     if (pressTimer.current !== null) {
       clearTimeout(pressTimer.current);
     }
     pressTimer.current = null;
-  }
+  };
 
   const startPress = () => {
     heldNow.current = false;
@@ -93,4 +93,4 @@ export function CutText({ text, className, testId }: CutTextProps) {
       )}
     </span>
   );
-}
+};

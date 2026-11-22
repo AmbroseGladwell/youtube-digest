@@ -53,7 +53,7 @@ const elsewhere = (url: string, place: ReaderPlace, title: string, why: string):
 // Designs 77an–77aq: says why in the publisher's terms, then sends the reader to the one place
 // it can work. What failed here failed on our server, so the reader's own browser may still
 // get in.
-export function pastedLinkFailureCopy(failure: ArticleFailure, url: string, place: ReaderPlace): PastedLinkFailureCopy {
+export const pastedLinkFailureCopy = (failure: ArticleFailure, url: string, place: ReaderPlace): PastedLinkFailureCopy => {
   const site = failure.siteName ?? domainOf(url);
   switch (failure.reason) {
     case "blocked":
@@ -84,4 +84,4 @@ export function pastedLinkFailureCopy(failure: ArticleFailure, url: string, plac
         "Try another link",
       );
   }
-}
+};

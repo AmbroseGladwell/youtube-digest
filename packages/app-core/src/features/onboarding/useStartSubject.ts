@@ -21,7 +21,7 @@ export interface StartSubject {
 
 // What Start is beside, which in the panel is the tab and on the web is nothing: the shell
 // supplies neither context there (docs/features/extension-panel.md).
-export function useStartSubject(): StartSubject | null {
+export const useStartSubject = (): StartSubject | null => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
   const pages = useArticlePages();
@@ -53,4 +53,4 @@ export function useStartSubject(): StartSubject | null {
       void startOnboarding(activePage.url, activePage.tabId);
     },
   };
-}
+};

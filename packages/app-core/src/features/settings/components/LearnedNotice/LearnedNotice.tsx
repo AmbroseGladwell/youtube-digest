@@ -15,7 +15,7 @@ const UNDONE_SHOWN_MS = 4_000;
 // Design 141n: on the library only, so it can never cover a note or the read-along. Each item
 // has its own Undo, and an undone item is remembered as removed. Nothing joins the profile
 // unseen, because an item stays unnoticed until the reader has been shown it.
-export function LearnedNotice() {
+export const LearnedNotice = () => {
   const learned = useSettingsQuery().data?.learned ?? {};
   const items = unnoticedLearnedItems(learned);
   const updateSettings = useUpdateSettingsMutation();
@@ -158,4 +158,4 @@ export function LearnedNotice() {
       </div>
     </div>
   );
-}
+};

@@ -27,7 +27,7 @@ const inOrderAsOpened = (summaries: ProjectSummary[], openedOrder: ProjectId[]):
   return [...summaries].sort((left, right) => place(left.project.id) - place(right.project.id));
 };
 
-export function ProjectPicker({ summaries, holding, of, onToggle, onNewProject, onClose }: ProjectPickerProps) {
+export const ProjectPicker = ({ summaries, holding, of, onToggle, onNewProject, onClose }: ProjectPickerProps) => {
   const [openedOrder] = useState(() => summaries.map(({ project }) => project.id));
   const ordered = inOrderAsOpened(summaries, openedOrder);
   const options = ordered.map(({ project, items }) => {
@@ -69,4 +69,4 @@ export function ProjectPicker({ summaries, holding, of, onToggle, onNewProject, 
       testIds={projectPickerTestIds}
     />
   );
-}
+};

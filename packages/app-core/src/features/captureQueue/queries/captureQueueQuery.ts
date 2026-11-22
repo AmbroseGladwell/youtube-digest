@@ -9,7 +9,7 @@ export const captureQueueQueryOptions = (store: CaptureQueueStore) =>
     queryFn: () => store.listQueue(),
   });
 
-export function useCaptureQueueQuery() {
+export const useCaptureQueueQuery = () => {
   const { captureQueueStore } = useStores();
   return useQuery(captureQueueQueryOptions(captureQueueStore));
-}
+};

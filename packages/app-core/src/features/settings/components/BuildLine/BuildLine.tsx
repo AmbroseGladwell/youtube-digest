@@ -3,7 +3,7 @@ import { buildLabel } from "../../util/buildLabel.js";
 import styles from "./BuildLine.module.scss";
 import { buildLineTestIds } from "./BuildLineTestIds.js";
 
-export function BuildLine() {
+export const BuildLine = () => {
   const build = useAppBuild();
   if (build === null) {
     return null;
@@ -14,4 +14,4 @@ export function BuildLine() {
       {buildLabel(build)}
     </p>
   );
-}
+};

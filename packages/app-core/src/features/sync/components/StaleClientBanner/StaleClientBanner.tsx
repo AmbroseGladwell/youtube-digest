@@ -10,7 +10,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 // Fires on encounter, not on the handshake: only when records are actually being held
 // back. Dismissed for the session and no longer, because what it reports is the reader's
 // own data being invisible (docs/features/record-migrations.md).
-export function StaleClientBanner() {
+export const StaleClientBanner = () => {
   const surface = useSurface();
   const appUpdate = useAppUpdate();
   const [dismissed, setDismissed] = useState(false);
@@ -60,4 +60,4 @@ export function StaleClientBanner() {
       </div>
     </div>
   );
-}
+};

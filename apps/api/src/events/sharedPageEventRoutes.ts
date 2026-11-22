@@ -12,10 +12,10 @@ const SHARED_PAGE_EVENTS_BODY_LIMIT_BYTES = 32 * 1024;
 // With or without an account, and only sharedPage.* events. The token never leaves this
 // handler: the overview it names is added to each event instead (docs/architecture/analytics.md,
 // "The shared page").
-export function sharedPageEventRoutes(
+export const sharedPageEventRoutes = (
   app: FastifyInstance,
   { shares, sink, clock }: { shares: SharesRepository; sink: EventSink | null; clock: () => Date },
-): void {
+): void => {
   app.post<{ Params: { token: string } }>(
     "/shares/:token/events",
     {
@@ -59,4 +59,4 @@ export function sharedPageEventRoutes(
       return reply.status(204).send();
     },
   );
-}
+};

@@ -9,11 +9,11 @@ export interface RelatedOverview extends OverviewWithState {
 
 // The overviews that share the most tags with this one, newest first among equals
 // ("OV-84 1 On the Note" 84a). Read ones stay in.
-export function relatedByTag(
+export const relatedByTag = (
   current: OverviewWithState,
   library: readonly OverviewWithState[],
   limit: number = RELATED_BY_TAG_LIMIT,
-): RelatedOverview[] {
+): RelatedOverview[] => {
   const tags = new Set(overviewTags(current));
   return library
     .filter(({ overview }) => overview.id !== current.overview.id)
@@ -21,4 +21,4 @@ export function relatedByTag(
     .filter(({ sharedTags }) => sharedTags > 0)
     .sort((left, right) => right.sharedTags - left.sharedTags || right.overview.savedAt.localeCompare(left.overview.savedAt))
     .slice(0, limit);
-}
+};

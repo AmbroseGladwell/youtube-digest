@@ -16,7 +16,7 @@ export interface CookingIngredientsDrawerProps {
 // a layer over it. A plain region, so nothing is modal and no key is trapped; the keys are the
 // cooking screen's. The mode opens with it open, already in place and leaving focus on the step;
 // only a reader opening it moves focus in (docs/features/recipe-notes.md, "Cooking step by step").
-export function CookingIngredientsDrawer({ id, open, asked, onClose, onSettled, children }: CookingIngredientsDrawerProps) {
+export const CookingIngredientsDrawer = ({ id, open, asked, onClose, onSettled, children }: CookingIngredientsDrawerProps) => {
   const aside = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -58,4 +58,4 @@ export function CookingIngredientsDrawer({ id, open, asked, onClose, onSettled, 
       </div>
     </aside>
   );
-}
+};

@@ -21,12 +21,12 @@ const spokenSecondsOf = (overview: Overview) =>
   );
 
 // Joined by code from what the two passes recorded, never estimated (docs/prototype/constraints.md).
-export function stepsNotes(
+export const stepsNotes = (
   runs: readonly RunRecord[],
   sources: ReadonlyMap<string, StepsSource>,
   lists: readonly ActionableItemsRecord[],
   judgments: readonly StepsJudgeRecord[],
-): StepsNote[] {
+): StepsNote[] => {
   const listOf = new Map(lists.filter((list) => list.items !== null).map((list) => [list.sourceId, list.items!]));
   return runs
     .filter((run) => run.overview !== null && run.overview.recipe == null && sources.has(run.videoId))
@@ -56,11 +56,11 @@ export function stepsNotes(
         claims: overview.watchAnyway ? reasonClaims(overview.watchAnyway.reason) : [],
       };
     });
-}
+};
 
 const share = (part: number, whole: number) => (whole === 0 ? "–" : `${Math.round((part / whole) * 100)}%`);
 
-export function stepsMarkdown(notes: readonly StepsNote[], runName: string): string {
+export const stepsMarkdown = (notes: readonly StepsNote[], runName: string): string => {
   const writers = [...new Set(notes.map((note) => note.writer))].sort();
   const judgedItems = (note: StepsNote) => (Array.isArray(note.items) ? note.items.filter((item) => item.verdict !== null) : []);
   const summary = writers.map((writer) => {
@@ -113,4 +113,4 @@ export function stepsMarkdown(notes: readonly StepsNote[], runName: string): str
     "",
     ...perNote.flatMap((block) => [block, ""]),
   ].join("\n");
-}
+};

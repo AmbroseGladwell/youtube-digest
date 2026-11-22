@@ -8,7 +8,7 @@ import { readSharePayload } from "./util/readSharePayload.js";
 
 // The copy arrives in the document rather than over the wire, so it is read once, on the
 // first render, and never again (docs/features/sharing.md).
-export function SharedOverviewRoute() {
+export const SharedOverviewRoute = () => {
   const [payload] = useState(() => readSharePayload());
   const token = useParams()[RouteParams.shareToken] ?? "";
 
@@ -18,10 +18,10 @@ export function SharedOverviewRoute() {
       <SharedOverviewPage payload={payload} />
     </SharedPageAnalyticsRuntime>
   );
-}
+};
 
-function SharedPageOpened({ stopped }: { stopped: boolean }) {
+const SharedPageOpened = ({ stopped }: { stopped: boolean }) => {
   const analytics = useAnalytics();
   useEffect(() => analytics.sharedPage.page.opened({ stopped }), [analytics, stopped]);
   return null;
-}
+};

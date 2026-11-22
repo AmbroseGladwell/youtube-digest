@@ -17,7 +17,7 @@ interface Adding {
 
 // The create dialog and what follows it: from the rail or the index it opens the new
 // project's page; from a picker it adds the overviews and stays where it is (168x).
-export function useNewProject(takenNames: string[]) {
+export const useNewProject = (takenNames: string[]) => {
   const [adding, setAdding] = useState<Adding | null>(null);
   const create = useCreateProjectMutation();
   const analytics = useAnalytics();
@@ -69,4 +69,4 @@ export function useNewProject(takenNames: string[]) {
     );
 
   return { open, dialog };
-}
+};

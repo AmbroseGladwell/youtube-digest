@@ -92,7 +92,7 @@ export interface LibraryPageProps {
 // A project's page starts from every overview in it (docs/features/projects.md).
 const PROJECT_VIEW = { filters: EVERY_OVERVIEW, sort: DEFAULT_LIBRARY_SORT };
 
-export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) {
+export const LibraryPage = ({ entries: allEntries, place = WHOLE_LIBRARY }: LibraryPageProps) => {
   const topicsQuery = useTopicsQuery();
   const { searchParams, view, change } = useLibraryView(topicsQuery.data, { remember: place.kind === "library" });
   // The field's words lead and the URL follows once typing pauses, so a key never waits on
@@ -831,4 +831,4 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       <Toast toast={toast.toast} onDismiss={toast.dismiss} />
     </div>
   );
-}
+};

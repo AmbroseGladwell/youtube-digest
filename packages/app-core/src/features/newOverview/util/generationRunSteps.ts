@@ -13,7 +13,7 @@ export interface GenerationStep {
   state: GenerationStepState;
 }
 
-export function generationRunSteps(run: NewOverviewRun, now: number = Date.now()): GenerationStep[] {
+export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()): GenerationStep[] => {
   const transcriptDone = run.transcriptWords !== null;
   const overviewDone = run.overview !== null;
 
@@ -125,4 +125,4 @@ export function generationRunSteps(run: NewOverviewRun, now: number = Date.now()
       state: overviewDone ? "done" : transcriptDone ? "running" : "waiting",
     },
   ];
-}
+};

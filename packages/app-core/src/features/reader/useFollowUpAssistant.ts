@@ -18,7 +18,7 @@ export interface FollowUpAssistantState {
 
 // The one synced setting questions open in, which Settings › Connections shares (designs 266aa,
 // 310f). Connections unknown are taken as none, so nothing claims a connection that isn't there.
-export function useFollowUpAssistant(): FollowUpAssistantState {
+export const useFollowUpAssistant = (): FollowUpAssistantState => {
   const settings = useSettingsQuery().data;
   const chosen = settings?.followUpAssistant ?? null;
   const connections = useConnectionsQuery().data ?? [];
@@ -33,4 +33,4 @@ export function useFollowUpAssistant(): FollowUpAssistantState {
       updateSettings.mutate(insteadOfHere ? { followUpAssistant: each, questionsAnsweredHere: false } : { followUpAssistant: each }),
     chooseHere: () => updateSettings.mutate({ questionsAnsweredHere: true }),
   };
-}
+};

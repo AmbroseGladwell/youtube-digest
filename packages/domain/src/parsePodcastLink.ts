@@ -11,7 +11,7 @@ const SPOTIFY_HOSTS = new Set(["open.spotify.com", "play.spotify.com"]);
 const SPOTIFY_SHORT_HOSTS = new Set(["spotify.link", "spotify.app.link"]);
 const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/;
 
-function spotifyPath(segments: readonly string[]): PodcastLink | null {
+const spotifyPath = (segments: readonly string[]): PodcastLink | null => {
   const parts = segments[0]?.startsWith("intl-") ? segments.slice(1) : segments;
   const [type, id] = parts;
   if (type === "show") {
@@ -21,11 +21,11 @@ function spotifyPath(segments: readonly string[]): PodcastLink | null {
     return { platform: "spotify", episodeId: id };
   }
   return null;
-}
+};
 
 // Which kind of podcast link this is, from its shape alone (docs/features/podcast-links.md).
 // Any other web address is a page that may be a show's own episode page.
-export function parsePodcastLink(link: string): PodcastLink | null {
+export const parsePodcastLink = (link: string): PodcastLink | null => {
   const uri = /^spotify:(episode|show):([A-Za-z0-9]{22})$/.exec(link.trim());
   if (uri !== null) {
     return spotifyPath([uri[1]!, uri[2]!]);
@@ -58,4 +58,4 @@ export function parsePodcastLink(link: string): PodcastLink | null {
     return { platform: "spotify-short", url: url.href };
   }
   return { platform: "page", url: url.href };
-}
+};

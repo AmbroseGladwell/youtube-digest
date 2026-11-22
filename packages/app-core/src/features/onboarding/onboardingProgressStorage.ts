@@ -67,7 +67,7 @@ const STORAGE_KEY = ONBOARDING_PROGRESS_STORAGE_KEY;
 // Where this device is in onboarding, so a reload or the sign-in link opened in another tab
 // picks up at the same screen. The device's own, before there is an account to keep it on
 // (docs/features/onboarding.md, "Leaving and coming back").
-export function readOnboardingProgress(storage: Storage = globalThis.localStorage): OnboardingProgress | null {
+export const readOnboardingProgress = (storage: Storage = globalThis.localStorage): OnboardingProgress | null => {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) {
@@ -78,9 +78,9 @@ export function readOnboardingProgress(storage: Storage = globalThis.localStorag
   } catch {
     return null;
   }
-}
+};
 
-export function writeOnboardingProgress(progress: OnboardingProgress | null, storage: Storage = globalThis.localStorage): void {
+export const writeOnboardingProgress = (progress: OnboardingProgress | null, storage: Storage = globalThis.localStorage): void => {
   try {
     if (progress === null) {
       storage.removeItem(STORAGE_KEY);
@@ -90,6 +90,6 @@ export function writeOnboardingProgress(progress: OnboardingProgress | null, sto
   } catch {
     return;
   }
-}
+};
 
 export const isOnboardingProgressKey = (key: string | null): boolean => key === STORAGE_KEY;

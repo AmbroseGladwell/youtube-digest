@@ -5,7 +5,7 @@ export const readyTabTitle = (title: string): string => `Ready: ${title}`;
 
 // The wait's two ways of keeping the reader (README "F · Wait", Build): a prompt before a running
 // tab closes, and a tab title that says it's done.
-export function useKeepTabWhileRunning(phase: WaitPhase, title: string): void {
+export const useKeepTabWhileRunning = (phase: WaitPhase, title: string): void => {
   useEffect(() => {
     if (phase !== "running") {
       return;
@@ -28,4 +28,4 @@ export function useKeepTabWhileRunning(phase: WaitPhase, title: string): void {
       document.title = previous;
     };
   }, [phase, title]);
-}
+};

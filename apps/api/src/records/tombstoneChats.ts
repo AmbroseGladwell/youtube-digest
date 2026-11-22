@@ -4,10 +4,10 @@ import type { RecordsRepository } from "./RecordsRepository.js";
 import { tombstoneLiveRecords } from "./tombstoneLiveRecords.js";
 
 // An overview's or a project's chats go with it (docs/features/chats.md).
-export function tombstoneChats(
+export const tombstoneChats = (
   records: RecordsRepository,
   accountId: AccountId,
   owner: Exclude<ChatOwner, { kind: "library" }>,
-): Promise<number> {
+): Promise<number> => {
   return tombstoneLiveRecords(records, accountId, "chat", `${chatOwnerPrefix(owner)}%`);
-}
+};

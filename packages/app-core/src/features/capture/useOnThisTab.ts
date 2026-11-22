@@ -26,7 +26,7 @@ export interface OnThisTab {
 // video, so there is nothing for the tab to have moved away from, and home is already the
 // offer. Matched on the video's own id rather than the url, the rule
 // docs/features/extension-panel.md gives for "Already in the library".
-export function useOnThisTab(): OnThisTab | null {
+export const useOnThisTab = (): OnThisTab | null => {
   const isPanel = useIsPanel();
   const onOverview = useMatch(Routes.overview(`:${RouteParams.overviewId}`));
   const overviewId = onOverview?.params[RouteParams.overviewId] ?? null;
@@ -87,4 +87,4 @@ export function useOnThisTab(): OnThisTab | null {
     page: offeredPage,
     dismiss: () => setDismissedFor(latestSubject.current),
   };
-}
+};

@@ -53,6 +53,6 @@ const SyncContext = createContext<SyncState>({
 
 export const SyncProvider = SyncContext.Provider;
 
-export function useSync(): SyncState {
+export const useSync = (): SyncState => {
   return useContext(SyncContext);
-}
+};

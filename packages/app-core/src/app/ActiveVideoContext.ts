@@ -14,7 +14,7 @@ export const ActiveVideoProvider = ActiveVideoContext.Provider;
 const subscribeToNothing = () => () => {};
 const noActiveVideo = () => null;
 
-export function useActiveVideoUrl(): string | null {
+export const useActiveVideoUrl = (): string | null => {
   const source = useContext(ActiveVideoContext);
   return useSyncExternalStore(source?.subscribe ?? subscribeToNothing, source?.getVideoUrl ?? noActiveVideo);
-}
+};

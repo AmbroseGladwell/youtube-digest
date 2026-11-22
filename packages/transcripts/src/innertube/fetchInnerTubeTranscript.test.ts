@@ -19,7 +19,7 @@ const ok = (body: unknown): YouTubeFetchResponse => ({
   body: typeof body === "string" ? body : JSON.stringify(body),
 });
 
-function scriptedFetch(handle: (request: YouTubeFetchRequest, clientName: string | undefined) => YouTubeFetchResponse) {
+const scriptedFetch = (handle: (request: YouTubeFetchRequest, clientName: string | undefined) => YouTubeFetchResponse) => {
   const requests: Array<{ url: string; clientName: string | undefined }> = [];
   const youTubeFetch: YouTubeFetch = (request) => {
     const clientName = request.headers["X-YouTube-Client-Name"];
@@ -29,7 +29,7 @@ function scriptedFetch(handle: (request: YouTubeFetchRequest, clientName: string
   const countOf = (clientName: string) => requests.filter((entry) => entry.clientName === clientName).length;
   const captionCalls = () => requests.filter((entry) => entry.url.includes("timedtext")).length;
   return { youTubeFetch, requests, countOf, captionCalls };
-}
+};
 
 const happyPath = () =>
   scriptedFetch((request, clientName) => {

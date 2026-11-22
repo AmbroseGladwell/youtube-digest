@@ -15,11 +15,11 @@ const sameResource = (asked: string, ours: string): boolean => asked.replace(/\/
 // A bad client or redirect URI is shown to the reader and never redirected to, so this can't
 // be used to bounce someone to an address of the caller's choosing. Anything else wrong goes
 // back to the client as an error on its own redirect (RFC 6749 §4.1.2.1).
-export async function startAuthorization(
+export const startAuthorization = async (
   sql: SqlClient,
   query: Query,
   { urls, now }: { urls: OAuthUrls; now: Date },
-): Promise<AuthorizationStart> {
+): Promise<AuthorizationStart> => {
   const client = query.client_id === undefined ? null : await findClient(sql, query.client_id);
   if (client === null) {
     return { kind: "refuse", reason: "This app is not registered to connect." };
@@ -68,4 +68,4 @@ export async function startAuthorization(
     ],
   );
   return { kind: "redirect", location: urls.consent(row!.id) };
-}
+};

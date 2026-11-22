@@ -9,7 +9,7 @@ export type FollowUpHandOff = { kind: "prefill"; url: string } | { kind: "copyTh
 
 // How a question reaches the assistant: in the link that opens it when it can be filled in that
 // way and the link isn't too long, otherwise copied for the reader to paste into it.
-export function followUpHandOff(assistant: FollowUpAssistant, prompt: string): FollowUpHandOff {
+export const followUpHandOff = (assistant: FollowUpAssistant, prompt: string): FollowUpHandOff => {
   const { openUrl, prefillParam } = FOLLOW_UP_ASSISTANTS[assistant];
   if (prefillParam !== null) {
     const url = new URL(openUrl);
@@ -19,4 +19,4 @@ export function followUpHandOff(assistant: FollowUpAssistant, prompt: string): F
     }
   }
   return { kind: "copyThenOpen", url: openUrl, text: prompt };
-}
+};

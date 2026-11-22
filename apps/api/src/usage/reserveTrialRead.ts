@@ -7,11 +7,11 @@ import type { TrialsRepository } from "./TrialsRepository.js";
 // Signed out, a link is read on the device's trial, which allows a few reads beside its one
 // overview, whether the link is an article or a podcast episode (docs/features/onboarding.md,
 // "Any kind of link"). An account reads without counting.
-export async function reserveTrialRead(
+export const reserveTrialRead = async (
   request: FastifyRequest,
   reply: FastifyReply,
   { trials, clock }: { trials: TrialsRepository; clock: () => Date },
-): Promise<void> {
+): Promise<void> => {
   if (request.session !== null) {
     return;
   }
@@ -38,4 +38,4 @@ export async function reserveTrialRead(
     quota: "trial-reads-address",
     retryAfterSeconds,
   });
-}
+};

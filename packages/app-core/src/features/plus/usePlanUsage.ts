@@ -10,7 +10,7 @@ import type { PlanUsageProps } from "./components/PlanUsage/PlanUsage.js";
 
 // What Settings › Plan counts: the account's month signed in, an offer of one signed out
 // where this shell can make one, and nothing where it can't.
-export function usePlanUsage(): PlanUsageProps | null {
+export const usePlanUsage = (): PlanUsageProps | null => {
   const { connection } = useSyncConnection();
   const accountsAvailable = useSync().available;
   const usage = useOverviewUsageQuery();
@@ -25,4 +25,4 @@ export function usePlanUsage(): PlanUsageProps | null {
     hasOwnKey: hasKeyFor(apiKeys, provider),
     usage: usage.data !== undefined ? { status: "known", data: usage.data } : { status: usage.isError ? "unreachable" : "checking" },
   };
-}
+};

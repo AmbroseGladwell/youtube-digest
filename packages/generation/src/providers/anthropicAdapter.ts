@@ -8,7 +8,7 @@ const MAX_TOKENS = 16000;
 
 // Unenforced, Claude can wrap the object in a code fence or add a sentence after it, so the
 // first whole object is taken. Anything malformed inside it still fails the parse.
-function firstJsonObject(text: string): string {
+const firstJsonObject = (text: string): string => {
   const start = text.indexOf("{");
   if (start === -1) {
     return text;
@@ -32,7 +32,7 @@ function firstJsonObject(text: string): string {
     }
   }
   return text.slice(start);
-}
+};
 
 // The header Anthropic requires before it will answer a browser at all, and the reason
 // the key can live on the device rather than behind a server of ours

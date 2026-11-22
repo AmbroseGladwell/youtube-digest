@@ -12,7 +12,7 @@ export interface RecipePageLinkProps {
 
 // The end of the Summary: the page itself, with what reading it costs (design 144c), or the
 // video, with its length (122a).
-export function RecipePageLink({ source, onPage }: RecipePageLinkProps) {
+export const RecipePageLink = ({ source, onPage }: RecipePageLinkProps) => {
   if (source.kind === "youtube") {
     return (
       <a className={styles.link} href={source.url} target="_blank" rel="noopener" data-testid={recipePageLinkTestIds.link}>
@@ -41,4 +41,4 @@ export function RecipePageLink({ source, onPage }: RecipePageLinkProps) {
       Back to the top of the recipe · {minutes} min
     </button>
   );
-}
+};

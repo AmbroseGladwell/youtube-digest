@@ -83,7 +83,7 @@ const PAGE_SIZE = 50;
 const MORE_PAGES = 5;
 const ISO_DURATION = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
 
-export function isoDurationSeconds(duration: string | undefined): number | null {
+export const isoDurationSeconds = (duration: string | undefined): number | null => {
   const parts = ISO_DURATION.exec(duration ?? "");
   if (parts === null) {
     return null;
@@ -91,7 +91,7 @@ export function isoDurationSeconds(duration: string | undefined): number | null 
   const [days, hours, minutes, seconds] = parts.slice(1).map((part) => Number(part ?? 0));
   const total = days! * 86_400 + hours! * 3_600 + minutes! * 60 + seconds!;
   return total > 0 ? total : null;
-}
+};
 
 // The same episode on YouTube, found through the YouTube Data API on our key with one search: a
 // video search for its title, the episode among the results by its title, length and date on any
@@ -99,7 +99,7 @@ export function isoDurationSeconds(duration: string | undefined): number | null 
 // its title and length or, retitled, its description and date: the rules the extension's search
 // uses. Only its captions are read any other way, as no API offers them
 // (docs/features/podcast-on-youtube.md, "Our server's search"; OV-294, OV-304).
-export function youTubeDataApiEpisodes({
+export const youTubeDataApiEpisodes = ({
   apiKey,
   youTubeFetch,
   now = () => new Date(),
@@ -107,7 +107,7 @@ export function youTubeDataApiEpisodes({
   apiKey: string;
   youTubeFetch: YouTubeFetch;
   now?: () => Date;
-}): YouTubeEpisodes {
+}): YouTubeEpisodes => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   const videos = async (ids: readonly string[]): Promise<Upload[]> => {
@@ -268,4 +268,4 @@ export function youTubeDataApiEpisodes({
         : null;
     },
   };
-}
+};

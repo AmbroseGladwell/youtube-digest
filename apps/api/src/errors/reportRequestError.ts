@@ -11,7 +11,7 @@ export interface RequestErrorReporting {
 // An answer the server couldn't give, as an issue in error tracking beside the reader's own.
 // Only a 500 comes here: a 4xx is the server working, and stays a log line
 // (docs/architecture/errors-and-logs.md, "The server's own errors").
-export function reportRequestError({ errorSink, clock }: RequestErrorReporting, request: FastifyRequest, error: unknown): void {
+export const reportRequestError = ({ errorSink, clock }: RequestErrorReporting, request: FastifyRequest, error: unknown): void => {
   if (errorSink === null) {
     return;
   }
@@ -29,4 +29,4 @@ export function reportRequestError({ errorSink, clock }: RequestErrorReporting, 
   void errorSink
     .captureServerError(serverError)
     .catch((failure: unknown) => request.log.warn(apiLogLines.errors.serverErrorNotForwarded({ error: String(failure) })));
-}
+};

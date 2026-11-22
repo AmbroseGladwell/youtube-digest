@@ -45,7 +45,7 @@ export interface FollowUpAssistantMenuProps {
 
 type Option = "here" | FollowUpAssistant;
 
-function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowUpAssistant; connected: boolean; continueIn: boolean }) {
+const OptionDetail = ({ assistant, connected, continueIn }: { assistant: FollowUpAssistant; connected: boolean; continueIn: boolean }) => {
   if (connected && FOLLOW_UP_ASSISTANTS[assistant].prefillParam !== null) {
     return (
       <>
@@ -65,12 +65,12 @@ function OptionDetail({ assistant, connected, continueIn }: { assistant: FollowU
   return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
     ? "Copies the question and this note; you paste it in"
     : "Gets this note in the link";
-}
+};
 
 // Design 266s–266v: a menu under the tapped question, or a sheet on a phone and in the panel.
 // The assistants are a radio group with focus managed as ChoicePicker's; Escape or a tap
 // outside closes it with nothing remembered.
-export function FollowUpAssistantMenu({
+export const FollowUpAssistantMenu = ({
   firstTap,
   continueIn = false,
   align = "centre",
@@ -87,7 +87,7 @@ export function FollowUpAssistantMenu({
   onCopyQuestion,
   onSetUpFollowed,
   onClose,
-}: FollowUpAssistantMenuProps) {
+}: FollowUpAssistantMenuProps) => {
   const title = continueIn ? CONTINUE_IN_TITLE : firstTap ? ASK_IN_TITLE : offerHere ? ANSWER_QUESTIONS_TITLE : CHANGE_TITLE;
   const choices: readonly Option[] = offerHere ? ["here", ...FollowUpAssistant.options] : FollowUpAssistant.options;
   const checked: Option | null = offerHere && hereChosen ? "here" : chosen;
@@ -240,4 +240,4 @@ export function FollowUpAssistantMenu({
     </dialog>,
     document.body,
   );
-}
+};

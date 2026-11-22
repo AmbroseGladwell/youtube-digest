@@ -46,7 +46,7 @@ const SAME_PLACE_SECONDS = 1;
 // The tab's cooking timers (OV-284, carried outside the mode by OV-288): one clock, one ring
 // however many are done, the narration held while one rings, and the screen kept on while any
 // runs. docs/features/recipe-notes.md, "Timers".
-export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimeProps) {
+export const CookingTimersRuntime = ({ scope, children }: CookingTimersRuntimeProps) => {
   const engine = usePlayer();
   const tracker = useAnalytics();
   const sound = useSettingsQuery().data?.timerSound ?? DEFAULT_TIMER_SOUND;
@@ -196,4 +196,4 @@ export function CookingTimersRuntime({ scope, children }: CookingTimersRuntimePr
       <CookingTimersProvider value={value}>{children}</CookingTimersProvider>
     </CookingTimerListProvider>
   );
-}
+};

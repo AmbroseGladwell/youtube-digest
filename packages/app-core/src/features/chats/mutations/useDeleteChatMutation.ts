@@ -11,7 +11,7 @@ export interface DeleteChatVariables {
 
 // Gone from the list at once; the store journals the delete and sync takes it to the server
 // and every other device (docs/features/chats.md, "Deleting").
-export function useDeleteChatMutation() {
+export const useDeleteChatMutation = () => {
   const { chatStore } = useStores();
   const queryClient = useQueryClient();
   return useMutation<void, Error, DeleteChatVariables, { previous: Chat[] | undefined }>({
@@ -37,4 +37,4 @@ export function useDeleteChatMutation() {
       }
     },
   });
-}
+};

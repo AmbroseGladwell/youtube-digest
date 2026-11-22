@@ -88,7 +88,7 @@ const FIXED_GROUPS: Record<Exclude<AboutYouSection, "focus">, readonly Suggestio
   ],
 };
 
-export function aboutYouSuggestionGroups(section: AboutYouSection, topicNames: readonly string[]): readonly SuggestionGroup[] {
+export const aboutYouSuggestionGroups = (section: AboutYouSection, topicNames: readonly string[]): readonly SuggestionGroup[] => {
   if (section !== "focus") {
     return FIXED_GROUPS[section];
   }
@@ -96,14 +96,14 @@ export function aboutYouSuggestionGroups(section: AboutYouSection, topicNames: r
     ({ name, suggestions, example }): SuggestionGroup => ({ name: `From ${name}`, entries: suggestions, example }),
   );
   return fromTopics.length === 0 ? [LIFE, LEARNING] : [...fromTopics, LIFE];
-}
+};
 
 // How many came from the reader's own words, the only thing analytics hears about what they typed.
-export function typedEntryCount(aboutYou: AboutYou, topicNames: readonly string[]): number {
+export const typedEntryCount = (aboutYou: AboutYou, topicNames: readonly string[]): number => {
   return ABOUT_YOU_SECTIONS.flatMap((section) => {
     const offered = aboutYouSuggestionGroups(section, topicNames).flatMap(({ entries }) => entries);
     return aboutYou[section].filter((entry) => !offered.includes(entry));
   }).length;
-}
+};
 
 export const capitalised = (text: string): string => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;

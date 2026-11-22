@@ -23,7 +23,7 @@ export const environmentOfBucket = (bucketName) => (bucketName.endsWith("-dev") 
 
 const areaOfService = (serviceFamily) => (serviceFamily === "R2" ? "storage" : serviceFamily.toLowerCase().replace(/[^a-z0-9]+/g, "_"));
 
-export function cloudflareCostRowsOf({ dates, usage }) {
+export const cloudflareCostRowsOf = ({ dates, usage }) => {
   const wanted = new Set(dates);
   const totals = new Map();
   for (const charge of usage) {
@@ -39,9 +39,9 @@ export function cloudflareCostRowsOf({ dates, usage }) {
   }
   const earliest = usage.map((charge) => charge.ChargePeriodStart.slice(0, 10)).sort()[0] ?? null;
   return { rows: [...totals.values()], earliest };
-}
+};
 
-export function cloudflareUsageRowsOf({ dates, storage, operations }) {
+export const cloudflareUsageRowsOf = ({ dates, storage, operations }) => {
   const wanted = new Set(dates);
   const totals = new Map();
   const add = (date, bucketName, unit, quantity) => {
@@ -70,9 +70,9 @@ export function cloudflareUsageRowsOf({ dates, storage, operations }) {
     add(group.dimensions.date, group.dimensions.bucketName, "r2_requests", group.sum.requests);
   }
   return [...totals.values()];
-}
+};
 
-async function readCloudflare(fetch, url, apiToken, init = {}) {
+const readCloudflare = async (fetch, url, apiToken, init = {}) => {
   const response = await fetch(url, { ...init, headers: { Authorization: `Bearer ${apiToken}`, "content-type": "application/json" } });
   if (!response.ok) {
     throw new ProviderReadError(`Cloudflare answered ${response.status}`);
@@ -83,9 +83,9 @@ async function readCloudflare(fetch, url, apiToken, init = {}) {
     throw new ProviderReadError(`Cloudflare answered with an error: ${first?.code ?? first?.extensions?.code ?? "unknown"}`);
   }
   return body;
-}
+};
 
-export async function cloudflareSpend({ apiToken, accountId, fetch, dates }) {
+export const cloudflareSpend = async ({ apiToken, accountId, fetch, dates }) => {
   const billable = await readCloudflare(fetch, `${CLOUDFLARE_API}/accounts/${accountId}/billable-usage`, apiToken);
   const storage = [];
   const operations = [];
@@ -106,4 +106,4 @@ export async function cloudflareSpend({ apiToken, accountId, fetch, dates }) {
     readable: (date) => earliest !== null && date >= earliest,
     outOfRange: BEFORE_BILLING_PERIOD,
   };
-}
+};

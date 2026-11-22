@@ -388,7 +388,7 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
   },
 };
 
-export function onboardingSourceOf(link: string): { source: OnboardingSource; linkKind: OnboardingLinkKind } | null {
+export const onboardingSourceOf = (link: string): { source: OnboardingSource; linkKind: OnboardingLinkKind } | null => {
   for (const source of Object.values(onboardingSources)) {
     const linkKind = source.linkKind(link);
     if (linkKind !== null) {
@@ -396,7 +396,7 @@ export function onboardingSourceOf(link: string): { source: OnboardingSource; li
     }
   }
   return null;
-}
+};
 
 export const foundIn = (overview: Overview): OnboardingFound => ({
   source: overview.source,

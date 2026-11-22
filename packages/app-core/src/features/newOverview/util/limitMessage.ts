@@ -32,18 +32,18 @@ const PLAN_NAME: Record<Plan, string> = { free: "your free account", "byo-plus":
 
 const onKey = (key: KeySource, first: boolean): string => (key === "ours" ? "on us" : first ? "on your own key" : "on your own");
 
-function madePhrase(spent: SpentQuota[], plainOurs: boolean): string {
+const madePhrase = (spent: SpentQuota[], plainOurs: boolean): string => {
   const [first, second] = spent;
   if (second !== undefined) {
     return `${first!.limit} ${onKey(first!.key, true)} and ${second.limit} ${onKey(second.key, false)}`;
   }
   return plainOurs ? `${first!.limit}` : `${first!.limit} ${onKey(first!.key, true)}`;
-}
+};
 
 // What ran out, when it's back, and only the ways round it that exist (designs 95i–95o, with
 // the key order flipped for everyone but Plus, decided on OV-131; docs/architecture/tiers.md,
 // "At the limit"). Null while there is still a quota to use.
-export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage | null {
+export const limitMessageOf = (next: NextQuota | null, plan: Plan): LimitMessage | null => {
   if (next?.kind !== "spent") {
     return null;
   }
@@ -78,4 +78,4 @@ export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage
     body: "That's the most any plan makes on your own key, so there's no upgrade for this.",
     actions: ["seeUsage"],
   };
-}
+};

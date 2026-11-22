@@ -2,7 +2,7 @@
 // arriving as JSON: each element of the "sections" array whose closing brace has come, read in
 // order. A section still being written waits for the next chunk (docs/features/chats.md, "Library
 // and project chat").
-export function sectionsSoFar(partialJson: string): unknown[] {
+export const sectionsSoFar = (partialJson: string): unknown[] => {
   const key = partialJson.search(/"sections"\s*:\s*\[/);
   if (key === -1) {
     return [];
@@ -41,4 +41,4 @@ export function sectionsSoFar(partialJson: string): unknown[] {
     }
   }
   return sections;
-}
+};

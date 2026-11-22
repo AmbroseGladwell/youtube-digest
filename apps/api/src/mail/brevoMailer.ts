@@ -15,7 +15,7 @@ export class MailDeliveryError extends Error {}
 
 // Brevo over its one HTTP call, with no SDK: a transactional message is one POST
 // (docs/features/sign-in.md).
-export function createBrevoMailer({ apiKey, from, siteUrl, fetch: fetchImpl = globalThis.fetch }: BrevoMailerOptions): Mailer {
+export const createBrevoMailer = ({ apiKey, from, siteUrl, fetch: fetchImpl = globalThis.fetch }: BrevoMailerOptions): Mailer => {
   const sender = parseMailSender(from);
   const send = async (to: string, { subject, text, html }: EmailContent): Promise<void> => {
     const response = await fetchImpl("https://api.brevo.com/v3/smtp/email", {
@@ -37,4 +37,4 @@ export function createBrevoMailer({ apiKey, from, siteUrl, fetch: fetchImpl = gl
     sendMagicLink: (mail: MagicLinkMail) => send(mail.to, magicLinkEmail(mail)),
     sendAccountMail: (mail: AccountMail) => send(mail.to, accountEmail(mail, siteUrl)),
   };
-}
+};

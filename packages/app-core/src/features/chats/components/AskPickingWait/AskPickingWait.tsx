@@ -24,7 +24,7 @@ const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "ove
 
 // The mark as the loader (354v): its circle an orange arc turning over its bar while a step runs;
 // a filled circle with a tick drawn in once it is done; faint, and still, before it starts.
-function Mark({ state }: { state: MarkState }) {
+const Mark = ({ state }: { state: MarkState }) => {
   return (
     <svg className={`${styles.mark} ${styles[state]}`} viewBox="0 0 30 30" fill="none" aria-hidden="true">
       {state === "done" ? (
@@ -42,12 +42,12 @@ function Mark({ state }: { state: MarkState }) {
       )}
     </svg>
   );
-}
+};
 
 // OV-354, page 3 (354v, the mp4): a short list in small muted type while a library or project
 // question chooses what to read, then reads it, the titles named by code from the ids; once the
 // answer begins it folds into one "Read 5 overviews" line that opens to show them as chips.
-export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) {
+export const AskPickingWait = ({ phase, picked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) => {
   const [slow, setSlow] = useState(false);
   const [open, setOpen] = useState(false);
   const chipsId = useId();
@@ -151,4 +151,4 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
       )}
     </div>
   );
-}
+};

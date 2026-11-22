@@ -54,7 +54,7 @@ const statusText = (state: Exclude<QueueRowState, "making">, resumeTime: string 
 // tile but the one being made, a faded thumbnail, no verdict or topic, and its status in
 // words, so the difference never rests on colour. A video waiting on its pace is waiting,
 // not failed: muted, never warning ink (95aa).
-export function QueueRow({
+export const QueueRow = ({
   capture,
   state,
   position,
@@ -66,7 +66,7 @@ export function QueueRow({
   onRemove,
   onMakeNow,
   choice,
-}: QueueRowProps) {
+}: QueueRowProps) => {
   const making = state === "making";
   const chosenByReader = state === "chosenNext" || state === "chosen";
   return (
@@ -155,4 +155,4 @@ export function QueueRow({
       )}
     </li>
   );
-}
+};

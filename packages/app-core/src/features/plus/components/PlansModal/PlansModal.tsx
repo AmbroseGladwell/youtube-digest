@@ -19,7 +19,7 @@ export interface PlansModalProps {
 // the nudge's See plans. Every plan has every feature, so the cards differ only in their figures.
 // Choosing a paid plan goes to checkout once billing exists (OV-18); until then the buttons say so
 // rather than going nowhere. On a phone Plus comes first, so the recommended plan is in view.
-export function PlansModal({ open, plan, onClose }: PlansModalProps) {
+export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const phone = useIsPhone();
   useEffect(() => {
@@ -55,9 +55,9 @@ export function PlansModal({ open, plan, onClose }: PlansModalProps) {
       <p className={styles.foot}>Cancel anytime. Prices in GBP.</p>
     </dialog>
   );
-}
+};
 
-function PlanCardItem({ card, yours }: { card: PlanCard; yours: boolean }) {
+const PlanCardItem = ({ card, yours }: { card: PlanCard; yours: boolean }) => {
   const plan = PLAN_OF_CARD[card.name]!;
   const recommended = plan === "plus";
   return (
@@ -107,4 +107,4 @@ function PlanCardItem({ card, yours }: { card: PlanCard; yours: boolean }) {
       )}
     </li>
   );
-}
+};

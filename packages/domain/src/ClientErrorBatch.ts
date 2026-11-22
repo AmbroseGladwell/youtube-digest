@@ -97,7 +97,7 @@ export interface ClientError extends Omit<SentClientError, "apiErrorCode" | "tra
 }
 
 // The client redacted it already; the server doesn't take its word (docs/architecture/errors-and-logs.md).
-export function readClientError(sent: SentClientError): ClientError {
+export const readClientError = (sent: SentClientError): ClientError => {
   const { apiErrorCode, trail, message, ...rest } = sent;
   return {
     ...rest,
@@ -105,4 +105,4 @@ export function readClientError(sent: SentClientError): ClientError {
     ...(apiErrorCode !== undefined && apiErrorCode in API_ERROR_CODES ? { apiErrorCode: apiErrorCode as ApiErrorCode } : {}),
     trail: trail.filter((entry): entry is { name: AnalyticsEventName; at: string } => isAnalyticsEventName(entry.name)),
   };
-}
+};

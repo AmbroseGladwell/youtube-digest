@@ -13,7 +13,7 @@ export interface CyclingLine {
 // card looks stuck (docs/features/time-saved.md, "The lines").
 export const lineDurationMs = (line: string): number => Math.min(13_000, Math.max(6_000, 3_000 + line.split(/\s+/).length * 330));
 
-export function useCyclingLines(lines: readonly string[], paused: boolean) {
+export const useCyclingLines = (lines: readonly string[], paused: boolean) => {
   const [line, setLine] = useState<CyclingLine>({ index: 0, previous: null, direction: 0, turn: 0 });
   const remaining = useRef(lineDurationMs(lines[0] ?? ""));
   const startedAt = useRef(0);
@@ -43,4 +43,4 @@ export function useCyclingLines(lines: readonly string[], paused: boolean) {
     step: (by: 1 | -1) => show((line.index + by + lines.length) % lines.length, by),
     jumpTo: (index: number) => show(index, index > line.index ? 1 : -1),
   };
-}
+};

@@ -15,7 +15,7 @@ window.__iwftRouter__ = router;
 // props/hooksConfig passed to Playwright CT's mount() are JSON-serialized across the
 // Node<->browser boundary, so the live store instances have to be read from the global
 // playwright/index.tsx's beforeMount hook already built in the browser, not passed in.
-export function IwftAppRoot() {
+export const IwftAppRoot = () => {
   return (
     <App
       library={window.__iwftLibrary__}
@@ -38,4 +38,4 @@ export function IwftAppRoot() {
       accentMirror={window.__iwftAccentMirror__ === null ? null : (accentColour) => window.__iwftAccentMirror__?.push(accentColour)}
     />
   );
-}
+};

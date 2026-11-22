@@ -17,7 +17,7 @@ export interface OtherChatsInPrompt {
 // The overview's other conversations, newest messages kept first until the budget is spent,
 // then laid out oldest first. Each message has an id the model can cite, which code turns
 // back into the chat and the message's place in it (docs/features/chats.md).
-export function otherChatsInPrompt(others: readonly Chat[], budget = OTHER_CHATS_BUDGET_CHARACTERS): OtherChatsInPrompt {
+export const otherChatsInPrompt = (others: readonly Chat[], budget = OTHER_CHATS_BUDGET_CHARACTERS): OtherChatsInPrompt => {
   const chats = [...others].sort((left, right) => left.startedAt.localeCompare(right.startedAt));
   const all = chats.flatMap((chat, chatIndex) => chat.messages.map((message, index) => ({ chatIndex, index, message })));
   const newestFirst = [...all].sort((left, right) => right.message.at.localeCompare(left.message.at) || right.index - left.index);
@@ -47,4 +47,4 @@ export function otherChatsInPrompt(others: readonly Chat[], budget = OTHER_CHATS
     }
   }
   return { conversations, labels, messages: kept.size };
-}
+};

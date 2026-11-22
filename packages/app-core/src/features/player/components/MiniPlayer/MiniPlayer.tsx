@@ -22,7 +22,7 @@ const DOCKED_STATUSES = new Set<PlayerSnapshot["status"]>(["preparing", "playing
 // docks nothing (OV-333). It is absent on the playing note's own reader, whose bar already
 // says all of it (docs/features/audio-player.md). It sits in the cooking timers' dock, under
 // any timers (design 288g).
-export function MiniPlayer() {
+export const MiniPlayer = () => {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
   const { pathname } = useLocation();
@@ -33,9 +33,9 @@ export function MiniPlayer() {
     return null;
   }
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
-}
+};
 
-function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onStop: () => void }) {
+const DockedMiniPlayer = ({ snapshot, onStop }: { snapshot: PlayerSnapshot; onStop: () => void }) => {
   const engine = usePlayer();
   const time = usePlayerTime();
   const analytics = useAnalytics();
@@ -132,4 +132,4 @@ function DockedMiniPlayer({ snapshot, onStop }: { snapshot: PlayerSnapshot; onSt
       </span>
     </div>
   );
-}
+};

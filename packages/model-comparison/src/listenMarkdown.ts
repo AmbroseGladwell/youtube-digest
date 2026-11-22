@@ -7,7 +7,7 @@ const minutes = (seconds: number): string => {
 
 const cell = (text: string): string => text.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
 
-export function listenMarkdown(picks: readonly ListenPick[], name: string, oldRun: string, newRun: string): string {
+export const listenMarkdown = (picks: readonly ListenPick[], name: string, oldRun: string, newRun: string): string => {
   const count = (preferred: ListenPick["preferred"]) => picks.filter((pick) => pick.preferred === preferred).length;
   const rows = picks.map(
     (pick) =>
@@ -25,4 +25,4 @@ export function listenMarkdown(picks: readonly ListenPick[], name: string, oldRu
     ...rows,
     "",
   ].join("\n");
-}
+};

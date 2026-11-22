@@ -12,7 +12,7 @@ export interface ChatStreamedTextProps {
 
 // While it streams, the answer's last word is held back until it is whole, and a fence's backticks
 // until they are three, so no marker ever shows.
-function blocksSoFar(text: string, whole: boolean): AnswerBlock[] {
+const blocksSoFar = (text: string, whole: boolean): AnswerBlock[] => {
   if (whole) {
     return answerBlocks(text);
   }
@@ -23,12 +23,12 @@ function blocksSoFar(text: string, whole: boolean): AnswerBlock[] {
     return held === "" ? blocks.slice(0, -1) : [...blocks.slice(0, -1), { kind: "paragraph", text: held }];
   }
   return blocks;
-}
+};
 
 // OV-341: each word fades in as it arrives, in the final answer's paragraphs, so nothing moves when it
 // lands. Its Markdown shows as it is written, never its markers, and a code block grows line by line
 // (OV-362, OV-364).
-export function ChatStreamedText({ text, whole }: ChatStreamedTextProps) {
+export const ChatStreamedText = ({ text, whole }: ChatStreamedTextProps) => {
   return (
     <div className={styles.root} data-testid={chatStreamedTextTestIds.root}>
       {blocksSoFar(text, whole).map((block, index) =>
@@ -44,4 +44,4 @@ export function ChatStreamedText({ text, whole }: ChatStreamedTextProps) {
       )}
     </div>
   );
-}
+};

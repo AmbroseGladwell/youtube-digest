@@ -32,7 +32,7 @@ const BLOCKED = "LocalDatabaseBlockedError";
 // Follows the signed-in account: opens that account's library, or the no-account one, and
 // swaps the stores under the running app rather than remounting it, so a screen mid-flow
 // keeps its place (docs/features/account-libraries.md).
-export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, children }: LibraryRuntimeProps) {
+export const LibraryRuntime = ({ library: initial, openLibrary, deleteLibrary, children }: LibraryRuntimeProps) => {
   const { connection } = useSyncConnection();
   const wanted = libraryAccountIdOf(connection);
   const queryClient = useQueryClient();
@@ -119,4 +119,4 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
       </DeleteLibraryProvider>
     </OpenLibraryProvider>
   );
-}
+};

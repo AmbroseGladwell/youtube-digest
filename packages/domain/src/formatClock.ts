@@ -1,4 +1,4 @@
-export function formatClock(totalSeconds: number): string {
+export const formatClock = (totalSeconds: number): string => {
   const safeSeconds = Math.max(0, Math.round(totalSeconds));
   const hours = Math.floor(safeSeconds / 3600);
   const minutes = Math.floor((safeSeconds % 3600) / 60);
@@ -9,4 +9,4 @@ export function formatClock(totalSeconds: number): string {
     return `${hours}:${String(minutes).padStart(2, "0")}:${paddedSeconds}`;
   }
   return `${minutes}:${paddedSeconds}`;
-}
+};

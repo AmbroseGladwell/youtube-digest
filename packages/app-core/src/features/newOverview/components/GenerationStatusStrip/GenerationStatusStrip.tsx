@@ -21,7 +21,7 @@ export interface GenerationStatusStripProps {
 // the bar — a mark, the label, then step, clock and title receding to the muted ink —
 // with a brand-orange bar at its foot while it runs. Ready, it moves to the stone tint
 // and offers the one action that makes something (docs/features/stone-theme.md).
-export function GenerationStatusStrip({ run, onDetails, onDismiss, onReadOverview }: GenerationStatusStripProps) {
+export const GenerationStatusStrip = ({ run, onDetails, onDismiss, onReadOverview }: GenerationStatusStripProps) => {
   const status = generationRunStatus(run);
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
 
@@ -116,4 +116,4 @@ export function GenerationStatusStrip({ run, onDetails, onDismiss, onReadOvervie
       )}
     </div>
   );
-}
+};

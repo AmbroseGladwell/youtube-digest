@@ -48,7 +48,7 @@ const CLAUSES: readonly { section: AboutYouSection; lead: string }[] = [
 
 // Empty sections are left out, so what is read back and what is sent are always a whole
 // sentence: "I'm a dad, and right now I'm focusing on sleep."
-export function aboutYouSentenceParts(aboutYou: AboutYou): AboutYouSentencePart[] {
+export const aboutYouSentenceParts = (aboutYou: AboutYou): AboutYouSentencePart[] => {
   const clauses = CLAUSES.filter(({ section }) => aboutYou[section].length > 0);
   const parts = clauses.flatMap(({ section, lead }, index) => {
     const opening = index === 0 ? `${lead.charAt(0).toUpperCase()}${lead.slice(1)}` : lead;
@@ -59,14 +59,14 @@ export function aboutYouSentenceParts(aboutYou: AboutYou): AboutYouSentencePart[
     ];
   });
   return parts.length === 0 ? [] : [...parts, { text: ".", filled: false }];
-}
+};
 
 export const aboutYouSentence = (aboutYou: AboutYou): string =>
   aboutYouSentenceParts(aboutYou)
     .map(({ text }) => text)
     .join("");
 
-export function firstAboutYouText(aboutYou: AboutYou): string | null {
+export const firstAboutYouText = (aboutYou: AboutYou): string | null => {
   const section = ABOUT_YOU_SECTIONS.find((candidate) => aboutYou[candidate].length > 0);
   return section === undefined ? null : aboutYouSectionText(section, aboutYou[section]);
-}
+};

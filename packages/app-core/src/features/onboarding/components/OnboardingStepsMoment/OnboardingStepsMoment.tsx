@@ -36,7 +36,7 @@ export interface OnboardingStepsMomentProps {
   onSkip: () => void;
 }
 
-export function OnboardingStepsMoment({ noun, onAddContext, onSkip }: OnboardingStepsMomentProps) {
+export const OnboardingStepsMoment = ({ noun, onAddContext, onSkip }: OnboardingStepsMomentProps) => {
   return (
     <div className={styles.root} data-testid={onboardingStepsMomentTestIds.root}>
       <div className={styles.intro}>
@@ -105,4 +105,4 @@ export function OnboardingStepsMoment({ noun, onAddContext, onSkip }: Onboarding
       </div>
     </div>
   );
-}
+};

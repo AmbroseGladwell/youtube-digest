@@ -19,11 +19,11 @@ export const SpokenScript = z
   });
 export type SpokenScript = z.infer<typeof SpokenScript>;
 
-export function spokenLines(lines: NoteLine[], opening: string | null = null): SpokenScript {
+export const spokenLines = (lines: NoteLine[], opening: string | null = null): SpokenScript => {
   const spoken = lines.map((line) => speakable(line.spoken ?? line.text));
   return opening === null ? spoken : [speakable(opening), ...spoken];
-}
+};
 
-export function spokenScript(overview: SharedNote): SpokenScript {
+export const spokenScript = (overview: SharedNote): SpokenScript => {
   return spokenLines(overviewNoteLines(overview), spokenOpening(overview.source));
-}
+};

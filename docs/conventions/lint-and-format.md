@@ -76,6 +76,7 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `no-var` | `let` and `const`, including in the two `public/appearance.js` scripts. |
 | `no-param-reassign` | A parameter is never reassigned; destructure into a `let` instead. |
 | `no-unused-expressions` (no ternaries, no short circuits), `no-sequences` | A ternary or `&&` produces a value; a side effect is an `if`. |
+| `func-style: expression` | A function is a `const` holding an arrow function, never a `function` declaration. A generator, which can't be an arrow, is a `function*` expression. A `const` isn't hoisted, so a module defines a function before anything at its top level calls it. Converted by a script across about 1,950 functions; that commit is in `.git-blame-ignore-revs`. |
 | `prefer-arrow-callback` | Callbacks are arrow functions. Components take `ref` as a prop (React 19), not through `forwardRef(function …)`. |
 | `import/no-duplicates`, `import/no-cycle` | One import per module, and no cycles. |
 | `react/jsx-no-useless-fragment`, allowing expressions | No fragment around a single element. `<>{node}</>` stays allowed, since it's how a component returns a `ReactNode` as an element. |

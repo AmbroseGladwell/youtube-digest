@@ -81,7 +81,7 @@ const placeOf = (overview: Overview, part: OverviewPart, index: number): Article
 const isOverviewCitation = (citation: ChatCitation): citation is Extract<ChatCitation, OverviewPartCitation> => "part" in citation;
 
 // An answer's citations of the overview, in the note's order.
-export function overviewCitationViews(overview: Overview, citations: readonly ChatCitation[]): OverviewCitationView[] {
+export const overviewCitationViews = (overview: Overview, citations: readonly ChatCitation[]): OverviewCitationView[] => {
   const cited = citations
     .filter(isOverviewCitation)
     .sort((a, b) => OVERVIEW_PARTS.indexOf(a.part) - OVERVIEW_PARTS.indexOf(b.part) || a.index - b.index);
@@ -110,4 +110,4 @@ export function overviewCitationViews(overview: Overview, citations: readonly Ch
       ...(place === undefined ? {} : { place }),
     };
   });
-}
+};

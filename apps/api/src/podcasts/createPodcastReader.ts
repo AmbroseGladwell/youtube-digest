@@ -48,12 +48,12 @@ const samePage = (a: string | null, b: string | null): boolean => {
 };
 
 // docs/features/podcast-links.md
-export function createPodcastReader({
+export const createPodcastReader = ({
   fetchPublicWeb,
   mostFeedBytes = MOST_FEED_BYTES,
   appleBudget,
   podcastIndex = null,
-}: PodcastReaderOptions) {
+}: PodcastReaderOptions) => {
   const fetchPage = async (link: string): Promise<{ url: string; html: string; isFeed: boolean } | { failure: PodcastReadFailure }> => {
     const answer = await fetchPublicWeb(link, { accept: HTML });
     if (answer.status === "failed") {
@@ -263,4 +263,4 @@ export function createPodcastReader({
       return failed("no-answer");
     }
   };
-}
+};

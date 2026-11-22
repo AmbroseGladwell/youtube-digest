@@ -9,6 +9,6 @@ const REASONS: Record<NonNullable<QueuedCapture["problem"]>, string> = {
 };
 
 // Design 27j: the reason, then where it came from.
-export function queueProblemText(capture: QueuedCapture): string {
+export const queueProblemText = (capture: QueuedCapture): string => {
   return `${REASONS[capture.problem ?? "failed"]} From ${capture.fromPlaylist.title}.`;
-}
+};

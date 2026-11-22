@@ -5,7 +5,7 @@ const ORDER: readonly SampleKind[] = ["video", "article", "podcast", "recipe"];
 
 // The deck holds two of each kind, mixed (327b-3): one of each kind in turn, then again, each kind
 // keeping its own order from the list the house account set.
-export function mixedByKind<Sample extends { note: SharedNote }>(samples: readonly Sample[]): Sample[] {
+export const mixedByKind = <Sample extends { note: SharedNote }>(samples: readonly Sample[]): Sample[] => {
   const byKind = new Map<SampleKind, Sample[]>(ORDER.map((kind) => [kind, []]));
   for (const sample of samples) {
     byKind.get(sampleKindOf(sample.note))!.push(sample);
@@ -20,4 +20,4 @@ export function mixedByKind<Sample extends { note: SharedNote }>(samples: readon
     }
   }
   return mixed;
-}
+};

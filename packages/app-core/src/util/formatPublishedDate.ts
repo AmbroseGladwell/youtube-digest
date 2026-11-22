@@ -5,6 +5,6 @@ const FORMAT = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short"
 // site, the way OverviewThumbnail catches its own missing key.
 // Carries the year, unlike the saved date beside it: how old a video is changes how its
 // claims read, and that is the whole reason the date is on the page.
-export function formatPublishedDate(iso: string): string {
+export const formatPublishedDate = (iso: string): string => {
   return FORMAT.format(new Date(iso));
-}
+};

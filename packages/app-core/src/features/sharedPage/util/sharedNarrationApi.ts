@@ -9,7 +9,7 @@ import type { NarrationApi } from "@overview/sync";
 //
 // A copy shared without narration gets null, and the player falls back to the pacer as it
 // does for any signed-out reader.
-export function sharedNarrationApi(narration: SharedNarration | null): NarrationApi | null {
+export const sharedNarrationApi = (narration: SharedNarration | null): NarrationApi | null => {
   if (narration === null) {
     return null;
   }
@@ -31,4 +31,4 @@ export function sharedNarrationApi(narration: SharedNarration | null): Narration
     // The page is served by the process that serves the file, so the path is the URL.
     fileUrl: ({ fileUrl }) => fileUrl,
   };
-}
+};

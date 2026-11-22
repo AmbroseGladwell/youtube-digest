@@ -17,7 +17,7 @@ const UNCHECKED: CheckedVideoKind = { noteKind: null, transcript: null };
 // Your link. One check per video for everyone, remembered; signed out, capped for the day across
 // every device. The transcript fetched for it goes back to the device, which keeps it for the
 // overview, so the video is fetched once (docs/features/onboarding.md, "The recipe video check").
-export async function checkVideoKind(
+export const checkVideoKind = async (
   videoId: VideoId,
   video: VideoSource,
   caller: ServiceCaller,
@@ -34,7 +34,7 @@ export async function checkVideoKind(
     now: Date;
     log: FastifyBaseLogger;
   },
-): Promise<CheckedVideoKind> {
+): Promise<CheckedVideoKind> => {
   const known = await kinds.kindOf(videoId);
   if (known !== null) {
     return { noteKind: known, transcript: null };
@@ -60,4 +60,4 @@ export async function checkVideoKind(
     await kinds.remember(now, videoId, noteKind);
   }
   return { noteKind, transcript };
-}
+};

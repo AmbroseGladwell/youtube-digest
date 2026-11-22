@@ -39,7 +39,7 @@ const rangeProblem = (label: string, item: SegmentRangeShape | null | undefined,
   return [];
 };
 
-function proseOf(output: GeneratedOutput): string[] {
+const proseOf = (output: GeneratedOutput): string[] => {
   return [
     output.inOneLine,
     output.bigPicture,
@@ -58,7 +58,7 @@ function proseOf(output: GeneratedOutput): string[] {
     ...(output.howToApply?.items ?? []),
     output.watchAnyway?.reason ?? "",
   ].filter((text) => text !== "");
-}
+};
 
 const NUMBER = /\d+(?:[.,]\d+)*/g;
 const normalisedNumber = (raw: string): string => raw.replace(/,(?=\d{3}\b)/g, "").replace(/[.,]$/, "");
@@ -83,16 +83,16 @@ const spokenAsDigits = (source: string): string =>
       String(Math.round(Number(digits) * SCALES[scale.toLowerCase()]!)),
     );
 
-export function unsupportedNumbers(prose: readonly string[], sources: readonly string[]): string[] {
+export const unsupportedNumbers = (prose: readonly string[], sources: readonly string[]): string[] => {
   const haystack = sources.flatMap((source) => [withoutSeparators(source), spokenAsDigits(source)]).join("\n");
   const claimed = new Set(prose.flatMap((text) => (text.match(NUMBER) ?? []).map(normalisedNumber)));
   return [...claimed].filter((number) => {
     const escaped = number.replace(/\./g, "\\.");
     return !new RegExp(`(?<![\\d.])${escaped}(?![\\d]|\\.\\d)`).test(haystack);
   });
-}
+};
 
-function longestChapterShare(output: GeneratedOutput, fetched: FetchedTranscript): number {
+const longestChapterShare = (output: GeneratedOutput, fetched: FetchedTranscript): number => {
   const starts = output.chapters.map((chapter) => fetched.transcript[chapter.startSegmentIndex]?.startMs ?? 0);
   const endMs = fetched.transcript.at(-1)?.endMs ?? 0;
   if (endMs === 0) {
@@ -100,9 +100,9 @@ function longestChapterShare(output: GeneratedOutput, fetched: FetchedTranscript
   }
   const lengths = starts.map((start, index) => (starts[index + 1] ?? endMs) - start);
   return Math.max(0, ...lengths) / endMs;
-}
+};
 
-export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscript): CheckResult[] {
+export const checkOverview = (output: GeneratedOutput, fetched: FetchedTranscript): CheckResult[] => {
   const segments = fetched.transcript.length;
   const verdict = output.verdict;
   const oneLine = output.inOneLine.trim().toLowerCase();
@@ -182,4 +182,4 @@ export function checkOverview(output: GeneratedOutput, fetched: FetchedTranscrip
       spokenLength >= CHAPTERED_FROM_MS && share > LONGEST_CHAPTER_SHARE ? [`one chapter is ${Math.round(share * 100)}% of the video`] : [],
     ),
   ];
-}
+};

@@ -17,7 +17,7 @@ export const applyProjectPatch = (project: Project, patch: ProjectPatch): Projec
   ...Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)),
 });
 
-export function useUpdateProjectMutation() {
+export const useUpdateProjectMutation = () => {
   const { projectStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -43,4 +43,4 @@ export function useUpdateProjectMutation() {
       }
     },
   });
-}
+};

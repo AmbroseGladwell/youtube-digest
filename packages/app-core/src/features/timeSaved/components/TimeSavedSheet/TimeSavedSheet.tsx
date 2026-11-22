@@ -19,7 +19,7 @@ const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "ove
 // Design 34ai: the figure, how it is counted, the way to the next milestone, the ones
 // already reached, and what was left out. A centred card on a desktop and a bottom sheet
 // on a phone, like the other dialogs (docs/features/time-saved.md, "Counted honestly").
-export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) {
+export const TimeSavedSheet = ({ open, summary, onClose }: TimeSavedSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const { minutes } = summary;
   const reached = MILESTONES.filter((milestone) => milestone.minutes <= minutes);
@@ -142,4 +142,4 @@ export function TimeSavedSheet({ open, summary, onClose }: TimeSavedSheetProps) 
       </div>
     </dialog>
   );
-}
+};

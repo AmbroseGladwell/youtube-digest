@@ -19,6 +19,6 @@ const BackLinkHandoffContext = createContext<BackLinkHandoff>({ register: () => 
 
 export const BackLinkHandoffProvider = BackLinkHandoffContext.Provider;
 
-export function useBackLinkHandoff(): BackLinkHandoff {
+export const useBackLinkHandoff = (): BackLinkHandoff => {
   return useContext(BackLinkHandoffContext);
-}
+};

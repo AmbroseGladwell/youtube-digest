@@ -15,7 +15,7 @@ export interface SettingsSectionListProps {
 
 // Design OV-51 51a and 51d: each row carries its section's current value, so most visits
 // end here.
-export function SettingsSectionList({ sections, current, stacked }: SettingsSectionListProps) {
+export const SettingsSectionList = ({ sections, current, stacked }: SettingsSectionListProps) => {
   const analytics = useAnalytics();
   return (
     <nav className={stacked ? styles.stacked : styles.beside} aria-label="Settings sections" data-testid={settingsSectionListTestIds.root}>
@@ -43,4 +43,4 @@ export function SettingsSectionList({ sections, current, stacked }: SettingsSect
       ))}
     </nav>
   );
-}
+};

@@ -9,7 +9,7 @@ export interface WrapToWidthInput {
 // overflows the card on exactly the long titles that most need wrapping
 // (docs/prototype/constraints.md). A word too long to fit on a line of its own is left to
 // overhang rather than broken mid-word.
-export function wrapToWidth({ text, maxWidth, maxLines, measure }: WrapToWidthInput): string[] {
+export const wrapToWidth = ({ text, maxWidth, maxLines, measure }: WrapToWidthInput): string[] => {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = "";
@@ -37,7 +37,7 @@ export function wrapToWidth({ text, maxWidth, maxLines, measure }: WrapToWidthIn
     lines[lines.length - 1] = ellipsise(lines[lines.length - 1]!, maxWidth, measure);
   }
   return lines;
-}
+};
 
 const ellipsise = (line: string, maxWidth: number, measure: (line: string) => number): string => {
   let trimmed = line;

@@ -8,6 +8,6 @@ const YouTubeFetchContext = createContext<YouTubeFetch | null>(null);
 
 export const YouTubeFetchProvider = YouTubeFetchContext.Provider;
 
-export function useYouTubeFetch(): YouTubeFetch | null {
+export const useYouTubeFetch = (): YouTubeFetch | null => {
   return useContext(YouTubeFetchContext);
-}
+};

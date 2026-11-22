@@ -31,7 +31,7 @@ export interface ChatSourceChipProps {
 
 // OV-354, page 2: every reference in the chat is the same chip, 28px, a mini thumbnail, the title
 // cut with an ellipsis, then the place it names and "+n". One deleted since is muted and not a link.
-export function ChatSourceChip({
+export const ChatSourceChip = ({
   title,
   detail,
   more = [],
@@ -48,7 +48,7 @@ export function ChatSourceChip({
   label,
   deletedDetail = "deleted",
   testId,
-}: ChatSourceChipProps) {
+}: ChatSourceChipProps) => {
   const className = `${styles.chip} ${quiet ? styles.quiet : styles.outline} ${deleted ? styles.deleted : ""}`;
   const thumbnail = imageUrl ? (
     <img className={`${styles.thumb} ${wide ? styles.wide : ""}`} src={imageUrl} alt="" loading="lazy" />
@@ -100,4 +100,4 @@ export function ChatSourceChip({
       )}
     </span>
   );
-}
+};

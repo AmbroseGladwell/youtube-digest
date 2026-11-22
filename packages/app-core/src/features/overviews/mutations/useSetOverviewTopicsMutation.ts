@@ -15,7 +15,7 @@ interface SetOverviewTopicsContext {
   previousDetail: OverviewWithState | null | undefined;
 }
 
-export function useSetOverviewTopicsMutation() {
+export const useSetOverviewTopicsMutation = () => {
   const { overviewStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -57,4 +57,4 @@ export function useSetOverviewTopicsMutation() {
       }
     },
   });
-}
+};

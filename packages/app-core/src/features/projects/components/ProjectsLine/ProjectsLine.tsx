@@ -28,7 +28,7 @@ const joined = (parts: ReactNode[]): ReactNode[] =>
 
 // Which projects the overview is in, on the From line's quiet scale: up to three by name,
 // four or more as two and how many more ("OV-168 3 Adding and Making" 168r, 168r-3).
-export function ProjectsLine({ projects, webApp, onOpen, onChange }: ProjectsLineProps) {
+export const ProjectsLine = ({ projects, webApp, onOpen, onChange }: ProjectsLineProps) => {
   if (projects.length === 0) {
     return null;
   }
@@ -72,9 +72,9 @@ export function ProjectsLine({ projects, webApp, onOpen, onChange }: ProjectsLin
       </span>
     </p>
   );
-}
+};
 
-function ProjectName({
+const ProjectName = ({
   project,
   webApp,
   onOpen,
@@ -82,7 +82,7 @@ function ProjectName({
   project: Project;
   webApp: ProjectsLineProps["webApp"];
   onOpen: (project: Project) => void;
-}) {
+}) => {
   const tipId = useId();
   const cut = project.name.length > CUT_AT;
   const common = {
@@ -117,4 +117,4 @@ function ProjectName({
       </span>
     </span>
   );
-}
+};

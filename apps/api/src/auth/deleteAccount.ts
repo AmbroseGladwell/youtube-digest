@@ -22,10 +22,10 @@ export interface EraseAccountOptions {
 // One transaction: what the later steps need is captured first, the audit row is written,
 // then everything under the account goes. The foreign keys cascade for every table but
 // three, which are deleted by hand here (docs/features/account-deletion.md, "What goes").
-export async function eraseAccount(
+export const eraseAccount = async (
   sql: SqlClient,
   { accountId, email, now, narrationStore, personEraser }: EraseAccountOptions,
-): Promise<AccountDeletion> {
+): Promise<AccountDeletion> => {
   return sql.transaction(async (tx) => {
     const keys = (await tx.query<{ key: string }>("select key from audio_renders where requested_by = $1", [accountId])).map(
       (row) => row.key,
@@ -50,7 +50,7 @@ export async function eraseAccount(
     await tx.query("delete from accounts where id = $1", [accountId]);
     return deletion;
   });
-}
+};
 
 export interface FinishAccountDeletionOptions {
   narrationStore: AudioStore | null;
@@ -80,11 +80,11 @@ const withinTime = <T>(work: Promise<T>, ms: number, step: string): Promise<T> =
 // The steps outside the transaction, each recorded as it ends. A step that fails is left
 // `failed` with its error for `task api:finish-deletions` to retry; a step with nothing
 // configured to run it is left `not_configured`, which the same retry picks up once it is.
-export async function finishAccountDeletion(
+export const finishAccountDeletion = async (
   sql: SqlClient,
   deletion: AccountDeletion,
   { narrationStore, personEraser, log, now, stepTimeoutMs = STEP_TIMEOUT_MS }: FinishAccountDeletionOptions,
-): Promise<AccountDeletion> {
+): Promise<AccountDeletion> => {
   const steps: StepStatuses = {
     narration: deletion.narration,
     postHogAccount: deletion.postHogAccount,
@@ -136,4 +136,4 @@ export async function finishAccountDeletion(
   steps.postHogAnonymous = await erase(steps.postHogAnonymous, deletion.anonymousId, "postHogAnonymous");
 
   return new AccountDeletionsRepository(sql).recordSteps(deletion.id, steps, lastError, now());
-}
+};

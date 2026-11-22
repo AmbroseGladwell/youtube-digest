@@ -37,7 +37,7 @@ const refusedLead = (reason: Refusal, email: string | null): string => {
 // a POST from this page, as a sign-in link's is. Done means every session on the account
 // has ended, this browser's included, so Sign in is the one action
 // (docs/features/account-changes.md, "Moving it back").
-export function RevertEmailPage() {
+export const RevertEmailPage = () => {
   const { hash } = useLocation();
   const navigate = useNavigate();
   const sync = useSync();
@@ -138,4 +138,4 @@ export function RevertEmailPage() {
       </p>
     </AuthScreen>
   );
-}
+};

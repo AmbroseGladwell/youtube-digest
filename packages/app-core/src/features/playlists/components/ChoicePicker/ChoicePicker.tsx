@@ -27,7 +27,7 @@ export interface ChoicePickerProps<Choice extends string> {
 // Design 95x–95z: a pill naming the choice, which opens the options with what each would do.
 // Choosing saves straight away; there is nothing to confirm. Built for a playlist's pace, and
 // used for its order too (docs/features/playlists.md, "An order for each playlist").
-export function ChoicePicker<Choice extends string>({
+export const ChoicePicker = <Choice extends string>({
   choice,
   choices,
   labelOf,
@@ -41,7 +41,7 @@ export function ChoicePicker<Choice extends string>({
   sheetFoot,
   stacked,
   onChange,
-}: ChoicePickerProps<Choice>) {
+}: ChoicePickerProps<Choice>) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -197,4 +197,4 @@ export function ChoicePicker<Choice extends string>({
       )}
     </div>
   );
-}
+};

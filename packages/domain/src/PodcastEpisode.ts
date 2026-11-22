@@ -33,8 +33,8 @@ export const PodcastEpisode = z.object({
 export type PodcastEpisode = z.infer<typeof PodcastEpisode>;
 
 // The feed and its guid together, since a guid is only promised unique within its feed.
-export async function podcastSourceId({ feedUrl, guid }: Pick<PodcastEpisode, "feedUrl" | "guid">): Promise<SourceKey> {
+export const podcastSourceId = async ({ feedUrl, guid }: Pick<PodcastEpisode, "feedUrl" | "guid">): Promise<SourceKey> => {
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${feedUrl}\n${guid}`));
   const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
   return hex.slice(0, 32) as SourceKey;
-}
+};

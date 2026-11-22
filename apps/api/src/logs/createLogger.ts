@@ -29,9 +29,9 @@ export const requestLogSerializers = {
 
 export const SERVICE_NAME = "overview-api";
 
-export function createLogger(destinations: DestinationStream[]): Logger {
+export const createLogger = (destinations: DestinationStream[]): Logger => {
   return pino(
     { level: "info", base: { service: SERVICE_NAME }, serializers: requestLogSerializers },
     multistream(destinations.map((stream) => ({ stream }))),
   );
-}
+};

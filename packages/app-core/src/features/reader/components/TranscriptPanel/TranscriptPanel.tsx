@@ -49,7 +49,7 @@ export interface TranscriptPanelProps {
 
 const canCopy = (): boolean => typeof navigator.clipboard?.writeText === "function";
 
-export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromStep = null, onBackToChapters }: TranscriptPanelProps) {
+export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromStep = null, onBackToChapters }: TranscriptPanelProps) => {
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
   const blocks = useMemo(() => (transcript === null ? [] : transcriptBlocks(transcript.segments)), [transcript]);
@@ -229,7 +229,7 @@ export function TranscriptPanel({ video, held, openAtMs, openedFrom, openedFromS
       )}
     </div>
   );
-}
+};
 
 interface TranscriptState {
   blocks: TranscriptBlock[];
@@ -240,7 +240,7 @@ interface TranscriptState {
 
 // Null means there are blocks to read, which is the one case the tools and the search
 // box are worth drawing for.
-function unreadableTranscript(video: VideoSource, { blocks, isPending, error, retry }: TranscriptState): ReactNode | null {
+const unreadableTranscript = (video: VideoSource, { blocks, isPending, error, retry }: TranscriptState): ReactNode | null => {
   if (video.id === null) {
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
@@ -261,7 +261,7 @@ function unreadableTranscript(video: VideoSource, { blocks, isPending, error, re
     return <TranscriptNote testId={transcriptPanelTestIds.emptyNote}>{NOTHING_STORED}</TranscriptNote>;
   }
   return null;
-}
+};
 
 interface TranscriptRowsProps {
   blocks: TranscriptBlock[];
@@ -278,7 +278,7 @@ interface TranscriptRowsProps {
 
 const chapterNumber = (number: number) => String(number).padStart(2, "0");
 
-function TranscriptRows({
+const TranscriptRows = ({
   blocks,
   search,
   follow,
@@ -289,7 +289,7 @@ function TranscriptRows({
   openedFrom,
   openedFromStep,
   head,
-}: TranscriptRowsProps) {
+}: TranscriptRowsProps) => {
   const [currentMatch, setCurrentMatch] = useState<HTMLElement | null>(null);
   const [targetRow, setTargetRow] = useState<HTMLElement | null>(null);
   const analytics = useOverviewPageAnalytics();
@@ -395,7 +395,7 @@ function TranscriptRows({
       })}
     </div>
   );
-}
+};
 
 interface TranscriptSearchBarProps {
   search: TranscriptSearch;
@@ -405,7 +405,7 @@ interface TranscriptSearchBarProps {
 // The field's own clear button, in place of the browser's blue cancel glyph, so all
 // three round controls in the pill are the one size, colour and hover
 // (docs/features/stone-theme.md, "Transcript search").
-function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps) {
+const TranscriptSearchBar = ({ search, onQueryChange }: TranscriptSearchBarProps) => {
   const searching = search.query.trim() !== "";
   const found = search.matches.length;
   const input = useRef<HTMLInputElement | null>(null);
@@ -502,17 +502,17 @@ function TranscriptSearchBar({ search, onQueryChange }: TranscriptSearchBarProps
       )}
     </div>
   );
-}
+};
 
-function TranscriptNote({ testId, children }: { testId: string; children: ReactNode }) {
+const TranscriptNote = ({ testId, children }: { testId: string; children: ReactNode }) => {
   return (
     <p className={styles.note} data-testid={testId}>
       {children}
     </p>
   );
-}
+};
 
-function TranscriptSkeleton() {
+const TranscriptSkeleton = () => {
   return (
     <div data-testid={transcriptPanelTestIds.skeleton}>
       {Array.from({ length: SKELETON_ROWS }, (_, index) => (
@@ -527,4 +527,4 @@ function TranscriptSkeleton() {
       ))}
     </div>
   );
-}
+};

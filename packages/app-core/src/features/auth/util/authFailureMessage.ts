@@ -5,7 +5,7 @@ export const CODE_SPENT = "That code is wrong, has expired, or was already used.
 
 // The one line a sign-in form says when the server said no. What a spent link or code
 // means differs by which was sent, so the caller names it (docs/features/sign-in.md).
-export function authFailureMessage(error: unknown, whenSpent: string): string {
+export const authFailureMessage = (error: unknown, whenSpent: string): string => {
   if (isSyncTransportError(error)) {
     return "Couldn't reach the server. Check the address and try again.";
   }
@@ -22,13 +22,13 @@ export function authFailureMessage(error: unknown, whenSpent: string): string {
     }
   }
   return "Something went wrong. Try again.";
-}
+};
 
-function waitFrom(details: Record<string, unknown> | undefined): string {
+const waitFrom = (details: Record<string, unknown> | undefined): string => {
   const seconds = details?.retryAfterSeconds;
   if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) {
     return "later";
   }
   const minutes = Math.ceil(seconds / 60);
   return minutes === 1 ? "in a minute" : `in ${minutes} minutes`;
-}
+};

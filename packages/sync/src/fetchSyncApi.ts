@@ -6,7 +6,7 @@ import { isSyncRequestError } from "./SyncRequestError.js";
 
 export type FetchSyncApiOptions = ApiRequesterOptions;
 
-export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
+export const createFetchSyncApi = (options: FetchSyncApiOptions): SyncApi => {
   const request = createApiRequester(options);
   const written = answered<WrittenRecord>;
 
@@ -47,4 +47,4 @@ export function createFetchSyncApi(options: FetchSyncApiOptions): SyncApi {
         throw error;
       }),
   };
-}
+};

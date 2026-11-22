@@ -33,7 +33,7 @@ const isStarter = (name: string) => STARTER_TOPICS.some((topic) => sameTopicName
 // Design 327e: up to three suggested for this source, pre-ticked, eight popular, and the rest of the
 // 27 on See all, with anything else typed in there. Nothing is made until Continue, so pressing a
 // chip off again leaves nothing behind (docs/features/onboarding.md, "Starter topics").
-export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving, below, onContinue }: OnboardingTopicsProps) {
+export const OnboardingTopics = ({ chosen: initiallyChosen, suggestions, saving, below, onContinue }: OnboardingTopicsProps) => {
   const [chosen, setChosenHere] = useState<string[]>([...initiallyChosen]);
   const [touched, setTouched] = useState(initiallyChosen.length > 0);
   const [allShown, setAllShown] = useState(false);
@@ -190,9 +190,9 @@ export function OnboardingTopics({ chosen: initiallyChosen, suggestions, saving,
       </div>
     </div>
   );
-}
+};
 
-function TopicChip({ name, pressed, onToggle }: { name: string; pressed: boolean; onToggle: (name: string) => void }) {
+const TopicChip = ({ name, pressed, onToggle }: { name: string; pressed: boolean; onToggle: (name: string) => void }) => {
   return (
     <button
       type="button"
@@ -205,4 +205,4 @@ function TopicChip({ name, pressed, onToggle }: { name: string; pressed: boolean
       {name}
     </button>
   );
-}
+};

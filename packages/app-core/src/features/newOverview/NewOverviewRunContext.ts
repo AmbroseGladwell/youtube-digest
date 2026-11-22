@@ -8,10 +8,10 @@ const NewOverviewRunContext = createContext<NewOverviewRunController | null>(nul
 
 export const NewOverviewRunProvider = NewOverviewRunContext.Provider;
 
-export function useNewOverviewRunController(): NewOverviewRunController {
+export const useNewOverviewRunController = (): NewOverviewRunController => {
   const controller = useContext(NewOverviewRunContext);
   if (!controller) {
     throw new Error("useNewOverviewRunController must be used within a NewOverviewRunProvider");
   }
   return controller;
-}
+};

@@ -20,12 +20,12 @@ const appended = (base: Record<string, unknown>, patch: Record<string, unknown>)
 // while its owner, an overview or a project, is there, so a chat can never outlive the sweep that
 // follows its owner's delete; a library chat has no owner to wait on. Never onto a conversation
 // the reader deleted (docs/features/chats.md).
-export async function appendChatMessages(
+export const appendChatMessages = async (
   records: RecordsRepository,
   accountId: AccountId,
   { owner, conversationId, messages }: ChatAppend,
   now: Date,
-): Promise<WriteOutcome> {
+): Promise<WriteOutcome> => {
   const id = chatRecordId(owner, conversationId);
   const at = now.toISOString();
   const ownerField = owner.kind === "overview" ? { overviewId: owner.id } : owner.kind === "project" ? { projectId: owner.id } : {};
@@ -57,4 +57,4 @@ export async function appendChatMessages(
     },
   ]);
   return written!;
-}
+};

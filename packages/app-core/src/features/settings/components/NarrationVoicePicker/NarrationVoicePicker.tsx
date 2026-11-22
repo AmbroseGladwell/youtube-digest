@@ -46,7 +46,7 @@ export interface NarrationVoicePickerProps {
 
 // Design OV-43, 43a–43d and 43f: a radio group of voices by accent, each with a sample of
 // the same passage. Choosing saves at once; there is no Save button.
-export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: NarrationVoicePickerProps) {
+export const NarrationVoicePicker = ({ scrollToChosen = false, labelledBy }: NarrationVoicePickerProps) => {
   const api = useNarrationApi();
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
@@ -162,7 +162,7 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
       ))}
     </section>
   );
-}
+};
 
 interface VoiceRowProps {
   voice: NarrationVoice;
@@ -175,7 +175,7 @@ interface VoiceRowProps {
   onStop: () => void;
 }
 
-function VoiceRow({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, onStop }: VoiceRowProps) {
+const VoiceRow = ({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, onStop }: VoiceRowProps) => {
   const name = narrationVoiceName(voice);
   const second =
     playback !== null
@@ -254,4 +254,4 @@ function VoiceRow({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, o
         ))}
     </div>
   );
-}
+};

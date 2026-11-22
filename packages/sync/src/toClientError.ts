@@ -13,7 +13,7 @@ export interface ToClientErrorOptions {
 
 // Anything thrown, as the report the app may send: redacted on the device, with the failing
 // call's id when it was a call to the API (docs/architecture/errors-and-logs.md).
-export function toClientError(thrown: unknown, { source, handled, trail, at }: ToClientErrorOptions): SentClientError {
+export const toClientError = (thrown: unknown, { source, handled, trail, at }: ToClientErrorOptions): SentClientError => {
   const error = thrown instanceof Error ? thrown : null;
   const message = error !== null ? error.message : typeof thrown === "string" ? thrown : "";
   const request = isSyncRequestError(thrown)
@@ -31,4 +31,4 @@ export function toClientError(thrown: unknown, { source, handled, trail, at }: T
     trail,
     at: at.toISOString(),
   };
-}
+};

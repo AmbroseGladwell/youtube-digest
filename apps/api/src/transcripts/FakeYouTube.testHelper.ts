@@ -44,7 +44,7 @@ const playerFor = (videoId: string, answer: YouTubeAnswer): PlayerResponse => {
 
 // YouTube as our server sees it, from our own address and through the proxy, answering
 // each route as the test says (docs/conventions/backend-testing-guide.md).
-export function makeFakeYouTube(answers: FakeYouTube["answers"] = { direct: "captions", proxy: "captions" }): FakeYouTube {
+export const makeFakeYouTube = (answers: FakeYouTube["answers"] = { direct: "captions", proxy: "captions" }): FakeYouTube => {
   const fake: FakeYouTube = { fetches: undefined!, requests: [], answers, sessionsClosed: 0 };
   let sessions = 0;
 
@@ -74,4 +74,4 @@ export function makeFakeYouTube(answers: FakeYouTube["answers"] = { direct: "cap
     newSession: () => `session-${(sessions += 1)}`,
   };
   return fake;
-}
+};

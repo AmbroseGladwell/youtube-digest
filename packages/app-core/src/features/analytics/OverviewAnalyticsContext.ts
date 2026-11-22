@@ -18,10 +18,10 @@ const OverviewAnalyticsContext = createContext<OverviewAnalytics>({ page: silent
 
 export const OverviewAnalyticsProvider = OverviewAnalyticsContext.Provider;
 
-export function useOverviewPageAnalytics(): OverviewPageAnalytics {
+export const useOverviewPageAnalytics = (): OverviewPageAnalytics => {
   return useContext(OverviewAnalyticsContext).page;
-}
+};
 
-export function useReaderAnalytics(): ReaderAnalytics {
+export const useReaderAnalytics = (): ReaderAnalytics => {
   return useContext(OverviewAnalyticsContext).reader ?? silentReader;
-}
+};

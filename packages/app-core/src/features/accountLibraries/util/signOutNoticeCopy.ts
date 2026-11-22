@@ -12,7 +12,7 @@ const changes = (count: number): string => (count === 1 ? "1 change" : `${count}
 
 // Designs 47d-2 and 47d-3: what is waiting leads, the reason first when it is known, and
 // what the server refused is its own line because nothing will send it.
-export function signOutNoticeCopy({ pending, stuck, offline, deleted = false }: SignOutNotice, surface: Surface): SignOutNoticeCopy {
+export const signOutNoticeCopy = ({ pending, stuck, offline, deleted = false }: SignOutNotice, surface: Surface): SignOutNoticeCopy => {
   if (deleted) {
     return { lead: "Your account is deleted.", then: "This device and your others are signed out.", stuck: null };
   }
@@ -32,4 +32,4 @@ export function signOutNoticeCopy({ pending, stuck, offline, deleted = false }: 
       ? null
       : `${pending === 0 ? changes(stuck) : `${stuck} more`} couldn’t be sent and won’t retry on ${stuck === 1 ? "its" : "their"} own. You’ll see ${stuck === 1 ? "it" : "them"} in Account & sync when you sign in.`;
   return { lead, then, stuck: stuckLine };
-}
+};

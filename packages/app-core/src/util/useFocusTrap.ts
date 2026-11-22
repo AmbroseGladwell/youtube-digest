@@ -14,7 +14,7 @@ const FOCUSABLE = [
 // of where they are. Tab and Shift+Tab wrap inside the sheet while it is open, and
 // closing it hands focus back to whatever opened it
 // (docs/features/stone-theme.md, "The filter sheet").
-export function useFocusTrap(active: boolean, containerRef: RefObject<HTMLElement | null>): void {
+export const useFocusTrap = (active: boolean, containerRef: RefObject<HTMLElement | null>): void => {
   useEffect(() => {
     const container = containerRef.current;
     if (!active || container === null) {
@@ -65,4 +65,4 @@ export function useFocusTrap(active: boolean, containerRef: RefObject<HTMLElemen
       opener?.focus();
     };
   }, [active, containerRef]);
-}
+};

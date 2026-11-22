@@ -12,7 +12,7 @@ export interface CookingIngredientsSheetProps {
 // Designs 150ah, 150ai: on a phone and in the panel, the note's own list as a sheet over the
 // step, as written or as the reader adjusted it. Opening it pauses nothing; servings and units
 // belong to the note, before cooking. The wide web gets CookingIngredientsDrawer instead.
-export function CookingIngredientsSheet({ open, onClose, children }: CookingIngredientsSheetProps) {
+export const CookingIngredientsSheet = ({ open, onClose, children }: CookingIngredientsSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
@@ -68,4 +68,4 @@ export function CookingIngredientsSheet({ open, onClose, children }: CookingIngr
       </div>
     </dialog>
   );
-}
+};

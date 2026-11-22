@@ -13,12 +13,12 @@ const item = (text: string, source: string, changes: Partial<LearnedItem> = {}):
   [text.toLowerCase()]: { text, source, learnedAt: AT, noticedAt: AT, removedAt: null, ...changes },
 });
 
-async function patchSettings(reader: TestAccount, patch: Record<string, unknown>) {
+const patchSettings = async (reader: TestAccount, patch: Record<string, unknown>) => {
   updates += 1;
   const updatedAt = new Date(Date.UTC(2026, 10, 9, 9, 0, updates)).toISOString();
   const response = await reader.inject({ method: "PUT", url: "/api/settings", body: { ...patch, updatedAt } });
   assert.equal(response.statusCode, 200, response.body);
-}
+};
 
 test("get_profile serves the reader's sentence and what was learned, each item with what it rests on", async () => {
   const testApp = await createTestApp();

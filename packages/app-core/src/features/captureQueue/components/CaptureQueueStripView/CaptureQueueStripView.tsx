@@ -34,7 +34,7 @@ const LEAD: Record<CaptureQueueStrip["kind"], StrokeIconName | null> = {
 
 // Design 27k: the queue in the generation strip's slot and shape (3c), one state at a time.
 // Its words are a polite live region, so progress is heard without taking focus.
-export function CaptureQueueStripView({ strip, compact, folded, onPause, onResume, onDetails, onDismiss }: CaptureQueueStripViewProps) {
+export const CaptureQueueStripView = ({ strip, compact, folded, onPause, onResume, onDetails, onDismiss }: CaptureQueueStripViewProps) => {
   const analytics = useAnalytics();
   const copy = captureQueueStripCopy(strip, compact);
   const lead = LEAD[strip.kind];
@@ -236,4 +236,4 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
       )}
     </div>
   );
-}
+};

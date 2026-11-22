@@ -57,7 +57,7 @@ export interface SettingsSectionSummary {
 
 // The sections this shell can show, in the design's order (docs/features/settings.md). A
 // section whose panel would have nothing to show is left out, row and route alike.
-export function useSettingsSections(): SettingsSectionSummary[] {
+export const useSettingsSections = (): SettingsSectionSummary[] => {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const narrationApi = useNarrationApi();
@@ -160,7 +160,7 @@ export function useSettingsSections(): SettingsSectionSummary[] {
     ...(knownApiUrl !== null ? [{ id: "privacy" as const, title: "Privacy", value: shareUsageRowValue(shareUsage) }] : []),
     ...(build !== null ? [{ id: "about" as const, title: "About", value: aboutRowValue(build) }] : []),
   ];
-}
+};
 
 // Design 305o: the Plan row names transcribing only once some was used this month.
 const transcribingLeftOf = (transcription: TranscriptionUsage | undefined): string | null =>

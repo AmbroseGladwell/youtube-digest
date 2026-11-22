@@ -8,7 +8,7 @@ const UNQUOTABLE = /["\\\r\n]/;
 // both readers, `fly secrets import` and Node's --env-file, cut an unquoted value at a "#"; a value
 // the quotes cannot carry intact, and a template naming a variable that is not there, are refused
 // whole rather than rendered wrong (docs/conventions/secrets.md, "Quoting").
-export function renderEnvTemplate(template, env) {
+export const renderEnvTemplate = (template, env) => {
   const missing = new Set();
   const unquoted = new Set();
   const unquotable = new Set();
@@ -27,7 +27,7 @@ export function renderEnvTemplate(template, env) {
     return `${open}${value}${close}`;
   });
   return { rendered, missing: [...missing], unquoted: [...unquoted], unquotable: [...unquotable] };
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [templatePath, outputPath] = process.argv.slice(2);

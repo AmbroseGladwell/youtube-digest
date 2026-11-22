@@ -5,13 +5,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTestApp } from "../testing/createTestApp.testHelper.js";
 
-async function builtWebApp(): Promise<string> {
+const builtWebApp = async (): Promise<string> => {
   const root = await mkdtemp(join(tmpdir(), "overview-web-"));
   await mkdir(join(root, "assets"));
   await writeFile(join(root, "index.html"), "<!doctype html><title>Overview</title>");
   await writeFile(join(root, "assets", "index-abc123.js"), "console.log('app')");
   return root;
-}
+};
 
 test("the web app's index is served at the root and must revalidate", async () => {
   const testApp = await createTestApp({ staticRoot: await builtWebApp() });

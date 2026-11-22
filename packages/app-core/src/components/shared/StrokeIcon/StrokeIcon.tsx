@@ -627,7 +627,7 @@ const GEOMETRY: Record<StrokeIconName, ReactNode> = {
   ),
 };
 
-export function StrokeIcon({ name, size = 14 }: StrokeIconProps) {
+export const StrokeIcon = ({ name, size = 14 }: StrokeIconProps) => {
   return (
     <svg
       className={styles.icon}
@@ -644,4 +644,4 @@ export function StrokeIcon({ name, size = 14 }: StrokeIconProps) {
       {GEOMETRY[name]}
     </svg>
   );
-}
+};

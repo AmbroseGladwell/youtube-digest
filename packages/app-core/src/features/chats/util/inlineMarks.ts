@@ -17,7 +17,7 @@ const WORD = /[\p{L}\p{N}]/u;
 // mark still open at the end is shown as it will be while the answer streams in, and as plain text
 // once it is whole; a link only half written shows its words alone. A link to anything but http(s)
 // keeps its words and drops the address.
-export function inlineMarks(text: string, { open = "plain" }: { open?: "bold" | "plain" } = {}): MarkedPiece[] {
+export const inlineMarks = (text: string, { open = "plain" }: { open?: "bold" | "plain" } = {}): MarkedPiece[] => {
   const streaming = open === "bold";
   const pieces: MarkedPiece[] = [];
   let bold = false;
@@ -94,11 +94,11 @@ export function inlineMarks(text: string, { open = "plain" }: { open?: "bold" | 
     }
   }
   return pieces.filter((piece) => piece.text !== "");
-}
+};
 
 // The same, word by word, for an answer whose words fade in as they arrive.
-export function markedWords(words: readonly string[], whole: boolean): MarkedPiece[] {
+export const markedWords = (words: readonly string[], whole: boolean): MarkedPiece[] => {
   return inlineMarks(words.join(""), { open: whole ? "plain" : "bold" }).flatMap((piece) =>
     piece.code || piece.href !== undefined ? [piece] : (piece.text.match(/\S+\s*|\s+/g) ?? []).map((word) => ({ ...piece, text: word })),
   );
-}
+};

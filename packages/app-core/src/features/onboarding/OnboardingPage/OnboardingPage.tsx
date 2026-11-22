@@ -98,7 +98,7 @@ const SHARES_BEING_SAVED = new Set<string>();
 // written. Where they are is kept on the device, so a reload or the sign-in link in another tab
 // carries on. The run lives above the router (OnboardingRunRuntime), so neither unmounts it
 // (docs/features/onboarding.md).
-export function OnboardingPage() {
+export const OnboardingPage = () => {
   const [progress, update] = useOnboardingProgress();
   const leaving = useRef(false);
   if (progress === null) {
@@ -113,7 +113,7 @@ export function OnboardingPage() {
       }}
     />
   );
-}
+};
 
 interface OnboardingProps {
   progress: OnboardingProgress;
@@ -121,7 +121,7 @@ interface OnboardingProps {
   onLeave: () => void;
 }
 
-function Onboarding({ progress, update, onLeave }: OnboardingProps) {
+const Onboarding = ({ progress, update, onLeave }: OnboardingProps) => {
   const navigate = useNavigate();
   const analytics = useAnalytics();
   const [contentEnd, contentBelow] = useContentBelow();
@@ -640,4 +640,4 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       </div>
     </div>
   );
-}
+};

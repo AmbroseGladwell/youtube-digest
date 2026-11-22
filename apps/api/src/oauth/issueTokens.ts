@@ -12,10 +12,10 @@ export interface TokenResponse {
 }
 
 // The only place a connection's raw tokens exist: handed back once, kept as hashes.
-export async function issueTokens(
+export const issueTokens = async (
   sql: SqlClient,
   { connectionId, scope, now }: { connectionId: string; scope: string; now: Date },
-): Promise<TokenResponse> {
+): Promise<TokenResponse> => {
   const access = generateToken();
   const refresh = generateToken();
   const insert = (token: string, kind: "access" | "refresh", ttlMs: number) =>
@@ -33,4 +33,4 @@ export async function issueTokens(
     refresh_token: refresh,
     scope,
   };
-}
+};

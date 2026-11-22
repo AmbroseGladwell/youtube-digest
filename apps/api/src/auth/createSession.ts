@@ -19,11 +19,11 @@ export interface CreateSessionOptions {
 
 // The only place a raw token exists: it is handed back once and only its hash is kept
 // (docs/architecture/api.md).
-export async function createSessionForAccount(
+export const createSessionForAccount = async (
   sql: SqlClient,
   accountId: AccountId,
   { now, sessionTtlDays }: CreateSessionOptions,
-): Promise<CreatedSession> {
+): Promise<CreatedSession> => {
   const token = generateToken();
   const expiresAt = sessionExpiry(now, sessionTtlDays);
   const [row] = await sql.query<{ id: string }>(
@@ -31,8 +31,8 @@ export async function createSessionForAccount(
     [accountId, hashToken(token), now.toISOString(), expiresAt],
   );
   return { id: row!.id, token, accountId, expiresAt };
-}
+};
 
-export async function createSession(sql: SqlClient, email: string, options: CreateSessionOptions): Promise<CreatedSession> {
+export const createSession = async (sql: SqlClient, email: string, options: CreateSessionOptions): Promise<CreatedSession> => {
   return createSessionForAccount(sql, (await findOrCreateAccount(sql, email)).id, options);
-}
+};

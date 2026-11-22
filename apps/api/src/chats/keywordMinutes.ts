@@ -28,13 +28,13 @@ export interface OverviewMinutes {
 // The 8 best minutes for a question's words across the account's transcripts, each with its
 // neighbours, grouped by the live overview they belong to, best first (OV-352). Search failing never
 // stops the answer: it goes on without minutes, and the log says so.
-export async function keywordMinutes(
+export const keywordMinutes = async (
   { passages, records }: { passages: TranscriptPassagesRepository; records: RecordsRepository },
   accountId: AccountId,
   question: string,
   { except = [], within = null }: { except?: readonly string[]; within?: readonly string[] | null },
   log: FastifyBaseLogger,
-): Promise<OverviewMinutes[]> {
+): Promise<OverviewMinutes[]> => {
   let hits;
   try {
     await passages.backfill(accountId);
@@ -67,15 +67,15 @@ export async function keywordMinutes(
     grouped.set(overview.id, held);
   }
   return [...grouped.values()].map((minutes) => ({ ...minutes, passages: minutes.passages.sort((a, b) => a.startMs - b.startMs) }));
-}
+};
 
 // Every minute of these overviews' transcripts, cut again, so an earlier question's minutes rebuild
 // as they were sent. A transcript gone since leaves its overview out.
-export async function transcriptMinutes(
+export const transcriptMinutes = async (
   transcripts: TranscriptsRepository,
   accountId: AccountId,
   overviews: ReadonlyArray<Overview>,
-): Promise<Map<string, Passage[]>> {
+): Promise<Map<string, Passage[]>> => {
   const cut = new Map<string, Passage[]>();
   for (const overview of overviews) {
     const key = sourceKey(overview.source);
@@ -88,4 +88,4 @@ export async function transcriptMinutes(
     }
   }
   return cut;
-}
+};

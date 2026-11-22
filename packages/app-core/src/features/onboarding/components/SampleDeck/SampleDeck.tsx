@@ -34,7 +34,7 @@ export interface SampleDeckProps {
 // the visit, and the arrows step by hand. See all unfolds it into a list in deck order. With
 // reduced motion it doesn't cycle until Play, and every change is a crossfade
 // (docs/features/onboarding.md, "Try a sample").
-export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDeckProps) {
+export const SampleDeck = ({ samples, firstIndex = 0, phone, onFront }: SampleDeckProps) => {
   const n = samples.length;
   const g = phone ? GEOMETRY.phone : GEOMETRY.wide;
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -340,7 +340,7 @@ export function SampleDeck({ samples, firstIndex = 0, phone, onFront }: SampleDe
       )}
     </section>
   );
-}
+};
 
 interface Placement {
   top: number;
@@ -359,7 +359,7 @@ interface Placement {
 
 // Where each card sits, by its place behind the front one: the deck's three, the one leaving,
 // the rest waiting out of sight; or squared into a stack, or laid out as rows.
-function placement(o: {
+const placement = (o: {
   layout: Layout;
   slot: number;
   n: number;
@@ -368,7 +368,7 @@ function placement(o: {
   drag: number | null;
   fling: number;
   reduced: boolean;
-}): Placement {
+}): Placement => {
   const { layout, slot, n, g, dragging, drag, fling, reduced } = o;
   const p: Placement = {
     top: TOP,
@@ -449,4 +449,4 @@ function placement(o: {
   behind(true);
   p.opacity = 0;
   return p;
-}
+};

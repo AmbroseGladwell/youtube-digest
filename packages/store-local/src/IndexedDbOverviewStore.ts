@@ -310,14 +310,14 @@ const withStateDefaults = (raw: unknown): Record<string, unknown> => ({
   ...(typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {}),
 });
 
-function quarantined<T>(
+const quarantined = <T>(
   raws: unknown[],
   kind: UnreadableRecordKind,
   keyPath: string,
   read: (raw: unknown) => StoredRecordRead<T>,
-): UnreadableRecord[] {
+): UnreadableRecord[] => {
   return raws.flatMap((raw) => {
     const result = read(raw);
     return result.status === "unreadable" ? [unreadableRecord(kind, storedRecordId(raw, keyPath), result, raw)] : [];
   });
-}
+};

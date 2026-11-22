@@ -20,10 +20,10 @@ export interface OverviewStoreUnderTest {
   seedRawOverview?: ((raw: unknown) => Promise<void>) | undefined;
 }
 
-export function defineOverviewStoreConformanceSuite(
+export const defineOverviewStoreConformanceSuite = (
   label: string,
   createStoreUnderTest: () => OverviewStoreUnderTest | Promise<OverviewStoreUnderTest>,
-): void {
+): void => {
   const behaviour = (description: string) => `${label} OverviewStore: ${description}`;
   const createStore = async () => (await createStoreUnderTest()).store;
 
@@ -244,7 +244,7 @@ export function defineOverviewStoreConformanceSuite(
   });
 
   defineMigrationChecks(behaviour, createStoreUnderTest);
-}
+};
 
 const corpusAt = (version: number): Record<string, unknown> => {
   const record = OVERVIEW_CORPUS.get(version);
@@ -254,10 +254,10 @@ const corpusAt = (version: number): Record<string, unknown> => {
   return record as Record<string, unknown>;
 };
 
-function defineMigrationChecks(
+const defineMigrationChecks = (
   behaviour: (description: string) => string,
   createStoreUnderTest: () => OverviewStoreUnderTest | Promise<OverviewStoreUnderTest>,
-): void {
+): void => {
   const oldRecord = corpusAt(1);
   const oldRecordId = OverviewId.parse(oldRecord.id as string);
 
@@ -359,4 +359,4 @@ function defineMigrationChecks(
 
     await assert.rejects(() => store.setOverviewCaptureReason(oldRecordId, "anything"), UnreadableRecordError);
   });
-}
+};

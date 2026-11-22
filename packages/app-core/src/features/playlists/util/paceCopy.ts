@@ -20,7 +20,7 @@ const MONTH_DAYS = 30;
 const DAYS_BEFORE_MONTHS = 60;
 
 // How long a backfill takes at a pace, rounded up to whole days and read in months past 60.
-export function paceSpan(days: number): string {
+export const paceSpan = (days: number): string => {
   if (days <= 1) {
     return "a day";
   }
@@ -28,11 +28,11 @@ export function paceSpan(days: number): string {
     return `${formatCount(days)} days`;
   }
   return `${formatCount(Math.round(days / MONTH_DAYS))} months`;
-}
+};
 
 // What following at a pace would do with this playlist, worked out in code
 // (docs/features/playlists.md, "The preview").
-export function paceConsequence(pace: PlaylistPace, toMake: number, backfill: boolean): string {
+export const paceConsequence = (pace: PlaylistPace, toMake: number, backfill: boolean): string => {
   const limit = paceDailyLimit(pace);
   if (limit === 0) {
     return backfill && toMake > 0
@@ -49,10 +49,10 @@ export function paceConsequence(pace: PlaylistPace, toMake: number, backfill: bo
     return `All ${formatCount(toMake)} today, then up to ${limit} a day as new ones arrive.`;
   }
   return `${formatCount(toMake)} videos at ${limit} a day: about ${paceSpan(Math.ceil(toMake / limit))}.`;
-}
+};
 
 // What choosing a pace in Settings would do to the videos already waiting on it (95y).
-export function paceWaitEffect(pace: PlaylistPace, waiting: number): string {
+export const paceWaitEffect = (pace: PlaylistPace, waiting: number): string => {
   if (waiting === 0) {
     return paceConsequence(pace, 0, false);
   }
@@ -67,10 +67,10 @@ export function paceWaitEffect(pace: PlaylistPace, waiting: number): string {
     return `The ${formatCount(waiting)} waiting are made today`;
   }
   return `${formatCount(waiting)} waiting at ${limit} a day: about ${paceSpan(Math.ceil(waiting / limit))}`;
-}
+};
 
 // What a change did, said once in the row it was made in.
-export function paceChangedLine(pace: PlaylistPace, waiting: number, madeToday: number): string {
+export const paceChangedLine = (pace: PlaylistPace, waiting: number, madeToday: number): string => {
   const now = `Now ${PACE_IN_A_SENTENCE[pace]}.`;
   if (waiting === 0) {
     return now;
@@ -86,15 +86,15 @@ export function paceChangedLine(pace: PlaylistPace, waiting: number, madeToday: 
   return tomorrow === 0
     ? `${now} The ${formatCount(waiting)} waiting are made today.`
     : `${now} ${formatCount(tomorrow)} of the ${formatCount(waiting)} wait for tomorrow.`;
-}
+};
 
-export function paceInASentence(pace: PlaylistPace): string {
+export const paceInASentence = (pace: PlaylistPace): string => {
   return PACE_IN_A_SENTENCE[pace];
-}
+};
 
 // What the month's allowance means for a backfill it can't cover, before anything runs (95s,
 // and 95v with a pace). Null when it covers the lot, or when nothing here would spend it.
-export function allowanceLine(pace: PlaylistPace | null, toMake: number, left: number, resetsOn: string): string | null {
+export const allowanceLine = (pace: PlaylistPace | null, toMake: number, left: number, resetsOn: string): string | null => {
   const limit = pace === null ? null : paceDailyLimit(pace);
   if (limit === 0 || toMake <= left) {
     return null;
@@ -110,4 +110,4 @@ export function allowanceLine(pace: PlaylistPace | null, toMake: number, left: n
   const days = Math.ceil(left / limit);
   const span = days === 1 ? "today" : `the next ${formatCount(days)} days`;
   return `Your allowance covers ${formatCount(left)} more this month. At ${limit} a day that’s ${span}; the other ${rest} wait for ${date}, then carry on at ${limit} a day.`;
-}
+};

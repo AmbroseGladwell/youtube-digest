@@ -50,7 +50,7 @@ const IDLE: AskState = { status: "idle" };
 // Asks a question about one overview and follows its answer as it streams. The stored answer
 // goes into the conversation at once, and sync brings the record down behind it; a wait comes
 // back as a state to show, never as a failure (docs/features/chats.md, "Asking").
-export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, api?: ChatApi) {
+export const useAskQuestion = (overviewId: OverviewId, about: ChatSourceKind, api?: ChatApi) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { syncNow } = useSync();
@@ -159,4 +159,4 @@ export function useAskQuestion(overviewId: OverviewId, about: ChatSourceKind, ap
   const dismiss = useCallback(() => setState(IDLE), []);
 
   return { state, ask, stop, dismiss };
-}
+};

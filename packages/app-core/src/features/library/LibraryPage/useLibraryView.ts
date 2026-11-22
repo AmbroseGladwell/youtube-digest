@@ -7,11 +7,11 @@ import { readLibraryView, writeLibraryView, type RestoredLibraryView } from "../
 import { DEFAULT_LIBRARY_VIEW, type LibraryView } from "../types/LibraryView.js";
 import { applyLibraryView, hasLibraryViewParams, parseLibraryView } from "../util/libraryFilterParams.js";
 
-function restoringFor(accountId: string | null): RestoredLibraryView {
+const restoringFor = (accountId: string | null): RestoredLibraryView => {
   return readLibraryView(accountId) ?? { view: DEFAULT_LIBRARY_VIEW, dropped: [] };
-}
+};
 
-function withoutMissingTopic(restoring: RestoredLibraryView, topics: Topic[]): RestoredLibraryView {
+const withoutMissingTopic = (restoring: RestoredLibraryView, topics: Topic[]): RestoredLibraryView => {
   const { topicId } = restoring.view.filters;
   if (topicId === "all" || topics.some((topic) => topic.id === topicId)) {
     return restoring;
@@ -21,7 +21,7 @@ function withoutMissingTopic(restoring: RestoredLibraryView, topics: Topic[]): R
     view: { ...restoring.view, filters: { ...restoring.view.filters, topicId: "all" } },
     dropped: [...restoring.dropped, "topic"],
   };
-}
+};
 
 export interface UseLibraryViewResult {
   searchParams: URLSearchParams;
@@ -33,7 +33,7 @@ export interface UseLibraryViewResult {
 // account left on this device, or unread first; a link that names a view wins and is not
 // saved (docs/features/library-view.md). A project's page starts from every overview in it
 // and keeps nothing (docs/features/projects.md).
-export function useLibraryView(topics: Topic[] | undefined, { remember = true }: { remember?: boolean } = {}): UseLibraryViewResult {
+export const useLibraryView = (topics: Topic[] | undefined, { remember = true }: { remember?: boolean } = {}): UseLibraryViewResult => {
   const [searchParams, setSearchParams] = useSearchParams();
   const accountId = libraryAccountIdOf(useSyncConnection().connection);
   const [restoredAccountId, setRestoredAccountId] = useState(accountId);
@@ -84,4 +84,4 @@ export function useLibraryView(topics: Topic[] | undefined, { remember = true }:
   };
 
   return { searchParams: shown, view: parseLibraryView(shown), change };
-}
+};

@@ -36,7 +36,7 @@ interface ReadCopy {
 // others' filing and state are folded onto it, and the others are tombstoned so every
 // device drops them through the feed. Runs inside the migration that puts the unique index
 // on, so the index can go on (docs/features/one-overview-per-video.md).
-export async function foldDuplicateOverviews(sql: SqlClient, now: () => Date = () => new Date()): Promise<DuplicateFold[]> {
+export const foldDuplicateOverviews = async (sql: SqlClient, now: () => Date = () => new Date()): Promise<DuplicateFold[]> => {
   const groups = await sql.query<{ account_id: string; video_id: string }>(
     `select account_id, video_id from records
      where kind = 'overview' and not deleted and video_id is not null
@@ -49,15 +49,15 @@ export async function foldDuplicateOverviews(sql: SqlClient, now: () => Date = (
     folds.push(await foldOne(sql, records, account_id as AccountId, video_id, now));
   }
   return folds;
-}
+};
 
-async function foldOne(
+const foldOne = async (
   sql: SqlClient,
   records: RecordsRepository,
   accountId: AccountId,
   videoId: string,
   now: () => Date,
-): Promise<DuplicateFold> {
+): Promise<DuplicateFold> => {
   const rows = await sql.query<RecordRow>(
     `select ${RECORD_COLUMNS} from records
      where account_id = $1 and kind = 'overview' and not deleted and video_id = $2
@@ -122,12 +122,12 @@ async function foldOne(
   await records.write(accountId, operations);
 
   return { accountId, videoId, kept: winner.record.id, folded: losers.map(({ record }) => record.id) };
-}
+};
 
 // Every copy is read at the current version before anything is merged, as a field write
 // is (docs/features/sync-api.md, "A merge migrates first"). One this server cannot read
 // stops the fold loudly rather than guessing at it.
-function readCurrent(record: StoredRecord, migrations: readonly RecordMigration[], accountId: string, videoId: string): ReadCopy {
+const readCurrent = (record: StoredRecord, migrations: readonly RecordMigration[], accountId: string, videoId: string): ReadCopy => {
   const migrated = migrateStoredRecord(stampSchemaVersion(record.body ?? {}, record.schemaVersion), migrations);
   if (migrated.status === "unreadable") {
     throw new Error(
@@ -136,7 +136,7 @@ function readCurrent(record: StoredRecord, migrations: readonly RecordMigration[
   }
   const { schemaVersion: _version, ...body } = migrated.record;
   return { record, body };
-}
+};
 
 const savedAtOf = ({ body }: ReadCopy): string => (typeof body.savedAt === "string" ? body.savedAt : "");
 
@@ -152,12 +152,12 @@ const filingOf = (body: Record<string, unknown>): FoldableFiling => ({
   captureReason: typeof body.captureReason === "string" ? body.captureReason : null,
 });
 
-async function statesOf(
+const statesOf = async (
   sql: SqlClient,
   accountId: AccountId,
   overviewIds: string[],
   videoId: string,
-): Promise<Map<string, { record: StoredRecord; state: FoldableState }>> {
+): Promise<Map<string, { record: StoredRecord; state: FoldableState }>> => {
   const rows = await sql.query<RecordRow>(
     `select ${RECORD_COLUMNS} from records
      where account_id = $1 and kind = 'overviewState' and not deleted and id = any($2::text[])`,
@@ -185,11 +185,11 @@ async function statesOf(
       ];
     }),
   );
-}
+};
 
 // The latest edit among the copies dates the merged record; the fold's own clock only
 // where none of them was dated (docs/features/sync-metadata.md).
-function latestOf(updatedAts: Array<string | null>, now: () => Date): string {
+const latestOf = (updatedAts: Array<string | null>, now: () => Date): string => {
   const dated = updatedAts.filter((at): at is string => at !== null).sort();
   return dated.at(-1) ?? now().toISOString();
-}
+};

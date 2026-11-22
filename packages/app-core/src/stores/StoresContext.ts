@@ -30,10 +30,10 @@ const StoresContext = createContext<Stores | null>(null);
 
 export const StoresProvider = StoresContext.Provider;
 
-export function useStores(): Stores {
+export const useStores = (): Stores => {
   const stores = useContext(StoresContext);
   if (!stores) {
     throw new Error("useStores must be used within a StoresProvider");
   }
   return stores;
-}
+};

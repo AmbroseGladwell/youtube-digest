@@ -8,6 +8,6 @@ const ShareApiContext = createContext<ShareApi | null>(null);
 
 export const ShareApiProvider = ShareApiContext.Provider;
 
-export function useShareApi(): ShareApi | null {
+export const useShareApi = (): ShareApi | null => {
   return useContext(ShareApiContext);
-}
+};

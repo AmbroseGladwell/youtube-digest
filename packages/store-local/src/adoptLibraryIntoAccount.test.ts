@@ -9,7 +9,7 @@ const ACCOUNT = "0b6f3c1e-1a2b-4c3d-8e4f-5a6b7c8d9e0f";
 
 // What an install signed in before this card holds: an enrolled library with a write still
 // waiting to go, a cursor, a revision the server gave, and its settings.
-async function signedInBeforeAccounts(indexedDB: IDBFactory) {
+const signedInBeforeAccounts = async (indexedDB: IDBFactory) => {
   const legacy = await openLocalLibrary({ accountId: null, indexedDB });
   const overview = makeOverview();
   await legacy.overviewStore.saveOverview(overview);
@@ -19,7 +19,7 @@ async function signedInBeforeAccounts(indexedDB: IDBFactory) {
   await legacy.syncStorage.applyChanges([], 7);
   legacy.close();
   return overview;
-}
+};
 
 test("an install signed in before accounts had libraries keeps everything under that account", async () => {
   const indexedDB = new IDBFactory();

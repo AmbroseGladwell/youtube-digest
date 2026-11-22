@@ -130,7 +130,7 @@ const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "num
 const tabId = (tab: ReaderTab) => `reader-tab-${tab.toLowerCase()}`;
 const panelId = (tab: ReaderTab) => `reader-panel-${tab.toLowerCase()}`;
 
-export function ReaderPage() {
+export const ReaderPage = () => {
   const params = useParams();
   const parsedId = OverviewId.safeParse(params[RouteParams.overviewId]);
 
@@ -138,14 +138,14 @@ export function ReaderPage() {
     return <ReaderNotFound />;
   }
   return <ReaderPageForOverview overviewId={parsedId.data} />;
-}
+};
 
 const CHAT_OPEN_MS = 320;
 // How long following a citation waits for its part to appear: a tab switch, the folded steps or
 // the dubious reasons opening. Past it, the part's section, if any, is brought into view.
 const MAX_FRAMES_TO_FIND = 20;
 
-function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
+const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const overviewQuery = useOverviewWithStateQuery(overviewId);
   const libraryQuery = useOverviewsWithStateQuery();
   const setOverviewState = useSetOverviewStateMutation();
@@ -1178,9 +1178,9 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
       </div>
     </OverviewAnalyticsProvider>,
   );
-}
+};
 
-function ReaderNotFound() {
+const ReaderNotFound = () => {
   return (
     <div className={styles.state}>
       <p className={styles.error} data-testid={readerPageTestIds.notFound}>
@@ -1189,4 +1189,4 @@ function ReaderNotFound() {
       <PageLink to={Routes.home()}>← All overviews</PageLink>
     </div>
   );
-}
+};

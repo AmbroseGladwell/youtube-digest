@@ -20,7 +20,7 @@ export interface ArticleLinkStatusProps {
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
 // Designs 77am–77ar: under the field, what the link turned out to be.
-export function ArticleLinkStatus({ link, url, place, onRetry, onClear, onOpened }: ArticleLinkStatusProps) {
+export const ArticleLinkStatus = ({ link, url, place, onRetry, onClear, onOpened }: ArticleLinkStatusProps) => {
   switch (link.status) {
     case "none":
       return null;
@@ -69,4 +69,4 @@ export function ArticleLinkStatus({ link, url, place, onRetry, onClear, onOpened
       return <ArticleFailureNotice copy={copy} href={copy.href} after={copy.after} onWay={copy.way === "tryAgain" ? onRetry : onClear} />;
     }
   }
-}
+};

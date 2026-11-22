@@ -6,7 +6,7 @@ import { ApiError } from "./ApiError.js";
 
 const IF_MATCH = /^"?([1-9]\d*)"?$/;
 
-export function ifMatchOf(request: FastifyRequest): number | null {
+export const ifMatchOf = (request: FastifyRequest): number | null => {
   const header = request.headers["if-match"];
   if (header === undefined) {
     return null;
@@ -16,11 +16,11 @@ export function ifMatchOf(request: FastifyRequest): number | null {
     throw new ApiError("invalid_request", "If-Match must be one revision number");
   }
   return Number(match[1]);
-}
+};
 
 export const UpdatedAt = z.iso.datetime({ offset: true }).transform((value) => new Date(value).toISOString());
 
-export function sendWritten(reply: FastifyReply, written: WriteOutcome, status: 200 | 201 = 200) {
+export const sendWritten = (reply: FastifyReply, written: WriteOutcome, status: 200 | 201 = 200) => {
   logRecordWritten(reply.request.log, written);
   return reply.status(status).header("etag", `"${written.rev}"`).send({ id: written.id, rev: written.rev, seq: written.seq });
-}
+};

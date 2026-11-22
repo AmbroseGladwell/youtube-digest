@@ -76,7 +76,7 @@ const articleByline = (source: WebSource, saved: string, recipe: boolean): strin
     `Saved ${saved}`,
   ].join(" · ");
 
-export function ReaderMasthead({
+export const ReaderMasthead = ({
   overview,
   metaParts,
   savedChip,
@@ -100,7 +100,7 @@ export function ReaderMasthead({
   onChat = null,
   projects,
   ref,
-}: ReaderMastheadProps) {
+}: ReaderMastheadProps) => {
   const analytics = useReaderAnalytics();
   const backToLibrary = useBackTo(Routes.home());
   const homeName = useHomeName();
@@ -330,4 +330,4 @@ export function ReaderMasthead({
       </div>
     </header>
   );
-}
+};

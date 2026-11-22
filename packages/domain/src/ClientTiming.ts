@@ -59,6 +59,6 @@ const isKnownStep = (sent: z.infer<typeof SentCaptureStep>): sent is CaptureTime
 
 // A step or outcome the API doesn't have is dropped rather than logged as sent, the way
 // readClientWarning drops a code it doesn't know.
-export function readClientTiming(sent: SentClientTiming): ClientTiming {
+export const readClientTiming = (sent: SentClientTiming): ClientTiming => {
   return { ...sent, steps: sent.steps.filter(isKnownStep) };
-}
+};

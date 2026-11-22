@@ -5,7 +5,7 @@ import { checkOverview } from "./checkOverview.js";
 import type { RunRecord } from "./RunRecord.js";
 import { NOTE_CSS, escapeHtml, noteHtml } from "./noteHtml.js";
 
-function overviewCell(record: RunRecord, fetched: FetchedTranscript): string {
+const overviewCell = (record: RunRecord, fetched: FetchedTranscript): string => {
   const heading = `<h3>${escapeHtml(`${record.provider}:${record.model}`)}</h3>
 <p class="meta">${escapeHtml(record.outcome)} · ${(record.latencyMs / 1000).toFixed(1)}s · ${
     record.costDollars === null ? "unpriced" : `$${record.costDollars.toFixed(4)}`
@@ -19,9 +19,9 @@ function overviewCell(record: RunRecord, fetched: FetchedTranscript): string {
 ${failedChecks.length === 0 ? "" : `<ul class="checks">${failedChecks.map((check) => `<li>${escapeHtml(check.check)}: ${escapeHtml(check.detail ?? "")}</li>`).join("")}</ul>`}
 ${noteHtml(record.overview)}
 </section>`;
-}
+};
 
-export function sideBySideHtml(runName: string, records: readonly RunRecord[], transcripts: readonly FetchedTranscript[]): string {
+export const sideBySideHtml = (runName: string, records: readonly RunRecord[], transcripts: readonly FetchedTranscript[]): string => {
   const videos = transcripts
     .map((fetched) => {
       const id = fetched.video.id ?? fetched.video.url;
@@ -49,4 +49,4 @@ ${NOTE_CSS}
 ${videos}
 </body></html>
 `;
-}
+};

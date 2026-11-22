@@ -15,7 +15,7 @@ export const TAG_VOCABULARY_CAP = 60;
 
 export const GeneratedTags = z.array(Tag).min(3).max(MAX_TAGS);
 
-export function tagInstructions(existingTags: readonly TagCount[]): string {
+export const tagInstructions = (existingTags: readonly TagCount[]): string => {
   const vocabulary = existingTags.slice(0, TAG_VOCABULARY_CAP).map(({ tag }) => tag);
   const tagList =
     vocabulary.length === 0 ? "The reader has no tags yet." : `The reader's existing tags, most used first:\n${vocabulary.join(", ")}`;
@@ -27,7 +27,7 @@ ${tagList}
 Reuse an existing tag wherever one fits, spelled exactly as it is listed,
 even if you would have worded it differently. Add a new tag only when no
 existing one covers that subject.`;
-}
+};
 
 export const filingSection: PromptSection = {
   title: "Filing",

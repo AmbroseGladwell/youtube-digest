@@ -14,7 +14,7 @@ import { useRunArticleGeneration, useRunOverviewGeneration, useRunPodcastGenerat
 export type GenerateOverviewVariables = RunOverviewGenerationOptions &
   ({ url: string } | { readArticle: () => Promise<ArticleRead> } | { podcast: PodcastRunRequest });
 
-export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
+export const useGenerateOverviewMutation = (apiKeys: ApiKeys) => {
   const queryClient = useQueryClient();
   const player = usePlayer();
   const generate = useRunOverviewGeneration(apiKeys);
@@ -46,4 +46,4 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
       void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
     },
   });
-}
+};

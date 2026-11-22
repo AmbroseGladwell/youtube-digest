@@ -26,7 +26,7 @@ export interface TimersWillStop {
 
 // Signing out, or leaving a shared page for the app, stops the timers (OV-288 edge case 8, owner's
 // option C); this asks first (designs 288ae–288ag).
-export function useTimersWillStop(): TimersWillStop {
+export const useTimersWillStop = (): TimersWillStop => {
   const timers = useCookingTimerList();
   const [asking, setAsking] = useState<Asking | null>(null);
   const { all } = timers;
@@ -65,4 +65,4 @@ export function useTimersWillStop(): TimersWillStop {
       />
     ),
   };
-}
+};

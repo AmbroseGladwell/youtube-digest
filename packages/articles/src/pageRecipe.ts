@@ -86,7 +86,7 @@ const isHidden = ({ isAccessibleForFree: free }: JsonObject): boolean =>
 
 // One page, one recipe: a page declaring several is a round-up, and reads as an article. A page
 // declaring none is read from its markup (docs/features/recipe-notes.md).
-export function pageRecipe(document: Document): Recipe | null {
+export const pageRecipe = (document: Document): Recipe | null => {
   const declared = linkedData(document)
     .flatMap((node) => [node, ...(isObject(node.mainEntity) ? [node.mainEntity] : [])])
     .filter((node) => typesOf(node).includes("Recipe"));
@@ -104,4 +104,4 @@ export function pageRecipe(document: Document): Recipe | null {
     return null;
   }
   return first.recipe;
-}
+};

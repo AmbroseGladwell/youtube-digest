@@ -6,7 +6,7 @@ export interface EntryFlight {
   from: DOMRect;
 }
 
-export function measureEntries(sheet: HTMLElement | null, entries: readonly string[]): EntryFlight[] {
+export const measureEntries = (sheet: HTMLElement | null, entries: readonly string[]): EntryFlight[] => {
   if (sheet === null) {
     return [];
   }
@@ -14,11 +14,11 @@ export function measureEntries(sheet: HTMLElement | null, entries: readonly stri
     const chip = Array.from(sheet.querySelectorAll<HTMLElement>("[data-entry]")).find((element) => element.dataset.entry === text);
     return chip === undefined ? [] : [{ text: chip.textContent ?? text, from: chip.getBoundingClientRect() }];
   });
-}
+};
 
 // Design 141i: each new entry lifts from the closing sheet and travels to its section. A
 // copy on the document, because the sheet it left is already gone.
-export function flyEntriesInto(flights: readonly EntryFlight[], section: HTMLElement): void {
+export const flyEntriesInto = (flights: readonly EntryFlight[], section: HTMLElement): void => {
   if (prefersReducedMotion()) {
     return;
   }
@@ -41,4 +41,4 @@ export function flyEntriesInto(flights: readonly EntryFlight[], section: HTMLEle
     flight.onfinish = () => ghost.remove();
     flight.oncancel = () => ghost.remove();
   }
-}
+};

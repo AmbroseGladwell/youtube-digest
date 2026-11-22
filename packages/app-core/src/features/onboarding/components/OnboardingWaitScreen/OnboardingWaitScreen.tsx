@@ -39,7 +39,7 @@ export interface OnboardingWaitScreenProps {
 // Design 327m, live on page 7: the first paid screen. Each stage is a real event of the run (the
 // words found, writing begun, the overview in the account); only the line under the writing stage
 // is a timed script (docs/features/onboarding.md, "The wait").
-export function OnboardingWaitScreen({
+export const OnboardingWaitScreen = ({
   kind,
   found,
   run,
@@ -51,7 +51,7 @@ export function OnboardingWaitScreen({
   focus,
   onTryAgain,
   onOpen,
-}: OnboardingWaitScreenProps) {
+}: OnboardingWaitScreenProps) => {
   const analytics = useAnalytics();
   const waitKind: WaitKind = found === null ? "video" : onboardingKindOf(found);
   const copy = WAIT_COPY[waitKind];
@@ -129,4 +129,4 @@ export function OnboardingWaitScreen({
       }
     />
   );
-}
+};

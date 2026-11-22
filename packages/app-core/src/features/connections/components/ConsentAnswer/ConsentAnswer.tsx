@@ -42,7 +42,7 @@ const permissionsAsked = (writes: boolean, readsProfile: boolean): Permission[] 
 
 // What approving grants, then the answer. Both answers leave for the assistant, so the only
 // thing after a press is a pending state (design 58a, 58c).
-export function ConsentAnswer({ host, writes, readsProfile, deciding, onDecide }: ConsentAnswerProps) {
+export const ConsentAnswer = ({ host, writes, readsProfile, deciding, onDecide }: ConsentAnswerProps) => {
   const pendingLabel = deciding === "approve" ? `Sending you back to ${host}…` : "Declining…";
 
   const button = (decision: ConsentDecision, label: string, className: string, testId: string) => (
@@ -96,4 +96,4 @@ export function ConsentAnswer({ host, writes, readsProfile, deciding, onDecide }
       </div>
     </>
   );
-}
+};

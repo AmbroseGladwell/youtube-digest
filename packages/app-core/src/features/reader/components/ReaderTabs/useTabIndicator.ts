@@ -13,7 +13,7 @@ export interface TabIndicator {
 // width — docs/prototype/constraints.md's rule that nothing estimates a number it could
 // read. The layout effect puts the measurement in before the first paint, and the ref
 // callbacks are built once so React never detaches a button between renders.
-export function useTabIndicator(active: ReaderTab): TabIndicator {
+export const useTabIndicator = (active: ReaderTab): TabIndicator => {
   const buttons = useRef(new Map<ReaderTab, HTMLButtonElement>());
   const [bounds, setBounds] = useState({ offset: 0, width: 0 });
 
@@ -46,4 +46,4 @@ export function useTabIndicator(active: ReaderTab): TabIndicator {
   }, [active]);
 
   return { tabRef, offset: bounds.offset, width: bounds.width };
-}
+};

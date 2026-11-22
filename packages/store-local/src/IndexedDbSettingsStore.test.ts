@@ -13,11 +13,11 @@ defineSettingsStoreConformanceSuite("IndexedDbSettingsStore", async () => {
   return new IndexedDbSettingsStore(db);
 });
 
-async function storeHoldingSettings(stored: unknown): Promise<IndexedDbSettingsStore> {
+const storeHoldingSettings = async (stored: unknown): Promise<IndexedDbSettingsStore> => {
   const db = await openLocalDatabase({ indexedDB: new IDBFactory() });
   await promisifyRequest(db.transaction(SETTINGS_STORE, "readwrite").objectStore(SETTINGS_STORE).put(stored, SETTINGS_KEY));
   return new IndexedDbSettingsStore(db);
-}
+};
 
 test("get() fills in a field the stored settings predate, rather than handing back undefined", async () => {
   const store = await storeHoldingSettings({

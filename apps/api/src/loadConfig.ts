@@ -199,7 +199,7 @@ export interface PodcastIndexKey {
 
 export class ConfigError extends Error {}
 
-export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
+export const loadConfig = (env: Record<string, string | undefined> = process.env): Config => {
   const parsed = ConfigEnv.safeParse(env);
   if (!parsed.success) {
     throw new ConfigError(z.prettifyError(parsed.error));
@@ -278,4 +278,4 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     },
     logs,
   };
-}
+};

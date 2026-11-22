@@ -16,7 +16,7 @@ const STORAGE_KEY = "overview.nextSteps.v1";
 
 // The next steps under onboarding's overview, and which of them were dismissed: this device's
 // own, since they follow the reveal it saw (docs/features/onboarding.md, "The reveal").
-export function readNextSteps(storage: Storage = globalThis.localStorage): NextSteps | null {
+export const readNextSteps = (storage: Storage = globalThis.localStorage): NextSteps | null => {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) {
@@ -27,15 +27,15 @@ export function readNextSteps(storage: Storage = globalThis.localStorage): NextS
   } catch {
     return null;
   }
-}
+};
 
-export function writeNextSteps(nextSteps: NextSteps, storage: Storage = globalThis.localStorage): void {
+export const writeNextSteps = (nextSteps: NextSteps, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(nextSteps));
   } catch {
     return;
   }
-}
+};
 
 // The overview onboarding ended on was a sample.
 export const isRevealedSample = (overviewId: string | null): boolean => {

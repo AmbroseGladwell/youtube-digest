@@ -38,7 +38,7 @@ export interface EmailLinkFormProps {
 
 // Checked here before anything is sent (design 9i); what the server refuses is said in
 // the same place.
-export function EmailLinkForm({
+export const EmailLinkForm = ({
   intent,
   submitLabel,
   initialEmail = "",
@@ -52,7 +52,7 @@ export function EmailLinkForm({
   refused,
   onSubmit,
   onboarding = false,
-}: EmailLinkFormProps) {
+}: EmailLinkFormProps) => {
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -239,4 +239,4 @@ export function EmailLinkForm({
       )}
     </form>
   );
-}
+};

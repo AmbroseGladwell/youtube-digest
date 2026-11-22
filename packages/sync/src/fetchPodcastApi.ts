@@ -23,7 +23,7 @@ export interface PodcastApi {
   transcription: (id: string) => Promise<PodcastTranscription>;
 }
 
-export function createFetchPodcastApi(options: ApiRequesterOptions): PodcastApi {
+export const createFetchPodcastApi = (options: ApiRequesterOptions): PodcastApi => {
   const request = createApiRequester(options);
   return {
     read: (url) => answered(request("POST", "/podcasts/read", PodcastRead, { body: { url } })),
@@ -32,4 +32,4 @@ export function createFetchPodcastApi(options: ApiRequesterOptions): PodcastApi 
     transcribe: (ask) => answered(request("POST", "/podcasts/transcription", PodcastTranscription, { body: ask })),
     transcription: (id) => answered(request("GET", `/podcasts/transcription/${encodeURIComponent(id)}`, PodcastTranscription)),
   };
-}
+};

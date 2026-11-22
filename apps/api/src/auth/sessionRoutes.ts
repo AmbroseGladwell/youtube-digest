@@ -49,10 +49,10 @@ const CODE_REFUSED = "That code is wrong, has expired, or was already used";
 // account's changes. A name needs only the session; a new email needs the session to have
 // proved its inbox first, then the new inbox to prove itself (docs/features/account-changes.md).
 // Deleting the account needs the same proof (docs/features/account-deletion.md).
-export function sessionRoutes(
+export const sessionRoutes = (
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, supportEmail, sessionCookieSecure, narrationStore, personEraser }: SessionRoutesOptions,
-): void {
+): void => {
   const perAccount = (rateLimit: RateLimit) =>
     rateLimitHook(rateLimit, (request: FastifyRequest) => request.session?.accountId ?? null, clock);
 
@@ -210,17 +210,17 @@ export function sessionRoutes(
       }
     }
   });
-}
+};
 
-async function latestExpiry(
+const latestExpiry = async (
   sql: SqlClient,
   table: "session_verifications" | "email_changes",
   column: "session_id" | "account_id",
   id: string,
-): Promise<string> {
+): Promise<string> => {
   const rows = await sql.query<{ expires_at: string | Date }>(
     `select expires_at from ${table} where ${column} = $1 order by created_at desc limit 1`,
     [id],
   );
   return new Date(rows[0]!.expires_at).toISOString();
-}
+};

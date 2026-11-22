@@ -27,9 +27,9 @@ export const PlaybackProvider = PlaybackContext.Provider;
 const subscribeToNothing = () => () => {};
 const noPosition = () => null;
 
-export function useCanFollowPlayback(): boolean {
+export const useCanFollowPlayback = (): boolean => {
   return useContext(PlaybackContext) !== null;
-}
+};
 
 // Null for a shell that cannot see the player, for a player that has not reported yet,
 // and for a report about a different video than the one being read. Never a number this
@@ -37,17 +37,17 @@ export function useCanFollowPlayback(): boolean {
 // (docs/prototype/constraints.md).
 // Null unless there is a player to move and it is playing the video being read, which
 // is what keeps the control off the web app and off a note about another video.
-export function useSeekPlayback(videoId: string | null): ((positionMs: number, untilMs?: number) => void) | null {
+export const useSeekPlayback = (videoId: string | null): ((positionMs: number, untilMs?: number) => void) | null => {
   const source = useContext(PlaybackContext);
   const reporting = usePlaybackPosition(videoId) !== null;
   return source !== null && reporting ? source.seekTo : null;
-}
+};
 
-export function usePlaybackPosition(videoId: string | null): PlaybackPosition | null {
+export const usePlaybackPosition = (videoId: string | null): PlaybackPosition | null => {
   const source = useContext(PlaybackContext);
   const position = useSyncExternalStore(source?.subscribe ?? subscribeToNothing, source?.getPosition ?? noPosition);
   if (position === null || videoId === null || position.videoId !== videoId) {
     return null;
   }
   return position;
-}
+};

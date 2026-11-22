@@ -28,7 +28,7 @@ const tileName = (tile: MilestoneTile, now: Date): string => {
 };
 
 // Design 34aj and 34ak (docs/features/time-saved.md, "Settings › Milestones").
-export function MilestonesSection() {
+export const MilestonesSection = () => {
   const overviews = useOverviewsWithStateQuery();
   const { minutes } = timeSavedSummary(readableEntries(overviews.data ?? []));
   const milestones = useMilestones(minutes, overviews.isSuccess);
@@ -193,4 +193,4 @@ export function MilestonesSection() {
       </div>
     </div>
   );
-}
+};

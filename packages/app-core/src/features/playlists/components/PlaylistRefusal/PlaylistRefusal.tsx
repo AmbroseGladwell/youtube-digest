@@ -49,7 +49,7 @@ export interface PlaylistRefusalProps {
 
 // The error-state pattern (design 19, 27g): a short orange bar, a plain title, the reason,
 // then the recovery. Recovery first where it stacks.
-export function PlaylistRefusal({ reason, stacked, action, onPasteAnother }: PlaylistRefusalProps) {
+export const PlaylistRefusal = ({ reason, stacked, action, onPasteAnother }: PlaylistRefusalProps) => {
   const { title, body } = COPY[reason];
   return (
     <>
@@ -86,4 +86,4 @@ export function PlaylistRefusal({ reason, stacked, action, onPasteAnother }: Pla
       </div>
     </>
   );
-}
+};

@@ -8,6 +8,6 @@ const DefaultApiUrlContext = createContext<string | null>(null);
 
 export const DefaultApiUrlProvider = DefaultApiUrlContext.Provider;
 
-export function useDefaultApiUrl(): string | null {
+export const useDefaultApiUrl = (): string | null => {
   return useContext(DefaultApiUrlContext);
-}
+};

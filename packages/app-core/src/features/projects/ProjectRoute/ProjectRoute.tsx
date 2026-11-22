@@ -5,10 +5,10 @@ import { ErrorState } from "../../../components/shared/ErrorState/ErrorState.js"
 import { HomePage } from "../../home/HomePage/HomePage.js";
 
 // One project's page: the library with its main column given over to the project.
-export function ProjectRoute() {
+export const ProjectRoute = () => {
   const parsed = ProjectId.safeParse(useParams()[RouteParams.projectId]);
   if (!parsed.success) {
     return <ErrorState screen="notFound" title="There's nothing at this address" back />;
   }
   return <HomePage key={parsed.data} place={{ kind: "project", projectId: parsed.data }} />;
-}
+};

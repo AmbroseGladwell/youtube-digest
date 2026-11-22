@@ -11,7 +11,7 @@ const readable = (rows: ReadonlyArray<{ schema_version: number; body: Record<str
 // Apart from readLibrary, so only the calls that need conversations pay to read them. A
 // deleted conversation is never read (docs/features/mcp-connector.md, "Chats"). With overview
 // ids, only the chats those overviews own.
-export async function readChats(sql: SqlClient, accountId: AccountId, overviewIds?: readonly string[]): Promise<Chat[]> {
+export const readChats = async (sql: SqlClient, accountId: AccountId, overviewIds?: readonly string[]): Promise<Chat[]> => {
   const rows = await sql.query<{ schema_version: number; body: Record<string, unknown> }>(
     overviewIds === undefined
       ? "select schema_version, body from records where account_id = $1 and kind = 'chat' and not deleted"
@@ -19,14 +19,14 @@ export async function readChats(sql: SqlClient, accountId: AccountId, overviewId
     overviewIds === undefined ? [accountId] : [accountId, [...overviewIds]],
   );
   return readable(rows);
-}
+};
 
-export async function readChat(sql: SqlClient, accountId: AccountId, id: string): Promise<Chat | null> {
+export const readChat = async (sql: SqlClient, accountId: AccountId, id: string): Promise<Chat | null> => {
   const rows = await sql.query<{ schema_version: number; body: Record<string, unknown> }>(
     "select schema_version, body from records where account_id = $1 and kind = 'chat' and id = $2 and not deleted",
     [accountId, id],
   );
   return readable(rows)[0] ?? null;
-}
+};
 
 export const lastMessageAt = (chat: Chat): string => chat.messages.at(-1)?.at ?? chat.startedAt;

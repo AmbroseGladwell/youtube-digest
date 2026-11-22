@@ -60,7 +60,7 @@ const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): Pod
 // the episode's own audio, transcribed for them alone. The episode is read again from its feed,
 // so the audio sent to the GPU host is the feed's own, never one a caller names
 // (docs/features/speech-to-text.md, "The server rung").
-export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock }: PodcastTranscriptionsOptions) {
+export const createPodcastTranscriptions = ({ fetchPublicWeb, jobs, queue, clock }: PodcastTranscriptionsOptions) => {
   const usage = async (now: Date, caller: ServiceCaller): Promise<TranscriptionUsage> => ({
     ...(await jobs.usage(now, callerKey(caller))),
     limitSeconds: limitSecondsOf(caller),
@@ -141,4 +141,4 @@ export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock
   };
 
   return { start, status, offer, usage };
-}
+};

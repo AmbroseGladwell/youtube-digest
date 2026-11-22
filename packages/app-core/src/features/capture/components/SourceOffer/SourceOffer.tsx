@@ -18,7 +18,7 @@ export interface SourceOfferProps {
 // as one screen with a changing subject rather than several screens. Before Create that is
 // only what the tab says: we promise not to read a page until then, and a video's length
 // is not drawn here either.
-export function SourceOffer({ source, title, words = null, recipe = null, video = false }: SourceOfferProps) {
+export const SourceOffer = ({ source, title, words = null, recipe = null, video = false }: SourceOfferProps) => {
   const facts = video
     ? null
     : recipe !== null
@@ -42,4 +42,4 @@ export function SourceOffer({ source, title, words = null, recipe = null, video 
       )}
     </div>
   );
-}
+};

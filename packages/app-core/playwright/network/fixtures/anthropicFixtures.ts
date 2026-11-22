@@ -2,7 +2,7 @@
 // @overview/generation, matching every optional section since DEFAULT_SECTIONS_ENABLED
 // turns them all on. Not imported as a type here to keep this file dependency-free of
 // generation's internals; it's a plain fixture object the network layer serializes.
-export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = {}) {
+export const makeGeneratedOutputFixture = (overrides: Record<string, unknown> = {}) => {
   return {
     inOneLine: "A simulated creator explains one claim and one technique.",
     bigPicture: "",
@@ -39,16 +39,16 @@ export function makeGeneratedOutputFixture(overrides: Record<string, unknown> = 
     },
     ...overrides,
   };
-}
+};
 
 // What a provider sends back when asked what the reader's key can reach. Anthropic's
 // shape, which OpenAI, DeepSeek, xAI and Mistral share; Gemini's differs and has its own
 // scenario rather than its own fixture.
-export function makeModelListResponse(ids: string[] = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"]) {
+export const makeModelListResponse = (ids: string[] = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"]) => {
   return { data: ids.map((id) => ({ id, type: "model", display_name: id })) };
-}
+};
 
-export function makeAnthropicMessageResponse(generatedOutput: Record<string, unknown>) {
+export const makeAnthropicMessageResponse = (generatedOutput: Record<string, unknown>) => {
   return {
     id: "msg_iwft_fixture",
     type: "message",
@@ -59,4 +59,4 @@ export function makeAnthropicMessageResponse(generatedOutput: Record<string, unk
     stop_sequence: null,
     usage: { input_tokens: 100, output_tokens: 100 },
   };
-}
+};

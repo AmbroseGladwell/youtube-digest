@@ -5,7 +5,7 @@ const NOTHING_USED = "No overview was used.";
 
 // Designs 106d–106f: one message for each of our server's reasons, in the reader's terms, each
 // saying nothing was used, which holds because nothing is reserved until the words are found.
-export function podcastLinkFailureCopy(reason: PodcastReadFailure, showName: string | null): ArticleFailureCopy {
+export const podcastLinkFailureCopy = (reason: PodcastReadFailure, showName: string | null): ArticleFailureCopy => {
   const show = showName ?? "This show";
   switch (reason) {
     case "not-an-episode":
@@ -51,4 +51,4 @@ export function podcastLinkFailureCopy(reason: PodcastReadFailure, showName: str
         wayLabel: "Try again",
       };
   }
-}
+};

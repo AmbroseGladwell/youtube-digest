@@ -96,7 +96,7 @@ test("cost on a project that is not an environment, or on no project, is unattri
   assert.equal(find(rows, "2026-11-09", "unattributed", "generation").dollars, 0.5);
 });
 
-function fakeOpenAi({ status = 200 } = {}) {
+const fakeOpenAi = ({ status = 200 } = {}) => {
   const urls = [];
   const fetch = async (url, init) => {
     urls.push({ url: new URL(url), authorization: init.headers.Authorization });
@@ -130,7 +130,7 @@ function fakeOpenAi({ status = 200 } = {}) {
         };
   };
   return { fetch, urls };
-}
+};
 
 test("every page of projects and costs is read, for whole UTC days, grouped by project and line item", async () => {
   const openAi = fakeOpenAi();

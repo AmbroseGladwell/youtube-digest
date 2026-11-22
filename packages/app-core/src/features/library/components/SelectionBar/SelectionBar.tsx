@@ -34,7 +34,7 @@ interface Action {
 const icon = (name: StrokeIconName) => <StrokeIcon name={name} size={16} />;
 
 // Five actions, the orange one first, Delete last in warning ink ("OV-168 5" 168az, 168bb).
-export function SelectionBar({
+export const SelectionBar = ({
   count,
   iconsOnly,
   allRead,
@@ -46,7 +46,7 @@ export function SelectionBar({
   onToggleFavourite,
   onRemoveFromProject,
   onDelete,
-}: SelectionBarProps) {
+}: SelectionBarProps) => {
   const actions: Action[] = [
     {
       label: "Add to project…",
@@ -121,4 +121,4 @@ export function SelectionBar({
       </div>
     </div>
   );
-}
+};

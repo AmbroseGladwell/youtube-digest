@@ -31,7 +31,12 @@ export interface ChatTurnResult {
   latencyMs: number;
 }
 
-export async function chatTurn(apiKey: string, model: string, messages: readonly ChatMessage[], cacheKey: string): Promise<ChatTurnResult> {
+export const chatTurn = async (
+  apiKey: string,
+  model: string,
+  messages: readonly ChatMessage[],
+  cacheKey: string,
+): Promise<ChatTurnResult> => {
   const started = performance.now();
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -59,4 +64,4 @@ export async function chatTurn(apiKey: string, model: string, messages: readonly
     throw new Error("the reply had no token usage");
   }
   return { reply: ChatReply.parse(JSON.parse(raw)), raw, usage, latencyMs };
-}
+};

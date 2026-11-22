@@ -31,7 +31,7 @@ const firstThree = (made: readonly (string | null)[], fallbacks: readonly string
 
 // OV-354, page 3: three starter questions under the Ask page's field, made by code from templates
 // and the reader's own library (its projects, topics and what's unread), never by a model.
-export function askStarters(library: AskStarterLibrary, project: Project | null): string[] {
+export const askStarters = (library: AskStarterLibrary, project: Project | null): string[] => {
   if (project !== null) {
     const held = membersOf(project, library.members);
     const unread = library.overviews.filter((entry) => held.has(entry.overview.id) && !entry.read).length;
@@ -69,4 +69,4 @@ export function askStarters(library: AskStarterLibrary, project: Project | null)
     ],
     LIBRARY_FALLBACKS,
   );
-}
+};

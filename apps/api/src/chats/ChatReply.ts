@@ -80,7 +80,7 @@ export interface CitedIds {
 // The ids a reply cites, by kind, as code turns them into places: transcript passages (p12, and
 // another overview's minutes, S2.p14), other chats' messages (c1.m3), and everything else an item of
 // an overview (step2, S2.kp1, O3).
-export function citedIds(ids: readonly string[], inSource: boolean): CitedIds {
+export const citedIds = (ids: readonly string[], inSource: boolean): CitedIds => {
   const unique = [...new Set(ids)];
   return {
     passages: unique.filter((id) => /^(S\d+\.)?p\d+$/.test(id)),
@@ -88,7 +88,7 @@ export function citedIds(ids: readonly string[], inSource: boolean): CitedIds {
     overviewParts: unique.filter((id) => !/^(S\d+\.)?p\d+$/.test(id) && !/^c\d+\.m\d+$/.test(id)),
     inSource,
   };
-}
+};
 
 export const allIds = (reply: ChatReply): string[] => [
   ...reply.introSources.map((source) => source.id),

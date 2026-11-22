@@ -34,7 +34,7 @@ export interface OnboardingWaitProps {
 
 // The logo mark as each stage's loader (design 327r): OverviewMark's ring and underline, the ring
 // an arc that turns while the stage runs, then closed, filled and ticked.
-function StageMark({ state }: { state: WaitStageState }) {
+const StageMark = ({ state }: { state: WaitStageState }) => {
   return (
     <svg
       className={styles.mark}
@@ -53,11 +53,11 @@ function StageMark({ state }: { state: WaitStageState }) {
       <path className={styles.tick} d="M11.75 14.9l2.8 2.8 5.65-6.1" strokeWidth="2.5" pathLength={1} />
     </svg>
   );
-}
+};
 
 const STATE_SAID: Record<WaitStageState, string> = { waiting: ", waiting", running: ", in progress", done: "" };
 
-function announcementOf(phase: WaitPhase, heading: string, stages: readonly WaitStage[]): string {
+const announcementOf = (phase: WaitPhase, heading: string, stages: readonly WaitStage[]): string => {
   if (phase === "ready") {
     return heading;
   }
@@ -67,9 +67,9 @@ function announcementOf(phase: WaitPhase, heading: string, stages: readonly Wait
   const lastDone = [...stages].reverse().find((stage) => stage.state === "done");
   const running = stages.find((stage) => stage.state === "running");
   return [lastDone?.doneLine, running?.name].filter((part) => part != null).join(". ");
-}
+};
 
-export function OnboardingWait({
+export const OnboardingWait = ({
   heading,
   cardLabel,
   card,
@@ -84,7 +84,7 @@ export function OnboardingWait({
   openLabel,
   onOpen,
   setups,
-}: OnboardingWaitProps) {
+}: OnboardingWaitProps) => {
   const now = useNow(1000);
   const [startedAt] = useState(() => startedAtGiven ?? Date.now());
   const writingAt = stages.length - 1;
@@ -217,4 +217,4 @@ export function OnboardingWait({
       </p>
     </div>
   );
-}
+};

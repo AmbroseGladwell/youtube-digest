@@ -8,7 +8,7 @@ const SEMVER = /^\d+\.\d+\.\d+$/;
 
 // What every event and error in a batch has in common (docs/architecture/analytics.md,
 // "What an event may carry").
-export function useAnalyticsContext(): AnalyticsContext {
+export const useAnalyticsContext = (): AnalyticsContext => {
   const surface = useSurface();
   const layout = useLayout();
   const build = useAppBuild();
@@ -21,4 +21,4 @@ export function useAnalyticsContext(): AnalyticsContext {
     }),
     [surface, layout, build],
   );
-}
+};

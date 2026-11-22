@@ -21,10 +21,10 @@ export type KeyPrompt =
   | { kind: "no-key"; heading: string; detail: string }
   | { kind: "wrong-device"; heading: string; detail: string; provider: Provider; fallback: Provider; footnote: string };
 
-export function keyPrompt(
+export const keyPrompt = (
   readiness: GenerationReadiness,
   { surface, isPhone, detail }: { surface: Surface; isPhone: boolean; detail: string },
-): KeyPrompt | null {
+): KeyPrompt | null => {
   if (readiness.hasChosenKey) {
     return null;
   }
@@ -47,7 +47,7 @@ export function keyPrompt(
     fallback: readiness.fallback,
     footnote: `Using ${fallbackName} changes the choice on every device.`,
   };
-}
+};
 
 export const sentenceCase = (words: string): string => `${words.charAt(0).toUpperCase()}${words.slice(1)}`;
 

@@ -10,14 +10,14 @@ if (!url) {
   process.exit(1);
 }
 
-function videoIdOf(videoUrl: string): string {
+const videoIdOf = (videoUrl: string): string => {
   const parsed = new URL(videoUrl);
   const id = parsed.hostname === "youtu.be" ? parsed.pathname.slice(1) : parsed.searchParams.get("v");
   if (!id) {
     throw new Error(`no video id in ${videoUrl}`);
   }
   return id;
-}
+};
 
 const nodeFetch: YouTubeFetch = async (request) => {
   const response = await fetch(request.url, {

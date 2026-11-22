@@ -28,7 +28,7 @@ const storageKey = (accountId: string | null) => `overview.libraryView.${account
 
 // The list's filters and order as this account last left them on this device. Never synced:
 // each origin keeps its own (docs/features/library-view.md). The search is not kept.
-export function readLibraryView(accountId: string | null, storage: Storage = globalThis.localStorage): RestoredLibraryView | null {
+export const readLibraryView = (accountId: string | null, storage: Storage = globalThis.localStorage): RestoredLibraryView | null => {
   let saved: Record<string, unknown>;
   try {
     const raw = storage.getItem(storageKey(accountId));
@@ -68,13 +68,13 @@ export function readLibraryView(accountId: string | null, storage: Storage = glo
     sort: field("sort", DEFAULT_LIBRARY_SORT),
   };
   return { view, dropped };
-}
+};
 
-export function writeLibraryView(
+export const writeLibraryView = (
   accountId: string | null,
   { filters, sort }: LibraryView,
   storage: Storage = globalThis.localStorage,
-): void {
+): void => {
   try {
     storage.setItem(
       storageKey(accountId),
@@ -92,12 +92,12 @@ export function writeLibraryView(
   } catch {
     return;
   }
-}
+};
 
-export function forgetLibraryView(accountId: string, storage: Storage = globalThis.localStorage): void {
+export const forgetLibraryView = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.removeItem(storageKey(accountId));
   } catch {
     return;
   }
-}
+};

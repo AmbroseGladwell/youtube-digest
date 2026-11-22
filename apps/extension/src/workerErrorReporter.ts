@@ -21,14 +21,14 @@ const SEMVER = /^\d+\.\d+\.\d+$/;
 // The worker can be stopped between any two messages, so each error is sent the moment it
 // is caught, on its own and with keepalive, rather than held for a batch
 // (docs/architecture/errors-and-logs.md, "The service worker").
-export function createWorkerErrorReporter({
+export const createWorkerErrorReporter = ({
   readDestination,
   defaultApiUrl,
   appVersion,
   createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token, surface: "extension" }),
   now = () => new Date(),
   maxPerMinute = 10,
-}: WorkerErrorReporterOptions): WorkerErrorReporter {
+}: WorkerErrorReporterOptions): WorkerErrorReporter => {
   const context: AnalyticsContext = {
     surface: "extension",
     layout: "worker",
@@ -63,4 +63,4 @@ export function createWorkerErrorReporter({
       }
     },
   };
-}
+};

@@ -23,7 +23,7 @@ export interface KeyPromptNoteProps {
 
 // The one block every surface outside Settings shows in place of its generate button. A
 // button that cannot work is replaced, never disabled (design 110k).
-export function KeyPromptNote({ readiness, detail, from, testIds, onFollowed }: KeyPromptNoteProps) {
+export const KeyPromptNote = ({ readiness, detail, from, testIds, onFollowed }: KeyPromptNoteProps) => {
   const analytics = useAnalytics();
   const updateSettings = useUpdateSettingsMutation();
   const prompt = keyPrompt(readiness, { surface: useSurface(), isPhone: useIsPhone(), detail });
@@ -77,4 +77,4 @@ export function KeyPromptNote({ readiness, detail, from, testIds, onFollowed }: 
       )}
     </div>
   );
-}
+};

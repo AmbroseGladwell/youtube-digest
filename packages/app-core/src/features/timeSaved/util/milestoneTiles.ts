@@ -6,7 +6,7 @@ export type MilestoneTile =
   | { milestone: Milestone; state: "ahead"; toGo: number };
 
 // Design 34aj (docs/features/time-saved.md, "Settings › Milestones").
-export function milestoneTiles(marks: MilestoneMarks, minutes: number): MilestoneTile[] {
+export const milestoneTiles = (marks: MilestoneMarks, minutes: number): MilestoneTile[] => {
   const next = MILESTONES.find((milestone) => milestone.minutes > minutes);
   return MILESTONES.map((milestone, index) => {
     if (milestone.minutes <= minutes) {
@@ -17,7 +17,7 @@ export function milestoneTiles(marks: MilestoneMarks, minutes: number): Mileston
       ? { milestone, state: "next", toGo, from: MILESTONES[index - 1]?.minutes ?? 0 }
       : { milestone, state: "ahead", toGo };
   });
-}
+};
 
 export const reachedCount = (minutes: number): number => MILESTONES.filter((milestone) => milestone.minutes <= minutes).length;
 
@@ -30,8 +30,8 @@ export const spokenTimeToGo = (minutes: number): string => `${spokenTimeSaved(mi
 const MONTH = new Intl.DateTimeFormat("en-US", { month: "short" });
 
 // "2 Aug", with the year once it is not this one.
-export function formatReachedOn(iso: string, now: Date): string {
+export const formatReachedOn = (iso: string, now: Date): string => {
   const date = new Date(iso);
   const dayMonth = `${date.getDate()} ${MONTH.format(date)}`;
   return date.getFullYear() === now.getFullYear() ? dayMonth : `${dayMonth} ${date.getFullYear()}`;
-}
+};

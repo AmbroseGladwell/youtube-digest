@@ -17,9 +17,9 @@ export const transcriptSourceNote = (readiness: GenerationReadiness): string | n
 // The line under "Add an API key to write overviews." It names the six providers, and
 // says the other missing thing too when both are missing, rather than sending the reader
 // to Settings to discover the second one (design 110k).
-export function keyPromptDetail(readiness: GenerationReadiness): string {
+export const keyPromptDetail = (readiness: GenerationReadiness): string => {
   return readiness.needsTranscriptSource ? `${PROVIDER_CHOICE_LINE} ${NO_TRANSCRIPT_SOURCE}` : PROVIDER_CHOICE_LINE;
-}
+};
 
 // The link's own words, so a reader knows where it goes before pressing it.
 export const settingsLinkLabel = (readiness: GenerationReadiness): string =>

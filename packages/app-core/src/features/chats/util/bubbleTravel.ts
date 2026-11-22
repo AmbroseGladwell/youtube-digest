@@ -11,7 +11,7 @@ const arriving = () => document.querySelector<HTMLElement>(`[${ARRIVING_ATTRIBUT
 // travels into the chat as its question, narrowing to fit and following the chat every frame
 // while it slides in. The question it lands as stays hidden until it arrives. Nothing travels
 // with reduced motion.
-export function bubbleTravel(from: HTMLElement, text: string): void {
+export const bubbleTravel = (from: HTMLElement, text: string): void => {
   if (prefersReducedMotion() || typeof requestAnimationFrame === "undefined") {
     return;
   }
@@ -62,4 +62,4 @@ export function bubbleTravel(from: HTMLElement, text: string): void {
     hidden?.style.removeProperty("visibility");
   };
   requestAnimationFrame(frame);
-}
+};

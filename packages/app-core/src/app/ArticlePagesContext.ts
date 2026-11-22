@@ -29,14 +29,14 @@ const ArticlePagesContext = createContext<ArticlePages | null>(null);
 
 export const ArticlePagesProvider = ArticlePagesContext.Provider;
 
-export function useArticlePages(): ArticlePages | null {
+export const useArticlePages = (): ArticlePages | null => {
   return useContext(ArticlePagesContext);
-}
+};
 
 const subscribeToNothing = () => () => {};
 const noPage = () => null;
 
-export function useActivePage(): ActivePage | null {
+export const useActivePage = (): ActivePage | null => {
   const pages = useArticlePages();
   return useSyncExternalStore(pages?.subscribe ?? subscribeToNothing, pages?.getPage ?? noPage);
-}
+};

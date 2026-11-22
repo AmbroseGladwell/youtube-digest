@@ -45,14 +45,14 @@ const NO_VOICE: RecipeListVoice = {
 // Listen plays straight through; a list's Read aloud plays its own stretch of the same audio
 // and stops at the end of it, and each list tints the line being read. Tapping an ingredient
 // or a step moves the voice there, as tapping a line of the note does (OV-149).
-export function useRecipeVoice(
+export const useRecipeVoice = (
   track: PlayerTrack | null,
   lines: readonly NoteLine[],
   actions: readonly RecipeAction[],
   stepCount: number,
   notePlayer: NotePlayer,
   analytics: OverviewPageAnalytics,
-): RecipeVoice | null {
+): RecipeVoice | null => {
   const engine = usePlayer();
   const [stopAfter, setStop] = useState<number | null>(null);
   const { activeIndex, playing } = notePlayer;
@@ -144,4 +144,4 @@ export function useRecipeVoice(
       setStopAfter(null);
     },
   };
-}
+};

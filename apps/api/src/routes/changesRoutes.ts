@@ -21,7 +21,7 @@ const change = (record: StoredRecord) => ({
   ...(record.body === null ? {} : { body: record.body }),
 });
 
-export function changesRoutes(app: FastifyInstance, records: RecordsRepository): void {
+export const changesRoutes = (app: FastifyInstance, records: RecordsRepository): void => {
   app.get("/changes", async (request) => {
     const { since, limit } = parseOrThrow(ChangesQuery, request.query, "The changes query");
     const { schemaVersions } = request.client!;
@@ -30,4 +30,4 @@ export function changesRoutes(app: FastifyInstance, records: RecordsRepository):
     request.log.info(apiLogLines.sync.changesServed({ since, next: page.next, count: page.changes.length, more: page.more }));
     return { changes: page.changes.map(change), next: page.next, more: page.more };
   });
-}
+};

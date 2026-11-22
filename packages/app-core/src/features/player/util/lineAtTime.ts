@@ -1,6 +1,6 @@
 // The spoken line at a moment is the last one to have started by then. Before the first
 // start, and for a note with no lines, it is the first.
-export function lineAtTime(lineStarts: readonly number[], seconds: number): number {
+export const lineAtTime = (lineStarts: readonly number[], seconds: number): number => {
   let low = 0;
   let high = lineStarts.length - 1;
   let found = 0;
@@ -14,9 +14,9 @@ export function lineAtTime(lineStarts: readonly number[], seconds: number): numb
     }
   }
   return found;
-}
+};
 
-export function nearestLineStart(lineStarts: readonly number[], seconds: number): number {
+export const nearestLineStart = (lineStarts: readonly number[], seconds: number): number => {
   let nearest = 0;
   lineStarts.forEach((start, index) => {
     if (Math.abs(start - seconds) < Math.abs(lineStarts[nearest]! - seconds)) {
@@ -24,4 +24,4 @@ export function nearestLineStart(lineStarts: readonly number[], seconds: number)
     }
   });
   return nearest;
-}
+};

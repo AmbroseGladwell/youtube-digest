@@ -12,7 +12,7 @@ export interface PlaylistPreview {
 
 // What following a playlist with its backfill would do, counted from the lookup itself
 // (docs/features/playlists.md, "The preview").
-export function playlistPreview(lookup: PlaylistLookup, held: ReadonlySet<string>, order: PlaylistOrder): PlaylistPreview {
+export const playlistPreview = (lookup: PlaylistLookup, held: ReadonlySet<string>, order: PlaylistOrder): PlaylistPreview => {
   const entries = placedEntries(lookup.entries);
   const inLibrary = entries.filter((entry) => held.has(entry.videoId)).length;
   const fresh = entries.filter((entry) => !held.has(entry.videoId));
@@ -27,4 +27,4 @@ export function playlistPreview(lookup: PlaylistLookup, held: ReadonlySet<string
     toMake,
     tokens: tokenEstimate(toMake.length),
   };
-}
+};

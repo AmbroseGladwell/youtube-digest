@@ -44,7 +44,7 @@ export const askScopeOf = (owner: AskOwner): "library" | "project" => owner.kind
 // Asks over the whole library or one project and follows its answer: the choosing, what it chose,
 // the intro as it streams and each section once whole. The stored answer goes into the Ask page's
 // list at once, and sync brings the record down behind it (docs/features/chats.md, "The Ask page").
-export function useAskOver(owner: AskOwner, api?: ChatApi) {
+export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { syncNow } = useSync();
@@ -150,4 +150,4 @@ export function useAskOver(owner: AskOwner, api?: ChatApi) {
   const dismiss = useCallback(() => setState(IDLE), []);
 
   return { state, ask, stop, dismiss };
-}
+};

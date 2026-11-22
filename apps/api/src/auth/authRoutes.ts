@@ -56,10 +56,10 @@ const codeEmailOf = (request: FastifyRequest): string | null => {
 // Every answer here is the same whether or not the address has an account, and an account
 // is only ever made by a consumed create-account link. Only the mail differs
 // (docs/features/sign-in.md, "Which mail an address gets").
-export function authRoutes(
+export const authRoutes = (
   app: FastifyInstance,
   { sql, clock, mailer, appUrl, sessionTtlDays, sessionCookieSecure, eventSink }: AuthRoutesOptions,
-): void {
+): void => {
   const perAddress = (rateLimit: RateLimit) => rateLimitHook(rateLimit, (request) => request.clientAddress, clock);
   const magicLinkLimits = [perAddress(rateLimits.magicLinkPerAddress), rateLimitHook(rateLimits.magicLinkPerEmail, emailOf, clock)];
 
@@ -211,4 +211,4 @@ export function authRoutes(
     const reverted: EmailChangeReverted = { email: result.email };
     return reverted;
   });
-}
+};

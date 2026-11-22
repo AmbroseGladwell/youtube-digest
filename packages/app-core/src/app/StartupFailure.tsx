@@ -8,7 +8,7 @@ export interface StartupFailureProps {
 // stores to give the app. Two cases, because the reader can act on one of them: a blocked
 // open is another window holding an older version, which closing that window fixes, and
 // everything else is a storage failure they can only retry (docs/features/error-state.md).
-export function StartupFailure({ blocked }: StartupFailureProps) {
+export const StartupFailure = ({ blocked }: StartupFailureProps) => {
   return blocked ? (
     <ErrorState
       screen="libraryLocked"
@@ -24,4 +24,4 @@ export function StartupFailure({ blocked }: StartupFailureProps) {
       action={{ label: "Reload", onSelect: () => globalThis.location.reload() }}
     />
   );
-}
+};

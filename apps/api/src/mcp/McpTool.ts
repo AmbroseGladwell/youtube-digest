@@ -49,7 +49,7 @@ export const toolError = (text: string): McpToolOutcome => ({ text, isError: tru
 
 // Arguments that do not fit are answered as a failed call rather than a protocol error, so
 // the assistant reads why and can try again (MCP 2025-11-25, "Error Handling").
-export function mcpTool<Input extends z.ZodObject>(tool: {
+export const mcpTool = <Input extends z.ZodObject>(tool: {
   name: string;
   title: string;
   description: string;
@@ -59,7 +59,7 @@ export function mcpTool<Input extends z.ZodObject>(tool: {
   idempotent?: boolean;
   readsProfile?: boolean;
   run(input: z.infer<Input>, context: McpToolContext): Promise<McpToolOutcome>;
-}): McpTool {
+}): McpTool => {
   return {
     name: tool.name,
     title: tool.title,
@@ -76,4 +76,4 @@ export function mcpTool<Input extends z.ZodObject>(tool: {
       return tool.run(parsed.data, context);
     },
   };
-}
+};

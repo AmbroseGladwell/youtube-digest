@@ -6,7 +6,7 @@ import { useSettingsQuery } from "../settings/queries/settingsQuery.js";
 // Design 46m: shown once the library holds an overview, until × hides it or the first time
 // milestone takes its place. Hidden on the account, so it holds on every device, and with
 // the rest when milestone cards are switched off (docs/features/time-saved.md).
-export function useFirstOverviewMilestone(overviews: number): { shown: boolean; dismiss: () => void } {
+export const useFirstOverviewMilestone = (overviews: number): { shown: boolean; dismiss: () => void } => {
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
   const analytics = useAnalytics();
@@ -26,4 +26,4 @@ export function useFirstOverviewMilestone(overviews: number): { shown: boolean; 
       analytics.timeSaved.firstOverview.dismissed();
     },
   };
-}
+};

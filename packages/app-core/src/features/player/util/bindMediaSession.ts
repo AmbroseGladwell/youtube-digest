@@ -7,7 +7,7 @@ const POSITION_REPORT_MS = 5000;
 // The lock screen, Now Playing and headphone buttons, which are designed through this
 // rather than drawn (docs/features/audio-player.md). Seek ±15 s and no track buttons: iOS
 // shows skip buttons only when there is no previous or next track to offer instead.
-export function bindMediaSession(engine: PlayerEngine): () => void {
+export const bindMediaSession = (engine: PlayerEngine): (() => void) => {
   const session = typeof navigator === "undefined" ? undefined : navigator.mediaSession;
   if (session === undefined || typeof MediaMetadata === "undefined") {
     return () => undefined;
@@ -116,4 +116,4 @@ export function bindMediaSession(engine: PlayerEngine): () => void {
       }
     }
   };
-}
+};

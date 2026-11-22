@@ -36,7 +36,7 @@ const theOnlyValue = <T>(values: T[]): T | null => {
 
 // The times and yield a source labels as text, a recipe page's or a video's description, read in
 // code and never worked out (docs/features/recipe-notes.md, "Read from the page itself").
-export function recipeFactsInLines(lines: readonly string[]): Facts {
+export const recipeFactsInLines = (lines: readonly string[]): Facts => {
   const times: Record<Time, number[]> = { prepMinutes: [], cookMinutes: [], totalMinutes: [] };
   const yields: string[] = [];
   lines.forEach((line, index) => {
@@ -61,4 +61,4 @@ export function recipeFactsInLines(lines: readonly string[]): Facts {
     totalMinutes: theOnlyValue(times.totalMinutes),
     yield: theOnlyValue(yields),
   };
-}
+};

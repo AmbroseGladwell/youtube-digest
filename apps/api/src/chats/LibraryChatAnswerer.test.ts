@@ -38,7 +38,7 @@ interface Setup {
   ): Promise<ChatStreamEvent[]>;
 }
 
-async function setUp(t: TestContext, answers: FakeChatAnswer[], { wholeCharacters }: { wholeCharacters?: number } = {}): Promise<Setup> {
+const setUp = async (t: TestContext, answers: FakeChatAnswer[], { wholeCharacters }: { wholeCharacters?: number } = {}): Promise<Setup> => {
   const openAi = makeFakeChatOpenAi(...answers);
   const testApp = await createTestApp(
     {},
@@ -85,21 +85,21 @@ async function setUp(t: TestContext, answers: FakeChatAnswer[], { wholeCharacter
       return events;
     },
   };
-}
+};
 
 const titled = (title: string, savedAt: string, points = ["Start with one habit", "Charge from day one", "Keep it small"]): Overview => {
   const overview = noteAbout(`${title} claim`, points, { savedAt });
   return { ...overview, source: { ...overview.source, title } };
 };
 
-async function saved(setup: Setup, ...overviews: Overview[]) {
+const saved = async (setup: Setup, ...overviews: Overview[]) => {
   for (const overview of overviews) {
     const response = await setup.account.inject({ method: "POST", url: "/api/overviews", body: overview });
     assert.equal(response.statusCode, 201, response.body);
   }
-}
+};
 
-async function projectOf(setup: Setup, overviews: Overview[], removed: Overview[] = []) {
+const projectOf = async (setup: Setup, overviews: Overview[], removed: Overview[] = []) => {
   const project = {
     ...makeProject({ name: "Indie apps" }),
     purpose: "Apps I can run alone",
@@ -116,7 +116,7 @@ async function projectOf(setup: Setup, overviews: Overview[], removed: Overview[
     await setup.account.inject({ method: "PUT", url, body: { updatedAt: UPDATED_AT, removedAt: "2026-11-02T09:00:00.000Z" } });
   }
   return project;
-}
+};
 
 const sectioned = (sections: Array<{ heading: string; points: Array<{ text: string; sources: string[] }> }>) => ({
   reply: {

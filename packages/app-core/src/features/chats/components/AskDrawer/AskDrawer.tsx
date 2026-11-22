@@ -32,7 +32,7 @@ export interface AskDrawerProps {
 // scope: "Your library", the project's name or the overview's title. Each has a ⋯ whose only
 // item is Delete conversation; there's no Rename, because the title is the first question. On the
 // web a raised column down the left of the page; on a phone a bottom sheet.
-export function AskDrawer({
+export const AskDrawer = ({
   motion,
   chats,
   openChatId,
@@ -45,7 +45,7 @@ export function AskDrawer({
   onOpen,
   onDelete,
   onClose,
-}: AskDrawerProps) {
+}: AskDrawerProps) => {
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -184,4 +184,4 @@ export function AskDrawer({
       </div>
     </>
   );
-}
+};

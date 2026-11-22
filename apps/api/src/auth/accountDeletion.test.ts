@@ -40,7 +40,7 @@ const staleSession = async (testApp: TestApp, email: string): Promise<TestSessio
 
 // Every kind of row an account can own, written straight into the tables so the sweep
 // below has something to find in each of them.
-async function seedEverything(testApp: TestApp, session: TestSession, email: string, narrationKey: string): Promise<void> {
+const seedEverything = async (testApp: TestApp, session: TestSession, email: string, narrationKey: string): Promise<void> => {
   const { sql, clock } = testApp;
   const now = clock.now.toISOString();
   const { accountId } = session;
@@ -142,11 +142,11 @@ async function seedEverything(testApp: TestApp, session: TestSession, email: str
     hex64(`verify-${email}`),
     now,
   ]);
-}
+};
 
 // Every column that names an account, read from the schema rather than from a list that
 // could go stale; the two rows that are meant to outlive the account are the exceptions.
-async function rowsNamingAccount(testApp: TestApp, accountId: string): Promise<Record<string, number>> {
+const rowsNamingAccount = async (testApp: TestApp, accountId: string): Promise<Record<string, number>> => {
   const columns = await testApp.sql.query<{ table_name: string; column_name: string }>(
     `select table_name, column_name from information_schema.columns
      where table_schema = 'public' and column_name in ('account_id', 'requested_by') order by table_name`,
@@ -160,7 +160,7 @@ async function rowsNamingAccount(testApp: TestApp, accountId: string): Promise<R
     counts[table_name] = Number(row!.count);
   }
   return counts;
-}
+};
 
 test("deleting needs the session to have proved its inbox, with a code that says what it is for", async () => {
   const testApp = await createTestApp();

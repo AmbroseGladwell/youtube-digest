@@ -230,7 +230,7 @@ const isCommand = (words: readonly Word[], at: number): boolean => {
 // ("…and rest it for 5 minutes"), else the nearest in any form ("until cooked, about 15
 // minutes"), from a short list held here (design 284g). A list misses some; the timer is then
 // named by its step instead.
-export function timerName(before: string): string | null {
+export const timerName = (before: string): string | null => {
   const words = wordsBefore(before.replace(SENTENCE_START, ""));
   for (let at = words.length - 1; at >= 0; at -= 1) {
     if (isCommand(words, at)) {
@@ -244,13 +244,13 @@ export function timerName(before: string): string | null {
     }
   }
   return null;
-}
+};
 
 // The times an action gives, each as its span in the text and its length in seconds, and a
 // range as both its ends (owner, 12 Nov 2026). Code reads them, never a model
 // (docs/prototype/constraints.md). A time that isn't a wait ("within 30 minutes", "every 5
 // minutes") and anything over a day are left alone.
-export function methodTimes(text: string): MethodTime[] {
+export const methodTimes = (text: string): MethodTime[] => {
   const times: MethodTime[] = [];
   let from = 0;
   for (const match of text.matchAll(SPAN)) {
@@ -274,4 +274,4 @@ export function methodTimes(text: string): MethodTime[] {
     times.push({ start: found.start, end: found.end, seconds: found.seconds, name: timerName(text.slice(0, found.start)) });
   }
   return times;
-}
+};

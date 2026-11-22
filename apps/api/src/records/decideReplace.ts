@@ -19,13 +19,13 @@ export interface ReplaceRequest {
 // account holds one overview per video: a second is refused naming the first, and a
 // regeneration under the same id is a replace and unaffected
 // (docs/features/one-overview-per-video.md).
-export function decideReplace(
+export const decideReplace = (
   kind: RecordKind,
   current: StoredRecord | null,
   request: ReplaceRequest,
   client: ClientContext,
   held: StoredRecord | null = null,
-): WriteDecision {
+): WriteDecision => {
   const live = current !== null && !current.deleted ? current : null;
   if (held !== null) {
     throw new ApiError("video_already_held", "The account already holds an overview of this video", {
@@ -49,4 +49,4 @@ export function decideReplace(
   assertWholeRecordVersion(kind, request.schemaVersion, client);
   validateRecordBody(kind, request.body, request.schemaVersion);
   return { action: "upsert", body: request.body, schemaVersion: request.schemaVersion, updatedAt: request.updatedAt };
-}
+};

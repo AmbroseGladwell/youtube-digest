@@ -22,9 +22,9 @@ export const youTubeOriginRule = (extensionId: string): chrome.declarativeNetReq
 
 // Replacing by id rather than adding, so re-running on every worker start cannot
 // accumulate duplicates.
-export async function installYouTubeOriginRule(): Promise<void> {
+export const installYouTubeOriginRule = async (): Promise<void> => {
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [RULE_ID],
     addRules: [youTubeOriginRule(chrome.runtime.id)],
   });
-}
+};

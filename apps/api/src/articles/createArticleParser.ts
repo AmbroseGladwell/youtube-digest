@@ -20,7 +20,7 @@ export type ArticleParser = (html: string, url: string) => Promise<ArticleRead>;
 
 // One warm worker, one page at a time, replaced whenever a page outruns the limit or the
 // worker fails (docs/features/pasted-article-links.md, "Parsing").
-export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: ArticleParserOptions): ArticleParser {
+export const createArticleParser = ({ workerUrl, timeoutMs, heapLimitMb }: ArticleParserOptions): ArticleParser => {
   const waiting: Job[] = [];
   let worker: Worker | null = null;
   let current: { job: Job; timer: NodeJS.Timeout } | null = null;
@@ -90,4 +90,4 @@ export function createArticleParser({ workerUrl, timeoutMs, heapLimitMb }: Artic
       waiting.push({ id: nextId, html, url, resolve });
       next();
     });
-}
+};

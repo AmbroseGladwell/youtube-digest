@@ -30,7 +30,7 @@ export interface Milestones {
 // device waits for its first sync to finish before recording anything, so a library still
 // arriving from the server is not mistaken for milestones crossed just now
 // (docs/features/time-saved.md, "When a milestone shows").
-export function useMilestones(minutes: number, libraryLoaded: boolean): Milestones {
+export const useMilestones = (minutes: number, libraryLoaded: boolean): Milestones => {
   const settings = useSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
   const sync = useSync();
@@ -82,4 +82,4 @@ export function useMilestones(minutes: number, libraryLoaded: boolean): Mileston
       analytics.timeSaved.milestoneCard.dismissalUndone({ milestone: id });
     },
   };
-}
+};

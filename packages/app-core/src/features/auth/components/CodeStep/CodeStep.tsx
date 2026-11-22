@@ -35,7 +35,7 @@ const secondsLeft = (sentAt: number, now: number): number =>
 // Designs 14d and 14i: one box for both codes, the step-up's and the new address's, so the
 // two read as a pair. The heading takes focus when the step arrives; an error keeps focus
 // in the field (docs/features/account-changes.md).
-export function CodeStep({
+export const CodeStep = ({
   heading,
   lead,
   note,
@@ -53,7 +53,7 @@ export function CodeStep({
   onDifferentAddress,
   variant = "box",
   headingId,
-}: CodeStepProps) {
+}: CodeStepProps) => {
   const ids = useId();
   const [code, setCode] = useState("");
   const [empty, setEmpty] = useState(false);
@@ -197,4 +197,4 @@ export function CodeStep({
       )}
     </form>
   );
-}
+};

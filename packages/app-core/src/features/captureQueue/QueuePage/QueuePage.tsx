@@ -24,7 +24,7 @@ import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 // rather than promising it happens anywhere (docs/features/capture-queue.md). Design
 // 95aa–95aj: what waits on a pace, or for the reader, by playlist after it, with Make now on
 // each and Choose for several.
-export function QueuePage() {
+export const QueuePage = () => {
   const queue = useCaptureQueueController();
   const analytics = useAnalytics();
   const isPanel = useIsPanel();
@@ -438,4 +438,4 @@ export function QueuePage() {
       )}
     </div>
   );
-}
+};

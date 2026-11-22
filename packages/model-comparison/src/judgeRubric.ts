@@ -62,7 +62,7 @@ export const noteForJudging = (overview: Overview): string =>
     .replace(/^https?:\/\/\S+$/gm, "")
     .replace(/ · saved \d{4}-\d{2}-\d{2}/, "");
 
-export function judgePrompt(fetched: FetchedTranscript, noteA: Overview, noteB: Overview) {
+export const judgePrompt = (fetched: FetchedTranscript, noteA: Overview, noteB: Overview) => {
   return {
     systemPrompt: SYSTEM_PROMPT,
     userMessage: `${transcriptForJudging(fetched)}
@@ -74,4 +74,4 @@ ${noteForJudging(noteA)}
 ${noteForJudging(noteB)}`,
     schema: JudgeAnswer,
   };
-}
+};

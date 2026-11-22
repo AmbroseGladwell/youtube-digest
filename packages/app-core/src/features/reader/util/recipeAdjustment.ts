@@ -49,7 +49,11 @@ export const initialScale = (recipe: Pick<Recipe, "yield">): RecipeScale => {
 
 const factorOf = (scale: RecipeScale): number => (scale.kind === "servings" ? scale.count / scale.base : scale.times);
 
-export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, scale: RecipeScale, units: RecipeUnits): RecipeAdjustment {
+export const recipeAdjustment = (
+  recipe: Pick<Recipe, "ingredients" | "yield">,
+  scale: RecipeScale,
+  units: RecipeUnits,
+): RecipeAdjustment => {
   const factor = factorOf(scale);
   const ingredients = recipe.ingredients.map(tidyIngredient);
   const lines = ingredients.map((line) => adjustIngredient(line, factor, units));
@@ -98,4 +102,4 @@ export function recipeAdjustment(recipe: Pick<Recipe, "ingredients" | "yield">, 
     cookingNote: `${done}, and so is the method.${unreadNote}`,
     servings,
   };
-}
+};

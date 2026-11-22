@@ -43,7 +43,7 @@ const webUrl = (value: string | undefined): string | null => {
   }
 };
 
-export function feedDurationSeconds(value: string): number | null {
+export const feedDurationSeconds = (value: string): number | null => {
   const text = value.trim();
   if (/^\d+(\.\d+)?$/.test(text)) {
     const seconds = Math.round(Number(text));
@@ -54,7 +54,7 @@ export function feedDurationSeconds(value: string): number | null {
   }
   const seconds = text.split(":").reduce((total, part) => total * 60 + Number(part), 0);
   return seconds > 0 ? seconds : null;
-}
+};
 
 const feedDate = (value: string): string | null => {
   const time = Date.parse(value.trim());
@@ -76,7 +76,7 @@ const emptyItem = (): FeedItem => ({
 
 // Reads a feed as it arrives and stops soon after the first item that is wanted, since feeds run
 // to tens of megabytes and list the newest first (docs/features/podcast-links.md).
-export async function readFeedEpisode(chunks: AsyncIterable<string>, isWanted: (item: FeedItem) => boolean): Promise<FeedEpisode> {
+export const readFeedEpisode = async (chunks: AsyncIterable<string>, isWanted: (item: FeedItem) => boolean): Promise<FeedEpisode> => {
   const show: FeedShow = { title: null, imageUrl: null };
   let item: FeedItem | null = null;
   let found: FeedItem | null = null;
@@ -197,4 +197,4 @@ export async function readFeedEpisode(chunks: AsyncIterable<string>, isWanted: (
     parser.end();
   }
   return { show, item: found, itemsRead, neighbourNotes: found === null ? [] : neighbourNotes };
-}
+};

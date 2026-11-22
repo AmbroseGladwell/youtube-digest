@@ -13,7 +13,7 @@ export const CHAT_USAGE = { prompt_tokens: 10_000, completion_tokens: 80, prompt
 // OpenAI's streamed chat completions as chat meets them: each call takes the next answer,
 // the last one repeating. A reply that isn't a string is sent as its JSON, a few characters
 // a chunk, so the answer has to be read as it arrives.
-export function makeFakeChatOpenAi(...answers: FakeChatAnswer[]): FakeChatOpenAi {
+export const makeFakeChatOpenAi = (...answers: FakeChatAnswer[]): FakeChatOpenAi => {
   const fake: FakeChatOpenAi = {
     answers,
     requests: [],
@@ -57,4 +57,4 @@ export function makeFakeChatOpenAi(...answers: FakeChatAnswer[]): FakeChatOpenAi
     }) as unknown as typeof fetch,
   };
   return fake;
-}
+};

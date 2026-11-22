@@ -99,7 +99,7 @@ export interface CaptureQueueController {
 // it, while the app is open. A run the reader starts goes first
 // (docs/features/capture-queue.md). Owned by the AppShell, like the reader's own run, so it
 // outlives every navigation.
-export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean }): CaptureQueueController {
+export const useCaptureQueue = ({ readerRunActive }: { readerRunActive: boolean }): CaptureQueueController => {
   const { overviewStore, followedPlaylistStore, captureQueueStore } = useStores();
   const accountId = useLibraryAccountId();
   const queryClient = useQueryClient();
@@ -675,4 +675,4 @@ export function useCaptureQueue({ readerRunActive }: { readerRunActive: boolean 
       clear,
     ],
   );
-}
+};

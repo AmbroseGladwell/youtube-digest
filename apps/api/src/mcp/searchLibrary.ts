@@ -12,7 +12,7 @@ const words = (query: string) =>
 
 // The library's own haystack, so a search here finds what the library's search finds, but
 // every word rather than the whole phrase: an assistant sends keywords, not a phrase it saw.
-export function searchLibrary(entries: LibraryEntry[], filters: ResolvedFilters): LibraryEntry[] {
+export const searchLibrary = (entries: LibraryEntry[], filters: ResolvedFilters): LibraryEntry[] => {
   const wanted = words(filters.query ?? "");
   const tag = filters.tag?.trim().toLowerCase();
 
@@ -53,7 +53,7 @@ export function searchLibrary(entries: LibraryEntry[], filters: ResolvedFilters)
     }
     return true;
   });
-}
+};
 
 // Keyword first, then meaning: a word the reader remembers still finds its note at the top,
 // and the closest few by meaning that no word matched come after
@@ -65,7 +65,7 @@ export interface LibrarySearch {
   byMeaning: Set<string>;
 }
 
-export function searchWithMeaning(entries: LibraryEntry[], filters: ResolvedFilters, meaningIds: string[]): LibrarySearch {
+export const searchWithMeaning = (entries: LibraryEntry[], filters: ResolvedFilters, meaningIds: string[]): LibrarySearch => {
   const { query, ...withoutQuery } = filters;
   const byWord = searchLibrary(entries, filters);
   if ((query ?? "").trim() === "" || meaningIds.length === 0) {
@@ -78,4 +78,4 @@ export function searchWithMeaning(entries: LibraryEntry[], filters: ResolvedFilt
     .flatMap((id) => candidates.get(id) ?? [])
     .slice(0, MEANING_RESULTS);
   return { entries: [...byWord, ...extra], byMeaning: new Set(extra.map((entry) => entry.overview.id)) };
-}
+};

@@ -42,12 +42,12 @@ export interface OtherSourcesAsk {
   nextLabel: number;
 }
 
-function readAll<T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] {
+const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] => {
   return rows.flatMap((row) => {
     const read = readStoredRecord(stampSchemaVersion(row.body ?? {}, row.schemaVersion), schema, migrations);
     return read.status === "read" ? [read.record] : [];
   });
-}
+};
 
 interface Candidate {
   overviewId: OverviewId;
@@ -61,11 +61,11 @@ interface Candidate {
 // brief), then claim search's closest 3. Never the chat's own overview, nothing the conversation
 // already holds, and nothing the reader set aside unless they pin it again (OV-307's measured
 // shapes; docs/features/chats.md, "Other overviews").
-export async function chooseOtherSources(
+export const chooseOtherSources = async (
   records: RecordsRepository,
   meaningSearch: MeaningSearch | null,
   { accountId, home, question, inConversation, setAside, nextLabel }: OtherSourcesAsk,
-): Promise<OtherSourcesChoice> {
+): Promise<OtherSourcesChoice> => {
   const candidates: Candidate[] = question.pins.overviews.map((overviewId) => ({ overviewId, how: "pinned" }));
 
   const projects = readAll(await records.readLive(accountId, "project", question.pins.projects), Project, PROJECT_MIGRATIONS);
@@ -135,17 +135,17 @@ export async function chooseOtherSources(
     });
   }
   return { added, searched };
-}
+};
 
 // A large pinned project's members closest to the question, by claim search within the project;
 // without search, or short of matches above the floor, the most recently added fill the rest.
-async function closestOf(
+const closestOf = async (
   meaningSearch: MeaningSearch | null,
   accountId: AccountId,
   text: string,
   ids: readonly OverviewId[],
-): Promise<OverviewId[]> {
+): Promise<OverviewId[]> => {
   const result = meaningSearch === null ? null : await meaningSearch.search(accountId, text, { within: ids });
   const ranked = result?.available === true ? result.matches.flatMap((match) => ids.filter((id) => id === match.overviewId)) : [];
   return [...new Set([...ranked, ...ids])].slice(0, PINNED_PROJECT_CLOSEST);
-}
+};

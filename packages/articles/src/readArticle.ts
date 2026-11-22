@@ -14,7 +14,7 @@ const wordsPerSentence = (text: string): number => wordCount(text) / Math.max(te
 // Readability takes the document apart as it reads, so it is handed a copy: this one is the
 // page in the reader's tab. isProbablyReaderable looks for paragraphs, so prose laid out
 // with line breaks has to qualify another way (docs/features/article-extraction.md).
-export function readArticle(document: Document, pageUrl: string): ArticleRead {
+export const readArticle = (document: Document, pageUrl: string): ArticleRead => {
   const metadata = articleMetadata(document, pageUrl);
   const parsed = new Readability(document.cloneNode(true) as Document).parse();
   const body = document.implementation.createHTMLDocument("").body;
@@ -54,4 +54,4 @@ export function readArticle(document: Document, pageUrl: string): ArticleRead {
       recipe,
     },
   };
-}
+};

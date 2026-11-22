@@ -29,13 +29,13 @@ const marksOf = ({ read, favourite }: { read?: boolean | undefined; favourite?: 
   ...(favourite === undefined ? {} : { favourite }),
 });
 
-function describeMarks(marks: Marks): string {
+const describeMarks = (marks: Marks): string => {
   const words = [
     ...(marks.read === undefined ? [] : [marks.read ? "read" : "unread"]),
     ...(marks.favourite === undefined ? [] : [marks.favourite ? "a favourite" : "not a favourite"]),
   ];
   return words.join(" and ");
-}
+};
 
 const alreadyMarked = (entry: LibraryEntry, marks: Marks): boolean => {
   const state = entry.state ?? { ...DEFAULT_OVERVIEW_STATE, overviewId: entry.overview.id };

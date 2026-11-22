@@ -83,12 +83,12 @@ export interface LibraryChatAnswererOptions {
 
 export type LibraryChatOwner = Exclude<ChatOwner, { kind: "overview" }>;
 
-function readAll<T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] {
+const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrations: readonly RecordMigration[]): T[] => {
   return rows.flatMap((row) => {
     const read = readStoredRecord(stampSchemaVersion(row.body ?? {}, row.schemaVersion), schema, migrations);
     return read.status === "read" ? [read.record] : [];
   });
-}
+};
 
 // Answers a reader's question over their whole library or one project, on our key, within the
 // same allowance as an overview's chat. Small enough, the overviews go whole and one pass answers;
@@ -480,7 +480,7 @@ export class LibraryChatAnswerer {
 }
 
 // An overview cited by several points is one citation of each place, and of the whole only once.
-function uniqueCitations(citations: readonly ChatCitation[]): ChatCitation[] {
+const uniqueCitations = (citations: readonly ChatCitation[]): ChatCitation[] => {
   const seen = new Set<string>();
   return citations.filter((citation) => {
     const key = JSON.stringify(citation);
@@ -490,4 +490,4 @@ function uniqueCitations(citations: readonly ChatCitation[]): ChatCitation[] {
     seen.add(key);
     return true;
   });
-}
+};

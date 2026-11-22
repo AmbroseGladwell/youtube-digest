@@ -20,7 +20,7 @@ const nameWords = (tail: string): string[] =>
 
 // The amounts the method can follow: each adjusted ingredient line's amount as the page wrote it,
 // with the words that name it. A tin sold at its size has nothing the method repeats.
-export function methodAmounts(ingredients: readonly string[], lines: readonly AdjustedIngredient[]): MethodAmount[] {
+export const methodAmounts = (ingredients: readonly string[], lines: readonly AdjustedIngredient[]): MethodAmount[] => {
   return lines.flatMap((line, index) => {
     if (line.kind !== "adjusted" || line.packAsSold) {
       return [];
@@ -35,7 +35,7 @@ export function methodAmounts(ingredients: readonly string[], lines: readonly Ad
       { written: line.written, adjusted: changed.text, names: nameWords(ingredient.slice(at + line.written.length)), plural: line.plural },
     ];
   });
-}
+};
 
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -51,7 +51,7 @@ interface Edit {
 // A share ("1 tbsp of the oil", "about 3 tbsp of the batter") is followed by "of", never a name,
 // so it stays as written: one may be part of the batch and the other per pancake, and code can't
 // tell which (design 231k, owner 8 Nov 2026). Times, sizes and counts of pieces never match.
-export function methodPieces(text: string, amounts: readonly MethodAmount[]): IngredientPiece[] {
+export const methodPieces = (text: string, amounts: readonly MethodAmount[]): IngredientPiece[] => {
   const edits: Edit[] = [];
   for (const amount of amounts) {
     const pattern = new RegExp(
@@ -92,7 +92,7 @@ export function methodPieces(text: string, amounts: readonly MethodAmount[]): In
     pieces.push({ text: text.slice(from), changed: false });
   }
   return pieces;
-}
+};
 
 export const inMethodAmounts = (text: string, amounts: readonly MethodAmount[]): string =>
   amounts.length === 0

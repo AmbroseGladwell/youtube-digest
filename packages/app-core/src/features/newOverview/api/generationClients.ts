@@ -10,9 +10,9 @@ import type { TranscriptSource } from "../../transcripts/types/TranscriptSource.
 // (docs/architecture/v1-architecture-decisions.md Model D). Every one of the six providers
 // answers a cross-origin preflight, so no server of ours is ever in the path; the adapter
 // behind this sends whatever header its provider needs to permit it.
-export function createGenerationClient(provider: Provider, apiKey: string, model: string): GenerationClient {
+export const createGenerationClient = (provider: Provider, apiKey: string, model: string): GenerationClient => {
   return createProviderClient({ provider, apiKey, model });
-}
+};
 
 export interface TranscriptSourceOptions {
   youTubeFetch: YouTubeFetch | null;
@@ -23,11 +23,11 @@ export interface TranscriptSourceOptions {
 // The rungs this surface can actually reach, in the order they are asked: the free ones
 // first, our own server last (docs/features/transcript-retrieval.md). There is no shared cache to
 // ask: each reader fetches their own words (OV-295).
-export function createTranscriptSources(options: TranscriptSourceOptions): TranscriptSource[] {
+export const createTranscriptSources = (options: TranscriptSourceOptions): TranscriptSource[] => {
   return [
     ...(options.youTubeFetch === null ? [] : [innerTubeTranscriptSource(options.youTubeFetch)]),
     ...(options.service === null
       ? []
       : [serviceTranscriptSource(createFetchServiceTranscriptApi({ baseUrl: options.service.apiUrl, token: options.service.token }))]),
   ];
-}
+};

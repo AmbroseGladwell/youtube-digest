@@ -5,7 +5,7 @@ import { isSyncRequestError } from "./SyncRequestError.js";
 
 export type FetchShareApiOptions = ApiRequesterOptions;
 
-export function createFetchShareApi(options: FetchShareApiOptions): ShareApi {
+export const createFetchShareApi = (options: FetchShareApiOptions): ShareApi => {
   const request = createApiRequester(options);
 
   return {
@@ -22,4 +22,4 @@ export function createFetchShareApi(options: FetchShareApiOptions): ShareApi {
       });
     },
   };
-}
+};

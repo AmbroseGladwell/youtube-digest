@@ -1,6 +1,6 @@
 import type { GeneratedOutput } from "@overview/generation";
 
-export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): GeneratedOutput {
+export const makeGeneratedOutput = (overrides: Partial<GeneratedOutput> = {}): GeneratedOutput => {
   return {
     inOneLine: "A thrift channel tests a grocery budget for three months.",
     bigPicture: "",
@@ -34,4 +34,4 @@ export function makeGeneratedOutput(overrides: Partial<GeneratedOutput> = {}): G
     watchAnyway: { answer: "no", reason: "The overview covers it.", startSegmentIndex: -1, endSegmentIndex: -1 },
     ...overrides,
   };
-}
+};

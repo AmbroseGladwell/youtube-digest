@@ -13,7 +13,7 @@ export type EpisodeAction =
   | { kind: "free"; offer: Offer<"free"> }
   | { kind: "stop"; offer: Offer<"not-enough" | "too-long"> };
 
-export function episodeActionOf(words: EpisodeWords): EpisodeAction {
+export const episodeActionOf = (words: EpisodeWords): EpisodeAction => {
   if (words.state === "checking") {
     return { kind: "waiting" };
   }
@@ -33,7 +33,7 @@ export function episodeActionOf(words: EpisodeWords): EpisodeAction {
     case "unavailable":
       return { kind: "create" };
   }
-}
+};
 
 // Whether Create sends the episode's audio to be transcribed rather than looking for its words, and
 // why: the reader chose it on the card, or it costs nothing.

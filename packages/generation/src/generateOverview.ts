@@ -21,12 +21,12 @@ export interface GenerationObserver {
 // recipe the video turns out not to hold falls back to the default note, and a process note is the
 // default one with the steps the source gives
 // (docs/features/overview-generation-decisions.md, "The kind check").
-export async function generateOverview(
+export const generateOverview = async (
   client: GenerationClient,
   input: GenerationInput,
   meta: { id: OverviewId; savedAt: string },
   observer: GenerationObserver = {},
-): Promise<Overview> {
+): Promise<Overview> => {
   const kind = input.noteKind ?? (await checkNoteKind(client, kindSampleOfVideo(input)));
   observer.kindChecked?.(kind);
   if (kind === "recipe") {
@@ -41,4 +41,4 @@ export async function generateOverview(
   const output = await requestGeneratedOutput<GeneratedOutput>(client, composePrompt(input, noteKind));
   observer.projectsFiled?.(filedProjectIds(input.existingProjects, output.matchedProjectNames));
   return assembleOverview(input, output, meta);
-}
+};

@@ -61,7 +61,7 @@ export const KIND_CHECK_USAGE = { prompt_tokens: 400, completion_tokens: 10 };
 // OpenAI's chat completions as our key would meet them: a video's kind check is answered
 // "default" apart from the queue, and every other call takes the next answer, the last
 // one repeating.
-export function makeFakeOpenAi(...answers: FakeOpenAiAnswer[]): FakeOpenAi {
+export const makeFakeOpenAi = (...answers: FakeOpenAiAnswer[]): FakeOpenAi => {
   const fake: FakeOpenAi = {
     answers: answers.length === 0 ? ["valid"] : answers,
     requests: [],
@@ -92,4 +92,4 @@ export function makeFakeOpenAi(...answers: FakeOpenAiAnswer[]): FakeOpenAi {
     }) as unknown as typeof fetch,
   };
   return fake;
-}
+};

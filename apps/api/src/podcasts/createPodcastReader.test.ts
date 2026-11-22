@@ -42,7 +42,7 @@ const spotifyPage = (title: string, released: string) =>
     <meta property="og:title" content="${title}">
   </head><body></body></html>`);
 
-function readerOver(web: Record<string, Answer>, podcastIndex: ShowDirectory | null = null) {
+const readerOver = (web: Record<string, Answer>, podcastIndex: ShowDirectory | null = null) => {
   const asked: string[] = [];
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
@@ -60,7 +60,7 @@ function readerOver(web: Record<string, Answer>, podcastIndex: ShowDirectory | n
     };
   };
   return { read: createPodcastReader({ fetchPublicWeb, podcastIndex }), asked };
-}
+};
 
 const episodeOf = (read: PodcastRead) => {
   assert.equal(read.status, "read", JSON.stringify(read));
@@ -141,7 +141,7 @@ test("a Spotify episode missing from a public show's feed is not found, rather t
 });
 
 // Podcast Index, scripted: its parsing is podcastIndexDirectory.test.ts's.
-function podcastIndexOver(answer: "knows the show" | "doesn't know it" | "fails") {
+const podcastIndexOver = (answer: "knows the show" | "doesn't know it" | "fails") => {
   const asked: string[] = [];
   const directory: ShowDirectory = {
     searchShows: async (name) => {
@@ -168,7 +168,7 @@ function podcastIndexOver(answer: "knows the show" | "doesn't know it" | "fails"
     },
   };
   return { directory, asked };
-}
+};
 
 const spotifyEpisodeWeb = {
   [`https://open.spotify.com/episode/${SPOTIFY_EPISODE}`]: spotifyPage("Episode 1: The “Start”", "2026-11-01T09:00:00Z"),

@@ -61,7 +61,7 @@ const sharedAnonymousId = (): { anonymousId?: string } => {
   return consentAllowsSharing(consent) && consent?.anonymousId != null ? { anonymousId: consent.anonymousId } : {};
 };
 
-export function RequestLinkFlow({ intent, expired = false, returnTo = null, onboarding }: RequestLinkFlowProps) {
+export const RequestLinkFlow = ({ intent, expired = false, returnTo = null, onboarding }: RequestLinkFlowProps) => {
   const surface = useSurface();
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
@@ -417,4 +417,4 @@ export function RequestLinkFlow({ intent, expired = false, returnTo = null, onbo
       {!creating && <PolicyLinks />}
     </AuthScreen>
   );
-}
+};

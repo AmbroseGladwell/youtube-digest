@@ -27,7 +27,7 @@ export interface OpenLocalLibraryOptions {
   onSuperseded?: () => void;
 }
 
-export async function openLocalLibrary({ accountId, ...options }: OpenLocalLibraryOptions): Promise<LocalLibrary> {
+export const openLocalLibrary = async ({ accountId, ...options }: OpenLocalLibraryOptions): Promise<LocalLibrary> => {
   const db = await openLocalDatabase({ ...options, name: localDatabaseName(accountId) });
   const syncStorage = new IndexedDbSyncStorage(db);
   return {
@@ -41,4 +41,4 @@ export async function openLocalLibrary({ accountId, ...options }: OpenLocalLibra
     syncStorage,
     close: () => db.close(),
   };
-}
+};

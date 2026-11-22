@@ -12,10 +12,10 @@ export const storedOverview = (overrides: Partial<Overview> = {}) => ({
   updatedAt: UPDATED_AT,
 });
 
-export function distinctVideo(): VideoOverview["source"] {
+export const distinctVideo = (): VideoOverview["source"] => {
   const id = randomUUID().slice(0, 11);
   return { ...makeOverview().source, id: VideoId.parse(id), url: `https://www.youtube.com/watch?v=${id}` };
-}
+};
 
 export const storedTopic = (overrides: Partial<Topic> = {}) => ({
   id: randomUUID(),
@@ -37,7 +37,7 @@ export const rawOverviewAtVersion2 = (id: string): Record<string, unknown> => {
 export const LAST_SCHEMA_VERSION_WITH_VIDEO = 9;
 
 // A body as a client from before `source` writes it (docs/features/source-identity.md).
-export function withVideo<T extends { source: Overview["source"] }>({ source, ...rest }: T) {
+export const withVideo = <T extends { source: Overview["source"] }>({ source, ...rest }: T) => {
   const { kind: _kind, ...video } = source;
   return { ...rest, video };
-}
+};

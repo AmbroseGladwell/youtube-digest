@@ -12,7 +12,7 @@ const TICK_MS = 50;
 
 // One sample at a time, as the voice samples are; a note that was playing is paused and left
 // paused (docs/features/narration-voice.md, "Listening").
-export function useTimerSoundSample() {
+export const useTimerSoundSample = () => {
   const player = usePlayer();
   const [playback, setPlayback] = useState<TimerSoundPlayback | null>(null);
   const playing = useRef<{ stop: () => void; tick: ReturnType<typeof setInterval> } | null>(null);
@@ -49,4 +49,4 @@ export function useTimerSoundSample() {
   useEffect(() => stop, [stop]);
 
   return { playback, play, stop };
-}
+};

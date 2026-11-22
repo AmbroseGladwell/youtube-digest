@@ -44,7 +44,7 @@ const mark = (x: number, y: number) =>
 
 // Everything on the card comes from the shared copy, which is why it can be drawn from the
 // snapshot alone and never goes stale (docs/features/sharing.md).
-export function shareCardSvg(note: SharedNote): string {
+export const shareCardSvg = (note: SharedNote): string => {
   const titleLines = wrapToWidth({
     text: note.source.title,
     maxWidth: CONTENT_WIDTH,
@@ -71,12 +71,12 @@ export function shareCardSvg(note: SharedNote): string {
     text(metaLine, PADDING_X, META_BASELINE, META_SIZE, BODY_FONT_FAMILY, QUIET_INK),
     "</svg>",
   ].join("");
-}
+};
 
-export async function shareCardPng(note: SharedNote): Promise<Buffer> {
+export const shareCardPng = async (note: SharedNote): Promise<Buffer> => {
   const resvg = new Resvg(shareCardSvg(note), {
     fitTo: { mode: "width", value: CARD_WIDTH },
     font: { fontFiles: FONT_FILES, loadSystemFonts: false, defaultFontFamily: BODY_FONT_FAMILY },
   });
   return Buffer.from(resvg.render().asPng());
-}
+};

@@ -10,7 +10,7 @@ export interface DeleteOverviewDialogProps {
 
 const HEADING_ID = "DeleteOverviewDialog-heading";
 
-export function DeleteOverviewDialog({ title, onDelete, onClose }: DeleteOverviewDialogProps) {
+export const DeleteOverviewDialog = ({ title, onDelete, onClose }: DeleteOverviewDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);
 
@@ -65,4 +65,4 @@ export function DeleteOverviewDialog({ title, onDelete, onClose }: DeleteOvervie
       </div>
     </dialog>
   );
-}
+};

@@ -15,7 +15,7 @@ export interface ArticleFailureCopy {
 // the page has been read. The site's own name is only known if the page gave it. The last
 // three reasons of no-access's group come from our server, so only a pasted link meets them
 // (pastedLinkFailureCopy.ts).
-export function articleFailureCopy(failure: ArticleFailure, url: string): ArticleFailureCopy {
+export const articleFailureCopy = (failure: ArticleFailure, url: string): ArticleFailureCopy => {
   const host = domainOf(url);
   const site = failure.siteName ?? host;
   switch (failure.reason) {
@@ -65,4 +65,4 @@ export function articleFailureCopy(failure: ArticleFailure, url: string): Articl
         wayLabel: null,
       };
   }
-}
+};

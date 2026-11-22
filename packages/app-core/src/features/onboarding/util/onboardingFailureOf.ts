@@ -19,7 +19,7 @@ export type OnboardingFailure =
   | { kind: "other" };
 
 // Why onboarding's run failed, as far as the reader can act on it (designs 154l–154n).
-export function onboardingFailureOf(error: unknown): OnboardingFailure {
+export const onboardingFailureOf = (error: unknown): OnboardingFailure => {
   if (error instanceof ArticleReadError) {
     return { kind: "read", failure: error.failure };
   }
@@ -49,4 +49,4 @@ export function onboardingFailureOf(error: unknown): OnboardingFailure {
     }
   }
   return { kind: "other" };
-}
+};

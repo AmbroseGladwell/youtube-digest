@@ -13,7 +13,7 @@ export interface SettingsSectionProps {
 
 export const settingsSectionHeadingId = (section: SettingsSectionId) => `settings-section-${section}`;
 
-export function SettingsSection({ id, title, intro, focusOnArrival, children }: SettingsSectionProps) {
+export const SettingsSection = ({ id, title, intro, focusOnArrival, children }: SettingsSectionProps) => {
   const heading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -42,4 +42,4 @@ export function SettingsSection({ id, title, intro, focusOnArrival, children }: 
       {children}
     </section>
   );
-}
+};

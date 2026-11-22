@@ -25,13 +25,13 @@ export const sameLetterBothOrders = (record: KeyPointsJudgeRecord): boolean =>
   record.candidateFirst.overall.winner !== "tie" &&
   record.candidateFirst.overall.winner === record.candidateSecond.overall.winner;
 
-export function keyPointsJudgingMarkdown(
+export const keyPointsJudgingMarkdown = (
   records: readonly KeyPointsJudgeRecord[],
   videos: readonly KeyPointsVideo[],
   candidateRun: string,
   baselineRun: string,
   rubricVersion: number,
-): string {
+): string => {
   const judged = records.filter((record) => record.results !== null);
   const dimensions = [...KEY_POINT_DIMENSIONS, "overall" as const];
   const cost = records.reduce((total, record) => total + (record.costDollars ?? 0), 0);
@@ -84,4 +84,4 @@ export function keyPointsJudgingMarkdown(
     );
   }
   return `${lines.join("\n")}\n`;
-}
+};

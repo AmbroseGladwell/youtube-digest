@@ -13,7 +13,7 @@ export const BASELINE_MODEL = "anthropic:claude-opus-5-5";
 // provider, first choice first.
 export const JUDGES: readonly string[] = ["openai:gpt-6.1-sol", "gemini:gemini-3.1-pro-preview", "anthropic:claude-opus-5-5"];
 
-export function judgeFor(baseline: ComparedModel, candidate: ComparedModel): ComparedModel {
+export const judgeFor = (baseline: ComparedModel, candidate: ComparedModel): ComparedModel => {
   const judge = JUDGES.map(parseComparedModel).find(
     (model) => model.provider !== baseline.provider && model.provider !== candidate.provider,
   );
@@ -21,7 +21,7 @@ export function judgeFor(baseline: ComparedModel, candidate: ComparedModel): Com
     throw new Error(`no judge outside ${baseline.provider} and ${candidate.provider}`);
   }
   return judge;
-}
+};
 
 export const candidateGoesFirst = (videoId: string, candidate: string): boolean =>
   (createHash("sha256").update(`${videoId}\n${candidate}`).digest()[0]! & 1) === 1;
@@ -38,14 +38,14 @@ export interface JudgePairOptions {
   now?: () => number;
 }
 
-export async function judgePair({
+export const judgePair = async ({
   fetched,
   baseline,
   candidate,
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgePairOptions): Promise<JudgeRecord> {
+}: JudgePairOptions): Promise<JudgeRecord> => {
   const videoId = fetched.video.id ?? fetched.video.url;
   const judge = judgeFor(parseComparedModel(baseline.name), parseComparedModel(candidate.name));
   const candidateIsA = candidateGoesFirst(videoId, candidate.name);
@@ -91,4 +91,4 @@ export async function judgePair({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

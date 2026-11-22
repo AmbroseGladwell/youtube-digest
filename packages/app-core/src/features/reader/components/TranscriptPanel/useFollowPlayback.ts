@@ -27,11 +27,11 @@ export interface FollowPlaybackOptions {
   head: HTMLElement | null;
 }
 
-export function useFollowPlayback(
+export const useFollowPlayback = (
   videoId: string | null,
   blocks: TranscriptBlock[],
   { held = false, head }: FollowPlaybackOptions,
-): FollowPlayback {
+): FollowPlayback => {
   const canFollow = useCanFollowPlayback();
   const position = usePlaybackPosition(videoId);
   const [wanted, setFollowing] = useState(true);
@@ -75,4 +75,4 @@ export function useFollowPlayback(
     follow: () => setFollowing(true),
     stop: () => setFollowing(false),
   };
-}
+};

@@ -5,7 +5,7 @@ import type { ConnectionsApi } from "./ConnectionsApi.js";
 
 export type FetchConnectionsApiOptions = ApiRequesterOptions;
 
-export function createFetchConnectionsApi(options: FetchConnectionsApiOptions): ConnectionsApi {
+export const createFetchConnectionsApi = (options: FetchConnectionsApiOptions): ConnectionsApi => {
   const request = createApiRequester(options);
   const requestPath = (requestId: string) => `/oauth/requests/${encodeURIComponent(requestId)}`;
 
@@ -18,4 +18,4 @@ export function createFetchConnectionsApi(options: FetchConnectionsApiOptions): 
       await request("DELETE", `/connections/${encodeURIComponent(connectionId)}`, z.never());
     },
   };
-}
+};

@@ -7,7 +7,7 @@ export interface RecordingErrorSink extends ErrorSink {
   failing: boolean;
 }
 
-export function makeRecordingErrorSink(): RecordingErrorSink {
+export const makeRecordingErrorSink = (): RecordingErrorSink => {
   const sink: RecordingErrorSink = {
     captured: [],
     serverErrors: [],
@@ -26,4 +26,4 @@ export function makeRecordingErrorSink(): RecordingErrorSink {
     },
   };
   return sink;
-}
+};

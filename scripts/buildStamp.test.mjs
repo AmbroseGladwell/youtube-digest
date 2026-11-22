@@ -8,11 +8,11 @@ import { buildStamp } from "./buildStamp.mjs";
 
 const FULL_SHA = "30bb95a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7";
 
-function git(cwd, args) {
+const git = (cwd, args) => {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
-}
+};
 
-function checkout({ version = "0.1.0", committed = true } = {}) {
+const checkout = ({ version = "0.1.0", committed = true } = {}) => {
   const cwd = mkdtempSync(path.join(tmpdir(), "buildStamp-test-"));
   writeFileSync(path.join(cwd, "package.json"), JSON.stringify(version === null ? {} : { version }));
   if (!committed) {
@@ -25,7 +25,7 @@ function checkout({ version = "0.1.0", committed = true } = {}) {
   git(cwd, ["add", "package.json"]);
   git(cwd, ["commit", "--quiet", "--message", "first"]);
   return cwd;
-}
+};
 
 const stampOf = (cwd, env = {}) => buildStamp({ env, cwd, rootDir: cwd });
 

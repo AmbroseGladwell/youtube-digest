@@ -20,7 +20,7 @@ export const askScopeOfChat = (chat: Chat): "library" | "project" | "overview" =
 // in the address so it survives a reload; the drawer's history of every conversation, an
 // overview's opening on that overview (OV-363), a deleted one undoable for six seconds; and what
 // the next question pins.
-export function useAskPage(projectId: ProjectId | null, chatParam: string | null) {
+export const useAskPage = (projectId: ProjectId | null, chatParam: string | null) => {
   const owner: AskOwner = projectId === null ? { kind: "library" } : { kind: "project", id: projectId };
   const scope = askScopeOf(owner);
   const navigate = useNavigate();
@@ -190,4 +190,4 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
     stop,
     dismiss: asking.dismiss,
   };
-}
+};

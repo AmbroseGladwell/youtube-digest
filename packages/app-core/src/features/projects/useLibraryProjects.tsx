@@ -50,7 +50,7 @@ export interface AddedByLine {
 
 // Everything projects bring to the library: the rail's group, and, on a project's page, its
 // head, which overviews are in it and what an empty one says (docs/features/projects.md).
-export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithState[], host: LibraryProjectsHost) {
+export const useLibraryProjects = (place: LibraryPlace, overviews: OverviewWithState[], host: LibraryProjectsHost) => {
   const { summaries, loaded } = useProjectSummaries(overviews);
   const assistants = useAssistantConnections();
   const analytics = useAnalytics();
@@ -286,4 +286,4 @@ export function useLibraryProjects(place: LibraryPlace, overviews: OverviewWithS
     removeFromCurrent,
     dialogs,
   };
-}
+};

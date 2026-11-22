@@ -17,6 +17,6 @@ const DAILY_LIMIT: Record<PlaylistPace, number | null> = {
 };
 
 // Null is no daily limit at all: the month's allowance is the only one.
-export function paceDailyLimit(pace: PlaylistPace): number | null {
+export const paceDailyLimit = (pace: PlaylistPace): number | null => {
   return DAILY_LIMIT[pace];
-}
+};

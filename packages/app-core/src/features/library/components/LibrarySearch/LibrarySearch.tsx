@@ -21,7 +21,7 @@ export interface LibrarySearchProps {
 
 // The field keeps what is typed and hands it on as a transition, so no key waits for the
 // list (docs/features/library-view.md, "Search"). A new revision of `text` replaces it.
-export function LibrarySearch({ text, onType, onClearPressed, isPhone, placeholder, children }: LibrarySearchProps) {
+export const LibrarySearch = ({ text, onType, onClearPressed, isPhone, placeholder, children }: LibrarySearchProps) => {
   const [query, setQuery] = useState(text.text);
   const [revision, setRevision] = useState(text.revision);
   const [focused, setFocused] = useState(false);
@@ -114,4 +114,4 @@ export function LibrarySearch({ text, onType, onClearPressed, isPhone, placehold
       </div>
     </div>
   );
-}
+};

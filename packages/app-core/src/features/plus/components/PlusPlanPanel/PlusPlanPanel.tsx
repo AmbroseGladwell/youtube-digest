@@ -11,7 +11,7 @@ import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 // Design 16c, redrawn by 95d–95h: the plan's name and this month's counts, what every account
 // includes, then every plan as a card carrying both quotas, with the reader's own ringed and
 // named. Signed out there is no plan, and no card is the reader's.
-export function PlusPlanPanel() {
+export const PlusPlanPanel = () => {
   const { plan, status, recheck } = usePlan();
   const usage = usePlanUsage();
   const chatUsage = useChatUsageQuery().data ?? null;
@@ -114,4 +114,4 @@ export function PlusPlanPanel() {
       </p>
     </section>
   );
-}
+};

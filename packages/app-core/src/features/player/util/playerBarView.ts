@@ -30,14 +30,14 @@ export interface PlayerBarContext {
 
 // The name the note itself prints over the section, which is what a listener sees: the
 // Summary section is headed Premise.
-export function sectionHeadingAt(lines: NoteLine[], index: number): string {
+export const sectionHeadingAt = (lines: NoteLine[], index: number): string => {
   for (let at = Math.min(index, lines.length - 1); at >= 0; at -= 1) {
     if (lines[at]!.heading) {
       return lines[at]!.text;
     }
   }
   return lines[0]?.section ?? "";
-}
+};
 
 const aboutMinutes = (seconds: number) => `~${Math.max(1, Math.round(seconds / 60))} min`;
 
@@ -45,7 +45,7 @@ const rateLabelFor = (rate: number) => `${rate}×`;
 
 // Design Player.dc.html section 1, one state per branch: what the bar says, which button
 // sits in the middle, and what the track is doing. The label line is the live region.
-export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView {
+export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView => {
   const { track, status, source, pacerReason, availability, preparing, timings, rate, voice, narratedVoice } = snapshot;
   const lines = track?.lines ?? [];
   const inOpening = time < (timings.lineStarts[0] ?? 0);
@@ -216,9 +216,9 @@ export function playerBarView(snapshot: PlayerSnapshot, time: number, { read }: 
       };
     }
   }
-}
+};
 
-function mainFor(status: PlayerSnapshot["status"]): PlayerBarView["main"] {
+const mainFor = (status: PlayerSnapshot["status"]): PlayerBarView["main"] => {
   switch (status) {
     case "playing":
       return { kind: "pause", label: "Pause", disabled: false };
@@ -229,4 +229,4 @@ function mainFor(status: PlayerSnapshot["status"]): PlayerBarView["main"] {
     default:
       return { kind: "play", label: "Play", disabled: false };
   }
-}
+};

@@ -7,7 +7,7 @@ const cell = (value) => {
 
 const amount = (value, places) => (value === null || value === undefined ? "" : Number(value.toFixed(places)));
 
-function cellsOf(line) {
+const cellsOf = (line) => {
   const cells = [];
   let current = "";
   let quoted = false;
@@ -26,11 +26,11 @@ function cellsOf(line) {
     }
   }
   return [...cells, current];
-}
+};
 
 const numberOrNull = (text) => (text === "" ? null : Number(text));
 
-export function parseSpendCsv(csv) {
+export const parseSpendCsv = (csv) => {
   const [header, ...lines] = csv.split("\n").filter((line) => line !== "");
   const columns = cellsOf(header);
   return lines.map((line) => {
@@ -47,9 +47,9 @@ export function parseSpendCsv(csv) {
       unit: cells.unit || undefined,
     };
   });
-}
+};
 
-export function spendCsv(rows, recordedAt) {
+export const spendCsv = (rows, recordedAt) => {
   const lines = rows.map((row) =>
     [
       row.date,
@@ -67,4 +67,4 @@ export function spendCsv(rows, recordedAt) {
       .join(","),
   );
   return `${[SPEND_COLUMNS.join(","), ...lines].join("\n")}\n`;
-}
+};

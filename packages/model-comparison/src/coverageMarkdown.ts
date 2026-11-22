@@ -13,12 +13,12 @@ const percent = (share: number | null) => (share === null ? "–" : `${Math.roun
 
 const mean = (values: number[]) => (values.length === 0 ? null : values.reduce((total, value) => total + value, 0) / values.length);
 
-function pointsCell({ points, unplaced, outOfRange }: Coverage): string {
+const pointsCell = ({ points, unplaced, outOfRange }: Coverage): string => {
   const notes = [unplaced > 0 ? `${unplaced} unplaced` : "", outOfRange > 0 ? `${outOfRange} out of range` : ""].filter(Boolean);
   return notes.length === 0 ? `${points}` : `${points} (${notes.join(", ")})`;
-}
+};
 
-function rowCells({ title, kind, length, outcome, coverage, gapPlace }: CoverageRow): string[] {
+const rowCells = ({ title, kind, length, outcome, coverage, gapPlace }: CoverageRow): string[] => {
   if (coverage === null) {
     return [title, kind, length, outcome, "–", "–", "–", "–", "–"];
   }
@@ -37,9 +37,9 @@ function rowCells({ title, kind, length, outcome, coverage, gapPlace }: Coverage
     gap,
     coverage.pointsByThird.join(" / "),
   ];
-}
+};
 
-function kindSummary(kind: CoverageRow["kind"], rows: readonly CoverageRow[]): string {
+const kindSummary = (kind: CoverageRow["kind"], rows: readonly CoverageRow[]): string => {
   const measured = rows.filter((row) => row.kind === kind && row.coverage?.measurable).map((row) => row.coverage!);
   const all = rows.filter((row) => row.kind === kind).length;
   return (
@@ -47,9 +47,9 @@ function kindSummary(kind: CoverageRow["kind"], rows: readonly CoverageRow[]): s
     `${percent(mean(measured.map((coverage) => coverage.chapterShare!)))} | ` +
     `${percent(mean(measured.map((coverage) => coverage.largestGap?.share ?? 0)))} |`
   );
-}
+};
 
-export function coverageMarkdown(rows: readonly CoverageRow[], runName: string, model: string): string {
+export const coverageMarkdown = (rows: readonly CoverageRow[], runName: string, model: string): string => {
   return [
     `# Coverage: ${runName}`,
     "",
@@ -74,4 +74,4 @@ export function coverageMarkdown(rows: readonly CoverageRow[], runName: string, 
     ...rows.map((row) => `| ${rowCells(row).join(" | ")} |`),
     "",
   ].join("\n");
-}
+};

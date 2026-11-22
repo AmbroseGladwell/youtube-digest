@@ -10,7 +10,7 @@ export interface TagVocabulary {
 // The model's tags as the reader's library spells them. A singular or plural is folded only
 // onto a tag that already exists, because a blanket rule mangles words like news and
 // analytics (docs/features/tag-reuse.md).
-export function resolveTags(raw: readonly string[], { known, aliases }: TagVocabulary): string[] {
+export const resolveTags = (raw: readonly string[], { known, aliases }: TagVocabulary): string[] => {
   const resolved: string[] = [];
   for (const candidate of raw) {
     const normalised = normaliseTag(candidate);
@@ -24,17 +24,17 @@ export function resolveTags(raw: readonly string[], { known, aliases }: TagVocab
     }
   }
   return resolved.slice(0, MAX_TAGS);
-}
+};
 
-function foldOntoExisting(tag: string, known: ReadonlySet<string>, aliases: TagAliases): string {
+const foldOntoExisting = (tag: string, known: ReadonlySet<string>, aliases: TagAliases): string => {
   const exists = (candidate: string) => known.has(candidate) || Object.hasOwn(aliases, candidate);
   if (exists(tag)) {
     return tag;
   }
   return otherNumberOf(tag).find(exists) ?? tag;
-}
+};
 
-function otherNumberOf(tag: string): string[] {
+const otherNumberOf = (tag: string): string[] => {
   const forms = [`${tag}s`, `${tag}es`];
   if (tag.endsWith("y")) {
     forms.push(`${tag.slice(0, -1)}ies`);
@@ -49,4 +49,4 @@ function otherNumberOf(tag: string): string[] {
     forms.push(tag.slice(0, -1));
   }
   return forms;
-}
+};

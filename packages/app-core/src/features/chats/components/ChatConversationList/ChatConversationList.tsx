@@ -17,7 +17,7 @@ export interface ChatConversationListProps {
 
 // Design 310q–310t: an overview's conversations, newest first, with New conversation at the top.
 // The open one is tinted. Deleting is at once; focus moves to the next row, or to New.
-export function ChatConversationList({ chats, openChatId, now, onNew, onOpen, onDelete }: ChatConversationListProps) {
+export const ChatConversationList = ({ chats, openChatId, now, onNew, onOpen, onDelete }: ChatConversationListProps) => {
   const rows = [...chats].sort((a, b) => lastActive(b).localeCompare(lastActive(a)));
   const openButtons = useRef<(HTMLButtonElement | null)[]>([]);
   const newButton = useRef<HTMLButtonElement | null>(null);
@@ -75,4 +75,4 @@ export function ChatConversationList({ chats, openChatId, now, onNew, onOpen, on
       </ul>
     </div>
   );
-}
+};

@@ -2,7 +2,7 @@ import { AnalyticsConsent } from "./types/AnalyticsConsent.js";
 
 const STORAGE_KEY = "overview.analyticsConsent.v1";
 
-export function readAnalyticsConsent(storage: Storage = globalThis.localStorage): AnalyticsConsent | null {
+export const readAnalyticsConsent = (storage: Storage = globalThis.localStorage): AnalyticsConsent | null => {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) {
@@ -12,9 +12,9 @@ export function readAnalyticsConsent(storage: Storage = globalThis.localStorage)
   } catch {
     return null;
   }
-}
+};
 
-export function writeAnalyticsConsent(consent: AnalyticsConsent | null, storage: Storage = globalThis.localStorage): void {
+export const writeAnalyticsConsent = (consent: AnalyticsConsent | null, storage: Storage = globalThis.localStorage): void => {
   try {
     if (consent === null) {
       storage.removeItem(STORAGE_KEY);
@@ -24,4 +24,4 @@ export function writeAnalyticsConsent(consent: AnalyticsConsent | null, storage:
   } catch {
     return;
   }
-}
+};

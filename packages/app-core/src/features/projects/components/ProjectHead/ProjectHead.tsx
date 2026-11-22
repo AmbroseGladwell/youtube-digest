@@ -45,7 +45,7 @@ const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText =
 // The top of a project's page: what it's for on the stone tint (1rem, 0.8rem on a phone),
 // counts from code, the verdict spread, then Copy as Markdown and ⋯
 // ("OV-168 2 The Project Page" 168f–168l, 168p, 168bd–168bf).
-export function ProjectHead({
+export const ProjectHead = ({
   summary,
   now,
   assistantConnected,
@@ -60,7 +60,7 @@ export function ProjectHead({
   onCopied,
   suggestionsLine = null,
   purposeAsked = 0,
-}: ProjectHeadProps) {
+}: ProjectHeadProps) => {
   const { project, items, unread, updatedAt } = summary;
   const [renaming, setRenaming] = useState(false);
   const [editingPurpose, setEditingPurpose] = useState(false);
@@ -312,9 +312,9 @@ export function ProjectHead({
       </div>
     </div>
   );
-}
+};
 
-function NameEditor({ name, onSave, onCancel }: { name: string; onSave: (name: string) => void; onCancel: () => void }) {
+const NameEditor = ({ name, onSave, onCancel }: { name: string; onSave: (name: string) => void; onCancel: () => void }) => {
   const [value, setValue] = useState(name);
   const field = useRef<HTMLInputElement | null>(null);
   const helpId = useId();
@@ -364,9 +364,9 @@ function NameEditor({ name, onSave, onCancel }: { name: string; onSave: (name: s
       </div>
     </div>
   );
-}
+};
 
-function PurposeEditor({
+const PurposeEditor = ({
   purpose,
   assistantConnected,
   assistantWrote,
@@ -378,7 +378,7 @@ function PurposeEditor({
   assistantWrote: string | null;
   onSave: (purpose: string | null) => void;
   onCancel: () => void;
-}) {
+}) => {
   const [value, setValue] = useState(purpose);
   const field = useRef<HTMLTextAreaElement | null>(null);
   const helpId = useId();
@@ -435,4 +435,4 @@ function PurposeEditor({
       </div>
     </section>
   );
-}
+};

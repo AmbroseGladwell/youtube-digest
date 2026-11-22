@@ -8,7 +8,7 @@ export interface RecordingPersonEraser extends PersonEraser {
   failing: boolean;
 }
 
-export function makeRecordingPersonEraser(): RecordingPersonEraser {
+export const makeRecordingPersonEraser = (): RecordingPersonEraser => {
   const eraser: RecordingPersonEraser = {
     erased: [],
     absent: new Set(),
@@ -22,4 +22,4 @@ export function makeRecordingPersonEraser(): RecordingPersonEraser {
     },
   };
   return eraser;
-}
+};

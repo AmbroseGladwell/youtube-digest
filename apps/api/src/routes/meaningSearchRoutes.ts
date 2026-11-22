@@ -8,7 +8,7 @@ const MeaningQuery = z.object({ query: z.string().trim().min(1).max(MEANING_QUER
 
 // Absent an embedder, the route still answers, unavailable, so the app shows word matches
 // and says meaning is off rather than failing (docs/features/search-by-meaning.md).
-export function meaningSearchRoutes(app: FastifyInstance, meaning: MeaningSearch | null): void {
+export const meaningSearchRoutes = (app: FastifyInstance, meaning: MeaningSearch | null): void => {
   app.get("/search/meaning", async (request): Promise<MeaningSearchResponse> => {
     const { query } = parseOrThrow(MeaningQuery, request.query, "The search");
     const result = meaning === null ? { available: false as const } : await meaning.search(request.session!.accountId, query);
@@ -23,4 +23,4 @@ export function meaningSearchRoutes(app: FastifyInstance, meaning: MeaningSearch
       ? { available: true, matches: result.matches.map(({ overviewId, similarity }) => ({ overviewId, similarity })) }
       : { available: false };
   });
-}
+};

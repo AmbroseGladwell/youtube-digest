@@ -30,7 +30,7 @@ export interface UsageLineOptions {
 // (decided on OV-131): only the quota the next overview will use. Falling back to our key on
 // Free or BYO Plus, it mentions Plus once (95m): an upsell names only a plan that makes more
 // on the key this overview uses (decided on OV-131).
-export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: UsageLineOptions = {}): UsageLine {
+export const usageLineOf = (next: NextQuota, { narrow = false, plan = null }: UsageLineOptions = {}): UsageLine => {
   const planLink = narrow ? null : "Plan";
   switch (next.kind) {
     case "checking":
@@ -57,10 +57,10 @@ export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: Us
         : { parts: [`${left} ${ON_KEY[next.key]} this month`, `Resets ${resetDate(next.resetsOn)}`], link: planLink };
     }
   }
-}
+};
 
 // The Settings row beside Plan: the plan, and what's left of the next quota (design 95d).
-export function planRowCount(next: NextQuota | null): string | null {
+export const planRowCount = (next: NextQuota | null): string | null => {
   if (next === null) {
     return null;
   }
@@ -74,4 +74,4 @@ export function planRowCount(next: NextQuota | null): string | null {
     case "spent":
       return "None left this month";
   }
-}
+};

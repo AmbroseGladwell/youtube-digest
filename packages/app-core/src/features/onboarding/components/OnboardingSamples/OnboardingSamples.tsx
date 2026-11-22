@@ -13,7 +13,7 @@ export const SAMPLE_FAILED = "That sample couldn't be opened. Try another, or pa
 // Design 155d: Start's samples as rows, three at a time, under what the panel is beside. More
 // samples opens the rest in place and moves focus to the first of them; nothing scrolls sideways
 // (docs/features/onboarding.md, "Try a sample").
-export function OnboardingSamples({ samples }: { samples: readonly Sample[] }) {
+export const OnboardingSamples = ({ samples }: { samples: readonly Sample[] }) => {
   const headingId = useId();
   const { opening, failed, open } = useStartFromSample();
   const [all, setAll] = useState(false);
@@ -78,4 +78,4 @@ export function OnboardingSamples({ samples }: { samples: readonly Sample[] }) {
       )}
     </section>
   );
-}
+};

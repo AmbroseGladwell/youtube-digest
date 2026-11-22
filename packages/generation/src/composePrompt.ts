@@ -10,11 +10,11 @@ import { transcriptBudget } from "./sections/transcriptBudget.js";
 
 const VIDEO_TAG = /<(\/?)(video|title|channel|description|transcript)\b/gi;
 
-function asVideoContent(text: string): string {
+const asVideoContent = (text: string): string => {
   return text.replace(VIDEO_TAG, "‹$1$2");
-}
+};
 
-function contextBlock(input: GenerationInput): string {
+const contextBlock = (input: GenerationInput): string => {
   const transcript = input.transcript.map((segment, i) => `[${i}] ${asVideoContent(segment.text)}`).join("\n");
   return `
 <video>
@@ -27,7 +27,7 @@ ${transcript}
 </video>
 
 Why they saved it: ${input.captureReason ?? "not said"}`;
-}
+};
 
 // Only a long video is held to its whole length, so a short one's note and retries stay as
 // they were (docs/features/overview-generation-decisions.md, "One note budget").
@@ -88,7 +88,7 @@ export const SYSTEM_OPENING: Record<NoteKind, string> = {
     "You write the note on a saved recipe video for one reader, from its transcript and description alone. Follow the sections below exactly. ",
 };
 
-export function composePrompt(input: GenerationInput, kind: NoteKind = "default"): ComposedPrompt {
+export const composePrompt = (input: GenerationInput, kind: NoteKind = "default"): ComposedPrompt => {
   const sections = enabledSections(input, kind);
 
   const instructions = sections.map((section) => section.prompt(input)).join("\n");
@@ -109,4 +109,4 @@ export function composePrompt(input: GenerationInput, kind: NoteKind = "default"
     userMessage: contextBlock(input),
     schema: kind === "recipe" ? schema : schema.superRefine(keyPointsCoverALongVideo(input)),
   };
-}
+};

@@ -6,7 +6,7 @@ import type { createPodcastTranscriptions } from "../podcasts/createPodcastTrans
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 
 // The month's overviews, and its transcribing where this server transcribes episodes.
-export function overviewUsageRoutes(
+export const overviewUsageRoutes = (
   app: FastifyInstance,
   {
     usage,
@@ -19,7 +19,7 @@ export function overviewUsageRoutes(
     sql: SqlClient;
     clock: () => Date;
   },
-): void {
+): void => {
   app.get("/overview-usage", async (request): Promise<OverviewUsage> => {
     const { accountId } = request.session!;
     const plan = await accountPlan(sql, accountId);
@@ -30,4 +30,4 @@ export function overviewUsageRoutes(
     }
     return { ...overviews, transcription: await transcriptions.usage(now, { accountId, plan }) };
   });
-}
+};

@@ -51,7 +51,7 @@ const INTROS: Record<SettingsSectionId, string | null> = {
   about: null,
 };
 
-function SectionBody({ id }: { id: SettingsSectionId }) {
+const SectionBody = ({ id }: { id: SettingsSectionId }) => {
   switch (id) {
     case "account":
       return <SyncPanel />;
@@ -90,11 +90,11 @@ function SectionBody({ id }: { id: SettingsSectionId }) {
         </>
       );
   }
-}
+};
 
 // Design OV-51 (docs/features/settings.md): two panes on a wide screen, and on a phone or in
 // the panel the list is the page and each section is a page of its own.
-export function SettingsPage({ section }: SettingsPageProps) {
+export const SettingsPage = ({ section }: SettingsPageProps) => {
   const analytics = useAnalytics();
   const sections = useSettingsSections();
   const isPanel = useIsPanel();
@@ -184,4 +184,4 @@ export function SettingsPage({ section }: SettingsPageProps) {
       )}
     </div>
   );
-}
+};

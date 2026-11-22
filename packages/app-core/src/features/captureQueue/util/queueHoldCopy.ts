@@ -6,7 +6,7 @@ const count = (n: number) => n.toLocaleString("en-GB");
 // One pattern for every limit the queue waits at, with a different reason and resume time;
 // the extension is named only where it would be a way around
 // (docs/features/capture-queue.md, "Waiting at a limit").
-export function queueHoldStripMeta(hold: QueueHold, waiting: number, viaExtension: boolean): string {
+export const queueHoldStripMeta = (hold: QueueHold, waiting: number, viaExtension: boolean): string => {
   const time = resumeTimeText(new Date(hold.resumesAt));
   const continues = `${waiting === 1 ? "it continues" : "these continue"} after ${time}`;
   switch (hold.reason) {
@@ -17,9 +17,9 @@ export function queueHoldStripMeta(hold: QueueHold, waiting: number, viaExtensio
     case "monthSpent":
       return `${count(waiting)} waiting · ${continues}`;
   }
-}
+};
 
-export function queueHoldNote(hold: QueueHold, waiting: number, viaExtension: boolean): string {
+export const queueHoldNote = (hold: QueueHold, waiting: number, viaExtension: boolean): string => {
   const time = resumeTimeText(new Date(hold.resumesAt));
   const subject = waiting === 1 ? "The waiting video continues" : "These continue";
   switch (hold.reason) {
@@ -30,4 +30,4 @@ export function queueHoldNote(hold: QueueHold, waiting: number, viaExtension: bo
     case "monthSpent":
       return `This month's overviews are made. ${subject} after ${time}. Nothing has failed.`;
   }
-}
+};

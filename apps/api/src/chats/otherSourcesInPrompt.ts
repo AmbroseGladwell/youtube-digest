@@ -24,11 +24,11 @@ export interface OtherSourcesInPrompt {
 // every later question from what the conversation stored, so the prompt only ever grows at its end
 // (docs/architecture/in-app-chat.md, "What it does to a reader's month"). An overview deleted since
 // is left out and can no longer be cited.
-export function otherSourcesInPrompt(
+export const otherSourcesInPrompt = (
   turns: readonly SourcesTurn[],
   overviews: ReadonlyMap<string, Overview>,
   projects: ReadonlyMap<string, Project>,
-): OtherSourcesInPrompt {
+): OtherSourcesInPrompt => {
   const labels = new Map<string, LabelledSource>();
   const minuteLabels = new Map<string, OtherOverviewCitation>();
   const titles = new Map<string, string>();
@@ -78,17 +78,17 @@ export function otherSourcesInPrompt(
     return parts.length === 0 ? null : parts.join("\n\n");
   });
   return { blocks, labels, minuteLabels };
-}
+};
 
 // OV-307's keyword shape: the minutes beside their overviews, each with an id the model cites in
 // passages, which code turns into a time of that overview's source.
-function minutesBlock(shown: ReadonlyArray<{ label: string; title: string; passages: readonly Passage[] }>): string {
+const minutesBlock = (shown: ReadonlyArray<{ label: string; title: string; passages: readonly Passage[] }>): string => {
   return `# Minutes of their transcripts that match the question's words
 
 Each line is a minute of the transcript of one of the reader's other overviews above, with its id (such as S2.p14). When an answer uses one, list its id as a source, even where this chat's own material has no transcript. inSource is still about this chat's own transcript alone.
 
 ${shown.map(({ label, title, passages }) => `## ${label}: ${title}\n\n${passages.map((passage) => `[${label}.${passage.id} ${formatClock(passage.startMs / 1000)}] ${passage.text}`).join("\n")}`).join("\n\n")}`;
-}
+};
 
 const listed = (items: readonly string[]): string =>
   items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
@@ -106,7 +106,7 @@ const LATER_LEAD = `# More overviews from the reader's library
 Added for this question, labelled and cited as before.`;
 
 // OV-307's otherSourcesBlock and pinnedProjectBlock, as measured, with the pins named.
-function sourcesBlock(present: readonly LabelledSource[], projects: ReadonlyMap<string, Project>, first: boolean): string {
+const sourcesBlock = (present: readonly LabelledSource[], projects: ReadonlyMap<string, Project>, first: boolean): string => {
   const pinned = present
     .filter(({ source }) => source.how === "pinned" && source.projectId === undefined)
     .map(({ source }) => source.label);
@@ -130,11 +130,11 @@ function sourcesBlock(present: readonly LabelledSource[], projects: ReadonlyMap<
     return [`# The rest of ${projectName(projects.get(projectId))}, in brief\n\n${brief.map(briefLine).join("\n\n")}`];
   });
   return [first ? FIRST_LEAD : LATER_LEAD, lines.join("\n"), ...whole, ...briefs].filter((part) => part !== "").join("\n\n");
-}
+};
 
 const projectName = (project: Project | undefined): string => (project === undefined ? "the project" : `"${project.name}"`);
 
-function projectLead(project: Project | undefined, present: readonly LabelledSource[], projectId: string): string {
+const projectLead = (project: Project | undefined, present: readonly LabelledSource[], projectId: string): string => {
   const members = present.filter(({ source }) => source.projectId === projectId);
   const whole = members.filter(({ source }) => source.brief !== true).map(({ source }) => source.label);
   const purpose = project?.purpose === null || project?.purpose === undefined ? "" : `, which they keep for this: "${project.purpose}"`;
@@ -145,7 +145,7 @@ function projectLead(project: Project | undefined, present: readonly LabelledSou
       ? ` The ${whole.length === 1 ? "one" : "few"} closest to the question (${listed(whole)}) ${whole.length === 1 ? "is" : "are"} given in full; the rest are listed in brief, by title, big picture and core claim.`
       : ""
   }`;
-}
+};
 
 const briefLine = ({ source, overview }: LabelledSource): string =>
   [`## [${source.label}] ${overview.source.title}`, overview.bigPicture ?? "", overview.coreClaim].filter((line) => line !== "").join("\n");

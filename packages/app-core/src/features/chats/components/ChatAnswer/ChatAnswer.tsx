@@ -93,7 +93,7 @@ const stretchesOf = (citations: readonly ChatCitation[]): TimeRange[] =>
 // (319c). One the source doesn't cover says so in a label above it, its text as plain as any
 // other: an answer, not an error. One from the overview has no label: its pills and its wording
 // say so (319k). One that has just arrived fades in what streaming didn't show (OV-341).
-export function ChatAnswer({
+export const ChatAnswer = ({
   text,
   inSource,
   citations,
@@ -113,7 +113,7 @@ export function ChatAnswer({
   imageOf,
   onSourcesOpened,
   actions,
-}: ChatAnswerProps) {
+}: ChatAnswerProps) => {
   const stretches = video === null ? [] : stretchesOf(citations);
   const parts = overviewCitationViews(overview, citations);
   const others = otherOverviewsOf(citations);
@@ -253,10 +253,10 @@ export function ChatAnswer({
       {actions?.(sourcesMenu)}
     </div>
   );
-}
+};
 
 // A list item's text, inline, or as paragraphs and code blocks when it holds a fence (OV-372).
-function ChatItemText({ text }: { text: string }) {
+const ChatItemText = ({ text }: { text: string }) => {
   if (!holdsCodeBlock(text)) {
     return <ChatMarkedText text={text} />;
   }
@@ -265,18 +265,18 @@ function ChatItemText({ text }: { text: string }) {
       <ChatAnswerText text={text} />
     </div>
   );
-}
+};
 
 // OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
 // sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
-export function ChatAnswerSectionsView({
+export const ChatAnswerSectionsView = ({
   sections,
   chipsOf,
 }: {
   sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
   // The chips for what a section cites; none while it streams in an overview's chat.
   chipsOf?: ((cited: readonly ChatCitation[]) => ChatChip[]) | undefined;
-}) {
+}) => {
   const row = (cited: readonly ChatCitation[]) => {
     const chips = chipsOf?.(cited) ?? [];
     return <ChatChipRow chips={chips.map((each) => each.chip)} hiddenLabels={chips.slice(VISIBLE_CHIPS).map((each) => each.label)} />;
@@ -341,11 +341,11 @@ export function ChatAnswerSectionsView({
       )}
     </>
   );
-}
+};
 
 // OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
 // moments first. N is counted by code.
-export function ChatSourcesMenu({
+export const ChatSourcesMenu = ({
   count,
   onOpened,
   children,
@@ -353,7 +353,7 @@ export function ChatSourcesMenu({
   count: number;
   onOpened?: ((count: number) => void) | undefined;
   children: ReactNode;
-}) {
+}) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -398,11 +398,11 @@ export function ChatSourcesMenu({
       )}
     </div>
   );
-}
+};
 
 // Design 319 for OV-320: a plain link beside an article's key point or chapter. Beside the
 // article it moves the page; anywhere else it opens the page at that place in a new tab.
-function ShowOnPageLink({ page, place }: { page: ChatPage; place: ArticlePlace }) {
+const ShowOnPageLink = ({ page, place }: { page: ChatPage; place: ArticlePlace }) => {
   if (page.onPage !== null) {
     const { onPage } = page;
     if (onPage.statusOf(place) === "missing") {
@@ -426,4 +426,4 @@ function ShowOnPageLink({ page, place }: { page: ChatPage; place: ArticlePlace }
       <StrokeIcon name="openOut" size={13} />
     </a>
   );
-}
+};

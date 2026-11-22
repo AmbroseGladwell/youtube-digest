@@ -13,11 +13,11 @@ export interface PacedQueue {
 // A pace holds only its own playlist's videos; everything else carries on in its place, and
 // a video the reader chose never waits on its pace (docs/features/capture-queue.md,
 // "Waiting on a pace").
-export function pacedQueue(
+export const pacedQueue = (
   waiting: readonly QueuedCapture[],
   paceOf: (capture: QueuedCapture) => PlaylistPace,
   madeToday: (capture: QueuedCapture) => number,
-): PacedQueue {
+): PacedQueue => {
   const chosen = waiting.filter((capture) => capture.chosenAt !== null);
   const ready: QueuedCapture[] = [];
   const tomorrow: QueuedCapture[] = [];
@@ -44,4 +44,4 @@ export function pacedQueue(
   }
 
   return { ready: [...chosen, ...ready], tomorrow, forYou };
-}
+};

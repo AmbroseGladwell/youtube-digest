@@ -15,7 +15,7 @@ export interface LentBackLink {
 // The ref goes on the page's own back link. Registered from an effect rather than a
 // callback ref: the router's Link merges refs into a new function every render, which
 // would detach and re-attach a callback ref, and set the shell's state, on each one.
-export function useLentBackLink({ to, label, follow, lent = true, inPage = true }: LentBackLink): RefObject<HTMLAnchorElement | null> {
+export const useLentBackLink = ({ to, label, follow, lent = true, inPage = true }: LentBackLink): RefObject<HTMLAnchorElement | null> => {
   const handoff = useBackLinkHandoff();
   const latestFollow = useRef(follow);
   latestFollow.current = follow;
@@ -31,4 +31,4 @@ export function useLentBackLink({ to, label, follow, lent = true, inPage = true 
   }, [handoff, to, label, lent, inPage]);
 
   return element;
-}
+};

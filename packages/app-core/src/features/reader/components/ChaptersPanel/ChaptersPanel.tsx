@@ -43,7 +43,7 @@ const throughChapter = (chapter: Chapter, positionMs: number): number => {
 
 // Design 3a: the chapter the video is inside sits on the raised card with an orange
 // range and a thin bar through it; the chapters before it drop to the muted ink.
-export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps = [] }: ChaptersPanelProps) {
+export const ChaptersPanel = ({ chapters, video, held, onOpenTranscriptAt, steps = [] }: ChaptersPanelProps) => {
   const isPanel = useIsPanel();
   const seek = useSeekPlayback(video.id);
   const position = usePlaybackPosition(video.id);
@@ -154,7 +154,7 @@ export function ChaptersPanel({ chapters, video, held, onOpenTranscriptAt, steps
       </div>
     </div>
   );
-}
+};
 
 interface ChapterRangeProps {
   chapter: Chapter;
@@ -166,7 +166,7 @@ interface ChapterRangeProps {
 // The range is the control, as the transcript's times are: a player beside the panel
 // is moved, the wide reader links out to YouTube, and a panel whose tab has moved on
 // prints the range as plain text (docs/features/chapters.md).
-function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
+const ChapterRange = ({ chapter, video, seek, linksOut }: ChapterRangeProps) => {
   const label = formatTimeRange(chapter.startMs, chapter.endMs);
   const analytics = useOverviewPageAnalytics();
 
@@ -202,4 +202,4 @@ function ChapterRange({ chapter, video, seek, linksOut }: ChapterRangeProps) {
     );
   }
   return <span data-testid={chaptersPanelTestIds.range}>{label}</span>;
-}
+};

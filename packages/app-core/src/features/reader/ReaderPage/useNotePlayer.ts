@@ -29,7 +29,7 @@ const isBusyElsewhere = (snapshot: PlayerSnapshot) =>
 // can say whether its audio exists, and so is one opened while another note waits paused out
 // of sight; one opened while the mini-player holds another note keeps a reading mark of its
 // own, and takes the player over only when play is pressed on it.
-export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
+export const useNotePlayer = (track: PlayerTrack | null): NotePlayer => {
   const engine = usePlayer();
   const snapshot = usePlayerSnapshot();
   const time = usePlayerTime();
@@ -106,4 +106,4 @@ export function useNotePlayer(track: PlayerTrack | null): NotePlayer {
       }
     },
   };
-}
+};

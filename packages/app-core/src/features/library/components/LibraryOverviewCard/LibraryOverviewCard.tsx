@@ -45,7 +45,7 @@ const SELLING_LABEL: Record<string, string> = {
 const bylineOf = (source: Source): string =>
   source.kind === "web" && source.author !== null ? `${sourceName(source)} · ${source.author}` : sourceName(source);
 
-export function LibraryOverviewCard({
+export const LibraryOverviewCard = ({
   overviewWithState,
   entering = false,
   topicNames,
@@ -57,7 +57,7 @@ export function LibraryOverviewCard({
   readerState,
   addedBy = null,
   selection = null,
-}: LibraryOverviewCardProps) {
+}: LibraryOverviewCardProps) => {
   const { overview, state } = overviewWithState;
   const selling = overview.selling && overview.selling.type !== "none" ? SELLING_LABEL[overview.selling.type] : null;
   const readerPath = Routes.overview(overview.id);
@@ -219,4 +219,4 @@ export function LibraryOverviewCard({
       </div>
     </article>
   );
-}
+};

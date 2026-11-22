@@ -8,7 +8,7 @@ export interface ConversationSources {
   searchLibrary: boolean;
 }
 
-export function conversationSources(chat: Pick<Chat, "messages"> | null): ConversationSources {
+export const conversationSources = (chat: Pick<Chat, "messages"> | null): ConversationSources => {
   const asked = (chat?.messages ?? []).flatMap((message) => (message.from === "reader" ? [message] : []));
   const setAside = new Set(asked.flatMap((message) => message.setAside ?? []));
   const live = new Map<string, ChatSource>();
@@ -21,4 +21,4 @@ export function conversationSources(chat: Pick<Chat, "messages"> | null): Conver
   }
   const last = asked.at(-1);
   return { live: [...live.values()], searchLibrary: last === undefined ? true : last.searchedLibrary !== false };
-}
+};

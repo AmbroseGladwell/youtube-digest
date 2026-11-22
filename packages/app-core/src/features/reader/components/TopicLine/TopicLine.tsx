@@ -30,7 +30,7 @@ const sheet = (isPhone: boolean, content: ReactNode) => (isPhone ? createPortal(
 // Design 14a/14b/14c: reading, this is the topics the overview is in and nothing else. The
 // editing half is disclosed by the picker, so the line is editable exactly while the picker
 // is open (docs/features/topic-filing.md).
-export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps) {
+export const TopicLine = ({ overview, editing, onEditingChange }: TopicLineProps) => {
   const topicsQuery = useTopicsQuery();
   const libraryQuery = useOverviewsWithStateQuery();
   const setOverviewTopics = useSetOverviewTopicsMutation();
@@ -115,4 +115,4 @@ export function TopicLine({ overview, editing, onEditingChange }: TopicLineProps
       )}
     </span>
   );
-}
+};

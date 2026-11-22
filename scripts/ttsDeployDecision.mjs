@@ -5,14 +5,14 @@ import { fileURLToPath } from "node:url";
 const TTS_PATH = "services/tts";
 const API_FLY_TOML = "fly.toml";
 
-function gitSucceeds(args) {
+const gitSucceeds = (args) => {
   try {
     execFileSync("git", args, { stdio: "ignore" });
     return true;
   } catch {
     return false;
   }
-}
+};
 
 export const gitHistory = {
   exists: (commit) => gitSucceeds(["cat-file", "-e", `${commit}^{commit}`]),
@@ -21,14 +21,14 @@ export const gitHistory = {
 };
 
 // What each machine says it is running: the commit the last deploy stamped on its env.
-export function deployedCommitsOf(machines) {
+export const deployedCommitsOf = (machines) => {
   return machines.map((machine) => machine?.config?.env?.DEPLOYED_COMMIT ?? null);
-}
+};
 
 // Whether HEAD's services/tts differs from what is live, judged against the live commit
 // rather than the previous push, because CI cancels superseded runs on main
 // (docs/architecture/deploy.md, "The TTS service").
-export function ttsDeployDecision({ deployedCommits, head, git = gitHistory }) {
+export const ttsDeployDecision = ({ deployedCommits, head, git = gitHistory }) => {
   const known = [...new Set(deployedCommits)];
   if (deployedCommits.length === 0) {
     return { deploy: true, reason: "the app has no machines to compare" };
@@ -52,21 +52,21 @@ export function ttsDeployDecision({ deployedCommits, head, git = gitHistory }) {
   return git.changed(live, head)
     ? { deploy: true, reason: `${TTS_PATH} changed between the live ${short(live)} and ${short(head)}` }
     : { deploy: false, reason: `${TTS_PATH} is unchanged since the live ${short(live)}` };
-}
+};
 
 // The pool is as many machines as the API runs renders at once, so the API's own setting is
 // its size (docs/architecture/deploy.md, "The TTS service").
-export function poolSizeOf(apiFlyToml) {
+export const poolSizeOf = (apiFlyToml) => {
   const match = apiFlyToml.match(/^\s*TTS_CONCURRENCY\s*=\s*"(\d+)"/m);
   if (match === null) {
     throw new Error(`${API_FLY_TOML} sets no TTS_CONCURRENCY to size the pool by`);
   }
   return Number(match[1]);
-}
+};
 
 // A deploy that retries can leave the machines it created on an earlier try behind, so the
 // count is checked as well as the commit (docs/architecture/deploy.md, "The TTS service").
-export function verifyTtsDeploy({ deployedCommits, head, poolSize }) {
+export const verifyTtsDeploy = ({ deployedCommits, head, poolSize }) => {
   const behind = deployedCommits.filter((commit) => commit !== head).length;
   if (deployedCommits.length === 0 || behind > 0) {
     throw new Error(`${behind} of ${deployedCommits.length} machines don't report ${short(head)} after the deploy`);
@@ -75,11 +75,11 @@ export function verifyTtsDeploy({ deployedCommits, head, poolSize }) {
     throw new Error(`the pool has ${deployedCommits.length} machines, not ${poolSize}: fly scale count ${poolSize} --app the-overview-tts`);
   }
   return `all ${deployedCommits.length} machines report ${short(head)}`;
-}
+};
 
-function short(commit) {
+const short = (commit) => {
   return commit.slice(0, 7);
-}
+};
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [mode, machinesFile, head] = process.argv.slice(2);

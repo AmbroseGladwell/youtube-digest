@@ -46,11 +46,11 @@ const refusalOf = (error: unknown): Error => {
 // asked after every few seconds until the words are ready. Waiting for a card and transcribing are
 // told apart, since only the second is the minute the words take (design 305e). Asking again for
 // one transcribed in the last day, or on its way, joins it and costs nothing.
-export async function transcribeEpisode(
+export const transcribeEpisode = async (
   api: Pick<PodcastApi, "transcribe" | "transcription">,
   episode: PodcastEpisode,
   { onProgress, isCancelled, sleep = wait }: TranscribeEpisodeOptions = {},
-): Promise<{ transcript: StoredTranscript }> {
+): Promise<{ transcript: StoredTranscript }> => {
   let state: PodcastTranscription = await api.transcribe({ feedUrl: episode.feedUrl, guid: episode.guid }).catch((error: unknown) => {
     throw refusalOf(error);
   });
@@ -82,4 +82,4 @@ export async function transcribeEpisode(
       }
     }
   }
-}
+};

@@ -43,7 +43,7 @@ export const videoLengthMs = (fetched: FetchedTranscript): number => fetched.vid
 
 export const isPassed = (record: RunRecord): boolean => record.outcome === "passed-first" || record.outcome === "passed-after-retry";
 
-export function summariseRuns(records: readonly RunRecord[], transcripts: ReadonlyMap<string, FetchedTranscript>): ModelSummary[] {
+export const summariseRuns = (records: readonly RunRecord[], transcripts: ReadonlyMap<string, FetchedTranscript>): ModelSummary[] => {
   const byModel = new Map<string, RunRecord[]>();
   for (const record of records) {
     const name = `${record.provider}:${record.model}`;
@@ -95,4 +95,4 @@ export function summariseRuns(records: readonly RunRecord[], transcripts: Readon
       checks,
     };
   });
-}
+};

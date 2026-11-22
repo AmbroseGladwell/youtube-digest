@@ -18,7 +18,7 @@ export interface OnThisTabLineProps {
 // bar. The copy is generic and never names what's on the tab: the reader can see the tab
 // beside the panel. Making lands on home, where the run is the page, exactly as if the
 // offer had been taken there (docs/features/extension-panel.md).
-export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
+export const OnThisTabLine = ({ tab, onStartVideo }: OnThisTabLineProps) => {
   const analytics = useAnalytics();
   const navigate = useNavigate();
   const startArticleRun = useStartArticleRun();
@@ -77,4 +77,4 @@ export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
       </button>
     </div>
   );
-}
+};

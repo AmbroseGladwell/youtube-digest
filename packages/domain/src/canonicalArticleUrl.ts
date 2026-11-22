@@ -31,7 +31,7 @@ const parsedWebUrl = (href: string, base?: string): URL | null => {
 
 // A home page named as the canonical of an article is a site's template misfiring, and would
 // make every article on that site one item (docs/features/article-extraction.md).
-export function canonicalArticleUrl(pageUrl: string, declaredCanonical: string | null): string {
+export const canonicalArticleUrl = (pageUrl: string, declaredCanonical: string | null): string => {
   const page = parsedWebUrl(pageUrl);
   if (page === null) {
     return pageUrl;
@@ -46,4 +46,4 @@ export function canonicalArticleUrl(pageUrl: string, declaredCanonical: string |
   }
   url.hash = "";
   return url.href;
-}
+};

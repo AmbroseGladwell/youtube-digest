@@ -24,14 +24,14 @@ const LINK = /\[(\d+(?::\d+)+)(?:–(\d+(?::\d+)+))?\]\([^)]*\)/;
 const keyOf = <K extends string>(labels: Record<K, string>, text: string): K | undefined =>
   (Object.keys(labels) as K[]).find((key) => text.startsWith(labels[key]));
 
-function sections(markdown: string): Map<string, string> {
+const sections = (markdown: string): Map<string, string> => {
   const found = new Map<string, string>();
   for (const block of markdown.split(/^## /m).slice(1)) {
     const newline = block.indexOf("\n");
     found.set(block.slice(0, newline).trim(), block.slice(newline + 1).trim());
   }
   return found;
-}
+};
 
 const bulletsOf = (body: string) =>
   body
@@ -39,31 +39,31 @@ const bulletsOf = (body: string) =>
     .filter((line) => /^(- |\d+\. )/.test(line))
     .map((line) => line.replace(/^(- |\d+\. )/, ""));
 
-function trailingRange(text: string): { text: string; range: { startMs: number; endMs: number } | null } {
+const trailingRange = (text: string): { text: string; range: { startMs: number; endMs: number } | null } => {
   const match = new RegExp(` \\(${LINK.source}\\)$`).exec(text);
   if (match === null) {
     return { text, range: null };
   }
   const startMs = clockMs(match[1]!);
   return { text: text.slice(0, match.index), range: { startMs, endMs: match[2] === undefined ? startMs : clockMs(match[2]) } };
-}
+};
 
 const READ_ANYWAY: Record<string, "yes" | "no" | "partial"> = { Yes: "yes", No: "no", "Just part of it": "partial" };
 const ARTICLE_CHAPTER = /^\[(.*?)\]\(([^)]*)\): (.*)$/;
 
 // A place's address, back to its anchor or its quoted text (articlePlaceUrl).
-function placeOf(url: string): ArticlePlace {
+const placeOf = (url: string): ArticlePlace => {
   const hash = url.indexOf("#");
   const fragment = hash === -1 ? "" : url.slice(hash + 1);
   return fragment.startsWith(":~:text=")
     ? { anchor: null, quote: decodeURIComponent(fragment.slice(":~:text=".length).split(",")[0]!) }
     : { anchor: fragment === "" ? null : decodeURIComponent(fragment), quote: "" };
-}
+};
 
 const minutesOf = (value: string): number =>
   [...value.matchAll(/(\d+) (hr|min)/g)].reduce((total, [, count, unit]) => total + Number(count) * (unit === "hr" ? 60 : 1), 0);
 
-function recipeFrom(found: Map<string, string>): Overview["recipe"] {
+const recipeFrom = (found: Map<string, string>): Overview["recipe"] => {
   const ingredients = bulletsOf(found.get("Ingredients") ?? "");
   const steps: RecipeStep[] = [];
   let group: string | null = null;
@@ -95,9 +95,9 @@ function recipeFrom(found: Map<string, string>): Overview["recipe"] {
     totalMinutes: minutes("Total"),
     yield: made === undefined ? null : `${figures.has("Serves") ? "Serves" : "Makes"} ${made}`,
   };
-}
+};
 
-export function overviewFromMarkdown(markdown: string): Partial<Overview> {
+export const overviewFromMarkdown = (markdown: string): Partial<Overview> => {
   const found = sections(markdown);
   const overview: Partial<Overview> = {};
   if (found.has("Ingredients")) {
@@ -223,4 +223,4 @@ export function overviewFromMarkdown(markdown: string): Partial<Overview> {
     overview.bigPicture = big;
   }
   return overview;
-}
+};

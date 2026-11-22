@@ -27,7 +27,7 @@ export const applyProjectMemberChange = (
   return [...others, held ?? { id, projectId, overviewId, addedAt: now, addedBy: BY_READER, removedAt: null }];
 };
 
-export function useSetProjectMemberMutation() {
+export const useSetProjectMemberMutation = () => {
   const { projectStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -54,4 +54,4 @@ export function useSetProjectMemberMutation() {
       }
     },
   });
-}
+};

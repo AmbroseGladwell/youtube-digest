@@ -9,7 +9,7 @@ export interface SavedLocallyNoteProps {
   onDismiss: () => void;
 }
 
-export function SavedLocallyNote({ onDismiss }: SavedLocallyNoteProps) {
+export const SavedLocallyNote = ({ onDismiss }: SavedLocallyNoteProps) => {
   const analytics = useAnalytics();
   return (
     <div className={styles.root} role="note" data-testid={savedLocallyNoteTestIds.root}>
@@ -40,4 +40,4 @@ export function SavedLocallyNote({ onDismiss }: SavedLocallyNoteProps) {
       </div>
     </div>
   );
-}
+};

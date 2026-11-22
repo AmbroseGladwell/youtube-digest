@@ -6,13 +6,13 @@ import type { ArticleGenerationInput } from "./ArticleGenerationInput.js";
 import { assembleArticleOverview, type GeneratedArticleOutput } from "./assembleArticleOverview.js";
 import { composeArticlePrompt } from "./composeArticlePrompt.js";
 
-export async function generateArticleOverview(
+export const generateArticleOverview = async (
   client: GenerationClient,
   input: ArticleGenerationInput,
   meta: { id: OverviewId; savedAt: string },
   observer: GenerationObserver = {},
-): Promise<Overview> {
+): Promise<Overview> => {
   const output = await requestGeneratedOutput<GeneratedArticleOutput>(client, composeArticlePrompt(input));
   observer.projectsFiled?.(filedProjectIds(input.existingProjects, output.matchedProjectNames));
   return assembleArticleOverview(input, output, { ...meta, sourceId: await articleSourceId(input.article.url) });
-}
+};

@@ -7,7 +7,7 @@ const storageKeyFor = (accountId: string | null): string => (accountId === null 
 
 // Every read and write is allowed to fail quietly: a browser that refuses site data
 // costs the reader a convenience, not the transcript (docs/features/reading-position.md).
-function readAll(accountId: string | null, storage: Storage): ReadingPositions {
+const readAll = (accountId: string | null, storage: Storage): ReadingPositions => {
   try {
     const raw = storage.getItem(storageKeyFor(accountId));
     if (!raw) {
@@ -17,39 +17,47 @@ function readAll(accountId: string | null, storage: Storage): ReadingPositions {
   } catch {
     return [];
   }
-}
+};
 
-function writeAll(positions: ReadingPositions, accountId: string | null, storage: Storage): void {
+const writeAll = (positions: ReadingPositions, accountId: string | null, storage: Storage): void => {
   try {
     storage.setItem(storageKeyFor(accountId), JSON.stringify(positions));
   } catch {
     // see above
   }
-}
+};
 
-export function readReadingPosition(videoId: string, accountId: string | null, storage: Storage = globalThis.localStorage): number | null {
+export const readReadingPosition = (
+  videoId: string,
+  accountId: string | null,
+  storage: Storage = globalThis.localStorage,
+): number | null => {
   return readingPositionFor(readAll(accountId, storage), videoId);
-}
+};
 
-export function writeReadingPosition(
+export const writeReadingPosition = (
   videoId: string,
   startMs: number,
   accountId: string | null,
   storage: Storage = globalThis.localStorage,
-): void {
+): void => {
   writeAll(rememberReadingPosition(readAll(accountId, storage), videoId, startMs), accountId, storage);
-}
+};
 
-export function forgetReadingPosition(videoId: string, accountId: string | null, storage: Storage = globalThis.localStorage): void {
+export const forgetReadingPosition = (videoId: string, accountId: string | null, storage: Storage = globalThis.localStorage): void => {
   const positions = readAll(accountId, storage);
   if (readingPositionFor(positions, videoId) !== null) {
     writeAll(forgetReadingPositionIn(positions, videoId), accountId, storage);
   }
-}
+};
 
 // Where the reader had got to in the overviews the move on sign-in carried into an account
 // goes with them, without replacing a place the account's library already holds.
-export function moveReadingPositions(videoIds: readonly string[], toAccountId: string, storage: Storage = globalThis.localStorage): void {
+export const moveReadingPositions = (
+  videoIds: readonly string[],
+  toAccountId: string,
+  storage: Storage = globalThis.localStorage,
+): void => {
   for (const videoId of videoIds) {
     const startMs = readReadingPosition(videoId, null, storage);
     if (startMs === null) {
@@ -60,11 +68,11 @@ export function moveReadingPositions(videoIds: readonly string[], toAccountId: s
     }
     forgetReadingPosition(videoId, null, storage);
   }
-}
+};
 
 // An install signed in before accounts had libraries of their own: every place it
 // remembered was the account's, and moves under it with the library.
-export function adoptReadingPositions(accountId: string, storage: Storage = globalThis.localStorage): void {
+export const adoptReadingPositions = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   const positions = readAll(null, storage);
   if (positions.length === 0) {
     return;
@@ -75,13 +83,13 @@ export function adoptReadingPositions(accountId: string, storage: Storage = glob
     }
   }
   writeAll([], null, storage);
-}
+};
 
 // A deleted account's places go with its library (docs/features/account-deletion.md).
-export function forgetReadingPositions(accountId: string, storage: Storage = globalThis.localStorage): void {
+export const forgetReadingPositions = (accountId: string, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.removeItem(storageKeyFor(accountId));
   } catch {
     // see above
   }
-}
+};

@@ -13,11 +13,11 @@ export interface PastedLinkStatusProps {
 }
 
 // Under every paste field, what the link turned out to be: an episode or an article.
-export function PastedLinkStatus({ article, podcast, url, onClear, onOpened }: PastedLinkStatusProps) {
+export const PastedLinkStatus = ({ article, podcast, url, onClear, onOpened }: PastedLinkStatusProps) => {
   const opened = onOpened === undefined ? {} : { onOpened };
   return pastedLinkState(article.link, podcast).podcastShown ? (
     <PodcastLinkStatus link={podcast.link} url={url} onRetry={podcast.retry} onClear={onClear} {...opened} />
   ) : (
     <ArticleLinkStatus link={article.link} url={url} place={article.place} onRetry={article.retry} onClear={onClear} {...opened} />
   );
-}
+};

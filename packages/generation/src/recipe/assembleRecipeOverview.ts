@@ -14,12 +14,12 @@ export interface GeneratedRecipeOutput {
 
 // Everything in the recipe is the page's, copied by code; only the summary and the line come
 // from the model (docs/features/recipe-notes.md).
-export function assembleRecipeOverview(
+export const assembleRecipeOverview = (
   input: ArticleGenerationInput,
   recipe: Recipe,
   output: GeneratedRecipeOutput,
   meta: { id: OverviewId; savedAt: string; sourceId: SourceKey },
-): Overview {
+): Overview => {
   return Overview.parse({
     id: meta.id,
     source: webSource(input.article, meta.sourceId),
@@ -44,4 +44,4 @@ export function assembleRecipeOverview(
     article: null,
     recipe: recipeNote(recipe, output.summary),
   });
-}
+};

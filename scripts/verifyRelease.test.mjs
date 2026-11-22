@@ -11,7 +11,7 @@ const GOOD_MANIFEST = { name: "The Overview", version: "0.1.0" };
 const KEY = "MIIB…";
 const GOOD_BUILD = { version: "0.1.0", commit: "30bb95a", dirty: false };
 
-function releaseZip({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) {
+const releaseZip = ({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) => {
   const root = mkdtempSync(path.join(tmpdir(), "verifyRelease-test-"));
   const files = { "manifest.json": manifest, "build.json": build };
   const names = [];
@@ -25,7 +25,7 @@ function releaseZip({ manifest = GOOD_MANIFEST, build = GOOD_BUILD } = {}) {
   const zipPath = path.join(root, "the-overview-0.1.0.zip");
   execFileSync("zip", ["-q", zipPath, ...names], { cwd: root });
   return { root, zipPath };
-}
+};
 
 const check = (zip, overrides = {}) => verifyRelease({ zipPath: zip.zipPath, version: "0.1.0", commit: FULL_SHA, ...overrides });
 

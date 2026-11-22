@@ -13,7 +13,7 @@ export const APPEARANCE_STORAGE_KEY = "overview.appearance.v1";
 
 // This device's copy of the account's choice, read by public/appearance.js before first paint,
 // when the settings store cannot have answered yet (docs/features/appearance.md, "No flash").
-export function readAppearance(storage: Storage = globalThis.localStorage): Appearance {
+export const readAppearance = (storage: Storage = globalThis.localStorage): Appearance => {
   try {
     const raw = storage.getItem(APPEARANCE_STORAGE_KEY);
     if (!raw) {
@@ -24,12 +24,12 @@ export function readAppearance(storage: Storage = globalThis.localStorage): Appe
   } catch {
     return DEFAULT_APPEARANCE;
   }
-}
+};
 
-export function writeAppearance(appearance: Appearance, storage: Storage = globalThis.localStorage): void {
+export const writeAppearance = (appearance: Appearance, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(appearance));
   } catch {
     return;
   }
-}
+};

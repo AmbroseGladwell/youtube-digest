@@ -9,7 +9,7 @@ export interface SystemShare {
 // (docs/features/sharing.md).
 export const canShareToSystem = (): boolean => typeof navigator.share === "function";
 
-export async function shareToSystem(share: SystemShare): Promise<void> {
+export const shareToSystem = async (share: SystemShare): Promise<void> => {
   try {
     await navigator.share(share);
   } catch (error) {
@@ -18,4 +18,4 @@ export async function shareToSystem(share: SystemShare): Promise<void> {
     }
     throw error;
   }
-}
+};

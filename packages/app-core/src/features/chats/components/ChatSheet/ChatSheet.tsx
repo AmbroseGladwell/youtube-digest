@@ -39,7 +39,7 @@ interface Drag {
 // rest; let go, it springs to the nearer, or where it was flicked. Raised it is a modal dialog
 // holding focus; lowered to its header it leaves the page usable, and a citation followed lowers
 // it to say what's playing.
-export function ChatSheet({
+export const ChatSheet = ({
   rest,
   label,
   loweredTitle,
@@ -49,7 +49,7 @@ export function ChatSheet({
   underMasthead,
   onRestChange,
   children,
-}: ChatSheetProps) {
+}: ChatSheetProps) => {
   const sheet = useRef<HTMLDivElement | null>(null);
   const anchor = useRef<HTMLSpanElement | null>(null);
   const [mastheadTop, setMastheadTop] = useState<string | null>(null);
@@ -213,4 +213,4 @@ export function ChatSheet({
       )}
     </>
   );
-}
+};

@@ -29,7 +29,7 @@ export type VideoReader = (videoId: VideoId) => Promise<VideoSource | null>;
 
 // One videos.list call on our key, a single quota unit and no model: enough for onboarding's card
 // before there's an account (docs/features/onboarding.md, "Signed out sees no overviews").
-export function youTubeDataApiVideoReader({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): VideoReader {
+export const youTubeDataApiVideoReader = ({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): VideoReader => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
   return async (videoId) => {
     const answer = await get("videos", { part: "snippet,contentDetails", id: videoId }, VideosResponse);
@@ -53,4 +53,4 @@ export function youTubeDataApiVideoReader({ apiKey, youTubeFetch }: { apiKey: st
       thumbnailUrl: widest ?? null,
     });
   };
-}
+};

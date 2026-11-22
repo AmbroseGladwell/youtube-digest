@@ -52,7 +52,7 @@ import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
 // Signed out where there are accounts, home is onboarding's Start, in the panel as on the
 // web (205g), or, once this device has had an account, the way back into it unless Create
 // account asked for Start (docs/features/onboarding.md).
-export function HomePage({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) {
+export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) => {
   const isPanel = useIsPanel();
   const accountNeeded = useAccountNeeded();
   const location = useLocation();
@@ -77,9 +77,9 @@ export function HomePage({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) {
     );
   }
   return <LibraryHome accountNeeded={accountNeeded} place={place} />;
-}
+};
 
-function LibraryHome({ accountNeeded, place }: { accountNeeded: boolean; place: LibraryPlace }) {
+const LibraryHome = ({ accountNeeded, place }: { accountNeeded: boolean; place: LibraryPlace }) => {
   if (accountNeeded) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>
@@ -88,9 +88,9 @@ function LibraryHome({ accountNeeded, place }: { accountNeeded: boolean; place: 
     );
   }
   return <SignedInHome place={place} />;
-}
+};
 
-function SignedInHome({ place }: { place: LibraryPlace }) {
+const SignedInHome = ({ place }: { place: LibraryPlace }) => {
   const overviewsQuery = useOverviewsWithStateQuery();
   const sync = useSync();
 
@@ -142,13 +142,13 @@ function SignedInHome({ place }: { place: LibraryPlace }) {
       <LibraryPage entries={overviewsQuery.data} place={place} />
     </div>
   );
-}
+};
 
 // Design 2b/2c: the empty library has one job, which is to take a link. The field is the
 // same run + New starts — it hands the URL to the shell's run and opens the dialog on the
 // progress it makes — so there is one pipeline and one place a run lives
 // (docs/features/stone-theme.md, "First run").
-function FirstRunHero() {
+const FirstRunHero = () => {
   const { readiness, ready, limit, url, setUrl, validationError, generate, article, podcast, pasted } = useStartFromLink();
   const analytics = useAnalytics();
   const urlFieldId = useId();
@@ -227,7 +227,7 @@ function FirstRunHero() {
       {ready && limit === null && <UsageLine testIds={homePageTestIds.usageLine} />}
     </Hero>
   );
-}
+};
 
 // Fewer than this and there's no deck to cycle, so the samples are plain rows (155l).
 const DECK_LEAST = 3;
@@ -238,7 +238,7 @@ const DECK_LEAST = 3;
 // (docs/features/onboarding.md).
 // In the panel it is the same screen compressed (205g): the tab is the subject, the headline's
 // verb follows it, and Sign in stands under Make my overview as a peer rather than a line.
-function StartHero() {
+const StartHero = () => {
   const isPanel = useIsPanel();
   const subject = useStartSubject();
   const startOnboarding = useStartOnboarding();
@@ -358,7 +358,7 @@ function StartHero() {
       )}
     </Hero>
   );
-}
+};
 
 interface HeroProps {
   standfirst: string;
@@ -374,7 +374,7 @@ interface HeroProps {
   panel?: boolean;
 }
 
-function Hero({
+const Hero = ({
   standfirst,
   children,
   verb = "Watch Less,",
@@ -382,7 +382,7 @@ function Hero({
   aside = <ExampleOverview />,
   alignTop = false,
   panel = false,
-}: HeroProps) {
+}: HeroProps) => {
   const surface = useSurface();
   const extensionOffered = useExtensionOffered();
   return (
@@ -429,12 +429,12 @@ function Hero({
       {aside}
     </div>
   );
-}
+};
 
 // The design's own sample, so the first thing a new reader sees is what comes back. It is
 // illustration, labelled as such, and every number in it is the design's rather than a
 // measurement of anything (docs/prototype/constraints.md).
-function ExampleOverview() {
+const ExampleOverview = () => {
   return (
     <aside className={styles.example} aria-label="Example overview" data-testid={homePageTestIds.exampleOverview}>
       <span className={styles.exampleBackTwo} aria-hidden="true" />
@@ -485,4 +485,4 @@ function ExampleOverview() {
       </article>
     </aside>
   );
-}
+};

@@ -16,7 +16,7 @@ const chapterNumber = (index: number) => String(index + 1).padStart(2, "0");
 // Design 77w: laid out as a video's chapters, with a read time where the time range sits. We
 // can't see whether a jump landed, so that is said once, at the top. Beside the article we
 // can, so there it's said in the row instead (designs 77x, 77y).
-export function ArticleChaptersPanel({ source, article, onPage }: ArticleChaptersPanelProps) {
+export const ArticleChaptersPanel = ({ source, article, onPage }: ArticleChaptersPanelProps) => {
   const worthReading = new Set(article.readAnyway?.chapterIndexes ?? []);
   const cited = useCitedOverviewPart();
   return (
@@ -81,4 +81,4 @@ export function ArticleChaptersPanel({ source, article, onPage }: ArticleChapter
       })}
     </div>
   );
-}
+};

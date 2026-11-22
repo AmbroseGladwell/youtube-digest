@@ -25,16 +25,16 @@ const PREVIEW_NAMES = 2;
 
 const siteOf = (href: string): string => new URL(href).hostname.replace(/^www\./, "");
 
-export function resourcesPreview(resources: readonly ArticleResource[]): string {
+export const resourcesPreview = (resources: readonly ArticleResource[]): string => {
   const names = resources.slice(0, PREVIEW_NAMES).map(({ text }) => text);
   const more = resources.length - names.length;
   if (more > 0) {
     return `${names.join(", ")} and ${more} more`;
   }
   return names.join(" and ");
-}
+};
 
-function explanation(source: WebSource, oneChapter: boolean, beside: boolean, several: boolean): string {
+const explanation = (source: WebSource, oneChapter: boolean, beside: boolean, several: boolean): string => {
   const names = several ? "Names open the resource in a new tab." : "The name opens it in a new tab.";
   if (oneChapter) {
     return `${names} “Where the article shares it” opens the article on ${sourceName(source)} at that place.`;
@@ -43,11 +43,11 @@ function explanation(source: WebSource, oneChapter: boolean, beside: boolean, se
     return `${several ? "Names open" : "The name opens"} in a new tab. “From” links move the article beside this panel to the place it was shared.`;
   }
   return `${names} “From” links open the article on ${sourceName(source)} at the place it was shared.`;
-}
+};
 
 // The links the piece points to, last in the note and closed to start (designs 203a–203n). The
 // heading row is the one control; closed, a line names the first two so there's a reason to open it.
-export function ArticleResources({ source, article, onPage, compact }: ArticleResourcesProps) {
+export const ArticleResources = ({ source, article, onPage, compact }: ArticleResourcesProps) => {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const resources = article.resources ?? [];
@@ -105,7 +105,7 @@ export function ArticleResources({ source, article, onPage, compact }: ArticleRe
       </div>
     </section>
   );
-}
+};
 
 interface ResourceItemProps {
   resource: ArticleResource;
@@ -115,7 +115,7 @@ interface ResourceItemProps {
   onPage: ShowOnPage | null;
 }
 
-function ResourceItem({ resource, index, source, article, onPage }: ResourceItemProps) {
+const ResourceItem = ({ resource, index, source, article, onPage }: ResourceItemProps) => {
   const site = siteOf(resource.href);
   const chapter = article.chapters.length === 1 ? null : (article.chapters[resource.chapter]?.title ?? null);
   const fromLabel =
@@ -177,4 +177,4 @@ function ResourceItem({ resource, index, source, article, onPage }: ResourceItem
       )}
     </li>
   );
-}
+};

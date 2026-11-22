@@ -11,7 +11,7 @@ const Params = z.object({ id: PlaylistId });
 
 // Anyone may look a playlist up, signed in or not: following one is for everyone
 // (docs/features/playlists.md). Without a YouTube key it says it is unavailable.
-export function playlistRoutes(app: FastifyInstance, { reader, clock }: { reader: PlaylistReader | null; clock: () => Date }): void {
+export const playlistRoutes = (app: FastifyInstance, { reader, clock }: { reader: PlaylistReader | null; clock: () => Date }): void => {
   app.get(
     "/playlists/:id",
     {
@@ -34,4 +34,4 @@ export function playlistRoutes(app: FastifyInstance, { reader, clock }: { reader
       }
     },
   );
-}
+};

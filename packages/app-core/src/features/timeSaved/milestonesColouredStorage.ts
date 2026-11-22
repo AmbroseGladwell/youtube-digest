@@ -3,7 +3,7 @@ import { z } from "zod";
 const STORAGE_KEY = "overview.milestonesColoured.v1";
 const MilestonesColoured = z.array(z.string());
 
-function read(storage: Storage): string[] {
+const read = (storage: Storage): string[] => {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (!raw) {
@@ -14,18 +14,18 @@ function read(storage: Storage): string[] {
   } catch {
     return [];
   }
-}
+};
 
 // Which milestones have flooded with colour on this device (docs/features/time-saved.md, "Colouring in").
-export function milestonesColouredHere(storage: Storage = globalThis.localStorage): ReadonlySet<string> {
+export const milestonesColouredHere = (storage: Storage = globalThis.localStorage): ReadonlySet<string> => {
   return new Set(read(storage));
-}
+};
 
-export function rememberMilestonesColoured(ids: readonly string[], storage: Storage = globalThis.localStorage): void {
+export const rememberMilestonesColoured = (ids: readonly string[], storage: Storage = globalThis.localStorage): void => {
   const kept = new Set([...read(storage), ...ids]);
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify([...kept]));
   } catch {
     return;
   }
-}
+};

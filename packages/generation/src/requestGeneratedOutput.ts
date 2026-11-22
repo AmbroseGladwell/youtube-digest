@@ -8,7 +8,7 @@ export type GenerationClient = (request: {
   schema: z.ZodObject<z.ZodRawShape>;
 }) => Promise<unknown>;
 
-export function correctionRequest(previous: unknown, error: z.ZodError): string {
+export const correctionRequest = (previous: unknown, error: z.ZodError): string => {
   const violations = error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("; ");
   return [
     "Your previous attempt was:",
@@ -19,10 +19,10 @@ export function correctionRequest(previous: unknown, error: z.ZodError): string 
     "A list with too many items keeps the ones that matter most and drops the rest.",
     "A field with too many words keeps its meaning and drops words.",
   ].join("\n");
-}
+};
 
 // Asks once, and once more with what was wrong, before giving up.
-export async function requestGeneratedOutput<Output>(client: GenerationClient, prompt: ComposedPrompt): Promise<Output> {
+export const requestGeneratedOutput = async <Output>(client: GenerationClient, prompt: ComposedPrompt): Promise<Output> => {
   const { systemPrompt, userMessage, schema } = prompt;
 
   const attempt = async (correction?: string) => {
@@ -44,4 +44,4 @@ export async function requestGeneratedOutput<Output>(client: GenerationClient, p
   }
 
   return parsed.data as unknown as Output;
-}
+};

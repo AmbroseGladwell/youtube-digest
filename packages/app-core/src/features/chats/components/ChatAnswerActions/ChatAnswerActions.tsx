@@ -15,7 +15,7 @@ export interface ChatAnswerActionsProps {
 
 // Design 324x, 324ae, 324af: Copy under each answer. The latest answer's always shows; an earlier
 // one's on hover, focus or tap, in a slot kept so nothing moves.
-export function ChatAnswerActions({ answer, latest, onSaid, onCopied, sources }: ChatAnswerActionsProps) {
+export const ChatAnswerActions = ({ answer, latest, onSaid, onCopied, sources }: ChatAnswerActionsProps) => {
   const copy = () => {
     onCopied();
     void copyText(answer).then((copied) => onSaid(copied ? "Answer copied" : "That couldn’t be copied.", copied));
@@ -29,4 +29,4 @@ export function ChatAnswerActions({ answer, latest, onSaid, onCopied, sources }:
       {sources}
     </div>
   );
-}
+};

@@ -139,7 +139,7 @@ const packShare = (_: string, whole: string | undefined, char: string, size: str
   return parts[1] === 2 ? `half ${a} ` : `${partWords(parts)} of ${a} `;
 };
 
-export function spokenMeasures(text: string): string {
+export const spokenMeasures = (text: string): string => {
   return text
     .replace(/\s+\([^()]*\)/g, "")
     .replace(/(?<![\p{L}\d.])(\d+)(?:\s?°\s?([CF])|\s?º\s?([CF])|([CF]))(?![\p{L}\d])/gu, (whole, degrees, a, b, c) =>
@@ -158,4 +158,4 @@ export function spokenMeasures(text: string): string {
     .replace(/\s\+\s/g, " plus ")
     .replace(/\s{2,}/g, " ")
     .trim();
-}
+};

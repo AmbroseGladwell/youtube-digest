@@ -40,14 +40,14 @@ export const comparisonInput = (fetched: FetchedTranscript): GenerationInput => 
   tagAliases: {},
 });
 
-export function measuredCost(model: ComparedModel, calls: MeteredCall[]): number | null {
+export const measuredCost = (model: ComparedModel, calls: MeteredCall[]): number | null => {
   const price = priceOf(model);
   const answered = calls.filter((call) => call.status >= 200 && call.status < 300);
   if (price === undefined || answered.some((call) => call.usage === null)) {
     return null;
   }
   return answered.reduce((total, call) => total + costInDollars(price, call.usage!), 0);
-}
+};
 
 export const isTheModelsDoing = (error: unknown): boolean =>
   error instanceof SyntaxError ||
@@ -62,14 +62,14 @@ export interface RunGenerationOptions {
   now?: () => number;
 }
 
-export async function runGeneration({
+export const runGeneration = async ({
   model,
   apiKey,
   sourceId,
   generate,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: RunGenerationOptions): Promise<RunRecord> {
+}: RunGenerationOptions): Promise<RunRecord> => {
   const metered = meteredFetch(model.provider, http, now);
   const inner = createGenerationClient({ ...model, apiKey, http: metered.http });
   const attempts: unknown[] = [];
@@ -123,7 +123,7 @@ export async function runGeneration({
     overview,
     ...(checked ? { kindCheck: { noteKind, costDollars: measuredCost(model, checkCalls) } } : {}),
   };
-}
+};
 
 export const runOne = ({ fetched, profile, ...options }: RunOneOptions): Promise<RunRecord> =>
   runGeneration({

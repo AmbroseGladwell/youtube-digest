@@ -16,6 +16,6 @@ const RunBridgeContext = createContext<RunBridge | null>(null);
 
 export const RunBridgeProvider = RunBridgeContext.Provider;
 
-export function useRunBridge(): RunBridge | null {
+export const useRunBridge = (): RunBridge | null => {
   return useContext(RunBridgeContext);
-}
+};

@@ -11,14 +11,14 @@ export interface TestSession {
 
 let emails = 0;
 
-export async function makeSession(
+export const makeSession = async (
   sql: SqlClient,
   { email = `reader${++emails}@example.com`, now = new Date(), sessionTtlDays = 30 } = {},
-): Promise<TestSession> {
+): Promise<TestSession> => {
   const { token, accountId } = await createSession(sql, email, { now, sessionTtlDays });
   return {
     accountId,
     token,
     headers: { authorization: `Bearer ${token}`, [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) },
   };
-}
+};

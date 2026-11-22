@@ -15,7 +15,7 @@ type Body = Record<string, unknown> | undefined;
 const field = (body: Body, key: string): Body =>
   typeof body?.[key] === "object" && body[key] !== null ? (body[key] as Record<string, unknown>) : undefined;
 
-export function tokenUsageOf(provider: Provider, body: unknown): TokenUsage | null {
+export const tokenUsageOf = (provider: Provider, body: unknown): TokenUsage | null => {
   const root = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : undefined;
 
   if (provider === "anthropic") {
@@ -58,4 +58,4 @@ export function tokenUsageOf(provider: Provider, body: unknown): TokenUsage | nu
     cacheWriteTokens: written,
     outputTokens: count(usage.completion_tokens),
   };
-}
+};

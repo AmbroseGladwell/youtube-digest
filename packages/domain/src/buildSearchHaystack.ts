@@ -4,7 +4,7 @@ import type { Overview } from "./Overview.js";
 // Logic ported from prototype/index_template.html's haystack() (CLAUDE.md: port the
 // logic, not the file) — concatenate everything a reader might search by into one
 // lowercased blob, checked with a plain substring match.
-export function buildSearchHaystack(overview: Overview): string {
+export const buildSearchHaystack = (overview: Overview): string => {
   return [
     overview.source.title,
     sourceName(overview.source),
@@ -21,4 +21,4 @@ export function buildSearchHaystack(overview: Overview): string {
   ]
     .join(" ")
     .toLowerCase();
-}
+};

@@ -17,7 +17,7 @@ export interface ProjectSummary {
 const later = (left: string, right: string): string => (left > right ? left : right);
 
 // Every project with the overviews in it that this library holds, last changed first.
-export function projectSummaries(projects: Project[], members: ProjectMember[], overviews: OverviewWithState[]): ProjectSummary[] {
+export const projectSummaries = (projects: Project[], members: ProjectMember[], overviews: OverviewWithState[]): ProjectSummary[] => {
   const byId = new Map<string, OverviewWithState>(overviews.map((entry) => [entry.overview.id, entry]));
   return projects
     .map((project) => {
@@ -34,7 +34,7 @@ export function projectSummaries(projects: Project[], members: ProjectMember[], 
       };
     })
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.project.name.localeCompare(right.project.name));
-}
+};
 
 export const activeSummaries = (summaries: ProjectSummary[]): ProjectSummary[] =>
   summaries.filter((summary) => summary.project.archivedAt === null);

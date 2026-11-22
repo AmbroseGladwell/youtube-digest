@@ -15,7 +15,7 @@ export interface PlanState {
 // Free. A signed-in device that has not heard back yet does not know its plan, and says so
 // rather than calling it Free (docs/features/plus-upsell.md). Nothing is gated on it: what
 // it will decide is how many overviews a month the account can make (tiers.md).
-export function usePlan(): PlanState {
+export const usePlan = (): PlanState => {
   const sync = useSync();
   const session = useSessionQuery();
   const recheck = () => void session.refetch();
@@ -28,4 +28,4 @@ export function usePlan(): PlanState {
     return { plan: session.data.plan, status: "known", recheck };
   }
   return { plan: DEFAULT_PLAN, status: session.isError ? "unreachable" : "checking", recheck };
-}
+};

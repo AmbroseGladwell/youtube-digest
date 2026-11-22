@@ -30,10 +30,10 @@ export const isYouTubeFetchReply = (reply: unknown): reply is YouTubeFetchReply 
 // (docs/features/byo-providers.md). It is a security boundary, not caution.
 const ALLOWED_ORIGINS = new Set(["https://www.youtube.com", "https://m.youtube.com"]);
 
-export function isAllowedYouTubeUrl(url: string): boolean {
+export const isAllowedYouTubeUrl = (url: string): boolean => {
   try {
     return ALLOWED_ORIGINS.has(new URL(url).origin);
   } catch {
     return false;
   }
-}
+};

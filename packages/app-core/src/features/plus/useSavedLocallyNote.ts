@@ -16,7 +16,7 @@ export interface SavedLocallyNoteState {
 // (docs/architecture/tiers.md). A device that has not heard back is not told its overview is
 // local. Dismissing it is permanent — an unasked-for prompt that comes back is worse than
 // one that never appeared (docs/features/plus-upsell.md).
-export function useSavedLocallyNote(justGenerated: boolean): SavedLocallyNoteState {
+export const useSavedLocallyNote = (justGenerated: boolean): SavedLocallyNoteState => {
   const isPanel = useIsPanel();
   const sync = useSync();
   const session = useSessionQuery();
@@ -29,4 +29,4 @@ export function useSavedLocallyNote(justGenerated: boolean): SavedLocallyNoteSta
     shown: isPanel && !signedIn && justGenerated && settingsQuery.data?.plusNoticeDismissed !== true,
     dismiss: () => updateSettings.mutate({ plusNoticeDismissed: true }),
   };
-}
+};

@@ -13,7 +13,7 @@ export interface SavedChipProps {
 
 const COUNT_UP_MS = 600;
 
-function useCountUp(to: number, enabled: boolean): number {
+const useCountUp = (to: number, enabled: boolean): number => {
   const [value, setValue] = useState(enabled && !prefersReducedMotion() ? 0 : to);
 
   useEffect(() => {
@@ -35,11 +35,11 @@ function useCountUp(to: number, enabled: boolean): number {
   }, [to, enabled]);
 
   return value;
-}
+};
 
 // "Saved you 10 min", unwrapping beside the reading line when an overview is marked read
 // (designs 34q and 34r; docs/features/time-saved.md, "Every day").
-export function SavedChip({ minutes, countUp = false, leaving = false }: SavedChipProps) {
+export const SavedChip = ({ minutes, countUp = false, leaving = false }: SavedChipProps) => {
   const shown = useCountUp(minutes, countUp);
 
   return (
@@ -61,4 +61,4 @@ export function SavedChip({ minutes, countUp = false, leaving = false }: SavedCh
       </span>
     </span>
   );
-}
+};

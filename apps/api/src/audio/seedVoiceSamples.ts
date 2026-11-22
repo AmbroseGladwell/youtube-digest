@@ -21,7 +21,7 @@ export interface SeededVoiceSamples {
 
 // One sample of the same passage per offered voice, through the same queue as a note
 // (docs/features/narration-voice.md, "The samples").
-export async function seedVoiceSamples({ renders, samples, store, now }: SeedVoiceSamplesOptions): Promise<SeededVoiceSamples> {
+export const seedVoiceSamples = async ({ renders, samples, store, now }: SeedVoiceSamplesOptions): Promise<SeededVoiceSamples> => {
   const current = NarrationVoice.options.map((voice) => ({ voice, key: audioKey(VOICE_SAMPLE_LINES, voice) }));
   const queued: NarrationVoice[] = [];
   for (const { voice, key } of current) {
@@ -47,4 +47,4 @@ export async function seedVoiceSamples({ renders, samples, store, now }: SeedVoi
     await renders.delete(key);
   }
   return { queued, deleted };
-}
+};

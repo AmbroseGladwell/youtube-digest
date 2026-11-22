@@ -31,7 +31,7 @@ export interface OnboardingKnowledgeMomentProps {
   onSkip: () => void;
 }
 
-export function OnboardingKnowledgeMoment({ onContinue, onSkip }: OnboardingKnowledgeMomentProps) {
+export const OnboardingKnowledgeMoment = ({ onContinue, onSkip }: OnboardingKnowledgeMomentProps) => {
   const isPanel = useIsPanel();
   return (
     <div className={styles.root} data-testid={onboardingKnowledgeMomentTestIds.root}>
@@ -93,4 +93,4 @@ export function OnboardingKnowledgeMoment({ onContinue, onSkip }: OnboardingKnow
       </div>
     </div>
   );
-}
+};

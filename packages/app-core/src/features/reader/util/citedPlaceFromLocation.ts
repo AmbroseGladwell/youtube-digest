@@ -4,7 +4,7 @@ import { OVERVIEW_PARTS, type OverviewPartCitation } from "@overview/domain";
 // another overview's chat or the Ask page (OV-362), carried in the link's state.
 export const CITED_PLACE_STATE = "citedPlace";
 
-export function citedPlaceFromLocation(state: unknown): OverviewPartCitation | null {
+export const citedPlaceFromLocation = (state: unknown): OverviewPartCitation | null => {
   if (typeof state !== "object" || state === null) {
     return null;
   }
@@ -20,4 +20,4 @@ export function citedPlaceFromLocation(state: unknown): OverviewPartCitation | n
     return null;
   }
   return { part: part as OverviewPartCitation["part"], index, textHash };
-}
+};

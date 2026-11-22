@@ -6,13 +6,13 @@ import { serverClientContext } from "../versions/serverClientContext.js";
 
 // An assistant's add or removal, dated by the server's clock and never later than the
 // membership record's last change: an assistant is never asked the time (CLAUDE.md).
-export function projectMemberWrite(
+export const projectMemberWrite = (
   projectId: string,
   overviewId: string,
   change: "add" | "remove",
   by: ProjectAuthor,
   now: Date,
-): WriteOperation {
+): WriteOperation => {
   const id = projectMemberId(projectId, overviewId);
   return {
     kind: "projectMember",
@@ -37,4 +37,4 @@ export function projectMemberWrite(
       );
     },
   };
-}
+};

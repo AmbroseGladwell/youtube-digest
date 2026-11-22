@@ -18,19 +18,19 @@ export interface UseApiKeysResult {
 const listeners = new Set<() => void>();
 let snapshot: ApiKeys | null = null;
 
-function getSnapshot(): ApiKeys {
+const getSnapshot = (): ApiKeys => {
   snapshot ??= readApiKeys();
   return snapshot;
-}
+};
 
-function refresh(): void {
+const refresh = (): void => {
   snapshot = readApiKeys();
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
   globalThis.addEventListener?.("storage", refresh);
   return () => {
@@ -39,9 +39,9 @@ function subscribe(listener: () => void): () => void {
       globalThis.removeEventListener?.("storage", refresh);
     }
   };
-}
+};
 
-export function useApiKeys(): UseApiKeysResult {
+export const useApiKeys = (): UseApiKeysResult => {
   const apiKeys = useSyncExternalStore(subscribe, getSnapshot);
 
   const saveKey = useCallback((provider: Provider, key: string) => {
@@ -62,4 +62,4 @@ export function useApiKeys(): UseApiKeysResult {
   }, []);
 
   return { apiKeys, saveKey, removeKey, removeAllKeys };
-}
+};

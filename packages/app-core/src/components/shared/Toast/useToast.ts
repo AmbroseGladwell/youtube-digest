@@ -10,7 +10,7 @@ export interface ToastMessage {
   undo: (() => void) | null;
 }
 
-export function useToast() {
+export const useToast = () => {
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   useEffect(() => {
@@ -26,4 +26,4 @@ export function useToast() {
     show: (text: string, done: boolean, undo: (() => void) | null = null) => setToast({ text, done, key: Date.now(), undo }),
     dismiss: () => setToast(null),
   };
-}
+};

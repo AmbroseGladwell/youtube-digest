@@ -9,7 +9,7 @@ export interface OAuthUrls {
   consent: (authorizationId: string) => string;
 }
 
-export function oauthUrls(appUrl: string): OAuthUrls {
+export const oauthUrls = (appUrl: string): OAuthUrls => {
   const issuer = appUrl.replace(/\/+$/, "");
   return {
     issuer,
@@ -21,4 +21,4 @@ export function oauthUrls(appUrl: string): OAuthUrls {
     resourceMetadata: `${issuer}/.well-known/oauth-protected-resource/mcp`,
     consent: (authorizationId) => `${issuer}/connect/${authorizationId}`,
   };
-}
+};

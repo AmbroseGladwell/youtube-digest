@@ -35,7 +35,7 @@ export const episodeFacts = (episode: Pick<PodcastEpisode, "durationSeconds" | "
     .join(" · ");
 
 // Designs 106a–106f: under the field, the episode our server found, or why it can't be used.
-export function PodcastLinkStatus({ link, url, onRetry, onClear, onOpened }: PodcastLinkStatusProps) {
+export const PodcastLinkStatus = ({ link, url, onRetry, onClear, onOpened }: PodcastLinkStatusProps) => {
   switch (link.status) {
     case "none":
       return null;
@@ -89,11 +89,11 @@ export function PodcastLinkStatus({ link, url, onRetry, onClear, onOpened }: Pod
       return <ArticleFailureNotice copy={copy} onWay={copy.way === "tryAgain" ? onRetry : onClear} />;
     }
   }
-}
+};
 
 // Designs 305c, 305d, 305h and 305j: under the card, what Create will spend, why it spends nothing,
 // or the stop in its place. Nothing while the check runs, or when it found the words.
-export function EpisodeWordsNote({
+export const EpisodeWordsNote = ({
   words,
   episodeSeconds,
   onFollowed,
@@ -101,7 +101,7 @@ export function EpisodeWordsNote({
   words: EpisodeWords;
   episodeSeconds: number | null;
   onFollowed?: (() => void) | undefined;
-}) {
+}) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const action = episodeActionOf(words);
   switch (action.kind) {
@@ -124,7 +124,7 @@ export function EpisodeWordsNote({
     default:
       return null;
   }
-}
+};
 
 // The line under the episode's facts: checking for its words, then whether it needs transcribing.
 const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string | null => {
@@ -135,7 +135,7 @@ const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string |
   return action.kind === "transcribe" ? transcriptionCopy.needs(episodeSeconds) : null;
 };
 
-function EpisodeCard({ episode, from, words }: { episode: PodcastEpisode; from: string; words: EpisodeWords }) {
+const EpisodeCard = ({ episode, from, words }: { episode: PodcastEpisode; from: string; words: EpisodeWords }) => {
   const line = wordsLine(words, episode.durationSeconds);
   const [failed, setFailed] = useState(false);
   return (
@@ -167,7 +167,7 @@ function EpisodeCard({ episode, from, words }: { episode: PodcastEpisode; from: 
       </span>
     </div>
   );
-}
+};
 
 const hostOf = (url: string): string => {
   try {

@@ -4,7 +4,7 @@ import { generationRunStatus } from "./generationRunStatus.js";
 
 // The status and the fraction come from generationRunStatus rather than being worked out
 // again here, so the button's bar and the strip's bar are the same measurement.
-export function runReportFor(run: NewOverviewRun): RunReport {
+export const runReportFor = (run: NewOverviewRun): RunReport => {
   const status = generationRunStatus(run);
 
   return {
@@ -15,4 +15,4 @@ export function runReportFor(run: NewOverviewRun): RunReport {
     progressFraction: status.progressFraction,
     overviewId: run.overview?.id ?? null,
   };
-}
+};

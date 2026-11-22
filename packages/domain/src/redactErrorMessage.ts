@@ -9,7 +9,7 @@ const ID_LIKE_PATTERN = /\b(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Za-z])[A-Za-z
 // What an error says, with anything that could be the reader's own (a URL, an address, a
 // quoted title, a video id) replaced by what kind of thing it was, so the same failure
 // reads the same for every reader (docs/architecture/errors-and-logs.md, "What an error may carry").
-export function redactErrorMessage(message: string): string {
+export const redactErrorMessage = (message: string): string => {
   const redacted = message
     .replace(URL_PATTERN, "<url>")
     .replace(EMAIL_PATTERN, "<email>")
@@ -21,4 +21,4 @@ export function redactErrorMessage(message: string): string {
     .replace(/\s+/g, " ")
     .trim();
   return redacted.length > MAX_ERROR_MESSAGE_LENGTH ? `${redacted.slice(0, MAX_ERROR_MESSAGE_LENGTH - 1)}…` : redacted;
-}
+};

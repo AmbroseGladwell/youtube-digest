@@ -7,7 +7,7 @@ export interface ProjectEntry extends ProjectOverview {
 
 // The overviews in a project now, each with who put it there. A membership record whose
 // overview this library no longer holds or cannot read is left out.
-export function projectOverviews(library: Library, projectId: string): ProjectEntry[] {
+export const projectOverviews = (library: Library, projectId: string): ProjectEntry[] => {
   const entries = new Map(library.entries.map((entry) => [entry.overview.id, entry]));
   return library.members
     .filter((member) => member.projectId === projectId && isInProject(member))
@@ -15,4 +15,4 @@ export function projectOverviews(library: Library, projectId: string): ProjectEn
       const entry = entries.get(member.overviewId);
       return entry === undefined ? [] : [{ entry, overview: entry.overview, read: entry.state?.read ?? false, addedBy: member.addedBy }];
     });
-}
+};

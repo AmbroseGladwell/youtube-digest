@@ -12,7 +12,7 @@ import { transcriptPassages } from "../chats/transcriptPassages.js";
 //
 //   node dist/scripts/chatCacheProbe.js <a sources/<id> dir with transcript.json>
 
-async function main() {
+const main = async () => {
   const [directory] = process.argv.slice(2);
   const apiKey = process.env.OPENAI_API_KEY;
   if (directory === undefined || apiKey === undefined) {
@@ -93,6 +93,6 @@ async function main() {
       `${label}: uncached ${usage?.uncachedInputTokens} read ${usage?.cachedInputTokens} written ${usage?.cacheWriteTokens} out ${usage?.outputTokens}\n`,
     );
   }
-}
+};
 
 await main();

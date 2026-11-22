@@ -20,13 +20,13 @@ const ASK_LIMIT_MS = 5_000;
 // their own learns whose session it holds and moves its library under that account, once.
 // If the server can't say (offline, or the session ended), nothing changes and the next
 // start asks again (docs/features/account-libraries.md, "Installs already signed in").
-export async function adoptSignedInLibrary({
+export const adoptSignedInLibrary = async ({
   moveDatabase,
   surface,
   storage = globalThis.localStorage,
   readSession = ({ apiUrl, token }) => createFetchAuthApi({ baseUrl: apiUrl, token, surface }).session(),
   timeoutMs = ASK_LIMIT_MS,
-}: AdoptSignedInLibraryOptions): Promise<string | null> {
+}: AdoptSignedInLibraryOptions): Promise<string | null> => {
   const connection = readSyncConnection(storage);
   if (!isConnected(connection) || connection.accountId !== null) {
     return null;
@@ -47,4 +47,4 @@ export async function adoptSignedInLibrary({
   writeSyncConnection({ ...now, accountId: session.accountId }, storage);
   adoptReadingPositions(session.accountId, storage);
   return session.accountId;
-}
+};

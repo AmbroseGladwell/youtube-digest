@@ -31,7 +31,7 @@ export interface MovingStores {
 // is written into the account before it leaves here, so a move that stops halfway is
 // finished by running it again: what already arrived now counts as the account's, and only
 // goes from here (docs/features/account-libraries.md, "The move on sign-in").
-export async function moveLibraryInto(from: MovingStores, into: MovingStores): Promise<LibraryMove & { sourceKeys: VideoId[] }> {
+export const moveLibraryInto = async (from: MovingStores, into: MovingStores): Promise<LibraryMove & { sourceKeys: VideoId[] }> => {
   const [leaving, held, heldUnreadable, leavingTopics, accountTopics] = await Promise.all([
     from.overviewStore.listOverviews(),
     into.overviewStore.listOverviews(),
@@ -109,4 +109,4 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
     }
   }
   return { moved, alreadyThere, sourceKeys };
-}
+};

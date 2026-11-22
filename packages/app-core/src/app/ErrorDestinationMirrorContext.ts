@@ -14,6 +14,6 @@ const ErrorDestinationMirrorContext = createContext<ErrorDestinationMirror | nul
 
 export const ErrorDestinationMirrorProvider = ErrorDestinationMirrorContext.Provider;
 
-export function useErrorDestinationMirror(): ErrorDestinationMirror | null {
+export const useErrorDestinationMirror = (): ErrorDestinationMirror | null => {
   return useContext(ErrorDestinationMirrorContext);
-}
+};

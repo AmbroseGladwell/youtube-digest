@@ -5,7 +5,7 @@ import { EMPTY_HISTORY_TRAIL, advanceHistoryTrail, type HistoryMove, type Histor
 const moveOf = (type: NavigationType): HistoryMove =>
   type === NavigationType.Push ? "PUSH" : type === NavigationType.Replace ? "REPLACE" : "POP";
 
-export function useHistoryTrail(): HistoryTrail {
+export const useHistoryTrail = (): HistoryTrail => {
   const location = useLocation();
   const type = useNavigationType();
   const trail = useRef(EMPTY_HISTORY_TRAIL);
@@ -13,4 +13,4 @@ export function useHistoryTrail(): HistoryTrail {
     trail.current = advanceHistoryTrail(trail.current, moveOf(type), { key: location.key, pathname: location.pathname });
   }
   return trail.current;
-}
+};

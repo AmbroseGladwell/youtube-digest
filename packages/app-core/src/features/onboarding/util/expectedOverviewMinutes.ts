@@ -15,7 +15,7 @@ export interface ExpectedMinutes {
 // What Your link promises before anything is written: the writer's own budget for a source this
 // long, at the reader's own reading and speaking rates. Arithmetic, never a model's guess; null
 // where the source's length isn't known.
-export function expectedOverviewMinutes(source: Source): ExpectedMinutes | null {
+export const expectedOverviewMinutes = (source: Source): ExpectedMinutes | null => {
   const sourceWords =
     source.kind === "web"
       ? source.wordCount
@@ -31,4 +31,4 @@ export function expectedOverviewMinutes(source: Source): ExpectedMinutes | null 
     read: Math.max(1, Math.round(words / READING_WORDS_PER_MINUTE)),
     listen: Math.max(1, Math.round(words / SPOKEN_WORDS_PER_MINUTE)),
   };
-}
+};

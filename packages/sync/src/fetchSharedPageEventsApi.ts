@@ -6,11 +6,11 @@ export interface FetchSharedPageEventsApiOptions extends ApiRequesterOptions {
   token: string;
 }
 
-export function createFetchSharedPageEventsApi({ token, ...options }: FetchSharedPageEventsApiOptions): SharedPageEventsApi {
+export const createFetchSharedPageEventsApi = ({ token, ...options }: FetchSharedPageEventsApiOptions): SharedPageEventsApi => {
   const request = createApiRequester({ ...options, token: null });
   return {
     send: async (batch, { keepalive = false } = {}) => {
       await request("POST", `/shares/${encodeURIComponent(token)}/events`, z.never(), { body: batch, keepalive });
     },
   };
-}
+};
