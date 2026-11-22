@@ -2,7 +2,7 @@ import { Routes } from "../../../app/Routes.js";
 import { LegalPage, type LegalSection } from "../LegalPage/LegalPage.js";
 import { legalIdentity } from "../legalIdentity.js";
 
-export const TERMS_UPDATED_ON = "2026-11-18";
+export const TERMS_UPDATED_ON = "2026-11-22";
 
 const { service, operator, country, contactEmail, governingLaw, minimumAge } = legalIdentity;
 
@@ -98,12 +98,14 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           <strong>Asking about an overview.</strong> With an account you can ask questions about a video, podcast episode, article or recipe
-          page inside its overview. Questions are always answered on our key, within a monthly allowance of their own that never uses up
-          your overviews, and a daily cap; the app shows what is left and when it resets. The same terms apply: they are allowances, not
-          entitlements. An answer comes from the video's or episode's own words, or for an article or a recipe page from its overview alone.
-          When they don't cover the question, the answer says so and may add general knowledge, marked as not from the source. Either can
-          still be wrong, so check anything that matters at the moment or on the page it cites, and treat general knowledge as a starting
-          point, not advice.
+          page inside its overview, or across your library or a project. Questions are always answered on our key, within a monthly chat
+          allowance of its own that never uses up your overviews, and a daily cap. Chat is counted in usage, not questions: each answer uses
+          some of the month's allowance in proportion to what it took to answer, so a question across your whole library uses more than one
+          about a single overview, and a library question needs enough left to answer it. The app shows the share used and when it resets.
+          The same terms apply: they are allowances, not entitlements. An answer comes from the video's or episode's own words, or for an
+          article or a recipe page from its overview alone. When they don't cover the question, the answer says so and may add general
+          knowledge, marked as not from the source. Either can still be wrong, so check anything that matters at the moment or on the page
+          it cites, and treat general knowledge as a starting point, not advice.
         </p>
         <p>
           <strong>Paid plans.</strong> Nothing is charged for today. When paid plans are offered, the price, what it buys, how to cancel and

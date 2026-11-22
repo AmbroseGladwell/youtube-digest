@@ -40,7 +40,7 @@ rather than replacing it.
 | Price a month (launch, 18 Oct 2026)                           | free                                                     | free                   | £4.99               | £7.99               |
 | Overviews on our key                                          | — (needs an account; onboarding's first is made after it) | 5 a month              | 10 a month          | 50 a month          |
 | Overviews on your own key                                     | —                                                        | 10 a month             | 200 a month         | 200 a month         |
-| Questions about an overview, on our key (OV-309, 16 Nov 2026) | — (needs an account)                                     | 100 a month            | 500 a month         | 1,000 a month       |
+| Chat on our key, in usage (OV-309, OV-376)                    | — (needs an account)                                     | About 100 typical questions | About 500     | About 1,000         |
 | Seeing an overview                                            | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
 | Transcripts from our server                                   | Onboarding's video read only (OV-327)                     | Part of an overview    | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers)      | 5 per address                                            | 50                     | 100                 | 100                 |
@@ -534,13 +534,23 @@ for questions about long-form content.
   A reader who asks a handful of questions about each long video, or many about short ones,
   gets at least today's numbers. One who asks a single question about each of many long videos,
   or mostly broad library questions, gets fewer.
-- **Edge rules:** a question goes ahead while the month is under 100%, and its real cost is
-  charged once it's answered, so the last answer may go a little over. A failed or stopped
-  answer spends nothing (its cost still goes on the account's tally, `unit-economics.md`).
-- **Slice 1, built:** every answer settles its usage into `chat_usage.units` on the day it was
-  reserved, and into `our_key_usage.chat_units`, and logs `usageUnits`. The limits still count
-  questions. Slice 2, after a Design round for the meter: limits in usage (the month, the day
-  and the global day), the meter in place of "questions left", pricing copy and `/terms`.
+- **Edge rules:** a question about one overview goes ahead while the month is under 100%. A
+  library or project question needs room for its worst case, `CHAT_LIBRARY_RESERVE_UNITS` (12
+  questions' worth, against a measured worst of about 10.5), so near the end it can be refused
+  while overview questions still work (design 376h). Either way the real cost is charged once
+  it's answered, so the last answer may go a little over. A failed or stopped answer spends
+  nothing (its cost still goes on the account's tally, `unit-economics.md`).
+- **Settled and enforced** (`ChatUsageRepository`): every stored answer settles its usage into
+  `chat_usage.units` on the day it was reserved, and into `our_key_usage.chat_units`. The month,
+  the day (`CHAT_UNITS_PER_ACCOUNT_DAILY`, 200 questions' worth) and the global day
+  (`OUR_KEY_DAILY_CHAT_MESSAGES` questions' worth) are checked in units, under the account's row
+  lock, against what is settled, so two questions at once can both go ahead near the end. The
+  question count is kept beside the units for analytics.
+- **Refusals** keep their shape: `chat-month` (with `scope: "library"` when only a library
+  question won't fit), `chat-day`, `chat-our-key-daily`. `GET /api/chat-usage` adds `share` and
+  `libraryFits`; `used` and `limit` still count questions for older clients.
+- **What readers see** (designs 376a–376j, `chats.md`): a percentage and the reset date, never a
+  count, a unit or a cost. Plans say "about N typical questions a month".
 
 ## Options for saving cost, not built
 

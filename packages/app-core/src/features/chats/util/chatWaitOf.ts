@@ -2,6 +2,7 @@ import { SyncRequestError } from "@overview/sync";
 
 export type ChatWait =
   | { kind: "month"; resetsOn: string | null }
+  | { kind: "libraryMonth"; resetsOn: string | null }
   | { kind: "day"; retryAfterSeconds: number | null }
   | { kind: "everyone"; retryAfterSeconds: number | null }
   | { kind: "conversationFull" }
@@ -27,8 +28,10 @@ export const chatWaitOf = (error: unknown): ChatWait | null => {
     return null;
   }
   switch (details.quota) {
-    case "chat-month":
-      return { kind: "month", resetsOn: typeof details.resetsOn === "string" ? details.resetsOn : null };
+    case "chat-month": {
+      const resetsOn = typeof details.resetsOn === "string" ? details.resetsOn : null;
+      return details.scope === "library" ? { kind: "libraryMonth", resetsOn } : { kind: "month", resetsOn };
+    }
     case "chat-day":
       return { kind: "day", retryAfterSeconds: seconds(details.retryAfterSeconds) };
     case "chat-our-key-daily":

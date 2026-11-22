@@ -160,7 +160,7 @@ export class LibraryChatAnswerer {
     }
 
     const askedAt = clock();
-    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages }, log);
+    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages, scope: "library" }, log);
     const release = () => usage.release(reservation.day, accountId);
 
     const material = libraryChatMaterial(scope, overviews, this.#options.wholeCharacters, { marks, topics });

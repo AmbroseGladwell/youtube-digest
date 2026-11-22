@@ -1,5 +1,6 @@
-import { MAX_CHAT_QUESTIONS, chatAllowances, type Plan } from "@overview/domain";
+import { MAX_CHAT_QUESTIONS, type Plan } from "@overview/domain";
 import { resetDate } from "../../newOverview/util/usageLine.js";
+import { CHAT_UPSELL, chatUpsellLabel } from "./chatMeterOf.js";
 import type { ChatWait } from "./chatWaitOf.js";
 
 export type ShownWait = Exclude<ChatWait, { kind: "noSource" }> | { kind: "offline" };
@@ -12,46 +13,43 @@ export interface WaitCopy {
   action: { kind: "seePlans" | "seePlus"; label: string } | { kind: "newConversation"; label: string } | null;
 }
 
-const count = (value: number) => value.toLocaleString("en-GB");
-const NOT_OVERVIEWS = "Making overviews isn’t affected.";
+const more = (back: string | null) => (back === null ? "More next month." : `More on ${resetDate(back)}.`);
+const until = (back: string | null) => (back === null ? " this month" : ` until ${resetDate(back)}`);
+
+const plansAction = (plan: Plan): WaitCopy["action"] => {
+  const upsell = CHAT_UPSELL[plan];
+  return upsell === null ? null : { kind: upsell, label: chatUpsellLabel(upsell) };
+};
 
 // Design 310ad–310ah: what a wait in the field's place says (docs/features/chats.md, "Waits").
 export const chatWaitCopy = (wait: ShownWait, plan: Plan, resetsOn: string | null): WaitCopy => {
   switch (wait.kind) {
-    case "month": {
-      const back = wait.resetsOn ?? resetsOn;
-      const more = back === null ? "More next month." : `More on ${resetDate(back)}.`;
-      const heading = `You’ve asked this month’s ${count(chatAllowances[plan])} questions on us`;
-      if (plan === "free") {
-        return {
-          icon: "clock",
-          heading,
-          body: `${more} BYO Plus gives ${count(chatAllowances["byo-plus"])} a month, Plus ${count(chatAllowances.plus)}. ${NOT_OVERVIEWS}`,
-          action: { kind: "seePlans", label: "See plans" },
-        };
-      }
-      if (plan === "byo-plus") {
-        return {
-          icon: "clock",
-          heading,
-          body: `${more} Plus gives ${count(chatAllowances.plus)} a month. ${NOT_OVERVIEWS}`,
-          action: { kind: "seePlus", label: "See Plus" },
-        };
-      }
-      return { icon: "clock", heading, body: `${more} ${NOT_OVERVIEWS}`, action: null };
-    }
+    case "month":
+      return {
+        icon: "clock",
+        heading: "You’ve used this month’s chat",
+        body: `${more(wait.resetsOn ?? resetsOn)} Your overviews, and everything you’ve saved, keep working.`,
+        action: plansAction(plan),
+      };
+    case "libraryMonth":
+      return {
+        icon: "clock",
+        heading: "Not enough chat left for a library question",
+        body: `A question across your library needs more than you have left this month. Questions about one overview still work${until(wait.resetsOn ?? resetsOn)}.`,
+        action: plansAction(plan),
+      };
     case "day":
       return {
         icon: "clock",
-        heading: "That’s the most questions for one day",
-        body: "Ask again tomorrow. The rest of this month’s questions are still yours.",
+        heading: "That’s the most chat for one day",
+        body: "Ask again tomorrow. The rest of this month’s chat is still yours.",
         action: null,
       };
     case "everyone":
       return {
         icon: "clock",
-        heading: "Questions are paused for everyone today",
-        body: "So many readers asked today that we’ve hit our own limit. Ask again tomorrow.",
+        heading: "Chat is paused for everyone today",
+        body: "So many readers asked today that we’ve hit our own limit. Ask again tomorrow. Your allowance isn’t touched.",
         action: null,
       };
     case "conversationFull":

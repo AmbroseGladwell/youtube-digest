@@ -1,8 +1,6 @@
 import { chatAllowances } from "@overview/domain";
 
-// What each plan gives, written once (docs/architecture/tiers.md, design 95d–95h). The paid
-// plans sell volume, never features: sync, narration with every voice, the MCP connection and
-// chat all belong to the free account, so what a reader runs out of is overviews and questions.
+// What each plan gives, written once; paid plans sell volume, never features (docs/architecture/tiers.md).
 
 export const EVERY_ACCOUNT_INCLUDES = [
   "Your library synced to the web app and every device",
@@ -16,12 +14,14 @@ export interface PlanCard {
   price: string;
   ourKey: string;
   ownKey: string;
-  // Questions about an overview a month, always on us (OV-310).
-  questions: string;
+  // Chat a month, always on us, as typical questions since chat is counted in usage (OV-376, design 376j).
+  chat: string;
   // Hours of audio a month, shown where the server transcribes episodes (design 305m).
   transcribing: string;
   note: string;
 }
+
+const typicalQuestions = (count: number) => `About ${count.toLocaleString("en-GB")} typical questions a month`;
 
 export const PLAN_CARDS: PlanCard[] = [
   {
@@ -29,7 +29,7 @@ export const PLAN_CARDS: PlanCard[] = [
     price: "£0",
     ourKey: "5 a month",
     ownKey: "10 a month",
-    questions: `${chatAllowances.free.toLocaleString("en-GB")} a month`,
+    chat: typicalQuestions(chatAllowances.free),
     transcribing: "5 hr a month",
     note: "Comes with every account.",
   },
@@ -38,7 +38,7 @@ export const PLAN_CARDS: PlanCard[] = [
     price: "£4.99 a month",
     ourKey: "10 a month",
     ownKey: "200 a month",
-    questions: `${chatAllowances["byo-plus"].toLocaleString("en-GB")} a month`,
+    chat: typicalQuestions(chatAllowances["byo-plus"]),
     transcribing: "15 hr a month",
     note: "Cheaper, for a reader who already pays an AI provider.",
   },
@@ -47,7 +47,7 @@ export const PLAN_CARDS: PlanCard[] = [
     price: "£7.99 a month",
     ourKey: "50 a month",
     ownKey: "200 a month",
-    questions: `${chatAllowances.plus.toLocaleString("en-GB")} a month`,
+    chat: typicalQuestions(chatAllowances.plus),
     transcribing: "30 hr a month",
     note: "For a reader who would rather not hold a key at all.",
   },

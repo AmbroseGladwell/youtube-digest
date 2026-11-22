@@ -27,6 +27,9 @@ import { useAskPage } from "../useAskPage.js";
 import type { PickedOverview } from "../useAskOver.js";
 import { askStarters } from "../util/askStarters.js";
 import { chatWaitCopy, type ShownWait } from "../util/chatWaitCopy.js";
+import { chatMeterOf, chatMeterStateOf, spentWaitOf } from "../util/chatMeterOf.js";
+import { useChatMeterShown } from "../useChatMeterShown.js";
+import { ChatMeterLine } from "../components/ChatMeterLine/ChatMeterLine.js";
 import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
 import styles from "./AskPage.module.scss";
 import { askPageTestIds } from "./AskPageTestIds.js";
@@ -42,11 +45,10 @@ interface WaitFacts {
   online: boolean;
   asked: number;
   refused: ShownWait | null;
-  left: number | null;
   usage: ChatUsage | null;
 }
 
-const waitOf = ({ online, asked, refused, left, usage }: WaitFacts): ShownWait | null => {
+const waitOf = ({ online, asked, refused, usage }: WaitFacts): ShownWait | null => {
   if (!online) {
     return { kind: "offline" };
   }
@@ -56,7 +58,7 @@ const waitOf = ({ online, asked, refused, left, usage }: WaitFacts): ShownWait |
   if (refused !== null) {
     return refused;
   }
-  return left === 0 && usage !== null ? { kind: "month", resetsOn: usage.resetsOn } : null;
+  return spentWaitOf(usage, "library");
 };
 
 const placeholderOf = (isPhone: boolean, scope: "library" | "project"): string => {
@@ -150,9 +152,12 @@ export const AskPage = () => {
   const pending = state.status !== "idle" && state.status !== "waiting" && state.conversationId === page.conversationId ? state : null;
   const answering = pending?.status === "answering";
   const asked = messages.filter((message) => message.from === "reader").length;
-  const left = usage === null ? null : Math.max(0, usage.limit - usage.used);
   const refused = state.status === "waiting" && state.wait.kind !== "noSource" ? state.wait : null;
-  const wait = waitOf({ online, asked, refused, left, usage });
+  const wait = waitOf({ online, asked, refused, usage });
+  const meter = chatMeterOf(usage);
+  useChatMeterShown(chatMeterStateOf(wait?.kind ?? null, meter), (state) =>
+    analytics.ask.chat.meterShown({ scope, state, plan: usage?.plan ?? "free" }),
+  );
   const empty = messages.length === 0 && pending === null;
   const latestAnswerAt = messages.map((message) => message.from).lastIndexOf("answer");
   const starters = empty ? askStarters({ overviews: entries, projects, members, topics }, project) : [];
@@ -257,7 +262,7 @@ export const AskPage = () => {
   };
   const toast = toastFor();
 
-  const composer =
+  const field =
     wait !== null ? (
       <ChatWaitBlock
         copy={chatWaitCopy(wait, usage?.plan ?? "free", usage?.resetsOn ?? null)}
@@ -282,6 +287,14 @@ export const AskPage = () => {
         onStop={page.stop}
       />
     );
+  const composer = (
+    <>
+      {field}
+      {wait === null && meter !== null && (
+        <ChatMeterLine meter={meter} onPlansFollowed={() => analytics.ask.chat.plansFollowed({ scope })} />
+      )}
+    </>
+  );
 
   const answerOf = (message: Extract<ChatMessage, { from: "answer" }>, index: number) => (
     <AskAnswer

@@ -16,10 +16,12 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import { useOnline } from "../../../../util/useOnline.js";
 import { useAnalytics } from "../../../analytics/AnalyticsContext.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
-import { resetDate } from "../../../newOverview/util/usageLine.js";
 import { useChatUsageQuery } from "../../queries/chatUsageQuery.js";
 import { useSlowAnswer } from "../../useSlowAnswer.js";
 import { chatWaitCopy, type ShownWait } from "../../util/chatWaitCopy.js";
+import { chatMeterOf, chatMeterStateOf, spentWaitOf } from "../../util/chatMeterOf.js";
+import { useChatMeterShown } from "../../useChatMeterShown.js";
+import { ChatMeterLine } from "../ChatMeterLine/ChatMeterLine.js";
 import { ChatWaitBlock } from "../ChatWaitBlock/ChatWaitBlock.js";
 import type { AskState } from "../../useAskQuestion.js";
 import type { useChatPanel } from "../../useChatPanel.js";
@@ -54,9 +56,6 @@ export interface ChatPanelProps {
 const SAID_MS = 4000;
 const OUTLINE_MS = 1600;
 
-// The line under the field shows only when this few are left (design 310ab).
-const FEW_LEFT = 10;
-
 const plural = (count: number, one: string) => `${count} ${count === 1 ? one : `${one}s`}`;
 
 const cited = (message: ChatMessage, kind: "startMs" | "part") =>
@@ -88,11 +87,10 @@ interface WaitState {
   full: boolean;
   refused: ShownWait | null;
   pending: boolean;
-  left: number | null;
   usage: ChatUsage | null;
 }
 
-const shownWaitOf = ({ online, full, refused, pending, left, usage }: WaitState): ShownWait | null => {
+const shownWaitOf = ({ online, full, refused, pending, usage }: WaitState): ShownWait | null => {
   if (!online) {
     return { kind: "offline" };
   }
@@ -102,7 +100,7 @@ const shownWaitOf = ({ online, full, refused, pending, left, usage }: WaitState)
   if (refused !== null && (refused.kind !== "conversationFull" || pending)) {
     return refused;
   }
-  return left === 0 && usage !== null ? { kind: "month", resetsOn: usage.resetsOn } : null;
+  return spentWaitOf(usage, "overview");
 };
 
 // Design 310a, 310i–310x: chat about one overview, beside its note. The conversation scrolls on
@@ -147,9 +145,12 @@ export const ChatPanel = ({
   const slowness = useSlowAnswer(answering, pending?.status === "answering" ? pending.text : "");
   const asked = messages.filter((message) => message.from === "reader").length;
   const full = asked >= MAX_CHAT_QUESTIONS;
-  const left = usage === null ? null : Math.max(0, usage.limit - usage.used);
   const refused = ask.status === "waiting" && ask.wait.kind !== "noSource" ? ask.wait : null;
-  const wait: ShownWait | null = shownWaitOf({ online, full, refused, pending: pending !== null, left, usage });
+  const wait: ShownWait | null = shownWaitOf({ online, full, refused, pending: pending !== null, usage });
+  const meter = chatMeterOf(usage);
+  useChatMeterShown(chatMeterStateOf(wait?.kind ?? null, meter), (state) =>
+    analytics.reader.chat.meterShown({ overviewId: overview.id, state, plan: usage?.plan ?? "free" }),
+  );
   const others = chats.filter((each) => each !== chat).length;
   const questions = overview.followUpQuestions ?? [];
   const sets = Math.ceil(questions.length / FOLLOW_UP_QUESTIONS_SHOWN);
@@ -508,11 +509,6 @@ export const ChatPanel = ({
         )}
       </div>
 
-      {view === "list" && usage !== null && left !== null && (
-        <p className={`${styles.left} ${styles.listFoot}`} data-testid={chatPanelTestIds.left}>
-          {left} of {usage.limit.toLocaleString("en-GB")} questions left this month, on us. More on {resetDate(usage.resetsOn)}.
-        </p>
-      )}
       {view === "conversation" && (
         <div className={styles.foot}>
           {toast !== null && <div className={styles.toastSpot}>{toast}</div>}
@@ -575,10 +571,8 @@ export const ChatPanel = ({
               onStop={panel.stop}
             />
           )}
-          {wait === null && left !== null && left > 0 && left <= FEW_LEFT && (
-            <p className={styles.left} data-testid={chatPanelTestIds.left}>
-              <b>{left}</b> {left === 1 ? "question" : "questions"} left this month, on us
-            </p>
+          {wait === null && meter !== null && (
+            <ChatMeterLine meter={meter} onPlansFollowed={() => analytics.reader.chat.plansFollowed({ overviewId: overview.id })} />
           )}
         </div>
       )}

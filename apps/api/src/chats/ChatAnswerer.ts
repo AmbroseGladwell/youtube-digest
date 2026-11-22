@@ -142,7 +142,7 @@ export class ChatAnswerer {
       .flatMap((record) => readChat(record) ?? []);
 
     const askedAt = clock();
-    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages }, log);
+    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages, scope: "overview" }, log);
 
     const settings = await readSettings(records, accountId);
     const reader = settings === null ? null : composeReaderContext(settings.aboutYou, settings.learned);
