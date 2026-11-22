@@ -135,6 +135,18 @@
   li + li {
     margin-top: 4px;
   }
+
+  .itemBlocks > * {
+    margin: 0.375rem 0;
+  }
+
+  .itemBlocks > :first-child {
+    margin-top: 0;
+  }
+
+  .itemBlocks > :last-child {
+    margin-bottom: 0;
+  }
 }
 
 .sectionSources {

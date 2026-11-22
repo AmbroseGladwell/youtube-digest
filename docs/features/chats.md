@@ -798,7 +798,9 @@ From the hand-off's pages, built for the panel beside the note and the phone she
   - A link opens in a new tab, and says so to a screen reader. Only http(s) addresses become links;
     for any other, the words stay and the address goes.
   - A fenced block is a monospace block on the surface tint, naming its language, with Copy. It
-    scrolls sideways and can be reached by keyboard.
+    scrolls sideways and can be reached by keyboard. That includes a block inside a section's
+    numbered or bulleted item: an item holding a fence is drawn as paragraphs and blocks, and any
+    other item stays inline (OV-372).
   - Raw HTML stays text.
   - While an answer streams, an open mark or fence shows as it will be, never its markers.
     A half-written link shows its words alone.
