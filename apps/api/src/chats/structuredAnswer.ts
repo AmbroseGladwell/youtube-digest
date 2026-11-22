@@ -7,6 +7,7 @@ import {
   type ChatListItem,
 } from "@overview/domain";
 import type { ChatReply } from "./ChatReply.js";
+import { outsideCode } from "./outsideCode.js";
 import { withoutCitationMarks } from "./withoutCitationMarks.js";
 
 type SourceRef = ChatReply["introSources"][number];
@@ -34,7 +35,7 @@ export function structuredAnswer(
   cite: (ids: readonly string[]) => ChatCitation[],
   { library = false }: { library?: boolean } = {},
 ): ChatAnswerSections {
-  const clean = (text: string) => withoutDashes(withoutCitationMarks(text, { library }));
+  const clean = (text: string) => outsideCode(text, (prose) => withoutDashes(withoutCitationMarks(prose, { library })));
   const sourcesOf = (refs: readonly SourceRef[]) => {
     const seen = new Set<string>();
     return refs.flatMap((ref) =>

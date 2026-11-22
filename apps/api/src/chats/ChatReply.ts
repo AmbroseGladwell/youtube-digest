@@ -108,4 +108,4 @@ export const ANSWER_SHAPE_RULES = `Answer in this shape, structured only where i
 - takeaway: one sentence when there are sections; otherwise empty.
 - Never write an id in the text: the sources carry them.
 - Never use an em dash (—) anywhere; use a comma or a full stop instead.
-- You may bold a few key words with **double asterisks**, never a whole sentence and never in a heading. No other markdown: no headings, links or tables in the text.`;
+- Light Markdown is allowed in the text, never in a heading: **bold** for a few key words (never a whole sentence), *italics*, \`inline code\` for a command, file, setting or piece of code, and a fenced code block with its language (\`\`\`python) when the answer needs code. A [link](https://…) only to an address the source or an overview gives. No headings, tables or HTML in the text: lists go in numbered and bullets.`;
