@@ -17,6 +17,16 @@ export interface EpisodeOfferProps {
   on: string;
 }
 
+const wordsLineOf = (words: EpisodeWords | null, episode: PodcastEpisode): string | null => {
+  if (words === null) {
+    return null;
+  }
+  if (words.state === "checking") {
+    return "Checking for a transcript…";
+  }
+  return episodeActionOf(words).kind === "transcribe" ? transcriptionCopy.needs(episode.durationSeconds) : null;
+};
+
 // Design 106k: an episode tab offered as 205a offers an article, in text only. Our server reads
 // the episode from the address, so the card fills in after a moment rather than straight away.
 export const EpisodeOffer = ({ offer, on }: EpisodeOfferProps) => {
@@ -47,14 +57,7 @@ export const EpisodeOffer = ({ offer, on }: EpisodeOfferProps) => {
   }
   const facts = episodeFacts(offer.episode);
   // Design 305c, in the panel: checking for its words, then whether it needs transcribing.
-  const words =
-    offer.words === null
-      ? null
-      : offer.words.state === "checking"
-        ? "Checking for a transcript…"
-        : episodeActionOf(offer.words).kind === "transcribe"
-          ? transcriptionCopy.needs(offer.episode.durationSeconds)
-          : null;
+  const words = wordsLineOf(offer.words, offer.episode);
   return (
     <section className={styles.card} aria-label="On this tab" data-testid={episodeOfferTestIds.card}>
       <p className={styles.kicker} data-testid={episodeOfferTestIds.kicker}>

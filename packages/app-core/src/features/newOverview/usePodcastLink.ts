@@ -124,10 +124,12 @@ export const usePodcastLink = (url: string) => {
       return checked.words === "none" ? { state: "none", transcription: checked.transcription } : { state: checked.words };
     },
   });
-  const words: EpisodeWords = useMemo(
-    () => (check.isError ? { state: "unknown" } : check.isFetching ? { state: "checking" } : (check.data ?? { state: "checking" })),
-    [check.isError, check.isFetching, check.data],
-  );
+  const words: EpisodeWords = useMemo(() => {
+    if (check.isError) {
+      return { state: "unknown" };
+    }
+    return check.isFetching ? { state: "checking" } : (check.data ?? { state: "checking" });
+  }, [check.isError, check.isFetching, check.data]);
 
   const podcastLink: PodcastLink = useMemo(() => {
     if (!offered) {

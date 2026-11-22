@@ -175,14 +175,16 @@ interface VoiceRowProps {
   onStop: () => void;
 }
 
+const secondLineOf = (playback: SamplePlayback | null, chosen: boolean): string | null => {
+  if (playback !== null) {
+    return `Playing · ${formatClock(playback.seconds)} of ${formatClock(playback.durationSeconds)}`;
+  }
+  return chosen ? "Your voice" : null;
+};
+
 const VoiceRow = ({ voice, chosen, rowRef, sample, playback, onChoose, onPlay, onStop }: VoiceRowProps) => {
   const name = narrationVoiceName(voice);
-  const second =
-    playback !== null
-      ? `Playing · ${formatClock(playback.seconds)} of ${formatClock(playback.durationSeconds)}`
-      : chosen
-        ? "Your voice"
-        : null;
+  const second = secondLineOf(playback, chosen);
   const progress = playback === null ? 0 : Math.min(1, playback.seconds / playback.durationSeconds);
 
   return (

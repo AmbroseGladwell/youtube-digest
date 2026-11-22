@@ -1,8 +1,11 @@
 import { recipeMinutes } from "@overview/domain";
 import { transcriptionCopy } from "../../podcasts/util/transcriptionCopy.js";
-import type { NewOverviewRun } from "../types/NewOverviewRun.js";
+import type { ArticleRun, NewOverviewRun } from "../types/NewOverviewRun.js";
 import { overviewReadMinutes } from "./overviewReadMinutes.js";
 import { recipeCounts } from "./recipeCounts.js";
+
+const SUMMARISING = "Summarising, scoring and filing";
+const QUEUED = "Queued";
 
 export type GenerationStepState = "waiting" | "running" | "done";
 
@@ -12,6 +15,47 @@ export interface GenerationStep {
   detail: string;
   state: GenerationStepState;
 }
+
+const writingState = (overviewDone: boolean, inputDone: boolean): GenerationStepState => {
+  if (overviewDone) {
+    return "done";
+  }
+  return inputDone ? "running" : "waiting";
+};
+
+const writingDetail = (run: NewOverviewRun, inputDone: boolean): string => {
+  if (run.overview !== null) {
+    return `Overview written · ${overviewReadMinutes(run.overview)} min read`;
+  }
+  return inputDone ? SUMMARISING : QUEUED;
+};
+
+const creatingDetail = (run: NewOverviewRun): string => {
+  if (run.overview === null) {
+    return run.transcriptWords !== null ? SUMMARISING : QUEUED;
+  }
+  if (run.overview.recipe != null) {
+    return `Recipe · ${recipeCounts({ ingredients: run.overview.recipe.ingredients.length, steps: run.overview.recipe.stepCount })}`;
+  }
+  return `Overview written · ${overviewReadMinutes(run.overview)} min read`;
+};
+
+const readingLabel = (article: ArticleRun, kind: string): string => {
+  if (article.fetched) {
+    return `Fetching the ${kind}`;
+  }
+  return article.oneTimeAccess ? "Reading this page" : `Reading the ${kind}`;
+};
+
+const readingDetail = (article: ArticleRun, transcriptWords: number | null): string => {
+  if (article.recipe !== null) {
+    return recipeCounts(article.recipe);
+  }
+  if (transcriptWords !== null) {
+    return `${transcriptWords.toLocaleString("en-GB")} words`;
+  }
+  return article.fetched ? "From the link" : "Reading what's on the page";
+};
 
 export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()): GenerationStep[] => {
   const transcriptDone = run.transcriptWords !== null;
@@ -62,12 +106,8 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
       {
         number: transcription === null ? "03" : "04",
         label: "Writing the overview",
-        detail: overviewDone
-          ? `Overview written · ${overviewReadMinutes(run.overview!)} min read`
-          : wordsFound
-            ? "Summarising, scoring and filing"
-            : "Queued",
-        state: overviewDone ? "done" : wordsFound ? "running" : "waiting",
+        detail: writingDetail(run, wordsFound),
+        state: writingState(overviewDone, wordsFound),
       },
     ];
   }
@@ -75,30 +115,19 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
   if (run.article !== null) {
     const { recipe } = run.article;
     const kind = recipe === null ? "article" : "recipe";
-    const label = run.article.fetched ? `Fetching the ${kind}` : run.article.oneTimeAccess ? "Reading this page" : `Reading the ${kind}`;
+    const label = readingLabel(run.article, kind);
     return [
       {
         number: "01",
         label,
-        detail:
-          recipe !== null
-            ? recipeCounts(recipe)
-            : transcriptDone
-              ? `${run.transcriptWords!.toLocaleString("en-GB")} words`
-              : run.article.fetched
-                ? "From the link"
-                : "Reading what's on the page",
+        detail: readingDetail(run.article, run.transcriptWords),
         state: transcriptDone ? "done" : "running",
       },
       {
         number: "02",
         label: "Writing the overview",
-        detail: overviewDone
-          ? `Overview written · ${overviewReadMinutes(run.overview!)} min read`
-          : transcriptDone
-            ? "Summarising, scoring and filing"
-            : "Queued",
-        state: overviewDone ? "done" : transcriptDone ? "running" : "waiting",
+        detail: writingDetail(run, transcriptDone),
+        state: writingState(overviewDone, transcriptDone),
       },
     ];
   }
@@ -115,14 +144,8 @@ export const generationRunSteps = (run: NewOverviewRun, now: number = Date.now()
     {
       number: "02",
       label: "Creating overview",
-      detail: overviewDone
-        ? run.overview!.recipe != null
-          ? `Recipe · ${recipeCounts({ ingredients: run.overview!.recipe.ingredients.length, steps: run.overview!.recipe.stepCount })}`
-          : `Overview written · ${overviewReadMinutes(run.overview!)} min read`
-        : transcriptDone
-          ? "Summarising, scoring and filing"
-          : "Queued",
-      state: overviewDone ? "done" : transcriptDone ? "running" : "waiting",
+      detail: creatingDetail(run),
+      state: writingState(overviewDone, transcriptDone),
     },
   ];
 };

@@ -103,12 +103,18 @@ const checkQuestions = async (): Promise<number> => {
 };
 
 const usage = "usage: npm run chat-prepare -- fetch | passages --overview <id> [--window <seconds>] | check";
-const outcome =
-  command === "fetch"
-    ? await fetchTranscripts()
-    : command === "passages" && values.overview !== undefined
-      ? await printPassages(values.overview, Number(values.window) * 1000)
-      : command === "check"
-        ? await checkQuestions()
-        : (console.error(usage), 1);
+const runCommand = async (): Promise<number> => {
+  if (command === "fetch") {
+    return fetchTranscripts();
+  }
+  if (command === "passages" && values.overview !== undefined) {
+    return printPassages(values.overview, Number(values.window) * 1000);
+  }
+  if (command === "check") {
+    return checkQuestions();
+  }
+  console.error(usage);
+  return 1;
+};
+const outcome = await runCommand();
 process.exit(outcome === 0 ? 0 : 1);

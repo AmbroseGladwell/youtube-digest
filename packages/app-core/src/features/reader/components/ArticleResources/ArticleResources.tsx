@@ -115,17 +115,21 @@ interface ResourceItemProps {
   onPage: ShowOnPage | null;
 }
 
+const fromLabelOf = (chapter: string | null, beside: boolean): string => {
+  if (chapter === null) {
+    return beside
+      ? "Where the article shares it: moves the article beside this panel to that place"
+      : "Where the article shares it: opens the article at that place";
+  }
+  return beside
+    ? `From ${chapter}: moves the article beside this panel to the place it was shared`
+    : `From ${chapter}: opens the article at the place it was shared`;
+};
+
 const ResourceItem = ({ resource, index, source, article, onPage }: ResourceItemProps) => {
   const site = siteOf(resource.href);
   const chapter = article.chapters.length === 1 ? null : (article.chapters[resource.chapter]?.title ?? null);
-  const fromLabel =
-    chapter === null
-      ? onPage === null
-        ? "Where the article shares it: opens the article at that place"
-        : "Where the article shares it: moves the article beside this panel to that place"
-      : onPage === null
-        ? `From ${chapter}: opens the article at the place it was shared`
-        : `From ${chapter}: moves the article beside this panel to the place it was shared`;
+  const fromLabel = fromLabelOf(chapter, onPage !== null);
   const fromText =
     chapter === null ? (
       <b>Where the article shares it</b>

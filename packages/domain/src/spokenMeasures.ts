@@ -90,13 +90,21 @@ const readAmount = (amount: string): Fraction => {
     : { whole: null, parts: null, plain: amount };
 };
 
-const partWords = ([count, of]: [number, number]) =>
-  of === 2 ? "a half" : count === 1 ? `a ${PART_NAME[of]}` : `${COUNT_NAME[count]} ${PART_NAME[of]}s`;
+const partWords = ([count, of]: [number, number]) => {
+  if (of === 2) {
+    return "a half";
+  }
+  return count === 1 ? `a ${PART_NAME[of]}` : `${COUNT_NAME[count]} ${PART_NAME[of]}s`;
+};
 
 const article = (word: string) => (/^[aeiou]/i.test(word) ? "an" : "a");
 
-const amountWords = ({ whole, parts, plain }: Fraction) =>
-  parts === null ? plain : whole === null ? partWords(parts).replace(/^a /, "") : `${whole} and ${partWords(parts)}`;
+const amountWords = ({ whole, parts, plain }: Fraction) => {
+  if (parts === null) {
+    return plain;
+  }
+  return whole === null ? partWords(parts).replace(/^a /, "") : `${whole} and ${partWords(parts)}`;
+};
 
 const isOne = ({ whole, parts, plain }: Fraction) => (parts === null ? plain === "1" : whole === null);
 
@@ -121,8 +129,14 @@ const measure = (_: string, from: string, to: string | undefined, unit: string, 
   return `${amountWords(first)} ${describes || isOne(first) ? one : many}`;
 };
 
-const temperature = (_: string, degrees: string, scale: string | undefined) =>
-  `${degrees} degrees${scale === undefined ? "" : scale.toUpperCase() === "C" ? " Celsius" : " Fahrenheit"}`;
+const scaleWords = (scale: string | undefined): string => {
+  if (scale === undefined) {
+    return "";
+  }
+  return scale.toUpperCase() === "C" ? " Celsius" : " Fahrenheit";
+};
+
+const temperature = (_: string, degrees: string, scale: string | undefined) => `${degrees} degrees${scaleWords(scale)}`;
 
 const lonePart = (_: string, whole: string | undefined, char: string) => {
   const words = partWords(UNICODE_FRACTION[char]!);

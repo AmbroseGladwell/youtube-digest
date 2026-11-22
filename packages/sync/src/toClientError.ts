@@ -4,6 +4,36 @@ import { parseStackFrames } from "./parseStackFrames.js";
 
 const IDENTIFIER = /^[A-Za-z_$][\w$]{0,63}$/;
 
+const messageOf = (error: Error | null, thrown: unknown): string => {
+  if (error !== null) {
+    return error.message;
+  }
+  if (typeof thrown === "string") {
+    return thrown;
+  }
+  return "";
+};
+
+const typeOf = (error: Error | null): string => {
+  if (error === null) {
+    return "NonError";
+  }
+  if (IDENTIFIER.test(error.name)) {
+    return error.name;
+  }
+  return "Error";
+};
+
+const requestOf = (thrown: unknown) => {
+  if (isSyncRequestError(thrown)) {
+    return { requestId: thrown.requestId, apiErrorCode: thrown.code, status: thrown.status };
+  }
+  if (isSyncTransportError(thrown)) {
+    return { requestId: thrown.requestId };
+  }
+  return {};
+};
+
 export interface ToClientErrorOptions {
   source: ClientErrorSource;
   handled: boolean;
@@ -15,15 +45,11 @@ export interface ToClientErrorOptions {
 // call's id when it was a call to the API (docs/architecture/errors-and-logs.md).
 export const toClientError = (thrown: unknown, { source, handled, trail, at }: ToClientErrorOptions): SentClientError => {
   const error = thrown instanceof Error ? thrown : null;
-  const message = error !== null ? error.message : typeof thrown === "string" ? thrown : "";
-  const request = isSyncRequestError(thrown)
-    ? { requestId: thrown.requestId, apiErrorCode: thrown.code, status: thrown.status }
-    : isSyncTransportError(thrown)
-      ? { requestId: thrown.requestId }
-      : {};
+  const message = messageOf(error, thrown);
+  const request = requestOf(thrown);
   return {
     source,
-    type: error !== null && IDENTIFIER.test(error.name) ? error.name : error !== null ? "Error" : "NonError",
+    type: typeOf(error),
     message: redactErrorMessage(message),
     handled,
     frames: parseStackFrames(error?.stack),

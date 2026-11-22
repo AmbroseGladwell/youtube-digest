@@ -25,14 +25,15 @@ const SEVERITIES: ReadonlyArray<[minLevel: number, number: number, text: string]
 
 const PINO_OWN_FIELDS = new Set(["level", "time", "msg", "pid", "hostname"]);
 
-export const otlpValue = (value: string | number | boolean): OtlpAnyValue =>
-  typeof value === "string"
-    ? { stringValue: value }
-    : typeof value === "boolean"
-      ? { boolValue: value }
-      : Number.isInteger(value)
-        ? { intValue: String(value) }
-        : { doubleValue: value };
+export const otlpValue = (value: string | number | boolean): OtlpAnyValue => {
+  if (typeof value === "string") {
+    return { stringValue: value };
+  }
+  if (typeof value === "boolean") {
+    return { boolValue: value };
+  }
+  return Number.isInteger(value) ? { intValue: String(value) } : { doubleValue: value };
+};
 
 const flatten = (prefix: string, value: unknown, into: OtlpKeyValue[]): void => {
   if (value === null || value === undefined) {

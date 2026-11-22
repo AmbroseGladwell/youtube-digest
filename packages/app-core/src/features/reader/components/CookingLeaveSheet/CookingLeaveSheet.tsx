@@ -21,6 +21,13 @@ export interface CookingLeaveSheetProps {
 
 const lower = (timer: CookingTimer) => timerSpokenName(timer).toLowerCase();
 
+const leaveLabel = (onlyRinging: boolean, running: readonly CookingTimer[], ringing: readonly CookingTimer[]): string => {
+  if (onlyRinging) {
+    return ringing.length === 1 ? "Keep it ringing" : "Keep them ringing";
+  }
+  return running.length === 1 ? "Stop timer" : "Stop timers";
+};
+
 const headingFor = (running: readonly CookingTimer[], ringing: readonly CookingTimer[]): string => {
   if (running.length === 0) {
     return ringing.length === 1 ? `The ${lower(ringing[0]!)} is ringing` : `${countWord(ringing.length)} timers are ringing`;
@@ -156,13 +163,7 @@ export const CookingLeaveSheet = ({
               onClick={onlyRinging ? onKeep : onStop}
               data-testid={onlyRinging ? cookingLeaveSheetTestIds.keep : cookingLeaveSheetTestIds.stop}
             >
-              {onlyRinging
-                ? ringing.length === 1
-                  ? "Keep it ringing"
-                  : "Keep them ringing"
-                : running.length === 1
-                  ? "Stop timer"
-                  : "Stop timers"}
+              {leaveLabel(onlyRinging, running, ringing)}
             </button>
             <button type="button" className={styles.stay} onClick={onStay} data-testid={cookingLeaveSheetTestIds.stay}>
               Keep cooking

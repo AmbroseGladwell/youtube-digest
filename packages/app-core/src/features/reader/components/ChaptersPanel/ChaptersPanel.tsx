@@ -1,5 +1,6 @@
 import { chapterStepsLabel, youtubeTimestampUrl, formatTimestamp } from "@overview/domain";
 import type { Chapter, RecipeStep, StoredTranscript, VideoSource } from "@overview/domain";
+import type { FetchStatus } from "@tanstack/react-query";
 import { useIsPanel } from "../../../../app/LayoutContext.js";
 import { usePlaybackPosition, useSeekPlayback } from "../../../../app/PlaybackContext.js";
 import { useTranscriptQuery } from "../../../transcripts/queries/transcriptQuery.js";
@@ -29,6 +30,21 @@ export interface ChaptersPanelProps {
   steps?: readonly RecipeStep[];
 }
 
+interface TranscriptLoad {
+  isError: boolean;
+  fetchStatus: FetchStatus;
+}
+
+const noTranscriptReasonOf = (held: StoredTranscript | null | undefined, load: TranscriptLoad): string => {
+  if (held === undefined && load.isError) {
+    return COULD_NOT_LOAD_TRANSCRIPT;
+  }
+  if (held === undefined && load.fetchStatus === "fetching") {
+    return LOOKING_FOR_TRANSCRIPT;
+  }
+  return NO_TRANSCRIPT;
+};
+
 const chapterNumber = (index: number) => String(index + 1).padStart(2, "0");
 
 // How far through the current chapter the player is, from the player's own position and
@@ -52,12 +68,7 @@ export const ChaptersPanel = ({ chapters, video, held, onOpenTranscriptAt, steps
   const transcriptQuery = useTranscriptQuery(held === undefined ? video.id : null);
   const transcript = held ?? transcriptQuery.data ?? null;
   const hasTranscript = (transcript?.segments.length ?? 0) > 0;
-  const noTranscriptReason =
-    held === undefined && transcriptQuery.isError
-      ? COULD_NOT_LOAD_TRANSCRIPT
-      : held === undefined && transcriptQuery.fetchStatus === "fetching"
-        ? LOOKING_FOR_TRANSCRIPT
-        : NO_TRANSCRIPT;
+  const noTranscriptReason = noTranscriptReasonOf(held, transcriptQuery);
 
   const currentIndex = chapters === null || position === null ? -1 : blockAtPosition(chapters, position.positionMs);
 

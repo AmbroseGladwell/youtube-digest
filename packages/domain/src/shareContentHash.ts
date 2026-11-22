@@ -1,5 +1,12 @@
 import type { SharedNote } from "./SharedNote.js";
 
+const compareKeys = (left: string, right: string): number => {
+  if (left < right) {
+    return -1;
+  }
+  return left > right ? 1 : 0;
+};
+
 const stableStringify = (value: unknown): string => {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value) ?? "null";
@@ -9,7 +16,7 @@ const stableStringify = (value: unknown): string => {
   }
   const entries = Object.entries(value as Record<string, unknown>)
     .filter(([, entry]) => entry !== undefined)
-    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+    .sort(([left], [right]) => compareKeys(left, right));
   return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableStringify(entry)}`).join(",")}}`;
 };
 

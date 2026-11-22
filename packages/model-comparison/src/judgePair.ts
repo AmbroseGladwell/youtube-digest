@@ -26,8 +26,12 @@ export const judgeFor = (baseline: ComparedModel, candidate: ComparedModel): Com
 export const candidateGoesFirst = (videoId: string, candidate: string): boolean =>
   (createHash("sha256").update(`${videoId}\n${candidate}`).digest()[0]! & 1) === 1;
 
-const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult =>
-  winner === "tie" ? "tie" : (winner === "A") === candidateIsA ? "win" : "loss";
+const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult => {
+  if (winner === "tie") {
+    return "tie";
+  }
+  return (winner === "A") === candidateIsA ? "win" : "loss";
+};
 
 export interface JudgePairOptions {
   fetched: FetchedTranscript;

@@ -1,6 +1,11 @@
 import type { ChecklistState } from "./ChecklistPicker.js";
 
-export const checklistOptionState = (held: number, of: number): ChecklistState => (held === 0 ? "none" : held >= of ? "all" : "some");
+export const checklistOptionState = (held: number, of: number): ChecklistState => {
+  if (held === 0) {
+    return "none";
+  }
+  return held >= of ? "all" : "some";
+};
 
 export const sharedChecklistHint = "Changes save as you go. A dash means some of them have it; tick to give it to all of them.";
 

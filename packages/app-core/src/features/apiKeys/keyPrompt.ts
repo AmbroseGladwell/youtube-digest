@@ -4,8 +4,12 @@ import type { GenerationReadiness } from "../newOverview/useGenerationReadiness.
 
 // What this device is called in a sentence about where a key lives. The distinction is the
 // whole point of the sentence, so it is not softened to "here" (design 110g).
-export const deviceWord = (surface: Surface, isPhone: boolean): string =>
-  surface === "extension" ? "the extension" : isPhone ? "this phone" : "this computer";
+export const deviceWord = (surface: Surface, isPhone: boolean): string => {
+  if (surface === "extension") {
+    return "the extension";
+  }
+  return isPhone ? "this phone" : "this computer";
+};
 
 // "Anthropic, OpenAI, Google Gemini, DeepSeek, xAI Grok or Mistral" — the six named in
 // full, once, where a reader with no key at all needs to know what would count

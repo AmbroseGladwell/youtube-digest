@@ -7,7 +7,8 @@ const WORD_LIKE = /^[A-Za-z][A-Za-z0-9_-]*$/;
 const SOURCE_FILE = /\.(ts|tsx|mts|cts|js|mjs|cjs)$/;
 const SKIPPED_FOLDERS = new Set(["node_modules", "dist", "build", ".git", ".local", "coverage", "test-results", "playwright-report"]);
 const NOT_PRODUCT = /(\.test\.|\.testHelper\.|\/playwright\/|\/scripts\/|^scripts\/)/;
-const STRING_LITERAL = /"((?:[^"\\\n]|\\.){8,})"/g;
+const STRING_LITERAL = /"((?:[^"\\\s]|\\.){8,})"/g;
+const COPY = /\s/;
 const COMPARISON = new Set(["===", "!==", "==", "!="]);
 
 const isCandidate = (value) => value.length >= MIN_LENGTH && !WORD_LIKE.test(value) && value.trim() === value && /[A-Za-z]/.test(value);
@@ -75,7 +76,7 @@ export const noRepeatedString = {
     type: "suggestion",
     docs: {
       description:
-        "A string used more than once is a const: at the top of the file, or exported from its owner when other files use it too.",
+        "A string used twice in a file is a const at its top; a URL, path or key another file also has is exported from its owner.",
     },
     schema: [{ type: "object", properties: { acrossFiles: { type: "boolean" } }, additionalProperties: false }],
     messages: {
@@ -112,7 +113,7 @@ export const noRepeatedString = {
             }
             continue;
           }
-          if (!acrossFiles || value.length < MIN_SHARED_LENGTH || value.includes('"')) {
+          if (!acrossFiles || value.length < MIN_SHARED_LENGTH || value.includes('"') || COPY.test(value)) {
             continue;
           }
           const others = [...filesUsing(root, value)].filter((file) => file !== here);

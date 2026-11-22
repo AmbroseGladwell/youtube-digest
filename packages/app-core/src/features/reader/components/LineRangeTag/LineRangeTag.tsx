@@ -19,6 +19,13 @@ export interface NoteLineRange {
   step?: number;
 }
 
+const rangeKindOf = (section: NoteLine["section"]): RangeKind => {
+  if (section === WATCH_ANYWAY_SECTION) {
+    return "watchAnyway";
+  }
+  return section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut";
+};
+
 // What a line of the note points at, for the tag at its end. One of the steps a source gives
 // names its number, counted from the note's lines (design 250d).
 export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): NoteLineRange => {
@@ -28,7 +35,7 @@ export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): 
     return { kind: "sourceStep", about: line.text, ...(at === -1 ? {} : { step: at + 1 }) };
   }
   return {
-    kind: line.section === WATCH_ANYWAY_SECTION ? "watchAnyway" : line.section === KEY_POINTS_SECTION ? "keyPoint" : "standsOut",
+    kind: rangeKindOf(line.section),
     about: line.text,
   };
 };

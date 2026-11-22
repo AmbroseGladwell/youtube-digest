@@ -30,20 +30,22 @@ export interface RecipeIngredientsProps {
 const HAS_A_FIGURE = /\d|[¼½¾⅓⅔⅛]/;
 
 // A video's line with nothing to adjust either named no amount or said it in words (122e).
-const unreadableAside = (line: string, fromVideo: boolean): string =>
-  !fromVideo
-    ? "· as written"
-    : HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line)
-      ? "· as said"
-      : "· no amount said";
+const unreadableAside = (line: string, fromVideo: boolean): string => {
+  if (!fromVideo) {
+    return "· as written";
+  }
+  return HAS_A_FIGURE.test(line) || /\b(?:half|quarter|third|one|two|three|four|five|six|dozen)\b/i.test(line)
+    ? "· as said"
+    : "· no amount said";
+};
 
 // Design 122c–122d: one line under the heading says where a video's list came from.
-export const ingredientsSource = (said: readonly number[], total: number): string =>
-  said.length === total
-    ? "As said in the video. Where no amount is said, the line has none."
-    : said.length === 0
-      ? "From the video’s description."
-      : `From the video’s description, with ${said.length} said in the video.`;
+export const ingredientsSource = (said: readonly number[], total: number): string => {
+  if (said.length === total) {
+    return "As said in the video. Where no amount is said, the line has none.";
+  }
+  return said.length === 0 ? "From the video’s description." : `From the video’s description, with ${said.length} said in the video.`;
+};
 
 interface LineProps {
   line: AdjustedIngredient;

@@ -23,6 +23,13 @@ export const nextBlindPair = (
   return pool.length === 0 ? null : pool[Math.floor(random() * pool.length)]!;
 };
 
+const pickResult = (choice: BlindChoice, candidateWasA: boolean): BlindPick["result"] => {
+  if (choice === "tie") {
+    return "tie";
+  }
+  return (choice === "A") === candidateWasA ? "win" : "loss";
+};
+
 export const blindPick = (pair: JudgingPair, candidateWasA: boolean, choice: BlindChoice, pickedAt: string): BlindPick => {
   return {
     videoId: videoIdOf(pair),
@@ -30,7 +37,7 @@ export const blindPick = (pair: JudgingPair, candidateWasA: boolean, choice: Bli
     candidate: pair.candidate.name,
     candidateWasA,
     choice,
-    result: choice === "tie" ? "tie" : (choice === "A") === candidateWasA ? "win" : "loss",
+    result: pickResult(choice, candidateWasA),
     pickedAt,
   };
 };

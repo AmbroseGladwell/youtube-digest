@@ -76,6 +76,13 @@ const articleByline = (source: WebSource, saved: string, recipe: boolean): strin
     `Saved ${saved}`,
   ].join(" · ");
 
+const sourceLineKind = (hasRecipe: boolean, isArticle: boolean): string => {
+  if (!hasRecipe) {
+    return "Article";
+  }
+  return isArticle ? "Recipe" : "Recipe video";
+};
+
 export const ReaderMasthead = ({
   overview,
   metaParts,
@@ -239,7 +246,7 @@ export const ReaderMasthead = ({
           <div className={styles.who}>
             {(isArticle || overview.recipe !== null) && (
               <p className={styles.sourceLine} data-testid={readerMastheadTestIds.sourceLine}>
-                {sourceName(overview.source)} · {overview.recipe === null ? "Article" : isArticle ? "Recipe" : "Recipe video"}
+                {sourceName(overview.source)} · {sourceLineKind(overview.recipe !== null, isArticle)}
               </p>
             )}
             <p className={styles.byline}>

@@ -332,11 +332,13 @@ export const FollowUpQuestions = ({
   const hoverLabel = here || assistant === null || compact ? undefined : `Ask ${FOLLOW_UP_ASSISTANTS[assistant].name} ↗`;
 
   let line: ReactNode = "Each opens your assistant. You’ll choose which on your first tap.";
-  const lead = here ? (
-    ANSWERED_HERE_LINE
-  ) : assistant === null ? null : (
-    <AssistantLine assistant={assistant} connected={connectedTo(assistant)} copies={copies} />
-  );
+  const leadLine = (): ReactNode => {
+    if (here) {
+      return ANSWERED_HERE_LINE;
+    }
+    return assistant === null ? null : <AssistantLine assistant={assistant} connected={connectedTo(assistant)} copies={copies} />;
+  };
+  const lead = leadLine();
   if (lead !== null) {
     line = (
       <>

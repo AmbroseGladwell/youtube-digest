@@ -12,16 +12,18 @@ export interface ExpectedMinutes {
   listen: number;
 }
 
+const sourceWordsOf = (source: Source): number | null => {
+  if (source.kind === "web") {
+    return source.wordCount;
+  }
+  return source.durationMs === null ? null : Math.round((source.durationMs / 60_000) * SPOKEN_WORDS_PER_MINUTE);
+};
+
 // What Your link promises before anything is written: the writer's own budget for a source this
 // long, at the reader's own reading and speaking rates. Arithmetic, never a model's guess; null
 // where the source's length isn't known.
 export const expectedOverviewMinutes = (source: Source): ExpectedMinutes | null => {
-  const sourceWords =
-    source.kind === "web"
-      ? source.wordCount
-      : source.durationMs === null
-        ? null
-        : Math.round((source.durationMs / 60_000) * SPOKEN_WORDS_PER_MINUTE);
+  const sourceWords = sourceWordsOf(source);
   if (sourceWords === null || sourceWords <= 0) {
     return null;
   }

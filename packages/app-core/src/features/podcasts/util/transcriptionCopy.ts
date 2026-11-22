@@ -2,6 +2,7 @@ import { recipeMinutes, type Plan, type TranscriptionFailure, type Transcription
 import { resetDate } from "../../newOverview/util/usageLine.js";
 
 const HOUR = 3600;
+const A_FEW_MINUTES = "a few minutes";
 
 // "1 hr 56 min", as an episode's length reads (design 305, Notes: Copy).
 export const audioLength = (seconds: number): string => recipeMinutes(Math.max(0, Math.round(seconds / 60)));
@@ -12,7 +13,14 @@ export const transcribeMinutes = (episodeSeconds: number | null): number | null 
 
 const about = (episodeSeconds: number | null): string => {
   const minutes = transcribeMinutes(episodeSeconds);
-  return minutes === null ? "a few minutes" : `about ${minutes} min`;
+  return minutes === null ? A_FEW_MINUTES : `about ${minutes} min`;
+};
+
+const takesOf = (minutes: number | null): string => {
+  if (minutes === null) {
+    return A_FEW_MINUTES;
+  }
+  return minutes === 1 ? "about a minute" : `about ${minutes} minutes`;
 };
 
 const leftOf = (usage: TranscriptionUsage): number => Math.max(0, usage.limitSeconds - usage.usedSeconds);
@@ -68,7 +76,7 @@ export const transcriptionCopy = {
   // 305c-2: asked after Create, when the check couldn't tell.
   ask: (episodeSeconds: number | null): TranscriptionNotice => {
     const minutes = transcribeMinutes(episodeSeconds);
-    const takes = minutes === null ? "a few minutes" : minutes === 1 ? "about a minute" : `about ${minutes} minutes`;
+    const takes = takesOf(minutes);
     return {
       heading: "This episode needs transcribing",
       body: `We couldn’t find a transcript for this episode, so we’ll make one from its audio. It takes ${takes}.`,

@@ -178,6 +178,44 @@ export const AppShell = () => {
     );
   }
 
+  const runOrQueueStrip = () => {
+    if (!isPanel && newOverview.run && !newOverview.dialogOpen) {
+      return (
+        <GenerationStatusStrip
+          run={newOverview.run}
+          onDetails={newOverview.open}
+          onDismiss={newOverview.dismiss}
+          onReadOverview={readOverview}
+        />
+      );
+    }
+    if (!isPanel && !newOverview.run && captureQueue.strip !== null) {
+      return (
+        <CaptureQueueStripView
+          strip={captureQueue.strip}
+          compact={isPhone}
+          folded={
+            onHome && captureQueue.folded
+              ? { attention: captureQueue.attention.length, onUnfold: () => captureQueue.setFolded(false) }
+              : null
+          }
+          onPause={() => captureQueue.setPaused(true)}
+          onResume={() => captureQueue.setPaused(false)}
+          onDetails={() => setQueueDetailsOpen(true)}
+          onDismiss={captureQueue.dismissStrip}
+        />
+      );
+    }
+    return !isPanel && !newOverview.run && libraryMoved && <LibraryMoveNotice />;
+  };
+
+  const paneContent = () => {
+    if (belowWriteFloor) {
+      return <WriteFloorWall generating={newOverview.run !== null} />;
+    }
+    return gated ? <SignedOutGate panel={isPanel} /> : <Outlet />;
+  };
+
   return (
     <NewOverviewRunProvider value={newOverview}>
       <CaptureQueueProvider value={captureQueue}>
@@ -317,40 +355,11 @@ export const AppShell = () => {
 
                 {onThisTab !== null && <OnThisTabLine tab={onThisTab} onStartVideo={(url) => newOverview.start(url, { from: "panel" })} />}
 
-                {!isPanel && newOverview.run && !newOverview.dialogOpen ? (
-                  <GenerationStatusStrip
-                    run={newOverview.run}
-                    onDetails={newOverview.open}
-                    onDismiss={newOverview.dismiss}
-                    onReadOverview={readOverview}
-                  />
-                ) : !isPanel && !newOverview.run && captureQueue.strip !== null ? (
-                  <CaptureQueueStripView
-                    strip={captureQueue.strip}
-                    compact={isPhone}
-                    folded={
-                      onHome && captureQueue.folded
-                        ? { attention: captureQueue.attention.length, onUnfold: () => captureQueue.setFolded(false) }
-                        : null
-                    }
-                    onPause={() => captureQueue.setPaused(true)}
-                    onResume={() => captureQueue.setPaused(false)}
-                    onDetails={() => setQueueDetailsOpen(true)}
-                    onDismiss={captureQueue.dismissStrip}
-                  />
-                ) : (
-                  !isPanel && !newOverview.run && libraryMoved && <LibraryMoveNotice />
-                )}
+                {runOrQueueStrip()}
               </header>
 
               <div className={styles.pane} data-testid={appShellTestIds.pane}>
-                {belowWriteFloor ? (
-                  <WriteFloorWall generating={newOverview.run !== null} />
-                ) : gated ? (
-                  <SignedOutGate panel={isPanel} />
-                ) : (
-                  <Outlet />
-                )}
+                {paneContent()}
               </div>
 
               <CookingTimerDock>

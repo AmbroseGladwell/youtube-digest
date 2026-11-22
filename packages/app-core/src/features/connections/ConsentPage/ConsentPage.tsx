@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useParams } from "react-router";
 import { consentPath, MAGIC_LINK_TTL_MINUTES } from "@overview/domain";
 import { isSyncRequestError } from "@overview/sync";
@@ -259,6 +259,42 @@ export const ConsentPage = () => {
     />
   );
 
+  const answerBodyFor = (): ReactNode => {
+    if (!signedIn) {
+      return (
+        <ConsentSignInCard
+          initialEmail={lastEmail}
+          sending={requestLink.isPending}
+          refused={refused}
+          onSubmit={(email) => askForLink(email)}
+        />
+      );
+    }
+    if (session.isError) {
+      return (
+        <p className={styles.error} role="alert" data-testid={consentPageTestIds.sessionError}>
+          <StrokeIcon name="alertCircle" size={14} />
+          We couldn't check your account.{" "}
+          <button
+            type="button"
+            className={styles.retry}
+            onClick={() => {
+              analytics.mcp.consentScreen.sessionRetried();
+              void session.refetch();
+            }}
+          >
+            Try again
+          </button>
+        </p>
+      );
+    }
+    if (plan === undefined) {
+      return <div className={styles.planPending} aria-busy="true" />;
+    }
+    return <ConsentAnswer host={host} writes={writes} readsProfile={readsProfile} deciding={deciding} onDecide={answer} />;
+  };
+  const answerBody = answerBodyFor();
+
   return (
     <div className={styles.root} data-testid={consentPageTestIds.root}>
       <div className={styles.question}>
@@ -274,33 +310,7 @@ export const ConsentPage = () => {
       </div>
       <div className={styles.answer}>
         <ConsentAddressCard host={host} />
-        {!signedIn ? (
-          <ConsentSignInCard
-            initialEmail={lastEmail}
-            sending={requestLink.isPending}
-            refused={refused}
-            onSubmit={(email) => askForLink(email)}
-          />
-        ) : session.isError ? (
-          <p className={styles.error} role="alert" data-testid={consentPageTestIds.sessionError}>
-            <StrokeIcon name="alertCircle" size={14} />
-            We couldn't check your account.{" "}
-            <button
-              type="button"
-              className={styles.retry}
-              onClick={() => {
-                analytics.mcp.consentScreen.sessionRetried();
-                void session.refetch();
-              }}
-            >
-              Try again
-            </button>
-          </p>
-        ) : plan === undefined ? (
-          <div className={styles.planPending} aria-busy="true" />
-        ) : (
-          <ConsentAnswer host={host} writes={writes} readsProfile={readsProfile} deciding={deciding} onDecide={answer} />
-        )}
+        {answerBody}
         {decide.isError && !isCode(decide.error, "unauthenticated") && (
           <p className={styles.error} role="alert" data-testid={consentPageTestIds.decisionError}>
             <StrokeIcon name="alertCircle" size={14} />

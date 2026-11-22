@@ -50,15 +50,18 @@ const PART_SECTION: Record<OverviewPart, string> = {
 
 const SINGLE_ITEM_PARTS: ReadonlySet<OverviewPart> = new Set(["verdict", "selling", "watchAnyway"]);
 
+const sectionOf = (overview: Overview, part: OverviewPart): string => {
+  if (part !== "watchAnyway") {
+    return PART_SECTION[part];
+  }
+  if (overview.source.kind === "podcast") {
+    return "Listen to it anyway?";
+  }
+  return overview.source.kind === "web" ? "Read it anyway?" : PART_SECTION.watchAnyway;
+};
+
 const overviewPartText = (overview: Overview, citation: Extract<ChatCitation, { part: OverviewPart }>): string => {
-  const section =
-    citation.part !== "watchAnyway"
-      ? PART_SECTION[citation.part]
-      : overview.source.kind === "podcast"
-        ? "Listen to it anyway?"
-        : overview.source.kind === "web"
-          ? "Read it anyway?"
-          : PART_SECTION.watchAnyway;
+  const section = sectionOf(overview, citation.part);
   const cited = citedOverviewPart(overview, citation);
   if (cited === null) {
     return `the overview's "${section}", no longer in it`;

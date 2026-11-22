@@ -235,7 +235,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
         ...(read.noteKind === null ? {} : { noteKind: read.noteKind }),
       });
     },
-    noun: (linkKind, found) => (linkKind === "playlist" ? "playlist" : found?.noteKind === "recipe" ? "recipe" : "video"),
+    noun: (linkKind, found) => {
+      if (linkKind === "playlist") {
+        return "playlist";
+      }
+      return found?.noteKind === "recipe" ? "recipe" : "video";
+    },
     pending: () => null,
     finding: "Finding the video…",
     notFound: "We couldn't find that video.",
@@ -355,7 +360,12 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
       }
       return makers.article(async () => read, { isCancelled, onWriting });
     },
-    noun: (_linkKind, found) => (found === null ? "page" : found.recipe !== null ? "recipe" : "article"),
+    noun: (_linkKind, found) => {
+      if (found === null) {
+        return "page";
+      }
+      return found.recipe !== null ? "recipe" : "article";
+    },
     pending: (link) => domainOf(link),
     finding: "Reading the page…",
     notFound: "We couldn't read that page.",

@@ -1,5 +1,5 @@
 import { SPOKEN_WORDS_PER_MINUTE, overviewNoteLines, wordCount, type Overview } from "@overview/domain";
-import type { ActionableItemsRecord } from "./extractActionableItems.js";
+import type { ActionableItem, ActionableItemsRecord } from "./extractActionableItems.js";
 import type { CarriedVerdict, StepsJudgeRecord } from "./judgeStepsCarried.js";
 import { reasonClaims } from "./reasonClaims.js";
 import type { RunRecord } from "./RunRecord.js";
@@ -19,6 +19,24 @@ const spokenSecondsOf = (overview: Overview) =>
   Math.round(
     (overviewNoteLines(overview).reduce((total, line) => total + wordCount(line.spoken ?? line.text), 0) / SPOKEN_WORDS_PER_MINUTE) * 60,
   );
+
+const stepItemsOf = (
+  items: ActionableItem[] | undefined,
+  source: StepsSource,
+  judged: StepsJudgeRecord | undefined,
+): StepsNote["items"] => {
+  if (items === undefined) {
+    return "not listed";
+  }
+  return items.length === 0
+    ? "no steps"
+    : items.map((item, index) => ({
+        text: item.text,
+        place: item.start < 0 ? null : source.placeOf(item.start),
+        verdict: judged?.labels?.items[index]?.verdict ?? null,
+        reason: judged?.labels?.items[index]?.reason ?? null,
+      }));
+};
 
 // Joined by code from what the two passes recorded, never estimated (docs/prototype/constraints.md).
 export const stepsNotes = (
@@ -42,17 +60,7 @@ export const stepsNotes = (
         writer,
         watchAnswer: overview.watchAnyway?.answer ?? null,
         spokenSeconds: spokenSecondsOf(overview),
-        items:
-          items === undefined
-            ? "not listed"
-            : items.length === 0
-              ? "no steps"
-              : items.map((item, index) => ({
-                  text: item.text,
-                  place: item.start < 0 ? null : source.placeOf(item.start),
-                  verdict: judged?.labels?.items[index]?.verdict ?? null,
-                  reason: judged?.labels?.items[index]?.reason ?? null,
-                })),
+        items: stepItemsOf(items, source, judged),
         claims: overview.watchAnyway ? reasonClaims(overview.watchAnyway.reason) : [],
       };
     });

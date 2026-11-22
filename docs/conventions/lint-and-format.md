@@ -84,6 +84,7 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `overview/no-side-effect-ternary` | A ternary sets or returns a value; a side effect is an `if`/`else`. Besides a ternary whose value is thrown away, it catches an assignment in a branch, and an arrow whose whole body is a ternary where nothing uses the result: an `on…` handler in JSX, a `forEach` or `useEffect` callback, a `: void` arrow, or one that calls a `set…` state setter. Without types it can't see every case, so it errs towards letting a returned value through. |
 | `max-depth: 3` | No block nested more than three deep inside a function. Past that, a guard returns early, a filter replaces a `continue`, or the inner part becomes a function with a name. |
 | `max-nested-callbacks: 3` (4 in tests) | No more than three callbacks inside each other. A test's `describe`, `it` and one callback already make three, so tests get a fourth. |
+| `no-nested-ternary` | A ternary has one condition. Past that, a union becomes a `Record` lookup, a return becomes `if`/`return` guards, a value becomes a named helper, and JSX becomes a helper or a small component. |
 | `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
 
 ### Custom rules: `scripts/oxlint/`
@@ -104,12 +105,12 @@ doesn't count as new; editing it does.
 | Rule | What it holds |
 |---|---|
 | `overview/no-long-comment` | A comment is one line at most, and never a TODO or FIXME (`commenting.md`). Tool directives such as `@ts-expect-error` and `oxlint-disable` don't count. |
-| `overview/no-repeated-string` | A string written twice in one file is a const at the top of the file. One that another product file also has is exported once, from the module that owns it. Off in tests, where repeating a fixture reads better. |
+| `overview/no-repeated-string` | A string written twice in one file is a const at the top of the file. A URL, path, storage key, header or event name (a string with no spaces) that another product file also has is exported once, from the module that owns it. Copy shared between screens isn't: two screens that say "Try again" may change apart. Off in tests, where repeating a fixture reads better. |
 
 `no-repeated-string` leaves out strings that are usually a string union's members rather than
 copy: single words like `"video"` or `"in-progress"`, strings compared with `===` or in a
 `case`, import paths, object keys, types and JSX attribute values. Across files it only
-compares strings of eight characters or more.
+compares strings of eight characters or more with no spaces in them.
 
 ### Import boundaries
 
@@ -136,7 +137,7 @@ These rules are off in some folders, each with a reason:
 
 | Rule | Where | Why |
 |---|---|---|
-| `max-depth`, `max-nested-callbacks` | `apps/api/src/scripts/chatAcrossSourcesCheck.ts` | A 2,200-line research harness from OV-307, nested well past the limits. Restructuring its main loop could only be proved safe with a paid run, so it stays as it is. New harness code follows the rules. |
+| `max-depth`, `max-nested-callbacks`, `no-nested-ternary` | `apps/api/src/scripts/chatAcrossSourcesCheck.ts` | A 2,200-line research harness from OV-307, nested well past the limits. Restructuring its main loop could only be proved safe with a paid run, so it stays as it is. New harness code follows the rules. |
 | `import/no-cycle` | `**/playwright/**` | Page objects follow the app's navigation: the library opens the reader, and the reader goes back to the library, so each imports the other. The imports are only used inside methods, so the cycle is harmless at load time, and breaking it would mean redesigning how page objects hand over to each other. |
 
 These rules are off, and each one has a reason:

@@ -17,6 +17,13 @@ export interface OverviewThumbnailProps {
   carriesIntoHead?: boolean | undefined;
 }
 
+const pictureClass = (kind: string, to: string | undefined, className: string | undefined) => {
+  if (kind === "podcast") {
+    return styles.art;
+  }
+  return to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`;
+};
+
 // Renders nothing at all when there is no usable image, rather than leaving an empty
 // frame behind — CLAUDE.md's degrade-visibly rule. IndexedDB reads aren't re-validated
 // against the schema (docs/architecture/v1-architecture-decisions.md's swappable-store
@@ -58,7 +65,7 @@ export const OverviewThumbnail = ({ video, className, to, state, onOpen, carries
 
   const picture = (
     <img
-      className={kind === "podcast" ? styles.art : to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`}
+      className={pictureClass(kind, to, className)}
       src={imageUrl!}
       alt=""
       loading="lazy"

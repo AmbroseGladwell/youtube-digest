@@ -139,6 +139,46 @@ const productRight = (question: Question, answer: string, similarTitles: readonl
   return answer.includes("Settings") && answer.includes("Personalisation");
 };
 
+interface SourceCheck {
+  kind: Question["kind"];
+  webPage: boolean;
+  answerable: boolean;
+  citesParts: boolean;
+  inSource: boolean;
+}
+
+const rightOnSourceOf = ({ kind, webPage, answerable, citesParts, inSource }: SourceCheck): boolean | null => {
+  if (kind === "filler" || kind === "overviewPart" || kind === "aboutReader" || kind === "product") {
+    return null;
+  }
+  return webPage ? answerable === citesParts : inSource === answerable;
+};
+
+interface MentionCheck {
+  question: Question;
+  personalised: boolean;
+  answerable: boolean;
+  text: string;
+}
+
+const mentionedOf = ({ question, personalised, answerable, text }: MentionCheck): boolean | null => {
+  if (question.id === "r1") {
+    return personalised
+      ? READER_TERMS.some((term) => text.toLowerCase().includes(term)) && text.includes("Settings")
+      : !READER_TERMS.some((term) => text.toLowerCase().includes(term)) && text.includes("Settings");
+  }
+  return answerable && question.mentions.length > 0
+    ? question.mentions.some((term) => text.toLowerCase().includes(term.toLowerCase()))
+    : null;
+};
+
+const rightOnGeneralOf = (kind: Question["kind"], generalKnowledge: boolean | null): boolean | null => {
+  if (kind === "notInSource") {
+    return generalKnowledge === true;
+  }
+  return kind === "offSubject" ? generalKnowledge === false : null;
+};
+
 const TOLERANCE_MS = 10_000;
 const normalised = (text: string) =>
   text
@@ -365,12 +405,13 @@ const main = async () => {
         kind: question.kind,
         failed: false,
         // A web page has no transcript: a decline is right when it cites nothing at all.
-        rightOnSource:
-          question.kind === "filler" || question.kind === "overviewPart" || question.kind === "aboutReader" || question.kind === "product"
-            ? null
-            : source.page !== null
-              ? answerable === parts.length > 0
-              : answer.inSource === answerable,
+        rightOnSource: rightOnSourceOf({
+          kind: question.kind,
+          webPage: source.page !== null,
+          answerable,
+          citesParts: parts.length > 0,
+          inSource: answer.inSource,
+        }),
         citedRightMoment:
           answerable && moments.length > 0
             ? moments.every(
@@ -378,14 +419,7 @@ const main = async () => {
               )
             : null,
         // With a profile, "what do you know" names it and Settings; with none, it says nothing yet and names Settings.
-        mentioned:
-          question.id === "r1"
-            ? logged.personalised === true
-              ? READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
-              : !READER_TERMS.some((term) => answer.text.toLowerCase().includes(term)) && answer.text.includes("Settings")
-            : answerable && question.mentions.length > 0
-              ? question.mentions.some((term) => answer.text.toLowerCase().includes(term.toLowerCase()))
-              : null,
+        mentioned: mentionedOf({ question, personalised: logged.personalised === true, answerable, text: answer.text }),
         citedRightPart:
           question.parts === undefined
             ? null
@@ -394,8 +428,7 @@ const main = async () => {
               ),
         generalKnowledge,
         // OV-329: a fair question the source doesn't answer gets general knowledge; one off its subject is declined.
-        rightOnGeneral:
-          question.kind === "notInSource" ? generalKnowledge === true : question.kind === "offSubject" ? generalKnowledge === false : null,
+        rightOnGeneral: rightOnGeneralOf(question.kind, generalKnowledge),
         rightOnProduct:
           question.kind === "product"
             ? productRight(question, answer.text, source.overview.verdict?.similarTo.map(({ title }) => title) ?? [])

@@ -100,6 +100,78 @@ export const ProjectHead = ({
     }
   }, [purposeAsked]);
 
+  const purposeBlock = () => {
+    if (editingPurpose) {
+      return (
+        <PurposeEditor
+          purpose={project.purpose ?? ""}
+          assistantConnected={assistantConnected}
+          assistantWrote={project.purpose !== null && project.purposeBy?.by === "assistant" ? project.purposeBy.name : null}
+          onSave={(purpose) => {
+            if (purpose !== project.purpose) {
+              onPurpose(purpose);
+            }
+            finishEditing(() => setEditingPurpose(false));
+          }}
+          onCancel={() => finishEditing(() => setEditingPurpose(false))}
+        />
+      );
+    }
+    if (project.purpose !== null) {
+      return (
+        <section className={styles.purpose} aria-label="What it’s for" data-testid={projectHeadTestIds.purpose}>
+          <div className={styles.purposeHead}>
+            <span className={styles.purposeLabel}>What it’s for</span>
+            {assistantConnected && (
+              <span className={styles.purposeHint} data-testid={projectHeadTestIds.purposeHint}>
+                Your assistant works from this
+              </span>
+            )}
+          </div>
+          <p className={styles.purposeText} data-testid={projectHeadTestIds.purposeText}>
+            {project.purpose}
+          </p>
+          <div className={styles.purposeFoot}>
+            {project.purposeBy?.by === "assistant" && (
+              <span data-testid={projectHeadTestIds.writtenBy}>Written by {project.purposeBy.name}</span>
+            )}
+            <button
+              type="button"
+              ref={editButton}
+              className={styles.edit}
+              onClick={() => startPurpose(editButton)}
+              aria-label="Edit what it’s for"
+              data-testid={projectHeadTestIds.editPurposeButton}
+            >
+              <StrokeIcon name="pencil" size={13} />
+              Edit
+            </button>
+          </div>
+        </section>
+      );
+    }
+    return (
+      <section className={styles.invitation} aria-label="What it’s for" data-testid={projectHeadTestIds.purposeInvitation}>
+        <span className={styles.purposeLabel}>What it’s for</span>
+        <p className={styles.invitationText}>
+          {assistantConnected
+            ? "Say what you’re trying to do. Your assistant works from it, so “Redo the kitchen by March for £18k” gets answers about your kitchen, not kitchens in general."
+            : "Say what you’re trying to do, like “Redo the kitchen by March for £18k”. It sits at the top of the project and of Copy as Markdown."}
+        </p>
+        <button
+          type="button"
+          ref={editButton}
+          className={styles.pill}
+          onClick={() => startPurpose(editButton)}
+          data-testid={projectHeadTestIds.addPurposeButton}
+        >
+          <StrokeIcon name="plus" />
+          Add what it’s for
+        </button>
+      </section>
+    );
+  };
+
   return (
     <div className={styles.root} data-testid={projectHeadTestIds.root}>
       <PageLink
@@ -147,69 +219,7 @@ export const ProjectHead = ({
         </p>
       )}
 
-      {editingPurpose ? (
-        <PurposeEditor
-          purpose={project.purpose ?? ""}
-          assistantConnected={assistantConnected}
-          assistantWrote={project.purpose !== null && project.purposeBy?.by === "assistant" ? project.purposeBy.name : null}
-          onSave={(purpose) => {
-            if (purpose !== project.purpose) {
-              onPurpose(purpose);
-            }
-            finishEditing(() => setEditingPurpose(false));
-          }}
-          onCancel={() => finishEditing(() => setEditingPurpose(false))}
-        />
-      ) : project.purpose !== null ? (
-        <section className={styles.purpose} aria-label="What it’s for" data-testid={projectHeadTestIds.purpose}>
-          <div className={styles.purposeHead}>
-            <span className={styles.purposeLabel}>What it’s for</span>
-            {assistantConnected && (
-              <span className={styles.purposeHint} data-testid={projectHeadTestIds.purposeHint}>
-                Your assistant works from this
-              </span>
-            )}
-          </div>
-          <p className={styles.purposeText} data-testid={projectHeadTestIds.purposeText}>
-            {project.purpose}
-          </p>
-          <div className={styles.purposeFoot}>
-            {project.purposeBy?.by === "assistant" && (
-              <span data-testid={projectHeadTestIds.writtenBy}>Written by {project.purposeBy.name}</span>
-            )}
-            <button
-              type="button"
-              ref={editButton}
-              className={styles.edit}
-              onClick={() => startPurpose(editButton)}
-              aria-label="Edit what it’s for"
-              data-testid={projectHeadTestIds.editPurposeButton}
-            >
-              <StrokeIcon name="pencil" size={13} />
-              Edit
-            </button>
-          </div>
-        </section>
-      ) : (
-        <section className={styles.invitation} aria-label="What it’s for" data-testid={projectHeadTestIds.purposeInvitation}>
-          <span className={styles.purposeLabel}>What it’s for</span>
-          <p className={styles.invitationText}>
-            {assistantConnected
-              ? "Say what you’re trying to do. Your assistant works from it, so “Redo the kitchen by March for £18k” gets answers about your kitchen, not kitchens in general."
-              : "Say what you’re trying to do, like “Redo the kitchen by March for £18k”. It sits at the top of the project and of Copy as Markdown."}
-          </p>
-          <button
-            type="button"
-            ref={editButton}
-            className={styles.pill}
-            onClick={() => startPurpose(editButton)}
-            data-testid={projectHeadTestIds.addPurposeButton}
-          >
-            <StrokeIcon name="plus" />
-            Add what it’s for
-          </button>
-        </section>
-      )}
+      {purposeBlock()}
 
       <p className={styles.facts} data-testid={projectHeadTestIds.facts}>
         <span>

@@ -125,6 +125,48 @@ export const AccountMenu = () => {
 
   const signedOutAtServer = sync.status.phase === "signedOut";
   const settings = item("settings", "Settings", "settings", go(Routes.settings()), accountMenuTestIds.settingsItem);
+  const signOutControl = (): ReactNode => {
+    if (signedOutAtServer) {
+      return item(
+        "signIn",
+        "Sign in again",
+        "signInAgain",
+        () => {
+          close(false);
+          void signOut().then(() => navigate(Routes.signIn()));
+        },
+        accountMenuTestIds.signInAgainItem,
+      );
+    }
+    if (sync.signingOut) {
+      return (
+        <div
+          role="menuitem"
+          aria-disabled="true"
+          aria-live="polite"
+          tabIndex={-1}
+          autoFocus
+          className={styles.signingOut}
+          data-testid={accountMenuTestIds.signingOut}
+        >
+          <span className={styles.spinner}>
+            <StrokeIcon name="loader" size={16} />
+          </span>
+          Syncing before you sign out…
+        </div>
+      );
+    }
+    return item(
+      "signOut",
+      "Sign out",
+      "signOut",
+      () =>
+        void signOut()
+          .then(() => close(false))
+          .then(refocusIfNothingElseIs),
+      accountMenuTestIds.signOutItem,
+    );
+  };
 
   let content: ReactNode;
   if (!sync.available) {
@@ -166,44 +208,7 @@ export const AccountMenu = () => {
             accountMenuTestIds.connectExtensionItem,
           )}
         {settings}
-        {signedOutAtServer ? (
-          item(
-            "signIn",
-            "Sign in again",
-            "signInAgain",
-            () => {
-              close(false);
-              void signOut().then(() => navigate(Routes.signIn()));
-            },
-            accountMenuTestIds.signInAgainItem,
-          )
-        ) : sync.signingOut ? (
-          <div
-            role="menuitem"
-            aria-disabled="true"
-            aria-live="polite"
-            tabIndex={-1}
-            autoFocus
-            className={styles.signingOut}
-            data-testid={accountMenuTestIds.signingOut}
-          >
-            <span className={styles.spinner}>
-              <StrokeIcon name="loader" size={16} />
-            </span>
-            Syncing before you sign out…
-          </div>
-        ) : (
-          item(
-            "signOut",
-            "Sign out",
-            "signOut",
-            () =>
-              void signOut()
-                .then(() => close(false))
-                .then(refocusIfNothingElseIs),
-            accountMenuTestIds.signOutItem,
-          )
-        )}
+        {signOutControl()}
       </>
     );
   } else if (surface === "extension" && pending !== null) {

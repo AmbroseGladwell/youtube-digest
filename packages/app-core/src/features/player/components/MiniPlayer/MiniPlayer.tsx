@@ -35,6 +35,20 @@ export const MiniPlayer = () => {
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
 };
 
+const metaText = (preparing: boolean, pausedForTimer: boolean, clock: string): string => {
+  if (preparing) {
+    return "Preparing audio";
+  }
+  return pausedForTimer ? "Paused for the timer" : clock;
+};
+
+const playLabel = (preparing: boolean, playing: boolean): string => {
+  if (preparing) {
+    return "Cancel preparing audio";
+  }
+  return playing ? "Pause" : "Play";
+};
+
 interface DockedMiniPlayerProps {
   snapshot: PlayerSnapshot;
   onStop: () => void;
@@ -70,11 +84,11 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
         >
           <span className={styles.titleText}>{track.title}</span>
           <span className={styles.meta} data-testid={miniPlayerTestIds.meta}>
-            {preparing
-              ? "Preparing audio"
-              : narrationHeld && status === "paused"
-                ? "Paused for the timer"
-                : `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`}
+            {metaText(
+              preparing,
+              narrationHeld && status === "paused",
+              `${section} · ${estimated}${formatClock(time)} / ${estimated}${formatClock(timings.durationSeconds)}`,
+            )}
           </span>
         </PageLink>
         <button
@@ -96,7 +110,7 @@ const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
             analytics.player.miniPlayer.playToggled({ overviewId: track.overviewId, playing: !playing && !preparing });
             engine.toggle("miniPlayer");
           }}
-          aria-label={preparing ? "Cancel preparing audio" : playing ? "Pause" : "Play"}
+          aria-label={playLabel(preparing, playing)}
           data-testid={miniPlayerTestIds.playButton}
         >
           {preparing ? (

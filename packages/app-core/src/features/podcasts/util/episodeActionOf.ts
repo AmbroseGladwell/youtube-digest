@@ -37,8 +37,15 @@ export const episodeActionOf = (words: EpisodeWords): EpisodeAction => {
 
 // Whether Create sends the episode's audio to be transcribed rather than looking for its words, and
 // why: the reader chose it on the card, or it costs nothing.
-export const transcribeChoiceOf = (action: EpisodeAction | null): TranscribeChoice | undefined =>
-  action?.kind === "transcribe" ? "chosen" : action?.kind === "free" ? "free" : undefined;
+export const transcribeChoiceOf = (action: EpisodeAction | null): TranscribeChoice | undefined => {
+  if (action?.kind === "transcribe") {
+    return "chosen";
+  }
+  if (action?.kind === "free") {
+    return "free";
+  }
+  return undefined;
+};
 
 // The button's words: "Transcribe and create" only when it spends transcribing (design 305c).
 export const createLabelOf = (action: EpisodeAction, otherwise: string): string =>

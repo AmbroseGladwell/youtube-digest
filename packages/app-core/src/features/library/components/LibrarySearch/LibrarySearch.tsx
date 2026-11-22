@@ -19,6 +19,16 @@ export interface LibrarySearchProps {
   children: ReactNode;
 }
 
+const phoneSearchOf = (isPhone: boolean, focused: boolean, query: string): "folded" | "open" | "kept" | undefined => {
+  if (!isPhone) {
+    return undefined;
+  }
+  if (focused) {
+    return "open";
+  }
+  return query !== "" ? "kept" : "folded";
+};
+
 // The field keeps what is typed and hands it on as a transition, so no key waits for the
 // list (docs/features/library-view.md, "Search"). A new revision of `text` replaces it.
 export const LibrarySearch = ({ text, onType, onClearPressed, isPhone, placeholder, children }: LibrarySearchProps) => {
@@ -39,7 +49,7 @@ export const LibrarySearch = ({ text, onType, onClearPressed, isPhone, placehold
     startTransition(() => onType(next));
   };
 
-  const phoneSearch: "folded" | "open" | "kept" | undefined = !isPhone ? undefined : focused ? "open" : query !== "" ? "kept" : "folded";
+  const phoneSearch = phoneSearchOf(isPhone, focused, query);
 
   const openSearch = () => {
     flushSync(() => setFocused(true));

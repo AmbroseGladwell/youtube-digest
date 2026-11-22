@@ -34,6 +34,13 @@ const themeLine = (theme: ThemeMode, deviceIsDark: boolean): string =>
     ? `Follows your device, which is ${deviceIsDark ? "dark" : "light"} right now.`
     : `Always ${theme}, whatever your device uses.`;
 
+const layoutSize = (isPanel: boolean, isPhone: boolean): string => {
+  if (isPanel) {
+    return "panel";
+  }
+  return isPhone ? "phone" : "wide";
+};
+
 // Native radios under the paint, so arrow keys move the choice and it applies as they move
 // (design 135d).
 export const AppearanceSection = () => {
@@ -81,7 +88,7 @@ export const AppearanceSection = () => {
   };
 
   return (
-    <div className={styles.root} data-size={isPanel ? "panel" : isPhone ? "phone" : "wide"} data-testid={appearanceSectionTestIds.root}>
+    <div className={styles.root} data-size={layoutSize(isPanel, isPhone)} data-testid={appearanceSectionTestIds.root}>
       <div className={styles.card}>
         <p className={styles.label} id={themeLabelId}>
           Theme

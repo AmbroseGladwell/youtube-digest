@@ -26,6 +26,13 @@ export interface ProfilePassDeps {
   now?: () => Date;
 }
 
+const passKeyOf = (madeOn: KeySource | null, hasOwn: boolean, hasApi: boolean): KeySource | null => {
+  if (madeOn === "own" && hasOwn) {
+    return "own";
+  }
+  return madeOn === "ours" && hasApi ? "ours" : null;
+};
+
 // Runs after an overview lands, on the key that made it. Its failing never touches the overview
 // and nothing tells the reader, so it is counted and left; the next due pass picks up from here
 // (docs/features/personalisation.md, "A profile that learns"). True when Settings changed.
@@ -38,7 +45,7 @@ export const runProfilePassIfDue = async ({
   analytics,
   now = () => new Date(),
 }: ProfilePassDeps): Promise<boolean> => {
-  const passAsks = madeOn === "own" && own !== null ? "own" : madeOn === "ours" && api !== null ? "ours" : null;
+  const passAsks = passKeyOf(madeOn, own !== null, api !== null);
   if (passAsks === null) {
     return false;
   }

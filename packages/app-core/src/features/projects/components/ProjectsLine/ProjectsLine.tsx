@@ -74,6 +74,42 @@ export const ProjectsLine = ({ projects, webApp, onOpen, onChange }: ProjectsLin
   );
 };
 
+interface ProjectLinkCommon {
+  className: string;
+  "aria-describedby": string | undefined;
+  onClick: () => void;
+  "data-testid": string;
+}
+
+interface ProjectLinkProps {
+  project: Project;
+  webApp: ProjectsLineProps["webApp"];
+  common: ProjectLinkCommon;
+}
+
+const ProjectLink = ({ project, webApp, common }: ProjectLinkProps) => {
+  if (webApp === "here") {
+    return (
+      <PageLink {...common} to={Routes.project(project.id)}>
+        {project.name}
+      </PageLink>
+    );
+  }
+  if (webApp === null) {
+    return (
+      <span className={common.className} data-testid={common["data-testid"]}>
+        {project.name}
+      </span>
+    );
+  }
+  return (
+    <a {...common} href={new URL(Routes.project(project.id), webApp).href} target="_blank" rel="noopener">
+      {project.name}
+      <StrokeIcon name="openOut" size={12} />
+    </a>
+  );
+};
+
 interface ProjectNameProps {
   project: Project;
   webApp: ProjectsLineProps["webApp"];
@@ -83,27 +119,13 @@ interface ProjectNameProps {
 const ProjectName = ({ project, webApp, onOpen }: ProjectNameProps) => {
   const tipId = useId();
   const cut = project.name.length > CUT_AT;
-  const common = {
+  const common: ProjectLinkCommon = {
     className: `${styles.name} ${cut ? styles.cut : ""}`,
     "aria-describedby": cut ? tipId : undefined,
     onClick: () => onOpen(project),
     "data-testid": projectsLineTestIds.projectLink(project.name),
   };
-  const link =
-    webApp === "here" ? (
-      <PageLink {...common} to={Routes.project(project.id)}>
-        {project.name}
-      </PageLink>
-    ) : webApp === null ? (
-      <span className={common.className} data-testid={common["data-testid"]}>
-        {project.name}
-      </span>
-    ) : (
-      <a {...common} href={new URL(Routes.project(project.id), webApp).href} target="_blank" rel="noopener">
-        {project.name}
-        <StrokeIcon name="openOut" size={12} />
-      </a>
-    );
+  const link = <ProjectLink project={project} webApp={webApp} common={common} />;
   if (!cut) {
     return link;
   }

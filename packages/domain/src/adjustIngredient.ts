@@ -204,10 +204,17 @@ const FRACTIONS: Array<[number, string]> = [
   [1, ""],
 ];
 
+const roundedSmallMetric = (value: number): number => {
+  if (value >= 100) {
+    return Math.round(value / 5) * 5;
+  }
+  return value >= 10 ? Math.round(value) : Math.round(value * 2) / 2;
+};
+
 // Counts and spoons read best as kitchen fractions; grams and millilitres as whole numbers.
 const formatNumber = (value: number, unit: Unit | null): string => {
   if (unit !== null && unit.system === "metric" && unit.size <= 1) {
-    const rounded = value >= 100 ? Math.round(value / 5) * 5 : value >= 10 ? Math.round(value) : Math.round(value * 2) / 2;
+    const rounded = roundedSmallMetric(value);
     return String(rounded);
   }
   if (unit !== null && unit.system === "metric") {
@@ -412,6 +419,51 @@ const target = (unit: Unit, grams: number, units: RecipeUnits): Unit => {
   return grams >= UNITS.tbsp!.size ? UNITS.tbsp! : UNITS.tsp!;
 };
 
+const gramsEachOf = (units: RecipeUnits, from: Unit | null, afterUnit: string): number | null => {
+  if (units !== "metric") {
+    return null;
+  }
+  if (from === UNITS.cup) {
+    return gramsPerCup(afterUnit);
+  }
+  return from === UNITS.stick && STICK_OF_BUTTER.test(afterUnit) ? 113 : null;
+};
+
+const convertedUnitOf = (from: Unit | null, gramsEach: number | null, scaledLow: number, units: RecipeUnits): Unit | null => {
+  if (from === null) {
+    return null;
+  }
+  if (gramsEach !== null) {
+    return scaledLow * gramsEach >= 1000 ? UNITS.kg! : UNITS.g!;
+  }
+  return target(from, scaledLow * from.size, units);
+};
+
+interface UnitWording {
+  hasUnit: boolean;
+  to: Unit | null;
+  inKitchenSizes: boolean;
+  unitUnchanged: boolean;
+  pageUnitText: string;
+  many: boolean;
+}
+
+const unitShownOf = ({ hasUnit, to, inKitchenSizes, unitUnchanged, pageUnitText, many }: UnitWording): string => {
+  if (!hasUnit || to === null || inKitchenSizes) {
+    return "";
+  }
+  return unitUnchanged
+    ? agreeing(pageUnitText, many)
+    : `${to.system === "metric" && to !== UNITS.l ? "" : " "}${many ? to.plural : to.singular}`;
+};
+
+const agreedTailOf = (counted: boolean, low: number, newLow: number, afterUnit: string): string => {
+  if (counted && low <= 1 && newLow > 1) {
+    return withNoun(afterUnit, plural);
+  }
+  return counted && low > 1 && newLow <= 1 ? withNoun(afterUnit, singular) : afterUnit;
+};
+
 // Arithmetic on an amount we can read at the start of a line, never a guess: units move
 // only within their kind, a tin's size stays as sold, and anything else stays as written
 // (design 144y–144ab, docs/features/recipe-notes.md).
@@ -459,22 +511,8 @@ export const adjustIngredient = (line: string, factor: number, units: RecipeUnit
   }
 
   const from = named === null ? null : UNITS[named.unit]!;
-  const gramsEach =
-    units !== "metric"
-      ? null
-      : from === UNITS.cup
-        ? gramsPerCup(afterUnit)
-        : from === UNITS.stick && STICK_OF_BUTTER.test(afterUnit)
-          ? 113
-          : null;
-  const to =
-    from === null
-      ? null
-      : gramsEach !== null
-        ? low * factor * gramsEach >= 1000
-          ? UNITS.kg!
-          : UNITS.g!
-        : target(from, low * factor * from.size, units);
+  const gramsEach = gramsEachOf(units, from, afterUnit);
+  const to = convertedUnitOf(from, gramsEach, low * factor, units);
   const convert = (value: number) =>
     from === null || to === null ? value * factor : (value * factor * (gramsEach ?? from.size)) / to.size;
   const newLow = convert(low);
@@ -484,12 +522,7 @@ export const adjustIngredient = (line: string, factor: number, units: RecipeUnit
   const many = newLow > 1 || newHigh !== null;
   const pageUnitText = named === null ? "" : rest.slice(0, spaced.length + named.length);
   const inKitchenSizes = high === null && isMeasured(to) && (factor !== 1 || !unitUnchanged);
-  const unitShown =
-    named === null || to === null || inKitchenSizes
-      ? ""
-      : unitUnchanged
-        ? agreeing(pageUnitText, many)
-        : `${to.system === "metric" && to !== UNITS.l ? "" : " "}${many ? to.plural : to.singular}`;
+  const unitShown = unitShownOf({ hasUnit: named !== null, to, inKitchenSizes, unitUnchanged, pageUnitText, many });
   const shown = inKitchenSizes ? partsText(measured(newLow, to), from, pageUnitText) : `${amountText}${unitShown}`;
   const moved = Math.abs(newLow - low) > 1e-9 || !unitUnchanged || (high !== null && Math.abs((newHigh ?? 0) - high) > 1e-9);
   if (!moved) {
@@ -497,12 +530,7 @@ export const adjustIngredient = (line: string, factor: number, units: RecipeUnit
   }
 
   const counted = from === null && pack === null && high === null;
-  const tail =
-    counted && low <= 1 && newLow > 1
-      ? withNoun(afterUnit, plural)
-      : counted && low > 1 && newLow <= 1
-        ? withNoun(afterUnit, singular)
-        : afterUnit;
+  const tail = agreedTailOf(counted, low, newLow, afterUnit);
   const pieces: IngredientPiece[] = [
     { text: lead, changed: false },
     { text: shown, changed: true },
@@ -591,7 +619,13 @@ const inBothSystems = (line: string, lead: string, body: string, factor: number,
     const many = (grams.low * factor * grams.unit.size) / usUnit.size > 1 || grams.high !== null;
     return `${value(grams.low)}${grams.high === null ? "" : `–${value(grams.high)}`} ${many ? usUnit.plural : usUnit.singular}`;
   };
-  const shown = units === "asWritten" ? `${scaled(first)}${slash[0]}${scaled(second)}` : units === "metric" ? scaled(grams) : inUs();
+  const shownIn = (): string => {
+    if (units === "asWritten") {
+      return `${scaled(first)}${slash[0]}${scaled(second)}`;
+    }
+    return units === "metric" ? scaled(grams) : inUs();
+  };
+  const shown = shownIn();
   const pieces: IngredientPiece[] = [
     { text: lead, changed: false },
     { text: shown, changed: true },

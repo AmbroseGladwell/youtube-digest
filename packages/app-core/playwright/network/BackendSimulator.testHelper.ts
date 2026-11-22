@@ -416,38 +416,41 @@ export class BackendSimulator {
 
     await this.#page.route("**/api.anthropic.com/v1/messages**", (route) =>
       this.#respond(route, EndpointKey.ANTHROPIC_MESSAGES, {
-        onDefault: () =>
-          this.#anthropicRefusesModel
-            ? {
-                status: 400,
-                body: {
-                  type: "error",
-                  error: {
-                    type: "invalid_request_error",
-                    message: "The compiled grammar is too large, which would cause performance issues.",
-                  },
+        onDefault: () => {
+          if (this.#anthropicRefusesModel) {
+            return {
+              status: 400,
+              body: {
+                type: "error",
+                error: {
+                  type: "invalid_request_error",
+                  message: "The compiled grammar is too large, which would cause performance issues.",
                 },
-              }
-            : this.#anthropicOutOfCredit
-              ? {
-                  status: 400,
-                  body: {
-                    type: "error",
-                    error: {
-                      type: "invalid_request_error",
-                      message:
-                        "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
-                    },
-                  },
-                }
-              : {
-                  status: 200,
-                  body: makeAnthropicMessageResponse(
-                    route.request().postData()?.includes('"noteKind"')
-                      ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
-                      : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
-                  ),
+              },
+            };
+          }
+          if (this.#anthropicOutOfCredit) {
+            return {
+              status: 400,
+              body: {
+                type: "error",
+                error: {
+                  type: "invalid_request_error",
+                  message:
+                    "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.",
                 },
+              },
+            };
+          }
+          return {
+            status: 200,
+            body: makeAnthropicMessageResponse(
+              route.request().postData()?.includes('"noteKind"')
+                ? { noteKind: this.#generatedOutputOverrides.recipe ? "recipe" : "default" }
+                : makeGeneratedOutputFixture(this.#generatedOutputOverrides),
+            ),
+          };
+        },
         onError: () => ({
           status: 401,
           body: {
@@ -457,6 +460,21 @@ export class BackendSimulator {
         }),
       }),
     );
+  };
+
+  #ourKeyOverviewFor = (request: OurKeyGenerationRequest) => {
+    if ("podcast" in request.input) {
+      return makeOverview({ id: request.overviewId, source: request.input.podcast, inOneLine: "Made from the episode." });
+    }
+    if ("article" in request.input) {
+      return { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." };
+    }
+    return makeOverview({
+      id: request.overviewId,
+      source: youTubeSource(request.input.video),
+      inOneLine: "Made on our key.",
+      ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
+    });
   };
 
   #handleSyncNetworking = async (): Promise<void> => {
@@ -1073,16 +1091,7 @@ export class BackendSimulator {
               return {
                 status: 200,
                 body: {
-                  ...("podcast" in request.input
-                    ? makeOverview({ id: request.overviewId, source: request.input.podcast, inOneLine: "Made from the episode." })
-                    : "article" in request.input
-                      ? { ...makeArticleOverview({ id: request.overviewId }), inOneLine: "Made from the article." }
-                      : makeOverview({
-                          id: request.overviewId,
-                          source: youTubeSource(request.input.video),
-                          inOneLine: "Made on our key.",
-                          ...(this.#ourKeyHowToApply === null ? {} : { howToApply: { items: this.#ourKeyHowToApply } }),
-                        })),
+                  ...this.#ourKeyOverviewFor(request),
                   filedProjectIds,
                 },
               };

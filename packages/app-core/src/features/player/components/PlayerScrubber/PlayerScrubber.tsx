@@ -31,6 +31,19 @@ const landingLabel = (lines: NoteLine[], index: number, seconds: number): string
   return `${heading} · line ${within} · ${formatClock(seconds)}`;
 };
 
+const unseekableAccessibility = (fill: PlayerBarView["track"]["fill"], percent: number) => {
+  if (fill === "sweep") {
+    return { role: "progressbar", "aria-label": "Preparing audio" };
+  }
+  return {
+    role: "progressbar",
+    "aria-label": "Progress",
+    "aria-valuemin": 0,
+    "aria-valuemax": 100,
+    "aria-valuenow": Math.round(fill === "none" ? 0 : percent),
+  };
+};
+
 const keyTarget = (key: string, time: number, durationSeconds: number): number | null => {
   switch (key) {
     case "ArrowRight":
@@ -112,15 +125,7 @@ export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds,
         )}`,
         onKeyDown,
       }
-    : fill === "sweep"
-      ? { role: "progressbar", "aria-label": "Preparing audio" }
-      : {
-          role: "progressbar",
-          "aria-label": "Progress",
-          "aria-valuemin": 0,
-          "aria-valuemax": 100,
-          "aria-valuenow": Math.round(fill === "none" ? 0 : percent),
-        };
+    : unseekableAccessibility(fill, percent);
 
   return (
     <div

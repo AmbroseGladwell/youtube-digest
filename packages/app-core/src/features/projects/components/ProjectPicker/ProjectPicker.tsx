@@ -20,7 +20,19 @@ export interface ProjectPickerProps {
   onClose: () => void;
 }
 
-const footLine = (count: number): string => (count === 0 ? "Not in a project yet" : count === 1 ? "In 1 project" : `In ${count} projects`);
+const footLine = (count: number): string => {
+  if (count === 0) {
+    return "Not in a project yet";
+  }
+  return count === 1 ? "In 1 project" : `In ${count} projects`;
+};
+
+const detailLine = (project: ProjectSummary["project"], held: number, of: number): string | null => {
+  if (of > 1 && held > 0 && held < of) {
+    return `${held} of ${of} in it`;
+  }
+  return project.createdBy.by === "assistant" ? `Made by ${project.createdBy.name}` : null;
+};
 
 const inOrderAsOpened = (summaries: ProjectSummary[], openedOrder: ProjectId[]): ProjectSummary[] => {
   const place = (id: ProjectId) => openedOrder.indexOf(id);
@@ -35,12 +47,7 @@ export const ProjectPicker = ({ summaries, holding, of, onToggle, onNewProject, 
     return {
       id: project.id,
       name: project.name,
-      detail:
-        of > 1 && held > 0 && held < of
-          ? `${held} of ${of} in it`
-          : project.createdBy.by === "assistant"
-            ? `Made by ${project.createdBy.name}`
-            : null,
+      detail: detailLine(project, held, of),
       count: items.length,
       state: checklistOptionState(held, of),
     };

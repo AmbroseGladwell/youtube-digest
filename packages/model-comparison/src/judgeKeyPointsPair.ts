@@ -6,8 +6,12 @@ import type { KeyPointsJudgeRecord, KeyPointsResults } from "./KeyPointsJudgeRec
 import { KEY_POINT_DIMENSIONS, KeyPointsAnswer, keyPointsPrompt } from "./keyPointsRubric.js";
 import { isTheModelsDoing, measuredCost } from "./runOne.js";
 
-const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult =>
-  winner === "tie" ? "tie" : (winner === "A") === candidateIsA ? "win" : "loss";
+const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult => {
+  if (winner === "tie") {
+    return "tie";
+  }
+  return (winner === "A") === candidateIsA ? "win" : "loss";
+};
 
 // Judged once in each order. A side wins a dimension only when both orders agree, so a
 // judge that leans towards whichever note it reads first scores a tie, not a win.

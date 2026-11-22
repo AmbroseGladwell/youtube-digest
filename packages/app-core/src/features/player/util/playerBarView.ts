@@ -43,6 +43,23 @@ const aboutMinutes = (seconds: number) => `~${Math.max(1, Math.round(seconds / 6
 
 const rateLabelFor = (rate: number) => `${rate}×`;
 
+const pacerRestOf = (pacerReason: PlayerSnapshot["pacerReason"], status: PlayerSnapshot["status"], section: string): string => {
+  if (pacerReason === "unavailable") {
+    return "narration is unavailable right now";
+  }
+  if (pacerReason === "dailyCap") {
+    return "you’ve started today’s new narration, more tomorrow";
+  }
+  return status === "ended" ? "finished" : section;
+};
+
+const liveLeadOf = (status: PlayerSnapshot["status"], section: string): string => {
+  if (status === "playing") {
+    return `Now playing · ${section}`;
+  }
+  return status === "paused" ? "Paused" : "Buffering";
+};
+
 // Design Player.dc.html section 1, one state per branch: what the bar says, which button
 // sits in the middle, and what the track is doing. The label line is the live region.
 export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: PlayerBarContext): PlayerBarView => {
@@ -72,14 +89,7 @@ export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: 
 
   if (source === "pacer") {
     const started = status !== "ready";
-    const rest =
-      pacerReason === "unavailable"
-        ? "narration is unavailable right now"
-        : pacerReason === "dailyCap"
-          ? "you’ve started today’s new narration, more tomorrow"
-          : status === "ended"
-            ? "finished"
-            : section;
+    const rest = pacerRestOf(pacerReason, status, section);
     return {
       ...base,
       label: { lead: "Read-along · no audio", rest, tone: "ink", pacerTag: true },
@@ -202,7 +212,7 @@ export const playerBarView = (snapshot: PlayerSnapshot, time: number, { read }: 
       };
 
     default: {
-      const lead = status === "playing" ? `Now playing · ${section}` : status === "paused" ? "Paused" : "Buffering";
+      const lead = liveLeadOf(status, section);
       return {
         ...base,
         label: { lead, rest: status === "playing" ? null : section, tone: "ink", pacerTag: false },

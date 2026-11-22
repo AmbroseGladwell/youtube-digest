@@ -15,11 +15,18 @@ import { createFetchSyncApi, SyncEngine, type SyncStatus } from "@overview/sync"
 import type { TestApp } from "../testing/createTestApp.testHelper.js";
 import type { TestAccount } from "../testing/TestAccount.testHelper.js";
 
+const hrefOf = (input: string | URL | Request): string => {
+  if (typeof input === "string") {
+    return input;
+  }
+  return input instanceof URL ? input.href : input.url;
+};
+
 // fetch over app.inject(): the client half runs exactly as it would in a browser, against
 // the whole API in process, with no port opened (docs/conventions/backend-testing-guide.md).
 export const injectingFetch = (app: FastifyInstance): typeof fetch => {
   return async (input, init) => {
-    const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url);
+    const url = new URL(hrefOf(input));
     const response = await app.inject({
       method: (init?.method ?? "GET") as "GET" | "POST" | "PUT" | "DELETE",
       url: `${url.pathname}${url.search}`,

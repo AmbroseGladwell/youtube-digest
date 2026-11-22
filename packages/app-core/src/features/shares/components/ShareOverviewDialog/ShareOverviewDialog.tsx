@@ -83,6 +83,50 @@ export const ShareOverviewDialog = ({
     setCopied(true);
   };
 
+  const notice = () => {
+    if (edited) {
+      return (
+        <div className={styles.notice} data-testid={shareOverviewDialogTestIds.editedNotice}>
+          <p>You’ve edited this overview since sharing it. The link still shows the earlier copy.</p>
+          <button
+            type="button"
+            className={styles.noticeAction}
+            onClick={() => {
+              analytics.shareDialog.updated();
+              onCreate();
+            }}
+            disabled={busy}
+            data-testid={shareOverviewDialogTestIds.updateButton}
+          >
+            {busy ? "Updating…" : "Update shared copy"}
+          </button>
+        </div>
+      );
+    }
+    if (audioMissing) {
+      return (
+        <div className={styles.notice} data-testid={shareOverviewDialogTestIds.audioMissingNotice}>
+          <p>The shared copy has no audio yet. Add yours, and anyone who opens the link can listen too.</p>
+          <button
+            type="button"
+            className={styles.noticeAction}
+            onClick={() => {
+              analytics.shareDialog.audioAdded();
+              onCreate();
+            }}
+            disabled={busy}
+            data-testid={shareOverviewDialogTestIds.addAudioButton}
+          >
+            {busy ? "Adding audio…" : "Add audio"}
+          </button>
+        </div>
+      );
+    }
+    return (
+      <p className={styles.body}>Anyone with this link can read and listen to the shared copy. Your reason and topics aren’t in it.</p>
+    );
+  };
+
   const body = () => {
     if (!signedIn) {
       return (
@@ -251,41 +295,7 @@ export const ShareOverviewDialog = ({
           </button>
         </div>
 
-        {edited ? (
-          <div className={styles.notice} data-testid={shareOverviewDialogTestIds.editedNotice}>
-            <p>You’ve edited this overview since sharing it. The link still shows the earlier copy.</p>
-            <button
-              type="button"
-              className={styles.noticeAction}
-              onClick={() => {
-                analytics.shareDialog.updated();
-                onCreate();
-              }}
-              disabled={busy}
-              data-testid={shareOverviewDialogTestIds.updateButton}
-            >
-              {busy ? "Updating…" : "Update shared copy"}
-            </button>
-          </div>
-        ) : audioMissing ? (
-          <div className={styles.notice} data-testid={shareOverviewDialogTestIds.audioMissingNotice}>
-            <p>The shared copy has no audio yet. Add yours, and anyone who opens the link can listen too.</p>
-            <button
-              type="button"
-              className={styles.noticeAction}
-              onClick={() => {
-                analytics.shareDialog.audioAdded();
-                onCreate();
-              }}
-              disabled={busy}
-              data-testid={shareOverviewDialogTestIds.addAudioButton}
-            >
-              {busy ? "Adding audio…" : "Add audio"}
-            </button>
-          </div>
-        ) : (
-          <p className={styles.body}>Anyone with this link can read and listen to the shared copy. Your reason and topics aren’t in it.</p>
-        )}
+        {notice()}
 
         <div className={styles.footSplit}>
           <button

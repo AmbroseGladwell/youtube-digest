@@ -63,12 +63,19 @@ export const verdictSpreadLine = (spread: VerdictSpread): string => {
 
 export const authorName = (author: ProjectAuthor): string => (author.by === "reader" ? "the reader" : author.name);
 
+const addedByFact = (addedBy: MemberAuthor): string | null => {
+  if (addedBy.by === "assistant") {
+    return `added by ${addedBy.name}`;
+  }
+  return addedBy.by === "filing" ? "added automatically" : null;
+};
+
 const overviewLine = ({ overview, read, addedBy }: ProjectOverview): string => {
   const facts = [
     sourceName(overview.source),
     overview.verdict === null ? null : `${NOVELTY_LABEL[overview.verdict.novelty]}${overview.verdict.dubious ? ", dubious" : ""}`,
     read ? null : "unread",
-    addedBy.by === "assistant" ? `added by ${addedBy.name}` : addedBy.by === "filing" ? "added automatically" : null,
+    addedByFact(addedBy),
     `saved ${overview.savedAt.slice(0, 10)}`,
     `id ${overview.id}`,
   ].filter((fact) => fact !== null);
