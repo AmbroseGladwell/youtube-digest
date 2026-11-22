@@ -96,7 +96,7 @@ import { OnboardingNextSteps } from "../../onboarding/components/OnboardingNextS
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { overviewTags } from "../../overviews/util/overviewTags.js";
 import { relatedByTag } from "../util/relatedByTag.js";
-import { ARTICLE_TABS, READER_TABS, UNCHAPTERED_RECIPE_VIDEO_TABS, type ReaderTab } from "../types/ReaderTab.js";
+import { ARTICLE_TABS, timedSourceTabs, type ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
 import { useSavedOnRead } from "./useSavedOnRead.js";
@@ -217,7 +217,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
       return ["Overview" as const];
     }
     if (webArticle === null) {
-      return recipeNote !== null && !overview?.chapters?.length ? UNCHAPTERED_RECIPE_VIDEO_TABS : READER_TABS;
+      return timedSourceTabs(overview?.chapters?.length ?? null, recipeNote !== null);
     }
     return webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
   };

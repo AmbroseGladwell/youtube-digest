@@ -51,7 +51,7 @@ import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import { sharedNarrationApi } from "../util/sharedNarrationApi.js";
 import { TranscriptPanel } from "../../reader/components/TranscriptPanel/TranscriptPanel.js";
 import { SharedTranscriptPrompt } from "../components/SharedTranscriptPrompt/SharedTranscriptPrompt.js";
-import { ARTICLE_TABS, READER_TABS, UNCHAPTERED_RECIPE_VIDEO_TABS, type ReaderTab } from "../../reader/types/ReaderTab.js";
+import { ARTICLE_TABS, timedSourceTabs, type ReaderTab } from "../../reader/types/ReaderTab.js";
 import { useNotePlayer } from "../../reader/ReaderPage/useNotePlayer.js";
 import { useCookingMode } from "../../reader/ReaderPage/useCookingMode.js";
 import { useRecipeVoice } from "../../reader/ReaderPage/useRecipeVoice.js";
@@ -109,12 +109,17 @@ interface SaveAction {
   onChoose: () => void;
 }
 
-const tabsShownFor = (recipePage: boolean, articleChapterCount: number | null, unchapteredRecipeVideo: boolean): readonly ReaderTab[] => {
+const tabsShownFor = (
+  recipePage: boolean,
+  articleChapterCount: number | null,
+  noteChapterCount: number | null,
+  recipeVideo: boolean,
+): readonly ReaderTab[] => {
   if (recipePage) {
     return ["Overview"];
   }
   if (articleChapterCount === null) {
-    return unchapteredRecipeVideo ? UNCHAPTERED_RECIPE_VIDEO_TABS : READER_TABS;
+    return timedSourceTabs(noteChapterCount, recipeVideo);
   }
   return articleChapterCount > 1 ? ARTICLE_TABS : ["Overview"];
 };
@@ -148,7 +153,8 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
   const tabsShown = tabsShownFor(
     recipePage !== null,
     webArticle?.article.chapters.length ?? null,
-    recipeNote !== null && !note?.chapters?.length,
+    note.chapters?.length ?? null,
+    recipeNote !== null,
   );
   // Adjusted on the visitor's device, never in the copy.
   const [recipeScale, setRecipeScale] = useState<RecipeScale | null>(null);
