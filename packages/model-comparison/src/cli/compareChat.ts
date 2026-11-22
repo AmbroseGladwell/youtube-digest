@@ -120,15 +120,12 @@ const prepared = await Promise.all(
   }),
 );
 
-const lanes = models.map((model) =>
-  prepared.flatMap((setup) =>
-    arms.flatMap((arm) =>
-      Array.from({ length: repeats }, (_, index) => index + 1)
-        .filter((repeat) => !done.has(fileOf({ overviewId: setup.source.overviewId, arm, model, repeat })))
-        .map((repeat) => () => runChatConversation({ apiKey, ...setup, arm, model, repeat, windowS, retrieveCount })),
-    ),
-  ),
-);
+const lanesFor = (model: string, setup: (typeof prepared)[number], arm: ChatArm) =>
+  Array.from({ length: repeats }, (_, index) => index + 1)
+    .filter((repeat) => !done.has(fileOf({ overviewId: setup.source.overviewId, arm, model, repeat })))
+    .map((repeat) => () => runChatConversation({ apiKey, ...setup, arm, model, repeat, windowS, retrieveCount }));
+
+const lanes = models.map((model) => prepared.flatMap((setup) => arms.flatMap((arm) => lanesFor(model, setup, arm))));
 
 const outcome = await spendWithinBudget<ChatConversationRecord>({
   lanes,

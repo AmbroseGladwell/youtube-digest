@@ -93,12 +93,11 @@ if (!values["measure-only"]) {
   }
   if (values["list-only"]) {
     for (const record of (await lists.all()).filter((list) => toList.includes(list.sourceId))) {
-      log(`\n${record.sourceId}:`);
-      for (const [index, item] of (record.items ?? []).entries()) {
-        log(
+      const items = (record.items ?? []).map(
+        (item, index) =>
           `  ${index + 1}. [${item.kind}] ${item.text} (${item.start < 0 ? "no place" : sources.get(record.sourceId)!.placeOf(item.start)})`,
-        );
-      }
+      );
+      log([`\n${record.sourceId}:`, ...items].join("\n"));
     }
     log(`\nListed ${toList.length}, $${listing.spentDollars.toFixed(4)} spent. Nothing judged (--list-only).`);
     process.exit(0);

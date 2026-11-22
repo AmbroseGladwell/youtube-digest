@@ -23,6 +23,8 @@
     "react/jsx-no-useless-fragment": ["error", { "allowExpressions": true }],
     "overview/no-side-effect-ternary": "error",
     "overview/no-inline-object-type": "error",
+    "max-depth": ["error", 3],
+    "max-nested-callbacks": ["error", 3],
     "unicorn/no-thenable": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/no-new-array": "off",
@@ -53,8 +55,13 @@
       "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.testHelper.ts", "**/*.testHelper.tsx", "**/playwright/**", "**/scripts/**", "scripts/**"],
       "rules": {
         "overview/no-inline-object-type": "off",
+        "max-nested-callbacks": ["error", 4],
         "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette", "!@overview/transcripts/testing"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }]}]
       }
+    },
+    {
+      "files": ["apps/api/src/scripts/chatAcrossSourcesCheck.ts"],
+      "rules": { "max-depth": "off", "max-nested-callbacks": "off" }
     },
     {
       "files": ["**/playwright/**"],

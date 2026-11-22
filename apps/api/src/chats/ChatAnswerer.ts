@@ -39,7 +39,7 @@ import type { StoredRecord } from "../records/StoredRecord.js";
 import type { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import type { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { answerSoFar } from "./answerSoFar.js";
-import { sectionsSoFar } from "./sectionsSoFar.js";
+import { arrivedSections } from "./arrivedSections.js";
 import { outsideCode } from "./outsideCode.js";
 import { flattenedAnswer, structuredAnswer, withoutDashes } from "./structuredAnswer.js";
 import { assertWhole, CHAT_FAILED as FAILED, EmptyAnswerError, reasonOf, statusOf } from "./chatFailure.js";
@@ -245,20 +245,15 @@ export class ChatAnswerer {
             yield { type: "text", text: text.slice(sent.length) };
             sent = text;
           }
-          const whole = sectionsSoFar(raw);
-          for (; sectionsSent < whole.length; sectionsSent += 1) {
-            const section = ChatReply.shape.sections.element.safeParse(whole[sectionsSent]);
-            if (!section.success) {
-              continue;
-            }
-            // A passage cited before inSource is known shows as a moment; the stored answer settles it.
-            const [shown] = structuredAnswer(
-              { intro: "", introSources: [], sections: [section.data], takeaway: "" },
-              (ids) => cite(ids, true).citations,
-            ).sections;
-            if (shown !== undefined) {
-              yield { type: "section", section: shown };
-            }
+          const arrived = arrivedSections(raw, sectionsSent);
+          sectionsSent = arrived.seen;
+          // A passage cited before inSource is known shows as a moment; the stored answer settles it.
+          const shown = structuredAnswer(
+            { intro: "", introSources: [], sections: arrived.sections, takeaway: "" },
+            (ids) => cite(ids, true).citations,
+          ).sections;
+          for (const section of shown) {
+            yield { type: "section", section };
           }
         }
         assertWhole(stream);

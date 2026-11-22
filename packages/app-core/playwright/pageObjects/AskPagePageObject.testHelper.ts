@@ -249,16 +249,18 @@ export class AskPagePageObject extends PageObject {
           this.drawer()
             .getByTestId(askDrawerTestIds.group)
             .evaluateAll(
-              (sections, ids) =>
-                sections.map((section) => {
+              (sections, ids) => {
+                const itemText = (button: Element) => {
+                  const question = button.querySelector(`[data-testid="${ids.question}"]`)?.textContent ?? "";
+                  const scope = button.querySelector(`[data-testid="${ids.scope}"]`)?.textContent ?? "";
+                  return `${question} · ${scope}`;
+                };
+                return sections.map((section) => {
                   const label = section.querySelector("h2")?.textContent ?? "";
-                  const items = [...section.querySelectorAll(`[data-testid="${ids.open}"]`)].map((button) => {
-                    const question = button.querySelector(`[data-testid="${ids.question}"]`)?.textContent ?? "";
-                    const scope = button.querySelector(`[data-testid="${ids.scope}"]`)?.textContent ?? "";
-                    return `${question} · ${scope}`;
-                  });
+                  const items = [...section.querySelectorAll(`[data-testid="${ids.open}"]`)].map(itemText);
                   return `${label}: ${items.join(", ")}`;
-                }),
+                });
+              },
               { open: askDrawerTestIds.open, question: askDrawerTestIds.question, scope: askDrawerTestIds.scope },
             ),
         )

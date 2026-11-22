@@ -35,6 +35,23 @@ interface PointsSection {
   points?: Array<{ text?: unknown; citations?: unknown[] }>;
 }
 
+const uniqueByValue = (values: unknown[]) =>
+  values.filter((value, index) => values.findIndex((each) => JSON.stringify(each) === JSON.stringify(value)) === index);
+
+const pointsAsList = (section: PointsSection) => {
+  if (!Array.isArray(section.points)) {
+    return section;
+  }
+  const citations = uniqueByValue(section.points.flatMap((point) => point.citations ?? []));
+  return {
+    heading: section.heading,
+    paragraphs: [],
+    numbered: [],
+    bullets: section.points.map((point) => point.text),
+    sources: citations.map((citation) => ({ citation, relation: "Supports" })),
+  };
+};
+
 const sectionsAsLists = (record: unknown): unknown => {
   const chat = record as { messages?: Array<Record<string, unknown>> };
   if (!Array.isArray(chat.messages)) {
@@ -52,22 +69,7 @@ const sectionsAsLists = (record: unknown): unknown => {
         sections: {
           ...sections,
           introSources: [],
-          sections: sections.sections.map((section) => {
-            if (!Array.isArray(section.points)) {
-              return section;
-            }
-            const citations = section.points.flatMap((point) => point.citations ?? []);
-            const unique = citations.filter(
-              (citation, index) => citations.findIndex((each) => JSON.stringify(each) === JSON.stringify(citation)) === index,
-            );
-            return {
-              heading: section.heading,
-              paragraphs: [],
-              numbered: [],
-              bullets: section.points.map((point) => point.text),
-              sources: unique.map((citation) => ({ citation, relation: "Supports" })),
-            };
-          }),
+          sections: sections.sections.map(pointsAsList),
         },
       };
     }),

@@ -154,20 +154,19 @@ export const useProjectSuggestions = (current: ProjectSummary | null, overviews:
     }
     const { project } = current;
     analytics.projects.suggestions.added({ projectId: project.id, count: entries.length, how, empty });
+    const added = entries.map(({ overview }) => overview.id as string);
     leave(entries, () => {
       for (const { overview } of entries) {
         analytics.projects.membership.added({ projectId: project.id, overviewId: overview.id, from: "suggestion" });
         setMember.mutate({ projectId: project.id, overviewId: overview.id, inProject: true });
       }
-      setOfferedAgain(
-        (previous) => new Set([...previous].filter((overviewId) => !entries.some((entry) => entry.overview.id === overviewId))),
-      );
+      setOfferedAgain((previous) => new Set([...previous].filter((overviewId) => !added.includes(overviewId))));
       host.say(entries.length === 1 ? `Added to ${project.name}` : `Added ${entries.length} to ${project.name}`, () => {
         analytics.projects.suggestions.undone({ projectId: project.id, action: "add", count: entries.length });
         for (const { overview } of entries) {
           setMember.mutate({ projectId: project.id, overviewId: overview.id, inProject: false });
         }
-        setOfferedAgain((previous) => new Set([...previous, ...entries.map(({ overview }) => overview.id as string)]));
+        setOfferedAgain((previous) => new Set([...previous, ...added]));
       });
     });
   };

@@ -98,19 +98,18 @@ export const finishAccountDeletion = async (
     );
   };
 
-  if (steps.narration === "pending" || steps.narration === "failed" || steps.narration === "not_configured") {
-    if (narrationStore === null) {
-      steps.narration = "not_configured";
-    } else {
-      try {
-        for (const key of deletion.narrationKeys) {
-          await withinTime(narrationStore.delete(key), stepTimeoutMs, "narration");
-        }
-        steps.narration = "done";
-      } catch (error) {
-        steps.narration = "failed";
-        failed("narration", error);
+  const narrationDue = steps.narration === "pending" || steps.narration === "failed" || steps.narration === "not_configured";
+  if (narrationDue && narrationStore === null) {
+    steps.narration = "not_configured";
+  } else if (narrationDue && narrationStore !== null) {
+    try {
+      for (const key of deletion.narrationKeys) {
+        await withinTime(narrationStore.delete(key), stepTimeoutMs, "narration");
       }
+      steps.narration = "done";
+    } catch (error) {
+      steps.narration = "failed";
+      failed("narration", error);
     }
   }
 
