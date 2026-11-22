@@ -224,9 +224,7 @@ test.describe("Ask", () => {
     await ask.openDrawer();
 
     await ask.verifyDrawerIsOpen(true);
-    await expect
-      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "ask.drawer.opened"))
-      .toHaveLength(1);
+    await expect.poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "ask.drawer.opened")).toHaveLength(1);
   });
 
   test("an overview's conversation in the drawer opens on that overview with its chat open on it, and deletes with Undo (OV-363)", async ({
