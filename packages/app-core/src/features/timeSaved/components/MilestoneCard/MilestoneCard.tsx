@@ -1,5 +1,5 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import { spokenTimeSaved, type Milestone, type MilestoneLineControl } from "@overview/domain";
+import { timeSavedName, type Milestone, type MilestoneLineControl } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { MILESTONE_LINES } from "../../util/milestoneLines.js";
 import { milestoneColourStyle } from "../../util/milestoneColourStyle.js";
@@ -148,7 +148,7 @@ export const MilestoneCard = ({ milestone, minutes, reachedOn, dismiss, onLineCh
       <p className={styles.pill} data-testid={milestoneCardTestIds.pill}>
         {milestone.label} saved{reachedOn === undefined ? "" : ` · ${reachedOn}`}
       </p>
-      <p className={styles.figure} aria-label={`Time saved: ${spokenTimeSaved(minutes)}`} data-testid={milestoneCardTestIds.figure}>
+      <p className={styles.figure} aria-label={timeSavedName(minutes)} data-testid={milestoneCardTestIds.figure}>
         <TimeSavedFigure minutes={minutes} rollFrom={Math.max(0, minutes - ENTRANCE_ROLL_MINUTES)} rollDelayMs={500} />
       </p>
       <div className={styles.lines} aria-live="off">

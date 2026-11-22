@@ -17,3 +17,6 @@ export const spokenTimeSaved = (minutes: number): string => {
   const spokenHours = pluralise(hours, "hour", "hours");
   return rest === 0 ? spokenHours : `${spokenHours} ${pluralise(rest, "minute", "minutes")}`;
 };
+
+// "9 hours 47 minutes saved": the figure's name, in full (docs/features/time-saved.md, "Its spoken name").
+export const timeSavedName = (minutes: number): string => `${spokenTimeSaved(minutes)} saved`;
