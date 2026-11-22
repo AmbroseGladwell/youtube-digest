@@ -1,4 +1,5 @@
 @use "../../../theme/controls.scss" as controls;
+@use "../../../theme/shortScreens.scss";
 
 .root {
   position: relative;
@@ -379,13 +380,18 @@
     left: 0;
     right: 0;
     bottom: 0;
-    max-height: calc(100dvh - var(--masthead-height, 3.5rem) - 1rem);
+    max-height: calc(100dvh - var(--masthead-size, 3.5rem) - 1rem);
     background: var(--card);
     box-shadow: var(--shadow-dialog);
     border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
     transform: translateY(100%);
     transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
     z-index: 5;
+
+    @include shortScreens.very-short-screen {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
   }
 
   .railOpen {
@@ -406,6 +412,11 @@
     min-height: 0;
     overflow-y: auto;
     padding: 0 0.75rem 1rem;
+
+    @include shortScreens.very-short-screen {
+      flex: none;
+      overflow-y: visible;
+    }
   }
 
   .sheetHandle {

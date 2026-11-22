@@ -13,6 +13,10 @@ import {
   scrollWindowsTooShort,
 } from "../support/reflowMeasures.testHelper.js";
 
+const REACHABLE_CONTROLS = ["button", "a[href]", "input", "select", "textarea", "[role=menuitem]", "[role=option]", "[role=tab]"]
+  .map((control) => `${control}:not([disabled]):not([aria-disabled=true])`)
+  .join(", ");
+const REACH_MARK = "data-reach-check";
 const LONGEST_WAIT_FOR_ANIMATIONS_MS = 2_000;
 const WCAG_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
@@ -153,14 +157,20 @@ export abstract class PageObject {
 
   verifyControlsCanBeReached = (within: Locator) =>
     this.step("verifyControlsCanBeReached", async () => {
-      const controls = await within
-        .locator("button, a[href], input, select, textarea, [role=menuitem], [role=option], [role=tab]")
+      await this.page.mouse.move(0, 0);
+      const count = await within
+        .locator(REACHABLE_CONTROLS)
         .filter({ visible: true })
-        .all();
-      expect(controls.length).toBeGreaterThan(0);
+        .evaluateAll((controls, mark) => {
+          controls.forEach((control, at) => control.setAttribute(mark, String(at)));
+          return controls.length;
+        }, REACH_MARK);
+      expect(count).toBeGreaterThan(0);
       const unreachable: string[] = [];
-      for (const control of controls) {
+      for (let at = 0; at < count; at++) {
+        const control = within.locator(`[${REACH_MARK}="${at}"]`);
         const before = await control.evaluate(clippedScrollPositions);
+        await control.focus();
         const reached = await control.click({ trial: true, timeout: 2_000 }).then(
           () => true,
           () => false,

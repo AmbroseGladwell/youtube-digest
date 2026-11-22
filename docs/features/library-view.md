@@ -150,5 +150,28 @@ How it keeps what a full list gave:
 The first row at 5,000 is still 5.6 s. That is the data, not the list: the harness syncs every
 overview, and the library reads each one's state separately. OV-383 has it.
 
+### Reading the library from the device's store
+
+`playwright/perf/libraryData.perf.tsx` (also run by `npm run perf:library`) times the real
+IndexedDB store in the browser, without the page: it writes a first sync of N overviews (every
+second one read) in the sync feed's pages of 200, then times the library's read
+(`readLibraryEntries`) five times. 4× CPU, 22 Nov 2026 (OV-383).
+
+The read used to fetch every overview, then each overview's state on its own. It now fetches all
+the states in one call (`OverviewStore.listOverviewStates`). The machine was busy, so the two reads
+were timed alternately in one run, and only their difference is worth trusting. Medians of five:
+
+| Overviews | First-sync writes | Read, a state per overview | Read, all states at once |
+|---|---|---|---|
+| 500 | 84 ms | 88 ms | 54 ms |
+| 2,000 | 352 ms | 261 ms | 159 ms |
+| 5,000 | 1.4 s | 556 ms | 345 ms |
+
+What the read still pays for, every time it runs:
+
+- `listUnreadable` reads every overview and state again, to find the ones it can't read.
+- Every record is checked against its schema and migrated on every read.
+- Every sync that applies anything re-reads the whole library.
+
 Not measured here: the load from IndexedDB (the harness uses the in-memory store) and the
 extension panel at 400 px.

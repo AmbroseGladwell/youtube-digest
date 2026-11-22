@@ -1,8 +1,10 @@
 @use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/shortScreens.scss";
 
 .root {
   position: sticky;
   top: 0;
+
   // Above the tab strip's 2, so the strip slides under it rather than over.
   z-index: 3;
   background: var(--ground);
@@ -11,6 +13,10 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.875rem 1.75rem;
+
+  @include shortScreens.short-screen {
+    position: relative;
+  }
 }
 
 .home {

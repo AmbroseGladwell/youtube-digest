@@ -107,6 +107,28 @@ export const defineOverviewStoreConformanceSuite = (
     });
   });
 
+  test(behaviour("listOverviewStates lists every state written, and none for an overview nobody has touched"), async () => {
+    const store = await createStore();
+    const touched = makeOverview();
+    const untouched = makeOverview();
+    await store.saveOverview(touched);
+    await store.saveOverview(untouched);
+    await store.setOverviewState(touched.id, { read: true, userTags: ["keep"] });
+
+    assert.deepEqual(await store.listOverviewStates(), [await store.getOverviewState(touched.id)]);
+  });
+
+  test(behaviour("listOverviewStates leaves out a deleted overview's state"), async () => {
+    const store = await createStore();
+    const overview = makeOverview();
+    await store.saveOverview(overview);
+    await store.setOverviewState(overview.id, { favourite: true });
+
+    await store.deleteOverview(overview.id);
+
+    assert.deepEqual(await store.listOverviewStates(), []);
+  });
+
   test(behaviour("deleteOverview removes it from getOverview and from listOverviews"), async () => {
     const store = await createStore();
     const overview = makeOverview();
