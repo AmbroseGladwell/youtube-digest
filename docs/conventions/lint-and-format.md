@@ -88,6 +88,10 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `overview/no-long-comment` | A comment is one line at most, and never a TODO or FIXME (`commenting.md`). Tool directives such as `@ts-expect-error` and `oxlint-disable` don't count. It ran on changed lines only until OV-377 cleared the 2,507 older ones. |
 | `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
 
+### Stylesheets
+
+Oxlint doesn't read SCSS or CSS, so `scripts/checkStyleComments.mjs` holds the same line there as `no-long-comment` does in TypeScript: no comment of more than one line, and no TODO or FIXME (OV-378). `npm run lint` runs it on every style file, and the pre-commit hook on the staged ones. `prototype/` is left alone, as evidence.
+
 ### Type-aware rules
 
 `npm run lint` and the pre-commit hook pass `--type-aware`, so Oxlint asks `oxlint-tsgolint` (TypeScript's own checker, in Go) for types. That runs the type-aware rules in `correctness`, and the two below. A run over the whole repo takes about 9 seconds and peaks under 1 GB. On a commit's few files it takes under a second. It reads `@overview/*` types from each package's `dist`, so CI's `lint` job builds the packages first, and locally a stale `dist` gives stale answers, just as it does for `task typecheck`.
@@ -159,7 +163,7 @@ These rules are off, and each one has a reason:
 |---|---|
 | `typescript/no-unnecessary-condition` | Its 190 hits are mostly guards kept on purpose where the types promise more than the runtime gives: `globalThis.removeEventListener?.()` for the Node tests, `setPointerCapture?.()` for jsdom, `textContent ?? ""`. Following it would delete guards that stop real crashes. |
 | `react-hooks/exhaustive-deps` | 22 existing effects leave dependencies out, many of them on purpose. Each one needs reviewing on its own before the rule can go on, since adding a dependency changes when an effect runs. That review is its own card. |
-| `react/refs`, `react/set-state-in-effect`, `react/purity`, `react/immutability`, `react/preserve-manual-memoization` | These are React Compiler's rules, and the apps don't run the React Compiler. Meeting them would mean restructuring about a hundred components for a compiler we don't use. |
+| `react/refs`, `react/set-state-in-effect`, `react/purity`, `react/immutability`, `react/preserve-manual-memoization`, `react/incompatible-library` | These are React Compiler's rules, and the apps don't run the React Compiler. Meeting them would mean restructuring about a hundred components for a compiler we don't use. `incompatible-library` also refuses `@tanstack/react-virtual`, which the library list uses (OV-381). |
 | `unicorn/no-thenable` | `then` is a real field in the domain: a recipe step's "then" clause, the second line of a notice's copy. None of them is ever awaited. |
 | `unicorn/no-useless-spread` | It flags `[...url.searchParams.keys()]` in `canonicalArticleUrl.ts`, where the copy is what makes deleting while looping safe. Following its advice there would introduce a bug. |
 | `unicorn/no-new-array` | `new Array<number>(n).fill(0)` is clear, and it's typed. |

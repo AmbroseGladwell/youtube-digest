@@ -40,7 +40,7 @@ rather than replacing it.
 | Price a month (launch, 18 Oct 2026)                           | free                                                     | free                   | £4.99               | £7.99               |
 | Overviews on our key                                          | — (needs an account; onboarding's first is made after it) | 5 a month              | 10 a month          | 50 a month          |
 | Overviews on your own key                                     | —                                                        | 10 a month             | 200 a month         | 200 a month         |
-| Questions about an overview, on our key (OV-309, 16 Nov 2026) | — (needs an account)                                     | 100 a month            | 500 a month         | 1,000 a month       |
+| Chat on our key, in usage (OV-309, OV-376)                    | — (needs an account)                                     | About 100 typical questions | About 500     | About 1,000         |
 | Seeing an overview                                            | — (needs an account)                                     | Yes                    | Yes                 | Yes                 |
 | Transcripts from our server                                   | Onboarding's video read only (OV-327)                     | Part of an overview    | Part of an overview | Part of an overview |
 | Daily safety cap on those fetches (not shown to readers)      | 5 per address                                            | 50                     | 100                 | 100                 |
@@ -499,7 +499,59 @@ Plus 500, Plus 1,000, set by the owner on 16 Nov 2026 (BYO Plus raised from a su
   about in the last 30 minutes, and $0.004 for the first after that (OV-313). A Plus month of
   1,000 questions each about a different 169-minute source would be about $4.40; the same
   1,000 in conversations of 30 about $0.60.
-- `GET /api/chat-usage` says what is used, the limit and the reset date.
+- `GET /api/chat-usage` says what is used, the limit and the reset date, and since OV-376 the
+  `share` of the month's usage spent.
+
+### Chat usage (OV-376)
+
+Questions don't cost the same: a follow-up about a short video is a fraction of a cent, and a
+broad library answer covering dozens of overviews costs several times more (OV-373). So the
+allowance is moving from a count of questions to **usage**, as Claude counts it: each answer
+spends what it really cost, and each plan has an amount of usage a month. The owner's
+conditions, 22 Nov 2026: stay profitable without being stingy, and keep about today's numbers
+for questions about long-form content.
+
+- **A unit of usage is a millionth of a dollar** of list-price cost (`chatUnitsOf`), worked out
+  by code from the provider's own token counts, both passes of a library answer included. The
+  amounts live in config (`chatAllowances.ts`), so they can move without a migration, and
+  readers never see a unit.
+- **One question means one about long-form content:** `CHAT_UNITS_PER_QUESTION` is a question
+  about a 169-minute source in a conversation of four, the first from a cold cache and the rest
+  from a warm one (the endpoint measurements in `chats.md`). Each plan's usage is its question
+  count times that, so a plan's most expensive month of chat is fixed, however it's spent.
+- **What things cost, in those questions** (measured, OV-267's endpoint runs and OV-373's
+  production arm, with the map cached):
+
+  | Question                                             | Questions' worth |
+  | ---------------------------------------------------- | ---------------- |
+  | A follow-up about a video of up to 89 minutes        | about 0.15       |
+  | A follow-up about a 169-minute video                 | about 0.3        |
+  | The first question about a 169-minute video          | about 3          |
+  | A library question, deep, reading 5 in full          | about 2          |
+  | A broad library answer                               | about 2 to 8     |
+  | A library question in a new conversation (cold map)  | about 2 more     |
+
+  A reader who asks a handful of questions about each long video, or many about short ones,
+  gets at least today's numbers. One who asks a single question about each of many long videos,
+  or mostly broad library questions, gets fewer.
+- **Edge rules:** a question about one overview goes ahead while the month is under 100%. A
+  library or project question needs room for its worst case, `CHAT_LIBRARY_RESERVE_UNITS` (12
+  questions' worth, against a measured worst of about 10.5), so near the end it can be refused
+  while overview questions still work (design 376h). Either way the real cost is charged once
+  it's answered, so the last answer may go a little over. A failed or stopped answer spends
+  nothing (its cost still goes on the account's tally, `unit-economics.md`).
+- **Settled and enforced** (`ChatUsageRepository`): every stored answer settles its usage into
+  `chat_usage.units` on the day it was reserved, and into `our_key_usage.chat_units`. The month,
+  the day (`CHAT_UNITS_PER_ACCOUNT_DAILY`, 200 questions' worth) and the global day
+  (`OUR_KEY_DAILY_CHAT_MESSAGES` questions' worth) are checked in units, under the account's row
+  lock, against what is settled, so two questions at once can both go ahead near the end. The
+  question count is kept beside the units for analytics, and `library_units` holds the part
+  spent on library and project questions, for the cost dashboard (`cost_reports.chat_months`).
+- **Refusals** keep their shape: `chat-month` (with `scope: "library"` when only a library
+  question won't fit), `chat-day`, `chat-our-key-daily`. `GET /api/chat-usage` adds `share` and
+  `libraryFits`; `used` and `limit` still count questions for older clients.
+- **What readers see** (designs 376a–376j, `chats.md`): a percentage and the reset date, never a
+  count, a unit or a cost. Plans say "about N typical questions a month".
 
 ## Options for saving cost, not built
 

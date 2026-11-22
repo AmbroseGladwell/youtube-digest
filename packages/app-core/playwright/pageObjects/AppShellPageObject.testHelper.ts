@@ -60,6 +60,39 @@ export class AppShellPageObject extends PageObject {
     return new ErrorStatePageObject(this.testContext, this.get(appShellTestIds.pane));
   }
 
+  verifyBarFitsTheScreen = () =>
+    this.step("verifyBarFitsTheScreen", async () => {
+      const width = this.page.viewportSize()!.width;
+      const controls = this.get(appShellTestIds.masthead).locator(
+        `[data-testid="${appShellTestIds.askButton}"], [data-testid="${appShellTestIds.newOverviewButton}"], [data-testid="${accountMenuTestIds.trigger}"]`,
+      );
+      await expect(controls.first()).toBeVisible();
+      for (const box of await controls.evaluateAll((all) => all.map((control) => control.getBoundingClientRect().toJSON() as DOMRect))) {
+        expect(box.left).toBeGreaterThanOrEqual(0);
+        expect(box.right).toBeLessThanOrEqual(width);
+        expect(box.width).toBeGreaterThanOrEqual(44);
+      }
+      await this.verifyPageDoesNotScrollSideways();
+    });
+
+  verifyNameShownWhole = () =>
+    this.step("verifyNameShownWhole", async () => {
+      const name = this.get(appShellTestIds.brand).locator("h1");
+      await expect(name).toHaveText("The Overview");
+      expect(await name.evaluate((title) => title.scrollWidth - title.clientWidth)).toBeLessThanOrEqual(0);
+    });
+
+  verifyBackLabelShownWhole = (label: string) =>
+    this.step(`verifyBackLabelShownWhole ${label}`, async () => {
+      const back = this.get(appShellTestIds.backLink);
+      await expect(back).toHaveText(label);
+      const spill = await back.evaluate((link) => {
+        const words = link.lastElementChild!.getBoundingClientRect();
+        return words.right - link.getBoundingClientRect().right;
+      });
+      expect(spill).toBeLessThanOrEqual(0.5);
+    });
+
   // paneTransitions.scss keys every rule off this attribute, so it is what can be asserted.
   verifyNavigationDirection = (direction: NavigationDirection) =>
     this.step(`verifyNavigationDirection ${direction}`, () =>
@@ -321,6 +354,29 @@ export class AppShellPageObject extends PageObject {
       await expect(button.locator("xpath=following-sibling::span[1]")).toBeVisible();
       await expect(button.locator("xpath=following-sibling::span[1]")).toHaveText(tip);
     });
+
+  verifyIconButtonTipShown = (which: "ask" | "new", shown: boolean) =>
+    this.step(`verifyIconButtonTipShown ${which} ${shown}`, async () => {
+      const tip = this.iconButton(which).locator("xpath=following-sibling::span[1]");
+      await (shown ? expect(tip).toBeVisible() : expect(tip).toBeHidden());
+    });
+
+  holdIconButton = (which: "ask" | "new") =>
+    this.step(`holdIconButton ${which}`, async () => {
+      const button = this.iconButton(which);
+      await button.dispatchEvent("touchstart");
+      await this.verifyIconButtonTipShown(which, true);
+      await button.dispatchEvent("touchend");
+      await button.dispatchEvent("click");
+    });
+
+  verifyAskIsCurrent = (current: boolean) =>
+    this.step(`verifyAskIsCurrent ${current}`, async () => {
+      const ask = this.iconButton("ask");
+      await (current ? expect(ask).toHaveAttribute("aria-current", "page") : expect(ask).not.toHaveAttribute("aria-current"));
+    });
+
+  private iconButton = (which: "ask" | "new") => this.get(which === "ask" ? appShellTestIds.askButton : appShellTestIds.newOverviewButton);
 
   verifyOffersAsk = (offers: boolean) =>
     this.step(`verifyOffersAsk ${offers}`, () => this.expectToHaveCount(appShellTestIds.askButton, offers ? 1 : 0));

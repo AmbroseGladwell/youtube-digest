@@ -1,9 +1,8 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 11c/12c: the row rests on a raised tile and never moves. Under the pointer the
-// shadow deepens and, on the dark ground, the surface lightens a step; on the light
-// ground the tile is already white and only the shadow answers
-// (docs/features/stone-theme.md, "The tile").
+$control-height: 2.125rem;
+
+// Design 11c/12c: docs/features/stone-theme.md, "The tile".
 .root {
   position: relative;
   padding: 0.875rem 1rem 0.875rem 0.875rem;
@@ -21,9 +20,7 @@
   @include controls.tile-hover;
 }
 
-// A tile arrives by fading up in place: a hairline drawing along its edge belonged to
-// the editorial theme's rules, and there are no rules here. The global
-// prefers-reduced-motion rule in theme/global.scss collapses it to its end state.
+// Why it fades up in place: docs/features/stone-theme.md, "The tile".
 .entering {
   animation: tileArrive var(--motion-arrive) cubic-bezier(0.33, 0, 0.15, 1) both;
 }
@@ -46,7 +43,6 @@
   align-items: start;
 }
 
-// No thumbnail saved: the body is the first cell, and the text takes its column.
 .row:has(> .body:first-child) {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -71,8 +67,7 @@
   font-size: 0.75rem;
 }
 
-// What it is, then its warnings (design 232a): each group moves to the next line whole, and
-// only breaks inside when it is wider than the row on its own.
+// Design 232a: each group moves to the next line whole.
 .kickerGroup {
   display: inline-flex;
   flex-wrap: wrap;
@@ -146,8 +141,7 @@
   color: var(--ink);
 }
 
-// A row already read: its title recedes to the muted ink and its picture dims, so the
-// unread rows are what the eye lands on.
+// Read rows recede, so the unread rows are what the eye lands on.
 .root[data-read] .title,
 .root[data-read] .channel {
   color: var(--muted);
@@ -165,7 +159,6 @@
   margin-top: 0.25rem;
 }
 
-// The reading line, and beside it the "Saved you" chip for a moment after Mark read.
 .reading {
   display: flex;
   align-items: center;
@@ -174,8 +167,7 @@
   min-width: 0;
 }
 
-// The same three numbers the reader prints, in the same treatment, so a row and the note it
-// opens read as one thing.
+// The reader's own treatment, so a row and the note it opens read as one thing.
 .timing {
   margin: 0;
   font-size: 0.78125rem;
@@ -189,20 +181,19 @@
   gap: var(--gap-control);
 }
 
-// The pills and the circle share one 34px height, so the row of controls reads as one row.
 .action {
   @include controls.surface-pill;
   @include controls.pill-sm;
 
-  min-height: 2.125rem;
+  min-height: $control-height;
 }
 
-// Design 3a: the row whose note is playing turns its Listen to action orange and says so.
+// Design 3a.
 .actionPlaying {
   @include controls.action-pill;
   @include controls.pill-sm;
 
-  min-height: 2.125rem;
+  min-height: $control-height;
 }
 
 // Mark read and Read share one width, so turning one into the other moves nothing.
@@ -218,7 +209,7 @@
 
 .favouriteAction {
   @include controls.surface-pill;
-  @include controls.circle(2.125rem);
+  @include controls.circle($control-height);
 
   font-size: 0.875rem;
 }
@@ -227,14 +218,12 @@
   color: var(--brand);
 }
 
-// The phone row: one column, no thumbnail, and the three actions under the text.
 @media (max-width: 47.9375rem) {
   .root {
     padding: 0.875rem;
   }
 
-  // A phone row drops the thumbnail. At the width a phone can spare it is too small to
-  // tell one video from another, and it costs the title the column it needs.
+  // Too small on a phone to tell one video from another, and it costs the title its column.
   .thumbnail {
     display: none;
   }
@@ -294,9 +283,7 @@
   cursor: pointer;
 }
 
-// Selecting ("OV-168 5" 168ax–168bb). On the web the box fades in over the thumbnail's
-// corner and nothing moves; on a phone, or a row with no thumbnail, it grows in at the
-// start of the kicker and pushes it along. The row's own buttons fade out.
+// Designs 168ax–168bb.
 .box {
   flex: none;
   display: inline-flex;

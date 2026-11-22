@@ -1,6 +1,4 @@
-// The stone theme's controls (docs/features/stone-theme.md, "Three pills"). Unlike the
-// editorial theme's mixins, these carry the paint as well as the states: a stone pill
-// is the same pill everywhere, and what a call site adds is only its size.
+// Why the mixins carry the paint: docs/features/stone-theme.md, "What was built" (Three pills).
 
 @mixin control-motion {
   transition:
@@ -57,7 +55,6 @@
 }
 
 // The surface pill: Mark read, Listen, Cancel, a filter option, the favourite circle.
-// Hover steps to the stone tint and nothing else moves.
 @mixin surface-control {
   @include control-motion;
   @include control-disabled;
@@ -116,9 +113,7 @@
   }
 }
 
-// Round targets on a coloured ground scale rather than shifting down — a 1px nudge on
-// a circle reads as a wobble. The wash is currentColor so one mixin serves a neutral
-// circle and an accent one.
+// Round targets scale rather than shift: a 1px nudge on a circle reads as a wobble.
 @mixin icon-control {
   @include control-motion;
   @include control-disabled;
@@ -140,8 +135,7 @@
   flex: none;
 }
 
-// The three sizes the design draws: the bar and a row's actions, a dialog's actions,
-// and the hero's one big button.
+// The three sizes the design draws: a row's actions, a dialog's actions, the hero's button.
 @mixin pill-sm {
   padding: 0.4375rem 0.875rem;
   font-size: 0.8125rem;
@@ -157,8 +151,7 @@
   font-size: 0.9375rem;
 }
 
-// A text field is a pill too: a card-coloured track with a 2px border that lights in
-// the brand orange while it has focus.
+// A text field is a pill too.
 @mixin field-pill {
   display: flex;
   align-items: center;
@@ -218,8 +211,7 @@
   }
 }
 
-// What labels a section: Figtree 13 semibold in the stone ink, sentence case. It
-// replaces the editorial theme's uppercase letterspaced kicker everywhere.
+// What labels a section, in place of the editorial theme's uppercase kicker.
 @mixin section-label {
   margin: 0;
   font-family: var(--font-body);
@@ -243,8 +235,7 @@
   white-space: nowrap;
 }
 
-// A topic or a tag on the reader (design 4a): the surface rather than the stone tint,
-// and medium weight, so it reads as a place the note is filed rather than a verdict.
+// A topic or tag (design 4a): on the surface, so it reads as where the note is filed, not a verdict.
 @mixin topic-chip {
   display: inline-flex;
   align-items: center;
@@ -257,8 +248,7 @@
   white-space: nowrap;
 }
 
-// The raised tile a library row sits on. It never moves: hover lightens the surface a
-// step on the dark ground and deepens the shadow on both.
+// The raised tile a library row sits on. It never moves.
 @mixin tile {
   background: var(--card);
   border-radius: var(--radius-tile);

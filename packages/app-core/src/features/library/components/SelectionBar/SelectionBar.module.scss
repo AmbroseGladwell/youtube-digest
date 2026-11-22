@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// It rides at the foot of the list, above the floating player, centred on the column it
-// acts on ("OV-168 6 Motion Prototype").
+// "OV-168 6 Motion Prototype".
 .dock {
   position: sticky;
   bottom: calc(1rem + var(--mini-player-clearance, 0px));

@@ -234,9 +234,10 @@ const sections: readonly LegalSection[] = [
           attempts that failed; the tokens used to make your library and your searches searchable by meaning, and their cost; and the bytes
           fetched through our transcript proxy for you. It holds amounts only, never what was sent or found. What a device without an
           account costs is tallied with no device or account on it. Once a day PostHog copies a monthly summary of the tally for our cost
-          dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions you made, under a
-          coded id that is neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by
-          kind of work, with no account or plan on it. When an account is deleted, the next day's copy leaves it out.
+          dashboard: the month, your plan, what you cost and how many overviews, narrations, questions and transcriptions you made, how much
+          of the month's chat you used and how much of that went on questions across your library or a project, under a coded id that is
+          neither your account's id nor the one analytics uses. It also copies each day's total cost across everyone, by kind of work, with
+          no account or plan on it. When an account is deleted, the next day's copy leaves it out.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping
@@ -290,12 +291,12 @@ const sections: readonly LegalSection[] = [
         </p>
         <p>
           We count the questions each account asks each day, against its monthly allowance. Each question's tokens and their cost at
-          OpenAI's list price go into the daily cost tally above. We log that a question was answered, with the tokens, the cost, how long
-          it took, whether it was about a video, an episode, an article or a recipe page, whether the video or episode covered it, whether
-          the answer added general knowledge beyond it, whether what we know about you went with it, how many of your other overviews went
-          with it, and how many places the answer cited; for a question over your library or a project, also how many overviews it read
-          whole, how many it looked across and how many of those the answer cited, and how many sections the answer had; never the question,
-          the answer or what we know about you.
+          OpenAI's list price go into the daily cost tally above. We log that a question was answered, with the tokens, the cost and the
+          share of your month's chat it used, how long it took, whether it was about a video, an episode, an article or a recipe page,
+          whether the video or episode covered it, whether the answer added general knowledge beyond it, whether what we know about you went
+          with it, how many of your other overviews went with it, and how many places the answer cited; for a question over your library or
+          a project, also how many overviews it read whole, how many it looked across and how many of those the answer cited, and how many
+          sections the answer had; never the question, the answer or what we know about you.
         </p>
         <p>
           <strong>Basis:</strong> performance of our contract with you. Counting and the cost tally are our legitimate interest in keeping

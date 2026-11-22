@@ -1,6 +1,4 @@
-// Design 1e: a 4px track the stone surface colour, the elapsed part in brand orange (stone
-// for the pacer, 1k), a 2px notch in the bar's own colour where each section starts. The
-// hit area is taller than the track so a thumb can find it.
+// Design 1e: the hit area is taller than the track so a thumb can find it.
 .hitArea {
   position: relative;
   padding: 0.5rem 0;
@@ -30,7 +28,7 @@
   background: var(--label);
 }
 
-// Design 250f: the steps a source gives, outlined in the stone ink and 1px proud of the track.
+// Design 250f.
 .stepsSpan {
   position: absolute;
   top: -1px;
@@ -81,8 +79,7 @@
   pointer-events: none;
 }
 
-// Design 1c: no invented percentage, a slow band crossing the track. Under reduced motion
-// the global rule stops it where the design draws it.
+// Design 1c: no invented percentage, a slow band crossing the track.
 .sweep {
   position: absolute;
   top: 0;

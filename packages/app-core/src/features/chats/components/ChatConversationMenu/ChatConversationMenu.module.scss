@@ -26,7 +26,7 @@ $sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 
   color: var(--ink);
 }
 
-// Design 324y: under the header, right-aligned to ⋯.
+// Design 324y.
 .menu {
   position: absolute;
   top: calc(100% + 0.25rem);
@@ -42,7 +42,7 @@ $sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 
   text-align: left;
 }
 
-// Design 324ac, 324r–324t: the same items as an action sheet on a phone and in the panel.
+// Designs 324ac and 324r–324t.
 .inSheet {
   position: static;
   width: auto;
@@ -163,7 +163,7 @@ $sheet-spring: linear(0, 0.13 3.2%, 0.53 8.6%, 0.89 16.3%, 1.015 25%, 1.03 34%, 
   }
 }
 
-// OV-354, 354w: the switch sits at the item's right; its line wraps under the label.
+// Design 354w.
 .switchItem {
   position: relative;
   padding-right: 58px;

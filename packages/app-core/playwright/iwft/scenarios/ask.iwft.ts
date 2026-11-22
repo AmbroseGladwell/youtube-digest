@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { overviewPartHash, type Chat, type ChatAnswerSections, type ChatCitation, type Overview, type ProjectId } from "@overview/domain";
 import { test, expect } from "../../support/fixtures.testHelper.js";
 import { SIMULATED_EMAIL } from "../../network/BackendSimulator.testHelper.js";
@@ -10,6 +11,12 @@ const SIGNED_IN = {
 };
 
 const PHONE = { width: 390, height: 800 };
+
+// Chromium's touch emulation is what turns (hover: hover) off.
+const useATouchScreen = async (page: Page) => {
+  const devtools = await page.context().newCDPSession(page);
+  await devtools.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 1 });
+};
 
 const titled = (title: string, savedAt: string): Overview => {
   const overview = makeOverview({ savedAt });
@@ -457,6 +464,27 @@ test.describe("Ask", () => {
     await launcher.appShell.verifyPageDoesNotScrollSideways();
   });
 
+  test("on a phone's touch screen a tap on Ask opens the page with no tooltip left showing, and a long press names it without opening it", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    await useATouchScreen(page);
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+
+    await launcher.appShell.holdIconButton("ask");
+
+    await launcher.appShell.verifyAskIsCurrent(false);
+    await launcher.appShell.verifyIconButtonTipShown("ask", false);
+
+    await launcher.appShell.openAsk();
+
+    await launcher.appShell.verifyAskIsCurrent(true);
+    await launcher.appShell.verifyIconButtonTipShown("ask", false);
+  });
+
   test("an Ask answer's inline code, links and code blocks render as in an overview's chat, and a block copies (OV-364)", async ({
     launcher,
     backendSimulator,
@@ -547,5 +575,50 @@ test.describe("Ask", () => {
     await expect(cited.first()).toContainText(steps[11]!);
     await expect(cited.first()).toBeInViewport();
     expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+  });
+
+  test("on a phone, chips with long titles are cut and fold into +N, never pushing an answer sideways", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    const longTitles = [
+      "A very long title about everything you ever wanted to know about fermenting vegetables at home",
+      "Another remarkably long title on slow-cooked beans, lentils and every pulse in between",
+      "A third long title covering weeknight curries from start to finish without any shortcuts",
+    ];
+    const overviews = longTitles.map((title, index) => titled(title, `2026-11-0${index + 3}T09:00:00.000Z`));
+    for (const overview of overviews) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
+    const cited = overviews.map(cite);
+    backendSimulator.chats.answerWith({
+      text: "Here is what they say.",
+      citations: cited,
+      sections: {
+        intro: "Here is what they say.",
+        introSources: [],
+        sections: [
+          {
+            heading: "What they say",
+            paragraphs: [],
+            numbered: [],
+            bullets: [{ text: "Start small and keep going", sources: cited }],
+            sources: cited.map((citation) => ({ citation, relation: "" })),
+          },
+        ],
+        takeaway: "",
+      },
+      stats: { overviews: 3, read: 3 },
+    });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+    await ask.ask("What do they say?");
+
+    await ask.verifyItemSourcesFold(0, 0, 0, 2, 1);
+    await ask.verifyChipRowsWithinAnswer(0);
+    await ask.verifySectionSourcesFold(0, 0, 2, 1, 3);
+    await ask.verifyPageDoesNotScrollSideways();
   });
 });

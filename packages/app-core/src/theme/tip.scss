@@ -1,0 +1,17 @@
+// docs/conventions/frontend-architecture-guide.md, 4.4: a mouse, keyboard focus, or a long press (useLongPressTip).
+@mixin shows($tip) {
+  -webkit-touch-callout: none;
+
+  @media (hover: hover) {
+    &:hover #{$tip} {
+      @content;
+    }
+  }
+
+  &:focus-visible #{$tip},
+  &:has(:focus-visible) #{$tip},
+  :focus-visible & #{$tip},
+  &[data-held] #{$tip} {
+    @content;
+  }
+}

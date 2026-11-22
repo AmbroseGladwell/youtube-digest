@@ -8,6 +8,7 @@ import {
   composeReaderContext,
   chatQuestionCount,
   chatRecordId,
+  chatUnitsOf,
   MAX_CHAT_QUESTIONS,
   Overview,
   OVERVIEW_MIGRATIONS,
@@ -138,7 +139,7 @@ export class ChatAnswerer {
       .flatMap((record) => readChat(record) ?? []);
 
     const askedAt = clock();
-    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages }, log);
+    const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages, scope: "overview" }, log);
 
     const settings = await readSettings(records, accountId);
     const reader = settings === null ? null : composeReaderContext(settings.aboutYou, settings.learned);
@@ -295,10 +296,13 @@ export class ChatAnswerer {
         );
         settled = true;
         const cost = await this.#recordCost(accountId, stream.usage(), "message", log);
+        const usageUnits = chatUnitsOf(cost.costDollars ?? 0);
+        await usage.settle(reservation.day, accountId, usageUnits, "overview");
         log.info(
           apiLogLines.chat.answered({
             ...logged,
             ...cost,
+            usageUnits,
             inSource: cited.inSource,
             generalKnowledge: reply.generalKnowledge,
             sourceCitations: cited.sourceCitations,

@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Designs 288s–288v: the way back sits above Cancel timer, a surface row with its words on the
-// left and an arrow on the right.
+// Designs 288s–288v.
 .wayBack {
   @include controls.surface-control;
 

@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// The Delete overview dialog's shell (designs 184b–184d): a centred card on a desktop and a
-// bottom sheet under 48rem, which is the phone and the panel alike.
+// The Delete overview dialog's shell, designs 184b–184d.
 $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .dialog {

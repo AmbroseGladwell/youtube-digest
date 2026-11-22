@@ -8,9 +8,7 @@
   gap: 0.375rem;
 }
 
-// Design 4a: a topic is a surface chip; design 4d: while editing, the chips take the
-// stone ink so the × on each reads as part of it, and Add is a surface chip ringed in
-// the brand orange.
+// Design 4a: a surface chip; 4d: while editing, stone ink so each × reads as part of it.
 .chip {
   @include controls.topic-chip;
 

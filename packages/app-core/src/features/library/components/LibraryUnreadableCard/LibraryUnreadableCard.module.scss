@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// The same tile a readable row sits on: what marks it out is what it says, not a treatment
-// of its own. There is no error colour in this palette (docs/features/stone-theme.md).
+// The same tile a readable row sits on: what marks it out is what it says, not a treatment.
 .root {
   display: flex;
   flex-direction: column;

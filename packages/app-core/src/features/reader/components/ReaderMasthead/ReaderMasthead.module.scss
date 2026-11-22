@@ -1,9 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 4a: the back link and the actions on one bar in the page's own gutter, the
-// title block centred beneath on the 760px reading column. The areas are what let the
-// phone (5c) move the actions under the title and the panel (6d) put Listen beside ⋯
-// without a second head in the DOM.
+// Design 4a; grid areas let the phone (5c) and the panel (6d) rearrange without a second head.
 .root {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
@@ -50,8 +47,7 @@
   color: var(--brand);
 }
 
-// The one action on the note that makes something happen, in action orange: the web's
-// Read aloud and the panel's Listen (docs/features/stone-theme.md).
+// The note's one action that makes something happen, in action orange: Read aloud or Listen.
 .listen {
   @include controls.action-pill;
   @include controls.pill-sm;
@@ -115,8 +111,7 @@
   width: 100%;
 }
 
-// Design OV-85 (85a): warning-coloured text that opens the explanation under the byline,
-// tinted from the warning colour on hover and while open.
+// Design OV-85 (85a): warning text that opens the explanation under the byline.
 .dubious {
   display: inline-flex;
   align-items: center;
@@ -223,9 +218,7 @@
   text-wrap: balance;
 }
 
-// Design 5c: back link and ⋯ on the bar, the title block, then Listen full width beside
-// a 42px favourite. The panel is narrower than this breakpoint, so this is its reader too
-// (design 205b).
+// Design 5c; the panel is narrower than this breakpoint, so this is its reader too (205b).
 @media (max-width: 61.9375rem) {
   .root {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -249,8 +242,7 @@
     font-size: 2rem;
   }
 
-  // The row takes the head's own column, not the grid's full width: between 760px and
-  // the breakpoint the head is centred at the reading measure and this has to be too.
+  // The head's own column, not the grid's: the head is centred at the reading measure here.
   .actions {
     justify-self: center;
     width: 100%;
@@ -271,9 +263,7 @@
   }
 }
 
-// Design OV-85 (85d, 85e): below 480px the flag drops its words and keeps the icon, the
-// count and the chevron, so channel, verdict and flag stay on one line and the channel
-// truncates first. The words stay as its accessible name.
+// Design OV-85 (85d, 85e): the flag drops its words so the byline stays one line.
 @media (max-width: 29.9375rem) {
   .byline {
     flex-wrap: nowrap;
@@ -330,8 +320,7 @@
   }
 }
 
-// Design 106l: an episode's square art leads the head at 112px where a video's tile is wider,
-// 88 on a phone and 72 in the panel, with the show and its chip beside it.
+// Design 106l: an episode's square art leads the head where a video's tile would.
 .art {
   width: 100%;
 }

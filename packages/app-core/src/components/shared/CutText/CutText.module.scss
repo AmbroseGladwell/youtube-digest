@@ -1,8 +1,14 @@
+@use "../../../theme/tip.scss";
+
 .wrap {
   position: relative;
   display: block;
   min-width: 0;
-  -webkit-touch-callout: none;
+
+  @include tip.shows(".tip") {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 .tip {
@@ -24,18 +30,4 @@
   visibility: hidden;
   pointer-events: none;
   transition: opacity var(--motion-state) var(--motion-ease);
-}
-
-// On touch a tap would leave :hover stuck on, so there the tip waits for a long press (.held).
-@media (hover: hover) {
-  .wrap:hover .tip {
-    opacity: 1;
-    visibility: visible;
-  }
-}
-
-:global(:focus-visible) .tip,
-.held .tip {
-  opacity: 1;
-  visibility: visible;
 }

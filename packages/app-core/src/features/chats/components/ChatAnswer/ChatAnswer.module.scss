@@ -117,7 +117,7 @@
   margin-top: 0.375rem;
 }
 
-// OV-354, page 4: sections under 13px headings; sources grouped by relation beneath each.
+// OV-354, page 4.
 .section {
   margin-top: 14px;
 }
@@ -215,9 +215,9 @@
   box-shadow: var(--shadow-menu);
 }
 
-// OV-362: a list item's own sources, after its text.
 .itemChips {
   display: inline-flex;
+  max-width: calc(100% - 6px);
   margin-left: 6px;
   vertical-align: middle;
 }

@@ -89,3 +89,66 @@ OV-232, design 232a–232k. Every row says what it is, in words, never by an ico
   the shared page and the link preview already name the kind in words, so they have no chip.
 - **A new kind** is one word in `SOURCE_KIND` and one row in the source filter; it gets the chip
   because it isn't a video.
+
+## At scale
+
+OV-165 and OV-381 measured the library at 300, 500, 2,000 and 5,000 overviews (22 Nov 2026).
+`npm run perf:library --workspace packages/app-core` repeats it: `playwright/perf/libraryScale.perf.ts`
+seeds a synced library, then times what a reader does with it. It is not in CI. Run it on a quiet
+machine, one run at a time. `SIZES`, `WIDTH` and `THROTTLE` change what it measures. The browser
+does every measurement (`docs/prototype/constraints.md`): a view transition counts from the tap to
+its `ready`, and a search or filter from the slowest Event Timing entry.
+
+Before virtualising, at phone width (390 px) with the CPU slowed 4×. The default view hides read
+overviews, so the list shows half of them.
+
+| Overviews | Rows shown | DOM nodes | JS heap | First row | Ask, and back | Overview, and Back | Search (worst key) | Unread filter (glide ready) |
+|---|---|---|---|---|---|---|---|---|
+| 300 | 150 | 5,900 | 21 MB | 1.2 s | 156 / 176 ms | 184 / 254 ms | 24 ms | 0.7 s |
+| 500 | 250 | 9,600 | 25 MB | 1.3 s | 202 / 248 ms | 252 / 293 ms | 48 ms | 1.1 s |
+| 2,000 | 1,000 | 37,000 | 92 MB | 3.2 s | 903 / 1,213 ms | 1.1 / 1.7 s | 104 ms | 8.2 s |
+| 5,000 | 2,500 | 93,000 | 212 MB | 8.1 s | 2.8 / 2.1 s | skipped; scroll lost | 248 ms | 82 s |
+
+Every cost but search grows with the rows in the page, about 37 DOM nodes a row:
+
+- **A page transition waits on the whole list.** When a view transition starts, Chrome restyles
+  every element in the page before taking the old snapshot. Coming back, React renders every row,
+  and the browser styles, lays out and paints them, before the new one.
+- **The filter glide names every row** (`useLibraryGlide`), and a view transition's cost grows
+  with its names, so one tap of a filter freezes the page for seconds past a thousand rows.
+- **Scroll comes back** below about 2,500 rows. At 5,000 the Back transition was skipped and the
+  library returned to the top.
+- Scrolling itself stayed smooth at every size.
+
+### Only the rows near the screen are in the page
+
+So the library list is virtualised (`LibraryList`, `@tanstack/react-virtual` on the window's
+scroll; the owner's choice over loading more as the reader scrolls, 22 Nov 2026). After, same
+machine and settings:
+
+| Overviews | Rows in the page | DOM nodes | JS heap | First row | Ask, and back | Overview, and Back | Search (worst key) | Unread filter (glide ready) |
+|---|---|---|---|---|---|---|---|---|
+| 300 | 8 | 700 | 13 MB | 1.0 s | 81 / 72 ms | 79 / 85 ms | 16 ms | 88 ms |
+| 500 | 8 | 700 | 19 MB | 0.7 s | 66 / 76 ms | 78 / 105 ms | 16 ms | 65 ms |
+| 2,000 | 8 | 700 | 51 MB | 1.6 s | 86 / 97 ms | 71 / 134 ms | 24 ms | 91 ms |
+| 5,000 | 8 | 1,700 | 105 MB | 5.6 s | 79 / 101 ms | 103 / 163 ms | 40 ms | 154 ms |
+
+How it keeps what a full list gave:
+
+- **Back lands on the same row.** Each row's measured height is kept for the session, per list
+  width (`libraryRowHeights`), and each history entry's scroll position (`libraryScrollPositions`).
+  So the first render after Back already holds the right rows at their real heights, the list is
+  its full height from the start, and the router's scroll restoration lands exactly.
+- **Tab walks the whole list.** Rows sit in normal flow between two spacers, with six past each
+  edge of the screen, so the next row is always there to take focus, and focusing it scrolls more in.
+- **Screen readers hear a list.** The list is `role="list"`, and each row says its place in the
+  whole: `aria-setsize` and `aria-posinset`.
+- **The filter glide names only the rows in the page,** which is what made it fast.
+- **Find in page (Cmd+F) finds only the rows near the screen.** Accepted: the library's own search
+  covers every overview.
+
+The first row at 5,000 is still 5.6 s. That is the data, not the list: the harness syncs every
+overview, and the library reads each one's state separately. OV-383 has it.
+
+Not measured here: the load from IndexedDB (the harness uses the in-memory store) and the
+extension panel at 400 px.

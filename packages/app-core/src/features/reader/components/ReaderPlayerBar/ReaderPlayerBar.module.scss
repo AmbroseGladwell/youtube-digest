@@ -1,9 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 1a: a card floated over the foot of the page, inset from its edges, with the
-// transport on the left, the label and clock over the scrubber in the middle, then any
-// way out the state offers, then the rate. It sits above the mini-player when one is
-// docked beneath it (docs/features/audio-player.md).
+// Design 1a; over the mini-player: docs/features/audio-player.md, "Which note the bar is about".
 .root {
   position: sticky;
   bottom: calc(1rem + var(--mini-player-clearance, 0px) + var(--chat-sheet-clearance, 0px));
@@ -94,8 +91,7 @@
   text-overflow: ellipsis;
 }
 
-// Design 1k: the pacer is tagged in the stone tint rather than named in ink, so nobody
-// takes it for narration.
+// Design 1k: the pacer is tagged in the stone tint, so nobody takes it for narration.
 .pacerTag {
   @include controls.chip;
 }
@@ -122,8 +118,7 @@
   @include controls.quiet-control;
 }
 
-// Design 43j: on the web bar a pill beside the rate; in the panel and on a phone, a link
-// on the label line.
+// Design 43j: a pill beside the rate on the web; a link on the label line elsewhere.
 .reRecord {
   @include controls.surface-pill;
   @include controls.pill-sm;
@@ -167,8 +162,7 @@
   @include controls.pill-sm;
 }
 
-// Design 1k: on the web bar the way to sign in is a link in the warning ink, standing
-// where the voice would be named.
+// Design 1k: the way to sign in stands where the voice would be named.
 .signIn {
   @include controls.pill-shape;
   @include controls.pill-sm;
@@ -199,9 +193,7 @@
   display: none;
 }
 
-// The panel and a phone (1b, 2c): the scrubber with its clocks at each end, then rate,
-// transport and favourite on one row, then the label, any note and any way out, centred.
-// The wrappers dissolve so their children can take areas of their own.
+// The panel and a phone (1b, 2c): the wrappers dissolve so their children take their own areas.
 @media (max-width: 61.9375rem) {
   .skipStepsWide {
     display: none;

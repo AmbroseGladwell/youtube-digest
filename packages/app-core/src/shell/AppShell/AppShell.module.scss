@@ -1,4 +1,5 @@
 @use "../../theme/controls.scss" as controls;
+@use "../../theme/tip.scss";
 
 .root {
   display: flex;
@@ -7,12 +8,7 @@
   background: var(--ground);
 }
 
-// The whole sticky band, which is what anything sticking beneath it has to clear: the
-// generation status strip belongs inside it, under the bar.
-//
-// The two view-transition names in this file are the app's whole set: the region that
-// swaps, and the chrome that paints above it (frontend-architecture-guide.md 2.3, which
-// budgets under ten for an app). paneTransitions.scss is what they're for.
+// The view-transition names: docs/features/page-transitions.md, "The name budget".
 .masthead {
   position: sticky;
   top: 0;
@@ -25,8 +21,7 @@
   right: var(--masthead-fade-right, 0);
 }
 
-// No rule under the bar: the stone theme separates with surfaces, never with lines
-// (docs/features/stone-theme.md).
+// No rule under the bar: docs/features/stone-theme.md, "The visual argument".
 .bar {
   display: flex;
   align-items: center;
@@ -107,8 +102,7 @@
   @include controls.pill-sm;
 }
 
-// Design 9e: on a phone, a sign-in page is a step of its own with one way out. Wider,
-// the bar keeps its actions and the brand is the way home.
+// Design 9e: on a phone a sign-in page has one way out; wider, the brand is the way home.
 .notNowLink {
   @include controls.ghost-pill;
   @include controls.pill-sm;
@@ -119,8 +113,7 @@
   color: var(--muted);
 }
 
-// The panel's whole masthead is the mark and the account: no + New and no list, because
-// there is only ever the one video it is beside (docs/features/extension-panel.md).
+// The panel's masthead: docs/features/extension-panel.md, "One slot, one way out".
 .panelActions {
   margin-left: auto;
   display: flex;
@@ -137,8 +130,7 @@
   view-transition-name: pane;
 }
 
-// While the library glides a filter change, its rows are captured one by one rather than
-// inside the pane (features/library/LibraryPage/useLibraryGlide.ts).
+// While the library glides a filter change its rows are captured one by one (useLibraryGlide).
 :global(:root[data-library-glide]) .pane {
   view-transition-name: none;
 }
@@ -149,8 +141,7 @@
     padding: 0.75rem 1.25rem;
   }
 
-  // The touch target belongs to the full layout's bar. The panel is narrower than this at
-  // any width Chrome is dragged to, and is a pointer surface, so it keeps the web's button.
+  // The full layout's touch target; the panel is a pointer surface and keeps the web's button.
   .actions .newOverviewButton,
   .actions .askButton {
     min-height: 2.75rem;
@@ -177,9 +168,7 @@
   }
 }
 
-// OV-354: Ask is the same pill as + New (owner, 22 Nov 2026). It's a link, so the global link
-// hover colour is held off: its text and icon stay on the action colour, as + New's do. While its
-// page is open it is ringed, a gap of the page between the pill and the ring.
+// OV-354: Ask is + New's pill; as a link it holds off the global link hover colour.
 .askButton {
   @include controls.action-pill;
   @include controls.pill-sm;
@@ -207,8 +196,7 @@
   display: none;
 }
 
-// OV-362: on a phone, Ask and + New are round icon buttons, each named by a tooltip on hover and
-// focus, so they never squash beside the account.
+// OV-362: on a phone, round icon buttons named by tooltips, so they never squash the account.
 @media (max-width: 47.9375rem) {
   .actions .askButton,
   .actions .iconOnPhone {
@@ -237,21 +225,14 @@
     pointer-events: none;
   }
 
-  .tipHost:hover .tip,
-  .tipHost:focus-within .tip {
-    display: block;
+  .tipHost {
+    @include tip.shows(".tip") {
+      display: block;
+    }
   }
 }
 
-// Design OV-167 (167a–167c): where the slot hands over it is one fixed box the bar's
-// full height, holding the brand and the way back one over the other. The one not shown
-// is inert. Keyed off .brandSlotLive rather than a width, because the shell already
-// decides who hands over: a phone, a tablet, and the panel at any width Chrome is
-// dragged to (design 205w). The hand-off runs in two overlapping beats on
-// --motion-arrive: the mark turns and shrinks away as the wordmark lifts off, then the
-// arrow draws in with a small overshoot and the label settles a beat behind it;
-// scrolling back reverses the order, so the mark springs back last
-// (docs/features/back-within-reach.md).
+// The hand-off (167a–167c, 205w): docs/features/back-within-reach.md, "What was built".
 .brandSlotLive {
   --handoff: var(--motion-arrive);
   --handoff-settle: cubic-bezier(0.2, 0, 0, 1);
@@ -264,8 +245,7 @@
   margin: -0.75rem 0 -0.75rem -0.625rem;
 }
 
-// The box is the brand's own, which stays in flow unseen, so it is the same box in
-// both states and on a narrower phone than the design drew.
+// The brand stays in flow unseen, so the box is the same in both states.
 .brandSlotLive .brand {
   padding: 0 0.625rem;
   white-space: nowrap;
@@ -364,4 +344,29 @@
     opacity calc(var(--handoff) * 0.8) var(--handoff-settle) calc(var(--handoff) * 0.45),
     transform calc(var(--handoff) * 0.8) var(--handoff-settle) calc(var(--handoff) * 0.45),
     filter calc(var(--handoff) * 0.8) var(--handoff-settle) calc(var(--handoff) * 0.45);
+}
+
+// OV-380: the narrowest phones fit the bar by spacing and a smaller name, never smaller touch targets.
+@media (max-width: 23.375rem) {
+  .bar {
+    gap: 0.75rem;
+    padding-inline: 1rem;
+  }
+
+  .actions {
+    gap: 0.375rem;
+  }
+
+  .brandSlot,
+  .brand {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .title {
+    overflow: hidden;
+    font-size: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

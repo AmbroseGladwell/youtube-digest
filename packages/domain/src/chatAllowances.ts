@@ -9,3 +9,21 @@ export const chatAllowances = {
 
 // Behind every plan's month, so one day can't spend it all at once.
 export const CHAT_MESSAGES_PER_ACCOUNT_DAILY = 200;
+
+// OV-376: usage is list-price cost in micro-dollars, and one question means one about long-form content (docs/architecture/tiers.md, "Chat usage").
+export const CHAT_UNITS_PER_QUESTION = 1_400;
+
+export const chatUsageAllowances = {
+  free: chatAllowances.free * CHAT_UNITS_PER_QUESTION,
+  "byo-plus": chatAllowances["byo-plus"] * CHAT_UNITS_PER_QUESTION,
+  plus: chatAllowances.plus * CHAT_UNITS_PER_QUESTION,
+} as const satisfies Record<Plan, number>;
+
+export const chatUnitsOf = (costDollars: number): number => Math.max(0, Math.round(costDollars * 1_000_000));
+
+export const CHAT_UNITS_PER_ACCOUNT_DAILY = CHAT_MESSAGES_PER_ACCOUNT_DAILY * CHAT_UNITS_PER_QUESTION;
+
+// A library or project question goes ahead only with room for its worst case left; measured at about 10.5 questions.
+export const CHAT_LIBRARY_RESERVE_UNITS = 12 * CHAT_UNITS_PER_QUESTION;
+
+export type ChatScopeKind = "overview" | "library";

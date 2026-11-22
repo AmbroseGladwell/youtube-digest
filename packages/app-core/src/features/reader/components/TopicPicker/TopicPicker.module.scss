@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 14b/14c: one control, two presentations — a popover hung under the topic line on
-// a desktop, the same list as a bottom sheet on a phone. It sits inside the topic line's
-// row, so it puts type back to the body's rather than inherit the chip's.
+// Design 14b/14c: a popover on a desktop, a sheet on a phone; type resets from the chip's.
 .root {
   position: absolute;
   left: 0;

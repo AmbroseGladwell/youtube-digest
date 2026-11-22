@@ -22,12 +22,7 @@
   max-width: var(--measure);
 }
 
-// The screen takes focus so a keyboard lands on the way out rather than at the top of the
-// page, but it is the container that takes it, not the action. The app's focus ring is a
-// 2px rectangle, and script-moved focus matches :focus-visible in Chromium however the
-// reader got here — so focusing the back link directly drew a box around it and turned
-// navigation into something shaped like the pill it must not be mistaken for
-// (docs/features/error-state.md).
+// Why the container takes focus: docs/features/error-state.md, "What the design settles that isn't obvious".
 .root:focus,
 .root:focus-visible {
   outline: none;
@@ -72,8 +67,6 @@
   margin-top: 0.75rem;
 }
 
-// A recovery action is the one thing to do here, so it takes the action orange
-// (docs/features/error-state.md).
 .action {
   @include controls.action-pill;
   @include controls.pill-md;

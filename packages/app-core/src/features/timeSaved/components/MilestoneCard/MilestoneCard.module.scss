@@ -1,5 +1,4 @@
-// Design 34za. The tint, ring and ink come from the milestone's tokens through
-// milestoneColourStyle; everything else is the stone ink, so the card reads on both grounds.
+// Design 34za; tint, ring and ink come from milestoneColourStyle, the rest is stone ink.
 $spring: linear(0, 0.034 1.5%, 0.13 3.2%, 0.27 5.1%, 0.53 8.6%, 0.75 12.4%, 0.89 16.3%, 0.97 20.4%, 1.015 25%, 1.035 30%, 1.038 34%, 1.03 40%, 1.012 50%, 1.001 62%, 0.998 75%, 1);
 $leave-easing: cubic-bezier(0.4, 0, 1, 1);
 
@@ -35,8 +34,7 @@ $leave-easing: cubic-bezier(0.4, 0, 1, 1);
   }
 }
 
-// A light that passes over the card now and then. It sits on the dark tile at a whisper
-// and on the light one more brightly, because white on a pale tint is barely there.
+// Brighter on the light tile, since white on a pale tint is barely there.
 .shimmer {
   position: absolute;
   inset: 0;
@@ -118,8 +116,7 @@ $leave-easing: cubic-bezier(0.4, 0, 1, 1);
   font-variant-numeric: tabular-nums;
 }
 
-// Every line sits in the same cell. The invisible copies hold the box at the height of the
-// longest, so nothing below it moves as the lines change.
+// Invisible copies hold the shared cell at the longest line's height, so nothing below moves.
 .lines {
   display: grid;
   margin-top: 2px;
@@ -237,8 +234,7 @@ $leave-easing: cubic-bezier(0.4, 0, 1, 1);
   padding-top: 0.625rem;
 }
 
-// The current line's dot stretches into a bar that fills while the line is up. The hit
-// area is larger than the dot, so the dot can stay small.
+// The current dot is a bar filling while its line is up; the hit area lets the dot stay small.
 .dot {
   position: relative;
   width: 6px;

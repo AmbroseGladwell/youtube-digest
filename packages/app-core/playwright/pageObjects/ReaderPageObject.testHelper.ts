@@ -69,6 +69,14 @@ export class ReaderPageObject extends PageObject {
 
   verifyIsNotShown = () => this.step("verifyIsNotShown", () => this.expectNotToBeVisible(readerPageTestIds.root));
 
+  verifyTabLabelsShownWhole = () =>
+    this.step("verifyTabLabelsShownWhole", async () => {
+      const tabs = this.page.getByTestId(readerTabsTestIds.root).getByRole("tab");
+      await expect(tabs.first()).toBeVisible();
+      const cut = await tabs.evaluateAll((all) => all.filter((tab) => tab.scrollWidth > tab.clientWidth).map((tab) => tab.textContent));
+      expect(cut).toEqual([]);
+    });
+
   verifyFromLine = (text: string | null, manage: boolean) =>
     this.step(`verifyFromLine ${text} ${manage}`, async () => {
       if (text === null) {

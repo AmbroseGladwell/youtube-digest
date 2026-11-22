@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// The same dialog NewTopicDialog draws, cut down to a question: a centred card on a
-// desktop and a bottom sheet on a phone.
+// NewTopicDialog's dialog cut down to a question: a card on a desktop, a sheet on a phone.
 $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .dialog {

@@ -1,3 +1,4 @@
+import { chatMeterLineTestIds } from "../../src/features/chats/components/ChatMeterLine/ChatMeterLineTestIds.js";
 import { expect } from "@playwright/experimental-ct-react";
 import { chatCodeBlockTestIds } from "../../src/features/chats/components/ChatCodeBlock/ChatCodeBlockTestIds.js";
 import { chatMarkedTextTestIds } from "../../src/features/chats/components/ChatMarkedText/ChatMarkedTextTestIds.js";
@@ -409,12 +410,18 @@ export class ChatPanelPageObject extends PageObject {
 
   clickWaitAction = () => this.step("clickWaitAction", () => this.click(this.panel().getByTestId(chatWaitBlockTestIds.action)));
 
-  verifyLeftReads = (text: string | null) =>
-    this.step(`verifyLeftReads ${text}`, () =>
-      text === null
-        ? expect(this.panel().getByTestId(chatPanelTestIds.left)).toHaveCount(0)
-        : expect(this.panel().getByTestId(chatPanelTestIds.left)).toHaveText(text),
-    );
+  verifyMeterReads = (text: string | null, announced = "") =>
+    this.step(`verifyMeterReads ${text}`, async () => {
+      const meter = this.panel().getByTestId(chatMeterLineTestIds.root);
+      if (text === null) {
+        await expect(meter).toHaveCount(0);
+        return;
+      }
+      await expect(meter.getByTestId(chatMeterLineTestIds.text)).toHaveText(text);
+      await expect(this.panel().getByTestId(chatMeterLineTestIds.announcement)).toHaveText(announced);
+    });
+
+  followMeterPlans = () => this.step("followMeterPlans", () => this.click(this.panel().getByTestId(chatMeterLineTestIds.plans)));
 
   verifySlowReads = (text: string) =>
     this.step(`verifySlowReads ${text}`, () => expect(this.panel().getByTestId(chatPanelTestIds.slow)).toHaveText(text));
@@ -493,6 +500,17 @@ export class ChatPanelPageObject extends PageObject {
         return expect(row).toHaveCount(0);
       }
       await expect(row.locator(":scope > *")).toHaveText(texts);
+    });
+
+  verifyNextSourcesWithinPanel = () =>
+    this.step("verifyNextSourcesWithinPanel", async () => {
+      const panel = (await this.panel().boundingBox())!;
+      const row = (await this.panel().getByTestId(chatComposerTestIds.sources).boundingBox())!;
+      const chips = await this.panel()
+        .getByTestId(chatComposerTestIds.sources)
+        .evaluate((root) => Math.max(...[...root.children].map((child) => child.getBoundingClientRect().right)));
+      expect(row.x + row.width).toBeLessThanOrEqual(panel.x + panel.width + 0.5);
+      expect(chips).toBeLessThanOrEqual(panel.x + panel.width + 0.5);
     });
 
   removeNextSource = (index: number) =>

@@ -1,4 +1,6 @@
 import { expect } from "@playwright/experimental-ct-react";
+import { chatMeterLineTestIds } from "../../src/features/chats/components/ChatMeterLine/ChatMeterLineTestIds.js";
+import { chatWaitBlockTestIds } from "../../src/features/chats/components/ChatWaitBlock/ChatWaitBlockTestIds.js";
 import { chatCodeBlockTestIds } from "../../src/features/chats/components/ChatCodeBlock/ChatCodeBlockTestIds.js";
 import { chatMarkedTextTestIds } from "../../src/features/chats/components/ChatMarkedText/ChatMarkedTextTestIds.js";
 import { askPageTestIds } from "../../src/features/chats/AskPage/AskPageTestIds.js";
@@ -46,6 +48,24 @@ export class AskPagePageObject extends PageObject {
 
   chooseStarter = (index: number) =>
     this.step(`chooseStarter ${index}`, () => this.click(this.root().getByTestId(askPageTestIds.starter).nth(index)));
+
+  verifyWaitReads = (heading: string, body: string, action: string | null) =>
+    this.step(`verifyWaitReads ${heading}`, async () => {
+      const wait = this.root().getByTestId(chatWaitBlockTestIds.root);
+      await expect(wait.getByTestId(chatWaitBlockTestIds.heading)).toHaveText(heading);
+      await expect(wait.getByTestId(chatWaitBlockTestIds.body)).toHaveText(body);
+      await (action === null
+        ? expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveCount(0)
+        : expect(wait.getByTestId(chatWaitBlockTestIds.action)).toHaveText(action));
+      await expect(this.field()).toHaveCount(0);
+    });
+
+  verifyMeterReads = (text: string | null) =>
+    this.step(`verifyMeterReads ${text}`, () =>
+      text === null
+        ? expect(this.root().getByTestId(chatMeterLineTestIds.root)).toHaveCount(0)
+        : expect(this.root().getByTestId(chatMeterLineTestIds.text)).toHaveText(text),
+    );
 
   type = (text: string) => this.step(`type ${text}`, () => this.field().fill(text));
 
@@ -148,6 +168,33 @@ export class AskPagePageObject extends PageObject {
           .getByRole("link"),
       ).toHaveText(titles),
     );
+
+  verifyChipRowsWithinAnswer = (answer: number) =>
+    this.step(`verifyChipRowsWithinAnswer ${answer}`, async () => {
+      const spill = await this.answers()
+        .nth(answer)
+        .evaluate((root, rowId) => {
+          const edge = root.getBoundingClientRect().right;
+          return Math.max(
+            0,
+            ...[...root.querySelectorAll(`[data-testid="${rowId}"]`)].map((row) => row.getBoundingClientRect().right - edge),
+          );
+        }, chatChipRowTestIds.root);
+      expect(spill).toBeLessThanOrEqual(0.5);
+    });
+
+  verifyItemSourcesFold = (answer: number, section: number, item: number, shown: number, more: number) =>
+    this.step(`verifyItemSourcesFold ${answer} ${section} ${item}`, async () => {
+      const row = this.answers()
+        .nth(answer)
+        .getByTestId(chatAnswerTestIds.section)
+        .nth(section)
+        .locator("li")
+        .nth(item)
+        .getByTestId(chatAnswerTestIds.itemSources);
+      await expect(row.getByRole("link")).toHaveCount(shown);
+      await expect(row.getByTestId(chatChipRowTestIds.more)).toHaveText(`+${more}`);
+    });
 
   followItemSource = (answer: number, section: number, item: number) =>
     this.step(`followItemSource ${answer} ${section} ${item}`, () =>

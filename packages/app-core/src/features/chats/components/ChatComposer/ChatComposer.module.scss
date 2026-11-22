@@ -1,14 +1,30 @@
+$focus-ring-room: 4px;
+
 .root {
   position: relative;
 }
 
-// OV-354, page 1: one row above the field that never wraps; 4px at the top keeps focus rings whole.
+// OV-354, page 1.
 .row {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
   overflow: visible;
-  padding: 4px 4px 8px;
+  padding: $focus-ring-room 4px 8px;
+}
+
+.measuring {
+  overflow: hidden;
+
+  .slot {
+    flex: none;
+  }
+}
+
+.slot {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .moreHost {
@@ -33,7 +49,6 @@
   background: var(--surface-press);
 }
 
-// Opens above the "+N", right-aligned; rows 40px; a full-width 1px rule above Clear all.
 .moreMenu {
   position: absolute;
   right: 0;
@@ -102,8 +117,7 @@
   cursor: pointer;
 }
 
-// The picker: OV-324's menu surface with 18px corners, over the field, or under it where there
-// isn't room above, as in the Ask page's empty state. A long list scrolls (OV-362).
+// OV-324's menu surface, as the picker (OV-362).
 .picker {
   position: absolute;
   right: 0;

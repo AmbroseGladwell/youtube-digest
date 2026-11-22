@@ -4,6 +4,7 @@ import { audioLength } from "../../../podcasts/util/transcriptionCopy.js";
 import { Routes } from "../../../../app/Routes.js";
 import { PLAN_CARDS } from "../../planCards.js";
 import { CHECKING, leftOf, resetDate } from "../../../newOverview/util/usageLine.js";
+import { chatPercentUsed } from "../../../chats/util/chatMeterOf.js";
 import styles from "./PlanUsage.module.scss";
 import { planUsageTestIds } from "./PlanUsageTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
@@ -13,7 +14,7 @@ type Usage = { status: "checking" | "unreachable" } | { status: "known"; data: O
 export type PlanUsageProps = { signedIn: true; usage: Usage; hasOwnKey: boolean; chatUsage?: ChatUsage | null } | { signedIn: false };
 
 interface Cell {
-  id: "ours" | "own" | "questions" | "transcribing";
+  id: "ours" | "own" | "transcribing";
   label: string;
   count: string;
   aside?: ReactNode;
@@ -37,7 +38,6 @@ export const PlanUsage = (props: PlanUsageProps) => {
   }
 
   const { usage, hasOwnKey, chatUsage = null } = props;
-  const questionsLeft = chatUsage === null ? null : Math.max(0, chatUsage.limit - chatUsage.used);
   const countOf = (key: "ours" | "own"): Pick<Cell, "count" | "aside"> => {
     if (usage.status !== "known") {
       return { count: usage.status === "checking" ? CHECKING : "Couldn't check" };
@@ -72,21 +72,12 @@ export const PlanUsage = (props: PlanUsageProps) => {
         cells={[
           { id: "ours", label: "On us", ...countOf("ours") },
           { id: "own", label: "On your own key", ...countOf("own") },
-          ...(chatUsage === null || questionsLeft === null
-            ? []
-            : [
-                {
-                  id: "questions" as const,
-                  label: "Questions about overviews, on us",
-                  count: leftOf(questionsLeft, chatUsage.limit),
-                  ...(questionsLeft === 0 ? { aside: `None left. More on ${resetDate(chatUsage.resetsOn)}.` } : {}),
-                },
-              ]),
           ...(usage.status === "known" && usage.data.transcription !== undefined
             ? [transcribingCell(usage.data.transcription, usage.data.resetsOn)]
             : []),
         ]}
       />
+      {chatUsage?.share !== undefined && <ChatUsageMeter share={chatUsage.share} resetsOn={chatUsage.resetsOn} />}
     </div>
   );
 };
@@ -104,6 +95,33 @@ const transcribingCell = (transcription: TranscriptionUsage, resetsOn: string): 
         : "Episodes with no transcript are made from their audio. Ones you’ve transcribed before are free.",
     wide: true,
   };
+};
+
+const NEARLY_USED_UP = 90;
+
+interface ChatUsageMeterProps {
+  share: number;
+  resetsOn: string;
+}
+
+// Design 376i: chat always shows its full meter here, the way Claude's usage page reads, in percent only.
+const ChatUsageMeter = ({ share, resetsOn }: ChatUsageMeterProps) => {
+  const percent = chatPercentUsed(share);
+  const warning = percent >= NEARLY_USED_UP;
+  return (
+    <div className={warning ? `${styles.meter} ${styles.warning}` : styles.meter} data-testid={planUsageTestIds.chatMeter}>
+      <p className={styles.meterHead}>
+        Chat, on us<span data-testid={planUsageTestIds.chatPercent}>{percent}% used</span>
+      </p>
+      <div className={styles.meterBar} role="img" aria-label={`${percent}% of this month’s chat used`}>
+        <b style={{ width: `${percent}%` }} />
+      </div>
+      <p className={styles.meterFoot}>
+        <span>{warning ? "Nearly used up" : "Questions about one overview use the least; questions across your library use more."}</span>
+        <span>Resets {resetDate(resetsOn)}</span>
+      </p>
+    </div>
+  );
 };
 
 const Cells = ({ cells }: { cells: Cell[] }) => {

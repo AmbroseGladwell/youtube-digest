@@ -1,6 +1,8 @@
 @use "../../../../theme/stickyFade.scss";
 
-// 354t-4: a raised column down the left of the page, 280px, on the tile surface.
+$drawer-width: 280px;
+
+// Design 354t-4.
 .root {
   --drawer-surface: var(--card);
   --drawer-inset: 14px;
@@ -13,8 +15,7 @@
   box-sizing: border-box;
 }
 
-// OV-371: the close button and New chat stay at the top as the list scrolls under them, with the
-// fade under the bar in the drawer's own surface (docs/features/fade-under-the-bar.md).
+// OV-371, in the drawer's own surface: docs/features/fade-under-the-bar.md.
 .top {
   position: sticky;
   top: 0;
@@ -49,7 +50,7 @@
   top: calc(var(--masthead-height) + 4px);
   flex: none;
   align-self: flex-start;
-  width: 280px;
+  width: $drawer-width;
   height: calc(100dvh - var(--masthead-height) - 24px);
   margin: 4px 0 20px 16px;
   border-radius: 22px;
@@ -57,11 +58,11 @@
 
   // While its width opens and closes, what's inside keeps the open width rather than squeezing.
   > * {
-    min-width: calc(280px - 2 * var(--drawer-inset));
+    min-width: calc($drawer-width - 2 * var(--drawer-inset));
   }
 
   > .top {
-    min-width: 280px;
+    min-width: $drawer-width;
   }
 
   &.arriving {
@@ -89,7 +90,7 @@
   }
 }
 
-// 354t-5: on a phone, a bottom sheet with a grab handle over a scrim.
+// Design 354t-5.
 .sheet {
   position: fixed;
   left: 0;
@@ -267,7 +268,7 @@
   color: var(--muted);
 }
 
-// The ⋯ shows on hover, on focus and on the open conversation, and always on touch (354t-6).
+// Design 354t-6.
 .more {
   position: absolute;
   top: 50%;
@@ -302,7 +303,6 @@
   }
 }
 
-// Below the ⋯, right-aligned inside the panel; above it when there's no room below.
 .menu {
   position: absolute;
   top: calc(100% + 2px);

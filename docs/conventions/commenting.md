@@ -22,7 +22,7 @@ bug, a spec quirk) with no other home. If you're about to write more than one
 line explaining *why*, that reasoning belongs in a doc instead.
 
 The linter holds the line: `overview/no-long-comment` refuses a comment of more than
-one line, and any TODO or FIXME, everywhere (`lint-and-format.md`).
+one line, and any TODO or FIXME, everywhere (`lint-and-format.md`). Stylesheets are held to the same by `scripts/checkStyleComments.mjs`, and an unexplained value there is a named Sass variable rather than a comment.
 
 A one-line comment that restates the code next to it goes too: `// Save the
 record` above `saveRecord(record)` says nothing the code doesn't (OV-377).

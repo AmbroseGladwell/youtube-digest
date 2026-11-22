@@ -5,6 +5,10 @@ import { randomUUID } from "node:crypto";
 import {
   answeredFromOverview,
   chatRecordId,
+  CHAT_UNITS_PER_ACCOUNT_DAILY,
+  CHAT_UNITS_PER_QUESTION,
+  chatUnitsOf,
+  chatUsageAllowances,
   CURRENT_SCHEMA_VERSIONS,
   overviewPartHash,
   MAX_CHAT_QUESTIONS,
@@ -130,6 +134,11 @@ const answered = (body: string) => {
 const usedThisMonth = async (setup: Setup) =>
   ((await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { used: number }).used;
 
+const unitsThisMonth = async (setup: Setup) => {
+  const [row] = await setup.testApp.sql.query<{ units: string | null }>("select sum(units) as units from chat_usage");
+  return Number(row?.units ?? 0);
+};
+
 test("a question is answered as a stream on Luna, cited by time from code, stored with the question, and counted", async (t) => {
   const setup = await setUp(t, [answer("Three to five grams a day.")]);
   const conversation = randomUUID();
@@ -164,6 +173,8 @@ test("a question is answered as a stream on Luna, cited by time from code, store
     resetsOn: "2026-10-01",
     used: 1,
     limit: 100,
+    share: chatUnitsOf(0.00032) / chatUsageAllowances.free,
+    libraryFits: true,
   });
   const [cost] = await setup.testApp.sql.query<{ area: string; detail: string; calls: number }>(
     "select area, detail, calls from account_costs where account_id = $1 and area = 'chat'",
@@ -319,45 +330,50 @@ test("ids the model wrote into its answer are left out of what streams and what 
   assert.equal(message.citations.length, 2);
 });
 
-test("the month's allowance, the day's, and the global day refuse before the provider is asked, and say when they reset", async (t) => {
+test("the month's usage, the day's, and the global day refuse before the provider is asked, and say when they reset (OV-376)", async (t) => {
   const setup = await setUp(t, [answer("Fine.")], { dailyChatMessages: 1 });
   const { sql, clock } = setup.testApp;
   const today = clock.now.toISOString().slice(0, 10);
-  await sql.query("insert into chat_usage (day, account_id, messages) values ($1::date, $2, 100)", [today, setup.account.accountId]);
+  await sql.query("insert into chat_usage (day, account_id, messages, units) values ($1::date, $2, 3, $3)", [
+    today,
+    setup.account.accountId,
+    chatUsageAllowances.free,
+  ]);
 
   const month = await setup.ask(randomUUID(), "One more?");
   assert.equal(month.statusCode, 429);
   assert.equal(month.json().error.details.quota, "chat-month");
+  assert.equal(month.json().error.details.scope, undefined);
   assert.equal(month.json().error.details.resetsOn, "2026-10-01");
   assert.ok(Number(month.headers["retry-after"]) > 0);
 
   await sql.query("update accounts set plan = 'plus' where id = $1", [setup.account.accountId]);
-  await sql.query("update chat_usage set messages = 200 where account_id = $1", [setup.account.accountId]);
+  await sql.query("update chat_usage set units = $2 where account_id = $1", [setup.account.accountId, CHAT_UNITS_PER_ACCOUNT_DAILY]);
   const day = await setup.ask(randomUUID(), "One more?");
   assert.equal(day.json().error.details.quota, "chat-day");
 
-  await sql.query("update chat_usage set messages = 0 where account_id = $1", [setup.account.accountId]);
-  answered((await setup.ask(randomUUID(), "First of the day?")).body);
-  const global = await setup.ask(randomUUID(), "Second of the day?");
+  await sql.query("update chat_usage set units = 0 where account_id = $1", [setup.account.accountId]);
+  await sql.query("insert into our_key_usage (day, chat_units) values ($1::date, $2)", [today, CHAT_UNITS_PER_QUESTION]);
+  const global = await setup.ask(randomUUID(), "One more?");
   assert.equal(global.json().error.details.quota, "chat-our-key-daily");
 
-  assert.equal(setup.openAi.requests.length, 1);
+  assert.equal(setup.openAi.requests.length, 0);
 });
 
-test("two questions at once for the last message of the month: one is answered, one waits", async (t) => {
+test("a question goes ahead while the month is under its usage, and its real cost may take the month a little past it", async (t) => {
   const setup = await setUp(t, [answer("Fine.")]);
   const today = setup.testApp.clock.now.toISOString().slice(0, 10);
-  await setup.testApp.sql.query("insert into chat_usage (day, account_id, messages) values ($1::date, $2, 99)", [
+  await setup.testApp.sql.query("insert into chat_usage (day, account_id, messages, units) values ($1::date, $2, 99, $3)", [
     today,
     setup.account.accountId,
+    chatUsageAllowances.free - 1,
   ]);
 
-  const statuses = (await Promise.all([setup.ask(randomUUID(), "One?"), setup.ask(randomUUID(), "Two?")])).map(
-    (response) => response.statusCode,
-  );
-
-  assert.deepEqual(statuses.sort(), [200, 429]);
-  assert.equal(await usedThisMonth(setup), 100);
+  answered((await setup.ask(randomUUID(), "One?")).body);
+  const usage = (await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { share: number; libraryFits: boolean };
+  assert.ok(usage.share > 1);
+  assert.equal(usage.libraryFits, false);
+  assert.equal((await setup.ask(randomUUID(), "Two?")).json().error.details.quota, "chat-month");
 });
 
 test("a provider refusing for now is asked again after its wait, quietly", async (t) => {
@@ -382,6 +398,7 @@ test("a provider that keeps failing, or a reply that can't be read, stores nothi
   assert.equal(eventsOf(broken.body).at(-1)?.type, "failed");
 
   assert.equal(await usedThisMonth(setup), 0);
+  assert.equal(await unitsThisMonth(setup), 0);
   const kinds = (await setup.account.changes()).changes.map((change) => change.kind);
   assert.ok(!kinds.includes("chat"));
   const costs = await setup.testApp.sql.query<{ detail: string }>("select detail from account_costs where area = 'chat'");
@@ -389,6 +406,36 @@ test("a provider that keeps failing, or a reply that can't be read, stores nothi
     costs.map(({ detail }) => detail),
     ["message-failed"],
   );
+});
+
+test("an answer spends its real cost as usage, beside the count, and the month's share says how much is gone (OV-376)", async (t) => {
+  const { lines, logger } = recordingLogger();
+  const setup = await setUp(t, [answer("Fine.")], { logger });
+
+  answered((await setup.ask(randomUUID(), "How much?")).body);
+  answered((await setup.ask(randomUUID(), "And after?")).body);
+
+  const spent = lines.filter((line) => line.logCode === "api.chat.answered").map((line) => line.usageUnits as number);
+  assert.deepEqual(
+    spent,
+    lines.filter((line) => line.logCode === "api.chat.answered").map((line) => chatUnitsOf(line.costDollars as number)),
+  );
+  assert.ok(spent.every((units) => units > 0));
+  assert.equal(await unitsThisMonth(setup), spent[0]! + spent[1]!);
+  const usage = (await setup.account.inject({ method: "GET", url: "/api/chat-usage" })).json() as { used: number; share: number };
+  assert.equal(usage.used, 2);
+  assert.equal(usage.share, (spent[0]! + spent[1]!) / chatUsageAllowances.free);
+  const [library] = await setup.testApp.sql.query<{ units: string }>("select sum(library_units) as units from chat_usage");
+  assert.equal(Number(library?.units), 0);
+  const [global] = await setup.testApp.sql.query<{ chat_units: string }>("select chat_units from our_key_usage");
+  assert.equal(Number(global?.chat_units), spent[0]! + spent[1]!);
+});
+
+test("usage is cost in millionths of a dollar, and one question about long-form content is the allowance's unit (OV-376)", () => {
+  assert.equal(chatUnitsOf(0.0014), 1_400);
+  assert.equal(chatUnitsOf(0.00000049), 0);
+  assert.equal(chatUnitsOf(-1), 0);
+  assert.equal(chatUsageAllowances.plus / chatUsageAllowances.free, 10);
 });
 
 const webPage = (title: string): WebSource => {

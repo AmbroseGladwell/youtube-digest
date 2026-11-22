@@ -121,8 +121,7 @@
   }
 }
 
-// Fades in over 200ms, stays six seconds, fades out over 400ms; without motion it simply
-// appears and goes (design 106p).
+// Design 106p: in quickly, out slowly; how long it stays is JUMP_LINE_SHOWN_MS.
 .jumpLine {
   min-height: 1.125rem;
   padding: 0 0.25rem;

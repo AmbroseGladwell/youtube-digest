@@ -40,6 +40,7 @@
     "react/purity": "off",
     "react/immutability": "off",
     "react/preserve-manual-memoization": "off",
+    "react/incompatible-library": "off",
     "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }]}]
   },
   "overrides": [

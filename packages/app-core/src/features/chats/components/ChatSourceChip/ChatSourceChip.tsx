@@ -96,7 +96,9 @@ export const ChatSourceChip = ({
   const body: ReactNode = (
     <>
       {thumbnail}
-      <span className={styles.title}>{title}</span>
+      <span className={styles.title} data-cuttable>
+        {title}
+      </span>
       {detail === undefined ? null : <span className={styles.detail}> · {detail}</span>}
       {more.length === 0 ? null : <span className={styles.detail}> +{more.length}</span>}
       {deleted ? <span className={styles.detail}> · {deletedDetail}</span> : null}

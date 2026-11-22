@@ -2,9 +2,7 @@
 
 $settle: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-// The group and each row shrink to nothing as they go, by their grid track, so what is
-// below closes the gap rather than jumping ("OV-318 3" 318q). The global reduced-motion
-// rule in theme/global.scss turns every one of these into an instant change.
+// Shrinks by grid track so what is below closes the gap instead of jumping (318q).
 .collapse {
   display: grid;
   grid-template-rows: 1fr;

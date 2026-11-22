@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 203ab: open in 280ms, the preview line fading first and each line dropping 4px into
-// place 40ms apart; close in 200ms, the list fading before the space shrinks. Nothing below
-// moves, since the block is last in the note. With reduced motion it opens and closes at once.
+// Design 203ab: lines drop in one after another; the list fades before the space shrinks.
 .root {
   --open: 280ms;
   --close: 200ms;

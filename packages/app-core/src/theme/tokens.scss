@@ -1,18 +1,6 @@
 @use "sass:map";
 
-// The stone theme's tokens, from "The Overview - Stone.dc.html" (docs/features/stone-theme.md).
-// Warm neutrals only: surfaces and pills carry structure, and one accent is spent on actions,
-// progress, search hits and the mark. --action is what labels sit on; --brand stays on the
-// mark, the progress bars and the focus ring. The accent is the reader's choice and :root
-// below is Orange (docs/features/appearance.md); --alert stays orange-red under all of them.
-//
-// Contrast in Orange, checked on the ground each colour sits on (accentContrast.test.ts does
-// the same for every accent): --muted (#5f5c57 on #f6f4f0) is
-// 6.6:1, --accent (#b03c12) 6.2:1, and white on --action 4.6:1. The dark --muted
-// (#a6a49e on #151618) is 7.4:1. Preserve those if the palette moves.
-//
-// The motion values are design turn 9's one rule, carried over: state changes in
-// 80–160ms, arrivals in 240–300ms, on --motion-ease unless the animation says otherwise.
+// Accents: docs/features/appearance.md, "The eight accents"; contrast held by accentContrast.test.ts.
 
 :root {
   color-scheme: light dark;
@@ -23,6 +11,8 @@
   --card-hover: #ffffff;
   --dialog: #ffffff;
   --stone-tint: #e4e0d9;
+  // A usage bar's fill (OV-376, design 376b).
+  --meter: #3a3835;
   --on-stone-tint: #24221f;
   --tint-pill: #ffffff;
   --tint-pill-hover: #f6f4f0;
@@ -59,6 +49,7 @@
   --shadow-menu: 0 12px 32px rgba(0, 0, 0, 0.16);
   --shadow-chat: 0 1px 6px rgba(0, 0, 0, 0.07);
 
+  // Motion: docs/features/overview-redesign.md, "The small movements".
   --motion-press: 80ms;
   --motion-state: 120ms;
   --motion-tile: 160ms;
@@ -69,8 +60,6 @@
 
   --measure: 46rem;
   --masthead-height: 3.5rem;
-  // Zero unless a layout sticks the reader's own masthead under the app's, which only
-  // the side panel does (docs/features/extension-panel.md).
   --reader-tabs-height: 2.25rem;
   // docs/features/fade-under-the-bar.md: one height serves every surface.
   --sticky-fade-height: 16px;
@@ -84,8 +73,7 @@
   --radius-tile: 18px;
   --radius-dialog: 24px;
 
-  // The ten time-saved milestones ("OV-34 2 Milestones" 34za): a tint for the card, a
-  // ring for its pill and a deeper step for the pill's label on the light ground.
+  // The ten time-saved milestones (34za): the card's tint, its pill's ring and the label's ink.
   --milestone-first-tint: #eeebe5;
   --milestone-first-ring: #3a3835;
   --milestone-first-ink: #24221f;
@@ -128,6 +116,7 @@
   --card-hover: #292b2f;
   --dialog: #26282c;
   --stone-tint: #2c2b29;
+  --meter: #d9d4cb;
   --on-stone-tint: #eae5dc;
   --tint-pill: #151618;
   --tint-pill-hover: #222428;
@@ -209,8 +198,7 @@
   color-scheme: dark;
 }
 
-// Orange is :root and the dark block above. packages/domain's ACCENT_PALETTES carries the
-// same values, and accentContrast.test.ts holds the two together.
+// Orange is :root above; accentContrast.test.ts holds these to packages/domain's ACCENT_PALETTES.
 $accents: (
   "gold": (
     "brand": #9d7f02, "action": #f7c900, "action-hover": #e3b90c, "action-press": #d0aa09,

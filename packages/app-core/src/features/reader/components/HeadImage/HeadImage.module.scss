@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 151a and 151d: under the pointer the image darkens a little and shows what a click
-// will do in its middle, as a stone disc that holds its contrast on light, busy and dark
-// pictures. Touch has no hover, so nothing is drawn on it there (151e).
+// Design 151a/151d: a stone disc holds its contrast on any picture; touch draws nothing (151e).
 .root {
   position: relative;
   display: block;
@@ -41,8 +39,7 @@
   object-fit: cover;
 }
 
-// Design 151p: the sharper picture sits over the tile's until it has arrived, then shows
-// without a fade.
+// Design 151p: the sharper picture shows over the tile's once it arrives, without a fade.
 .sharp {
   position: absolute;
   inset: 0;

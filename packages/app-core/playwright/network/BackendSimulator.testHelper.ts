@@ -216,7 +216,7 @@ export class BackendSimulator {
   #chatReplies: ChatReply[] = [];
   #chatQuestions: ChatQuestionSent[] = [];
   #chatRecords = new Map<string, Chat & { rev: number }>();
-  #chatUsage: ChatUsage = { plan: "free", resetsOn: "2026-10-01", used: 0, limit: 100 };
+  #chatUsage: ChatUsage = { plan: "free", resetsOn: "2026-10-01", used: 0, limit: 100, share: 0, libraryFits: true };
   #generatedOutputOverrides: Record<string, unknown> = {};
   #feed: RecordChange[] = [];
   #accountTranscripts = new Map<string, StoredTranscript>();
