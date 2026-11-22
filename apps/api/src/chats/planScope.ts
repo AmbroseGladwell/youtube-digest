@@ -31,9 +31,7 @@ export interface PlannedScope {
   filtered: boolean;
 }
 
-// OV-373: the overviews a question is about, kept by code from the filters the plan chose, never by
-// the model. A topic the library doesn't have, or a day that isn't one, is dropped rather than
-// narrowing the scope to nothing.
+// Code, never the model, keeps the scope (docs/features/chats.md, "Two passes on the map").
 export const planScope = (
   filters: ChatPlan["filters"],
   labels: ReadonlyMap<string, Overview>,

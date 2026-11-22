@@ -127,10 +127,7 @@ export interface ResolvedScope {
   topics: string[];
 }
 
-// Answers a reader's question over their whole library or one project, on our key, within the
-// same allowance as an overview's chat. Small enough, the overviews go whole and one pass answers;
-// larger, the model plans from the map: filters code applies, a mode, and up to five picks code sends
-// whole for a second pass (OV-373; docs/features/chats.md, "Library and project chat").
+// Library and project chat: docs/features/chats.md, "Library and project chat".
 export class LibraryChatAnswerer {
   #options: LibraryChatAnswererOptions;
 
@@ -368,7 +365,7 @@ export class LibraryChatAnswerer {
           [
             ...before,
             marksMessage,
-            ...(filtered ? [scopeBlock(kept)] : []),
+            ...(filtered || (broad && material.mode === "map") ? [scopeBlock(kept, { filtered, broad })] : []),
             ...block([...pinnedNew.map((overview) => overview.id), ...picked]),
             ...minutesMessage(minutes),
             ...setAsideLine(setAsideNow),

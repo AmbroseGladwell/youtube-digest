@@ -202,8 +202,9 @@ or taken-out one.
   - **Code applies the filters** (`planScope`). A topic the scope doesn't have, or a day that isn't
     one, is dropped rather than emptying the scope. Picks outside the kept scope, already read in
     this conversation or pinned are dropped.
-  - **Pass two** sends the marks, then the kept labels when the plan filtered (`scopeBlock`), then
-    the picks whole as one user message, then the question. A `deep` answer has
+  - **Pass two** sends the marks, then `scopeBlock`: the kept labels when the plan filtered, and for
+    a `broad` answer a line telling it to place every kept overview, not only the ones read in
+    full. Then it sends the picks whole as one user message, then the question. A `deep` answer has
     `SECTIONED_SHAPE`'s 4,000-token cap; a `broad` one, and every whole-mode answer, has
     `BROAD_SHAPE`'s 16,000, since an answer placing 89 overviews ran to 7,800 tokens.
   - **A broad answer covers every overview in scope.** The prompt asks for each to appear in a list

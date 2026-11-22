@@ -463,7 +463,10 @@ test("a plan's filters keep the scope by code: the marks and topics are sent, pi
     setup.openAi.requests.map((request) => request.maxTokens),
     [3_000, 16_000],
   );
-  assert.equal(answer![2]!.content, "The overviews code kept after your filters: O2, O3. Answer from these alone.");
+  assert.equal(
+    answer![2]!.content,
+    "The overviews code kept after your filters: O2, O3. Answer from these alone. This answer is broad: put every one of these in the sources of a list item, not only the ones read in full. Group those that share a reason.",
+  );
   assert.match(answer![3]!.content, /^The full notes of the overviews you chose:\n\n## \[O2\][\s\S]*## \[O3\]/);
   const done = answeredOf(events);
   assert.deepEqual((done.messages[1] as Extract<ChatMessage, { from: "answer" }>).stats, {
@@ -485,8 +488,33 @@ test("a small library that goes whole sends the marks and leaves room for an ans
   assert.equal(setup.openAi.requests.length, 1);
   assert.equal(setup.openAi.requests[0]!.messages[1]!.content, "The reader's marks. Unread: O1, O2.\nFavourites: none.");
   assert.equal(setup.openAi.requests[0]!.maxTokens, 16_000);
+  assert.equal(setup.openAi.requests[0]!.messages.length, 3);
   assert.equal(
     events.some((event) => event.type === "picking"),
     false,
   );
+});
+
+test("a broad answer over the whole map, unfiltered, is told by code to place every overview, not only the ones read in full (OV-373)", async (t) => {
+  const setup = await setUp(
+    t,
+    [planned(["O2"], { mode: "broad" }), sectioned([{ heading: "All", points: [{ text: "Each.", sources: ["O1", "O2", "O3"] }] }])],
+    { wholeCharacters: 10 },
+  );
+  await saved(
+    setup,
+    titled("First", "2026-11-01T09:00:00.000Z"),
+    titled("Second", "2026-11-02T09:00:00.000Z"),
+    titled("Third", "2026-11-03T09:00:00.000Z"),
+  );
+
+  await setup.ask({ kind: "library" }, randomUUID(), "Rank everything I saved.");
+
+  const answer = setup.openAi.requests[1]!;
+  assert.equal(answer.maxTokens, 16_000);
+  assert.equal(
+    answer.messages[2]!.content,
+    "This answer is broad: put every one of the overviews in the sources of a list item, not only the ones read in full. Group those that share a reason.",
+  );
+  assert.match(answer.messages[3]!.content, /^The full notes of the overviews you chose:\n\n## \[O2\]/);
 });

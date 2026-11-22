@@ -134,7 +134,7 @@ Rules:
 - Use only what the overviews say. Where you connect them, say it is your connection, not theirs.
 - When nothing here covers the question, say so in the intro and leave sections empty.
 - There is no single source here: always set inSource to false, and set generalKnowledge to false unless you add something from beyond these overviews, which you mark as such.
-- When the answer covers many overviews (every unread one, every one on a topic, a ranking), every overview it covers appears in the sources of a list item, so none is left out silently. Group them: one item may carry many sources when they share a reason.`;
+- When the answer has to cover many overviews (every unread one, every one on a topic, a ranking), every overview the question is about appears in the sources of a list item, not only the ones read in full, so none is left out. Group them: one item may carry many sources when they share a reason.`;
 
 const FACTS = `Each overview also has a line of facts: its kind, its length, the day it was saved, how new its ideas are, whether its claims are dubious, whether it is worth watching anyway, and its topics. The reader's read and favourite marks come in a message of their own.`;
 
@@ -182,8 +182,7 @@ ${[...labels].map(([label, overview]) => briefEntry(label, overview, marksOf(ove
   return { mode, system, labels };
 };
 
-// The reader's marks, after the map rather than on it, so marking an overview read doesn't change
-// the cached map.
+// After the map, not on it, so marking an overview read keeps the cached map.
 export const marksBlock = (labels: ReadonlyMap<string, Overview>, marks: ReadonlyMap<string, OverviewMarks>): PromptMessage => {
   const which = (keep: (mark: OverviewMarks) => boolean) =>
     [...labels]
@@ -201,12 +200,29 @@ export const planPrompt = (question: string): PromptMessage => ({
   content: `Plan the answer to this question: ${question}`,
 });
 
-export const scopeBlock = (kept: readonly string[]): PromptMessage => ({
+export interface ScopeAsked {
+  filtered: boolean;
+  broad: boolean;
+}
+
+const scopeLines = (kept: readonly string[], { filtered, broad }: ScopeAsked): string[] => {
+  const lines = filtered ? [`The overviews code kept after your filters: ${kept.join(", ")}. Answer from these alone.`] : [];
+  if (broad) {
+    const which = filtered ? "these" : "the overviews";
+    lines.push(
+      `This answer is broad: put every one of ${which} in the sources of a list item, not only the ones read in full. Group those that share a reason.`,
+    );
+  }
+  return lines;
+};
+
+// A broad answer is told by code to place every kept overview (docs/features/chats.md, "Two passes on the map").
+export const scopeBlock = (kept: readonly string[], asked: ScopeAsked): PromptMessage => ({
   role: "user",
   content:
     kept.length === 0
       ? "Your filters kept none of the overviews. Say so, and answer from nothing else."
-      : `The overviews code kept after your filters: ${kept.join(", ")}. Answer from these alone.`,
+      : scopeLines(kept, asked).join(" "),
 });
 
 export const pickPrompt = (question: string): PromptMessage => ({

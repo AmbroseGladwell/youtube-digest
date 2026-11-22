@@ -20,18 +20,24 @@ import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage }
 import { allIds, ANSWER_SHAPE_RULES, CHAT_REPLY_SCHEMA, ChatReply } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
 import {
+  BROAD_SHAPE,
   libraryChatMaterial,
+  marksBlock,
   PICK_SHAPE,
   pickedBlock,
   pickPrompt,
+  PLAN_SHAPE,
+  planPrompt as productionPlanPrompt,
+  scopeBlock as productionScopeBlock,
   SECTIONED_SHAPE,
   type LibraryChatMaterial,
 } from "../chats/libraryChatPrompt.js";
+import { ChatPlan, planScope, type OverviewMarks } from "../chats/planScope.js";
 import type { PromptMessage } from "../chats/streamChatCompletion.js";
 
 // OV-373 whole-scope harness: docs/architecture/in-app-chat.md, "Answering from the whole scope" and "Running it again".
 
-const ARMS = ["shipped", "plan5", "plan-budget", "plan-whole"] as const;
+const ARMS = ["shipped", "plan5", "plan-budget", "plan-whole", "production"] as const;
 type ArmName = (typeof ARMS)[number];
 
 const PLAN_TOKENS = 3_000;
@@ -379,6 +385,8 @@ interface Context {
   library: Library;
   labels: Map<string, Entry>;
   shipped: LibraryChatMaterial;
+  production: LibraryChatMaterial;
+  marks: Map<string, OverviewMarks>;
   system: string;
   price: NonNullable<ReturnType<typeof priceOf>>;
 }
@@ -493,11 +501,43 @@ const askPlan = async (context: Context, job: Job, progress: Progress): Promise<
   return { messages, answerCap: plan.mode === "broad" ? BROAD_ANSWER_TOKENS : SHIPPED_ANSWER_CAP };
 };
 
+const askProduction = async (context: Context, job: Job, progress: Progress): Promise<PassOne> => {
+  const { production, marks } = context;
+  const messages: PromptMessage[] = [{ role: "system", content: production.system }, marksBlock(production.labels, marks)];
+  const planned = await completeJson(
+    context.apiKey,
+    [...messages, productionPlanPrompt(job.question.question)],
+    PLAN_SHAPE.schema,
+    PLAN_SHAPE.maxTokens,
+    `ov373-${job.arm}`,
+  );
+  progress.usage = addUsage(progress.usage, planned.usage);
+  progress.passOneOutput = planned.usage?.outputTokens ?? 0;
+  const plan = ChatPlan.parse(planned.json);
+  progress.plan = plan as Plan;
+  const scoped = planScope(plan.filters, production.labels, marks);
+  progress.scope = scoped.kept.map((label): string => production.labels.get(label)!.id);
+  progress.readLabels = firstLabels(plan.picks)
+    .filter((label) => scoped.kept.includes(label))
+    .slice(0, MAX_CHAT_PICKS);
+  const broad = plan.mode === "broad";
+  if (scoped.filtered || broad) {
+    messages.push(productionScopeBlock(scoped.kept, { filtered: scoped.filtered, broad }));
+  }
+  if (progress.readLabels.length > 0) {
+    const block = pickedBlock(progress.readLabels.map((label) => [label, production.labels.get(label)!] as const));
+    progress.readTokens = tokensOf(block.content);
+    messages.push(block);
+  }
+  return { messages, answerCap: broad ? BROAD_SHAPE.maxTokens : SECTIONED_SHAPE.maxTokens };
+};
+
 const ASK: Record<ArmName, (context: Context, job: Job, progress: Progress) => Promise<PassOne>> = {
   shipped: askShipped,
   plan5: askPlan,
   "plan-budget": askPlan,
   "plan-whole": askPlan,
+  production: askProduction,
 };
 
 const replyText = (reply: ChatReply): string =>
@@ -592,8 +632,15 @@ const fullNotesEstimate = (context: Context, job: Job): number => {
   return Math.min(WHOLE_CEILING_TOKENS, tokensOf(notes));
 };
 
+const mapOf = (context: Context, arm: ArmName): string => {
+  if (arm === "shipped") {
+    return context.shipped.system;
+  }
+  return arm === "production" ? context.production.system : context.system;
+};
+
 const estimate = (context: Context, job: Job): number => {
-  const map = tokensOf(job.arm === "shipped" ? context.shipped.system : context.system);
+  const map = tokensOf(mapOf(context, job.arm));
   const wholeTokens = fullNotesEstimate(context, job);
   const output = job.question.wantsAll ? 6_000 : 2_500;
   const cost = map * CACHE_WRITE + map * CACHED + wholeTokens * CACHE_WRITE + (1_000 + output) * (context.price.perMillion.output / 1e6);
@@ -629,7 +676,31 @@ const run = async (
   if (shipped.mode !== "map") {
     throw new Error("this library goes whole: the comparison needs the map");
   }
-  const context: Context = { apiKey, library, labels, shipped, system: planSystem(library, labels), price: priceOf(chatModel)! };
+  const marks = new Map<string, OverviewMarks>(
+    library.entries.map((entry) => [entry.overview.id, { read: entry.read, favourite: entry.favourite, topics: entry.topics }]),
+  );
+  const topics = [...new Set(library.entries.flatMap((entry) => entry.topics))].sort((left, right) => left.localeCompare(right));
+  const production = libraryChatMaterial(
+    { kind: "library" },
+    library.entries.map((entry) => entry.overview),
+    undefined,
+    { marks, topics },
+  );
+  for (const [label, overview] of production.labels) {
+    if (labels.get(label)?.overview.id !== overview.id) {
+      throw new Error(`production labels ${label} differently`);
+    }
+  }
+  const context: Context = {
+    apiKey,
+    library,
+    labels,
+    shipped,
+    production,
+    marks,
+    system: planSystem(library, labels),
+    price: priceOf(chatModel)!,
+  };
   const done: Turn[] = JSON.parse((await readFile(outPath, "utf-8").catch(() => "[]")) as string) as Turn[];
   const jobs = options.arms.flatMap((arm) =>
     Array.from({ length: options.runs }, (_, index) => index + 1).flatMap((r) =>
