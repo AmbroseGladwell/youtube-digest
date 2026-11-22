@@ -149,6 +149,33 @@ export class AskPagePageObject extends PageObject {
       ).toHaveText(titles),
     );
 
+  verifyChipRowsWithinAnswer = (answer: number) =>
+    this.step(`verifyChipRowsWithinAnswer ${answer}`, async () => {
+      const spill = await this.answers()
+        .nth(answer)
+        .evaluate((root, rowId) => {
+          const edge = root.getBoundingClientRect().right;
+          return Math.max(
+            0,
+            ...[...root.querySelectorAll(`[data-testid="${rowId}"]`)].map((row) => row.getBoundingClientRect().right - edge),
+          );
+        }, chatChipRowTestIds.root);
+      expect(spill).toBeLessThanOrEqual(0.5);
+    });
+
+  verifyItemSourcesFold = (answer: number, section: number, item: number, shown: number, more: number) =>
+    this.step(`verifyItemSourcesFold ${answer} ${section} ${item}`, async () => {
+      const row = this.answers()
+        .nth(answer)
+        .getByTestId(chatAnswerTestIds.section)
+        .nth(section)
+        .locator("li")
+        .nth(item)
+        .getByTestId(chatAnswerTestIds.itemSources);
+      await expect(row.getByRole("link")).toHaveCount(shown);
+      await expect(row.getByTestId(chatChipRowTestIds.more)).toHaveText(`+${more}`);
+    });
+
   followItemSource = (answer: number, section: number, item: number) =>
     this.step(`followItemSource ${answer} ${section} ${item}`, () =>
       this.click(

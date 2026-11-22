@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
-import { fittingChipCount, type LibraryFilterChip } from "../../util/libraryFilterChips.js";
+import { fittingChipCount } from "../../../../util/fittingChipCount.js";
+import type { LibraryFilterChip } from "../../util/libraryFilterChips.js";
 import styles from "./LibraryFilterChips.module.scss";
 import { libraryFilterChipsTestIds } from "./LibraryFilterChipsTestIds.js";
 
