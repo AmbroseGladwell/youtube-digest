@@ -1,28 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { Response } from "undici";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
-import type { PublicWebAnswer } from "../publicWeb/createPublicWebFetch.js";
-import { createTikTokReader } from "./createTikTokReader.js";
-import { CAPTIONS_URL, CAPTIONS_VTT, makeTikTokItem, makeTikTokPage, pageWithItem, VIDEO_ID } from "./TikTokPageFactory.testHelper.js";
+import { createTikTokReader, type Spend } from "./createTikTokReader.js";
+import { VIDEO_ID, VIDEO_URL } from "./ScrapeCreatorsAnswerFactory.testHelper.js";
+import { found, scriptedTikTokVendor, TIKTOK_VIDEO } from "./ScriptedTikTokVendor.testHelper.js";
 
-type Answer = { body: string; url?: string } | "missing" | "blocked" | "down";
-
-const PAGE = `https://www.tiktok.com/@/video/${VIDEO_ID}`;
 const NOW = new Date("2026-11-22T10:00:00.000Z");
 
-function readerOver(web: Record<string, Answer>) {
-  const asked: string[] = [];
-  const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
-    asked.push(link);
-    const answer = web[link];
-    if (answer === undefined || answer === "missing") return { status: "failed", reason: "missing" };
-    if (answer === "blocked") return { status: "failed", reason: "blocked" };
-    if (answer === "down") return { status: "failed", reason: "no-answer" };
-    return { status: "answered", url: answer.url ?? link, response: new Response(answer.body) };
+const recordingSpend = () => {
+  const spent: [number, number | null][] = [];
+  const spend: Spend = async (credits, vendorStatus) => {
+    spent.push([credits, vendorStatus]);
   };
-  return { reader: createTikTokReader({ fetchPublicWeb, clock: () => NOW }), asked };
-}
+  return { spend, spent };
+};
 
 const transcriptFailure = async (promise: Promise<unknown>): Promise<string> => {
   try {
@@ -34,97 +25,102 @@ const transcriptFailure = async (promise: Promise<unknown>): Promise<string> => 
   }
 };
 
-test("a video link is read from the video's own page, whatever handle or parameters it came with", async () => {
-  const { reader, asked } = readerOver({ [PAGE]: { body: makeTikTokPage() } });
+test("a video link goes to the vendor without its sharer's parameters, and what it cost is spent", async () => {
+  const { vendor, asked } = scriptedTikTokVendor();
+  const { spend, spent } = recordingSpend();
 
-  const read = await reader.read(`https://www.tiktok.com/@someone/video/${VIDEO_ID}?is_from_webapp=1`);
+  const read = await createTikTokReader({ vendor }).read(`${VIDEO_URL}?is_from_webapp=1&sender_device=pc`, spend);
 
-  assert.equal(read.status, "read");
-  assert.equal(read.status === "read" ? read.video.handle : null, "anewsroom");
-  assert.deepEqual(asked, [PAGE]);
+  assert.deepEqual(read, { status: "read", video: TIKTOK_VIDEO });
+  assert.deepEqual(asked, [{ url: VIDEO_URL, withTranscript: false }]);
+  assert.deepEqual(spent, [[1, null]]);
 });
 
-test("a short link is followed to the page it names", async () => {
-  const short = "https://vm.tiktok.com/ZMhAbCdEf/";
-  const { reader } = readerOver({ [short]: { body: makeTikTokPage(), url: `https://www.tiktok.com/@anewsroom/video/${VIDEO_ID}` } });
+test("a link with no handle, or an embed's, goes to the vendor as the video's own address", async () => {
+  const { vendor, asked } = scriptedTikTokVendor();
+  const reader = createTikTokReader({ vendor });
 
-  const read = await reader.read(short);
+  await reader.read(`https://www.tiktok.com/embed/v2/${VIDEO_ID}`, recordingSpend().spend);
+  await reader.read(`https://m.tiktok.com/v/${VIDEO_ID}.html`, recordingSpend().spend);
 
-  assert.equal(read.status === "read" ? read.video.id : null, VIDEO_ID);
+  assert.deepEqual(
+    asked.map(({ url }) => url),
+    [`https://www.tiktok.com/@/video/${VIDEO_ID}`, `https://www.tiktok.com/@/video/${VIDEO_ID}`],
+  );
 });
 
-test("a link that isn't a TikTok video is refused without a fetch", async () => {
-  const { reader, asked } = readerOver({});
+test("a short link goes to the vendor as it came, for it to follow", async () => {
+  const { vendor, asked } = scriptedTikTokVendor();
 
-  assert.deepEqual(await reader.read("https://www.tiktok.com/@anewsroom"), { status: "failed", reason: "not-a-video" });
-  assert.deepEqual(await reader.read("https://example.com/video"), { status: "failed", reason: "not-a-video" });
+  await createTikTokReader({ vendor }).read("https://vm.tiktok.com/ZMhAbCdEf/", recordingSpend().spend);
+
+  assert.deepEqual(asked, [{ url: "https://vm.tiktok.com/ZMhAbCdEf/", withTranscript: false }]);
+});
+
+test("a link that isn't a TikTok video is refused without asking the vendor or spending anything", async () => {
+  const { vendor, asked } = scriptedTikTokVendor();
+  const { spend, spent } = recordingSpend();
+  const reader = createTikTokReader({ vendor });
+
+  assert.deepEqual(await reader.read("https://www.tiktok.com/@anewsroom", spend), { status: "failed", reason: "not-a-video" });
+  assert.deepEqual(await reader.read("https://example.com/video", spend), { status: "failed", reason: "not-a-video" });
   assert.deepEqual(asked, []);
+  assert.deepEqual(spent, []);
 });
 
-test("a refused, missing or silent page each say why", async () => {
-  assert.deepEqual(await readerOver({ [PAGE]: "blocked" }).reader.read(PAGE), { status: "failed", reason: "blocked" });
-  assert.deepEqual(await readerOver({ [PAGE]: "missing" }).reader.read(PAGE), { status: "failed", reason: "unavailable" });
-  assert.deepEqual(await readerOver({ [PAGE]: "down" }).reader.read(PAGE), { status: "failed", reason: "no-answer" });
-  assert.deepEqual(await readerOver({ [PAGE]: { body: "<html>Verify</html>" } }).reader.read(PAGE), {
-    status: "failed",
-    reason: "unreadable",
-  });
-  assert.deepEqual(await readerOver({ [PAGE]: { body: makeTikTokPage({ statusCode: 10204 }) } }).reader.read(PAGE), {
-    status: "failed",
-    reason: "unavailable",
-  });
+test("the vendor's failure is the read's, and its status goes with what it cost", async () => {
+  const { vendor } = scriptedTikTokVendor({ status: "failed", reason: "unavailable", credits: 0, vendorStatus: 404 });
+  const { spend, spent } = recordingSpend();
+
+  assert.deepEqual(await createTikTokReader({ vendor }).read(VIDEO_URL, spend), { status: "failed", reason: "unavailable" });
+  assert.deepEqual(spent, [[0, 404]]);
 });
 
-test("a video's words come from its caption track, keyed as a TikTok and marked machine-heard", async () => {
-  const { reader } = readerOver({ [PAGE]: { body: makeTikTokPage() }, [CAPTIONS_URL]: { body: CAPTIONS_VTT } });
+test("a video's words are its captions, keyed as a TikTok and marked machine-heard", async () => {
+  const { vendor, asked } = scriptedTikTokVendor();
+  const { spend, spent } = recordingSpend();
 
-  const { transcript, source } = await reader.transcript(VIDEO_ID);
+  const { transcript, source } = await createTikTokReader({ vendor, clock: () => NOW }).transcript(VIDEO_URL, spend);
 
+  assert.deepEqual(asked, [{ url: VIDEO_URL, withTranscript: true }]);
+  assert.deepEqual(spent, [[1, null]]);
   assert.equal(source, "ASR");
   assert.equal(transcript.videoId, `tiktok:${VIDEO_ID}`);
   assert.equal(transcript.generated, true);
   assert.equal(transcript.fetchedAt, NOW.toISOString());
-  assert.equal(transcript.segments[0]?.startMs, 0);
   assert.match(transcript.segments.map(({ text }) => text).join(" "), /^There is now a real chance that the talks end/);
 });
 
-test("the spoken track is chosen over a translation of it", async () => {
-  const translation = "https://captions.tiktok.example/fr.vtt";
-  const item = makeTikTokItem(
-    {},
-    {
-      subtitleInfos: [
-        { LanguageCodeName: "fra-FR", Source: "MT", Format: "webvtt", Url: translation },
-        { LanguageCodeName: "eng-US", Source: "ASR", Format: "webvtt", Url: CAPTIONS_URL },
-      ],
-    },
-  );
-  const { reader, asked } = readerOver({ [PAGE]: { body: pageWithItem(item) }, [CAPTIONS_URL]: { body: CAPTIONS_VTT } });
+test("captions a creator wrote are not marked machine-heard", async () => {
+  const { vendor } = scriptedTikTokVendor(found({ ...TIKTOK_VIDEO, captions: [{ language: "en", source: "creator" }] }));
 
-  await reader.transcript(VIDEO_ID);
+  const { transcript } = await createTikTokReader({ vendor }).transcript(VIDEO_URL, recordingSpend().spend);
 
-  assert.deepEqual(asked, [PAGE, CAPTIONS_URL]);
+  assert.equal(transcript.generated, false);
 });
 
 test("a video without captions, or with empty ones, has no transcript to give", async () => {
-  const bare = readerOver({ [PAGE]: { body: pageWithItem(makeTikTokItem({}, { subtitleInfos: [] })) } });
-  assert.equal(await transcriptFailure(bare.reader.transcript(VIDEO_ID)), TranscriptFetchFailure.NO_CAPTIONS);
+  const bare = scriptedTikTokVendor(found(TIKTOK_VIDEO, null)).vendor;
+  const empty = scriptedTikTokVendor(found(TIKTOK_VIDEO, "WEBVTT\n\n")).vendor;
 
-  const empty = readerOver({ [PAGE]: { body: makeTikTokPage() }, [CAPTIONS_URL]: { body: "WEBVTT\n\n" } });
-  assert.equal(await transcriptFailure(empty.reader.transcript(VIDEO_ID)), TranscriptFetchFailure.NO_CAPTIONS);
+  assert.equal(
+    await transcriptFailure(createTikTokReader({ vendor: bare }).transcript(VIDEO_URL, recordingSpend().spend)),
+    TranscriptFetchFailure.NO_CAPTIONS,
+  );
+  assert.equal(
+    await transcriptFailure(createTikTokReader({ vendor: empty }).transcript(VIDEO_URL, recordingSpend().spend)),
+    TranscriptFetchFailure.NO_CAPTIONS,
+  );
 });
 
-test("a transcript that can't be fetched says why in transcript terms", async () => {
-  assert.equal(
-    await transcriptFailure(readerOver({ [PAGE]: "blocked" }).reader.transcript(VIDEO_ID)),
-    TranscriptFetchFailure.SOURCE_BLOCKED,
-  );
-  assert.equal(
-    await transcriptFailure(readerOver({ [PAGE]: { body: makeTikTokPage({ statusCode: 10204 }) } }).reader.transcript(VIDEO_ID)),
-    TranscriptFetchFailure.VIDEO_UNAVAILABLE,
-  );
-  assert.equal(
-    await transcriptFailure(readerOver({ [PAGE]: { body: makeTikTokPage() }, [CAPTIONS_URL]: "down" }).reader.transcript(VIDEO_ID)),
-    TranscriptFetchFailure.SOURCE_UNAVAILABLE,
-  );
+test("a transcript the vendor can't give says why in transcript terms", async () => {
+  const failing = (reason: "blocked" | "unavailable" | "no-answer") =>
+    createTikTokReader({ vendor: scriptedTikTokVendor({ status: "failed", reason, credits: 0, vendorStatus: 500 }).vendor }).transcript(
+      VIDEO_URL,
+      recordingSpend().spend,
+    );
+
+  assert.equal(await transcriptFailure(failing("blocked")), TranscriptFetchFailure.SOURCE_BLOCKED);
+  assert.equal(await transcriptFailure(failing("unavailable")), TranscriptFetchFailure.VIDEO_UNAVAILABLE);
+  assert.equal(await transcriptFailure(failing("no-answer")), TranscriptFetchFailure.SOURCE_UNAVAILABLE);
 });

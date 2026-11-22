@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readTikTokPage } from "./readTikTokPage.js";
+import { readTikTokPage, spokenCaptionTrack } from "./readTikTokPage.js";
 import { CAPTIONS_URL, makeTikTokItem, makeTikTokPage, pageWithItem, VIDEO_ID } from "./TikTokPageFactory.testHelper.js";
 
 test("a video page gives the video, its author and its caption tracks", () => {
@@ -69,4 +69,12 @@ test("a page without the data, or with data in a shape we don't know, is unreada
   assert.deepEqual(readTikTokPage('<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application/json">{not json</script>'), {
     status: "unreadable",
   });
+});
+
+test("the spoken track is chosen over a translation of it, and a translation only when nothing else exists", () => {
+  const asr = { language: "eng-US", source: "ASR" };
+  const translation = { language: "fra-FR", source: "MT" };
+  assert.equal(spokenCaptionTrack([translation, asr]), asr);
+  assert.equal(spokenCaptionTrack([translation]), translation);
+  assert.equal(spokenCaptionTrack([]), undefined);
 });

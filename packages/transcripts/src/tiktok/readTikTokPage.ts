@@ -13,6 +13,10 @@ export type TikTokPage =
   | { status: "not-a-video" }
   | { status: "unreadable" };
 
+// The spoken words first: an ASR track is what was said, and any other is a translation of it.
+export const spokenCaptionTrack = <Track extends { source: string }>(tracks: readonly Track[]): Track | undefined =>
+  tracks.find(({ source }) => source.toUpperCase() === "ASR") ?? tracks[0];
+
 const PAGE_DATA = /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/;
 
 const PageItem = z.object({
@@ -52,7 +56,7 @@ const postedAt = (createTime: string | number | undefined): string | null => {
 };
 
 // What a TikTok video page says about its video, from the data the page carries for its own
-// script (docs/features/tiktok-links.md).
+// script. The extension reads the reader's own tab with it (docs/features/tiktok-links.md).
 export function readTikTokPage(html: string): TikTokPage {
   const data = PAGE_DATA.exec(html)?.[1];
   if (data === undefined) return { status: "unreadable" };

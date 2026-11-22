@@ -88,6 +88,11 @@ export const apiLogLines = coded("api", {
     ),
     ourKey: line("info", "our key", "Whether overviews can be made on our key, on which model, and the global daily cap."),
     playlists: line("info", "playlists", "Whether a YouTube key is set, so playlists can be followed."),
+    tiktok: line(
+      "info",
+      "tiktok",
+      "Whether the ScrapeCreators key is set, so our server can read TikTok links; without it /api/tiktok says it is unavailable.",
+    ),
     podcastLookups: line(
       "info",
       "podcast lookups",
@@ -399,12 +404,12 @@ export const apiLogLines = coded("api", {
     read: line(
       "info",
       "tiktok video read",
-      "A TikTok link was turned into a video from its page; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks the page offered. Never the link, the handle or the video.",
+      "A TikTok link was turned into a video through the vendor; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks it has, `credits` what the vendor charged and `vendorStatus` its answer when it failed. Never the link, the handle or the video.",
     ),
     transcript: line(
       "info",
       "tiktok transcript resolved",
-      "A TikTok video's words were asked for from its caption track; `source` is the track's (ASR, or a translation), `segments` how many came back, or `failure` why none could. Never the video, and the words are never kept.",
+      "A TikTok video's words were asked for through the vendor; `source` is the caption track's (ASR, creator), `segments` how many came back, or `failure` why none could, with `credits` and `vendorStatus` as for a read. Never the video, and the words are never kept.",
     ),
   },
   transcription: {
