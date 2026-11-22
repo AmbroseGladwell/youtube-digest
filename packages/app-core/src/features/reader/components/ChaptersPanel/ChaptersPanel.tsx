@@ -113,7 +113,7 @@ export const ChaptersPanel = ({ chapters, video, held, onOpenTranscriptAt, steps
                   {current && (
                     <span className={styles.playingBadge} data-testid={chaptersPanelTestIds.playingBadge}>
                       <span className={styles.playingMark} aria-hidden="true" />
-                      {playingLabel(timedNoun(video))}
+                      {playingLabel(video)}
                     </span>
                   )}
                   <button

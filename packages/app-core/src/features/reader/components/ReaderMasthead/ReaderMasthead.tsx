@@ -233,7 +233,7 @@ export const ReaderMasthead = ({
                   {sourceName(overview.source)}
                 </span>
               )}
-              {overview.source.kind === "podcast" && <KindChip overview={overview} />}
+              {(overview.source.kind === "podcast" || overview.source.kind === "tiktok") && <KindChip overview={overview} />}
               {!isArticle && overview.verdict && <span className={styles.verdict}>{NOVELTY_LABEL[overview.verdict.novelty]}</span>}
               {!isArticle && overview.thin && <span className={styles.verdict}>Thin · no clear claim</span>}
               {overview.verdict?.dubious && (

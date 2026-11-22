@@ -15,6 +15,9 @@ tab) and speech-to-text for videos without captions are the next slices, in the 
 | The vendor our server reads TikTok through | `apps/api/src/tiktok/createScrapeCreatorsTikTok.ts` |
 | From a link to the video, and from the video to its words | `createTikTokReader.ts` |
 | The routes | `POST /api/tiktok/read`, `POST /api/tiktok/transcript`, `src/routes/tiktokRoutes.ts` |
+| What an overview of a TikTok is of | `TikTokSource`, `tiktokSource` in `packages/domain/src/Source.ts` |
+| Writing its note as a video's, and giving it back its source | `clipAsVideo`, `isTikTokInput` in `packages/generation/src/tiktok` |
+| From a read and its words to a saved note | `runTikTokOverviewGeneration` in `app-core`'s `generationPipeline.ts` |
 
 ## Who reads TikTok
 
@@ -81,6 +84,46 @@ AI transcript endpoint, and our own speech-to-text, are slice 5's question.
 
 **The words are the account's own copy**, returned to the caller and kept nowhere on the server,
 the rule since OV-295.
+
+## A TikTok in the library
+
+Step 4 of the card, 22 Nov 2026. `TikTokSource` joins `Source` with the key `tiktok:<id>`, the
+video's own digits (`source-identity.md`, "Adding a kind"). It keeps the video's address, the caption
+as its title (or `@handle` when there is none, which is common), the handle and display name, the
+length, the posting date and the cover.
+
+**The cover's address expires.** TikTok signs its cover links and they stop working after about a
+day, so a library row falls back to the name tile, as an article's dead image does
+(`OverviewThumbnail`). Keeping a copy, or asking oEmbed for a fresh one, is a question for the
+screens.
+
+**What every card says of it:** the creator's name (or `@handle`), a quiet "TikTok" kind chip (the
+owner's call, 22 Nov 2026: a TikTok is its own kind, not a "video" with no chip, OV-232), and
+its length as a clock: "0:42 TikTok". In the library's filter it counts as a video. Its ways out
+say "Watch on TikTok" and "Copy TikTok link".
+
+**No time links.** TikTok's address takes no start time, so Markdown and chat answers give a
+TikTok's times as plain text, as an episode's are. The embed player can seek, and that is for the
+screens.
+
+### The note
+
+A TikTok is written by the video note (`generateOverview`, the kind check included, so a recipe
+clip gets the recipe note), sized by the short rows in "One note budget"
+(`overview-generation-decisions.md`), and then given back its `TikTokSource`. The generator sees it
+as a video through `clipAsVideo`: the caption's first 150 characters as the title, its first 400 as
+the description (`VideoSource` caps it there), and the whole caption, up to 5,000, as
+`fullDescription` when it is longer. The harness run found three captions over 400 characters.
+
+`OurKeyGenerationRequest` takes a TikTok before a plain video, as it does an episode: the video
+member would accept the body and drop the `tiktok` field.
+
+### Its words
+
+The client keeps the words under `tiktok:<id>` and puts them in the account's own copy, like any
+transcript. **Another device with no copy is given none** (`GET /api/transcripts/:key` answers 404):
+fetching them again means a read, and a read costs a credit. Which route found them is
+`transcriptSource` on the capture events: `tiktok-tab` (the reader's own tab) or `tiktok-vendor`.
 
 ## Cost
 

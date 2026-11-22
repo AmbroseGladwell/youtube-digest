@@ -9,6 +9,9 @@ import {
   podcastSourceId,
   sourceKey,
   tagUsage,
+  tiktokSource,
+  type StoredTranscript,
+  type TikTokVideo,
   type ArticleRead,
   type CaptureTranscriptSource,
   type ClientTimingReport,
@@ -24,7 +27,14 @@ import {
   type TranscriptStore,
   type VideoSource,
 } from "@overview/domain";
-import { episodeAsVideo, type GenerationInput, type OverviewInput, type PodcastGenerationInput } from "@overview/generation";
+import {
+  clipAsVideo,
+  episodeAsVideo,
+  type GenerationInput,
+  type OverviewInput,
+  type PodcastGenerationInput,
+  type TikTokGenerationInput,
+} from "@overview/generation";
 import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
 import { countWords } from "../../../util/countWords.js";
 import { captureReasonFromDraft } from "../../overviews/util/captureReasonFromDraft.js";
@@ -183,6 +193,44 @@ export const runPodcastOverviewGeneration = async (
   return writeOverview({ podcast, video: episodeAsVideo(podcast, episode.notes), transcript: transcript.segments }, deps, options);
 };
 
+export interface TikTokWords {
+  transcript: StoredTranscript;
+  source: Extract<CaptureTranscriptSource, "tiktok-tab" | "tiktok-vendor">;
+}
+
+// The words come with the read, so a clip that can't be read costs nothing to write (docs/features/tiktok-links.md).
+export const runTikTokOverviewGeneration = async (
+  video: TikTokVideo,
+  findWords: (video: TikTokVideo) => Promise<TikTokWords>,
+  deps: Pick<GenerationPipelineDeps, "makeOverview" | "overviewStore" | "settingsStore" | "transcriptStore" | "projectStore">,
+  options: RunOverviewGenerationOptions = {},
+): Promise<Overview> => {
+  const tiktok = tiktokSource(video);
+  const key = sourceKey(tiktok)!;
+  if (options.overviewId === undefined) {
+    const held = await heldOverviewOf(deps.overviewStore, key);
+    if (held !== null) {
+      throw new ArticleAlreadyHeldError(held);
+    }
+  }
+  const { transcript, source: transcriptSource } = await findWords(video);
+  stopIfCancelled(options);
+  await deps.transcriptStore.saveTranscript({ ...transcript, videoId: key });
+  const clip = clipAsVideo(tiktok, video.description);
+  const transcriptWords = transcript.segments.reduce((total, segment) => total + countWords(segment.text), 0);
+  const transcriptOpening = transcript.segments
+    .map((segment) => segment.text)
+    .join(" ")
+    .slice(0, TRANSCRIPT_OPENING_CHARACTERS);
+  options.onProgress?.({ video: clip, transcriptWords, transcriptSource, transcriptOpening });
+  stopIfCancelled(options);
+  return writeOverview(
+    { tiktok, video: clip, transcript: transcript.segments, ...(options.noteKind === undefined ? {} : { noteKind: options.noteKind }) },
+    deps,
+    options,
+  );
+};
+
 const stopIfCancelled = (options: RunOverviewGenerationOptions): void => {
   if (options.isCancelled?.()) {
     throw new GenerationCancelledError();
@@ -202,6 +250,7 @@ const keptOnRegeneration = (previous: Overview) => ({
 type WhatToWrite =
   | Pick<GenerationInput, "video" | "transcript" | "noteKind">
   | Pick<PodcastGenerationInput, "podcast" | "video" | "transcript">
+  | Pick<TikTokGenerationInput, "tiktok" | "video" | "transcript" | "noteKind">
   | { article: ExtractedArticle };
 
 const writeOverview = async (

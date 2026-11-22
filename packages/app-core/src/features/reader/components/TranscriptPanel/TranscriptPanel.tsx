@@ -203,6 +203,7 @@ export const TranscriptPanel = ({ video, held, openAtMs, openedFrom, openedFromS
       {unreadable ?? (
         <TranscriptRows
           noun={timedNoun(video)}
+          playing={playingLabel(video)}
           blocks={blocks}
           search={search}
           follow={follow}
@@ -262,6 +263,7 @@ interface TranscriptRowsProps {
   position: ReadingPosition;
   seek: ((positionMs: number) => void) | null;
   noun: "video" | "episode";
+  playing: string;
   targetRun: ChapterBlockRun | null;
   openedFrom: OpenedFromChapter | null;
   openedFromStep: number | null;
@@ -277,6 +279,7 @@ const TranscriptRows = ({
   position,
   seek,
   noun,
+  playing,
   targetRun,
   openedFrom,
   openedFromStep,
@@ -349,7 +352,7 @@ const TranscriptRows = ({
               {current && (
                 <span className={styles.playingBadge} data-testid={transcriptPanelTestIds.playingBadge}>
                   <span className={styles.playingMark} aria-hidden="true" />
-                  {playingLabel(noun)}
+                  {playing}
                 </span>
               )}
               {opensRun && openedFrom !== null && (

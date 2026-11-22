@@ -54,6 +54,9 @@ const wayOut = ({ source, recipe }: SharedNote): string => {
   if (source.kind === "podcast") {
     return openPodcastLabel(source.sharedFrom);
   }
+  if (source.kind === "tiktok") {
+    return "Watch on TikTok";
+  }
   return `${recipe == null ? "Read the article" : "Open the recipe"} on ${sourceName(source)}`;
 };
 

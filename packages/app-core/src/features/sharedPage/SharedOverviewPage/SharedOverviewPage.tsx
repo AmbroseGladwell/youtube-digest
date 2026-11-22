@@ -129,6 +129,9 @@ const channelLine = (source: Source, recipeVideo: boolean, recipePage: boolean):
   if (source.kind === "podcast") {
     return `An overview of an episode of ${source.showName}`;
   }
+  if (source.kind === "tiktok") {
+    return `An overview of a ${recipeVideo ? "recipe " : ""}TikTok from ${sourceName(source)}`;
+  }
   return `An overview of ${recipePage ? "a recipe" : "an article"} from ${sourceName(source)}`;
 };
 
@@ -138,6 +141,9 @@ const sourceLinkLabel = (source: Source, recipeVideo: boolean, recipePage: boole
   }
   if (source.kind === "podcast") {
     return openPodcastLabel(source.sharedFrom);
+  }
+  if (source.kind === "tiktok") {
+    return recipeVideo ? "Open the video on TikTok" : "Watch on TikTok";
   }
   return `${recipePage ? "Open the recipe" : "Read the article"} on ${sourceName(source)}`;
 };

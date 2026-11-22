@@ -44,7 +44,8 @@ export const overviewMarkdown = (overview: Overview, { partIds = false, partIdPr
   const id = (part: OverviewPart, index = 0) => (partIds ? `[${partIdPrefix}${overviewPartId(part, index)}] ` : "");
   const { source: video } = overview;
   const link = sourceUrl(video);
-  const timed = video.kind === "podcast" ? null : link;
+  // TikTok takes no time in its address, and an episode's would land where ads put it.
+  const timed = video.kind === "podcast" || video.kind === "tiktok" ? null : link;
   const facts = [
     sourceName(video),
     authorFactOf(video),

@@ -10,10 +10,11 @@ export interface RecipePageLinkProps {
 }
 
 export const RecipePageLink = ({ source, onPage }: RecipePageLinkProps) => {
-  if (source.kind === "youtube") {
+  if (source.kind === "youtube" || source.kind === "tiktok") {
     return (
       <a className={styles.link} href={source.url} target="_blank" rel="noopener" data-testid={recipePageLinkTestIds.link}>
-        Open the video on YouTube{source.durationMs ? ` · ${formatClock(source.durationMs / 1000)}` : ""}
+        Open the video on {source.kind === "tiktok" ? "TikTok" : "YouTube"}
+        {source.durationMs ? ` · ${formatClock(source.durationMs / 1000)}` : ""}
         <StrokeIcon name="openOut" size={13} />
       </a>
     );

@@ -78,6 +78,28 @@ export const makePodcastOverview = (overrides: Partial<Overview> = {}): Overview
     ...overrides,
   });
 
+export const makeTikTokOverview = (overrides: Partial<Overview> = {}): Overview =>
+  makeOverview({
+    source: {
+      kind: "tiktok",
+      id: VideoId.parse("7301234567890123456"),
+      url: "https://www.tiktok.com/@kitchenwithada/video/7301234567890123456",
+      title: "The one-pan jollof I make every Sunday #jollof #dinner",
+      handle: "kitchenwithada",
+      authorName: "Kitchen with Ada",
+      durationMs: 42_000,
+      publishedAt: "2026-11-12T18:30:00.000Z",
+      imageUrl: "https://p16-sign.tiktokcdn.example/cover.jpeg",
+    },
+    keyPoints: [
+      { text: "Fry the tomato base until the oil floats.", range: null },
+      { text: "Wash the rice until the water runs clear.", range: null },
+      { text: "Steam it covered on the lowest heat.", range: null },
+    ],
+    chapters: [],
+    ...overrides,
+  });
+
 export const makeArticleOverview = (overrides: Partial<Overview> = {}): Overview =>
   makeOverview({
     source: {

@@ -145,7 +145,16 @@ export type CaptureEntry = z.infer<typeof CaptureEntry>;
 export const GenerationKey = z.enum(["own", "ours", "trial"]);
 export type GenerationKey = z.infer<typeof GenerationKey>;
 
-export const CaptureTranscriptSource = z.enum(["stored", "shared-cache", "extension", "service", "article", "podcast"]);
+export const CaptureTranscriptSource = z.enum([
+  "stored",
+  "shared-cache",
+  "extension",
+  "service",
+  "article",
+  "podcast",
+  "tiktok-tab",
+  "tiktok-vendor",
+]);
 export type CaptureTranscriptSource = z.infer<typeof CaptureTranscriptSource>;
 // A transcript failure by its TranscriptFetchFailure name, or what went wrong past it.
 export const CaptureFailure = z.enum([
