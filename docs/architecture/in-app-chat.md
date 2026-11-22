@@ -920,6 +920,8 @@ production over the same read-only connection: 223 overviews, 112 unread, 38 fav
   schema, then 5 picks read in full and the scope code kept.
 - **`plan-budget`:** the same, reading up to 20 picks within 40,000 tokens.
 - **`plan-whole`:** the same, reading the whole filtered set in full when it fits 300,000 tokens.
+- **`production`:** added after the build, and run on its own afterwards. It sends what
+  `LibraryChatAnswerer` sends, built by its own prompt functions and `planScope`.
 
 **The questions.** There are 7 filtered (unread, favourites, a kind, a month, novelty, and
 combinations), 3 on a topic, 1 ranking and 3 deep. Each filtered, topic or ranking question carries
@@ -940,11 +942,17 @@ provider, and passed when asked again.
 | `plan5`       | 345/371             | 0                 | 11/11            | 12/12      | 5            | 4                 | $0.0038 / $0.0121              | 30 s    |
 | `plan-budget` | 347/371             | 3                 | 11/11            | 12/12      | 17           | 3                 | $0.0066 / $0.0149              | 39 s    |
 | `plan-whole`  | 336/371             | 0                 | 11/11            | 12/12      | 29           | 4                 | $0.0084 / $0.0288              | 34 s    |
+| `production`  | 367/371             | 8                 | 11/11            | 12/12      | 5            | 3                 | $0.0037 / $0.0117              | 30 s    |
 
 - Today's shape couldn't rank unread videos at all: it said it couldn't see what was unread. It
   covered 3 of the 112 unread on the starter, and one grouping answer was cut off at the cap.
 - 22 of `plan5`'s 26 misses are one question, "which of my recipes should I cook first?". Every
   plan arm answered it with one recipe, which reads as a fair answer to an ambiguous question.
+- The built prompts first scored 240/371. On the unread starter, a broad answer cited only the 5
+  overviews it read in full, because the map's rule asked for every overview the answer covers,
+  which those 5 satisfied. Now code tells a broad answer, in `scopeBlock`, to place every kept
+  overview. With that, it covered 367 of 371, the recipes question included. 8 citations fell
+  outside a filtered scope, 6 of them in the topic-themes answer. That run cost about $0.07.
 - Costs are with the map cached across questions, as follow-ups get. A first question in a new
   conversation also writes the map to the cache, about $0.003 more.
 
@@ -1001,7 +1009,7 @@ node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
 ```
 DATABASE_URL=… node apps/api/dist/scripts/exportChatLibrary.js <email> <data dir>/library   # overview-prod, read only
 node apps/api/dist/scripts/wholeScopeChatCheck.js facts <data dir>                            # free: counts, topics, map size
-node apps/api/dist/scripts/wholeScopeChatCheck.js run <data dir> <out.json> --arms shipped,plan5,plan-budget,plan-whole --runs 1 --budget 1 [--dry-run] [--only <re>]
+node apps/api/dist/scripts/wholeScopeChatCheck.js run <data dir> <out.json> --arms shipped,plan5,plan-budget,plan-whole,production --runs 1 --budget 1 [--dry-run] [--only <re>]
 node apps/api/dist/scripts/wholeScopeChatCheck.js report <out.json>
 ```
 

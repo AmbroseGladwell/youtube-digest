@@ -86,6 +86,8 @@ export const ChatScopeStats = z.object({
   projects: z.number().int().nonnegative().optional(),
   // How many of them the answer read whole: "From 5 of your 208 overviews" (OV-354).
   read: z.number().int().nonnegative().optional(),
+  // How many the plan's filters kept, for "Looked across 112 of your 223 overviews"; absent when whole.
+  looked: z.number().int().nonnegative().optional(),
 });
 export type ChatScopeStats = z.infer<typeof ChatScopeStats>;
 

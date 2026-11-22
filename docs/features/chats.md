@@ -187,14 +187,31 @@ or taken-out one.
     recipe project measured.
   - Past that, the system message is the compact map: each overview's title, big picture and core
     claim, plus a recipe's first 12 ingredient lines, since a recipe has no claim.
+  - Since OV-373 every overview, whole or on the map, also has a line of facts set by code
+    (`factsLine`): kind, length in minutes, the day saved, novelty, dubious, watch it anyway and its
+    topics. The map lists the scope's topics. The reader's read and favourite marks go in a message
+    of their own after the system message and the history (`marksBlock`), so marking an overview
+    read doesn't change the cached map.
   - A project's prompt carries its name and purpose.
-- **Two passes on the map:**
-  - **Pass one** asks the model to choose up to 5 overviews (`PICK_SHAPE`, a 2,000-token cap, since
-    Luna's reasoning counts). Code keeps known labels only and drops any already read in this
-    conversation.
-  - **Pass two** sends the chosen ones whole after the history as one user message, then the
-    question (`SECTIONED_SHAPE`, a 4,000-token cap). Each question's picks are stored on its reader
-    message (`picked`) and rebuilt in place, so the prompt only grows at its end.
+- **Two passes on the map** (OV-373; measured in `docs/architecture/in-app-chat.md`, "Answering
+  from the whole scope"):
+  - **Pass one is a plan** (`PLAN_SHAPE`, a 3,000-token cap, since Luna's reasoning counts):
+    - filters from a fixed list (read, favourite, kinds, topics, saved between, novelty);
+    - a mode, `deep` or `broad`;
+    - up to 5 picks.
+  - **Code applies the filters** (`planScope`). A topic the scope doesn't have, or a day that isn't
+    one, is dropped rather than emptying the scope. Picks outside the kept scope, already read in
+    this conversation or pinned are dropped.
+  - **Pass two** sends the marks, then `scopeBlock`: the kept labels when the plan filtered, and for
+    a `broad` answer a line telling it to place every kept overview, not only the ones read in
+    full. Then it sends the picks whole as one user message, then the question. A `deep` answer has
+    `SECTIONED_SHAPE`'s 4,000-token cap; a `broad` one, and every whole-mode answer, has
+    `BROAD_SHAPE`'s 16,000, since an answer placing 89 overviews ran to 7,800 tokens.
+  - **A broad answer covers every overview in scope.** The prompt asks for each to appear in a list
+    item's sources, grouped where they share a reason; the log line counts how many were cited
+    (`scopeCited`).
+  - Each question's picks are stored on its reader message (`picked`) and rebuilt in place. The
+    marks and scope aren't replayed for earlier questions.
 - **The answer** is `{ intro, sections[{ heading, points[{ text, sources }] }], takeaway }`:
   - Code turns each point's `O3` or `O3.kp2` into `{ overviewId, title, item }` (`overviewCitationsOf`)
     and drops unknown ids. An overview seen only on the map is cited as a whole.
@@ -217,7 +234,9 @@ or taken-out one.
   project's 8 most recently added members, are read whole with that question beside the picks,
   never counted against the 5. One outside the project gets a label after the map's. They're stored
   as the question's `sources`, and setting one aside is a new message, as in an overview's chat.
-- **`stats.read`** counts the overviews the answer read whole ("From 5 of your 208 overviews").
+- **`stats.read`** counts the overviews the answer read whole, and **`stats.looked`** how many the plan
+  kept ("Looked across 112 of your 223 overviews · read 5 in full", OV-373). `looked` is absent when
+  the overviews went whole. It's an optional field, so the chat schema doesn't move.
 - **Not yet:** these chats don't read each other, and don't carry the reader's profile. The UI is
   the Ask page ("In the app", OV-354), and keyword minutes from transcripts are OV-352.
 
@@ -862,14 +881,17 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     - While a step runs, its circle is an orange arc turning over the mark's bar.
     - Done, the circle fills with a white tick drawn in.
     - A step not yet started is faint and still.
+  - Since OV-373 `picked` carries `looked`, and the second step reads "Looking across 112 overviews,
+    reading 5 in full" (or just "Looking across 112 overviews" when nothing was picked).
   - Once the intro or a section arrives it folds into "Read 5 overviews" with a tick and a chevron.
     That line opens to the five as chips, and stays on each stored question, from its `picked`.
   - After 10 seconds still choosing, "Still choosing, slow connection".
   - Each step is announced once, never the titles. Reduced motion has no spin, slide or drawing.
   - A small library or project, read whole, has no picking: three dots, then the intro.
 - **The answer** (`AskAnswer`) is the shared sectioned view, with each section's sources as other
-  overviews' chips by relation, then the line from `stats` (`askStatsLine`: "From 5 of your 208
-  overviews", "From 5 of this project's 83 overviews"), then Copy and "Sources N". Each section
+  overviews' chips by relation, then the line from `stats` (`askStatsLine`: "Looked across 112 of
+  your 223 overviews · read 5 in full", or "From 5 of your 208 overviews" on answers from before
+  OV-373), then Copy and "Sources N". Each section
   lands whole.
 - **The drawer** (`AskDrawer`, top left) holds New chat and every conversation on the device: the
   library's, each project's and each overview's (OV-363; `askChatsQuery` over
@@ -909,7 +931,7 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
 - **Events**, `ask.*`, never the question, the answer, a title or which project:
   - `page.opened`: from the top bar or a project, and over what.
   - `chat.*`: asked (typed or a starter, new conversation, pins and set aside counted), picked (how
-    many), answered (sections, overviews cited), answerFailed, waited, stopped, answerCopied,
+    many, and `lookedAcross` since OV-373), answered (sections, overviews cited), answerFailed, waited, stopped, answerCopied,
     sourcesMenuOpened, readOpened, sourcePinned, sourceRemoved, overviewFollowed and plansFollowed.
   - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone. The last
     three carry `scope`: library, project or overview (OV-363).

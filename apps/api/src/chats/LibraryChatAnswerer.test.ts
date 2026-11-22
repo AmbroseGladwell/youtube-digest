@@ -19,10 +19,11 @@ import { TranscriptPassagesRepository } from "../transcripts/TranscriptPassagesR
 import { TranscriptsRepository } from "../transcripts/TranscriptsRepository.js";
 import { createTestApp, type TestApp } from "../testing/createTestApp.testHelper.js";
 import { noteAbout } from "../testing/meaningFixtures.testHelper.js";
-import { UPDATED_AT } from "../testing/storedRecords.testHelper.js";
+import { storedTopic, UPDATED_AT } from "../testing/storedRecords.testHelper.js";
 import { makeAccount, type TestAccount } from "../testing/TestAccount.testHelper.js";
 import { ChatUsageRepository } from "../usage/ChatUsageRepository.js";
 import { makeFakeChatOpenAi, type FakeChatAnswer, type FakeChatOpenAi } from "./FakeChatOpenAi.testHelper.js";
+import type { ChatPlan } from "./planScope.js";
 import { LibraryChatAnswerer, type LibraryChatOwner } from "./LibraryChatAnswerer.js";
 
 interface Setup {
@@ -118,6 +119,11 @@ const projectOf = async (setup: Setup, overviews: Overview[], removed: Overview[
   return project;
 };
 
+const ANY: ChatPlan["filters"] = { read: "any", favourite: "any", kinds: [], topics: [], savedFrom: "", savedTo: "", novelty: [] };
+const planned = (picks: string[], extra: { filters?: Partial<ChatPlan["filters"]>; mode?: ChatPlan["mode"] } = {}): FakeChatAnswer => ({
+  reply: { filters: { ...ANY, ...extra.filters }, mode: extra.mode ?? "deep", picks },
+});
+
 const sectioned = (sections: Array<{ heading: string; points: Array<{ text: string; sources: string[] }> }>) => ({
   reply: {
     intro: "Most of them start small.",
@@ -160,14 +166,18 @@ test("a small project goes whole in one pass, with its purpose, and answers in s
   const events = await setup.ask({ kind: "project", id: project.id }, conversation, "What do these share?");
 
   assert.equal(setup.openAi.requests.length, 1);
-  const [system, question] = setup.openAi.requests[0]!.messages;
+  const [system, marks, question] = setup.openAi.requests[0]!.messages;
   assert.match(
     system!.content,
     /about one of their projects in The Overview, "Indie apps", which they keep for this: "Apps I can run alone", listed below in full/,
   );
-  assert.match(system!.content, /## \[O1\]\n\n# Cardstock[\s\S]*## \[O2\]\n\n# Tiny SaaS/);
+  assert.match(
+    system!.content,
+    /## \[O1\]\n\nvideo · saved 2026-11-01[^\n]*\n\n# Cardstock[\s\S]*## \[O2\]\n\nvideo · saved 2026-11-02[^\n]*\n\n# Tiny SaaS/,
+  );
   assert.match(system!.content, /\[O1\.kp1\] Start with one habit/);
   assert.doesNotMatch(system!.content, /Left out/);
+  assert.deepEqual(marks, { role: "user", content: "The reader's marks. Unread: O1, O2.\nFavourites: none." });
   assert.deepEqual(question, { role: "user", content: "What do these share?" });
   assert.deepEqual(
     events.map((event) => event.type).filter((type, index, all) => all.indexOf(type) === index),
@@ -203,7 +213,7 @@ test("a large library is read in two passes: it picks from the map, reads the pi
   const setup = await setUp(
     t,
     [
-      { reply: { overviews: ["O1", "O3.kp2", "O7", "O1"] } },
+      planned(["O1", "O3.kp2", "O7", "O1"]),
       sectioned([
         { heading: "Money", points: [{ text: "Charge early.", sources: ["O1.kp2", "O2.kp1", "O3"] }] },
         { heading: "Size", points: [{ text: "Stay small.", sources: ["O3.kp3"] }] },
@@ -228,16 +238,18 @@ test("a large library is read in two passes: it picks from the map, reads the pi
       { overviewId: overviews[0]!.id, title: "First" },
       { overviewId: overviews[2]!.id, title: "Third" },
     ],
+    looked: 3,
   });
   assert.deepEqual(events.filter((event) => event.type === "section").length, 2);
   const [pick, answer] = setup.openAi.requests.map((request) => request.messages);
-  assert.match(pick![0]!.content, /listed below in brief[\s\S]*Choose up to 5/);
-  assert.match(pick![0]!.content, /## \[O2\] Second\nSecond claim/);
-  assert.equal(pick!.at(-1)!.content, "Choose the overviews whose full notes you need to answer this question: What makes money?");
-  assert.deepEqual(answer![0], pick![0]);
-  assert.match(answer![1]!.content, /^The full notes of the overviews you chose:\n\n## \[O1\]\n\n# First[\s\S]*## \[O3\]\n\n# Third/);
-  assert.doesNotMatch(answer![1]!.content, /# Second/);
-  assert.deepEqual(answer![2], { role: "user", content: "What makes money?" });
+  assert.match(pick![0]!.content, /listed below in brief[\s\S]*picks: up to 5 overviews/);
+  assert.match(pick![0]!.content, /## \[O2\] Second\nvideo · saved 2026-11-02[^\n]*\nSecond claim/);
+  assert.equal(pick![1]!.content, "The reader's marks. Unread: O1, O2, O3.\nFavourites: none.");
+  assert.equal(pick!.at(-1)!.content, "Plan the answer to this question: What makes money?");
+  assert.deepEqual(answer!.slice(0, 2), pick!.slice(0, 2));
+  assert.match(answer![2]!.content, /^The full notes of the overviews you chose:\n\n## \[O1\]\n\n# First[\s\S]*## \[O3\]\n\n# Third/);
+  assert.doesNotMatch(answer![2]!.content, /# Second/);
+  assert.deepEqual(answer![3], { role: "user", content: "What makes money?" });
 
   const done = answeredOf(events);
   const reply = done.messages[1] as Extract<ChatMessage, { from: "answer" }>;
@@ -252,7 +264,7 @@ test("a large library is read in two passes: it picks from the map, reads the pi
       ["Third", 2],
     ],
   );
-  assert.deepEqual(reply.stats, { overviews: 3, projects: 1, read: 2 });
+  assert.deepEqual(reply.stats, { overviews: 3, projects: 1, read: 2, looked: 3 });
   assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).picked, [overviews[0]!.id, overviews[2]!.id]);
   assert.equal(await usedThisMonth(setup), 1);
   const costs = await setup.testApp.sql.query<{ detail: string }>(
@@ -269,9 +281,9 @@ test("a follow-up's picks go after the history, the earlier ones stay where they
   const setup = await setUp(
     t,
     [
-      { reply: { overviews: ["O1"] } },
+      planned(["O1"]),
       sectioned([{ heading: "One", points: [{ text: "First point.", sources: ["O1"] }] }]),
-      { reply: { overviews: ["O1", "O2"] } },
+      planned(["O1", "O2"]),
       sectioned([{ heading: "Two", points: [{ text: "Second point.", sources: ["O2"] }] }]),
     ],
     { wholeCharacters: 10 },
@@ -283,9 +295,11 @@ test("a follow-up's picks go after the history, the earlier ones stay where they
   const events = await setup.ask({ kind: "library" }, conversation, "Question two?");
 
   const [, firstAnswer, secondPick, secondAnswer] = setup.openAi.requests.map((request) => request.messages);
-  assert.deepEqual(secondPick!.slice(0, firstAnswer!.length), firstAnswer);
-  assert.equal(secondPick![firstAnswer!.length]!.role, "assistant");
-  assert.deepEqual(secondAnswer!.slice(0, firstAnswer!.length + 1), secondPick!.slice(0, firstAnswer!.length + 1));
+  const [system, , firstPicks, firstQuestion] = firstAnswer!;
+  assert.deepEqual(secondPick!.slice(0, 3), [system, firstPicks, firstQuestion]);
+  assert.equal(secondPick![3]!.role, "assistant");
+  assert.match(secondPick![4]!.content, /^The reader's marks\./);
+  assert.deepEqual(secondAnswer!.slice(0, 5), secondPick!.slice(0, 5));
   const added = secondAnswer!.at(-2)!.content;
   assert.match(added, /^The full notes of the overviews you chose:\n\n## \[O2\]/);
   assert.doesNotMatch(added, /## \[O1\]/);
@@ -333,10 +347,7 @@ test("the routes ask over the library or a project, and refuse a project that is
 test("a large project's chat also sends the best minutes of its members' transcripts, and a point cites one as a time (OV-352)", async (t) => {
   const setup = await setUp(
     t,
-    [
-      { reply: { overviews: ["O1"] } },
-      sectioned([{ heading: "Dose", points: [{ text: "Three hundred milligrams.", sources: ["O2.p2", "O2.p9"] }] }]),
-    ],
+    [planned(["O1"]), sectioned([{ heading: "Dose", points: [{ text: "Three hundred milligrams.", sources: ["O2.p2", "O2.p9"] }] }])],
     { wholeCharacters: 10 },
   );
   const stored = makeStoredTranscript({
@@ -405,4 +416,105 @@ test("an overview pinned from outside the project is read whole with the questio
     reply.sections!.sections[0]!.sources.map(({ citation }) => ("overviewId" in citation ? citation.title : null)),
     ["Member"],
   );
+});
+
+test("a plan's filters keep the scope by code: the marks and topics are sent, picks outside it are dropped, and a broad answer gets room (OV-373)", async (t) => {
+  const setup = await setUp(
+    t,
+    [
+      planned(["O2", "O1", "O3"], { filters: { read: "unread", topics: ["Health", "Gardening"], savedFrom: "soon" }, mode: "broad" }),
+      sectioned([{ heading: "Read first", points: [{ text: "Both of these.", sources: ["O2", "O3", "O1"] }] }]),
+    ],
+    { wholeCharacters: 10 },
+  );
+  const topic = storedTopic({ name: "Health" });
+  const posted = await setup.account.inject({ method: "POST", url: "/api/topics", body: topic });
+  assert.equal(posted.statusCode, 201, posted.body);
+  const onTopic = (overview: Overview): Overview => ({ ...overview, topicIds: [topic.id as Overview["topicIds"][number]] });
+  const overviews = [
+    onTopic(titled("Read already", "2026-11-01T09:00:00.000Z")),
+    onTopic(titled("Sleep", "2026-11-02T09:00:00.000Z")),
+    onTopic(titled("Stress", "2026-11-03T09:00:00.000Z")),
+    titled("Off topic", "2026-11-04T09:00:00.000Z"),
+  ];
+  await saved(setup, ...overviews);
+  const marked = await setup.account.inject({
+    method: "PUT",
+    url: `/api/overviews/${overviews[0]!.id}/state`,
+    body: { read: true, favourite: true, updatedAt: UPDATED_AT },
+  });
+  assert.ok(marked.statusCode < 300, marked.body);
+
+  const events = await setup.ask({ kind: "library" }, randomUUID(), "What's worth reading first in my unread health overviews?");
+
+  const [plan, answer] = setup.openAi.requests.map((request) => request.messages);
+  assert.match(plan![0]!.content, /# Topics\n\nHealth\n/);
+  assert.match(plan![0]!.content, /## \[O2\] Sleep\nvideo · saved 2026-11-02 · [^\n]*topics: Health\n/);
+  assert.equal(plan![1]!.content, "The reader's marks. Unread: O2, O3, O4.\nFavourites: O1.");
+  assert.deepEqual(events[1], {
+    type: "picked",
+    overviews: [
+      { overviewId: overviews[1]!.id, title: "Sleep" },
+      { overviewId: overviews[2]!.id, title: "Stress" },
+    ],
+    looked: 2,
+  });
+  assert.deepEqual(
+    setup.openAi.requests.map((request) => request.maxTokens),
+    [3_000, 16_000],
+  );
+  assert.equal(
+    answer![2]!.content,
+    "The overviews code kept after your filters: O2, O3. Answer from these alone. This answer is broad: put every one of these in the sources of a list item, not only the ones read in full. Group those that share a reason.",
+  );
+  assert.match(answer![3]!.content, /^The full notes of the overviews you chose:\n\n## \[O2\][\s\S]*## \[O3\]/);
+  const done = answeredOf(events);
+  assert.deepEqual((done.messages[1] as Extract<ChatMessage, { from: "answer" }>).stats, {
+    overviews: 4,
+    projects: 0,
+    read: 2,
+    looked: 2,
+  });
+  const line = setup.lines.find((each) => each["logCode"] === "api.chat.answered")!;
+  assert.deepEqual([line["answerMode"], line["filtered"], line["lookedAcross"], line["scopeCited"]], ["broad", true, 2, 2]);
+});
+
+test("a small library that goes whole sends the marks and leaves room for an answer that covers every overview (OV-373)", async (t) => {
+  const setup = await setUp(t, [sectioned([{ heading: "All", points: [{ text: "Both.", sources: ["O1", "O2"] }] }])]);
+  await saved(setup, titled("One", "2026-11-01T09:00:00.000Z"), titled("Two", "2026-11-02T09:00:00.000Z"));
+
+  const events = await setup.ask({ kind: "library" }, randomUUID(), "Sort everything I saved.");
+
+  assert.equal(setup.openAi.requests.length, 1);
+  assert.equal(setup.openAi.requests[0]!.messages[1]!.content, "The reader's marks. Unread: O1, O2.\nFavourites: none.");
+  assert.equal(setup.openAi.requests[0]!.maxTokens, 16_000);
+  assert.equal(setup.openAi.requests[0]!.messages.length, 3);
+  assert.equal(
+    events.some((event) => event.type === "picking"),
+    false,
+  );
+});
+
+test("a broad answer over the whole map, unfiltered, is told by code to place every overview, not only the ones read in full (OV-373)", async (t) => {
+  const setup = await setUp(
+    t,
+    [planned(["O2"], { mode: "broad" }), sectioned([{ heading: "All", points: [{ text: "Each.", sources: ["O1", "O2", "O3"] }] }])],
+    { wholeCharacters: 10 },
+  );
+  await saved(
+    setup,
+    titled("First", "2026-11-01T09:00:00.000Z"),
+    titled("Second", "2026-11-02T09:00:00.000Z"),
+    titled("Third", "2026-11-03T09:00:00.000Z"),
+  );
+
+  await setup.ask({ kind: "library" }, randomUUID(), "Rank everything I saved.");
+
+  const answer = setup.openAi.requests[1]!;
+  assert.equal(answer.maxTokens, 16_000);
+  assert.equal(
+    answer.messages[2]!.content,
+    "This answer is broad: put every one of the overviews in the sources of a list item, not only the ones read in full. Group those that share a reason.",
+  );
+  assert.match(answer.messages[3]!.content, /^The full notes of the overviews you chose:\n\n## \[O2\]/);
 });
