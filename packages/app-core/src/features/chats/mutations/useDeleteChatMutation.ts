@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Chat } from "@overview/domain";
+import { chatOwnerOfId, type Chat } from "@overview/domain";
 import { useStores } from "../../../stores/StoresContext.js";
+import { chatKeys } from "../chatKeys.js";
 
 export interface DeleteChatVariables {
   // The list it is shown in: an overview's conversations, or the Ask page's.
@@ -24,8 +25,12 @@ export function useDeleteChatMutation() {
     onError: (_error, { listKey }, context) => {
       if (context !== undefined) queryClient.setQueryData(listKey, context.previous);
     },
-    onSettled: (_data, _error, { listKey }) => {
+    // An overview's conversation is in both its own list and the Ask drawer's (OV-363).
+    onSettled: (_data, _error, { listKey, chatId }) => {
       void queryClient.invalidateQueries({ queryKey: listKey });
+      void queryClient.invalidateQueries({ queryKey: chatKeys.asked() });
+      const owner = chatOwnerOfId(chatId);
+      if (owner?.kind === "overview") void queryClient.invalidateQueries({ queryKey: chatKeys.list(owner.id) });
     },
   });
 }

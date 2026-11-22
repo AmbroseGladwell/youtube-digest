@@ -522,6 +522,11 @@ export class ChatPanelPageObject extends PageObject {
       await expect(root).not.toContainText("`");
     });
 
+  verifyCodeBlocksInListItems = (answer: number, count: number) =>
+    this.step(`verifyCodeBlocksInListItems ${answer} ${count}`, () =>
+      expect(this.answers().nth(answer).locator("li").getByTestId(chatCodeBlockTestIds.code)).toHaveCount(count),
+    );
+
   copyCodeBlock = (answer: number, index: number, expected: string) =>
     this.step(`copyCodeBlock ${answer} ${index}`, async () => {
       await this.page.context().grantPermissions(["clipboard-read", "clipboard-write"]);

@@ -27,12 +27,16 @@ import { useAskPage } from "../useAskPage.js";
 import type { PickedOverview } from "../useAskOver.js";
 import { askStarters } from "../util/askStarters.js";
 import { chatWaitCopy, type ShownWait } from "../util/chatWaitCopy.js";
+import { prefersReducedMotion } from "../../../util/prefersReducedMotion.js";
 import styles from "./AskPage.module.scss";
 import { askPageTestIds } from "./AskPageTestIds.js";
 
 const SAID_MS = 3000;
 
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
+
+// --motion-travel, the drawer's slide in and out.
+const DRAWER_MOTION_MS = 260;
 
 // OV-354, pages 3 and 4: Ask, a top-level page over the whole library, or one project when opened
 // from it. No header and no close; the top bar is the way back. Empty, the field sits centred under
@@ -54,13 +58,33 @@ export function AskPage() {
   const topics = useTopicsQuery().data ?? [];
   const library = useOverviewsWithStateQuery().data;
   const [draft, setDraft] = useState("");
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // On the web the drawer starts open beside the page; on a phone, where it is a sheet over it, closed (OV-370).
+  const [drawerOpen, setDrawerOpen] = useState(() => !isPhone);
+  // Closing plays the opening backwards, so the drawer stays for its time on the way out (OV-371).
+  const [drawerLeaving, setDrawerLeaving] = useState(false);
+  const [drawerArrives, setDrawerArrives] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const [said, setSaid] = useState<{ text: string; done: boolean; key: number } | null>(null);
   const [arrivedAt, setArrivedAt] = useState<number | null>(null);
   const drawerButton = useRef<HTMLButtonElement | null>(null);
   const opened = useRef(false);
   const now = new Date();
+
+  const showDrawer = () => {
+    analytics.ask.drawer.opened();
+    setDrawerLeaving(false);
+    setDrawerArrives(!prefersReducedMotion());
+    setDrawerOpen(true);
+  };
+  const hideDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerLeaving(!prefersReducedMotion());
+  };
+  useEffect(() => {
+    if (!drawerLeaving) return;
+    const timer = setTimeout(() => setDrawerLeaving(false), DRAWER_MOTION_MS);
+    return () => clearTimeout(timer);
+  }, [drawerLeaving]);
 
   const project = projectId === null ? null : (projects.find((each) => each.id === projectId) ?? null);
   const scope = page.scope;
@@ -232,25 +256,27 @@ export function AskPage() {
 
   return (
     <main className={styles.root} data-testid={askPageTestIds.root}>
-      {drawerOpen && (
+      {(drawerOpen || drawerLeaving) && (
         <AskDrawer
+          motion={drawerOpen ? (drawerArrives ? "arriving" : "still") : "leaving"}
           chats={page.chats}
           openChatId={page.chat?.id ?? null}
           now={now}
           projectName={(id) => projects.find((each) => each.id === id)?.name ?? null}
+          overviewTitle={(id) => (library === undefined ? "" : (overviewOf(id)?.source.title ?? null))}
           sheet={isPhone}
           trigger={drawerButton}
           onNew={() => {
-            if (isPhone) setDrawerOpen(false);
+            if (isPhone) hideDrawer();
             page.newConversation();
           }}
           onOpen={(chat) => {
-            if (isPhone) setDrawerOpen(false);
+            if (isPhone) hideDrawer();
             page.openConversation(chat);
           }}
           onDelete={page.deleteConversation}
           onClose={() => {
-            setDrawerOpen(false);
+            hideDrawer();
             requestAnimationFrame(() => drawerButton.current?.focus());
           }}
         />
@@ -265,8 +291,8 @@ export function AskPage() {
               aria-label="Show conversations"
               aria-expanded={drawerOpen}
               onClick={() => {
-                if (!drawerOpen) analytics.ask.drawer.opened();
-                setDrawerOpen(!drawerOpen);
+                if (drawerOpen) hideDrawer();
+                else showDrawer();
               }}
               data-testid={askPageTestIds.drawerButton}
             >

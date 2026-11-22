@@ -1,0 +1,10 @@
+// docs/features/fade-under-the-bar.md: a surface's own colour thinning to nothing under a band.
+@mixin fade-gradient($surface) {
+  background: linear-gradient(
+    $surface,
+    color-mix(in srgb, #{$surface} 85%, transparent) 33%,
+    color-mix(in srgb, #{$surface} 45%, transparent) 62%,
+    color-mix(in srgb, #{$surface} 15%, transparent) 84%,
+    transparent
+  );
+}
