@@ -28,7 +28,10 @@ runs `dist/**/*.test.js`. `app.inject()` opens no port.
 
 `src/testing/createTestApp.testHelper.ts` builds the whole API over a fresh PGlite with
 migrations applied, a clock the test owns, and a mailer that records every magic link
-so a test can open it the way a reader would:
+so a test can open it the way a reader would. Each test still gets its own database, but
+loaded from one migrated copy per test process (`createMigratedTestPglite`): booting
+Postgres and running every migration per test was most of the suite's time. A test that
+passes `migrationsUpTo` gets a database migrated from scratch to that point instead:
 
 ```ts
 const testApp = await createTestApp({ minSupportedClientVersion: 2 });
