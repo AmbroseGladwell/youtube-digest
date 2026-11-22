@@ -879,6 +879,75 @@ embeddings on the evals key, 892 tokens, under $0.0001). The questions and title
   sets lived in a worktree that has since been removed. A question whose detail sits only in an
   overview search by meaning doesn't find will now miss it, unless the reader pins that overview.
 
+## Answering from the whole scope (OV-373)
+
+OV-373, an investigation, 22 November 2026. Library and project chat read at most 5 overviews in
+full (`MAX_CHAT_PICKS`), chosen from a map of titles, big pictures and core claims. A question that
+covers many overviews ("what's worth reading first in my unread overviews?", which is one of our
+own starters) got an answer from 5. The map also carried no read or favourite state, so the model
+couldn't tell which overviews were unread. The owner asked for a general fix for every question that
+draws on many overviews, not one for that starter.
+
+### The answer
+
+- **A plan before the answer fixes it, and reading more in full adds nothing.** The first pass
+  returns filters (read, favourite, kind, topic, saved between, novelty), which code applies
+  exactly; a mode (`deep` or `broad`); and picks. The map gains a line of facts per overview, and
+  the reader's marks go in as a message of their own. With 5 read in full, questions that need every
+  matching overview covered 345 of 371, against 17 of 333 for today's shape. Larger budgets and
+  whole filtered sets covered no more, for up to twice the cost.
+- **Code picks the right scope.** The plan's filters matched the expected set in 11 of 11 filtered
+  questions in every arm, and no plan arm cited an overview outside it, against 14 for today's shape.
+- **Deep questions get better too:** 12 of 12 core overviews against 10 of 12.
+- **Broad answers are long.** They ran up to 7,800 output tokens. 4 of 14 went past today's
+  4,000-token cap, so a broad answer needs a cap of its own (16,000 here).
+- **Slower:** a median 30 seconds against 14, and up to 70 for a ranking of 89 overviews.
+- **The decision:** build the plan with 5 read in full. The second slice brings facts on the map, the
+  marks message, the plan with code-applied filters, a broad answer that places every match, a
+  separate cap for broad answers, and a stat line counted by code ("Looked across 112 unread · read
+  5 in full"). Charging more for a broad answer is OV-376: allowance as usage, weighted by cost.
+
+### How it was measured
+
+`exportChatLibrary.ts` now also exports overview states and topics. It read the owner's library from
+production over the same read-only connection: 223 overviews, 112 unread, 38 favourites,
+13 topics. `wholeScopeChatCheck.ts` asks 14 questions through four arms on Luna, once each, with
+`prompt_cache_key` per arm:
+
+- **`shipped`:** today's production material, `libraryChatMaterial` in map mode, `PICK_SHAPE`,
+  `pickedBlock` and `SECTIONED_SHAPE`.
+- **`plan5`:** the facts map (about 29,700 tokens against 24,400), the marks message, the plan
+  schema, then 5 picks read in full and the scope code kept.
+- **`plan-budget`:** the same, reading up to 20 picks within 40,000 tokens.
+- **`plan-whole`:** the same, reading the whole filtered set in full when it fits 300,000 tokens.
+
+**The questions.** There are 7 filtered (unread, favourites, a kind, a month, novelty, and
+combinations), 3 on a topic, 1 ranking and 3 deep. Each filtered, topic or ranking question carries
+the filter that defines its expected set, and code applies it, so what an answer should cover is
+never a model's judgement. Each deep question carries 4 core overviews. Claude wrote the questions
+from the library's facts. They and the titles stay local (`packages/model-comparison/.local`).
+
+**Scoring is code:** covered (expected overviews any source cites, for questions that want them
+all), cited outside the expected set, whether the plan's scope equals the expected set, core found,
+ids that don't exist, and the count pattern the prompt forbids.
+
+**Cost:** $0.32 on the evals key. Four answers timed out at 300 seconds during a slow spell at the
+provider, and passed when asked again.
+
+| Arm           | Covered (wants all) | Outside the scope | Scope = expected | Core found | Read in full | Past 4,000 output | Cost a question (median / max) | Latency |
+| ------------- | ------------------- | ----------------- | ---------------- | ---------- | ------------ | ----------------- | ------------------------------ | ------- |
+| `shipped`     | 17/333              | 14                | —                | 10/12      | 5            | 0 (1 cut off)     | $0.0024 / $0.0069              | 14 s    |
+| `plan5`       | 345/371             | 0                 | 11/11            | 12/12      | 5            | 4                 | $0.0038 / $0.0121              | 30 s    |
+| `plan-budget` | 347/371             | 3                 | 11/11            | 12/12      | 17           | 3                 | $0.0066 / $0.0149              | 39 s    |
+| `plan-whole`  | 336/371             | 0                 | 11/11            | 12/12      | 29           | 4                 | $0.0084 / $0.0288              | 34 s    |
+
+- Today's shape couldn't rank unread videos at all: it said it couldn't see what was unread. It
+  covered 3 of the 112 unread on the starter, and one grouping answer was cut off at the cap.
+- 22 of `plan5`'s 26 misses are one question, "which of my recipes should I cook first?". Every
+  plan arm answered it with one recipe, which reads as a fair answer to an ambiguous question.
+- Costs are with the map cached across questions, as follow-ups get. A first question in a new
+  conversation also writes the map to the cache, about $0.003 more.
+
 ## Running it again
 
 ```
@@ -926,3 +995,18 @@ node dist/scripts/chatAcrossSourcesCheck.js answer x x <out.json> --report
   overviews by meaning and by words with their scores.
 - Run through `scripts/secrets.sh run` from a script with no spaces in its path: the worktree's
   path has a space, and the arguments split on it.
+
+**Answering from the whole scope (OV-373)**, from the repo root after a build:
+
+```
+DATABASE_URL=… node apps/api/dist/scripts/exportChatLibrary.js <email> <data dir>/library   # overview-prod, read only
+node apps/api/dist/scripts/wholeScopeChatCheck.js facts <data dir>                            # free: counts, topics, map size
+node apps/api/dist/scripts/wholeScopeChatCheck.js run <data dir> <out.json> --arms shipped,plan5,plan-budget,plan-whole --runs 1 --budget 1 [--dry-run] [--only <re>]
+node apps/api/dist/scripts/wholeScopeChatCheck.js report <out.json>
+```
+
+- The data dir holds `library/` and `questions.json`: `{ questions: [{ id, kind, question, expect,
+  wantsAll, core }] }`. `expect` is the filter that defines the expected set, and `core` lists
+  overview id prefixes.
+- A run carries on from where it stopped. To ask again, remove the failed turns from the output.
+- Relative paths, run from the repo root, passed through `secrets.sh run` without splitting.

@@ -4,7 +4,7 @@ import pg from "pg";
 
 // OV-307: one reader's library as search by meaning sees it, for chatAcrossSourcesCheck. Every
 // live overview record, the claim embeddings made at its current rev, the account's own
-// transcripts, and its projects with their memberships. The connection is read only at the server, so nothing here can write.
+// transcripts, its projects with their memberships, and (OV-373) its read and favourite state and topics. The connection is read only at the server, so nothing here can write.
 //
 //   node dist/scripts/exportChatLibrary.js <email> <out dir>   (DATABASE_URL in the environment)
 
@@ -50,7 +50,7 @@ try {
 
   const projects = await query<{ kind: string; id: string; schema_version: number; body: unknown }>(
     `select kind, id, schema_version, body from records
-      where account_id = $1 and kind in ('project', 'projectMember') and not deleted`,
+      where account_id = $1 and kind in ('project', 'projectMember', 'overviewState', 'topic') and not deleted`,
     [account.id],
   );
 
@@ -82,13 +82,19 @@ try {
       projectMembers: projects
         .filter((row) => row.kind === "projectMember")
         .map((row) => ({ id: row.id, schemaVersion: row.schema_version, body: row.body })),
+      overviewStates: projects
+        .filter((row) => row.kind === "overviewState")
+        .map((row) => ({ id: row.id, schemaVersion: row.schema_version, body: row.body })),
+      topics: projects
+        .filter((row) => row.kind === "topic")
+        .map((row) => ({ id: row.id, schemaVersion: row.schema_version, body: row.body })),
     })}\n`,
   );
   for (const transcript of transcripts) {
     await writeFile(join(outDir, "transcripts", `${encodeURIComponent(transcript.video_id)}.json`), `${JSON.stringify(transcript.body)}\n`);
   }
   console.error(
-    `${overviews.length} live overviews, ${current.size} embedded at their current rev (${claims.filter((claim) => current.has(claim.overview_id)).length} claims), ${transcripts.length} transcripts, ${projects.filter((row) => row.kind === "project").length} projects → ${outDir}`,
+    `${overviews.length} live overviews, ${current.size} embedded at their current rev (${claims.filter((claim) => current.has(claim.overview_id)).length} claims), ${transcripts.length} transcripts, ${projects.filter((row) => row.kind === "project").length} projects, ${projects.filter((row) => row.kind === "overviewState").length} overview states, ${projects.filter((row) => row.kind === "topic").length} topics → ${outDir}`,
   );
 } finally {
   await pool.end();
