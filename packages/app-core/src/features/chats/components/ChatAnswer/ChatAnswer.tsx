@@ -2,6 +2,7 @@ import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
   articlePlaceUrl,
   formatTimestamp,
+  holdsCodeBlock,
   type ArticlePlace,
   type ChatAnswerSections,
   type ChatCitation,
@@ -26,7 +27,6 @@ import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import { chatWords } from "../../util/chatWords.js";
 import { byRelation, citationKey } from "../../util/chatSourceGroups.js";
-import { holdsCodeBlock } from "../../util/answerBlocks.js";
 import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
