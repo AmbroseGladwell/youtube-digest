@@ -14,12 +14,12 @@ const judgmentKey = (writer: string, videoId: string) => `${writer}:${videoId}`;
 
 // The deletion test is the acceptance property (OV-225): a big picture that loses nothing
 // when removed has failed, and a high rate means the prompt's split is not landing.
-export function bigPictureMarkdown(
+export const bigPictureMarkdown = (
   runs: readonly RunRecord[],
   judgments: readonly BigPictureJudgeRecord[],
   byVideo: ReadonlyMap<string, FetchedTranscript>,
   runName: string,
-): string {
+): string => {
   const notes = runs.filter((run) => run.overview !== null && run.overview.recipe === null && byVideo.has(run.videoId));
   const judged = new Map(
     judgments.filter((record) => record.outcome === "judged").map((record) => [judgmentKey(record.writer, record.videoId), record]),
@@ -85,4 +85,4 @@ export function bigPictureMarkdown(
   });
 
   return [`# Big picture: ${runName}`, "", ...sections.flatMap((section) => [section, ""])].join("\n");
-}
+};

@@ -50,7 +50,7 @@ import { capturePageTestIds } from "./CapturePageTestIds.js";
 import { useAnalytics } from "../../analytics/AnalyticsContext.js";
 import { shouldAnimateNavigation } from "../../../util/viewTransitions.js";
 
-function usePageAccess(url: string | null): boolean | null {
+const usePageAccess = (url: string | null): boolean | null => {
   const pages = useArticlePages();
   const [known, setKnown] = useState<{ url: string; granted: boolean } | null>(null);
   useEffect(() => {
@@ -68,12 +68,12 @@ function usePageAccess(url: string | null): boolean | null {
     };
   }, [pages, url]);
   return known?.url === url ? known.granted : null;
-}
+};
 
 // The side panel's home: the video or article in front of it (docs/features/extension-panel.md,
 // docs/features/article-panel.md). There is no + New: the page is the offer to take what's
 // beside it, and it becomes the run's own progress while the run is going.
-export function CapturePage() {
+export const CapturePage = () => {
   const navigate = useNavigate();
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();
@@ -404,7 +404,7 @@ export function CapturePage() {
       </div>
     </div>
   );
-}
+};
 
 interface RunInProgressProps {
   run: NewOverviewRun;
@@ -414,7 +414,7 @@ interface RunInProgressProps {
   onTranscribe: () => void;
 }
 
-function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonCommit, onTranscribe }: RunInProgressProps) {
+const RunInProgress = ({ run, onDismiss, onCaptureReasonChange, onCaptureReasonCommit, onTranscribe }: RunInProgressProps) => {
   const analytics = useAnalytics();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const failed = run.error !== null;
@@ -498,4 +498,4 @@ function RunInProgress({ run, onDismiss, onCaptureReasonChange, onCaptureReasonC
       )}
     </div>
   );
-}
+};

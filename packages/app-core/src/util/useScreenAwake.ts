@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 // Holds a screen wake lock while `wanted`, asking again when the page comes back into view (the
 // browser drops it when hidden). True only while the browser actually holds it, so a line that
 // says so is never shown where it can't (design 150v).
-export function useScreenAwake(wanted: boolean): boolean {
+export const useScreenAwake = (wanted: boolean): boolean => {
   const [held, setHeld] = useState(false);
 
   useEffect(() => {
@@ -46,4 +46,4 @@ export function useScreenAwake(wanted: boolean): boolean {
   }, [wanted]);
 
   return held;
-}
+};

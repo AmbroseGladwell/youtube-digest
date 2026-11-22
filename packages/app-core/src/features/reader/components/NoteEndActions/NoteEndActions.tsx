@@ -12,7 +12,7 @@ export interface NoteEndActionsProps {
   onToggleFavourite: () => void;
 }
 
-export function NoteEndActions({ read, favourite, savedChip, onToggleRead, onToggleFavourite }: NoteEndActionsProps) {
+export const NoteEndActions = ({ read, favourite, savedChip, onToggleRead, onToggleFavourite }: NoteEndActionsProps) => {
   return (
     <div className={styles.root} data-testid={noteEndActionsTestIds.root}>
       <div className={styles.buttons}>
@@ -42,4 +42,4 @@ export function NoteEndActions({ read, favourite, savedChip, onToggleRead, onTog
       </div>
     </div>
   );
-}
+};

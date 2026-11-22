@@ -26,7 +26,7 @@ const detail = (timer: CookingTimer, now: number, here: string | null) =>
 // moves to the first Dismiss when one starts, to the next Dismiss as each is answered, and to
 // the cooking screen itself once none ring, so Space and the arrows move on again. Outside the
 // mode it goes back to wherever it was before the ring (design 288y).
-export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey, here = null }: CookingTimerBannerProps) {
+export const CookingTimerBanner = ({ ringing, now, onDismiss, onMore, dismissKey, here = null }: CookingTimerBannerProps) => {
   const firstDismiss = useRef<HTMLButtonElement | null>(null);
   const screen = useRef<HTMLElement | null>(null);
   const before = useRef<Element | null>(null);
@@ -132,4 +132,4 @@ export function CookingTimerBanner({ ringing, now, onDismiss, onMore, dismissKey
       )}
     </div>
   );
-}
+};

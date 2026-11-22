@@ -11,7 +11,7 @@ import { orderLibraryEntriesBySavedAt } from "./orderLibraryEntriesBySavedAt.js"
 // It lives with the overviews rather than in either caller: the panel's capture screen
 // and the injected button ask the same question, and both ask it to avoid paying for a
 // video twice (docs/features/injected-button.md).
-export function overviewForVideoUrl(entries: LibraryEntry[], videoUrl: string | null): Overview | null {
+export const overviewForVideoUrl = (entries: LibraryEntry[], videoUrl: string | null): Overview | null => {
   if (videoUrl === null) {
     return null;
   }
@@ -21,14 +21,14 @@ export function overviewForVideoUrl(entries: LibraryEntry[], videoUrl: string | 
   }
   const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(({ overview }) => sourceKey(overview.source) === videoId);
   return match?.overview ?? null;
-}
+};
 
 // Before Create the tab's address is all there is, so this catches the ordinary case and the
 // run's check on the page's own canonical address catches the rest.
-export function overviewForPageUrl(entries: LibraryEntry[], pageUrl: string): Overview | null {
+export const overviewForPageUrl = (entries: LibraryEntry[], pageUrl: string): Overview | null => {
   const wanted = canonicalArticleUrl(pageUrl, null);
   const match = readableEntries(orderLibraryEntriesBySavedAt(entries)).find(
     ({ overview }) => overview.source.kind === "web" && overview.source.url === wanted,
   );
   return match?.overview ?? null;
-}
+};

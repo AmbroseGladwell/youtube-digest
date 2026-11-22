@@ -17,7 +17,7 @@ import { signInPageTestIds } from "./SignInPageTestIds.js";
 // spent by one POST to this page's origin: a web link signs this browser in and goes to
 // the library; an extension link shows the code and signs nothing in here
 // (docs/features/sign-in.md).
-export function SignInPage() {
+export const SignInPage = () => {
   const { hash, search } = useLocation();
   const signIn = useSignInMutation();
   const { land } = useWebSignInLanding();
@@ -73,4 +73,4 @@ export function SignInPage() {
       <p className={styles.note}>Checking your link. This takes a moment.</p>
     </AuthScreen>
   );
-}
+};

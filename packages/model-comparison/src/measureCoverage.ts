@@ -33,15 +33,15 @@ const sum = (values: readonly number[]): number => values.reduce((total, value) 
 
 const isInside = (span: PositionSpan, units: number): boolean => span.start >= 0 && span.start <= span.end && span.end < units;
 
-function chapterBounds(chapterStarts: readonly number[], units: number): PositionSpan[] {
+const chapterBounds = (chapterStarts: readonly number[], units: number): PositionSpan[] => {
   const starts = [...new Set(chapterStarts.filter((start) => start >= 0 && start < units))].sort((a, b) => a - b);
   if (starts.length === 0) {
     return units === 0 ? [] : [{ start: 0, end: units - 1 }];
   }
   return starts.map((start, index) => ({ start: index === 0 ? 0 : start, end: (starts[index + 1] ?? units) - 1 }));
-}
+};
 
-function largestUncoveredStretch(unitWords: readonly number[], covered: readonly boolean[], totalWords: number): Stretch | null {
+const largestUncoveredStretch = (unitWords: readonly number[], covered: readonly boolean[], totalWords: number): Stretch | null => {
   let best: Stretch | null = null;
   let runStart = -1;
   let runWords = 0;
@@ -60,9 +60,9 @@ function largestUncoveredStretch(unitWords: readonly number[], covered: readonly
     runWords = 0;
   }
   return best;
-}
+};
 
-export function measureCoverage({ unitWords, points, chapterStarts }: CoverageInput): Coverage {
+export const measureCoverage = ({ unitWords, points, chapterStarts }: CoverageInput): Coverage => {
   const units = unitWords.length;
   const totalWords = sum(unitWords);
   const placed = points.filter((span): span is PositionSpan => span !== null && isInside(span, units));
@@ -112,4 +112,4 @@ export function measureCoverage({ unitWords, points, chapterStarts }: CoverageIn
     largestGap: largestUncoveredStretch(unitWords, covered, totalWords),
     pointsByThird,
   };
-}
+};

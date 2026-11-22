@@ -26,7 +26,7 @@ export const FOLLOW_UP_ASSISTANTS: Record<FollowUpAssistant, FollowUpAssistantLi
 
 // Which assistant a connection is, from the name its client registered with, which it chose
 // itself. Null for any other client.
-export function connectionAssistant(clientName: string | null): FollowUpAssistant | null {
+export const connectionAssistant = (clientName: string | null): FollowUpAssistant | null => {
   const name = clientName?.toLowerCase() ?? "";
   if (name.includes("claude")) {
     return "claude";
@@ -38,4 +38,4 @@ export function connectionAssistant(clientName: string | null): FollowUpAssistan
     return "gemini";
   }
   return null;
-}
+};

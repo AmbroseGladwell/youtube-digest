@@ -31,7 +31,7 @@ const sharperImage = (url: string): string | null => {
 // Design 151a–151e and 151p: the image is the control, a button that swaps it between the
 // tile and the column's width. Nothing is drawn when there is no image or it fails, so
 // there is nothing to press (151q).
-export function HeadImage({ source, full, className, onToggle, ref, carriesFrom }: HeadImageProps) {
+export const HeadImage = ({ source, full, className, onToggle, ref, carriesFrom }: HeadImageProps) => {
   const [failed, setFailed] = useState(false);
   const [sharpLoaded, setSharpLoaded] = useState(false);
   const imageUrl = sourceImage(source);
@@ -85,4 +85,4 @@ export function HeadImage({ source, full, className, onToggle, ref, carriesFrom 
       </span>
     </button>
   );
-}
+};

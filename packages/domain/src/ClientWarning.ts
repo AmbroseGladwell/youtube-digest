@@ -151,10 +151,10 @@ export type ClientWarningReport = {
 }[ClientWarningName];
 
 // A code the API doesn't have is dropped rather than logged as sent.
-export function readClientWarning(sent: ClientWarning): ClientWarning {
+export const readClientWarning = (sent: ClientWarning): ClientWarning => {
   if (sent.name === "narrationFellBack" && sent.apiErrorCode !== undefined && !(sent.apiErrorCode in API_ERROR_CODES)) {
     const { apiErrorCode: _dropped, ...rest } = sent;
     return rest;
   }
   return sent;
-}
+};

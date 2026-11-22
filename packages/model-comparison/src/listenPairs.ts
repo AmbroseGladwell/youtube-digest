@@ -11,7 +11,7 @@ export interface ListenPair {
 const passed = (record: RunRecord): record is RunRecord & { overview: Overview } =>
   (record.outcome === "passed-first" || record.outcome === "passed-after-retry") && record.overview !== null;
 
-function latestPassedByVideo(runs: readonly RunRecord[]): Map<string, Overview> {
+const latestPassedByVideo = (runs: readonly RunRecord[]): Map<string, Overview> => {
   const latest = new Map<string, RunRecord & { overview: Overview }>();
   for (const record of runs.filter(passed)) {
     const held = latest.get(record.videoId);
@@ -20,9 +20,9 @@ function latestPassedByVideo(runs: readonly RunRecord[]): Map<string, Overview> 
     }
   }
   return new Map([...latest].map(([videoId, record]) => [videoId, record.overview]));
-}
+};
 
-export function listenPairs(oldRuns: readonly RunRecord[], newRuns: readonly RunRecord[], order: readonly string[]): ListenPair[] {
+export const listenPairs = (oldRuns: readonly RunRecord[], newRuns: readonly RunRecord[], order: readonly string[]): ListenPair[] => {
   const olds = latestPassedByVideo(oldRuns);
   const news = latestPassedByVideo(newRuns);
   return order.flatMap((videoId) => {
@@ -30,14 +30,14 @@ export function listenPairs(oldRuns: readonly RunRecord[], newRuns: readonly Run
     const fresh = news.get(videoId);
     return old === undefined || fresh === undefined ? [] : [{ videoId, old, new: fresh }];
   });
-}
+};
 
 export const nextListenPair = (pairs: readonly ListenPair[], picks: readonly ListenPick[]): ListenPair | null =>
   pairs.find((pair) => !picks.some((pick) => pick.videoId === pair.videoId)) ?? null;
 
-export function preferenceOf(side: ListenSide, newWasA: boolean): ListenPreference {
+export const preferenceOf = (side: ListenSide, newWasA: boolean): ListenPreference => {
   if (side === "tie") {
     return "tie";
   }
   return (side === "A") === newWasA ? "new" : "old";
-}
+};

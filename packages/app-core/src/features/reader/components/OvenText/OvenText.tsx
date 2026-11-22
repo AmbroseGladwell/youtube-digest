@@ -12,7 +12,7 @@ export interface OvenTextProps {
 // The method's words, with the amounts it repeats from adjusted ingredients adjusted too (231c)
 // and its oven temperatures in Fahrenheit for US units (150ak), each marked as a changed
 // ingredient amount is.
-export function OvenText({ text, us, amounts = [] }: OvenTextProps) {
+export const OvenText = ({ text, us, amounts = [] }: OvenTextProps) => {
   if (!us && amounts.length === 0) {
     return <>{text}</>;
   }
@@ -39,4 +39,4 @@ export function OvenText({ text, us, amounts = [] }: OvenTextProps) {
       )}
     </>
   );
-}
+};

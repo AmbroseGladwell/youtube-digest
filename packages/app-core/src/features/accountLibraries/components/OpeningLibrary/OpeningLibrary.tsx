@@ -7,7 +7,7 @@ const RAIL = ["40%", "80%", "70%", null, "40%", "85%", "60%", "65%"];
 
 // Design 47f: after a sign-in only, until the account's first cycle is done, so an empty
 // library is never mistaken for the account's (docs/features/account-libraries.md).
-export function OpeningLibrary({ panel = false }: { panel?: boolean }) {
+export const OpeningLibrary = ({ panel = false }: { panel?: boolean }) => {
   const status = (
     <p className={styles.status} role="status" aria-live="polite" data-testid={openingLibraryTestIds.status}>
       <span className={styles.spinner}>
@@ -54,4 +54,4 @@ export function OpeningLibrary({ panel = false }: { panel?: boolean }) {
       </div>
     </div>
   );
-}
+};

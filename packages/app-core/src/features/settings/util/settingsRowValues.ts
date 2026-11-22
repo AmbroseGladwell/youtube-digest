@@ -31,27 +31,27 @@ import { OVERVIEW_SECTIONS } from "./overviewSections.js";
 
 export const NOT_SIGNED_IN_ROW_VALUE = "Not signed in";
 
-export function accountRowValue(sync: { connected: boolean; status: SyncStatus }, connection: SyncConnection, now: Date): string {
+export const accountRowValue = (sync: { connected: boolean; status: SyncStatus }, connection: SyncConnection, now: Date): string => {
   if (!sync.connected) {
     return NOT_SIGNED_IN_ROW_VALUE;
   }
   const name = connection.firstName ?? connection.email;
   const line = syncStatusLine(sync.status, now);
   return name === null ? line : `${name} · ${line}`;
-}
+};
 
 export const cookingRowValue = (readStepsAloud: boolean, sound: TimerSound): string =>
   `Voice ${readStepsAloud ? "on" : "off"} · ${TIMER_SOUND_LABELS[sound].name}`;
 
-export function voiceRowValue(voice: NarrationVoice): string {
+export const voiceRowValue = (voice: NarrationVoice): string => {
   return `${narrationVoiceName(voice)} · ${ACCENT_GROUP_LABELS[narrationAccent(voice)]}`;
-}
+};
 
 // Design 110j: the model's name already says who made it, so the row spends its second
 // half on how many keys this device holds rather than repeating the provider. The state
 // where the choice arrived by sync and the key did not is said in words, because a count
 // cannot say it (design 110g).
-export function keysRowValue(apiKeys: ApiKeys, provider: Provider, models: ModelByProvider): string {
+export const keysRowValue = (apiKeys: ApiKeys, provider: Provider, models: ModelByProvider): string => {
   const held = providersWithKeys(apiKeys);
   if (held.length === 0) {
     return "No keys yet";
@@ -62,16 +62,16 @@ export function keysRowValue(apiKeys: ApiKeys, provider: Provider, models: Model
     return `${name} · no ${PROVIDER_SHORT_LABEL[provider]} key here`;
   }
   return held.length === 1 ? `${name} · 1 key` : `${name} · ${held.length} keys`;
-}
+};
 
 // "3 shared" or "None": the row says how many links are live without opening the section
 // (docs/features/sharing.md).
-export function sharedLinksRowValue(count: number): string {
+export const sharedLinksRowValue = (count: number): string => {
   if (count === 0) {
     return "None";
   }
   return count === 1 ? "1 shared" : `${count} shared`;
-}
+};
 
 export interface LearningRowState {
   canLearn: boolean;
@@ -83,11 +83,11 @@ const NOT_LEARNING: LearningRowState = { canLearn: false, keepLearning: true, le
 
 // Design 141m: the first section, what was learned, then sections. With learning off the row
 // says so in place of the sections.
-export function personalisationRowValue(
+export const personalisationRowValue = (
   sectionsEnabled: SectionsEnabled,
   aboutYou: AboutYou,
   { canLearn, keepLearning, learnedCount }: LearningRowState = NOT_LEARNING,
-): string {
+): string => {
   const on = OVERVIEW_SECTIONS.filter(({ section }) => sectionsEnabled[section]).length;
   const sections =
     on === OVERVIEW_SECTIONS.length
@@ -101,19 +101,19 @@ export function personalisationRowValue(
     return `${lead} · Learning off`;
   }
   return canLearn && learnedCount > 0 ? `${lead} · ${learnedCount} learned · ${sections}` : `${lead} · ${sections}`;
-}
+};
 
-export function appearanceRowValue(theme: ThemeMode, accentColour: AccentColour): string {
+export const appearanceRowValue = (theme: ThemeMode, accentColour: AccentColour): string => {
   return `${THEME_MODE_NAMES[theme]} · ${ACCENT_COLOUR_NAMES[accentColour]}`;
-}
+};
 
-export function milestonesRowValue(minutes: number): string {
+export const milestonesRowValue = (minutes: number): string => {
   return `${formatTimeSaved(minutes)} saved · ${reachedCount(minutes)} of ${MILESTONES.length}`;
-}
+};
 
-export function aboutRowValue(build: AppBuild): string {
+export const aboutRowValue = (build: AppBuild): string => {
   return `Version ${build.version}`;
-}
+};
 
 // Design 95d: the plan, then what's left of the quota the next overview will use; then, once some
 // were used this month, the transcribing left (design 305o).

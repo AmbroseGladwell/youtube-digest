@@ -16,7 +16,7 @@ const count = (value: number) => value.toLocaleString("en-GB");
 const NOT_OVERVIEWS = "Making overviews isn’t affected.";
 
 // Design 310ad–310ah: what a wait in the field's place says (docs/features/chats.md, "Waits").
-export function chatWaitCopy(wait: ShownWait, plan: Plan, resetsOn: string | null): WaitCopy {
+export const chatWaitCopy = (wait: ShownWait, plan: Plan, resetsOn: string | null): WaitCopy => {
   switch (wait.kind) {
     case "month": {
       const back = wait.resetsOn ?? resetsOn;
@@ -64,4 +64,4 @@ export function chatWaitCopy(wait: ShownWait, plan: Plan, resetsOn: string | nul
     case "offline":
       return { icon: "wifiOff", heading: "You’re offline", body: "Ask again when you’re back online.", action: null };
   }
-}
+};

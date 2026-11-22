@@ -12,7 +12,7 @@ const WHERE: Record<LibraryPlace, string> = {
 // account, one overview per video, and the account's copy is kept where both have one
 // (docs/features/account-libraries.md, design 47h). A new account holds nothing to clash
 // with, so creating one says nothing about it. Nothing to say about an empty library.
-export function savedOverviewsNote(count: number, intent: AuthIntent, place: LibraryPlace): string | null {
+export const savedOverviewsNote = (count: number, intent: AuthIntent, place: LibraryPlace): string | null => {
   if (count <= 0) {
     return null;
   }
@@ -26,4 +26,4 @@ export function savedOverviewsNote(count: number, intent: AuthIntent, place: Lib
   const everywhere =
     place === "browser" ? ` You’ll then have ${count === 1 ? "it" : "them"} on your phone, in the extension and on any other device.` : "";
   return `Signing in adds the ${overviews} to your account, ${except}.${everywhere}`;
-}
+};

@@ -6,7 +6,7 @@ import { GenerationError } from "./GenerationError.js";
 // Which of the reader's own topics a finished note belongs under, zero or more, matched against
 // their list and never added to: the same rule the note's own filing follows
 // (docs/features/topic-filing.md), for a note made for someone else.
-export async function generateTopicMatches(client: GenerationClient, input: TopicMatchInput): Promise<string[]> {
+export const generateTopicMatches = async (client: GenerationClient, input: TopicMatchInput): Promise<string[]> => {
   const names = input.topics.map((topic) => topic.name) as [string, ...string[]];
   const TopicMatchOutput = z.object({ matchedTopicNames: z.array(z.enum(names)) });
   const raw = await client({
@@ -31,4 +31,4 @@ failure. Never name a topic that isn't on the list.`,
     throw new GenerationError(`topic matches failed their schema: ${parsed.error.message}`);
   }
   return [...new Set(parsed.data.matchedTopicNames)];
-}
+};

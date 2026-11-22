@@ -14,7 +14,7 @@ const NOTHING: EpisodeWordsNotice = { notice: null, stop: null };
 
 // Designs 327v–327w-4: what the transcript check found, said on Your link before anything is used,
 // so Looks right carries the consent to transcribe and the wait never asks.
-export function episodeWordsNotice(check: TranscriptCheck | null | undefined, durationMs: number | null): EpisodeWordsNotice {
+export const episodeWordsNotice = (check: TranscriptCheck | null | undefined, durationMs: number | null): EpisodeWordsNotice => {
   if (check == null || check.words === "found") {
     return NOTHING;
   }
@@ -47,4 +47,4 @@ export function episodeWordsNotice(check: TranscriptCheck | null | undefined, du
       return { notice: `There’s no transcript, so we’ll make one from the audio${use}.`, stop: null };
     }
   }
-}
+};

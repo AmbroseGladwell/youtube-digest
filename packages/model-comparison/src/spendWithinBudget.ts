@@ -19,7 +19,7 @@ export interface SpendOutcome {
 
 // Lanes run side by side, each one task at a time, so a lane is one model and the budget
 // can be overshot by at most one task per lane (docs/architecture/model-comparison.md).
-export async function spendWithinBudget<R extends Spend>(options: BudgetedSpend<R>): Promise<SpendOutcome> {
+export const spendWithinBudget = async <R extends Spend>(options: BudgetedSpend<R>): Promise<SpendOutcome> => {
   let spentDollars = options.spentDollars;
   let stoppedForBudget = false;
   let ran = 0;
@@ -40,6 +40,6 @@ export async function spendWithinBudget<R extends Spend>(options: BudgetedSpend<
 
   await Promise.all(options.lanes.map(work));
   return { ran, spentDollars, stoppedForBudget };
-}
+};
 
 export const totalSpent = (results: readonly Spend[]): number => results.reduce((total, result) => total + (result.costDollars ?? 0), 0);

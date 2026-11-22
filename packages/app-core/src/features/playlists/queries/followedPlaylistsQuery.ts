@@ -19,7 +19,7 @@ export const followedPlaylistsQueryOptions = (store: FollowedPlaylistStore) =>
     },
   });
 
-export function useFollowedPlaylistsQuery() {
+export const useFollowedPlaylistsQuery = () => {
   const { followedPlaylistStore } = useStores();
   return useQuery(followedPlaylistsQueryOptions(followedPlaylistStore));
-}
+};

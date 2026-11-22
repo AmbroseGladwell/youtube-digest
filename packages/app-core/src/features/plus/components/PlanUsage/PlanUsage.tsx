@@ -28,7 +28,7 @@ const FREE_ACCOUNT = `A free account makes ${FREE.ourKey} on us and ${FREE.ownKe
 // This month's counts above the plan cards (designs 95d–95h): one cell per quota on an
 // account. Signed out there is nothing to count, since overviews need an account
 // (docs/architecture/tiers.md, "Signed out"), so it offers one.
-export function PlanUsage(props: PlanUsageProps) {
+export const PlanUsage = (props: PlanUsageProps) => {
   if (!props.signedIn) {
     return (
       <div className={styles.root} data-testid={planUsageTestIds.root}>
@@ -93,7 +93,7 @@ export function PlanUsage(props: PlanUsageProps) {
       />
     </div>
   );
-}
+};
 
 // Design 305m: transcribing as its own full-width row under the overviews, counted in hours and
 // minutes of audio, with the episodes it went on and a line on what it's for.
@@ -112,7 +112,7 @@ const transcribingCell = (transcription: TranscriptionUsage, resetsOn: string): 
   };
 };
 
-function Cells({ cells }: { cells: Cell[] }) {
+const Cells = ({ cells }: { cells: Cell[] }) => {
   return (
     <dl className={styles.cells}>
       {cells.map((cell) => (
@@ -131,4 +131,4 @@ function Cells({ cells }: { cells: Cell[] }) {
       ))}
     </dl>
   );
-}
+};

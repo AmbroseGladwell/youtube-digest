@@ -15,7 +15,7 @@ export interface NoteAskFieldProps {
 
 // Design 310d, 310a-3: "Ask about this video" under the questions to ask next, and under it the
 // way into the overview's conversations. Sending opens chat with the question.
-export function NoteAskField({ sourceWord, chatOpen, conversations, onAsk, onOpenConversations }: NoteAskFieldProps) {
+export const NoteAskField = ({ sourceWord, chatOpen, conversations, onAsk, onOpenConversations }: NoteAskFieldProps) => {
   const [draft, setDraft] = useState("");
   const field = useRef<HTMLDivElement | null>(null);
   const send = () => {
@@ -47,4 +47,4 @@ export function NoteAskField({ sourceWord, chatOpen, conversations, onAsk, onOpe
       )}
     </div>
   );
-}
+};

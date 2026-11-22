@@ -10,7 +10,7 @@ export interface DeleteOverviewsDialogProps {
 
 // Always asks, names the count, and says they leave their projects too; Cancel takes the
 // focus ("OV-168 5" 168at).
-export function DeleteOverviewsDialog({ count, onDelete, onClose }: DeleteOverviewsDialogProps) {
+export const DeleteOverviewsDialog = ({ count, onDelete, onClose }: DeleteOverviewsDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);
   const headingId = useId();
@@ -66,4 +66,4 @@ export function DeleteOverviewsDialog({ count, onDelete, onClose }: DeleteOvervi
       </div>
     </dialog>
   );
-}
+};

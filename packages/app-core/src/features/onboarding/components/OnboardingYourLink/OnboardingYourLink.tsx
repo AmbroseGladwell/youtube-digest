@@ -27,7 +27,7 @@ export interface OnboardingYourLinkProps {
 // get, so they can say it's the wrong one before anything is written. One centred column on every
 // width; a playlist adds a choice of its videos. The heading takes focus again when the read
 // changes what it's called.
-export function OnboardingYourLink({
+export const OnboardingYourLink = ({
   kind,
   linkKind,
   link,
@@ -37,7 +37,7 @@ export function OnboardingYourLink({
   onLooksRight,
   onDifferentLink,
   onChooseVideo,
-}: OnboardingYourLinkProps) {
+}: OnboardingYourLinkProps) => {
   const [choosing, setChoosing] = useState(false);
   const isPanel = useIsPanel();
   const entries = playlist?.entries.filter((entry) => entry.availability === "available") ?? [];
@@ -171,4 +171,4 @@ export function OnboardingYourLink({
       </div>
     </div>
   );
-}
+};

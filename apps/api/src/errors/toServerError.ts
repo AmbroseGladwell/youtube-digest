@@ -17,7 +17,7 @@ const relativeFile = (location: string, root: string): string => {
   return (path.isAbsolute(file) ? path.relative(root, file) : file).replace(/[^\w./@~+:-]/g, "_").slice(0, 200);
 };
 
-export function parseServerStack(stack: string | undefined, root: string): ServerErrorFrame[] {
+export const parseServerStack = (stack: string | undefined, root: string): ServerErrorFrame[] => {
   if (stack === undefined) {
     return [];
   }
@@ -44,12 +44,12 @@ export function parseServerStack(stack: string | undefined, root: string): Serve
     }
   }
   return frames;
-}
+};
 
 // Anything the server threw, as it may leave the process: the message redacted by the same
 // rules a client's is, and paths made relative to where the server runs
 // (docs/architecture/errors-and-logs.md, "The server's own errors").
-export function toServerError(thrown: unknown, { caughtBy, request, at, root = process.cwd() }: ToServerErrorOptions): ServerError {
+export const toServerError = (thrown: unknown, { caughtBy, request, at, root = process.cwd() }: ToServerErrorOptions): ServerError => {
   const error = thrown instanceof Error ? thrown : null;
   const message = error !== null ? error.message : typeof thrown === "string" ? thrown : "";
   return {
@@ -60,4 +60,4 @@ export function toServerError(thrown: unknown, { caughtBy, request, at, root = p
     ...(request === undefined ? {} : { request }),
     at: at.toISOString(),
   };
-}
+};

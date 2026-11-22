@@ -19,7 +19,7 @@ export interface SelectionTopicsPickerProps {
 
 // Topics for the selection, in bulk: Edit topics in ⋯ does it one overview at a time
 // ("OV-168 5" 168as).
-export function SelectionTopicsPicker({ topics, overviews, countByTopic, onToggle, onCreate, onClose }: SelectionTopicsPickerProps) {
+export const SelectionTopicsPicker = ({ topics, overviews, countByTopic, onToggle, onCreate, onClose }: SelectionTopicsPickerProps) => {
   const of = overviews.length;
   const options = topics.map((topic) => {
     const held = overviews.filter(({ overview }) => overview.topicIds.includes(topic.id)).length;
@@ -48,4 +48,4 @@ export function SelectionTopicsPicker({ topics, overviews, countByTopic, onToggl
       testIds={selectionTopicsPickerTestIds}
     />
   );
-}
+};

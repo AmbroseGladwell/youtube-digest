@@ -44,7 +44,7 @@ export const isArticleLink = (input: string): boolean => {
 // before Generate; reading costs nothing against the month, and Generate spends this read rather
 // than fetching again (designs 77am–77ar). Null where there is no account on a server to fetch
 // through, which is what hides articles from the field.
-export function useArticleLink(url: string, from: "dialog" | "home") {
+export const useArticleLink = (url: string, from: "dialog" | "home") => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { overviewStore } = useStores();
@@ -112,4 +112,4 @@ export function useArticleLink(url: string, from: "dialog" | "home") {
   }, [articleLink, link, from, place, analytics]);
 
   return { available, link: articleLink, place, retry: () => void query.refetch() };
-}
+};

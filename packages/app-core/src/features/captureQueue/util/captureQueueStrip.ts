@@ -29,7 +29,7 @@ export interface CaptureQueueStripInput {
 
 // Which of the strip's states the queue is in, most pressing first. Null says nothing at
 // all, which is most of the time (docs/features/capture-queue.md, "The strip").
-export function captureQueueStrip(input: CaptureQueueStripInput): CaptureQueueStrip | null {
+export const captureQueueStrip = (input: CaptureQueueStripInput): CaptureQueueStrip | null => {
   const {
     making,
     waiting,
@@ -89,4 +89,4 @@ export function captureQueueStrip(input: CaptureQueueStripInput): CaptureQueueSt
     return notice;
   }
   return null;
-}
+};

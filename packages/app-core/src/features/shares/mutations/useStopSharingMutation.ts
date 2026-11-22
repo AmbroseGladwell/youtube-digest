@@ -13,7 +13,7 @@ interface StopSharingContext {
 
 // Optimistic, because the reader has already decided: the row goes at once, and comes back
 // only if the server refuses.
-export function useStopSharingMutation() {
+export const useStopSharingMutation = () => {
   const api = useShareApi();
   const queryClient = useQueryClient();
 
@@ -45,4 +45,4 @@ export function useStopSharingMutation() {
       }
     },
   });
-}
+};

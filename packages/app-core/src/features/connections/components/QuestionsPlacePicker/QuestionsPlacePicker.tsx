@@ -14,7 +14,7 @@ const PLACES: readonly Place[] = ["here", "assistant"];
 
 // Design 310f: "Questions to ask next: Answered here / Open in {assistant}", the same synced
 // setting as the Change menu under an overview's questions.
-export function QuestionsPlacePicker() {
+export const QuestionsPlacePicker = () => {
   const { assistant, answeredHere } = useFollowUpAssistant();
   const updateSettings = useUpdateSettingsMutation();
   const analytics = useAnalytics();
@@ -44,4 +44,4 @@ export function QuestionsPlacePicker() {
       />
     </div>
   );
-}
+};

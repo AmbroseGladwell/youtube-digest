@@ -30,10 +30,10 @@ export const meaningMatchesQueryOptions = (
     retry: false,
   });
 
-export function useMeaningMatchesQuery(query: string) {
+export const useMeaningMatchesQuery = (query: string) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   return useQuery(
     meaningMatchesQueryOptions({ apiUrl, accountId: libraryAccountIdOf(connection), token: connection.token, query: query.trim() }),
   );
-}
+};

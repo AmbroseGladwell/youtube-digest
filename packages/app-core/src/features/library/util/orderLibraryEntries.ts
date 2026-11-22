@@ -25,7 +25,7 @@ const byTitle = unknownLast(libraryEntryTitle, (left, right) =>
 );
 const oldestFirst = unknownLast(libraryEntrySavedAt, (left, right) => left.localeCompare(right));
 
-export function orderLibraryEntries<T extends LibraryEntry>(entries: T[], sort: LibrarySort): T[] {
+export const orderLibraryEntries = <T extends LibraryEntry>(entries: T[], sort: LibrarySort): T[] => {
   const newest = orderLibraryEntriesBySavedAt(entries);
   switch (sort) {
     case "newest":
@@ -35,4 +35,4 @@ export function orderLibraryEntries<T extends LibraryEntry>(entries: T[], sort: 
     case "title":
       return newest.sort(byTitle);
   }
-}
+};

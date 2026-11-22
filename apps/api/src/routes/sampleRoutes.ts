@@ -11,7 +11,7 @@ const Params = z.object({ token: ShareToken });
 // stopped the way any share is, and one that isn't live is left out rather than offered
 // broken. Reading one counts no visit: it's Start's, not a page someone was sent
 // (docs/features/onboarding.md, "Try a sample").
-export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tokens: readonly ShareToken[]): void {
+export const sampleRoutes = (app: FastifyInstance, shares: SharesRepository, tokens: readonly ShareToken[]): void => {
   const live = async (token: ShareToken): Promise<SharedOverview | null> => {
     const share = await shares.peek(token);
     return share === null || share === "revoked" ? null : share.snapshot;
@@ -38,4 +38,4 @@ export function sampleRoutes(app: FastifyInstance, shares: SharesRepository, tok
     }
     return snapshot;
   });
-}
+};

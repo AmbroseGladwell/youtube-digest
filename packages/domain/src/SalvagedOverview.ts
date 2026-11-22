@@ -22,6 +22,6 @@ export const SalvagedOverview = z.object({
 });
 export type SalvagedOverview = z.infer<typeof SalvagedOverview>;
 
-export function salvageOverview(record: unknown): SalvagedOverview | null {
+export const salvageOverview = (record: unknown): SalvagedOverview | null => {
   return SalvagedOverview.safeParse(moveVideoToSource(record)).data ?? null;
-}
+};

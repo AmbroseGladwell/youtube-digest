@@ -27,7 +27,7 @@ export interface OnboardingSavingMomentProps {
   onSkip: () => void;
 }
 
-export function OnboardingSavingMoment({ onContinue, onSkip }: OnboardingSavingMomentProps) {
+export const OnboardingSavingMoment = ({ onContinue, onSkip }: OnboardingSavingMomentProps) => {
   const extensionOffered = useExtensionOffered();
   return (
     <div className={styles.root} data-testid={onboardingSavingMomentTestIds.root}>
@@ -88,4 +88,4 @@ export function OnboardingSavingMoment({ onContinue, onSkip }: OnboardingSavingM
       </div>
     </div>
   );
-}
+};

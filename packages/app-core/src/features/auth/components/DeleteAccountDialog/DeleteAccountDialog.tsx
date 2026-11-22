@@ -45,7 +45,7 @@ const KEPT = [
 // nothing and names what goes and what stays; Continue asks for the code to the account's
 // own address, or goes straight to deleting for a session that just signed in; a failure
 // before the commit says nothing was deleted (docs/features/account-deletion.md).
-export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccountDialogProps) {
+export const DeleteAccountDialog = ({ email, accountId, onClose }: DeleteAccountDialogProps) => {
   const analytics = useAnalytics();
   const dialog = useRef<HTMLDialogElement | null>(null);
   const cancel = useRef<HTMLButtonElement | null>(null);
@@ -321,4 +321,4 @@ export function DeleteAccountDialog({ email, accountId, onClose }: DeleteAccount
       </div>
     </dialog>
   );
-}
+};

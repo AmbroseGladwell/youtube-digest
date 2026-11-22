@@ -47,11 +47,11 @@ export const ANSWERED_HERE_LINE = "Tap one and it’s answered here, from the vi
 const LEAVE_MS = 130;
 const ARRIVAL_THRESHOLD = 0.4;
 
-function setAnnouncement(from: number, to: number, of: number): string {
+const setAnnouncement = (from: number, to: number, of: number): string => {
   return from === to ? `Question ${from} of ${of}` : `Questions ${from} to ${to} of ${of}`;
-}
+};
 
-function AssistantLine({ assistant, connected, copies }: { assistant: FollowUpAssistant; connected: boolean; copies: boolean }) {
+const AssistantLine = ({ assistant, connected, copies }: { assistant: FollowUpAssistant; connected: boolean; copies: boolean }) => {
   const name = <b>{FOLLOW_UP_ASSISTANTS[assistant].name}</b>;
   if (copies) {
     return <>Each copies the question and this note, then opens {name} for you to paste.</>;
@@ -69,11 +69,11 @@ function AssistantLine({ assistant, connected, copies }: { assistant: FollowUpAs
     );
   }
   return <>Each opens {name} in a new tab with this note filled in.</>;
-}
+};
 
 // A ghost of the tapped question shrinks and drops to the toast, so the reader sees something
 // was picked up before they switch tabs (266am). Only when the tap copies.
-function dropGhost(from: HTMLElement | null): Promise<void> {
+const dropGhost = (from: HTMLElement | null): Promise<void> => {
   if (from === null || prefersReducedMotion() || typeof from.animate !== "function") {
     return Promise.resolve();
   }
@@ -105,12 +105,12 @@ function dropGhost(from: HTMLElement | null): Promise<void> {
     )
     .finished.catch(() => undefined)
     .then(() => ghost.remove());
-}
+};
 
 // Design 266a–266ao: the last block in the note, questions as speech bubbles, three at a time,
 // taken to the reader's own assistant, or answered in the app where chat is offered (310f;
 // docs/features/follow-up-questions.md, docs/features/chats.md).
-export function FollowUpQuestions({
+export const FollowUpQuestions = ({
   overview,
   questions,
   compact,
@@ -119,7 +119,7 @@ export function FollowUpQuestions({
   analytics,
   onAskHere,
   answeredHereOf,
-}: FollowUpQuestionsProps) {
+}: FollowUpQuestionsProps) => {
   const { assistant, answeredHere, connectedTo, anyConnection, choose, chooseHere } = useFollowUpAssistant();
   const offerHere = onAskHere !== undefined;
   const here = offerHere && answeredHere;
@@ -470,4 +470,4 @@ export function FollowUpQuestions({
       <Toast toast={toast} />
     </div>
   );
-}
+};

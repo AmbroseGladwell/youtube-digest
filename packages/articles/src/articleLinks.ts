@@ -14,7 +14,7 @@ const clean = (text: string | null): string => (text ?? "").replace(/[[\]]/g, ""
 const isNamed = (text: string): boolean =>
   text.replace(/[^\p{L}]/gu, "").length >= FEWEST_LETTERS && text.split(" ").length <= MOST_WORDS && !UNNAMED.test(text);
 
-function outboundHref(href: string | null, pageUrl: string): string | null {
+const outboundHref = (href: string | null, pageUrl: string): string | null => {
   if (href === null || href.startsWith("#")) {
     return null;
   }
@@ -32,15 +32,15 @@ function outboundHref(href: string | null, pageUrl: string): string | null {
   const samePlace = url.origin === page.origin && url.pathname === page.pathname;
   const siteIndex = url.origin === page.origin && (url.pathname === "/" || url.pathname === "");
   return samePlace || siteIndex ? null : url.href;
-}
+};
 
 // The links a block names in its own words. A link that only says "here", opens a picture, points
 // back into the same page or to the site's front page, or sits in the page's furniture, is not one
 // a reader would follow from a note (docs/features/article-resources.md).
-export function articleLinks(block: Element, pageUrl: string): ArticleLink[] {
+export const articleLinks = (block: Element, pageUrl: string): ArticleLink[] => {
   return [...block.querySelectorAll("a[href]")].flatMap((anchor) => {
     const text = clean(anchor.textContent);
     const href = outboundHref(anchor.getAttribute("href"), pageUrl);
     return href !== null && isNamed(text) && !isPageFurniture(anchor) ? [{ text, href }] : [];
   });
-}
+};

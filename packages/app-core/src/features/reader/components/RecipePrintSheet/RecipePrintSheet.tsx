@@ -28,7 +28,7 @@ export interface RecipePrintSheetProps {
 }
 
 // Ink may not carry the tint, so on paper a changed amount is set in bold (231l).
-function Printed({ pieces }: { pieces: readonly IngredientPiece[] }) {
+const Printed = ({ pieces }: { pieces: readonly IngredientPiece[] }) => {
   return (
     <>
       {pieces.map((piece, index) =>
@@ -36,7 +36,7 @@ function Printed({ pieces }: { pieces: readonly IngredientPiece[] }) {
       )}
     </>
   );
-}
+};
 
 const piecesOf = (line: AdjustedIngredient): IngredientPiece[] =>
   line.kind === "adjusted" ? line.pieces : [{ text: line.line, changed: false }];
@@ -44,7 +44,7 @@ const piecesOf = (line: AdjustedIngredient): IngredientPiece[] =>
 // Design 144s: the page's recipe on one sheet, black on white whatever the theme, with the
 // page's own image above it and our name and mark at the foot, and none of our words
 // (OV-148). It exists only while the print dialog is open, which waits for the image.
-export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, adjusted, onDone }: RecipePrintSheetProps) {
+export const RecipePrintSheet = ({ source, from, recipe, lines, methodAmounts, adjusted, onDone }: RecipePrintSheetProps) => {
   const imageUrl = source.kind === "web" ? source.imageUrl : null;
   const [imageSettled, setImageSettled] = useState(imageUrl === null);
 
@@ -137,4 +137,4 @@ export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, a
     </div>,
     document.body,
   );
-}
+};

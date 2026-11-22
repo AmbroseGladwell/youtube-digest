@@ -64,7 +64,7 @@ const mayBeEpisodeLink = (link: string): boolean => {
 // A pasted podcast link is read as soon as it settles, so the episode, or why it can't be used,
 // is known before Create (designs 106a–106f). Reading costs nothing against the month. Null where
 // there is no account on a server to read through.
-export function usePodcastLink(url: string) {
+export const usePodcastLink = (url: string) => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const { overviewStore } = useStores();
@@ -147,4 +147,4 @@ export function usePodcastLink(url: string) {
   }, [offered, settled, link, query.isFetching, query.isError, query.data, platformLink, words]);
 
   return { available, link: podcastLink, platformLink, retry: () => void query.refetch() };
-}
+};

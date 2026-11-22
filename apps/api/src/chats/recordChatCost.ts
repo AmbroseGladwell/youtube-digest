@@ -13,13 +13,13 @@ export interface ChatCost {
 
 // A call's tokens at list price into the account's cost tally, area chat, and what the log line
 // says of them (docs/architecture/unit-economics.md).
-export async function recordChatCost(
+export const recordChatCost = async (
   { costs, clock }: { costs: AccountCostsRepository; clock: () => Date },
   accountId: AccountId,
   usage: TokenUsage | null,
   detail: string,
   log: FastifyBaseLogger,
-): Promise<ChatCost> {
+): Promise<ChatCost> => {
   if (usage === null) {
     return { inputTokens: 0, cachedShare: null, outputTokens: 0, costDollars: null };
   }
@@ -40,4 +40,4 @@ export async function recordChatCost(
     outputTokens: usage.outputTokens,
     costDollars,
   };
-}
+};

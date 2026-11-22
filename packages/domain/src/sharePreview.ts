@@ -11,9 +11,9 @@ export interface SharePreview {
 // own message, not something the preview says for them. The premise goes in whole rather
 // than cut at its first full stop — it is at most 25 words, and a sentence splitter would
 // be guessing (docs/features/sharing.md).
-export function sharePreview(note: SharedNote): SharePreview {
+export const sharePreview = (note: SharedNote): SharePreview => {
   return {
     title: note.source.title,
     description: `${overviewMetaParts(note).join(" · ")}. ${note.inOneLine}`,
   };
-}
+};

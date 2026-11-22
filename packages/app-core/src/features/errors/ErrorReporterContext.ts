@@ -26,6 +26,6 @@ const ErrorReporterContext = createContext<ErrorReporter>(silentErrorReporter);
 
 export const ErrorReporterProvider = ErrorReporterContext.Provider;
 
-export function useErrorReporter(): ErrorReporter {
+export const useErrorReporter = (): ErrorReporter => {
   return useContext(ErrorReporterContext);
-}
+};

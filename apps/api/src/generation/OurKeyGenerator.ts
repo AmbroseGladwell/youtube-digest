@@ -89,7 +89,7 @@ export class OurKeyUnavailableError extends Error {}
 
 // What a run of calls on our key used and cost, failed attempts included, since the provider
 // bills every response it answers.
-function meteredUsageOf(calls: MeteredCall[]): { inputTokens: number; outputTokens: number; costDollars: number | null } {
+const meteredUsageOf = (calls: MeteredCall[]): { inputTokens: number; outputTokens: number; costDollars: number | null } => {
   const price = priceOf(ourKeyModel);
   return calls.reduce(
     (total, { usage }) =>
@@ -102,7 +102,7 @@ function meteredUsageOf(calls: MeteredCall[]): { inputTokens: number; outputToke
           },
     { inputTokens: 0, outputTokens: 0, costDollars: price === undefined ? null : 0 },
   );
-}
+};
 
 export class OurKeyGenerationError extends Error {
   readonly fallback: FallbackReason | null;

@@ -15,7 +15,7 @@ interface SetOverviewCaptureReasonContext {
   previousDetail: OverviewWithState | null | undefined;
 }
 
-export function useSetOverviewCaptureReasonMutation() {
+export const useSetOverviewCaptureReasonMutation = () => {
   const { overviewStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -59,4 +59,4 @@ export function useSetOverviewCaptureReasonMutation() {
       }
     },
   });
-}
+};

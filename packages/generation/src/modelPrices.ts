@@ -71,7 +71,7 @@ export const MODEL_PRICES: Record<string, ModelPrice> = {
 export const priceOf = ({ provider, model }: { provider: Provider; model: string }): ModelPrice | undefined =>
   MODEL_PRICES[`${provider}:${model}`];
 
-export function costInDollars(price: ModelPrice, usage: TokenUsage): number {
+export const costInDollars = (price: ModelPrice, usage: TokenUsage): number => {
   const { perMillion } = price.longPrompt !== undefined && promptTokensOf(usage) > price.longPrompt.aboveTokens ? price.longPrompt : price;
   return (
     (usage.uncachedInputTokens * perMillion.input +
@@ -80,4 +80,4 @@ export function costInDollars(price: ModelPrice, usage: TokenUsage): number {
       usage.outputTokens * perMillion.output) /
     1_000_000
   );
-}
+};

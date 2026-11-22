@@ -11,8 +11,8 @@ export interface AssistantConnections {
 
 // Unknown until the list arrives, and taken as none, so nothing promises an assistant that
 // isn't there (docs/features/projects.md, "The project page").
-export function useAssistantConnections(): AssistantConnections {
+export const useAssistantConnections = (): AssistantConnections => {
   const connections = useConnectionsQuery().data ?? [];
   const writer = connections.find((connection) => connection.writes);
   return { any: connections.length > 0, writes: writer !== undefined, writerName: writer?.clientName ?? null };
-}
+};

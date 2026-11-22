@@ -8,7 +8,7 @@ import { accountTermsLineTestIds } from "./AccountTermsLineTestIds.js";
 // and to analytics on which features are used. No checkbox: analytics rests on legitimate
 // interests, not consent, and Settings › Privacy still turns it off
 // (docs/features/analytics-consent.md, "Creating an account").
-export function AccountTermsLine() {
+export const AccountTermsLine = () => {
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";
   if (apiUrl === null) {
@@ -29,4 +29,4 @@ export function AccountTermsLine() {
       , including analytics on which features you use. You can turn this off in Settings › Privacy.
     </p>
   );
-}
+};

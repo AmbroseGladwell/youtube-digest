@@ -7,7 +7,7 @@ export const FIXTURE_VIDEO_ID = "tL9Lw250spc";
 
 export const CAPTION_BASE_URL = "https://www.youtube.com/api/timedtext?v=tL9Lw250spc&ei=2ECva&lang=en&fmt=srv3";
 
-export function makePlayerResponse(overrides: Partial<PlayerResponse> = {}): PlayerResponse {
+export const makePlayerResponse = (overrides: Partial<PlayerResponse> = {}): PlayerResponse => {
   return {
     playabilityStatus: { status: "OK" },
     videoDetails: {
@@ -35,16 +35,16 @@ export function makePlayerResponse(overrides: Partial<PlayerResponse> = {}): Pla
     },
     ...overrides,
   };
-}
+};
 
 // The WEB client answers UNPLAYABLE and carries no caption tracks, but it is the only one
 // that carries a publish date (docs/features/transcript-retrieval.md).
-export function makeMetadataResponse(publishDate = "2026-07-25T10:29:09-07:00"): PlayerResponse {
+export const makeMetadataResponse = (publishDate = "2026-07-25T10:29:09-07:00"): PlayerResponse => {
   return {
     playabilityStatus: { status: "UNPLAYABLE" },
     microformat: { playerMicroformatRenderer: { publishDate, uploadDate: publishDate } },
   };
-}
+};
 
 // Two written cues and one machine-heard, in the shapes json3 actually emits: a segless
 // window-definition event, a rolling append, and a whitespace-only cue.

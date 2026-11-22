@@ -21,7 +21,7 @@ export interface AnswerStores {
 // appearance. The account's own win; this device's apply only where the account has none.
 // Moved before the overviews, so a topic the move finds by name already carries its
 // description (docs/features/onboarding.md, "Into the account").
-export async function moveAnswersInto(from: AnswerStores, into: AnswerStores): Promise<void> {
+export const moveAnswersInto = async (from: AnswerStores, into: AnswerStores): Promise<void> => {
   const [leavingTopics, accountTopics, leaving, held] = await Promise.all([
     from.overviewStore.listTopics(),
     into.overviewStore.listTopics(),
@@ -66,4 +66,4 @@ export async function moveAnswersInto(from: AnswerStores, into: AnswerStores): P
       accentColour: DEFAULT_ACCENT_COLOUR,
     });
   }
-}
+};

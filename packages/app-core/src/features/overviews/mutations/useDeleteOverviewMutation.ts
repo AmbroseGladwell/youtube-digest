@@ -13,7 +13,7 @@ interface DeleteOverviewContext {
   previousList: LibraryEntry[] | undefined;
 }
 
-export function useDeleteOverviewMutation() {
+export const useDeleteOverviewMutation = () => {
   const { overviewStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -51,4 +51,4 @@ export function useDeleteOverviewMutation() {
       }
     },
   });
-}
+};

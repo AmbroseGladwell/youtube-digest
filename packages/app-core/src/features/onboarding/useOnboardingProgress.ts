@@ -13,25 +13,25 @@ import {
 const listeners = new Set<() => void>();
 let snapshot: OnboardingProgress | null | undefined;
 
-function getSnapshot(): OnboardingProgress | null {
+const getSnapshot = (): OnboardingProgress | null => {
   snapshot ??= readOnboardingProgress();
   return snapshot;
-}
+};
 
-function refresh(): void {
+const refresh = (): void => {
   snapshot = readOnboardingProgress();
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-function onStorage(event: StorageEvent): void {
+const onStorage = (event: StorageEvent): void => {
   if (isOnboardingProgressKey(event.key)) {
     refresh();
   }
-}
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
   globalThis.addEventListener?.("storage", onStorage);
   return () => {
@@ -40,16 +40,16 @@ function subscribe(listener: () => void): () => void {
       globalThis.removeEventListener?.("storage", onStorage);
     }
   };
-}
+};
 
-export function writeProgress(progress: OnboardingProgress | null): void {
+export const writeProgress = (progress: OnboardingProgress | null): void => {
   writeOnboardingProgress(progress);
   refresh();
-}
+};
 
 // The home page's link starts onboarding on the screen after Start (design 46a). The run is
 // this tab's.
-export function startOnboarding(link: string, key: SourceKey | null, tabId: number | null = null): void {
+export const startOnboarding = (link: string, key: SourceKey | null, tabId: number | null = null): void => {
   writeProgress({
     link,
     sourceKey: key,
@@ -63,11 +63,11 @@ export function startOnboarding(link: string, key: SourceKey | null, tabId: numb
     landed: null,
     share: null,
   });
-}
+};
 
 // Save to my overviews on a shared page, or a sample chosen at Start, starts onboarding with
 // the copy as its overview: already made, so there is nothing to wait for and no video to check.
-export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOverview, sample = false): void {
+export const startOnboardingFromShare = (token: ShareToken, snapshot: SharedOverview, sample = false): void => {
   writeProgress({
     link: sourceUrl(snapshot.note.source),
     sourceKey: sourceKey(snapshot.note.source),
@@ -81,11 +81,11 @@ export function startOnboardingFromShare(token: ShareToken, snapshot: SharedOver
     landed: null,
     share: { token, snapshot, sample },
   });
-}
+};
 
 // Onboarding's progress, written through as it changes and read again when another tab
 // changes it: the sign-in link opens in a tab of its own.
-export function useOnboardingProgress() {
+export const useOnboardingProgress = () => {
   const progress = useSyncExternalStore(subscribe, getSnapshot);
 
   const update = useCallback((patch: Partial<OnboardingProgress> | null) => {
@@ -94,4 +94,4 @@ export function useOnboardingProgress() {
   }, []);
 
   return [progress, update] as const;
-}
+};

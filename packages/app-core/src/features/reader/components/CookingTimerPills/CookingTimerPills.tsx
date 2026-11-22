@@ -19,7 +19,7 @@ export interface CookingTimerPillsProps {
 
 // Designs 284a–284f: a "Start a timer" row under the action, one pill per time, a range as its
 // two ends with "or" between, and a started pill shown as running.
-export function CookingTimerPills({ times, action, runningFrom, onStart, onOpen, firstPill, firstKey }: CookingTimerPillsProps) {
+export const CookingTimerPills = ({ times, action, runningFrom, onStart, onOpen, firstPill, firstKey }: CookingTimerPillsProps) => {
   if (times.length === 0) {
     return null;
   }
@@ -79,4 +79,4 @@ export function CookingTimerPills({ times, action, runningFrom, onStart, onOpen,
       </div>
     </div>
   );
-}
+};

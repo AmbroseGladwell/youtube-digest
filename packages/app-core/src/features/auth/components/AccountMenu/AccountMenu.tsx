@@ -23,7 +23,7 @@ const ACCOUNT_PATHS = new Set([Routes.signIn(), Routes.createAccount(), Routes.c
 // Design 9j–9n and 10a: one person button in the bar in place of Settings and Sign in.
 // What it holds follows what this device can do and who it is signed in as
 // (docs/features/sign-in.md, "The account menu").
-export function AccountMenu() {
+export const AccountMenu = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isPanel = useIsPanel();
@@ -270,4 +270,4 @@ export function AccountMenu() {
       )}
     </div>
   );
-}
+};

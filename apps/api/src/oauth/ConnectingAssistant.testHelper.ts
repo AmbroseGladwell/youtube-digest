@@ -46,10 +46,10 @@ export const postForm = (testApp: TestApp, url: string, fields: Record<string, s
 
 // An MCP client as Claude would be one: it registers itself, sends the reader to authorize,
 // and trades what comes back for tokens (docs/features/mcp-connector.md).
-export async function makeConnectingAssistant(
+export const makeConnectingAssistant = async (
   testApp: TestApp,
   registration: Record<string, unknown> = { token_endpoint_auth_method: "none" },
-): Promise<ConnectingAssistant> {
+): Promise<ConnectingAssistant> => {
   const registered = await testApp.app.inject({
     method: "POST",
     url: "/oauth/register",
@@ -118,4 +118,4 @@ export async function makeConnectingAssistant(
     refresh: (refreshToken) => token({ grant_type: "refresh_token", refresh_token: refreshToken }),
     revoke: (revoked) => postForm(testApp, "/oauth/revoke", { ...credentials(), token: revoked }),
   };
-}
+};

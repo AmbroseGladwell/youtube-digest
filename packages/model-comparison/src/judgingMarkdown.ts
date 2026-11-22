@@ -7,7 +7,7 @@ const rate = (tally: Tally) => {
 };
 const record = (tally: Tally) => `${tally.win}–${tally.tie}–${tally.loss}`;
 
-export function judgingMarkdown(summaries: readonly CandidateJudging[]): string {
+export const judgingMarkdown = (summaries: readonly CandidateJudging[]): string => {
   if (summaries.length === 0) {
     return "";
   }
@@ -42,4 +42,4 @@ export function judgingMarkdown(summaries: readonly CandidateJudging[]): string 
     }),
     "",
   ].join("\n");
-}
+};

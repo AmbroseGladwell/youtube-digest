@@ -45,7 +45,7 @@ const guardedLookup =
     });
   };
 
-export async function readBodyText(response: Response, mostBytes: number): Promise<string | null> {
+export const readBodyText = async (response: Response, mostBytes: number): Promise<string | null> => {
   const reader = response.body?.getReader();
   if (reader === undefined) {
     return "";
@@ -69,16 +69,16 @@ export async function readBodyText(response: Response, mostBytes: number): Promi
     }
   })();
   return decoder.decode(Buffer.concat(chunks));
-}
+};
 
 // Fetches an address chosen by a stranger: the checks here are the whole of what stops it
 // reaching anything but the public web (docs/features/pasted-article-links.md). No cookies or
 // credentials are ever sent. The caller reads the body, within the same time limit.
-export function createPublicWebFetch({
+export const createPublicWebFetch = ({
   isAllowedAddress = isPublicAddress,
   allowedPorts = WEB_PORTS,
   timeoutMs = TIMEOUT_MS,
-}: PublicWebFetchOptions = {}) {
+}: PublicWebFetchOptions = {}) => {
   const dispatcher: Dispatcher = new Agent({ connect: { lookup: guardedLookup(isAllowedAddress) } });
 
   const mayVisit = ({ protocol, port, hostname, username, password }: URL): boolean => {
@@ -132,4 +132,4 @@ export function createPublicWebFetch({
       return { status: "failed", reason: cause instanceof ClosedAddressError ? "closed" : "no-answer" };
     }
   };
-}
+};

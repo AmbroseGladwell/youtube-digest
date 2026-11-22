@@ -26,21 +26,21 @@ const CLOCK = /(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d{1,3}))?/;
 const MOST_WORDS_IN_A_LINE = 30;
 const LONGEST_PAUSE_IN_A_LINE_MS = 1500;
 
-function clockMs(text: string): number | null {
+const clockMs = (text: string): number | null => {
   const match = CLOCK.exec(text.trim());
   if (match === null) {
     return null;
   }
   const [, hours, minutes, seconds, fraction] = match;
   return ((Number(hours ?? 0) * 60 + Number(minutes)) * 60 + Number(seconds)) * 1000 + Number((fraction ?? "0").padEnd(3, "0"));
-}
+};
 
 const spokenText = (markup: string): string =>
   htmlToText(markup.replace(/<v(?:\.[^\s>]*)?\s+[^>]*>/g, ""))
     .replace(/\n/g, " ")
     .trim();
 
-function cues(text: string): TranscriptSegment[] {
+const cues = (text: string): TranscriptSegment[] => {
   const segments: TranscriptSegment[] = [];
   for (const block of text.replace(/\r\n?/g, "\n").split(/\n\s*\n/)) {
     const lines = block.split("\n");
@@ -58,7 +58,7 @@ function cues(text: string): TranscriptSegment[] {
     segments.push({ text: words, startMs, endMs });
   }
   return segments;
-}
+};
 
 const JsonTranscript = z.object({
   segments: z.array(
@@ -68,7 +68,7 @@ const JsonTranscript = z.object({
 
 // Hosts often time every word. Words are joined into lines at a sentence's end, a speaker's
 // change or a pause, so a line reads like a caption.
-function wordTimings(text: string): TranscriptSegment[] {
+const wordTimings = (text: string): TranscriptSegment[] => {
   let parsed: z.infer<typeof JsonTranscript>;
   try {
     parsed = JsonTranscript.parse(JSON.parse(text));
@@ -102,11 +102,11 @@ function wordTimings(text: string): TranscriptSegment[] {
   }
   close();
   return segments;
-}
+};
 
 // A paragraph's time is where it starts. It ends there too, rather than where the next one
 // begins, because no end was given (docs/features/transcript-retrieval.md, "Cue times").
-function paragraphTimes(text: string): TranscriptSegment[] {
+const paragraphTimes = (text: string): TranscriptSegment[] => {
   const segments: TranscriptSegment[] = [];
   for (const match of text.matchAll(/<time>([^<]+)<\/time>\s*<p>([\s\S]*?)<\/p>/gi)) {
     const startMs = clockMs(match[1]!);
@@ -116,9 +116,9 @@ function paragraphTimes(text: string): TranscriptSegment[] {
     }
   }
   return segments;
-}
+};
 
-function timedText(text: string): TranscriptSegment[] {
+const timedText = (text: string): TranscriptSegment[] => {
   const segments: TranscriptSegment[] = [];
   let current: { startMs: number; lines: string[] } | null = null;
   const close = () => {
@@ -137,12 +137,12 @@ function timedText(text: string): TranscriptSegment[] {
   }
   close();
   return segments;
-}
+};
 
 // Hosts' cue times sometimes run backwards for a few seconds, where an ad was spliced in. Those
 // cues are dropped rather than the whole file, unless there are enough of them to distrust it
 // (docs/features/podcast-transcripts.md, "Times that run backwards").
-function inOrder(segments: TranscriptSegment[]): TranscriptSegment[] {
+const inOrder = (segments: TranscriptSegment[]): TranscriptSegment[] => {
   const kept: TranscriptSegment[] = [];
   for (const segment of segments) {
     if (segment.endMs >= segment.startMs && segment.startMs >= (kept.at(-1)?.startMs ?? 0)) {
@@ -150,14 +150,14 @@ function inOrder(segments: TranscriptSegment[]): TranscriptSegment[] {
     }
   }
   return segments.length - kept.length > MOST_SHARE_OUT_OF_ORDER * segments.length ? [] : kept;
-}
+};
 
 // An untimed transcript gives nothing to link a point to, so it reads as no transcript here.
-export function parsePodcastTranscript(text: string, format: PodcastTranscriptFormat): TranscriptSegment[] {
+export const parsePodcastTranscript = (text: string, format: PodcastTranscriptFormat): TranscriptSegment[] => {
   return inOrder(segmentsOf(text, format));
-}
+};
 
-function segmentsOf(text: string, format: PodcastTranscriptFormat): TranscriptSegment[] {
+const segmentsOf = (text: string, format: PodcastTranscriptFormat): TranscriptSegment[] => {
   switch (format) {
     case "vtt":
     case "srt":
@@ -169,4 +169,4 @@ function segmentsOf(text: string, format: PodcastTranscriptFormat): TranscriptSe
     case "text":
       return timedText(text);
   }
-}
+};

@@ -24,7 +24,7 @@ const { values, positionals } = parseArgs({
 });
 const [command] = positionals;
 
-async function fetchTranscripts(): Promise<number> {
+const fetchTranscripts = async (): Promise<number> => {
   let failures = 0;
   for (const source of CHAT_SOURCES) {
     const directory = chatSourceDirectory(source.overviewId);
@@ -57,17 +57,17 @@ async function fetchTranscripts(): Promise<number> {
     }
   }
   return failures;
-}
+};
 
-async function printPassages(overviewId: string, windowMs: number): Promise<number> {
+const printPassages = async (overviewId: string, windowMs: number): Promise<number> => {
   const fetched = JSON.parse(await readFile(join(chatSourceDirectory(overviewId), "transcript.json"), "utf-8")) as FetchedTranscript;
   for (const passage of transcriptPassages(fetched.transcript, windowMs)) {
     console.log(passageBlock(passage));
   }
   return 0;
-}
+};
 
-async function checkQuestions(): Promise<number> {
+const checkQuestions = async (): Promise<number> => {
   let problems = 0;
   for (const source of CHAT_SOURCES) {
     const directory = chatSourceDirectory(source.overviewId);
@@ -100,7 +100,7 @@ async function checkQuestions(): Promise<number> {
   }
   console.error(problems === 0 ? "every quote found" : `${problems} problem(s)`);
   return problems;
-}
+};
 
 const usage = "usage: npm run chat-prepare -- fetch | passages --overview <id> [--window <seconds>] | check";
 const outcome =

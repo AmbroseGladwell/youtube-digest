@@ -256,7 +256,7 @@ const offBy = (parts: Part[], ml: number): number =>
 // ¹⁄₁₆ tsp. One size within 5% is enough. Otherwise a
 // size and a spoon: within 5% first, then in the bigger spoon, in whole tablespoons, the closer,
 // the bigger size.
-function measured(value: number, unit: Unit): Part[] {
+const measured = (value: number, unit: Unit): Part[] => {
   const ml = value * unit.size;
   if (unit === UNITS.cup && value < 1 / 4 - 1e-9) {
     return measured(ml / UNITS.tbsp!.size, UNITS.tbsp!);
@@ -301,7 +301,7 @@ function measured(value: number, unit: Unit): Part[] {
     return at !== -1 && a[at]! < b[at]!;
   };
   return [single, ...pairs].reduce((best, parts) => (before(rank(parts), rank(best)) ? parts : best));
-}
+};
 
 // A part in the page's own unit keeps the page's word for it ("teaspoons").
 const partsText = (parts: Part[], pageUnit: Unit | null, pageUnitText: string): string =>
@@ -410,7 +410,7 @@ const target = (unit: Unit, grams: number, units: RecipeUnits): Unit => {
 // Arithmetic on an amount we can read at the start of a line, never a guess: units move
 // only within their kind, a tin's size stays as sold, and anything else stays as written
 // (design 144y–144ab, docs/features/recipe-notes.md).
-export function adjustIngredient(line: string, factor: number, units: RecipeUnits): AdjustedIngredient {
+export const adjustIngredient = (line: string, factor: number, units: RecipeUnits): AdjustedIngredient => {
   if (factor === 1 && units === "asWritten") {
     return { kind: "asWritten", line };
   }
@@ -507,7 +507,7 @@ export function adjustIngredient(line: string, factor: number, units: RecipeUnit
   const spelled = line.slice(lead.length).match(SPELLED_AMOUNT)?.[0];
   const written = `${spelled ?? amount[0]}${named === null ? "" : rest.slice(0, spaced.length + named.length)}`;
   return { kind: "adjusted", pieces, packAsSold: pack !== null || packSized, written, plural: pluralTaken(afterUnit, tail) };
-}
+};
 
 interface Measure {
   text: string;
@@ -553,7 +553,7 @@ const measureAt = (text: string): Measure | null => {
 // the unit US would choose, or a spoon; British fl oz, or ounces past a pound, are converted from
 // the metric half as any metric line is, into cups or pounds (owner, 12 Nov 2026). "60g / 1/4 cup
 // butter" is a weight the author has already put as a volume, so US keeps the cup (owner, 14 Nov 2026).
-function inBothSystems(line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null {
+const inBothSystems = (line: string, lead: string, body: string, factor: number, units: RecipeUnits): AdjustedIngredient | null => {
   const first = measureAt(body);
   const slash = first === null ? null : body.slice(first.text.length).match(/^\s*\/\s*/);
   if (first === null || slash === null) {
@@ -593,7 +593,7 @@ function inBothSystems(line: string, lead: string, body: string, factor: number,
     { text: tail, changed: false },
   ].filter(({ text }) => text !== "");
   return { kind: "adjusted", pieces, packAsSold: false, written: `${first.text}${slash[0]}${second.text}`, plural: null };
-}
+};
 
 const pluralTaken = (before: string, after: string): { from: string; to: string } | null => {
   if (before === after) {
@@ -607,7 +607,7 @@ const pluralTaken = (before: string, after: string): { from: string; to: string 
 
 // "400g can chopped tomatoes" doubled is "2 × 400g cans chopped tomatoes": the can is sold at
 // its size, so what scales is how many of them, written the way "2 × 400g tins" already is.
-function packsOf(line: string, lead: string, size: string, afterSize: string, factor: number): AdjustedIngredient {
+const packsOf = (line: string, lead: string, size: string, afterSize: string, factor: number): AdjustedIngredient => {
   if (ANY_NUMBER.test(withoutNotes(afterSize))) {
     return { kind: "unreadable", line };
   }
@@ -624,26 +624,26 @@ function packsOf(line: string, lead: string, size: string, afterSize: string, fa
     { text: `${word[1]}${factor > 1 ? plural(singular) : singular}${tail}`, changed: false },
   ].filter(({ text }) => text !== "");
   return { kind: "adjusted", pieces, packAsSold: true, written: size, plural: null };
-}
+};
 
 export const adjustedText = (adjusted: AdjustedIngredient): string =>
   adjusted.kind === "adjusted" ? adjusted.pieces.map(({ text }) => text).join("") : adjusted.line;
 
 // The number at the front of a yield, "4" of "4 servings", that servings step from. Null
 // where there isn't one, and the reader gets a multiplier instead (design 144aa).
-export function yieldCount(yieldText: string | null): number | null {
+export const yieldCount = (yieldText: string | null): number | null => {
   const match = yieldText?.match(/^\D{0,20}?(\d+)(?!\s*[-–]\s*\d)/);
   if (!match) {
     return null;
   }
   const count = Number(match[1]);
   return count > 0 ? count : null;
-}
+};
 
 // "8 servings" for "4 servings" doubled; a bare "6" reads "Makes 12".
-export function servingsLabel(yieldText: string, count: number): string {
+export const servingsLabel = (yieldText: string, count: number): string => {
   if (!/[a-z]/i.test(yieldText)) {
     return `Makes ${count}`;
   }
   return yieldText.replace(/\d+/, String(count));
-}
+};

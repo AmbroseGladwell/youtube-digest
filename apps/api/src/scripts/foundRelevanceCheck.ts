@@ -48,14 +48,14 @@ const sqlOf = (pool: pg.Pool): SqlClient => ({
   close: () => pool.end(),
 });
 
-async function assertReadOnly(sql: SqlClient) {
+const assertReadOnly = async (sql: SqlClient) => {
   const [row] = await sql.query<{ transaction_read_only: string }>("show transaction_read_only");
   if (row?.transaction_read_only !== "on") {
     throw new Error("the connection is not read only");
   }
-}
+};
 
-async function overviewsOf(sql: SqlClient, accountId: string) {
+const overviewsOf = async (sql: SqlClient, accountId: string) => {
   const rows = await sql.query<{ id: string; schema_version: number; body: unknown }>(
     "select id, schema_version, body from records where account_id = $1 and kind = 'overview' and not deleted",
     [accountId],
@@ -68,9 +68,9 @@ async function overviewsOf(sql: SqlClient, accountId: string) {
     }
   }
   return byId;
-}
+};
 
-async function questions(email: string, out: string) {
+const questions = async (email: string, out: string) => {
   const sql = sqlOf(readOnlyPool());
   try {
     await assertReadOnly(sql);
@@ -109,9 +109,9 @@ async function questions(email: string, out: string) {
   } finally {
     await sql.close();
   }
-}
+};
 
-async function embed(file: string) {
+const embed = async (file: string) => {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is needed");
@@ -126,9 +126,9 @@ async function embed(file: string) {
   });
   await writeFile(file, JSON.stringify(asked));
   console.log(`${embedded.tokens} tokens embedded`);
-}
+};
 
-async function score(file: string, out: string) {
+const score = async (file: string, out: string) => {
   const asked = JSON.parse(await readFile(file, "utf8")) as Asked[];
   const sql = sqlOf(readOnlyPool());
   try {
@@ -171,7 +171,7 @@ async function score(file: string, out: string) {
   } finally {
     await sql.close();
   }
-}
+};
 
 if (mode === "questions" && rest.length === 2) {
   await questions(rest[0]!, rest[1]!);

@@ -19,7 +19,7 @@ const embedUrl = (videoId: string, { startMs, endMs }: TimeRange) =>
 
 // Design 122m: the step's part of the video in a sheet over the step, which stops at the step's
 // end. The voice waits; closing the sheet goes back to the step.
-export function CookingStepVideoSheet({ open, videoId, step, range, onClose }: CookingStepVideoSheetProps) {
+export const CookingStepVideoSheet = ({ open, videoId, step, range, onClose }: CookingStepVideoSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {
@@ -90,4 +90,4 @@ export function CookingStepVideoSheet({ open, videoId, step, range, onClose }: C
       </div>
     </dialog>
   );
-}
+};

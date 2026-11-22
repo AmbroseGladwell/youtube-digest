@@ -11,7 +11,7 @@ import { savedFromShare } from "./util/savedFromShare.js";
 // A shared copy into the library open now. The share's token goes to the server before the
 // copy is saved, so its push is let in uncounted rather than reserving a slot on the
 // reader's month (docs/architecture/tiers.md, "Reserving on the reader's own key").
-export function useSaveFromShare(): (token: ShareToken, snapshot: SharedOverview, options?: { sample: boolean }) => Promise<Overview> {
+export const useSaveFromShare = (): ((token: ShareToken, snapshot: SharedOverview, options?: { sample: boolean }) => Promise<Overview>) => {
   const { overviewStore, transcriptStore } = useStores();
   const queryClient = useQueryClient();
   const apiUrl = useKnownApiUrl();
@@ -38,12 +38,12 @@ export function useSaveFromShare(): (token: ShareToken, snapshot: SharedOverview
     },
     [overviewStore, transcriptStore, apiUrl, connection.token, queryClient],
   );
-}
+};
 
 // A sample is sorted into the reader's own topics where it fits any, on us, as a note they made
 // would have been. Without topics, or if the pass fails, it's saved unsorted
 // (docs/features/onboarding.md, "Try a sample").
-async function sortedInto(api: GenerationApi, overview: Overview, topics: readonly Topic[]): Promise<Overview["topicIds"]> {
+const sortedInto = async (api: GenerationApi, overview: Overview, topics: readonly Topic[]): Promise<Overview["topicIds"]> => {
   if (topics.length === 0) {
     return [];
   }
@@ -58,4 +58,4 @@ async function sortedInto(api: GenerationApi, overview: Overview, topics: readon
     .then(({ names }) => names)
     .catch((): string[] => []);
   return topics.filter((topic) => names.includes(topic.name)).map((topic) => topic.id);
-}
+};

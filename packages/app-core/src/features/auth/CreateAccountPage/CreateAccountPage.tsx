@@ -9,7 +9,7 @@ import { RequestLinkFlow } from "../components/RequestLinkFlow/RequestLinkFlow.j
 // back to onboarding already under way, whose account screen holds the form. Start is home's,
 // asked for even in a panel whose home leads with signing back in. A shell with no server
 // keeps design 9b's own page (docs/features/onboarding.md, "Every Create account").
-export function CreateAccountPage() {
+export const CreateAccountPage = () => {
   const accountNeeded = useAccountNeeded();
   if (!accountNeeded) {
     return <RequestLinkFlow intent="createAccount" />;
@@ -18,4 +18,4 @@ export function CreateAccountPage() {
     return <Navigate to={Routes.onboarding()} replace />;
   }
   return <Navigate to={Routes.home()} replace state={startAsked} />;
-}
+};

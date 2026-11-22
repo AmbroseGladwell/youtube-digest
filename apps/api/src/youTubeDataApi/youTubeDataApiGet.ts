@@ -15,7 +15,7 @@ export class YouTubeDataApiError extends Error {
 // One Data API call, its answer checked against `schema`; null where YouTube says there's no such
 // thing. The key goes in a header rather than the query, so it is never part of a URL that a log,
 // a proxy or an error message could carry (Google's API key best practices).
-export function youTubeDataApiGet({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }) {
+export const youTubeDataApiGet = ({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }) => {
   return async <T>(path: string, params: Record<string, string>, schema: z.ZodType<T>): Promise<T | null> => {
     const response = await youTubeFetch({
       url: `${DATA_API}/${path}?${new URLSearchParams(params).toString()}`,
@@ -30,6 +30,6 @@ export function youTubeDataApiGet({ apiKey, youTubeFetch }: { apiKey: string; yo
     }
     return schema.parse(JSON.parse(response.body));
   };
-}
+};
 
 export type YouTubeDataApiGet = ReturnType<typeof youTubeDataApiGet>;

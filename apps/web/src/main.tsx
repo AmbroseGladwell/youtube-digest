@@ -15,7 +15,7 @@ import {
 import { adoptLibraryIntoAccount, deleteLocalLibrary, LocalDatabaseBlockedError, openLocalLibrary } from "@overview/store-local";
 import { appBuild } from "./appBuild.js";
 
-async function main() {
+const main = async () => {
   const container = document.getElementById("root");
   if (!container) {
     throw new Error("index.html is missing its #root element");
@@ -70,6 +70,6 @@ async function main() {
       />
     </StrictMode>,
   );
-}
+};
 
 main().catch((error: unknown) => console.error(error));

@@ -42,7 +42,7 @@ if (
 const sources = await Promise.all(CHAT_SOURCES.map(loadChatSource));
 
 const roughTokens = (text: string) => Math.ceil(text.length / 4);
-function roughConversationDollars(source: LoadedChatSource, arm: ChatArm, model: string): number {
+const roughConversationDollars = (source: LoadedChatSource, arm: ChatArm, model: string): number => {
   const price = priceOf({ provider: "openai", model });
   if (price === undefined) {
     return 0;
@@ -60,7 +60,7 @@ function roughConversationDollars(source: LoadedChatSource, arm: ChatArm, model:
     history += user + 150;
   }
   return dollars;
-}
+};
 
 if (values["dry-run"]) {
   let total = 0;

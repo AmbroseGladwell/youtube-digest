@@ -9,6 +9,6 @@ const ServerSwitchableContext = createContext<boolean>(true);
 
 export const ServerSwitchableProvider = ServerSwitchableContext.Provider;
 
-export function useServerSwitchable(): boolean {
+export const useServerSwitchable = (): boolean => {
   return useContext(ServerSwitchableContext);
-}
+};

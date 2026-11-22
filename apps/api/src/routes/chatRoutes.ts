@@ -33,15 +33,15 @@ const OverviewParams = z.object({ overviewId: OverviewId });
 const ProjectParams = z.object({ projectId: ProjectId });
 const LibraryQuestion = ChatQuestionRequest.pick({ conversationId: true, text: true, pins: true, setAside: true });
 
-async function* serverSentEvents(events: AsyncIterable<ChatStreamEvent>): AsyncGenerator<string> {
+const serverSentEvents = async function* (events: AsyncIterable<ChatStreamEvent>): AsyncGenerator<string> {
   for await (const event of events) {
     yield `data: ${JSON.stringify(event)}\n\n`;
   }
-}
+};
 
 // The reader asks, and the answer streams back as server-sent events; the server writes the
 // conversation, and the reader can only delete one (docs/features/chats.md).
-export function chatRoutes(
+export const chatRoutes = (
   app: FastifyInstance,
   {
     records,
@@ -58,7 +58,7 @@ export function chatRoutes(
     sql: SqlClient;
     clock: () => Date;
   },
-): void {
+): void => {
   const streamed = async (reply: FastifyReply, start: () => Promise<AsyncIterable<ChatStreamEvent>>) => {
     try {
       const events = await start();
@@ -145,4 +145,4 @@ export function chatRoutes(
     }
     return deleteChat(id, request, reply);
   });
-}
+};

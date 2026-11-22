@@ -13,7 +13,7 @@ import { forgetAccountOnDevice } from "./forgetAccountOnDevice.js";
 // a sign-out does but with nothing to sync first, drops the account's library and what it
 // kept about it, and goes to Start. The request's failure is the caller's to show; nothing
 // on the device changes until the server has answered (docs/features/account-deletion.md).
-export function useDeleteAccount(): (accountId: string) => Promise<void> {
+export const useDeleteAccount = (): ((accountId: string) => Promise<void>) => {
   const sync = useSync();
   const analytics = useAnalytics();
   const errors = useErrorReporter();
@@ -32,4 +32,4 @@ export function useDeleteAccount(): (accountId: string) => Promise<void> {
     },
     [sync, analytics, errors, deleteLibrary, deleteAccount, navigate],
   );
-}
+};

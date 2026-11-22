@@ -5,9 +5,9 @@ import { useSettingsQuery } from "./queries/settingsQuery.js";
 
 // Whether any key can run the profile pass. Where none can, learning hides itself rather than
 // showing a switch that can't work (design 141l).
-export function useCanLearn(): boolean {
+export const useCanLearn = (): boolean => {
   const { hasChosenKey, ourKeyUsable } = useGenerationReadiness();
   const { connection } = useSyncConnection();
   const onlyMyKey = useSettingsQuery().data?.onlyMyKey ?? false;
   return hasChosenKey || (ourKeyUsable && !onlyMyKey && libraryAccountIdOf(connection) !== null);
-}
+};

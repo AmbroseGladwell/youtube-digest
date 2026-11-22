@@ -53,12 +53,12 @@ const CHAT_REPLY: ReplyShape = { name: "chat_reply", schema: CHAT_REPLY_SCHEMA, 
 
 // A refusal for now (a rate limit, an overloaded provider) is asked again after a wait,
 // quietly, before anything has streamed; anything else, or a third refusal, fails.
-export async function streamChatCompletion(
+export const streamChatCompletion = async (
   { apiKey, http, sleep, retried }: ChatCompletionSetup,
   messages: readonly PromptMessage[],
   cacheKey: string,
   shape: ReplyShape = CHAT_REPLY,
-): Promise<ChatCompletionStream> {
+): Promise<ChatCompletionStream> => {
   const body = JSON.stringify({
     model: chatModel.model,
     max_completion_tokens: shape.maxTokens,
@@ -86,12 +86,12 @@ export async function streamChatCompletion(
     const asked = Number(response.headers.get("retry-after")) * 1000;
     await sleep(Number.isFinite(asked) && asked > 0 ? Math.min(asked, LONGEST_RETRY_WAIT_MS) : wait);
   }
-}
+};
 
-function readStream(body: ReadableStream<Uint8Array>): ChatCompletionStream {
+const readStream = (body: ReadableStream<Uint8Array>): ChatCompletionStream => {
   let usage: TokenUsage | null = null;
   let finishReason: string | null = null;
-  async function* pieces(): AsyncGenerator<string> {
+  const pieces = async function* (): AsyncGenerator<string> {
     const decoder = new TextDecoder();
     let buffered = "";
     for await (const bytes of body as unknown as AsyncIterable<Uint8Array>) {
@@ -120,6 +120,6 @@ function readStream(body: ReadableStream<Uint8Array>): ChatCompletionStream {
         }
       }
     }
-  }
+  };
   return { pieces: pieces(), usage: () => usage, finishReason: () => finishReason };
-}
+};

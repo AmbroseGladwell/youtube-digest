@@ -23,7 +23,7 @@ if (!baseUrl || !token) {
   process.exit(1);
 }
 
-async function pullLibrary(api: SyncApi): Promise<{ overviews: Overview[]; aliases: TagAliases }> {
+const pullLibrary = async (api: SyncApi): Promise<{ overviews: Overview[]; aliases: TagAliases }> => {
   const latest = new Map<string, RecordChange>();
   let since = 0;
   for (;;) {
@@ -56,7 +56,7 @@ async function pullLibrary(api: SyncApi): Promise<{ overviews: Overview[]; alias
     }
   }
   return { overviews: overviews.sort((left, right) => left.savedAt.localeCompare(right.savedAt)), aliases };
-}
+};
 
 const api = createFetchSyncApi({ baseUrl, token });
 const client = generationClientFromEnv();

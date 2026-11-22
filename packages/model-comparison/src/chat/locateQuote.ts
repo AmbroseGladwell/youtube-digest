@@ -6,7 +6,7 @@ const normalised = (text: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-export function locateQuote(segments: readonly TranscriptSegment[], quote: string): number | null {
+export const locateQuote = (segments: readonly TranscriptSegment[], quote: string): number | null => {
   const wanted = normalised(quote);
   if (wanted.length === 0) {
     return null;
@@ -36,4 +36,4 @@ export function locateQuote(segments: readonly TranscriptSegment[], quote: strin
     startMs = start.startMs;
   }
   return startMs;
-}
+};

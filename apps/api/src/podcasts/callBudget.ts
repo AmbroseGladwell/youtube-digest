@@ -20,10 +20,10 @@ export class BudgetSpentError extends Error {
   }
 }
 
-export function callBudget<Rest extends unknown[]>(
+export const callBudget = <Rest extends unknown[]>(
   fetchJson: (url: string, ...rest: Rest) => Promise<unknown>,
   options: CallBudgetOptions,
-): (url: string, ...rest: Rest) => Promise<unknown> {
+): ((url: string, ...rest: Rest) => Promise<unknown>) => {
   const calls: number[] = [];
   const kept = new Map<string, { until: number; value: unknown }>();
 
@@ -59,7 +59,7 @@ export function callBudget<Rest extends unknown[]>(
     kept.set(url, { until: options.now() + options.keepMs(url), value });
     return value;
   };
-}
+};
 
 const HOUR_MS = 60 * 60_000;
 

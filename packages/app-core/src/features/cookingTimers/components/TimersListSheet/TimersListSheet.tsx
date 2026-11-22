@@ -15,7 +15,7 @@ export interface TimersListSheetProps {
 
 // Design 288p: four or more timers, folded at the foot, listed soonest first, each named by its
 // step and recipe and opening its own controls.
-export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps) {
+export const TimersListSheet = ({ open, onOpen, onClose }: TimersListSheetProps) => {
   const { running, now } = useCookingTimers();
   const dialog = useRef<HTMLDialogElement | null>(null);
 
@@ -79,4 +79,4 @@ export function TimersListSheet({ open, onOpen, onClose }: TimersListSheetProps)
       )}
     </dialog>
   );
-}
+};

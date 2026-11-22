@@ -42,11 +42,11 @@ const MORE_PAGES = 5;
 // and length, or, where the upload was retitled, by its description and date. Null when the
 // episode isn't there or can't be told apart from its neighbours, since a confident wrong match
 // is worse than none (docs/features/podcast-on-youtube.md). At most 15 requests.
-export async function findEpisodeOnYouTube(
+export const findEpisodeOnYouTube = async (
   youTubeFetch: YouTubeFetch,
   episode: EpisodeToFind,
   { now = () => new Date(), client = DEFAULT_METADATA_CLIENT }: FindOptions = {},
-): Promise<EpisodeOnYouTube | null> {
+): Promise<EpisodeOnYouTube | null> => {
   const ask = async (endpoint: "search" | "browse", payload: Record<string, unknown>): Promise<unknown> => {
     const response = await youTubeFetch({
       url: `${ENDPOINT}${endpoint}`,
@@ -137,4 +137,4 @@ export async function findEpisodeOnYouTube(
     return null;
   }
   return found(best.upload, showChannel.channel, "description");
-}
+};

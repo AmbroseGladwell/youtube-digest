@@ -47,13 +47,13 @@ const exists = (path: string) =>
     () => false,
   );
 
-async function loadCoverageVideos(): Promise<FetchedTranscript[]> {
+const loadCoverageVideos = async (): Promise<FetchedTranscript[]> => {
   const files = (await readdir(comparisonPaths.coverageTranscripts).catch(() => [])).filter((file) => file.endsWith(".json"));
   const loaded = await Promise.all(
     files.map(async (file) => JSON.parse(await readFile(join(comparisonPaths.coverageTranscripts, file), "utf-8")) as FetchedTranscript),
   );
   return loaded.sort((left, right) => videoLengthMs(left) - videoLengthMs(right));
-}
+};
 
 const videos = await loadCoverageVideos();
 const byVideo = new Map(videos.map((fetched) => [fetched.video.id ?? fetched.video.url, fetched]));
@@ -63,13 +63,13 @@ const pairs = listenPairs(
   [...byVideo.keys()],
 );
 
-async function writeReport(): Promise<void> {
+const writeReport = async (): Promise<void> => {
   const order = pairs.map((pair) => pair.videoId);
   const picked = (await picks.all()).sort((left, right) => order.indexOf(left.videoId) - order.indexOf(right.videoId));
   await mkdir(directory, { recursive: true });
   await writeFile(reportPath, listenMarkdown(picked, name, oldRun, newRun));
   log(`Report written to ${reportPath}`);
-}
+};
 
 if (values["report-only"]) {
   await writeReport();
@@ -80,7 +80,7 @@ type Side = "old" | "new";
 const audioPath = (videoId: string, side: Side) => join(audioDirectory, `${safePathPart(videoId)}-${side}.m4a`);
 const secondsPath = (videoId: string, side: Side) => join(audioDirectory, `${safePathPart(videoId)}-${side}.json`);
 
-async function narrate(videoId: string, side: Side, overview: Overview): Promise<void> {
+const narrate = async (videoId: string, side: Side, overview: Overview): Promise<void> => {
   if (await exists(secondsPath(videoId, side))) {
     return;
   }
@@ -89,7 +89,7 @@ async function narrate(videoId: string, side: Side, overview: Overview): Promise
   await writeFile(audioPath(videoId, side), narration.audio);
   await writeFile(secondsPath(videoId, side), `${JSON.stringify({ durationSeconds: narration.durationSeconds })}\n`);
   log(`rendered ${videoId} ${side}: ${formatTimestamp(narration.durationSeconds * 1000)}`);
-}
+};
 
 const secondsOf = async (videoId: string, side: Side): Promise<number> =>
   (JSON.parse(await readFile(secondsPath(videoId, side), "utf-8")) as { durationSeconds: number }).durationSeconds;

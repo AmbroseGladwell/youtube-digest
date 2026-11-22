@@ -4,7 +4,7 @@ import { episodeNoTranscriptTestIds } from "./EpisodeNoTranscriptTestIds.js";
 // Design 106j: beside the episode's tab, 106h's words, shorter, in place of Create overview.
 // There is no link to try instead, since the tab is the link. Where our server can transcribe,
 // the reader is asked instead (305c-2).
-export function EpisodeNoTranscript() {
+export const EpisodeNoTranscript = () => {
   return (
     <div className={styles.card} role="alert" data-testid={episodeNoTranscriptTestIds.root}>
       <p className={styles.heading}>No transcript for this one yet</p>
@@ -13,4 +13,4 @@ export function EpisodeNoTranscript() {
       </p>
     </div>
   );
-}
+};

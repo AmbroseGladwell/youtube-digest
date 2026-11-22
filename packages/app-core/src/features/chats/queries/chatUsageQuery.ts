@@ -8,7 +8,7 @@ import { chatKeys } from "../chatKeys.js";
 
 // The account's questions this month against its plan's allowance, as the server counts
 // them (docs/architecture/tiers.md, "Questions about an overview").
-export function useChatUsageQuery() {
+export const useChatUsageQuery = () => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const accountId = libraryAccountIdOf(connection);
@@ -19,4 +19,4 @@ export function useChatUsageQuery() {
     staleTime: 60 * 1000,
     retry: false,
   });
-}
+};

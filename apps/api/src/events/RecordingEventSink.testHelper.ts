@@ -6,7 +6,7 @@ export interface RecordingEventSink extends EventSink {
   failing: boolean;
 }
 
-export function makeRecordingEventSink(): RecordingEventSink {
+export const makeRecordingEventSink = (): RecordingEventSink => {
   const sink: RecordingEventSink = {
     captured: [],
     links: [],
@@ -25,4 +25,4 @@ export function makeRecordingEventSink(): RecordingEventSink {
     },
   };
   return sink;
-}
+};

@@ -10,6 +10,6 @@ const AccentMirrorContext = createContext<AccentMirror | null>(null);
 
 export const AccentMirrorProvider = AccentMirrorContext.Provider;
 
-export function useAccentMirror(): AccentMirror | null {
+export const useAccentMirror = (): AccentMirror | null => {
   return useContext(AccentMirrorContext);
-}
+};

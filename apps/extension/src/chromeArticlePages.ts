@@ -18,7 +18,7 @@ const notify = () => {
   }
 };
 
-async function refresh(): Promise<void> {
+const refresh = async (): Promise<void> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || tab?.pendingUrl;
   const next =
@@ -30,9 +30,9 @@ async function refresh(): Promise<void> {
   }
   page = next;
   notify();
-}
+};
 
-async function pullMenuRequest(): Promise<void> {
+const pullMenuRequest = async (): Promise<void> => {
   try {
     const reply = (await chrome.runtime.sendMessage({ type: BridgeMessage.TAKE_PAGE_REQUEST })) as { page: ActivePage | null } | undefined;
     if (reply?.page == null) {
@@ -43,7 +43,7 @@ async function pullMenuRequest(): Promise<void> {
   } catch {
     // No worker to answer, so nothing is waiting.
   }
-}
+};
 
 const onActivated = () => void refresh();
 const onUpdated = (_tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
@@ -57,7 +57,7 @@ const onMessage = (message: unknown) => {
   }
 };
 
-function reloadTab(tabId: number): Promise<void> {
+const reloadTab = (tabId: number): Promise<void> => {
   return new Promise((resolve) => {
     const finish = () => {
       clearTimeout(timeout);
@@ -73,7 +73,7 @@ function reloadTab(tabId: number): Promise<void> {
     chrome.tabs.onUpdated.addListener(onReloaded);
     void chrome.tabs.reload(tabId).catch(finish);
   });
-}
+};
 
 export const chromeArticlePages: ArticlePages = {
   subscribe: (onChange) => {

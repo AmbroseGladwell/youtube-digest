@@ -19,7 +19,7 @@ export interface OnboardingReadFailureProps {
 // Designs 154l–154n, pattern 19 at the confirm step: a short bar, what happened, the link that
 // was pasted, and a field for another. The free overview is what's untouched, so the foot says
 // that rather than that nothing counted.
-export function OnboardingReadFailure({ copy, link, onTryAgain, onTranscribe, onAnotherLink }: OnboardingReadFailureProps) {
+export const OnboardingReadFailure = ({ copy, link, onTryAgain, onTranscribe, onAnotherLink }: OnboardingReadFailureProps) => {
   const [another, setAnother] = useState("");
   const [refused, setRefused] = useState(false);
   const fieldId = useId();
@@ -102,4 +102,4 @@ export function OnboardingReadFailure({ copy, link, onTryAgain, onTranscribe, on
       </div>
     </div>
   );
-}
+};

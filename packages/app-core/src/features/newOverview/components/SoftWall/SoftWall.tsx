@@ -23,7 +23,7 @@ export interface SoftWallProps {
 // now. It's soft: everything they've saved keeps working, the link stays where it was, and the
 // ways on are Plus first, then every plan and, for a reader with no key, the key Free already
 // includes. Waiting for the reset with the link kept comes with OV-358.
-export function SoftWall({ link, resetsOn, offerKey, onSeePlans, onFollowed }: SoftWallProps) {
+export const SoftWall = ({ link, resetsOn, offerKey, onSeePlans, onFollowed }: SoftWallProps) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   useEffect(() => heading.current?.focus(), []);
   return (
@@ -69,4 +69,4 @@ export function SoftWall({ link, resetsOn, offerKey, onSeePlans, onFollowed }: S
       </p>
     </section>
   );
-}
+};

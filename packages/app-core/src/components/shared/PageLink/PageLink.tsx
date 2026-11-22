@@ -8,7 +8,7 @@ export type PageLinkProps = Omit<ComponentProps<typeof Link>, "viewTransition">;
 // in one place rather than at each call site (docs/conventions/frontend-architecture-guide.md
 // 2.2, docs/features/page-transitions.md). A link that stays on the page — a tag that filters
 // the library in place, an anchor down the note — keeps react-router's own Link.
-export function PageLink(props: PageLinkProps) {
+export const PageLink = (props: PageLinkProps) => {
   const animate = useShouldAnimateNavigation();
   return <Link {...props} viewTransition={animate} />;
-}
+};

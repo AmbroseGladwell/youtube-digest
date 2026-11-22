@@ -7,7 +7,7 @@ import { hasStoreKey, keyedZipName, storeZipName } from "./packExtension.mjs";
 
 const SHORT_SHA_LENGTH = 7;
 
-function readJsonFromZip(zipPath, name) {
+const readJsonFromZip = (zipPath, name) => {
   let text;
   try {
     text = execFileSync("unzip", ["-p", zipPath, name], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
@@ -15,9 +15,9 @@ function readJsonFromZip(zipPath, name) {
     throw new Error(`${path.basename(zipPath)} holds no ${name}`);
   }
   return JSON.parse(text);
-}
+};
 
-function keyProblem(manifest, key) {
+const keyProblem = (manifest, key) => {
   if (key === null) {
     return manifest.key === undefined ? null : "its manifest still carries the key";
   }
@@ -25,12 +25,12 @@ function keyProblem(manifest, key) {
     return "its manifest carries no key, so it would load under a directory-derived id";
   }
   return manifest.key === key ? null : "its manifest carries a key that is not the store's";
-}
+};
 
 // The zip about to be attached to a release is the one built from the commit being
 // deployed, at the version being tagged, or the release does not happen
 // (docs/architecture/deploy.md, "Tags and releases").
-export function verifyRelease({ zipPath, version, commit, key = null }) {
+export const verifyRelease = ({ zipPath, version, commit, key = null }) => {
   const shortCommit = commit.slice(0, SHORT_SHA_LENGTH);
   const manifest = readJsonFromZip(zipPath, "manifest.json");
   const build = readJsonFromZip(zipPath, "build.json");
@@ -55,7 +55,7 @@ export function verifyRelease({ zipPath, version, commit, key = null }) {
     throw new Error(`${path.basename(zipPath)} is not the release: ${problems.join("; ")}`);
   }
   return { version, commit: shortCommit };
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

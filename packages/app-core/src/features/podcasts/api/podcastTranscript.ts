@@ -59,11 +59,11 @@ const isUnconfirmed = (error: unknown) => isSyncRequestError(error) && error.det
 // connection and checked by our server before it is kept for everyone. Without an extension, our
 // server searches itself (docs/features/podcast-on-youtube.md, "The reader's part"). Where no rung
 // answers and our server would transcribe the episode for this reader, it says so (design 305c-2).
-export async function podcastTranscript(
+export const podcastTranscript = async (
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,
   youTubeFetch: YouTubeFetch | null,
-): Promise<PodcastTranscript> {
+): Promise<PodcastTranscript> => {
   const ask = { feedUrl: episode.feedUrl, guid: episode.guid };
   try {
     return { transcript: await api.transcript(ask), keptForEveryone: true };
@@ -83,14 +83,14 @@ export async function podcastTranscript(
     }
     throw error;
   }
-}
+};
 
-async function fromYouTube(
+const fromYouTube = async (
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,
   youTubeFetch: YouTubeFetch | null,
   ask: { feedUrl: string; guid: string },
-): Promise<PodcastTranscript> {
+): Promise<PodcastTranscript> => {
   let videoId: string | null = null;
   if (youTubeFetch !== null) {
     try {
@@ -138,4 +138,4 @@ async function fromYouTube(
     },
     keptForEveryone: false,
   };
-}
+};

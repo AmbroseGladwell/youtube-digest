@@ -13,7 +13,7 @@ export interface DubiousStepFlagProps {
 
 // Design 250i–250k: flagged in text under the step, never hidden or greyed out, opening the
 // reason in place. The byline's Dubious claim flag is the same button.
-export function DubiousStepFlag({ reason, saidAtMs }: DubiousStepFlagProps) {
+export const DubiousStepFlag = ({ reason, saidAtMs }: DubiousStepFlagProps) => {
   const [open, setOpen] = useState(false);
   const reasonId = useId();
   const analytics = useOverviewPageAnalytics();
@@ -52,4 +52,4 @@ export function DubiousStepFlag({ reason, saidAtMs }: DubiousStepFlagProps) {
       )}
     </span>
   );
-}
+};

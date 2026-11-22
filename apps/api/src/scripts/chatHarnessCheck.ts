@@ -128,7 +128,7 @@ const OWNED = /\byour (own )?(library|saved|overviews)\b|\byou(['’]ve| have)? 
 
 // x1/x2: no offer of what chat can't take. x3: with similar overviews, names one as the reader's own;
 // with none, doesn't claim any. x4: points to Settings › Personalisation.
-function productRight(question: Question, answer: string, similarTitles: readonly string[]): boolean {
+const productRight = (question: Question, answer: string, similarTitles: readonly string[]): boolean => {
   if (question.id === "x1" || question.id === "x2") {
     return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
   }
@@ -137,7 +137,7 @@ function productRight(question: Question, answer: string, similarTitles: readonl
     return similarTitles.length === 0 ? !named : named && OWNED.test(answer);
   }
   return answer.includes("Settings") && answer.includes("Personalisation");
-}
+};
 
 const TOLERANCE_MS = 10_000;
 const normalised = (text: string) =>
@@ -146,7 +146,7 @@ const normalised = (text: string) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-function locateQuote(segments: readonly TranscriptSegment[], quote: string): number | null {
+const locateQuote = (segments: readonly TranscriptSegment[], quote: string): number | null => {
   let joined = "";
   const starts: Array<{ offset: number; startMs: number }> = [];
   for (const segment of segments) {
@@ -165,9 +165,9 @@ function locateQuote(segments: readonly TranscriptSegment[], quote: string): num
     return null;
   }
   return starts.filter((start) => start.offset <= found).at(-1)?.startMs ?? null;
-}
+};
 
-async function loadSource(directory: string): Promise<Source> {
+const loadSource = async (directory: string): Promise<Source> => {
   const read = (file: string) => readFile(join(directory, file), "utf-8").catch(() => null);
   const transcriptText = await read("transcript.json");
   const markdownText = (await read("overview.md")) ?? "";
@@ -196,12 +196,12 @@ async function loadSource(directory: string): Promise<Source> {
       ...(overviewQuestions === null ? [] : (JSON.parse(overviewQuestions) as { questions: Question[] }).questions),
     ],
   };
-}
+};
 
 // Two of the library's longest, end to end: the library has nothing over 89 minutes. Questions
 // on both, and code-placed fillers through the whole, to fill a 30-question conversation. The
 // first's overview goes in the prompt, so the second's questions about its overview are left out.
-function longSource(first: Source, whole: Source): Source {
+const longSource = (first: Source, whole: Source): Source => {
   const second = { ...whole, questions: whole.questions.filter((question) => question.kind !== "overviewPart") };
   const offset = (first.segments.at(-1)?.endMs ?? 0) + 1_000;
   const segments = [
@@ -222,12 +222,12 @@ function longSource(first: Source, whole: Source): Source {
     overview: first.overview,
     questions,
   };
-}
+};
 
 // Every number in a text, as written: an answer's numbers should all be the overview's.
 const numbersOf = (text: string): string[] => [...text.matchAll(/\d+(?:[.,/]\d+)?/g)].map(([number]) => number);
 
-async function main() {
+const main = async () => {
   const [dataDirectory, outFile, mode, limit] = process.argv.slice(2);
   const longOnly = mode === "long-only";
   const profile = mode === "profile";
@@ -470,6 +470,6 @@ async function main() {
 
   await writeFile(outFile, JSON.stringify({ ranOn: new Date().toISOString().slice(0, 10), turns }, null, 2));
   await testApp.close();
-}
+};
 
 await main();

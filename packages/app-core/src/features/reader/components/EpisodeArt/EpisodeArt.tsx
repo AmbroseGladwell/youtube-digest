@@ -12,7 +12,7 @@ export interface EpisodeArtProps {
 // Design 106l and 106n: an episode's square art leads the head where a video's thumbnail
 // does, and opens where the reader came from, as ⋯ does. With no art in the feed, or art that
 // fails, the show's name on a stone tile.
-export function EpisodeArt({ source, className }: EpisodeArtProps) {
+export const EpisodeArt = ({ source, className }: EpisodeArtProps) => {
   const [failed, setFailed] = useState(false);
   const label = openPodcastLabel(source.sharedFrom);
   return (
@@ -37,4 +37,4 @@ export function EpisodeArt({ source, className }: EpisodeArtProps) {
       </span>
     </a>
   );
-}
+};

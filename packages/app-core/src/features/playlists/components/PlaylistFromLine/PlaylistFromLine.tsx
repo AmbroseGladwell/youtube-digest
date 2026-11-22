@@ -12,11 +12,11 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 // provenance rather than verdict. The name opens the playlist on YouTube and Manage opens
 // Settings while it is followed. Unfollowed, Manage goes; gone from YouTube, the name is
 // plain text. Stored on the overview, so it survives unfollowing and syncs.
-export function PlaylistFromLine({ overview }: { overview: Overview }) {
+export const PlaylistFromLine = ({ overview }: { overview: Overview }) => {
   return overview.fromPlaylist === null ? null : <FromLine overview={overview} origin={overview.fromPlaylist} />;
-}
+};
 
-function FromLine({ overview, origin }: { overview: Overview; origin: PlaylistOrigin }) {
+const FromLine = ({ overview, origin }: { overview: Overview; origin: PlaylistOrigin }) => {
   const analytics = useAnalytics();
   const followed = useFollowedPlaylistsQuery();
 
@@ -66,4 +66,4 @@ function FromLine({ overview, origin }: { overview: Overview; origin: PlaylistOr
       )}
     </p>
   );
-}
+};

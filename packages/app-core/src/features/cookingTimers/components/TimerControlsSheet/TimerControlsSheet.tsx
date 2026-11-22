@@ -25,7 +25,7 @@ type WayBack = "step" | "start" | "gone" | "unknown";
 // the recipe named, and a way back to the action it came from. The app looks the recipe up, since
 // it may have changed or gone since, and looks afresh each time; a shared page's one copy can do
 // neither.
-function useWayBack(timer: CookingTimer | null): WayBack {
+const useWayBack = (timer: CookingTimer | null): WayBack => {
   const { scope } = useCookingTimers();
   const { overviewStore } = useStores();
   const query = useQuery({
@@ -47,9 +47,9 @@ function useWayBack(timer: CookingTimer | null): WayBack {
     return "gone";
   }
   return recipeActions(recipe.steps)[timer.source.action]?.text === timer.actionText ? "step" : "start";
-}
+};
 
-export function TimerControlsSheet({ timer, onClose, onLeaving }: TimerControlsSheetProps) {
+export const TimerControlsSheet = ({ timer, onClose, onLeaving }: TimerControlsSheetProps) => {
   const timers = useCookingTimers();
   const navigate = useNavigate();
   const wayBack = useWayBack(timer);
@@ -98,4 +98,4 @@ export function TimerControlsSheet({ timer, onClose, onLeaving }: TimerControlsS
       wayBack={back}
     />
   );
-}
+};

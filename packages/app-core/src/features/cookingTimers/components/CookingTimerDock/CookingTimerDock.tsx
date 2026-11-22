@@ -39,7 +39,7 @@ const soundLine = (panel: boolean, awake: boolean): string | null => {
 // player, the same width; with no player they take its place. One timer is a full tile named by
 // its recipe, two or three sit side by side, four or more fold into one. A timer that runs out
 // rings here, in the tiles' place. The whole dock tells the page how much of the foot it covers.
-export function CookingTimerDock({ children }: CookingTimerDockProps) {
+export const CookingTimerDock = ({ children }: CookingTimerDockProps) => {
   const timers = useCookingTimers();
   const panel = useIsPanel();
   const phone = useIsPhone();
@@ -153,4 +153,4 @@ export function CookingTimerDock({ children }: CookingTimerDockProps) {
       {shownTimer !== null && <TimerControlsSheet timer={shownTimer} onClose={() => setShown(null)} />}
     </div>
   );
-}
+};

@@ -7,11 +7,11 @@ import { OverviewUsageRepository } from "./OverviewUsageRepository.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-async function usageApp() {
+const usageApp = async () => {
   const testApp = await createTestApp();
   const { accountId } = await makeSession(testApp.sql, { now: testApp.clock.now });
   return { testApp, accountId, usage: new OverviewUsageRepository(testApp.sql) };
-}
+};
 
 test("a reserved slot counts, and a released one is given back", async () => {
   const { testApp, accountId, usage } = await usageApp();

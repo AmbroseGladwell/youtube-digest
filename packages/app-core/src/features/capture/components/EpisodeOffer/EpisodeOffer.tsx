@@ -19,7 +19,7 @@ export interface EpisodeOfferProps {
 
 // Design 106k: an episode tab offered as 205a offers an article, in text only. Our server reads
 // the episode from the address, so the card fills in after a moment rather than straight away.
-export function EpisodeOffer({ offer, on }: EpisodeOfferProps) {
+export const EpisodeOffer = ({ offer, on }: EpisodeOfferProps) => {
   if (offer.status === "reading") {
     return (
       <section className={styles.card} aria-label="On this tab" data-testid={episodeOfferTestIds.card}>
@@ -77,4 +77,4 @@ export function EpisodeOffer({ offer, on }: EpisodeOfferProps) {
       </p>
     </section>
   );
-}
+};

@@ -78,7 +78,7 @@ export interface AnalyticsEvent {
   at: string;
 }
 
-export function parseAnalyticsEvent(sent: SentAnalyticsEvent): AnalyticsEvent | null {
+export const parseAnalyticsEvent = (sent: SentAnalyticsEvent): AnalyticsEvent | null => {
   const definition = analyticsEventDefinitions.get(sent.name);
   if (definition === undefined) {
     return null;
@@ -89,8 +89,8 @@ export function parseAnalyticsEvent(sent: SentAnalyticsEvent): AnalyticsEvent | 
   }
   const present = Object.entries(props.data).filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined);
   return { name: sent.name as AnalyticsEventName, props: Object.fromEntries(present), at: sent.at };
-}
+};
 
-export function parseSharedPageEvent(sent: SentAnalyticsEvent): AnalyticsEvent | null {
+export const parseSharedPageEvent = (sent: SentAnalyticsEvent): AnalyticsEvent | null => {
   return sent.name.startsWith(SHARED_PAGE_EVENT_PREFIX) ? parseAnalyticsEvent(sent) : null;
-}
+};

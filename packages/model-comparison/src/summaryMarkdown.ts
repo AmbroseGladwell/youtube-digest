@@ -4,7 +4,7 @@ const dollars = (value: number | null) => (value === null ? "unpriced" : `$${val
 const seconds = (ms: number | null) => (ms === null ? "–" : `${(ms / 1000).toFixed(1)}s`);
 const percent = (part: number, whole: number) => (whole === 0 ? "–" : `${Math.round((part / whole) * 100)}%`);
 
-export function summaryMarkdown(summaries: readonly ModelSummary[], runName: string): string {
+export const summaryMarkdown = (summaries: readonly ModelSummary[], runName: string): string => {
   const checkNames = [...new Set(summaries.flatMap((summary) => Object.keys(summary.checks)))];
   const lines = [
     `# Model comparison: ${runName}`,
@@ -42,4 +42,4 @@ export function summaryMarkdown(summaries: readonly ModelSummary[], runName: str
     "",
   ];
   return lines.join("\n");
-}
+};

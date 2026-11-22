@@ -11,7 +11,7 @@ export interface WriteFloorWallProps {
 // tree, so the shell and any generation it owns keep running, and the update action is
 // held back while a run is in flight: it neither refunds nor aborts, it only discards
 // (docs/features/record-migrations.md, "Below the write floor is a wall").
-export function WriteFloorWall({ generating }: WriteFloorWallProps) {
+export const WriteFloorWall = ({ generating }: WriteFloorWallProps) => {
   const surface = useSurface();
   const appUpdate = useAppUpdate();
   const action =
@@ -35,4 +35,4 @@ export function WriteFloorWall({ generating }: WriteFloorWallProps) {
       action={generating ? undefined : action}
     />
   );
-}
+};

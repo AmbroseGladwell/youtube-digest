@@ -20,7 +20,7 @@ type Open = "name" | "email" | null;
 // Designs 14a–14e: the "Signed in as" tile as two rows, Name and Email, each with its own
 // Change. A row opens in place; nothing else on the section moves
 // (docs/features/account-changes.md).
-export function AccountTile({ email, firstName, onEditingChange }: AccountTileProps) {
+export const AccountTile = ({ email, firstName, onEditingChange }: AccountTileProps) => {
   const analytics = useAnalytics();
   const { connection } = useSyncConnection();
   const updateAccount = useUpdateAccountMutation();
@@ -156,4 +156,4 @@ export function AccountTile({ email, firstName, onEditingChange }: AccountTilePr
       )}
     </section>
   );
-}
+};

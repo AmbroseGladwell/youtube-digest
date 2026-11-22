@@ -55,7 +55,7 @@ export interface AppProps {
   accentMirror?: AccentMirror | null;
 }
 
-export function App({
+export const App = ({
   library,
   openLibrary,
   deleteLibrary,
@@ -74,7 +74,7 @@ export function App({
   build = null,
   errorDestinationMirror = null,
   accentMirror = null,
-}: AppProps) {
+}: AppProps) => {
   return (
     <YouTubeFetchProvider value={youTubeFetch}>
       <ProviderPermissionProvider value={providerPermissions}>
@@ -128,4 +128,4 @@ export function App({
       </ProviderPermissionProvider>
     </YouTubeFetchProvider>
   );
-}
+};

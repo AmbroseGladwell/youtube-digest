@@ -45,7 +45,7 @@ export const ingredientsSource = (said: readonly number[], total: number): strin
       ? "From the video’s description."
       : `From the video’s description, with ${said.length} said in the video.`;
 
-function Line({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVideo: boolean; saidAside: boolean }) {
+const Line = ({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVideo: boolean; saidAside: boolean }) => {
   if (line.kind !== "adjusted") {
     return (
       <>
@@ -70,12 +70,12 @@ function Line({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVi
       {saidAside && <span className={styles.aside}>· said in the video</span>}
     </>
   );
-}
+};
 
 // Designs 144y–144ab: the ingredients on their own raised card, with servings and units at
 // its top. As written is where every note opens; changed amounts sit on the stone tint, and
 // a line we can't read stays exactly as the page wrote it and says so.
-export function RecipeIngredients({
+export const RecipeIngredients = ({
   adjustment,
   scale,
   units,
@@ -86,7 +86,7 @@ export function RecipeIngredients({
   onScaleChange,
   onUnitsChange,
   onReset,
-}: RecipeIngredientsProps) {
+}: RecipeIngredientsProps) => {
   const headingId = useId();
   const cited = useCitedOverviewPart();
   const groupName = useId();
@@ -211,4 +211,4 @@ export function RecipeIngredients({
       )}
     </section>
   );
-}
+};

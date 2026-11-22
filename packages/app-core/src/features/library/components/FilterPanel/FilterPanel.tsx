@@ -33,7 +33,7 @@ const moreSummary = (filters: LibraryFilters): string => {
   ].join(" · ");
 };
 
-export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) {
+export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onManageTags, projects = null }: FilterPanelProps) => {
   const [allTopicsShown, setAllTopicsShown] = useState(false);
   // A tag arriving from a note opens the group the tag is in (84g).
   const [moreShown, setMoreShown] = useState(filters.tag !== null);
@@ -247,9 +247,9 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
       </div>
     </div>
   );
-}
+};
 
-function Toggle({
+const Toggle = ({
   active,
   count,
   onClick,
@@ -261,7 +261,7 @@ function Toggle({
   onClick: () => void;
   testId: string;
   children: string;
-}) {
+}) => {
   return (
     <button type="button" className={`${styles.option} ${styles.toggle}`} onClick={onClick} aria-pressed={active} data-testid={testId}>
       <span className={styles.optionLabel}>
@@ -273,9 +273,9 @@ function Toggle({
       <span className={styles.count}>{count}</span>
     </button>
   );
-}
+};
 
-function ListOption({
+const ListOption = ({
   active,
   count,
   accent,
@@ -289,7 +289,7 @@ function ListOption({
   onClick: () => void;
   testId: string;
   children: string;
-}) {
+}) => {
   return (
     <button
       type="button"
@@ -309,4 +309,4 @@ function ListOption({
       <span className={styles.count}>{count}</span>
     </button>
   );
-}
+};

@@ -16,7 +16,7 @@ export interface AboutYouSentenceProps {
 
 // Design 141a: a whole sentence at every step. An empty section holds a phrase that reads
 // naturally, and a hidden status line repeats the sentence as it changes.
-export function AboutYouSentence({ aboutYou, size, openSection, settling, rising, sectionRef, onOpen }: AboutYouSentenceProps) {
+export const AboutYouSentence = ({ aboutYou, size, openSection, settling, rising, sectionRef, onOpen }: AboutYouSentenceProps) => {
   const said = aboutYouSentence(aboutYou);
   return (
     <>
@@ -50,4 +50,4 @@ export function AboutYouSentence({ aboutYou, size, openSection, settling, rising
       </p>
     </>
   );
-}
+};

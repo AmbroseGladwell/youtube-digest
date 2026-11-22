@@ -33,7 +33,7 @@ export const CONNECTOR_ICON_PATH = "/connector-icon.png";
 // Each assistant's way in, as the owner reported its menus on 14 November 2026 (design 301b–301e).
 // They change without notice, so they live here together, beside OV-266's FOLLOW_UP_ASSISTANTS.
 // ChatGPT's free plan can add a custom connector (owner, 15 November 2026), so it carries no limit.
-export function connectorSteps(assistant: ChosenAssistant, address: string): ConnectorSetupSteps {
+export const connectorSteps = (assistant: ChosenAssistant, address: string): ConnectorSetupSteps => {
   switch (assistant) {
     case "claude":
       return {
@@ -97,4 +97,4 @@ export function connectorSteps(assistant: ChosenAssistant, address: string): Con
         steps: [],
       };
   }
-}
+};

@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // The migration files below one version, in a directory of their own, so a test can seed
 // the shape a migration starts from and then let it run.
-export async function migrationsBefore(version: number): Promise<URL> {
+export const migrationsBefore = async (version: number): Promise<URL> => {
   const source = fileURLToPath(new URL("../../migrations/", import.meta.url));
   const dir = await mkdtemp(join(tmpdir(), "migrations-"));
   for (const file of await readdir(source)) {
@@ -14,4 +14,4 @@ export async function migrationsBefore(version: number): Promise<URL> {
     }
   }
   return pathToFileURL(`${dir}/`);
-}
+};

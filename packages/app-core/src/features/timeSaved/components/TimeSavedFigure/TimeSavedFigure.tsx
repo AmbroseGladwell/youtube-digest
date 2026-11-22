@@ -20,7 +20,7 @@ interface Roll {
 
 // The total as a mechanical counter: a change rolls minutes first, carrying into tens and
 // hours. Decorative; whatever holds it carries the figure as its accessible name.
-export function TimeSavedFigure({ minutes, rollFrom, rollDelayMs = 0 }: TimeSavedFigureProps) {
+export const TimeSavedFigure = ({ minutes, rollFrom, rollDelayMs = 0 }: TimeSavedFigureProps) => {
   const settled = useRef(rollFrom ?? minutes);
   const [shown, setShown] = useState(settled.current);
   const [roll, setRoll] = useState<Roll | null>(null);
@@ -84,4 +84,4 @@ export function TimeSavedFigure({ minutes, rollFrom, rollDelayMs = 0 }: TimeSave
       ))}
     </span>
   );
-}
+};

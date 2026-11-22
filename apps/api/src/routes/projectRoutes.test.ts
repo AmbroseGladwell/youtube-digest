@@ -13,19 +13,19 @@ const storedProject = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-async function withProject(account: TestAccount) {
+const withProject = async (account: TestAccount) => {
   const project = storedProject();
   const response = await account.inject({ method: "POST", url: "/api/projects", body: project });
   assert.equal(response.statusCode, 201);
   return project;
-}
+};
 
-async function withOverview(account: TestAccount) {
+const withOverview = async (account: TestAccount) => {
   const overview = storedOverview();
   const response = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
   assert.equal(response.statusCode, 201);
   return overview;
-}
+};
 
 const member = (account: TestAccount, projectId: string, overviewId: string, body: Record<string, unknown>) =>
   account.inject({ method: "PUT", url: `/api/projects/${projectId}/members/${overviewId}`, body: { updatedAt: UPDATED_AT, ...body } });

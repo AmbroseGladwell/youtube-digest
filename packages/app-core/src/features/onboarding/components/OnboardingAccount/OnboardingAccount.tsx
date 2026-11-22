@@ -15,11 +15,11 @@ export interface OnboardingAccountProps {
 // Design 327l: the account comes before anything is written, so the screen shows what they've put
 // in and what they'll get beside the way in. Email only for now (docs/features/onboarding.md,
 // "The account").
-export function OnboardingAccount({ form, saved, sideBeside }: OnboardingAccountProps) {
+export const OnboardingAccount = ({ form, saved, sideBeside }: OnboardingAccountProps) => {
   return (
     <div className={styles.root} data-testid={onboardingAccountTestIds.root}>
       <div className={styles.form}>{form}</div>
       {!sideBeside && <OnboardingAccountSide saved={saved} />}
     </div>
   );
-}
+};

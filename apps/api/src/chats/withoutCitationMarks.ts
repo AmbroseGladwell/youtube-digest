@@ -16,7 +16,7 @@ const LIBRARY_MARK = markOf("SO");
 // While the reply arrives, a mark may be cut in half, and the space before it may belong to it.
 const CUT_MARK = /\s*[[(][\w.,;–—\- ]{0,40}$|\s+$/;
 
-export function withoutCitationMarks(text: string, { arriving = false, library = false } = {}): string {
+export const withoutCitationMarks = (text: string, { arriving = false, library = false } = {}): string => {
   const whole = text.replace(library ? LIBRARY_MARK : MARK, "").replace(/ {2,}/g, " ");
   return arriving ? whole.replace(CUT_MARK, "") : whole.trim();
-}
+};

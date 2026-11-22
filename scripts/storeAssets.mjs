@@ -18,7 +18,7 @@ const ACCENT = "#b03c12";
 // the taller side and centring what is left (docs/architecture/store-listing.md).
 export const markBox = { x: 7, y: 5.5, width: 18, height: 22 };
 
-export function artworkFit({ canvas, artwork, box = markBox }) {
+export const artworkFit = ({ canvas, artwork, box = markBox }) => {
   const scale = artwork / Math.max(box.width, box.height);
   const width = box.width * scale;
   const height = box.height * scale;
@@ -29,20 +29,20 @@ export function artworkFit({ canvas, artwork, box = markBox }) {
     top: (canvas - height) / 2,
     viewBox: `${box.x} ${box.y} ${box.width} ${box.height}`,
   };
-}
+};
 
 const markInner = (svg) => svg.replace(/^[\s\S]*?<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
 
-function iconHtml(svg) {
+const iconHtml = (svg) => {
   const fit = artworkFit({ canvas: 128, artwork: 96 });
   return `<style>html,body{margin:0;width:128px;height:128px;background:transparent}</style>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${fit.viewBox}"
      style="position:absolute;left:${fit.left}px;top:${fit.top}px;width:${fit.width}px;height:${fit.height}px">
   ${markInner(svg)}
 </svg>`;
-}
+};
 
-function tileHtml(svg) {
+const tileHtml = (svg) => {
   return `<link rel="stylesheet" href="${FONTS}">
 <style>
   html,body{margin:0;width:440px;height:280px;overflow:hidden}
@@ -65,7 +65,7 @@ function tileHtml(svg) {
   <h1>All the info,<br><span>less wait.</span></h1>
   <p>Bookmark videos, articles and recipes. Read the overview, hear it, or hand it to your AI.</p>
 </div>`;
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { chromium } = await import("playwright");

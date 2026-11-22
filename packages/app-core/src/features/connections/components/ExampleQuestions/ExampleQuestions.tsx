@@ -6,7 +6,7 @@ export const EXAMPLE_QUESTIONS = [
   "“Which video explained index funds, and what was its verdict?”",
 ];
 
-export function ExampleQuestions() {
+export const ExampleQuestions = () => {
   return (
     <ul className={styles.root} aria-label="Example questions">
       {EXAMPLE_QUESTIONS.map((question) => (
@@ -16,4 +16,4 @@ export function ExampleQuestions() {
       ))}
     </ul>
   );
-}
+};

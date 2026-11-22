@@ -36,7 +36,7 @@ interface Script {
   players?: Record<string, { description: string; published: string }>;
 }
 
-function youTubeOver({ videoSearch = videoSearchAnswer(), search = searchAnswer(SHOW), browse = {}, players = {} }: Script) {
+const youTubeOver = ({ videoSearch = videoSearchAnswer(), search = searchAnswer(SHOW), browse = {}, players = {} }: Script) => {
   const asked: string[] = [];
   const youTubeFetch = async ({ url, body }: YouTubeFetchRequest) => {
     const payload = JSON.parse(body ?? "{}") as { browseId?: string; continuation?: string; videoId?: string; params?: string };
@@ -65,7 +65,7 @@ function youTubeOver({ videoSearch = videoSearchAnswer(), search = searchAnswer(
         };
   };
   return { youTubeFetch, asked };
-}
+};
 
 const find = (script: Script, wanted: EpisodeToFind = episode) => {
   const youTube = youTubeOver(script);

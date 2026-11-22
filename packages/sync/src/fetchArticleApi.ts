@@ -5,9 +5,9 @@ export interface ArticleApi {
   read: (url: string) => Promise<ArticleRead>;
 }
 
-export function createFetchArticleApi(options: ApiRequesterOptions): ArticleApi {
+export const createFetchArticleApi = (options: ApiRequesterOptions): ArticleApi => {
   const request = createApiRequester(options);
   return {
     read: (url) => answered(request("POST", "/articles/read", ArticleRead, { body: { url } })),
   };
-}
+};

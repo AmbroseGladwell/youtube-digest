@@ -82,6 +82,6 @@ const linesBefore = (body: HTMLElement, end: Element): string[] => {
 
 // The times and yield a recipe read from markup labels as text, ahead of its method
 // (docs/features/recipe-notes.md, "Read from the page itself").
-export function labelledRecipeFacts(body: HTMLElement, method: Element): Facts {
+export const labelledRecipeFacts = (body: HTMLElement, method: Element): Facts => {
   return recipeFactsInLines(linesBefore(body, method));
-}
+};

@@ -18,7 +18,16 @@ export interface CookingStepsSheetProps {
 
 // Design 150m: every step by its first action, done ones ticked and the current one tinted.
 // Choosing one goes to its first action and reads it, backwards or forwards.
-export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, methodAmounts, onChoose, onClose }: CookingStepsSheetProps) {
+export const CookingStepsSheet = ({
+  open,
+  steps,
+  actions,
+  at,
+  usTemperatures,
+  methodAmounts,
+  onChoose,
+  onClose,
+}: CookingStepsSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const headingId = useId();
   const current = actions[at]?.step ?? 0;
@@ -106,4 +115,4 @@ export function CookingStepsSheet({ open, steps, actions, at, usTemperatures, me
       </div>
     </dialog>
   );
-}
+};

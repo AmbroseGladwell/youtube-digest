@@ -23,7 +23,7 @@ import type { LibraryMove } from "./types/LibraryMove.js";
 // no-account library holding something, which is also how a move that stopped is finished,
 // and again when asked, for onboarding's overview landing after the account exists; moves
 // run one after another, never together (docs/features/account-libraries.md, "The move on sign-in").
-export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
+export const LibraryMoveRuntime = ({ children }: { children: ReactNode }) => {
   const accountId = useLibraryAccountId();
   const stores = useStores();
   const openLibrary = useOpenLibrary();
@@ -88,4 +88,4 @@ export function LibraryMoveRuntime({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ move, dismiss: () => setMove(null), answersIn }), [move, answersIn]);
   return <LibraryMoveProvider value={value}>{children}</LibraryMoveProvider>;
-}
+};

@@ -24,7 +24,7 @@ export interface OverviewShare {
 // server holds the hash of what it stored, and the reader's own copy is hashed by the same
 // function, so the two can be compared without sending the overview anywhere
 // (docs/features/sharing.md).
-export function useOverviewShare(overview: Overview | null): OverviewShare {
+export const useOverviewShare = (overview: Overview | null): OverviewShare => {
   const api = useShareApi();
   const narrationApi = useNarrationApi();
   const voice = useSettingsQuery().data?.narrationVoice ?? DEFAULT_NARRATION_VOICE;
@@ -82,4 +82,4 @@ export function useOverviewShare(overview: Overview | null): OverviewShare {
       setChecks((count) => count + 1);
     },
   };
-}
+};

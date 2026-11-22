@@ -6,7 +6,7 @@ import type { KindSample } from "./KindSample.js";
 // About the first four minutes of speech.
 export const KIND_CHECK_OPENING_WORDS = 600;
 
-export function kindSampleOfVideo(input: Pick<GenerationInput, "video" | "transcript">): KindSample {
+export const kindSampleOfVideo = (input: Pick<GenerationInput, "video" | "transcript">): KindSample => {
   const opening: string[] = [];
   let words = 0;
   for (const { text } of input.transcript) {
@@ -17,4 +17,4 @@ export function kindSampleOfVideo(input: Pick<GenerationInput, "video" | "transc
     words += wordCount(text);
   }
   return { title: input.video.title, by: input.video.channel, description: descriptionOf(input), opening: opening.join(" ") };
-}
+};

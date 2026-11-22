@@ -9,27 +9,27 @@ const PlayerContext = createContext<PlayerEngine | null>(null);
 
 export const PlayerProvider = PlayerContext.Provider;
 
-export function usePlayer(): PlayerEngine {
+export const usePlayer = (): PlayerEngine => {
   const engine = useContext(PlayerContext);
   if (engine === null) {
     throw new Error("usePlayer must be used within a PlayerProvider");
   }
   return engine;
-}
+};
 
-export function usePlayerSnapshot(): PlayerSnapshot {
+export const usePlayerSnapshot = (): PlayerSnapshot => {
   const engine = usePlayer();
   return useSyncExternalStore(engine.subscribe, engine.getSnapshot);
-}
+};
 
-export function usePlayerTime(): number {
+export const usePlayerTime = (): number => {
   const engine = usePlayer();
   return useSyncExternalStore(engine.subscribeTime, engine.getTime);
-}
+};
 
 // The spoken line, which moves far less often than the clock: a component that only
 // tints a line re-renders when the line changes, not on every tick.
-export function usePlayerLine(): number {
+export const usePlayerLine = (): number => {
   const engine = usePlayer();
   const subscribe = useCallback(
     (onChange: () => void) => {
@@ -43,4 +43,4 @@ export function usePlayerLine(): number {
     [engine],
   );
   return useSyncExternalStore(subscribe, engine.getLine);
-}
+};

@@ -15,7 +15,7 @@ export interface NoteTiming {
   listenMinutes: number;
 }
 
-export function noteTiming(lines: NoteLine[]): NoteTiming {
+export const noteTiming = (lines: NoteLine[]): NoteTiming => {
   const lineSeconds = lines.map((line) => Math.max(MINIMUM_LINE_SECONDS, (wordCount(line.text) / SPOKEN_WORDS_PER_MINUTE) * 60));
   const words = lines.reduce((total, line) => total + wordCount(line.text), 0);
 
@@ -25,8 +25,8 @@ export function noteTiming(lines: NoteLine[]): NoteTiming {
     readMinutes: words === 0 ? 0 : Math.max(1, Math.round(words / READING_WORDS_PER_MINUTE)),
     listenMinutes: words === 0 ? 0 : Math.max(1, Math.round(words / SPOKEN_WORDS_PER_MINUTE)),
   };
-}
+};
 
-export function elapsedSecondsBefore(timing: NoteTiming, lineIndex: number): number {
+export const elapsedSecondsBefore = (timing: NoteTiming, lineIndex: number): number => {
   return timing.lineSeconds.slice(0, Math.max(0, lineIndex)).reduce((total, seconds) => total + seconds, 0);
-}
+};

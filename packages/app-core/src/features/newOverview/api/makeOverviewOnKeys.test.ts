@@ -70,7 +70,7 @@ const refusal = (code: ApiErrorCode, details?: Record<string, unknown>) =>
 
 // Our server as the device meets it: each call recorded, our key answering with the
 // overview it made or the refusal it was told to give, reservations likewise.
-function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error } = {}) {
+const fakeServer = ({ generate, reserve }: { generate?: Error; reserve?: Error } = {}) => {
   const calls: string[] = [];
   const api: GenerationApi = {
     status: async () => ({ available: true }),
@@ -100,7 +100,7 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     startTrial: async () => ({ token: "trial-token" }),
   };
   return { api, calls };
-}
+};
 
 describe("makeOverviewOnKeys", () => {
   it("makes it on the reader's key when that comes first, reserving the slot before, and says no key was passed over", async () => {

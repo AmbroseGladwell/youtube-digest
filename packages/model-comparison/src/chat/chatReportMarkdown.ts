@@ -43,7 +43,7 @@ const perMessage = (turns: readonly ChatTurnRecord[], cost: (turn: ChatTurnRecor
 const cachedCost = (turn: ChatTurnRecord) => turn.costDollars + turn.queryEmbeddingDollars;
 const uncachedCost = (turn: ChatTurnRecord) => turn.uncachedCostDollars + turn.queryEmbeddingDollars;
 
-export function chatReportMarkdown(records: readonly ChatConversationRecord[]): string {
+export const chatReportMarkdown = (records: readonly ChatConversationRecord[]): string => {
   const arms = groupBy(records);
   const lines: string[] = [];
   const ranOn = [...new Set(records.map((record) => record.ranOn))].sort().join(", ");
@@ -110,4 +110,4 @@ export function chatReportMarkdown(records: readonly ChatConversationRecord[]): 
     );
   }
   return `${lines.join("\n")}\n`;
-}
+};

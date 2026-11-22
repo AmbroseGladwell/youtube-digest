@@ -78,7 +78,7 @@ export const TEST_SUPPORT_EMAIL = "help@overview.test";
 
 // The whole API against a real Postgres in process, with a clock the test owns
 // (docs/conventions/backend-testing-guide.md).
-export async function createTestApp(
+export const createTestApp = async (
   config: Partial<AppConfig> = {},
   {
     narration = true,
@@ -95,7 +95,7 @@ export async function createTestApp(
     readPodcastEpisode,
     podcastWeb,
   }: TestAppOptions = {},
-): Promise<TestApp> {
+): Promise<TestApp> => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps(), ...(migrationsUpTo === undefined ? {} : { upTo: migrationsUpTo }) });
   const clock: TestClock = {
@@ -174,4 +174,4 @@ export async function createTestApp(
       await sql.close();
     },
   };
-}
+};

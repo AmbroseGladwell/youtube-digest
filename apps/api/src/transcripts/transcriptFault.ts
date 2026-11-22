@@ -4,7 +4,7 @@ export type TranscriptFault = "no-segments" | "no-words" | "times-out-of-order" 
 
 // What makes a transcript unfit to share, checked before anything is kept
 // (docs/features/shared-transcript-cache.md, "What a contribution has to be").
-export function transcriptFault(transcript: StoredTranscript, videoId: VideoId): TranscriptFault | null {
+export const transcriptFault = (transcript: StoredTranscript, videoId: VideoId): TranscriptFault | null => {
   const { segments } = transcript;
   if (transcript.videoId !== videoId || (transcript.video?.id != null && transcript.video.id !== videoId)) {
     return "another-video";
@@ -19,4 +19,4 @@ export function transcriptFault(transcript: StoredTranscript, videoId: VideoId):
     (segment, index) => segment.endMs < segment.startMs || (index > 0 && segment.startMs < segments[index - 1]!.startMs),
   );
   return outOfOrder ? "times-out-of-order" : null;
-}
+};

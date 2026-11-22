@@ -21,7 +21,7 @@ export interface TrialDevice {
 }
 
 // A signed-out device holding the trial token the server issued it, asking from one address.
-export async function makeTrialDevice({ app }: TestApp, address = TRIAL_ADDRESS): Promise<TrialDevice> {
+export const makeTrialDevice = async ({ app }: TestApp, address = TRIAL_ADDRESS): Promise<TrialDevice> => {
   const versioned = { [CLIENT_VERSION_HEADER]: String(CLIENT_VERSION) };
   const issued = await app.inject({ method: "POST", url: "/api/trials", headers: versioned, remoteAddress: address });
   if (issued.statusCode !== 200) {
@@ -54,4 +54,4 @@ export async function makeTrialDevice({ app }: TestApp, address = TRIAL_ADDRESS)
         remoteAddress: address,
       }),
   };
-}
+};

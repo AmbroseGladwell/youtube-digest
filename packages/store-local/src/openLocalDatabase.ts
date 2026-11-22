@@ -30,7 +30,7 @@ export interface OpenLocalDatabaseOptions {
 
 const NOVELTY_RENAME_RESET_VERSION = 2;
 
-export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> {
+export const openLocalDatabase = (options: OpenLocalDatabaseOptions = {}): Promise<IDBDatabase> => {
   const { name = DATABASE_NAME, indexedDB = globalThis.indexedDB, onSuperseded } = options;
 
   return new Promise((resolve, reject) => {
@@ -109,4 +109,4 @@ export function openLocalDatabase(options: OpenLocalDatabaseOptions = {}): Promi
     };
     request.onerror = () => reject(request.error);
   });
-}
+};

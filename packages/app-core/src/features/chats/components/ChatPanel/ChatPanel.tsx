@@ -62,7 +62,7 @@ const cited = (message: ChatMessage, kind: "startMs" | "part") =>
 
 // Said once an answer is final. One that cites the overview isn't a decline, though the source
 // didn't cover it (319k), and on an article or a recipe page that is every answer (OV-320).
-function announcementOf(message: ChatMessage, words: ChatWords): string {
+const announcementOf = (message: ChatMessage, words: ChatWords): string => {
   if (message.from !== "answer") {
     return "";
   }
@@ -76,7 +76,7 @@ function announcementOf(message: ChatMessage, words: ChatWords): string {
     parts === 0 ? null : `${plural(parts, "part")} of the overview`,
   ].filter((line) => line !== null);
   return `Answer: ${message.text}${citedLine.length === 0 ? "" : ` ${citedLine.join(" and ")} cited.`}`;
-}
+};
 
 // The reader's question a cited message belongs to: itself, or the question its answer answered.
 const questionAt = (messages: readonly ChatMessage[], message: number) => (messages[message]?.from === "answer" ? message - 1 : message);

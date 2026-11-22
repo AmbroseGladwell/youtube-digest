@@ -40,7 +40,7 @@ export interface NewOverviewDialogProps {
 
 const HEADING_ID = "NewOverviewDialog-heading";
 
-export function NewOverviewDialog({
+export const NewOverviewDialog = ({
   open,
   prefill,
   run,
@@ -52,7 +52,7 @@ export function NewOverviewDialog({
   onReadOverview,
   onCaptureReasonChange,
   onCaptureReasonCommit,
-}: NewOverviewDialogProps) {
+}: NewOverviewDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const returnFocusTo = useRef<HTMLElement | null>(null);
   const activeVideoUrl = useActiveVideoUrl();
@@ -260,7 +260,7 @@ export function NewOverviewDialog({
       </div>
     </dialog>
   );
-}
+};
 
 interface RunProgressProps {
   run: NewOverviewRun;
@@ -272,7 +272,7 @@ interface RunProgressProps {
   onCaptureReasonCommit: () => void;
 }
 
-function RunProgress({
+const RunProgress = ({
   run,
   headingId,
   onClose,
@@ -280,7 +280,7 @@ function RunProgress({
   onReadOverview,
   onCaptureReasonChange,
   onCaptureReasonCommit,
-}: RunProgressProps) {
+}: RunProgressProps) => {
   const surface = useSurface();
   const elapsedSeconds = useElapsedSeconds(run.startedAt, run.finishedAt);
   const isDone = run.overview !== null;
@@ -402,4 +402,4 @@ function RunProgress({
       </div>
     </>
   );
-}
+};

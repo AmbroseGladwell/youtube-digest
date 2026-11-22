@@ -7,13 +7,13 @@ const listeners = new Set<() => void>();
 
 // pendingUrl covers a tab that has come to the front before its navigation commits, which
 // a tab opened from another app does (docs/features/watching-detection.md).
-async function readActiveVideoUrl(): Promise<string | null> {
+const readActiveVideoUrl = async (): Promise<string | null> => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tab?.url || tab?.pendingUrl;
   return url !== undefined && isYouTubeUrl(url) ? url : null;
-}
+};
 
-async function refresh(): Promise<void> {
+const refresh = async (): Promise<void> => {
   const next = await readActiveVideoUrl();
   if (next === videoUrl) {
     return;
@@ -22,7 +22,7 @@ async function refresh(): Promise<void> {
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
 const onActivated = () => void refresh();
 

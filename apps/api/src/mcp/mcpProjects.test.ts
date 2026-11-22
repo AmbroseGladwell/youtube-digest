@@ -18,22 +18,22 @@ interface Connected {
   client: McpClient;
 }
 
-async function connected(scope?: string): Promise<Connected> {
+const connected = async (scope?: string): Promise<Connected> => {
   const testApp = await createTestApp();
   const reader = await makeAccount(testApp);
   const library = sampleLibrary();
   await seedLibrary(reader, library);
   return { testApp, reader, library, client: await connectMcpClient(testApp, reader, scope) };
-}
+};
 
-async function readerProject(reader: TestAccount, overrides: Record<string, unknown> = {}) {
+const readerProject = async (reader: TestAccount, overrides: Record<string, unknown> = {}) => {
   const project = { ...makeProject(), schemaVersion: CURRENT_SCHEMA_VERSIONS.project, updatedAt: UPDATED_AT, ...overrides };
   const response = await reader.inject({ method: "POST", url: "/api/projects", body: project });
   assert.equal(response.statusCode, 201, response.body);
   return project;
-}
+};
 
-async function readerAdds(reader: TestAccount, projectId: string, overviewIds: string[]) {
+const readerAdds = async (reader: TestAccount, projectId: string, overviewIds: string[]) => {
   for (const overviewId of overviewIds) {
     const response = await reader.inject({
       method: "PUT",
@@ -42,7 +42,7 @@ async function readerAdds(reader: TestAccount, projectId: string, overviewIds: s
     });
     assert.equal(response.statusCode, 200, response.body);
   }
-}
+};
 
 const ids = (library: SampleLibrary) => library.notes.map(({ overview }) => overview.id);
 

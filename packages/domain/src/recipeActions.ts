@@ -94,7 +94,7 @@ const atThen = (text: string, sentence: Span): Span[] => {
 };
 
 // docs/features/recipe-notes.md, "A step's actions": code, never a model, decides where one ends.
-export function recipeActions(steps: readonly RecipeStep[]): RecipeAction[] {
+export const recipeActions = (steps: readonly RecipeStep[]): RecipeAction[] => {
   return steps.flatMap(({ text }, step) => {
     const lifted = LABEL.exec(text);
     const label = lifted !== null && lifted[0].length < text.trim().length ? lifted : null;
@@ -113,6 +113,6 @@ export function recipeActions(steps: readonly RecipeStep[]): RecipeAction[] {
       };
     });
   });
-}
+};
 
 export const isLastOfStep = (action: RecipeAction): boolean => action.index === action.count - 1;

@@ -29,7 +29,7 @@ export const comparisonPaths = {
   chat: join(dataDirectory, "chat"),
 };
 
-export async function loadTranscripts(set: TranscriptSetName = "main"): Promise<FetchedTranscript[]> {
+export const loadTranscripts = async (set: TranscriptSetName = "main"): Promise<FetchedTranscript[]> => {
   const directory = comparisonPaths.transcriptsOf(set);
   const files = await readdir(directory).catch(() => []);
   const loaded = await Promise.all(
@@ -38,9 +38,9 @@ export async function loadTranscripts(set: TranscriptSetName = "main"): Promise<
       .map(async (file) => JSON.parse(await readFile(join(directory, file), "utf-8")) as FetchedTranscript),
   );
   return loaded.sort((left, right) => videoLengthMs(left) - videoLengthMs(right));
-}
+};
 
-export async function loadComparison(runName: string) {
+export const loadComparison = async (runName: string) => {
   const transcripts = await loadTranscripts();
   return {
     transcripts,
@@ -49,7 +49,7 @@ export async function loadComparison(runName: string) {
     judgments: await judgmentStore(comparisonPaths.judgments(runName)).all(),
     picks: await pickStore(comparisonPaths.picks(runName)).all(),
   };
-}
+};
 
 export const providerKeysFromEnv = (): Partial<Record<Provider, string>> =>
   Object.fromEntries(

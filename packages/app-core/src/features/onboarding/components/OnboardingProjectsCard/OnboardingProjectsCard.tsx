@@ -22,7 +22,7 @@ export interface OnboardingProjectsCardProps {
   compact?: boolean;
 }
 
-export function OnboardingProjectsCard({ compact = false }: OnboardingProjectsCardProps) {
+export const OnboardingProjectsCard = ({ compact = false }: OnboardingProjectsCardProps) => {
   const labelId = useId();
   const project = (
     <div className={compact ? styles.projectCompact : styles.project} data-testid={onboardingProjectsCardTestIds.project}>
@@ -74,4 +74,4 @@ export function OnboardingProjectsCard({ compact = false }: OnboardingProjectsCa
       {compact ? project : <div className={styles.scene}>{project}</div>}
     </aside>
   );
-}
+};

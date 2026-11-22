@@ -16,7 +16,7 @@ export interface AddProviderKeyRowProps {
 
 // Each failure stays on the row it belongs to and says what did not change. Nothing turns
 // red; the words carry it (design 110f, part 3's standfirst).
-function problemText(state: AddKeyState, provider: Provider, inUseProvider: Provider | null): string | null {
+const problemText = (state: AddKeyState, provider: Provider, inUseProvider: Provider | null): string | null => {
   const console = PROVIDER_CONSOLE[provider];
   switch (state.step) {
     case "refused":
@@ -32,9 +32,9 @@ function problemText(state: AddKeyState, provider: Provider, inUseProvider: Prov
     default:
       return null;
   }
-}
+};
 
-function headingText(state: AddKeyState, provider: Provider): string | null {
+const headingText = (state: AddKeyState, provider: Provider): string | null => {
   const name = PROVIDER_SHORT_LABEL[provider];
   switch (state.step) {
     case "refused":
@@ -46,7 +46,7 @@ function headingText(state: AddKeyState, provider: Provider): string | null {
     default:
       return null;
   }
-}
+};
 
 const statusText = (state: AddKeyState, provider: Provider): string | null => {
   switch (state.step) {
@@ -61,7 +61,7 @@ const statusText = (state: AddKeyState, provider: Provider): string | null => {
 
 // A quiet one-line row until it is opened, then the field, the way to make a key for a
 // reader who never has, and the one orange button on the screen (design 110d).
-export function AddProviderKeyRow({ provider, open, onOpen, onClose, onSaved, inUseProvider }: AddProviderKeyRowProps) {
+export const AddProviderKeyRow = ({ provider, open, onOpen, onClose, onSaved, inUseProvider }: AddProviderKeyRowProps) => {
   const [key, setKey] = useState("");
   const { state, add, reset } = useAddProviderKey(provider);
   const input = useRef<HTMLInputElement>(null);
@@ -182,4 +182,4 @@ export function AddProviderKeyRow({ provider, open, onOpen, onClose, onSaved, in
       </form>
     </li>
   );
-}
+};

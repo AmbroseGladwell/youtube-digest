@@ -21,7 +21,7 @@ export const CITED_PART_SELECTOR = '[data-cited-part="true"]';
 
 // Marks an element as a part an answer can lead to: one item, or its section's heading. The
 // cited one is tinted by the global [data-cited-part] rule and can take focus (319n–319s).
-export function citedPartProps(cited: CitedOverviewPart | null, part: OverviewPart, index: number | "section") {
+export const citedPartProps = (cited: CitedOverviewPart | null, part: OverviewPart, index: number | "section") => {
   const isCited =
     cited !== null &&
     cited.part === part &&
@@ -31,4 +31,4 @@ export function citedPartProps(cited: CitedOverviewPart | null, part: OverviewPa
     "data-cited-part": isCited ? "true" : undefined,
     tabIndex: isCited ? -1 : undefined,
   };
-}
+};

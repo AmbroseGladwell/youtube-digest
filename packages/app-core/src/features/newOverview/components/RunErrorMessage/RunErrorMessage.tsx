@@ -24,7 +24,7 @@ export interface RunErrorMessageProps {
   onNotNow?: () => void;
 }
 
-export function RunErrorMessage({
+export const RunErrorMessage = ({
   error,
   className,
   testId,
@@ -33,7 +33,7 @@ export function RunErrorMessage({
   episodeSeconds = null,
   onTranscribe,
   onNotNow,
-}: RunErrorMessageProps) {
+}: RunErrorMessageProps) => {
   if (error.kind === "articleFetch") {
     return <ArticleFetchFailure error={error} />;
   }
@@ -67,11 +67,11 @@ export function RunErrorMessage({
       and try again.
     </p>
   );
-}
+};
 
 // The read was the run's, so there is no field to try again from: only a way that leaves the
 // app is offered, and a regeneration names the item that remakes it beside the article.
-function ArticleFetchFailure({ error }: { error: Extract<RunError, { kind: "articleFetch" }> }) {
+const ArticleFetchFailure = ({ error }: { error: Extract<RunError, { kind: "articleFetch" }> }) => {
   const place = useReaderPlace();
   const copy = pastedLinkFailureCopy(error.failure, error.url, place);
   const after = copy.after !== null && error.regenerating ? "Then press Regenerate in the side panel." : copy.after;
@@ -83,11 +83,11 @@ function ArticleFetchFailure({ error }: { error: Extract<RunError, { kind: "arti
       onWay={() => undefined}
     />
   );
-}
+};
 
 // After Create: the question 305c-2 asks when the check couldn't tell, a transcription that failed
 // (305k), or one our server wouldn't start after all (305h, 305j). Each counted nothing.
-function TranscriptionStop({
+const TranscriptionStop = ({
   error,
   episodeSeconds,
   onTranscribe,
@@ -99,7 +99,7 @@ function TranscriptionStop({
   onTranscribe: (() => void) | undefined;
   onNotNow: (() => void) | undefined;
   onFollowed: (() => void) | undefined;
-}) {
+}) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const transcribing = usage?.transcription ?? null;
   const notNow = onNotNow === undefined ? null : { label: "Not now", onPress: onNotNow };
@@ -135,12 +135,12 @@ function TranscriptionStop({
         };
   const stop = transcriptionCopy.stop(offer, usage?.plan ?? "free", usage?.resetsOn ?? null);
   return <TranscriptionNotice notice={stop} route={stop.route} onFollowed={onFollowed} takeFocus />;
-}
+};
 
 // Design 106h: about half of episodes have no words we can find yet, so this is drawn as an
 // everyday outcome: what happened, that it's common, and that nothing was used. Where our server
 // can transcribe, the reader is asked instead (305c-2). It never says where we looked.
-function PodcastNoTranscript({ testId }: { testId: string }) {
+const PodcastNoTranscript = ({ testId }: { testId: string }) => {
   return (
     <div className={styles.noTranscript} role="alert" data-testid={testId}>
       <span className={styles.rule} aria-hidden="true" />
@@ -152,4 +152,4 @@ function PodcastNoTranscript({ testId }: { testId: string }) {
       <p className={styles.noTranscriptBody}>Have it on YouTube? Paste that link above, or another episode.</p>
     </div>
   );
-}
+};

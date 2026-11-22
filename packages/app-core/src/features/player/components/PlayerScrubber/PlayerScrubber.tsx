@@ -19,7 +19,7 @@ export interface PlayerScrubberProps {
 }
 
 // Design 2a: the line a drag will land on, named the way the note names it.
-function landingLabel(lines: NoteLine[], index: number, seconds: number): string {
+const landingLabel = (lines: NoteLine[], index: number, seconds: number): string => {
   const heading = sectionHeadingAt(lines, index);
   if (lines[index]?.heading) {
     return `${heading} · ${formatClock(seconds)}`;
@@ -29,7 +29,7 @@ function landingLabel(lines: NoteLine[], index: number, seconds: number): string
     within += 1;
   }
   return `${heading} · line ${within} · ${formatClock(seconds)}`;
-}
+};
 
 const keyTarget = (key: string, time: number, durationSeconds: number): number | null => {
   switch (key) {
@@ -50,7 +50,7 @@ const keyTarget = (key: string, time: number, durationSeconds: number): number |
 
 // Design 1e and 2a: a thumb, a notch where each section starts, and a drag that snaps to
 // the nearest line start. From the keyboard it is a slider that moves five seconds a step.
-export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds, onSeek }: PlayerScrubberProps) {
+export const PlayerScrubber = ({ view, time, lines, lineStarts, durationSeconds, onSeek }: PlayerScrubberProps) => {
   const track = useRef<HTMLDivElement | null>(null);
   const [landing, setLanding] = useState<{ index: number; seconds: number } | null>(null);
   const { fill, tone, thumb } = view.track;
@@ -160,4 +160,4 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
       </div>
     </div>
   );
-}
+};

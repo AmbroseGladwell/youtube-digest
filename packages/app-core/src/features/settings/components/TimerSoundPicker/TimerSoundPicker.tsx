@@ -15,7 +15,7 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
 // Designs 284ai–284al: the narration voice picker's rows for the four timer sounds, each with a
 // sample. Choosing saves at once and syncs; there is no Save button.
-export function TimerSoundPicker() {
+export const TimerSoundPicker = () => {
   const analytics = useAnalytics();
   const settings = useSettingsQuery().data;
   const updateSettings = useUpdateSettingsMutation();
@@ -123,4 +123,4 @@ export function TimerSoundPicker() {
       </p>
     </div>
   );
-}
+};

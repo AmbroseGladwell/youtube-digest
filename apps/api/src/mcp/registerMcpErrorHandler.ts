@@ -8,7 +8,7 @@ import { reportRequestError, type RequestErrorReporting } from "../errors/report
 const isFastifyError = (error: unknown): error is FastifyError =>
   typeof error === "object" && error !== null && "code" in error && "statusCode" in error;
 
-export function registerMcpErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
+export const registerMcpErrorHandler = (app: FastifyInstance, reporting: RequestErrorReporting): void => {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {
       logRefused(request, error.code, error.status, error.details);
@@ -23,4 +23,4 @@ export function registerMcpErrorHandler(app: FastifyInstance, reporting: Request
     reportRequestError(reporting, request, error);
     return reply.status(500).send(jsonRpcError(null, JSON_RPC_ERRORS.internalError, "Something went wrong"));
   });
-}
+};

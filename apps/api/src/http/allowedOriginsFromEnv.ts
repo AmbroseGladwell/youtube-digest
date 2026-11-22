@@ -2,7 +2,7 @@ const ORIGIN = /^[a-z][a-z0-9+.-]*:\/\/[^/?#\s]+$/i;
 
 export class AllowedOriginError extends Error {}
 
-export function allowedOriginsFromEnv(value: string | undefined): string[] {
+export const allowedOriginsFromEnv = (value: string | undefined): string[] => {
   const origins = (value ?? "")
     .split(",")
     .map((origin) => origin.trim())
@@ -13,4 +13,4 @@ export function allowedOriginsFromEnv(value: string | undefined): string[] {
     }
   }
   return origins;
-}
+};

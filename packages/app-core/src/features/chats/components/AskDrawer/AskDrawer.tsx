@@ -26,7 +26,7 @@ export interface AskDrawerProps {
 // by when it was last asked in, each with its first question and its scope. Each has a ⋯ whose only
 // item is Delete conversation; there's no Rename, because the title is the first question. On the
 // web a raised column down the left of the page; on a phone a bottom sheet.
-export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger, onNew, onOpen, onDelete, onClose }: AskDrawerProps) {
+export const AskDrawer = ({ chats, openChatId, now, projectName, sheet, trigger, onNew, onOpen, onDelete, onClose }: AskDrawerProps) => {
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -154,4 +154,4 @@ export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger,
       </div>
     </>
   );
-}
+};

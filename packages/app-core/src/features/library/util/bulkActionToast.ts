@@ -5,7 +5,7 @@ export type BulkAction =
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
-function doneText(action: BulkAction): string {
+const doneText = (action: BulkAction): string => {
   switch (action.kind) {
     case "read":
       return `${action.overviews} marked read`;
@@ -24,9 +24,9 @@ function doneText(action: BulkAction): string {
     case "updated":
       return `Updated ${plural(action.places, action.noun)}`;
   }
-}
+};
 
-function failedText(action: BulkAction, share: string): string {
+const failedText = (action: BulkAction, share: string): string => {
   switch (action.kind) {
     case "read":
       return `Couldn’t mark ${share} read`;
@@ -45,14 +45,14 @@ function failedText(action: BulkAction, share: string): string {
     case "updated":
       return `Couldn’t make ${share} changes`;
   }
-}
+};
 
-export function bulkActionToast(
+export const bulkActionToast = (
   action: BulkAction,
   { writes, failed }: { writes: number; failed: number },
-): { text: string; done: boolean } {
+): { text: string; done: boolean } => {
   if (failed === 0) {
     return { text: doneText(action), done: true };
   }
   return { text: failedText(action, `${failed} of ${writes}`), done: false };
-}
+};

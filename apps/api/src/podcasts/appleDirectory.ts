@@ -71,7 +71,7 @@ const parsed = <T>(schema: z.ZodType<T>, rows: readonly unknown[]): T[] =>
 
 // Apple's free directory: a show's feed, and the guids of its newest episodes
 // (docs/features/podcast-links.md, "From a link to an episode").
-export function appleDirectory(fetchJson: FetchJson) {
+export const appleDirectory = (fetchJson: FetchJson) => {
   return {
     async showWithEpisodes(showId: string): Promise<{ show: DirectoryShow; episodes: DirectoryEpisode[] } | null> {
       const { results } = Results.parse(
@@ -96,6 +96,6 @@ export function appleDirectory(fetchJson: FetchJson) {
       return parsed(Show, results).map(toShow);
     },
   };
-}
+};
 
 export type AppleDirectory = ReturnType<typeof appleDirectory>;

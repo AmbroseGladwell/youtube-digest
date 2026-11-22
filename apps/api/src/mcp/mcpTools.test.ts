@@ -18,19 +18,19 @@ interface Connected {
   client: McpClient;
 }
 
-async function connectedToSamples(): Promise<Connected> {
+const connectedToSamples = async (): Promise<Connected> => {
   const testApp = await createTestApp();
   const reader = await makeAccount(testApp);
   const library = sampleLibrary();
   await seedLibrary(reader, library);
   return { testApp, reader, library, client: await connectMcpClient(testApp, reader) };
-}
+};
 
 const note = (library: SampleLibrary, topic: string) => library.notes.find((sample) => sample.topic === topic)!;
 
 const overviewIdsIn = (text: string) => [...text.matchAll(/^Overview id: (\S+)$/gm)].map((match) => match[1]);
 
-async function seedMany(reader: TestAccount, count: number, topicId: string) {
+const seedMany = async (reader: TestAccount, count: number, topicId: string) => {
   const ids: string[] = [];
   for (let index = 0; index < count; index += 1) {
     const overview = storedOverview({
@@ -41,7 +41,7 @@ async function seedMany(reader: TestAccount, count: number, topicId: string) {
     ids.push(overview.id);
   }
   return ids.reverse();
-}
+};
 
 test("search_overviews with no filters lists the whole library, newest saved first, with each id", async () => {
   const { testApp, library, client } = await connectedToSamples();

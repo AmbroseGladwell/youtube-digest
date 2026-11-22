@@ -6,7 +6,7 @@ const named = (project: Project) => `"${project.name}" (id ${project.id}${projec
 
 // By id, or by name ignoring case and spaces at the ends. A name two projects share is
 // refused naming both, as an unknown one is refused pointing at list_projects.
-export function resolveProject(library: Library, nameOrId: string): Project | McpToolOutcome {
+export const resolveProject = (library: Library, nameOrId: string): Project | McpToolOutcome => {
   const byId = library.projects.find((project) => project.id === nameOrId);
   if (byId !== undefined) {
     return byId;
@@ -19,6 +19,6 @@ export function resolveProject(library: Library, nameOrId: string): Project | Mc
     return toolError(`More than one project is called "${nameOrId}": ${byName.map(named).join(", ")}. Pass the id instead.`);
   }
   return toolError(`There is no project called "${nameOrId}" in this library. list_projects names every project.`);
-}
+};
 
 export const isProject = (value: Project | McpToolOutcome): value is Project => !("text" in value);

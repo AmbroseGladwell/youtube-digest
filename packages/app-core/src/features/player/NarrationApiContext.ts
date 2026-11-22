@@ -8,6 +8,6 @@ const NarrationApiContext = createContext<NarrationApi | null>(null);
 
 export const NarrationApiProvider = NarrationApiContext.Provider;
 
-export function useNarrationApi(): NarrationApi | null {
+export const useNarrationApi = (): NarrationApi | null => {
   return useContext(NarrationApiContext);
-}
+};

@@ -62,7 +62,7 @@ export const keyPointsForJudging = (overview: Overview): string =>
     ...overview.keyPoints.map((point, index) => `${index + 1}. [${place(point)}] ${point.text}`),
   ].join("\n");
 
-export function keyPointsPrompt(fetched: FetchedTranscript, noteA: Overview, noteB: Overview) {
+export const keyPointsPrompt = (fetched: FetchedTranscript, noteA: Overview, noteB: Overview) => {
   return {
     systemPrompt: SYSTEM_PROMPT,
     userMessage: `${transcriptForJudging(fetched)}
@@ -74,4 +74,4 @@ ${keyPointsForJudging(noteA)}
 ${keyPointsForJudging(noteB)}`,
     schema: KeyPointsAnswer,
   };
-}
+};

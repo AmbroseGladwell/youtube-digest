@@ -21,7 +21,7 @@ const canWriteClipboard = (): boolean => typeof navigator.clipboard?.writeText =
 // An empty project takes the list's place: with an assistant that can fill it, a prompt to
 // give it; without, the two ways to add by hand ("OV-168 3 Adding and Making" 168aa, 168ab).
 // Under suggestions, the same as the ways to go further ("OV-318 1" 318a, 318d).
-export function ProjectEmpty({ name, assistantWrites, writerName, afterSuggestions, onPromptCopied }: ProjectEmptyProps) {
+export const ProjectEmpty = ({ name, assistantWrites, writerName, afterSuggestions, onPromptCopied }: ProjectEmptyProps) => {
   const [copied, setCopied] = useState(false);
   const prompt = fillProjectPrompt(name);
   const assistant = writerName ?? "your assistant";
@@ -91,4 +91,4 @@ export function ProjectEmpty({ name, assistantWrites, writerName, afterSuggestio
       )}
     </div>
   );
-}
+};

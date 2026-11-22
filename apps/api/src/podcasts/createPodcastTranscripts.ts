@@ -103,7 +103,13 @@ const dataApiUnavailable = (error: unknown): never => {
 // (docs/features/podcast-transcripts.md, "Each reader's own copy"; OV-297). The episode is read
 // again from its own feed, never taken from the caller, and a video a caller names is checked
 // against it by our server, so nothing a caller sends decides where an episode's words are.
-export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeService, youTubeEpisodes, clock }: PodcastTranscriptsOptions) {
+export const createPodcastTranscripts = ({
+  fetchPublicWeb,
+  sources,
+  youTubeService,
+  youTubeEpisodes,
+  clock,
+}: PodcastTranscriptsOptions) => {
   const isFresh = (known: KnownWordSource) => known.source.via === "tag" || clock().getTime() - known.foundAt.getTime() < MATCH_KEPT_MS;
 
   const captionsOf = async (key: SourceKey, videoId: string, caller: ServiceCaller, log: FastifyBaseLogger) => {
@@ -327,4 +333,4 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
   };
 
   return { resolve, remembered, check };
-}
+};

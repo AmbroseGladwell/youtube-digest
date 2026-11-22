@@ -31,7 +31,7 @@ const addedOn = (stored: StoredKey): string => {
 
 // One provider the reader has a key for: what it is, that it is the one in use, what the
 // key ends in, and the model it remembers (design 110c).
-export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRemove, onChooseModel }: ProviderKeyRowProps) {
+export const ProviderKeyRow = ({ provider, stored, inUse, models, movesTo, onRemove, onChooseModel }: ProviderKeyRowProps) => {
   const [confirming, setConfirming] = useState(false);
   const here = deviceWord(useSurface(), useIsPhone());
 
@@ -111,4 +111,4 @@ export function ProviderKeyRow({ provider, stored, inUse, models, movesTo, onRem
       )}
     </li>
   );
-}
+};

@@ -87,7 +87,7 @@ export interface SharedOverviewPageProps {
 
 // Design 30e–30k: the reader's own layout, with none of the owner's controls, over a copy
 // that arrived in the document (docs/features/sharing.md).
-export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
+export const SharedOverviewPage = ({ payload }: SharedOverviewPageProps) => {
   if (payload.state !== "shared") {
     return (
       <div className={styles.page}>
@@ -103,9 +103,9 @@ export function SharedOverviewPage({ payload }: SharedOverviewPageProps) {
       </CookingTimersRuntime>
     </SharedPlayerRuntime>
   );
-}
+};
 
-function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) {
+const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "shared" }> }) => {
   const { note, transcript } = payload.snapshot;
   const video = useMemo(() => timedSource(note.source), [note.source]);
   const webArticle = note.source.kind === "web" && note.article != null ? { source: note.source, article: note.article } : null;
@@ -627,4 +627,4 @@ function SharedOverview({ payload }: { payload: Extract<SharePayload, { state: "
       {willStop.dialog}
     </div>,
   );
-}
+};

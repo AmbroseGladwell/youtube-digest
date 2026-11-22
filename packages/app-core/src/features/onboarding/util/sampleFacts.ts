@@ -49,7 +49,7 @@ export interface SampleFacts {
   sections: readonly string[];
 }
 
-export function sampleFacts(note: SharedNote): SampleFacts {
+export const sampleFacts = (note: SharedNote): SampleFacts => {
   const kind = sampleKindOf(note);
   const length = lengthOf(note);
   return {
@@ -65,6 +65,6 @@ export function sampleFacts(note: SharedNote): SampleFacts {
         ? ["Ingredients", "Method"]
         : [...(note.bigPicture ? ["Big picture"] : []), "Key points", "How to apply", "Verdict"],
   };
-}
+};
 
 export const DEFAULT_START_VERB = START_VERB.video;

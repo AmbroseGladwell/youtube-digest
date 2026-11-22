@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { PlaylistId, VideoId, type CaptureQueueStore } from "@overview/domain";
 import { makeQueuedCapture } from "./makeQueuedCapture.js";
 
-export function defineCaptureQueueStoreConformanceSuite(
+export const defineCaptureQueueStoreConformanceSuite = (
   label: string,
   createStore: () => CaptureQueueStore | Promise<CaptureQueueStore>,
-): void {
+): void => {
   const behaviour = (description: string) => `${label} CaptureQueueStore: ${description}`;
   const capture = (videoId: string, queuedAt: string, overrides: Parameters<typeof makeQueuedCapture>[0] = {}) =>
     makeQueuedCapture({ videoId: VideoId.parse(videoId), queuedAt, ...overrides });
@@ -82,4 +82,4 @@ export function defineCaptureQueueStoreConformanceSuite(
       ["b"],
     );
   });
-}
+};

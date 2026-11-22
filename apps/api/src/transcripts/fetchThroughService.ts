@@ -48,11 +48,11 @@ export const budgetExhausted = () =>
 
 // From our own address first, which costs nothing, and through the residential proxy only
 // when YouTube turned that away (docs/architecture/server-side-transcripts.md).
-export async function throughService<T>(
+export const throughService = async <T>(
   fetches: ServiceFetches,
   budget: ProxyBudget,
   operation: (youTubeFetch: YouTubeFetch) => Promise<T>,
-): Promise<{ value: T; via: "direct" | "proxy"; proxySessions: number }> {
+): Promise<{ value: T; via: "direct" | "proxy"; proxySessions: number }> => {
   let lastError: unknown;
   try {
     return { value: await operation(fetches.direct), via: "direct", proxySessions: 0 };
@@ -97,12 +97,12 @@ export async function throughService<T>(
       await budget.spend(bytes);
     }
   }
-}
+};
 
-export async function fetchThroughService(fetches: ServiceFetches, budget: ProxyBudget, videoId: string): Promise<ServiceFetchResult> {
+export const fetchThroughService = async (fetches: ServiceFetches, budget: ProxyBudget, videoId: string): Promise<ServiceFetchResult> => {
   const url = `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`;
   const { value, via, proxySessions } = await throughService(fetches, budget, (youTubeFetch) =>
     fetchInnerTubeTranscript(youTubeFetch, videoId, url),
   );
   return { fetched: value, via, proxySessions };
-}
+};

@@ -29,7 +29,7 @@ export const sourceUrl = (source: Source): string => (source.kind === "podcast" 
 
 export type PodcastPlatform = "spotify" | "apple" | "page";
 
-export function podcastPlatform(sharedFrom: string): PodcastPlatform {
+export const podcastPlatform = (sharedFrom: string): PodcastPlatform => {
   const link = parsePodcastLink(sharedFrom);
   if (link === null) {
     return "page";
@@ -41,7 +41,7 @@ export function podcastPlatform(sharedFrom: string): PodcastPlatform {
     return "page";
   }
   return "spotify";
-}
+};
 
 const OPEN_PODCAST: Record<PodcastPlatform, string> = {
   spotify: "Listen on Spotify",
@@ -77,25 +77,25 @@ const capitalised = (word: string): string => word.charAt(0).toUpperCase() + wor
 
 // "18:42 video", "14 min article", or "Video" when the length is not known: the kind is named
 // on every card, never by an icon alone, and a missing length is never guessed (OV-232).
-export function sourceLength(source: Source): string {
+export const sourceLength = (source: Source): string => {
   const kind = SOURCE_KIND[source.kind];
   const length = knownLength(source);
   return length === null ? capitalised(kind) : `${length} ${kind}`;
-}
+};
 
 // The chip a library row leads with. A video is most of the library and says so in its meta
 // line, so it has none; any other kind does, and a recipe keeps its yield (design 232a, 232f).
-export function kindChip(note: { source: Source; recipe?: RecipeNote | null | undefined }): string | null {
+export const kindChip = (note: { source: Source; recipe?: RecipeNote | null | undefined }): string | null => {
   if (note.recipe != null) {
     return note.recipe.yield === null ? "Recipe" : `Recipe · ${note.recipe.yield}`;
   }
   return note.source.kind === "youtube" ? null : KIND_CHIP[note.source.kind];
-}
+};
 
 // A recipe names itself by the page's stated total, "1 hr 5 min recipe", or just "Recipe",
 // never by a sum of prep and cook (design 144m); a recipe video by its length, "14:32 recipe
 // video" (122n).
-export function noteSourceLength(note: { source: Source; recipe?: RecipeNote | null | undefined }): string {
+export const noteSourceLength = (note: { source: Source; recipe?: RecipeNote | null | undefined }): string => {
   if (note.recipe != null && note.source.kind === "youtube") {
     return note.source.durationMs ? `${formatClock(note.source.durationMs / 1000)} recipe video` : "Recipe video";
   }
@@ -103,4 +103,4 @@ export function noteSourceLength(note: { source: Source; recipe?: RecipeNote | n
     return note.recipe.totalMinutes === null ? "Recipe" : `${recipeMinutes(note.recipe.totalMinutes)} recipe`;
   }
   return sourceLength(note.source);
-}
+};

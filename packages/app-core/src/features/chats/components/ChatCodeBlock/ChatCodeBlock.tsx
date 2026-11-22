@@ -9,7 +9,7 @@ const COPIED_MS = 2000;
 // OV-364: a fenced block of code in an answer, monospace on the surface tint, its language named
 // when the answer gave one, with Copy. It scrolls sideways rather than wrapping, and can be reached
 // by keyboard to do so.
-export function ChatCodeBlock({ language, code }: { language: string; code: string }) {
+export const ChatCodeBlock = ({ language, code }: { language: string; code: string }) => {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) {
@@ -38,4 +38,4 @@ export function ChatCodeBlock({ language, code }: { language: string; code: stri
       </pre>
     </div>
   );
-}
+};

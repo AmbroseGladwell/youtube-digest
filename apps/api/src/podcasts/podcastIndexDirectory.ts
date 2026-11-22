@@ -64,11 +64,11 @@ export const podcastIndexHeaders = ({ apiKey, apiSecret }: PodcastIndexKey, now:
 
 // The open podcast directory, asked before Apple's on a Spotify link: a show by its exact title,
 // and its newest episodes' guids (docs/features/podcast-links.md, "The directories"; OV-294, OV-303).
-export function podcastIndexDirectory(
+export const podcastIndexDirectory = (
   key: PodcastIndexKey,
   fetchSignedJson: FetchSignedJson,
   now: () => Date = () => new Date(),
-): ShowDirectory {
+): ShowDirectory => {
   const ask = (path: string, params: Record<string, string>) =>
     fetchSignedJson(`${API}/${path}?${new URLSearchParams(params).toString()}`, podcastIndexHeaders(key, now()));
 
@@ -86,7 +86,7 @@ export function podcastIndexDirectory(
       return show === undefined ? null : { show: toShow(show), episodes: parsed(Item, Items.parse(episodes).items).map(toEpisode) };
     },
   };
-}
+};
 
 export const fetchPodcastIndexJson: FetchSignedJson = async (url, headers) => {
   const response = await fetch(url, {

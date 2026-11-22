@@ -30,7 +30,7 @@ export interface LoadedChatSource extends ChatSource {
   questions: ChatQuestionSet;
 }
 
-export async function loadChatSource(source: ChatSource): Promise<LoadedChatSource> {
+export const loadChatSource = async (source: ChatSource): Promise<LoadedChatSource> => {
   const directory = chatSourceDirectory(source.overviewId);
   const read = (file: string) => readFile(join(directory, file), "utf-8");
   const [overview, transcript, questions] = await Promise.all([read("overview.md"), read("transcript.json"), read("questions.json")]);
@@ -40,4 +40,4 @@ export async function loadChatSource(source: ChatSource): Promise<LoadedChatSour
     fetched: JSON.parse(transcript) as FetchedTranscript,
     questions: ChatQuestionSet.parse(JSON.parse(questions)),
   };
-}
+};

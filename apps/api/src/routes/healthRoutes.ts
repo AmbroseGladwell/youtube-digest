@@ -4,7 +4,7 @@ import { ApiError } from "../http/ApiError.js";
 
 // /live is Fly's periodic check and never touches the database, so Neon can suspend while
 // the machine idles; /health is the deploy job's, and asks the database (docs/architecture/deploy.md).
-export function healthRoutes(app: FastifyInstance, sql: SqlClient): void {
+export const healthRoutes = (app: FastifyInstance, sql: SqlClient): void => {
   app.get("/live", { config: { public: true } }, async () => ({ ok: true }));
   app.get("/health", { config: { public: true } }, async () => {
     try {
@@ -14,4 +14,4 @@ export function healthRoutes(app: FastifyInstance, sql: SqlClient): void {
     }
     return { ok: true };
   });
-}
+};

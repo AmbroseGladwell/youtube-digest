@@ -5,7 +5,7 @@ const CALL_TIMEOUT_MS = 20_000;
 
 const Submitted = z.object({ callId: z.string().min(1) });
 
-export function createHttpTranscriber(baseUrl: string, token: string, fetchImpl: typeof fetch = fetch): Transcriber {
+export const createHttpTranscriber = (baseUrl: string, token: string, fetchImpl: typeof fetch = fetch): Transcriber => {
   const base = baseUrl.replace(/\/+$/, "");
   const call = async (method: string, path: string, body?: object): Promise<unknown> => {
     const response = await fetchImpl(`${base}${path}`, {
@@ -26,4 +26,4 @@ export function createHttpTranscriber(baseUrl: string, token: string, fetchImpl:
       await call("DELETE", `/jobs/${encodeURIComponent(callId)}`);
     },
   };
-}
+};

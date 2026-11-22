@@ -52,11 +52,11 @@ export interface GeneratedArticleOutput {
 const chapterHolding = (paragraphIndex: number, chapters: ArticleChapterShape[]): number =>
   chapters.reduce((held, { startParagraphIndex }, index) => (startParagraphIndex <= paragraphIndex ? index : held), 0);
 
-export function assembleArticleOverview(
+export const assembleArticleOverview = (
   input: ArticleGenerationInput,
   output: GeneratedArticleOutput,
   meta: { id: OverviewId; savedAt: string; sourceId: SourceKey },
-): Overview {
+): Overview => {
   const paragraphs = articleParagraphs(input.article);
   const paragraphAt = (index: number): ArticleParagraph => {
     const paragraph = paragraphs[index];
@@ -135,4 +135,4 @@ export function assembleArticleOverview(
       ...(resources.length === 0 ? {} : { resources }),
     },
   });
-}
+};

@@ -17,7 +17,7 @@ const isFastifyError = (error: unknown): error is FastifyError =>
 
 // One shape for every failure under /api, and nothing about an unexpected error's cause
 // reaches the client (docs/architecture/api.md).
-export function registerApiErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
+export const registerApiErrorHandler = (app: FastifyInstance, reporting: RequestErrorReporting): void => {
   app.setErrorHandler((error, request, reply) => {
     if (isApiError(error)) {
       logRefused(request, error.code, error.status, error.details);
@@ -35,4 +35,4 @@ export function registerApiErrorHandler(app: FastifyInstance, reporting: Request
   app.setNotFoundHandler((request, reply) =>
     reply.status(404).send(envelope(new ApiError("not_found", `No route for ${request.method} ${request.url}`))),
   );
-}
+};

@@ -20,7 +20,7 @@ const Body = z.object({ videoId: VideoId });
 // A video's card, read before anything is written: an account, or signed out a trial token
 // reading onboarding's link, as an article's or an episode's read is, with its kind where it
 // can be checked. Never the video in a log.
-export function videoRoutes(
+export const videoRoutes = (
   app: FastifyInstance,
   {
     reader,
@@ -39,7 +39,7 @@ export function videoRoutes(
     sql: SqlClient;
     clock: () => Date;
   },
-): void {
+): void => {
   app.post(
     "/videos/read",
     {
@@ -68,4 +68,4 @@ export function videoRoutes(
       return { status: "read", video, noteKind, transcript };
     },
   );
-}
+};

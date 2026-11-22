@@ -3,7 +3,7 @@ import type { NoteLine } from "@overview/domain";
 // The note's line whose moment holds a cited time, to scroll to and tint (design 310n): the
 // line whose stretch contains it, or else the latest one starting before it. Null when no line
 // has a moment at or before it.
-export function citedLineIndex(lines: readonly NoteLine[], startMs: number): number | null {
+export const citedLineIndex = (lines: readonly NoteLine[], startMs: number): number | null => {
   let latest: number | null = null;
   for (const [index, line] of lines.entries()) {
     const range = line.range;
@@ -18,4 +18,4 @@ export function citedLineIndex(lines: readonly NoteLine[], startMs: number): num
     }
   }
   return latest;
-}
+};

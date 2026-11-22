@@ -28,7 +28,7 @@ export interface PlannedTagEdit {
 
 const same = (left: readonly string[], right: readonly string[]) => left.join("\u0000") === right.join("\u0000");
 
-export function planTagEdit(entries: readonly OverviewWithState[], aliases: TagAliases, edit: TagEdit): PlannedTagEdit {
+export const planTagEdit = (entries: readonly OverviewWithState[], aliases: TagAliases, edit: TagEdit): PlannedTagEdit => {
   const from = new Set(edit.from);
   const apply: OverviewTagWrite[] = [];
   const undo: OverviewTagWrite[] = [];
@@ -60,10 +60,10 @@ export function planTagEdit(entries: readonly OverviewWithState[], aliases: TagA
     undo: { writes: undo, aliases },
     overviewsChanged: apply.length,
   };
-}
+};
 
 // The plan as the caches should read once it lands, for the optimistic paint.
-export function applyTagEditPlan<T extends OverviewWithState>(entry: T, plan: TagEditPlan): T {
+export const applyTagEditPlan = <T extends OverviewWithState>(entry: T, plan: TagEditPlan): T => {
   const write = plan.writes.find(({ overviewId }) => overviewId === entry.overview.id);
   if (write === undefined) {
     return entry;
@@ -73,4 +73,4 @@ export function applyTagEditPlan<T extends OverviewWithState>(entry: T, plan: Ta
     overview: write.tags === undefined ? entry.overview : { ...entry.overview, tags: write.tags },
     state: write.userTags === undefined ? entry.state : { ...entry.state, userTags: write.userTags },
   };
-}
+};

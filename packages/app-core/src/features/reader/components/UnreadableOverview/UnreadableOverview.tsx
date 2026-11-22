@@ -18,7 +18,7 @@ export interface UnreadableOverviewProps {
 // recovered. A held-back record is not offered it at all, because writing this client's
 // version over a newer one is the clobber the read rule exists to prevent
 // (docs/features/record-migrations.md).
-export function UnreadableOverview({ record }: UnreadableOverviewProps) {
+export const UnreadableOverview = ({ record }: UnreadableOverviewProps) => {
   const navigate = useNavigate();
   const { start } = useNewOverviewRunController();
 
@@ -98,4 +98,4 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
       back
     />
   );
-}
+};

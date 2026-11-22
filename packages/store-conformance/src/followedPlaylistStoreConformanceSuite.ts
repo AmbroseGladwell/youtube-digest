@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { PlaylistId, VideoId, type FollowedPlaylistStore } from "@overview/domain";
 import { makeFollowedPlaylist } from "./makeFollowedPlaylist.js";
 
-export function defineFollowedPlaylistStoreConformanceSuite(
+export const defineFollowedPlaylistStoreConformanceSuite = (
   label: string,
   createStore: () => FollowedPlaylistStore | Promise<FollowedPlaylistStore>,
-): void {
+): void => {
   const behaviour = (description: string) => `${label} FollowedPlaylistStore: ${description}`;
 
   test(behaviour("follows nothing until a playlist is saved"), async () => {
@@ -51,4 +51,4 @@ export function defineFollowedPlaylistStoreConformanceSuite(
     await store.saveCheck(later);
     assert.deepEqual(await store.getCheck(playlistId), later);
   });
-}
+};

@@ -8,7 +8,7 @@ export interface ConsentAddressCardProps {
 
 // The one thing on the screen the assistant cannot make up, so it outranks the name
 // (design 58a).
-export function ConsentAddressCard({ host }: ConsentAddressCardProps) {
+export const ConsentAddressCard = ({ host }: ConsentAddressCardProps) => {
   return (
     <div className={styles.root} data-testid={consentAddressCardTestIds.root}>
       <div className={styles.address}>
@@ -25,4 +25,4 @@ export function ConsentAddressCard({ host }: ConsentAddressCardProps) {
       <p className={styles.note}>The one detail the assistant can’t make up. If you weren’t just using {host}, decline.</p>
     </div>
   );
-}
+};

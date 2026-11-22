@@ -29,7 +29,7 @@ const answer = (overall: string) => ({
   overall: call(overall),
 });
 
-function openAiReplying(body: unknown, status = 200) {
+const openAiReplying = (body: unknown, status = 200) => {
   const sent: string[] = [];
   const http = (async (url: string, init: RequestInit) => {
     sent.push(`${url} ${String(init.body)}`);
@@ -45,7 +45,7 @@ function openAiReplying(body: unknown, status = 200) {
     );
   }) as unknown as typeof fetch;
   return { http, sent };
-}
+};
 
 const pair = (candidate: string) => ({
   fetched: makeFetchedTranscript(),

@@ -34,7 +34,7 @@ const Figure = ({ value }: { value: number }) => <span className={styles.figure}
 // token estimate labelled as one, every figure counted in code. Both main actions follow;
 // Cancel follows nothing. Focus moves to the actions when it opens. The pace and the order sit
 // behind one line each with Change, because the defaults need no attention (95t–95v).
-export function PlaylistPreview({
+export const PlaylistPreview = ({
   lookup,
   preview,
   alreadyFollowing,
@@ -48,7 +48,7 @@ export function PlaylistPreview({
   onOrderChange,
   onFollow,
   onCancel,
-}: PlaylistPreviewProps) {
+}: PlaylistPreviewProps) => {
   const firstAction = useRef<HTMLButtonElement>(null);
   const toMake = preview.toMake.length;
   const month = useLeftThisMonth();
@@ -205,4 +205,4 @@ export function PlaylistPreview({
       </div>
     </div>
   );
-}
+};

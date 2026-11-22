@@ -11,14 +11,14 @@ const answer = (text: string) =>
 const refusal = (message: string) =>
   new Response(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message } }), { status: 400 });
 
-function recordingHttp(responses: Response[]) {
+const recordingHttp = (responses: Response[]) => {
   const bodies: Record<string, unknown>[] = [];
   const http: typeof fetch = async (_input, init) => {
     bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
     return responses.shift()!;
   };
   return { http, bodies };
-}
+};
 
 test("a schema whose grammar Claude refuses is sent again in the prompt, unenforced", async () => {
   const { http, bodies } = recordingHttp([

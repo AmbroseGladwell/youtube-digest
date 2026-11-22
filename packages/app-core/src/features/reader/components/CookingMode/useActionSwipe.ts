@@ -24,7 +24,7 @@ export interface ActionSwipe {
 
 // Swipe up for the next action and down for the last one (OV-158). The action follows the finger
 // while it drags, and a short or mostly sideways drag springs back.
-export function useActionSwipe(onUp: () => void, onDown: () => void, enabled: boolean): ActionSwipe {
+export const useActionSwipe = (onUp: () => void, onDown: () => void, enabled: boolean): ActionSwipe => {
   const start = useRef<Start | null>(null);
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -82,4 +82,4 @@ export function useActionSwipe(onUp: () => void, onDown: () => void, enabled: bo
       onPointerCancel: reset,
     },
   };
-}
+};

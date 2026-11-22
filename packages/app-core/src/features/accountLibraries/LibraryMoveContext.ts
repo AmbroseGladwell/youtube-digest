@@ -18,6 +18,6 @@ const LibraryMoveContext = createContext<LibraryMoveState>({
 
 export const LibraryMoveProvider = LibraryMoveContext.Provider;
 
-export function useLibraryMove(): LibraryMoveState {
+export const useLibraryMove = (): LibraryMoveState => {
   return useContext(LibraryMoveContext);
-}
+};

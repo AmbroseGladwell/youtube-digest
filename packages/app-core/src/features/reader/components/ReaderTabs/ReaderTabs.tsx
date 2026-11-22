@@ -17,7 +17,7 @@ export interface ReaderTabsProps {
 
 const readerTabChoice = (tab: ReaderTab): ReaderTabChoice => ReaderTabChoice.parse(tab.toLowerCase());
 
-export function ReaderTabs({ active, panelId, tabId, onChange, tabs = READER_TABS, ref }: ReaderTabsProps) {
+export const ReaderTabs = ({ active, panelId, tabId, onChange, tabs = READER_TABS, ref }: ReaderTabsProps) => {
   const indicator = useTabIndicator(active);
   const analytics = useOverviewPageAnalytics();
   const choose = (tab: ReaderTab) => {
@@ -62,4 +62,4 @@ export function ReaderTabs({ active, panelId, tabId, onChange, tabs = READER_TAB
       </div>
     </div>
   );
-}
+};

@@ -20,7 +20,7 @@ export interface ArticlePageFetcherOptions extends PublicWebFetchOptions {
 }
 
 // docs/features/pasted-article-links.md
-export function createArticlePageFetcher({ mostBytes = MOST_BYTES, ...options }: ArticlePageFetcherOptions = {}) {
+export const createArticlePageFetcher = ({ mostBytes = MOST_BYTES, ...options }: ArticlePageFetcherOptions = {}) => {
   const fetchPublicWeb = createPublicWebFetch(options);
 
   return async function fetchArticlePage(link: string): Promise<FetchedPage> {
@@ -40,4 +40,4 @@ export function createArticlePageFetcher({ mostBytes = MOST_BYTES, ...options }:
       return failed("no-answer");
     }
   };
-}
+};

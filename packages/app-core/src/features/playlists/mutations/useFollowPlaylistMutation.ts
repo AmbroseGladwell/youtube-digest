@@ -19,7 +19,7 @@ export interface FollowPlaylistVariables {
 // Following records the playlist for every device and marks everything in it as seen here,
 // so only what is added later is queued on its own. The backfill, when asked for, queues
 // what is already there (docs/features/playlists.md, "Following").
-export function useFollowPlaylistMutation() {
+export const useFollowPlaylistMutation = () => {
   const { followedPlaylistStore, captureQueueStore, overviewStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -64,4 +64,4 @@ export function useFollowPlaylistMutation() {
       await queryClient.invalidateQueries({ queryKey: captureQueueKeys.all });
     },
   });
-}
+};

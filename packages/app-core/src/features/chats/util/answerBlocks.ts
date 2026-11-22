@@ -10,7 +10,7 @@ const paragraphsOf = (prose: string): AnswerBlock[] =>
 
 // An answer's text as it is drawn (OV-364): paragraphs, one a line, and fenced code blocks, which
 // keep their lines. A fence still open at the end is a code block already while the answer streams.
-export function answerBlocks(text: string): AnswerBlock[] {
+export const answerBlocks = (text: string): AnswerBlock[] => {
   const blocks: AnswerBlock[] = [];
   let from = 0;
   for (const fence of text.matchAll(FENCE)) {
@@ -21,4 +21,4 @@ export function answerBlocks(text: string): AnswerBlock[] {
   }
   blocks.push(...paragraphsOf(text.slice(from)));
   return blocks;
-}
+};

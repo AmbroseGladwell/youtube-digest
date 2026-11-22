@@ -9,11 +9,11 @@ import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js"
 // One message of the reader's allowance, taken before anything is asked, or the wait that says
 // why not: the month, the day, or everyone's day on us (docs/features/chats.md, "Asking"). Every
 // kind of chat counts the same, one message however many passes it takes.
-export async function reserveChatMessage(
+export const reserveChatMessage = async (
   usage: ChatUsageRepository,
   { askedAt, accountId, plan, dailyMessages }: { askedAt: Date; accountId: AccountId; plan: Plan; dailyMessages: number },
   log: FastifyBaseLogger,
-): Promise<Extract<ChatReservation, { reserved: true }>> {
+): Promise<Extract<ChatReservation, { reserved: true }>> => {
   const reservation = await usage.reserve(askedAt, accountId, plan, dailyMessages);
   if (reservation.reserved) {
     return reservation;
@@ -36,4 +36,4 @@ export async function reserveChatMessage(
         quota: "chat-day",
         retryAfterSeconds: secondsToNextUsageDay(askedAt),
       });
-}
+};

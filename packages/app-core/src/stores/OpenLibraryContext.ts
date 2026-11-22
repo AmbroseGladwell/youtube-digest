@@ -7,6 +7,6 @@ export const OpenLibraryProvider = OpenLibraryContext.Provider;
 
 // How to open another library beside the one shown, for the move on sign-in. Null outside
 // a shell that has libraries to open.
-export function useOpenLibrary(): OpenLibrary | null {
+export const useOpenLibrary = (): OpenLibrary | null => {
   return useContext(OpenLibraryContext);
-}
+};

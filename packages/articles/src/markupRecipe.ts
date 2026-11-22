@@ -108,7 +108,7 @@ const theOnly = (sections: Section[]): Section | null => {
 
 // The recipe a page shows when it declares none: an ingredients heading over a list, and a
 // method heading over steps (docs/features/recipe-notes.md, "Read from the page itself").
-export function markupRecipe(document: Document): Recipe | null {
+export const markupRecipe = (document: Document): Recipe | null => {
   if (document.body === null) {
     return null;
   }
@@ -131,4 +131,4 @@ export function markupRecipe(document: Document): Recipe | null {
     steps: method.items,
     ...labelledRecipeFacts(document.body, method.heading),
   };
-}
+};

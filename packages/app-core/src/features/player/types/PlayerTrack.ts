@@ -15,7 +15,7 @@ export interface PlayerTrack {
 
 // Takes SharedNote so a shared copy makes the same track from the same fields: none of
 // the three an Overview has on top of it is played or named (docs/features/sharing.md).
-export function playerTrackFor(overview: SharedNote, lines: NoteLine[] = overviewNoteLines(overview)): PlayerTrack {
+export const playerTrackFor = (overview: SharedNote, lines: NoteLine[] = overviewNoteLines(overview)): PlayerTrack => {
   return {
     overviewId: overview.id,
     title: overview.source.title,
@@ -24,4 +24,4 @@ export function playerTrackFor(overview: SharedNote, lines: NoteLine[] = overvie
     opening: spokenOpening(overview.source),
     lines,
   };
-}
+};

@@ -14,16 +14,16 @@ const cosine = (left: readonly number[], right: readonly number[]): number => {
   return dot / (Math.sqrt(leftSize) * Math.sqrt(rightSize));
 };
 
-export function closestPassages(
+export const closestPassages = (
   passages: readonly Passage[],
   vectors: readonly (readonly number[])[],
   query: readonly number[],
   count: number,
-): Passage[] {
+): Passage[] => {
   return passages
     .map((passage, index) => ({ passage, similarity: cosine(vectors[index] ?? [], query) }))
     .sort((left, right) => right.similarity - left.similarity)
     .slice(0, count)
     .map(({ passage }) => passage)
     .sort((left, right) => left.startMs - right.startMs);
-}
+};

@@ -34,7 +34,7 @@ const GONE_COPY: Record<"revoked" | "unknown", { heading: string; line: string }
 // Served when this process has no built web app beside it — an API-only deploy, and every
 // route test. The document is real and readable rather than a placeholder, but the reader's
 // own layout is the app's job (docs/features/sharing.md).
-function fallbackBody(payload: SharePayload): string {
+const fallbackBody = (payload: SharePayload): string => {
   if (payload.state !== "shared") {
     const { heading, line } = GONE_COPY[payload.state];
     return `<main><h1>${escapeHtml(heading)}</h1><p>${escapeHtml(line)}</p></main>`;
@@ -48,9 +48,9 @@ function fallbackBody(payload: SharePayload): string {
     `<p><a href="${escapeHtml(sourceUrl(note.source))}">${escapeHtml(wayOut(note))}</a></p>`,
     "</main>",
   ].join("");
-}
+};
 
-function wayOut({ source, recipe }: SharedNote): string {
+const wayOut = ({ source, recipe }: SharedNote): string => {
   if (source.kind === "youtube") {
     return "Watch on YouTube";
   }
@@ -58,9 +58,9 @@ function wayOut({ source, recipe }: SharedNote): string {
     return openPodcastLabel(source.sharedFrom);
   }
   return `${recipe == null ? "Read the article" : "Open the recipe"} on ${sourceName(source)}`;
-}
+};
 
-export function sharePageHtml({ head, payload, shell }: SharePageHtmlInput): string {
+export const sharePageHtml = ({ head, payload, shell }: SharePageHtmlInput): string => {
   const injected = `${head}\n    ${payloadScript(payload)}`;
   if (shell !== null && shell.includes("</head>")) {
     // The shell's own <title> goes, or a crawler reads that one and every shared link
@@ -77,4 +77,4 @@ export function sharePageHtml({ head, payload, shell }: SharePageHtmlInput): str
   <body>${fallbackBody(payload)}</body>
 </html>
 `;
-}
+};

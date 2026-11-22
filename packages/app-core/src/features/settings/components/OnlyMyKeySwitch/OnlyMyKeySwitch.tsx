@@ -15,7 +15,7 @@ export const OWN_KEY_FOR_OVERVIEWS_ONLY =
 
 // Beside the keys, because it is about where they send things (docs/architecture/tiers.md,
 // "Which key an overview uses"). Off by default: the fallback is on until the reader says.
-export function OnlyMyKeySwitch() {
+export const OnlyMyKeySwitch = () => {
   const onlyMyKey = useSettingsQuery().data?.onlyMyKey ?? false;
   const updateSettings = useUpdateSettingsMutation();
   const labelId = useId();
@@ -48,4 +48,4 @@ export function OnlyMyKeySwitch() {
       </p>
     </div>
   );
-}
+};

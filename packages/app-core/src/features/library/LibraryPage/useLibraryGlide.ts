@@ -27,7 +27,7 @@ export const libraryRowGlideName = (id: string) => `library-row-${id.replace(/[^
 // opens or closes with them (libraryTransitions.scss). The names exist only for the length
 // of the transition, so a route transition still sees one pane. Scrolled down into the list,
 // the change lands at once and the page goes back to the top instead.
-export function useLibraryGlide(region: RefObject<HTMLElement | null>, viewKey: string) {
+export const useLibraryGlide = (region: RefObject<HTMLElement | null>, viewKey: string) => {
   const settle = useRef<(() => void) | null>(null);
 
   useLayoutEffect(() => {
@@ -77,4 +77,4 @@ export function useLibraryGlide(region: RefObject<HTMLElement | null>, viewKey: 
     },
     [region],
   );
-}
+};

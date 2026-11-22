@@ -10,7 +10,7 @@ interface ClientRow {
   client_secret_hash: string | null;
 }
 
-export async function findClient(sql: SqlClient, clientId: string): Promise<OAuthClient | null> {
+export const findClient = async (sql: SqlClient, clientId: string): Promise<OAuthClient | null> => {
   const [row] = await sql.query<ClientRow>(
     "select id, client_name, redirect_uris, token_endpoint_auth_method, client_secret_hash from oauth_clients where id = $1",
     [clientId],
@@ -24,4 +24,4 @@ export async function findClient(sql: SqlClient, clientId: string): Promise<OAut
         tokenEndpointAuthMethod: TokenEndpointAuthMethod.parse(row.token_endpoint_auth_method),
         clientSecretHash: row.client_secret_hash,
       };
-}
+};

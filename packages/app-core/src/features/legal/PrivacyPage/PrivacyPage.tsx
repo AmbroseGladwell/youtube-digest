@@ -671,7 +671,7 @@ const sections: readonly LegalSection[] = [
   },
 ];
 
-export function PrivacyPage() {
+export const PrivacyPage = () => {
   return (
     <LegalPage
       title="Privacy policy"
@@ -686,4 +686,4 @@ export function PrivacyPage() {
       otherPage={{ label: "Terms of service", to: Routes.terms() }}
     />
   );
-}
+};

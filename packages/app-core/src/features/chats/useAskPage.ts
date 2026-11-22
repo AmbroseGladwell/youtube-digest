@@ -18,7 +18,7 @@ export const askScopeOfChat = (chat: Chat): "library" | "project" => (chatOwner(
 // The Ask page (OV-354, page 3): one conversation over the library or a project at a time, named
 // in the address so it survives a reload; the drawer's history of every library and project
 // conversation, a deleted one undoable for six seconds; and what the next question pins.
-export function useAskPage(projectId: ProjectId | null, chatParam: string | null) {
+export const useAskPage = (projectId: ProjectId | null, chatParam: string | null) => {
   const owner: AskOwner = projectId === null ? { kind: "library" } : { kind: "project", id: projectId };
   const scope = askScopeOf(owner);
   const navigate = useNavigate();
@@ -184,4 +184,4 @@ export function useAskPage(projectId: ProjectId | null, chatParam: string | null
     stop,
     dismiss: asking.dismiss,
   };
-}
+};

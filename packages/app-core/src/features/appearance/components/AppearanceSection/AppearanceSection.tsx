@@ -36,7 +36,7 @@ const themeLine = (theme: ThemeMode, deviceIsDark: boolean): string =>
 
 // Native radios under the paint, so arrow keys move the choice and it applies as they move
 // (design 135d).
-export function AppearanceSection() {
+export const AppearanceSection = () => {
   const saved = useAppearance();
   const updateSettings = useUpdateSettingsMutation();
   const appearance = updateSettings.isPending ? { ...saved, ...updateSettings.variables } : saved;
@@ -177,4 +177,4 @@ export function AppearanceSection() {
       </p>
     </div>
   );
-}
+};

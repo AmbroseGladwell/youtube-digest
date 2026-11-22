@@ -26,7 +26,7 @@ const messageOf = (event: MessageEvent): OnboardingRunMessage | null => {
 // instance, asks over a channel whether that tab still has it, and mirrors what it answers.
 // When nothing answers, the tab is gone, and the asking tab takes the run over
 // (docs/features/onboarding.md, "The run lives in one tab").
-export function useOnboardingRunOwner({
+export const useOnboardingRunOwner = ({
   link,
   wanted,
   mine,
@@ -39,7 +39,7 @@ export function useOnboardingRunOwner({
   mine: boolean;
   phase: OnboardingRunPhase;
   claim: () => void;
-}): HeldElsewhere | null {
+}): HeldElsewhere | null => {
   const [held, setHeld] = useState<HeldElsewhere | null>(null);
   const latest = useRef({ phase, claim });
   latest.current = { phase, claim };
@@ -101,4 +101,4 @@ export function useOnboardingRunOwner({
   }, [mine, wanted, link]);
 
   return mine ? null : held;
-}
+};

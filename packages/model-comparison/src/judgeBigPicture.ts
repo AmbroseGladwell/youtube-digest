@@ -47,7 +47,7 @@ Then, giving a one-sentence reason first:
 - describesTheSource: does it describe the source itself, such as its format, speakers, host or length,
   rather than the subject? That is In one line's job, so true is a fault.`;
 
-export function bigPictureJudgePrompt(overview: Pick<Overview, "inOneLine" | "bigPicture" | "coreClaim">) {
+export const bigPictureJudgePrompt = (overview: Pick<Overview, "inOneLine" | "bigPicture" | "coreClaim">) => {
   return {
     systemPrompt: SYSTEM_PROMPT,
     userMessage: [
@@ -57,7 +57,7 @@ export function bigPictureJudgePrompt(overview: Pick<Overview, "inOneLine" | "bi
     ].join("\n\n"),
     schema: BigPictureLabels,
   };
-}
+};
 
 export interface JudgeBigPictureOptions {
   videoId: string;
@@ -70,7 +70,7 @@ export interface JudgeBigPictureOptions {
 }
 
 // A judge from another provider than the writer, as for the actions (docs/architecture/model-comparison.md).
-export async function judgeBigPicture({
+export const judgeBigPicture = async ({
   videoId,
   overview,
   writer,
@@ -78,7 +78,7 @@ export async function judgeBigPicture({
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgeBigPictureOptions): Promise<BigPictureJudgeRecord> {
+}: JudgeBigPictureOptions): Promise<BigPictureJudgeRecord> => {
   const judge = actionJudgeFor(writer, chosen);
   const metered = meteredFetch(judge.provider, http, now);
   const client = createGenerationClient({ ...judge, apiKey: keys[judge.provider] ?? "", http: metered.http });
@@ -111,4 +111,4 @@ export async function judgeBigPicture({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

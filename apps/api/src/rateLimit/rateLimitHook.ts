@@ -8,7 +8,7 @@ export type RateLimitKey = (request: FastifyRequest) => string | null;
 
 // A request with no key is not counted by this limit: an unauthenticated request has no
 // account, and a malformed body has no address to count against (docs/architecture/api.md).
-export function rateLimitHook(rateLimit: RateLimit, keyOf: RateLimitKey, clock: () => Date) {
+export const rateLimitHook = (rateLimit: RateLimit, keyOf: RateLimitKey, clock: () => Date) => {
   const limiter = new FixedWindowLimiter(rateLimit);
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const key = keyOf(request);
@@ -31,4 +31,4 @@ export function rateLimitHook(rateLimit: RateLimit, keyOf: RateLimitKey, clock: 
     reply.header("retry-after", String(retryAfterSeconds));
     throw new ApiError("too_many_requests", "Too many requests. Try again shortly", { retryAfterSeconds });
   };
-}
+};

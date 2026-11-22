@@ -3,7 +3,7 @@ const openingOf = (field: string) => new RegExp(String.raw`^\s*\{\s*"${field}"\s
 // The text of a reply's first field (its answer, or a sectioned answer's intro) while the reply
 // still arrives as JSON, up to the last character that is certainly whole: an escape cut in half
 // waits for the next chunk.
-export function answerSoFar(partialJson: string, field = "answer"): string {
+export const answerSoFar = (partialJson: string, field = "answer"): string => {
   const opening = openingOf(field).exec(partialJson);
   if (opening === null) {
     return "";
@@ -22,4 +22,4 @@ export function answerSoFar(partialJson: string, field = "answer"): string {
   } catch {
     return "";
   }
-}
+};

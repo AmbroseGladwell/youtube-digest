@@ -7,7 +7,7 @@ interface NavigatorWithUserAgentData {
 
 // The operating system in one word, from what the browser says about itself: never the
 // device, the browser build or anything finer.
-export function analyticsPlatform(navigator: NavigatorWithUserAgentData | undefined): AnalyticsPlatform {
+export const analyticsPlatform = (navigator: NavigatorWithUserAgentData | undefined): AnalyticsPlatform => {
   const said = `${navigator?.userAgentData?.platform ?? ""} ${navigator?.userAgent ?? ""}`.toLowerCase();
   if (said.includes("android")) {
     return "android";
@@ -28,4 +28,4 @@ export function analyticsPlatform(navigator: NavigatorWithUserAgentData | undefi
     return "linux";
   }
   return "other";
-}
+};

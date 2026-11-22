@@ -10,12 +10,12 @@ export interface ReplyScore {
   citedUnknownPassage: boolean;
 }
 
-export function scoreReply(
+export const scoreReply = (
   question: ChatQuestion,
   momentsMs: readonly number[],
   reply: ChatReply,
   passages: readonly Passage[],
-): ReplyScore {
+): ReplyScore => {
   const byId = new Map(passages.map((passage) => [passage.id, passage]));
   const cited = reply.passages.flatMap((id) => byId.get(id.trim()) ?? []);
   const answerable = question.kind !== "notInSource";
@@ -26,4 +26,4 @@ export function scoreReply(
     mentioned: answerable && question.mentions.length > 0 ? question.mentions.some((term) => answer.includes(term.toLowerCase())) : null,
     citedUnknownPassage: cited.length < reply.passages.length,
   };
-}
+};

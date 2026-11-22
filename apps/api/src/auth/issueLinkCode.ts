@@ -11,7 +11,7 @@ export interface IssuedLinkCode {
   expiresAt: string;
 }
 
-export async function issueLinkCode(sql: SqlClient, accountId: AccountId, now: Date): Promise<IssuedLinkCode> {
+export const issueLinkCode = async (sql: SqlClient, accountId: AccountId, now: Date): Promise<IssuedLinkCode> => {
   const code = generateLinkCode();
   const expiresAt = new Date(now.getTime() + LINK_CODE_TTL_MS).toISOString();
   await sql.query(
@@ -19,4 +19,4 @@ export async function issueLinkCode(sql: SqlClient, accountId: AccountId, now: D
     [accountId, hashToken(code), now.toISOString(), expiresAt],
   );
   return { code: formatLinkCode(code), expiresAt };
-}
+};

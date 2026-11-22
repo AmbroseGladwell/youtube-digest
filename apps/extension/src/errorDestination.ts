@@ -14,7 +14,7 @@ const StoredErrorDestination = z.object({
 export const writeErrorDestination = (destination: ErrorDestination): void =>
   void chrome.storage.session.set({ [ERROR_DESTINATION]: destination }).catch(() => undefined);
 
-export async function readErrorDestination(): Promise<ErrorDestination | null> {
+export const readErrorDestination = async (): Promise<ErrorDestination | null> => {
   try {
     const stored = await chrome.storage.session.get(ERROR_DESTINATION);
     const parsed = StoredErrorDestination.safeParse(stored[ERROR_DESTINATION]);
@@ -22,4 +22,4 @@ export async function readErrorDestination(): Promise<ErrorDestination | null> {
   } catch {
     return null;
   }
-}
+};

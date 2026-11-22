@@ -9,7 +9,7 @@ const WHAT_YOU_GET: { icon: StrokeIconName; line: string }[] = [
 ];
 
 // Design 327l: beside the way in, their card as it will be saved, and what the account gives them.
-export function OnboardingAccountSide({ saved }: { saved: ReactNode | null }) {
+export const OnboardingAccountSide = ({ saved }: { saved: ReactNode | null }) => {
   return (
     <aside className={styles.root}>
       {saved !== null && (
@@ -35,4 +35,4 @@ export function OnboardingAccountSide({ saved }: { saved: ReactNode | null }) {
       </section>
     </aside>
   );
-}
+};

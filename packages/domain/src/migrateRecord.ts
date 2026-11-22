@@ -2,7 +2,7 @@ import type { RecordMigration } from "./RecordMigration.js";
 import { RecordMigrationError } from "./RecordMigrationError.js";
 import { stampSchemaVersion, storedSchemaVersion } from "./storedSchemaVersion.js";
 
-export function applyRecordMigration(record: unknown, migration: RecordMigration): unknown {
+export const applyRecordMigration = (record: unknown, migration: RecordMigration): unknown => {
   const expected = migration.newSchemaVersion - 1;
   const found = storedSchemaVersion(record);
   if (found !== expected) {
@@ -14,9 +14,9 @@ export function applyRecordMigration(record: unknown, migration: RecordMigration
     throw new RecordMigrationError(expected, found);
   }
   return stampSchemaVersion(altered, migration.newSchemaVersion);
-}
+};
 
-export function migrateRecord(record: unknown, migrations: readonly RecordMigration[]): unknown {
+export const migrateRecord = (record: unknown, migrations: readonly RecordMigration[]): unknown => {
   let migrated = record;
   for (const migration of migrations) {
     if (storedSchemaVersion(migrated) >= migration.newSchemaVersion) {
@@ -25,4 +25,4 @@ export function migrateRecord(record: unknown, migrations: readonly RecordMigrat
     migrated = applyRecordMigration(migrated, migration);
   }
   return migrated;
-}
+};

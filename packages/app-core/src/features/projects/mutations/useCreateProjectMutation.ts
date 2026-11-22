@@ -10,7 +10,7 @@ export interface CreateProjectVariables {
 }
 
 // Not optimistic: the page it opens onto needs the project to be there.
-export function useCreateProjectMutation() {
+export const useCreateProjectMutation = () => {
   const { projectStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -38,4 +38,4 @@ export function useCreateProjectMutation() {
       }
     },
   });
-}
+};

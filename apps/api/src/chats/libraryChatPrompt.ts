@@ -66,11 +66,11 @@ Rules:
 // OV-307's two-pass system message, which found 20 of 22 core overviews with no point drifting from
 // its sources. The map serves both passes, so the second reads it from the cache. Below the
 // threshold the overviews go whole and the model answers at once.
-export function libraryChatMaterial(
+export const libraryChatMaterial = (
   scope: LibraryChatScope,
   overviews: readonly Overview[],
   wholeCharacters = WHOLE_CHARACTERS,
-): LibraryChatMaterial {
+): LibraryChatMaterial => {
   const labels = new Map(overviews.map((overview, index) => [`O${index + 1}`, overview]));
   const whole = [...labels].map(([label, overview]) => `## [${label}]\n\n${labelled(label, overview)}`);
   const mode = whole.join("\n\n").length <= wholeCharacters ? "whole" : "map";
@@ -93,7 +93,7 @@ ${SHAPE_AND_RULES}
 
 ${[...labels].map(([label, overview]) => briefEntry(label, overview)).join("\n\n")}`;
   return { mode, system, labels };
-}
+};
 
 export const pickPrompt = (question: string): PromptMessage => ({
   role: "user",

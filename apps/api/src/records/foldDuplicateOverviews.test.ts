@@ -18,16 +18,16 @@ const OTHER_ACCOUNT = "a0000000-0000-4000-8000-000000000002";
 const TOPIC_A = TopicId.parse(randomUUID());
 const TOPIC_B = TopicId.parse(randomUUID());
 
-async function databaseBeforeTheIndex(): Promise<SqlClient> {
+const databaseBeforeTheIndex = async (): Promise<SqlClient> => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(18) });
   for (const id of [ACCOUNT, OTHER_ACCOUNT]) {
     await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [id, `${id}@example.com`]);
   }
   return sql;
-}
+};
 
-async function seed(
+const seed = async (
   sql: SqlClient,
   accountId: string,
   kind: "overview" | "overviewState",
@@ -35,7 +35,7 @@ async function seed(
   body: Record<string, unknown>,
   updatedAt: string,
   schemaVersion = CURRENT_SCHEMA_VERSIONS[kind],
-): Promise<void> {
+): Promise<void> => {
   const [row] = await sql.query<{ last_seq: number | string | bigint }>(
     "update accounts set last_seq = last_seq + 1 where id = $1 returning last_seq",
     [accountId],
@@ -45,7 +45,7 @@ async function seed(
      values ($1, $2, $3, $4, 1, $5, $6, false, $7::jsonb)`,
     [accountId, kind, id, schemaVersion, Number(row!.last_seq), updatedAt, JSON.stringify(body)],
   );
-}
+};
 
 const live = async (sql: SqlClient, accountId = ACCOUNT) =>
   (await sql.query<RecordRow>(`select ${RECORD_COLUMNS} from records where account_id = $1 order by seq`, [accountId])).map(

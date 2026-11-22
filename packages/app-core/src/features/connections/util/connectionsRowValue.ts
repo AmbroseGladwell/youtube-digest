@@ -12,7 +12,7 @@ export const UNREACHABLE_ROW_VALUE = "Couldn't check";
 // signed-in account can connect (docs/architecture/tiers.md), so a connection belongs to an
 // account rather than to a plan, and what is not known yet is said as such rather than
 // guessed as none.
-export function connectionsRowValue({ signedIn, accountUnreachable, count, countFailed }: ConnectionsRowState): string {
+export const connectionsRowValue = ({ signedIn, accountUnreachable, count, countFailed }: ConnectionsRowState): string => {
   if (!signedIn) {
     return "Sign in first";
   }
@@ -23,4 +23,4 @@ export function connectionsRowValue({ signedIn, accountUnreachable, count, count
     return countFailed ? UNREACHABLE_ROW_VALUE : CHECKING_ROW_VALUE;
   }
   return count === 0 ? "None" : `${count} connected`;
-}
+};

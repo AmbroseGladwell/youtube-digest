@@ -47,7 +47,7 @@ type RunStores = Pick<Stores, "overviewStore" | "settingsStore" | "transcriptSto
 // (docs/architecture/tiers.md, "Signed out"). Shared by a run the reader starts and by the
 // capture queue (docs/features/capture-queue.md). The library is the one shown, unless the
 // run brings its own.
-export function useRunOverviewGeneration(apiKeys: ApiKeys) {
+export const useRunOverviewGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
   const youTubeFetch = useYouTubeFetch();
@@ -78,9 +78,9 @@ export function useRunOverviewGeneration(apiKeys: ApiKeys) {
         .finally(settled),
     [makeWith, learnFrom, settled, knownApiUrl, youTubeFetch, connection.token, shown, reporter],
   );
-}
+};
 
-export function useRunArticleGeneration(apiKeys: ApiKeys) {
+export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const shown = useStores();
 
@@ -100,13 +100,13 @@ export function useRunArticleGeneration(apiKeys: ApiKeys) {
         .finally(settled),
     [makeWith, learnFrom, settled, shown],
   );
-}
+};
 
 // An episode's words come through our server, on the account; the reader's
 // extension searches YouTube for the episode on their own connection when it can
 // (docs/features/podcast-on-youtube.md). Or its audio is transcribed, as the reader chose, with the
 // events of that measured here, wherever the run was started (docs/features/speech-to-text.md).
-export function useRunPodcastGeneration(apiKeys: ApiKeys) {
+export const useRunPodcastGeneration = (apiKeys: ApiKeys) => {
   const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
   const analytics = useAnalytics();
   const shown = useStores();
@@ -181,9 +181,9 @@ export function useRunPodcastGeneration(apiKeys: ApiKeys) {
     },
     [makeWith, learnFrom, settled, shown, knownApiUrl, connection.token, youTubeFetch, analytics],
   );
-}
+};
 
-function useOverviewMaker(apiKeys: ApiKeys) {
+const useOverviewMaker = (apiKeys: ApiKeys) => {
   const settingsQuery = useSettingsQuery();
   const knownApiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
@@ -255,4 +255,4 @@ function useOverviewMaker(apiKeys: ApiKeys) {
   const settled = useCallback(() => void queryClient.invalidateQueries({ queryKey: generationKeys.allUsage() }), [queryClient]);
 
   return { makeWith, learnFrom, settled };
-}
+};

@@ -81,7 +81,7 @@ const voiceOf = ({ status, source }: PlayerSnapshot, canNarrate: boolean, paused
 
 // Cooking a recipe step by step (OV-150, designs 150a–150au): one action on screen, read once,
 // and then the voice waits for the reader. docs/features/recipe-notes.md, "Cooking step by step".
-export function useCookingMode({ overviewId, title, steps, actions, recipeVoice, snapshot, analytics }: CookingModeInput): CookingMode {
+export const useCookingMode = ({ overviewId, title, steps, actions, recipeVoice, snapshot, analytics }: CookingModeInput): CookingMode => {
   const engine = usePlayer();
   const [open, setOpen] = useState(false);
   const [at, setAt] = useState(0);
@@ -296,4 +296,4 @@ export function useCookingMode({ overviewId, title, steps, actions, recipeVoice,
       writeCookingHints(COOKING_HINT_ENTRIES);
     },
   };
-}
+};

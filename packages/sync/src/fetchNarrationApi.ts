@@ -17,7 +17,7 @@ const ignoringNotFound = (error: unknown) => {
   throw error;
 };
 
-export function createFetchNarrationApi(options: FetchNarrationApiOptions): NarrationApi {
+export const createFetchNarrationApi = (options: FetchNarrationApiOptions): NarrationApi => {
   const request = createApiRequester(options);
   const root = options.baseUrl.replace(/\/+$/, "");
   const status = (key: string) => answered(request("GET", `/audio/${key}`, NarrationRender));
@@ -43,4 +43,4 @@ export function createFetchNarrationApi(options: FetchNarrationApiOptions): Narr
       }),
     fileUrl: ({ fileUrl }) => `${root}${fileUrl}`,
   };
-}
+};

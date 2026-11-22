@@ -71,7 +71,7 @@ const STAGES: Record<WaitStageId, { name: string; doneLine: (facts: WaitFacts) =
   prepareRecipe: { name: "Preparing the recipe", doneLine: () => recipeReadyLine() },
 };
 
-export function waitStageIds(kind: WaitKind, { transcribing = false }: { transcribing?: boolean } = {}): readonly WaitStageId[] {
+export const waitStageIds = (kind: WaitKind, { transcribing = false }: { transcribing?: boolean } = {}): readonly WaitStageId[] => {
   switch (kind) {
     case "video":
       return ["fetchTranscript", "write"];
@@ -82,19 +82,19 @@ export function waitStageIds(kind: WaitKind, { transcribing = false }: { transcr
     case "podcast":
       return ["findEpisode", transcribing ? "transcribe" : "fetchTranscript", "write"];
   }
-}
+};
 
-export function waitStage(id: WaitStageId, state: WaitStageState, facts: WaitFacts = {}, detail: string | null = null): WaitStage {
+export const waitStage = (id: WaitStageId, state: WaitStageState, facts: WaitFacts = {}, detail: string | null = null): WaitStage => {
   const stage = STAGES[id];
   return { name: stage.name, doneLine: state === "done" ? stage.doneLine(facts) : null, state, detail };
-}
+};
 
 const stepsFor = (focus: string | null): string => `Writing steps for ${focus ?? "you"}`;
 
-export function waitScript(
+export const waitScript = (
   kind: WaitKind,
   { focus = null, transcribing = false }: { focus?: string | null; transcribing?: boolean } = {},
-): readonly string[] {
+): readonly string[] => {
   switch (kind) {
     case "video":
       return ["Reading the transcript", "Finding what's new in it", "Checking the claims", "Writing your verdict", stepsFor(focus)];
@@ -113,7 +113,7 @@ export function waitScript(
         ? ["Reading the transcript", "Checking the claims", "Writing your verdict"]
         : ["Reading the transcript", "Finding what's new in it", "Checking the claims", "Writing your verdict", stepsFor(focus)];
   }
-}
+};
 
 const OVERVIEW_KEEP_TAB = "You can switch tabs but keep this tab open: closing or reloading it stops generating the overview.";
 

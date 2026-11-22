@@ -48,7 +48,7 @@ export interface GenerateOverviewFormProps {
 
 // What a link means once it is complete: a playlist to look up, or one to refuse. Null
 // for a video, or a link that is neither.
-export function playlistTargetOf(url: string): PlaylistTarget | null {
+export const playlistTargetOf = (url: string): PlaylistTarget | null => {
   const link = youTubeLink(url);
   if (link?.kind === "playlist") {
     return { kind: "playlist", playlistId: link.playlistId };
@@ -57,11 +57,11 @@ export function playlistTargetOf(url: string): PlaylistTarget | null {
     return { kind: "unfollowable", list: link.list, videoUrl: link.videoUrl };
   }
   return null;
-}
+};
 
 const canReadClipboard = (): boolean => typeof navigator.clipboard?.readText === "function";
 
-export function GenerateOverviewForm({
+export const GenerateOverviewForm = ({
   url,
   onUrlChange,
   onSubmit,
@@ -69,7 +69,7 @@ export function GenerateOverviewForm({
   onPlaylist,
   generationError = null,
   active = false,
-}: GenerateOverviewFormProps) {
+}: GenerateOverviewFormProps) => {
   const playlistsAvailable = usePlaylistApi() !== null;
   const phone = useIsPhone();
   const link = youTubeLink(url);
@@ -341,4 +341,4 @@ export function GenerateOverviewForm({
       {keysReady && limit === null && <UsageLine testIds={generateOverviewFormTestIds.usageLine} onPlanFollowed={onCancel} />}
     </form>
   );
-}
+};

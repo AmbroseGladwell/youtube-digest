@@ -47,7 +47,7 @@ const query = (params: Record<string, string>) => new URLSearchParams(params).to
 
 // YouTube keeps a private or deleted video in the playlist with its title replaced, and
 // says which only through these two markers (docs/features/playlists.md).
-function availabilityOf(title: string, privacyStatus: string | undefined): PlaylistEntryAvailability {
+const availabilityOf = (title: string, privacyStatus: string | undefined): PlaylistEntryAvailability => {
   if (privacyStatus === "private") {
     return "private";
   }
@@ -55,11 +55,11 @@ function availabilityOf(title: string, privacyStatus: string | undefined): Playl
     return "deleted";
   }
   return "available";
-}
+};
 
 // The Data API answers a private playlist and a missing one alike, as nothing. oEmbed does
 // not: it refuses a private one as unauthorised (docs/features/playlists.md).
-async function whyUnavailable(youTubeFetch: YouTubeFetch, playlistId: string): Promise<"private" | "gone"> {
+const whyUnavailable = async (youTubeFetch: YouTubeFetch, playlistId: string): Promise<"private" | "gone"> => {
   const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
   const response = await youTubeFetch({
     url: `https://www.youtube.com/oembed?${query({ format: "json", url: playlistUrl })}`,
@@ -67,9 +67,9 @@ async function whyUnavailable(youTubeFetch: YouTubeFetch, playlistId: string): P
     headers: {},
   });
   return response.status === 401 || response.status === 403 ? "private" : "gone";
-}
+};
 
-export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): PlaylistReader {
+export const youTubeDataApiPlaylistReader = ({ apiKey, youTubeFetch }: { apiKey: string; youTubeFetch: YouTubeFetch }): PlaylistReader => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   return {
@@ -127,4 +127,4 @@ export function youTubeDataApiPlaylistReader({ apiKey, youTubeFetch }: { apiKey:
       return lookup;
     },
   };
-}
+};

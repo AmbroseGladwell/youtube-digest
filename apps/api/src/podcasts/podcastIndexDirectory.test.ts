@@ -13,7 +13,7 @@ test("each request is signed with the SHA-1 of key, secret and time, and the sec
   });
 });
 
-function directoryOver(answers: Record<string, unknown>) {
+const directoryOver = (answers: Record<string, unknown>) => {
   const asked: { url: string; headers: Record<string, string> }[] = [];
   const directory = podcastIndexDirectory(
     KEY,
@@ -28,7 +28,7 @@ function directoryOver(answers: Record<string, unknown>) {
     () => NOW,
   );
   return { directory, asked };
-}
+};
 
 test("a show is searched for by its name, and each feed found becomes a show with its feed", async () => {
   const { directory, asked } = directoryOver({

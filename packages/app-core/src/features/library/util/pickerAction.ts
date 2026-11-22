@@ -6,7 +6,7 @@ export interface PickerChange {
   given: boolean;
 }
 
-export function pickerAction(changes: Iterable<PickerChange>, overviews: number, noun: "project" | "topic"): BulkAction | null {
+export const pickerAction = (changes: Iterable<PickerChange>, overviews: number, noun: "project" | "topic"): BulkAction | null => {
   const real = [...changes].filter(({ heldBefore, given }) => (given ? heldBefore < overviews : heldBefore > 0));
   if (real.length === 0) {
     return null;
@@ -16,4 +16,4 @@ export function pickerAction(changes: Iterable<PickerChange>, overviews: number,
   }
   const [only] = real as [PickerChange];
   return { kind: only.given ? "added" : "removed", overviews, place: only.place };
-}
+};

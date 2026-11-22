@@ -32,7 +32,7 @@ interface PlaceLinkProps {
   children: ReactNode;
 }
 
-function PlaceLink({ chapter, source, onPage, className, testId, label, children }: PlaceLinkProps) {
+const PlaceLink = ({ chapter, source, onPage, className, testId, label, children }: PlaceLinkProps) => {
   return onPage === null ? (
     <a
       className={className}
@@ -49,12 +49,12 @@ function PlaceLink({ chapter, source, onPage, className, testId, label, children
       {children}
     </button>
   );
-}
+};
 
 // What a line of an article's note points at: its chapter, in the slot where a video's line
 // shows a timestamp, and at the end of Read it anyway the parts named and the full article
 // with its cost (designs 77o, 77s–77v).
-export function ArticleLineLinks({ line, source, article, onPage }: ArticleLineLinksProps) {
+export const ArticleLineLinks = ({ line, source, article, onPage }: ArticleLineLinksProps) => {
   const leaving = onPage === null && <StrokeIcon name="openOut" size={13} />;
 
   if (line.chapterIndex !== undefined) {
@@ -126,4 +126,4 @@ export function ArticleLineLinks({ line, source, article, onPage }: ArticleLineL
       )}
     </>
   );
-}
+};

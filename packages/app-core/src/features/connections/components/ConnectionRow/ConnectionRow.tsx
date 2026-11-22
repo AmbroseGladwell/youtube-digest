@@ -14,7 +14,7 @@ export interface ConnectionRowProps {
 }
 
 // Revoking cannot be undone, so the row asks once and says so (design 58i, 58j).
-export function ConnectionRow({ connection, now, sharingProfile, onRevoke }: ConnectionRowProps) {
+export const ConnectionRow = ({ connection, now, sharingProfile, onRevoke }: ConnectionRowProps) => {
   const analytics = useAnalytics();
   const [confirming, setConfirming] = useState(false);
   const [returned, setReturned] = useState(false);
@@ -100,4 +100,4 @@ export function ConnectionRow({ connection, now, sharingProfile, onRevoke }: Con
       </button>
     </li>
   );
-}
+};

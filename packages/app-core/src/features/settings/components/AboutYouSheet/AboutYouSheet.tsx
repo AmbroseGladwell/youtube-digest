@@ -18,7 +18,7 @@ export interface AboutYouSheetProps {
 const lengthWith = (entries: readonly string[], extra: string) => joinInProse(extra === "" ? entries : [...entries, extra]).length;
 
 // Design 141h: what's in the section, then its suggestion groups, each ending with "Your own".
-export function AboutYouSheet({ section, entries, topicNames, headingId, headingRef, onChange, onDone }: AboutYouSheetProps) {
+export const AboutYouSheet = ({ section, entries, topicNames, headingId, headingRef, onChange, onDone }: AboutYouSheetProps) => {
   const copy = ABOUT_YOU_SECTION_COPY[section];
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const toggle = (entry: string) => onChange(entries.includes(entry) ? entries.filter((held) => held !== entry) : [...entries, entry]);
@@ -107,7 +107,7 @@ export function AboutYouSheet({ section, entries, topicNames, headingId, heading
       </div>
     </div>
   );
-}
+};
 
 interface YourOwnProps {
   group: SuggestionGroup;
@@ -120,7 +120,7 @@ interface YourOwnProps {
 
 // A dashed chip that opens in place into a focused field; Enter adds, Escape folds it back
 // and focus returns to the chip (141i).
-function YourOwn({ group, entries, open, onOpen, onClose, onAdd }: YourOwnProps) {
+const YourOwn = ({ group, entries, open, onOpen, onClose, onAdd }: YourOwnProps) => {
   const [typed, setTyped] = useState("");
   const fieldId = useId();
   const countId = useId();
@@ -228,4 +228,4 @@ function YourOwn({ group, entries, open, onOpen, onClose, onAdd }: YourOwnProps)
       </div>
     </div>
   );
-}
+};

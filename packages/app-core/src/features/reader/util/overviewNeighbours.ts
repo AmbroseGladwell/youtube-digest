@@ -16,11 +16,11 @@ export interface OverviewNeighbours {
 // list, it walks that list's view, keeping the overview in hand and every one already passed
 // even once they no longer match, as marking one read does to an unread list
 // (docs/features/library-view.md).
-export function overviewNeighbours(
+export const overviewNeighbours = (
   entries: LibraryEntry[],
   overviewId: string,
   stepped: Pick<SteppedLibraryView, "view" | "kept"> | null = null,
-): OverviewNeighbours {
+): OverviewNeighbours => {
   const ordered =
     stepped === null
       ? orderLibraryEntriesBySavedAt(entries)
@@ -43,4 +43,4 @@ export function overviewNeighbours(
     previousId: previous === undefined ? null : libraryEntryId(previous),
     nextId: next === undefined ? null : libraryEntryId(next),
   };
-}
+};

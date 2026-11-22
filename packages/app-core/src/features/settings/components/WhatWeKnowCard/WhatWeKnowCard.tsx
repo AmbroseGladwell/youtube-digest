@@ -41,7 +41,7 @@ interface SwitchRowProps {
   testId: string;
 }
 
-function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
+const SwitchRow = ({ title, hint, on, onSwitch, testId }: SwitchRowProps) => {
   const labelId = useId();
   const hintId = useId();
   return (
@@ -68,7 +68,7 @@ function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
       </button>
     </div>
   );
-}
+};
 
 // Designs 141k and 141l: the sentence as it reads, then in place with its sections editable,
 // what was learned and Keep learning. Listing an item shows it to the reader as the library's
@@ -76,7 +76,7 @@ function SwitchRow({ title, hint, on, onSwitch, testId }: SwitchRowProps) {
 // now on is written for, so the card says where it goes on us. Where no key can run the pass,
 // learning isn't offered, but items already held stay readable and removable, since they're
 // still sent (docs/features/personalisation.md).
-export function WhatWeKnowCard() {
+export const WhatWeKnowCard = () => {
   const settings = useSettingsQuery().data;
   const aboutYou = settings?.aboutYou ?? EMPTY_ABOUT_YOU;
   const learned = keptLearnedItems(settings?.learned ?? {});
@@ -277,4 +277,4 @@ export function WhatWeKnowCard() {
       </div>
     </div>
   );
-}
+};

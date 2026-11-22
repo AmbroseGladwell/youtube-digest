@@ -15,7 +15,7 @@ export interface NewTopicDialogProps {
 
 const HEADING_ID = "NewTopicDialog-heading";
 
-export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose }: NewTopicDialogProps) {
+export const NewTopicDialog = ({ open, unsorted, busy, onCreate, onPick, onClose }: NewTopicDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [name, setName] = useState("");
   const [chosen, setChosen] = useState<OverviewId[]>([]);
@@ -160,4 +160,4 @@ export function NewTopicDialog({ open, unsorted, busy, onCreate, onPick, onClose
       </form>
     </dialog>
   );
-}
+};

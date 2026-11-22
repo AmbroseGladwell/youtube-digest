@@ -45,13 +45,13 @@ test("leaves brackets that are prose alone", () => {
   }
 });
 
-function arriving(whole: string): string[] {
+const arriving = (whole: string): string[] => {
   return Array.from({ length: whole.length + 1 }, (_, end) => withoutCitationMarks(whole.slice(0, end), { arriving: true }));
-}
+};
 
-function onlyGrows(seen: string[]): boolean {
+const onlyGrows = (seen: string[]): boolean => {
   return seen.every((text, index) => index === 0 || text.startsWith(seen[index - 1]!));
-}
+};
 
 test("while the reply arrives, the text only grows and never shows half a mark", () => {
   const whole = "It lasted 43 days [p28–p30], then (perhaps) more. [kp4]";

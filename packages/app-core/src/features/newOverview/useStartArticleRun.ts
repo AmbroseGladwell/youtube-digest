@@ -16,7 +16,7 @@ export interface ArticleRunOptions {
 }
 
 // Call it from the click: requestAccess spends the gesture (docs/features/article-panel.md).
-export function useStartArticleRun() {
+export const useStartArticleRun = () => {
   const pages = useArticlePages();
   const { startArticle } = useNewOverviewRunController();
 
@@ -43,4 +43,4 @@ export function useStartArticleRun() {
     },
     [pages, startArticle],
   );
-}
+};

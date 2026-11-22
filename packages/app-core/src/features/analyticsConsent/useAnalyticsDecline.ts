@@ -6,7 +6,7 @@ import { declineAnalyticsConsent } from "./useAnalyticsConsent.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 
 // docs/features/analytics-consent.md, "A no is counted with no id".
-export function useAnalyticsDecline(): () => void {
+export const useAnalyticsDecline = (): (() => void) => {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();
   const context = useAnalyticsContext();
@@ -19,4 +19,4 @@ export function useAnalyticsDecline(): () => void {
       .declined(context)
       .catch(() => undefined);
   }, [apiUrl, surface, context]);
-}
+};

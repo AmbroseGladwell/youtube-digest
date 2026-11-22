@@ -10,7 +10,7 @@ export interface SamplePlayback {
 
 // One sample at a time, and a note that was playing is paused and left paused, so comparing
 // voices does not keep cutting back to it (docs/features/narration-voice.md, "Listening").
-export function useVoiceSamplePlayer() {
+export const useVoiceSamplePlayer = () => {
   const player = usePlayer();
   const audio = useRef<HTMLAudioElement | null>(null);
   const [playback, setPlayback] = useState<SamplePlayback | null>(null);
@@ -51,4 +51,4 @@ export function useVoiceSamplePlayer() {
   useEffect(() => () => audio.current?.pause(), []);
 
   return { playback, play, stop };
-}
+};

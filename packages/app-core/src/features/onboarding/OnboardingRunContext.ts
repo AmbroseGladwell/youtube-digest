@@ -34,6 +34,6 @@ const OnboardingRunContext = createContext<OnboardingRunState>({
 
 export const OnboardingRunProvider = OnboardingRunContext.Provider;
 
-export function useOnboardingRunState(): OnboardingRunState {
+export const useOnboardingRunState = (): OnboardingRunState => {
   return useContext(OnboardingRunContext);
-}
+};

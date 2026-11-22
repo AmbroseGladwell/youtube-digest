@@ -13,7 +13,7 @@ import { nextUsageMonth, secondsToNextUsageMonth } from "../usage/usageMonth.js"
 
 const Params = z.object({ overviewId: OverviewId });
 
-export function overviewReservationRoutes(
+export const overviewReservationRoutes = (
   app: FastifyInstance,
   {
     reservations,
@@ -28,7 +28,7 @@ export function overviewReservationRoutes(
     sql: SqlClient;
     clock: () => Date;
   },
-): void {
+): void => {
   app.post("/overview-reservations", async (request, reply) => {
     const { overviewId, shareToken } = parseOrThrow(OverviewReservationRequest, request.body, "The reservation");
     const { accountId } = request.session!;
@@ -66,4 +66,4 @@ export function overviewReservationRoutes(
     }
     return reply.status(204).send();
   });
-}
+};

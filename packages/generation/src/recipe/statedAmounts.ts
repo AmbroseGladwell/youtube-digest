@@ -60,7 +60,7 @@ const parseDigits = (text: string): number => {
 
 // Every number a text states, in digits or in words, so "two and a half cups" and "2½ cups" state
 // the same amount. Read in code, never by a model (docs/prototype/constraints.md).
-export function numbersStated(text: string): number[] {
+export const numbersStated = (text: string): number[] => {
   const found: number[] = [];
   for (const match of text.matchAll(DIGITS)) {
     const value = parseDigits(match[0].replace(/\s+and\s+a\s+half$/i, ""));
@@ -87,7 +87,7 @@ export function numbersStated(text: string): number[] {
     }
   }
   return found;
-}
+};
 
 const sameNumber = (a: number, b: number) => Math.abs(a - b) < 1e-6;
 
@@ -104,7 +104,7 @@ const unstatedIn = (text: string, stated: StatedNumbers): number => numbersState
 
 // A line whose amount nobody stated keeps its name and loses the amount: "1 tsp salt" becomes
 // "salt" (docs/features/recipe-notes.md, "Recipe videos").
-export function withStatedAmounts(lines: readonly string[], stated: StatedNumbers): { ingredients: string[]; amountsDropped: number } {
+export const withStatedAmounts = (lines: readonly string[], stated: StatedNumbers): { ingredients: string[]; amountsDropped: number } => {
   let amountsDropped = 0;
   const ingredients = lines.flatMap((line) => {
     if (unstatedIn(line, stated) === 0) {
@@ -129,4 +129,4 @@ export function withStatedAmounts(lines: readonly string[], stated: StatedNumber
     return kept === "" ? [] : [kept];
   });
   return { ingredients, amountsDropped };
-}
+};

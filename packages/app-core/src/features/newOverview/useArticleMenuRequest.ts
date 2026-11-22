@@ -9,7 +9,7 @@ import type { NewOverviewRunController } from "./useNewOverviewRun.js";
 // The right-click route. It lives beside the run, as the injected button's does, because the
 // panel can be anywhere when the menu is chosen, or not yet open. The menu's click granted
 // activeTab, so nothing is asked and the run goes straight to reading (design 77ag).
-export function useArticleMenuRequest({ startArticle }: Pick<NewOverviewRunController, "startArticle">): void {
+export const useArticleMenuRequest = ({ startArticle }: Pick<NewOverviewRunController, "startArticle">): void => {
   const pages = useArticlePages();
   const navigate = useNavigate();
   const readiness = useGenerationReadiness();
@@ -48,4 +48,4 @@ export function useArticleMenuRequest({ startArticle }: Pick<NewOverviewRunContr
     take();
     return pages.subscribe(take);
   }, [pages, readiness, navigate, startArticle]);
-}
+};

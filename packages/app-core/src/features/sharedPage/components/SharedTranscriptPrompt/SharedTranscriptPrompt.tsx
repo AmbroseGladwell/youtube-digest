@@ -12,7 +12,7 @@ export interface SharedTranscriptPromptProps {
 // A shared link carries the overview, not the source's words: those are each reader's own, so a
 // visitor reads the transcript once the overview is in their own library (OV-295,
 // docs/features/sharing.md).
-export function SharedTranscriptPrompt({ label, saving, onSave }: SharedTranscriptPromptProps) {
+export const SharedTranscriptPrompt = ({ label, saving, onSave }: SharedTranscriptPromptProps) => {
   return (
     <section className={styles.root} data-testid={sharedTranscriptPromptTestIds.root}>
       <h2 className={styles.heading}>The full transcript comes with your own copy</h2>
@@ -26,4 +26,4 @@ export function SharedTranscriptPrompt({ label, saving, onSave }: SharedTranscri
       </button>
     </section>
   );
-}
+};

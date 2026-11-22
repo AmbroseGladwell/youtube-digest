@@ -8,10 +8,10 @@ import { withQueryParams } from "./withQueryParams.js";
 
 // One statement decides and reads, so a request can be decided once: a second answer finds
 // nothing left to update.
-export async function decideAuthorization(
+export const decideAuthorization = async (
   sql: SqlClient,
   { id, accountId, approve, urls, now }: { id: string; accountId: AccountId; approve: boolean; urls: OAuthUrls; now: Date },
-): Promise<string | null> {
+): Promise<string | null> => {
   const code = approve ? generateToken() : null;
   const [row] = await sql.query<{ redirect_uri: string; state: string | null }>(
     `update oauth_authorizations
@@ -36,4 +36,4 @@ export async function decideAuthorization(
     state: row.state,
     iss: urls.issuer,
   });
-}
+};

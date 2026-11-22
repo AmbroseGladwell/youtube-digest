@@ -7,7 +7,7 @@ export const TYPING_SETTLED_MS = 1_000;
 // "Typing"). send is read when it fires, so it can say what the typing found. A form that
 // submits the text calls the returned settle first, so typing cut short by the submit is still
 // counted, and counted before what the submit sends (OV-93).
-export function useTypingSettled(text: string, send: () => void, delayMs: number = TYPING_SETTLED_MS): () => void {
+export const useTypingSettled = (text: string, send: () => void, delayMs: number = TYPING_SETTLED_MS): (() => void) => {
   const latest = useRef(send);
   latest.current = send;
   const initial = useRef(text);
@@ -38,4 +38,4 @@ export function useTypingSettled(text: string, send: () => void, delayMs: number
     pending.current = null;
     latest.current();
   }, []);
-}
+};

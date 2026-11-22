@@ -4,7 +4,7 @@ export interface TagCount {
 }
 
 // Each tag, with how many notes carry it: most used first, then A–Z.
-export function tagUsage(tagLists: Iterable<readonly string[]>): TagCount[] {
+export const tagUsage = (tagLists: Iterable<readonly string[]>): TagCount[] => {
   const counts = new Map<string, number>();
   for (const tags of tagLists) {
     for (const tag of new Set(tags)) {
@@ -14,4 +14,4 @@ export function tagUsage(tagLists: Iterable<readonly string[]>): TagCount[] {
   return [...counts]
     .map(([tag, count]) => ({ tag, count }))
     .sort((left, right) => right.count - left.count || left.tag.localeCompare(right.tag));
-}
+};

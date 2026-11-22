@@ -14,7 +14,7 @@ const TagsOutput = z.object({ tags: GeneratedTags });
 
 // Tags for a note that already exists, from the note rather than the transcript: the one-off
 // re-tag of a library made before tags were reused (docs/features/tag-reuse.md).
-export async function generateTags(client: GenerationClient, input: TagsInput): Promise<string[]> {
+export const generateTags = async (client: GenerationClient, input: TagsInput): Promise<string[]> => {
   const { overview } = input;
   const raw = await client({
     systemPrompt: `You tag a saved overview of a YouTube video for its reader.\n\n${tagInstructions(input.existingTags)}`,
@@ -36,4 +36,4 @@ export async function generateTags(client: GenerationClient, input: TagsInput): 
     known: new Set(input.existingTags.map(({ tag }) => tag)),
     aliases: input.tagAliases,
   });
-}
+};

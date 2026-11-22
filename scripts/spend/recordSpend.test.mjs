@@ -8,7 +8,7 @@ import { datesBetween, NO_FIGURE, readersFromEnv, recentDays, recordSpend, rowsF
 const AT = "2026-11-09T04:30:00.000Z";
 const NOW = new Date(AT);
 
-function memoryStore({ failPut = false, corrupt = false } = {}) {
+const memoryStore = ({ failPut = false, corrupt = false } = {}) => {
   const objects = new Map();
   return {
     objects,
@@ -22,7 +22,7 @@ function memoryStore({ failPut = false, corrupt = false } = {}) {
       return corrupt ? "" : (objects.get(key) ?? null);
     },
   };
-}
+};
 
 const openAiRow = (date, environment, area, dollars) => ({ date, provider: "openai", environment, area, dollars, source: "bill" });
 const parse = (csv) =>
@@ -164,14 +164,14 @@ test("a missing key warns and leaves the provider not tracked", async () => {
 
 const neonProject = { compute_time_seconds: 36_000, active_time_seconds: 72_000, data_transfer_bytes: 2e9 };
 
-function neonFetch() {
+const neonFetch = () => {
   const calls = [];
   const fetch = async (url) => {
     calls.push(url);
     return { ok: true, json: async () => (url.endsWith("/branches") ? { branches: [{ logical_size: 5e8 }] } : { project: neonProject }) };
   };
   return { fetch, calls };
-}
+};
 
 test("Neon's month so far is recorded on yesterday as usage, beside its hand-entered cost", async () => {
   const neon = neonFetch();

@@ -12,7 +12,7 @@ const MOST_TERMS = 12;
 
 // A question's words worth searching for: lower-cased letters and digits, without the words every
 // question has, at most a dozen. Postgres stems them, as it stemmed the passages.
-export function keywordTermsOf(question: string): string[] {
+export const keywordTermsOf = (question: string): string[] => {
   const words = question
     .toLowerCase()
     .normalize("NFKD")
@@ -20,7 +20,7 @@ export function keywordTermsOf(question: string): string[] {
     .split(/\s+/)
     .filter((word) => word.length > 1 && !STOPWORDS.has(word));
   return [...new Set(words)].slice(0, MOST_TERMS);
-}
+};
 
 export interface KeywordHit {
   videoId: string;

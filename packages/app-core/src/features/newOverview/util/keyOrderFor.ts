@@ -11,7 +11,7 @@ export interface KeyOrderContext {
 // Which keys an overview is tried on, in order (docs/architecture/tiers.md, "Which key an
 // overview uses"): Plus pays for ours, so it goes first; everyone else spends their own key
 // first and keeps ours as the safety net. "Only ever use my key" leaves the reader's key alone.
-export function keyOrderFor({ ourKeyUsable, plan, hasOwnKey, onlyMyKey }: KeyOrderContext): KeySource[] {
+export const keyOrderFor = ({ ourKeyUsable, plan, hasOwnKey, onlyMyKey }: KeyOrderContext): KeySource[] => {
   if (!hasOwnKey) {
     return ourKeyUsable ? ["ours"] : [];
   }
@@ -19,4 +19,4 @@ export function keyOrderFor({ ourKeyUsable, plan, hasOwnKey, onlyMyKey }: KeyOrd
     return ["own"];
   }
   return plan === "plus" ? ["ours", "own"] : ["own", "ours"];
-}
+};

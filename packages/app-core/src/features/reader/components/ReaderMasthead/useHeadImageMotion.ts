@@ -37,7 +37,7 @@ const below = (header: HTMLElement, title: HTMLElement): HTMLElement[] => {
 // from where it was, so the page doesn't reflow on the way; the text below slides with it
 // and who it's from fades in at its new place. Reduced motion swaps at once and crossfades
 // the head.
-export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): () => void {
+export const useHeadImageMotion = (full: boolean, parts: HeadImageMotionParts): (() => void) => {
   const before = useRef<Before | null>(null);
 
   useLayoutEffect(() => {
@@ -96,4 +96,4 @@ export function useHeadImageMotion(full: boolean, parts: HeadImageMotionParts): 
     }
     before.current = { image: image.getBoundingClientRect(), titleTop: title.getBoundingClientRect().top };
   };
-}
+};

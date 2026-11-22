@@ -113,10 +113,10 @@ export const hasChapterLinks = (overview: SharedNote): boolean => (overview.arti
 // on screen (docs/features/recipe-notes.md, "Reading aloud").
 // `steps: false` is the reader's switch: the block is hidden everywhere, and How to apply is
 // introduced as it was before the block.
-export function overviewNoteLines(
+export const overviewNoteLines = (
   overview: SharedNote,
   shown: { ingredients?: readonly string[]; units?: RecipeUnits; methodAmounts?: readonly MethodAmount[]; steps?: boolean } = {},
-): NoteLine[] {
+): NoteLine[] => {
   const lines: NoteLine[] = [];
 
   const section = (name: string, heading: Body, bodies: Body[], bullet = false) => {
@@ -262,8 +262,8 @@ export function overviewNoteLines(
   }
 
   return lines;
-}
+};
 
-export function noteSectionNames(lines: NoteLine[]): string[] {
+export const noteSectionNames = (lines: NoteLine[]): string[] => {
   return [...new Set(lines.map((line) => line.section))];
-}
+};

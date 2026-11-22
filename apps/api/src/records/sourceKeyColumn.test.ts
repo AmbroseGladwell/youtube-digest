@@ -11,12 +11,12 @@ import type { SqlClient } from "../db/SqlClient.js";
 const ACCOUNT = "a0000000-0000-4000-8000-000000000001";
 const UPDATED_AT = "2026-11-02T00:00:00.000Z";
 
-async function migratedDatabase(): Promise<SqlClient> {
+const migratedDatabase = async (): Promise<SqlClient> => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { before: migrationSteps() });
   await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [ACCOUNT, "reader@example.com"]);
   return sql;
-}
+};
 
 let seq = 0;
 const insertOverview = async (sql: SqlClient, body: unknown, id = crypto.randomUUID()) => {
@@ -60,7 +60,7 @@ test("one id under two kinds is two items", async () => {
   assert.equal(await keyInColumn(sql, web), sourceKey({ kind: "web", id: "same" }));
 });
 
-async function databaseWithShares(notes: Array<{ token: string; note: Record<string, unknown>; hash: string }>): Promise<SqlClient> {
+const databaseWithShares = async (notes: Array<{ token: string; note: Record<string, unknown>; hash: string }>): Promise<SqlClient> => {
   const sql = createPgliteSqlClient(createTestPglite());
   await runMigrations(sql, { dir: await migrationsBefore(24), before: migrationSteps() });
   await sql.query("insert into accounts (id, email, created_at) values ($1, $2, now())", [ACCOUNT, "reader@example.com"]);
@@ -73,7 +73,7 @@ async function databaseWithShares(notes: Array<{ token: string; note: Record<str
   }
   await runMigrations(sql, { before: migrationSteps() });
   return sql;
-}
+};
 
 const oldNote = { id: "a", video: { id: "abc", title: "Kept" }, coreClaim: "A claim" };
 const movedNote = { id: "a", source: { id: "abc", title: "Kept", kind: "youtube" }, coreClaim: "A claim" };

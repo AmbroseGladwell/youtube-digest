@@ -12,7 +12,7 @@ interface DeleteProjectContext {
   previousMembers: ProjectMember[] | undefined;
 }
 
-export function useDeleteProjectMutation() {
+export const useDeleteProjectMutation = () => {
   const { projectStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -42,4 +42,4 @@ export function useDeleteProjectMutation() {
       }
     },
   });
-}
+};

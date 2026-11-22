@@ -31,7 +31,7 @@ const normalised = (email: string): string => email.trim().toLowerCase();
 // Designs 14c, 14d, 14i: a code to the current address first, unless the session is fresh;
 // then the new address; then its code. Every error sits under the field it belongs to, and
 // a button that can't work is hidden rather than disabled (docs/features/account-changes.md).
-export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeFlowProps) {
+export const EmailChangeFlow = ({ currentEmail, onDone, onCancel }: EmailChangeFlowProps) => {
   const analytics = useAnalytics();
   const ids = useId();
   const [step, setStep] = useState<Step>({ kind: "starting" });
@@ -340,4 +340,4 @@ export function EmailChangeFlow({ currentEmail, onDone, onCancel }: EmailChangeF
       />
     </div>
   );
-}
+};

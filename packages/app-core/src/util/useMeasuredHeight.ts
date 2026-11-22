@@ -13,9 +13,9 @@ export interface MeasuredHeightRefs<THost extends HTMLElement, TMeasured extends
 //
 // Callback refs rather than useRef, because the elements arrive later than the first
 // render on any page that renders a skeleton first — the reader does.
-export function useMeasuredHeight<THost extends HTMLElement = HTMLDivElement, TMeasured extends HTMLElement = HTMLElement>(
+export const useMeasuredHeight = <THost extends HTMLElement = HTMLDivElement, TMeasured extends HTMLElement = HTMLElement>(
   property: string,
-): MeasuredHeightRefs<THost, TMeasured> {
+): MeasuredHeightRefs<THost, TMeasured> => {
   const [host, setHost] = useState<THost | null>(null);
   const [measured, setMeasured] = useState<TMeasured | null>(null);
 
@@ -33,4 +33,4 @@ export function useMeasuredHeight<THost extends HTMLElement = HTMLDivElement, TM
   }, [host, measured, property]);
 
   return { host: setHost, measured: setMeasured };
-}
+};

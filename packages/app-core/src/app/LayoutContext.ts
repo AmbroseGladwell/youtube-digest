@@ -14,10 +14,10 @@ const LayoutContext = createContext<AppLayout>("full");
 
 export const LayoutProvider = LayoutContext.Provider;
 
-export function useLayout(): AppLayout {
+export const useLayout = (): AppLayout => {
   return useContext(LayoutContext);
-}
+};
 
-export function useIsPanel(): boolean {
+export const useIsPanel = (): boolean => {
   return useLayout() === "panel";
-}
+};

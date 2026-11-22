@@ -60,7 +60,18 @@ const othersLine = (others: readonly CookingTimer[]): string | null => {
 // they now carry on outside the mode. Keep running is filled and focused; Stop is the one that
 // loses something; Keep cooking is quiet, and Esc means it. With only a ringing timer, the choice
 // is Dismiss and leave or Keep it ringing. A sheet on the phone and in the panel, a dialog on the web.
-export function CookingLeaveSheet({ open, running, ringing, others, now, web, stayKey, onStay, onKeep, onStop }: CookingLeaveSheetProps) {
+export const CookingLeaveSheet = ({
+  open,
+  running,
+  ringing,
+  others,
+  now,
+  web,
+  stayKey,
+  onStay,
+  onKeep,
+  onStop,
+}: CookingLeaveSheetProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const first = useRef<HTMLButtonElement | null>(null);
   const onlyRinging = running.length === 0;
@@ -162,4 +173,4 @@ export function CookingLeaveSheet({ open, running, ringing, others, now, web, st
       )}
     </dialog>
   );
-}
+};

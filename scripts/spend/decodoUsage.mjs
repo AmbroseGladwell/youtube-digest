@@ -4,7 +4,7 @@ const DECODO_TRAFFIC = "https://api.decodo.com/api/v2/statistics/traffic";
 const GB = 1e9;
 const PAGE_SIZE = 500;
 
-export function decodoRowsOf({ dates, data }) {
+export const decodoRowsOf = ({ dates, data }) => {
   const byDate = new Map(data.map((item) => [item.key.slice(0, 10), item]));
   const usage = (date, quantity, unit) => ({
     date,
@@ -20,9 +20,9 @@ export function decodoRowsOf({ dates, data }) {
     const item = byDate.get(date);
     return [usage(date, (item?.rx_tx_bytes ?? 0) / GB, "proxy_traffic_gb"), usage(date, item?.requests ?? 0, "proxy_requests")];
   });
-}
+};
 
-export async function decodoUsage({ apiKey, fetch, dates }) {
+export const decodoUsage = async ({ apiKey, fetch, dates }) => {
   const data = [];
   let page = 1;
   let pages = 1;
@@ -48,4 +48,4 @@ export async function decodoUsage({ apiKey, fetch, dates }) {
     page += 1;
   } while (page <= pages);
   return decodoRowsOf({ dates, data });
-}
+};

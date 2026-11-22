@@ -18,7 +18,7 @@ export const applyOrder = (followed: FollowedPlaylistWithCheck[], { playlist, or
 
 // Saved as soon as it is chosen, for every device; the videos already waiting are put in the
 // new order straight away (docs/features/playlists.md, "An order for each playlist").
-export function useSetPlaylistOrderMutation() {
+export const useSetPlaylistOrderMutation = () => {
   const { followedPlaylistStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -50,4 +50,4 @@ export function useSetPlaylistOrderMutation() {
       }
     },
   });
-}
+};

@@ -10,7 +10,7 @@ export const safePathPart = (part: string): string => part.replace(/[^\w.-]/g, "
 
 // One JSON file per record, in one folder per group, so a record can be read on its own
 // and a run that dies halfway keeps everything it finished.
-export function jsonRecordStore<T>(directory: string, pathOf: (record: T) => string): RecordStore<T> {
+export const jsonRecordStore = <T>(directory: string, pathOf: (record: T) => string): RecordStore<T> => {
   return {
     async all() {
       const groups = await readdir(directory, { withFileTypes: true }).catch(() => []);
@@ -30,4 +30,4 @@ export function jsonRecordStore<T>(directory: string, pathOf: (record: T) => str
       await writeFile(path, `${JSON.stringify(record, null, 2)}\n`);
     },
   };
-}
+};

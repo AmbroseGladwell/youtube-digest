@@ -17,7 +17,7 @@ export const typesOf = (node: JsonObject): string[] => {
   return (Array.isArray(type) ? type : [type]).filter((entry): entry is string => typeof entry === "string");
 };
 
-export function linkedData(document: Document): JsonObject[] {
+export const linkedData = (document: Document): JsonObject[] => {
   return [...document.querySelectorAll('script[type="application/ld+json"]')].flatMap((script) => {
     try {
       return flattened(JSON.parse(script.textContent ?? ""));
@@ -25,4 +25,4 @@ export function linkedData(document: Document): JsonObject[] {
       return [];
     }
   });
-}
+};

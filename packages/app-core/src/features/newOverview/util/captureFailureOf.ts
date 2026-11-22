@@ -20,7 +20,7 @@ const ARTICLE_FAILURE = {
 // A failed run by name, never by its message, which can quote a provider's own words
 // (docs/architecture/analytics.md, "What an event may carry"). Once the transcript is in
 // hand, whatever fails is the generation, however its client chose to throw.
-export function captureFailureOf(error: unknown, { transcriptResolved }: { transcriptResolved: boolean }): CaptureFailure {
+export const captureFailureOf = (error: unknown, { transcriptResolved }: { transcriptResolved: boolean }): CaptureFailure => {
   if (error instanceof ArticleReadError) {
     return ARTICLE_FAILURE[error.failure.reason];
   }
@@ -37,4 +37,4 @@ export function captureFailureOf(error: unknown, { transcriptResolved }: { trans
     return "generation";
   }
   return "unknown";
-}
+};

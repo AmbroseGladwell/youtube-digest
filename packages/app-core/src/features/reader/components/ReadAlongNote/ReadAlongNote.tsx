@@ -89,7 +89,7 @@ const linePlaces = (lines: NoteLine[]): Array<number | "section"> => {
   });
 };
 
-export function ReadAlongNote({
+export const ReadAlongNote = ({
   lines,
   activeIndex,
   speaking,
@@ -100,7 +100,7 @@ export function ReadAlongNote({
   renderLineEnd,
   playingIndex = null,
   citedIndex = null,
-}: ReadAlongNoteProps) {
+}: ReadAlongNoteProps) => {
   const analytics = useOverviewPageAnalytics();
   const numbers = numberListLines(lines);
   const places = linePlaces(lines);
@@ -283,4 +283,4 @@ export function ReadAlongNote({
       )}
     </div>
   );
-}
+};

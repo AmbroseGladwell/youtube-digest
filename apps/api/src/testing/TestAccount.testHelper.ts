@@ -44,7 +44,7 @@ export interface TestAccount {
 // A new overview pushed as a reserving device pushes it, with its reservation already taken.
 // The row is written directly rather than through the route, so a test pushing more
 // overviews than a month allows is not stopped by a quota it isn't about.
-export async function letInOverview({ sql, clock }: Pick<TestApp, "sql" | "clock">, accountId: AccountId, body: unknown): Promise<void> {
+export const letInOverview = async ({ sql, clock }: Pick<TestApp, "sql" | "clock">, accountId: AccountId, body: unknown): Promise<void> => {
   const id = typeof body === "object" && body !== null ? (body as { id?: unknown }).id : undefined;
   if (typeof id !== "string") {
     return;
@@ -54,11 +54,11 @@ export async function letInOverview({ sql, clock }: Pick<TestApp, "sql" | "clock
      values ($1, $2, 'own', $3::timestamptz) on conflict do nothing`,
     [accountId, id, clock.now.toISOString()],
   );
-}
+};
 
 // One account per test: isolation by account rather than by database, which is cheap and
 // exercises account scoping on every request (docs/conventions/backend-testing-guide.md).
-export async function makeAccount({ app, sql, clock }: TestApp): Promise<TestAccount> {
+export const makeAccount = async ({ app, sql, clock }: TestApp): Promise<TestAccount> => {
   const session = await makeSession(sql, { now: clock.now });
   const inject = async ({ method, url, body, ifMatch, clientVersion = CLIENT_VERSION, reserved = true }: InjectOptions) => {
     if (reserved && method === "POST" && url === "/api/overviews" && ifMatch === undefined) {
@@ -107,4 +107,4 @@ export async function makeAccount({ app, sql, clock }: TestApp): Promise<TestAcc
       );
     },
   };
-}
+};

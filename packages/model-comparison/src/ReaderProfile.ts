@@ -23,7 +23,7 @@ export const SAMPLE_READER_CONTEXT =
 
 const capitalised = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
 
-export function readerProfileOf(records: readonly SampleRecord[]): ReaderProfile {
+export const readerProfileOf = (records: readonly SampleRecord[]): ReaderProfile => {
   const topicNames = [...new Set(records.map((record) => capitalised(record.topic)))];
   return {
     captureReason: null,
@@ -43,12 +43,12 @@ export function readerProfileOf(records: readonly SampleRecord[]): ReaderProfile
     existingTags: tagUsage(records.map((record) => record.tags)),
     tagAliases: {},
   };
-}
+};
 
-export async function loadSampleReader(): Promise<ReaderProfile> {
+export const loadSampleReader = async (): Promise<ReaderProfile> => {
   const files = (await readdir(samplesDirectory)).filter((file) => file.endsWith(".json")).sort();
   const records = await Promise.all(
     files.map(async (file) => JSON.parse(await readFile(join(samplesDirectory, file), "utf-8")) as SampleRecord),
   );
   return readerProfileOf(records);
-}
+};

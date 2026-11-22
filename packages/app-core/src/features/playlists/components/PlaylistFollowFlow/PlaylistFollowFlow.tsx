@@ -41,7 +41,7 @@ export interface PlaylistFollowFlowProps {
   onDone: () => void;
 }
 
-function refusalOf(error: unknown): PlaylistRefusalReason {
+const refusalOf = (error: unknown): PlaylistRefusalReason => {
   if (!isSyncRequestError(error)) {
     return "lookupFailed";
   }
@@ -55,11 +55,19 @@ function refusalOf(error: unknown): PlaylistRefusalReason {
     return "unavailable";
   }
   return "lookupFailed";
-}
+};
 
 // A pasted playlist, from lookup to following (designs 27b–27h): a short honest wait, then
 // the preview, or the reason it can't be followed and what to do instead.
-export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThisVideo, onPasteAnother, onDone }: PlaylistFollowFlowProps) {
+export const PlaylistFollowFlow = ({
+  target,
+  pastedUrl,
+  from,
+  stacked,
+  onJustThisVideo,
+  onPasteAnother,
+  onDone,
+}: PlaylistFollowFlowProps) => {
   const analytics = useAnalytics();
   const lookup = usePlaylistLookupQuery(target.kind === "playlist" ? target.playlistId : null);
   const overviews = useOverviewsWithStateQuery();
@@ -190,4 +198,4 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
       )}
     </div>
   );
-}
+};

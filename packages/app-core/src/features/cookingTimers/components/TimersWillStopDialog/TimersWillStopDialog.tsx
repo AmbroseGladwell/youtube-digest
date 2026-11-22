@@ -20,7 +20,7 @@ export interface TimersWillStopDialogProps {
 
 // Designs 288ae–288ag: going somewhere that stops the timers warns first. Staying is filled and
 // focused, and Esc means it; going on stops them. A sheet on a phone, a dialog on the web.
-export function TimersWillStopDialog({ open, heading, copy, onStay, onGo }: TimersWillStopDialogProps) {
+export const TimersWillStopDialog = ({ open, heading, copy, onStay, onGo }: TimersWillStopDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const stay = useRef<HTMLButtonElement | null>(null);
   const web = !useIsPhone() && !useIsPanel();
@@ -73,4 +73,4 @@ export function TimersWillStopDialog({ open, heading, copy, onStay, onGo }: Time
       )}
     </dialog>
   );
-}
+};

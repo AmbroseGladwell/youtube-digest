@@ -10,7 +10,7 @@ export interface ChatOverviewCitationProps {
 // Design 319a, 319x, 319z as the shared chip (OV-354, page 2): a part of the overview an answer
 // rests on, named by the note's own heading. One whose item was rewritten since still leads to
 // its section; one whose section is gone is muted and no longer a button.
-export function ChatOverviewCitation({ view, onFollowed }: ChatOverviewCitationProps) {
+export const ChatOverviewCitation = ({ view, onFollowed }: ChatOverviewCitationProps) => {
   if (view.kind === "gone") {
     return (
       <ChatSourceChip
@@ -32,4 +32,4 @@ export function ChatOverviewCitation({ view, onFollowed }: ChatOverviewCitationP
       testId={chatOverviewCitationTestIds.pill}
     />
   );
-}
+};

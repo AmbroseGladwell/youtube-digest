@@ -75,11 +75,11 @@ const inLanes = <T>(tasks: T[]): T[][] => Array.from({ length: LANES }, (_, lane
 
 const log = (line: string) => console.error(line);
 
-async function spend<R extends Spend & { videoId: string; outcome: string }>(
+const spend = async <R extends Spend & { videoId: string; outcome: string }>(
   phase: string,
   tasks: (() => Promise<R>)[],
   save: (record: R) => Promise<void>,
-) {
+) => {
   const outcome = await spendWithinBudget({
     lanes: inLanes(tasks),
     budgetDollars,
@@ -94,7 +94,7 @@ async function spend<R extends Spend & { videoId: string; outcome: string }>(
     return false;
   }
   return true;
-}
+};
 
 const doneSingle = settled(await stores.single.all());
 const carriedOn = await spend(

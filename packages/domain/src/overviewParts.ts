@@ -42,7 +42,7 @@ export const overviewPartId = (part: OverviewPart, index: number): string =>
 // `partIds`, so the ids the model sees are exactly these (docs/features/chats.md, "Citing the
 // overview"). An article's chapters are its chapters, and its Read it anyway? its watchAnyway, so
 // a chat about an article needs no new kind of citation (OV-320).
-export function overviewParts(overview: Overview): OverviewPartItem[] {
+export const overviewParts = (overview: Overview): OverviewPartItem[] => {
   const items: OverviewPartItem[] = [];
   const add = (part: OverviewPart, texts: readonly string[]) => texts.forEach((text, index) => items.push({ part, index, text }));
   const { recipe, verdict } = overview;
@@ -78,18 +78,18 @@ export function overviewParts(overview: Overview): OverviewPartItem[] {
     (overview.article?.chapters ?? overview.chapters ?? []).map(({ title }) => title),
   );
   return items;
-}
+};
 
 // FNV-1a, 32 bits: enough to tell whether the item at a cited place is still the one cited,
 // and the same on the server and every client without an async digest.
-export function overviewPartHash(text: string): string {
+export const overviewPartHash = (text: string): string => {
   let hash = 0x811c9dc5;
   for (const char of text.trim()) {
     hash ^= char.codePointAt(0)!;
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
   return hash.toString(16).padStart(8, "0");
-}
+};
 
 export interface OverviewPartCitation {
   part: OverviewPart;
@@ -100,7 +100,10 @@ export interface OverviewPartCitation {
 // Where a citation of the overview lands now. A regenerated overview keeps its id but can move
 // or rewrite its items: the item that still has the cited text, wherever it moved within its
 // part, else the part's section alone (index null), else nothing when the section is gone.
-export function citedOverviewPart(overview: Overview, citation: OverviewPartCitation): { part: OverviewPart; index: number | null } | null {
+export const citedOverviewPart = (
+  overview: Overview,
+  citation: OverviewPartCitation,
+): { part: OverviewPart; index: number | null } | null => {
   const inPart = overviewParts(overview).filter(({ part }) => part === citation.part);
   if (inPart.length === 0) {
     return null;
@@ -109,4 +112,4 @@ export function citedOverviewPart(overview: Overview, citation: OverviewPartCita
   const atPlace = inPart.find(({ index }) => index === citation.index);
   const found = atPlace !== undefined && same(atPlace) ? atPlace : inPart.find(same);
   return { part: citation.part, index: found?.index ?? null };
-}
+};

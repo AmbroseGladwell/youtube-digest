@@ -5,7 +5,7 @@ export interface PostHogEventSinkOptions extends PostHogBatchOptions {
   environment: string;
 }
 
-export function createPostHogEventSink({ environment, ...options }: PostHogEventSinkOptions): EventSink {
+export const createPostHogEventSink = ({ environment, ...options }: PostHogEventSinkOptions): EventSink => {
   return {
     capture: (events, { accountId, anonymousId, viewId, context, geoAddress }) =>
       sendPostHogBatch(
@@ -39,4 +39,4 @@ export function createPostHogEventSink({ environment, ...options }: PostHogEvent
         options,
       ),
   };
-}
+};

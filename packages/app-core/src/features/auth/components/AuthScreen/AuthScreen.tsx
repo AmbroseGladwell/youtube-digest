@@ -18,7 +18,7 @@ export interface AuthScreenProps {
 
 // Design 9's one column and 10's panel: every step of signing in is this screen with a
 // different heading, so the heading takes focus whenever a step arrives.
-export function AuthScreen({ title, icon, kicker, lead, compactTitle = false, testId, embedded = false, children }: AuthScreenProps) {
+export const AuthScreen = ({ title, icon, kicker, lead, compactTitle = false, testId, embedded = false, children }: AuthScreenProps) => {
   const isPanel = useIsPanel();
   const heading = useRef<HTMLHeadingElement | null>(null);
 
@@ -56,4 +56,4 @@ export function AuthScreen({ title, icon, kicker, lead, compactTitle = false, te
       </div>
     </div>
   );
-}
+};

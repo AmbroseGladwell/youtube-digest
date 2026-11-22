@@ -8,11 +8,11 @@ export const JOURNALLED_STORES = [OUTBOX_STORE, SYNC_META_STORE];
 // class wrote it: an enrolled library journals every write, in the same transaction as
 // the write, and a library that was never enrolled journals nothing
 // (docs/features/sync-client.md).
-export async function appendPendingWrite(transaction: IDBTransaction, write: PendingWrite): Promise<boolean> {
+export const appendPendingWrite = async (transaction: IDBTransaction, write: PendingWrite): Promise<boolean> => {
   const enrolled = await promisifyRequest(transaction.objectStore(SYNC_META_STORE).get(SYNC_ENROLLED_KEY));
   if (enrolled !== true) {
     return false;
   }
   transaction.objectStore(OUTBOX_STORE).add({ ...write, stuck: null });
   return true;
-}
+};

@@ -36,7 +36,7 @@ const refusesModel = (status: number): boolean => status >= 400 && status < 500 
 const outOfCredit = (status: number, body: string): boolean =>
   status === 402 || (status === 429 && body.includes("insufficient_quota")) || (status === 400 && /credit balance is too low/i.test(body));
 
-export function providerFailure(status: number, body: string): GenerationError {
+export const providerFailure = (status: number, body: string): GenerationError => {
   const detail = body.slice(0, 500);
   // 401 is the common refusal; 403 is a key that exists but is not allowed to do this, and
   // reads the same way to a reader holding it.
@@ -50,4 +50,4 @@ export function providerFailure(status: number, body: string): GenerationError {
     return new ModelRefusedError(status, detail);
   }
   return new ProviderRequestError(status, detail);
-}
+};

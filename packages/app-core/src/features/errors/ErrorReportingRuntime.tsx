@@ -11,7 +11,7 @@ import { useClientSurface } from "../../app/SurfaceContext.js";
 
 // Signed in or not: an error is reported to the server this shell knows, under the session
 // when there is one (docs/architecture/errors-and-logs.md, "Who is reported").
-export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
+export const ErrorReportingRuntime = ({ children }: { children: ReactNode }) => {
   const apiUrl = useKnownApiUrl();
   const { token } = useSyncConnection().connection;
   const surface = useClientSurface();
@@ -79,4 +79,4 @@ export function ErrorReportingRuntime({ children }: { children: ReactNode }) {
   useEffect(() => () => queue.dispose(), [queue]);
 
   return <ErrorReporterProvider value={reporter}>{children}</ErrorReporterProvider>;
-}
+};

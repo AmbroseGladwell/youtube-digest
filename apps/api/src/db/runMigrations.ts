@@ -24,10 +24,10 @@ export interface RunMigrationsOptions {
 // Flyway's file naming without Flyway: each file runs once, in version order, in its own
 // transaction, under a lock so two starting servers cannot both apply the same one
 // (docs/architecture/api.md).
-export async function runMigrations(
+export const runMigrations = async (
   sql: SqlClient,
   { dir = MIGRATIONS_DIR, before = {}, upTo = Number.POSITIVE_INFINITY }: RunMigrationsOptions = {},
-): Promise<AppliedMigration[]> {
+): Promise<AppliedMigration[]> => {
   await sql.execute(
     "create table if not exists schema_migrations (version integer primary key, name text not null, applied_at timestamptz not null default now())",
   );
@@ -60,4 +60,4 @@ export async function runMigrations(
     }
   }
   return applied;
-}
+};

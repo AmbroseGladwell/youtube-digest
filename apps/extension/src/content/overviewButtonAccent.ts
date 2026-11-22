@@ -12,17 +12,17 @@ export interface OverviewButtonAccent {
 
 const channels = (hex: string): number[] => [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
 
-export function mixColours(base: string, over: string, amount: number): string {
+export const mixColours = (base: string, over: string, amount: number): string => {
   const [from, to] = [channels(base), channels(over)];
   const mixed = from.map((value, index) => Math.round(value + ((to[index] as number) - value) * amount));
   return `#${mixed.map((value) => value.toString(16).padStart(2, "0")).join("")}`;
-}
+};
 
 const ringOf = (hex: string, alpha: number) => `rgba(${channels(hex).join(",")},${alpha})`;
 
 // Design 135k: today's recipe with the accent in the orange's place. Orange itself stays the
 // hand-set values in overviewButtonStyles.ts.
-export function overviewButtonAccent(accentColour: AccentColour, dark: boolean): OverviewButtonAccent {
+export const overviewButtonAccent = (accentColour: AccentColour, dark: boolean): OverviewButtonAccent => {
   const palette = ACCENT_PALETTES[accentColour];
   if (dark) {
     const { mark } = palette.dark;
@@ -46,9 +46,9 @@ export function overviewButtonAccent(accentColour: AccentColour, dark: boolean):
     readyRing: ringOf(brand, 0.36),
     readyLabel: accentHover,
   };
-}
+};
 
-function schemeRules(id: string, accentColour: AccentColour, dark: boolean): string {
+const schemeRules = (id: string, accentColour: AccentColour, dark: boolean): string => {
   const accent = overviewButtonAccent(accentColour, dark);
   const scheme = dark ? "html[dark]" : "html:not([dark])";
   const button = `${scheme} #${id}[data-accent="${accentColour}"]`;
@@ -63,7 +63,7 @@ ${button}[data-state="ready"] {
 ${button}[data-state="ready"]:hover {
   background: linear-gradient(180deg, ${accent.readyHoverTop} 0%, ${accent.readyHoverBottom} 100%);
 }`;
-}
+};
 
 export const accentButtonCss = (id: string): string =>
   ACCENT_COLOURS.filter((accentColour) => accentColour !== DEFAULT_ACCENT_COLOUR)

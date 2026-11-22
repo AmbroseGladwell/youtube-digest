@@ -48,7 +48,7 @@ Judge only what the note says. Do not credit what a reader might infer or alread
 
 // Everything the note shows a reader that could carry an action. The watch-anyway reason is
 // left out: it is the claim being checked, not part of what it claims to cover.
-export function noteText(overview: Overview): string {
+export const noteText = (overview: Overview): string => {
   const section = (heading: string, lines: readonly string[]) =>
     lines.length === 0 ? [] : [`## ${heading}`, ...lines.map((line) => `- ${line}`)];
   return [
@@ -69,15 +69,15 @@ export function noteText(overview: Overview): string {
       (overview.chapters ?? []).map(({ title, summary }) => `${title}: ${summary}`),
     ),
   ].join("\n");
-}
+};
 
-export function stepsCarriedPrompt(overview: Overview, items: readonly ActionableItem[]) {
+export const stepsCarriedPrompt = (overview: Overview, items: readonly ActionableItem[]) => {
   return {
     systemPrompt: SYSTEM_PROMPT,
     userMessage: `# The note\n\n${noteText(overview)}\n\n# The source's actionable items\n\n${items.map(({ text }, index) => `${index + 1}. ${text}`).join("\n")}`,
     schema: CarriedLabels,
   };
-}
+};
 
 export interface JudgeStepsCarriedOptions {
   videoId: string;
@@ -91,7 +91,7 @@ export interface JudgeStepsCarriedOptions {
 }
 
 // The judge never reads a note its own provider wrote (docs/architecture/model-comparison.md).
-export async function judgeStepsCarried({
+export const judgeStepsCarried = async ({
   videoId,
   overview,
   items,
@@ -100,7 +100,7 @@ export async function judgeStepsCarried({
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgeStepsCarriedOptions): Promise<StepsJudgeRecord> {
+}: JudgeStepsCarriedOptions): Promise<StepsJudgeRecord> => {
   if (judge.provider === writer.provider) {
     throw new Error(`a judge from ${writer.provider} would be judging its own provider's note`);
   }
@@ -136,4 +136,4 @@ export async function judgeStepsCarried({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

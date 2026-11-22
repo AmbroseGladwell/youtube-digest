@@ -11,7 +11,7 @@ export interface ShareSnapshotInput {
 // posted rather than trusting a snapshot the client assembled, so a private field cannot
 // reach a share by any route (docs/features/sharing.md). A shared copy never carries the
 // transcript: the source's words are each reader's own, not ours to publish on a link (OV-295).
-export function shareSnapshot({ overview, narration }: ShareSnapshotInput): SharedOverview {
+export const shareSnapshot = ({ overview, narration }: ShareSnapshotInput): SharedOverview => {
   const note: SharedNote = {
     id: overview.id,
     source: overview.source,
@@ -34,4 +34,4 @@ export function shareSnapshot({ overview, narration }: ShareSnapshotInput): Shar
     ...(overview.recipe === null ? {} : { recipe: overview.recipe }),
   };
   return { note, transcript: null, narration };
-}
+};

@@ -15,7 +15,7 @@ interface SetOverviewStateContext {
   previousDetail: OverviewWithState | null | undefined;
 }
 
-export function useSetOverviewStateMutation() {
+export const useSetOverviewStateMutation = () => {
   const { overviewStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -55,4 +55,4 @@ export function useSetOverviewStateMutation() {
       }
     },
   });
-}
+};

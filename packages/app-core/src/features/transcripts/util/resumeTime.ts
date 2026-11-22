@@ -2,10 +2,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Our server's daily caps reset at UTC midnight; when a refusal didn't say how long, that is
 // how long (docs/architecture/server-side-transcripts.md, "Limits").
-export function secondsToNextUtcDay(now: Date): number {
+export const secondsToNextUtcDay = (now: Date): number => {
   const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
   return Math.max(1, Math.ceil((next - now.getTime()) / 1000));
-}
+};
 
 export const resumesAtFrom = (retryAfterSeconds: number | null, now: Date): Date =>
   new Date(now.getTime() + Math.min(DAY_MS, Math.max(1, retryAfterSeconds ?? secondsToNextUtcDay(now)) * 1000));

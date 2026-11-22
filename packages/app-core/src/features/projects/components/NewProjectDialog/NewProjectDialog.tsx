@@ -17,7 +17,7 @@ export interface NewProjectDialogProps {
 
 // A name, and what it's for with the reason to write it right under the field
 // ("OV-168 3 Adding and Making" 168x, 168y, 168y-2).
-export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) {
+export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [name, setName] = useState("");
   const [purpose, setPurpose] = useState("");
@@ -137,4 +137,4 @@ export function NewProjectDialog({ adds, assistantConnected, takenNames, busy, o
       </form>
     </dialog>
   );
-}
+};

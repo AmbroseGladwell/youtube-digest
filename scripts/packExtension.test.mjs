@@ -8,7 +8,7 @@ import { packExtension, storeManifest } from "./packExtension.mjs";
 
 const KEY = "MIIB…";
 
-function builtExtension(manifest) {
+const builtExtension = (manifest) => {
   const root = mkdtempSync(path.join(tmpdir(), "packExtension-test-"));
   const distDir = path.join(root, "dist");
   mkdirSync(path.join(distDir, "chunks"), { recursive: true });
@@ -17,7 +17,7 @@ function builtExtension(manifest) {
   writeFileSync(path.join(distDir, "chunks", "app-abc123.js"), "export {};");
   writeFileSync(path.join(distDir, ".DS_Store"), "");
   return { root, distDir, releaseDir: path.join(root, "release") };
-}
+};
 
 const manifestIn = (zipPath) => JSON.parse(execFileSync("unzip", ["-p", zipPath, "manifest.json"], { encoding: "utf8" }));
 

@@ -29,7 +29,7 @@ export const winRate = (tally: Tally): number | null => {
   return total === 0 ? null : (tally.win + tally.tie / 2) / total;
 };
 
-export function summariseJudging(judgments: readonly JudgeRecord[], picks: readonly BlindPick[]): CandidateJudging[] {
+export const summariseJudging = (judgments: readonly JudgeRecord[], picks: readonly BlindPick[]): CandidateJudging[] => {
   const candidates = [...new Set([...judgments.map((record) => record.candidate), ...picks.map((pick) => pick.candidate)])].sort();
   const overallByPair = new Map<string, CandidateResult>(
     judgments
@@ -72,4 +72,4 @@ export function summariseJudging(judgments: readonly JudgeRecord[], picks: reado
       },
     };
   });
-}
+};

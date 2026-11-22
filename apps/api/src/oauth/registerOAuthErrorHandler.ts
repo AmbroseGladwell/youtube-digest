@@ -8,7 +8,7 @@ import { reportRequestError, type RequestErrorReporting } from "../errors/report
 const isFastifyError = (error: unknown): error is FastifyError =>
   typeof error === "object" && error !== null && "code" in error && "statusCode" in error;
 
-export function registerOAuthErrorHandler(app: FastifyInstance, reporting: RequestErrorReporting): void {
+export const registerOAuthErrorHandler = (app: FastifyInstance, reporting: RequestErrorReporting): void => {
   app.setErrorHandler((error, request, reply) => {
     reply.header("cache-control", "no-store");
     if (isOAuthError(error)) {
@@ -30,4 +30,4 @@ export function registerOAuthErrorHandler(app: FastifyInstance, reporting: Reque
     reportRequestError(reporting, request, error);
     return reply.status(500).send({ error: "server_error", error_description: "Something went wrong" });
   });
-}
+};

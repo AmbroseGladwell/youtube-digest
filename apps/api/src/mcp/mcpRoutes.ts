@@ -26,7 +26,7 @@ const onlyPost = (reply: FastifyReply) =>
 
 // Runs after connectionAccessPlugin, so every request here carries a connection
 // (docs/features/mcp-connector.md, "The endpoint").
-export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, meaning, clock, appOrigin }: McpRoutesOptions): void {
+export const mcpRoutes = (app: FastifyInstance, { sql, transcripts, records, meaning, clock, appOrigin }: McpRoutesOptions): void => {
   app.post("/mcp", async (request, reply) => {
     reply.header("cache-control", "no-store");
     const origin = request.headers.origin;
@@ -60,4 +60,4 @@ export function mcpRoutes(app: FastifyInstance, { sql, transcripts, records, mea
 
   app.get("/mcp", async (_request, reply) => onlyPost(reply));
   app.delete("/mcp", async (_request, reply) => onlyPost(reply));
-}
+};

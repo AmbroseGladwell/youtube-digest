@@ -14,7 +14,7 @@ import { useOnboardingRunOwner } from "./useOnboardingRunOwner.js";
 // the overview over. One tab has it; the others ask after it and take it over if that tab
 // is gone. Nothing is spent until the account exists and the answers are moved into it
 // (docs/features/onboarding.md, "The run lives in one tab" and "Nothing paid before the account").
-export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
+export const OnboardingRunRuntime = ({ children }: { children: ReactNode }) => {
   const [progress, update] = useOnboardingProgress();
   const libraryMove = useLibraryMove();
   const accountId = useLibraryAccountId();
@@ -84,4 +84,4 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
   }, [run, mine, held, attempt, claim, link, transcribing]);
 
   return <OnboardingRunProvider value={value}>{children}</OnboardingRunProvider>;
-}
+};

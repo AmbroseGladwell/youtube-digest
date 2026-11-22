@@ -33,7 +33,7 @@ interface CaptionPiece {
   speakerChange: boolean;
 }
 
-export function transcriptBlocks(segments: TranscriptSegment[]): TranscriptBlock[] {
+export const transcriptBlocks = (segments: TranscriptSegment[]): TranscriptBlock[] => {
   const blocks: TranscriptBlock[] = [];
   let open: TranscriptBlock | null = null;
 
@@ -66,13 +66,13 @@ export function transcriptBlocks(segments: TranscriptSegment[]): TranscriptBlock
     blocks.push(open);
   }
   return blocks;
-}
+};
 
-function startsNewBlock(open: TranscriptBlock, piece: CaptionPiece): boolean {
+const startsNewBlock = (open: TranscriptBlock, piece: CaptionPiece): boolean => {
   return piece.speakerChange || piece.startMs - open.endMs >= LIMITS.silenceMs || piece.startMs - open.startMs >= LIMITS.runOnMs;
-}
+};
 
-function endsBlock(open: TranscriptBlock, piece: CaptionPiece): boolean {
+const endsBlock = (open: TranscriptBlock, piece: CaptionPiece): boolean => {
   const elapsedMs = piece.startMs - open.startMs;
   const atNaturalBoundary =
     piece.sentenceEnd || (piece.clauseEnd && (open.text.length >= LIMITS.idealChars || elapsedMs >= LIMITS.clauseMs));
@@ -80,9 +80,9 @@ function endsBlock(open: TranscriptBlock, piece: CaptionPiece): boolean {
   return (
     (atNaturalBoundary && (open.text.length >= LIMITS.minChars || elapsedMs >= LIMITS.impatientMs)) || open.text.length >= LIMITS.runOnChars
   );
-}
+};
 
-function captionPieces(segments: TranscriptSegment[]): CaptionPiece[] {
+const captionPieces = (segments: TranscriptSegment[]): CaptionPiece[] => {
   const pieces: CaptionPiece[] = [];
 
   for (const segment of segments) {
@@ -109,18 +109,18 @@ function captionPieces(segments: TranscriptSegment[]): CaptionPiece[] {
     }
   }
   return pieces;
-}
+};
 
-function normaliseCaption(text: string): string {
+const normaliseCaption = (text: string): string => {
   return text
     .replace(SPEAKER_MARKER, "")
     .replace(NON_SPEECH, "")
     .replace(/\s+/g, " ")
     .replace(/\s+([,.;:!?，。；：！？])/g, "$1")
     .trim();
-}
+};
 
-function splitOversizedPart(text: string): string[] {
+const splitOversizedPart = (text: string): string[] => {
   const parts: string[] = [];
   let rest = text;
 
@@ -133,9 +133,9 @@ function splitOversizedPart(text: string): string[] {
     parts.push(rest);
   }
   return parts;
-}
+};
 
-function cutPoint(window: string): number {
+const cutPoint = (window: string): number => {
   const lowerBound = Math.floor(LIMITS.maxChars * 0.55);
 
   for (const pattern of SPLIT_PATTERNS) {
@@ -150,4 +150,4 @@ function cutPoint(window: string): number {
     }
   }
   return LIMITS.maxChars;
-}
+};

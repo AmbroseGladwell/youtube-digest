@@ -18,7 +18,7 @@ export const applyPace = (followed: FollowedPlaylistWithCheck[], { playlist, pac
 
 // Saved as soon as it is chosen, for every device; the queue takes the new pace straight
 // away (docs/features/playlists.md, "A pace for each playlist").
-export function useSetPlaylistPaceMutation() {
+export const useSetPlaylistPaceMutation = () => {
   const { followedPlaylistStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -50,4 +50,4 @@ export function useSetPlaylistPaceMutation() {
       }
     },
   });
-}
+};

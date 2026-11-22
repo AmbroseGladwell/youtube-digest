@@ -38,7 +38,7 @@ const EXPIRED_BODY =
 
 const isCode = (error: unknown, code: string) => isSyncRequestError(error) && error.code === code;
 
-function useOnce(when: boolean, record: () => void): void {
+const useOnce = (when: boolean, record: () => void): void => {
   const recorded = useRef(false);
   useEffect(() => {
     if (!when || recorded.current) {
@@ -47,11 +47,11 @@ function useOnce(when: boolean, record: () => void): void {
     recorded.current = true;
     record();
   }, [when, record]);
-}
+};
 
 // Where an assistant sends a reader to answer its request (design 58,
 // docs/features/mcp-connector.md, "The consent screen").
-export function ConsentPage() {
+export const ConsentPage = () => {
   const requestId = useParams()[RouteParams.requestId] ?? "";
   const location = useLocation();
   const surface = useSurface();
@@ -311,4 +311,4 @@ export function ConsentPage() {
       </div>
     </div>
   );
-}
+};

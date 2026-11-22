@@ -12,7 +12,7 @@ export interface ArticleFailureNoticeProps {
 
 // Designs 77ai–77al: the error pattern, with one way forward where there is one. Trying again
 // has to be a press, because asking Chrome again needs one.
-export function ArticleFailureNotice({ copy, onWay, href = null, after = null }: ArticleFailureNoticeProps) {
+export const ArticleFailureNotice = ({ copy, onWay, href = null, after = null }: ArticleFailureNoticeProps) => {
   const quiet = copy.way === "tryAgain" || copy.way === "tryAnother";
   return (
     <div className={styles.root} role="alert" data-testid={articleFailureNoticeTestIds.root}>
@@ -40,4 +40,4 @@ export function ArticleFailureNotice({ copy, onWay, href = null, after = null }:
       {after !== null && <p className={styles.after}>{after}</p>}
     </div>
   );
-}
+};

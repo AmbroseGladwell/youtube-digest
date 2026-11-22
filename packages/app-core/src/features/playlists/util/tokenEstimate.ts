@@ -7,6 +7,6 @@ export const tokenEstimate = (overviews: number): number => overviews * TOKENS_P
 
 export const formatCount = (count: number): string => count.toLocaleString("en-GB");
 
-export function tokensText(tokens: number): string {
+export const tokensText = (tokens: number): string => {
   return tokens >= 1_000_000 ? `${Math.round(tokens / 100_000) / 10} million` : formatCount(tokens);
-}
+};

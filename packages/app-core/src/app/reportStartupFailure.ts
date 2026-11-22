@@ -20,7 +20,7 @@ const SEMVER = /^\d+\.\d+\.\d+$/;
 // A shell that couldn't open its database has no App, so none of the reporter: this sends
 // the one error straight to the server the shell knows, as the service worker does
 // (docs/architecture/errors-and-logs.md, "Before the app mounts").
-export async function reportStartupFailure(
+export const reportStartupFailure = async (
   thrown: unknown,
   {
     surface,
@@ -31,7 +31,7 @@ export async function reportStartupFailure(
     createApi = ({ apiUrl, token }) => createFetchErrorsApi({ baseUrl: apiUrl, token, surface }),
     now = () => new Date(),
   }: ReportStartupFailureOptions,
-): Promise<void> {
+): Promise<void> => {
   try {
     const connection = readSyncConnection(storage);
     const apiUrl = surface === "extension" ? (connection.apiUrl ?? defaultApiUrl) : (globalThis.location?.origin ?? null);
@@ -49,4 +49,4 @@ export async function reportStartupFailure(
   } catch {
     // Nothing is mounted to report a failed report to; the shell has logged the error itself.
   }
-}
+};

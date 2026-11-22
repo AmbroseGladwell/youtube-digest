@@ -16,7 +16,7 @@ const bundlePath = (location: string): string | null => {
   }
 };
 
-function* locatedFrames(stack: string) {
+const locatedFrames = function* (stack: string) {
   for (const line of stack.split("\n")) {
     const match = V8_FRAME.exec(line) ?? GECKO_FRAME.exec(line);
     if (match === null) {
@@ -28,7 +28,7 @@ function* locatedFrames(stack: string) {
       yield { fn, file, line: Number(lineNumber), column: Number(column) };
     }
   }
-}
+};
 
 let cached: { chunkIds: ChunkIds; count: number; byFile: Map<string, string> } | null = null;
 
@@ -56,10 +56,10 @@ const chunkIdsByFile = (chunkIds: ChunkIds | undefined): Map<string, string> => 
 // A stack cut to function names and paths inside the bundle: a frame's address loses its
 // origin, query and hash, and a frame with no address at all is dropped
 // (docs/architecture/errors-and-logs.md, "What an error may carry").
-export function parseStackFrames(
+export const parseStackFrames = (
   stack: string | undefined,
   chunkIds: ChunkIds | undefined = (globalThis as { _posthogChunkIds?: ChunkIds })._posthogChunkIds,
-): ClientErrorFrame[] {
+): ClientErrorFrame[] => {
   if (stack === undefined) {
     return [];
   }
@@ -82,4 +82,4 @@ export function parseStackFrames(
     }
   }
   return frames;
-}
+};

@@ -23,7 +23,7 @@ export interface RecipeTextInput {
 
 // Copy recipe: the page's recipe only, with where it came from, and never our summary. Plain
 // text with "-" and numbers, so it pastes cleanly anywhere (design 144r).
-export function recipeText({ title, from, url, recipe, ingredients, adjusted, methodAmounts = [] }: RecipeTextInput): string {
+export const recipeText = ({ title, from, url, recipe, ingredients, adjusted, methodAmounts = [] }: RecipeTextInput): string => {
   const figures = recipeFigures(recipe);
   const head = [
     title,
@@ -46,4 +46,4 @@ export function recipeText({ title, from, url, recipe, ingredients, adjusted, me
       "\n\n",
     ) + "\n"
   );
-}
+};

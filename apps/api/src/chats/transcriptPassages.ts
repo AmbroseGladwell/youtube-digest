@@ -11,7 +11,7 @@ export interface Passage {
 // (docs/architecture/in-app-chat.md, "Retrieval, measured first").
 export const PASSAGE_WINDOW_MS = 60_000;
 
-export function transcriptPassages(segments: readonly TranscriptSegment[], windowMs = PASSAGE_WINDOW_MS): Passage[] {
+export const transcriptPassages = (segments: readonly TranscriptSegment[], windowMs = PASSAGE_WINDOW_MS): Passage[] => {
   const passages: Passage[] = [];
   let current: TranscriptSegment[] = [];
 
@@ -42,4 +42,4 @@ export function transcriptPassages(segments: readonly TranscriptSegment[], windo
   }
   close();
   return passages;
-}
+};

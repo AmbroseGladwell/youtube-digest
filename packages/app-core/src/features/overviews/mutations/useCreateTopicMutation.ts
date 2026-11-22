@@ -12,7 +12,7 @@ export interface CreateTopicVariables {
 }
 
 // Find-or-create, and not optimistic, for the reasons in docs/features/topic-filing.md.
-export function useCreateTopicMutation() {
+export const useCreateTopicMutation = () => {
   const { overviewStore } = useStores();
   const queryClient = useQueryClient();
 
@@ -37,4 +37,4 @@ export function useCreateTopicMutation() {
       void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
     },
   });
-}
+};

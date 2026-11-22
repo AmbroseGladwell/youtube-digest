@@ -59,7 +59,7 @@ const secureImage = (href: string | null, pageUrl: string): string | null => {
   }
 };
 
-export function articleMetadata(document: Document, pageUrl: string): ArticleMetadata {
+export const articleMetadata = (document: Document, pageUrl: string): ArticleMetadata => {
   const article = linkedData(document).find(isArticleNode);
   const free = article?.isAccessibleForFree;
   return {
@@ -74,4 +74,4 @@ export function articleMetadata(document: Document, pageUrl: string): ArticleMet
       secureImage(imageOf(article?.image), pageUrl),
     declaredPaywalled: free === false || (typeof free === "string" && free.toLowerCase() === "false"),
   };
-}
+};

@@ -3,7 +3,7 @@ import { answered, createApiCaller, createApiRequester, refusalOf, sendApiCall, 
 import type { ChatApi, ChatOutcome, ChatProgress } from "./ChatApi.js";
 import { SyncTransportError } from "./SyncRequestError.js";
 
-async function* serverSentEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<unknown> {
+const serverSentEvents = async function* (body: ReadableStream<Uint8Array>): AsyncGenerator<unknown> {
   const decoder = new TextDecoder();
   let buffered = "";
   for await (const bytes of body as unknown as AsyncIterable<Uint8Array>) {
@@ -21,9 +21,9 @@ async function* serverSentEvents(body: ReadableStream<Uint8Array>): AsyncGenerat
       }
     }
   }
-}
+};
 
-export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
+export const createFetchChatApi = (options: ApiRequesterOptions): ChatApi => {
   const call = createApiCaller(options);
   const request = createApiRequester(options);
   const streamed = async (
@@ -77,4 +77,4 @@ export function createFetchChatApi(options: ApiRequesterOptions): ChatApi {
         onProgress,
       ),
   };
-}
+};

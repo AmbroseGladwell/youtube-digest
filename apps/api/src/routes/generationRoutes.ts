@@ -34,10 +34,10 @@ import type { TrialsRepository } from "../usage/TrialsRepository.js";
 // A two-hour transcript with a reader's whole library of topics, claims and tags.
 const GENERATION_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
 
-export function generationRoutes(
+export const generationRoutes = (
   app: FastifyInstance,
   { generator, trials, sql, clock }: { generator: OurKeyGenerator | null; trials: TrialsRepository; sql: SqlClient; clock: () => Date },
-): void {
+): void => {
   app.get("/generations", { config: { public: true } }, async () => {
     const status: OurKeyGenerationStatus = generator === null ? { available: false } : { available: true, ...ourKeyModel };
     return status;
@@ -158,4 +158,4 @@ export function generationRoutes(
       throw error;
     }
   });
-}
+};

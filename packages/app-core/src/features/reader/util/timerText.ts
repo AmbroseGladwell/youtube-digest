@@ -5,15 +5,15 @@ const COUNT_WORDS = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", 
 
 export const countWord = (count: number): string => COUNT_WORDS[count] ?? String(count);
 
-export function timerClock(ms: number): string {
+export const timerClock = (ms: number): string => {
   const total = Math.ceil(ms / 1000);
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const seconds = String(total % 60).padStart(2, "0");
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}` : `${minutes}:${seconds}`;
-}
+};
 
-export function timerLength(seconds: number): string {
+export const timerLength = (seconds: number): string => {
   if (seconds < 60) {
     return `${seconds} sec`;
   }
@@ -23,9 +23,9 @@ export function timerLength(seconds: number): string {
     return `${minutes} min`;
   }
   return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes}`;
-}
+};
 
-export function timerLengthWords(seconds: number): string {
+export const timerLengthWords = (seconds: number): string => {
   if (seconds < 60) {
     return `${seconds}-second`;
   }
@@ -33,9 +33,9 @@ export function timerLengthWords(seconds: number): string {
     return `${seconds / 3600}-hour`;
   }
   return `${Math.round(seconds / 60)}-minute`;
-}
+};
 
-export function timeLeftWords(ms: number): string {
+export const timeLeftWords = (ms: number): string => {
   if (ms < 60_000) {
     return plural(Math.max(1, Math.ceil(ms / 1000)), "second");
   }
@@ -45,7 +45,7 @@ export function timeLeftWords(ms: number): string {
   }
   const hours = Math.floor(minutes / 60);
   return minutes % 60 === 0 ? plural(hours, "hour") : `${plural(hours, "hour")} ${plural(minutes % 60, "minute")}`;
-}
+};
 
 export const timerAgo = (ms: number): string =>
   ms < 10_000 ? "just now" : ms < 60_000 ? `${Math.floor(ms / 1000)} s ago` : `${Math.floor(ms / 60_000)} min ago`;

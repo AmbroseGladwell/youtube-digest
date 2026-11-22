@@ -6,7 +6,7 @@ export interface LegalTableProps {
   rows: readonly (readonly string[])[];
 }
 
-export function LegalTable({ caption, columns, rows }: LegalTableProps) {
+export const LegalTable = ({ caption, columns, rows }: LegalTableProps) => {
   return (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
@@ -32,4 +32,4 @@ export function LegalTable({ caption, columns, rows }: LegalTableProps) {
       </table>
     </div>
   );
-}
+};

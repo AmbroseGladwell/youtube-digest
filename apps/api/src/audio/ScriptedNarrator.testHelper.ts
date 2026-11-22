@@ -7,7 +7,7 @@ export interface ScriptedNarrator extends Narrator {
 }
 
 // A TTS service that says each line in one second, and fails when told to.
-export function makeScriptedNarrator(): ScriptedNarrator {
+export const makeScriptedNarrator = (): ScriptedNarrator => {
   const failures: string[] = [];
   const requests: NarrationRequest[] = [];
   return {
@@ -29,7 +29,7 @@ export function makeScriptedNarrator(): ScriptedNarrator {
       };
     },
   };
-}
+};
 
 export interface MemoryAudioStore extends AudioStore {
   files: Map<string, Buffer>;
@@ -37,7 +37,7 @@ export interface MemoryAudioStore extends AudioStore {
   failingDeletes: boolean;
 }
 
-export function makeMemoryAudioStore(): MemoryAudioStore {
+export const makeMemoryAudioStore = (): MemoryAudioStore => {
   const files = new Map<string, Buffer>();
   const store: MemoryAudioStore = {
     files,
@@ -56,4 +56,4 @@ export function makeMemoryAudioStore(): MemoryAudioStore {
     },
   };
   return store;
-}
+};

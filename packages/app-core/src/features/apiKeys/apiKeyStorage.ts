@@ -17,7 +17,7 @@ const parse = (raw: string, schema: z.ZodType): unknown => {
   }
 };
 
-export function readApiKeys(storage: Storage = globalThis.localStorage): ApiKeys {
+export const readApiKeys = (storage: Storage = globalThis.localStorage): ApiKeys => {
   const raw = storage.getItem(STORAGE_KEY);
   if (raw !== null) {
     const parsed = parse(raw, ApiKeys) as z.ZodSafeParseResult<ApiKeys>;
@@ -35,8 +35,8 @@ export function readApiKeys(storage: Storage = globalThis.localStorage): ApiKeys
   // No date: the older build never recorded when the key was added, and the row says
   // nothing rather than guessing.
   return { keys: { anthropic: { key: parsed.data.anthropicApiKey, addedAt: null } } };
-}
+};
 
-export function writeApiKeys(keys: ApiKeys, storage: Storage = globalThis.localStorage): void {
+export const writeApiKeys = (keys: ApiKeys, storage: Storage = globalThis.localStorage): void => {
   storage.setItem(STORAGE_KEY, JSON.stringify(keys));
-}
+};

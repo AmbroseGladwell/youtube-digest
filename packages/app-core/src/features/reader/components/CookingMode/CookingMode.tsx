@@ -58,7 +58,7 @@ const INTERACTIVE = "button, a, input, select, textarea, [contenteditable]";
 
 const placeOf = (action: RecipeAction) => `Step ${action.step + 1}${action.count === 1 ? "" : ` · ${action.index + 1} of ${action.count}`}`;
 
-function VoiceLine({
+const VoiceLine = ({
   voice,
   step,
   firstScreen,
@@ -68,7 +68,7 @@ function VoiceLine({
   step: number;
   firstScreen: boolean;
   onTryAgain: () => void;
-}) {
+}) => {
   if (voice === "reading") {
     return (
       <>
@@ -125,7 +125,7 @@ function VoiceLine({
       <span>Waiting for you</span>
     </>
   );
-}
+};
 
 interface TimedTextProps {
   text: string;
@@ -137,7 +137,7 @@ interface TimedTextProps {
 }
 
 // Design 284a: each time in the action is underlined in orange, and tapping it does what its pill does.
-function TimedText({ text, offset, times, us, amounts, onTime }: TimedTextProps) {
+const TimedText = ({ text, offset, times, us, amounts, onTime }: TimedTextProps) => {
   const parts: ReactNode[] = [];
   let from = 0;
   times.forEach((time, index) => {
@@ -166,7 +166,7 @@ function TimedText({ text, offset, times, us, amounts, onTime }: TimedTextProps)
     parts.push(<OvenText key={`text${from}`} text={text.slice(from)} us={us} amounts={amounts} />);
   }
   return <>{parts}</>;
-}
+};
 
 interface ActionTextProps {
   action: RecipeAction;
@@ -176,7 +176,7 @@ interface ActionTextProps {
   onTime: (index: number) => void;
 }
 
-function ActionText({ action, times, us, amounts, onTime }: ActionTextProps) {
+const ActionText = ({ action, times, us, amounts, onTime }: ActionTextProps) => {
   if (action.condition === null) {
     return <TimedText text={action.text} offset={0} times={times} us={us} amounts={amounts} onTime={onTime} />;
   }
@@ -195,7 +195,7 @@ function ActionText({ action, times, us, amounts, onTime }: ActionTextProps) {
       />
     </>
   );
-}
+};
 
 const wakeLineFor = (awake: boolean, timing: boolean, web: boolean): string | null => {
   if (!timing) {
@@ -214,7 +214,7 @@ const wakeLineFor = (awake: boolean, timing: boolean, web: boolean): string | nu
 // biggest thing on the screen. The phone is the main case; the panel is taken over, and the wide
 // web is a full-screen takeover with each control's key on it, where the ingredients open as a
 // column beside the step (190a–190k) (docs/features/recipe-notes.md, "Cooking step by step").
-export function CookingMode({
+export const CookingMode = ({
   mode,
   title,
   from,
@@ -227,7 +227,7 @@ export function CookingMode({
   methodAmounts,
   videoId = null,
   seekVideo = null,
-}: CookingModeProps) {
+}: CookingModeProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const ingredientsButton = useRef<HTMLButtonElement | null>(null);
   const drawerId = useId();
@@ -801,4 +801,4 @@ export function CookingMode({
       )}
     </dialog>
   );
-}
+};

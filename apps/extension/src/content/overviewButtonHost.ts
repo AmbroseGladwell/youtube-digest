@@ -15,7 +15,7 @@ const isVisible = (element: Element | null): element is HTMLElement => {
 // it. Every candidate is measured instead. Both this and the selector list are taken
 // from the reference extension, which carries the scar
 // (docs/features/injected-button.md).
-export function findOverviewButtonHost(): HTMLElement | null {
+export const findOverviewButtonHost = (): HTMLElement | null => {
   for (const actionRow of document.querySelectorAll("ytd-watch-metadata #actions-inner")) {
     if (!isVisible(actionRow)) {
       continue;
@@ -38,4 +38,4 @@ export function findOverviewButtonHost(): HTMLElement | null {
         isVisible(candidate) && (candidate.closest("ytd-watch-metadata") !== null || candidate.closest("#primary") !== null),
     ) ?? null
   );
-}
+};

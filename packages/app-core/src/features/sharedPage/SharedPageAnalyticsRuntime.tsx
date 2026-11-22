@@ -10,7 +10,7 @@ import { useErrorReporter } from "../errors/ErrorReporterContext.js";
 // A shared link counts what its visitors do, account or not, against the share's own route
 // rather than the reader's session; the page load's id lives in memory and nowhere else
 // (docs/architecture/analytics.md, "The shared page").
-export function SharedPageAnalyticsRuntime({ token, children }: { token: string; children: ReactNode }) {
+export const SharedPageAnalyticsRuntime = ({ token, children }: { token: string; children: ReactNode }) => {
   const context = useAnalyticsContext();
   const errors = useErrorReporter();
   const [viewId] = useState(() => globalThis.crypto.randomUUID());
@@ -59,4 +59,4 @@ export function SharedPageAnalyticsRuntime({ token, children }: { token: string;
       <OverviewAnalyticsProvider value={overviewAnalytics}>{children}</OverviewAnalyticsProvider>
     </AnalyticsProvider>
   );
-}
+};

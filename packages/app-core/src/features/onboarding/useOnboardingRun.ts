@@ -54,7 +54,7 @@ const FETCHING: OnboardingRun = {
 // straight into the account's library. A page the panel was beside is read in the browser where
 // Chrome allows it, spending no trial read (docs/features/onboarding.md, "Nothing paid before the
 // account").
-export function useOnboardingRun({
+export const useOnboardingRun = ({
   source,
   target,
   tabId,
@@ -73,7 +73,7 @@ export function useOnboardingRun({
   transcribe?: TranscribeChoice | undefined;
   onFound: (found: OnboardingFound) => void;
   onMade: (overview: Overview) => void;
-}): OnboardingRun {
+}): OnboardingRun => {
   const { apiKeys } = useApiKeys();
   const runVideo = useRunOverviewGeneration(apiKeys);
   const runArticle = useRunArticleGeneration(apiKeys);
@@ -266,4 +266,4 @@ export function useOnboardingRun({
   }, [target, attempt]);
 
   return target === null || state.key === key ? state.run : FETCHING;
-}
+};

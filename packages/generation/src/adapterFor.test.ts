@@ -16,7 +16,7 @@ interface Call {
   init: RequestInit;
 }
 
-function recorder(respond: (call: Call) => { status?: number; body: unknown }) {
+const recorder = (respond: (call: Call) => { status?: number; body: unknown }) => {
   const calls: Call[] = [];
   const http = (async (url: string | URL | Request, init: RequestInit = {}) => {
     const call = { url: String(url), init };
@@ -25,7 +25,7 @@ function recorder(respond: (call: Call) => { status?: number; body: unknown }) {
     return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   }) as unknown as typeof fetch;
   return { calls, http };
-}
+};
 
 const BODIES: Record<string, unknown> = {
   anthropic: { content: [{ type: "text", text: JSON.stringify(answer) }] },

@@ -20,7 +20,7 @@ const PLATES = 2;
 // a stack shortest first with the next ones peeking out underneath in their own colours.
 // × brings the next forward; the last × leaves a moment to undo it
 // (docs/features/time-saved.md, "When a milestone shows").
-export function MilestoneStack({ milestones, minutes, onLineChosen, onDismiss, onUndo }: MilestoneStackProps) {
+export const MilestoneStack = ({ milestones, minutes, onLineChosen, onDismiss, onUndo }: MilestoneStackProps) => {
   const [dismissedHere, setDismissedHere] = useState(0);
   const [undoable, setUndoable] = useState<MilestoneId | null>(null);
   const front = milestones[0];
@@ -101,4 +101,4 @@ export function MilestoneStack({ milestones, minutes, onLineChosen, onDismiss, o
       </div>
     </div>
   );
-}
+};

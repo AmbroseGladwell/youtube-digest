@@ -39,7 +39,7 @@ export type EnterCodeProps = EnterCodeCommonProps &
 // comes in the same way, with no email behind it. On the web, the code is the one printed in
 // the mail itself, for a mail read somewhere other than this browser
 // (docs/features/sign-in.md, "A code in the web mail").
-export function EnterCode(props: EnterCodeProps) {
+export const EnterCode = (props: EnterCodeProps) => {
   const { connecting, refused, onConnect } = props;
   const fromEmail = props.from !== "webApp";
   const inMail = props.from === "emailCode";
@@ -230,4 +230,4 @@ export function EnterCode(props: EnterCodeProps) {
       </form>
     </AuthScreen>
   );
-}
+};

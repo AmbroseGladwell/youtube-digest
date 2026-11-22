@@ -12,7 +12,7 @@ type WebSignedIn = Extract<SignedIn, { surface: "web" }>;
 // device connects to the account, and the page lands once the account's library is the one
 // open, so whatever comes next, onboarding included, reads the account's library rather than
 // the one being left (docs/features/sign-in.md, docs/features/account-libraries.md).
-export function useWebSignInLanding() {
+export const useWebSignInLanding = () => {
   const navigate = useNavigate();
   const { setConnection } = useSyncConnection();
   const libraryAccountId = useLibraryAccountId();
@@ -43,4 +43,4 @@ export function useWebSignInLanding() {
   }, [landing, libraryAccountId, navigate]);
 
   return { land, landing: landing !== null };
-}
+};

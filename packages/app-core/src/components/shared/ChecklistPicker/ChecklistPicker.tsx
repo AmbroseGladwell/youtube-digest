@@ -48,7 +48,7 @@ const FIND_ABOVE = 8;
 
 // A dialog on the web and a sheet on a phone. Each tick saves as it's made, and Done only
 // closes ("OV-168 3 Adding and Making" 168t, 168u; "OV-168 5" 168as).
-export function ChecklistPicker({
+export const ChecklistPicker = ({
   heading,
   hint,
   groupLabel,
@@ -60,7 +60,7 @@ export function ChecklistPicker({
   foot,
   onClose,
   testIds,
-}: ChecklistPickerProps) {
+}: ChecklistPickerProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [query, setQuery] = useState("");
   const [naming, setNaming] = useState<string | null>(null);
@@ -209,4 +209,4 @@ export function ChecklistPicker({
       </div>
     </dialog>
   );
-}
+};

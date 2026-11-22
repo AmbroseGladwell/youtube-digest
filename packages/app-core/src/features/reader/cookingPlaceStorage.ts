@@ -11,11 +11,11 @@ export type CookingPlace = z.infer<typeof CookingPlace>;
 
 // Where the reader left cooking a recipe step by step, kept on this device for a day and cleared
 // by Finish (design 150w, owner 3 Nov 2026). Never synced; nothing when it can't be read.
-export function readCookingPlace(
+export const readCookingPlace = (
   overviewId: OverviewId,
   now = Date.now(),
   storage: Storage = globalThis.localStorage,
-): CookingPlace | null {
+): CookingPlace | null => {
   try {
     const parsed = CookingPlace.safeParse(JSON.parse(storage.getItem(PLACE_PREFIX + overviewId) ?? "null"));
     if (!parsed.success || now - parsed.data.leftAt > COOKING_PLACE_KEPT_MS) {
@@ -25,9 +25,9 @@ export function readCookingPlace(
   } catch {
     return null;
   }
-}
+};
 
-export function writeCookingPlace(overviewId: OverviewId, place: CookingPlace | null, storage: Storage = globalThis.localStorage): void {
+export const writeCookingPlace = (overviewId: OverviewId, place: CookingPlace | null, storage: Storage = globalThis.localStorage): void => {
   try {
     if (place === null) {
       storage.removeItem(PLACE_PREFIX + overviewId);
@@ -37,10 +37,10 @@ export function writeCookingPlace(overviewId: OverviewId, place: CookingPlace | 
   } catch {
     // A device that won't store it starts again from step 1.
   }
-}
+};
 
 // The headphones line is shown on the first two entries only (design 150t).
-export function readCookingHints(storage: Storage = globalThis.localStorage): number {
+export const readCookingHints = (storage: Storage = globalThis.localStorage): number => {
   try {
     return z
       .number()
@@ -51,12 +51,12 @@ export function readCookingHints(storage: Storage = globalThis.localStorage): nu
   } catch {
     return COOKING_HINT_ENTRIES;
   }
-}
+};
 
-export function writeCookingHints(count: number, storage: Storage = globalThis.localStorage): void {
+export const writeCookingHints = (count: number, storage: Storage = globalThis.localStorage): void => {
   try {
     storage.setItem(HINTS_KEY, String(count));
   } catch {
     // As above: the line simply shows again.
   }
-}
+};

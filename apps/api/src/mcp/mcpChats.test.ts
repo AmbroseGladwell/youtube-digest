@@ -19,7 +19,7 @@ interface Connected {
   chat(overviewIndex: number, messages: ChatMessage[], at?: string): Promise<string>;
 }
 
-async function connected(t: test.TestContext): Promise<Connected> {
+const connected = async (t: test.TestContext): Promise<Connected> => {
   const testApp = await createTestApp();
   t.after(() => testApp.close());
   const reader = await makeAccount(testApp);
@@ -43,7 +43,7 @@ async function connected(t: test.TestContext): Promise<Connected> {
       return chatRecordId(overviewId, conversationId);
     },
   };
-}
+};
 
 const exchange = (
   question: string,

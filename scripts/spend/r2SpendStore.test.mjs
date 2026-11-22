@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { r2SpendStore } from "./r2SpendStore.mjs";
 
-function fakeR2(answers) {
+const fakeR2 = (answers) => {
   const requests = [];
   const fetch = async (request) => {
     requests.push({
@@ -14,7 +14,7 @@ function fakeR2(answers) {
     return answers.shift();
   };
   return { fetch, requests };
-}
+};
 
 const settings = { accountId: "acct", bucket: "the-overview-spend", accessKeyId: "id", secretAccessKey: "secret" };
 

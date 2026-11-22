@@ -23,12 +23,12 @@ const REPLACE_ATTEMPTS = 3;
 // regeneration is the reader's deliberate act and the last local write wins, as it does
 // in the local store. A field write to a record the server no longer has is done with:
 // the tombstone will arrive on the next pull (docs/features/sync-client.md).
-export async function pushPendingWrite(
+export const pushPendingWrite = async (
   api: SyncApi,
   entry: OutboxEntry,
   knownRev: number | null,
   storage: Pick<SyncStorage, "transcriptToPush">,
-): Promise<PushOutcome> {
+): Promise<PushOutcome> => {
   try {
     return await send(api, entry, knownRev, storage);
   } catch (error) {
@@ -44,14 +44,14 @@ export async function pushPendingWrite(
     }
     return { result: "stuck", failure: { code: "unknown", message: describe(error) } };
   }
-}
+};
 
-async function send(
+const send = async (
   api: SyncApi,
   entry: OutboxEntry,
   knownRev: number | null,
   storage: Pick<SyncStorage, "transcriptToPush">,
-): Promise<PushOutcome> {
+): Promise<PushOutcome> => {
   const { change } = entry;
   switch (change.op) {
     case "replace":
@@ -95,7 +95,7 @@ async function send(
       return { result: "sent" };
     }
   }
-}
+};
 
 const written = ({ rev }: WrittenRecord): PushOutcome => ({ result: "written", rev });
 
@@ -111,10 +111,10 @@ const revisionNamedBy = (error: unknown): number | null =>
     ? error.details.rev
     : null;
 
-async function replaceWithRetry(
+const replaceWithRetry = async (
   replace: (ifMatch: number | null) => Promise<WrittenRecord>,
   knownRev: number | null,
-): Promise<PushOutcome> {
+): Promise<PushOutcome> => {
   let ifMatch = knownRev;
   for (let attempt = 1; ; attempt += 1) {
     try {
@@ -127,7 +127,7 @@ async function replaceWithRetry(
       ifMatch = named;
     }
   }
-}
+};
 
 // A second overview of a video the account holds is refused naming the first; the caller
 // folds this one into it rather than resending (docs/features/one-overview-per-video.md).
@@ -135,7 +135,7 @@ async function replaceWithRetry(
 // client reserved, takes a slot on the month and goes again: on our key when the server
 // made it in a signed-out trial, on the reader's own otherwise
 // (docs/architecture/tiers.md, "Reserving on the reader's own key").
-async function createOverview(api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> {
+const createOverview = async (api: SyncApi, record: Record<string, unknown>, knownRev: number | null): Promise<PushOutcome> => {
   const create = () => replaceWithRetry((ifMatch) => api.createOverview(record, ifMatch), knownRev);
   try {
     try {
@@ -157,9 +157,9 @@ async function createOverview(api: SyncApi, record: Record<string, unknown>, kno
     }
     throw error;
   }
-}
+};
 
-async function reserve(api: SyncApi, overviewId: string): Promise<PushOutcome | null> {
+const reserve = async (api: SyncApi, overviewId: string): Promise<PushOutcome | null> => {
   try {
     await api.reserveOverview(overviewId);
     return null;
@@ -171,9 +171,9 @@ async function reserve(api: SyncApi, overviewId: string): Promise<PushOutcome | 
     }
     throw error;
   }
-}
+};
 
-function deleteFor(api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | null> {
+const deleteFor = (api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | null> => {
   switch (entry.kind) {
     case "followedPlaylist":
       return api.deleteFollowedPlaylist(entry.id);
@@ -184,13 +184,13 @@ function deleteFor(api: SyncApi, entry: OutboxEntry): Promise<WrittenRecord | nu
     default:
       return api.deleteOverview(entry.id);
   }
-}
+};
 
 const createTopic = (api: SyncApi, record: Record<string, unknown>): Promise<PushOutcome> => createOnce(() => api.createTopic(record));
 
 // Topics and projects are created once. One the server already holds under this id is this
 // same record, pushed before and not acknowledged in time; there is nothing to replace.
-async function createOnce(create: () => Promise<WrittenRecord>): Promise<PushOutcome> {
+const createOnce = async (create: () => Promise<WrittenRecord>): Promise<PushOutcome> => {
   try {
     return written(await create());
   } catch (error) {
@@ -200,4 +200,4 @@ async function createOnce(create: () => Promise<WrittenRecord>): Promise<PushOut
     }
     throw error;
   }
-}
+};

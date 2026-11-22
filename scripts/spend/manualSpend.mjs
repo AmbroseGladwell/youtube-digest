@@ -2,7 +2,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 export class ManualEntriesError extends Error {}
 
-export function parseManualEntries(json) {
+export const parseManualEntries = (json) => {
   if (json === undefined || json.trim() === "") {
     return [];
   }
@@ -30,14 +30,14 @@ export function parseManualEntries(json) {
     }
     return { provider, environment, area, monthlyDollars, from, to, waived };
   });
-}
+};
 
-function daysInMonthOf(date) {
+const daysInMonthOf = (date) => {
   const [year, month] = date.split("-").map(Number);
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
+};
 
-export function manualRowsFor(entries, date) {
+export const manualRowsFor = (entries, date) => {
   return entries
     .filter((entry) => entry.from <= date && (entry.to === null || date <= entry.to))
     .map(({ provider, environment, area, monthlyDollars, waived }) => ({
@@ -49,4 +49,4 @@ export function manualRowsFor(entries, date) {
       source: waived === null ? "manual" : "waived",
       ...(waived === null ? {} : { reason: waived }),
     }));
-}
+};

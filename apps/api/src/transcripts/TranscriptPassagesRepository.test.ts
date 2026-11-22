@@ -10,19 +10,19 @@ import { keywordTermsOf, TranscriptPassagesRepository } from "./TranscriptPassag
 
 const minute = (index: number, text: string): TranscriptSegment => ({ text, startMs: index * 60_000, endMs: index * 60_000 + 50_000 });
 
-async function setUp(t: TestContext): Promise<{ testApp: TestApp; account: TestAccount; repository: TranscriptPassagesRepository }> {
+const setUp = async (t: TestContext): Promise<{ testApp: TestApp; account: TestAccount; repository: TranscriptPassagesRepository }> => {
   const testApp = await createTestApp();
   t.after(() => testApp.close());
   return { testApp, account: await makeAccount(testApp), repository: new TranscriptPassagesRepository(testApp.sql) };
-}
+};
 
-async function kept(account: TestAccount, segments: TranscriptSegment[]): Promise<{ overviewId: string; videoId: string }> {
+const kept = async (account: TestAccount, segments: TranscriptSegment[]): Promise<{ overviewId: string; videoId: string }> => {
   const transcript = makeStoredTranscript({ videoId: VideoId.parse(randomUUID().slice(0, 11)), segments });
   const overview = storedOverview({ source: youTubeSource(transcript.video!) });
   assert.equal((await account.inject({ method: "POST", url: "/api/overviews", body: overview })).statusCode, 201);
   assert.equal((await account.inject({ method: "PUT", url: `/api/transcripts/${transcript.videoId}`, body: transcript })).statusCode, 204);
   return { overviewId: overview.id, videoId: transcript.videoId };
-}
+};
 
 const sleepTalk = [
   minute(0, "Welcome to the show, today we talk about sleep and recovery."),

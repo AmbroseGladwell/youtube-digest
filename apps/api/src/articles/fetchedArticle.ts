@@ -9,7 +9,7 @@ let parse: ReturnType<typeof createArticleParser> | null = null;
 
 // Parsing takes CPU that would stop every other reader's requests, so it happens on a worker
 // (docs/features/pasted-article-links.md, "Parsing").
-export async function fetchedArticle(page: FetchedPage): Promise<ArticleRead> {
+export const fetchedArticle = async (page: FetchedPage): Promise<ArticleRead> => {
   if (page.status !== "page") {
     return page;
   }
@@ -19,4 +19,4 @@ export async function fetchedArticle(page: FetchedPage): Promise<ArticleRead> {
     heapLimitMb: PARSE_HEAP_LIMIT_MB,
   });
   return parse(page.html, page.url);
-}
+};

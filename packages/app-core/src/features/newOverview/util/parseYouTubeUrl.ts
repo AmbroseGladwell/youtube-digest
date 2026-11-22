@@ -15,19 +15,19 @@ const VIDEO_PATH = /^\/(?:shorts|embed|live|v)\/([^/]+)/;
 // A colon would make the id read as another kind's key (docs/features/source-identity.md).
 const VIDEO_ID = /^[A-Za-z0-9_-]+$/;
 
-function stripHostPrefix(host: string): string {
+const stripHostPrefix = (host: string): string => {
   return host.startsWith("www.") ? host.slice(4) : host;
-}
+};
 
 // Cheap client-side validation, not a duplicate of what a source checks for itself —
 // this exists only to reject an obviously-not-YouTube paste before a rung is asked, and
 // to give the InnerTube rung the id it needs (docs/features/transcript-retrieval.md).
-export function extractYouTubeVideoId(input: string): string | null {
+export const extractYouTubeVideoId = (input: string): string | null => {
   const id = idInYouTubeUrl(input);
   return id !== null && VIDEO_ID.test(id) ? id : null;
-}
+};
 
-function idInYouTubeUrl(input: string): string | null {
+const idInYouTubeUrl = (input: string): string | null => {
   let parsed: URL;
   try {
     parsed = new URL(input.trim());
@@ -51,16 +51,16 @@ function idInYouTubeUrl(input: string): string | null {
   }
 
   return VIDEO_PATH.exec(parsed.pathname)?.[1] ?? null;
-}
+};
 
-export function isYouTubeUrl(input: string): boolean {
+export const isYouTubeUrl = (input: string): boolean => {
   return extractYouTubeVideoId(input) !== null;
-}
+};
 
-export function canonicalYouTubeUrl(input: string): string | null {
+export const canonicalYouTubeUrl = (input: string): string | null => {
   const id = extractYouTubeVideoId(input);
   return id === null ? null : `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
-}
+};
 
 // Lists YouTube keeps to the viewer, and the Mix it makes up on the fly for each one: none
 // can be read by an app (docs/features/playlists.md, "Playlists that can't be followed").
@@ -72,7 +72,7 @@ export type YouTubeLink =
   | { kind: "playlist"; playlistId: PlaylistId }
   | { kind: "unfollowable"; list: UnfollowableList; videoUrl: string | null };
 
-function unfollowableList(listId: string): UnfollowableList | null {
+const unfollowableList = (listId: string): UnfollowableList | null => {
   if (listId === "WL") {
     return "watchLater";
   }
@@ -83,11 +83,11 @@ function unfollowableList(listId: string): UnfollowableList | null {
     return "mix";
   }
   return null;
-}
+};
 
 // What a pasted link points at, so every paste field can tell a video from a playlist
 // before anything starts (docs/features/playlists.md, "Pasting a link").
-export function youTubeLink(input: string): YouTubeLink | null {
+export const youTubeLink = (input: string): YouTubeLink | null => {
   let parsed: URL;
   try {
     parsed = new URL(input.trim());
@@ -114,6 +114,6 @@ export function youTubeLink(input: string): YouTubeLink | null {
 
   const playlistId = PlaylistId.parse(listId);
   return videoUrl === null ? { kind: "playlist", playlistId } : { kind: "videoInPlaylist", videoUrl, playlistId };
-}
+};
 
 export const playlistUrl = (playlistId: PlaylistId): string => `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;

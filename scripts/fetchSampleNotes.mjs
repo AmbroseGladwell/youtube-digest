@@ -9,7 +9,7 @@ const DESTINATION = "packages/app-core/playwright/store/sampleNotes.json";
 // whatever Start is offering today (docs/architecture/store-listing.md, "The screenshots").
 // A sample whose share has gone is left out of the answer by the API, not nulled, so the only
 // thing to check is that something came back at all.
-export function notesFrom(answer) {
+export const notesFrom = (answer) => {
   const samples = answer?.samples;
   if (!Array.isArray(samples) || samples.length === 0) {
     throw new Error(`${SAMPLES_URL} listed no samples, so there is nothing to take shots of`);
@@ -20,7 +20,7 @@ export function notesFrom(answer) {
     throw new Error(`${untitled.length} of ${notes.length} samples carry no title`);
   }
   return notes;
-}
+};
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

@@ -64,7 +64,7 @@ reader would rather have. Give the reason in one sentence before each winner.`;
 
 const lastAttemptOf = (record: RunRecord): Record<string, unknown> => (record.attempts.at(-1) ?? {}) as Record<string, unknown>;
 
-export function personalPartsText(record: RunRecord, profile: ReaderProfile): string {
+export const personalPartsText = (record: RunRecord, profile: ReaderProfile): string => {
   const overview = record.overview!;
   const topicNames = profile.existingTopics.filter((topic) => overview.topicIds.includes(topic.id)).map((topic) => topic.name);
   const suggested = lastAttemptOf(record).suggestedTopic as { name: string; description: string | null } | null;
@@ -77,9 +77,9 @@ export function personalPartsText(record: RunRecord, profile: ReaderProfile): st
     `Tags: ${overview.tags.join(", ")}`,
     `Repeats past claims: ${(overview.verdict?.similarTo ?? []).map((similar) => similar.title).join("; ") || "none"}`,
   ].join("\n");
-}
+};
 
-export function personalJudgePrompt(shared: Overview, profile: ReaderProfile, partsA: string, partsB: string) {
+export const personalJudgePrompt = (shared: Overview, profile: ReaderProfile, partsA: string, partsB: string) => {
   return {
     systemPrompt: SYSTEM_PROMPT,
     userMessage: `About the reader: ${profile.readerContext ?? "nothing said"}
@@ -98,7 +98,7 @@ ${partsA}
 ${partsB}`,
     schema: PersonalJudgeAnswer,
   };
-}
+};
 
 const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): CandidateResult =>
   winner === "tie" ? "tie" : (winner === "A") === candidateIsA ? "win" : "loss";
@@ -113,7 +113,7 @@ export interface JudgePersonalPairOptions {
   now?: () => number;
 }
 
-export async function judgePersonalPair({
+export const judgePersonalPair = async ({
   fetched,
   profile,
   baseline,
@@ -121,7 +121,7 @@ export async function judgePersonalPair({
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgePersonalPairOptions): Promise<PersonalJudgeRecord> {
+}: JudgePersonalPairOptions): Promise<PersonalJudgeRecord> => {
   const videoId = fetched.video.id ?? fetched.video.url;
   const judge = parseComparedModel(PERSONAL_JUDGE);
   const candidateIsA = candidateGoesFirst(videoId, candidate.name);
@@ -172,4 +172,4 @@ export async function judgePersonalPair({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

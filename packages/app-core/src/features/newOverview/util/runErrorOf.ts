@@ -11,7 +11,7 @@ export interface FetchedArticle {
   regenerating: boolean;
 }
 
-export function runErrorOf(error: Error, fetched: FetchedArticle | null = null, episode = false): RunError {
+export const runErrorOf = (error: Error, fetched: FetchedArticle | null = null, episode = false): RunError => {
   if (episode && error instanceof EpisodeNeedsTranscribingError) {
     return { kind: "podcastNeedsTranscribing" };
   }
@@ -31,4 +31,4 @@ export function runErrorOf(error: Error, fetched: FetchedArticle | null = null, 
     return { kind: "articleFetch", failure: error.failure, ...fetched };
   }
   return { kind: "message", message: error.message };
-}
+};

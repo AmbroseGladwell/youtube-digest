@@ -27,7 +27,7 @@ export type AppRouter = ReturnType<RouterFactory>;
 // The history is the mounting shell's choice, the same way the stores are: the web app has
 // real paths to push, an extension page at chrome-extension://<id>/sidepanel.html does not
 // (docs/architecture/v1-architecture-decisions.md's one-core-two-shells model).
-export function createAppRouter(createRouter: RouterFactory): AppRouter {
+export const createAppRouter = (createRouter: RouterFactory): AppRouter => {
   return createRouter([
     // Outside the shell: a visitor opening a shared link has no library behind them, so
     // the page brings its own head (docs/features/sharing.md).
@@ -63,4 +63,4 @@ export function createAppRouter(createRouter: RouterFactory): AppRouter {
       ],
     },
   ]);
-}
+};

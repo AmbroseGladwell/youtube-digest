@@ -3,7 +3,7 @@ import { useEffect, useState, type RefCallback } from "react";
 // Whether a step runs on below its pinned foot, judged by a sentinel at the end of the step
 // being out of view. The fallback for the foot's scroll-driven fade, and its reduced-motion path
 // (docs/features/onboarding-foot.md).
-export function useContentBelow(): [RefCallback<HTMLElement>, boolean] {
+export const useContentBelow = (): [RefCallback<HTMLElement>, boolean] => {
   const [sentinel, setSentinel] = useState<HTMLElement | null>(null);
   const [below, setBelow] = useState(false);
 
@@ -17,4 +17,4 @@ export function useContentBelow(): [RefCallback<HTMLElement>, boolean] {
   }, [sentinel]);
 
   return [setSentinel, below];
-}
+};

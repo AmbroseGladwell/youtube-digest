@@ -17,7 +17,7 @@ export interface CheckEmailProps {
 
 // Design 9c: what happens next, and the two ways out of waiting. The mail's code is the way
 // in for a reader whose mail opens somewhere other than this browser.
-export function CheckEmail({ email, intent, firstName, sentAt, resending, onDifferentEmail, onResend, onEnterCode }: CheckEmailProps) {
+export const CheckEmail = ({ email, intent, firstName, sentAt, resending, onDifferentEmail, onResend, onEnterCode }: CheckEmailProps) => {
   const creating = intent === "createAccount";
   return (
     <AuthScreen
@@ -54,4 +54,4 @@ export function CheckEmail({ email, intent, firstName, sentAt, resending, onDiff
       </p>
     </AuthScreen>
   );
-}
+};

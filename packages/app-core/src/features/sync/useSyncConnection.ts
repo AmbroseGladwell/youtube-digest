@@ -12,19 +12,19 @@ export interface UseSyncConnectionResult {
 const listeners = new Set<() => void>();
 let snapshot: SyncConnection | null = null;
 
-function getSnapshot(): SyncConnection {
+const getSnapshot = (): SyncConnection => {
   snapshot ??= readSyncConnection();
   return snapshot;
-}
+};
 
-function refresh(): void {
+const refresh = (): void => {
   snapshot = readSyncConnection();
   for (const listener of listeners) {
     listener();
   }
-}
+};
 
-function subscribe(listener: () => void): () => void {
+const subscribe = (listener: () => void): (() => void) => {
   listeners.add(listener);
   globalThis.addEventListener?.("storage", refresh);
   return () => {
@@ -33,9 +33,9 @@ function subscribe(listener: () => void): () => void {
       globalThis.removeEventListener?.("storage", refresh);
     }
   };
-}
+};
 
-export function useSyncConnection(): UseSyncConnectionResult {
+export const useSyncConnection = (): UseSyncConnectionResult => {
   const connection = useSyncExternalStore(subscribe, getSnapshot);
 
   const setConnection = useCallback((next: SyncConnection) => {
@@ -44,6 +44,6 @@ export function useSyncConnection(): UseSyncConnectionResult {
   }, []);
 
   return { connection, setConnection };
-}
+};
 
 export { DEFAULT_SYNC_CONNECTION };

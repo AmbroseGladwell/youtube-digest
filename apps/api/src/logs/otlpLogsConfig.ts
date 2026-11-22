@@ -46,10 +46,10 @@ const keyValueList = (raw: string | undefined, name: string): Record<string, str
 // destination needs no code change. With none set, PostHog's own log ingest, under the
 // project token analytics already uses; with OTEL_LOGS_EXPORTER=none, nowhere
 // (docs/architecture/errors-and-logs.md, "Shipping the server's logs").
-export function otlpLogsConfig(
+export const otlpLogsConfig = (
   env: OtlpLogsEnv,
   { postHog, environment }: { postHog: PostHogLogsFallback | null; environment: string },
-): OtlpLogsConfig | null {
+): OtlpLogsConfig | null => {
   if (env.OTEL_LOGS_EXPORTER?.trim() === "none") {
     return null;
   }
@@ -86,4 +86,4 @@ export function otlpLogsConfig(
       "service.name": env.OTEL_SERVICE_NAME ?? DEFAULT_SERVICE_NAME,
     },
   };
-}
+};

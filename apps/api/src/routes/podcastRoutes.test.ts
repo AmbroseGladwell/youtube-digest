@@ -88,7 +88,7 @@ const FEED_XML = `<?xml version="1.0"?><rss xmlns:podcast="https://podcastindex.
 <podcast:transcript url="https://show.example/ep1.vtt" type="text/vtt"/></item></channel></rss>`;
 const VTT = "WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nHello there.\n";
 
-function scriptedWeb(pages: Record<string, { body: string; type: string }>) {
+const scriptedWeb = (pages: Record<string, { body: string; type: string }>) => {
   const asked: string[] = [];
   const podcastWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
@@ -98,7 +98,7 @@ function scriptedWeb(pages: Record<string, { body: string; type: string }>) {
       : { status: "answered", url: link, response: new Response(page.body, { headers: { "content-type": page.type } }) };
   };
   return { podcastWeb, asked };
-}
+};
 
 const appOverWeb = (web: ReturnType<typeof scriptedWeb>, logger?: ReturnType<typeof recordingLogger>["logger"]) =>
   createTestApp({}, { podcastWeb: web.podcastWeb, ...(logger === undefined ? {} : { logger }) });

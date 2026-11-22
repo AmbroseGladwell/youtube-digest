@@ -39,7 +39,7 @@ const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "ove
 // the heading with three starter questions made by code; asked, the conversation runs above it
 // with the picking wait and answers in sections. The drawer holds every library and project
 // conversation (docs/features/chats.md, "The Ask page").
-export function AskPage() {
+export const AskPage = () => {
   const [params] = useSearchParams();
   const parsedProject = ProjectId.safeParse(params.get("project"));
   const projectId = parsedProject.success ? parsedProject.data : null;
@@ -438,4 +438,4 @@ export function AskPage() {
       </p>
     </main>
   );
-}
+};

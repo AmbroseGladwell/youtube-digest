@@ -46,6 +46,6 @@ const REGISTRY: Record<NoteKind, PromptSection[]> = {
 export const writtenKind = (input: GenerationInput, kind: NoteKind): NoteKind =>
   kind === "process" && !input.sectionsEnabled.steps ? "default" : kind;
 
-export function enabledSections(input: GenerationInput, kind: NoteKind = "default"): PromptSection[] {
+export const enabledSections = (input: GenerationInput, kind: NoteKind = "default"): PromptSection[] => {
   return REGISTRY[writtenKind(input, kind)].filter((section) => section.key === "structural" || input.sectionsEnabled[section.key]);
-}
+};

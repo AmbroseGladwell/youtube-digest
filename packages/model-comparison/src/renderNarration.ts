@@ -19,7 +19,7 @@ const postJson = (url: URL, body: string): Promise<{ status: number; text: strin
     sent.end(body);
   });
 
-export async function renderNarration(ttsUrl: string, overview: Overview): Promise<Narration> {
+export const renderNarration = async (ttsUrl: string, overview: Overview): Promise<Narration> => {
   const { status, text } = await postJson(
     new URL("/render", ttsUrl),
     JSON.stringify({
@@ -34,4 +34,4 @@ export async function renderNarration(ttsUrl: string, overview: Overview): Promi
   }
   const rendered = JSON.parse(text) as { durationSeconds: number; audioBase64: string };
   return { audio: Buffer.from(rendered.audioBase64, "base64"), durationSeconds: rendered.durationSeconds };
-}
+};

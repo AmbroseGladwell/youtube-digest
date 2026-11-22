@@ -8,7 +8,7 @@ import { generationKeys } from "../generationKeys.js";
 
 // The signed-in account's plan and this month's counts on each key, as the server keeps
 // them. Signed out there is no account to ask about.
-export function useOverviewUsageQuery() {
+export const useOverviewUsageQuery = () => {
   const apiUrl = useKnownApiUrl();
   const { connection } = useSyncConnection();
   const accountId = libraryAccountIdOf(connection);
@@ -19,4 +19,4 @@ export function useOverviewUsageQuery() {
     staleTime: 60 * 1000,
     retry: false,
   });
-}
+};

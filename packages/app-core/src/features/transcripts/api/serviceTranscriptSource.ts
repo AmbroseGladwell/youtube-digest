@@ -24,7 +24,7 @@ const serviceError = (message: string, failure: TranscriptFetchFailure, cause?: 
     ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
   });
 
-function asServiceError(error: unknown): TranscriptFetchError | null {
+const asServiceError = (error: unknown): TranscriptFetchError | null => {
   if (!isSyncRequestError(error)) {
     return serviceError("Our server could not be reached to fetch the transcript.", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
   }
@@ -60,7 +60,7 @@ function asServiceError(error: unknown): TranscriptFetchError | null {
     );
   }
   return serviceError("Our server could not fetch the transcript.", TranscriptFetchFailure.SOURCE_UNAVAILABLE, error);
-}
+};
 
 // The last rung: our own server fetches the captions, which costs us rather than the
 // reader, so the background prefetch never reaches it and a server with it off is never

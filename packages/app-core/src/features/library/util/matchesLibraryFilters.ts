@@ -7,7 +7,7 @@ import type { LibraryFilters } from "../types/LibraryFilters.js";
 // own store. Everything else reads a field of the overview, so including it would pollute
 // every filtered view — it is excluded, and the exclusion is stated beside the count
 // (docs/features/record-migrations.md).
-export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilters): boolean {
+export const matchesLibraryFilters = (entry: LibraryEntry, filters: LibraryFilters): boolean => {
   const { state } = entry;
 
   if (filters.status === "read" && !state.read) {
@@ -54,4 +54,4 @@ export function matchesLibraryFilters(entry: LibraryEntry, filters: LibraryFilte
   }
 
   return true;
-}
+};

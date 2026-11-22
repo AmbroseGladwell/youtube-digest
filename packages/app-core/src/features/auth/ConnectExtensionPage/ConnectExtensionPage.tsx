@@ -15,7 +15,7 @@ import { useSignOut } from "../../accountLibraries/useSignOut.js";
 
 // The web app, already signed in, mints a code over its own session so the extension
 // beside it signs in without a second email (docs/features/sign-in.md).
-export function ConnectExtensionPage() {
+export const ConnectExtensionPage = () => {
   const surface = useSurface();
   const navigate = useNavigate();
   const sync = useSync();
@@ -77,4 +77,4 @@ export function ConnectExtensionPage() {
   }
 
   return <AuthScreen testId={connectExtensionPageTestIds.working} icon="puzzle" title="Making your code…" compactTitle />;
-}
+};

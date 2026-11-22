@@ -29,7 +29,7 @@ const later = (ms: number, then: () => void) => window.setTimeout(then, prefersR
 
 // Saved overviews that might fit the project on the page, and what adding or turning one
 // down does (docs/features/projects.md, "Offering what's already saved").
-export function useProjectSuggestions(current: ProjectSummary | null, overviews: OverviewWithState[], host: SuggestionsHost) {
+export const useProjectSuggestions = (current: ProjectSummary | null, overviews: OverviewWithState[], host: SuggestionsHost) => {
   const analytics = useAnalytics();
   const setMember = useSetProjectMemberMutation();
   const { projectStore } = useStores();
@@ -247,4 +247,4 @@ export function useProjectSuggestions(current: ProjectSummary | null, overviews:
     // An empty project with suggestions above it says what else can fill it (318a, 318d).
     offering: count > 0,
   };
-}
+};

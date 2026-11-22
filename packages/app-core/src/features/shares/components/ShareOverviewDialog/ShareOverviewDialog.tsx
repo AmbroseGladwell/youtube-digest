@@ -25,7 +25,7 @@ const HEADING_ID = "ShareOverviewDialog-heading";
 const SHARED = ["The whole overview, with its audio", "Transcript and chapters", "Video title, channel and link"];
 const PRIVATE = ["Your reason", "Your topics", "Questions to ask next", "Read and favourite state"];
 
-export function ShareOverviewDialog({
+export const ShareOverviewDialog = ({
   share,
   edited,
   audioMissing,
@@ -36,7 +36,7 @@ export function ShareOverviewDialog({
   onStop,
   onSignIn,
   onClose,
-}: ShareOverviewDialogProps) {
+}: ShareOverviewDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const initialFocus = useRef<HTMLButtonElement | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
@@ -357,4 +357,4 @@ export function ShareOverviewDialog({
       </div>
     </dialog>
   );
-}
+};

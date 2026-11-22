@@ -22,7 +22,7 @@ const SHOWN = 5;
 // Above Topic and always there: none is a heading and New project, five show last changed
 // first, and All projects is the line under them once any exist ("OV-168 1 Where Projects
 // Live" 168d).
-export function ProjectsRailGroup({ active, archived, current, onOpen, onLeave, onAll, onNew }: ProjectsRailGroupProps) {
+export const ProjectsRailGroup = ({ active, archived, current, onOpen, onLeave, onAll, onNew }: ProjectsRailGroupProps) => {
   const shown = active.slice(0, SHOWN);
   const currentHidden = current !== null && !shown.some(({ project }) => project.id === current);
   const listed = currentHidden ? [...shown, ...active.filter(({ project }) => project.id === current)] : shown;
@@ -66,4 +66,4 @@ export function ProjectsRailGroup({ active, archived, current, onOpen, onLeave, 
       </button>
     </div>
   );
-}
+};

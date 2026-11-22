@@ -32,7 +32,7 @@ ${
 }
 List the indices (if any) whose claim this video repeats, as similarToIndices.`;
 
-export function personalisePrompt(fetched: FetchedTranscript, profile: ReaderProfile, shared: Overview, withTranscript: boolean) {
+export const personalisePrompt = (fetched: FetchedTranscript, profile: ReaderProfile, shared: Overview, withTranscript: boolean) => {
   const input: GenerationInput = {
     ...profile,
     video: fetched.video,
@@ -79,9 +79,9 @@ ${noteForJudging(sharedPartOf(shared))}${transcript}`,
             ),
     }),
   };
-}
+};
 
-export function personalisedOverview(shared: Overview, profile: ReaderProfile, output: PersonalOutput): Overview {
+export const personalisedOverview = (shared: Overview, profile: ReaderProfile, output: PersonalOutput): Overview => {
   const base = sharedPartOf(shared);
   return {
     ...base,
@@ -102,4 +102,4 @@ export function personalisedOverview(shared: Overview, profile: ReaderProfile, o
               .map((i) => ({ overviewId: profile.pastClaims[i]!.overviewId, title: profile.pastClaims[i]!.title })),
           },
   };
-}
+};

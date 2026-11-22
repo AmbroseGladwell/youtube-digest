@@ -27,7 +27,7 @@ const othersOf = (cited: readonly ChatCitation[]) => cited.flatMap((citation) =>
 // OV-354, page 4: an answer over the library or a project, the same shape as every chat's: its
 // intro, its sections each with their sources by relation, the Takeaway, then the line counted by
 // code, never written by the model, and Copy with Sources.
-export function AskAnswer({
+export const AskAnswer = ({
   text,
   sections,
   citations,
@@ -39,7 +39,7 @@ export function AskAnswer({
   onFollowed,
   onSourcesOpened,
   actions,
-}: AskAnswerProps) {
+}: AskAnswerProps) => {
   const chipsOf = (cited: readonly ChatCitation[]): ChatChip[] =>
     othersOf(cited).map((citation, index) => {
       const image = imageOf(citation.overviewId);
@@ -79,4 +79,4 @@ export function AskAnswer({
       {actions(sourcesMenu)}
     </div>
   );
-}
+};

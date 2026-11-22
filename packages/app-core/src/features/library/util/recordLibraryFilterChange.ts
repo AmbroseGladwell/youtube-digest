@@ -7,12 +7,12 @@ export type FilterControl = "panel" | "filterChip" | "clearAll" | "reset" | "cau
 // value it changed to: a topic by its id, a novelty or status by its own enum, never a label
 // (docs/architecture/analytics.md, "What an event may carry"). The search query is not here:
 // it is counted once the reader stops typing.
-export function recordLibraryFilterChange(
+export const recordLibraryFilterChange = (
   analytics: Analytics["library"]["filters"],
   before: LibraryFilters,
   patch: Partial<LibraryFilters>,
   from: FilterControl,
-): void {
+): void => {
   if (patch.source !== undefined && patch.source !== before.source) {
     analytics.sourceChosen({ source: patch.source, from });
   }
@@ -42,4 +42,4 @@ export function recordLibraryFilterChange(
       analytics.tagChosen({ from });
     }
   }
-}
+};

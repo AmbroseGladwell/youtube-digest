@@ -49,7 +49,7 @@ const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 // Where the note's head uses the phone arrangement and scrolls away (ReaderMasthead.module.scss).
 const HEAD_SCROLLS_AWAY_QUERY = "(max-width: 61.9375rem)";
 
-export function AppShell() {
+export const AppShell = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isPanel = useIsPanel();
@@ -390,4 +390,4 @@ export function AppShell() {
       </CaptureQueueProvider>
     </NewOverviewRunProvider>
   );
-}
+};

@@ -8,7 +8,7 @@ import { usePlayer } from "../player/PlayerContext.js";
 // session can still carry them, since a signed-out reader sends nothing
 // (docs/architecture/analytics.md, "Who is counted"), and a last sync given up on is warned
 // of under the same session.
-export function useSignOut(): () => Promise<void> {
+export const useSignOut = (): (() => Promise<void>) => {
   const sync = useSync();
   const analytics = useAnalytics();
   const errors = useErrorReporter();
@@ -27,4 +27,4 @@ export function useSignOut(): () => Promise<void> {
       }),
     [sync, analytics, errors, player],
   );
-}
+};

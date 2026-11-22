@@ -7,7 +7,7 @@ export interface Passage {
   text: string;
 }
 
-export function transcriptPassages(segments: readonly TranscriptSegment[], windowMs: number): Passage[] {
+export const transcriptPassages = (segments: readonly TranscriptSegment[], windowMs: number): Passage[] => {
   const passages: Passage[] = [];
   let current: TranscriptSegment[] = [];
 
@@ -38,7 +38,7 @@ export function transcriptPassages(segments: readonly TranscriptSegment[], windo
   }
   close();
   return passages;
-}
+};
 
 export const clockOf = (ms: number): string => {
   const total = Math.floor(ms / 1000);

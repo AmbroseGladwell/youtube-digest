@@ -76,7 +76,7 @@ export interface NewOverviewRunController {
 // Owned by the AppShell, which is the one component that stays mounted across every
 // navigation: that is what lets a generation outlive the dialog it was started from
 // without a second app-wide context (docs/conventions/frontend-architecture-guide.md 4.1).
-export function useNewOverviewRun(): NewOverviewRunController {
+export const useNewOverviewRun = (): NewOverviewRunController => {
   const { apiKeys } = useApiKeys();
   const { overviewStore } = useStores();
   const { mutate } = useGenerateOverviewMutation(apiKeys);
@@ -475,4 +475,4 @@ export function useNewOverviewRun(): NewOverviewRunController {
     setCaptureReason,
     commitCaptureReason,
   };
-}
+};

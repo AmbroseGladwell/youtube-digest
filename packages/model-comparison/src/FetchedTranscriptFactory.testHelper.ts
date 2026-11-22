@@ -3,7 +3,7 @@ import type { FetchedTranscript } from "@overview/transcripts";
 
 export const SEGMENT_MS = 30_000;
 
-export function makeFetchedTranscript(segments = 30, overrides: Partial<FetchedTranscript["video"]> = {}): FetchedTranscript {
+export const makeFetchedTranscript = (segments = 30, overrides: Partial<FetchedTranscript["video"]> = {}): FetchedTranscript => {
   return {
     video: {
       id: VideoId.parse("video-one"),
@@ -23,4 +23,4 @@ export function makeFetchedTranscript(segments = 30, overrides: Partial<FetchedT
     })),
     generated: false,
   };
-}
+};

@@ -11,7 +11,7 @@ const asCandidate = (winner: "A" | "B" | "tie", candidateIsA: boolean): Candidat
 
 // Judged once in each order. A side wins a dimension only when both orders agree, so a
 // judge that leans towards whichever note it reads first scores a tie, not a win.
-export function combineOrders(candidateFirst: KeyPointsAnswer, candidateSecond: KeyPointsAnswer): KeyPointsResults {
+export const combineOrders = (candidateFirst: KeyPointsAnswer, candidateSecond: KeyPointsAnswer): KeyPointsResults => {
   return Object.fromEntries(
     [...KEY_POINT_DIMENSIONS, "overall" as const].map((dimension) => {
       const first = asCandidate(candidateFirst[dimension].winner, true);
@@ -19,16 +19,16 @@ export function combineOrders(candidateFirst: KeyPointsAnswer, candidateSecond: 
       return [dimension, first === second ? first : "tie"];
     }),
   ) as KeyPointsResults;
-}
+};
 
-export async function judgeKeyPointsPair({
+export const judgeKeyPointsPair = async ({
   fetched,
   baseline,
   candidate,
   keys,
   http = globalThis.fetch.bind(globalThis),
   now = () => performance.now(),
-}: JudgePairOptions): Promise<KeyPointsJudgeRecord> {
+}: JudgePairOptions): Promise<KeyPointsJudgeRecord> => {
   const judge = judgeFor(parseComparedModel(baseline.name), parseComparedModel(candidate.name));
   const metered = meteredFetch(judge.provider, http, now);
   const client = createGenerationClient({ ...judge, apiKey: keys[judge.provider] ?? "", http: metered.http });
@@ -71,4 +71,4 @@ export async function judgeKeyPointsPair({
     latencyMs: Math.round(now() - began),
     costDollars: measuredCost(judge, metered.calls),
   };
-}
+};

@@ -20,7 +20,7 @@ const parsedOrUndefined = (text: string): unknown => {
   }
 };
 
-export function meteredFetch(provider: Provider, inner: typeof fetch, now: () => number = () => performance.now()): MeteredFetch {
+export const meteredFetch = (provider: Provider, inner: typeof fetch, now: () => number = () => performance.now()): MeteredFetch => {
   const calls: MeteredCall[] = [];
   const http: typeof fetch = async (input, init) => {
     const startedAt = now();
@@ -34,4 +34,4 @@ export function meteredFetch(provider: Provider, inner: typeof fetch, now: () =>
     return response;
   };
   return { http, calls };
-}
+};

@@ -10,10 +10,10 @@ export interface SharedPageReader {
   signedIn: boolean;
 }
 
-export function useSharedPageReader(): SharedPageReader {
+export const useSharedPageReader = (): SharedPageReader => {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const openLibraryAccountId = useLibraryAccountId();
   const accountId = libraryAccountIdOf(connection);
   return { signedIn: sync.connected && accountId !== null && openLibraryAccountId === accountId };
-}
+};

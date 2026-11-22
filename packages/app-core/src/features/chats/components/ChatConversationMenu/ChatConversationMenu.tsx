@@ -35,7 +35,7 @@ export interface ChatConversationMenuProps {
 
 type Open = "closed" | "menu" | "choose";
 
-function continueDetail(assistant: FollowUpAssistant, connected: boolean, writing: boolean): ReactNode {
+const continueDetail = (assistant: FollowUpAssistant, connected: boolean, writing: boolean): ReactNode => {
   if (writing) {
     return "Sends the finished answers";
   }
@@ -49,12 +49,12 @@ function continueDetail(assistant: FollowUpAssistant, connected: boolean, writin
   return FOLLOW_UP_ASSISTANTS[assistant].prefillParam === null
     ? "Copies this conversation; you paste it in"
     : "Opens with this conversation filled in";
-}
+};
 
 // Design 324x–324ag: the chat header's ⋯, holding the overview's other conversations and
 // Continue in {assistant}. A menu under the header on the web, an action sheet on a phone and in
 // the panel. Hidden while it would hold nothing: a new conversation, alone, before its first answer.
-export function ChatConversationMenu({
+export const ChatConversationMenu = ({
   chat,
   overview,
   conversations,
@@ -65,7 +65,7 @@ export function ChatConversationMenu({
   onSaid,
   searchLibrary,
   onSearchLibrary,
-}: ChatConversationMenuProps) {
+}: ChatConversationMenuProps) => {
   const { assistant, connectedTo, anyConnection, choose } = useFollowUpAssistant();
   const analytics = useAnalytics();
   const [open, setOpen] = useState<Open>("closed");
@@ -313,4 +313,4 @@ export function ChatConversationMenu({
       )}
     </div>
   );
-}
+};

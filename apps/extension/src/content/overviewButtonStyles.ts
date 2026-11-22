@@ -122,7 +122,7 @@ html[dark] #${OVERVIEW_BUTTON_ID}[data-state="ready"]:hover {
 ${accentButtonCss(OVERVIEW_BUTTON_ID)}
 `;
 
-export function ensureOverviewButtonStyles(): void {
+export const ensureOverviewButtonStyles = (): void => {
   if (document.getElementById(STYLE_ID)) {
     return;
   }
@@ -130,4 +130,4 @@ export function ensureOverviewButtonStyles(): void {
   style.id = STYLE_ID;
   style.textContent = CSS;
   document.head.append(style);
-}
+};

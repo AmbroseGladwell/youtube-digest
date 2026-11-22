@@ -16,7 +16,7 @@ export interface ChatChipRowProps {
 // OV-362: a row of source chips that never runs long. Two show, then "+N", which opens a menu of
 // every one, as the row above the field does (OV-354, page 1). Used for a section's sources by
 // relation, a list item's, Pinned, Found for you and what a library answer read.
-export function ChatChipRow({ chips, hiddenLabels, align = "start", testId }: ChatChipRowProps) {
+export const ChatChipRow = ({ chips, hiddenLabels, align = "start", testId }: ChatChipRowProps) => {
   const [open, setOpen] = useState(false);
   const host = useRef<HTMLSpanElement | null>(null);
   useDismissOnOutside(open, () => setOpen(false), host);
@@ -46,4 +46,4 @@ export function ChatChipRow({ chips, hiddenLabels, align = "start", testId }: Ch
       )}
     </div>
   );
-}
+};
