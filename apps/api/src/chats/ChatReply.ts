@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const SourceRef = z.object({ id: z.string(), relation: z.string() });
+const ListItem = z.object({ text: z.string(), sources: z.array(z.string()) });
 
 // Every chat's reply, whatever its scope (OV-354; owner, 21 Nov 2026): an intro that alone answers a
 // simple question, sections only where they help, a takeaway, and every source as an id with how it
@@ -12,8 +13,8 @@ export const ChatReply = z.object({
     z.object({
       heading: z.string(),
       paragraphs: z.array(z.string()),
-      numbered: z.array(z.string()),
-      bullets: z.array(z.string()),
+      numbered: z.array(ListItem),
+      bullets: z.array(ListItem),
       sources: z.array(SourceRef),
     }),
   ),
@@ -29,6 +30,14 @@ const SOURCE_REF = {
   additionalProperties: false,
   required: ["id", "relation"],
   properties: { id: { type: "string" }, relation: { type: "string" } },
+} as const;
+
+// A list item names the ids it rests on, so a list of overviews carries a chip after each (OV-362).
+const LIST_ITEM = {
+  type: "object",
+  additionalProperties: false,
+  required: ["text", "sources"],
+  properties: { text: { type: "string" }, sources: { type: "array", items: { type: "string" } } },
 } as const;
 
 // intro first, so its text can be streamed while the sections are still to come; each section
@@ -49,8 +58,8 @@ export const CHAT_REPLY_SCHEMA = {
         properties: {
           heading: { type: "string" },
           paragraphs: { type: "array", items: { type: "string" } },
-          numbered: { type: "array", items: { type: "string" } },
-          bullets: { type: "array", items: { type: "string" } },
+          numbered: { type: "array", items: LIST_ITEM },
+          bullets: { type: "array", items: LIST_ITEM },
           sources: { type: "array", items: SOURCE_REF },
         },
       },
@@ -83,13 +92,20 @@ export function citedIds(ids: readonly string[], inSource: boolean): CitedIds {
 
 export const allIds = (reply: ChatReply): string[] => [
   ...reply.introSources.map((source) => source.id),
-  ...reply.sections.flatMap((section) => section.sources.map((source) => source.id)),
+  ...reply.sections.flatMap((section) => [
+    ...section.sources.map((source) => source.id),
+    ...[...section.numbered, ...section.bullets].flatMap((item) => item.sources),
+  ]),
 ];
 
 // The shape every chat's prompt asks for, the same whatever its scope.
 export const ANSWER_SHAPE_RULES = `Answer in this shape, structured only where it helps:
 - intro: the answer itself. A simple question is answered by the intro alone, in two to five plain sentences: leave sections empty and takeaway empty, and list in introSources the ids it rests on.
-- sections: only when the question has parts, or the answer compares or lists several things. Each has a short heading, one or two short paragraphs, a numbered list where order matters or bullets where it doesn't (otherwise leave both empty), and sources: every id the section rests on, each with its relation, "Supports", or where the section compares, a few words naming the side that source takes.
+- sections: only when the question has parts, or the answer compares or lists several things. Each has a short heading, one or two short paragraphs, a numbered list where order matters or bullets where it doesn't (otherwise leave both empty), and sources: every id the section rests on.
+- A source's relation is empty when it backs the section. Only where the section compares, give the side that source takes in one to four words, such as "For charging early".
+- A list item that names or rests on a source lists its ids in the item's own sources, so each item can be followed; the section's sources still list every id.
 - When sources disagree, give that a section of its own.
 - takeaway: one sentence when there are sections; otherwise empty.
-- Never write an id in the text: the sources carry them.`;
+- Never write an id in the text: the sources carry them.
+- Never use an em dash (—) anywhere; use a comma or a full stop instead.
+- You may bold a few key words with **double asterisks**, never a whole sentence and never in a heading. No other markdown: no headings, links or tables in the text.`;

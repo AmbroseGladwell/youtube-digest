@@ -81,8 +81,11 @@ OV-355, step 1 of OV-307's recommendation (`docs/architecture/in-app-chat.md`, "
 sources"). Each question in an overview's chat can bring in the reader's other saved overviews,
 sent as overviews only (no transcripts; OV-352 adds keyword minutes):
 
-- **Found:** claim search (`MeaningSearch`, floored at `MEANING_FLOOR`) runs on the question, and
-  its closest 3 go in, never the chat's own overview and never one the reader set aside. Search
+- **Found:** claim search (`MeaningSearch`) runs on the question. Up to 3 of the closest that reach
+  `FOUND_FLOOR` (0.40, OV-362) go in, never the chat's own overview and never one the reader set
+  aside, so a question with nothing close finds nothing. On one reader's 51 real questions, unrelated
+  overviews scored 0.33 to 0.37 and the ones worth reading 0.40 and up
+  (`in-app-chat.md`, "What found sources should be"). Library search keeps `MEANING_FLOOR`. Search
   is on for every reader from client version 25 (`FIRST_ACROSS_SOURCES_CLIENT_VERSION`; owner,
   20 Nov 2026). Without search (no embedder, or the embedding service down) nothing is found and
   pins still go in.
@@ -122,8 +125,12 @@ a project, the library). They look and feel the same; only what they draw on dif
   sources in `introSources`;
 - **sections**, only where the question has parts or the answer compares or lists. Each has a
   heading, short paragraphs, a numbered list where order matters or bullets where it doesn't, and
-  `sources`: every id it rests on, each with how it relates ("Supports", or a few words for the
-  side it takes when it compares). Disagreement gets a section of its own;
+  `sources`: every id it rests on. A source that backs the section has an empty relation, shown as
+  "Based on"; where the section compares, the relation names the side it takes in one to four
+  words, cut at a word if longer (`relationOf`). Disagreement gets a section of its own;
+- **list items with their own sources** (OV-362): each numbered or bulleted item is
+  `{ text, sources }`, so a list of overviews has a chip after each item. The section's sources
+  still list everything;
 - **a takeaway**, one sentence when there are sections;
 - for an overview's chat, `inSource` and `generalKnowledge`, as before.
 
@@ -135,7 +142,14 @@ a project, the library). They look and feel the same; only what they draw on dif
 - a minute of another transcript (`S2.p14`, `O3.p14`).
 
 `structuredAnswer` cites each by code (an id it wasn't given is dropped) and stores
-`{ citation, relation }` pairs on the answer's `sections` (chat schema 6, client 28).
+`{ citation, relation }` pairs on the answer's `sections` (chat schema 6, client 28), and each list
+item's citations (chat schema 7, client 29). An answer stored before reads its items as citing
+nothing of their own, and its "Supports" shows as "Based on" (`relationLabel`).
+
+**Writing** (OV-362):
+- No em dashes, ever. The prompt says so, and `withoutDashes` turns any it writes into a comma, in
+  every stored field and in the streamed intro.
+- A few key words may be bold, with `**double asterisks**`, never a heading. The app renders them.
 
 **Text.** `text` is the flattened reading, for copy, hand-offs and the next question's history.
 `citations` is the union of every source.
@@ -215,9 +229,13 @@ the account's other transcripts (`TranscriptPassagesRepository`, `keywordMinutes
 `transcript-storage.md`, "A search index of the minutes").
 
 - **An overview's chat:**
-  - The 8 best minutes go with the question, never from the chat's own source or an overview set
-    aside, each with the minute either side.
-  - An overview they come from joins as a found source if it isn't in the conversation yet.
+  - The 8 best minutes go with the question, each with the minute either side. They are searched only
+    in the overviews the question reads: pinned, found or already in the conversation, never the
+    chat's own source or one set aside (OV-362).
+  - Words alone never add an overview. Before OV-362 each overview a minute came from joined as
+    found, past the cap of 3, and keyword scores don't tell relevant from not (an unrelated overview
+    sharing one word scored 0.17, a relevant one 0.14), so a question could gather 11 overviews,
+    most unrelated.
   - The minutes follow that question's sources as their own section (`[S2.p14 3:21] …`), and each
     question's are stored on its reader message (`minutes`), so later questions rebuild them in
     place.

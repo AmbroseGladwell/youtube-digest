@@ -95,7 +95,7 @@ test.describe("Ask", () => {
     expect(backendSimulator.chats.questions()[0]).toMatchObject({ overviewId: "library", pins: { overviews: [], projects: [] } });
     await ask.verifyReadLineReads(0, "Read 2 overviews");
     await ask.verifySectionsRead(0, ["Beans every day", "Takeaway"]);
-    await ask.verifySectionSourcesRead(0, 0, [`Supports${PLANTS}${STEW}`]);
+    await ask.verifySectionSourcesRead(0, 0, [`Based on${PLANTS}${STEW}`]);
     await ask.verifyStatsReads(0, "From 2 of your 3 overviews");
     await ask.verifyAnnouncement("Answer ready");
     await expect(page).toHaveURL(/\/ask\?chat=/);

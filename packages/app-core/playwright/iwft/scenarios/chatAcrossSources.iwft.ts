@@ -205,7 +205,7 @@ test.describe("Chat across sources", () => {
     await reader.chat.askInNote("How do my healthy-eating overviews apply to this?");
 
     await reader.chat.verifySectionsRead(0, ["Beans every day", "Takeaway"]);
-    await reader.chat.verifySectionSourcesRead(0, 0, [`Supports${PLANTS} · Key point 1`]);
+    await reader.chat.verifySectionSourcesRead(0, 0, [`Based on${PLANTS} · Key point 1`]);
     await reader.chat.verifyNoCitationRow(0);
 
     await reader.chat.openSourcesMenu(0);

@@ -10,6 +10,7 @@ import {
   chatQuestionCount,
   chatRecordId,
   MAX_CHAT_QUESTIONS,
+  relationLabel,
   type ChatMessage,
 } from "./Chat.js";
 
@@ -160,10 +161,57 @@ test("a schema 5 answer of points reads as bullets, each point's sources cited o
         heading: "Scope",
         paragraphs: [],
         numbered: [],
-        bullets: ["One habit.", "Then two."],
+        bullets: [
+          { text: "One habit.", sources: [] },
+          { text: "Then two.", sources: [] },
+        ],
         sources: [{ citation: cited, relation: "Supports" }],
       },
     ],
     takeaway: "Pick one.",
   });
+});
+
+test("a schema 6 list reads as items citing nothing of their own, and an item can cite its overviews (OV-362)", () => {
+  const cited = { overviewId: OTHER, title: "Start small", item: null };
+  const old = {
+    ...chat([
+      question,
+      {
+        ...answer,
+        citations: [cited],
+        inSource: false,
+        sections: {
+          intro: "Read these first.",
+          introSources: [],
+          sections: [{ heading: "Order", paragraphs: [], numbered: ["Start small"], bullets: ["Later"], sources: [] }],
+          takeaway: "",
+        },
+      },
+    ]),
+    schemaVersion: 6,
+  };
+  const read = readStoredRecord(old, Chat, CHAT_MIGRATIONS);
+  assert.equal(read.status, "read");
+  const sections = read.status === "read" ? (read.record.messages[1] as Extract<ChatMessage, { from: "answer" }>).sections : undefined;
+  assert.deepEqual(sections?.sections[0]?.numbered, [{ text: "Start small", sources: [] }]);
+  assert.deepEqual(sections?.sections[0]?.bullets, [{ text: "Later", sources: [] }]);
+  const listed = {
+    ...answer,
+    citations: [cited],
+    inSource: false,
+    sections: {
+      intro: "Read these first.",
+      introSources: [],
+      sections: [{ heading: "Order", paragraphs: [], numbered: [{ text: "Start small", sources: [cited] }], bullets: [], sources: [] }],
+      takeaway: "",
+    },
+  };
+  assert.ok(Chat.safeParse(chat([question, listed])).success);
+});
+
+test("a source that backs a section reads as Based on, the old Supports too (OV-362)", () => {
+  assert.equal(relationLabel("Supports"), "Based on");
+  assert.equal(relationLabel(""), "Based on");
+  assert.equal(relationLabel("For charging early"), "For charging early");
 });

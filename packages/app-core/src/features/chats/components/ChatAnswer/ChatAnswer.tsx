@@ -286,14 +286,28 @@ export function ChatAnswerSectionsView({
           {section.numbered.length > 0 && (
             <ol className={styles.list}>
               {section.numbered.map((item, at) => (
-                <li key={at}>{item}</li>
+                <li key={at}>
+                  {item.text}
+                  {chipsOf !== undefined && item.sources.length > 0 && (
+                    <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
+                      {chipsOf(item.sources)}
+                    </span>
+                  )}
+                </li>
               ))}
             </ol>
           )}
           {section.bullets.length > 0 && (
             <ul className={styles.list}>
               {section.bullets.map((item, at) => (
-                <li key={at}>{item}</li>
+                <li key={at}>
+                  {item.text}
+                  {chipsOf !== undefined && item.sources.length > 0 && (
+                    <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
+                      {chipsOf(item.sources)}
+                    </span>
+                  )}
+                </li>
               ))}
             </ul>
           )}

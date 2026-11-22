@@ -45,16 +45,20 @@ export const MAX_SOURCE_RELATION_LENGTH = 40;
 // Every chat's answer, structured where it helps, whatever its scope (OV-354, page 4; owner, 21
 // Nov 2026): an intro, which alone answers a simple question, then sections, each a bold heading,
 // short paragraphs, a numbered list where order matters and bullets where it doesn't, and
-// underneath, everything it draws on with how it relates ("Supports", or the side it takes when it
-// compares), then a takeaway. Every source is cited by code from the ids the model gave
+// underneath, everything it draws on with how it relates (backing it, or the side it takes when it
+// compares), then a takeaway. A list item names its own sources, so a list of overviews has a chip
+// after each (OV-362). Every source is cited by code from the ids the model gave
 // (docs/features/chats.md, "One shape for every answer").
 const ChatSourceRelation = z.object({ citation: ChatCitation, relation: z.string().max(MAX_SOURCE_RELATION_LENGTH) });
+
+export const ChatListItem = z.object({ text: z.string(), sources: z.array(ChatCitation) });
+export type ChatListItem = z.infer<typeof ChatListItem>;
 
 export const ChatAnswerSection = z.object({
   heading: z.string(),
   paragraphs: z.array(z.string()),
-  numbered: z.array(z.string()),
-  bullets: z.array(z.string()),
+  numbered: z.array(ChatListItem),
+  bullets: z.array(ChatListItem),
   sources: z.array(ChatSourceRelation),
 });
 export type ChatAnswerSection = z.infer<typeof ChatAnswerSection>;
@@ -66,6 +70,11 @@ export const ChatAnswerSections = z.object({
   takeaway: z.string(),
 });
 export type ChatAnswerSections = z.infer<typeof ChatAnswerSections>;
+
+// What a section's sources are called when they back it rather than taking a side. Answers before
+// OV-362 stored "Supports", which reads either way round, so it shows as this too.
+export const BACKING_RELATION = "Based on";
+export const relationLabel = (relation: string): string => (relation === "Supports" || relation === "" ? BACKING_RELATION : relation);
 
 export const MAX_CHAT_SOURCES = 200;
 export const MAX_CHAT_PICKS = 5;

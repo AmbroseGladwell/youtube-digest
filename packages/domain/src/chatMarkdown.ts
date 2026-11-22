@@ -4,7 +4,9 @@ import {
   type Chat,
   type ChatAnswerSections,
   type ChatCitation,
+  type ChatListItem,
   type OtherOverviewCitation,
+  relationLabel,
 } from "./Chat.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import type { Overview } from "./Overview.js";
@@ -84,13 +86,19 @@ const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" 
 // What a library or project chat was over, for its heading (OV-353).
 export type ChatScopeLabel = { kind: "project"; name: string; id: string } | { kind: "library" };
 
-// Sources grouped by how they relate, each group named once: "Supports: …; For charging early: …".
+// Sources grouped by how they relate, each group named once: "Based on: …; For charging early: …".
 const sourcesLine = (sources: ChatAnswerSections["introSources"], describe: (citation: ChatCitation) => string): string | null => {
   if (sources.length === 0) return null;
   const groups = new Map<string, string[]>();
-  for (const { citation, relation } of sources) groups.set(relation, [...(groups.get(relation) ?? []), describe(citation)]);
+  for (const { citation, relation } of sources) {
+    const label = relationLabel(relation);
+    groups.set(label, [...(groups.get(label) ?? []), describe(citation)]);
+  }
   return [...groups].map(([relation, cited]) => `${relation}: ${cited.join("; ")}`).join(" · ");
 };
+
+const listItemText = (item: ChatListItem, describe: (citation: ChatCitation) => string): string =>
+  item.sources.length === 0 ? item.text : `${item.text} (${item.sources.map(describe).join("; ")})`;
 
 // A structured answer as it reads outside the app: the intro, each section's heading, paragraphs
 // and lists with its sources by how they relate, then the takeaway (OV-354).
@@ -101,8 +109,8 @@ function sectionsText(sections: ChatAnswerSections, describe: (citation: ChatCit
     return [
       `   ${index + 1}. ${section.heading}`,
       ...section.paragraphs.map((paragraph) => `      ${paragraph}`),
-      ...section.numbered.map((item, at) => `      ${at + 1}) ${item}`),
-      ...section.bullets.map((item) => `      - ${item}`),
+      ...section.numbered.map((item, at) => `      ${at + 1}) ${listItemText(item, describe)}`),
+      ...section.bullets.map((item) => `      - ${listItemText(item, describe)}`),
       ...(sources === null ? [] : [`      (${sources})`]),
     ];
   });

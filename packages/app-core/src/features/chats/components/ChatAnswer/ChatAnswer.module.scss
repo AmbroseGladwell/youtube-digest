@@ -214,3 +214,12 @@
   background: var(--dialog);
   box-shadow: var(--shadow-menu);
 }
+
+// OV-362: a list item's own sources, after its text.
+.itemChips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}

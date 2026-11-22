@@ -29,6 +29,7 @@ import { appendChatMessages } from "./appendChatMessages.js";
 import { ChatAnswerer } from "./ChatAnswerer.js";
 import { makeFakeChatOpenAi, type FakeChatAnswer, type FakeChatOpenAi } from "./FakeChatOpenAi.testHelper.js";
 import type { Embedder } from "../meaning/Embedder.js";
+import { EMBEDDING_DIMENSIONS } from "../meaning/createOpenAiEmbedder.js";
 
 const SEGMENTS = [
   { text: "Creatine is a backup store of energy.", startMs: 0, endMs: 8_000 },
@@ -847,7 +848,7 @@ async function keptWithTranscript(setup: Setup, title: string, segments: Array<{
 
 const minuteOf = (index: number, text: string) => ({ text, startMs: index * 60_000, endMs: index * 60_000 + 50_000 });
 
-test("the best minutes of other transcripts go with the question, each with its neighbours, and an answer cites one as a time (OV-352)", async (t) => {
+test("the best minutes of the overviews a question reads go with it, each with its neighbours, and an answer cites one as a time (OV-352, OV-362)", async (t) => {
   const { lines, logger } = recordingLogger();
   const setup = await setUp(t, [answer("Take 300 milligrams an hour before bed.", ["S1.p3", "S1.p99", "p2"], [], true)], { logger });
   const sleep = await keptWithTranscript(setup, "Sleep better", [
@@ -857,14 +858,17 @@ test("the best minutes of other transcripts go with the question, each with its 
     minuteOf(3, "Then keep the room cool."),
     minuteOf(4, "That's all."),
   ]);
+  const unread = await keptWithTranscript(setup, "Herbs for stress", [minuteOf(0, "Ashwagandha is popular for stress.")]);
   const conversation = randomUUID();
 
-  const response = await setup.ask(conversation, "How much ashwagandha should I take?");
+  const response = await setup.ask(conversation, "How much ashwagandha should I take?", setup.overviewId, {
+    pins: { overviews: [sleep.id] },
+  });
 
   assert.deepEqual(eventsOf(response.body)[0], {
     type: "sources",
-    pinned: [],
-    found: [{ label: "S1", overviewId: sleep.id, title: "Sleep better", how: "found" }],
+    pinned: [{ label: "S1", overviewId: sleep.id, title: "Sleep better", how: "pinned" }],
+    found: [],
   });
   const block = setup.openAi.requests[0]!.messages.at(-2)!.content;
   assert.match(block, /# Minutes of their transcripts that match the question's words/);
@@ -873,6 +877,9 @@ test("the best minutes of other transcripts go with the question, each with its 
     /## S1: Sleep better\n\n\[S1\.p2 1:00\] Recovery needs sleep\.\n\[S1\.p3 2:00\] Take 300 milligrams of ashwagandha an hour before bed\.\n\[S1\.p4 3:00\] Then keep the room cool\./,
   );
   assert.doesNotMatch(block, /Creatine/);
+  // Words alone never add an overview: one the question doesn't read sends no minutes.
+  assert.doesNotMatch(block, /Ashwagandha is popular for stress/);
+  assert.ok(!JSON.stringify(eventsOf(response.body)).includes(unread.id));
   const done = answered(response.body);
   assert.deepEqual((done.messages[0] as Extract<ChatMessage, { from: "reader" }>).minutes, [
     { overviewId: sleep.id, passages: ["p2", "p3", "p4"] },
@@ -931,11 +938,14 @@ test("every answer is stored in the shared shape: a simple one as its intro with
           },
           {
             heading: "Where they differ",
-            paragraphs: ["Loading is optional."],
-            numbered: ["Load for a week", "Then keep to the daily dose"],
+            paragraphs: ["Loading is optional — or skip it."],
+            numbered: [
+              { text: "Load for a week", sources: ["p1", "p1", "p404"] },
+              { text: "Then keep to the daily dose", sources: [] },
+            ],
             bullets: [],
             sources: [
-              { id: "p1", relation: "For loading" },
+              { id: "p1", relation: "For loading when you want results in a week rather than a month" },
               { id: "p2", relation: "  " },
             ],
           },
@@ -953,7 +963,7 @@ test("every answer is stored in the shared shape: a simple one as its intro with
 
   assert.deepEqual(simple.sections, {
     intro: "Three to five grams a day.",
-    introSources: [{ citation: { startMs: 61_000, endMs: 70_000 }, relation: "Supports" }],
+    introSources: [{ citation: { startMs: 61_000, endMs: 70_000 }, relation: "Based on" }],
     sections: [],
     takeaway: "",
   });
@@ -965,16 +975,52 @@ test("every answer is stored in the shared shape: a simple one as its intro with
     paragraphs: ["Take it every day."],
     numbered: [],
     bullets: [],
-    sources: [{ citation: { startMs: 61_000, endMs: 70_000 }, relation: "Supports" }],
+    sources: [{ citation: { startMs: 61_000, endMs: 70_000 }, relation: "Based on" }],
   });
   assert.deepEqual(
     long.sections?.sections[1]?.sources.map((source) => source.relation),
-    ["For loading", "Supports"],
+    ["For loading when you want results in a", "Based on"],
   );
+  assert.deepEqual(long.sections?.sections[1]?.numbered, [
+    { text: "Load for a week", sources: [long.sections?.sections[1]?.sources[0]?.citation] },
+    { text: "Then keep to the daily dose", sources: [] },
+  ]);
   assert.equal(
     long.text,
-    "There are two ways to take it.\n\nDaily\nTake it every day.\n\nWhere they differ\nLoading is optional.\n1. Load for a week\n2. Then keep to the daily dose\n\nTake it daily.",
+    "There are two ways to take it.\n\nDaily\nTake it every day.\n\nWhere they differ\nLoading is optional, or skip it.\n1. Load for a week\n2. Then keep to the daily dose\n\nTake it daily.",
   );
+});
+
+test("only an overview close to the question is found for it, never the merely nearest (OV-362)", async (t) => {
+  // Two directions: the question and anything about the close note lie along one; everything else
+  // sits at 0.38 to it, the band where the owner's unrelated overviews scored.
+  const vectorOf = (text: string) => {
+    const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
+    if (/close/i.test(text)) vector[0] = 1;
+    else {
+      vector[0] = 0.38;
+      vector[1] = Math.sqrt(1 - 0.38 ** 2);
+    }
+    return vector;
+  };
+  const embedder: Embedder = {
+    model: "fixed-test",
+    dollarsPerMillionTokens: 0.02,
+    dimensions: EMBEDDING_DIMENSIONS,
+    embed: async (texts) => ({ vectors: texts.map(vectorOf), tokens: texts.length }),
+  };
+  const setup = await setUp(t, [answer("Three to five grams.")], { embedder });
+  const close = titled(noteAbout("Close claim", ["Close point one", "Close point two", "Close point three"]), "Close one");
+  const far = titled(noteAbout("Far claim", ["Far point one", "Far point two", "Far point three"]), "Far one");
+  await saved(setup, close, far);
+
+  const response = await setup.ask(randomUUID(), "What does the close one say?");
+
+  assert.deepEqual(eventsOf(response.body)[0], {
+    type: "sources",
+    pinned: [],
+    found: [{ label: "S1", overviewId: close.id, title: "Close one", how: "found" }],
+  });
 });
 
 test("with Search my library off, nothing is found by meaning or by words, pins still go in, and the question says so", async (t) => {
