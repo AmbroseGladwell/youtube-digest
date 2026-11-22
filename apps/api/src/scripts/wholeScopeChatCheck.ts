@@ -19,7 +19,14 @@ import {
 import { costInDollars, priceOf, promptTokensOf, tokenUsageOf, type TokenUsage } from "@overview/generation";
 import { allIds, ANSWER_SHAPE_RULES, CHAT_REPLY_SCHEMA, ChatReply } from "../chats/ChatReply.js";
 import { chatModel } from "../chats/chatModel.js";
-import { libraryChatMaterial, PICK_SHAPE, pickedBlock, pickPrompt, SECTIONED_SHAPE } from "../chats/libraryChatPrompt.js";
+import {
+  libraryChatMaterial,
+  PICK_SHAPE,
+  pickedBlock,
+  pickPrompt,
+  SECTIONED_SHAPE,
+  type LibraryChatMaterial,
+} from "../chats/libraryChatPrompt.js";
 import type { PromptMessage } from "../chats/streamChatCompletion.js";
 
 // OV-373: does library chat answer from the whole scope when the map carries facts set by code,
@@ -83,14 +90,15 @@ interface Library {
   topics: Topic[];
 }
 
-async function loadLibrary(dataDir: string): Promise<Library> {
+const loadLibrary = async (dataDir: string): Promise<Library> => {
   const raw = JSON.parse(await readFile(join(dataDir, "library", "library.json"), "utf-8")) as {
     overviews: Array<{ id: string; schemaVersion: number; body: unknown }>;
     overviewStates?: Array<{ schemaVersion: number; body: unknown }>;
     topics?: Array<{ schemaVersion: number; body: unknown }>;
   };
-  if (raw.overviewStates === undefined || raw.topics === undefined)
+  if (raw.overviewStates === undefined || raw.topics === undefined) {
     throw new Error("export again: this export has no overview states or topics");
+  }
   const stamp = (row: { schemaVersion: number; body: unknown }) =>
     stampSchemaVersion(row.body as Record<string, unknown>, row.schemaVersion);
   const topics = raw.topics.flatMap((row) => {
@@ -106,7 +114,9 @@ async function loadLibrary(dataDir: string): Promise<Library> {
   const entries = raw.overviews
     .map((row) => {
       const read = readStoredRecord(stamp(row), Overview, OVERVIEW_MIGRATIONS);
-      if (read.status !== "read") throw new Error(`overview ${row.id} did not read: ${read.status}`);
+      if (read.status !== "read") {
+        throw new Error(`overview ${row.id} did not read: ${read.status}`);
+      }
       const state = states.get(read.record.id);
       return {
         overview: read.record,
@@ -117,11 +127,13 @@ async function loadLibrary(dataDir: string): Promise<Library> {
     })
     .sort((left, right) => left.overview.savedAt.localeCompare(right.overview.savedAt));
   return { entries, topics };
-}
+};
 
 const minutesOf = ({ overview }: Entry): number | null => {
   const { source } = overview;
-  if (source.kind === "web") return Math.max(1, Math.round(source.wordCount / WORDS_A_MINUTE));
+  if (source.kind === "web") {
+    return Math.max(1, Math.round(source.wordCount / WORDS_A_MINUTE));
+  }
   return source.durationMs === null ? null : Math.max(1, Math.round(source.durationMs / 60_000));
 };
 
@@ -176,7 +188,7 @@ Rules:
 - When nothing here covers the question, say so in the intro and leave sections empty.
 - There is no single source here: always set inSource to false, and set generalKnowledge to false unless you add something from beyond these overviews, which you mark as such.`;
 
-function planSystem(library: Library, labels: Map<string, Entry>): string {
+const planSystem = (library: Library, labels: Map<string, Entry>): string => {
   return `You answer a reader's questions about their whole library in The Overview: every overview they have saved, listed below in brief. Each overview has an id (O1, O2 and so on) and shows its title; a line of facts (its kind, its length, the day it was saved, how new its ideas are, whether its claims are dubious, whether it is worth watching anyway, and its topics); its big picture and its core claim. A recipe shows its ingredients. The reader's read and favourite marks follow in a message of their own.
 
 Before answering you are asked for a plan:
@@ -195,7 +207,7 @@ ${library.topics.map((topic) => topic.name).join("; ")}
 # The overviews
 
 ${[...labels].map(([label, entry]) => factsEntry(label, entry)).join("\n\n")}`;
-}
+};
 
 const readerState = (labels: Map<string, Entry>): PromptMessage => {
   const ids = (keep: (entry: Entry) => boolean) =>
@@ -251,13 +263,13 @@ const scopeBlock = (scope: readonly string[], filtered: boolean): PromptMessage 
     : "Your filters kept the whole library.",
 });
 
-async function completeJson(
+const completeJson = async (
   apiKey: string,
   messages: PromptMessage[],
   schema: object,
   maxTokens: number,
   cacheKey: string,
-): Promise<{ json: unknown; usage: TokenUsage | null }> {
+): Promise<{ json: unknown; usage: TokenUsage | null }> => {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
@@ -270,25 +282,29 @@ async function completeJson(
     }),
     signal: AbortSignal.timeout(300_000),
   });
-  if (!response.ok) throw new Error(`The provider answered ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`The provider answered ${response.status}`);
+  }
   const body = (await response.json()) as { choices: Array<{ message: { content: string | null }; finish_reason: string }> };
   const usage = tokenUsageOf("openai", body);
   const choice = body.choices[0]!;
-  if (choice.finish_reason === "length") throw Object.assign(new Error("cut off at the answer cap"), { usage });
+  if (choice.finish_reason === "length") {
+    throw Object.assign(new Error("cut off at the answer cap"), { usage });
+  }
   return { json: JSON.parse(choice.message.content ?? ""), usage };
-}
+};
 
-const addUsage = (left: TokenUsage | null, right: TokenUsage | null): TokenUsage | null =>
-  left === null
-    ? right
-    : right === null
-      ? left
-      : {
-          uncachedInputTokens: left.uncachedInputTokens + right.uncachedInputTokens,
-          cacheWriteTokens: left.cacheWriteTokens + right.cacheWriteTokens,
-          cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
-          outputTokens: left.outputTokens + right.outputTokens,
-        };
+const addUsage = (left: TokenUsage | null, right: TokenUsage | null): TokenUsage | null => {
+  if (left === null || right === null) {
+    return left ?? right;
+  }
+  return {
+    uncachedInputTokens: left.uncachedInputTokens + right.uncachedInputTokens,
+    cacheWriteTokens: left.cacheWriteTokens + right.cacheWriteTokens,
+    cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
+    outputTokens: left.outputTokens + right.outputTokens,
+  };
+};
 
 interface Turn {
   arm: ArmName;
@@ -322,33 +338,40 @@ interface Turn {
 
 const resolvedFilter = (filter: Partial<Filter>): Filter => ({ ...ANY, ...filter });
 
-async function loadQuestions(dataDir: string, library: Library): Promise<Question[]> {
+const loadQuestions = async (dataDir: string, library: Library): Promise<Question[]> => {
   const questions = (JSON.parse(await readFile(join(dataDir, "questions.json"), "utf-8")) as { questions: Question[] }).questions;
   for (const question of questions) {
     question.core = question.core.map((prefix) => {
       const found = library.entries.find((entry) => entry.overview.id.startsWith(prefix));
-      if (found === undefined) throw new Error(`${question.id}: no overview ${prefix}`);
+      if (found === undefined) {
+        throw new Error(`${question.id}: no overview ${prefix}`);
+      }
       return found.overview.id;
     });
     for (const topic of question.expect?.topics ?? []) {
-      if (!library.topics.some((each) => sameTopicName(each.name, topic))) throw new Error(`${question.id}: no topic ${topic}`);
+      if (!library.topics.some((each) => sameTopicName(each.name, topic))) {
+        throw new Error(`${question.id}: no topic ${topic}`);
+      }
     }
   }
   return questions;
-}
+};
 
-async function facts(dataDir: string): Promise<void> {
+const facts = async (dataDir: string): Promise<void> => {
   const library = await loadLibrary(dataDir);
   const count = (keep: (entry: Entry) => boolean) => library.entries.filter(keep).length;
   console.log(
     `${library.entries.length} overviews, ${count((entry) => !entry.read)} unread, ${count((entry) => entry.favourite)} favourites`,
   );
   const kinds = new Map<string, number>();
-  for (const entry of library.entries) kinds.set(chatSourceKind(entry.overview), (kinds.get(chatSourceKind(entry.overview)) ?? 0) + 1);
+  for (const entry of library.entries) {
+    kinds.set(chatSourceKind(entry.overview), (kinds.get(chatSourceKind(entry.overview)) ?? 0) + 1);
+  }
   console.log(`kinds: ${[...kinds].map(([kind, n]) => `${kind} ${n}`).join(", ")}`);
   const months = new Map<string, number>();
-  for (const entry of library.entries)
+  for (const entry of library.entries) {
     months.set(entry.overview.savedAt.slice(0, 7), (months.get(entry.overview.savedAt.slice(0, 7)) ?? 0) + 1);
+  }
   console.log(`saved: ${[...months].map(([month, n]) => `${month} ${n}`).join(", ")}`);
   console.log("topics:");
   for (const topic of library.topics) {
@@ -359,233 +382,313 @@ async function facts(dataDir: string): Promise<void> {
   console.log(
     `plan map about ${tokensOf(planSystem(library, labels))} tokens; whole library about ${tokensOf(library.entries.map((entry, i) => whole(`O${i + 1}`, entry)).join("\n\n"))}`,
   );
+};
+
+interface Context {
+  apiKey: string;
+  library: Library;
+  labels: Map<string, Entry>;
+  shipped: LibraryChatMaterial;
+  system: string;
+  price: NonNullable<ReturnType<typeof priceOf>>;
 }
 
-async function run(
+interface Job {
+  arm: ArmName;
+  run: number;
+  question: Question;
+  expected: string[] | null;
+}
+
+// What a question has spent and chosen so far, so a failed one still records it.
+interface Progress {
+  usage: TokenUsage | null;
+  passOneOutput: number;
+  plan: Plan | null;
+  scope: string[];
+  readLabels: string[];
+  readTokens: number;
+}
+
+interface PassOne {
+  messages: PromptMessage[];
+  answerCap: number;
+}
+
+const firstLabels = (ids: readonly string[]): string[] => [...new Set(ids.map((id) => id.split(".")[0]!))];
+
+const askShipped = async (context: Context, job: Job, progress: Progress): Promise<PassOne> => {
+  const { shipped } = context;
+  const messages: PromptMessage[] = [{ role: "system", content: shipped.system }];
+  const pick = await completeJson(
+    context.apiKey,
+    [...messages, pickPrompt(job.question.question)],
+    PICK_SHAPE.schema,
+    PICK_SHAPE.maxTokens,
+    `ov373-${job.arm}`,
+  );
+  progress.usage = addUsage(progress.usage, pick.usage);
+  progress.passOneOutput = pick.usage?.outputTokens ?? 0;
+  progress.readLabels = firstLabels((pick.json as { overviews: string[] }).overviews)
+    .filter((label) => shipped.labels.has(label))
+    .slice(0, MAX_CHAT_PICKS);
+  const block = pickedBlock(progress.readLabels.map((label) => [label, shipped.labels.get(label)!] as const));
+  progress.readTokens = tokensOf(block.content);
+  return { messages: [...messages, block], answerCap: SHIPPED_ANSWER_CAP };
+};
+
+const withinBudget = (labels: Map<string, Entry>, picks: readonly string[]): string[] => {
+  const read: string[] = [];
+  let tokens = 0;
+  for (const label of picks.slice(0, BUDGET_PICKS)) {
+    tokens += tokensOf(whole(label, labels.get(label)!));
+    if (tokens > BUDGET_TOKENS) {
+      break;
+    }
+    read.push(label);
+  }
+  return read;
+};
+
+const readFor = (
+  arm: ArmName,
+  labels: Map<string, Entry>,
+  kept: ReadonlyArray<readonly [string, Entry]>,
+  picks: string[],
+  filtered: boolean,
+) => {
+  if (arm === "plan5") {
+    return picks.slice(0, MAX_CHAT_PICKS);
+  }
+  if (arm !== "plan-whole" || !filtered) {
+    return withinBudget(labels, picks);
+  }
+  const all = kept.map(([label, entry]) => [label, whole(label, entry)] as const);
+  const total = tokensOf(all.map(([, text]) => text).join("\n\n"));
+  return total <= WHOLE_CEILING_TOKENS ? all.map(([label]) => label) : picks.slice(0, BUDGET_PICKS);
+};
+
+const askPlan = async (context: Context, job: Job, progress: Progress): Promise<PassOne> => {
+  const { labels } = context;
+  const messages: PromptMessage[] = [{ role: "system", content: context.system }, readerState(labels)];
+  const most = job.arm === "plan5" ? MAX_CHAT_PICKS : BUDGET_PICKS;
+  const planned = await completeJson(
+    context.apiKey,
+    [...messages, planPrompt(job.question.question, most)],
+    PLAN_SCHEMA,
+    PLAN_TOKENS,
+    `ov373-${job.arm}`,
+  );
+  progress.usage = addUsage(progress.usage, planned.usage);
+  progress.passOneOutput = planned.usage?.outputTokens ?? 0;
+  const plan = planned.json as Plan;
+  progress.plan = plan;
+  const filter = resolvedFilter(plan.filters);
+  const kept = [...labels].filter(([, entry]) => matches(entry, filter));
+  progress.scope = kept.map(([, entry]): string => entry.overview.id);
+  const filtered = !isAny(filter);
+  const picks = firstLabels(plan.picks).filter((label) => labels.has(label));
+  progress.readLabels = readFor(job.arm, labels, kept, picks, filtered);
+  const notes = progress.readLabels.map((label) => whole(label, labels.get(label)!)).join("\n\n");
+  progress.readTokens = tokensOf(notes);
+  messages.push(
+    scopeBlock(
+      kept.map(([label]) => label),
+      filtered,
+    ),
+  );
+  if (progress.readLabels.length > 0) {
+    messages.push({ role: "user", content: `The full notes of the overviews you chose:\n\n${notes}` });
+  }
+  return { messages, answerCap: plan.mode === "broad" ? BROAD_ANSWER_TOKENS : SHIPPED_ANSWER_CAP };
+};
+
+const ASK: Record<ArmName, (context: Context, job: Job, progress: Progress) => Promise<PassOne>> = {
+  shipped: askShipped,
+  plan5: askPlan,
+  "plan-budget": askPlan,
+  "plan-whole": askPlan,
+};
+
+const replyText = (reply: ChatReply): string =>
+  [
+    reply.intro,
+    ...reply.sections.flatMap((s) => [s.heading, ...s.paragraphs, ...[...s.numbered, ...s.bullets].map((i) => i.text)]),
+    reply.takeaway,
+  ].join(" ");
+
+const turnOf = (
+  context: Context,
+  job: Job,
+  progress: Progress,
+  startedAt: number,
+  outcome: { reply: ChatReply; answerOutput: number } | { error: string },
+): Turn => {
+  const { question, expected } = job;
+  const { usage, scope } = progress;
+  const idOf = (label: string): string | null => context.labels.get(label.split(".")[0]!)?.overview.id ?? null;
+  const reply = "reply" in outcome ? outcome.reply : null;
+  const ids = reply === null ? [] : allIds(reply);
+  const cited = [...new Set(ids.flatMap((id) => idOf(id) ?? []))];
+  const answerOutput = "reply" in outcome ? outcome.answerOutput : 0;
+  const scored = reply !== null && expected !== null;
+  return {
+    arm: job.arm,
+    run: job.run,
+    id: question.id,
+    kind: question.kind,
+    failed: reply === null,
+    error: "error" in outcome ? outcome.error : null,
+    plan: progress.plan,
+    scopeSize: scope.length,
+    expectedSize: expected?.length ?? null,
+    scopeMatchesExpected:
+      !scored || job.arm === "shipped" ? null : expected.length === scope.length && expected.every((id) => scope.includes(id)),
+    readInFull: progress.readLabels.length,
+    readInFullTokens: progress.readTokens,
+    cited,
+    covered: !scored || !question.wantsAll ? null : expected.filter((id) => cited.includes(id)).length,
+    outside: scored ? cited.filter((id) => !expected.includes(id)).length : null,
+    coreFound: reply === null || question.core.length === 0 ? null : question.core.filter((id) => cited.includes(id)).length,
+    coreTotal: question.core.length,
+    invalidIds: ids.filter((id) => idOf(id) === null).length,
+    gaveCount: reply !== null && COUNTED.test(replyText(reply)),
+    passOneOutputTokens: progress.passOneOutput,
+    answerOutputTokens: answerOutput,
+    overShippedCap: answerOutput > SHIPPED_ANSWER_CAP,
+    inputTokens: usage === null ? 0 : promptTokensOf(usage),
+    cachedTokens: usage?.cachedInputTokens ?? 0,
+    costDollars: usage === null ? 0 : costInDollars(context.price, usage),
+    ms: Date.now() - startedAt,
+    reply,
+  };
+};
+
+const askTurn = async (context: Context, job: Job): Promise<Turn> => {
+  const startedAt = Date.now();
+  const progress: Progress = {
+    usage: null,
+    passOneOutput: 0,
+    plan: null,
+    scope: context.library.entries.map((entry): string => entry.overview.id),
+    readLabels: [],
+    readTokens: 0,
+  };
+  try {
+    const { messages, answerCap } = await ASK[job.arm](context, job, progress);
+    messages.push({ role: "user", content: job.question.question });
+    const answered = await completeJson(context.apiKey, messages, CHAT_REPLY_SCHEMA, answerCap, `ov373-${job.arm}`);
+    progress.usage = addUsage(progress.usage, answered.usage);
+    const reply = ChatReply.parse(answered.json);
+    return turnOf(context, job, progress, startedAt, { reply, answerOutput: answered.usage?.outputTokens ?? 0 });
+  } catch (error) {
+    progress.usage = addUsage(progress.usage, (error as { usage?: TokenUsage | null }).usage ?? null);
+    return turnOf(context, job, progress, startedAt, { error: error instanceof Error ? error.message : String(error) });
+  }
+};
+
+const fullNotesEstimate = (context: Context, job: Job): number => {
+  if (job.arm === "plan-budget") {
+    return BUDGET_TOKENS;
+  }
+  if (job.arm !== "plan-whole") {
+    return 2_300 * MAX_CHAT_PICKS;
+  }
+  const filtered = job.expected ?? context.library.entries.map((entry): string => entry.overview.id);
+  const notes = [...context.labels]
+    .filter(([, entry]) => filtered.includes(entry.overview.id))
+    .map(([label, entry]) => whole(label, entry))
+    .join("\n\n");
+  return Math.min(WHOLE_CEILING_TOKENS, tokensOf(notes));
+};
+
+const estimate = (context: Context, job: Job): number => {
+  const map = tokensOf(job.arm === "shipped" ? context.shipped.system : context.system);
+  const wholeTokens = fullNotesEstimate(context, job);
+  const output = job.question.wantsAll ? 6_000 : 2_500;
+  const cost = map * CACHE_WRITE + map * CACHED + wholeTokens * CACHE_WRITE + (1_000 + output) * (context.price.perMillion.output / 1e6);
+  if (job.run === 1) {
+    console.log(`${job.arm} ${job.question.id}: map ${map}, full notes ${wholeTokens}, about $${cost.toFixed(4)}`);
+  }
+  return cost;
+};
+
+const progressLine = (turn: Turn): string =>
+  `${turn.arm} r${turn.run} ${turn.id} ${
+    turn.failed
+      ? `FAILED ${turn.error}`
+      : `$${turn.costDollars.toFixed(4)} scope ${turn.scopeSize}${turn.expectedSize === null ? "" : `/${turn.expectedSize}`} read ${turn.readInFull} cited ${turn.cited.length}${turn.covered === null ? "" : ` covered ${turn.covered}/${turn.expectedSize}`} out ${turn.answerOutputTokens} ${(turn.ms / 1000).toFixed(1)}s`
+  }`;
+
+const run = async (
   dataDir: string,
   outPath: string,
   options: { arms: ArmName[]; runs: number; budget: number; dryRun: boolean; only: string | null },
-): Promise<void> {
-  const apiKey = process.env["OPENAI_API_KEY"];
-  if (!options.dryRun && !apiKey) throw new Error("OPENAI_API_KEY is needed");
+): Promise<void> => {
+  const apiKey = process.env["OPENAI_API_KEY"] ?? "";
+  if (!options.dryRun && apiKey === "") {
+    throw new Error("OPENAI_API_KEY is needed");
+  }
   const library = await loadLibrary(dataDir);
   const questions = await loadQuestions(dataDir, library);
-  const price = priceOf(chatModel)!;
   const labels = new Map(library.entries.map((entry, index) => [`O${index + 1}`, entry]));
-  const idOf = (label: string): string | null => labels.get(label.split(".")[0]!)?.overview.id ?? null;
   const shipped = libraryChatMaterial(
     { kind: "library" },
     library.entries.map((entry) => entry.overview),
   );
-  if (shipped.mode !== "map") throw new Error("this library goes whole: the comparison needs the map");
-  const system = planSystem(library, labels);
-  const done: Turn[] = JSON.parse((await readFile(outPath, "utf-8").catch(() => "[]")) as string) as Turn[];
-  let spent = done.reduce((total, turn) => total + turn.costDollars, 0);
-  let ceiling = 0;
-
-  for (const armName of options.arms) {
-    for (let r = 1; r <= options.runs; r += 1) {
-      for (const question of questions) {
-        if (options.only !== null && !new RegExp(options.only).test(question.id)) continue;
-        if (done.some((turn) => turn.arm === armName && turn.run === r && turn.id === question.id)) continue;
-        const expected =
-          question.expect === null
-            ? null
-            : library.entries.filter((entry) => matches(entry, resolvedFilter(question.expect!))).map((entry): string => entry.overview.id);
-        if (options.dryRun) {
-          const map = tokensOf(armName === "shipped" ? shipped.system : system);
-          const filtered = expected ?? library.entries.map((entry): string => entry.overview.id);
-          const wholeTokens =
-            armName === "plan-whole"
-              ? Math.min(
-                  WHOLE_CEILING_TOKENS,
-                  tokensOf(
-                    [...labels]
-                      .filter(([, entry]) => filtered.includes(entry.overview.id))
-                      .map(([label, entry]) => whole(label, entry))
-                      .join("\n\n"),
-                  ),
-                )
-              : armName === "plan-budget"
-                ? BUDGET_TOKENS
-                : 2_300 * MAX_CHAT_PICKS;
-          const output = question.wantsAll ? 6_000 : 2_500;
-          const cost = map * CACHE_WRITE + map * CACHED + wholeTokens * CACHE_WRITE + (1_000 + output) * (price.perMillion.output / 1e6);
-          ceiling += cost;
-          if (r === 1) console.log(`${armName} ${question.id}: map ${map}, full notes ${wholeTokens}, about $${cost.toFixed(4)}`);
-          continue;
-        }
-        if (spent >= options.budget) {
-          console.error(`budget of $${options.budget} reached at $${spent.toFixed(4)}`);
-          break;
-        }
-        const startedAt = Date.now();
-        const key = `ov373-${armName}`;
-        let usage: TokenUsage | null = null;
-        let plan: Plan | null = null;
-        let scope: string[] = library.entries.map((entry): string => entry.overview.id);
-        let readLabels: string[] = [];
-        let readTokens = 0;
-        let passOneOutput = 0;
-        let turn: Turn;
-        try {
-          let messages: PromptMessage[];
-          let answerCap: number;
-          if (armName === "shipped") {
-            messages = [{ role: "system", content: shipped.system }];
-            const pick = await completeJson(
-              apiKey!,
-              [...messages, pickPrompt(question.question)],
-              PICK_SHAPE.schema,
-              PICK_SHAPE.maxTokens,
-              key,
-            );
-            usage = addUsage(usage, pick.usage);
-            passOneOutput = pick.usage?.outputTokens ?? 0;
-            readLabels = [...new Set((pick.json as { overviews: string[] }).overviews.map((id) => id.split(".")[0]!))]
-              .filter((label) => shipped.labels.has(label))
-              .slice(0, MAX_CHAT_PICKS);
-            const block = pickedBlock(readLabels.map((label) => [label, shipped.labels.get(label)!] as const));
-            readTokens = tokensOf(block.content);
-            messages.push(block);
-            answerCap = SHIPPED_ANSWER_CAP;
-          } else {
-            messages = [{ role: "system", content: system }, readerState(labels)];
-            const most = armName === "plan5" ? MAX_CHAT_PICKS : BUDGET_PICKS;
-            const planned = await completeJson(apiKey!, [...messages, planPrompt(question.question, most)], PLAN_SCHEMA, PLAN_TOKENS, key);
-            usage = addUsage(usage, planned.usage);
-            passOneOutput = planned.usage?.outputTokens ?? 0;
-            plan = planned.json as Plan;
-            const filter = resolvedFilter(plan.filters);
-            const kept = [...labels].filter(([, entry]) => matches(entry, filter));
-            scope = kept.map(([, entry]): string => entry.overview.id);
-            const filtered = !isAny(filter);
-            const picks = [...new Set(plan.picks.map((id) => id.split(".")[0]!))].filter((label) => labels.has(label));
-            if (armName === "plan-whole" && filtered) {
-              const all = kept.map(([label, entry]) => [label, whole(label, entry)] as const);
-              const total = tokensOf(all.map(([, text]) => text).join("\n\n"));
-              readLabels = total <= WHOLE_CEILING_TOKENS ? all.map(([label]) => label) : picks.slice(0, BUDGET_PICKS);
-            } else if (armName === "plan5") {
-              readLabels = picks.slice(0, MAX_CHAT_PICKS);
-            } else {
-              for (const label of picks.slice(0, BUDGET_PICKS)) {
-                const tokens = tokensOf(whole(label, labels.get(label)!));
-                if (readTokens + tokens > BUDGET_TOKENS) break;
-                readTokens += tokens;
-                readLabels.push(label);
-              }
-            }
-            const notes = readLabels.map((label) => whole(label, labels.get(label)!)).join("\n\n");
-            readTokens = tokensOf(notes);
-            messages.push(
-              scopeBlock(
-                kept.map(([label]) => label),
-                filtered,
-              ),
-            );
-            if (readLabels.length > 0) messages.push({ role: "user", content: `The full notes of the overviews you chose:\n\n${notes}` });
-            answerCap = plan.mode === "broad" ? BROAD_ANSWER_TOKENS : SHIPPED_ANSWER_CAP;
-          }
-          messages.push({ role: "user", content: question.question });
-          const answered = await completeJson(apiKey!, messages, CHAT_REPLY_SCHEMA, answerCap, key);
-          usage = addUsage(usage, answered.usage);
-          const reply = ChatReply.parse(answered.json);
-          const ids = allIds(reply);
-          const cited = [...new Set(ids.flatMap((id) => idOf(id) ?? []))];
-          const allText = [
-            reply.intro,
-            ...reply.sections.flatMap((s) => [s.heading, ...s.paragraphs, ...[...s.numbered, ...s.bullets].map((i) => i.text)]),
-            reply.takeaway,
-          ].join(" ");
-          const answerOutput = answered.usage?.outputTokens ?? 0;
-          turn = {
-            arm: armName,
-            run: r,
-            id: question.id,
-            kind: question.kind,
-            failed: false,
-            error: null,
-            plan,
-            scopeSize: scope.length,
-            expectedSize: expected?.length ?? null,
-            scopeMatchesExpected:
-              expected === null || armName === "shipped"
-                ? null
-                : expected.length === scope.length && expected.every((id) => scope.includes(id)),
-            readInFull: readLabels.length,
-            readInFullTokens: readTokens,
-            cited,
-            covered: expected === null || !question.wantsAll ? null : expected.filter((id) => cited.includes(id)).length,
-            outside: expected === null ? null : cited.filter((id) => !expected.includes(id)).length,
-            coreFound: question.core.length === 0 ? null : question.core.filter((id) => cited.includes(id)).length,
-            coreTotal: question.core.length,
-            invalidIds: ids.filter((id) => idOf(id) === null).length,
-            gaveCount: COUNTED.test(allText),
-            passOneOutputTokens: passOneOutput,
-            answerOutputTokens: answerOutput,
-            overShippedCap: answerOutput > SHIPPED_ANSWER_CAP,
-            inputTokens: usage === null ? 0 : promptTokensOf(usage),
-            cachedTokens: usage?.cachedInputTokens ?? 0,
-            costDollars: usage === null ? 0 : costInDollars(price, usage),
-            ms: Date.now() - startedAt,
-            reply,
-          };
-        } catch (error) {
-          usage = addUsage(usage, (error as { usage?: TokenUsage | null }).usage ?? null);
-          turn = {
-            arm: armName,
-            run: r,
-            id: question.id,
-            kind: question.kind,
-            failed: true,
-            error: error instanceof Error ? error.message : String(error),
-            plan,
-            scopeSize: scope.length,
-            expectedSize: expected?.length ?? null,
-            scopeMatchesExpected: null,
-            readInFull: readLabels.length,
-            readInFullTokens: readTokens,
-            cited: [],
-            covered: null,
-            outside: null,
-            coreFound: null,
-            coreTotal: question.core.length,
-            invalidIds: 0,
-            gaveCount: false,
-            passOneOutputTokens: passOneOutput,
-            answerOutputTokens: 0,
-            overShippedCap: false,
-            inputTokens: usage === null ? 0 : promptTokensOf(usage),
-            cachedTokens: usage?.cachedInputTokens ?? 0,
-            costDollars: usage === null ? 0 : costInDollars(price, usage),
-            ms: Date.now() - startedAt,
-            reply: null,
-          };
-        }
-        done.push(turn);
-        spent += turn.costDollars;
-        await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
-        console.error(
-          `${armName} r${r} ${question.id} ${turn.failed ? `FAILED ${turn.error}` : `$${turn.costDollars.toFixed(4)} scope ${turn.scopeSize}${turn.expectedSize === null ? "" : `/${turn.expectedSize}`} read ${turn.readInFull} cited ${turn.cited.length}${turn.covered === null ? "" : ` covered ${turn.covered}/${turn.expectedSize}`} out ${turn.answerOutputTokens} ${(turn.ms / 1000).toFixed(1)}s`}`,
-        );
-      }
-    }
+  if (shipped.mode !== "map") {
+    throw new Error("this library goes whole: the comparison needs the map");
   }
+  const context: Context = { apiKey, library, labels, shipped, system: planSystem(library, labels), price: priceOf(chatModel)! };
+  const done: Turn[] = JSON.parse((await readFile(outPath, "utf-8").catch(() => "[]")) as string) as Turn[];
+  const jobs = options.arms.flatMap((arm) =>
+    Array.from({ length: options.runs }, (_, index) => index + 1).flatMap((r) =>
+      questions
+        .filter((question) => options.only === null || new RegExp(options.only).test(question.id))
+        .filter((question) => !done.some((turn) => turn.arm === arm && turn.run === r && turn.id === question.id))
+        .map((question): Job => ({
+          arm,
+          run: r,
+          question,
+          expected:
+            question.expect === null
+              ? null
+              : library.entries
+                  .filter((entry) => matches(entry, resolvedFilter(question.expect!)))
+                  .map((entry): string => entry.overview.id),
+        })),
+    ),
+  );
   if (options.dryRun) {
+    const ceiling = jobs.reduce((total, job) => total + estimate(context, job), 0);
     console.log(`dry run: about $${ceiling.toFixed(2)} for ${options.runs} run(s)`);
     return;
   }
+  let spent = done.reduce((total, turn) => total + turn.costDollars, 0);
+  for (const job of jobs) {
+    if (spent >= options.budget) {
+      console.error(`budget of $${options.budget} reached at $${spent.toFixed(4)}`);
+      break;
+    }
+    const turn = await askTurn(context, job);
+    done.push(turn);
+    spent += turn.costDollars;
+    await writeFile(outPath, `${JSON.stringify(done, null, 1)}\n`);
+    console.error(progressLine(turn));
+  }
   console.log(report(done));
   console.error(`spent $${spent.toFixed(4)} in all`);
-}
+};
 
 const median = (values: number[]) => {
-  if (values.length === 0) return 0;
+  if (values.length === 0) {
+    return 0;
+  }
   const sorted = [...values].sort((a, b) => a - b);
   return sorted[Math.floor(sorted.length / 2)]!;
 };
 
-function report(turns: Turn[]): string {
+const report = (turns: Turn[]): string => {
   const arms = ARMS.filter((arm) => turns.some((turn) => turn.arm === arm));
   const kinds = [...new Set(turns.map((turn) => turn.kind))];
   const ratio = (subset: Turn[], top: (turn: Turn) => number | null, bottom: (turn: Turn) => number | null) => {
@@ -628,7 +731,7 @@ function report(turns: Turn[]): string {
     "| --- | --- | --- | --- | --- | --- |",
     ...byKind,
   ].join("\n");
-}
+};
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -645,7 +748,11 @@ if (command === "facts" && first) {
   await facts(first);
 } else if (command === "run" && first && second) {
   const arms = values.arms.split(",");
-  for (const arm of arms) if (!(ARMS as readonly string[]).includes(arm)) throw new Error(`no arm ${arm}: ${ARMS.join(", ")}`);
+  for (const arm of arms) {
+    if (!(ARMS as readonly string[]).includes(arm)) {
+      throw new Error(`no arm ${arm}: ${ARMS.join(", ")}`);
+    }
+  }
   await run(first, second, {
     arms: arms as ArmName[],
     runs: Number(values.runs),
