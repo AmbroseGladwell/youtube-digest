@@ -257,6 +257,15 @@ test("the tab strip lines up with the note, and the head stays above it", async 
   await page.verifyHeaderStaysAboveTheTabs();
 });
 
+test("a shared short clip, made with no chapters, has no Chapters tab", async ({ page, launcher }) => {
+  await launcher.launchExpectingFirstRun();
+  await launcher.inlineSharePayload(sharedPayload({ ...shared(), chapters: [] }));
+  await launcher.openPage(Routes.sharedOverview(TOKEN));
+  await launcher.sharedOverviewPage.verifyIsShown();
+
+  await expect(page.getByRole("tab")).toHaveText(["Overview", "Transcript"]);
+});
+
 test("the stretch worth watching offers a way into the video at that moment", async ({ launcher }) => {
   await launcher.launchExpectingFirstRun();
   await launcher.inlineSharePayload(sharedPayload());
