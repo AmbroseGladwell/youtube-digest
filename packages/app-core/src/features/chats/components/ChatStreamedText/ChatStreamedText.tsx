@@ -1,4 +1,4 @@
-import { answerBlocks, type AnswerBlock } from "../../util/answerBlocks.js";
+import { answerBlocks, type AnswerBlock } from "@overview/domain";
 import { markedWords } from "../../util/inlineMarks.js";
 import { ChatCodeBlock } from "../ChatCodeBlock/ChatCodeBlock.js";
 import { MarkedPieceView } from "../ChatMarkedText/ChatMarkedText.js";

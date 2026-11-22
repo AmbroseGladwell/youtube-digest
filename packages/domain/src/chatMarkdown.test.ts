@@ -137,3 +137,130 @@ test("a minute of another overview's source is named by its times (OV-352)", () 
   );
   assert.match(markdown, /Cites: 3:21–4:20 of the reader's overview "Eat more plants"/);
 });
+
+const CODE_ITEM = 'Ban explicit any:\n```js\nrules: {\n  "no-explicit-any": "error",\n}\n```\nThis flags `value: any`.';
+
+test("code inside a section's list item, paragraph or a plain answer stays inside it, indented to its place (OV-374)", () => {
+  const cited = { overviewId: "o1", title: "Typed code", item: null } as ChatCitation;
+  const chat: Chat = {
+    id: "library:c1",
+    startedAt: AT,
+    messages: [
+      { from: "reader", text: "How do I stop any?", at: AT },
+      {
+        from: "answer",
+        text: "Two rules.",
+        at: AT,
+        citations: [cited],
+        inSource: false,
+        sections: {
+          intro: "Two rules.",
+          introSources: [],
+          sections: [
+            {
+              heading: "Lint",
+              paragraphs: ["Turn it on:\n```sh\nnpx oxlint\n```"],
+              numbered: [{ text: CODE_ITEM, sources: [cited] }],
+              bullets: [
+                { text: "Also:\n```ts\nconst a: unknown = 1;\n```", sources: [] },
+                { text: "Then relax.", sources: [] },
+              ],
+              sources: [],
+            },
+          ],
+          takeaway: "Pick one.",
+        },
+      },
+      { from: "reader", text: "And plainly?", at: AT },
+      { from: "answer", text: "Like so:\n```\nnpm i\n```\nDone.", at: AT, citations: [], inSource: true },
+    ],
+  };
+
+  const read = chatMarkdown(chat, { kind: "library" });
+
+  assert.ok(
+    read.includes(
+      [
+        "2. **The answer** (2026-11-15): Two rules.",
+        "   1. Lint",
+        "      Turn it on:",
+        "      ```sh",
+        "      npx oxlint",
+        "      ```",
+        "      1) Ban explicit any:",
+        "         ```js",
+        "         rules: {",
+        '           "no-explicit-any": "error",',
+        "         }",
+        "         ```",
+        '         This flags `value: any`. (the reader\'s overview "Typed code" (o1))',
+        "      - Also:",
+        "        ```ts",
+        "        const a: unknown = 1;",
+        "        ```",
+        "      - Then relax.",
+        "",
+        "   Pick one.",
+        "3. **The reader asked** (2026-11-15): And plainly?",
+        "4. **The answer** (2026-11-15): Like so:",
+        "   ```",
+        "   npm i",
+        "   ```",
+        "   Done.",
+      ].join("\n"),
+    ),
+    read,
+  );
+});
+
+test("an item's sources follow its code on a line of their own, so the fence still closes (OV-374)", () => {
+  const cited = { overviewId: "o1", title: "Typed code", item: null } as ChatCitation;
+  const chat: Chat = {
+    id: "library:c1",
+    startedAt: AT,
+    messages: [
+      {
+        from: "answer",
+        text: "One.",
+        at: AT,
+        citations: [cited],
+        inSource: false,
+        sections: {
+          intro: "One.",
+          introSources: [],
+          sections: [
+            {
+              heading: "Lint",
+              paragraphs: [],
+              numbered: [],
+              bullets: [{ text: "Run:\n```sh\nnpx oxlint\n```", sources: [cited] }],
+              sources: [],
+            },
+          ],
+          takeaway: "",
+        },
+      },
+    ],
+  };
+
+  assert.ok(
+    chatMarkdown(chat, { kind: "library" }).endsWith(
+      ["      - Run:", "        ```sh", "        npx oxlint", "        ```", '        (the reader\'s overview "Typed code" (o1))'].join(
+        "\n",
+      ),
+    ),
+  );
+});
+
+test("an answer's notes stay inside its item from the tenth message on (OV-374)", () => {
+  const overview = makeOverview();
+  const messages: Chat["messages"] = Array.from({ length: 10 }, (_, at) =>
+    at % 2 === 0
+      ? { from: "reader" as const, text: `Question ${at}?`, at: AT }
+      : { from: "answer" as const, text: "An answer.", at: AT, citations: [{ startMs: 1_000, endMs: 2_000 }], inSource: true },
+  );
+
+  const read = chatMarkdown({ id: `${overview.id}:c1`, overviewId: overview.id, startedAt: AT, messages }, overview);
+
+  assert.match(read, /10\. \*\*The answer\*\* \(2026-11-15\): An answer\.\n {4}Cites: /);
+});
