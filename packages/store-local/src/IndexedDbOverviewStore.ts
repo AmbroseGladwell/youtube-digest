@@ -244,6 +244,14 @@ export class IndexedDbOverviewStore implements OverviewStore {
     return read.status === "read" ? read.record : { ...DEFAULT_OVERVIEW_STATE, overviewId };
   }
 
+  async listOverviewStates() {
+    const raws = await this.#readAll(OVERVIEW_STATES_STORE);
+    return raws.flatMap((raw) => {
+      const read = readStoredRecord(withStateDefaults(raw), OverviewState, OVERVIEW_STATE_MIGRATIONS);
+      return read.status === "read" ? [read.record] : [];
+    });
+  }
+
   async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
     const raw = await this.#read(OVERVIEW_STATES_STORE, overviewId);
     const current =

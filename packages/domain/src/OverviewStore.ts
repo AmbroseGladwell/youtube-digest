@@ -40,5 +40,7 @@ export interface OverviewStore {
   createTopic(input: CreateTopicOptions): Promise<Topic>;
 
   getOverviewState(overviewId: OverviewId): Promise<OverviewState>;
+  // Only the states written: an overview nobody has touched has none, and getOverviewState gives its default.
+  listOverviewStates(): Promise<OverviewState[]>;
   setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>): Promise<void>;
 }

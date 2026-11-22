@@ -95,6 +95,10 @@ class InMemoryOverviewStore implements OverviewStore {
     return this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE };
   }
 
+  async listOverviewStates() {
+    return [...this.#states.values()];
+  }
+
   async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
     const current = await this.getOverviewState(overviewId);
     this.#states.set(overviewId, { ...current, ...patch });
