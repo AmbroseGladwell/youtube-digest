@@ -22,3 +22,9 @@ $masthead-lets-go: "[data-masthead-lets-go]";
     #{$offset}: 0px;
   }
 }
+
+@mixin fits-below($taken) {
+  max-height: calc(100dvh - #{$taken});
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

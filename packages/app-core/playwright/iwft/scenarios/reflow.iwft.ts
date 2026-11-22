@@ -46,7 +46,6 @@ interface Screen<Shown extends PageObject = PageObject> {
 
 const screen = <Shown extends PageObject>(described: Screen<Shown>): Screen => described as unknown as Screen;
 
-const ZOOMED = reflowConditions[0]!.name;
 const TIME_SAVED_NAME = "OV-389: the time-saved button's name leaves out its visible text";
 
 const openLibrary = (launcher: Launcher, backendSimulator: BackendSimulator) => {
@@ -78,7 +77,17 @@ const screens: Screen[] = [
       return launcher.appShell.accountMenu.open();
     },
     verify: (menu) => menu.verifyItemsCanBeReached(),
-    brokenUntil: { [ZOOMED]: "OV-386: the account menu runs off the screen", axe: TIME_SAVED_NAME },
+    brokenUntil: { axe: TIME_SAVED_NAME },
+  }),
+  screen({
+    name: "the sort menu",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      await library.sortPill.open();
+      return library.sortPill;
+    },
+    verify: (sort) => sort.verifyOptionsCanBeReached(),
+    brokenUntil: { axe: TIME_SAVED_NAME },
   }),
   screen({
     name: "an overview with its player",
@@ -99,6 +108,17 @@ const screens: Screen[] = [
       return reader.chat;
     },
     verify: (chat) => chat.verifyChatControlsCanBeReached(),
+  }),
+  screen({
+    name: "an overview's actions menu",
+    open: async (launcher, backendSimulator) => {
+      const library = await openLibrary(launcher, backendSimulator);
+      const reader = await library.nthCard(0).openReader();
+      await reader.openActionsMenu();
+      await reader.verifyActionsMenuIsShown(true);
+      return reader;
+    },
+    verify: (reader) => reader.verifyActionsCanBeReached(),
   }),
   screen({
     name: "the Ask page",
