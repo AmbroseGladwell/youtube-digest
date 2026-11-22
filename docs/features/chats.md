@@ -888,7 +888,10 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - On the web (354t-4) it's a raised 280px column down the left of the page, full height. The
     button that opens it is at the page's far left, with a panel icon, and the drawer closes with
     its own button.
-  - On a phone it's a bottom sheet over a scrim.
+  - On the web it starts open whenever the Ask page opens (owner, 22 Nov 2026, OV-370); closed,
+    it stays closed until the page is opened again. `drawer.opened` counts only the reader opening
+    it.
+  - On a phone it's a bottom sheet over a scrim, and starts closed.
   - The ⋯ menu (354t-6) is 220px and right-aligned. It opens below the ⋯, or above it when there's
     no room below, as for the last conversation in a phone's sheet (OV-362).
 - **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation.

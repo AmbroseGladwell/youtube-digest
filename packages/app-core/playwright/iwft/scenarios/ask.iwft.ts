@@ -162,7 +162,7 @@ test.describe("Ask", () => {
     await ask.verifyPinnedRead(0, [PLANTS]);
   });
 
-  test("the drawer is a column at the left listing library, project and overview conversations by day; it opens a library or project one beside it, and a deleted one comes back with Undo", async ({
+  test("on the web the drawer starts open (OV-370), a column at the left listing library, project and overview conversations by day; it opens a library or project one beside it, and a deleted one comes back with Undo", async ({
     launcher,
     backendSimulator,
     page,
@@ -187,7 +187,7 @@ test.describe("Ask", () => {
     await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(1);
     const ask = await launcher.appShell.openAsk();
 
-    await ask.openDrawer();
+    await ask.verifyDrawerIsOpen(true);
 
     await ask.verifyDrawerIsSheet(false);
     await ask.verifyDrawerReads([
@@ -220,6 +220,13 @@ test.describe("Ask", () => {
     await ask.closeDrawer();
 
     await ask.verifyDrawerIsOpen(false);
+
+    await ask.openDrawer();
+
+    await ask.verifyDrawerIsOpen(true);
+    await expect
+      .poll(() => backendSimulator.analytics.events().filter(({ name }) => name === "ask.drawer.opened"))
+      .toHaveLength(1);
   });
 
   test("an overview's conversation in the drawer opens on that overview with its chat open on it, and deletes with Undo (OV-363)", async ({
@@ -240,7 +247,7 @@ test.describe("Ask", () => {
     await launcher.launchExpectingLibrary(SIGNED_IN);
     await expect.poll(() => backendSimulator.chats.list(plants.id)).toHaveLength(2);
     const ask = await launcher.appShell.openAsk();
-    await ask.openDrawer();
+    await ask.verifyDrawerIsOpen(true);
     await ask.verifyDrawerReads([`Today: How much a day? · ${PLANTS}, Which beans? · ${PLANTS}`]);
 
     await ask.deleteDrawerConversation(0);
@@ -272,7 +279,7 @@ test.describe("Ask", () => {
     await reader.chat.verifyIsOpen(false);
   });
 
-  test("on a phone Ask is a page, its drawer is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
+  test("on a phone Ask is a page, its drawer starts closed and is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
     launcher,
     backendSimulator,
     page,
@@ -289,6 +296,8 @@ test.describe("Ask", () => {
     await ask.verifyHeadingReads("Ask across everything you’ve saved.");
     await ask.verifyPlaceholderReads("Ask or @ to add sources");
     await ask.verifyPageDoesNotScrollSideways();
+
+    await ask.verifyDrawerIsOpen(false);
 
     await ask.openDrawer();
 

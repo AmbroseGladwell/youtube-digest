@@ -54,7 +54,8 @@ export function AskPage() {
   const topics = useTopicsQuery().data ?? [];
   const library = useOverviewsWithStateQuery().data;
   const [draft, setDraft] = useState("");
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // On the web the drawer starts open beside the page; on a phone, where it is a sheet over it, closed (OV-370).
+  const [drawerOpen, setDrawerOpen] = useState(() => !isPhone);
   const [announcement, setAnnouncement] = useState("");
   const [said, setSaid] = useState<{ text: string; done: boolean; key: number } | null>(null);
   const [arrivedAt, setArrivedAt] = useState<number | null>(null);
