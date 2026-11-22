@@ -97,7 +97,7 @@ const FollowUpHandOffKind = z.enum(["prefill", "copyThenOpen"]);
 const FollowUpAssistantChosenFrom = z.enum(["firstTap", "change"]);
 // Where a question about the overview was asked from: one of its questions to ask next, or typed.
 const ChatAskedFrom = z.enum(["question", "typed"]);
-const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt"]);
+const ChatOpenedFrom = z.enum(["question", "typed", "menu", "conversationsLink", "receipt", "askDrawer"]);
 // Where a chat citation leads: a moment in the source, a part of the overview, another
 // conversation, or one deleted since.
 // A video, an episode, an article or a recipe page: what a chat is about (OV-320).
@@ -105,6 +105,8 @@ const ChatAbout = z.enum(["video", "episode", "article", "recipe"]);
 const ChatCitationTarget = z.enum(["source", "overview", "conversation", "deletedConversation", "otherOverview"]);
 // Which wait stopped a question: the month's allowance, the account's day, or the day on us for everyone.
 const AskScope = z.enum(["library", "project"]);
+// What a conversation in the Ask drawer is over: the drawer lists overviews' too (OV-363).
+const AskDrawerScope = z.enum([...AskScope.options, "overview"]);
 const ChatWait = z.enum(["month", "day", "everyone", "conversationFull"]);
 // A moment in the video is reached by moving the player beside the panel, or by a link out to YouTube.
 const VideoReach = z.enum(["skip", "youtube"]);
@@ -1456,9 +1458,11 @@ export const analyticsEvents = {
     drawer: {
       opened: event("The reader opens the Ask page's drawer of conversations"),
       newChat: event("The reader starts a new chat from the Ask page's drawer"),
-      conversationOpened: event("The reader opens an earlier library or project conversation from the drawer", { scope: AskScope }),
-      conversationDeleted: event("The reader deletes a library or project conversation from the drawer", { scope: AskScope }),
-      deleteUndone: event("The reader undoes deleting a library or project conversation", { scope: AskScope }),
+      conversationOpened: event("The reader opens an earlier conversation from the drawer; an overview's opens on that overview", {
+        scope: AskDrawerScope,
+      }),
+      conversationDeleted: event("The reader deletes a conversation from the drawer", { scope: AskDrawerScope }),
+      deleteUndone: event("The reader undoes deleting a conversation from the drawer", { scope: AskDrawerScope }),
     },
   },
   sharedPage: {

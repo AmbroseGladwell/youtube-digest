@@ -856,10 +856,18 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   overviews' chips by relation, then the line from `stats` (`askStatsLine`: "From 5 of your 208
   overviews", "From 5 of this project's 83 overviews"), then Copy and "Sources N". Each section
   lands whole.
-- **The drawer** (`AskDrawer`, top left) holds New chat and every library and project conversation,
-  never an overview's (`askChatsQuery`: the library's, then each project's).
+- **The drawer** (`AskDrawer`, top left) holds New chat and every conversation on the device: the
+  library's, each project's and each overview's (OV-363; `askChatsQuery` over
+  `ChatStore.listEveryChat`, leaving out a deleted project's).
   - It's grouped Today, Yesterday, Previous 7 days and Earlier (`askHistoryGroups`). Each item
-    shows its first question and its scope, "Your library" or the project's name.
+    shows its first question and its scope: "Your library", the project's name or the overview's
+    title, on one line. There's no thumbnail (owner, 22 Nov 2026: no Design round).
+  - A library or project conversation opens on the Ask page. An overview's opens on that overview,
+    with chat open on that conversation (owner, 22 Nov 2026): the link carries the conversation id
+    in its state (`conversationFromLocation`), the overview page opens it once chat is offered and
+    the conversation is on the device, then clears the state so a reload or Back doesn't open it
+    again. Chat's `opened` event says `from: "askDrawer"`.
+  - Deleting a conversation from either list refreshes both, the overview's own and the drawer's.
   - Its ⋯ (on hover, on focus and on the open one; always on touch) has only Delete conversation.
     There's no Rename, because the title is the first question.
   - Deleting has Undo for six seconds, and the delete is made when the toast goes or the reader
@@ -876,7 +884,8 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   - `chat.*`: asked (typed or a starter, new conversation, pins and set aside counted), picked (how
     many), answered (sections, overviews cited), answerFailed, waited, stopped, answerCopied,
     sourcesMenuOpened, readOpened, sourcePinned, sourceRemoved, overviewFollowed and plansFollowed.
-  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone.
+  - `drawer.*`: opened, newChat, conversationOpened, conversationDeleted and deleteUndone. The last
+    three carry `scope`: library, project or overview (OV-363).
 
 ## Over MCP
 

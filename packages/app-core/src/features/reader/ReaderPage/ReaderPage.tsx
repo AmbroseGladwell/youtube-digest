@@ -21,8 +21,10 @@ import {
   overviewTimeSaved,
   recipeActions as actionsOf,
   citedOverviewPart,
+  chatRecordId,
 } from "@overview/domain";
 import { CITED_PLACE_STATE, citedPlaceFromLocation } from "../util/citedPlaceFromLocation.js";
+import { CONVERSATION_STATE, conversationFromLocation } from "../util/conversationFromLocation.js";
 import { timedSource } from "../util/timedSource.js";
 import { useEpisodeEngine } from "../episode/useEpisodeEngine.js";
 import { EpisodePlayer } from "../components/EpisodePlayer/EpisodePlayer.js";
@@ -488,6 +490,24 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [citedFollowed]);
+  // Chat sits beside the note on the web (design 310a), and is a sheet on a phone and in the
+  // extension's panel (310g, 310h).
+  const chatAvailable =
+    chatOffered({ signedIn: isConnected(connection), sharedUnsaved: false, synced: synced.data === true }) && !chat.noSource;
+  // One of this overview's conversations opened from the Ask drawer lands here with it open in
+  // chat, once chat is offered and the conversation is on the device. The state is cleared so a
+  // reload or Back doesn't open it again (OV-363).
+  const arrivedConversation = conversationFromLocation(location.state);
+  useEffect(() => {
+    if (arrivedConversation === null || !chatAvailable) return;
+    const found = chat.chats.find((each) => each.id === chatRecordId(overviewId, arrivedConversation));
+    if (found === undefined) return;
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: { ...(location.state as object), [CONVERSATION_STATE]: undefined },
+    });
+    chat.arriveAtConversation(found);
+  }, [arrivedConversation, chatAvailable, chat.chats.length]);
 
   if (overviewQuery.isPending) {
     return (
@@ -613,10 +633,6 @@ function ReaderPageForOverview({ overviewId }: { overviewId: OverviewId }) {
     void navigate(Routes.home(), { replace: true, viewTransition: animateNavigation });
   };
 
-  // Chat sits beside the note on the web (design 310a), and is a sheet on a phone and in the
-  // extension's panel (310g, 310h).
-  const chatAvailable =
-    chatOffered({ signedIn: isConnected(connection), sharedUnsaved: false, synced: synced.data === true }) && !chat.noSource;
   const chatBeside = chatAvailable && !isPanel && !isPhone;
   const chatSheet = chatAvailable && (isPanel || isPhone);
   // Beside the note, a question asked from it travels into the chat as it opens (310a-4).

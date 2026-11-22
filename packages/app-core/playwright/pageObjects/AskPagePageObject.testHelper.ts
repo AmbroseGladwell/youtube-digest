@@ -9,6 +9,7 @@ import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewO
 import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
+import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 
 // The Ask page, over the whole library or one project (OV-354, pages 3 and 4; docs/features/chats.md).
 export class AskPagePageObject extends PageObject {
@@ -231,6 +232,13 @@ export class AskPagePageObject extends PageObject {
 
   openDrawerConversation = (index: number) =>
     this.step(`openDrawerConversation ${index}`, () => this.click(this.drawer().getByTestId(askDrawerTestIds.open).nth(index)));
+
+  // An overview's conversation opens on that overview, not here (OV-363).
+  openDrawerOverviewConversation = (index: number): Promise<ReaderPageObject> =>
+    this.step(`openDrawerOverviewConversation ${index}`, async () => {
+      await this.click(this.drawer().getByTestId(askDrawerTestIds.open).nth(index));
+      return new ReaderPageObject(this.testContext).verifyIsShown();
+    });
 
   closeDrawer = () => this.step("closeDrawer", () => this.click(this.drawer().getByTestId(askDrawerTestIds.close)));
 
