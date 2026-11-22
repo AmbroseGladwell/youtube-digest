@@ -2,8 +2,8 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export interface RecordStore<T> {
-  all(): Promise<T[]>;
-  save(record: T): Promise<void>;
+  all: () => Promise<T[]>;
+  save: (record: T) => Promise<void>;
 }
 
 export const safePathPart = (part: string): string => part.replace(/[^\w.-]/g, "_");

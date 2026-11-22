@@ -12,11 +12,11 @@ const checkCost = (800 * 4 + 10 * 20) / 1_000_000;
 
 // Answers the kind check with the given kind apart from the queue; every other call takes
 // the next answer.
-const anthropicReplying = (...answers: ({ status: number; body: string } | unknown)[]) => {
+const anthropicReplying = (...answers: unknown[]) => {
   return anthropicCheckingAs("default", ...answers);
 };
 
-const anthropicCheckingAs = (kind: string, ...answers: ({ status: number; body: string } | unknown)[]) => {
+const anthropicCheckingAs = (kind: string, ...answers: unknown[]) => {
   const sent: string[] = [];
   const http = (async (_url: string, init: RequestInit) => {
     if (String(init.body).includes('"noteKind"')) {

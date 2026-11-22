@@ -57,7 +57,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
     if (at.chat === null) {
       setFresh(newConversationId());
     }
-    navigate(Routes.ask(at));
+    void navigate(Routes.ask(at));
   };
 
   const ask = (question: string, from: AskOverFrom) => {
@@ -66,7 +66,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
       return;
     }
     if (chatParam === null) {
-      navigate(Routes.ask({ project: projectId, chat: conversationId }), { replace: true });
+      void navigate(Routes.ask({ project: projectId, chat: conversationId }), { replace: true });
     }
     void asking.ask(conversationId, text, from, {
       pins: {
@@ -137,7 +137,7 @@ export const useAskPage = (projectId: ProjectId | null, chatParam: string | null
     const of = chatOwner(opened);
     analytics.ask.drawer.conversationOpened({ scope: askScopeOfChat(opened) });
     if (of.kind === "overview") {
-      navigate(Routes.overview(of.id), { state: { [CONVERSATION_STATE]: chatConversationId(opened.id) } });
+      void navigate(Routes.overview(of.id), { state: { [CONVERSATION_STATE]: chatConversationId(opened.id) } });
       return;
     }
     goTo({ project: of.kind === "project" ? (of.id as ProjectId) : null, chat: chatConversationId(opened.id) });

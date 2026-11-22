@@ -561,7 +561,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
     if (found === undefined) {
       return;
     }
-    navigate(`${location.pathname}${location.search}`, {
+    void navigate(`${location.pathname}${location.search}`, {
       replace: true,
       state: { ...(location.state as object), [CONVERSATION_STATE]: undefined },
     });

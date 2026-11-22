@@ -10,8 +10,8 @@ fi
 gitleaks git --pre-commit --staged --redact --no-banner
 
 root="$(git rev-parse --show-toplevel)"
-if [ ! -x "$root/node_modules/.bin/oxlint" ] || [ ! -x "$root/node_modules/.bin/oxfmt" ]; then
-  echo "pre-commit: Oxlint and Oxfmt aren't installed; run task install" >&2
+if [ ! -x "$root/node_modules/.bin/oxlint" ] || [ ! -x "$root/node_modules/.bin/oxfmt" ] || [ ! -x "$root/node_modules/.bin/tsgolint" ]; then
+  echo "pre-commit: Oxlint, oxlint-tsgolint and Oxfmt aren't all installed; run task install" >&2
   exit 1
 fi
 
@@ -25,7 +25,7 @@ if [ "${#staged[@]}" -eq 0 ]; then
 fi
 
 cd "$root"
-if ! node_modules/.bin/oxlint --deny-warnings "${staged[@]}"; then
+if ! node_modules/.bin/oxlint --type-aware --deny-warnings "${staged[@]}"; then
   echo "pre-commit: fix the lint errors above (docs/conventions/lint-and-format.md)" >&2
   exit 1
 fi

@@ -168,6 +168,9 @@ export class InMemorySyncStorage implements SyncStorage {
         case "chat":
           this.chatStore.seedChat(Chat.parse({ id: change.id, ...(change.body as object) }));
           break;
+        case "project":
+        case "projectMember":
+          break;
       }
     }
     this.cursorValue = next;

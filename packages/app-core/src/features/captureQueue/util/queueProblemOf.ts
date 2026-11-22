@@ -17,10 +17,15 @@ export const isQueueHoldReason = (problem: QueueProblem): problem is QueueHoldRe
 
 const MONTH_QUOTAS = new Set(["ours", "own"]);
 
+const resetsOnOf = (details: Record<string, unknown> | undefined): string => {
+  const resetsOn = details?.resetsOn;
+  return typeof resetsOn === "string" ? resetsOn : "";
+};
+
 // The server refused every key the overview could use for this month.
 const monthSpentResetOf = (error: unknown): string | null =>
   isSyncRequestError(error) && error.code === "too_many_requests" && MONTH_QUOTAS.has(String(error.details?.quota))
-    ? String(error.details?.resetsOn ?? "")
+    ? resetsOnOf(error.details)
     : null;
 
 const fetchErrorOf = (error: unknown): TranscriptFetchError | null => {

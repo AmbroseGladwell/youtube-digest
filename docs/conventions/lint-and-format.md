@@ -59,7 +59,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ## Lint: `.oxlintrc.json`
 
 Oxlint's `correctness` category with the TypeScript, Unicorn, Oxc, React, import, Vitest
-and Node plugins, all as errors. Type-aware linting is off for now.
+and Node plugins, all as errors.
 
 `no-unused-vars` ignores parameters (handlers often keep a signature they don't read), caught
 errors, rest siblings (`const { a, ...rest }` to drop `a`), and names that start with `_`.
@@ -86,6 +86,19 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `max-nested-callbacks: 3` (4 in tests) | No more than three callbacks inside each other. A test's `describe`, `it` and one callback already make three, so tests get a fourth. |
 | `no-nested-ternary` | A ternary has one condition. Past that, a union becomes a `Record` lookup, a return becomes `if`/`return` guards, a value becomes a named helper, and JSX becomes a helper or a small component. |
 | `overview/no-inline-object-type` | An object type with two or more members is an `interface` with a name, never written inline in a parameter or return type. A component's props are `<Component>Props`. Off in tests. |
+
+### Type-aware rules
+
+`npm run lint` and the pre-commit hook pass `--type-aware`, so Oxlint asks `oxlint-tsgolint` (TypeScript's own checker, in Go) for types. That runs the type-aware rules in `correctness`, and the two below. A run over the whole repo takes about 9 seconds and peaks under 1 GB. On a commit's few files it takes under a second. It reads `@overview/*` types from each package's `dist`, so CI's `lint` job builds the packages first, and locally a stale `dist` gives stale answers, just as it does for `task typecheck`.
+
+`oxlint-tsgolint` is TypeScript 7, where `types` defaults to `[]`, so a package that uses Node's globals (`URL`, `Request`) and has no DOM lib names `"types": ["node"]` in its tsconfig. Without it, those types are unknown to the linter, though `tsc` 5.9 would still find them.
+
+| Rule | What it holds |
+|---|---|
+| `typescript/switch-exhaustiveness-check`, with a `default` counting as exhaustive | A `switch` on a union with no `default` names every member, so adding a member points at every switch that has to handle it. |
+| `typescript/no-floating-promises` | A promise is awaited, returned, or explicitly let go with `void`. `node:test`'s `test`, `it`, `describe` and `suite` are allowed, since their promise is the runner's to await. |
+
+In tests, `unbound-method`, `no-base-to-string`, `no-misused-spread`, `no-implied-eval` and `require-array-sort-compare` are off. Fakes pass methods to spies, stringify a `fetch` input they know is a string, spread `document` into a stub, `eval` the script under test, and sort short lists of strings for an assertion.
 
 ### Custom rules: `scripts/oxlint/`
 
@@ -144,6 +157,7 @@ These rules are off, and each one has a reason:
 
 | Rule | Why it's off |
 |---|---|
+| `typescript/no-unnecessary-condition` | Its 190 hits are mostly guards kept on purpose where the types promise more than the runtime gives: `globalThis.removeEventListener?.()` for the Node tests, `setPointerCapture?.()` for jsdom, `textContent ?? ""`. Following it would delete guards that stop real crashes. |
 | `react-hooks/exhaustive-deps` | 22 existing effects leave dependencies out, many of them on purpose. Each one needs reviewing on its own before the rule can go on, since adding a dependency changes when an effect runs. That review is its own card. |
 | `react/refs`, `react/set-state-in-effect`, `react/purity`, `react/immutability`, `react/preserve-manual-memoization` | These are React Compiler's rules, and the apps don't run the React Compiler. Meeting them would mean restructuring about a hundred components for a compiler we don't use. |
 | `unicorn/no-thenable` | `then` is a real field in the domain: a recipe step's "then" clause, the second line of a notice's copy. None of them is ever awaited. |
