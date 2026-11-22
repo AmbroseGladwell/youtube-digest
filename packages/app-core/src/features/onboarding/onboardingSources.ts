@@ -325,6 +325,24 @@ export const onboardingSources: { readonly [Kind in Source["kind"]]: OnboardingS
           };
     },
   },
+  // Recognises no link until onboarding reads TikTok (OV-130, step 5), so the web entry still takes one.
+  tiktok: {
+    linkKind: () => null,
+    keyFromLink: () => null,
+    target: ({ link }) => link,
+    make: () => Promise.reject(new Error("Onboarding doesn't read TikTok links yet.")),
+    noun: () => "video",
+    pending: () => null,
+    finding: "Finding the TikTok…",
+    notFound: "We couldn't find that TikTok.",
+    card: ({ source }) => ({ kicker: `${sourceName(source)} · TikTok`, facts: { line: "TikTok" } }),
+    yourLink: ({ source }, minutes) => ({
+      heading: "Here’s what’s in the TikTok you saved.",
+      line: `${fromWhom(null, sourceName(source))}, ${turnedInto(minutes)}`,
+      pills: "readListen",
+      inside: INSIDE,
+    }),
+  },
   web: {
     linkKind: (link) => (isArticleLink(link) ? "article" : null),
     keyFromLink: () => null,

@@ -11,7 +11,7 @@ export const START_VERB: Record<SampleKind, string> = {
 };
 
 export const sampleKindOf = (note: SharedNote): SampleKind => {
-  if (note.source.kind === "youtube") {
+  if (note.source.kind === "youtube" || note.source.kind === "tiktok") {
     return "video";
   }
   if (note.source.kind === "podcast") {
@@ -22,7 +22,7 @@ export const sampleKindOf = (note: SharedNote): SampleKind => {
 
 const lengthOf = (note: SharedNote): string | null => {
   const { source } = note;
-  if (source.kind === "youtube") {
+  if (source.kind === "youtube" || source.kind === "tiktok") {
     return source.durationMs === null ? null : formatClock(source.durationMs / 1000);
   }
   if (source.kind === "podcast") {

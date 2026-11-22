@@ -24,7 +24,9 @@ export const RecipeTimes = ({ recipe, source }: RecipeTimesProps) => {
         ))}
       </dl>
       <p className={styles.caption}>
-        {source.kind === "youtube" ? "As the video’s description gives them." : `As the recipe gives them on ${sourceName(source)}.`}
+        {source.kind === "youtube" || source.kind === "tiktok"
+          ? "As the video’s description gives them."
+          : `As the recipe gives them on ${sourceName(source)}.`}
       </p>
     </div>
   );

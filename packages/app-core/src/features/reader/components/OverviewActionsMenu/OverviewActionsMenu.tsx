@@ -34,6 +34,9 @@ interface WayOut {
   copyLabel: string;
 }
 
+const OPEN_RECIPE = "Open the recipe";
+const COPY_RECIPE_LINK = "Copy recipe link";
+
 const wayOut = (source: Source, recipe: boolean): WayOut => {
   if (source.kind === "podcast") {
     return { open: "openEpisode", openLabel: openPodcastLabel(source.sharedFrom), copy: "copyEpisodeLink", copyLabel: "Copy episode link" };
@@ -41,16 +44,17 @@ const wayOut = (source: Source, recipe: boolean): WayOut => {
   if (source.kind === "web") {
     return {
       open: "readArticle",
-      openLabel: recipe ? "Open the recipe" : "Read the article",
+      openLabel: recipe ? OPEN_RECIPE : "Read the article",
       copy: "copyArticleLink",
-      copyLabel: recipe ? "Copy recipe link" : "Copy article link",
+      copyLabel: recipe ? COPY_RECIPE_LINK : "Copy article link",
     };
   }
+  const platform = source.kind === "tiktok" ? "TikTok" : "YouTube";
   return {
     open: "watchOnYouTube",
-    openLabel: recipe ? "Open the recipe" : "Watch on YouTube",
+    openLabel: recipe ? OPEN_RECIPE : `Watch on ${platform}`,
     copy: "copyYouTubeLink",
-    copyLabel: recipe ? "Copy recipe link" : "Copy YouTube link",
+    copyLabel: recipe ? COPY_RECIPE_LINK : `Copy ${platform} link`,
   };
 };
 

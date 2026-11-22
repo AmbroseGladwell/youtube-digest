@@ -15,13 +15,19 @@ import {
   type ClientTimingReport,
   type LearnedItems,
   type PodcastEpisode,
+  type TikTokVideo,
   podcastSourceId,
   ProjectId,
 } from "@overview/domain";
 import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import type { PodcastTranscript } from "../../podcasts/api/podcastTranscript.js";
 import type { GenerationInput } from "@overview/generation";
-import { makeArticleOverview, makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import {
+  makeArticleOverview,
+  makeOverview,
+  makePodcastOverview,
+  makeTikTokOverview,
+} from "../../overviews/types/OverviewFactory.testHelper.js";
 import { makeTopic } from "../../overviews/types/TopicFactory.testHelper.js";
 import { InMemoryProjectStore } from "../../projects/types/InMemoryProjectStore.testHelper.js";
 import { makeProject } from "../../projects/types/ProjectFactory.testHelper.js";
@@ -33,7 +39,10 @@ import {
   runArticleOverviewGeneration,
   runOverviewGeneration,
   runPodcastOverviewGeneration,
+  runTikTokOverviewGeneration,
   type GenerationPipelineDeps,
+  type GenerationProgress,
+  type TikTokWords,
 } from "./generationPipeline.js";
 
 const VIDEO = makeOverview().source;
@@ -523,5 +532,86 @@ describe("filing into projects", () => {
 
     expect(inputs[0]!.existingProjects).toEqual([]);
     expect(await projectStore.listMembers()).toEqual([]);
+  });
+});
+
+describe("runTikTokOverviewGeneration", () => {
+  const clip: TikTokVideo = {
+    id: "7301234567890123456",
+    url: "https://www.tiktok.com/@kitchenwithada/video/7301234567890123456",
+    handle: "kitchenwithada",
+    authorName: "Kitchen with Ada",
+    description: "The one-pan jollof I make every Sunday #jollof",
+    durationSeconds: 42,
+    coverUrl: null,
+    postedAt: null,
+    captions: [{ language: "eng-US", source: "ASR" }],
+  };
+  const words: TikTokWords = {
+    transcript: {
+      videoId: "tiktok:7301234567890123456" as StoredTranscript["videoId"],
+      segments: [{ startMs: 0, endMs: 4_000, text: "Fry the base until the oil floats." }],
+      generated: true,
+      fetchedAt: "2026-11-22T09:00:00.000Z",
+    },
+    source: "tiktok-vendor",
+  };
+
+  const setUp = (held: Overview[] = []) => {
+    const made: unknown[] = [];
+    const kept: StoredTranscript[] = [];
+    const store = {
+      listTopics: async () => [],
+      listClaims: async () => [],
+      listUnreadable: async () => [],
+      getOverview: async () => null,
+      saveOverview: async () => {},
+      listOverviews: async () => held,
+    } as unknown as OverviewStore;
+    const deps = {
+      overviewStore: store,
+      settingsStore: { get: async () => DEFAULT_SETTINGS },
+      transcriptStore: {
+        getTranscript: async () => null,
+        saveTranscript: async (transcript: StoredTranscript) => {
+          kept.push(transcript);
+        },
+        deleteTranscript: async () => {},
+      } satisfies TranscriptStore,
+      makeOverview: (async (input, { id }) => {
+        made.push(input);
+        return makeTikTokOverview({ id });
+      }) satisfies GenerationPipelineDeps["makeOverview"],
+    };
+    return { deps, made, kept };
+  };
+
+  it("keeps the words under the TikTok's key and writes it as a TikTok, saying where the words came from", async () => {
+    const { deps, made, kept } = setUp();
+    let progress: GenerationProgress | null = null;
+    await runTikTokOverviewGeneration(clip, async () => words, deps, { onProgress: (reported) => (progress = reported) });
+    expect(kept[0]?.videoId).toBe("tiktok:7301234567890123456");
+    const input = made[0] as { tiktok: { id: string; title: string }; video: { channel: string; description: string } };
+    expect(input.tiktok.id).toBe("7301234567890123456");
+    expect(input.video.channel).toBe("Kitchen with Ada");
+    expect(input.video.description).toBe("The one-pan jollof I make every Sunday #jollof");
+    expect(progress).toMatchObject({ transcriptWords: 7, transcriptSource: "tiktok-vendor" });
+  });
+
+  it("refuses a TikTok already in the library before asking for its words", async () => {
+    const { deps, made } = setUp([makeTikTokOverview()]);
+    let asked = false;
+    await expect(
+      runTikTokOverviewGeneration(
+        clip,
+        async () => {
+          asked = true;
+          return words;
+        },
+        deps,
+      ),
+    ).rejects.toBeInstanceOf(ArticleAlreadyHeldError);
+    expect(asked).toBe(false);
+    expect(made).toHaveLength(0);
   });
 });

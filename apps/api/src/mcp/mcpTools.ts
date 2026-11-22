@@ -13,6 +13,8 @@ import {
   type Topic,
   sourceKey,
   sourceName,
+  sourceUrl,
+  type Source,
 } from "@overview/domain";
 import type { Library, LibraryEntry } from "./Library.js";
 import { LibraryFilters } from "./LibraryFilters.js";
@@ -35,6 +37,12 @@ import { searchTranscripts } from "./searchTranscripts.js";
 import { blockIndexAt, millisecondsOf, TIMESTAMP, transcriptPage } from "./transcriptPage.js";
 
 // Why these sizes: docs/features/mcp-connector.md, "The context budget".
+const MACHINE_WORDS: Record<Exclude<Source["kind"], "web">, string> = {
+  youtube: "Machine-transcribed: the video had no captions of its own",
+  podcast: "Machine-transcribed",
+  tiktok: "TikTok's machine captions",
+};
+
 export const LISTING_PAGE_SIZE = 50;
 export const OVERVIEWS_PER_CALL = 10;
 
@@ -294,7 +302,7 @@ const getTranscript = mcpTool({
     if (!transcript.success) {
       return toolError(`No transcript is kept for this ${source.kind === "podcast" ? "episode" : "video"}.`);
     }
-    const head = source.kind === "podcast" ? { title: source.title, channel: source.showName, url: source.sharedFrom } : source;
+    const head = source.kind === "youtube" ? source : { title: source.title, channel: sourceName(source), url: sourceUrl(source) };
     const blocks = transcriptBlocks(transcript.data.segments);
     const first = from === undefined ? Number(cursor ?? 0) : blockIndexAt(blocks, millisecondsOf(from)!);
     const end = blocks.at(-1)?.endMs ?? 0;
@@ -312,9 +320,7 @@ const getTranscript = mcpTool({
         ];
     const text = [transcriptPlainText(head, shown), ...where].join("\n");
     return {
-      text: transcript.data.generated
-        ? `${source.kind === "podcast" ? "Machine-transcribed" : "Machine-transcribed: the video had no captions of its own"}, so some words may be misheard.\n\n${text}`
-        : text,
+      text: transcript.data.generated ? `${MACHINE_WORDS[source.kind]}, so some words may be misheard.\n\n${text}` : text,
     };
   },
 });

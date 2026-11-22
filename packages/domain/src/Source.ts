@@ -2,6 +2,7 @@ import { z } from "zod";
 import { SourceKey } from "./Brands.js";
 import type { ExtractedArticle } from "./ExtractedArticle.js";
 import type { PodcastEpisode } from "./PodcastEpisode.js";
+import type { TikTokVideo } from "./TikTokVideo.js";
 import { VideoSource } from "./VideoSource.js";
 
 export const YouTubeSource = VideoSource.extend({ kind: z.literal("youtube") });
@@ -39,7 +40,21 @@ export const PodcastSource = z.object({
 });
 export type PodcastSource = z.infer<typeof PodcastSource>;
 
-export const Source = z.discriminatedUnion("kind", [YouTubeSource, WebSource, PodcastSource]);
+// The cover's address is signed and expires, so the name tile stands in once it does (docs/features/tiktok-links.md).
+export const TikTokSource = z.object({
+  kind: z.literal("tiktok"),
+  id: SourceKey,
+  url: z.url(),
+  title: z.string(),
+  handle: z.string().min(1),
+  authorName: z.string(),
+  durationMs: z.number().int().positive().nullable(),
+  publishedAt: z.iso.datetime().nullable(),
+  imageUrl: z.url().nullable(),
+});
+export type TikTokSource = z.infer<typeof TikTokSource>;
+
+export const Source = z.discriminatedUnion("kind", [YouTubeSource, WebSource, PodcastSource, TikTokSource]);
 export type Source = z.infer<typeof Source>;
 
 // Short, path-safe and the same for every reader (docs/features/source-identity.md).
@@ -98,4 +113,17 @@ export const podcastSource = (episode: PodcastEpisode, id: SourceKey, sharedFrom
   pageUrl: episode.pageUrl,
   imageUrl: episode.imageUrl,
   sharedFrom: keptSharedLink(sharedFrom),
+});
+
+// An empty caption is common, so the creator stands in as the title.
+export const tiktokSource = (video: TikTokVideo): TikTokSource => ({
+  kind: "tiktok",
+  id: video.id as SourceKey,
+  url: video.url,
+  title: video.description.trim() === "" ? `@${video.handle}` : video.description.trim(),
+  handle: video.handle,
+  authorName: video.authorName,
+  durationMs: video.durationSeconds === null ? null : video.durationSeconds * 1000,
+  publishedAt: video.postedAt,
+  imageUrl: video.coverUrl,
 });

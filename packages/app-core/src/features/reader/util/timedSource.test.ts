@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { makeArticleOverview, makeOverview, makePodcastOverview } from "../../overviews/types/OverviewFactory.testHelper.js";
+import { VideoId } from "@overview/domain";
+import {
+  makeArticleOverview,
+  makeOverview,
+  makePodcastOverview,
+  makeTikTokOverview,
+} from "../../overviews/types/OverviewFactory.testHelper.js";
 import { machineTranscribedLabel, playingLabel, timedSource } from "./timedSource.js";
 
 describe("timedSource", () => {
@@ -18,19 +24,32 @@ describe("timedSource", () => {
     });
   });
 
+  it("reads a TikTok by its source key, as its transcript is stored, named for its creator", () => {
+    expect(timedSource(makeTikTokOverview().source)).toMatchObject({
+      id: "tiktok:7301234567890123456",
+      url: "https://www.tiktok.com/@kitchenwithada/video/7301234567890123456",
+      channel: "Kitchen with Ada",
+      durationMs: 42_000,
+    });
+  });
+
   it("gives a page no times", () => {
     expect(timedSource(makeArticleOverview().source)).toBeNull();
   });
 });
 
 describe("labels", () => {
+  it("says a TikTok plays on TikTok", () => {
+    expect(playingLabel({ id: VideoId.parse("tiktok:7301234567890123456") })).toBe("Playing on TikTok");
+  });
+
   it("names YouTube's own words for a video", () => {
-    expect(playingLabel("video")).toBe("Playing on YouTube");
+    expect(playingLabel({ id: VideoId.parse("dQw4w9WgXcQ") })).toBe("Playing on YouTube");
     expect(machineTranscribedLabel("video")).toBe("Auto-generated");
   });
 
   it("borrows none of YouTube's words for an episode, which plays in the page", () => {
-    expect(playingLabel("episode")).toBe("Playing");
+    expect(playingLabel({ id: VideoId.parse("podcast:fedcba9876543210fedcba9876543210") })).toBe("Playing");
     expect(machineTranscribedLabel("episode")).toBe("Machine-transcribed");
   });
 });

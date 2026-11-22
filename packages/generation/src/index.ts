@@ -45,3 +45,4 @@ export * from "./noteKind/kindSampleOfVideo.js";
 export * from "./podcast/PodcastGenerationInput.js";
 export * from "./podcast/composePodcastPrompt.js";
 export * from "./podcast/generatePodcastOverview.js";
+export * from "./tiktok/TikTokGenerationInput.js";

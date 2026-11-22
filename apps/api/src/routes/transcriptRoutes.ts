@@ -27,11 +27,19 @@ export interface TranscriptRoutesOptions {
 }
 
 export const transcriptRoutes = (app: FastifyInstance, { transcripts, episodeWords, videoWords }: TranscriptRoutesOptions): void => {
+  // A TikTok's words come only with a read, which costs a credit, so another device has the kept copy or none.
+  const wordsFetchedAfresh = (key: VideoId, accountId: AccountId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
+    if (isYouTubeKey(key)) {
+      return videoWords(key, accountId, log);
+    }
+    return key.startsWith("tiktok:") ? Promise.resolve(null) : episodeWords(key, accountId, log);
+  };
+
   const fetchedFor = async (accountId: AccountId, videoId: VideoId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
     if (!(await transcripts.hasLiveNote(accountId, videoId))) {
       return null;
     }
-    const fetched = isYouTubeKey(videoId) ? await videoWords(videoId, accountId, log) : await episodeWords(videoId, accountId, log);
+    const fetched = await wordsFetchedAfresh(videoId, accountId, log);
     if (fetched === null || transcriptFault(fetched, videoId) !== null) {
       return null;
     }

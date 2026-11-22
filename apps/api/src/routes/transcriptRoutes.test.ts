@@ -342,3 +342,47 @@ test("an episode's transcript is kept as the account's own copy, for its other d
   assert.deepEqual((await account.inject({ method: "GET", url: `/api/transcripts/${encodeURIComponent(key)}` })).json(), transcript);
   await testApp.close();
 });
+
+const tiktokNote = (id: VideoId) =>
+  storedOverview({
+    source: {
+      kind: "tiktok" as const,
+      id,
+      url: `https://www.tiktok.com/@kitchenwithada/video/${id}`,
+      title: "The one-pan jollof",
+      handle: "kitchenwithada",
+      authorName: "Kitchen with Ada",
+      durationMs: 42_000,
+      publishedAt: null,
+      imageUrl: null,
+    },
+  });
+
+test("a TikTok's transcript is kept as the account's own copy, for its other devices", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const id = VideoId.parse("7301234567890123456");
+  const key = VideoId.parse(`tiktok:${id}`);
+  const { video: _video, ...transcript } = makeStoredTranscript({ videoId: key });
+  assert.equal((await account.inject({ method: "POST", url: "/api/overviews", body: tiktokNote(id) })).statusCode, 201);
+
+  assert.equal(
+    (await account.inject({ method: "PUT", url: `/api/transcripts/${encodeURIComponent(key)}`, body: transcript })).statusCode,
+    204,
+  );
+
+  assert.deepEqual((await account.inject({ method: "GET", url: `/api/transcripts/${encodeURIComponent(key)}` })).json(), transcript);
+  await testApp.close();
+});
+
+test("a TikTok with no kept copy is not read again, since a read costs a credit", async () => {
+  const testApp = await createTestApp();
+  const account = await makeAccount(testApp);
+  const id = VideoId.parse("7301234567890123456");
+  assert.equal((await account.inject({ method: "POST", url: "/api/overviews", body: tiktokNote(id) })).statusCode, 201);
+
+  const response = await account.inject({ method: "GET", url: `/api/transcripts/${encodeURIComponent(`tiktok:${id}`)}` });
+
+  assert.equal(response.statusCode, 404);
+  await testApp.close();
+});

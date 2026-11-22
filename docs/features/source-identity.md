@@ -121,3 +121,8 @@ them; the ones marked with a test fail one until it does.
 `web` joined the union with articles (`docs/features/article-notes.md`). Its id is the first 32 hex
 characters of a SHA-256 of the canonical URL, and its key is `web:<id>`. `sourceName`, `sourceImage`
 and `sourceLength` in `sourceFacts.ts` answer the questions every card asks of any kind.
+
+## TikTok
+
+`tiktok` joined with OV-130 (`tiktok-links.md`, "A TikTok in the library"). Its id is TikTok's own
+video id, all digits, so its key is `tiktok:<id>` and never holds a second colon.

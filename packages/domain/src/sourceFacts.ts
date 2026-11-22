@@ -20,6 +20,9 @@ export const sourceName = (source: Source): string => {
   if (source.kind === "podcast") {
     return source.showName;
   }
+  if (source.kind === "tiktok") {
+    return source.authorName.trim() === "" ? `@${source.handle}` : source.authorName;
+  }
   return source.siteName ?? domainOf(source.url);
 };
 
@@ -52,13 +55,18 @@ const OPEN_PODCAST: Record<PodcastPlatform, string> = {
 export const openPodcastLabel = (sharedFrom: string): string => OPEN_PODCAST[podcastPlatform(sharedFrom)];
 
 // As Copy and Print say it: "Kitchen with Ada on YouTube" (design 122r).
-export const recipeFrom = (source: Source): string => (source.kind === "youtube" ? `${source.channel} on YouTube` : sourceName(source));
+export const recipeFrom = (source: Source): string => {
+  if (source.kind === "youtube") {
+    return `${source.channel} on YouTube`;
+  }
+  return source.kind === "tiktok" ? `${sourceName(source)} on TikTok` : sourceName(source);
+};
 
 export const sourceImage = (source: Source): string | null => (source.kind === "youtube" ? (source.thumbnailUrl ?? null) : source.imageUrl);
 
 // Matches the library's filter: "Podcast" on its chip, "1 hr 56 min episode" by length (design 106l).
-const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode" };
-const KIND_CHIP: Record<Exclude<Source["kind"], "youtube">, string> = { web: "Article", podcast: "Podcast" };
+const SOURCE_KIND: Record<Source["kind"], string> = { youtube: "video", web: "article", podcast: "episode", tiktok: "TikTok" };
+const KIND_CHIP: Record<Exclude<Source["kind"], "youtube">, string> = { web: "Article", podcast: "Podcast", tiktok: "TikTok" };
 
 const knownLength = (source: Source): string | null => {
   if (source.kind === "web") {
@@ -94,7 +102,7 @@ export const kindChip = (note: SourcedNote): string | null => {
 
 // The page's stated total, never prep plus cook (design 144m); a recipe video by length (122n).
 export const noteSourceLength = (note: SourcedNote): string => {
-  if (note.recipe != null && note.source.kind === "youtube") {
+  if (note.recipe != null && (note.source.kind === "youtube" || note.source.kind === "tiktok")) {
     return note.source.durationMs ? `${formatClock(note.source.durationMs / 1000)} recipe video` : "Recipe video";
   }
   if (note.recipe != null) {

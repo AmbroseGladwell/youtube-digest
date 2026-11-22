@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { OverviewId, SourceKey } from "./Brands.js";
 import { OurKeyGenerationRequest } from "./OurKeyGenerationRequest.js";
-import type { PodcastSource } from "./Source.js";
+import type { PodcastSource, TikTokSource } from "./Source.js";
 import { DEFAULT_SECTIONS_ENABLED } from "./Settings.js";
 
 const podcast: PodcastSource = {
@@ -47,4 +47,47 @@ test("an episode sent to be made on our key arrives as an episode, not stripped 
   });
   assert.ok("podcast" in request.input);
   assert.deepEqual(request.input.podcast, podcast);
+});
+
+const tiktok: TikTokSource = {
+  kind: "tiktok",
+  id: SourceKey.parse("7301234567890123456"),
+  url: "https://www.tiktok.com/@kitchenwithada/video/7301234567890123456",
+  title: "The one-pan jollof",
+  handle: "kitchenwithada",
+  authorName: "Kitchen with Ada",
+  durationMs: 42_000,
+  publishedAt: null,
+  imageUrl: null,
+};
+
+test("a TikTok sent to be made on our key arrives as a TikTok, with the kind already checked", () => {
+  const request = OurKeyGenerationRequest.parse({
+    overviewId: OverviewId.parse("00000000-0000-4000-8000-000000000001"),
+    input: {
+      tiktok,
+      video: {
+        id: null,
+        url: tiktok.url,
+        title: tiktok.title,
+        channel: tiktok.authorName,
+        description: null,
+        durationMs: tiktok.durationMs,
+        publishedAt: null,
+        thumbnailUrl: null,
+      },
+      transcript: [{ text: "Hello.", startMs: 0, endMs: 1000 }],
+      noteKind: "recipe",
+      captureReason: null,
+      readerContext: null,
+      sectionsEnabled: DEFAULT_SECTIONS_ENABLED,
+      existingTopics: [],
+      pastClaims: [],
+      existingTags: [],
+      tagAliases: {},
+    },
+  });
+  assert.ok("tiktok" in request.input);
+  assert.deepEqual(request.input.tiktok, tiktok);
+  assert.equal(request.input.noteKind, "recipe");
 });
