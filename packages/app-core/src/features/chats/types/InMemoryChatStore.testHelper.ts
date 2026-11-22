@@ -14,6 +14,10 @@ export class InMemoryChatStore implements ChatStore {
       .sort((left, right) => left.startedAt.localeCompare(right.startedAt));
   }
 
+  async listEveryChat() {
+    return [...this.#chats.values()].sort((left, right) => left.startedAt.localeCompare(right.startedAt));
+  }
+
   async getChat(id: string) {
     return this.#chats.get(id) ?? null;
   }

@@ -1,10 +1,9 @@
 name: CI
 
+# Push only: a PR's checks are its branch's push run, and a pull_request trigger as well ran
+# every PR commit twice, in two concurrency groups, against one account-wide runner limit.
 on:
   push:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
@@ -108,18 +107,24 @@ jobs:
       - run: ./download_model.sh models
       - run: uv run --frozen pytest
 
+  # Playwright splits the tests evenly by count across the shards, since the config is
+  # fullyParallel; each shard still runs two workers.
   iwft:
-    name: iwft
+    name: iwft (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:iwft --workspace packages/app-core
+      - run: npm run test:iwft --workspace packages/app-core -- --shard=${{ matrix.shard }}/4
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: iwft-traces
+          name: iwft-traces-${{ matrix.shard }}
           path: packages/app-core/test-results/
           retention-days: 7
           if-no-files-found: ignore

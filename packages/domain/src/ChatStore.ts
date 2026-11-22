@@ -5,6 +5,8 @@ import type { Chat, ChatOwner } from "./Chat.js";
 export interface ChatStore {
   // An owner's chats, or the library's for the library owner, oldest first.
   listChats(owner: ChatOwner): Promise<Chat[]>;
+  // Every chat on the device, whatever owns it, oldest first.
+  listEveryChat(): Promise<Chat[]>;
   getChat(id: string): Promise<Chat | null>;
   deleteChat(id: string): Promise<void>;
 }

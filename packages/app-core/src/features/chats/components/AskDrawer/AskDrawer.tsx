@@ -13,6 +13,8 @@ export interface AskDrawerProps {
   now: Date;
   // A project's name for its conversations' scope line, or null once it is deleted.
   projectName: (projectId: string) => string | null;
+  // An overview's title for its conversations' scope line, or null when it isn't on this device.
+  overviewTitle: (overviewId: string) => string | null;
   sheet: boolean;
   // The button that opens it, so pressing it again closes it rather than reopening it.
   trigger: RefObject<HTMLElement | null>;
@@ -22,11 +24,24 @@ export interface AskDrawerProps {
   onClose: () => void;
 }
 
-// OV-354, page 3 (354t-4 to 354t-7): New chat and every library and project conversation, grouped
-// by when it was last asked in, each with its first question and its scope. Each has a ⋯ whose only
+// OV-354, page 3 (354t-4 to 354t-7): New chat and every conversation, the library's, projects' and
+// overviews' (OV-363), grouped by when it was last asked in, each with its first question and its
+// scope: "Your library", the project's name or the overview's title. Each has a ⋯ whose only
 // item is Delete conversation; there's no Rename, because the title is the first question. On the
 // web a raised column down the left of the page; on a phone a bottom sheet.
-export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger, onNew, onOpen, onDelete, onClose }: AskDrawerProps) {
+export function AskDrawer({
+  chats,
+  openChatId,
+  now,
+  projectName,
+  overviewTitle,
+  sheet,
+  trigger,
+  onNew,
+  onOpen,
+  onDelete,
+  onClose,
+}: AskDrawerProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -49,7 +64,9 @@ export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger,
 
   const scopeOf = (chat: Chat) => {
     const owner = chatOwner(chat);
-    return owner.kind === "project" ? (projectName(owner.id) ?? "A deleted project") : "Your library";
+    if (owner.kind === "project") return projectName(owner.id) ?? "A deleted project";
+    if (owner.kind === "overview") return overviewTitle(owner.id) ?? "An overview you deleted";
+    return "Your library";
   };
 
   return (
@@ -82,7 +99,7 @@ export function AskDrawer({ chats, openChatId, now, projectName, sheet, trigger,
         </button>
         {groups.length === 0 && (
           <p className={styles.empty} data-testid={askDrawerTestIds.empty}>
-            Your questions across your library and projects will be here.
+            Your questions across your library, projects and overviews will be here.
           </p>
         )}
         {groups.map((group) => (
