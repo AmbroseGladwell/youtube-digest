@@ -53,8 +53,6 @@ test.describe("the running total", () => {
     await card.verifyNoSavedChip();
   });
 
-  // The chip abbreviates and a screen reader gets the word in full, so the two are
-  // checked apart; "1 mins" was the whole of OV-196.
   test("a saving of a single minute is said in the singular", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(lasting(2));
     const library = await launcher.launchExpectingLibrary();
@@ -327,8 +325,6 @@ test.describe("in the panel's overview", () => {
     return { ...overview, source: { ...overview.source, id: VideoId.parse(IWFT_VIDEO_ID), url: WATCHED_URL } };
   };
 
-  // Design 205b moves the panel's Mark read off the head and into ⋯, where the phone keeps
-  // it; the chip still comes in at the head, because that is where it was pressed.
   test("Mark as read from ⋯ brings in what it saved, and the note's end says it is read", async ({ launcher, backendSimulator }) => {
     const overview = watched(11);
     backendSimulator.overviews.seed(overview);

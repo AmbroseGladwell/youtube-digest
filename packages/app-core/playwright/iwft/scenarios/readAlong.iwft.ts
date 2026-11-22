@@ -24,7 +24,6 @@ const NOTE = makeOverview({
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
-// Nobody is signed in here, so the bar is the pacer and says so (design 1k).
 test("the reader opens on the note's first line, with the pacer naming that section", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
@@ -71,7 +70,6 @@ test("the note's two lists carry bullets, and the prose sections do not", async 
   await reader.verifyBulletedLinesRead([...NOTE.keyPoints.map((point) => point.text), ...NOTE.howToApply!.items]);
 });
 
-// A shell that cannot sign in at all is not offered a link that could not work (CLAUDE.md).
 test("a shell with no way to sign in is not offered sign-in for audio", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
@@ -195,8 +193,7 @@ test("the tabs come to rest on the masthead's lower edge, and follow it when it 
   await reader.verifyTabsRestOnTheMasthead();
 });
 
-// A real YouTube thumbnail is far wider than a phone. Rendered at its intrinsic size it
-// pushes the whole page sideways, so the stacked layout has to hold it to the column.
+// A real YouTube thumbnail is far wider than a phone, so the stacked layout must hold it to the column.
 const WIDE_THUMBNAIL =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720'%3E%3Crect width='1280' height='720' fill='%23cccccc'/%3E%3C/svg%3E";
 

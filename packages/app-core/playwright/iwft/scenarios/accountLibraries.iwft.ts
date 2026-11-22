@@ -37,7 +37,6 @@ const ofVideo = (videoId: string): Overview => {
   return { ...overview, source: { ...overview.source, id: VideoId.parse(videoId), title: `Video ${videoId}` } };
 };
 
-// The account as the server holds it, arriving on the first pull after signing in.
 const inTheAccount = (seq: number, overview: Overview): RecordChange => ({
   kind: "overview",
   id: overview.id,
@@ -58,8 +57,6 @@ const readMark = (key: number, overviewId: string): OutboxEntry => ({
   stuck: null,
 });
 
-// Each account's library is its own, and stays on the device when it signs out
-// (docs/features/account-libraries.md).
 test.describe("each account's library", () => {
   test("signing out leaves the account's overviews behind, and signing back in brings them back", async ({
     launcher,
@@ -127,8 +124,6 @@ test.describe("each account's library", () => {
   });
 });
 
-// Signed out where there are accounts, no overview is shown anywhere, and every page that
-// would show one offers an account instead (docs/architecture/tiers.md, "Signed out").
 test.describe("signed out", () => {
   test("home is onboarding's Start, showing none of the overviews on this device", async ({ launcher, backendSimulator }) => {
     backendSimulator.overviews.seed(titled("Made Before This Change"));
@@ -191,7 +186,6 @@ test.describe("signed out", () => {
   });
 });
 
-// Designs 47d: sign-out syncs first, never blocks, and says afterwards what it couldn't send.
 test.describe("signing out", () => {
   test("says it is syncing first, in place, with the menu still open", async ({ launcher, backendSimulator }) => {
     backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_HANDSHAKE);
@@ -231,7 +225,6 @@ test.describe("signing out", () => {
   });
 });
 
-// Design 47f: after a sign-in, until the account's first cycle is done.
 test("signing in opens the account's library behind its skeleton", async ({ launcher, backendSimulator }) => {
   backendSimulator.simulateEndpointStalled(EndpointKey.SYNC_CHANGES);
   await launcher.launch({ sync: true });
@@ -241,8 +234,6 @@ test("signing in opens the account's library behind its skeleton", async ({ laun
   await launcher.openingLibrary.verifyIsShown();
 });
 
-// Decisions 6 and 7, and design 47e: what this device made without an account moves into it
-// on sign-in, one overview per video, and the reader is told once.
 test.describe("the move on sign-in", () => {
   test("adds what this browser made to the account, keeps the account's copy of a video it has, and says so", async ({
     launcher,

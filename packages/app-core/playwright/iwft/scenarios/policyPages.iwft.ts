@@ -13,8 +13,6 @@ const SIGNED_IN = {
   },
 } as const;
 
-// The two public pages every policy link points at: readable by anyone, one h1, a contents
-// list of the h2 sections, and the date the text last changed (docs/features/legal-pages.md).
 test.describe("the privacy policy and the terms", () => {
   test("the privacy policy opens without an account, with its date and a contents list", async ({ launcher }) => {
     await launcher.launch({ sync: true });

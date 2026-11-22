@@ -124,7 +124,6 @@ test("without an account the field stays YouTube's, and a page link is refused, 
   expect(backendSimulator.articles.reads()).toEqual([]);
 });
 
-// OV-285: we keep no copy of an article, so regenerating away from it reads the link again.
 test("an article regenerates from its link under the same id, without opening it", async ({ page, launcher, backendSimulator }) => {
   backendSimulator.ourKey.isAvailable();
   backendSimulator.articles.answerWith({ status: "read", article: ARTICLE });

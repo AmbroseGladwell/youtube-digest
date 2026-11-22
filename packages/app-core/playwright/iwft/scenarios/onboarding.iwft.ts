@@ -9,17 +9,15 @@ import type { Launcher } from "../../support/Launcher.testHelper.js";
 import type { OnboardingPageObject } from "../../pageObjects/OnboardingPageObject.testHelper.js";
 import type { ExtractedArticle } from "@overview/domain";
 
-// Onboarding around the reader's first link (docs/features/onboarding.md, designs 327a–327m).
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const VIDEO_TITLE = "The Simulated Video";
 const CODE = "ABCD-EFGH";
 const ADA = { firstName: "Ada", email: SIMULATED_EMAIL, code: CODE };
 
-// Asked nothing yet about analytics, so the screen is shown; answered, it is passed by.
+// Asked nothing yet about analytics, so that screen is shown.
 const signedOut = { sync: true, analyticsConsent: null };
 const signedOutAnswered = { sync: true };
 
-// Nothing that costs anything runs before the account: the link is only read.
 const nothingPaidYet = (backendSimulator: BackendSimulator) => {
   expect(backendSimulator.ourKey.generations()).toHaveLength(0);
   expect(backendSimulator.getCallCount(EndpointKey.OUR_KEY_GENERATE)).toBe(0);
@@ -28,7 +26,6 @@ const nothingPaidYet = (backendSimulator: BackendSimulator) => {
   expect(backendSimulator.podcasts.transcriptionAsks()).toEqual([]);
 };
 
-// Past Your link, skipping every question there is, to the account.
 const skipToAccount = async (onboarding: OnboardingPageObject) => {
   await onboarding.confirmVideo();
   await onboarding.verifyOnScreen("saving");

@@ -14,7 +14,6 @@ import { cutTextTestIds } from "../../src/components/shared/CutText/CutTextTestI
 import { PageObject } from "./PageObject.testHelper.js";
 import { ReaderPageObject } from "./ReaderPageObject.testHelper.js";
 
-// The Ask page, over the whole library or one project (OV-354, pages 3 and 4; docs/features/chats.md).
 export class AskPagePageObject extends PageObject {
   private root = () => this.page.getByTestId(askPageTestIds.root);
   private field = () => this.root().getByTestId(chatFieldTestIds.input);
@@ -114,7 +113,6 @@ export class AskPagePageObject extends PageObject {
       await expect(this.answers().nth(answer)).not.toContainText("**");
     });
 
-  // A section's first relation group: its two chips, then "+N" whose menu lists them all (OV-362).
   verifySectionSourcesFold = (answer: number, section: number, shown: number, more: number, all: number) =>
     this.step(`verifySectionSourcesFold ${answer} ${section}`, async () => {
       const row = this.answers()
@@ -177,7 +175,6 @@ export class AskPagePageObject extends PageObject {
       await expect(this.root().getByTestId(chatComposerTestIds.picker)).toBeInViewport({ ratio: 1 });
     });
 
-  // OV-364: an answer's inline code, links and code blocks, the same in every chat.
   verifyMarkdownRead = (answer: number, { code, links, blocks }: { code: string[]; links: string[]; blocks: string[] }) =>
     this.step(`verifyMarkdownRead ${answer}`, async () => {
       const root = this.answers().nth(answer);
@@ -270,7 +267,6 @@ export class AskPagePageObject extends PageObject {
   hoverDrawerConversation = (index: number) =>
     this.step(`hoverDrawerConversation ${index}`, () => this.drawer().getByTestId(askDrawerTestIds.question).nth(index).hover());
 
-  // The tip with a cut-off name in full, or none when the name fits (OV-371).
   verifyDrawerTipReads = (index: number, text: string | null) =>
     this.step(`verifyDrawerTipReads ${index} ${text}`, async () => {
       const tip = this.drawer().getByTestId(askDrawerTestIds.item).nth(index).getByTestId(cutTextTestIds.tip);
@@ -282,7 +278,6 @@ export class AskPagePageObject extends PageObject {
       }
     });
 
-  // A press held past the long-press time, then let go: the tip shows while held (OV-371).
   holdDrawerConversation = (index: number) =>
     this.step(`holdDrawerConversation ${index}`, async () => {
       const question = this.drawer().getByTestId(askDrawerTestIds.question).nth(index);
@@ -295,7 +290,6 @@ export class AskPagePageObject extends PageObject {
   scrollDrawerToEnd = () =>
     this.step("scrollDrawerToEnd", () => this.drawer().evaluate((drawer) => drawer.scrollTo({ top: drawer.scrollHeight })));
 
-  // New chat stays at the top of the drawer, with the fade under it once the list has scrolled.
   verifyDrawerTopIsPinned = (scrolled: boolean) =>
     this.step(`verifyDrawerTopIsPinned ${scrolled}`, async () => {
       const drawerBox = (await this.drawer().boundingBox())!;
@@ -317,7 +311,6 @@ export class AskPagePageObject extends PageObject {
   openDrawerConversation = (index: number) =>
     this.step(`openDrawerConversation ${index}`, () => this.click(this.drawer().getByTestId(askDrawerTestIds.open).nth(index)));
 
-  // An overview's conversation opens on that overview, not here (OV-363).
   openDrawerOverviewConversation = (index: number): Promise<ReaderPageObject> =>
     this.step(`openDrawerOverviewConversation ${index}`, async () => {
       await this.click(this.drawer().getByTestId(askDrawerTestIds.open).nth(index));

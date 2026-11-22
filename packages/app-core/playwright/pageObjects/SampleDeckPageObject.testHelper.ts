@@ -2,7 +2,6 @@ import { expect } from "@playwright/experimental-ct-react";
 import { sampleDeckTestIds } from "../../src/features/onboarding/components/SampleDeck/SampleDeckTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Web Start's sample deck (155l): one card in front, cycling, and See all to lay it out as a list.
 export class SampleDeckPageObject extends PageObject {
   #front = () => this.page.locator(`[data-testid="${sampleDeckTestIds.card}"][data-front]`);
   #cards = () => this.get(sampleDeckTestIds.card);
@@ -17,7 +16,6 @@ export class SampleDeckPageObject extends PageObject {
       await expect(this.get(sampleDeckTestIds.counter)).toHaveText(position);
     });
 
-  // Only the front card is in the tab order while the deck is stacked.
   verifyOnlyFrontIsFocusable = (count: number) =>
     this.step("verifyOnlyFrontIsFocusable", async () => {
       await expect(this.#cards()).toHaveCount(count);
@@ -42,7 +40,6 @@ export class SampleDeckPageObject extends PageObject {
       await expect(this.get(sampleDeckTestIds.toggle)).toHaveAttribute("aria-expanded", "true");
       await expect(this.page.locator(`[data-testid="${sampleDeckTestIds.card}"][tabindex="0"]`)).toHaveCount(names.length);
       await this.expectNotToBeVisible(sampleDeckTestIds.counter);
-      // Laid out in deck order, front card first: read the rows top to bottom.
       await expect
         .poll(async () => {
           const rows = await this.#cards().evaluateAll((cards) =>

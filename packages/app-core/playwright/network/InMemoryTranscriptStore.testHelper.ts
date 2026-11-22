@@ -15,7 +15,6 @@ export class InMemoryTranscriptStore implements TranscriptStore {
     this.#transcripts.delete(videoId);
   }
 
-  // Test-only seeding helper — not part of the TranscriptStore interface.
   seedTranscript(transcript: StoredTranscript): void {
     this.#transcripts.set(transcript.videoId, transcript);
   }

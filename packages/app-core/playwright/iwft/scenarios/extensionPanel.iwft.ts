@@ -16,8 +16,7 @@ test("the side panel's masthead is the mark and Settings, with no + New and no l
   await launcher.appShell.verifyIsParedBackToThePanel();
 });
 
-// The panel is narrower than the touch breakpoint at any width Chrome is dragged to, but it
-// is a pointer surface, so its bar is the web's and not the phone's.
+// Narrower than the touch breakpoint, but a pointer surface, so its bar is the web's.
 test("the panel's + New is the web's button, with the web's gap to the account menu", async ({ launcher, page }) => {
   await page.setViewportSize({ width: 400, height: 780 });
   await launcher.launchPanel(panel);
@@ -58,10 +57,6 @@ test("a panel open on something that isn't a video says which page it wants inst
   await capture.verifySaysThereIsNoVideo();
 });
 
-// DECISIONS.md, OV-205: home's "a key missing" face is gone. A reader with no key of their
-// own still makes overviews on ours, so in a build with a server it never showed; only the
-// at-limit message routes to keys now. Create stays disabled where nothing can make one,
-// which is a shell with no server and no key — this one.
 test("without keys or a server the panel offers no button that would fail, and asks for nothing", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ activeVideoUrl: WATCHED_URL });
 
@@ -150,8 +145,6 @@ test("the panel's reader drops the trail, the stepper and the rail it has nothin
   await reader.verifyMastheadIsThePhones();
 });
 
-// The panel is a browser that fetches its own captions, so a transcript key is not one of
-// the things it is waiting for (docs/features/transcript-retrieval.md).
 test("the panel creates with the Anthropic key alone, and asks for no transcript key", async ({ launcher }) => {
   const capture = await launcher.launchPanel({
     apiKeys: ANTHROPIC_KEY,

@@ -10,8 +10,6 @@ import { signedInWelcomeTestIds } from "../../src/features/auth/components/Signe
 import { signInPageTestIds } from "../../src/features/auth/SignInPage/SignInPageTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Every step of signing in and creating an account: /sign-in and /create-account are the
-// one flow with a different first screen (docs/features/sign-in.md).
 export class SignInPageObject extends PageObject {
   verifyAsksForEmail = (
     title:
@@ -66,8 +64,6 @@ export class SignInPageObject extends PageObject {
   verifyFieldErrorReads = (text: string) =>
     this.step(`verifyFieldErrorReads ${text}`, () => expect(this.get(emailLinkFormTestIds.fieldError)).toHaveText(text));
 
-  // 205g-4: in the panel the line says the first overview makes the account, in place of a
-  // link to a page that no longer exists there.
   verifySwitchLineSays = (text: string) =>
     this.step(`verifySwitchLineSays ${text}`, async () => {
       await expect(this.get(emailLinkFormTestIds.switchLine)).toContainText(text);
@@ -118,7 +114,6 @@ export class SignInPageObject extends PageObject {
       await this.click(enterCodeTestIds.connectButton);
     });
 
-  // Inside onboarding the code comes first and sends itself once all 8 characters are in (327l-2).
   typeCode = (code: string) => this.step(`typeCode ${code}`, () => this.get(enterCodeTestIds.codeInput).fill(code));
 
   verifyCodeErrorReads = (pattern: RegExp) =>

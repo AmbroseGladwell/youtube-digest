@@ -29,8 +29,7 @@ test("a note saved before the date was kept says nothing rather than guessing", 
   await reader.verifyShowsNoPublished();
 });
 
-// The real shape of an older note: the key is absent, not null. IndexedDB reads are not
-// re-validated against the schema, so this is what actually comes back.
+// The key absent, not null: IndexedDB reads aren't re-validated, so this is what comes back.
 test("a note saved before the field existed at all still opens", async ({ launcher, backendSimulator }) => {
   const overview = overviewPublished(null);
   const video = { ...overview.source, durationMs: 842000 };

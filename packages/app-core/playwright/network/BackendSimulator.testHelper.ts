@@ -77,8 +77,7 @@ import {
 } from "./fixtures/innerTubeFixtures.js";
 import type {} from "./iwftWindow.testHelper.js";
 
-// What the simulated server hands a signed-in reader (docs/features/sign-in.md).
-// The server's quotas a month, per plan (apps/api/src/usage/overviewQuotas.ts).
+// Mirrors apps/api/src/usage/overviewQuotas.ts.
 const SIMULATED_QUOTAS: Record<Plan, { ours: number; own: number }> = {
   free: { ours: 5, own: 10 },
   "byo-plus": { ours: 10, own: 200 },
@@ -87,21 +86,15 @@ const SIMULATED_QUOTAS: Record<Plan, { ours: number; own: number }> = {
 
 export const SIMULATED_ACCOUNT_ID = "account";
 export const SIMULATED_EMAIL = "reader@example.com";
-// The provider and model our server says it makes overviews with on our key.
 export const SIMULATED_OUR_MODEL = { provider: "openai", model: "gpt-6.1-sol" } as const;
 export const SIMULATED_LINK_CODE = "ABCD-EFGH";
 export const SIMULATED_BEARER = "linked-session-token";
-// Start offers a video, an article and a recipe unless a test offers others, as the house
-// account's shares do (docs/features/onboarding.md, "Try a sample"). The video is in front.
 export const SIMULATED_SAMPLE_TITLE = "A Sample To Start From";
 
-// Where a simulated assistant is sent back to once the reader has answered.
 export const SIMULATED_ASSISTANT_CALLBACK = "https://assistant.test/callback";
 
-// Every line of simulated narration lasts this long, so a test can say where a line starts.
 export const SIMULATED_SECONDS_PER_LINE = 2;
 
-// Long enough that a test can see a sample playing before it ends.
 const SAMPLE_SECONDS = 20;
 
 const keyFor = (lines: string[], voice: string) => createHash("sha256").update(narrationKeySource(lines, voice)).digest("hex");
@@ -114,8 +107,7 @@ const readyRender = (key: string, lineCount: number, secondsPerLine = SIMULATED_
   fileUrl: `/api/audio/${key}/file`,
 });
 
-// Headless Chromium cannot decode the M4A the real service makes, so the simulated file is
-// silence as 8-bit WAV, the length the render says it is.
+// Headless Chromium can't decode the real M4A, so the simulated file is silent 8-bit WAV.
 const silentWav = (seconds: number): Buffer => {
   const sampleRate = 8000;
   const samples = Math.round(seconds * sampleRate);
@@ -141,7 +133,6 @@ interface SimulatedResponse {
   stream?: unknown[];
 }
 
-// A streamed answer is server-sent events, one per piece; everything else is JSON.
 const fulfil = (route: Route, { status, body, stream }: SimulatedResponse): Promise<void> =>
   stream === undefined
     ? route.fulfill({ status, contentType: "application/json", body: status === 204 ? "" : JSON.stringify(body) })
@@ -155,10 +146,8 @@ export interface ChatAnswerReply {
   text: string;
   citations?: ChatCitation[];
   inSource?: boolean;
-  // OV-354: what search found for the question, and the answer in sections.
   found?: Array<{ overviewId: OverviewId; title: string }>;
   sections?: ChatAnswerSections;
-  // The Ask page (OV-354): what a library or project question chose to read, and the counts.
   picked?: Array<{ overviewId: OverviewId; title: string }>;
   stats?: ChatScopeStats;
 }
@@ -212,16 +201,13 @@ export class BackendSimulator {
   #shares = new Map<string, Share>();
   #shareSnapshots = new Map<string, SharedOverview>();
   #nextShareToken = 0;
-  // The house account's shares Start offers as samples, in order; none unless a test offers them
-  // (docs/features/onboarding.md, "Try a sample").
   #startSamples: ShareToken[] = [];
   #stalled: Array<{
     endpoint: EndpointKey;
     route: Route;
     onDefault: () => SimulatedResponse;
   }> = [];
-  // The answers the chat endpoint gives, in turn, then its default; a refusal waits its turn too
-  // (docs/features/chats.md, "Asking").
+  // Answered in turn, then the default: docs/features/chats.md, "Asking".
   #chatReplies: ChatReply[] = [];
   #chatQuestions: ChatQuestionSent[] = [];
   #chatRecords = new Map<string, Chat & { rev: number }>();
@@ -230,10 +216,7 @@ export class BackendSimulator {
   #feed: RecordChange[] = [];
   #accountTranscripts = new Map<string, StoredTranscript>();
   #sharedTranscripts = new Map<string, StoredTranscript>();
-  // On, as it is in production, answering for the fixture video; null is the service off.
   #serviceTranscripts: Map<string, StoredTranscript> | null = new Map([[IWFT_VIDEO_ID, makeServiceTranscriptFixture()]]);
-  // Our server turning this caller away for now: at the daily safety cap, or asked to slow
-  // down for a moment; null when it answers.
   #serviceRefusal: { daily: boolean; retryAfterSeconds: number } | null = null;
   #minSupportedClientVersion = 1;
   #magicLinkRequests: MagicLinkRequest[] = [];
@@ -243,8 +226,6 @@ export class BackendSimulator {
   #linkSurface: AuthSurface = "web";
   #accountFirstName: string | null = null;
   #accountEmail: string = SIMULATED_EMAIL;
-  // Whether a change of email needs a code to the current address first: a session older
-  // than fifteen minutes does, a fresh one does not (docs/features/account-changes.md).
   #verificationRequired = true;
   #newAddressTaken = false;
   #revertRefusal: { reason: "expired" | "spent" | "taken"; email?: string } | null = null;
@@ -253,16 +234,13 @@ export class BackendSimulator {
   #verificationPurposes: string[] = [];
   #verificationCodes: string[] = [];
   #accountDeletions = 0;
-  // The delete answers that the session has not proved its inbox, once, as a lapsed
-  // verification would.
   #deleteNeedsVerification = false;
   #emailChangeAsks: string[] = [];
   #emailChangeCodes: string[] = [];
   #revertTokens: string[] = [];
   #sessionHasEnded = false;
   #accountPlan: Plan = "free";
-  // Off unless a test turns it on, so a reader with no key of their own still meets the key
-  // prompt everywhere else (docs/architecture/tiers.md, "Generating on our key").
+  // Off by default: docs/architecture/tiers.md, "Generating on our key".
   #ourKeyAvailable = false;
   #ourKeyRefusal: { status: number; code: string; details: Record<string, unknown> } | null = null;
   #ownMonthSpent = false;
@@ -276,7 +254,6 @@ export class BackendSimulator {
   #ourKeyFilesInto: string[] = [];
   #topicMatches: string[] = [];
   #topicPasses: TopicMatchInput[] = [];
-  // Null answers as a failed pass, so onboarding falls back to matching in code.
   #topicSuggestion: TopicSuggestionResult | null = null;
   #topicSuggestionsHeld = false;
   #topicSuggestionsAsked: Array<{ input: TopicSuggestionInput; trialToken: string | null }> = [];
@@ -343,9 +320,7 @@ export class BackendSimulator {
   };
   getCallCount = (endpoint: EndpointKey): number => this.#callCounts.get(endpoint) ?? 0;
 
-  // Lets a test hold a request open, act on the loading state it produces, and then let it
-  // through — which is the only way to drive a multi-step pipeline one step at a time
-  // without racing it (frontend-testing-guide.md 4.4).
+  // The only way to drive a multi-step pipeline a step at a time without racing it.
   releaseEndpoint = async (endpoint: EndpointKey): Promise<void> => {
     const held = this.#stalled.filter((entry) => entry.endpoint === endpoint);
     this.#stalled = this.#stalled.filter((entry) => entry.endpoint !== endpoint);
@@ -359,9 +334,7 @@ export class BackendSimulator {
     this.#generatedOutputOverrides = overrides;
   };
 
-  // Read by Launcher at mount time and passed as Playwright CT's hooksConfig — the only
-  // channel that can carry this seed data into the browser-side stores (see
-  // IwftHooksConfig.testHelper.ts). apiKeys is merged in by the Launcher itself.
+  // Playwright CT's hooksConfig is the only channel into the browser-side stores.
   buildHooksConfig = (): Omit<IwftHooksConfig, "apiKeys"> => ({
     seedOverviews: this.#seedOverviews,
     seedStates: this.#seedStates,
@@ -377,8 +350,7 @@ export class BackendSimulator {
 
   handleNetworking = async (): Promise<void> => {
     await this.#handleSyncNetworking();
-    // The WEB client is asked only for a publish date and carries no caption tracks, so it
-    // is not the call worth counting (docs/features/transcript-retrieval.md).
+    // The WEB client only asks for a publish date, so it is not counted.
     await this.#page.route("**/www.youtube.com/youtubei/v1/player**", (route) => {
       const isMetadataClient = route.request().headers()["x-youtube-client-name"]?.toUpperCase() === "WEB";
       if (isMetadataClient) {
@@ -390,8 +362,7 @@ export class BackendSimulator {
       }
       return this.#respond(route, EndpointKey.INNERTUBE_PLAYER, {
         onDefault: () => ({ status: 200, body: makePlayerResponseFixture() }),
-        // A source failure rather than a dead video: ERROR would be a fact about the
-        // video and would stop the ladder instead of falling to the next rung.
+        // 500, not ERROR: ERROR is a fact about the video and would stop the ladder.
         onError: () => ({ status: 500, body: { error: "Simulated player failure" } }),
       });
     });
@@ -404,8 +375,7 @@ export class BackendSimulator {
       }),
     );
 
-    // Every provider's model list, matched by path rather than by host: the six differ in
-    // origin and in nothing else this layer cares about.
+    // Matched by path, not host: the providers differ only in origin.
     await this.#page.route(/\/(v1\/)?models(\?|$)/, (route) =>
       this.#respond(route, EndpointKey.PROVIDER_MODELS, {
         onDefault: () => ({ status: 200, body: makeModelListResponse() }),
@@ -825,7 +795,6 @@ export class BackendSimulator {
       }),
     );
 
-    // What our server fetched lands in the shared cache, so the next reader reads it there.
     await this.#page.route("**/api/service-transcripts/*", (route) =>
       this.#respond(route, EndpointKey.SERVICE_TRANSCRIPT, {
         onDefault: () => {
@@ -969,8 +938,7 @@ export class BackendSimulator {
       if (held?.render.status !== "ready") {
         return route.fulfill({ status: 404, body: "" });
       }
-      // Byte ranges, as the real route answers them: a media element that cannot ask for a
-      // range cannot seek.
+      // Byte ranges, as the real route serves them: a media element that can't ask for a range can't seek.
       const file = silentWav(held.render.durationSeconds);
       const range = /^bytes=(\d*)-(\d*)$/.exec(route.request().headers()["range"] ?? "");
       if (range === null) {
@@ -1013,8 +981,6 @@ export class BackendSimulator {
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#articleAnswer) });
     });
 
-    // A video's card before anything is written: the video our server would fetch for it, with no
-    // kind and no transcript unless a test says otherwise (docs/features/onboarding.md).
     await this.#page.route("**/api/videos/read", (route) => {
       const { videoId } = route.request().postDataJSON() as { videoId: string };
       this.#videoReads.push(videoId);
@@ -1044,14 +1010,11 @@ export class BackendSimulator {
         : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(this.#podcastWords) });
     });
 
-    // Without a scripted answer, the check says what Create will find: the words, or, as a server
-    // that transcribes nothing does, that it can't tell.
     await this.#page.route("**/api/podcasts/transcript/check", (route) => {
       const check: TranscriptCheck = this.#podcastCheck ?? (this.#podcastWords === null ? { words: "unknown" } : { words: "found" });
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(check) });
     });
 
-    // Asked for, then asked after: each answer is the next line of the script, the last repeating.
     await this.#page.route("**/api/podcasts/transcription**", (route) => {
       if (route.request().method() === "POST") {
         this.#transcriptionAsks.push(route.request().postDataJSON() as { feedUrl: string; guid: string });
@@ -1259,15 +1222,11 @@ export class BackendSimulator {
     );
   };
 
-  // The server's own job, done here so an IWFT sees what a reader would: the copy is built
-  // from the overview that was posted, and a link keeps its token, its share date and its
-  // view count when the copy behind it is replaced (docs/features/sharing.md).
+  // A link keeps its token, share date and views when its copy is replaced.
   #putShare = ({ overview, transcript, narration }: ShareRequest): { status: number; body: unknown } => {
     const existing = [...this.#shares.values()].find((share) => share.overviewId === overview.id);
     const token = existing?.token ?? `iwftShareToken${this.#nextShareToken++}`.slice(0, 16).padEnd(16, "0");
-    // The whole copy is kept, not just the note: a simulator that dropped what was posted
-    // could not tell a share that carries its transcript from one that does not, which is
-    // how a real one shipped without (docs/features/sharing.md).
+    // The whole copy is kept so a test can tell a share carrying its transcript from one without.
     const snapshot = shareSnapshot({ overview, narration: narration ?? null });
     const { note } = snapshot;
     const share: Share = {
@@ -1428,14 +1387,12 @@ export class BackendSimulator {
     await fulfil(route, behaviour === EndpointBehaviour.ERROR ? handlers.onError() : handlers.onDefault());
   };
 
-  // Seeding and inspection, grouped per domain (frontend-testing-guide.md 4.4). Seeding
-  // only queues data for the next mount's hooksConfig; inspection reads the live,
-  // browser-side store via page.evaluate, since that's the only real store instance.
+  // Seeding queues data for the next mount; inspection reads the live browser-side store.
   overviews = {
     seed: (overview: Overview): void => {
       this.#seedOverviews.push(overview);
     },
-    // On the device and held by the server too, as anything chat asks about must be.
+    // Chat asks only about overviews the server holds too.
     seedSynced: (overview: Overview): void => {
       this.#seedOverviews.push(overview);
       this.#feed.push({
@@ -1464,10 +1421,6 @@ export class BackendSimulator {
       this.#page.evaluate((overviewId) => window.__iwftStores__.overviewStore.failStateWritesFor(overviewId), id),
   };
 
-  // The account as the sync server holds it: what a pull would bring down, and where the
-  // server puts its write floor (docs/features/sync-client.md).
-  // Chat about an overview (docs/features/chats.md). An answer is stored as the server stores it,
-  // and its record joins the change feed so sync brings it down behind the stream.
   chats = {
     answerWith: (reply: ChatAnswerReply): void => {
       this.#chatReplies.push({ kind: "answer", ...reply });
@@ -1505,8 +1458,7 @@ export class BackendSimulator {
     const at = new Date().toISOString();
     const chatId = chatRecordId(request.overviewId, request.conversationId);
     const known = this.#chatRecords.get(chatId);
-    // As the server labels them: S1 on, never sending one twice, and a pinned overview by its title
-    // in the library; pinned projects aren't expanded here.
+    // Server labelling: S1 up, never repeated; pinned overviews by title, pinned projects not expanded.
     const before = (known?.messages ?? []).flatMap((message) => (message.from === "reader" ? (message.sources ?? []) : []));
     const library = new Map(this.#seedOverviews.map((overview) => [overview.id as string, overview.source.title]));
     const sources: ChatSource[] = [];
@@ -1565,8 +1517,6 @@ export class BackendSimulator {
     };
   };
 
-  // A question on the Ask page, answered as the server answers it: choosing, what it chose, the
-  // intro as text, then each section whole (OV-353, OV-354).
   #answerAsk = (owner: ChatOwner, request: Omit<ChatQuestionSent, "overviewId">): SimulatedResponse => {
     this.#chatQuestions.push({ overviewId: owner.kind === "library" ? "library" : `project:${owner.id}`, ...request });
     const reply = this.#chatReplies.shift() ?? DEFAULT_CHAT_REPLY;
@@ -1648,31 +1598,22 @@ export class BackendSimulator {
       this.#minSupportedClientVersion = version;
     },
     cursor: () => this.#page.evaluate(() => window.__iwftStores__.syncStorage?.cursor() ?? null),
-    // Writes this device made and has not sent yet, as the open library's outbox holds them.
     queueLocalWrites: (entries: OutboxEntry[]) =>
       this.#page.evaluate((queued) => {
         for (const entry of queued) {
           window.__iwftStores__.syncStorage?.seedPending(entry);
         }
       }, entries),
-    // How many overviews one of this device's libraries still holds, the no-account one under null.
     overviewsHeldIn: (accountId: string | null) =>
       this.#page.evaluate(async (id) => (await window.__iwftLibraries__.get(id)?.overviewStore.listOverviews())?.length ?? 0, accountId),
-    // Whether a library was ever enrolled into the account, which is what pushes all of it.
     enrolled: (accountId: string | null) =>
       this.#page.evaluate((id) => window.__iwftLibraries__.get(id)?.syncStorage?.enrolled ?? false, accountId),
-    // The browser saying the network is back, which is one of the things that starts a cycle.
     simulateBackOnline: () => this.#page.evaluate(() => window.dispatchEvent(new Event("online"))),
   };
 
-  // The links the reader has given out, as the server holds them (docs/features/sharing.md).
   shares = {
     live: (): Share[] => [...this.#shares.values()],
-    // What was actually uploaded behind a link, which is the only way to see that the copy
-    // carries everything the reader could see.
     snapshot: (token: string): SharedOverview | null => this.#shareSnapshots.get(token) ?? null,
-    // The copy behind the link was made from an earlier note, which is what the stored
-    // hash disagreeing with the reader's own means (docs/features/sharing.md).
     simulateCopyIsStale: (): void => {
       for (const [token, share] of this.#shares) {
         this.#shares.set(token, { ...share, contentHash: "stale".padEnd(64, "0") });
@@ -1680,9 +1621,6 @@ export class BackendSimulator {
     },
   };
 
-  // Start's samples: each overview is shared by the house account, not the reader, so it isn't
-  // among the reader's own links. Replaces the one offered by default, and offering none
-  // offers none. Says the tokens, in the order Start offers them.
   startSamples = {
     offer: (...overviews: Overview[]): ShareToken[] => {
       this.#startSamples = overviews.map((overview, index) => {
@@ -1694,8 +1632,6 @@ export class BackendSimulator {
     },
   };
 
-  // Sign-in as the server sees it: what was asked for, what was presented, and which
-  // shell the link the reader opens was asked for from (docs/features/sign-in.md).
   auth = {
     magicLinkRequests: (): MagicLinkRequest[] => [...this.#magicLinkRequests],
     signInAttempts: (): string[] => [...this.#signInAttempts],
@@ -1707,11 +1643,9 @@ export class BackendSimulator {
     accountIsNamed: (firstName: string): void => {
       this.#accountFirstName = firstName;
     },
-    // The account's email as the server holds it, which another device may have changed.
     accountEmailIs: (email: string): void => {
       this.#accountEmail = email;
     },
-    // A session made in the last fifteen minutes: no code to the current address first.
     sessionIsFresh: (): void => {
       this.#verificationRequired = false;
     },
@@ -1732,7 +1666,6 @@ export class BackendSimulator {
     emailChangeAsks: (): string[] => [...this.#emailChangeAsks],
     emailChangeCodes: (): string[] => [...this.#emailChangeCodes],
     revertTokens: (): string[] => [...this.#revertTokens],
-    // The server no longer knows the session this device still holds.
     sessionHasLapsed: (): void => {
       this.#sessionLapsed = true;
     },
@@ -1745,7 +1678,6 @@ export class BackendSimulator {
     },
   };
 
-  // A video link read for its card, kind and transcript before the account (OV-327).
   videos = {
     answerWith: (read: VideoRead): void => {
       this.#videoAnswer = read;
@@ -1753,30 +1685,24 @@ export class BackendSimulator {
     reads: (): string[] => [...this.#videoReads],
   };
 
-  // A pasted link, as our server's fetch answers it (docs/features/pasted-article-links.md).
   articles = {
     answerWith: (read: ArticleRead): void => {
       this.#articleAnswer = read;
     },
     reads: (): string[] => [...this.#articleReads],
     trialTokensSent: (): Array<string | null> => [...this.#articleReadTrialTokens],
-    // Signed out, the trial's reads used up on the device or across its network.
     trialReadsSpent: (quota: "trial-reads" | "trial-reads-address"): void => {
       this.#articleReadsSpent = quota;
     },
   };
 
-  // A pasted podcast link, as our server reads it, and the episode's words from its rungs
-  // (docs/features/podcast-links.md, docs/features/podcast-transcripts.md).
   podcasts = {
     answerWith: (read: PodcastRead): void => {
       this.#podcastAnswer = read;
     },
-    // The words our server finds for the episode; without them, it found none.
     wordsAre: (transcript: StoredTranscript): void => {
       this.#podcastWords = transcript;
     },
-    // Reads wait, unanswered, until let go: what the reader sees while our server looks.
     holdReads: (): void => {
       this.#podcastReadsHeld = [];
     },
@@ -1789,27 +1715,21 @@ export class BackendSimulator {
     },
     reads: (): string[] => [...this.#podcastReads],
     transcriptAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#podcastTranscriptAsks],
-    // What the check before Create says of the episode's words (design 305c).
     checkSays: (check: TranscriptCheck): void => {
       this.#podcastCheck = check;
     },
-    // Create finds no words, and says this server would transcribe the episode (design 305c-2).
     offersTranscribing: (): void => {
       this.#podcastTranscribable = true;
     },
-    // The transcription's states, asked for and then asked after, in order.
     transcribesAs: (...states: PodcastTranscription[]): void => {
       this.#transcriptionScript = states;
     },
     transcriptionAsks: (): Array<{ feedUrl: string; guid: string }> => [...this.#transcriptionAsks],
-    // The month's transcribing on the reader's usage (design 305m).
     transcribingUsed: (usage: TranscriptionUsage): void => {
       this.#transcriptionUsage = usage;
     },
   };
 
-  // Our key as our server offers it, and the reservations the reader's own key takes
-  // (docs/architecture/tiers.md, "Which key an overview uses").
   ourKey = {
     isAvailable: (): void => {
       this.#ourKeyAvailable = true;
@@ -1823,15 +1743,13 @@ export class BackendSimulator {
     ownMonthIsSpent: (): void => {
       this.#ownMonthSpent = true;
     },
-    // Overviews the account made this month before the test began, on each key.
     monthHasMade: (made: { ours?: number; own?: number }): void => {
       this.#madeEarlierThisMonth = { ours: made.ours ?? 0, own: made.own ?? 0 };
     },
     anthropicIsOutOfCredit: (): void => {
       this.#anthropicOutOfCredit = true;
     },
-    // The request is turned down for the model it names, as a smaller model's structured-output
-    // limits turn down the overview's schema (OV-247).
+    // As a smaller model's structured-output limits turn down the overview's schema (OV-247).
     anthropicRefusesTheModel: (): void => {
       this.#anthropicRefusesModel = true;
     },
@@ -1839,7 +1757,6 @@ export class BackendSimulator {
     writesHowToApply: (items: string[]): void => {
       this.#ourKeyHowToApply = items;
     },
-    // Which of the projects it is offered, by name, our key files the overview into.
     filesInto: (projectNames: string[]): void => {
       this.#ourKeyFilesInto = projectNames;
     },
@@ -1847,29 +1764,24 @@ export class BackendSimulator {
       this.#profilePassItems = items;
     },
     profilePasses: (): ProfilePassInput[] => [...this.#profilePasses],
-    // Which of the reader's topics a sample is sorted into, of those it's asked about.
     sortsSampleInto: (names: string[]): void => {
       this.#topicMatches = names;
     },
     topicPasses: (): TopicMatchInput[] => [...this.#topicPasses],
-    // What the model suggests for onboarding's topics screen; left unset, the pass fails.
+    // Left unset, the suggestion pass fails.
     suggestsTopics: (result: TopicSuggestionResult): void => {
       this.#topicSuggestion = result;
     },
     topicSuggestionsAsked: () => [...this.#topicSuggestionsAsked],
-    // The model's answer never arrives, so onboarding goes on with what it matched in code.
     holdsTopicSuggestions: (): void => {
       this.#topicSuggestionsHeld = true;
     },
-    // The trial token each generation on our key carried, null for one made by an account.
     trialTokensSent: (): Array<string | null> => [...this.#trialTokensSent],
     trialTokensIssued: (): number => this.#trialTokensIssued,
     reservations: (): Array<{ overviewId: string; shareToken?: string }> => [...this.#reservations],
     releases: (): string[] => [...this.#releases],
   };
 
-  // Narration as the server holds it: rendered already, still being made, given up on,
-  // or refused because the account has too much waiting (docs/features/audio-player.md).
   narration = {
     seedReady: (overview: Overview, voice: NarrationVoice = DEFAULT_NARRATION_VOICE, secondsPerLine = SIMULATED_SECONDS_PER_LINE): void => {
       const lines = spokenScript(overview);
@@ -1878,7 +1790,6 @@ export class BackendSimulator {
     },
     isStored: (overview: Overview, voice: NarrationVoice): boolean =>
       this.#renders.get(keyFor(spokenScript(overview), voice))?.render.status === "ready",
-    // One rendered sample per offered voice, as the deploy's release step leaves them.
     seedSamples: (): void => {
       this.#samples = NarrationVoice.options.map((voice) => {
         const lines = ["Hello.", `A sample in ${voice}.`];
@@ -1915,7 +1826,6 @@ export class BackendSimulator {
     requestedPriorities: (): string[] => [...this.#narrationPriorities],
   };
 
-  // An assistant waiting on the reader's answer (docs/features/mcp-connector.md).
   connections = {
     seedRequest: (request: ConnectionRequest): void => {
       this.#connectionRequest = request;
@@ -1927,15 +1837,12 @@ export class BackendSimulator {
     revoked: (): string[] => [...this.#revoked],
   };
 
-  // What the app told /api/events, batch by batch and flattened (docs/architecture/analytics.md).
   analytics = {
     batches: (): AnalyticsEventBatch[] => [...this.#eventBatches],
     events: (): Array<{ name: string; props: Record<string, unknown> }> =>
       this.#eventBatches.flatMap(({ events }) => events.map(({ name, props }) => ({ name, props }))),
     eventNames: (): string[] => this.#eventBatches.flatMap(({ events }) => events.map(({ name }) => name)),
-    // What a reader without an account saying no told /api/events/declined.
     declines: (): AnalyticsDeclined[] => [...this.#declines],
-    // What a shared link's page told /api/shares/:token/events, with the token it was sent under.
     sharedPage: {
       batches: (): Array<{ token: string; batch: SharedPageEventBatch }> => [...this.#sharedPageEventBatches],
       events: (): Array<{ name: string; props: Record<string, unknown> }> =>
@@ -1943,7 +1850,6 @@ export class BackendSimulator {
     },
   };
 
-  // What the app told /api/errors, batch by batch and flattened (docs/architecture/errors-and-logs.md).
   errors = {
     batches: (): ClientErrorBatch[] => [...this.#errorBatches],
     reported: (): ClientErrorBatch["errors"] => this.#errorBatches.flatMap(({ errors }) => errors),
@@ -1954,22 +1860,16 @@ export class BackendSimulator {
     seed: (transcript: StoredTranscript): void => {
       this.#seedTranscripts.push(transcript);
     },
-    // What our own server answers with for this transcript's video
-    // (docs/architecture/server-side-transcripts.md).
     seedService: (transcript: StoredTranscript): void => {
       this.#serviceTranscripts ??= new Map();
       this.#serviceTranscripts.set(transcript.videoId, transcript);
     },
-    // A server with its fetching switched off, which says so before anything is asked.
     serviceIsOff: (): void => {
       this.#serviceTranscripts = null;
     },
-    // This caller has reached our server's daily safety cap, which resets in this many
-    // seconds (docs/architecture/server-side-transcripts.md, "Limits").
     serviceCapReached: (resetsInSeconds: number): void => {
       this.#serviceRefusal = { daily: true, retryAfterSeconds: resetsInSeconds };
     },
-    // The ordinary per-address request limit: asked to slow down for this many seconds.
     serviceBusy: (retryAfterSeconds: number): void => {
       this.#serviceRefusal = { daily: false, retryAfterSeconds };
     },
@@ -1978,15 +1878,12 @@ export class BackendSimulator {
     },
   };
 
-  // What the server's embeddings would find for a search, closest first.
   meaning = {
     seed: (query: string, overviewIds: string[]): void => {
       this.#meaningMatches.set(query, overviewIds);
     },
   };
 
-  // YouTube's side of a playlist, as /api/playlists/:id answers for it, and what this library
-  // already follows and has queued (docs/features/playlists.md, docs/features/capture-queue.md).
   playlists = {
     seed: (lookup: PlaylistLookup): void => {
       this.#playlists.set(lookup.id, lookup);
@@ -2015,7 +1912,6 @@ export class BackendSimulator {
     get: () => this.#page.evaluate(() => window.__iwftStores__.settingsStore.get()),
   };
 
-  // Projects as this device holds them (docs/features/projects.md).
   projects = {
     seed: (project: Project): void => {
       this.#seedProjects.push(project);

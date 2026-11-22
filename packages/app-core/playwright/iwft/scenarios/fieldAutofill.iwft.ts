@@ -92,8 +92,7 @@ test("the extension's server address is a link field with no suggestions, beside
   await signIn.verifyFieldAttributes("server-url", LINK_FIELD);
 });
 
-// Every provider's field, not just the one that used to exist: a key is a key whoever
-// issued it, and a password manager offering to save one is the same mistake six times.
+// A key is a key whoever issued it, so every provider's field is checked.
 for (const provider of ["anthropic", "openai", "gemini", "deepseek", "xai", "mistral"] as const) {
   test(`the ${provider} key is kept away from password managers`, async ({ launcher }) => {
     await launcher.launch();

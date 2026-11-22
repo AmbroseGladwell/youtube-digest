@@ -321,7 +321,6 @@ test.describe("a project's page", () => {
   });
 });
 
-// Saved overviews that might fit, found by meaning (docs/features/projects.md, "Offering what's already saved").
 test.describe("overviews that might fit a project", () => {
   const WITH_ACCOUNT = { sync: true, syncConnection: { ...SIGNED_IN.syncConnection, accountId: SIMULATED_ACCOUNT_ID } };
   const project = makeProject();

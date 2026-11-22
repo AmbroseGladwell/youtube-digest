@@ -34,8 +34,6 @@ const sharedPayload = (overview: Overview): SharePayload => ({
   }),
 });
 
-// OV-191: the shared page draws the reader's own image, small on every visit.
-
 test("the video's image leads the shared head at the tile's size beside the channel, and a click makes it the column's width and back", async ({
   launcher,
   backendSimulator,

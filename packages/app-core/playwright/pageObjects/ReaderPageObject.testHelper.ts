@@ -127,18 +127,13 @@ export class ReaderPageObject extends PageObject {
   verifyChannelReads = (channel: string) =>
     this.step(`verifyChannelReads ${channel}`, () => expect(this.get(readerMastheadTestIds.channel)).toHaveText(channel));
 
-  // The head is four facts wide on the desktop reader and two in the panel, so what it
-  // leaves out is as much the behaviour as what it prints.
   verifyMastheadOmits = (pattern: RegExp) =>
     this.step(`verifyMastheadOmits ${pattern.source}`, () => expect(this.get(readerMastheadTestIds.root)).not.toHaveText(pattern));
 
   verifyMastheadMentions = (pattern: RegExp) =>
     this.step(`verifyMastheadMentions ${pattern.source}`, () => expect(this.get(readerMastheadTestIds.root)).toHaveText(pattern));
 
-  // Same line, measured rather than assumed: design 4a puts the verdict and the warnings
-  // on the channel's line, above the title, rather than in a second band. Overlap rather
-  // than a shared top edge — a chip carries padding that plain text on the same line does
-  // not, so their boxes start a couple of pixels apart.
+  // Overlap, not a shared top edge: a chip's padding starts its box a couple of pixels lower.
   verifyJudgementSharesTheChannelLine = () =>
     this.step("verifyJudgementSharesTheChannelLine", () =>
       expect(async () => {
@@ -158,9 +153,7 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
-  // Both halves of the bug this covers: a menu anchored to the wrong edge leaves the
-  // window, and one trapped in the sticky head's stacking context is painted over by
-  // the tab strip.
+  // A menu on the wrong edge leaves the window; one in the head's stacking context is painted over.
   verifyActionsMenuFitsAndIsOnTop = () =>
     this.step("verifyActionsMenuFitsAndIsOnTop", () =>
       expect(async () => {
@@ -187,7 +180,6 @@ export class ReaderPageObject extends PageObject {
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
-  // Somewhere that is nobody's popover: the note's own title.
   clickAwayFromAnyPopover = () => this.step("clickAwayFromAnyPopover", () => this.click(readerMastheadTestIds.title));
 
   verifyEditTopicsCountReads = (count: string) =>
@@ -266,8 +258,7 @@ export class ReaderPageObject extends PageObject {
 
   verifyNoLineIsActive = () => this.step("verifyNoLineIsActive", () => this.expectNotToBeVisible(readAlongNoteTestIds.activeLine));
 
-  // Watched rather than sampled: the scroll this is about happened on its own, a frame
-  // after the note rendered, so a single reading taken afterwards would have missed it.
+  // Watched, not sampled: the scroll happens on its own a frame after the note renders.
   verifyTheNoteStaysWhereItWasOpened = () =>
     this.step("verifyTheNoteStaysWhereItWasOpened", async () => {
       await expect(this.get(readAlongNoteTestIds.activeLine)).toBeVisible();
@@ -349,7 +340,6 @@ export class ReaderPageObject extends PageObject {
   clickSkipForward = () => this.step("clickSkipForward", () => this.click(readerPlayerBarTestIds.skipForwardButton));
   clickSkipBack = () => this.step("clickSkipBack", () => this.click(readerPlayerBarTestIds.skipBackButton));
 
-  // Design 2: [ and ] step the spoken line, from anywhere on the page but a field.
   pressLineKey = (key: "[" | "]") =>
     this.step(`pressLineKey ${key}`, () => this.page.keyboard.press(key === "[" ? "BracketLeft" : "BracketRight"));
 
@@ -365,7 +355,6 @@ export class ReaderPageObject extends PageObject {
       }
     });
 
-  // The label line is the bar's live region: every state says itself there.
   verifyBarSays = (text: string | RegExp) =>
     this.step(`verifyBarSays ${String(text)}`, () => expect(this.get(readerPlayerBarTestIds.label)).toHaveText(text, { timeout: 10_000 }));
 
@@ -377,14 +366,12 @@ export class ReaderPageObject extends PageObject {
       pacer ? this.expectToBeVisible(readerPlayerBarTestIds.pacerTag) : this.expectNotToBeVisible(readerPlayerBarTestIds.pacerTag),
     );
 
-  // Design 43i: the voice the bar names opens the voice setting, wherever the bar is.
   openVoiceSettingFromBar = (): Promise<SettingsPageObject> =>
     this.step("openVoiceSettingFromBar", async () => {
       await this.click(readerPlayerBarTestIds.voiceLink);
       return new SettingsPageObject(this.testContext).verifyIsShown();
     });
 
-  // Design 43j: a pill beside the rate on the web bar, a link on the label line in the panel.
   clickReRecord = () =>
     this.step("clickReRecord", async () => {
       const pill = this.get(readerPlayerBarTestIds.reRecordButton);
@@ -414,8 +401,7 @@ export class ReaderPageObject extends PageObject {
 
   verifyShowsPreparingSweep = () => this.step("verifyShowsPreparingSweep", () => this.expectToBeVisible(playerScrubberTestIds.sweep));
 
-  // Where the scrubber says the clock is, read off the slider rather than the text so it
-  // holds on every surface.
+  // Read off the slider rather than the text so it holds on every surface.
   readScrubberSeconds = (): Promise<number> =>
     this.step("readScrubberSeconds", async () => Number(await this.get(playerScrubberTestIds.root).getAttribute("aria-valuenow")));
 
@@ -424,8 +410,6 @@ export class ReaderPageObject extends PageObject {
       expect.poll(() => this.readScrubberSeconds(), { timeout: 10_000 }).toBeGreaterThanOrEqual(seconds),
     );
 
-  // Design 2a: held partway along, the scrubber names where it will land, and letting go
-  // lands there.
   dragScrubberTo = (fraction: number): Promise<string> =>
     this.step(`dragScrubberTo ${fraction}`, async () => {
       const box = (await this.get(playerScrubberTestIds.root).boundingBox())!;
@@ -447,8 +431,6 @@ export class ReaderPageObject extends PageObject {
   clickRate = () => this.step("clickRate", () => this.click(readerPlayerBarTestIds.rateButton));
   clickFavourite = () => this.step("clickFavourite", () => this.click(readerMastheadTestIds.favouriteButton));
 
-  // The head's circle is the row's circle: the control keeps its shape between a row and
-  // the note that row opens, which is the whole reason the two sizes are one number.
   verifyFavouriteMatchesTheRow = (size: number) =>
     this.step(`verifyFavouriteMatchesTheRow ${size}`, async () => {
       const box = (await this.get(readerMastheadTestIds.favouriteButton).boundingBox())!;
@@ -456,7 +438,6 @@ export class ReaderPageObject extends PageObject {
       expect(Math.round(box.height)).toBe(size);
     });
 
-  // Design 4b: read state lives in the ⋯ menu, so marking read is a menu choice.
   clickMarkRead = () =>
     this.step("clickMarkRead", async () => {
       await this.openActionsMenu();
@@ -480,11 +461,9 @@ export class ReaderPageObject extends PageObject {
       shown ? this.expectToBeVisible(noteEndActionsTestIds.root) : this.expectNotToBeVisible(noteEndActionsTestIds.root),
     );
 
-  // What a screen reader is given: the figure in full, where the chip itself abbreviates.
   verifySavedChipSays = (text: string) =>
     this.step(`verifySavedChipSays ${text}`, () => expect(this.get(savedChipTestIds.root)).toContainText(text));
 
-  // What the reader sees, which the spoken line above would otherwise cover for.
   verifySavedChipFigureReads = (text: string) =>
     this.step(`verifySavedChipFigureReads ${text}`, () => expect(this.get(savedChipTestIds.figure)).toHaveText(text));
 
@@ -559,8 +538,6 @@ export class ReaderPageObject extends PageObject {
     return new EpisodePlayerPageObject(this.testContext);
   }
 
-  // Design 106l: the show's art leads the head and goes where the reader came from, with the
-  // show and its Podcast chip beside it.
   verifyEpisodeHead = ({ show, wayOut, href }: { show: string; wayOut: string; href: string }) =>
     this.step(`verifyEpisodeHead ${show}`, async () => {
       const art = this.get(readerMastheadTestIds.root).getByTestId(episodeArtTestIds.link);
@@ -623,9 +600,7 @@ export class ReaderPageObject extends PageObject {
 
   clickTab = (tab: string) => this.step(`clickTab ${tab}`, () => this.click(readerTabsTestIds.tab(tab)));
 
-  // The indicator's position is measured off the laid-out buttons, so this is what fails
-  // if that measurement ever stops happening — the three labels are different widths and
-  // nothing else would notice.
+  // The labels differ in width, so nothing else would notice the measurement stopping.
   verifyTabIndicatorSitsUnder = (tab: string) =>
     this.step(`verifyTabIndicatorSitsUnder ${tab}`, () =>
       expect(async () => {
@@ -648,8 +623,7 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(readerMastheadTestIds.favouriteButton)).toHaveAttribute("aria-pressed", String(isFavourited)),
     );
 
-  // Read state is reported by what the menu offers to do next, so the menu is opened to
-  // read it and put away again.
+  // Read state shows only as what the menu offers, so the menu is opened and put away.
   verifyIsRead = (isRead: boolean) =>
     this.step(`verifyIsRead ${isRead}`, async () => {
       await this.openActionsMenu();
@@ -760,8 +734,7 @@ export class ReaderPageObject extends PageObject {
       ).toHaveText(text),
     );
 
-  // The raised card bleeds past the paragraph it holds, so the sticky head has to be
-  // wider than the card it hides, not as wide as the text under it.
+  // The raised card bleeds past its paragraph, so the head must be wider than the card.
   verifyTranscriptHeadHidesTheBlocksPassingUnderIt = () =>
     this.step("verifyTranscriptHeadHidesTheBlocksPassingUnderIt", async () => {
       const head = (await this.get(transcriptPanelTestIds.head).boundingBox())!;
@@ -892,8 +865,6 @@ export class ReaderPageObject extends PageObject {
 
   dismissSavedLocallyNote = () => this.step("dismissSavedLocallyNote", () => this.click(savedLocallyNoteTestIds.dismissButton));
 
-  // Design 205b: the panel's reader is the phone's, so the head carries the way back, the
-  // image, Listen and Favourite — and no stepper, which is the wide reader's alone.
   verifyMastheadIsThePhones = () =>
     this.step("verifyMastheadIsThePhones", async () => {
       await this.expectToBeVisible(readerMastheadTestIds.backLink);
@@ -908,8 +879,7 @@ export class ReaderPageObject extends PageObject {
       expect(this.get(transcriptPanelTestIds.errorNote)).toHaveText(pattern),
     );
   clickRetryTranscript = () => this.step("clickRetryTranscript", () => this.click(transcriptPanelTestIds.retryButton));
-  // YouTube's own phrase for its speech-recognition track, not the developer's
-  // (docs/features/transcript-storage.md).
+  // YouTube's own phrase for its speech-recognition track.
   verifyShowsMachineTranscribedNote = (label = "Auto-generated") => expect(this.get(transcriptPanelTestIds.sourceNote)).toHaveText(label);
   verifyShowsNoMachineTranscribedNote = () => this.expectNotToBeVisible(transcriptPanelTestIds.sourceNote);
   verifyShowsChaptersPanel = () => this.expectToBeVisible(chaptersPanelTestIds.root);
@@ -943,7 +913,6 @@ export class ReaderPageObject extends PageObject {
         : expect(seekControls).toHaveCount(0));
     });
 
-  // The wide reader's chapter is a link out, opened beside the note rather than over it.
   verifyChapterRangeLinksTo = (range: string, href: string) =>
     this.step(`verifyChapterRangeLinksTo ${range} ${href}`, async () => {
       const link = this.chapterRange(range);
@@ -999,8 +968,7 @@ export class ReaderPageObject extends PageObject {
 
   private currentTranscriptBlock = (): Locator => this.get(transcriptPanelTestIds.row).and(this.page.locator('[data-current="true"]'));
 
-  // Where the mark begins. A chapter marks its whole stretch, so this is the first block
-  // of the run and the one scrolled to; verifyTargetedTranscriptBlocksRead takes the rest.
+  // The first block of a chapter's run, the one scrolled to.
   verifyTargetTranscriptBlockReads = (text: string | RegExp) =>
     this.step(`verifyTargetTranscriptBlockReads ${String(text)}`, async () => {
       await expect(this.targetTranscriptBlock().first().getByTestId(transcriptPanelTestIds.rowText)).toHaveText(text);
@@ -1013,8 +981,6 @@ export class ReaderPageObject extends PageObject {
   verifyNoTranscriptBlockIsTargeted = () =>
     this.step("verifyNoTranscriptBlockIsTargeted", () => expect(this.targetTranscriptBlock()).toHaveCount(0));
 
-  // The whole stretch a chapter marks, in order, so the run's first and last blocks are
-  // both named rather than only its start (docs/features/chapters.md).
   verifyTargetedTranscriptBlocksRead = (texts: RegExp[]) =>
     this.step(`verifyTargetedTranscriptBlocksRead ${texts.length}`, () =>
       expect(this.targetTranscriptBlock().getByTestId(transcriptPanelTestIds.rowText)).toHaveText(texts),
@@ -1026,10 +992,7 @@ export class ReaderPageObject extends PageObject {
     );
   verifyShowsOverviewPanel = () => this.expectToBeVisible(readerPageTestIds.overviewPanel);
 
-  // Scrolled by script and confirmed, rather than a wheel event and a fixed pause: under
-  // load a wheel event can land after the pause has ended. The target is retried until the
-  // height has settled, tall page or short: a reader just opened can still reset its scroll
-  // (a page too short for the target only ever hid that, by waiting).
+  // Scrolled by script and confirmed: under load a wheel event can land after a fixed pause.
   scrollDown = (pixels: number) =>
     this.step(`scrollDown ${pixels}`, async () => {
       const target = Math.max(0, (await this.page.evaluate(() => window.scrollY)) + pixels);
@@ -1055,11 +1018,7 @@ export class ReaderPageObject extends PageObject {
         .toBe(true);
     });
 
-  // The block across the middle of the window, which is what the reading position
-  // remembers (docs/features/reading-position.md).
-  // Where the transcript says you are: the first block that starts below the sticky head,
-  // which is the one a block scrolled to comes to rest as
-  // (`transcriptRestingLine.ts`).
+  // The first block below the sticky head, where a scrolled-to block rests (transcriptRestingLine.ts).
   readTranscriptBlockAtTheRestingLine = (): Promise<string | null> =>
     this.step("readTranscriptBlockAtTheRestingLine", () =>
       this.page.evaluate(
@@ -1088,8 +1047,6 @@ export class ReaderPageObject extends PageObject {
       expect.poll(() => this.readTranscriptBlockAtTheRestingLine(), { timeout: 2_000 }).toBe(text),
     );
 
-  // What the reported bug was: a block the transcript scrolled to came to rest behind the
-  // sticky head, and the taller the block the more of it went.
   verifyCurrentTranscriptBlockIsWhollyBelowTheHead = () =>
     this.step("verifyCurrentTranscriptBlockIsWhollyBelowTheHead", () =>
       expect(async () => {
@@ -1102,8 +1059,6 @@ export class ReaderPageObject extends PageObject {
   verifyTranscriptIsAtTheTop = () =>
     this.step("verifyTranscriptIsAtTheTop", () => expect.poll(() => this.page.evaluate(() => window.scrollY), { timeout: 2_000 }).toBe(0));
 
-  // Design 205e: the line in the band under the bar, saying the tab has moved on under
-  // the open note.
   verifyOnThisTabLineIsShown = (shown: boolean) =>
     this.step(`verifyOnThisTabLineIsShown ${shown}`, () =>
       shown ? this.expectToBeVisible(onThisTabLineTestIds.root) : this.expectNotToBeVisible(onThisTabLineTestIds.root),
@@ -1115,9 +1070,7 @@ export class ReaderPageObject extends PageObject {
       await expect(this.get(onThisTabLineTestIds.offer)).toHaveText(offer);
     });
 
-  // Design 205e-5: a stone-tint pill, with the offer as plain text rather than a button.
-  // An undefined custom property falls back to nothing in silence, which is how the pill
-  // shipped square, so what is asserted is the drawn radius and not the declaration.
+  // Asserts the drawn radius: an undefined custom property once shipped the pill square, silently.
   verifyOnThisTabLineIsDrawnAsAPill = () =>
     this.step("verifyOnThisTabLineIsDrawnAsAPill", async () => {
       const line = await this.get(onThisTabLineTestIds.root).evaluate((element) => {
@@ -1137,8 +1090,6 @@ export class ReaderPageObject extends PageObject {
 
   dismissOnThisTabLine = () => this.step("dismissOnThisTabLine", () => this.click(onThisTabLineTestIds.dismissButton));
 
-  // At rest the head is still in flow above the tabs, so nothing of the note's own is
-  // held against the bar yet (design 205b).
   verifyTabsAreBelowTheHead = () =>
     this.step("verifyTabsAreBelowTheHead", () =>
       expect(async () => {
@@ -1148,9 +1099,6 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
-  // What the panel holds once the note has scrolled: the app's bar, the tabs, and — on
-  // the transcript — its tools. The head is not in it: it goes by as the phone's does,
-  // which is what leaves the note its room (design 205b, 205e-5).
   verifyPanelChromeStacks = (withTranscriptTools: boolean) =>
     this.step(`verifyPanelChromeStacks ${withTranscriptTools}`, () =>
       expect(async () => {
@@ -1166,7 +1114,6 @@ export class ReaderPageObject extends PageObject {
       }).toPass({ timeout: 2_000 }),
     );
 
-  // Flush on a narrow panel, a rem in from the foot where the bar floats as a card.
   verifyPlayerHoldsTheWindowFoot = () =>
     this.step("verifyPlayerHoldsTheWindowFoot", () =>
       expect(async () => {

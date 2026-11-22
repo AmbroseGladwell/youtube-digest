@@ -4,7 +4,6 @@ import { revertEmailPageTestIds } from "../../src/features/auth/RevertEmailPage/
 import { PageObject } from "./PageObject.testHelper.js";
 import { SignInPageObject } from "./SignInPageObject.testHelper.js";
 
-// Where the old address's "This wasn't me" button lands (docs/features/account-changes.md).
 export class RevertEmailPageObject extends PageObject {
   verifyIsWorking = () => this.step("verifyIsWorking", () => this.expectToBeVisible(revertEmailPageTestIds.working));
 

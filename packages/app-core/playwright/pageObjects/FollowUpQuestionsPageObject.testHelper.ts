@@ -4,7 +4,6 @@ import { toastTestIds } from "../../src/components/shared/Toast/ToastTestIds.js"
 import { followUpAssistantMenuTestIds } from "../../src/features/reader/components/FollowUpAssistantMenu/FollowUpAssistantMenuTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Questions to ask next, last in the note, each taken to the reader's own assistant (OV-266).
 export class FollowUpQuestionsPageObject extends PageObject {
   private questions = () => this.get(followUpQuestionsTestIds.question);
   private menu = () => this.page.getByTestId(followUpAssistantMenuTestIds.root);
@@ -86,7 +85,7 @@ export class FollowUpQuestionsPageObject extends PageObject {
 
   pressEscape = () => this.step("pressEscape", () => this.page.keyboard.press("Escape"));
 
-  // A tab the app opens is noted rather than loaded, so a test never reaches a real assistant.
+  // Noted rather than loaded, so a test never reaches a real assistant.
   catchNewTabs = () =>
     this.step("catchNewTabs", () =>
       this.page.evaluate(() => {

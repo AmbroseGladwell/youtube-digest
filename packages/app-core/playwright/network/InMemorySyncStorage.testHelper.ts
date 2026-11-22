@@ -23,10 +23,7 @@ import type { InMemoryChatStore } from "../../src/features/chats/types/InMemoryC
 import type { InMemorySettingsStore } from "./InMemorySettingsStore.testHelper.js";
 import type { InMemoryTranscriptStore } from "./InMemoryTranscriptStore.testHelper.js";
 
-// The browser-side sync bookkeeping for an IWFT run: what the feed delivers is written into
-// the in-memory stores the app is reading, so a pulled record shows up where the reader
-// would see it. Nothing here journals; pushing is covered where a real database and a real
-// API exist (apps/api/src/sync/twoDevices.test.ts).
+// Nothing journals here: pushing is covered against a real API in apps/api/src/sync/twoDevices.test.ts.
 export class InMemorySyncStorage implements SyncStorage {
   enrolled = false;
   cursorValue = 0;
@@ -182,7 +179,6 @@ export class InMemorySyncStorage implements SyncStorage {
     return () => this.#listeners.delete(listener);
   }
 
-  // Test-only: what a local write would have journaled, so the panel can count it.
   seedPending(entry: OutboxEntry): void {
     this.outbox.push(entry);
   }

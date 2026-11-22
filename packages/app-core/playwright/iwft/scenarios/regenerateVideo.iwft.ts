@@ -17,7 +17,6 @@ const OLD = makeOverview({
   coreClaim: "The claim the old prompt wrote.",
 });
 
-// docs/features/one-overview-per-video.md, "Regenerating".
 test("a video overview regenerates from its menu under the same id, keeping the reader's reason, topic, favourite and saved date", async ({
   page,
   launcher,

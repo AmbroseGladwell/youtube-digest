@@ -141,7 +141,6 @@ test("on the web the head scrolls away and the bar keeps the brand", async ({ la
   await launcher.appShell.verifyBarNeverOffersTheWayBack();
 });
 
-// OV-193: the settings page and its sections lend their own way back the same way.
 test("on a phone the settings page hands All overviews to the bar once scrolled, and it lands on the library", async ({
   launcher,
   backendSimulator,

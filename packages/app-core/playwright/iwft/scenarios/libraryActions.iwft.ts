@@ -33,10 +33,7 @@ test("the way in and the way back are marked as different journeys for the pane 
   await launcher.appShell.verifyNavigationDirection("back");
 });
 
-// The two rows differ only in whether a thumbnail was ever stored, and on a phone neither
-// shows one — so they have to lay out identically. They don't get there by the same route:
-// a hidden thumbnail is still the first child in the tree, so the selector that gives a
-// thumbnail-less row its own grid fires for one of them and not the other.
+// A hidden thumbnail is still the first child, so the thumbnail-less grid fires for only one row.
 test("on a phone a row drops its thumbnail, whether or not one was ever saved", async ({ launcher, backendSimulator, page }) => {
   const withThumbnail = makeOverview();
   backendSimulator.overviews.seed({
@@ -60,8 +57,6 @@ test("on a phone a row drops its thumbnail, whether or not one was ever saved", 
   }
 });
 
-// The row and the note are one claim about the same overview, so they must not be able to
-// disagree — both read overviewMetaParts rather than estimating separately.
 test("a row prints its read, listen and video times, and the note it opens says the same", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed({
@@ -120,7 +115,6 @@ test("a row rests on its tile, lifts under the pointer, and its text doesn't mov
   await row.verifyLiftsAbove(restingShadow);
   await library.nthCard(1).verifyRestsWith(restingShadow);
 
-  // The lift is a shadow deepening and never a move, so nothing reflows under the pointer.
   expect(await row.titleLeftEdge()).toBe(atRest);
 
   await page.mouse.move(0, 0);
@@ -208,8 +202,6 @@ test("a card with no thumbnail leaves the image slot out entirely", async ({ lau
   await library.nthCard(0).verifyHasNoThumbnail();
 });
 
-// Design 232a: a video is most of the library and names itself in the meta line, so only
-// the other kinds lead with a chip, and a recipe video's is a recipe's.
 test("every row but a video leads with its kind, and every row names it in the meta line", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(makeOverview({ savedAt: "2026-11-09T00:00:00.000Z" }));
   backendSimulator.overviews.seed(makeArticleOverview({ savedAt: "2026-11-08T00:00:00.000Z" }));

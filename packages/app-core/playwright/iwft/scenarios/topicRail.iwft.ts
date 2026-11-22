@@ -45,7 +45,6 @@ test("showing all reveals the rest, and the same control puts them away again", 
   await library.filterPanel.verifyListsTopics(FIRST_SIX);
 });
 
-// A filter you cannot see is a filter you cannot clear.
 test("the topic being filtered by stays listed even from beyond the sixth", async ({ launcher, backendSimulator }) => {
   seedTopics(backendSimulator, 8);
 

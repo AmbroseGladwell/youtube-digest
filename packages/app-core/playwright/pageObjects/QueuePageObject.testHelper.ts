@@ -5,7 +5,6 @@ import { pacedQueueGroupTestIds } from "../../src/features/captureQueue/componen
 import { queueRowTestIds } from "../../src/features/captureQueue/components/QueueRow/QueueRowTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The capture queue's own page (designs 27j–27m).
 export class QueuePageObject extends PageObject {
   verifyIsShown = (): Promise<QueuePageObject> =>
     this.step("verifyIsShown", async () => {
@@ -58,7 +57,6 @@ export class QueuePageObject extends PageObject {
   verifyHeldNoteReads = (text: string | RegExp) =>
     this.step("verifyHeldNoteReads", () => expect(this.get(queuePageTestIds.heldNote)).toHaveText(text));
 
-  // At the month's limit the note carries the ways round it (design 95q).
   verifyMonthHeldNote = (text: string, ways: string[]) =>
     this.step(`verifyMonthHeldNote ${text}`, async () => {
       await expect(this.get(queuePageTestIds.heldNote)).toContainText(text);

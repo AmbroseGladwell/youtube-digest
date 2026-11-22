@@ -3,7 +3,6 @@ import { onboardingSamplesTestIds } from "../../src/features/onboarding/componen
 import { sampleRowTestIds } from "../../src/features/onboarding/components/SampleRow/SampleRowTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Start's samples as rows: the panel's, and the web's when there are too few for a deck (155d).
 export class OnboardingSamplesPageObject extends PageObject {
   #rows = () => this.get(onboardingSamplesTestIds.root).getByTestId(sampleRowTestIds.root);
 

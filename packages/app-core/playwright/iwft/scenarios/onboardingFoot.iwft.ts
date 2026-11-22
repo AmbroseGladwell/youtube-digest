@@ -10,14 +10,10 @@ import { onboardingTopicsTestIds } from "../../../src/features/onboarding/compon
 import { onboardingPageTestIds } from "../../../src/features/onboarding/OnboardingPage/OnboardingPageTestIds.js";
 import { aboutYouSheetTestIds } from "../../../src/features/settings/components/AboutYouSheet/AboutYouSheetTestIds.js";
 
-// OV-210, designs 210a–210k: Continue never scrolls off an onboarding step. The step's content
-// scrolls and its foot stays at the bottom, topped with OV-166's fade, mirrored, while there
-// is content under it (docs/features/onboarding-foot.md).
 const VIDEO_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const PHONE = { width: 390, height: 844 };
 const PHONE_AT_200 = { width: 195, height: 422 };
-// Tall enough for the projects card to fit whole beside the flow (on a shorter window it scrolls
-// up at the end so its foot can be seen), short enough that the topics step still scrolls.
+// Tall enough for the projects card to fit whole, short enough that the topics step still scrolls.
 const WIDE = { width: 1440, height: 720 };
 
 const reachTopics = async (launcher: Launcher, backendSimulator: BackendSimulator, { allTopics = true } = {}) => {
@@ -62,7 +58,6 @@ test("on a phone Continue is on screen with all topics open, and the list scroll
   await onboarding.verifyOnScreen("knowledgeBase");
 });
 
-// Design 210d: the foot is pinned on every step, so one that fits keeps it where it was.
 test("a step that fits shows no fade and doesn't scroll", async ({ page, launcher }) => {
   await page.setViewportSize(PHONE);
   const home = await launcher.launch({ sync: true, analyticsConsent: null });
@@ -75,7 +70,6 @@ test("a step that fits shows no fade and doesn't scroll", async ({ page, launche
   await onboarding.verifyFootFadeIsShown(onboardingAnalyticsTestIds.allow, false);
 });
 
-// Design 210c: on a touch screen the keyboard takes half the screen while a topic is typed.
 test("on a touch screen the foot stands aside while a topic is typed, and Pick keeps the field for the next one", async ({
   page,
   launcher,
@@ -98,7 +92,7 @@ test("on a touch screen the foot stands aside while a topic is typed, and Pick k
   await onboarding.verifyContinueIsShown(onboardingTopicsTestIds.continue, true);
 });
 
-// Design 210f: at 200% zoom a phone is 195 × 422 CSS px.
+// At 200% zoom a phone is 195 × 422 CSS px (design 210f).
 test("at 200% zoom on a phone Continue is still on screen on arrival", async ({ page, launcher, backendSimulator }) => {
   await page.setViewportSize(PHONE_AT_200);
   const onboarding = await reachTopics(launcher, backendSimulator, { allTopics: false });
@@ -108,8 +102,6 @@ test("at 200% zoom on a phone Continue is still on screen on arrival", async ({ 
   await onboarding.verifyClearOfTheFoot(onboardingTopicsTestIds.count, onboardingTopicsTestIds.continue);
 });
 
-// Design 210h: the foot pins inside the flow column, the stepper stays at its top, and the
-// topics-and-projects card beside them doesn't move (327f).
 test("on a wide screen Continue is in reach in the flow column, and only the flow scrolls beside the projects card", async ({
   page,
   launcher,
@@ -131,8 +123,6 @@ test("on a wide screen Continue is in reach in the flow column, and only the flo
   await onboarding.verifyPageDoesNotScrollSideways();
 });
 
-// Design 210j: an open section's card runs under the foot, and opening one brings its Done
-// above it.
 test("on a wide screen opening a section of the sentence brings its Done clear of the foot", async ({
   page,
   launcher,

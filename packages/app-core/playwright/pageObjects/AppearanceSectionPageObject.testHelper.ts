@@ -62,7 +62,6 @@ export class AppearanceSectionPageObject extends PageObject {
       expect(box?.height).toBeGreaterThanOrEqual(height);
     });
 
-  // The attributes the stylesheet answers to, and what it answers with.
   verifyPageIs = ({ theme, accent }: { theme: string | null; accent: string | null }) =>
     this.step(`verifyPageIs ${theme} ${accent}`, () =>
       expect

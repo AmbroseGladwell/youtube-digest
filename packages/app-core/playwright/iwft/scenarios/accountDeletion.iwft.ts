@@ -29,7 +29,6 @@ const openDeleteDialog = async (launcher: Launcher) => {
   return settings.syncPanel.clickDeleteAccount();
 };
 
-// Designs 184a–184g (docs/features/account-deletion.md).
 test.describe("deleting the account", () => {
   test("explains what goes and what stays, asks for a code to the account's address, and leaves this device signed out on Start", async ({
     launcher,

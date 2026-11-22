@@ -21,8 +21,7 @@ export class NewTopicDialogPageObject extends PageObject {
 
   verifyOffersNoUnsorted = () => this.step("verifyOffersNoUnsorted", () => this.expectNotToBeVisible(newTopicDialogTestIds.unsortedHead));
 
-  // The checkbox itself is visually hidden behind its drawn box, so the label is what a
-  // person clicks and what the test clicks too.
+  // The checkbox is visually hidden behind its drawn box, so the label is what gets clicked.
   chooseUnsorted = (title: string) => this.step(`chooseUnsorted ${title}`, () => this.click(newTopicDialogTestIds.unsortedOption(title)));
 
   verifyUnsortedIsChosen = (title: string, chosen: boolean) =>

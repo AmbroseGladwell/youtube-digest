@@ -148,8 +148,6 @@ test("a failure hands the dialog back to the form with the link still in it, and
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(0);
 });
 
-// One overview per video: a video the library already holds opens rather than being made
-// again (docs/features/one-overview-per-video.md, "Prevention").
 test("a video the library already holds offers to open the existing overview, and generates nothing", async ({
   launcher,
   backendSimulator,

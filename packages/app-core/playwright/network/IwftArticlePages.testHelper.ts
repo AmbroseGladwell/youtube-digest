@@ -7,7 +7,6 @@ export interface IwftArticlePagesConfig {
   read: ArticleRead;
 }
 
-// The tab beside the panel, as far as app-core can see one: nothing else can reach chrome.*.
 export class IwftArticlePages implements ArticlePages {
   private readonly listeners = new Set<() => void>();
   private page: ActivePage | null;

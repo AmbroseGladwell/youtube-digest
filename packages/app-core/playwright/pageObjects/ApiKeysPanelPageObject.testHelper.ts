@@ -77,8 +77,6 @@ export class ApiKeysPanelPageObject extends PageObject {
   verifyModelReads = (provider: Provider, label: string) =>
     this.step(`verifyModelReads ${provider} ${label}`, () => expect(this.get(providerKeyRowTestIds.model(provider))).toContainText(label));
 
-  // Design 110g: the choice arrived by sync and the key did not, so the card carries both
-  // ways out rather than a control that cannot work.
   verifyNoKeyHereDeadEnd = () =>
     this.step("verifyNoKeyHereDeadEnd", async () => {
       await this.expectToBeVisible(generateWithCardTestIds.missingHeading);

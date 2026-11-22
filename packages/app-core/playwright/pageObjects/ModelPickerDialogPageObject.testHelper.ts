@@ -16,8 +16,6 @@ export class ModelPickerDialogPageObject extends PageObject {
 
   close = () => this.step("close", () => this.click(modelPickerDialogTestIds.close));
 
-  // The provider would not list its models, so the picker shows the ones we know and says
-  // so in one muted line. Not an error: the key itself works (design 110h).
   verifyFellBackToKnownModels = () =>
     this.step("verifyFellBackToKnownModels", () => this.expectToBeVisible(modelPickerDialogTestIds.staleNote));
 

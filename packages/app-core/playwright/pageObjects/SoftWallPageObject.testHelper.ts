@@ -2,7 +2,6 @@ import { expect } from "@playwright/experimental-ct-react";
 import { softWallTestIds } from "../../src/features/newOverview/components/SoftWall/SoftWallTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The soft wall at the monthly limit, for a Free or BYO Plus reader (designs 327aa–327ac).
 export class SoftWallPageObject extends PageObject {
   verifyIsShown = ({ resetsOn, link }: { resetsOn: string; link: { kicker: string | null; title: string } }) =>
     this.step("verifyIsShown", async () => {

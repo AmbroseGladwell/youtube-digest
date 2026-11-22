@@ -13,8 +13,7 @@ const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
 const API_KEYS = ANTHROPIC_KEY;
 
-// Nine captions, in three runs of the length YouTube actually emits — which the reader
-// merges into the three blocks below (docs/features/transcript-storage.md).
+// Three runs of the caption length YouTube emits, which the reader merges into three blocks.
 const SEGMENTS: TranscriptSegment[] = [
   ...makeCaptionRun(
     ["The claim starts here,", "and the whole of it takes four captions", "before it finally reaches", "its first full stop."],
@@ -147,8 +146,7 @@ test("a transcript still being read shows the tab's skeleton rather than its emp
   const library = await launcher.launchExpectingLibrary();
   const reader = await library.nthCard(0).openReader();
 
-  // Held open rather than slowed down: a read that never settles is the local store's
-  // equivalent of the harness's STALL behaviour (frontend-testing-guide.md 4.3).
+  // Held open, not slowed: a read that never settles is the local store's STALL.
   await page.evaluate(() => {
     window.__iwftStores__.transcriptStore.getTranscript = () => new Promise<StoredTranscript | null>(() => {});
   });
@@ -173,8 +171,7 @@ test("generating a note keeps the captions it fetched, and the tab reads them ba
   ]);
   await reader.verifyTranscriptBlockTimesRead(["0:00"]);
 
-  // Three captions stored, one block shown: the merging is display-only, and the store
-  // keeps what the model was given (docs/features/transcript-storage.md).
+  // The merging is display-only: the store keeps what the model was given.
   const stored = await backendSimulator.transcriptStore.getTranscript(VideoId.parse(IWFT_VIDEO_ID));
   expect(stored?.segments).toHaveLength(3);
   expect(stored?.generated).toBe(false);
@@ -226,8 +223,6 @@ test("a second note on a video already in the library reads the stored captions 
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
 });
 
-// Signed in, a transcript fetched on another device is on the account, not on this one
-// (docs/features/transcript-storage.md, "Following the reader across devices").
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: "session-token", email: SIMULATED_EMAIL },

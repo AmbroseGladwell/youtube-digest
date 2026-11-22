@@ -13,10 +13,6 @@ import { makeStoredTranscript } from "../../../src/features/transcripts/types/St
 import { makeCaptionRun } from "../../../src/features/transcripts/types/TranscriptSegmentFactory.testHelper.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-// OV-166, designs 166a-166h: content passing under the sticky chrome dissolves over 16px
-// of --ground. Only the lowest band in a stack has content under it, so it is the only one
-// the fade is drawn on; the ones above sit over the next band, which is the same --ground.
-
 const VIDEO_ID = VideoId.parse("watchedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=watchedVideo1";
 const TOKEN = ShareToken.parse("k7Qm2x9RfTabcdef");
@@ -25,15 +21,13 @@ const SIGNED_IN = {
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
 };
 
-// Long enough on every tab that there is something to scroll under the chrome.
 const SEGMENTS: TranscriptSegment[] = Array.from({ length: 30 }, (_, index) =>
   makeCaptionRun([`Paragraph ${index} opens here,`, "carries on for a while", "and then it stops."], {
     startMs: index * 60_000,
     cueMs: 3500,
   }),
 ).flat();
-// Seven is the schema's most (`Overview`, `SharedNote`), so the length that makes the page
-// scroll comes from the words rather than the count.
+// Seven is the schema's most, so the page's scroll length comes from the words, not the count.
 const KEY_POINTS = Array.from(
   { length: 7 },
   (_, index) =>
@@ -82,8 +76,6 @@ const sharedPayload = (overview: Overview): SharePayload => ({
   }),
 });
 
-// Design 166b: the fade is a scroll state, not a part of the bar. At the top of the page
-// the bar ends where it always did.
 test("the library fades under the bar once it has scrolled, and not before", async ({ launcher, backendSimulator }) => {
   seedLibrary(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
@@ -96,8 +88,6 @@ test("the library fades under the bar once it has scrolled, and not before", asy
   await library.verifyFadeIsShown(true);
 });
 
-// Design 166d: not under the bar, which would do nothing for 12px of ground and then land
-// its last pixels on the tab strip's own track.
 test("an overview fades under the tab strip, and under the transcript's tools on that tab", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const library = await launcher.launchExpectingLibrary();
@@ -114,8 +104,6 @@ test("an overview fades under the tab strip, and under the transcript's tools on
   await reader.verifyFadeHangsFrom(transcriptPanelTestIds.head);
 });
 
-// Design 166f, as 205b leaves it: the panel's head goes by with the note, so its stack is
-// the bar and the tabs and the fade hangs from the tabs.
 test("in the panel the fade hangs from the tabs, the head having scrolled away", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator);
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY, activeVideoUrl: VIDEO_URL });
@@ -131,8 +119,6 @@ test("in the panel the fade hangs from the tabs, the head having scrolled away",
   await reader.verifyFadeHangsFrom(transcriptPanelTestIds.head);
 });
 
-// Design 166h's last line: the shared page's header gets the same fade, and gives it up to
-// its tab strip the same way.
 test("a shared page fades under its own chrome", async ({ launcher, backendSimulator }) => {
   const overview = longNote();
   backendSimulator.transcripts.seed(makeStoredTranscript({ videoId: VIDEO_ID, segments: SEGMENTS }));
@@ -150,9 +136,7 @@ test("a shared page fades under its own chrome", async ({ launcher, backendSimul
   await shared.verifyFadeHangsFrom(readerTabsTestIds.root);
 });
 
-// Design 166h: nothing sticks on settings but the bar, and 16px is the most a section's
-// heading leaves clear once it is anchored. That is the constraint that set the fade's
-// height over 24px, so it is the one worth holding.
+// What capped the fade: docs/features/fade-under-the-bar.md, "What capped the height at 16px".
 test("settings fades under the bar alone, and a section's heading still clears it", async ({ launcher, page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await launcher.launchExpectingFirstRun();
@@ -163,8 +147,6 @@ test("settings fades under the bar alone, and a section's heading still clears i
   await settings.verifyAnchorsClearTheFade(settingsSectionTestIds.heading("appearance"));
 });
 
-// OV-328: a recipe page has one tab and so no tab strip, leaving the bar as the lowest band.
-// With chat open beside the note, the bar's fade ends where the chat starts.
 test("on a page with no tab strip, the bar's fade stops short of an open chat", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seedSynced(makeRecipeOverview());
   backendSimulator.chats.answerWith({ text: "Roast them first.", inSource: false, citations: [] });

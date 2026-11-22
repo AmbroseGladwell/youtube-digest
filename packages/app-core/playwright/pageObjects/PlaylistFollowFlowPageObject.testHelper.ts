@@ -13,7 +13,6 @@ export interface ExpectedPreview {
   basis?: string;
 }
 
-// A pasted playlist from lookup to following, wherever it was pasted (docs/features/playlists.md).
 export class PlaylistFollowFlowPageObject extends PageObject {
   verifyLookingUp = () => this.step("verifyLookingUp", () => this.expectToBeVisible(playlistFollowFlowTestIds.lookingUp));
 
@@ -55,7 +54,6 @@ export class PlaylistFollowFlowPageObject extends PageObject {
       await expect(this.get(previewChoiceLineTestIds.result(choice))).toHaveText(result);
     });
 
-  // What the month's allowance means for the backfill, before anything runs (95s, 95v).
   verifyAllowance = (text: string | null) =>
     this.step(`verifyAllowance ${text}`, () =>
       text === null
@@ -69,7 +67,6 @@ export class PlaylistFollowFlowPageObject extends PageObject {
       await this.expectToHaveCount(previewChoiceLineTestIds.line("order"), 0);
     });
 
-  // Change opens the choices in place, each with what it would do; choosing is immediate.
   changePace = (pace: string, result: string) => this.changeChoice("pace", "Pace", pace, result);
 
   changeOrder = (order: string, result: string) => this.changeChoice("order", "Order", order, result);

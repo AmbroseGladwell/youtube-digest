@@ -19,8 +19,6 @@ const seedOpenNote = (backendSimulator: { overviews: { seed: (o: ReturnType<type
   return overview;
 };
 
-// Design 205e. The copy is generic on purpose: the reader can see the tab beside the
-// panel, so naming it would only cost the line its one line.
 test("with a note open, moving the tab on offers to make an overview of what's there now", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
@@ -57,8 +55,6 @@ test("where the library already holds it, the offer is to read it", async ({ lau
   await reader.verifyOnThisTabLineSays("Another video on this tab", "Read overview");
 });
 
-// The note being read is the one the tab is on, so there is nothing to have moved away
-// from — and home is already the offer, so the line never shows there either.
 test("the line stays away while the tab still holds the note's own video, and on home", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);
@@ -74,7 +70,6 @@ test("the line stays away while the tab still holds the note's own video, and on
   await reader.verifyOnThisTabLineIsShown(false);
 });
 
-// Dismissed for this tab, not for ever: moving on again asks afresh (205e-4).
 test("dismissing it holds until the tab moves on again", async ({ launcher, backendSimulator }) => {
   seedOpenNote(backendSimulator);
   const capture = await launcher.launchPanel(panel);

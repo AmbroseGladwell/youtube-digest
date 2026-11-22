@@ -56,7 +56,6 @@ const conversation = (
   ],
 });
 
-// OV-354, pages 3 and 4: the Ask page over the whole library or one project.
 test.describe("Ask", () => {
   test("Ask in the top bar opens the page over the whole library with starters made from it; a starter asks, and the answer reads in sections with what it read and a line counted by code", async ({
     launcher,

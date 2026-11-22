@@ -184,7 +184,6 @@ test("opening a note with no reason saved is counted as none saved", async ({ la
     .toEqual([{ name: "reader.dubiousReasons.opened", props: { overviewId: overview.id, reasonsSaved: 0 } }]);
 });
 
-// The fixture answers with a segment index; the moment below is the transcript's own time.
 test("a freshly generated dubious overview explains itself, its moment timed from the transcript", async ({
   launcher,
   backendSimulator,

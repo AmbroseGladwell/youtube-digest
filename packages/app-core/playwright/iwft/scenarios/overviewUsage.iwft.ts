@@ -4,8 +4,6 @@ import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimu
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-// What's left this month, wherever a reader generates and in Settings › Plan (designs
-// 95a–95h, with the key order flipped for everyone but Plus, decided on OV-131).
 const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 const SIGNED_IN = {
   sync: true,
@@ -107,9 +105,6 @@ test("the panel's capture screen gives the narrow line", async ({ launcher, back
   await capture.verifyUsageLineReads("7 of 10 left on your own key · Resets 1 Nov");
 });
 
-// At the limit, a Free or BYO Plus reader can still paste a link, and meets the soft wall on
-// saving it (designs 327aa–327ah); Plus keeps the message in Generate's place (95i–95o), since
-// the wall's way on is Plus (docs/architecture/tiers.md, "At the limit").
 test("on Free with no key, our key's 5 spent: saving a link meets the wall, which keeps the link and leads to a key", async ({
   launcher,
   backendSimulator,

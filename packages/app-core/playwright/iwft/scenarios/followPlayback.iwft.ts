@@ -96,8 +96,6 @@ test("the web app, which cannot see a player, offers none of the following", asy
   await reader.verifyNoTranscriptBlockIsCurrent();
 });
 
-// transcript-storage.md parked what a block does when you click it until there was one
-// answer for all of it. Seeking is that answer, and only the time takes the click.
 test("the time against a block sends the video to it", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
@@ -123,8 +121,6 @@ test("the web app, with no player to send anywhere, prints the times as plain te
   await reader.verifyTranscriptTimesSeek(false);
 });
 
-// Clicking a time does one thing. Whether the transcript is following is a separate
-// question, answered by the control that exists for it.
 test("sending the video somewhere does not quietly re-engage the following", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
@@ -200,9 +196,6 @@ test("scrolling away from the marked block hands the scroll back, until Follow p
   await reader.verifyOffersToFollowPlayback(false);
 });
 
-// The block being spoken sits on a card that bleeds into the column's gutter, and the
-// sticky head it scrolls under has to be at least that wide or the card's corners show
-// either side of it.
 test("the sticky head is wider than the cards that pass under it", async ({ launcher, backendSimulator }) => {
   seedTranscript(backendSimulator);
   const capture = await launcher.launchPanel({
@@ -217,8 +210,6 @@ test("the sticky head is wider than the cards that pass under it", async ({ laun
   await reader.verifyTranscriptHeadHidesTheBlocksPassingUnderIt();
 });
 
-// The block the video moves to used to be centred in the window, which on the panel is
-// behind the sticky stack: a tall block lost its time and its first line under the head.
 test("a block the video moves to comes to rest under the head, however tall it is", async ({ launcher, backendSimulator }) => {
   const blocks = Array.from({ length: 16 }, (_, index) =>
     makeCaptionRun(

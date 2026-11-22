@@ -6,8 +6,7 @@ const VALID_URL = `https://www.youtube.com/watch?v=${IWFT_VIDEO_ID}`;
 // The panel fetches its own captions, so the Anthropic key alone is enough to create.
 const PANEL_OPTIONS = { apiKeys: ANTHROPIC_KEY, youTubeFetch: true };
 
-// Chrome opens the panel around 400 and lets it be dragged wider. Design 205c-2 puts the
-// break at the web's own: the phone's sheet below 768, the centred dialog from 768 up.
+// Chrome opens the panel around 400 wide, under the 768 break between sheet and dialog.
 const PANEL = { width: 400, height: 780 };
 const PANEL_DRAGGED_WIDE = { width: 800, height: 900 };
 

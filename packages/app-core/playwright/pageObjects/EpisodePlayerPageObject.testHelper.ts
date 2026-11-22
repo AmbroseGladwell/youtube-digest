@@ -3,7 +3,6 @@ import { episodePlayerTestIds } from "../../src/features/reader/components/Episo
 import { JUMP_LINE } from "../../src/features/reader/episode/jumpLine.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// An episode's own player under its note's head (design 106p).
 export class EpisodePlayerPageObject extends PageObject {
   verifyIsShown = () =>
     this.step("verifyIsShown", async () => {

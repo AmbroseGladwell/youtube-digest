@@ -20,8 +20,6 @@ const seedHeldOverview = (backendSimulator: BackendSimulator) => {
   });
 };
 
-// The paid plans sell volume, never features, and no plan ever says "unlimited"
-// (docs/architecture/tiers.md).
 test("Settings names the plan, gives every account the features, and sells both paid plans on volume", async ({ launcher }) => {
   await launcher.launchPanel(panel);
   const settings = await launcher.appShell.openSettings();
@@ -50,8 +48,6 @@ test("on Plus, Settings rings the reader's own plan among the three", async ({ l
   await settings.verifyPlansAreNotOnSale("set by hand");
 });
 
-// Design 2d: the Plus prompt on Listen is retired, since audio is open to every account
-// (docs/features/audio-player.md).
 test("Listen on a free plan docks the player and plays, with no case for Plus", async ({ launcher, backendSimulator }) => {
   seedHeldOverview(backendSimulator);
   const capture = await launcher.launchPanel(panel);
@@ -64,8 +60,6 @@ test("Listen on a free plan docks the player and plays, with no case for Plus", 
   await reader.verifyListenReads("Listening");
 });
 
-// The bar is the only place a panel listener can pause, so pausing from it must not be
-// the thing that takes it away.
 test("pausing from the docked player leaves it docked, and Listening puts it away", async ({ launcher, backendSimulator }) => {
   seedHeldOverview(backendSimulator);
   const capture = await launcher.launchPanel(panel);

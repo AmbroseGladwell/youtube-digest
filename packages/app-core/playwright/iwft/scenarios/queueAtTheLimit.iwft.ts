@@ -6,9 +6,6 @@ import { makeServiceTranscriptFixture } from "../../network/fixtures/innerTubeFi
 import { PSYCHOLOGY_ID, PSYCHOLOGY_URL, playlistEntry, psychologyPlaylist } from "../../network/fixtures/playlistFixtures.js";
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
-// The queue at the month's limit waits rather than failing, says why and when it carries on,
-// and the preview and Choose say what the allowance left means before anything runs
-// (designs 95p–95s, 95v, 95ad, 95ah; docs/features/capture-queue.md, "Waiting at a limit").
 const SIGNED_IN_WITHOUT_A_KEY = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },

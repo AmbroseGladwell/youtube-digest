@@ -50,8 +50,6 @@ test("skipping moves the video to the start of that stretch, not to the end of i
   await expect.poll(() => launcher.readPlaybackSeeks()).toEqual([RANGE.startMs]);
 });
 
-// The range is how someone gets there on their own, so it is printed whether or not
-// anything here can move a video.
 test("the web app offers the video at that moment, having no player of its own to move", async ({ launcher, backendSimulator }) => {
   seedNote(backendSimulator, partial);
   const library = await launcher.launchExpectingLibrary();

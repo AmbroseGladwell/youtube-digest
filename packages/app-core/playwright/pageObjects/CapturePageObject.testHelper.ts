@@ -31,7 +31,6 @@ export class CapturePageObject extends PageObject {
   verifyOffersNothingToCreate = () =>
     this.step("verifyOffersNothingToCreate", () => this.expectToHaveCount(capturePageTestIds.createButton, 0));
 
-  // The panel's narrow line: no "this month", no Plan link, and a short date (design 95c).
   verifyUsageLineReads = (text: string) =>
     this.step(`verifyUsageLineReads ${text}`, async () => {
       await expect(this.get(capturePageTestIds.usageLine.root)).toHaveText(text);

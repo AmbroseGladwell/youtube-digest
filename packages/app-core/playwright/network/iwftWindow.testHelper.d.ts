@@ -23,8 +23,6 @@ import type { OnboardingRunPhase } from "../../src/features/onboarding/useOnboar
 
 declare global {
   interface Window {
-    // The library the app has open now: the one the test seeded, until a sign-in or
-    // sign-out switches it (docs/features/account-libraries.md).
     __iwftStores__: {
       overviewStore: InMemoryOverviewStore;
       settingsStore: InMemorySettingsStore;
@@ -35,13 +33,11 @@ declare global {
       chatStore: InMemoryChatStore;
       syncStorage: InMemorySyncStorage | null;
     };
-    // Every library opened so far, by account, the no-account one under null.
+    // The no-account library is under null.
     __iwftLibraries__: Map<string | null, Window["__iwftStores__"]>;
     __iwftLibrary__: Library;
     __iwftOpenLibrary__: OpenLibrary;
-    // A deleted account's library, dropped from the map above (docs/features/account-deletion.md).
     __iwftDeleteLibrary__: DeleteLibrary;
-    // Another tab of this browser: signing in, or holding onboarding's run, as this tab sees it.
     __iwftAnotherTab__: {
       signsIn: (connection: SyncConnection) => void;
       holdsOnboardingRun: (link: string, phase: OnboardingRunPhase) => void;

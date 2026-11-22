@@ -2,9 +2,6 @@ import { test } from "../../support/fixtures.testHelper.js";
 import { keysFor } from "../../support/apiKeysSeed.testHelper.js";
 import { EndpointKey } from "../../network/EndpointKey.testHelper.js";
 
-// The one failure this feature introduces: the provider follows the reader between devices
-// and the key does not, so a reader can arrive somewhere holding neither
-// (design 110g, docs/features/byo-providers.md).
 const CHOSE_GEMINI_ELSEWHERE = {
   apiKeys: keysFor("anthropic"),
   provider: "gemini" as const,
@@ -34,8 +31,6 @@ test("taking the other key out of the dead end changes the choice, and generatio
   await settings.verifyRowReads("keys", /· 1 key$/);
 });
 
-// Designs 110k, 110l and 110m: the surfaces outside Settings carry the same dead end, so a
-// reader meets it where they tried to generate rather than only in Settings.
 test("the home hero carries the dead end rather than a button that would fail", async ({ launcher }) => {
   const home = await launcher.launch(CHOSE_GEMINI_ELSEWHERE);
 
@@ -52,8 +47,6 @@ test("the model picker offers the ones we describe by name", async ({ launcher }
   await settings.modelPicker.verifyOffers("claude-sonnet-5-5");
 });
 
-// Design 110e: it is a dialog, not a page — so it closes without leaving Settings, and
-// Escape closes it the way the native element does.
 test("the picker closes from its own close button, leaving the keys section behind it", async ({ launcher }) => {
   await launcher.launch({ apiKeys: keysFor("anthropic") });
   const settings = await (await launcher.appShell.openSettings()).openSection("keys");
@@ -86,8 +79,6 @@ test("choosing a model saves it against that provider and shows on its row", asy
   await settings.apiKeysPanel.verifyModelReads("anthropic", "Claude Haiku 5.5");
 });
 
-// Design 110h: the key works, only the catalogue call failed. The picker shows the models
-// we know and says so, and nothing is drawn as an error.
 test("a provider that will not list its models falls back to the ones we know, without an error", async ({
   launcher,
   backendSimulator,

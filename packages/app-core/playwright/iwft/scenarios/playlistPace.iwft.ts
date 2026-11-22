@@ -8,7 +8,7 @@ import { makeOverview } from "../../../src/features/overviews/types/OverviewFact
 import { ANTHROPIC_KEY } from "../../support/apiKeysSeed.testHelper.js";
 
 const API_KEYS = ANTHROPIC_KEY;
-// Signed in, because events go over the reader's session (docs/architecture/analytics.md).
+// Signed in, because events go over the reader's session.
 const SIGNED_IN_WITHOUT_A_KEY = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, email: SIMULATED_EMAIL, firstName: "Ada" },
@@ -41,8 +41,7 @@ const queued = (index: number, overrides: Partial<QueuedCapture> = {}): QueuedCa
   ...overrides,
 });
 
-// Following Psychology at a pace, with this device having seen everything it holds, so opening
-// queues nothing new and what is queued is only what the test seeds.
+// Everything already seen, so opening queues nothing new beyond what the test seeds.
 const followingAt = (backendSimulator: BackendSimulator, pace: PlaylistPace) => {
   const followed: FollowedPlaylist = {
     ...PSYCHOLOGY,
@@ -71,9 +70,6 @@ const seedQueuedWithTranscripts = (backendSimulator: BackendSimulator, captures:
 
 const overviewCount = async (backendSimulator: BackendSimulator) => (await backendSimulator.overviewStore.listOverviews()).length;
 
-// The definition of done for OV-95: a paced playlist makes no more than its number a day, the
-// rest of the queue isn't held up, and what waits says when it continues
-// (docs/features/capture-queue.md, "Waiting on a pace").
 test("a paced playlist makes its number for the day, the rest of the queue carries on, and its videos continue after midnight", async ({
   page,
   launcher,

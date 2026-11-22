@@ -69,36 +69,30 @@ import { SignOutNoticePageObject } from "../pageObjects/SignOutNoticePageObject.
 
 export interface LaunchOptions {
   apiKeys?: ApiKeys;
-  // Whether this shell can sync, and the server and token it already has.
   sync?: boolean;
   syncConnection?: SyncConnectionInput;
   pendingSignIn?: PendingSignIn;
-  // The trial token this device holds signed out.
   signedOutTrial?: SignedOutTrial;
-  // What this device said about analytics. Absent is a "no" already given, so a
-  // scenario about something else isn't asked; null is a device that has never been asked.
+  // Absent is a "no" already given, so other scenarios aren't asked; null is never asked.
   analyticsConsent?: AnalyticsConsent | null;
   accountSeen?: boolean;
   surface?: Surface;
-  // False is a phone's browser, where the extension can't be added. Absent is desktop Chrome.
+  // False is a phone's browser; absent is desktop Chrome.
   desktopChrome?: boolean;
   layout?: AppLayout;
   defaultApiUrl?: string;
-  // False is a build installed from the Web Store, which offers no other server.
+  // False is a Web Store build, which offers no other server.
   serverSwitchable?: boolean;
   build?: AppBuild;
   activeVideoUrl?: string | null;
   articlePages?: IwftArticlePagesConfig;
   playback?: PlaybackPosition | null;
-  // The account's plan, as the server holds it; only a signed-in launch has one.
   plan?: Plan;
   narrationVoice?: NarrationVoice;
   readStepsAloud?: boolean;
-  // Which provider this account generates with. It syncs while the keys do not, so a
-  // scenario can seed the device that holds the wrong one (docs/features/byo-providers.md).
+  // It syncs while keys don't, so a scenario can seed a device holding the wrong one.
   provider?: Provider;
   modelByProvider?: ModelByProvider;
-  // The time-saved milestones the account has already crossed or dismissed.
   milestones?: MilestoneMarks;
   showMilestoneCards?: boolean;
   theme?: ThemeMode;
@@ -119,6 +113,8 @@ export interface LaunchOptions {
   errorDestinationMirror?: boolean;
 }
 
+const isSignedOutWhereThereAreAccounts = (options: LaunchOptions): boolean => options.sync === true && !options.syncConnection?.apiUrl;
+
 export class Launcher {
   private readonly mount: ComponentFixtures["mount"];
   private readonly page: Page;
@@ -134,15 +130,12 @@ export class Launcher {
     return { page: this.page, backendSimulator: this.backendSimulator };
   }
 
-  // The panel's home is the capture screen rather than the library, so it lands
-  // somewhere else and needs its own launcher (frontend-testing-guide.md 5.2).
+  // The panel's home is the capture screen, not the library, so it needs its own launcher.
   launchPanel = (options: LaunchOptions = {}): Promise<CapturePageObject> =>
     test.step("Launcher.launchPanel", async () => {
       await this.mountApp({ ...options, layout: "panel", surface: options.surface ?? "extension" });
       const capture = new CapturePageObject(this.testContext);
-      // Signed out, the panel's home is the web's Start compressed, or once the device has
-      // had an account, the way back into it (designs 205g and 46q).
-      if (options.sync === true && !options.syncConnection?.apiUrl) {
+      if (isSignedOutWhereThereAreAccounts(options)) {
         await expect(this.page.getByTestId(homePageTestIds.hero).or(this.page.getByTestId(signedOutGateTestIds.root))).toBeVisible();
         return capture;
       }
@@ -153,25 +146,19 @@ export class Launcher {
     test.step("Launcher.launch", async () => {
       await this.mountApp(options);
       const home = new HomePageObject(this.testContext);
-      // Signed out where there are accounts, home is onboarding's Start rather than a library
-      // (docs/features/onboarding.md).
-      if (options.sync === true && !options.syncConnection?.apiUrl) {
+      if (isSignedOutWhereThereAreAccounts(options)) {
         return (await home.verifyIsShown()).verifyShowsStart();
       }
       return home.verifyIsShown();
     });
 
-  // A launch below the server's write floor: the wall takes the place of the page once the
-  // first sync cycle has answered, which can be before home has ever been seen, so home is
-  // not waited for (docs/features/record-migrations.md, "Below the write floor is a wall").
+  // The wall can replace the page before home is ever seen, so home is not waited for.
   launchExpectingWriteFloorWall = (options: LaunchOptions = {}): Promise<ErrorStatePageObject> =>
     test.step("Launcher.launchExpectingWriteFloorWall", async () => {
       await this.mountApp(options);
       return this.appShell.writeFloorWall.verifyIsShown();
     });
 
-  // A launch that lands on the dead-end screen rather than a page, because the read the
-  // landing page depends on was told to fail (frontend-testing-guide.md 5.2).
   launchExpectingDeadEnd = (options: LaunchOptions = {}): Promise<ErrorStatePageObject> =>
     test.step("Launcher.launchExpectingDeadEnd", async () => {
       await this.mountApp(options);
@@ -238,24 +225,19 @@ export class Launcher {
       return dialog.form;
     });
 
-  // The read recovering underneath a dead-end screen, so pressing its action can succeed.
   stopFailing = (read: InMemoryStoreRead): Promise<void> =>
     test.step(`Launcher.stopFailing ${read}`, () =>
       this.page.evaluate((next) => window.__iwftStores__.overviewStore.recoverRead(next), read));
 
-  // The shell's own view of which tab is in front, moved the way a tab change moves it.
   // Nothing in app-core can reach chrome.tabs, so the simulated source is the seam.
   watchAnotherVideo = (videoUrl: string | null): Promise<void> =>
     test.step(`Launcher.watchAnotherVideo ${videoUrl}`, () =>
       this.page.evaluate((next) => window.__iwftActiveVideo__?.watchAnother(next), videoUrl));
 
-  // The player in the tab beside the panel, moved the way playing the video moves it.
   movePlaybackTo = (position: PlaybackPosition | null): Promise<void> =>
     test.step(`Launcher.movePlaybackTo ${position?.positionMs ?? "nothing"}`, () =>
       this.page.evaluate((next) => window.__iwftPlayback__?.moveTo(next), position));
 
-  // Pressing the button injected into the YouTube page, from app-core's side of the
-  // seam (docs/features/injected-button.md).
   pressInjectedButton = (videoUrl: string): Promise<void> =>
     test.step(`Launcher.pressInjectedButton ${videoUrl}`, () =>
       this.page.evaluate((url) => window.__iwftRunBridge__?.requestOverview(url), videoUrl));
@@ -269,11 +251,9 @@ export class Launcher {
           ) ?? [],
       ));
 
-  // Every destination the app handed the worker, oldest first.
   readErrorDestinations = (): Promise<Array<{ apiUrl: string | null; token: string | null }>> =>
     test.step("Launcher.readErrorDestinations", () => this.page.evaluate(() => window.__iwftErrorDestinations__ ?? []));
 
-  // Every accent the app handed the worker, oldest first.
   readAccentMirror = (): Promise<AccentColour[]> =>
     test.step("Launcher.readAccentMirror", () => this.page.evaluate(() => window.__iwftAccentMirror__ ?? []));
 
@@ -283,8 +263,6 @@ export class Launcher {
   readPlaybackSeeks = (): Promise<number[]> =>
     test.step("Launcher.readPlaybackSeeks", () => this.page.evaluate(() => window.__iwftPlayback__?.seeks ?? []));
 
-  // Opening the link from the email: the sign-in path with the token in the hash, or with
-  // no token at all (docs/features/sign-in.md).
   openSignInLink = (token: string | null, returnTo: string | null = null): Promise<void> =>
     test.step(`Launcher.openSignInLink ${token ?? "without a token"}`, () =>
       this.page.evaluate(({ path, search, hash }) => window.__iwftRouter__.navigate({ pathname: path, search, hash }), {
@@ -293,8 +271,6 @@ export class Launcher {
         hash: token === null ? "" : `#token=${encodeURIComponent(token)}`,
       }));
 
-  // The sign-in link opened in another tab of this browser and signed the device in there
-  // (docs/features/onboarding.md, "The run lives in one tab").
   signInFromAnotherTab = (): Promise<void> =>
     test.step("Launcher.signInFromAnotherTab", () =>
       this.page.evaluate((connection) => window.__iwftAnotherTab__.signsIn(connection), {
@@ -305,7 +281,6 @@ export class Launcher {
         firstName: null,
       }));
 
-  // Another tab has onboarding's run, and answers for it until it closes.
   anotherTabHoldsOnboardingRun = (link: string, phase: OnboardingRunPhase): Promise<void> =>
     test.step(`Launcher.anotherTabHoldsOnboardingRun ${phase}`, () =>
       this.page.evaluate(({ link, phase }) => window.__iwftAnotherTab__.holdsOnboardingRun(link, phase), { link, phase }));
@@ -313,10 +288,8 @@ export class Launcher {
   anotherTabCloses = (): Promise<void> =>
     test.step("Launcher.anotherTabCloses", () => this.page.evaluate(() => window.__iwftAnotherTab__.closes()));
 
-  // Arriving from an assistant: it sends the reader's browser to the consent screen.
   openConsent = (requestId: string): Promise<void> => this.openPage(Routes.connect(requestId));
 
-  // Going to a page by its address, the way a typed or bookmarked URL arrives.
   openPage = (path: string): Promise<void> =>
     test.step(`Launcher.openPage ${path}`, () => this.page.evaluate((pathname) => window.__iwftRouter__.navigate(pathname), path));
 
@@ -364,7 +337,6 @@ export class Launcher {
     return new FirstOverviewMilestonePageObject(this.testContext);
   }
 
-  // From Start through a sample to onboarding's account screen, where the create-account form is.
   createAccountThroughSample = (): Promise<SignInPageObject> => createAccountThroughSample(this.testContext);
 
   get sampleDeck(): SampleDeckPageObject {
@@ -427,8 +399,6 @@ export class Launcher {
     return new SharedOverviewPageObject(this.testContext);
   }
 
-  // The copy the API inlines in the document a shared link opens, put there the same way
-  // (docs/features/sharing.md).
   inlineSharePayload = (payload: unknown): Promise<void> =>
     test.step("Launcher.inlineSharePayload", () =>
       this.page.evaluate(
@@ -443,8 +413,6 @@ export class Launcher {
         { id: SHARE_PAYLOAD_ELEMENT_ID, json: JSON.stringify(payload) },
       ));
 
-  // Whether this device still holds a library for the account, the no-account one under null
-  // (docs/features/account-deletion.md, "On the device").
   libraryIsKept = (accountId: string | null): Promise<boolean> =>
     test.step("Launcher.libraryIsKept", () => this.page.evaluate((id) => window.__iwftLibraries__.has(id), accountId));
 

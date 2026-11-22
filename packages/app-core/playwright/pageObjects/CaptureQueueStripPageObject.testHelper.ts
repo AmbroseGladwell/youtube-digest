@@ -2,7 +2,6 @@ import { expect } from "@playwright/experimental-ct-react";
 import { captureQueueStripViewTestIds } from "../../src/features/captureQueue/components/CaptureQueueStripView/CaptureQueueStripViewTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// The queue's strip in the generation strip's slot (design 27k).
 export class CaptureQueueStripPageObject extends PageObject {
   verifyReads = (title: string | RegExp, meta?: string | RegExp) =>
     this.step(`verifyReads ${String(title)}`, async () => {

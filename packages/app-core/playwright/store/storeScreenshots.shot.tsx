@@ -8,34 +8,18 @@ import type { ApiKeys } from "../../src/features/apiKeys/ApiKeys.js";
 import { SIMULATED_EMAIL } from "../network/BackendSimulator.testHelper.js";
 import { storeLibrary, theDataNote, theSellingNote } from "./storeLibrary.testHelper.js";
 
-// Four of the five screens are captures of a real side panel rather than renders. A render
-// here is taken at the harness's viewport, and the panel's layout is driven by media queries
-// that read that viewport, so a 420px-wide element inside a 1280px window lays itself out as
-// the desktop app and not as the panel anyone installs
-// (docs/architecture/store-listing.md, "The screenshots").
+// Captured, not rendered: docs/architecture/store-listing.md, "The screenshots".
 const SOURCES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../apps/extension/store/sources");
 
 const SHOTS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../apps/extension/store/screenshots");
 
-// Every shot is the side panel, because the side panel is the extension. Its other surface,
-// app.html, is an options_ui page nothing in the product links to, so the one shot that is
-// not the panel is the library the account syncs to, and its caption says so
-// (docs/architecture/store-listing.md, "The screenshots").
-
-// Captures are placed by height, not width, so the panel is the same size in every one of
-// them and the listing does not jump as it is scrolled through. The four sources were taken
-// at slightly different panel widths, so their placed widths differ by about three pixels;
-// the right edge is the fixed one, which puts that difference against the abstracted page
-// where nothing lines up with it anyway.
+// Placed by height, not width: docs/architecture/store-listing.md, "The screenshots".
 const CAPTURE_HEIGHT = 700;
 
-// The two families tokens.scss names. The app's own @font-face rules ship in the extension's
-// public/fonts.css, which this harness never loads, so a shot taken without this would be the
-// fallback stack rather than the product.
+// The app's @font-face rules ship in public/fonts.css, which this harness never loads.
 const FONTS = "https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;600;700&display=swap";
 
-// tokens.scss's own light palette, so the image around the panel is the product's own and
-// not a second one invented for the store.
+// tokens.scss's own light palette.
 const GROUND = "#ece8e1";
 const GRID = "rgba(21, 22, 24, 0.035)";
 const INK = "#151618";
@@ -47,8 +31,7 @@ const MARK =
   '<circle cx="16" cy="14.5" r="7.5" fill="none" stroke="#E2511E" stroke-width="3"></circle>' +
   '<rect x="7" y="25" width="18" height="2.5" fill="#E2511E"></rect></svg>';
 
-// The keys screen shows the last four characters of the stored key, and the shared seed's
-// end in "test", which reads as a fixture on a store page rather than as someone's key.
+// The shared seed's keys end in "test", which reads as a fixture on a store page.
 const ANTHROPIC_KEY: ApiKeys = {
   keys: { anthropic: { key: "sk-ant-api03-7f2c9e41b6d8", addedAt: "2026-09-12T09:00:00.000Z" } },
 };
@@ -65,34 +48,24 @@ const dressed = async (page: Page): Promise<void> => {
   await expect.poll(() => page.evaluate(() => [...document.images].every((image) => image.complete))).toBe(true);
 };
 
-// What fills the window to the left of the panel. "wide" is the one shot that is not the
-// panel at all, and fills the window with the web app instead.
+// "wide" is the one shot that is not the panel, and fills the window with the web app.
 type Surface = "page" | "chat" | "wide";
 
 interface Caption {
   lead: string;
   accent: string;
   sub: string;
-  // Headlines wrap on their own, which can start the accent mid-line or strand its last word.
-  // Setting this breaks the line at the split, so the two halves get a line each.
   breakAtSplit?: boolean;
 }
 
 interface Composition {
   surface?: Surface;
-  // The width to place a capture at, which panelFrom works out from the image. Null renders
-  // the live #root at the panel's own width instead.
+  // Null renders the live #root at the panel's own width instead.
   captureWidth?: number | null;
-  // The two notes the chat surface's reply names, passed in so they come from the library
-  // rather than being written out here.
   cites?: readonly [string, string];
 }
 
-// The panel is a fifth of the store's 1280 frame, so the rest of the image is a caption and
-// the browser the panel is docked in. The panel's own pixels are untouched: nothing is
-// scaled unevenly, recoloured or drawn over, and the window behind it is deliberately an
-// abstraction, a title bar and soft grey blocks, carrying no site's name, mark or layout
-// (docs/architecture/store-listing.md, "The screenshots").
+// The window behind is deliberately abstract: docs/architecture/store-listing.md, "The screenshots".
 const composed = (
   page: Page,
   { lead, accent, sub, breakAtSplit = false }: Caption,
@@ -100,10 +73,8 @@ const composed = (
 ): Promise<void> =>
   page.evaluate(
     ([placed, tall, ground, grid, ink, muted, accentInk, chrome, mark, leadText, accentText, subText, which, splitLine, named]) => {
-      // A capture of a real panel, placed in the window the way a live panel is.
       const captured = placed !== null;
-      // The width Chrome opens the side panel at, for a live render. Every capture brings
-      // its own, worked out from the image.
+      // The width Chrome opens the side panel at, for a live render.
       const PANEL = Number(placed ?? 420);
       const HEIGHT = Number(tall);
       const chatting = which === "chat";
@@ -128,9 +99,6 @@ const composed = (
         return element as HTMLElement;
       };
 
-      // The window the panel is docked in: a title bar, an address pill with no text, and
-      // blocks standing in for a page. Nothing here names or resembles a particular site.
-      // One geometry for every shot, so the frame does not move as the listing is scrolled.
       const INSET = 16;
       const BAR = 38;
       const frame = add(document.body, "div", {
@@ -179,9 +147,7 @@ const composed = (
         padding: "26px 24px",
         flexDirection: "column",
         gap: "14px",
-        // The blocks are a page that carries on past the window, so they fade out. A
-        // conversation does not: it is the whole of what it is, and a faded last line reads
-        // as a rendering fault.
+        // A conversation is whole, so it doesn't fade like the page blocks behind it.
         maskImage: chatting ? "none" : "linear-gradient(to bottom, #000 45%, transparent 92%)",
       });
       if (chatting) {
@@ -272,9 +238,6 @@ const composed = (
       name.textContent = "The Overview";
       logo.append(name);
 
-      // The panel itself, docked at the window's right edge, at the width Chrome gives it.
-      // A capture is set the same distance off the window's top and bottom edges, so it sits
-      // in the frame rather than filling it.
       const inner = frame.clientHeight - BAR;
       const root = document.getElementById("root");
       if (root !== null) {
@@ -289,8 +252,7 @@ const composed = (
                 height: captured ? `${HEIGHT}px` : "",
                 width: `${PANEL}px`,
                 overflow: "hidden",
-                // A capture is a rectangle of pixels, and a hard corner against the window's
-                // own soft one reads as pasted on. A small radius sets it into the frame.
+                // A small radius keeps a capture from reading as pasted onto a soft-cornered window.
                 borderRadius: captured ? "12px" : "0",
                 boxShadow: "-18px 0 40px rgba(21, 22, 24, 0.10)",
               }
@@ -325,18 +287,13 @@ const composed = (
     ] as const,
   );
 
-// A capture taken by hand catches a line or two of the dimmed browser behind the panel on
-// one or two of its edges, which reads as a dark hairline once the capture is set into the
-// window. Whole rows and columns of it are trimmed off, so the sources stay exactly what came
-// off the machine and the next capture needs no cropping either.
+// Trims the dimmed browser a hand capture catches at its edges, so sources stay untouched.
 const EDGE_TRIM_LIMIT = 8;
 
-// The browser behind the panel dims to about rgb(53,53,53). The panel's own ink is near
-// rgb(21,22,24), so a band this tight around the chrome grey cannot catch text.
+// The dimmed browser is about rgb(53,53,53) and panel ink near rgb(21,22,24), so text can't match.
 const CHROME_GREY = { lowest: 35, highest: 75, spread: 6 } as const;
 
-// The panel's own pixels, from a real install, put where the live panel would be. Returns the
-// width the shared height gives it, which composed() then docks it at.
+// Returns the width the shared height gives the capture.
 const panelFrom = async (page: Page, file: string): Promise<number> => {
   const source = `data:image/png;base64,${readFileSync(path.join(SOURCES, file)).toString("base64")}`;
   const aspect = await page.evaluate(
@@ -424,9 +381,7 @@ const panelFrom = async (page: Page, file: string): Promise<number> => {
 const shoot = (page: Page, name: string): Promise<Buffer> =>
   page.screenshot({ path: path.join(SHOTS, `${name}.png`), animations: "disabled" });
 
-// The captions sell what the reader gets, not what the software has, and they say it the
-// positive way round: what an hour of your evening buys, never what your saved list is full
-// of (docs/architecture/store-listing.md, "The words").
+// Benefits, the positive way round: docs/architecture/store-listing.md, "The screenshots".
 
 test("a note, which is what saving something gets you", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
@@ -446,8 +401,6 @@ test("a note, which is what saving something gets you", async ({ launcher }) => 
   await shoot(capture.page, "1-note");
 });
 
-// Following a playlist is the one thing that works at more than one video at a time, so it
-// gets the slot chapters had.
 test("a pasted playlist, previewed before it runs", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
   const width = await panelFrom(capture.page, "playlist-panel.png");
@@ -466,22 +419,16 @@ test("a pasted playlist, previewed before it runs", async ({ launcher }) => {
   await shoot(capture.page, "2-playlist");
 });
 
-// The library, and so the running total, is the web app's: the panel is one video by design
-// (docs/features/extension-panel.md), so this one shot is the wider surface the account syncs
-// to, and its caption says so.
 test("the hours the habit gives back", async ({ launcher, backendSimulator }) => {
   storeLibrary(backendSimulator);
-  // The milestone card is the point of this shot, and a crossing is recorded against the
-  // account, so this one is signed in (docs/features/time-saved.md, "Milestones").
+  // A milestone crossing is recorded against the account, so this shot is signed in.
   const shelf = await launcher.launchExpectingLibrary(SIGNED_IN);
   await dressed(shelf.page);
-  // 1h crosses two milestones, and the smaller is on top. The card behind it is the one worth
-  // showing, so the first is dismissed the way a reader would dismiss it.
+  // 1h crosses two milestones; the one behind is worth showing, so the first is dismissed.
   const card = shelf.page.getByTestId(milestoneCardTestIds.root).first();
   await shelf.page.getByTestId(milestoneCardTestIds.dismissButton).first().click();
   await expect(card.getByTestId(milestoneCardTestIds.pill)).toHaveText(/1 hour/);
-  // Five lines cycle: three jokes, then two facts (milestoneLines.ts). A store page is not the
-  // place for the sellotape one, so the card is moved to the first of the facts.
+  // Moves past the jokes to the first fact (milestoneLines.ts).
   await card.getByTestId(milestoneCardTestIds.dot(3)).click();
   // The total rolls up to its value, so it is waited out rather than caught part-way.
   await expect(card.getByTestId(milestoneCardTestIds.figure)).toHaveText(/^1h\s*00m$/);
@@ -498,10 +445,6 @@ test("the hours the habit gives back", async ({ launcher, backendSimulator }) =>
   await shoot(shelf.page, "3-time-saved");
 });
 
-// The connection itself, in the panel, with the conversation it makes possible beside it. The
-// panel is the product's own screen; the bubbles are an illustration of the assistant's side,
-// drawn in onboarding's own bubble styling and citing notes that really are in the house
-// account's samples (docs/architecture/store-listing.md, "The screenshots").
 test("the connection, and the conversation it allows", async ({ launcher }) => {
   const capture = await launcher.launchPanel({ apiKeys: ANTHROPIC_KEY });
   const width = await panelFrom(capture.page, "assistant-panel.png");

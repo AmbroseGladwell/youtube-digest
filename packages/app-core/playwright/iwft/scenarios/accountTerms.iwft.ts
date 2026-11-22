@@ -5,8 +5,6 @@ import { ANONYMOUS_ID, makeAnalyticsConsent } from "../../../src/features/analyt
 const SAID_YES = { analyticsConsent: makeAnalyticsConsent({ answer: "share" }) };
 const SAID_NO = { analyticsConsent: makeAnalyticsConsent({ answer: "dontShare" }) };
 
-// Design 62j: creating an account is agreeing to the terms, said directly above the button
-// (docs/features/analytics-consent.md, "Creating an account").
 test.describe("the create-account page", () => {
   test("says what creating an account agrees to, above the button, with no checkbox", async ({ launcher }) => {
     await launcher.launch({ sync: true });

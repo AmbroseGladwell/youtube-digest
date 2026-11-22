@@ -3,8 +3,6 @@ import { codeStepTestIds } from "../../src/features/auth/components/CodeStep/Cod
 import { deleteAccountDialogTestIds } from "../../src/features/auth/components/DeleteAccountDialog/DeleteAccountDialogTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
-// Designs 184b–184d: the dialog's three steps and the failure after the last
-// (docs/features/account-deletion.md).
 export class DeleteAccountDialogPageObject extends PageObject {
   verifyExplains = (): Promise<DeleteAccountDialogPageObject> =>
     this.step("verifyExplains", async () => {
@@ -47,8 +45,6 @@ export class DeleteAccountDialogPageObject extends PageObject {
 
   verifyIsClosed = () => this.step("verifyIsClosed", () => this.expectToHaveCount(deleteAccountDialogTestIds.root, 0));
 
-  // The code step, 14i's box inside the dialog.
-
   verifyAsksForCode = (email: string) =>
     this.step(`verifyAsksForCode ${email}`, async () => {
       await expect(this.get(codeStepTestIds.heading)).toHaveText("Confirm it’s you");
@@ -73,8 +69,6 @@ export class DeleteAccountDialogPageObject extends PageObject {
     });
 
   clickCancelCode = () => this.step("clickCancelCode", () => this.click(codeStepTestIds.cancelButton));
-
-  // Deleting, and when it can't.
 
   verifyIsDeleting = () =>
     this.step("verifyIsDeleting", async () => {

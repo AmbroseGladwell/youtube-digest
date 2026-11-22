@@ -110,8 +110,6 @@ beforeMount<IwftHooksConfig>(async ({ hooksConfig }) => {
   window.__iwftDeleteLibrary__ = async (accountId) => {
     libraries.delete(accountId);
   };
-  // Another tab of the same browser, as this one sees it: what it writes arrives as a storage
-  // event, and a run it holds answers on the channel (docs/features/onboarding.md).
   let heldRun: BroadcastChannel | null = null;
   const otherTabWrote = (key: string) => window.dispatchEvent(new StorageEvent("storage", { key, storageArea: localStorage }));
   window.__iwftAnotherTab__ = {

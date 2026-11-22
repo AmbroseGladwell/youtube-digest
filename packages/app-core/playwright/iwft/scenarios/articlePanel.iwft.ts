@@ -54,8 +54,7 @@ const chrome = {
   reloads: (page: Page) => page.evaluate(() => window.__iwftArticlePages__?.reloads),
 };
 
-// An undefined custom property draws in the parent's colour without a word (OV-212), so what is
-// compared is the drawn colour against the --label token resolved beside it, in both schemes.
+// An undefined custom property silently draws the parent's colour (OV-212), so the drawn colour is compared.
 const expectDrawnInTheLabelTone = async (page: Page, label: Locator) => {
   for (const colorScheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme });

@@ -8,8 +8,7 @@ import { makeCaptionRun } from "../../../src/features/transcripts/types/Transcri
 const VIDEO_ID = VideoId.parse("captionedVideo1");
 const VIDEO_URL = "https://www.youtube.com/watch?v=captionedVideo1";
 
-// Three runs far enough apart that each is its own block, with the search term in two of
-// them (docs/features/transcript-storage.md's silenceMs is what separates them).
+// Far enough apart for silenceMs to make each run its own block, the search term in two.
 const SEGMENTS: TranscriptSegment[] = [
   ...makeCaptionRun(
     ["Productivity is the claim here,", "and productivity is the trap", "that this whole video sets", "for anyone listening."],

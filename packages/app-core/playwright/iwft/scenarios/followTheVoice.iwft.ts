@@ -1,8 +1,7 @@
 import { test } from "../../support/fixtures.testHelper.js";
 import { makeOverview } from "../../../src/features/overviews/types/OverviewFactory.testHelper.js";
 
-// Long enough that the page scrolls well past a window, which is what reading ahead of
-// the voice means.
+// Long enough that the page scrolls well past a window.
 const NOTE = makeOverview({
   inOneLine: "A talking-head explainer about three data points.",
   coreClaim: "The economy may finally be improving.",
@@ -24,8 +23,6 @@ const NOTE = makeOverview({
   watchAnyway: { answer: "no", reason: "A written note carries it.", range: null },
 });
 
-// The bug: every open scrolled the page down to the premise before the reader had asked
-// for anything (docs/features/audio-player.md, "The note follows the voice").
 test("opening a note nobody is reading aloud leaves the page at the top", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();
@@ -70,8 +67,6 @@ test("reading ahead of the voice hands the scroll back, and the way back returns
   await reader.verifyOffersTheWayBackToTheVoice(false);
 });
 
-// Nothing is reading, so nothing wants the scroll back: scrolling a note you are reading
-// with your eyes is just reading it.
 test("scrolling a note that is not being read aloud offers no way back", async ({ launcher, backendSimulator }) => {
   backendSimulator.overviews.seed(NOTE);
   const library = await launcher.launchExpectingLibrary();

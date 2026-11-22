@@ -43,8 +43,7 @@ test("a free rung that fails falls through to our server, rather than failing th
   await form.submitUrl(VIDEO_URL);
   await launcher.appShell.newOverviewDialog.verifyStepState("02", "done");
 
-  // Both caption clients were tried before the rung gave up, which is the cascade doing
-  // its job rather than one client's failure ending the run.
+  // Both caption clients were tried before the rung gave up.
   expect(backendSimulator.getCallCount(EndpointKey.INNERTUBE_PLAYER)).toBe(2);
   expect(backendSimulator.getCallCount(EndpointKey.SERVICE_TRANSCRIPT)).toBe(1);
   expect(await backendSimulator.overviewStore.listOverviews()).toHaveLength(1);
@@ -88,7 +87,6 @@ const serviceTranscript = () =>
     segments: makeCaptionRun(["Fetched by our own server.", "Nobody else had it yet."], { startMs: 0, cueMs: 2000 }),
   });
 
-// The definition of done for OV-55 (docs/architecture/server-side-transcripts.md).
 test("a web reader with no extension gets an uncached video's transcript from our server", async ({ launcher, backendSimulator }) => {
   backendSimulator.transcripts.seedService(serviceTranscript());
   const form = await launcher.launchExpectingFirstRun({ apiKeys: ANTHROPIC_ONLY });

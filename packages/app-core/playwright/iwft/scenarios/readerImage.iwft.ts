@@ -85,8 +85,6 @@ test("an image that fails to load leaves the head as it is with none", async ({ 
   await reader.verifyAboveTitle("channel");
 });
 
-// Design 205b gives the panel the phone's head, image and all. It is the note's own stored
-// thumbnail, never taken from the tab.
 test("the panel's head carries the note's image, as the phone's does", async ({ launcher, backendSimulator }) => {
   const overview = makeOverview();
   backendSimulator.overviews.seed(withImage(overview, IMAGE));
@@ -95,8 +93,6 @@ test("the panel's head carries the note's image, as the phone's does", async ({ 
 
   await reader.verifyHeadHasImage(true);
 });
-
-// OV-151: the image is the control that switches it between the tile and the column's width.
 
 const YOUTUBE_THUMBNAIL = "https://i.ytimg.com/vi/pricing/hqdefault.jpg";
 const svg = (width: number, height: number) =>

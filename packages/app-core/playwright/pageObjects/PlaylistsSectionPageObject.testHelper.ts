@@ -4,7 +4,6 @@ import { playlistsSectionTestIds } from "../../src/features/playlists/components
 import { PageObject } from "./PageObject.testHelper.js";
 import { PlaylistFollowFlowPageObject } from "./PlaylistFollowFlowPageObject.testHelper.js";
 
-// Settings › YouTube playlists (designs 27p–27s).
 export class PlaylistsSectionPageObject extends PageObject {
   get flow(): PlaylistFollowFlowPageObject {
     return new PlaylistFollowFlowPageObject(this.testContext);
@@ -43,7 +42,6 @@ export class PlaylistsSectionPageObject extends PageObject {
   verifyFacts = (index: number, facts: string) =>
     this.step(`verifyFacts ${index} ${facts}`, () => expect(this.get(followedPlaylistRowTestIds.facts).nth(index)).toHaveText(facts));
 
-  // Opens the playlist's pace menu, checks what an option says it would do, and chooses it.
   choosePace = (title: string, pace: string, detail?: string) => this.choose("Pace", title, pace, detail);
 
   chooseOrder = (title: string, order: string, detail?: string) => this.choose("Order", title, order, detail);

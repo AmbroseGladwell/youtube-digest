@@ -37,7 +37,7 @@ export class LibraryPageObject extends PageObject {
     return new MilestoneStackPageObject(this.testContext);
   }
 
-  // The figure is drawn as rolling digits, so what it says is read from its accessible name.
+  // The figure is drawn as rolling digits, so it is read from its accessible name.
   verifyTimeSavedSays = (spoken: string) =>
     this.step(`verifyTimeSavedSays ${spoken}`, () =>
       expect(this.get(libraryPageTestIds.timeSavedButton)).toHaveAttribute("aria-label", `Time saved: ${spoken}`),
@@ -56,8 +56,6 @@ export class LibraryPageObject extends PageObject {
     return new SortPillPageObject(this.testContext);
   }
 
-  // Both kinds of card, in the order the list lays them out, so a test can see where an
-  // unreadable record lands among the readable ones.
   verifyCardOrder = (titles: string[]) =>
     this.step(`verifyCardOrder ${titles.join(", ")}`, () =>
       expect(
@@ -87,9 +85,6 @@ export class LibraryPageObject extends PageObject {
       return this;
     });
 
-  // The search sits over the list rather than in the rail (design 2a), so it is the
-  // page's rather than the filter panel's.
-  // On a phone the search is folded into an icon until it is opened ("OV-168 5" 168au).
   search = (query: string) =>
     this.step(`search ${query}`, async () => {
       if (await this.get(librarySearchTestIds.openButton).isVisible()) {
@@ -100,7 +95,7 @@ export class LibraryPageObject extends PageObject {
 
   openSearch = () => this.step("openSearch", () => this.click(librarySearchTestIds.openButton));
 
-  // OV-292: `fill` sets the whole value at once, which hides a dropped key.
+  // `fill` sets the whole value at once, which hides a dropped key (OV-292).
   typeInTheSearch = (text: string) =>
     this.step(`typeInTheSearch ${text}`, async () => {
       if (await this.get(librarySearchTestIds.openButton).isVisible()) {
@@ -202,8 +197,6 @@ export class LibraryPageObject extends PageObject {
       }).toPass({ timeout: 2_000 });
     });
 
-  // The rail is chrome: it comes to rest on the masthead's lower edge and stays there while
-  // the list scrolls past it (docs/features/overview-redesign.md, "Chrome that stays put").
   verifyRailRestsOnTheMasthead = () =>
     this.step("verifyRailRestsOnTheMasthead", () =>
       expect(async () => {
@@ -219,15 +212,13 @@ export class LibraryPageObject extends PageObject {
       expect(Math.round(rail.y + rail.height)).toBeGreaterThanOrEqual(this.page.viewportSize()!.height);
     });
 
-  // On a narrow screen the rail is a bottom sheet, opened from the button beside the search (84i).
   openFilters = () =>
     this.step("openFilters", async () => {
       await this.click(libraryPageTestIds.filterButton);
       await this.verifyFiltersAreOpen(true);
     });
 
-  // The sheet slides off the bottom rather than unmounting, so what says it is open is the
-  // button's own state and where the sheet has come to rest.
+  // The sheet slides off rather than unmounting, so its open state is read from the button and its rest.
   verifyFiltersAreOpen = (open: boolean) =>
     this.step(`verifyFiltersAreOpen ${open}`, () =>
       expect(async () => {
@@ -245,8 +236,6 @@ export class LibraryPageObject extends PageObject {
       expect(head.y).toBeGreaterThanOrEqual(masthead.y + masthead.height);
     });
 
-  // Tab all the way round the sheet's own controls and a little past them: every stop
-  // has to land back inside it, or the reader is lost behind a sheet they cannot see.
   verifyTabbingStaysInTheFilterSheet = (stops: number) =>
     this.step(`verifyTabbingStaysInTheFilterSheet ${stops}`, async () => {
       for (let step = 0; step < stops; step += 1) {
@@ -255,10 +244,7 @@ export class LibraryPageObject extends PageObject {
       }
     });
 
-  // A filter change glides the rows as snapshots in the browser's top layer, above any
-  // z-index the page can give the sheet. The open sheet and its scrim stay over the rows
-  // only by being captured into that layer themselves, so this watches the glide the change
-  // starts for their snapshots (useLibraryGlide.ts, libraryTransitions.scss).
+  // The glide paints above any z-index, so the sheet stays over the rows only if it is captured too.
   verifyTheGlideCapturesTheFilterSheet = (change: () => Promise<void>) =>
     this.step("verifyTheGlideCapturesTheFilterSheet", async () => {
       const wanted = ["::view-transition-group(library-filter-sheet)", "::view-transition-group(library-filter-scrim)"];
@@ -307,7 +293,6 @@ export class LibraryPageObject extends PageObject {
   verifyFocusIsOnTheFilterButton = () =>
     this.step("verifyFocusIsOnTheFilterButton", () => expect(this.get(libraryPageTestIds.filterButton)).toBeFocused());
 
-  // Every filter off, the order kept: the way a scenario that seeds read notes sees them.
   showAll = () => this.step("showAll", () => this.click(libraryPageTestIds.showAllButton));
 
   resetView = () => this.step("resetView", () => this.click(libraryPageTestIds.resetViewButton));
@@ -367,8 +352,7 @@ export class LibraryPageObject extends PageObject {
   nthCard = (index: number): LibraryOverviewCardPageObject =>
     new LibraryOverviewCardPageObject(this.testContext, this.get(libraryOverviewCardTestIds.root).nth(index));
 
-  // A card already wholly on screen, so opening it moves the page nowhere and the
-  // position read before the click is the one to come back to.
+  // Already wholly on screen, so opening it moves the page nowhere.
   openReaderFromACardOnScreen = (): Promise<ReaderPageObject> =>
     this.step("openReaderFromACardOnScreen", async () => {
       const cards = this.get(libraryOverviewCardTestIds.root);

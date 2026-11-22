@@ -4,7 +4,7 @@ import { SIMULATED_ACCOUNT_ID, SIMULATED_EMAIL } from "../../network/BackendSimu
 import { IWFT_VIDEO_ID } from "../../network/fixtures/innerTubeFixtures.js";
 import { makeProject } from "../../../src/features/projects/types/ProjectFactory.testHelper.js";
 
-// Overviews made on us, so the simulator holds the input each one was made from.
+// Made on us, so the simulator holds the input each overview was made from.
 const SIGNED_IN_WITHOUT_A_KEY = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },

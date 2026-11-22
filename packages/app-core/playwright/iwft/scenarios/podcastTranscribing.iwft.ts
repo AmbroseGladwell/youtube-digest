@@ -6,8 +6,6 @@ import { generationStepsTestIds } from "../../../src/features/newOverview/compon
 import { podcastLinkStatusTestIds } from "../../../src/features/newOverview/components/PodcastLinkStatus/PodcastLinkStatusTestIds.js";
 import { transcriptionNoticeTestIds } from "../../../src/features/podcasts/components/TranscriptionNotice/TranscriptionNoticeTestIds.js";
 
-// OV-305: an episode with no transcript anywhere, transcribed from its audio when the reader
-// chooses it (designs 305c–305o).
 const SIGNED_IN = {
   sync: true,
   syncConnection: { apiUrl: "https://sync.test", token: null, accountId: SIMULATED_ACCOUNT_ID, email: SIMULATED_EMAIL },
