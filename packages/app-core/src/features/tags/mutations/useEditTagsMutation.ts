@@ -12,8 +12,7 @@ interface EditTagsContext {
   previousSettings: Settings | undefined;
 }
 
-// One merge, rename, delete or undo: every note's new tags as its own synced field write, then
-// the aliases (docs/features/tag-reuse.md, "Merge and rename rewrite the notes").
+// Why every note is rewritten: docs/features/tag-reuse.md, "Merge and rename rewrite the notes".
 export const useEditTagsMutation = () => {
   const { overviewStore, settingsStore } = useStores();
   const queryClient = useQueryClient();

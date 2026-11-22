@@ -7,10 +7,7 @@ import { useSharedPageReader } from "../../useSharedPageReader.js";
 import styles from "./SharedPageHeader.module.scss";
 import { sharedPageHeaderTestIds } from "./SharedPageHeaderTestIds.js";
 
-// Design 30e: the shared page's own head. None of the app's chrome, because a visitor has
-// no library behind them — just the way in, or for a reader who is signed in, the way back
-// to their own overviews. It stays put as the page scrolls, the way the app's own masthead
-// does, and the tab strip rests against its measured height (docs/features/sharing.md).
+// None of the app's chrome, because a visitor has no library behind them.
 export const SharedPageHeader = ({ ref }: { ref?: Ref<HTMLElement> }) => {
   const analytics = useAnalytics();
   const { signedIn } = useSharedPageReader();

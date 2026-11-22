@@ -10,8 +10,6 @@ import { useNewProject } from "./useNewProject.js";
 import { useProjectSummaries } from "./useProjectSummaries.js";
 import { activeSummaries, projectsHolding } from "./util/projectSummaries.js";
 
-// The projects an overview is in, from its own page: the line under the byline, Add to
-// project… in ⋯, the picker both open, and New project… from the picker (168r–168x).
 export const useOverviewProjects = (overview: Overview | null, webApp: ProjectsLineProps["webApp"]) => {
   const entries = useOverviewsWithStateQuery();
   const { summaries } = useProjectSummaries(readableEntries(entries.data ?? []));

@@ -26,11 +26,7 @@ export interface MovingStores {
   transcriptStore: TranscriptStore;
 }
 
-// The no-account library into the account's, one overview per video: where the account
-// already has an overview of a video, its copy is kept and this one is let go. Each overview
-// is written into the account before it leaves here, so a move that stops halfway is
-// finished by running it again: what already arrived now counts as the account's, and only
-// goes from here (docs/features/account-libraries.md, "The move on sign-in").
+// Rerunning finishes a stopped move: docs/features/account-libraries.md, "The move on sign-in".
 export const moveLibraryInto = async (from: MovingStores, into: MovingStores): Promise<LibraryMove & { sourceKeys: VideoId[] }> => {
   const [leaving, held, heldUnreadable, leavingTopics, accountTopics] = await Promise.all([
     from.overviewStore.listOverviews(),

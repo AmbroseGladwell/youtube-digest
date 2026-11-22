@@ -3,15 +3,12 @@ import styles from "./SharedTranscriptPrompt.module.scss";
 import { sharedTranscriptPromptTestIds } from "./SharedTranscriptPromptTestIds.js";
 
 export interface SharedTranscriptPromptProps {
-  // "Save to my overviews", or "Open in my overviews" once the visitor holds it.
   label: string;
   saving: boolean;
   onSave: () => void;
 }
 
-// A shared link carries the overview, not the source's words: those are each reader's own, so a
-// visitor reads the transcript once the overview is in their own library (OV-295,
-// docs/features/sharing.md).
+// Why no transcript: docs/features/sharing.md, "What is in a shared copy, and what is not".
 export const SharedTranscriptPrompt = ({ label, saving, onSave }: SharedTranscriptPromptProps) => {
   return (
     <section className={styles.root} data-testid={sharedTranscriptPromptTestIds.root}>

@@ -23,8 +23,6 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 export const CONNECTIONS_INTRO =
   "Let Claude or another assistant read your overviews and transcripts, so you can ask about everything you’ve saved, mark them read or favourite for you, and gather them into projects.";
 
-// Design 301f: arriving from a question's "Set up a connection", what happens next, until the
-// assistant questions open in is connected.
 const arrivalNote = (chosen: ChosenAssistant | null): string => {
   if (chosen === null || chosen === "other") {
     return "Pick your assistant and connect it, then go back to your question.";
@@ -33,9 +31,7 @@ const arrivalNote = (chosen: ChosenAssistant | null): string => {
   return `Connect ${name}, then go back to your question. It’ll open in ${name}, connected.`;
 };
 
-// Design 58i–58r. A connection belongs to an account rather than to a plan
-// (docs/architecture/tiers.md), so signed out is the only state that says what it would take
-// rather than showing controls that cannot work.
+// Signed out is the one state without controls: docs/features/mcp-connector.md, "Settings › Connections".
 export const ConnectionsSection = () => {
   const analytics = useAnalytics();
   const sync = useSync();

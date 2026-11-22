@@ -13,8 +13,7 @@ const noticeIconOf = (deleted: boolean | undefined, offline: boolean): StrokeIco
   return offline ? "wifiOff" : "cloudUpload";
 };
 
-// Designs 47d-2 and 47d-3: told after the fact, never asked. It stays until dismissed and
-// does not take focus, which goes to the page (docs/features/account-libraries.md).
+// Why it never takes focus: docs/features/account-libraries.md, "Sign-out".
 export const SignOutNotice = () => {
   const sync = useSync();
   const surface = useSurface();

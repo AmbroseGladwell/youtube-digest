@@ -19,8 +19,6 @@ export type OverviewPageAnalytics = {
   };
 };
 
-// The reader's events with the overview's id already said, so a component on the page names
-// only what happened (docs/architecture/analytics.md, "One overview's events").
 export const bindOverviewId = (reader: Analytics["reader"], overviewId: OverviewId): ReaderAnalytics => {
   return Object.fromEntries(
     Object.entries(reader).map(([screen, actions]) => [

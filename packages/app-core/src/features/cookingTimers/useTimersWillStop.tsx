@@ -17,15 +17,11 @@ interface Asking {
 }
 
 export interface TimersWillStop {
-  // How many timers going on would stop, so copy can say "it" or "them".
   count: number;
-  // Runs `go` at once with no timers; otherwise warns first, and stops them if the reader goes on.
   ask: (copy: TimersWillStopCopy, by: CookingTimerEnd, go: () => void, stay?: () => void) => void;
   dialog: ReactNode;
 }
 
-// Signing out, or leaving a shared page for the app, stops the timers (OV-288 edge case 8, owner's
-// option C); this asks first (designs 288ae–288ag).
 export const useTimersWillStop = (): TimersWillStop => {
   const timers = useCookingTimerList();
   const [asking, setAsking] = useState<Asking | null>(null);

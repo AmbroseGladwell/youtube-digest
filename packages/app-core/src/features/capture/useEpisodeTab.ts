@@ -15,14 +15,11 @@ export type EpisodeTabState =
 
 export type EpisodeTab = EpisodeTabState & {
   url: string;
-  // "Spotify" or "Apple Podcasts": the app the tab is open in.
   on: string;
   retry: () => void;
 };
 
-// Design 106k: a Spotify or Apple Podcasts tab beside the panel, read from its address alone by
-// our server, so Chrome is never asked for the site. A show's page is known from the address and
-// isn't sent anywhere. Null where there's no such tab, or no account on a server to read through.
+// Read from its address alone by our server, so Chrome is never asked for the site (design 106k).
 export const useEpisodeTab = (): EpisodeTab | null => {
   const activeVideoUrl = useActiveVideoUrl();
   const activePage = useActivePage();

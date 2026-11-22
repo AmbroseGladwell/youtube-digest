@@ -19,9 +19,7 @@ export const formatSyncedAgo = (lastSyncedAt: string, now: Date): string => {
   return `Synced ${format.format(-Math.floor(elapsed / DAY_MS), "day")}`;
 };
 
-// The one line Settings shows about sync. It says what the last cycle found, and it
-// always carries what is still waiting, because a library that is quietly behind is the
-// failure this project exists to avoid (docs/features/sync-client.md).
+// Always says what is waiting: a library quietly behind is the failure this project exists to avoid.
 export const syncStatusLine = (status: SyncStatus, now: Date): string => {
   const waiting = [
     ...(status.pending > 0 ? [`${status.pending} ${status.pending === 1 ? "change" : "changes"} waiting to send`] : []),

@@ -12,9 +12,7 @@ export interface SharedPageAnalyticsRuntimeProps {
   children: ReactNode;
 }
 
-// A shared link counts what its visitors do, account or not, against the share's own route
-// rather than the reader's session; the page load's id lives in memory and nowhere else
-// (docs/architecture/analytics.md, "The shared page").
+// Why the share's own route and a view id in memory: docs/architecture/analytics.md, "The shared page".
 export const SharedPageAnalyticsRuntime = ({ token, children }: SharedPageAnalyticsRuntimeProps) => {
   const context = useAnalyticsContext();
   const errors = useErrorReporter();

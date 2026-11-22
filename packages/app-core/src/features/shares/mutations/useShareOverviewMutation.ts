@@ -10,10 +10,7 @@ export interface ShareOverviewVariables {
   overview: Overview;
 }
 
-// Making a link and replacing the copy behind one are the same call, because to the reader
-// they are the same act (docs/features/sharing.md). The narration is gathered here rather than
-// passed in, so every way of sharing sends the same copy. The transcript never goes: the source's
-// words are each reader's own, not ours to publish on a link (OV-295).
+// No transcript: docs/features/sharing.md, "What is in a shared copy, and what is not".
 export const useShareOverviewMutation = () => {
   const api = useShareApi();
   const narrationApi = useNarrationApi();

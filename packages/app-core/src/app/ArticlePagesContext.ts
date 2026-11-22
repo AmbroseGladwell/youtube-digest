@@ -7,12 +7,10 @@ export interface ActivePage {
   tabId: number;
 }
 
-// Everything that needs a browser tab, injected because app-core can't read chrome.*. The web
-// app supplies nothing, which is what hides all of it there (docs/features/article-panel.md).
+// Injected because app-core can't read chrome.*; the web app supplies none, which hides all of it there.
 export interface ArticlePages {
   subscribe: (onChange: () => void) => () => void;
-  // The ordinary web page in front of the panel. Null on YouTube, on a browser page, or with
-  // no tab: those are not offers to read anything.
+  // Null on YouTube, on a browser page, or with no tab: those are not offers to read anything.
   getPage: () => ActivePage | null;
   hasAccess: (url: string) => Promise<boolean>;
   // Must be called inside the click, or Chrome refuses it.

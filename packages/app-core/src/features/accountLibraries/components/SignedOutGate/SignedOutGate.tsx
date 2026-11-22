@@ -6,9 +6,6 @@ import styles from "./SignedOutGate.module.scss";
 import { signedOutGateTestIds } from "./SignedOutGateTestIds.js";
 import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 
-// Signed out where there are accounts, in place of every page that shows overviews: none is
-// seen without an account (docs/architecture/tiers.md, "Signed out"). In the panel it is design
-// 46q, for a reader who has an account and leads with signing in to it.
 export const SignedOutGate = ({ panel = false }: { panel?: boolean }) => {
   const heading = useRef<HTMLHeadingElement | null>(null);
   const analytics = useAnalytics();

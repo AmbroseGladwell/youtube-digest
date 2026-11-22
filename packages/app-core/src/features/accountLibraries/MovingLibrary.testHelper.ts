@@ -14,7 +14,6 @@ import {
 import type { AnswerStores } from "./moveAnswersInto.js";
 import type { MovingStores } from "./moveLibraryInto.js";
 
-// The parts of one library the move reads and writes, held in memory.
 export class MovingLibrary implements MovingStores, AnswerStores {
   #settings: Settings = DEFAULT_SETTINGS;
   readonly #overviews = new Map<string, Overview>();

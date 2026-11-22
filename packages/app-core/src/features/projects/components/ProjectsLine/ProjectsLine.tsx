@@ -9,7 +9,7 @@ import { projectsLineTestIds } from "./ProjectsLineTestIds.js";
 export interface ProjectsLineProps {
   // Most recently changed first, archived left off.
   projects: Project[];
-  // The panel opens a project in the web app; null where there is no web app to open.
+  // Null where there is no web app to open.
   webApp: string | null;
   onOpen: (project: Project) => void;
   onChange: (from: "line") => void;
@@ -26,8 +26,6 @@ const joined = (parts: ReactNode[]): ReactNode[] =>
     </Fragment>
   ));
 
-// Which projects the overview is in, on the From line's quiet scale: up to three by name,
-// four or more as two and how many more ("OV-168 3 Adding and Making" 168r, 168r-3).
 export const ProjectsLine = ({ projects, webApp, onOpen, onChange }: ProjectsLineProps) => {
   if (projects.length === 0) {
     return null;

@@ -20,10 +20,7 @@ export interface OnThisTabLineProps {
   onStartVideo: (url: string) => void;
 }
 
-// Design 205e: with a note open and the tab moved on, one 36px line in the band under the
-// bar. The copy is generic and never names what's on the tab: the reader can see the tab
-// beside the panel. Making lands on home, where the run is the page, exactly as if the
-// offer had been taken there (docs/features/extension-panel.md).
+// Why its copy never names the tab: docs/features/extension-panel.md, "The line under the bar".
 export const OnThisTabLine = ({ tab, onStartVideo }: OnThisTabLineProps) => {
   const analytics = useAnalytics();
   const navigate = useNavigate();
@@ -46,9 +43,7 @@ export const OnThisTabLine = ({ tab, onStartVideo }: OnThisTabLineProps) => {
       void navigate(Routes.overview(tab.held.id), { viewTransition: shouldAnimateNavigation() });
       return;
     }
-    // Chrome refuses a grant asked for outside the click, so the article run starts here
-    // and home renders the progress the shell is already tracking. An episode needs no grant:
-    // home reads it from the tab's address and offers it there.
+    // Chrome refuses a grant asked for outside the click, so the article run starts here.
     if (tab.kind === "page" && tab.page !== null) {
       startArticleRun(tab.page, { from: "panel", willAsk: true });
     } else if (tab.videoUrl !== null) {

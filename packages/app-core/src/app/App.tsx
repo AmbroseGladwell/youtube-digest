@@ -42,13 +42,11 @@ export interface AppProps {
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
-  // Null in the web app, which needs no permission to reach a provider. The extension
-  // passes Chrome's, asked for one provider at a time (docs/features/byo-providers.md).
+  // Null in the web app, which needs no permission to reach a provider.
   providerPermissions?: ProviderPermissions | null;
   appUpdate?: AppUpdate | null;
   defaultApiUrl?: string | null;
-  // False in a build installed from the Web Store, where the sign-in page has no business
-  // offering another server (ServerSwitchableContext).
+  // False in a Web Store build, where the sign-in page has no business offering another server.
   serverSwitchable?: boolean;
   build?: AppBuild | null;
   errorDestinationMirror?: ErrorDestinationMirror | null;

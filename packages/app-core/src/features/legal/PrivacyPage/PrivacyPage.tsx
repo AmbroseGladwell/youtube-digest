@@ -9,9 +9,7 @@ const { service, operator, country, contactEmail, minimumAge } = legalIdentity;
 
 const contact = <a href={`mailto:${contactEmail}`}>{contactEmail}</a>;
 
-// What the service collects, why, under which lawful basis, who handles it, for how long,
-// and how to have it erased. Every claim here is checked against the build it describes;
-// docs/features/legal-pages.md says which doc or code backs each section.
+// Backing: docs/features/legal-pages.md, "What the privacy policy says, and where each claim comes from".
 const sections: readonly LegalSection[] = [
   {
     id: "who-we-are",

@@ -3,8 +3,6 @@ import type { OverviewWithState } from "../../overviews/types/OverviewWithState.
 
 export const PROJECT_SUGGESTIONS = 5;
 
-// What a project is searched by: its name, and what it's for when it says
-// (docs/features/projects.md, "Offering what's already saved").
 export const projectSuggestionQuery = ({ name, purpose }: Pick<Project, "name" | "purpose">): string =>
   purpose === null ? name : `${name}. ${purpose}`;
 
@@ -15,8 +13,7 @@ export interface ProjectSuggestionsInput {
   takenOut: ReadonlySet<string>;
 }
 
-// The closest few saved overviews that aren't in the project and were never taken out of it.
-// No closeness cut-off beyond the server's floor: there is none that holds (OV-229).
+// No closeness cut-off beyond the server's floor: OV-229 found none that holds.
 export const projectSuggestions = ({ result, overviews, inProject, takenOut }: ProjectSuggestionsInput): OverviewWithState[] => {
   if (result === undefined || !result.available) {
     return [];

@@ -16,7 +16,6 @@ const readAll = (accountId: string | null): Kept => {
   }
 };
 
-// When the reader last chose Keep it on a project's quiet line, on this device.
 export const readProjectNudgeKept = (accountId: string | null, projectId: ProjectId): string | null => {
   const value = readAll(accountId)[projectId];
   return typeof value === "string" ? value : null;

@@ -6,7 +6,6 @@ import { savedChipTestIds } from "./SavedChipTestIds.js";
 
 export interface SavedChipProps {
   minutes: number;
-  // In an overview the number counts up from nothing; on a row it simply arrives.
   countUp?: boolean;
   leaving?: boolean;
 }
@@ -37,8 +36,6 @@ const useCountUp = (to: number, enabled: boolean): number => {
   return value;
 };
 
-// "Saved you 10 min", unwrapping beside the reading line when an overview is marked read
-// (designs 34q and 34r; docs/features/time-saved.md, "Every day").
 export const SavedChip = ({ minutes, countUp = false, leaving = false }: SavedChipProps) => {
   const shown = useCountUp(minutes, countUp);
 
@@ -55,8 +52,7 @@ export const SavedChip = ({ minutes, countUp = false, leaving = false }: SavedCh
         <span className={styles.count} style={{ minWidth: `${String(minutes).length}ch` }}>
           {shown}
         </span>{" "}
-        {/* The word comes off the figure, never off the counting one, so it holds still
-            while the digits roll rather than flicking between min and mins. */}
+        {/* Off the figure, not the counting one, so the word holds still while the digits roll. */}
         {pluralWord(minutes, "min", "mins")}
       </span>
     </span>

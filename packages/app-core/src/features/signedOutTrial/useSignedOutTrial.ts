@@ -1,8 +1,6 @@
 import { readSignedOutTrial, writeSignedOutTrial } from "./signedOutTrialStorage.js";
 import type { SignedOutTrial } from "./types/SignedOutTrial.js";
 
-// Read once and kept, since the trial generation API reads and writes the token and a run
-// reads it to fetch a transcript.
 let snapshot: SignedOutTrial | null = null;
 
 export const currentSignedOutTrial = (): SignedOutTrial => {

@@ -16,7 +16,6 @@ const read = (storage: Storage): string[] => {
   }
 };
 
-// Which milestones have flooded with colour on this device (docs/features/time-saved.md, "Colouring in").
 export const milestonesColouredHere = (storage: Storage = globalThis.localStorage): ReadonlySet<string> => {
   return new Set(read(storage));
 };

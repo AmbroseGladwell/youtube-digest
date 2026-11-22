@@ -11,9 +11,7 @@ export interface OverviewThumbnailProps {
   to?: string | undefined;
   state?: unknown;
   onOpen?: (() => void) | undefined;
-  // Design OV-170: the library's rows are the only thumbnails that become a note's head, so
-  // only they are named. Naming every one of them would break the budget and could put the
-  // same name on two elements at once (docs/features/page-transitions.md).
+  // Only a library row's thumbnail becomes a note's head; naming more could reuse the name at once.
   carriesIntoHead?: boolean | undefined;
 }
 
@@ -24,12 +22,7 @@ const pictureClass = (kind: string, to: string | undefined, className: string | 
   return to ? styles.linkedImage : `${styles.thumbnail} ${className ?? ""}`;
 };
 
-// Renders nothing at all when there is no usable image, rather than leaving an empty
-// frame behind — CLAUDE.md's degrade-visibly rule. IndexedDB reads aren't re-validated
-// against the schema (docs/architecture/v1-architecture-decisions.md's swappable-store
-// model reads whatever was saved), so an overview saved before thumbnailUrl existed has
-// no such key at all, i.e. undefined, not null. Boolean(...) treats every falsy case
-// (undefined, null, "") the same, rather than only the one the current schema can produce.
+// Any falsy URL counts as none: a record saved before thumbnailUrl existed has no key, not null.
 export const OverviewThumbnail = ({ video, className, to, state, onOpen, carriesIntoHead = false }: OverviewThumbnailProps) => {
   const [failed, setFailed] = useState(false);
   const morph = useOverviewImageMorph<HTMLAnchorElement>(to ?? "", carriesIntoHead);
@@ -73,8 +66,7 @@ export const OverviewThumbnail = ({ video, className, to, state, onOpen, carries
       data-testid={overviewThumbnailTestIds.image}
     />
   );
-  // Design 106u: a show's square art matted on the stone tint inside the same 16:9 slot, so
-  // rows stay one height and the title starts in one place.
+  // A show's square art is matted in the same 16:9 slot, so rows stay one height.
   const image =
     kind === "podcast" ? (
       <span className={to ? styles.matte : `${styles.thumbnail} ${styles.matte} ${className ?? ""}`}>{picture}</span>
@@ -86,9 +78,7 @@ export const OverviewThumbnail = ({ video, className, to, state, onOpen, carries
     return image;
   }
 
-  // The title beside it already links to the same place with the same words, so this one
-  // is taken out of the tab order and the accessibility tree rather than repeated as a
-  // second, unlabelled link.
+  // Out of the tab order and accessibility tree: the title beside it is the same link.
   return (
     <PageLink
       ref={morph}

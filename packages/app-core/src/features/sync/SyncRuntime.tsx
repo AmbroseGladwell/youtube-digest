@@ -22,16 +22,13 @@ import { chatKeys } from "../chats/chatKeys.js";
 import { projectKeys } from "../projects/projectKeys.js";
 import { useOverviewUsageQuery } from "../newOverview/queries/overviewUsageQuery.js";
 
-// How long sign-out waits for its last cycle before going anyway: it always completes.
 const SIGN_OUT_SYNC_LIMIT_MS = 10_000;
 
-// Owns the one engine for this tab: built when a server is known, stopped when it goes.
-// Sits above the router so a cycle outlives every navigation, and inside the query
-// client so a pull can tell every open page to re-read (docs/features/sync-client.md).
+// Above the router so a cycle outlives navigation; inside the query client so a pull re-reads every page.
 export const SyncRuntime = ({ children }: { children: ReactNode }) => {
   const stores = useStores();
   const { connection, setConnection } = useSyncConnection();
-  // Never the library being left, mid-switch (docs/features/account-libraries.md).
+  // Never the library being left, mid-switch.
   const libraryIsTheAccounts = useLibraryAccountId() === libraryAccountIdOf(connection);
   const syncStorage = libraryIsTheAccounts ? stores.syncStorage : null;
   const queryClient = useQueryClient();
@@ -96,7 +93,7 @@ export const SyncRuntime = ({ children }: { children: ReactNode }) => {
     };
   }, [syncStorage, apiUrl, token, surface, queryClient]);
 
-  // A new plan can make room for an overview the last month refused (tiers.md, "Counting").
+  // A new plan can make room for an overview the last month refused.
   useEffect(() => {
     const changed = lastPlan.current !== null && plan !== null && plan !== lastPlan.current;
     if (plan !== null) {
@@ -114,7 +111,6 @@ export const SyncRuntime = ({ children }: { children: ReactNode }) => {
       status,
       syncNow: () => void engine.current?.engine.sync(),
       fetchTranscript: connected ? (videoId: VideoId) => engine.current?.engine.fetchTranscript(videoId) ?? Promise.resolve(null) : null,
-      // Nothing is cleared, and the server's answer decides nothing (docs/features/account-libraries.md).
       signingOut,
       signOutNotice,
       dismissSignOutNotice: () => setSignOutNotice(null),
@@ -175,8 +171,7 @@ export const SyncRuntime = ({ children }: { children: ReactNode }) => {
   return <SyncProvider value={value}>{children}</SyncProvider>;
 };
 
-// One cycle, so whatever was waiting goes before the session does; a cycle that hangs is
-// given up on rather than holding the reader signed in (docs/features/account-libraries.md).
+// Why a hanging cycle is given up on: docs/features/account-libraries.md, "Sign-out".
 const lastCycleBeforeSigningOut = async (engine: SyncEngine, online: boolean): Promise<SignOutOutcome> => {
   const limit = new Promise<null>((resolve) => setTimeout(() => resolve(null), SIGN_OUT_SYNC_LIMIT_MS));
   const finished = await Promise.race([engine.sync().catch(() => engine.status), limit]);

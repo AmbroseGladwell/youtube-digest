@@ -86,8 +86,6 @@ export interface SharedOverviewPageProps {
   payload: SharePayload;
 }
 
-// Design 30e–30k: the reader's own layout, with none of the owner's controls, over a copy
-// that arrived in the document (docs/features/sharing.md).
 export const SharedOverviewPage = ({ payload }: SharedOverviewPageProps) => {
   if (payload.state !== "shared") {
     return (
@@ -152,7 +150,7 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
     webArticle?.article.chapters.length ?? null,
     recipeNote !== null && !note?.chapters?.length,
   );
-  // Adjusted on the visitor's device, never in the copy, as on the reader's own page (OV-244).
+  // Adjusted on the visitor's device, never in the copy.
   const [recipeScale, setRecipeScale] = useState<RecipeScale | null>(null);
   const [recipeUnits, setRecipeUnits] = useState<RecipeUnits>(readRecipeUnits);
   const chooseUnits = (units: RecipeUnits) => {
@@ -193,9 +191,7 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
   const player = usePlayer();
   const episode = useEpisodeEngine(note.source);
   const { signedIn } = useSharedPageReader();
-  // The copy's narration is the sharer's render of the recipe as written, so it plays only for
-  // that. Adjusted, a signed-in visitor renders afresh on their own account; signed out, the
-  // voice is the read-along without audio, and the page says an account reads it aloud (OV-244).
+  // Whose narration plays once a recipe is adjusted: docs/features/recipe-notes.md, "Sharing".
   const narration = payload.snapshot.narration;
   const sharedApi = useMemo(() => sharedNarrationApi(narration), [narration]);
   const accountApi = useNarrationApi();
@@ -250,8 +246,7 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
     };
   };
   const saveAction = saveActionNow();
-  // Owner's option C (OV-288): a visitor's timers stay while they stay on this page, and going
-  // into the app warns first, since they don't come along (designs 288ac–288af).
+  // Timers stay on this page, so going into the app warns: docs/features/recipe-notes.md, "Outside the mode".
   const willStop = useTimersWillStop();
   const stopping = useRef({ count: 0, going: false });
   stopping.current.count = willStop.count;
@@ -315,8 +310,7 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
       };
   const methodAction = recipeVoice?.methodAction ?? null;
   const cookFromHere = cookable && methodAction !== null ? () => cooking.start("bar", methodAction) : null;
-  // Both are measured rather than assumed, because the read-along's scroll margin and the
-  // tab strip's own offset are built from them (docs/features/overview-redesign.md).
+  // Measured, not assumed: the read-along's scroll margin and the tab strip's offset are built from them.
   const mastheadHeight = useMeasuredHeight<HTMLDivElement, HTMLElement>(MASTHEAD_HEIGHT_PROPERTY);
   const tabsHeight = useMeasuredHeight<HTMLDivElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
   const publishHeightsOn = useCallback(
@@ -378,7 +372,6 @@ const SharedOverview = ({ payload }: { payload: Extract<SharePayload, { state: "
       ? noteBarView
       : { ...noteBarView, label: { lead: "Now reading", rest: recipeVoice.nowReading, tone: "ink" as const, pacerTag: false } };
 
-  // Design 106w: the episode player as on the note, and every time plays it.
   const withEpisode = (page: ReactNode) => (episode === null ? page : <PlaybackProvider value={episode.playback}>{page}</PlaybackProvider>);
 
   return withEpisode(

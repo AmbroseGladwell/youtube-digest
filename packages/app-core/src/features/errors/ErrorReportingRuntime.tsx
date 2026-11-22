@@ -9,8 +9,7 @@ import { ErrorQueue } from "./ErrorQueue.js";
 import { ErrorReporterProvider, type ErrorReporter } from "./ErrorReporterContext.js";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 
-// Signed in or not: an error is reported to the server this shell knows, under the session
-// when there is one (docs/architecture/errors-and-logs.md, "Who is reported").
+// Signed in or not: docs/architecture/errors-and-logs.md, "Who is reported".
 export const ErrorReportingRuntime = ({ children }: { children: ReactNode }) => {
   const apiUrl = useKnownApiUrl();
   const { token } = useSyncConnection().connection;

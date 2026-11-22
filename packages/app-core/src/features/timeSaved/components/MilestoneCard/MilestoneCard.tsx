@@ -11,11 +11,9 @@ import { milestoneCardTestIds } from "./MilestoneCardTestIds.js";
 export interface MilestoneCardProps {
   milestone: Milestone;
   minutes: number;
-  // Settings looks back at a milestone, so it names the day and offers no ×.
   reachedOn?: string;
   dismiss?: { label: string; onDismiss: () => void };
   onLineChosen: (by: MilestoneLineControl) => void;
-  // Staggers the light that passes over the card, so a stack's cards never sweep together.
   shimmerIndex?: number;
 }
 
@@ -44,9 +42,6 @@ interface Drag {
   axis: "x" | "y" | null;
 }
 
-// Design 34za: a tile tinted in the milestone's colour, its pill, the total rolling in,
-// and five lines that cycle, swipe and step with the arrow keys
-// (docs/features/time-saved.md).
 export const MilestoneCard = ({ milestone, minutes, reachedOn, dismiss, onLineChosen, shimmerIndex = 0 }: MilestoneCardProps) => {
   const lines = MILESTONE_LINES[milestone.id];
   const [held, setHeld] = useState({ hover: false, focus: false, drag: false });

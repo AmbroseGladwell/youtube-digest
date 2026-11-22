@@ -15,17 +15,12 @@ import { timerControlsSheetTestIds } from "./TimerControlsSheetTestIds.js";
 export interface TimerControlsSheetProps {
   timer: CookingTimer | null;
   onClose: () => void;
-  // Run before going back to another recipe, as when cooking one recipe and opening another's
-  // timer (design 288e).
   onLeaving?: () => void;
 }
 
 type WayBack = "step" | "start" | "gone" | "unknown";
 
-// A timer's controls outside its recipe's cooking mode (designs 288s–288v): OV-284's sheet with
-// the recipe named, and a way back to the action it came from. The app looks the recipe up, since
-// it may have changed or gone since, and looks afresh each time; a shared page's one copy can do
-// neither.
+// Looked up afresh each time, since the recipe may have changed or gone; a shared page can't.
 const useWayBack = (timer: CookingTimer | null): WayBack => {
   const { scope } = useCookingTimers();
   const { overviewStore } = useStores();

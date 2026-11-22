@@ -33,11 +33,9 @@ export interface ChecklistPickerProps {
   groupLabel: string;
   findPlaceholder: string;
   options: ChecklistOption[];
-  // Ticking an option nobody or only some have gives it to all; unticking one all have takes it
-  // from all.
+  // Ticking gives the option to all, even where only some had it; unticking takes it from all.
   onToggle: (id: string, give: boolean) => void;
   newLabel: string;
-  // Either opens a dialog of its own, or names the new one in place.
   onNew: (() => void) | Naming;
   foot: string;
   onClose: () => void;
@@ -46,8 +44,7 @@ export interface ChecklistPickerProps {
 
 const FIND_ABOVE = 8;
 
-// A dialog on the web and a sheet on a phone. Each tick saves as it's made, and Done only
-// closes ("OV-168 3 Adding and Making" 168t, 168u; "OV-168 5" 168as).
+// Each tick saves as it's made, so Done only closes.
 export const ChecklistPicker = ({
   heading,
   hint,

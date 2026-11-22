@@ -7,7 +7,7 @@ import styles from "./ProjectsRailGroup.module.scss";
 import { projectsRailGroupTestIds } from "./ProjectsRailGroupTestIds.js";
 
 export interface ProjectsRailGroupProps {
-  // Active projects, last changed first.
+  // Last changed first.
   active: ProjectSummary[];
   archived: number;
   current: ProjectId | null;
@@ -19,9 +19,6 @@ export interface ProjectsRailGroupProps {
 
 const SHOWN = 5;
 
-// Above Topic and always there: none is a heading and New project, five show last changed
-// first, and All projects is the line under them once any exist ("OV-168 1 Where Projects
-// Live" 168d).
 export const ProjectsRailGroup = ({ active, archived, current, onOpen, onLeave, onAll, onNew }: ProjectsRailGroupProps) => {
   const shown = active.slice(0, SHOWN);
   const currentHidden = current !== null && !shown.some(({ project }) => project.id === current);

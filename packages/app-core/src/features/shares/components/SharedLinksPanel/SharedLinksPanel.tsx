@@ -15,9 +15,7 @@ const EMPTY: Share[] = [];
 export const SHARED_LINKS_STANDFIRST =
   "Anyone with one of these links can read and listen to that overview without an account. Stopping takes effect straight away.";
 
-// Design 30h: the links the reader has given out, each with the two things they might want
-// to do to it. Stopping asks inline, the way revoking a connection does, rather than
-// raising a dialog over a list (docs/features/sharing.md).
+// Why stopping asks inline: docs/features/sharing.md, "Settings › Shared links".
 export const SharedLinksPanel = () => {
   const shares = useSharesQuery();
   const live = shares.data ?? EMPTY;

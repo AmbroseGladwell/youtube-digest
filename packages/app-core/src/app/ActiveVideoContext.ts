@@ -5,8 +5,7 @@ export interface ActiveVideoSource {
   getVideoUrl: () => string | null;
 }
 
-// Injected by the shell, because app-core can't read chrome.* to find out whether it is
-// in one that can see tabs (docs/features/watching-detection.md).
+// Injected because app-core can't read chrome.* to find out whether its shell can see tabs.
 const ActiveVideoContext = createContext<ActiveVideoSource | null>(null);
 
 export const ActiveVideoProvider = ActiveVideoContext.Provider;

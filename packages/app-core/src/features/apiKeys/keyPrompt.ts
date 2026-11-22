@@ -2,8 +2,7 @@ import { PROVIDER_LABEL, PROVIDER_SHORT_LABEL, PROVIDERS, type Provider } from "
 import type { Surface } from "../../app/SurfaceContext.js";
 import type { GenerationReadiness } from "../newOverview/useGenerationReadiness.js";
 
-// What this device is called in a sentence about where a key lives. The distinction is the
-// whole point of the sentence, so it is not softened to "here" (design 110g).
+// Never softened to "here": which device holds the key is the point of the sentence (design 110g).
 export const deviceWord = (surface: Surface, isPhone: boolean): string => {
   if (surface === "extension") {
     return "the extension";
@@ -11,16 +10,11 @@ export const deviceWord = (surface: Surface, isPhone: boolean): string => {
   return isPhone ? "this phone" : "this computer";
 };
 
-// "Anthropic, OpenAI, Google Gemini, DeepSeek, xAI Grok or Mistral" — the six named in
-// full, once, where a reader with no key at all needs to know what would count
-// (design 110k).
 export const PROVIDER_CHOICE_LINE = `Use one from ${PROVIDERS.map((provider) => PROVIDER_LABEL[provider])
   .slice(0, -1)
   .join(", ")} or ${PROVIDER_LABEL[PROVIDERS[PROVIDERS.length - 1] as Provider]}.`;
 
-// The ways a reader can be unable to generate, each with its own words and its own way
-// out. Kept together so the four surfaces that render them cannot drift apart
-// (designs 110k, 110l, 110m).
+// In one place so the four surfaces that render these cannot drift apart.
 export type KeyPrompt =
   | { kind: "no-key"; heading: string; detail: string }
   | { kind: "wrong-device"; heading: string; detail: string; provider: Provider; fallback: Provider; footnote: string };

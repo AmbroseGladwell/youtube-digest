@@ -16,7 +16,6 @@ export interface QueuedErrorBatch {
 }
 
 export interface ErrorQueueOptions {
-  // False when there is no server to send to; errors are then dropped and counted.
   canSend: () => boolean;
   send: (batch: QueuedErrorBatch, options: SendOptions) => Promise<void>;
   now?: () => Date;
@@ -26,9 +25,7 @@ export interface ErrorQueueOptions {
 
 const MINUTE_MS = 60 * 1000;
 
-// Errors held for a moment and sent together, apart from events and ahead of them. As with
-// events, nothing is written to the device or retried, and what is lost is counted on the
-// next batch that gets through (docs/architecture/errors-and-logs.md, "The client").
+// Never retried, never on the device: docs/architecture/errors-and-logs.md, "The client".
 export class ErrorQueue {
   readonly #canSend: () => boolean;
   readonly #send: ErrorQueueOptions["send"];
@@ -57,15 +54,14 @@ export class ErrorQueue {
     }
   }
 
-  // Warnings share the errors' budget and their batch, so a loop that keeps falling back
-  // can't send more than a loop that keeps throwing.
+  // Shares the errors' budget, so a loop that keeps falling back can't outsend one that keeps throwing.
   recordWarning(warning: ClientWarning): void {
     if (this.#admit(this.#heldWarnings.length >= MAX_CLIENT_WARNING_BATCH)) {
       this.#heldWarnings.push(warning);
     }
   }
 
-  // As do timings: a capture loop can't send more of them than it can errors.
+  // Shares the errors' budget too, so a capture loop can't send more timings than errors.
   recordTiming(timing: ClientTiming): void {
     if (this.#admit(this.#heldTimings.length >= MAX_CLIENT_TIMING_BATCH)) {
       this.#heldTimings.push(timing);

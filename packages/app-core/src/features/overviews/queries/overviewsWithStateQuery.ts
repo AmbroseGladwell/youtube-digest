@@ -4,8 +4,7 @@ import { useStores } from "../../../stores/StoresContext.js";
 import type { LibraryEntry } from "../types/LibraryEntry.js";
 import { overviewKeys } from "../overviewKeys.js";
 
-// Read and favourite survive a record that does not, because overview state is its own
-// record in its own store (docs/prototype/decisions.md).
+// Why state is its own record: docs/prototype/decisions.md, "The data model".
 const stateFor = (overviewStore: OverviewStore, id: string): Promise<OverviewState> => {
   const parsed = OverviewId.safeParse(id);
   return parsed.success

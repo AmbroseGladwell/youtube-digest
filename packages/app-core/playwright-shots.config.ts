@@ -1,9 +1,6 @@
 import { defineConfig, devices } from "@playwright/experimental-ct-react";
 
-// The store's screenshots, rendered from the real components against seeded content rather
-// than mocked up (docs/architecture/store-listing.md, "The screenshots"). It is a separate
-// config from playwright-ct.config.ts because these are not tests: they assert nothing, they
-// write files, and CI must not run them.
+// Why apart from playwright-ct.config.ts: docs/architecture/store-listing.md, "The screenshots".
 export default defineConfig({
   testDir: "./playwright/store",
   testMatch: "**/*.shot.tsx",
@@ -14,7 +11,7 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     ...devices["Desktop Chrome"],
-    // 1280×800 is one of the two sizes the Web Store accepts, and the larger one.
+    // The larger of the two sizes the Web Store accepts.
     viewport: { width: 1280, height: 800 },
     deviceScaleFactor: 1,
     ctPort: 3105,

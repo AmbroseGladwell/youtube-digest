@@ -17,10 +17,6 @@ export interface RecentOverviewsProps {
 
 const SHOWN = 3;
 
-// Design 77aa: on a page there's nothing to take from, the panel offers what's already made.
-// Design 205f-2 ends it with the way to the whole library, which is the web app's: the panel
-// is one video, not a list (docs/features/extension-panel.md). A row leads with its kind as a
-// library row does (design 232i).
 export const RecentOverviews = ({ entries }: RecentOverviewsProps) => {
   const recent = readableEntries(orderLibraryEntriesBySavedAt(entries)).slice(0, SHOWN);
   const sync = useSync();

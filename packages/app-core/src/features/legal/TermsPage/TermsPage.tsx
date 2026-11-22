@@ -8,8 +8,7 @@ const { service, operator, country, contactEmail, governingLaw, minimumAge } = l
 
 const contact = <a href={`mailto:${contactEmail}`}>{contactEmail}</a>;
 
-// The terms a reader agrees to by creating an account, in plain words. The product facts
-// they rest on are the ones docs/features/legal-pages.md lists.
+// The product facts these rest on: docs/features/legal-pages.md, "What the terms say".
 const sections: readonly LegalSection[] = [
   {
     id: "what-this-is",

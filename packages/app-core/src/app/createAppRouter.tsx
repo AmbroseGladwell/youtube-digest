@@ -24,13 +24,10 @@ export type RouterFactory = typeof createBrowserRouter;
 
 export type AppRouter = ReturnType<RouterFactory>;
 
-// The history is the mounting shell's choice, the same way the stores are: the web app has
-// real paths to push, an extension page at chrome-extension://<id>/sidepanel.html does not
-// (docs/architecture/v1-architecture-decisions.md's one-core-two-shells model).
+// The shell picks the history: the web app has real paths to push, an extension page does not.
 export const createAppRouter = (createRouter: RouterFactory): AppRouter => {
   return createRouter([
-    // Outside the shell: a visitor opening a shared link has no library behind them, so
-    // the page brings its own head (docs/features/sharing.md).
+    // Outside the shell: a visitor opening a shared link has no library behind them.
     {
       path: Routes.sharedOverview(`:${RouteParams.shareToken}`),
       element: <SharedOverviewRoute />,

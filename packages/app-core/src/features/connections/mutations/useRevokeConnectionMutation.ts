@@ -8,8 +8,7 @@ interface RevokeConnectionContext {
   previous: Array<[readonly unknown[], Connection[] | undefined]>;
 }
 
-// Revoking cuts the assistant off on its next request, so the row goes at once and comes
-// back only if the server refused (docs/features/mcp-connector.md, "Tokens").
+// Why the row goes at once: docs/features/mcp-connector.md, "Tokens".
 export const useRevokeConnectionMutation = () => {
   const api = useConnectionsApi();
   const queryClient = useQueryClient();

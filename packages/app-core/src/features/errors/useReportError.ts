@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import type { ClientErrorSource } from "@overview/domain";
 import { useErrorReporter } from "./ErrorReporterContext.js";
 
-// Reports an error a screen is showing, once per error however often the screen renders.
 export const useReportError = (error: unknown, source: ClientErrorSource, { handled = true } = {}): void => {
   const reporter = useErrorReporter();
   useEffect(() => {

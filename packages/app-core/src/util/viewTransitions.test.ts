@@ -17,9 +17,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// This module is the single thing that can silently disable every navigation animation in
-// the app, which is why it is unit tested rather than left to the browser tiers
-// (docs/conventions/frontend-testing-guide.md's choice rule, point 2).
 describe("shouldAnimateNavigation", () => {
   it("animates only when the browser has the API and motion is not reduced", () => {
     stubEnvironment({ supported: true, reducedMotion: false });

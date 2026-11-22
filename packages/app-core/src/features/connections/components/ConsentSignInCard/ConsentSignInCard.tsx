@@ -9,8 +9,6 @@ export interface ConsentSignInCardProps {
   onSubmit: (email: string) => void;
 }
 
-// Signed out, the request stays in view and the permissions wait: the link asked for here
-// comes back to this request (design 58d).
 export const ConsentSignInCard = ({ initialEmail, sending, refused, onSubmit }: ConsentSignInCardProps) => {
   return (
     <div className={styles.root} data-testid={consentSignInCardTestIds.root}>

@@ -29,8 +29,6 @@ describe("overviewForVideoUrl", () => {
     expect(overviewForVideoUrl([noteOn("other"), held], "https://www.youtube.com/watch?v=abc")).toBe(held.overview);
   });
 
-  // The stored url is whichever one was pasted, so two spellings of the same video have
-  // to resolve to the same note (docs/features/transcript-storage.md).
   it("matches the video rather than the spelling of its link", () => {
     const held = noteOn("abc");
 
@@ -50,9 +48,7 @@ describe("overviewForVideoUrl", () => {
     expect(overviewForVideoUrl([noteOn("abc")], "https://example.com/abc")).toBeNull();
   });
 
-  // A note saved before transcripts were keyed by video has no id to match on, and must
-  // not be matched by the absence of one.
-  it("never matches a note that has no video id", () => {
+  it("never matches a note saved before transcripts were keyed by video, which has no video id", () => {
     expect(overviewForVideoUrl([noteOn(null)], "https://www.youtube.com/watch?v=abc")).toBeNull();
   });
 });

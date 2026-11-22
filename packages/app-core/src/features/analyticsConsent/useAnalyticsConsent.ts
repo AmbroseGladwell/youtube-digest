@@ -8,8 +8,7 @@ export interface AnalyticsConsentState {
   consent: AnalyticsConsent | null;
 }
 
-// One shared snapshot, as useSyncConnection keeps: an answer writes it, and the
-// analytics queue has to see a yes before the event recording it is sent.
+// One shared snapshot: the analytics queue has to see a yes before the event recording it is sent.
 const listeners = new Set<() => void>();
 let snapshot: AnalyticsConsentState | null = null;
 
@@ -45,15 +44,14 @@ export const answerAnalyticsConsent = (answer: ConsentAnswer, now: Date = new Da
   });
 };
 
-// A no after a live yes is a withdrawal, not a decline (docs/features/analytics-consent.md).
+// Withdrawal, not decline: docs/features/analytics-consent.md, "Analytics and logging".
 export const declineAnalyticsConsent = (now: Date = new Date()): { declined: boolean } => {
   const sharing = consentAllowsSharing(analyticsConsentSnapshot().consent);
   answerAnalyticsConsent("dontShare", now);
   return { declined: !sharing };
 };
 
-// The id belongs to whoever uses this device with no account, so a sign-in drops it and the
-// next reader signed out here gets a new one (docs/features/analytics-consent.md).
+// Why a sign-in drops the id: docs/features/analytics-consent.md, "The record".
 export const forgetAnonymousId = (): void => {
   const state = analyticsConsentSnapshot();
   if (state.consent?.anonymousId == null) {

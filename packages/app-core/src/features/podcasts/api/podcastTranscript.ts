@@ -11,8 +11,7 @@ import { EpisodeNeedsTranscribingError } from "./EpisodeNeedsTranscribingError.j
 
 export interface PodcastTranscript {
   transcript: StoredTranscript;
-  // False when the captions came from a video our server couldn't confirm: the reader uses them,
-  // and nothing was kept for anyone else.
+  // False when the captions came from a video our server couldn't confirm.
   keptForEveryone: boolean;
 }
 
@@ -54,11 +53,7 @@ const isNoCaptions = (error: unknown) => isSyncRequestError(error) && error.deta
 const isTranscribable = (error: unknown) => isSyncRequestError(error) && error.details?.transcribable === true;
 const isUnconfirmed = (error: unknown) => isSyncRequestError(error) && error.details?.match === "unconfirmed";
 
-// An episode's transcript, free routes first: our server's cache and the feed's own transcript,
-// then the episode on its show's YouTube channel, found by the reader's extension on their own
-// connection and checked by our server before it is kept for everyone. Without an extension, our
-// server searches itself (docs/features/podcast-on-youtube.md, "The reader's part"). Where no rung
-// answers and our server would transcribe the episode for this reader, it says so (design 305c-2).
+// The order of the rungs: docs/features/podcast-on-youtube.md, "The reader's part".
 export const podcastTranscript = async (
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,

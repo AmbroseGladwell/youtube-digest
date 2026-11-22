@@ -13,7 +13,6 @@ export interface ConnectionRowProps {
   onRevoke: (connectionId: string) => void;
 }
 
-// Revoking cannot be undone, so the row asks once and says so (design 58i, 58j).
 export const ConnectionRow = ({ connection, now, sharingProfile, onRevoke }: ConnectionRowProps) => {
   const analytics = useAnalytics();
   const [confirming, setConfirming] = useState(false);

@@ -4,9 +4,7 @@ export interface PlayPauseIconProps {
   playing: boolean;
 }
 
-// Drawn rather than typed, for the reason FavouriteIcon is: ▶ and ❚❚ are unrelated glyphs
-// whose serif faces are different widths, so the control's contents jumped every time it
-// was pressed. Two paths in one box cross-fade instead.
+// Drawn, not typed: ▶ and ❚❚ have different widths in a serif face, so the control jumped when pressed.
 export const PlayPauseIcon = ({ playing }: PlayPauseIconProps) => {
   return (
     <svg className={styles.icon} viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">

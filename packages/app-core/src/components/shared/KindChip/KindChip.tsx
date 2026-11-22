@@ -6,8 +6,6 @@ export interface KindChipProps {
   overview: { source: Source; recipe: RecipeNote | null };
 }
 
-// Design 232a: quieter than the verdict's filled pill, so the eye finds the title and the
-// verdict first and the kind when it looks for it.
 export const KindChip = ({ overview }: KindChipProps) => {
   const label = kindChip(overview);
   if (label === null) {

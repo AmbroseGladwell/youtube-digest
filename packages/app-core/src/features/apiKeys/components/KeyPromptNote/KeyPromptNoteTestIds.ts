@@ -1,7 +1,4 @@
-// The hero's note and the dialog's are both in the document at once — the dialog's form is
-// always mounted, closed — so two notes under one set of ids would be ambiguous. Each
-// surface builds its own from its own prefix, the same reason the hero's field carries its
-// own ids (docs/features/stone-theme.md, "The hero has its own field").
+// Prefixed per surface, as hero and dialog share a page: docs/features/stone-theme.md, "What was built".
 export const keyPromptNoteTestIds = (prefix: string) => ({
   root: `${prefix}.keyPrompt.root`,
   heading: `${prefix}.keyPrompt.heading`,

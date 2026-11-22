@@ -10,9 +10,7 @@ export interface OnCreateOptions {
 }
 
 export interface NewProjectDialogProps {
-  // The overview made from the picker, which the new project takes with it (168x).
   adds: { title: string } | { count: number } | null;
-  // Whether the reader has an assistant connected, which the helper line mentions only then.
   assistantConnected: boolean;
   takenNames: string[];
   busy: boolean;
@@ -20,8 +18,6 @@ export interface NewProjectDialogProps {
   onClose: () => void;
 }
 
-// A name, and what it's for with the reason to write it right under the field
-// ("OV-168 3 Adding and Making" 168x, 168y, 168y-2).
 export const NewProjectDialog = ({ adds, assistantConnected, takenNames, busy, onCreate, onClose }: NewProjectDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const [name, setName] = useState("");

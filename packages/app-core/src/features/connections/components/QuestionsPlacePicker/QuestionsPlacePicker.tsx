@@ -12,8 +12,6 @@ import { questionsPlacePickerTestIds } from "./QuestionsPlacePickerTestIds.js";
 type Place = "here" | "assistant";
 const PLACES: readonly Place[] = ["here", "assistant"];
 
-// Design 310f: "Questions to ask next: Answered here / Open in {assistant}", the same synced
-// setting as the Change menu under an overview's questions.
 export const QuestionsPlacePicker = () => {
   const { assistant, answeredHere } = useFollowUpAssistant();
   const updateSettings = useUpdateSettingsMutation();

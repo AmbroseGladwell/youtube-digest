@@ -24,9 +24,7 @@ describe("sharedNarrationApi", () => {
     expect(api.fileUrl({ fileUrl: `/api/audio/${NARRATION.key}/file` })).toBe(`/api/audio/${NARRATION.key}/file`);
   });
 
-  // Which is what makes the player fall back to the pacer, as it does for any reader with
-  // no account behind them.
-  it("is absent for a copy shared without narration", () => {
+  it("is absent for a copy shared without narration, so the player falls back to the pacer", () => {
     expect(sharedNarrationApi(null)).toBeNull();
   });
 });

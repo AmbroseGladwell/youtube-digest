@@ -10,11 +10,7 @@ export interface UseApiKeysResult {
   removeAllKeys: () => void;
 }
 
-// The keys are read in several places at once — the masthead's generate form, the capture
-// screen and the settings page — so the hook reads one shared snapshot rather than each
-// caller holding its own useState copy, which would leave the form still disabled after
-// the keys were saved. The cached snapshot is what keeps getSnapshot referentially stable
-// between writes.
+// One shared snapshot, not a useState copy per caller, so a save reaches every form at once.
 const listeners = new Set<() => void>();
 let snapshot: ApiKeys | null = null;
 

@@ -17,7 +17,6 @@ const CLEARANCE_GAP_PX = 8;
 const SIDE_BY_SIDE = 3;
 
 export interface CookingTimerDockProps {
-  // What sits under the timers at the foot: the floating player, where there is one.
   children?: ReactNode;
 }
 
@@ -31,7 +30,6 @@ const tileSuffix = (timer: CookingTimer, paused: boolean, solo: boolean): string
   return solo ? ` · ${timer.recipeTitle}` : "";
 };
 
-// Where sound can't be counted on outside the mode (designs 288aa, 288ab).
 const soundLine = (panel: boolean, awake: boolean): string | null => {
   if (panel) {
     return "Closing the panel stops timers";
@@ -42,10 +40,6 @@ const soundLine = (panel: boolean, awake: boolean): string | null => {
   return isAppleMobile() ? "Keep this screen open to hear your timer" : "Keep this screen on to hear your timer";
 };
 
-// Designs 288g–288r and 288w–288ab: the foot of every page. Timers sit above the floating
-// player, the same width; with no player they take its place. One timer is a full tile named by
-// its recipe, two or three sit side by side, four or more fold into one. A timer that runs out
-// rings here, in the tiles' place. The whole dock tells the page how much of the foot it covers.
 export const CookingTimerDock = ({ children }: CookingTimerDockProps) => {
   const timers = useCookingTimers();
   const panel = useIsPanel();

@@ -9,9 +9,7 @@ import { privacySectionTestIds } from "./PrivacySectionTestIds.js";
 
 const NEVER = "Counts which features you use, never what you watch, read or type";
 
-// Designs 62d–62h (docs/features/analytics-consent.md, "Settings › Privacy"): one switch,
-// the same for everyone, whose line says what it means. Error reports sit apart with no
-// switch, because they aren't part of the choice.
+// Error reports sit apart with no switch: docs/features/analytics-consent.md, "Settings › Privacy".
 export const PrivacySection = () => {
   const { state, switchTo } = useShareUsage();
   const surface = useSurface();

@@ -31,8 +31,6 @@ const overviewsText = (count: number) => `${count} ${count === 1 ? "overview" : 
 const carrying = (entries: OverviewWithState[], tags: readonly string[]) =>
   entries.filter((entry) => overviewTags(entry).some((tag) => tags.includes(tag))).length;
 
-// Design 84j–84n: pick tags, then merge, rename or delete them. Every change lands at once and
-// offers Undo until the dialog closes, rather than asking first (docs/features/tag-reuse.md).
 export const ManageTagsDialog = ({ open, entries, onClose }: ManageTagsDialogProps) => {
   const dialog = useRef<HTMLDialogElement | null>(null);
   const headingId = useId();
@@ -358,8 +356,6 @@ interface RenameRowProps {
   onSave: (target: string) => void;
 }
 
-// 84l: the row becomes a field that says what it will save as, refuses a name with nothing
-// in it, and turns into a merge when the name is taken.
 const RenameRow = ({ tag, draft, count, exists, onDraft, onCancel, onSave }: RenameRowProps) => {
   const statusId = useId();
   const row = useRef<HTMLLIElement | null>(null);
@@ -422,7 +418,6 @@ interface MergeStepProps {
   onMerge: (target: string) => void;
 }
 
-// 84k: which name the merged tags keep, most used first and chosen already, or a new one.
 const MergeStep = ({
   headingId,
   tags,

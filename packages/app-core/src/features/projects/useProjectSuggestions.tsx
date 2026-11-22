@@ -27,8 +27,6 @@ export interface SuggestionsHost {
 
 const later = (ms: number, then: () => void) => window.setTimeout(then, prefersReducedMotion() ? 0 : ms);
 
-// Saved overviews that might fit the project on the page, and what adding or turning one
-// down does (docs/features/projects.md, "Offering what's already saved").
 export const useProjectSuggestions = (current: ProjectSummary | null, overviews: OverviewWithState[], host: SuggestionsHost) => {
   const analytics = useAnalytics();
   const setMember = useSetProjectMemberMutation();
@@ -120,8 +118,6 @@ export const useProjectSuggestions = (current: ProjectSummary | null, overviews:
       return next;
     });
 
-  // A row fades and slides out, then what it did happens and its space closes; focus goes to
-  // the next suggestion's Add, or to the list when none is left ("OV-318 3" 318m, 318q).
   const leave = (entries: OverviewWithState[], then: () => void) => {
     const overviewIds = entries.map(({ overview }) => overview.id as string);
     const remaining = rows.filter((row) => row.phase === "shown" && !overviewIds.includes(row.entry.overview.id));
@@ -226,7 +222,6 @@ export const useProjectSuggestions = (current: ProjectSummary | null, overviews:
 
   return {
     group,
-    // The line in the head that opens them, for a project that already has overviews ("OV-318 2" 318g).
     line:
       current === null || empty || count === 0
         ? null
@@ -243,7 +238,7 @@ export const useProjectSuggestions = (current: ProjectSummary | null, overviews:
               }
             },
           },
-    // An empty project with suggestions above it says what else can fill it (318a, 318d).
+    // An empty project with suggestions above it says what else can fill it.
     offering: count > 0,
   };
 };

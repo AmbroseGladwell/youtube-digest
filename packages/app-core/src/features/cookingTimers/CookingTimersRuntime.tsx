@@ -29,8 +29,6 @@ import {
 } from "./CookingTimersContext.js";
 
 interface CookingTimersRuntimeProps {
-  // The app's timers count as the reader's, each on the recipe it came from, which may no
-  // longer be on screen; a shared page's count as that page's.
   scope: "reader" | "sharedPage";
   children: ReactNode;
 }
@@ -43,9 +41,7 @@ interface HeldNarration {
 const TICK_MS = 250;
 const SAME_PLACE_SECONDS = 1;
 
-// The tab's cooking timers (OV-284, carried outside the mode by OV-288): one clock, one ring
-// however many are done, the narration held while one rings, and the screen kept on while any
-// runs. docs/features/recipe-notes.md, "Timers".
+// One clock, one ring, narration held while one rings: docs/features/recipe-notes.md, "Timers".
 export const CookingTimersRuntime = ({ scope, children }: CookingTimersRuntimeProps) => {
   const engine = usePlayer();
   const tracker = useAnalytics();

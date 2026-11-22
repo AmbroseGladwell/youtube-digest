@@ -6,7 +6,6 @@ import { isConnected, type SyncConnection } from "../sync/types/SyncConnection.j
 import { adoptReadingPositions } from "../transcripts/readingPositionStorage.js";
 
 export interface AdoptSignedInLibraryOptions {
-  // The shell's own: copies the device's one library into the account's and empties it.
   moveDatabase: (accountId: string) => Promise<void>;
   surface: Surface;
   storage?: Storage;
@@ -16,10 +15,7 @@ export interface AdoptSignedInLibraryOptions {
 
 const ASK_LIMIT_MS = 5_000;
 
-// Before the app opens a library: an install signed in before accounts had libraries of
-// their own learns whose session it holds and moves its library under that account, once.
-// If the server can't say (offline, or the session ended), nothing changes and the next
-// start asks again (docs/features/account-libraries.md, "Installs already signed in").
+// Runs once; offline it waits: docs/features/account-libraries.md, "Installs already signed in".
 export const adoptSignedInLibrary = async ({
   moveDatabase,
   surface,

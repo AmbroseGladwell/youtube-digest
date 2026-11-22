@@ -27,8 +27,7 @@ describe("readSharePayload", () => {
     expect(readSharePayload(withPayload("{ not json"))).toEqual({ state: "unknown" });
   });
 
-  // A copy written by a newer server than this build knows how to read.
-  it("treats a shape it does not recognise the same way", () => {
+  it("treats a shape written by a newer server the same way", () => {
     expect(readSharePayload(withPayload(JSON.stringify({ state: "something-else" })))).toEqual({
       state: "unknown",
     });

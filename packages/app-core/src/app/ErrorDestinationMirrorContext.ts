@@ -5,9 +5,7 @@ export interface ErrorDestination {
   token: string | null;
 }
 
-// Hands where errors go, and under which session, to a part of the shell the app doesn't
-// run in: the extension's service worker, which can't read the page's storage
-// (docs/architecture/errors-and-logs.md, "The service worker"). The web app has none.
+// Why the service worker needs this: docs/architecture/errors-and-logs.md, "The service worker".
 export type ErrorDestinationMirror = (destination: ErrorDestination) => void;
 
 const ErrorDestinationMirrorContext = createContext<ErrorDestinationMirror | null>(null);

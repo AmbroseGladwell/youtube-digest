@@ -11,8 +11,7 @@ interface StopSharingContext {
   previous: Share[] | undefined;
 }
 
-// Optimistic, because the reader has already decided: the row goes at once, and comes back
-// only if the server refuses.
+// Optimistic, because the reader has already decided: the row comes back only if the server refuses.
 export const useStopSharingMutation = () => {
   const api = useShareApi();
   const queryClient = useQueryClient();

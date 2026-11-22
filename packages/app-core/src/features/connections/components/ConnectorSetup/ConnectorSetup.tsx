@@ -20,9 +20,6 @@ const COPIED_FOR_MS = 2500;
 
 const nameOf = (assistant: ChosenAssistant): string => (assistant === "other" ? "Other" : FOLLOW_UP_ASSISTANTS[assistant].name);
 
-// Design 301a–301e: which assistant the reader uses first, then that one's steps alone, so no
-// one reads steps for an assistant they don't use. The pick is the setting questions to ask
-// next open in (OV-266). Copy is offered only where the browser lets a page write to the clipboard.
 export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: ConnectorSetupProps) => {
   const analytics = useAnalytics();
   const chosen = useSettingsQuery().data?.followUpAssistant ?? null;

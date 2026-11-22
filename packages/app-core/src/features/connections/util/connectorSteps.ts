@@ -2,8 +2,6 @@ import type { ChosenAssistant } from "@overview/domain";
 
 export type CopiedField = "name" | "description" | "address";
 
-// One line of ChatGPT's connector form: what it asks for, what to put there, and whether we hand
-// the reader the value (design 301c).
 export interface ConnectorField {
   label: string;
   value: string;
@@ -13,15 +11,12 @@ export interface ConnectorField {
 
 export interface ConnectorStep {
   text: string;
-  // The step hands over the connector address, with Copy.
   address?: boolean;
   fields?: ConnectorField[];
 }
 
 export interface ConnectorSetupSteps {
-  // Said plainly before the steps when the assistant's plan or place limits who can connect.
   limit: string | null;
-  // In place of numbered steps, for an assistant we can only describe.
   lead: string | null;
   steps: ConnectorStep[];
 }
@@ -30,9 +25,7 @@ export const CONNECTOR_NAME = "The Overview";
 export const CONNECTOR_DESCRIPTION = "Your overviews and their transcripts";
 export const CONNECTOR_ICON_PATH = "/connector-icon.png";
 
-// Each assistant's way in, as the owner reported its menus on 14 November 2026 (design 301b–301e).
-// They change without notice, so they live here together, beside OV-266's FOLLOW_UP_ASSISTANTS.
-// ChatGPT's free plan can add a custom connector (owner, 15 November 2026), so it carries no limit.
+// Menus change without notice: docs/features/mcp-connector.md, "Settings › Connections".
 export const connectorSteps = (assistant: ChosenAssistant, address: string): ConnectorSetupSteps => {
   switch (assistant) {
     case "claude":

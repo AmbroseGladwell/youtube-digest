@@ -1,5 +1,4 @@
-// A transcription our server wouldn't start, though the card said it could: the month's hours went
-// on another device meanwhile, or the feed's length changed (designs 305h, 305j).
+// After the card said it could: another device spent the month's hours, or the feed's length changed.
 export class TranscriptionRefusedError extends Error {
   readonly refusal: "not-enough" | "too-long";
   readonly episodeSeconds: number | null;

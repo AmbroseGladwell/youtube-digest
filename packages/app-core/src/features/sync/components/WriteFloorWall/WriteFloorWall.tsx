@@ -22,11 +22,7 @@ const wallBodyFor = (generating: boolean, surface: Surface): string => {
     : "Chrome will update the extension on its own schedule. Everything you have is still here, and will sync once it does.";
 };
 
-// Below minSupportedClientVersion every write fails, so the app is replaced by an honest
-// wall rather than left looking like it works. It stands in for the pane rather than the
-// tree, so the shell and any generation it owns keep running, and the update action is
-// held back while a run is in flight: it neither refunds nor aborts, it only discards
-// (docs/features/record-migrations.md, "Below the write floor is a wall").
+// Why a wall: docs/features/record-migrations.md, "Below the write floor is a wall, not a banner".
 export const WriteFloorWall = ({ generating }: WriteFloorWallProps) => {
   const surface = useSurface();
   const appUpdate = useAppUpdate();

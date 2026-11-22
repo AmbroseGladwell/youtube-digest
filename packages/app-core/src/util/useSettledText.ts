@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { TYPING_SETTLED_MS } from "../features/analytics/useTypingSettled.js";
 
-// The text once the reader has stopped typing, so a search that costs a request is sent
-// once per burst rather than once per key.
 export const useSettledText = (text: string, delayMs: number = TYPING_SETTLED_MS): string => {
   const [settled, setSettled] = useState(text);
   useEffect(() => {

@@ -6,7 +6,6 @@ import styles from "./TimeSavedFigure.module.scss";
 
 export interface TimeSavedFigureProps {
   minutes: number;
-  // Where the first roll starts from, for a figure that arrives counting up to its value.
   rollFrom?: number;
   rollDelayMs?: number;
 }
@@ -18,8 +17,7 @@ interface Roll {
   to: number;
 }
 
-// The total as a mechanical counter: a change rolls minutes first, carrying into tens and
-// hours. Decorative; whatever holds it carries the figure as its accessible name.
+// Decorative: whatever holds it carries the figure as its accessible name.
 export const TimeSavedFigure = ({ minutes, rollFrom, rollDelayMs = 0 }: TimeSavedFigureProps) => {
   const settled = useRef(rollFrom ?? minutes);
   const [shown, setShown] = useState(settled.current);

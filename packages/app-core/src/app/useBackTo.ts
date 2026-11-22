@@ -5,9 +5,7 @@ import { usePreviousPathname } from "./HistoryTrailContext.js";
 const plainClick = (event: MouseEvent<HTMLAnchorElement>): boolean =>
   event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 
-// Back in history when the destination is the entry behind this one, so its scroll
-// position and view come back with it; otherwise the link goes there on its own
-// (docs/features/back-within-reach.md, "Back in history, or home").
+// Why back in history when it can: docs/features/back-within-reach.md, "Back in history, or home".
 export const useBackTo = (to: string): ((event: MouseEvent<HTMLAnchorElement>) => void) => {
   const navigate = useNavigate();
   const previous = usePreviousPathname();

@@ -5,11 +5,7 @@ export interface FollowingStores {
   captureQueueStore: CaptureQueueStore;
 }
 
-// The playlists this device followed without an account, what it had seen of each, and
-// what it still had queued from them, into the account's library. A queued video from a
-// playlist this device never followed is not carried, only dropped. Written there before it
-// leaves here, so a move that stops is finished by running it again
-// (docs/features/playlists.md, "Signing in").
+// Written there before it leaves here, so a move that stops is finished by running it again.
 export const moveFollowingInto = async (from: FollowingStores, into: FollowingStores): Promise<{ playlists: number }> => {
   const [leaving, held, queued] = await Promise.all([
     from.followedPlaylistStore.listFollowed(),

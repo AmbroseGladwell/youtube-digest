@@ -2,8 +2,7 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./FirstOverviewMilestone.module.scss";
 import { firstOverviewMilestoneTestIds } from "./FirstOverviewMilestoneTestIds.js";
 
-// Design 46m: OV-34's milestone card in stone, the one hue the time milestones don't use. Time
-// saved counts only once an overview is read, so the line says so.
+// Time saved counts only once an overview is read, so the line says so.
 export const FirstOverviewMilestone = ({ onDismiss }: { onDismiss: () => void }) => {
   return (
     <div className={styles.root} data-testid={firstOverviewMilestoneTestIds.root}>

@@ -50,8 +50,7 @@ export const ShareOverviewDialog = ({
     }
   }, []);
 
-  // Stopping leaves no link to confirm about, so the dialog goes back to its first state
-  // rather than asking the question again (design 30c·4).
+  // Stopping leaves no link to confirm about, so the dialog goes back to its first state.
   useEffect(() => {
     if (share === null) {
       setConfirmingStop(false);
