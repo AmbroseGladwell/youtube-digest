@@ -168,8 +168,8 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
     }
   }, [ask, conversationId, messages, latestAnswerAt, kind]);
 
-  // Each conversation opens scrolled to its latest answer, or to the message a citation named,
-  // outlined for a moment with focus on it (design 310x).
+  // Each conversation opens at its latest question, or at the message a citation named, outlined
+  // for a moment with focus on it (design 310x).
   useEffect(() => {
     if (view !== "conversation") return;
     if (focusedMessage !== null) {
@@ -183,10 +183,15 @@ export const ChatPanel = forwardRef<HTMLTextAreaElement, ChatPanelProps>(functio
         return () => clearTimeout(timer);
       }
     }
+    // The latest question at the top of the panel, once: an answer then reads down from it and is
+    // never followed to its end (OV-362).
     const element = body.current;
-    if (element !== null) element.scrollTop = element.scrollHeight;
+    const questions = element?.querySelectorAll<HTMLElement>(`[data-testid="${chatPanelTestIds.question}"]`);
+    const latest = questions?.[questions.length - 1];
+    if (element !== null && element !== undefined && latest !== undefined)
+      element.scrollTop += latest.getBoundingClientRect().top - element.getBoundingClientRect().top - 12;
     return undefined;
-  }, [view, conversationId, focusedMessage, messages.length, pending?.status, pending?.status === "answering" ? pending.text : null]);
+  }, [view, conversationId, focusedMessage, pending?.status === "answering" ? pending.question : null]);
 
   useEffect(() => {
     if (said === null) return;

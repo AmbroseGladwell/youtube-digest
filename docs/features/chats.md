@@ -787,6 +787,18 @@ From the hand-off's pages, built for the panel beside the note and the phone she
   the overview has one, the title cut with an ellipsis, then its place ("· Key point 6", "· 3:21")
   and "+n". The note's own parts (`ChatOverviewCitation`) and other overviews use it; the video's
   time pills keep their fill at the same height. The row above the field uses its quiet form.
+- **Long chip rows fold** (OV-362, `ChatChipRow`): two chips, then "+N", whose menu lists every
+  one. "+N" is named by every title it hides. This holds for a section's sources by relation, a
+  list item's own chips, Pinned and Found for you.
+- **Bold** (OV-362, `inlineMarks`, `ChatMarkedText`): an answer's `**words**` show as bold
+  everywhere answer text is drawn, while streaming too, never with their asterisks.
+- **Following another overview's citation** (OV-362): its link carries the cited item
+  (`citedPlace`), and the reader page opens at that item, tinted and scrolled to, switching to
+  Chapters for a chapter. An item rewritten since lands on its section. The state is cleared, so a
+  reload doesn't repeat it.
+- **The field**: the "@" is as tall as Send, so it lines up with the text. A long placeholder ends
+  in an ellipsis. The picker scrolls past 22rem, and opens below the field when there's no room
+  above, as in the Ask page's empty state.
 - **Answers in sections** (`ChatAnswerSectionsView`): the intro, then each section's heading,
   paragraphs, numbered and bulleted lists, and its sources grouped by relation ("Supports"), then
   "Takeaway". The intro streams; each section shows as it lands, its sources once the answer
@@ -798,27 +810,43 @@ From the hand-off's pages, built for the panel beside the note and the phone she
 Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` for a project and
 `?chat=` for the open conversation, so a reload keeps it (`AskPage`, `useAskPage`):
 
-- **Ways in:** the Ask pill in the top bar, beside + New and the same pill. On a phone narrower than
-  27rem it keeps only its icon, named "Ask", so the bar never scrolls sideways. A project's page has
-  an Ask link beside Copy as Markdown, which opens the page over that project. Both show only
-  signed in. Neither is in the extension's panel, which keeps chat within an overview.
+- **Ways in:**
+  - The Ask pill in the top bar is the same pill as + New, with a square speech-bubble icon, ringed
+    while the Ask page is open (owner, 22 Nov 2026). It's a link, so it holds off the global link
+    hover colour, and its text stays on the action colour as + New's does.
+  - On a phone (47.9375rem and below), Ask and + New are 44px round icons, each named by a tooltip
+    on hover and focus ("Ask your library", "New overview") (OV-362).
+  - A project's page has an Ask link beside Copy as Markdown, which opens the page over that
+    project.
+  - Both show only signed in. Neither is in the extension's panel, which keeps chat within an
+    overview.
 - **No header and no close:** the top bar is the way back, and on a phone it's a page, not a sheet.
   Signed out it says to sign in.
-- **Empty**, the field sits centred under "Ask across everything you've saved." or "Ask about this
-  project.", with the project as a chip above it. Its placeholder is "Ask your library or @ to add
-  sources" ("Ask about this project or @ to add sources"). Under it are three starter questions,
-  made by code from templates, never by a model (`askStarters`):
-  - **For the library:** its biggest topic with three or more overviews, its biggest unarchived
-    project with three or more, and how many are unread.
-  - **For a project:** what it's for, where its overviews disagree, and how many are unread in it.
-  - Plain questions fill any that don't apply.
+- **Empty** (354u), the field sits centred under "Ask across everything you've saved." or "Ask about
+  this project." (Gloock, 30px), with the project as a surface pill above it.
+  - The field is the large one, at least 56px.
+  - Its placeholder is "Ask your library or @ to add sources" ("Ask about this project or @ to add
+    sources"), or "Ask or @ to add sources" on a phone. It stays on one line.
+  - Under it are three starter questions as cards on the tile surface with a corner arrow. They're
+    made by code from templates, never by a model (`askStarters`):
+    - **For the library:** its biggest topic with three or more overviews, its biggest unarchived
+      project with three or more, and how many are unread.
+    - **For a project:** what it's for, where its overviews disagree, and how many are unread in it.
+    - Plain questions fill any that don't apply.
 - **Asking** (`useAskOver`, `ChatApi.askOver`) posts to the library's or the project's route with
   `pins` and `setAside`; the "@" picker and the row above the field are the overview chat's
   (`ChatComposer`, with nothing excluded). Pinned shows above the question.
+- **Scrolling** (OV-362): a question just sent, or a conversation just opened, scrolls its question
+  to the top once. The answer then reads down from it and is never followed to its end. The
+  overview panel does the same.
 - **The picking wait** (`AskPickingWait`; the hand-off's mp4):
-  - It's a small muted list: "Choosing which overviews to read · A few seconds" on `picking`, then
-    "Chosen" ticks and "Reading 5 overviews · Then the answer" names the titles from `picked`,
-    80ms apart.
+  - It's a small muted list in 12.5px: "Choosing which overviews to read · A few seconds" on
+    `picking`, then "Chosen" ticks and "Reading 5 overviews · Then the answer" names the titles
+    from `picked`, 80ms apart, each with its thumbnail, 25px in.
+  - The loader is the mark itself (354v):
+    - While a step runs, its circle is an orange arc turning over the mark's bar.
+    - Done, the circle fills with a white tick drawn in.
+    - A step not yet started is faint and still.
   - Once the intro or a section arrives it folds into "Read 5 overviews" with a tick and a chevron.
     That line opens to the five as chips, and stays on each stored question, from its `picked`.
   - After 10 seconds still choosing, "Still choosing, slow connection".
@@ -836,7 +864,12 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
     There's no Rename, because the title is the first question.
   - Deleting has Undo for six seconds, and the delete is made when the toast goes or the reader
     leaves.
-  - On the web it's a raised 280px panel. On a phone it's a bottom sheet over a scrim.
+  - On the web (354t-4) it's a raised 280px column down the left of the page, full height. The
+    button that opens it is at the page's far left, with a panel icon, and the drawer closes with
+    its own button.
+  - On a phone it's a bottom sheet over a scrim.
+  - The ⋯ menu (354t-6) is 220px and right-aligned. It opens below the ⋯, or above it when there's
+    no room below, as for the last conversation in a phone's sheet (OV-362).
 - **Waits** are the overview chat's (`ChatWaitBlock`), with 50 questions to a conversation.
 - **Events**, `ask.*`, never the question, the answer, a title or which project:
   - `page.opened`: from the top bar or a project, and over what.

@@ -1,123 +1,152 @@
+// 354v and the mp4: small muted type, the same size as the folded line, the mark as the loader.
 .root {
-  margin: 0;
-  padding: 0;
-  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  font: 500 0.78125rem/1.4 var(--font-body);
+  gap: 6px;
+  align-self: flex-start;
   color: var(--muted);
 }
 
 .step {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 7px;
+  min-height: 18px;
+  margin: 0;
+  font: 600 12.5px/1.3 var(--font-body);
+  white-space: nowrap;
+
+  small {
+    font: 500 12.5px var(--font-body);
+    color: var(--muted);
+  }
 }
 
-.running {
+.stepOn {
   color: var(--ink);
 }
 
-.hint {
+.stepDone,
+.stepTodo {
   color: var(--muted);
 }
 
 .mark {
   flex: none;
-  display: inline-grid;
-  place-items: center;
   width: 18px;
   height: 18px;
-}
+  stroke-linecap: round;
+  stroke-linejoin: round;
 
-.loader {
-  display: inline-grid;
-  width: 18px;
-  height: 18px;
-  animation: spin 1.4s linear infinite;
-
-  svg {
-    width: 100%;
-    height: 100%;
+  circle {
+    stroke: var(--mark);
+    stroke-width: 2.5;
   }
 }
 
-.step:not(.running) .loader {
-  animation: none;
-  opacity: 0.5;
+.bar {
+  fill: var(--mark);
+}
+
+.arc {
+  transform-origin: 15px 13px;
+}
+
+.on .arc {
+  animation: spin 1.1s linear infinite;
+}
+
+.todo {
+  opacity: 0.35;
+}
+
+.fill {
+  fill: var(--mark);
 }
 
 .tick {
-  width: 18px;
-  height: 18px;
-
-  circle {
-    fill: var(--accent);
-    animation: fill 0.2s var(--motion-ease) both;
-  }
-
-  path {
-    fill: none;
-    stroke: var(--on-action);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 14;
-    stroke-dashoffset: 14;
-    animation: draw 0.4s var(--motion-ease) 0.1s forwards;
-  }
+  stroke: var(--on-action);
+  stroke-width: 2.5;
+  stroke-dasharray: 14;
+  stroke-dashoffset: 14;
+  animation: draw 0.4s var(--motion-ease) 0.15s forwards;
 }
 
 .slow {
-  padding-left: 1.625rem;
+  margin: 0;
+  padding-left: 25px;
+  font: 500 12.5px var(--font-body);
 }
 
-.titles ul {
-  margin: 0;
-  padding: 0 0 0 1.625rem;
-  list-style: none;
+.titles {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 4px;
+  margin: 0;
+  padding: 0 0 0 25px;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    font: 500 12.5px var(--font-body);
+    color: var(--ink);
+    animation: drop 0.22s var(--motion-ease) both;
+  }
 }
 
-.title {
+.thumb {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--surface);
+  object-fit: cover;
+}
+
+.thumbWide {
+  width: 20px;
+  border-radius: 3px;
+}
+
+.titleText {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: drop 0.24s var(--motion-ease) both;
 }
 
 .folded {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
+  align-self: flex-start;
   animation: fold 0.3s var(--motion-ease) both;
 }
 
 .readLine {
-  align-self: flex-start;
   display: inline-flex;
+  align-self: flex-start;
   align-items: center;
-  gap: 0.5rem;
+  gap: 7px;
   padding: 0;
   border: 0;
   background: none;
   color: var(--muted);
-  font: 500 0.78125rem/1.4 var(--font-body);
+  font: 600 12.5px var(--font-body);
+  white-space: nowrap;
   cursor: pointer;
 
-  .tick circle,
-  .tick path {
+  .tick {
     animation: none;
     stroke-dashoffset: 0;
   }
 }
 
 .chevron {
-  display: inline-grid;
-  transition: transform 0.2s var(--motion-ease);
+  display: inline-flex;
+  transition: transform 120ms var(--motion-ease);
 }
 
 .chevronOpen {
@@ -127,19 +156,13 @@
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: 6px;
+  margin-left: 25px;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes fill {
-  from {
-    transform: scale(0.6);
-    transform-origin: center;
   }
 }
 
@@ -159,19 +182,18 @@
 @keyframes fold {
   from {
     opacity: 0;
-    transform: translateY(-4px);
   }
 }
 
+// Reduced motion: no spinning, no slides, ticks appear without drawing, the titles together.
 @media (prefers-reduced-motion: reduce) {
-  .loader,
-  .title,
-  .folded,
-  .tick circle {
+  .on .arc,
+  .titles li,
+  .folded {
     animation: none;
   }
 
-  .tick path {
+  .tick {
     animation: none;
     stroke-dashoffset: 0;
   }

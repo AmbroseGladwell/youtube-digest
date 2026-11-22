@@ -1,4 +1,5 @@
 import { formatTimestamp, type OtherOverviewCitation, type OverviewPart } from "@overview/domain";
+import { CITED_PLACE_STATE } from "../../../reader/util/citedPlaceFromLocation.js";
 import { Routes } from "../../../../app/Routes.js";
 import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
 import { chatOtherOverviewCitationTestIds } from "./ChatOtherOverviewCitationTestIds.js";
@@ -47,6 +48,7 @@ export function ChatOtherOverviewCitation({ citation, held, imageUrl, wide, onFo
       deleted={!held}
       deletedDetail="an overview you deleted"
       to={Routes.overview(citation.overviewId)}
+      {...(citation.item === null ? {} : { state: { [CITED_PLACE_STATE]: citation.item } })}
       onFollow={() => onFollowed(citation)}
       testId={held ? chatOtherOverviewCitationTestIds.link : chatOtherOverviewCitationTestIds.gone}
     />

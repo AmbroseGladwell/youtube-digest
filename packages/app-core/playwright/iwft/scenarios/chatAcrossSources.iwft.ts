@@ -212,4 +212,24 @@ test.describe("Chat across sources", () => {
 
     await reader.chat.verifySourcesMenuReads(0, 1, [`${PLANTS} · Key point 1`]);
   });
+
+  test("an answer's bold shows as bold, and more than two found overviews fold into +N", async ({ launcher, backendSimulator }) => {
+    const found = [
+      titled(PLANTS, "2026-11-03T09:00:00.000Z"),
+      titled(SOUP, "2026-11-04T09:00:00.000Z"),
+      titled(CURRY, "2026-11-05T09:00:00.000Z"),
+    ];
+    for (const overview of [...found, titled(STEW, "2026-11-10T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    backendSimulator.chats.answerWith({
+      text: "Have **a large handful** of beans a day.",
+      found: found.map((overview) => ({ overviewId: overview.id, title: overview.source.title })),
+    });
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+
+    await reader.chat.askInNote("How do my healthy-eating overviews apply to this?");
+
+    await reader.chat.verifyBoldRead(0, ["a large handful"]);
+    await reader.chat.verifyDrewOnFolds("found", 0, [PLANTS, SOUP], [CURRY]);
+  });
 });

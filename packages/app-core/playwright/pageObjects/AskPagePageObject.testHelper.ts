@@ -6,6 +6,7 @@ import { askPickingWaitTestIds } from "../../src/features/chats/components/AskPi
 import { chatAnswerTestIds } from "../../src/features/chats/components/ChatAnswer/ChatAnswerTestIds.js";
 import { chatComposerTestIds } from "../../src/features/chats/components/ChatComposer/ChatComposerTestIds.js";
 import { chatDrewOnTestIds } from "../../src/features/chats/components/ChatDrewOn/ChatDrewOnTestIds.js";
+import { chatChipRowTestIds } from "../../src/features/chats/components/ChatChipRow/ChatChipRowTestIds.js";
 import { chatFieldTestIds } from "../../src/features/chats/components/ChatField/ChatFieldTestIds.js";
 import { PageObject } from "./PageObject.testHelper.js";
 
@@ -103,6 +104,68 @@ export class AskPagePageObject extends PageObject {
       ).toHaveText(groups),
     );
 
+  verifyBoldRead = (answer: number, texts: string[]) =>
+    this.step(`verifyBoldRead ${answer} ${texts.join(" | ")}`, async () => {
+      await expect(this.answers().nth(answer).locator("strong")).toHaveText(texts);
+      await expect(this.answers().nth(answer)).not.toContainText("**");
+    });
+
+  // A section's first relation group: its two chips, then "+N" whose menu lists them all (OV-362).
+  verifySectionSourcesFold = (answer: number, section: number, shown: number, more: number, all: number) =>
+    this.step(`verifySectionSourcesFold ${answer} ${section}`, async () => {
+      const row = this.answers()
+        .nth(answer)
+        .getByTestId(chatAnswerTestIds.section)
+        .nth(section)
+        .getByTestId(chatAnswerTestIds.sectionSources)
+        .getByTestId(chatChipRowTestIds.root)
+        .first();
+      await expect(row.getByRole("link")).toHaveCount(shown);
+      await expect(row.getByTestId(chatChipRowTestIds.more)).toHaveText(`+${more}`);
+      await row.getByTestId(chatChipRowTestIds.more).click();
+      await expect(row.getByTestId(chatChipRowTestIds.menu).getByRole("link")).toHaveCount(all);
+    });
+
+  verifyItemSourcesRead = (answer: number, section: number, item: number, titles: string[]) =>
+    this.step(`verifyItemSourcesRead ${answer} ${section} ${item}`, () =>
+      expect(
+        this.answers()
+          .nth(answer)
+          .getByTestId(chatAnswerTestIds.section)
+          .nth(section)
+          .locator("li")
+          .nth(item)
+          .getByTestId(chatAnswerTestIds.itemSources)
+          .getByRole("link"),
+      ).toHaveText(titles),
+    );
+
+  followItemSource = (answer: number, section: number, item: number) =>
+    this.step(`followItemSource ${answer} ${section} ${item}`, () =>
+      this.click(
+        this.answers()
+          .nth(answer)
+          .getByTestId(chatAnswerTestIds.section)
+          .nth(section)
+          .locator("li")
+          .nth(item)
+          .getByTestId(chatAnswerTestIds.itemSources)
+          .getByRole("link")
+          .first(),
+      ),
+    );
+
+  verifyLatestQuestionInView = () =>
+    this.step("verifyLatestQuestionInView", () => expect(this.root().getByTestId(askPageTestIds.question).last()).toBeInViewport());
+
+  verifyPickerOpensBelowField = () =>
+    this.step("verifyPickerOpensBelowField", async () => {
+      const picker = (await this.root().getByTestId(chatComposerTestIds.picker).boundingBox())!;
+      const field = (await this.field().boundingBox())!;
+      expect(picker.y).toBeGreaterThan(field.y);
+      await expect(this.root().getByTestId(chatComposerTestIds.picker)).toBeInViewport({ ratio: 1 });
+    });
+
   verifyStatsReads = (answer: number, text: string) =>
     this.step(`verifyStatsReads ${answer} ${text}`, () =>
       expect(this.answers().nth(answer).getByTestId(askAnswerTestIds.stats)).toHaveText(text),
@@ -168,6 +231,22 @@ export class AskPagePageObject extends PageObject {
 
   openDrawerConversation = (index: number) =>
     this.step(`openDrawerConversation ${index}`, () => this.click(this.drawer().getByTestId(askDrawerTestIds.open).nth(index)));
+
+  closeDrawer = () => this.step("closeDrawer", () => this.click(this.drawer().getByTestId(askDrawerTestIds.close)));
+
+  openDrawerItemMenu = (index: number) =>
+    this.step(`openDrawerItemMenu ${index}`, async () => {
+      await this.drawer().getByTestId(askDrawerTestIds.item).nth(index).hover();
+      await this.click(this.drawer().getByTestId(askDrawerTestIds.menuButton).nth(index));
+    });
+
+  verifyDrawerItemMenuIsInView = () =>
+    this.step("verifyDrawerItemMenuIsInView", async () => {
+      const menu = this.drawer().getByTestId(askDrawerTestIds.menu);
+      await expect(menu).toBeVisible();
+      await expect(menu).toBeInViewport({ ratio: 1 });
+      await expect(menu.getByTestId(askDrawerTestIds.delete)).toBeInViewport({ ratio: 1 });
+    });
 
   newChat = () => this.step("newChat", () => this.click(this.drawer().getByTestId(askDrawerTestIds.newChat)));
 

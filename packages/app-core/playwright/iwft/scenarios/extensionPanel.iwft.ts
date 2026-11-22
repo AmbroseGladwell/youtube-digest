@@ -26,11 +26,14 @@ test("the panel's + New is the web's button, with the web's gap to the account m
   await launcher.appShell.verifyGapToTheAccountMenuIs(8);
 });
 
-test("a phone's full layout still gets the 44px touch target", async ({ launcher, page }) => {
+test("a phone's full layout still gets the 44px touch target, as a round icon named by its tooltip (OV-362)", async ({
+  launcher,
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 780 });
   await launcher.launch({ apiKeys: API_KEYS });
 
-  await launcher.appShell.verifyNewOverviewButtonIsTheTouchTarget();
+  await launcher.appShell.verifyIconButtonWithTip("new", "New overview");
 });
 
 test("the extension's own full page is still the library, with all of that chrome", async ({ launcher }) => {

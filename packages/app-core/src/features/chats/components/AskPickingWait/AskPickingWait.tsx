@@ -1,6 +1,5 @@
 import { useEffect, useId, useState } from "react";
 import { Routes } from "../../../../app/Routes.js";
-import { OverviewMark } from "../../../../components/shared/OverviewMark/OverviewMark.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import type { PickedOverview } from "../../useAskOver.js";
 import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
@@ -19,29 +18,35 @@ export interface AskPickingWaitProps {
   onFollow: () => void;
 }
 
+type MarkState = "on" | "todo" | "done";
+
 const overviews = (count: number) => `${count} ${count === 1 ? "overview" : "overviews"}`;
 
-function Tick({ done }: { done: boolean }) {
+// The mark as the loader (354v): its circle an orange arc turning over its bar while a step runs;
+// a filled circle with a tick drawn in once it is done; faint, and still, before it starts.
+function Mark({ state }: { state: MarkState }) {
   return (
-    <span className={`${styles.mark} ${done ? styles.done : ""}`} aria-hidden="true">
-      {done ? (
-        <svg viewBox="0 0 18 18" className={styles.tick}>
-          <circle cx="9" cy="9" r="9" />
-          <path d="M5.2 9.4l2.5 2.4 5-5.2" />
-        </svg>
+    <svg className={`${styles.mark} ${styles[state]}`} viewBox="0 0 30 30" fill="none" aria-hidden="true">
+      {state === "done" ? (
+        <>
+          <circle className={styles.fill} cx="15" cy="13" r="8" />
+          <path className={styles.tick} d="M10.5 13.5l3 3 6-6.5" />
+        </>
       ) : (
-        <span className={styles.loader}>
-          <OverviewMark />
-        </span>
+        <>
+          <g className={styles.arc}>
+            <circle cx="15" cy="13" r="8" strokeDasharray="36 50" />
+          </g>
+          <rect className={styles.bar} x="8" y="25" width="14" height="2.5" rx="1.25" />
+        </>
       )}
-    </span>
+    </svg>
   );
 }
 
-// OV-354, page 3 (354v, the mp4): a small muted list while a library or project question chooses
-// what to read, then reads it, its titles named by code from the ids; once the answer begins it
-// folds into one "Read 5 overviews" line that opens to show them as chips. Reduced motion has no
-// spin, slide or drawing (AskPickingWait.module.scss).
+// OV-354, page 3 (354v, the mp4): a short list in small muted type while a library or project
+// question chooses what to read, then reads it, the titles named by code from the ids; once the
+// answer begins it folds into one "Read 5 overviews" line that opens to show them as chips.
 export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFollow }: AskPickingWaitProps) {
   const [slow, setSlow] = useState(false);
   const [open, setOpen] = useState(false);
@@ -68,7 +73,7 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
           }}
           data-testid={askPickingWaitTestIds.read}
         >
-          <Tick done />
+          <Mark state="done" />
           Read {overviews(picked.length)}
           <span className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}>
             <StrokeIcon name="chevronDown" size={14} />
@@ -99,42 +104,46 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
 
   const reading = phase === "reading";
   return (
-    <ol className={styles.root} data-testid={askPickingWaitTestIds.root}>
-      <li className={`${styles.step} ${reading ? "" : styles.running}`} data-testid={askPickingWaitTestIds.step}>
-        <Tick done={reading} />
-        <span>
-          {reading ? "Chosen" : "Choosing which overviews to read"}
-          {!reading && <span className={styles.hint}> · A few seconds</span>}
-        </span>
-      </li>
+    <div className={styles.root} data-testid={askPickingWaitTestIds.root}>
+      <p className={`${styles.step} ${reading ? styles.stepDone : styles.stepOn}`} data-testid={askPickingWaitTestIds.step}>
+        <Mark state={reading ? "done" : "on"} />
+        {reading ? (
+          "Chosen"
+        ) : (
+          <span>
+            Choosing which overviews to read<small> · A few seconds</small>
+          </span>
+        )}
+      </p>
       {!reading && slow && (
-        <li className={styles.slow} data-testid={askPickingWaitTestIds.slow}>
+        <p className={styles.slow} data-testid={askPickingWaitTestIds.slow}>
           Still choosing, slow connection
-        </li>
+        </p>
       )}
-      <li className={`${styles.step} ${reading ? styles.running : ""}`} data-testid={askPickingWaitTestIds.step}>
-        <Tick done={false} />
+      <p className={`${styles.step} ${reading ? styles.stepOn : styles.stepTodo}`} data-testid={askPickingWaitTestIds.step}>
+        <Mark state={reading ? "on" : "todo"} />
         <span>
-          {reading ? `Reading ${overviews(picked.length)}` : "Reading"}
-          <span className={styles.hint}> · Then the answer</span>
+          {reading ? `Reading ${overviews(picked.length)}` : "Reading the overviews"}
+          {reading && <small> · Then the answer</small>}
         </span>
-      </li>
+      </p>
       {reading && (
-        <li className={styles.titles}>
-          <ul>
-            {picked.map((overview, index) => (
-              <li
-                key={overview.overviewId}
-                className={styles.title}
-                style={{ animationDelay: `${index * 80}ms` }}
-                data-testid={askPickingWaitTestIds.title}
-              >
-                {overview.title}
+        <ul className={styles.titles}>
+          {picked.map((overview, index) => {
+            const image = imageOf(overview.overviewId);
+            return (
+              <li key={overview.overviewId} style={{ animationDelay: `${index * 80}ms` }} data-testid={askPickingWaitTestIds.title}>
+                {image.url === null ? (
+                  <span className={`${styles.thumb} ${image.wide ? styles.thumbWide : ""}`} aria-hidden="true" />
+                ) : (
+                  <img className={`${styles.thumb} ${image.wide ? styles.thumbWide : ""}`} src={image.url} alt="" loading="lazy" />
+                )}
+                <span className={styles.titleText}>{overview.title}</span>
               </li>
-            ))}
-          </ul>
-        </li>
+            );
+          })}
+        </ul>
       )}
-    </ol>
+    </div>
   );
 }

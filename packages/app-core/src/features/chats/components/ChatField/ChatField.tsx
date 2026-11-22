@@ -15,12 +15,14 @@ export interface ChatFieldProps {
   onAt?: (() => void) | undefined;
   onPickerKey?: ((event: KeyboardEvent<HTMLTextAreaElement>) => boolean) | undefined;
   combobox?: { expanded: boolean; controls: string; activeDescendant: string | undefined } | undefined;
+  // The Ask page's empty state, where the field stands alone in the middle (354u).
+  large?: boolean | undefined;
 }
 
 // Design 310i–310j: Enter sends and Shift+Enter starts a new line; while an answer is being
 // written, Stop (ink, never orange) takes Send's place.
 export const ChatField = forwardRef<HTMLTextAreaElement, ChatFieldProps>(function ChatField(
-  { value, placeholder, answering, onChange, onSend, onStop, onAt, onPickerKey, combobox },
+  { value, placeholder, answering, onChange, onSend, onStop, onAt, onPickerKey, combobox, large = false },
   ref,
 ) {
   const id = useId();
@@ -34,7 +36,7 @@ export const ChatField = forwardRef<HTMLTextAreaElement, ChatFieldProps>(functio
   };
 
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} ${large ? styles.large : ""}`}>
       <label className={styles.label} htmlFor={id}>
         {placeholder}
       </label>

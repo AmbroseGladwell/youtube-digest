@@ -162,12 +162,6 @@
   font: 600 11.5px var(--font-body);
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
 .sourcesHost {
   position: relative;
   display: inline-flex;
@@ -218,8 +212,6 @@
 // OV-362: a list item's own sources, after its text.
 .itemChips {
   display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
   margin-left: 6px;
   vertical-align: middle;
 }

@@ -317,11 +317,6 @@ export class AppShellPageObject extends PageObject {
       expect(await this.newOverviewButtonSizing()).toEqual({ minHeight: "auto", paddingInline: "14px" }),
     );
 
-  verifyNewOverviewButtonIsTheTouchTarget = () =>
-    this.step("verifyNewOverviewButtonIsTheTouchTarget", async () =>
-      expect(await this.newOverviewButtonSizing()).toEqual({ minHeight: "44px", paddingInline: "16px" }),
-    );
-
   private newOverviewButtonSizing = () =>
     this.get(appShellTestIds.newOverviewButton).evaluate((element) => {
       const style = getComputedStyle(element);
@@ -345,6 +340,19 @@ export class AppShellPageObject extends PageObject {
     this.step("openAsk", async () => {
       await this.click(appShellTestIds.askButton);
       return new AskPagePageObject(this.testContext).verifyIsShown();
+    });
+
+  // OV-362: on a phone, Ask and + New are 44px round icons whose tooltip names them on hover.
+  verifyIconButtonWithTip = (which: "ask" | "new", tip: string) =>
+    this.step(`verifyIconButtonWithTip ${which}`, async () => {
+      const button = this.get(which === "ask" ? appShellTestIds.askButton : appShellTestIds.newOverviewButton);
+      const box = (await button.boundingBox())!;
+      expect(Math.round(box.width)).toBe(44);
+      expect(Math.round(box.height)).toBe(44);
+      await expect(button).toHaveAccessibleName(tip);
+      await button.hover();
+      await expect(button.locator("xpath=following-sibling::span[1]")).toBeVisible();
+      await expect(button.locator("xpath=following-sibling::span[1]")).toHaveText(tip);
     });
 
   verifyOffersAsk = (offers: boolean) =>

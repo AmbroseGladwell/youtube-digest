@@ -1,4 +1,4 @@
-import { forwardRef, useId, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react";
+import { forwardRef, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MutableRefObject } from "react";
 import { MAX_CHAT_PINS, sourceImage, type ChatSource, type OverviewId } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { useOverviewsWithStateQuery } from "../../../overviews/queries/overviewsWithStateQuery.js";
@@ -70,6 +70,17 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
   const { options, more } =
     picking === null ? { options: [], more: 0 } : sourcePickerOptions({ query: picking.query, projects, members, overviews, exclude });
   const open = picking !== null;
+
+  // Opens above the field, or below it when the space above, under the sticky top bar, is too
+  // small for it (OV-362).
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [below, setBelow] = useState(false);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const top = rootRef.current?.getBoundingClientRect().top ?? 0;
+    const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+    setBelow(top - Math.max(bar, 0) < Math.min(352, window.innerHeight * 0.5));
+  }, [open]);
 
   const rows: RowItem[] = [
     ...pinned.map((item) => {
@@ -165,9 +176,9 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
           .join(", ");
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={rootRef}>
       {open && (
-        <div className={styles.picker} data-testid={chatComposerTestIds.picker}>
+        <div className={`${styles.picker} ${below ? styles.pickerBelow : ""}`} data-testid={chatComposerTestIds.picker}>
           <p className={styles.srOnly} aria-live="polite">
             {announced}
           </p>

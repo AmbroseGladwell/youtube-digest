@@ -1,10 +1,12 @@
 import { Fragment, useRef, useState, type ReactNode } from "react";
 import {
   articlePlaceUrl,
+  formatTimestamp,
   type ArticlePlace,
   type ChatAnswerSections,
   type ChatCitation,
   type ChatSourceKind,
+  type OtherOverviewCitation,
   type Overview,
   type TimeRange,
   type VideoSource,
@@ -13,7 +15,13 @@ import { PageLink } from "../../../../components/shared/PageLink/PageLink.js";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
-import { ChatOtherOverviewCitation, type ChatOtherOverviewCitationProps } from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
+import { ChatChipRow, VISIBLE_CHIPS } from "../ChatChipRow/ChatChipRow.js";
+import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
+import {
+  ChatOtherOverviewCitation,
+  otherOverviewCitationPlace,
+  type ChatOtherOverviewCitationProps,
+} from "../ChatOtherOverviewCitation/ChatOtherOverviewCitation.js";
 import { ChatOverviewCitation, type ChatOverviewCitationProps } from "../ChatOverviewCitation/ChatOverviewCitation.js";
 import type { ShowOnPage } from "../../../reader/useShowOnPage.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
@@ -52,6 +60,17 @@ export interface ChatAnswerProps {
   actions?: ((sources: ReactNode) => ReactNode) | undefined;
 }
 
+// A chip and what it's called, so a folded row can name every chip it hides (OV-362).
+export interface ChatChip {
+  chip: ReactNode;
+  label: string;
+}
+
+export const otherOverviewChipLabel = (citation: OtherOverviewCitation): string => {
+  const place = otherOverviewCitationPlace(citation);
+  return place === undefined ? citation.title : `${citation.title} · ${place}`;
+};
+
 export interface ChatPage {
   url: string;
   onPage: ShowOnPage | null;
@@ -75,7 +94,7 @@ const withSettingsLinks = (paragraph: string): ReactNode =>
           {PERSONALISATION}
         </PageLink>
       )}
-      {piece}
+      <ChatMarkedText text={piece} />
     </Fragment>
   ));
 
@@ -122,37 +141,46 @@ export function ChatAnswer({
   const others = otherOverviewsOf(citations);
   const notCovered = !inSource && !citations.some((citation) => "part" in citation) && others.length === 0;
 
-  const chipsOf = (cited: readonly ChatCitation[]): ReactNode[] => {
-    const own = overviewCitationViews(overview, cited).map((view, index) => (
-      <Fragment key={`${view.part}-${index}`}>
-        <ChatOverviewCitation view={view} onFollowed={onOverviewPartFollowed} />
-        {page !== null && view.kind === "item" && view.place !== undefined && <ShowOnPageLink page={page} place={view.place} />}
-      </Fragment>
-    ));
+  const chipsOf = (cited: readonly ChatCitation[]): ChatChip[] => {
+    const own = overviewCitationViews(overview, cited).map((view, index) => ({
+      label: view.kind === "gone" ? view.section : view.label,
+      chip: (
+        <Fragment key={`${view.part}-${index}`}>
+          <ChatOverviewCitation view={view} onFollowed={onOverviewPartFollowed} />
+          {page !== null && view.kind === "item" && view.place !== undefined && <ShowOnPageLink page={page} place={view.place} />}
+        </Fragment>
+      ),
+    }));
     const times =
       video === null
         ? []
-        : stretchesOf(cited).map((range) => (
-            <ChatCitationPill
-              key={`${range.startMs}-${range.endMs}`}
-              range={range}
-              video={video}
-              onFollowed={onCitationFollowed}
-              onOpenTranscriptAt={onOpenTranscriptAt}
-            />
-          ));
+        : stretchesOf(cited).map((range) => ({
+            label: formatTimestamp(range.startMs),
+            chip: (
+              <ChatCitationPill
+                key={`${range.startMs}-${range.endMs}`}
+                range={range}
+                video={video}
+                onFollowed={onCitationFollowed}
+                onOpenTranscriptAt={onOpenTranscriptAt}
+              />
+            ),
+          }));
     const elsewhere = otherOverviewsOf(cited).map((citation, index) => {
       const image = imageOf?.(citation.overviewId);
-      return (
-        <ChatOtherOverviewCitation
-          key={`${citation.overviewId}-${index}`}
-          citation={citation}
-          held={holdsOverview(citation.overviewId)}
-          imageUrl={image?.url}
-          wide={image?.wide}
-          onFollowed={onOtherOverviewFollowed}
-        />
-      );
+      return {
+        label: otherOverviewChipLabel(citation),
+        chip: (
+          <ChatOtherOverviewCitation
+            key={`${citation.overviewId}-${index}`}
+            citation={citation}
+            held={holdsOverview(citation.overviewId)}
+            imageUrl={image?.url}
+            wide={image?.wide}
+            onFollowed={onOtherOverviewFollowed}
+          />
+        ),
+      };
     });
     return [...own, ...times, ...elsewhere];
   };
@@ -163,7 +191,7 @@ export function ChatAnswer({
   const sourcesMenu =
     sections === undefined || listed.length === 0 ? null : (
       <ChatSourcesMenu count={listed.length} onOpened={onSourcesOpened}>
-        {chipsOf(listed)}
+        {chipsOf(listed).map((each) => each.chip)}
       </ChatSourcesMenu>
     );
   return (
@@ -258,15 +286,19 @@ export function ChatAnswerSectionsView({
 }: {
   sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
   // The chips for what a section cites; none while it streams in an overview's chat.
-  chipsOf?: ((cited: readonly ChatCitation[]) => ReactNode[]) | undefined;
+  chipsOf?: ((cited: readonly ChatCitation[]) => ChatChip[]) | undefined;
 }) {
+  const row = (cited: readonly ChatCitation[]) => {
+    const chips = chipsOf?.(cited) ?? [];
+    return <ChatChipRow chips={chips.map((each) => each.chip)} hiddenLabels={chips.slice(VISIBLE_CHIPS).map((each) => each.label)} />;
+  };
   const sourceRow = (sources: ChatAnswerSections["introSources"]) =>
     chipsOf === undefined || sources.length === 0 ? null : (
       <div className={styles.sectionSources} data-testid={chatAnswerTestIds.sectionSources}>
         {byRelation(sources).map(([relation, cited]) => (
           <div key={relation} className={styles.relation}>
             <p className={styles.relationLabel}>{relation}</p>
-            <div className={styles.chips}>{chipsOf(cited)}</div>
+            {row(cited)}
           </div>
         ))}
       </div>
@@ -281,16 +313,18 @@ export function ChatAnswerSectionsView({
         <section key={index} className={styles.section} data-testid={chatAnswerTestIds.section}>
           <h3 className={styles.sectionHeading}>{section.heading}</h3>
           {section.paragraphs.map((paragraph, at) => (
-            <p key={`p-${at}`}>{paragraph}</p>
+            <p key={`p-${at}`}>
+              <ChatMarkedText text={paragraph} />
+            </p>
           ))}
           {section.numbered.length > 0 && (
             <ol className={styles.list}>
               {section.numbered.map((item, at) => (
                 <li key={at}>
-                  {item.text}
+                  <ChatMarkedText text={item.text} />
                   {chipsOf !== undefined && item.sources.length > 0 && (
                     <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
-                      {chipsOf(item.sources)}
+                      {row(item.sources)}
                     </span>
                   )}
                 </li>
@@ -301,10 +335,10 @@ export function ChatAnswerSectionsView({
             <ul className={styles.list}>
               {section.bullets.map((item, at) => (
                 <li key={at}>
-                  {item.text}
+                  <ChatMarkedText text={item.text} />
                   {chipsOf !== undefined && item.sources.length > 0 && (
                     <span className={styles.itemChips} data-testid={chatAnswerTestIds.itemSources}>
-                      {chipsOf(item.sources)}
+                      {row(item.sources)}
                     </span>
                   )}
                 </li>
@@ -317,7 +351,9 @@ export function ChatAnswerSectionsView({
       {sections.takeaway !== undefined && sections.takeaway !== "" && (
         <section className={styles.section} data-testid={chatAnswerTestIds.takeaway}>
           <h3 className={styles.sectionHeading}>Takeaway</h3>
-          <p>{sections.takeaway}</p>
+          <p>
+            <ChatMarkedText text={sections.takeaway} />
+          </p>
         </section>
       )}
     </>
