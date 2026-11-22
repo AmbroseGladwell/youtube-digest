@@ -23,7 +23,9 @@ import styles from "./WhatWeKnowCard.module.scss";
 import { whatWeKnowCardTestIds } from "./WhatWeKnowCardTestIds.js";
 
 const learningLine = (count: number, keepLearning: boolean) => {
-  if (!keepLearning) return count === 0 ? "Keep learning is off" : `${things(count)} learned · Keep learning is off`;
+  if (!keepLearning) {
+    return count === 0 ? "Keep learning is off" : `${things(count)} learned · Keep learning is off`;
+  }
   return count === 0 ? "Nothing learned yet · Keep learning is on" : `${things(count)} learned from your overviews · Keep learning is on`;
 };
 const things = (count: number) => (count === 1 ? "1 thing" : `${count} things`);
@@ -91,7 +93,9 @@ export function WhatWeKnowCard() {
   const unnoticedTexts = unnoticed.map(({ text }) => text).join("\n");
 
   useEffect(() => {
-    if (unnoticed.length === 0) return;
+    if (unnoticed.length === 0) {
+      return;
+    }
     const at = new Date().toISOString();
     updateSettings.mutate({
       learned: Object.fromEntries(unnoticed.map((item) => [learnedItemKey(item.text), { ...item, noticedAt: at }])),

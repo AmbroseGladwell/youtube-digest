@@ -129,7 +129,9 @@ const OWNED = /\byour (own )?(library|saved|overviews)\b|\byou(['’]ve| have)? 
 // x1/x2: no offer of what chat can't take. x3: with similar overviews, names one as the reader's own;
 // with none, doesn't claim any. x4: points to Settings › Personalisation.
 function productRight(question: Question, answer: string, similarTitles: readonly string[]): boolean {
-  if (question.id === "x1" || question.id === "x2") return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
+  if (question.id === "x1" || question.id === "x2") {
+    return !OFFERS_WHAT_CHAT_CANNOT.test(answer);
+  }
   if (question.id === "x3") {
     const named = similarTitles.some((title) => normalised(answer).includes(normalised(title).split(" ").slice(0, 4).join(" ")));
     return similarTitles.length === 0 ? !named : named && OWNED.test(answer);
@@ -149,13 +151,19 @@ function locateQuote(segments: readonly TranscriptSegment[], quote: string): num
   const starts: Array<{ offset: number; startMs: number }> = [];
   for (const segment of segments) {
     const text = normalised(segment.text);
-    if (text.length === 0) continue;
-    if (joined.length > 0) joined += " ";
+    if (text.length === 0) {
+      continue;
+    }
+    if (joined.length > 0) {
+      joined += " ";
+    }
     starts.push({ offset: joined.length, startMs: segment.startMs });
     joined += text;
   }
   const found = joined.indexOf(normalised(quote));
-  if (found === -1) return null;
+  if (found === -1) {
+    return null;
+  }
   return starts.filter((start) => start.offset <= found).at(-1)?.startMs ?? null;
 }
 
@@ -251,7 +259,9 @@ async function main() {
     await testApp.sql.query("update accounts set plan = 'plus' where id = $1", [account.accountId]);
     if (reader) {
       const put = await account.inject({ method: "PUT", url: "/api/settings", body: { ...READER, updatedAt: new Date().toISOString() } });
-      if (put.statusCode !== 200) throw new Error(`settings: ${put.statusCode} ${put.body}`);
+      if (put.statusCode !== 200) {
+        throw new Error(`settings: ${put.statusCode} ${put.body}`);
+      }
     }
     const videoId = VideoId.parse(randomUUID().slice(0, 11));
     const video = { ...source.video, id: videoId, url: `https://www.youtube.com/watch?v=${videoId}` };
@@ -272,9 +282,13 @@ async function main() {
           };
     const overview = storedOverview({ ...source.overview, source: web ?? youTubeSource(video) });
     const posted = await account.inject({ method: "POST", url: "/api/overviews", body: overview });
-    if (posted.statusCode !== 201) throw new Error(`overview: ${posted.statusCode} ${posted.body}`);
+    if (posted.statusCode !== 201) {
+      throw new Error(`overview: ${posted.statusCode} ${posted.body}`);
+    }
     numbersIn.set(overview.id, numbersOf(overviewMarkdown(overview)));
-    if (web !== null) return { account, overviewId: overview.id };
+    if (web !== null) {
+      return { account, overviewId: overview.id };
+    }
     const stored = {
       videoId,
       segments: source.segments,
@@ -283,7 +297,9 @@ async function main() {
       video: youTubeSource(video),
     };
     const put = await account.inject({ method: "PUT", url: `/api/transcripts/${videoId}`, body: stored });
-    if (put.statusCode !== 204) throw new Error(`transcript: ${put.statusCode} ${put.body}`);
+    if (put.statusCode !== 204) {
+      throw new Error(`transcript: ${put.statusCode} ${put.body}`);
+    }
     return { account, overviewId: overview.id };
   };
 

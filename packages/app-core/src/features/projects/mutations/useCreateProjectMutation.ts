@@ -27,7 +27,9 @@ export function useCreateProjectMutation() {
         archivedAt: null,
       };
       await projectStore.createProject(project);
-      for (const overviewId of overviewIds) await projectStore.addToProject(project.id, overviewId);
+      for (const overviewId of overviewIds) {
+        await projectStore.addToProject(project.id, overviewId);
+      }
       return project;
     },
     onSettled: () => {

@@ -20,11 +20,15 @@ function getSnapshot(): OnboardingProgress | null {
 
 function refresh(): void {
   snapshot = readOnboardingProgress();
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function onStorage(event: StorageEvent): void {
-  if (isOnboardingProgressKey(event.key)) refresh();
+  if (isOnboardingProgressKey(event.key)) {
+    refresh();
+  }
 }
 
 function subscribe(listener: () => void): () => void {
@@ -32,7 +36,9 @@ function subscribe(listener: () => void): () => void {
   globalThis.addEventListener?.("storage", onStorage);
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0) globalThis.removeEventListener?.("storage", onStorage);
+    if (listeners.size === 0) {
+      globalThis.removeEventListener?.("storage", onStorage);
+    }
   };
 }
 

@@ -10,8 +10,11 @@ export function inQueueOrder(waiting: readonly QueuedCapture[], orderOf: (playli
   const places = new Map<PlaylistId, number[]>();
   waiting.forEach((capture, place) => {
     const taken = places.get(capture.fromPlaylist.id);
-    if (taken === undefined) places.set(capture.fromPlaylist.id, [place]);
-    else taken.push(place);
+    if (taken === undefined) {
+      places.set(capture.fromPlaylist.id, [place]);
+    } else {
+      taken.push(place);
+    }
   });
 
   const ordered = [...waiting];

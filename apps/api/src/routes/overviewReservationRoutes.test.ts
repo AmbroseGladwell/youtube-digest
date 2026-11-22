@@ -67,7 +67,9 @@ test("reserving an overview on the reader's own key counts it once, and answers 
 test("the 11th own-key overview in a month on Free is refused with which quota and the reset date", async () => {
   const testApp = await createTestApp();
   const account = await makeAccount(testApp);
-  for (let made = 0; made < overviewQuotas.free.own; made += 1) await reserve(account, randomUUID());
+  for (let made = 0; made < overviewQuotas.free.own; made += 1) {
+    await reserve(account, randomUUID());
+  }
 
   const eleventh = await reserve(account, randomUUID());
 

@@ -39,7 +39,9 @@ export function LimitMessageNote({ message, from, testIds, takeFocus = false, on
   }, [message.quota]);
 
   useEffect(() => {
-    if (!takeFocus) return;
+    if (!takeFocus) {
+      return;
+    }
     const frame = requestAnimationFrame(() => firstAction.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [takeFocus, message.quota]);

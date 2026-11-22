@@ -24,7 +24,9 @@ export class OverviewUsageRepository {
 
   async reserve(now: Date, accountId: AccountId, keySource: KeySource, limit: number): Promise<OverviewReservation> {
     const month = usageMonth(now);
-    if (limit < 1) return { reserved: false, used: await this.#usedIn(month, accountId, keySource), limit };
+    if (limit < 1) {
+      return { reserved: false, used: await this.#usedIn(month, accountId, keySource), limit };
+    }
     const [row] = await this.#sql.query<{ overviews: number }>(
       `insert into overview_usage (month, account_id, key_source, overviews) values ($1::date, $2, $3, 1)
        on conflict (month, account_id, key_source) do update set overviews = overview_usage.overviews + 1
@@ -32,7 +34,9 @@ export class OverviewUsageRepository {
        returning overviews`,
       [month, accountId, keySource, limit],
     );
-    if (row !== undefined) return { reserved: true, month, used: row.overviews, limit };
+    if (row !== undefined) {
+      return { reserved: true, month, used: row.overviews, limit };
+    }
     return { reserved: false, used: await this.#usedIn(month, accountId, keySource), limit };
   }
 
@@ -62,7 +66,9 @@ export class OverviewUsageRepository {
   // The global cap behind every plan, counted per UTC day: one slot per generation on our
   // key, given back when it fails, like the proxy's budget.
   async reserveOurKeyDay(now: Date, limit: number): Promise<boolean> {
-    if (limit < 1) return false;
+    if (limit < 1) {
+      return false;
+    }
     const rows = await this.#sql.query(
       `insert into our_key_usage (day, generations) values ($1::date, 1)
        on conflict (day) do update set generations = our_key_usage.generations + 1

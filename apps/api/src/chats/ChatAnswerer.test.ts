@@ -996,8 +996,9 @@ test("only an overview close to the question is found for it, never the merely n
   // sits at 0.38 to it, the band where the owner's unrelated overviews scored.
   const vectorOf = (text: string) => {
     const vector = new Array<number>(EMBEDDING_DIMENSIONS).fill(0);
-    if (/close/i.test(text)) vector[0] = 1;
-    else {
+    if (/close/i.test(text)) {
+      vector[0] = 1;
+    } else {
       vector[0] = 0.38;
       vector[1] = Math.sqrt(1 - 0.38 ** 2);
     }

@@ -44,7 +44,9 @@ export function useFollowPlaylistMutation() {
         seenVideoIds: lookup.entries.map((entry) => entry.videoId),
         checkedAt: now.toISOString(),
       });
-      if (!backfill) return { queued: 0 };
+      if (!backfill) {
+        return { queued: 0 };
+      }
 
       const known = await knownVideoIds(overviewStore, captureQueueStore);
       const captures = capturesFor(

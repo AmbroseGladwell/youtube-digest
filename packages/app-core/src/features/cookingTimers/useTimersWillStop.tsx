@@ -36,8 +36,11 @@ export function useTimersWillStop(): TimersWillStop {
   return {
     count: all.length,
     ask: (copy, by, go, stay = () => undefined) => {
-      if (all.length === 0) go();
-      else setAsking({ copy, by, go, stay });
+      if (all.length === 0) {
+        go();
+      } else {
+        setAsking({ copy, by, go, stay });
+      }
     },
     dialog: (
       <TimersWillStopDialog
@@ -49,7 +52,9 @@ export function useTimersWillStop(): TimersWillStop {
           setAsking(null);
         }}
         onGo={() => {
-          if (asking === null) return;
+          if (asking === null) {
+            return;
+          }
           timers.stop(
             all.map((timer) => timer.id),
             asking.by,

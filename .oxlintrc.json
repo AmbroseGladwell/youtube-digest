@@ -10,6 +10,7 @@
     "typescript/consistent-type-definitions": ["error", "interface"],
     "typescript/consistent-type-imports": "error",
     "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "curly": ["error", "all"],
     "no-var": "error",
     "no-param-reassign": "error",
     "no-sequences": "error",

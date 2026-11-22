@@ -38,7 +38,9 @@ export function makeFakeYouTubeDataApi(playlists: FakePlaylist[]): FakeYouTubeDa
     if (url.hostname === "www.youtube.com" && url.pathname === "/oembed") {
       const listId = new URL(url.searchParams.get("url")!).searchParams.get("list");
       const playlist = playlists.find((candidate) => candidate.id === listId);
-      if (playlist === undefined) return { status: 404, body: "Not Found" };
+      if (playlist === undefined) {
+        return { status: 404, body: "Not Found" };
+      }
       return playlist.privacyStatus === "private" ? { status: 401, body: "Unauthorized" } : json(200, { title: playlist.title });
     }
     if (request.headers["x-goog-api-key"] !== FAKE_API_KEY || url.searchParams.has("key")) {

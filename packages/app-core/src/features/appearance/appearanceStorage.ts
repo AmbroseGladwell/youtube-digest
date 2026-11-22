@@ -16,7 +16,9 @@ export const APPEARANCE_STORAGE_KEY = "overview.appearance.v1";
 export function readAppearance(storage: Storage = globalThis.localStorage): Appearance {
   try {
     const raw = storage.getItem(APPEARANCE_STORAGE_KEY);
-    if (!raw) return DEFAULT_APPEARANCE;
+    if (!raw) {
+      return DEFAULT_APPEARANCE;
+    }
     const parsed = Appearance.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : DEFAULT_APPEARANCE;
   } catch {

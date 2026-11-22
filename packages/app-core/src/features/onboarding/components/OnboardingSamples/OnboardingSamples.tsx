@@ -23,10 +23,14 @@ export function OnboardingSamples({ samples }: { samples: readonly Sample[] }) {
   const shown = all ? samples : samples.slice(0, SHOWN_AT_FIRST);
 
   useEffect(() => {
-    if (failed && pressed.current !== null) rows.current[pressed.current]?.focus();
+    if (failed && pressed.current !== null) {
+      rows.current[pressed.current]?.focus();
+    }
   }, [failed]);
   useEffect(() => {
-    if (all && firstMore.current) rows.current[SHOWN_AT_FIRST]?.focus();
+    if (all && firstMore.current) {
+      rows.current[SHOWN_AT_FIRST]?.focus();
+    }
     firstMore.current = false;
   }, [all]);
 

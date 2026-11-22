@@ -89,7 +89,9 @@ async function send(
     }
     case "transcript": {
       const transcript = await storage.transcriptToPush(entry.id);
-      if (transcript !== null) await api.saveTranscript(transcript);
+      if (transcript !== null) {
+        await api.saveTranscript(transcript);
+      }
       return { result: "sent" };
     }
   }
@@ -139,9 +141,13 @@ async function createOverview(api: SyncApi, record: Record<string, unknown>, kno
     try {
       return await create();
     } catch (error) {
-      if (!isSyncRequestError(error) || error.code !== "not_reserved") throw error;
+      if (!isSyncRequestError(error) || error.code !== "not_reserved") {
+        throw error;
+      }
       const waiting = await reserve(api, String(record.id));
-      if (waiting !== null) return waiting;
+      if (waiting !== null) {
+        return waiting;
+      }
       return await create();
     }
   } catch (error) {
@@ -160,7 +166,9 @@ async function reserve(api: SyncApi, overviewId: string): Promise<PushOutcome | 
   } catch (error) {
     const spent = isSyncRequestError(error) && (error.details?.quota === "own" || error.details?.quota === "ours");
     const until = spent ? error.details?.resetsOn : undefined;
-    if (typeof until === "string") return { result: "waiting", until };
+    if (typeof until === "string") {
+      return { result: "waiting", until };
+    }
     throw error;
   }
 }

@@ -26,7 +26,9 @@ export function useSetPlaylistOrderMutation() {
     mutationKey: playlistKeys.all,
     mutationFn: async ({ playlist, order }) => {
       const stored = (await followedPlaylistStore.listFollowed()).find((each) => each.id === playlist.id);
-      if (stored === undefined) return;
+      if (stored === undefined) {
+        return;
+      }
       await followedPlaylistStore.saveFollowed({ ...stored, order });
     },
     onMutate: async (variables) => {
@@ -38,7 +40,9 @@ export function useSetPlaylistOrderMutation() {
       return { previous };
     },
     onError: (_error, _variables, context) => {
-      if (context?.previous !== undefined) queryClient.setQueryData(playlistKeys.followed(), context.previous);
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(playlistKeys.followed(), context.previous);
+      }
     },
     onSettled: async () => {
       if (queryClient.isMutating({ mutationKey: playlistKeys.all }) === 1) {

@@ -35,13 +35,17 @@ export const otlpValue = (value: string | number | boolean): OtlpAnyValue =>
         : { doubleValue: value };
 
 const flatten = (prefix: string, value: unknown, into: OtlpKeyValue[]): void => {
-  if (value === null || value === undefined) return;
+  if (value === null || value === undefined) {
+    return;
+  }
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
     into.push({ key: prefix, value: otlpValue(value) });
   } else if (Array.isArray(value)) {
     into.push({ key: prefix, value: { stringValue: JSON.stringify(value) } });
   } else if (typeof value === "object") {
-    for (const [key, inner] of Object.entries(value)) flatten(`${prefix}.${key}`, inner, into);
+    for (const [key, inner] of Object.entries(value)) {
+      flatten(`${prefix}.${key}`, inner, into);
+    }
   }
 };
 
@@ -54,7 +58,9 @@ export function otlpLogRecord(line: Record<string, unknown>, observedAt: Date): 
   const time = typeof line.time === "number" ? line.time : observedAt.getTime();
   const attributes: OtlpKeyValue[] = [];
   for (const [key, value] of Object.entries(line)) {
-    if (!PINO_OWN_FIELDS.has(key)) flatten(key, value, attributes);
+    if (!PINO_OWN_FIELDS.has(key)) {
+      flatten(key, value, attributes);
+    }
   }
   return {
     timeUnixNano: `${BigInt(Math.round(time)) * 1_000_000n}`,

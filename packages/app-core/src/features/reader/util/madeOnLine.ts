@@ -20,7 +20,9 @@ const PASSED_OVER_OURS: Record<FallbackCause, string> = {
 // (docs/architecture/tiers.md, "Which key an overview uses").
 export function madeOnLine(madeOn: MadeOn | null): string | null {
   const fallback = madeOn?.fallback ?? null;
-  if (madeOn === null || fallback === null) return null;
+  if (madeOn === null || fallback === null) {
+    return null;
+  }
   const provider = fallback.provider === null ? null : PROVIDER_SHORT_LABEL[fallback.provider];
   if (madeOn.key === "ours") {
     return `On us: ${PASSED_OVER_OWN[fallback.cause](provider ?? "your provider")}`;

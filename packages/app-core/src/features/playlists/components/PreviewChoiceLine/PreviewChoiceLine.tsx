@@ -41,7 +41,9 @@ export function PreviewChoiceLine<Choice extends string>({
   const resultId = `${group}-result`;
 
   useEffect(() => {
-    if (choosing) chosenOption.current?.focus();
+    if (choosing) {
+      chosenOption.current?.focus();
+    }
   }, [choosing]);
 
   if (choosing) {

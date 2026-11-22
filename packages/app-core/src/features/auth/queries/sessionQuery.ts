@@ -23,8 +23,12 @@ export function useSessionQuery() {
   const answered = query.data;
 
   useEffect(() => {
-    if (answered === undefined || answered.accountId !== connection.accountId) return;
-    if (answered.email === connection.email && answered.firstName === connection.firstName) return;
+    if (answered === undefined || answered.accountId !== connection.accountId) {
+      return;
+    }
+    if (answered.email === connection.email && answered.firstName === connection.firstName) {
+      return;
+    }
     setConnection({ ...connection, email: answered.email, firstName: answered.firstName });
   }, [answered, connection, setConnection]);
 

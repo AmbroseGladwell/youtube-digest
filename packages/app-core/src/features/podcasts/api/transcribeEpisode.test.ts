@@ -16,12 +16,16 @@ const transcript: StoredTranscript = {
 
 const scripted = (first: PodcastTranscription | Error, ...then: (PodcastTranscription | Error)[]) => ({
   transcribe: async () => {
-    if (first instanceof Error) throw first;
+    if (first instanceof Error) {
+      throw first;
+    }
     return first;
   },
   transcription: async () => {
     const next = then.length > 1 ? then.shift()! : then[0]!;
-    if (next instanceof Error) throw next;
+    if (next instanceof Error) {
+      throw next;
+    }
     return next;
   },
 });

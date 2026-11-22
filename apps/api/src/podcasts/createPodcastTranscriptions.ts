@@ -47,8 +47,12 @@ export interface PodcastTranscriptionsOptions {
 const limitSecondsOf = (caller: ServiceCaller): number => transcriptionHours["accountId" in caller ? caller.plan : "free"] * HOUR;
 
 const shown = (job: PodcastTranscriptionJob, episodeSeconds: number | null): PodcastTranscription => {
-  if (job.status === "ready") return { status: "ready", id: job.id, transcript: job.transcript! };
-  if (job.status === "failed") return { status: "failed", id: job.id, reason: job.failure ?? "failed" };
+  if (job.status === "ready") {
+    return { status: "ready", id: job.id, transcript: job.transcript! };
+  }
+  if (job.status === "failed") {
+    return { status: "failed", id: job.id, reason: job.failure ?? "failed" };
+  }
   return { status: job.status === "transcribing" ? "transcribing" : "waiting", id: job.id, episodeSeconds };
 };
 
@@ -64,11 +68,17 @@ export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock
 
   // Said before the reader chooses, from the feed already read for the check; nothing is held.
   const offer = async (episode: EpisodeAudio, caller: ServiceCaller): Promise<TranscriptionOffer> => {
-    if (episode.audioUrl === null) return { status: "no-audio" };
+    if (episode.audioUrl === null) {
+      return { status: "no-audio" };
+    }
     const episodeSeconds = episode.durationSeconds;
-    if (episodeSeconds !== null && episodeSeconds > LONGEST_EPISODE_SECONDS) return { status: "too-long", episodeSeconds };
+    if (episodeSeconds !== null && episodeSeconds > LONGEST_EPISODE_SECONDS) {
+      return { status: "too-long", episodeSeconds };
+    }
     const existing = await jobs.find(callerKey(caller), episode.sourceKey);
-    if (existing !== null && existing !== "failed") return { status: "free", why: existing === "ready" ? "transcribed" : "on-its-way" };
+    if (existing !== null && existing !== "failed") {
+      return { status: "free", why: existing === "ready" ? "transcribed" : "on-its-way" };
+    }
     const month = await usage(clock(), caller);
     const needs = Math.min(episodeSeconds ?? 1, LONGEST_EPISODE_SECONDS);
     return { status: month.usedSeconds + needs <= month.limitSeconds ? "needed" : "not-enough", episodeSeconds, usage: month };
@@ -76,9 +86,13 @@ export function createPodcastTranscriptions({ fetchPublicWeb, jobs, queue, clock
 
   const start = async (feedUrl: string, guid: string, caller: ServiceCaller, log: FastifyBaseLogger): Promise<TranscriptionStart> => {
     const read = await fetchFeedEpisode(fetchPublicWeb, feedUrl, (item) => feedItemGuid(item) === guid);
-    if (read.status === "failed") return { status: "feed-unreadable" };
+    if (read.status === "failed") {
+      return { status: "feed-unreadable" };
+    }
     const { item } = read.feed;
-    if (item === null) return { status: "not-in-feed" };
+    if (item === null) {
+      return { status: "not-in-feed" };
+    }
     const episodeSeconds = item.durationSeconds;
     if (item.audioUrl === null) {
       log.info(apiLogLines.transcription.refused({ reason: "no-audio" }));

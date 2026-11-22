@@ -11,7 +11,9 @@ import { accountTermsLineTestIds } from "./AccountTermsLineTestIds.js";
 export function AccountTermsLine() {
   const apiUrl = useKnownApiUrl();
   const opensElsewhere = useSurface() === "extension";
-  if (apiUrl === null) return null;
+  if (apiUrl === null) {
+    return null;
+  }
   const target = opensElsewhere ? { target: "_blank", rel: "noreferrer" } : {};
 
   return (

@@ -36,7 +36,9 @@ export const sessionPlugin = fp<SessionPluginOptions>(async (app, { sql, clock, 
     const resolved =
       token === null ? null : await resolveSession(sql, token, bearer === null ? "cookie" : "bearer", { now, sessionTtlDays });
     if (resolved === null) {
-      if (request.routeOptions.config.optionalSession) return;
+      if (request.routeOptions.config.optionalSession) {
+        return;
+      }
       reply.header("www-authenticate", 'Bearer realm="api"');
       throw new ApiError("unauthenticated", "Sign in to use the API");
     }

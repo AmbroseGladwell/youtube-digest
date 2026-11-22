@@ -29,7 +29,9 @@ export async function renderNarration(ttsUrl: string, overview: Overview): Promi
       renderVersion: NARRATION_RENDER_VERSION,
     }),
   );
-  if (status !== 200) throw new Error(`TTS answered ${status}: ${text}`);
+  if (status !== 200) {
+    throw new Error(`TTS answered ${status}: ${text}`);
+  }
   const rendered = JSON.parse(text) as { durationSeconds: number; audioBase64: string };
   return { audio: Buffer.from(rendered.audioBase64, "base64"), durationSeconds: rendered.durationSeconds };
 }

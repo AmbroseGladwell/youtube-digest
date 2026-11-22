@@ -37,7 +37,9 @@ export function useStartSubject(): StartSubject | null {
     };
   }
 
-  if (!isOfferedPage(activePage)) return null;
+  if (!isOfferedPage(activePage)) {
+    return null;
+  }
 
   return {
     verb: START_VERB.article,
@@ -45,7 +47,9 @@ export function useStartSubject(): StartSubject | null {
     offer: { source: domainOf(activePage.url), title: activePage.title, video: false },
     // Chrome is asked inside the press, so the read spends no trial read (`pageAccess.ts`).
     make: () => {
-      if (pages !== null) rememberPageAccess(activePage.url, pages.requestAccess(activePage.url));
+      if (pages !== null) {
+        rememberPageAccess(activePage.url, pages.requestAccess(activePage.url));
+      }
       void startOnboarding(activePage.url, activePage.tabId);
     },
   };

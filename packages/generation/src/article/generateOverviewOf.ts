@@ -16,8 +16,12 @@ export const generateOverviewOf = (
   meta: { id: OverviewId; savedAt: string },
   observer: GenerationObserver = {},
 ): Promise<Overview> => {
-  if (isPodcastInput(input)) return generatePodcastOverview(client, input, meta, observer);
-  if (!("article" in input)) return generateOverview(client, input, meta, observer);
+  if (isPodcastInput(input)) {
+    return generatePodcastOverview(client, input, meta, observer);
+  }
+  if (!("article" in input)) {
+    return generateOverview(client, input, meta, observer);
+  }
   const { recipe } = input.article;
   return recipe === null
     ? generateArticleOverview(client, input, meta, observer)

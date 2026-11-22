@@ -18,7 +18,9 @@ export interface ChatDrewOnProps {
 // (OV-362). A sent question keeps its
 // sources, so these chips have no ×: they only open their overview.
 export function ChatDrewOn({ how, sources, overviewOf, onFollow }: ChatDrewOnProps) {
-  if (sources.length === 0) return null;
+  if (sources.length === 0) {
+    return null;
+  }
   return (
     <li
       className={`${styles.root} ${how === "pinned" ? styles.pinned : styles.found}`}

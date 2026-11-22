@@ -57,7 +57,9 @@ export class IndexedDbSettingsStore implements SettingsStore {
       change: { op: "settings", patch },
     });
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
     return this.get();
   }
 

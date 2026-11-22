@@ -28,7 +28,9 @@ function dataApiOver(channels: FakeChannel[], searchFinds?: readonly string[]) {
     const url = new URL(request.url);
     const path = url.pathname.replace("/youtube/v3/", "");
     asked.push(path);
-    if (request.headers["x-goog-api-key"] !== API_KEY || url.searchParams.has("key")) return { status: 400, body: "{}" };
+    if (request.headers["x-goog-api-key"] !== API_KEY || url.searchParams.has("key")) {
+      return { status: 400, body: "{}" };
+    }
     const json = (body: unknown) => ({ status: 200, body: JSON.stringify(body) });
     const every = channels.flatMap((channel) => channel.videos);
     if (path === "search") {

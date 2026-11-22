@@ -17,7 +17,9 @@ function fakeTrello({ failMoves = [], listAfterMove = DONE } = {}) {
       return shortLink ? { ok: true, json: async () => ({ shortLink }) } : { ok: false, status: 404 };
     }
     const shortLink = segments.pop();
-    if (init.method === "PUT") return { ok: !failMoves.includes(shortLink), status: failMoves.includes(shortLink) ? 401 : 200 };
+    if (init.method === "PUT") {
+      return { ok: !failMoves.includes(shortLink), status: failMoves.includes(shortLink) ? 401 : 200 };
+    }
     return { ok: true, json: async () => ({ idList: listAfterMove, name: `Card ${shortLink}` }) };
   };
   return { fetch, calls };

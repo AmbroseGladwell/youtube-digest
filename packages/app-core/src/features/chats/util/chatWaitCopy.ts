@@ -22,20 +22,22 @@ export function chatWaitCopy(wait: ShownWait, plan: Plan, resetsOn: string | nul
       const back = wait.resetsOn ?? resetsOn;
       const more = back === null ? "More next month." : `More on ${resetDate(back)}.`;
       const heading = `You’ve asked this month’s ${count(chatAllowances[plan])} questions on us`;
-      if (plan === "free")
+      if (plan === "free") {
         return {
           icon: "clock",
           heading,
           body: `${more} BYO Plus gives ${count(chatAllowances["byo-plus"])} a month, Plus ${count(chatAllowances.plus)}. ${NOT_OVERVIEWS}`,
           action: { kind: "seePlans", label: "See plans" },
         };
-      if (plan === "byo-plus")
+      }
+      if (plan === "byo-plus") {
         return {
           icon: "clock",
           heading,
           body: `${more} Plus gives ${count(chatAllowances.plus)} a month. ${NOT_OVERVIEWS}`,
           action: { kind: "seePlus", label: "See Plus" },
         };
+      }
       return { icon: "clock", heading, body: `${more} ${NOT_OVERVIEWS}`, action: null };
     }
     case "day":

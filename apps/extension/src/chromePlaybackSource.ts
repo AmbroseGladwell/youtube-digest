@@ -14,7 +14,9 @@ const GIVE_UP_AFTER_MISSES = 5;
 
 function publish(next: PlaybackPosition | null): void {
   position = next;
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 // Serialized and run in the tab, so it closes over nothing and reads its own constants
@@ -82,11 +84,15 @@ function reportPlayback(reportType: string, everyMs: number, giveUpAfter: number
   const jumps = ["play", "pause", "seeked"];
 
   document.addEventListener("timeupdate", onTick, { capture: true });
-  for (const jump of jumps) document.addEventListener(jump, onJump, { capture: true });
+  for (const jump of jumps) {
+    document.addEventListener(jump, onJump, { capture: true });
+  }
 
   page.__overviewPlaybackStop__ = () => {
     document.removeEventListener("timeupdate", onTick, true);
-    for (const jump of jumps) document.removeEventListener(jump, onJump, true);
+    for (const jump of jumps) {
+      document.removeEventListener(jump, onJump, true);
+    }
     delete page.__overviewPlaybackStop__;
   };
 }

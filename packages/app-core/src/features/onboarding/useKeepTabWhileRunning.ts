@@ -7,7 +7,9 @@ export const readyTabTitle = (title: string): string => `Ready: ${title}`;
 // tab closes, and a tab title that says it's done.
 export function useKeepTabWhileRunning(phase: WaitPhase, title: string): void {
   useEffect(() => {
-    if (phase !== "running") return;
+    if (phase !== "running") {
+      return;
+    }
     const holdOpen = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
@@ -17,7 +19,9 @@ export function useKeepTabWhileRunning(phase: WaitPhase, title: string): void {
   }, [phase]);
 
   useEffect(() => {
-    if (phase !== "ready") return;
+    if (phase !== "ready") {
+      return;
+    }
     const previous = document.title;
     document.title = readyTabTitle(title);
     return () => {

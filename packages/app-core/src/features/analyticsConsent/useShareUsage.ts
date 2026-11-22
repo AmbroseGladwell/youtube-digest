@@ -34,13 +34,17 @@ export function useShareUsage(): ShareUsage {
   const analytics = useAnalytics();
 
   const switchTo = async (on: boolean): Promise<void> => {
-    if (on === shareUsageOn(state)) return;
+    if (on === shareUsageOn(state)) {
+      return;
+    }
     if (!on) {
       analytics.analyticsConsent.settings.switched({ on });
       await analytics.flush();
     }
     const switchedOn = () => {
-      if (on) analytics.analyticsConsent.settings.switched({ on });
+      if (on) {
+        analytics.analyticsConsent.settings.switched({ on });
+      }
     };
     if (state.signedIn) {
       updateSettings.mutate({ analyticsOptOut: !on, analyticsOptOutChangedAt: new Date().toISOString() }, { onSuccess: switchedOn });

@@ -29,7 +29,9 @@ export function MiniPlayer() {
   const { track } = snapshot;
   const shown = track !== null && snapshot.docked && DOCKED_STATUSES.has(snapshot.status) && pathname !== Routes.overview(track.overviewId);
 
-  if (!shown) return null;
+  if (!shown) {
+    return null;
+  }
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
 }
 

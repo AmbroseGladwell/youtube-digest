@@ -14,23 +14,35 @@ export function timerClock(ms: number): string {
 }
 
 export function timerLength(seconds: number): string {
-  if (seconds < 60) return `${seconds} sec`;
+  if (seconds < 60) {
+    return `${seconds} sec`;
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.round((seconds % 3600) / 60);
-  if (hours === 0) return `${minutes} min`;
+  if (hours === 0) {
+    return `${minutes} min`;
+  }
   return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes}`;
 }
 
 export function timerLengthWords(seconds: number): string {
-  if (seconds < 60) return `${seconds}-second`;
-  if (seconds % 3600 === 0) return `${seconds / 3600}-hour`;
+  if (seconds < 60) {
+    return `${seconds}-second`;
+  }
+  if (seconds % 3600 === 0) {
+    return `${seconds / 3600}-hour`;
+  }
   return `${Math.round(seconds / 60)}-minute`;
 }
 
 export function timeLeftWords(ms: number): string {
-  if (ms < 60_000) return plural(Math.max(1, Math.ceil(ms / 1000)), "second");
+  if (ms < 60_000) {
+    return plural(Math.max(1, Math.ceil(ms / 1000)), "second");
+  }
   const minutes = Math.ceil(ms / 60_000);
-  if (minutes < 60) return plural(minutes, "minute");
+  if (minutes < 60) {
+    return plural(minutes, "minute");
+  }
   const hours = Math.floor(minutes / 60);
   return minutes % 60 === 0 ? plural(hours, "hour") : `${plural(hours, "hour")} ${plural(minutes % 60, "minute")}`;
 }

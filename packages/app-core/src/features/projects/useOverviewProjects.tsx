@@ -23,13 +23,17 @@ export function useOverviewProjects(overview: Overview | null, webApp: ProjectsL
   const newProject = useNewProject(summaries.map(({ project }) => project.name));
 
   const openPicker = (from: "menu" | "line") => {
-    if (overview === null) return;
+    if (overview === null) {
+      return;
+    }
     analytics.projects.picker.opened({ overviewId: overview.id, from });
     setPicking(true);
   };
 
   const toggle = (projectId: ProjectId, inProject: boolean) => {
-    if (overview === null) return;
+    if (overview === null) {
+      return;
+    }
     if (inProject) {
       analytics.projects.membership.added({ projectId, overviewId: overview.id, from: "picker" });
     } else {

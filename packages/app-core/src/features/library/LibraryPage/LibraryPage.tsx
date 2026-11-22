@@ -104,12 +104,16 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const viewParams = query === view.filters.query ? searchParams : applyLibraryFilterPatch(searchParams, { query });
   const writeView = (next: URLSearchParams) => {
     const nextQuery = parseLibraryView(next).filters.query;
-    if (nextQuery !== view.filters.query) queryWrites.current.push(nextQuery);
+    if (nextQuery !== view.filters.query) {
+      queryWrites.current.push(nextQuery);
+    }
     change(next);
   };
   const settledTyping = useSettledText(query, QUERY_TO_URL_MS);
   useEffect(() => {
-    if (settledTyping !== query || query === view.filters.query) return;
+    if (settledTyping !== query || query === view.filters.query) {
+      return;
+    }
     writeView(applyLibraryFilterPatch(searchParams, { query }));
   }, [settledTyping]);
   useEffect(() => {
@@ -118,7 +122,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       queryWrites.current.splice(0, written + 1);
       return;
     }
-    if (view.filters.query === query) return;
+    if (view.filters.query === query) {
+      return;
+    }
     setQuery(view.filters.query);
     showInSearch(view.filters.query);
   }, [view.filters.query]);
@@ -184,7 +190,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const meaningSettled = useRef(() => {});
   const meaningHeadingId = useId();
   useEffect(() => {
-    if (meaningQuery.data !== undefined && settledQuery !== "") meaningSettled.current();
+    if (meaningQuery.data !== undefined && settledQuery !== "") {
+      meaningSettled.current();
+    }
   }, [meaningQuery.data, settledQuery]);
   const railIsSheet = useMediaQuery(RAIL_SHEET_QUERY);
   const isPhone = useMediaQuery(PHONE_QUERY);
@@ -212,13 +220,17 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   // hold the keyboard. On the wide one it is part of the page and `filtersOpen` is never
   // set, the button that would set it being hidden.
   const closeFilters = () => {
-    if (filtersOpen) analytics.library.filterSheet.closed();
+    if (filtersOpen) {
+      analytics.library.filterSheet.closed();
+    }
     setFiltersOpen(false);
   };
   useFocusTrap(filtersOpen, rail);
   useDismissOnOutside(filtersOpen, closeFilters, rail);
   useEffect(() => {
-    if (selection.selecting || !refocusSelect.current) return;
+    if (selection.selecting || !refocusSelect.current) {
+      return;
+    }
     refocusSelect.current = false;
     selectButton.current?.focus();
   }, [selection.selecting]);
@@ -241,7 +253,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
   const applied = appliedLibraryFilters(filters, topics);
   const topicNameById = new Map(topics.map((topic) => [topic.id, topic.name]));
   const changeFilters = (patch: Parameters<typeof applyLibraryFilterPatch>[1], from: FilterControl | null = null) => {
-    if (from !== null) recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
+    if (from !== null) {
+      recordLibraryFilterChange(analytics.library.filters, filters, patch, from);
+    }
     changeView(applyLibraryFilterPatch(viewParams, patch));
   };
   const showAll = (from: FilterControl) => changeFilters(NO_LIBRARY_FILTERS, from);
@@ -290,7 +304,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     refocusSelect.current = true;
     selection.stop();
     void countFailed(writes).then((failed) => {
-      if (failed > 0) analytics.library.selection.failed({ action, failed, writes: writes.length });
+      if (failed > 0) {
+        analytics.library.selection.failed({ action, failed, writes: writes.length });
+      }
       const { text, done: succeeded } = bulkActionToast(done, { writes: writes.length, failed });
       toast.show(text, succeeded);
     });
@@ -299,7 +315,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     const writes: Promise<unknown>[] = [];
     for (const entry of selected) {
       const [key, value] = Object.entries(patch)[0] as ["read" | "favourite", boolean];
-      if (entry.state[key] === value) continue;
+      if (entry.state[key] === value) {
+        continue;
+      }
       keepInPlace(entry.overview.id);
       writes.push(setOverviewState.mutateAsync({ overviewId: entry.overview.id, patch }));
     }
@@ -320,7 +338,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
       change.given = give;
     }
     for (const { overview } of selected) {
-      if (overview.topicIds.includes(topicId) === give) continue;
+      if (overview.topicIds.includes(topicId) === give) {
+        continue;
+      }
       keepInPlace(overview.id);
       writes.push(
         setOverviewTopics.mutateAsync({
@@ -343,7 +363,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
     setChoosingTopics(false);
     const { changes, writes } = topicSession.current;
     const done = pickerAction(changes.values(), selected.length, "topic");
-    if (done !== null) finishActing("addToTopic", done, writes, selected.length);
+    if (done !== null) {
+      finishActing("addToTopic", done, writes, selected.length);
+    }
   };
 
   // Only counts: with a tag set the chip under the search names it, so the line says it to a
@@ -699,7 +721,9 @@ export function LibraryPage({ entries: allEntries, place = WHOLE_LIBRARY }: Libr
                     acted("addToProject");
                     const overviews = selected.length;
                     projects.fileSelection(selected, (done, writes) => {
-                      if (done !== null) finishActing("addToProject", done, writes, overviews);
+                      if (done !== null) {
+                        finishActing("addToProject", done, writes, overviews);
+                      }
                     });
                   }}
                   onAddToTopic={() => {

@@ -89,7 +89,9 @@ export async function judgeBigPicture({
   let labels: BigPictureLabels | null = null;
   try {
     const parsed = BigPictureLabels.safeParse(await client(bigPictureJudgePrompt(overview)));
-    if (!parsed.success) throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    if (!parsed.success) {
+      throw new Error(`the judge's answer broke its schema: ${parsed.error.message}`);
+    }
     labels = parsed.data;
   } catch (thrown) {
     outcome =

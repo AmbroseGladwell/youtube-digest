@@ -51,7 +51,9 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
 
   useEffect(() => {
     const element = dialog.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     if (open && !element.open) {
       setQuery("");
       setSort("used");
@@ -61,7 +63,9 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
       setNotice(null);
       element.showModal();
     }
-    if (!open && element.open) element.close();
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   const usage = open ? tagUsage(entries.map(overviewTags)) : [];
@@ -117,12 +121,18 @@ export function ManageTagsDialog({ open, entries, onClose }: ManageTagsDialogPro
       aria-labelledby={headingId}
       onCancel={(event) => {
         event.preventDefault();
-        if (renaming !== null) setRenaming(null);
-        else if (merging) setMerging(false);
-        else close();
+        if (renaming !== null) {
+          setRenaming(null);
+        } else if (merging) {
+          setMerging(false);
+        } else {
+          close();
+        }
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) close();
+        if (event.target === dialog.current) {
+          close();
+        }
       }}
       data-testid={manageTagsDialogTestIds.root}
     >
@@ -369,7 +379,9 @@ function RenameRow({
         className={styles.renameForm}
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSave) onSave(target);
+          if (canSave) {
+            onSave(target);
+          }
         }}
       >
         <input
@@ -434,7 +446,9 @@ function MergeStep({
       className={styles.step}
       onSubmit={(event) => {
         event.preventDefault();
-        if (target !== null) onMerge(target);
+        if (target !== null) {
+          onMerge(target);
+        }
       }}
     >
       <div className={styles.head}>

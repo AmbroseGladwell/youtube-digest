@@ -48,7 +48,9 @@ export const theDataNote = (): OverviewRecord => titled("software engineering is
 const READ = 6;
 
 export function storeLibrary(backendSimulator: BackendSimulator): OverviewRecord[] {
-  for (const sample of SAMPLES) backendSimulator.overviews.seed(sample);
+  for (const sample of SAMPLES) {
+    backendSimulator.overviews.seed(sample);
+  }
   for (const sample of SAMPLES.slice(0, READ)) {
     backendSimulator.overviews.seedState(makeOverviewState(sample.id, { read: true }));
   }

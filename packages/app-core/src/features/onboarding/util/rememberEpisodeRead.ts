@@ -8,12 +8,16 @@ export function rememberEpisodeRead(
   read: (link: string) => Promise<PodcastRead>,
 ): Promise<PodcastRead> {
   const held = reads.get(link);
-  if (held !== undefined) return held;
+  if (held !== undefined) {
+    return held;
+  }
   const reading = read(link);
   reads.set(link, reading);
   reading.then(
     (answer) => {
-      if (answer.status === "failed") reads.delete(link);
+      if (answer.status === "failed") {
+        reads.delete(link);
+      }
     },
     () => reads.delete(link),
   );

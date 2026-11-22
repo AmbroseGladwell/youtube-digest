@@ -24,7 +24,9 @@ export function reportProcessErrors({ errorSink, log, clock, exit, process: emit
   let exiting = false;
   const onFatal = (caughtBy: Exclude<ServerError["caughtBy"], "request">) => (error: unknown) => {
     log.fatal(FATAL_LINES[caughtBy]({ err: error }));
-    if (exiting) return;
+    if (exiting) {
+      return;
+    }
     exiting = true;
     const sent =
       errorSink === null

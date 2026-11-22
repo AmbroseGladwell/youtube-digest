@@ -44,7 +44,9 @@ export function GenerationSteps({ run }: GenerationStepsProps) {
 function useMinuteClock(ticking: boolean): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!ticking) return;
+    if (!ticking) {
+      return;
+    }
     setNow(Date.now());
     const timer = setInterval(() => setNow(Date.now()), 15_000);
     return () => clearInterval(timer);

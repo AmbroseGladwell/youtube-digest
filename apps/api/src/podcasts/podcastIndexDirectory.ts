@@ -93,8 +93,12 @@ export const fetchPodcastIndexJson: FetchSignedJson = async (url, headers) => {
     headers: { ...headers, accept: "application/json", "user-agent": PUBLIC_WEB_USER_AGENT },
     signal: AbortSignal.timeout(ANSWER_WITHIN_MS),
   });
-  if (response.status !== 200) throw new Error(`Podcast Index answered ${response.status}`);
+  if (response.status !== 200) {
+    throw new Error(`Podcast Index answered ${response.status}`);
+  }
   const text = await readBodyText(response, MOST_JSON_BYTES);
-  if (text === null) throw new Error("Podcast Index answered with more than we read");
+  if (text === null) {
+    throw new Error("Podcast Index answered with more than we read");
+  }
   return JSON.parse(text);
 };

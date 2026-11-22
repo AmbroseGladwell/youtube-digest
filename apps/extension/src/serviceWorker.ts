@@ -121,7 +121,9 @@ chrome.runtime.onInstalled.addListener(() => {
 // before the first await spends it. A video goes the injected button's way, since a run for
 // one needs no access to the page (docs/features/article-panel.md).
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId !== PAGE_MENU_ITEM || tab?.id === undefined || tab.url === undefined) return;
+  if (info.menuItemId !== PAGE_MENU_ITEM || tab?.id === undefined || tab.url === undefined) {
+    return;
+  }
   const opening = chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => undefined);
   const { hostname, pathname } = new URL(tab.url);
   const isVideo = hostname.endsWith("youtube.com") && pathname === "/watch";

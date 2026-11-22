@@ -49,9 +49,13 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
 
   const accountTopicFor = async (topicId: TopicId): Promise<TopicId | null> => {
     const name = leavingTopicNames.get(topicId);
-    if (name === undefined) return null;
+    if (name === undefined) {
+      return null;
+    }
     const existing = knownTopics.find((topic) => sameTopicName(topic.name, name));
-    if (existing !== undefined) return existing.id;
+    if (existing !== undefined) {
+      return existing.id;
+    }
     const created = await into.overviewStore.createTopic({ name });
     knownTopics.push(created);
     return created.id;
@@ -61,11 +65,15 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
     const topicIds: TopicId[] = [];
     for (const topicId of overview.topicIds) {
       const mapped = await accountTopicFor(topicId);
-      if (mapped !== null && !topicIds.includes(mapped)) topicIds.push(mapped);
+      if (mapped !== null && !topicIds.includes(mapped)) {
+        topicIds.push(mapped);
+      }
     }
     const key = sourceKey(overview.source);
     const transcript = key === null ? null : await from.transcriptStore.getTranscript(key);
-    if (transcript !== null) await into.transcriptStore.saveTranscript(transcript);
+    if (transcript !== null) {
+      await into.transcriptStore.saveTranscript(transcript);
+    }
     await into.overviewStore.saveOverview({ ...overview, topicIds });
 
     const { read, favourite, userTags, asked } = await from.overviewStore.getOverviewState(overview.id);
@@ -75,7 +83,9 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
       ...(userTags.length > 0 ? { userTags } : {}),
       ...(asked.length > 0 ? { asked } : {}),
     };
-    if (Object.keys(patch).length > 0) await into.overviewStore.setOverviewState(overview.id, patch);
+    if (Object.keys(patch).length > 0) {
+      await into.overviewStore.setOverviewState(overview.id, patch);
+    }
   };
 
   let moved = 0;
@@ -94,7 +104,9 @@ export async function moveLibraryInto(from: MovingStores, into: MovingStores): P
       }
     }
     await from.overviewStore.deleteOverview(overview.id);
-    if (key !== null) await from.transcriptStore.deleteTranscript(key);
+    if (key !== null) {
+      await from.transcriptStore.deleteTranscript(key);
+    }
   }
   return { moved, alreadyThere, sourceKeys };
 }

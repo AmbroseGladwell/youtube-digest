@@ -34,13 +34,17 @@ export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: Conne
   const focusedAt = chosen === null ? 0 : ASSISTANTS.indexOf(chosen);
 
   useEffect(() => {
-    if (copied === null) return;
+    if (copied === null) {
+      return;
+    }
     const timer = setTimeout(() => setCopied(null), COPIED_FOR_MS);
     return () => clearTimeout(timer);
   }, [copied]);
 
   const choose = (assistant: ChosenAssistant) => {
-    if (assistant === chosen) return;
+    if (assistant === chosen) {
+      return;
+    }
     analytics.mcp.settingsConnections.assistantChosen({ assistant });
     updateSettings.mutate({ followUpAssistant: assistant });
     setSaid(assistant === "other" ? "Steps for any other assistant shown" : `${nameOf(assistant)} steps shown`);
@@ -48,7 +52,9 @@ export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: Conne
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = pills.current.indexOf(document.activeElement as HTMLButtonElement);
-    if (current === -1) return;
+    if (current === -1) {
+      return;
+    }
     const last = ASSISTANTS.length - 1;
     const target = {
       ArrowRight: current === last ? 0 : current + 1,
@@ -58,15 +64,20 @@ export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: Conne
       Home: 0,
       End: last,
     }[event.key];
-    if (target === undefined) return;
+    if (target === undefined) {
+      return;
+    }
     event.preventDefault();
     pills.current[target]?.focus();
     choose(ASSISTANTS[target]!);
   };
 
   const copy = (field: CopiedField, value: string) => {
-    if (field === "address") analytics.mcp.settingsConnections.addressCopied();
-    else analytics.mcp.settingsConnections.fieldCopied({ field });
+    if (field === "address") {
+      analytics.mcp.settingsConnections.addressCopied();
+    } else {
+      analytics.mcp.settingsConnections.fieldCopied({ field });
+    }
     void navigator.clipboard.writeText(value).then(
       () => {
         setCopied(field);
@@ -106,8 +117,10 @@ export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: Conne
   );
 
   const fieldAction = ({ label: fieldLabel, value, action }: ConnectorField) => {
-    if (action === null) return <span />;
-    if (action.kind === "download")
+    if (action === null) {
+      return <span />;
+    }
+    if (action.kind === "download") {
       return (
         <a
           className={styles.copy}
@@ -121,6 +134,7 @@ export const ConnectorSetup = ({ label, address, iconUrl, ref: labelRef }: Conne
           Download
         </a>
       );
+    }
     return copyButton(action.field, value, `Copy ${fieldLabel.toLowerCase()}`) || <span />;
   };
 

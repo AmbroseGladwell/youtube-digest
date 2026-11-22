@@ -7,11 +7,15 @@ const SETTLE_LIMIT_MS = 500;
 const glidables = (region: HTMLElement) => region.querySelectorAll<HTMLElement>("[data-glide-name]");
 
 const nameAll = (region: HTMLElement) => {
-  for (const element of glidables(region)) element.style.viewTransitionName = element.dataset.glideName ?? "";
+  for (const element of glidables(region)) {
+    element.style.viewTransitionName = element.dataset.glideName ?? "";
+  }
 };
 
 const unnameAll = (region: HTMLElement) => {
-  for (const element of glidables(region)) element.style.viewTransitionName = "";
+  for (const element of glidables(region)) {
+    element.style.viewTransitionName = "";
+  }
 };
 
 // A view-transition name for one library row: unique on the page, and a valid identifier
@@ -28,7 +32,9 @@ export function useLibraryGlide(region: RefObject<HTMLElement | null>, viewKey: 
 
   useLayoutEffect(() => {
     const element = region.current;
-    if (settle.current === null || element === null) return;
+    if (settle.current === null || element === null) {
+      return;
+    }
     nameAll(element);
     const done = settle.current;
     settle.current = null;

@@ -40,16 +40,22 @@ function actionItems(text: string): string[] {
   let open: string | null = null;
   for (const line of text.split("\n")) {
     if (ITEM_START.test(line)) {
-      if (open !== null) items.push(open);
+      if (open !== null) {
+        items.push(open);
+      }
       open = line.replace(ITEM_START, "").trim();
     } else if (line.trim() === "") {
-      if (open !== null) items.push(open);
+      if (open !== null) {
+        items.push(open);
+      }
       open = null;
     } else if (open !== null) {
       open = `${open} ${line.trim()}`;
     }
   }
-  if (open !== null) items.push(open);
+  if (open !== null) {
+    items.push(open);
+  }
   return items;
 }
 

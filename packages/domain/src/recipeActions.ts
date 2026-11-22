@@ -27,13 +27,19 @@ const ASIDE = /^\([^()]*\)[.!]?$/;
 
 const trimmed = (text: string, span: Span): Span => {
   let { start, end } = span;
-  while (start < end && /\s/.test(text[start]!)) start += 1;
-  while (end > start && /\s/.test(text[end - 1]!)) end -= 1;
+  while (start < end && /\s/.test(text[start]!)) {
+    start += 1;
+  }
+  while (end > start && /\s/.test(text[end - 1]!)) {
+    end -= 1;
+  }
   return { start, end, then: span.then };
 };
 
 const isAbbreviation = (text: string, dot: number): boolean => {
-  if (text[dot] !== ".") return false;
+  if (text[dot] !== ".") {
+    return false;
+  }
   const word = /([\p{L}.]+)$/u.exec(text.slice(0, dot))?.[1] ?? "";
   return ABBREVIATIONS.has(word.toLowerCase());
 };
@@ -43,7 +49,9 @@ const sentences = (text: string, from: number): Span[] => {
   let start = from;
   for (const match of text.slice(from).matchAll(SENTENCE_END)) {
     const at = from + match.index;
-    if (isAbbreviation(text, at)) continue;
+    if (isAbbreviation(text, at)) {
+      continue;
+    }
     const end = at + match[0].length - match[1]!.length;
     spans.push({ start, end, then: false });
     start = end;
@@ -65,13 +73,17 @@ const sentences = (text: string, from: number): Span[] => {
 
 const atThen = (text: string, sentence: Span): Span[] => {
   const body = text.slice(sentence.start, sentence.end);
-  if (/^If\s/i.test(body)) return [sentence];
+  if (/^If\s/i.test(body)) {
+    return [sentence];
+  }
   const spans: Span[] = [];
   let start = sentence.start;
   let then = sentence.then;
   for (const match of body.matchAll(THEN)) {
     const word = match[2]!.toLowerCase();
-    if (NOT_AN_ACTION.has(word) || word.endsWith("ing") || word.endsWith("ly")) continue;
+    if (NOT_AN_ACTION.has(word) || word.endsWith("ing") || word.endsWith("ly")) {
+      continue;
+    }
     const comma = sentence.start + match.index;
     spans.push({ start, end: comma, then });
     start = comma + match[0].indexOf(match[1]!);

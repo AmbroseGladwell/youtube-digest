@@ -31,13 +31,17 @@ export function orderMeaning(order: PlaylistOrder): string {
 
 // What choosing an order in Settings would do to the videos already waiting on it.
 export function orderWaitEffect(order: PlaylistOrder, waiting: number): string {
-  if (waiting === 0) return ORDER_MEANING[order];
+  if (waiting === 0) {
+    return ORDER_MEANING[order];
+  }
   return `The ${formatCount(waiting)} waiting are made ${ORDER_IN_A_SENTENCE[order]}`;
 }
 
 // What a change did, said once in the row it was made in.
 export function orderChangedLine(order: PlaylistOrder, waiting: number): string {
   const now = `Now ${ORDER_IN_A_SENTENCE[order]}.`;
-  if (waiting === 0) return now;
+  if (waiting === 0) {
+    return now;
+  }
   return `${now} The ${formatCount(waiting)} waiting are back in order.`;
 }

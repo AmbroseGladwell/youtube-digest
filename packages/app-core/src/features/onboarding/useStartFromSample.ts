@@ -34,7 +34,9 @@ export function useStartFromSample(): SampleOpening {
   useEffect(() => () => clearTimeout(shownAfter.current ?? undefined), []);
 
   const open = async (sample: Sample, index: number): Promise<boolean> => {
-    if (sampleApi === null || busy) return false;
+    if (sampleApi === null || busy) {
+      return false;
+    }
     analytics.onboarding.start.sampleChosen({ sample: index, kind: sampleKindOf(sample.note) });
     setBusy(true);
     setFailed(false);

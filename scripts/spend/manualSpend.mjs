@@ -3,14 +3,18 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 export class ManualEntriesError extends Error {}
 
 export function parseManualEntries(json) {
-  if (json === undefined || json.trim() === "") return [];
+  if (json === undefined || json.trim() === "") {
+    return [];
+  }
   let entries;
   try {
     entries = JSON.parse(json);
   } catch {
     throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not JSON");
   }
-  if (!Array.isArray(entries)) throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not a list");
+  if (!Array.isArray(entries)) {
+    throw new ManualEntriesError("SPEND_MANUAL_ENTRIES is not a list");
+  }
   return entries.map((entry, index) => {
     const { provider, environment, area, monthlyDollars, from, to = null, waived = null } = entry ?? {};
     const valid =
@@ -21,8 +25,9 @@ export function parseManualEntries(json) {
       DAY.test(from) &&
       (to === null || (typeof to === "string" && DAY.test(to))) &&
       (waived === null || (typeof waived === "string" && waived.length > 0));
-    if (!valid)
+    if (!valid) {
       throw new ManualEntriesError(`SPEND_MANUAL_ENTRIES entry ${index} needs provider, environment, area, monthlyDollars and from`);
+    }
     return { provider, environment, area, monthlyDollars, from, to, waived };
   });
 }

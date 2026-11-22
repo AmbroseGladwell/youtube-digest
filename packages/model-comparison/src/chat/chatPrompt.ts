@@ -12,13 +12,18 @@ Answer only from the material below. Never answer from general knowledge, even w
 - Cite only passage ids that appear in the material.`;
 
 export function chatSystemPrompt(arm: ChatArm, overview: string, passages: readonly Passage[]): string {
-  if (arm === "fullTranscript") return `${INSTRUCTIONS}\n\n# The transcript\n\n${passages.map(passageBlock).join("\n")}`;
-  if (arm === "overviewAndPassages")
+  if (arm === "fullTranscript") {
+    return `${INSTRUCTIONS}\n\n# The transcript\n\n${passages.map(passageBlock).join("\n")}`;
+  }
+  if (arm === "overviewAndPassages") {
     return `${INSTRUCTIONS}\n\nEach question comes with the transcript passages closest to it. The overview below is a summary of the whole video, for context; cite passages, not the overview.\n\n# The overview\n\n${overview}`;
+  }
   return `${INSTRUCTIONS}\n\nEach question comes with the transcript passages closest to it.`;
 }
 
 export function chatUserMessage(arm: ChatArm, question: string, retrieved: readonly Passage[]): string {
-  if (arm === "fullTranscript") return question;
+  if (arm === "fullTranscript") {
+    return question;
+  }
   return `# Transcript passages\n\n${retrieved.map(passageBlock).join("\n")}\n\n# Question\n\n${question}`;
 }

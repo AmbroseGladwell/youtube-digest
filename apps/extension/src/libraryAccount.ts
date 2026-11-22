@@ -20,6 +20,8 @@ export async function readLibraryAccount(): Promise<string | null> {
 
 export function onLibraryAccountChanged(listener: () => void): void {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && LIBRARY_ACCOUNT in changes) listener();
+    if (area === "local" && LIBRARY_ACCOUNT in changes) {
+      listener();
+    }
   });
 }

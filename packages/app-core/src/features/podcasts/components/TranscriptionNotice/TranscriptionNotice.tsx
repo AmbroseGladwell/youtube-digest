@@ -36,10 +36,14 @@ export function TranscriptionNotice({
 }: TranscriptionNoticeProps) {
   const first = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    if (takeFocus) first.current?.focus();
+    if (takeFocus) {
+      first.current?.focus();
+    }
   }, [takeFocus]);
   const takeFirst = (element: HTMLElement | null) => {
-    if (first.current === null) first.current = element;
+    if (first.current === null) {
+      first.current = element;
+    }
   };
   return (
     <div className={styles.root} role="alert" data-testid={transcriptionNoticeTestIds.root}>

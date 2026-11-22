@@ -34,7 +34,9 @@ export function youTubeDataApiVideoReader({ apiKey, youTubeFetch }: { apiKey: st
   return async (videoId) => {
     const answer = await get("videos", { part: "snippet,contentDetails", id: videoId }, VideosResponse);
     const item = answer?.items[0];
-    if (item === undefined) return null;
+    if (item === undefined) {
+      return null;
+    }
     const { snippet } = item;
     const description = snippet.description ?? "";
     const seconds = isoDurationSeconds(item.contentDetails?.duration);

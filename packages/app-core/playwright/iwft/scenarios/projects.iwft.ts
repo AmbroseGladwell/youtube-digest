@@ -109,7 +109,9 @@ test.describe("a project's page", () => {
   const project = makeProject();
 
   const seed = (backendSimulator: Parameters<Parameters<typeof test>[2]>[0]["backendSimulator"]) => {
-    for (const overview of [layout, sink, quartz, elsewhere]) backendSimulator.overviews.seed(overview);
+    for (const overview of [layout, sink, quartz, elsewhere]) {
+      backendSimulator.overviews.seed(overview);
+    }
     backendSimulator.overviews.seedState({ overviewId: layout.id, read: true, favourite: false, userTags: [], asked: [] });
     backendSimulator.projects.seed(project);
     backendSimulator.projects.seedMember(makeProjectMember(project, layout.id));
@@ -329,9 +331,13 @@ test.describe("overviews that might fit a project", () => {
   const tiles = titled("Large tiles in a small room");
 
   const seed = (backendSimulator: Parameters<Parameters<typeof test>[2]>[0]["backendSimulator"], inIt: Overview[] = []) => {
-    for (const overview of [layout, sink, quartz, tiles]) backendSimulator.overviews.seed(overview);
+    for (const overview of [layout, sink, quartz, tiles]) {
+      backendSimulator.overviews.seed(overview);
+    }
     backendSimulator.projects.seed(project);
-    for (const overview of inIt) backendSimulator.projects.seedMember(makeProjectMember(project, overview.id));
+    for (const overview of inIt) {
+      backendSimulator.projects.seedMember(makeProjectMember(project, overview.id));
+    }
     backendSimulator.meaning.seed(projectSuggestionQuery(project), [sink.id, quartz.id, tiles.id, layout.id]);
   };
   const suggestionEvents = (backendSimulator: Parameters<Parameters<typeof test>[2]>[0]["backendSimulator"]) =>

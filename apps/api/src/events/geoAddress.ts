@@ -5,8 +5,12 @@ const IPV6_PREFIX = /^([0-9a-f]{1,4}(?::[0-9a-f]{1,4}){3})::\/64$/;
 // IPv4 and everything past the /64 of IPv6 go (docs/architecture/analytics.md, "Location").
 export function geoAddress(clientAddress: string): string | null {
   const v4 = IPV4.exec(clientAddress);
-  if (v4 !== null) return `${v4[1]}.${v4[2]}.${v4[3]}.0`;
+  if (v4 !== null) {
+    return `${v4[1]}.${v4[2]}.${v4[3]}.0`;
+  }
   const v6 = IPV6_PREFIX.exec(clientAddress);
-  if (v6 !== null) return `${v6[1]}::`;
+  if (v6 !== null) {
+    return `${v6[1]}::`;
+  }
   return null;
 }

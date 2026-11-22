@@ -12,7 +12,9 @@ const arriving = () => document.querySelector<HTMLElement>(`[${ARRIVING_ATTRIBUT
 // while it slides in. The question it lands as stays hidden until it arrives. Nothing travels
 // with reduced motion.
 export function bubbleTravel(from: HTMLElement, text: string): void {
-  if (prefersReducedMotion() || typeof requestAnimationFrame === "undefined") return;
+  if (prefersReducedMotion() || typeof requestAnimationFrame === "undefined") {
+    return;
+  }
   const start = from.getBoundingClientRect();
   const ghost = document.createElement("div");
   ghost.textContent = text;

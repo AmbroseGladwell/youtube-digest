@@ -35,7 +35,9 @@ export function makeScriptedTranscriber(
     },
     async status() {
       const next = transcriber.script.length > 1 ? transcriber.script.shift()! : transcriber.script[0]!;
-      if (next instanceof Error) throw next;
+      if (next instanceof Error) {
+        throw next;
+      }
       return next;
     },
     async cancel(callId) {

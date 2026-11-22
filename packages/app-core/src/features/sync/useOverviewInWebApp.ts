@@ -15,7 +15,9 @@ export function useOverviewInWebApp(overviewId: OverviewId): OverviewInWebApp {
   const { connection } = useSyncConnection();
   const synced = useOverviewSyncedQuery(overviewId, sync.connected);
 
-  if (!sync.available) return null;
+  if (!sync.available) {
+    return null;
+  }
   if (!sync.connected || connection.apiUrl === null) {
     return { reason: "Sign in to see it in the web app" };
   }

@@ -36,7 +36,9 @@ test("every line the server writes carries a code from the catalogue", async () 
 const sourceFiles = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return sourceFiles(path);
+    if (entry.isDirectory()) {
+      return sourceFiles(path);
+    }
     return entry.name.endsWith(".ts") && !entry.name.includes(".test.") && !entry.name.includes("testHelper") ? [path] : [];
   });
 

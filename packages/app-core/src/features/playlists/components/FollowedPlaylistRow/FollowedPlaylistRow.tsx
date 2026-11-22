@@ -60,8 +60,11 @@ export function FollowedPlaylistRow({
   const titleId = `followed-${playlist.id}-unfollow`;
 
   useEffect(() => {
-    if (confirming) confirmTitle.current?.focus();
-    else if (returned) unfollowButton.current?.focus();
+    if (confirming) {
+      confirmTitle.current?.focus();
+    } else if (returned) {
+      unfollowButton.current?.focus();
+    }
   }, [confirming, returned]);
 
   if (confirming) {

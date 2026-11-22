@@ -60,7 +60,9 @@ export async function mountApp({
   youTubeFetch = null,
 }: MountOptions = {}): Promise<void> {
   const container = document.getElementById("root");
-  if (!container) throw new Error("the extension document is missing its #root element");
+  if (!container) {
+    throw new Error("the extension document is missing its #root element");
+  }
 
   const root = createRoot(container);
 
@@ -69,7 +71,9 @@ export async function mountApp({
       accountId,
       ...(shown ? { onSuperseded: () => root.render(<OutOfDateTab />) } : {}),
     });
-    if (shown) await writeLibraryAccount(accountId);
+    if (shown) {
+      await writeLibraryAccount(accountId);
+    }
     return { accountId, stores, close };
   };
 

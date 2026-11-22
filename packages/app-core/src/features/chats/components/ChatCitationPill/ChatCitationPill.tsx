@@ -34,13 +34,18 @@ export function ChatCitationPill({ range, video, onFollowed, onOpenTranscriptAt 
   useDismissOnOutside(open, close, root, menu);
 
   useEffect(() => {
-    if (open) menu.current?.querySelector<HTMLElement>("[data-citation-item]")?.focus();
+    if (open) {
+      menu.current?.querySelector<HTMLElement>("[data-citation-item]")?.focus();
+    }
   }, [open]);
 
   const follow = () => {
     onFollowed(range);
-    if (seek !== null) seek(range.startMs);
-    else setOpen(!open);
+    if (seek !== null) {
+      seek(range.startMs);
+    } else {
+      setOpen(!open);
+    }
   };
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -53,7 +58,9 @@ export function ChatCitationPill({ range, video, onFollowed, onOpenTranscriptAt 
       return;
     }
     const target = { ArrowDown: (current + 1) % items.length, ArrowUp: (current - 1 + items.length) % items.length }[event.key];
-    if (target === undefined) return;
+    if (target === undefined) {
+      return;
+    }
     event.preventDefault();
     items[target]?.focus();
   };

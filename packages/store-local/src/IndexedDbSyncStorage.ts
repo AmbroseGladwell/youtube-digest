@@ -128,7 +128,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
   }
 
   notifyJournaled = (): void => {
-    for (const listener of this.#listeners) listener();
+    for (const listener of this.#listeners) {
+      listener();
+    }
   };
 
   onJournaled(listener: () => void): () => void {
@@ -159,11 +161,15 @@ export class IndexedDbSyncStorage implements SyncStorage {
     ]);
 
     if (recordsEnrolled !== true) {
-      for (const write of await this.#libraryWrites(transaction)) outbox.add({ ...write, stuck: null });
+      for (const write of await this.#libraryWrites(transaction)) {
+        outbox.add({ ...write, stuck: null });
+      }
       meta.put(true, SYNC_ENROLLED_KEY);
     }
     if (transcriptsEnrolled !== true) {
-      for (const write of await this.#transcriptWrites(transaction)) outbox.add({ ...write, stuck: null });
+      for (const write of await this.#transcriptWrites(transaction)) {
+        outbox.add({ ...write, stuck: null });
+      }
       meta.put(true, SYNC_TRANSCRIPTS_ENROLLED_KEY);
     }
     await promisifyTransaction(transaction);
@@ -182,7 +188,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
     return transcripts.flatMap((raw) => {
       const transcript = readableTranscript(raw);
       const overviewId = transcript === null ? undefined : noteOn.get(transcript.videoId);
-      if (transcript === null || overviewId === undefined || queued.has(transcript.videoId)) return [];
+      if (transcript === null || overviewId === undefined || queued.has(transcript.videoId)) {
+        return [];
+      }
       return [transcriptWrite(transcript, overviewId)];
     });
   }
@@ -210,7 +218,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
   async leave(): Promise<void> {
     const transaction = this.#db.transaction(BOOKKEEPING_STORES, "readwrite");
-    for (const store of BOOKKEEPING_STORES) transaction.objectStore(store).clear();
+    for (const store of BOOKKEEPING_STORES) {
+      transaction.objectStore(store).clear();
+    }
     await promisifyTransaction(transaction);
   }
 
@@ -346,10 +356,14 @@ export class IndexedDbSyncStorage implements SyncStorage {
     const moved = new Set<string>();
     for (const raw of await promisifyRequest<unknown[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAll(from))) {
       const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
-      if (read.status !== "read") continue;
+      if (read.status !== "read") {
+        continue;
+      }
       moved.add(read.record.id);
       members.delete(read.record.id);
-      if (!isInProject(read.record)) continue;
+      if (!isInProject(read.record)) {
+        continue;
+      }
       const id = projectMemberId(read.record.projectId, into);
       const existingRaw = await promisifyRequest<unknown>(members.get(id));
       const existing = existingRaw === undefined ? undefined : (readable("projectMember", existingRaw) ?? undefined);
@@ -367,7 +381,9 @@ export class IndexedDbSyncStorage implements SyncStorage {
       promisifyRequest<unknown>(transaction.objectStore(TRANSCRIPTS_STORE).get(videoId)),
       promisifyRequest<unknown[]>(transaction.objectStore(OVERVIEWS_STORE).getAll()),
     ]);
-    if (raw === undefined || !overviews.flatMap(notedSource).some(([noted]) => noted === videoId)) return null;
+    if (raw === undefined || !overviews.flatMap(notedSource).some(([noted]) => noted === videoId)) {
+      return null;
+    }
     return readableTranscript(raw);
   }
 
@@ -392,12 +408,24 @@ export class IndexedDbSyncStorage implements SyncStorage {
 
       if (change.deleted || change.body === undefined) {
         store.delete(key);
-        if (change.kind === "overview") transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
-        if (change.kind === "followedPlaylist") await forgetFollowing(transaction, change.id);
-        if (change.kind === "overview") await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
-        if (change.kind === "overview") await forgetChats(transaction, CHATS_BY_OVERVIEW_INDEX, change.id);
-        if (change.kind === "project") await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
-        if (change.kind === "project") await forgetChats(transaction, CHATS_BY_PROJECT_INDEX, change.id);
+        if (change.kind === "overview") {
+          transaction.objectStore(OVERVIEW_STATES_STORE).delete(change.id);
+        }
+        if (change.kind === "followedPlaylist") {
+          await forgetFollowing(transaction, change.id);
+        }
+        if (change.kind === "overview") {
+          await forgetMembers(transaction, MEMBERS_BY_OVERVIEW_INDEX, change.id);
+        }
+        if (change.kind === "overview") {
+          await forgetChats(transaction, CHATS_BY_OVERVIEW_INDEX, change.id);
+        }
+        if (change.kind === "project") {
+          await forgetMembers(transaction, MEMBERS_BY_PROJECT_INDEX, change.id);
+        }
+        if (change.kind === "project") {
+          await forgetChats(transaction, CHATS_BY_PROJECT_INDEX, change.id);
+        }
         revisions.delete([change.kind, change.id]);
         continue;
       }
@@ -425,7 +453,9 @@ const pendingKey = (kind: OutboxKind, id: string) => `${kind}/${id}`;
 function groupPending(entries: OutboxEntry[]): Map<string, OutboxEntry[]> {
   const grouped = new Map<string, OutboxEntry[]>();
   for (const entry of entries) {
-    if (entry.stuck !== null) continue;
+    if (entry.stuck !== null) {
+      continue;
+    }
     const key = pendingKey(entry.kind, entry.id);
     grouped.set(key, [...(grouped.get(key) ?? []), entry]);
   }
@@ -449,7 +479,9 @@ const readable = (kind: SyncedRecordKind, raw: unknown): Record<string, unknown>
 // (docs/features/sync-metadata.md, "Absent means older than everything").
 function writtenAt(raw: Record<string, unknown>, creationKey: string | null, now: Date): Date {
   const stamped = storedUpdatedAt(raw);
-  if (stamped !== null) return new Date(stamped);
+  if (stamped !== null) {
+    return new Date(stamped);
+  }
   const created = creationKey === null ? undefined : raw[creationKey];
   const parsed = typeof created === "string" ? new Date(created) : new Date(Number.NaN);
   return Number.isNaN(parsed.getTime()) ? now : parsed;
@@ -462,7 +494,9 @@ function wholeRecordWrite(
   now: Date,
 ): PendingWrite[] {
   const migrated = readable(kind, raw);
-  if (migrated === null || typeof migrated.id !== "string") return [];
+  if (migrated === null || typeof migrated.id !== "string") {
+    return [];
+  }
   const at = writtenAt(migrated, creationKey, now);
   return [
     {
@@ -478,7 +512,9 @@ function wholeRecordWrite(
 // never needs to reach the server, which has never heard of it.
 function memberWrite(raw: unknown, now: Date): PendingWrite[] {
   const read = readStoredRecord(raw, ProjectMember, PROJECT_MEMBER_MIGRATIONS);
-  if (read.status !== "read" || !isInProject(read.record) || !isObject(raw)) return [];
+  if (read.status !== "read" || !isInProject(read.record) || !isObject(raw)) {
+    return [];
+  }
   const { id, addedAt, addedBy } = read.record;
   return [
     {
@@ -493,17 +529,23 @@ function memberWrite(raw: unknown, now: Date): PendingWrite[] {
 // The server tombstones them too, but not in the overview's or project's own write, so they may come down later.
 async function forgetChats(transaction: IDBTransaction, index: string, ownerId: string): Promise<void> {
   const chats = transaction.objectStore(CHATS_STORE);
-  for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(index).getAllKeys(ownerId))) chats.delete(key);
+  for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(index).getAllKeys(ownerId))) {
+    chats.delete(key);
+  }
 }
 
 async function forgetMembers(transaction: IDBTransaction, index: string, parentId: string): Promise<void> {
   const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
-  for (const key of await promisifyRequest<IDBValidKey[]>(members.index(index).getAllKeys(parentId))) members.delete(key);
+  for (const key of await promisifyRequest<IDBValidKey[]>(members.index(index).getAllKeys(parentId))) {
+    members.delete(key);
+  }
 }
 
 function stateWrite(raw: unknown, now: Date): PendingWrite[] {
   const migrated = readable("overviewState", { ...DEFAULT_OVERVIEW_STATE, ...(isObject(raw) ? raw : {}) });
-  if (migrated === null || typeof migrated.overviewId !== "string") return [];
+  if (migrated === null || typeof migrated.overviewId !== "string") {
+    return [];
+  }
   const { read, favourite, userTags } = migrated;
   return [
     {
@@ -516,9 +558,13 @@ function stateWrite(raw: unknown, now: Date): PendingWrite[] {
 }
 
 function settingsWrite(raw: unknown, now: Date): PendingWrite[] {
-  if (raw === undefined) return [];
+  if (raw === undefined) {
+    return [];
+  }
   const migrated = readable("settings", { ...DEFAULT_SETTINGS, ...(isObject(raw) ? raw : {}) });
-  if (migrated === null) return [];
+  if (migrated === null) {
+    return [];
+  }
   const patch = Object.fromEntries(
     Object.keys(DEFAULT_SETTINGS)
       .filter((key) => key in migrated)

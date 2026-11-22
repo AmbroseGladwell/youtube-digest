@@ -26,7 +26,9 @@ export function RecentOverviews({ entries }: RecentOverviewsProps) {
   const sync = useSync();
   const { connection } = useSyncConnection();
   const library = sync.connected && connection.apiUrl !== null ? new URL(Routes.home(), connection.apiUrl).href : null;
-  if (recent.length === 0) return null;
+  if (recent.length === 0) {
+    return null;
+  }
 
   return (
     <section className={styles.root} aria-labelledby="recent-overviews" data-testid={recentOverviewsTestIds.root}>

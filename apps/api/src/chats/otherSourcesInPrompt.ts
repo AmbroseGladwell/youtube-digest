@@ -39,15 +39,23 @@ export function otherSourcesInPrompt(
       const overview = overviews.get(source.overviewId);
       return overview === undefined ? [] : [{ source, overview }];
     });
-    for (const entry of present) labels.set(entry.source.label, entry);
+    for (const entry of present) {
+      labels.set(entry.source.label, entry);
+    }
     for (const label of setAside) {
       labels.delete(label);
-      for (const key of [...minuteLabels.keys()]) if (key.startsWith(`${label}.`)) minuteLabels.delete(key);
+      for (const key of [...minuteLabels.keys()]) {
+        if (key.startsWith(`${label}.`)) {
+          minuteLabels.delete(key);
+        }
+      }
     }
     const labelOf = (overviewId: string) => [...labels].reverse().find(([, entry]) => entry.source.overviewId === overviewId)?.[0];
     const shownMinutes = minutes.flatMap(({ overviewId, passages }) => {
       const label = labelOf(overviewId);
-      if (label === undefined || passages.length === 0) return [];
+      if (label === undefined || passages.length === 0) {
+        return [];
+      }
       const { source } = labels.get(label)!;
       for (const passage of passages) {
         minuteLabels.set(`${label}.${passage.id}`, {
@@ -64,7 +72,9 @@ export function otherSourcesInPrompt(
       shownMinutes.length === 0 ? null : minutesBlock(shownMinutes),
       setAside.length === 0 ? null : setAsideBlock(setAside.map((label) => `${label} (${titles.get(label) ?? "an overview"})`)),
     ].filter((part) => part !== null);
-    if (present.length > 0) shown = true;
+    if (present.length > 0) {
+      shown = true;
+    }
     return parts.length === 0 ? null : parts.join("\n\n");
   });
   return { blocks, labels, minuteLabels };
@@ -114,7 +124,9 @@ function sourcesBlock(present: readonly LabelledSource[], projects: ReadonlyMap<
     );
   const briefs = projectIds.flatMap((projectId) => {
     const brief = present.filter(({ source }) => source.projectId === projectId && source.brief === true);
-    if (brief.length === 0) return [];
+    if (brief.length === 0) {
+      return [];
+    }
     return [`# The rest of ${projectName(projects.get(projectId))}, in brief\n\n${brief.map(briefLine).join("\n\n")}`];
   });
   return [first ? FIRST_LEAD : LATER_LEAD, lines.join("\n"), ...whole, ...briefs].filter((part) => part !== "").join("\n\n");

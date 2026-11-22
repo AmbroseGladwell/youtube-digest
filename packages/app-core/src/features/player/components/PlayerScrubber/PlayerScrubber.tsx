@@ -21,9 +21,13 @@ export interface PlayerScrubberProps {
 // Design 2a: the line a drag will land on, named the way the note names it.
 function landingLabel(lines: NoteLine[], index: number, seconds: number): string {
   const heading = sectionHeadingAt(lines, index);
-  if (lines[index]?.heading) return `${heading} · ${formatClock(seconds)}`;
+  if (lines[index]?.heading) {
+    return `${heading} · ${formatClock(seconds)}`;
+  }
   let within = 0;
-  for (let at = index; at >= 0 && !lines[at]!.heading; at -= 1) within += 1;
+  for (let at = index; at >= 0 && !lines[at]!.heading; at -= 1) {
+    within += 1;
+  }
   return `${heading} · line ${within} · ${formatClock(seconds)}`;
 }
 
@@ -68,20 +72,28 @@ export function PlayerScrubber({ view, time, lines, lineStarts, durationSeconds,
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (!view.seekable) return;
+    if (!view.seekable) {
+      return;
+    }
     event.currentTarget.setPointerCapture?.(event.pointerId);
     setLanding(landingAt(event.clientX));
   };
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (landing !== null) setLanding(landingAt(event.clientX));
+    if (landing !== null) {
+      setLanding(landingAt(event.clientX));
+    }
   };
   const onPointerUp = () => {
-    if (landing !== null) onSeek(landing.seconds);
+    if (landing !== null) {
+      onSeek(landing.seconds);
+    }
     setLanding(null);
   };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const target = keyTarget(event.key, time, durationSeconds);
-    if (target === null) return;
+    if (target === null) {
+      return;
+    }
     event.preventDefault();
     onSeek(target);
   };

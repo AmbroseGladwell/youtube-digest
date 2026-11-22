@@ -70,8 +70,12 @@ export class IndexedDbOverviewStore implements OverviewStore {
       .flatMap((read) => (read.status === "read" ? [read.record] : []));
 
     return overviews.filter((overview) => {
-      if (query.unsorted) return overview.topicIds.length === 0;
-      if (query.topicId) return overview.topicIds.includes(query.topicId);
+      if (query.unsorted) {
+        return overview.topicIds.length === 0;
+      }
+      if (query.topicId) {
+        return overview.topicIds.includes(query.topicId);
+      }
       return true;
     });
   }
@@ -118,7 +122,9 @@ export class IndexedDbOverviewStore implements OverviewStore {
       });
     }
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 
   async setOverviewTopics(overviewId: OverviewId, topicIds: TopicId[]) {
@@ -183,9 +189,13 @@ export class IndexedDbOverviewStore implements OverviewStore {
     transaction.objectStore(OVERVIEWS_STORE).delete(id);
     transaction.objectStore(OVERVIEW_STATES_STORE).delete(id);
     const members = transaction.objectStore(PROJECT_MEMBERS_STORE);
-    for (const key of await promisifyRequest<IDBValidKey[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAllKeys(id))) members.delete(key);
+    for (const key of await promisifyRequest<IDBValidKey[]>(members.index(MEMBERS_BY_OVERVIEW_INDEX).getAllKeys(id))) {
+      members.delete(key);
+    }
     const chats = transaction.objectStore(CHATS_STORE);
-    for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_OVERVIEW_INDEX).getAllKeys(id))) chats.delete(key);
+    for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_OVERVIEW_INDEX).getAllKeys(id))) {
+      chats.delete(key);
+    }
     const journaled = await appendPendingWrite(transaction, {
       kind: "overview",
       id,
@@ -193,7 +203,9 @@ export class IndexedDbOverviewStore implements OverviewStore {
       change: { op: "delete" },
     });
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 
   async listClaims(): Promise<ClaimSummary[]> {
@@ -287,7 +299,9 @@ export class IndexedDbOverviewStore implements OverviewStore {
       change,
     });
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 }
 

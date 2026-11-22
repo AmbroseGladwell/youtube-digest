@@ -54,7 +54,9 @@ export function RecipePrintSheet({ source, from, recipe, lines, methodAmounts, a
   }, [onDone]);
 
   useEffect(() => {
-    if (!imageSettled) return;
+    if (!imageSettled) {
+      return;
+    }
     const printing = window.setTimeout(() => window.print(), 0);
     return () => window.clearTimeout(printing);
   }, [imageSettled]);

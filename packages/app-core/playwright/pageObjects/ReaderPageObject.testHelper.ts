@@ -76,14 +76,20 @@ export class ReaderPageObject extends PageObject {
         return;
       }
       await expect(this.get(playlistFromLineTestIds.root)).toContainText(text);
-      if (manage) await this.expectToBeVisible(playlistFromLineTestIds.manageLink);
-      else await this.expectToHaveCount(playlistFromLineTestIds.manageLink, 0);
+      if (manage) {
+        await this.expectToBeVisible(playlistFromLineTestIds.manageLink);
+      } else {
+        await this.expectToHaveCount(playlistFromLineTestIds.manageLink, 0);
+      }
     });
 
   verifyMadeOnLine = (text: string | null) =>
     this.step(`verifyMadeOnLine ${text}`, async () => {
-      if (text === null) await this.expectToHaveCount(madeOnLineTestIds.root, 0);
-      else await expect(this.get(madeOnLineTestIds.root)).toHaveText(text);
+      if (text === null) {
+        await this.expectToHaveCount(madeOnLineTestIds.root, 0);
+      } else {
+        await expect(this.get(madeOnLineTestIds.root)).toHaveText(text);
+      }
     });
 
   openManagePlaylists = () => this.step("openManagePlaylists", () => this.click(playlistFromLineTestIds.manageLink));
@@ -1257,8 +1263,11 @@ export class ReaderPageObject extends PageObject {
   verifyMenuSaysInProjects = (text: string | null) =>
     this.step(`verifyMenuSaysInProjects ${text}`, async () => {
       await this.openActionsMenu();
-      if (text === null) await this.expectNotToBeVisible(overviewActionsMenuTestIds.projectCount);
-      else await expect(this.get(overviewActionsMenuTestIds.projectCount)).toHaveText(text);
+      if (text === null) {
+        await this.expectNotToBeVisible(overviewActionsMenuTestIds.projectCount);
+      } else {
+        await expect(this.get(overviewActionsMenuTestIds.projectCount)).toHaveText(text);
+      }
       await this.page.keyboard.press("Escape");
     });
 

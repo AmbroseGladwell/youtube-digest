@@ -31,7 +31,9 @@ export async function moveFollowingInto(from: FollowingStores, into: FollowingSt
 
   const leavingIds = new Set<string>(leaving.map((playlist) => playlist.id));
   await into.captureQueueStore.enqueue(queued.filter((capture) => leavingIds.has(capture.fromPlaylist.id)));
-  for (const capture of queued) await from.captureQueueStore.removeQueued(capture.videoId);
+  for (const capture of queued) {
+    await from.captureQueueStore.removeQueued(capture.videoId);
+  }
 
   return { playlists: leaving.filter((playlist) => !heldIds.has(playlist.id)).length };
 }

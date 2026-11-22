@@ -65,8 +65,12 @@ export function OnboardingWaitScreen({
   const sourceIn = run.sourceWords !== null || run.writingStarted || phase === "ready";
   const writing = run.writingStarted || phase === "ready";
   const stateOf = (id: WaitStageId): WaitStageState => {
-    if (id === "findEpisode") return found === null ? "running" : "done";
-    if (id === "write" || id === "prepareRecipe") return phase === "ready" ? "done" : writing ? "running" : "waiting";
+    if (id === "findEpisode") {
+      return found === null ? "running" : "done";
+    }
+    if (id === "write" || id === "prepareRecipe") {
+      return phase === "ready" ? "done" : writing ? "running" : "waiting";
+    }
     return sourceIn ? "done" : "running";
   };
   const episodeMinutes =

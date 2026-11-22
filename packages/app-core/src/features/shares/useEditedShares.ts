@@ -17,12 +17,16 @@ export function useEditedShares(shares: Share[]): ReadonlySet<string> {
     void Promise.all(
       shares.map(async (share) => {
         const overview = held.get(share.overviewId);
-        if (overview === undefined) return null;
+        if (overview === undefined) {
+          return null;
+        }
         const { note } = shareSnapshot({ overview, narration: null });
         return (await shareContentHash(note)) === share.contentHash ? null : share.token;
       }),
     ).then((tokens) => {
-      if (current) setEdited(new Set(tokens.filter((token) => token !== null)));
+      if (current) {
+        setEdited(new Set(tokens.filter((token) => token !== null)));
+      }
     });
     return () => {
       current = false;

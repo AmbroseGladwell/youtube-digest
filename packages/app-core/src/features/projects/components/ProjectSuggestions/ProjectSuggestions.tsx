@@ -54,7 +54,9 @@ export function ProjectSuggestions({
   const offered = rows.filter((row) => row.phase === "shown");
 
   useEffect(() => {
-    if (focusAdd === null) return;
+    if (focusAdd === null) {
+      return;
+    }
     addButtons.current.get(focusAdd)?.focus({ preventScroll: true });
     onFocused();
   }, [focusAdd]);
@@ -144,8 +146,11 @@ export function ProjectSuggestions({
                       <button
                         type="button"
                         ref={(button) => {
-                          if (button === null) addButtons.current.delete(overview.id);
-                          else addButtons.current.set(overview.id, button);
+                          if (button === null) {
+                            addButtons.current.delete(overview.id);
+                          } else {
+                            addButtons.current.set(overview.id, button);
+                          }
                         }}
                         className={styles.pill}
                         onClick={() => onAdd(entry)}

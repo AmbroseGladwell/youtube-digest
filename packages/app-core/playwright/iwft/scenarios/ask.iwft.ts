@@ -65,7 +65,9 @@ test.describe("Ask", () => {
   }) => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
-    for (const overview of [plants, stew, titled(CURRY, "2026-11-05T09:00:00.000Z")]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, titled(CURRY, "2026-11-05T09:00:00.000Z")]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.chats.answerWith({
       text: "Beans and greens come up again and again.",
       citations: [cite(plants), cite(stew)],
@@ -117,7 +119,9 @@ test.describe("Ask", () => {
     const plants = titled(PLANTS, "2026-11-03T09:00:00.000Z");
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const dinner = { ...makeProject({ name: "Dinner Recipes" }), archivedAt: null };
-    for (const overview of [plants, stew]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     backendSimulator.projects.seed(dinner);
     backendSimulator.projects.seedMember(makeProjectMember(dinner, plants.id));
     backendSimulator.projects.seedMember(makeProjectMember(dinner, stew.id));
@@ -288,7 +292,7 @@ test.describe("Ask", () => {
     backendSimulator.chats.seed(
       conversation("library:1b2c3d4e-5f6a-4b7c-9d8e-0f1a2b3c4d5e", "Short one?", new Date(now - 60_000).toISOString()),
     );
-    for (let day = 1; day <= 20; day += 1)
+    for (let day = 1; day <= 20; day += 1) {
       backendSimulator.chats.seed(
         conversation(
           `library:${String(day).padStart(8, "0")}-2c3d-4e5f-8a6b-7c8d9e0f1a2b`,
@@ -296,6 +300,7 @@ test.describe("Ask", () => {
           new Date(now - day * 86_400_000).toISOString(),
         ),
       );
+    }
     await launcher.launchExpectingLibrary(SIGNED_IN);
     await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(22);
     const ask = await launcher.appShell.openAsk();
@@ -381,7 +386,9 @@ test.describe("Ask", () => {
     plants.source.title = PLANTS;
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
-    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, curry]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const beans: ChatCitation = {
       overviewId: plants.id,
       title: PLANTS,
@@ -430,8 +437,9 @@ test.describe("Ask", () => {
   });
 
   test("in the empty page the @ picker opens below the field, where there's room", async ({ launcher, backendSimulator }) => {
-    for (const [index, title] of [PLANTS, STEW, CURRY].entries())
+    for (const [index, title] of [PLANTS, STEW, CURRY].entries()) {
       backendSimulator.overviews.seedSynced(titled(title, `2026-11-0${index + 3}T09:00:00.000Z`));
+    }
     await launcher.launchExpectingLibrary(SIGNED_IN);
     const ask = await launcher.appShell.openAsk();
 
@@ -494,7 +502,9 @@ test.describe("Ask", () => {
     plants.source.title = PLANTS;
     const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
     const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
-    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    for (const overview of [plants, stew, curry]) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
     const step: ChatCitation = {
       overviewId: plants.id,
       title: PLANTS,

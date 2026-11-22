@@ -15,7 +15,9 @@ function git(cwd, args) {
 function checkout({ version = "0.1.0", committed = true } = {}) {
   const cwd = mkdtempSync(path.join(tmpdir(), "buildStamp-test-"));
   writeFileSync(path.join(cwd, "package.json"), JSON.stringify(version === null ? {} : { version }));
-  if (!committed) return cwd;
+  if (!committed) {
+    return cwd;
+  }
   git(cwd, ["init", "--quiet", "--initial-branch=main"]);
   git(cwd, ["config", "user.email", "test@example.com"]);
   git(cwd, ["config", "user.name", "Test"]);

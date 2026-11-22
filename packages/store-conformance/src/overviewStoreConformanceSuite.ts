@@ -272,7 +272,9 @@ function defineMigrationChecks(
 
   test(behaviour("a record written by an older schema is migrated on read, not handed back raw"), async () => {
     const store = await seeded(oldRecord);
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     const overview = await store.getOverview(oldRecordId);
 
@@ -290,7 +292,9 @@ function defineMigrationChecks(
       ...oldRecord,
       schemaVersion: CURRENT_OVERVIEW_SCHEMA_VERSION + 1,
     });
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     assert.deepEqual(await store.listOverviews(), []);
     const unreadable = await store.listUnreadable();
@@ -301,7 +305,9 @@ function defineMigrationChecks(
 
   test(behaviour("a record that cannot be parsed is quarantined rather than dropped"), async () => {
     const store = await seeded({ ...oldRecord, coreClaim: 7 });
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     assert.deepEqual(await store.listOverviews(), []);
     const unreadable = await store.listUnreadable();
@@ -311,7 +317,9 @@ function defineMigrationChecks(
 
   test(behaviour("an unreadable record keeps whatever of its video can be salvaged"), async () => {
     const store = await seeded({ ...oldRecord, coreClaim: 7 });
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     const [unreadable] = await store.listUnreadable();
 
@@ -321,7 +329,9 @@ function defineMigrationChecks(
 
   test(behaviour("getOverview throws for an unreadable record rather than reporting it absent"), async () => {
     const store = await seeded({ ...oldRecord, coreClaim: 7 });
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     await assert.rejects(() => store.getOverview(oldRecordId), UnreadableRecordError);
   });
@@ -331,7 +341,9 @@ function defineMigrationChecks(
       ...oldRecord,
       schemaVersion: CURRENT_OVERVIEW_SCHEMA_VERSION + 1,
     });
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     await assert.rejects(() => store.setOverviewTopics(oldRecordId, [TopicId.parse(randomUUID())]), UnreadableRecordError);
   });
@@ -341,7 +353,9 @@ function defineMigrationChecks(
       ...oldRecord,
       schemaVersion: CURRENT_OVERVIEW_SCHEMA_VERSION + 1,
     });
-    if (!store) return;
+    if (!store) {
+      return;
+    }
 
     await assert.rejects(() => store.setOverviewCaptureReason(oldRecordId, "anything"), UnreadableRecordError);
   });

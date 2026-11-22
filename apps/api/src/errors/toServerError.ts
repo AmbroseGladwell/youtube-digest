@@ -18,11 +18,15 @@ const relativeFile = (location: string, root: string): string => {
 };
 
 export function parseServerStack(stack: string | undefined, root: string): ServerErrorFrame[] {
-  if (stack === undefined) return [];
+  if (stack === undefined) {
+    return [];
+  }
   const frames: ServerErrorFrame[] = [];
   for (const line of stack.split("\n")) {
     const match = V8_FRAME.exec(line);
-    if (match === null) continue;
+    if (match === null) {
+      continue;
+    }
     const [, fn = "", location = "", lineNumber = "0", column = "0"] = match;
     const file = relativeFile(location, root);
     frames.push({
@@ -35,7 +39,9 @@ export function parseServerStack(stack: string | undefined, root: string): Serve
       column: Number(column),
       inApp: !file.startsWith("node:") && !file.includes("node_modules/"),
     });
-    if (frames.length === MAX_ERROR_FRAMES) break;
+    if (frames.length === MAX_ERROR_FRAMES) {
+      break;
+    }
   }
   return frames;
 }

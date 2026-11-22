@@ -12,9 +12,13 @@ export const transcriptQueryOptions = (transcriptStore: TranscriptStore, videoId
   queryOptions({
     queryKey: transcriptKeys.detail(videoId, fetchTranscript !== null),
     queryFn: async () => {
-      if (videoId === null) return null;
+      if (videoId === null) {
+        return null;
+      }
       const held = await transcriptStore.getTranscript(videoId);
-      if (held !== null || fetchTranscript === null) return held;
+      if (held !== null || fetchTranscript === null) {
+        return held;
+      }
       return fetchTranscript(videoId);
     },
     enabled: videoId !== null,

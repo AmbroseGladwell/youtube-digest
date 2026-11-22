@@ -12,7 +12,9 @@ export function withTagAlias(aliases: TagAliases, from: string, to: string | nul
     delete next[to];
   }
   for (const [alias, target] of Object.entries(next)) {
-    if (alias === target) delete next[alias];
+    if (alias === target) {
+      delete next[alias];
+    }
   }
   return next;
 }

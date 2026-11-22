@@ -58,8 +58,12 @@ function StageMark({ state }: { state: WaitStageState }) {
 const STATE_SAID: Record<WaitStageState, string> = { waiting: ", waiting", running: ", in progress", done: "" };
 
 function announcementOf(phase: WaitPhase, heading: string, stages: readonly WaitStage[]): string {
-  if (phase === "ready") return heading;
-  if (phase === "failed") return "";
+  if (phase === "ready") {
+    return heading;
+  }
+  if (phase === "failed") {
+    return "";
+  }
   const lastDone = [...stages].reverse().find((stage) => stage.state === "done");
   const running = stages.find((stage) => stage.state === "running");
   return [lastDone?.doneLine, running?.name].filter((part) => part != null).join(". ");
@@ -86,7 +90,9 @@ export function OnboardingWait({
   const writingAt = stages.length - 1;
   const writingRunning = phase === "running" && stages[writingAt]?.state === "running";
   const [writingSince, setWritingSince] = useState<number | null>(null);
-  if (writingRunning && writingSince === null) setWritingSince(now);
+  if (writingRunning && writingSince === null) {
+    setWritingSince(now);
+  }
 
   const elapsedSeconds = Math.max(0, (now - startedAt) / 1000);
   const doneStages = stages.filter((stage) => stage.state === "done").length;
@@ -98,10 +104,16 @@ export function OnboardingWait({
   const scriptAt = writingSince === null ? -1 : scriptLineIndex(script.length, (now - writingSince) / 1000, scriptSeconds);
 
   useEffect(() => {
-    if (phase !== "ready") return;
+    if (phase !== "ready") {
+      return;
+    }
     const openOnEnter = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-      if (event.target instanceof Element && event.target.closest(INTERACTIVE) !== null) return;
+      if (event.key !== "Enter" || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+      if (event.target instanceof Element && event.target.closest(INTERACTIVE) !== null) {
+        return;
+      }
       onOpen();
     };
     window.addEventListener("keydown", openOnEnter);
@@ -109,9 +121,15 @@ export function OnboardingWait({
   }, [phase, onOpen]);
 
   const subLineOf = (stage: WaitStage, index: number): { text: string; key: string } | null => {
-    if (phase !== "running" || stage.state !== "running") return null;
-    if (stage.detail) return { text: stage.detail, key: `detail-${stage.detail}` };
-    if (index === writingAt && scriptAt >= 0) return { text: script[scriptAt] ?? "", key: `script-${scriptAt}` };
+    if (phase !== "running" || stage.state !== "running") {
+      return null;
+    }
+    if (stage.detail) {
+      return { text: stage.detail, key: `detail-${stage.detail}` };
+    }
+    if (index === writingAt && scriptAt >= 0) {
+      return { text: script[scriptAt] ?? "", key: `script-${scriptAt}` };
+    }
     return null;
   };
 

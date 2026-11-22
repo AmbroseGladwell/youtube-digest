@@ -33,12 +33,16 @@ const parsedWebUrl = (href: string, base?: string): URL | null => {
 // make every article on that site one item (docs/features/article-extraction.md).
 export function canonicalArticleUrl(pageUrl: string, declaredCanonical: string | null): string {
   const page = parsedWebUrl(pageUrl);
-  if (page === null) return pageUrl;
+  if (page === null) {
+    return pageUrl;
+  }
   const declared = declaredCanonical === null ? null : parsedWebUrl(declaredCanonical, page.href);
   const namesTheHomePageOfAnArticle = declared?.pathname === "/" && page.pathname !== "/";
   const url = declared === null || namesTheHomePageOfAnArticle ? page : declared;
   for (const name of [...url.searchParams.keys()]) {
-    if (isTracking(name)) url.searchParams.delete(name);
+    if (isTracking(name)) {
+      url.searchParams.delete(name);
+    }
   }
   url.hash = "";
   return url.href;

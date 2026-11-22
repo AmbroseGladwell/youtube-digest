@@ -59,7 +59,9 @@ export class IndexedDbProjectStore implements ProjectStore {
   async getProject(id: ProjectId): Promise<Project | null> {
     const store = this.#db.transaction(PROJECTS_STORE, "readonly").objectStore(PROJECTS_STORE);
     const raw = await promisifyRequest<unknown>(store.get(id));
-    if (raw === undefined) return null;
+    if (raw === undefined) {
+      return null;
+    }
     const read = readStoredRecord(raw, Project, PROJECT_MIGRATIONS);
     return read.status === "read" ? read.record : null;
   }
@@ -116,7 +118,9 @@ export class IndexedDbProjectStore implements ProjectStore {
       members.delete(key);
     }
     const chats = transaction.objectStore(CHATS_STORE);
-    for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_PROJECT_INDEX).getAllKeys(id))) chats.delete(key);
+    for (const key of await promisifyRequest<IDBValidKey[]>(chats.index(CHATS_BY_PROJECT_INDEX).getAllKeys(id))) {
+      chats.delete(key);
+    }
     const journaled =
       existing !== undefined &&
       (await appendPendingWrite(transaction, { kind: "project", id, updatedAt: new Date().toISOString(), change: { op: "delete" } }));
@@ -193,6 +197,8 @@ export class IndexedDbProjectStore implements ProjectStore {
 
   async #finish(transaction: IDBTransaction, journaled: boolean): Promise<void> {
     await promisifyTransaction(transaction);
-    if (journaled) this.#onJournaled?.();
+    if (journaled) {
+      this.#onJournaled?.();
+    }
   }
 }

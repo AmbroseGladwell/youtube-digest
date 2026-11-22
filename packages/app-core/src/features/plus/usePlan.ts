@@ -21,7 +21,9 @@ export function usePlan(): PlanState {
   const recheck = () => void session.refetch();
   const signedOut = !sync.connected || (isSyncRequestError(session.error) && session.error.code === "unauthenticated");
 
-  if (signedOut) return { plan: DEFAULT_PLAN, status: "known", recheck };
+  if (signedOut) {
+    return { plan: DEFAULT_PLAN, status: "known", recheck };
+  }
   if (session.data !== undefined) {
     return { plan: session.data.plan, status: "known", recheck };
   }

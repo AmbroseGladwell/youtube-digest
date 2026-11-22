@@ -52,11 +52,17 @@ export function useOverviewImageMorph<T extends HTMLElement>(overviewPath: strin
     // The leaving end opens the journey, so the mark starts clean even if the end before it
     // went away without clearing — a head whose image failed after the row had named itself.
     const arriving = !settled.current;
-    if (!arriving) delete root.dataset[MORPHING];
+    if (!arriving) {
+      delete root.dataset[MORPHING];
+    }
 
     const node = element.current;
-    if (node === null || !carries || !shouldAnimateNavigation() || !onScreen(node)) return;
-    if (arriving && root.dataset[MORPHING] === undefined) return;
+    if (node === null || !carries || !shouldAnimateNavigation() || !onScreen(node)) {
+      return;
+    }
+    if (arriving && root.dataset[MORPHING] === undefined) {
+      return;
+    }
 
     node.style.viewTransitionName = OVERVIEW_IMAGE;
     named.current = true;

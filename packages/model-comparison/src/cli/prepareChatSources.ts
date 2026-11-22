@@ -61,7 +61,9 @@ async function fetchTranscripts(): Promise<number> {
 
 async function printPassages(overviewId: string, windowMs: number): Promise<number> {
   const fetched = JSON.parse(await readFile(join(chatSourceDirectory(overviewId), "transcript.json"), "utf-8")) as FetchedTranscript;
-  for (const passage of transcriptPassages(fetched.transcript, windowMs)) console.log(passageBlock(passage));
+  for (const passage of transcriptPassages(fetched.transcript, windowMs)) {
+    console.log(passageBlock(passage));
+  }
   return 0;
 }
 

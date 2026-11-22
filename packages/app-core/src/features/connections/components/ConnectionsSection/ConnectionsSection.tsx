@@ -26,7 +26,9 @@ export const CONNECTIONS_INTRO =
 // Design 301f: arriving from a question's "Set up a connection", what happens next, until the
 // assistant questions open in is connected.
 function arrivalNote(chosen: ChosenAssistant | null): string {
-  if (chosen === null || chosen === "other") return "Pick your assistant and connect it, then go back to your question.";
+  if (chosen === null || chosen === "other") {
+    return "Pick your assistant and connect it, then go back to your question.";
+  }
   const { name } = FOLLOW_UP_ASSISTANTS[chosen];
   return `Connect ${name}, then go back to your question. It’ll open in ${name}, connected.`;
 }

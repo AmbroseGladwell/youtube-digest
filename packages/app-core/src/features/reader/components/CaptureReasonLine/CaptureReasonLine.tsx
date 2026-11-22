@@ -39,9 +39,13 @@ export function CaptureReasonLine({ overview, editing, compact, onEditingChange 
   };
 
   const save = (captureReason: string | null) => {
-    if (captureReason !== null) analytics.captureReason.saved({ edited: overview.captureReason !== null });
-    else if (overview.captureReason !== null) analytics.captureReason.removed();
-    else analytics.captureReason.cancelled();
+    if (captureReason !== null) {
+      analytics.captureReason.saved({ edited: overview.captureReason !== null });
+    } else if (overview.captureReason !== null) {
+      analytics.captureReason.removed();
+    } else {
+      analytics.captureReason.cancelled();
+    }
     if (captureReason !== overview.captureReason) {
       setCaptureReason.mutate({ overview, captureReason });
     }

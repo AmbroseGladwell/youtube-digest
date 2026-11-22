@@ -27,7 +27,9 @@ export function useCookingColumnScale(drawerOpen: boolean): CookingColumnScale {
   const [held, setHeld] = useState<ColumnScale>("full");
 
   useEffect(() => {
-    if (gauge === null) return;
+    if (gauge === null) {
+      return;
+    }
     const publish = () => setWidth(gauge.getBoundingClientRect().width);
     publish();
     const observer = new ResizeObserver(publish);
@@ -41,7 +43,9 @@ export function useCookingColumnScale(drawerOpen: boolean): CookingColumnScale {
   }
 
   const measured = width === null ? "full" : columnScale(width);
-  if (!holding && held !== measured) setHeld(measured);
+  if (!holding && held !== measured) {
+    setHeld(measured);
+  }
 
   return {
     gauge: setGauge,

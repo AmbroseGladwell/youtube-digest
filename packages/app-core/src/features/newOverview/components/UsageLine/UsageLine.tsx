@@ -19,7 +19,9 @@ export interface UsageLineProps {
 export function UsageLine({ testIds, narrow = false, onPlanFollowed }: UsageLineProps) {
   const next = useNextQuota();
   const plan = useOverviewUsageQuery().data?.plan ?? null;
-  if (next === null) return null;
+  if (next === null) {
+    return null;
+  }
   const { parts, link } = usageLineOf(next, { narrow, plan });
   const segments = [
     ...parts,

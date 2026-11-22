@@ -19,7 +19,9 @@ const STORAGE_KEY = "overview.nextSteps.v1";
 export function readNextSteps(storage: Storage = globalThis.localStorage): NextSteps | null {
   try {
     const raw = storage.getItem(STORAGE_KEY);
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const parsed = NextSteps.safeParse(JSON.parse(raw));
     return parsed.success ? parsed.data : null;
   } catch {

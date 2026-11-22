@@ -62,7 +62,9 @@ export function keyPointsJudgingMarkdown(
   ];
   for (const video of videos) {
     const record = judged.find((candidate) => candidate.videoId === video.videoId);
-    if (record === undefined) continue;
+    if (record === undefined) {
+      continue;
+    }
     const results = record.results!;
     lines.push(
       `| ${video.title} | ${video.length} | ${results.overall} | ${results.choice} | ${results.completeness} | ${results.faithfulness} |`,
@@ -71,7 +73,9 @@ export function keyPointsJudgingMarkdown(
   lines.push("", "## Reasons", "");
   for (const video of videos) {
     const record = judged.find((candidate) => candidate.videoId === video.videoId);
-    if (record === undefined) continue;
+    if (record === undefined) {
+      continue;
+    }
     lines.push(
       `**${video.title}**: ${record.results!.overall}.`,
       `- Candidate as A: ${record.candidateFirst!.overall.winner}. ${record.candidateFirst!.overall.reason}`,

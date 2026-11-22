@@ -35,7 +35,9 @@ export class InMemorySyncStorage implements SyncStorage {
   journal(write: PendingWrite): OutboxEntry {
     const entry = { ...write, key: this.#nextKey++, stuck: null };
     this.outbox.push(entry);
-    for (const listener of this.#listeners) listener();
+    for (const listener of this.#listeners) {
+      listener();
+    }
     return entry;
   }
 
@@ -44,8 +46,12 @@ export class InMemorySyncStorage implements SyncStorage {
   }
 
   async enrol() {
-    if (this.enrolled) return;
-    for (const write of this.libraryOnEnrol) this.outbox.push({ ...write, key: this.#nextKey++, stuck: null });
+    if (this.enrolled) {
+      return;
+    }
+    for (const write of this.libraryOnEnrol) {
+      this.outbox.push({ ...write, key: this.#nextKey++, stuck: null });
+    }
     this.enrolled = true;
   }
 
@@ -67,9 +73,14 @@ export class InMemorySyncStorage implements SyncStorage {
   async acknowledge(key: number, outcome: WriteAcknowledgement) {
     const entry = this.outbox.find((candidate) => candidate.key === key);
     this.outbox = this.outbox.filter((candidate) => candidate.key !== key);
-    if (!entry) return;
-    if ("rev" in outcome) this.revisions.set(recordKey(entry.kind, entry.id), outcome.rev);
-    else if ("tombstoned" in outcome) this.revisions.delete(recordKey(entry.kind, entry.id));
+    if (!entry) {
+      return;
+    }
+    if ("rev" in outcome) {
+      this.revisions.set(recordKey(entry.kind, entry.id), outcome.rev);
+    } else if ("tombstoned" in outcome) {
+      this.revisions.delete(recordKey(entry.kind, entry.id));
+    }
   }
 
   async park(key: number, failure: OutboxFailure) {
@@ -83,15 +94,21 @@ export class InMemorySyncStorage implements SyncStorage {
   // What IndexedDbSyncStorage does over its stores, over the maps here.
   async foldOverview(from: string, into: string) {
     const winner = this.records.get(recordKey("overview", into));
-    if (winner === undefined) return null;
+    if (winner === undefined) {
+      return null;
+    }
     const loser = this.records.get(recordKey("overview", from)) ?? {};
     const filing = filingOf(winner);
     const folded = foldFiling(filing, filingOf(loser));
     const changes = changedFields(filing, folded);
     this.records.set(recordKey("overview", into), { ...winner, ...folded });
     const at = new Date().toISOString();
-    if (changes.topicIds) this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "topics", topicIds: changes.topicIds } });
-    if (changes.tags) this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "tags", tags: changes.tags } });
+    if (changes.topicIds) {
+      this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "topics", topicIds: changes.topicIds } });
+    }
+    if (changes.tags) {
+      this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "tags", tags: changes.tags } });
+    }
     if (changes.captureReason !== undefined) {
       this.journal({ kind: "overview", id: into, updatedAt: at, change: { op: "captureReason", captureReason: changes.captureReason } });
     }
@@ -124,8 +141,11 @@ export class InMemorySyncStorage implements SyncStorage {
       }
       const pending = this.outbox.filter((entry) => entry.stuck === null && entry.kind === change.kind && entry.id === change.id);
       const rebased = rebasePendingChanges({ ...change.body, schemaVersion: change.schemaVersion, updatedAt: change.updatedAt }, pending);
-      if (rebased === null) this.records.delete(key);
-      else this.records.set(key, rebased);
+      if (rebased === null) {
+        this.records.delete(key);
+      } else {
+        this.records.set(key, rebased);
+      }
       this.revisions.set(key, change.rev);
     }
     this.cursorValue = next;

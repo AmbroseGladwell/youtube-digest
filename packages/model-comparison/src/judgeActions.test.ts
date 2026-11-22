@@ -24,7 +24,9 @@ const labels = (id: string, overrides: Partial<ActionLabels> = {}): ActionLabels
 test("the judge never sees a reader's name, only what is known about them", () => {
   const { userMessage } = actionJudgePrompt(makeFetchedTranscript(), readers);
 
-  for (const reader of readers) assert.doesNotMatch(userMessage, new RegExp(reader.name));
+  for (const reader of readers) {
+    assert.doesNotMatch(userMessage, new RegExp(reader.name));
+  }
   assert.match(userMessage, /Reader 2 ===\nAbout this reader: I'm an A&E nurse\.\nActions:\n2\.1 Batch-cook/);
   assert.match(userMessage, /Nothing is known about this reader\./);
 });

@@ -9,7 +9,9 @@ const FOOT_NAMES = 3;
 // "Home on all 3 · Money on 1" (168as).
 export const sharedChecklistFoot = (options: { name: string; held: number }[], of: number, none: string): string => {
   const held = options.filter((option) => option.held > 0);
-  if (held.length === 0) return none;
+  if (held.length === 0) {
+    return none;
+  }
   const named = held.slice(0, FOOT_NAMES).map(({ name, held: count }) => (count >= of ? `${name} on all ${of}` : `${name} on ${count}`));
   return held.length > FOOT_NAMES ? `${named.join(" · ")} · and ${held.length - FOOT_NAMES} more` : named.join(" · ");
 };

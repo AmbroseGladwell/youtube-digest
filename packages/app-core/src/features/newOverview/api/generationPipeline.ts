@@ -152,13 +152,17 @@ export async function runArticleOverviewGeneration(
   options: RunOverviewGenerationOptions = {},
 ): Promise<Overview> {
   const result = await read();
-  if (result.status === "failed") throw new ArticleReadError(result);
+  if (result.status === "failed") {
+    throw new ArticleReadError(result);
+  }
   stopIfCancelled(options);
   options.onArticleRead?.(result.article);
   if (options.overviewId === undefined) {
     const key = sourceKey({ kind: "web", id: await articleSourceId(result.article.url) })!;
     const held = await heldOverviewOf(deps.overviewStore, key);
-    if (held !== null) throw new ArticleAlreadyHeldError(held);
+    if (held !== null) {
+      throw new ArticleAlreadyHeldError(held);
+    }
   }
   stopIfCancelled(options);
   return writeOverview({ article: result.article }, deps, options);
@@ -186,7 +190,9 @@ export async function runPodcastOverviewGeneration(
   const key = sourceKey({ kind: "podcast", id })!;
   if (options.overviewId === undefined) {
     const held = await heldOverviewOf(deps.overviewStore, key);
-    if (held !== null) throw new ArticleAlreadyHeldError(held);
+    if (held !== null) {
+      throw new ArticleAlreadyHeldError(held);
+    }
   }
   const { transcript } = await findWords(episode, options);
   stopIfCancelled(options);
@@ -198,7 +204,9 @@ export async function runPodcastOverviewGeneration(
 }
 
 function stopIfCancelled(options: RunOverviewGenerationOptions): void {
-  if (options.isCancelled?.()) throw new GenerationCancelledError();
+  if (options.isCancelled?.()) {
+    throw new GenerationCancelledError();
+  }
 }
 
 // A regeneration rewrites what the model wrote and keeps what the reader did: why they saved it,
@@ -281,7 +289,9 @@ async function writeOverview(
   const save = () => deps.overviewStore.saveOverview(saved);
   await (stopwatch ? stopwatch.time("save", save) : save());
   if (existingProjects.length > 0) {
-    for (const projectId of filedProjectIds) await deps.projectStore!.fileIntoProject(projectId, saved.id);
+    for (const projectId of filedProjectIds) {
+      await deps.projectStore!.fileIntoProject(projectId, saved.id);
+    }
     options.onProjectsFiled?.(filedProjectIds.length);
   }
 

@@ -23,7 +23,9 @@ export function overrideMediaSession(override: MediaSessionOverride): () => void
   current = override;
   listeners.forEach((listener) => listener());
   return () => {
-    if (current !== override) return;
+    if (current !== override) {
+      return;
+    }
     current = null;
     listeners.forEach((listener) => listener());
   };

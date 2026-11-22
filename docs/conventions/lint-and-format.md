@@ -72,6 +72,7 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `typescript/consistent-type-definitions: interface` | An object shape is an `interface`; a `type` is for unions, nullable shapes and types derived from others. About 99% of the code already did this. |
 | `typescript/consistent-type-imports` | A type-only import says `import type`, so it's erased. |
 | `eqeqeq`, with `null` ignored | `===` everywhere, except `== null`, which reads as "null or undefined". |
+| `curly: all` | Every `if`, `else`, `for` and `while` body is in braces, so Oxfmt always puts it on its own line. Turned on with Oxlint's own fix across about 2,600 sites; that commit is in `.git-blame-ignore-revs`. |
 | `no-var` | `let` and `const`, including in the two `public/appearance.js` scripts. |
 | `no-param-reassign` | A parameter is never reassigned; destructure into a `let` instead. |
 | `no-unused-expressions` (no ternaries, no short circuits), `no-sequences` | A ternary or `&&` produces a value; a side effect is an `if`. |

@@ -29,10 +29,14 @@ export function mapJson3ToSegments(body: string): TranscriptSegment[] {
   const segments: TranscriptSegment[] = [];
 
   for (const event of events) {
-    if (event.aAppend === 1 || !event.segs || event.tStartMs === undefined) continue;
+    if (event.aAppend === 1 || !event.segs || event.tStartMs === undefined) {
+      continue;
+    }
 
     const text = event.segs.map((segment) => segment.utf8 ?? "").join("");
-    if (text.trim() === "") continue;
+    if (text.trim() === "") {
+      continue;
+    }
 
     // endMs is the start plus YouTube's own duration, never the next cue's start and
     // never a length inferred from the words. A cue with no duration is a cue we were

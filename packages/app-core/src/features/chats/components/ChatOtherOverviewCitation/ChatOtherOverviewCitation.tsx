@@ -27,8 +27,12 @@ const SECTION: Record<OverviewPart, string> = {
 };
 
 export const otherOverviewCitationPlace = ({ item, range }: Pick<OtherOverviewCitation, "item" | "range">): string | undefined => {
-  if (range !== undefined) return formatTimestamp(range.startMs);
-  if (item === null) return undefined;
+  if (range !== undefined) {
+    return formatTimestamp(range.startMs);
+  }
+  if (item === null) {
+    return undefined;
+  }
   const numbered = NUMBERED[item.part];
   return numbered === undefined ? SECTION[item.part] : `${numbered} ${item.index + 1}`;
 };

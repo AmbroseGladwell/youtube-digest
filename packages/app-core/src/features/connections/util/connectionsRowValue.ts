@@ -13,8 +13,14 @@ export const UNREACHABLE_ROW_VALUE = "Couldn't check";
 // account rather than to a plan, and what is not known yet is said as such rather than
 // guessed as none.
 export function connectionsRowValue({ signedIn, accountUnreachable, count, countFailed }: ConnectionsRowState): string {
-  if (!signedIn) return "Sign in first";
-  if (accountUnreachable) return UNREACHABLE_ROW_VALUE;
-  if (count === undefined) return countFailed ? UNREACHABLE_ROW_VALUE : CHECKING_ROW_VALUE;
+  if (!signedIn) {
+    return "Sign in first";
+  }
+  if (accountUnreachable) {
+    return UNREACHABLE_ROW_VALUE;
+  }
+  if (count === undefined) {
+    return countFailed ? UNREACHABLE_ROW_VALUE : CHECKING_ROW_VALUE;
+  }
   return count === 0 ? "None" : `${count} connected`;
 }

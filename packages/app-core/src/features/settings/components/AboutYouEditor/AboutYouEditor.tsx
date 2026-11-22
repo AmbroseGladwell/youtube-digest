@@ -43,16 +43,23 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange }: AboutYo
   const sectionRef = useCallback(
     (section: AboutYouSection): Ref<HTMLButtonElement> =>
       (button) => {
-        if (button === null) sectionButtons.current.delete(section);
-        else sectionButtons.current.set(section, button);
+        if (button === null) {
+          sectionButtons.current.delete(section);
+        } else {
+          sectionButtons.current.set(section, button);
+        }
       },
     [],
   );
 
   useEffect(() => {
-    if (open === null) return;
+    if (open === null) {
+      return;
+    }
     const element = dialog.current;
-    if (element !== null && !element.open) element.showModal();
+    if (element !== null && !element.open) {
+      element.showModal();
+    }
     popover.current?.scrollIntoView({ block: "nearest" });
     heading.current?.focus();
   }, [open]);
@@ -69,12 +76,16 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange }: AboutYo
   };
 
   const commit = () => {
-    if (open === null || sameEntries(draft, aboutYou[open])) return;
+    if (open === null || sameEntries(draft, aboutYou[open])) {
+      return;
+    }
     onChange(open, draft);
   };
 
   const finish = ({ refocus = true } = {}) => {
-    if (open === null || finished.current === open) return;
+    if (open === null || finished.current === open) {
+      return;
+    }
     finished.current = open;
     const section = open;
     const before = opened.current;
@@ -87,9 +98,15 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange }: AboutYo
     dialog.current?.close();
     setOpen(null);
     const button = sectionButtons.current.get(section);
-    if (refocus) button?.focus();
-    if (!changed) return;
-    if (button !== undefined) flyEntriesInto(flights, button);
+    if (refocus) {
+      button?.focus();
+    }
+    if (!changed) {
+      return;
+    }
+    if (button !== undefined) {
+      flyEntriesInto(flights, button);
+    }
     setSettling(section);
     setRising(filledLast);
     window.setTimeout(() => {
@@ -104,18 +121,24 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange }: AboutYo
   const pressedOutside = useRef(false);
 
   useEffect(() => {
-    if (open === null || modal) return;
+    if (open === null || modal) {
+      return;
+    }
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       pointerDown.current = true;
       pressedOutside.current = !popover.current?.contains(target) && !sectionButtons.current.get(open)?.contains(target);
-      if (pressedOutside.current) latest.current.commit();
+      if (pressedOutside.current) {
+        latest.current.commit();
+      }
     };
     const onPointerUp = () => {
       pointerDown.current = false;
     };
     const onClick = () => {
-      if (pressedOutside.current) latest.current.finish({ refocus: false });
+      if (pressedOutside.current) {
+        latest.current.finish({ refocus: false });
+      }
     };
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("pointerup", onPointerUp, true);
@@ -140,9 +163,14 @@ export function AboutYouEditor({ aboutYou, size, topicNames, onChange }: AboutYo
 
   const onBlur = (event: FocusEvent<HTMLDivElement>) => {
     const to = event.relatedTarget;
-    if (to === null || event.currentTarget.contains(to) || (open !== null && to === sectionButtons.current.get(open))) return;
-    if (pointerDown.current) commit();
-    else finish({ refocus: false });
+    if (to === null || event.currentTarget.contains(to) || (open !== null && to === sectionButtons.current.get(open))) {
+      return;
+    }
+    if (pointerDown.current) {
+      commit();
+    } else {
+      finish({ refocus: false });
+    }
   };
 
   const sheet = open !== null && (

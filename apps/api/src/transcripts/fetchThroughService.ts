@@ -57,11 +57,15 @@ export async function throughService<T>(
   try {
     return { value: await operation(fetches.direct), via: "direct", proxySessions: 0 };
   } catch (error) {
-    if (fetches.proxied === null || !isWorthTheProxy(error)) throw error;
+    if (fetches.proxied === null || !isWorthTheProxy(error)) {
+      throw error;
+    }
     lastError = error;
   }
 
-  if (!(await budget.reserve())) throw budgetExhausted();
+  if (!(await budget.reserve())) {
+    throw budgetExhausted();
+  }
 
   let requests = 0;
   let bytes = 0;
@@ -78,15 +82,20 @@ export async function throughService<T>(
         return { value: await operation(counted), via: "proxy", proxySessions: session };
       } catch (error) {
         lastError = error;
-        if (!isWorthTheProxy(error)) break;
+        if (!isWorthTheProxy(error)) {
+          break;
+        }
       } finally {
         await proxied.close().catch(() => undefined);
       }
     }
     throw lastError;
   } finally {
-    if (requests === 0) await budget.release();
-    else await budget.spend(bytes);
+    if (requests === 0) {
+      await budget.release();
+    } else {
+      await budget.spend(bytes);
+    }
   }
 }
 

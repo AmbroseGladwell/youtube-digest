@@ -20,11 +20,15 @@ export function CookingIngredientsDrawer({ id, open, asked, onClose, onSettled, 
   const aside = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (open && asked) aside.current?.focus({ preventScroll: true });
+    if (open && asked) {
+      aside.current?.focus({ preventScroll: true });
+    }
   }, [open, asked]);
 
   const onTransitionEnd = (event: TransitionEvent<HTMLElement>) => {
-    if (event.target === event.currentTarget && event.propertyName === "width") onSettled();
+    if (event.target === event.currentTarget && event.propertyName === "width") {
+      onSettled();
+    }
   };
 
   return (

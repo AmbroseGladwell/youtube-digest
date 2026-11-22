@@ -100,7 +100,9 @@ function fakeOpenAi({ status = 200 } = {}) {
   const urls = [];
   const fetch = async (url, init) => {
     urls.push({ url: new URL(url), authorization: init.headers.Authorization });
-    if (status !== 200) return { ok: false, status };
+    if (status !== 200) {
+      return { ok: false, status };
+    }
     const { pathname, searchParams } = new URL(url);
     if (pathname.endsWith("/projects")) {
       return searchParams.get("after") === null

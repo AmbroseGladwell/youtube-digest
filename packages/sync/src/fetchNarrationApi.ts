@@ -11,7 +11,9 @@ const FoundRenders = z.object({ renders: z.array(NarrationRender) });
 const ListedSamples = z.object({ samples: z.array(z.unknown()) });
 
 const ignoringNotFound = (error: unknown) => {
-  if (isSyncRequestError(error) && error.code === "not_found") return;
+  if (isSyncRequestError(error) && error.code === "not_found") {
+    return;
+  }
   throw error;
 };
 

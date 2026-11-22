@@ -16,7 +16,9 @@ export const byRelation = (sources: ChatAnswerSections["introSources"]) => {
   for (const { citation, relation } of sources) {
     const label = relationLabel(relation);
     const held = groups.get(label) ?? [];
-    if (!held.some((each) => citationKey(each) === citationKey(citation))) held.push(citation);
+    if (!held.some((each) => citationKey(each) === citationKey(citation))) {
+      held.push(citation);
+    }
     groups.set(label, held);
   }
   return [...groups.entries()];

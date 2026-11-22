@@ -12,7 +12,9 @@ export interface RecipeTimesProps {
 // nothing shown.
 export function RecipeTimes({ recipe, source }: RecipeTimesProps) {
   const figures = recipeFigures(recipe);
-  if (figures.length === 0) return null;
+  if (figures.length === 0) {
+    return null;
+  }
   return (
     <div className={styles.root} data-testid={recipeTimesTestIds.root}>
       <dl className={styles.figures}>

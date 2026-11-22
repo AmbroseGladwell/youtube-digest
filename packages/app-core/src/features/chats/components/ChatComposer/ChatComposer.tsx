@@ -63,8 +63,11 @@ export const ChatComposer = ({
   const input = useRef<HTMLTextAreaElement | null>(null);
   const setRefs = (node: HTMLTextAreaElement | null) => {
     input.current = node;
-    if (typeof ref === "function") ref(node);
-    else if (ref != null) (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
+    if (typeof ref === "function") {
+      ref(node);
+    } else if (ref != null) {
+      (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
+    }
   };
 
   const overviews = library.flatMap((entry) => (entry.kind === "overview" ? [entry.overview] : []));
@@ -85,7 +88,9 @@ export const ChatComposer = ({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [below, setBelow] = useState(false);
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const top = rootRef.current?.getBoundingClientRect().top ?? 0;
     const bar = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
     setBelow(top - Math.max(bar, 0) < Math.min(352, window.innerHeight * 0.5));
@@ -127,8 +132,9 @@ export const ChatComposer = ({
   };
 
   const choose = (option: PickerOption) => {
-    if (picking !== null)
+    if (picking !== null) {
       onChange(`${value.slice(0, picking.start)}${value.slice(picking.start + 1 + picking.query.length)}`.replace(/ {2,}/g, " "));
+    }
     onPin(
       option.kind === "project"
         ? { kind: "project", id: option.project.id, title: option.project.name, count: option.count }
@@ -139,13 +145,17 @@ export const ChatComposer = ({
   };
 
   const pickerKey = (event: KeyboardEvent<HTMLTextAreaElement>): boolean => {
-    if (!open) return false;
+    if (!open) {
+      return false;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       setPicking(null);
       return true;
     }
-    if (full || options.length === 0) return false;
+    if (full || options.length === 0) {
+      return false;
+    }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       setActive((current) => (current + (event.key === "ArrowDown" ? 1 : options.length - 1)) % options.length);

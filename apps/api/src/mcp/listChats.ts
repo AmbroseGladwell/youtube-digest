@@ -33,7 +33,9 @@ export const listChats = mcpTool({
     }
     if (nameOrId !== undefined) {
       const project = resolveProject(library, nameOrId);
-      if (!isProject(project)) return project;
+      if (!isProject(project)) {
+        return project;
+      }
       const inProject = new Set<string>(projectOverviews(library, project.id).map(({ overview }) => overview.id));
       const before = wanted;
       wanted = (chat) =>

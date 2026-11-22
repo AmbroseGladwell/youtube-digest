@@ -42,10 +42,18 @@ export interface PlaylistFollowFlowProps {
 }
 
 function refusalOf(error: unknown): PlaylistRefusalReason {
-  if (!isSyncRequestError(error)) return "lookupFailed";
-  if (error.code === "playlist_private") return "private";
-  if (error.code === "playlist_not_found") return "gone";
-  if (error.code === "unavailable") return "unavailable";
+  if (!isSyncRequestError(error)) {
+    return "lookupFailed";
+  }
+  if (error.code === "playlist_private") {
+    return "private";
+  }
+  if (error.code === "playlist_not_found") {
+    return "gone";
+  }
+  if (error.code === "unavailable") {
+    return "unavailable";
+  }
   return "lookupFailed";
 }
 
@@ -85,11 +93,15 @@ export function PlaylistFollowFlow({ target, pastedUrl, from, stacked, onJustThi
           : null;
 
   useEffect(() => {
-    if (refusal !== null && refusal !== "empty") analytics.playlists.preview.refused({ from, reason: refusal });
+    if (refusal !== null && refusal !== "empty") {
+      analytics.playlists.preview.refused({ from, reason: refusal });
+    }
   }, [refusal, from, analytics]);
 
   const followLookup = (backfill: boolean) => {
-    if (lookup.data === undefined) return;
+    if (lookup.data === undefined) {
+      return;
+    }
     const preview = playlistPreview(lookup.data, held, order);
     follow.mutate(
       { lookup: lookup.data, backfill, pace, order },

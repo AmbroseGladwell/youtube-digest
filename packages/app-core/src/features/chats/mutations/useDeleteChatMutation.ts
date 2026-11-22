@@ -23,14 +23,18 @@ export function useDeleteChatMutation() {
       return { previous };
     },
     onError: (_error, { listKey }, context) => {
-      if (context !== undefined) queryClient.setQueryData(listKey, context.previous);
+      if (context !== undefined) {
+        queryClient.setQueryData(listKey, context.previous);
+      }
     },
     // An overview's conversation is in both its own list and the Ask drawer's (OV-363).
     onSettled: (_data, _error, { listKey, chatId }) => {
       void queryClient.invalidateQueries({ queryKey: listKey });
       void queryClient.invalidateQueries({ queryKey: chatKeys.asked() });
       const owner = chatOwnerOfId(chatId);
-      if (owner?.kind === "overview") void queryClient.invalidateQueries({ queryKey: chatKeys.list(owner.id) });
+      if (owner?.kind === "overview") {
+        void queryClient.invalidateQueries({ queryKey: chatKeys.list(owner.id) });
+      }
     },
   });
 }

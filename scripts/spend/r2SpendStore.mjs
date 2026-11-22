@@ -7,12 +7,18 @@ export function r2SpendStore({ accountId, bucket, accessKeyId, secretAccessKey, 
   return {
     async put(key, text) {
       const response = await send(objectUrl(key), { method: "PUT", headers: { "content-type": "text/csv" }, body: text });
-      if (!response.ok) throw new Error(`R2 refused to store ${key}: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`R2 refused to store ${key}: ${response.status}`);
+      }
     },
     async get(key) {
       const response = await send(objectUrl(key), { method: "GET" });
-      if (response.status === 404) return null;
-      if (!response.ok) throw new Error(`R2 refused to read ${key}: ${response.status}`);
+      if (response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(`R2 refused to read ${key}: ${response.status}`);
+      }
       return response.text();
     },
   };

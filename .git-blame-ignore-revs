@@ -1,2 +1,5 @@
 # OV-253: Oxfmt reformat of every JS and TS file (docs/conventions/lint-and-format.md)
 53c75837e7d46017e9fe68e15b3a44e4c31a953e
+
+# OV-369: curly braces on every if, else, for and while body (docs/conventions/lint-and-format.md)
+18b6b2b56df7e95cf23dea022093b5bfae7d16c2

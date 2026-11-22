@@ -34,7 +34,9 @@ const note = (name: string): number => {
 };
 
 const panned = ({ audio }: Engine, node: AudioNode, pan: number): AudioNode => {
-  if (pan === 0) return node;
+  if (pan === 0) {
+    return node;
+  }
   const panner = audio.createStereoPanner();
   panner.pan.value = pan;
   node.connect(panner);
@@ -329,9 +331,13 @@ const roomEcho = (audio: AudioContext): AudioBuffer => {
 let engine: Engine | null = null;
 
 const audioEngine = (): Engine | null => {
-  if (engine !== null) return engine;
+  if (engine !== null) {
+    return engine;
+  }
   const Context = typeof window === "undefined" ? undefined : window.AudioContext;
-  if (Context === undefined) return null;
+  if (Context === undefined) {
+    return null;
+  }
   const audio = new Context();
   const limiter = audio.createDynamicsCompressor();
   limiter.threshold.value = -14;
@@ -356,17 +362,25 @@ const audioEngine = (): Engine | null => {
 
 export function unlockTimerSound(): void {
   const audio = audioEngine()?.audio;
-  if (audio !== undefined && audio.state === "suspended") void audio.resume();
+  if (audio !== undefined && audio.state === "suspended") {
+    void audio.resume();
+  }
 }
 
 // Every sound is made here with Web Audio, so none needs a file and they play in the panel too
 // (docs/features/recipe-notes.md, "Timers"). Returns a stop that fades the sound out.
 export function playTimerSound(sound: TimerSound, { vibrate = true } = {}): () => void {
-  if (vibrate) navigator.vibrate?.(VIBRATION_MS);
+  if (vibrate) {
+    navigator.vibrate?.(VIBRATION_MS);
+  }
   const ready = audioEngine();
-  if (ready === null) return () => {};
+  if (ready === null) {
+    return () => {};
+  }
   const { audio, master, room } = ready;
-  if (audio.state === "suspended") void audio.resume();
+  if (audio.state === "suspended") {
+    void audio.resume();
+  }
   const { voice, room: roomAmount } = SOUNDS[sound];
   const out = audio.createGain();
   out.connect(master);

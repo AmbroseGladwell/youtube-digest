@@ -94,8 +94,12 @@ const spokenWatchAnswer = ({ answer, range }: WatchAnyway, episode: boolean) => 
 const READ_ANYWAY_LABEL: Record<WatchAnswer, string> = { no: "No", yes: "Yes", partial: "Just part of it" };
 
 const spokenReadAnswer = ({ answer }: ReadAnyway, chapters: readonly string[]) => {
-  if (answer === "yes") return "Yes, it's worth reading.";
-  if (answer === "no") return "No, you can probably skip the article, the overview covers it.";
+  if (answer === "yes") {
+    return "Yes, it's worth reading.";
+  }
+  if (answer === "no") {
+    return "No, you can probably skip the article, the overview covers it.";
+  }
   return chapters.length === 0 ? "Yes, it's worth reading one part." : `Yes, it's worth reading part of it: ${chapters.join(", and ")}.`;
 };
 
@@ -205,7 +209,9 @@ export function overviewNoteLines(
       const link = steps.length === 1 ? null : index === 0 ? "First" : index === steps.length - 1 ? "Finally" : "Then";
       const said = link === null ? text : `${link}, ${afterOrdinal(text)}`;
       const body = withRange({ text, range });
-      if (dubiousReason !== null) return { ...body, dubiousReason, spoken: `${said}${flaggedAloud(dubiousReason)}` };
+      if (dubiousReason !== null) {
+        return { ...body, dubiousReason, spoken: `${said}${flaggedAloud(dubiousReason)}` };
+      }
       return link === null ? body : { ...body, spoken: said };
     }),
     true,

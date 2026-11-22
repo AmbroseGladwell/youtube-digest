@@ -80,10 +80,14 @@ const SHARER_PARAMETERS = /^(si|utm_.+|context|nd|_branch_match_id|_branch_refer
 // (docs/features/podcast-screens.md).
 export function keptSharedLink(link: string): string {
   const uri = /^spotify:(episode|show):([A-Za-z0-9]{22})$/.exec(link.trim());
-  if (uri !== null) return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
+  if (uri !== null) {
+    return `https://open.spotify.com/${uri[1]}/${uri[2]}`;
+  }
   const url = new URL(link.trim());
   for (const name of [...url.searchParams.keys()]) {
-    if (SHARER_PARAMETERS.test(name)) url.searchParams.delete(name);
+    if (SHARER_PARAMETERS.test(name)) {
+      url.searchParams.delete(name);
+    }
   }
   url.hash = "";
   return url.toString();

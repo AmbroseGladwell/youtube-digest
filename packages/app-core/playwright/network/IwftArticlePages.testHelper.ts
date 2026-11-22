@@ -28,7 +28,9 @@ export class IwftArticlePages implements ArticlePages {
   }
 
   private notify = () => {
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      listener();
+    }
   };
 
   subscribe = (onChange: () => void): (() => void) => {
@@ -41,7 +43,9 @@ export class IwftArticlePages implements ArticlePages {
   hasAccess = async (): Promise<boolean> => this.granted;
   requestAccess = (url: string): Promise<boolean> => {
     this.asked.push(url);
-    if (this.granted) return Promise.resolve(true);
+    if (this.granted) {
+      return Promise.resolve(true);
+    }
     return new Promise((resolve) => {
       this.waiting = resolve;
     });

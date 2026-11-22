@@ -21,7 +21,9 @@ export const getProject = mcpTool({
   run: async ({ project: nameOrId, cursor }, { sql, accountId }) => {
     const library = await readLibrary(sql, accountId);
     const project = resolveProject(library, nameOrId);
-    if (!isProject(project)) return project;
+    if (!isProject(project)) {
+      return project;
+    }
     const items = projectOverviews(library, project.id);
     const page = pageOf(items, cursor, PROJECT_PAGE_SIZE);
     const footer = [

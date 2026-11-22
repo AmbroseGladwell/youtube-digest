@@ -19,8 +19,12 @@ function pointsCell({ points, unplaced, outOfRange }: Coverage): string {
 }
 
 function rowCells({ title, kind, length, outcome, coverage, gapPlace }: CoverageRow): string[] {
-  if (coverage === null) return [title, kind, length, outcome, "–", "–", "–", "–", "–"];
-  if (!coverage.measurable) return [title, kind, length, "unmeasurable", pointsCell(coverage), "–", "–", "–", "–"];
+  if (coverage === null) {
+    return [title, kind, length, outcome, "–", "–", "–", "–", "–"];
+  }
+  if (!coverage.measurable) {
+    return [title, kind, length, "unmeasurable", pointsCell(coverage), "–", "–", "–", "–"];
+  }
   const gap = coverage.largestGap === null ? "none" : `${percent(coverage.largestGap.share)}, ${gapPlace}`;
   return [
     title,

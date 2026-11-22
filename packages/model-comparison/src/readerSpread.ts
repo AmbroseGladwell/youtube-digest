@@ -36,7 +36,9 @@ export const sameActions = (left: readonly string[], right: readonly string[]): 
 export function wordOverlap(left: readonly string[], right: readonly string[]): number {
   const leftWords = wordsOf(left);
   const rightWords = wordsOf(right);
-  if (leftWords.size === 0 && rightWords.size === 0) return 1;
+  if (leftWords.size === 0 && rightWords.size === 0) {
+    return 1;
+  }
   const shared = [...leftWords].filter((word) => rightWords.has(word)).length;
   return shared / (leftWords.size + rightWords.size - shared);
 }
@@ -48,7 +50,9 @@ export function actionsByVideo(runs: ReadonlyMap<string, readonly RunRecord[]>):
   const byVideo = new Map<string, Map<string, readonly string[]>>();
   for (const [name, records] of runs) {
     for (const record of records.filter(isPassed)) {
-      if (record.overview === null) continue;
+      if (record.overview === null) {
+        continue;
+      }
       const entry = byVideo.get(record.videoId) ?? new Map<string, readonly string[]>();
       entry.set(name, record.overview.howToApply?.items ?? []);
       byVideo.set(record.videoId, entry);
@@ -80,7 +84,9 @@ export function readerSpread(readers: readonly string[], byVideo: ReadonlyMap<st
   const itemCounts = Object.fromEntries(
     readers.map((name) => {
       const counts: [number, number, number, number] = [0, 0, 0, 0];
-      for (const actions of videos) counts[Math.min(actions.get(name)!.length, 3)]! += 1;
+      for (const actions of videos) {
+        counts[Math.min(actions.get(name)!.length, 3)]! += 1;
+      }
       return [name, counts];
     }),
   );

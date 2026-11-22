@@ -16,7 +16,9 @@ export function notesFrom(answer) {
   }
   const notes = samples.map(({ note }) => note);
   const untitled = notes.filter((note) => typeof note?.source?.title !== "string");
-  if (untitled.length > 0) throw new Error(`${untitled.length} of ${notes.length} samples carry no title`);
+  if (untitled.length > 0) {
+    throw new Error(`${untitled.length} of ${notes.length} samples carry no title`);
+  }
   return notes;
 }
 
@@ -24,11 +26,15 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
   const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   try {
     const response = await fetch(SAMPLES_URL);
-    if (!response.ok) throw new Error(`${SAMPLES_URL} answered ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`${SAMPLES_URL} answered ${response.status}`);
+    }
     const notes = notesFrom(await response.json());
     writeFileSync(path.join(rootDir, DESTINATION), `${JSON.stringify(notes, null, 2)}\n`);
     console.log(`${notes.length} samples written to ${DESTINATION}; now run task store:screenshots`);
-    for (const note of notes) console.log(`  ${note.source.title}`);
+    for (const note of notes) {
+      console.log(`  ${note.source.title}`);
+    }
   } catch (error) {
     console.error(`samples: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);

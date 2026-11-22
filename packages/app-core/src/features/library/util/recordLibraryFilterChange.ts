@@ -17,8 +17,11 @@ export function recordLibraryFilterChange(
     analytics.sourceChosen({ source: patch.source, from });
   }
   if (patch.topicId !== undefined && patch.topicId !== before.topicId) {
-    if (patch.topicId === "all") analytics.topicCleared({ from });
-    else analytics.topicChosen({ topicId: patch.topicId, from });
+    if (patch.topicId === "all") {
+      analytics.topicCleared({ from });
+    } else {
+      analytics.topicChosen({ topicId: patch.topicId, from });
+    }
   }
   if (patch.novelty !== undefined && patch.novelty !== before.novelty) {
     analytics.noveltyChosen({ novelty: patch.novelty, from });
@@ -33,7 +36,10 @@ export function recordLibraryFilterChange(
     analytics.dubiousSwitched({ on: patch.dubious, from });
   }
   if (patch.tag !== undefined && patch.tag !== before.tag) {
-    if (patch.tag === null) analytics.tagCleared({ from });
-    else analytics.tagChosen({ from });
+    if (patch.tag === null) {
+      analytics.tagCleared({ from });
+    } else {
+      analytics.tagChosen({ from });
+    }
   }
 }

@@ -81,7 +81,9 @@ export function ChecklistPicker({
 
   const create = (event: FormEvent) => {
     event.preventDefault();
-    if (naming === null || typeof onNew === "function" || naming.trim() === "" || refusal !== null) return;
+    if (naming === null || typeof onNew === "function" || naming.trim() === "" || refusal !== null) {
+      return;
+    }
     onNew.onCreate(naming.trim());
     setNaming(null);
   };
@@ -96,7 +98,9 @@ export function ChecklistPicker({
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       data-testid={testIds.root}
     >
@@ -130,7 +134,9 @@ export function ChecklistPicker({
                 className={styles.checkbox}
                 checked={option.state === "all"}
                 ref={(element) => {
-                  if (element) element.indeterminate = option.state === "some";
+                  if (element) {
+                    element.indeterminate = option.state === "some";
+                  }
                 }}
                 onChange={() => onToggle(option.id, option.state !== "all")}
               />

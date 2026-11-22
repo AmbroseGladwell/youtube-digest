@@ -21,7 +21,9 @@ const timerLabel = (timer: CookingTimer, now: number, here: string): string => {
 // Designs 284g–284o: the running timers under the step dots on every screen of the mode,
 // soonest first. One is named by its verb and step; two or more by the verb alone.
 export function CookingTimerStrip({ timers, now, here, onOpen }: CookingTimerStripProps) {
-  if (timers.length === 0) return null;
+  if (timers.length === 0) {
+    return null;
+  }
   const solo = timers.length === 1;
   return (
     <div

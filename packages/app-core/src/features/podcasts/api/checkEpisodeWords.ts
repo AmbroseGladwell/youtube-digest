@@ -12,9 +12,13 @@ export async function checkEpisodeWords(
   youTubeFetch: YouTubeFetch | null,
 ): Promise<TranscriptCheck> {
   const ask = { feedUrl: episode.feedUrl, guid: episode.guid };
-  if (youTubeFetch === null) return api.checkTranscript({ ...ask, searchYouTube: true });
+  if (youTubeFetch === null) {
+    return api.checkTranscript({ ...ask, searchYouTube: true });
+  }
   const checked = await api.checkTranscript(ask);
-  if (checked.words !== "none") return checked;
+  if (checked.words !== "none") {
+    return checked;
+  }
   try {
     const found = await findEpisodeOnYouTube(youTubeFetch, {
       showName: episode.showName,

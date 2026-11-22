@@ -16,9 +16,13 @@ export function madeTodayByPlaylist(overviews: readonly Overview[], chosen: Read
   const today = localDayKey(now);
   const counts = new Map<string, number>();
   for (const overview of overviews) {
-    if (overview.fromPlaylist === null || localDayKey(new Date(overview.savedAt)) !== today) continue;
+    if (overview.fromPlaylist === null || localDayKey(new Date(overview.savedAt)) !== today) {
+      continue;
+    }
     const key = sourceKey(overview.source);
-    if (key !== null && chosen.has(key)) continue;
+    if (key !== null && chosen.has(key)) {
+      continue;
+    }
     counts.set(overview.fromPlaylist.id, (counts.get(overview.fromPlaylist.id) ?? 0) + 1);
   }
   return counts;

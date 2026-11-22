@@ -48,8 +48,11 @@ export class ApiKeysPanelPageObject extends PageObject {
 
   verifyOnlyMyKey = (state: boolean | "absent") =>
     this.step(`verifyOnlyMyKey ${state}`, async () => {
-      if (state === "absent") await expect(this.get(onlyMyKeySwitchTestIds.root)).toHaveCount(0);
-      else await expect(this.get(onlyMyKeySwitchTestIds.switch)).toHaveAttribute("aria-checked", String(state));
+      if (state === "absent") {
+        await expect(this.get(onlyMyKeySwitchTestIds.root)).toHaveCount(0);
+      } else {
+        await expect(this.get(onlyMyKeySwitchTestIds.switch)).toHaveAttribute("aria-checked", String(state));
+      }
     });
 
   verifyOnlyMyKeyExplains = (pattern: RegExp) =>

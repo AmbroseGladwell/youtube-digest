@@ -34,7 +34,9 @@ Why they saved it: ${input.captureReason ?? "not said"}`;
 export const keyPointsCoverALongVideo =
   (input: GenerationInput, noun = "video") =>
   (output: Record<string, unknown>, ctx: z.RefinementCtx) => {
-    if (!transcriptBudget(input).long) return;
+    if (!transcriptBudget(input).long) {
+      return;
+    }
     const segmentWords = input.transcript.map(({ text }) => wordCount(text));
     const ranges = (output.keyPoints as SegmentRangeShape[]).flatMap((point) => segmentRangeOf(point) ?? []);
     const reaches = (from: number, to: number) =>

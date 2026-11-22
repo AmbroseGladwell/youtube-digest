@@ -44,7 +44,9 @@ export function useOverviewShare(overview: Overview | null): OverviewShare {
     let current = true;
     const snapshot = shareSnapshot({ overview, narration: null });
     void shareContentHash(snapshot.note).then((computed) => {
-      if (current) setHash(computed);
+      if (current) {
+        setHash(computed);
+      }
     });
     return () => {
       current = false;
@@ -59,7 +61,9 @@ export function useOverviewShare(overview: Overview | null): OverviewShare {
     let current = true;
     narrationForShare(narrationApi, spokenScript(overview), voice).then(
       (narration) => {
-        if (current) setNarrationReady(narration !== null);
+        if (current) {
+          setNarrationReady(narration !== null);
+        }
       },
       () => undefined,
     );

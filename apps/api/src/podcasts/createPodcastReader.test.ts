@@ -47,8 +47,12 @@ function readerOver(web: Record<string, Answer>, podcastIndex: ShowDirectory | n
   const fetchPublicWeb = async (link: string): Promise<PublicWebAnswer> => {
     asked.push(link);
     const answer = web[link];
-    if (answer === undefined || answer === "missing") return { status: "failed", reason: "missing" };
-    if (answer === "down") return { status: "failed", reason: "no-answer" };
+    if (answer === undefined || answer === "missing") {
+      return { status: "failed", reason: "missing" };
+    }
+    if (answer === "down") {
+      return { status: "failed", reason: "no-answer" };
+    }
     return {
       status: "answered",
       url: answer.url ?? link,
@@ -142,7 +146,9 @@ function podcastIndexOver(answer: "knows the show" | "doesn't know it" | "fails"
   const directory: ShowDirectory = {
     searchShows: async (name) => {
       asked.push(`search:${name}`);
-      if (answer === "fails") throw new Error("Podcast Index answered 503");
+      if (answer === "fails") {
+        throw new Error("Podcast Index answered 503");
+      }
       return answer === "knows the show" ? [{ showId: "920666", showName: "A Show & Friends", feedUrl: FEED_URL }] : [];
     },
     showWithEpisodes: async (showId) => {

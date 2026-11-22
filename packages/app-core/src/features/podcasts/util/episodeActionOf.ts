@@ -14,8 +14,12 @@ export type EpisodeAction =
   | { kind: "stop"; offer: Offer<"not-enough" | "too-long"> };
 
 export function episodeActionOf(words: EpisodeWords): EpisodeAction {
-  if (words.state === "checking") return { kind: "waiting" };
-  if (words.state !== "none") return { kind: "create" };
+  if (words.state === "checking") {
+    return { kind: "waiting" };
+  }
+  if (words.state !== "none") {
+    return { kind: "create" };
+  }
   const offer = words.transcription;
   switch (offer.status) {
     case "needed":

@@ -83,8 +83,11 @@ export class HeadImagePageObject extends PageObject {
   verifySharperShown = (shown: boolean) =>
     this.step(`verifySharperShown ${shown}`, async () => {
       const sharp = this.button().getByTestId(headImageTestIds.sharpImage);
-      if (shown) await expect(sharp).toBeVisible();
-      else await expect(sharp).not.toBeVisible();
+      if (shown) {
+        await expect(sharp).toBeVisible();
+      } else {
+        await expect(sharp).not.toBeVisible();
+      }
     });
 
   // Design 147s: who it's from sits beside the image, and the title starts under both at

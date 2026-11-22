@@ -21,7 +21,9 @@ const longNote = () =>
 const LONG_NOTE = longNote();
 
 const seedAScrollingLibrary = (seed: (overview: ReturnType<typeof makeOverview>) => void) => {
-  for (let index = 0; index < 14; index += 1) seed(makeOverview());
+  for (let index = 0; index < 14; index += 1) {
+    seed(makeOverview());
+  }
   seed(LONG_NOTE);
 };
 

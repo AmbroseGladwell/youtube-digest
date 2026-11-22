@@ -10,17 +10,26 @@ const MAX_TOKENS = 16000;
 // first whole object is taken. Anything malformed inside it still fails the parse.
 function firstJsonObject(text: string): string {
   const start = text.indexOf("{");
-  if (start === -1) return text;
+  if (start === -1) {
+    return text;
+  }
   let depth = 0;
   let inString = false;
   for (let i = start; i < text.length; i++) {
     const char = text[i];
     if (inString) {
-      if (char === "\\") i++;
-      else if (char === '"') inString = false;
-    } else if (char === '"') inString = true;
-    else if (char === "{") depth++;
-    else if (char === "}" && --depth === 0) return text.slice(start, i + 1);
+      if (char === "\\") {
+        i++;
+      } else if (char === '"') {
+        inString = false;
+      }
+    } else if (char === '"') {
+      inString = true;
+    } else if (char === "{") {
+      depth++;
+    } else if (char === "}" && --depth === 0) {
+      return text.slice(start, i + 1);
+    }
   }
   return text.slice(start);
 }

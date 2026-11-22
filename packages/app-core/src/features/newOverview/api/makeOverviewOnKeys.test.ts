@@ -59,7 +59,9 @@ const answer = (inOneLine: string) => ({
 const ownClient =
   (outcome: "made" | Error): GenerationClient =>
   async ({ schema }) => {
-    if (outcome instanceof Error) throw outcome;
+    if (outcome instanceof Error) {
+      throw outcome;
+    }
     return "noteKind" in schema.shape ? { noteKind: "default" } : answer("Made on the reader's key.");
   };
 
@@ -80,12 +82,16 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
     },
     generate: async ({ input: sent }) => {
       calls.push("generate");
-      if (generate !== undefined) throw generate;
+      if (generate !== undefined) {
+        throw generate;
+      }
       return { ...(await generateOverviewOf(async () => answer("Made on our key."), sent, meta)), filedProjectIds: [] };
     },
     reserve: async () => {
       calls.push("reserve");
-      if (reserve !== undefined) throw reserve;
+      if (reserve !== undefined) {
+        throw reserve;
+      }
       return { plan: "free", resetsOn: "2026-11-01", ours: { used: 0, limit: 5 }, own: { used: 1, limit: 10 } };
     },
     release: async () => {

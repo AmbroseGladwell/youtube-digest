@@ -29,7 +29,9 @@ const KEPT_MS = 5 * 60 * 1000;
 
 export const isArticleLink = (input: string): boolean => {
   const link = input.trim();
-  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null || isPlatformPodcastLink(link)) return false;
+  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null || isPlatformPodcastLink(link)) {
+    return false;
+  }
   try {
     const { protocol, hostname } = new URL(link);
     return (protocol === "http:" || protocol === "https:") && hostname.includes(".");
@@ -66,10 +68,14 @@ export function useArticleLink(url: string, from: "dialog" | "home") {
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<ArticleLink> => {
       const read = await createFetchArticleApi({ baseUrl: apiUrl!, token: connection.token }).read(link);
-      if (read.status === "failed") return { status: "failed", failure: read };
+      if (read.status === "failed") {
+        return { status: "failed", failure: read };
+      }
       const key = sourceKey({ kind: "web", id: await articleSourceId(read.article.url) })!;
       const held = await heldOverviewOf(overviewStore, key);
-      if (held === null) return { status: "found", article: read.article };
+      if (held === null) {
+        return { status: "found", article: read.article };
+      }
       const overviews = await overviewStore.listOverviews();
       return {
         status: "held",
@@ -80,15 +86,23 @@ export function useArticleLink(url: string, from: "dialog" | "home") {
   });
 
   const articleLink: ArticleLink = useMemo(() => {
-    if (!offered) return { status: "none" };
-    if (settled !== link || query.isFetching) return { status: "reading" };
-    if (query.isError) return { status: "unreachable" };
+    if (!offered) {
+      return { status: "none" };
+    }
+    if (settled !== link || query.isFetching) {
+      return { status: "reading" };
+    }
+    if (query.isError) {
+      return { status: "unreachable" };
+    }
     return query.data ?? { status: "reading" };
   }, [offered, settled, link, query.isFetching, query.isError, query.data]);
 
   const reported = useRef<string | null>(null);
   useEffect(() => {
-    if (articleLink.status !== "failed" || reported.current === link) return;
+    if (articleLink.status !== "failed" || reported.current === link) {
+      return;
+    }
     reported.current = link;
     analytics.capture.newOverviewForm.articleLinkFailed({
       from,

@@ -122,7 +122,9 @@ export function resolveAnswer(readers: readonly ReaderActions[], answer: ActionJ
   const emptyReaders = readers.flatMap((reader, index) => (reader.actions.length === 0 ? [[readerLabel(index), reader] as const] : []));
   const empty = emptyReaders.map(([label, reader]) => {
     const found = answer.empty.find((entry) => entry.reader.trim() === label);
-    if (found === undefined) throw new JudgeAnswerError(`no verdict for ${label}, given no actions`);
+    if (found === undefined) {
+      throw new JudgeAnswerError(`no verdict for ${label}, given no actions`);
+    }
     return { reader: reader.name, verdict: found.verdict, reason: found.reason };
   });
   return {
@@ -139,10 +141,13 @@ export class JudgeAnswerError extends Error {
 }
 
 export function actionJudgeFor(writer: ComparedModel, chosen: ComparedModel | null = null): ComparedModel {
-  if (chosen !== null && chosen.provider === writer.provider)
+  if (chosen !== null && chosen.provider === writer.provider) {
     throw new Error(`a judge from ${writer.provider} would be judging its own provider's actions`);
+  }
   const judge = chosen ?? JUDGES.map(parseComparedModel).find((model) => model.provider !== writer.provider);
-  if (judge === undefined) throw new Error(`no judge outside ${writer.provider}`);
+  if (judge === undefined) {
+    throw new Error(`no judge outside ${writer.provider}`);
+  }
   return judge;
 }
 
@@ -177,7 +182,9 @@ export async function judgeActions({
   let resolved: Pick<ActionJudgeRecord, "actions" | "empty"> = { actions: [], empty: [] };
   try {
     const parsed = ActionJudgeAnswer.safeParse(await client(actionJudgePrompt(fetched, ordered)));
-    if (!parsed.success) throw new JudgeAnswerError(`the judge's answer broke its schema: ${parsed.error.message}`);
+    if (!parsed.success) {
+      throw new JudgeAnswerError(`the judge's answer broke its schema: ${parsed.error.message}`);
+    }
     resolved = resolveAnswer(ordered, parsed.data);
   } catch (thrown) {
     outcome = thrown instanceof JudgeAnswerError || isTheModelsDoing(thrown) ? "failed" : "errored";

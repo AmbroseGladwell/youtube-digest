@@ -33,7 +33,9 @@ export function useWebSignInLanding() {
   );
 
   useEffect(() => {
-    if (landing === null || libraryAccountId !== landing.accountId) return;
+    if (landing === null || libraryAccountId !== landing.accountId) {
+      return;
+    }
     setLanding(null);
     const { returnTo } = landing;
     const state: ConsentPageLocationState = { fromSignInLink: true };

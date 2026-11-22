@@ -8,13 +8,21 @@ export type SheetRest = "raised" | "lowered";
 // Where the sheet sits for a finger offset from the top of its travel, which runs from 0 (raised)
 // to `travel` (lowered to its header).
 export function resistedOffset(offset: number, travel: number): number {
-  if (offset < 0) return -(Math.abs(offset) ** 0.7);
-  if (offset > travel) return travel + (offset - travel) ** 0.7;
+  if (offset < 0) {
+    return -(Math.abs(offset) ** 0.7);
+  }
+  if (offset > travel) {
+    return travel + (offset - travel) ** 0.7;
+  }
   return offset;
 }
 
 export function restAfterDrag(offset: number, travel: number, velocityPxPerMs: number): SheetRest {
-  if (velocityPxPerMs > FLICK_PX_PER_MS) return "lowered";
-  if (velocityPxPerMs < -FLICK_PX_PER_MS) return "raised";
+  if (velocityPxPerMs > FLICK_PX_PER_MS) {
+    return "lowered";
+  }
+  if (velocityPxPerMs < -FLICK_PX_PER_MS) {
+    return "raised";
+  }
   return offset > travel / 2 ? "lowered" : "raised";
 }

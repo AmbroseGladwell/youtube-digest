@@ -13,16 +13,26 @@ export const START_VERB: Record<SampleKind, string> = {
 };
 
 export const sampleKindOf = (note: SharedNote): SampleKind => {
-  if (note.source.kind === "youtube") return "video";
-  if (note.source.kind === "podcast") return "podcast";
+  if (note.source.kind === "youtube") {
+    return "video";
+  }
+  if (note.source.kind === "podcast") {
+    return "podcast";
+  }
   return note.recipe ? "recipe" : "article";
 };
 
 const lengthOf = (note: SharedNote): string | null => {
   const { source } = note;
-  if (source.kind === "youtube") return source.durationMs === null ? null : formatClock(source.durationMs / 1000);
-  if (source.kind === "podcast") return source.durationMs === null ? null : recipeMinutes(Math.round(source.durationMs / 60_000));
-  if (note.recipe) return note.recipe.totalMinutes === null ? null : recipeMinutes(note.recipe.totalMinutes);
+  if (source.kind === "youtube") {
+    return source.durationMs === null ? null : formatClock(source.durationMs / 1000);
+  }
+  if (source.kind === "podcast") {
+    return source.durationMs === null ? null : recipeMinutes(Math.round(source.durationMs / 60_000));
+  }
+  if (note.recipe) {
+    return note.recipe.totalMinutes === null ? null : recipeMinutes(note.recipe.totalMinutes);
+  }
   return `${articleReadMinutes(source.wordCount)} min read`;
 };
 

@@ -39,7 +39,9 @@ export async function judgeKeyPointsPair({
   const ask = async (candidateIsA: boolean): Promise<KeyPointsAnswer | null> => {
     const [noteA, noteB] = candidateIsA ? [candidate.overview, baseline.overview] : [baseline.overview, candidate.overview];
     const parsed = KeyPointsAnswer.safeParse(await client(keyPointsPrompt(fetched, noteA, noteB)));
-    if (parsed.success) return parsed.data;
+    if (parsed.success) {
+      return parsed.data;
+    }
     outcome = "failed";
     error = `the judge's answer broke its schema: ${parsed.error.message}`;
     return null;

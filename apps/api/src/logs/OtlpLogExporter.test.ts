@@ -23,7 +23,9 @@ const makeExporter = (options: Partial<OtlpLogExporterOptions> = {}) => {
     flushIntervalMs: 60_000,
     onFailure: (message) => void failures.push(message),
     fetch: async (input, init) => {
-      if (status >= 300) return new Response(null, { status });
+      if (status >= 300) {
+        return new Response(null, { status });
+      }
       const body = JSON.parse(init!.body as string);
       const [{ resource, scopeLogs }] = body.resourceLogs;
       const records = scopeLogs[0].logRecords;

@@ -39,7 +39,9 @@ export function useGenerateOverviewMutation(apiKeys: ApiKeys) {
       // Only our key's overviews are narrated ahead: one on the reader's own key renders when
       // it is first played, so what narration costs follows what is listened to
       // (docs/architecture/tiers.md, "What an own-key overview costs us").
-      if (overview.madeOn?.key === "ours") player.prepare(playerTrackFor(overview));
+      if (overview.madeOn?.key === "ours") {
+        player.prepare(playerTrackFor(overview));
+      }
       void queryClient.invalidateQueries({ queryKey: overviewKeys.all });
       void queryClient.invalidateQueries({ queryKey: transcriptKeys.all });
     },

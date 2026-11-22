@@ -18,10 +18,18 @@ import { youtubeTimestampUrl } from "./youtubeTimestampUrl.js";
 // since a link into its audio would land wherever that listen's ads put it
 // (docs/features/podcast-notes.md, "Times and the episode's audio").
 function citationText(overview: Overview, citation: ChatCitation): string {
-  if ("chatId" in citation) return `message ${citation.message + 1} of conversation ${citation.chatId}`;
-  if ("paragraph" in citation) return `paragraph ${citation.paragraph + 1} of the article`;
-  if ("part" in citation) return overviewPartText(overview, citation);
-  if ("overviewId" in citation) return otherOverviewText(citation);
+  if ("chatId" in citation) {
+    return `message ${citation.message + 1} of conversation ${citation.chatId}`;
+  }
+  if ("paragraph" in citation) {
+    return `paragraph ${citation.paragraph + 1} of the article`;
+  }
+  if ("part" in citation) {
+    return overviewPartText(overview, citation);
+  }
+  if ("overviewId" in citation) {
+    return otherOverviewText(citation);
+  }
   const label = `${formatTimestamp(citation.startMs)}–${formatTimestamp(citation.endMs)}`;
   return overview.source.kind === "youtube" ? `[${label}](${youtubeTimestampUrl(overview.source.url, citation.startMs)})` : label;
 }
@@ -51,8 +59,12 @@ function overviewPartText(overview: Overview, citation: Extract<ChatCitation, { 
           ? "Read it anyway?"
           : PART_SECTION.watchAnyway;
   const cited = citedOverviewPart(overview, citation);
-  if (cited === null) return `the overview's "${section}", no longer in it`;
-  if (cited.index === null) return `the overview's "${section}", an item since changed`;
+  if (cited === null) {
+    return `the overview's "${section}", no longer in it`;
+  }
+  if (cited.index === null) {
+    return `the overview's "${section}", an item since changed`;
+  }
   return SINGLE_ITEM_PARTS.has(cited.part) ? `the overview's "${section}"` : `item ${cited.index + 1} of the overview's "${section}"`;
 }
 
@@ -60,8 +72,12 @@ function overviewPartText(overview: Overview, citation: Extract<ChatCitation, { 
 // it had then.
 function otherOverviewText({ overviewId, title, item, range }: OtherOverviewCitation): string {
   const named = `the reader's overview "${title}" (${overviewId})`;
-  if (range !== undefined) return `${formatTimestamp(range.startMs)}–${formatTimestamp(range.endMs)} of ${named}`;
-  if (item === null) return named;
+  if (range !== undefined) {
+    return `${formatTimestamp(range.startMs)}–${formatTimestamp(range.endMs)} of ${named}`;
+  }
+  if (item === null) {
+    return named;
+  }
   return SINGLE_ITEM_PARTS.has(item.part)
     ? `"${PART_SECTION[item.part]}" of ${named}`
     : `item ${item.index + 1} of "${PART_SECTION[item.part]}" in ${named}`;
@@ -69,7 +85,9 @@ function otherOverviewText({ overviewId, title, item, range }: OtherOverviewCita
 
 // An article or a recipe page is answered from its overview alone, so only a decline is noted.
 const answerNote = (message: Extract<Chat["messages"][number], { from: "answer" }>, kind: ChatSourceKind): string | null => {
-  if (message.inSource) return null;
+  if (message.inSource) {
+    return null;
+  }
   if (!answeredFromOverview(message) && answeredFromOtherOverviews(message)) {
     return `Answered from the reader's other overviews, not from what the ${answeredFromOverviewAlone(kind) ? "overview of this " + kind : kind} says.`;
   }
@@ -88,7 +106,9 @@ export type ChatScopeLabel = { kind: "project"; name: string; id: string } | { k
 
 // Sources grouped by how they relate, each group named once: "Based on: …; For charging early: …".
 const sourcesLine = (sources: ChatAnswerSections["introSources"], describe: (citation: ChatCitation) => string): string | null => {
-  if (sources.length === 0) return null;
+  if (sources.length === 0) {
+    return null;
+  }
   const groups = new Map<string, string[]>();
   for (const { citation, relation } of sources) {
     const label = relationLabel(relation);
@@ -144,7 +164,9 @@ function scopedChatMarkdown(chat: Chat, scope: ChatScopeLabel, from: number, cou
 // what it says, and a plain flag on an answer the source didn't cover
 // (docs/features/mcp-connector.md, "Chats").
 export function chatMarkdown(chat: Chat, about: Overview | ChatScopeLabel, { from = 0, count = chat.messages.length } = {}): string {
-  if (!("source" in about)) return scopedChatMarkdown(chat, about, from, count);
+  if (!("source" in about)) {
+    return scopedChatMarkdown(chat, about, from, count);
+  }
   const overview = about;
   const kind = chatSourceKind(overview);
   const lines = chat.messages.slice(from, from + count).map((message, offset) => {
@@ -154,7 +176,9 @@ export function chatMarkdown(chat: Chat, about: Overview | ChatScopeLabel, { fro
         ? sectionsText(message.sections, (citation) => citationText(overview, citation))
         : message.text;
     const head = `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${said}`;
-    if (message.from === "reader") return head;
+    if (message.from === "reader") {
+      return head;
+    }
     const notes = [
       answerNote(message, kind),
       message.citations.length === 0 ? null : `Cites: ${message.citations.map((citation) => citationText(overview, citation)).join("; ")}.`,

@@ -473,11 +473,19 @@ test("a recipe note's recipe may be null, and a step names its stretch as segmen
 test("the video schema keeps to the few fields that may be null, since each one grows the grammar Claude compiles", () => {
   const unions: string[] = [];
   const walk = (node: unknown, path: string) => {
-    if (typeof node !== "object" || node === null) return;
+    if (typeof node !== "object" || node === null) {
+      return;
+    }
     const schema = node as JsonSchema;
-    if ("anyOf" in schema || Array.isArray(schema.type)) unions.push(path);
-    for (const [key, value] of Object.entries(schema.properties ?? {})) walk(value, `${path}.${key}`);
-    for (const branch of (schema.anyOf as unknown[] | undefined) ?? []) walk(branch, path);
+    if ("anyOf" in schema || Array.isArray(schema.type)) {
+      unions.push(path);
+    }
+    for (const [key, value] of Object.entries(schema.properties ?? {})) {
+      walk(value, `${path}.${key}`);
+    }
+    for (const branch of (schema.anyOf as unknown[] | undefined) ?? []) {
+      walk(branch, path);
+    }
     walk(schema.items, `${path}[]`);
   };
   walk(providerJsonSchema(composePrompt({ ...baseInput, sectionsEnabled: DEFAULT_SECTIONS_ENABLED }).schema), "");

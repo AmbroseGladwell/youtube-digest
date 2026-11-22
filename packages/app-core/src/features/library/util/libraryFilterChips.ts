@@ -66,7 +66,9 @@ export function fittingChipCount(chipWidths: readonly number[], available: numbe
   for (let index = 0; index < chipWidths.length; index += 1) {
     const rest = chipWidths.length - index - 1;
     const need = (index === 0 ? 0 : gap) + chipWidths[index]! + (rest > 0 ? gap + moreWidth : 0);
-    if (used + need > available) return index;
+    if (used + need > available) {
+      return index;
+    }
     used += (index === 0 ? 0 : gap) + chipWidths[index]!;
   }
   return chipWidths.length;

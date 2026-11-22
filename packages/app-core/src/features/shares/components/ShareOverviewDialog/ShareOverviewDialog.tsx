@@ -53,12 +53,16 @@ export function ShareOverviewDialog({
   // Stopping leaves no link to confirm about, so the dialog goes back to its first state
   // rather than asking the question again (design 30c·4).
   useEffect(() => {
-    if (share === null) setConfirmingStop(false);
+    if (share === null) {
+      setConfirmingStop(false);
+    }
   }, [share]);
 
   // The label goes back to "Copy link" on its own, so a second copy still reads as one.
   useEffect(() => {
-    if (!copied) return;
+    if (!copied) {
+      return;
+    }
     const timer = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(timer);
   }, [copied]);
@@ -71,7 +75,9 @@ export function ShareOverviewDialog({
   };
 
   const copy = () => {
-    if (share === null) return;
+    if (share === null) {
+      return;
+    }
     analytics.shareDialog.linkCopied();
     void navigator.clipboard?.writeText(share.url);
     setCopied(true);

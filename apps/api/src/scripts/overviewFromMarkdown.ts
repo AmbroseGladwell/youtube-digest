@@ -41,7 +41,9 @@ const bulletsOf = (body: string) =>
 
 function trailingRange(text: string): { text: string; range: { startMs: number; endMs: number } | null } {
   const match = new RegExp(` \\(${LINK.source}\\)$`).exec(text);
-  if (match === null) return { text, range: null };
+  if (match === null) {
+    return { text, range: null };
+  }
   const startMs = clockMs(match[1]!);
   return { text: text.slice(0, match.index), range: { startMs, endMs: match[2] === undefined ? startMs : clockMs(match[2]) } };
 }
@@ -67,9 +69,13 @@ function recipeFrom(found: Map<string, string>): Overview["recipe"] {
   let group: string | null = null;
   for (const line of (found.get("Method") ?? "").split("\n")) {
     const heading = /^### (.*)$/.exec(line);
-    if (heading !== null) group = heading[1]!;
+    if (heading !== null) {
+      group = heading[1]!;
+    }
     const step = /^\d+\. (.*)$/.exec(line);
-    if (step !== null) steps.push({ text: step[1]!, group });
+    if (step !== null) {
+      steps.push({ text: step[1]!, group });
+    }
   }
   const [first = "", ...rest] = (found.get("Summary") ?? "").split("\n\n");
   const figures = new Map(
@@ -102,7 +108,9 @@ export function overviewFromMarkdown(markdown: string): Partial<Overview> {
   }
 
   const keyPoints = found.get("Key points");
-  if (keyPoints !== undefined) overview.keyPoints = bulletsOf(keyPoints).map(trailingRange);
+  if (keyPoints !== undefined) {
+    overview.keyPoints = bulletsOf(keyPoints).map(trailingRange);
+  }
 
   const verdict = found.get("Verdict");
   if (verdict !== undefined) {
@@ -152,7 +160,9 @@ export function overviewFromMarkdown(markdown: string): Partial<Overview> {
   }
 
   const apply = found.get("How to apply");
-  if (apply !== undefined) overview.howToApply = { items: bulletsOf(apply) };
+  if (apply !== undefined) {
+    overview.howToApply = { items: bulletsOf(apply) };
+  }
 
   const selling = found.get("What it sells");
   if (selling !== undefined) {
@@ -201,10 +211,16 @@ export function overviewFromMarkdown(markdown: string): Partial<Overview> {
   }
 
   const premise = found.get("Premise");
-  if (premise !== undefined) overview.inOneLine = premise;
+  if (premise !== undefined) {
+    overview.inOneLine = premise;
+  }
   const core = found.get("Core claim");
-  if (core !== undefined) overview.coreClaim = core;
+  if (core !== undefined) {
+    overview.coreClaim = core;
+  }
   const big = found.get("Big picture");
-  if (big !== undefined) overview.bigPicture = big;
+  if (big !== undefined) {
+    overview.bigPicture = big;
+  }
   return overview;
 }

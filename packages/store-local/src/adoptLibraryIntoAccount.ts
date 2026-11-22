@@ -45,7 +45,9 @@ export async function adoptLibraryIntoAccount({ accountId, indexedDB }: AdoptLib
     await promisifyTransaction(writing);
 
     const clearing = from.transaction(names, "readwrite");
-    for (const name of names) clearing.objectStore(name).clear();
+    for (const name of names) {
+      clearing.objectStore(name).clear();
+    }
     await promisifyTransaction(clearing);
   } finally {
     from.close();

@@ -21,7 +21,9 @@ function keyProblem(manifest, key) {
   if (key === null) {
     return manifest.key === undefined ? null : "its manifest still carries the key";
   }
-  if (manifest.key === undefined) return "its manifest carries no key, so it would load under a directory-derived id";
+  if (manifest.key === undefined) {
+    return "its manifest carries no key, so it would load under a directory-derived id";
+  }
   return manifest.key === key ? null : "its manifest carries a key that is not the store's";
 }
 
@@ -33,12 +35,22 @@ export function verifyRelease({ zipPath, version, commit, key = null }) {
   const manifest = readJsonFromZip(zipPath, "manifest.json");
   const build = readJsonFromZip(zipPath, "build.json");
   const problems = [];
-  if (manifest.version !== version) problems.push(`its manifest is at ${manifest.version}, not ${version}`);
+  if (manifest.version !== version) {
+    problems.push(`its manifest is at ${manifest.version}, not ${version}`);
+  }
   const keyed = keyProblem(manifest, key);
-  if (keyed !== null) problems.push(keyed);
-  if (build.version !== version) problems.push(`it was built as ${build.version}, not ${version}`);
-  if (build.commit !== shortCommit) problems.push(`it was built from ${build.commit}, not ${shortCommit}`);
-  if (build.dirty === true) problems.push("it was built from a tree with uncommitted changes");
+  if (keyed !== null) {
+    problems.push(keyed);
+  }
+  if (build.version !== version) {
+    problems.push(`it was built as ${build.version}, not ${version}`);
+  }
+  if (build.commit !== shortCommit) {
+    problems.push(`it was built from ${build.commit}, not ${shortCommit}`);
+  }
+  if (build.dirty === true) {
+    problems.push("it was built from a tree with uncommitted changes");
+  }
   if (problems.length > 0) {
     throw new Error(`${path.basename(zipPath)} is not the release: ${problems.join("; ")}`);
   }

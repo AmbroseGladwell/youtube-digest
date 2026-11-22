@@ -237,7 +237,9 @@ test("signed out, onboarding's trial reads a podcast link, and the read counts a
   const device = await makeTrialDevice(testApp);
 
   const answered = [];
-  for (let n = 0; n <= TRIAL_READS; n += 1) answered.push(await device.readPodcast(LINK));
+  for (let n = 0; n <= TRIAL_READS; n += 1) {
+    answered.push(await device.readPodcast(LINK));
+  }
 
   assert.deepEqual(answered[0]!.json(), { status: "read", episode: EPISODE });
   assert.equal(answered.at(-1)!.statusCode, 429);

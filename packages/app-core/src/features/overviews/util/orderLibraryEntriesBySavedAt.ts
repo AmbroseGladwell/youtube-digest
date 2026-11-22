@@ -8,8 +8,12 @@ export function orderLibraryEntriesBySavedAt<T extends LibraryEntry>(entries: T[
   return [...entries].sort((a, b) => {
     const left = libraryEntrySavedAt(a);
     const right = libraryEntrySavedAt(b);
-    if (left === null) return right === null ? 0 : 1;
-    if (right === null) return -1;
+    if (left === null) {
+      return right === null ? 0 : 1;
+    }
+    if (right === null) {
+      return -1;
+    }
     return right.localeCompare(left);
   });
 }

@@ -9,7 +9,9 @@ export class InMemoryCaptureQueueStore implements CaptureQueueStore {
 
   async enqueue(captures: QueuedCapture[]) {
     for (const capture of captures) {
-      if (!this.#queue.has(capture.videoId)) this.#queue.set(capture.videoId, capture);
+      if (!this.#queue.has(capture.videoId)) {
+        this.#queue.set(capture.videoId, capture);
+      }
     }
   }
 

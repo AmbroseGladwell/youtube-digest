@@ -59,7 +59,9 @@ export function AskDrawer({
   // A conversation's menu opens below its ⋯, or above it when the drawer has no room below, as for
   // the last in a phone's sheet (OV-362).
   useLayoutEffect(() => {
-    if (menuFor === null) return;
+    if (menuFor === null) {
+      return;
+    }
     const item = menu.current?.parentElement?.getBoundingClientRect();
     const box = root.current?.getBoundingClientRect();
     const height = menu.current?.offsetHeight ?? 0;
@@ -69,8 +71,12 @@ export function AskDrawer({
 
   const scopeOf = (chat: Chat) => {
     const owner = chatOwner(chat);
-    if (owner.kind === "project") return projectName(owner.id) ?? "A deleted project";
-    if (owner.kind === "overview") return overviewTitle(owner.id) ?? "An overview you deleted";
+    if (owner.kind === "project") {
+      return projectName(owner.id) ?? "A deleted project";
+    }
+    if (owner.kind === "overview") {
+      return overviewTitle(owner.id) ?? "An overview you deleted";
+    }
     return "Your library";
   };
 

@@ -31,7 +31,9 @@ export function ConnectExtensionPage() {
   const makeCode = () => issue.mutate({ apiUrl }, { onSuccess: (issued) => setCode(issued.linkCode) });
 
   useEffect(() => {
-    if (!canIssue || started.current) return;
+    if (!canIssue || started.current) {
+      return;
+    }
     started.current = true;
     makeCode();
   });

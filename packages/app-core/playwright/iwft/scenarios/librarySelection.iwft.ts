@@ -25,14 +25,20 @@ const spanish = titled("Stop studying Spanish, start listening", "2026-11-11T09:
 const kitchen = makeProject();
 
 const seed = (backendSimulator: BackendSimulator) => {
-  for (const topic of [HOME, MONEY]) backendSimulator.overviews.seedTopic(topic);
-  for (const overview of [layout, sink, quote, spanish]) backendSimulator.overviews.seed(overview);
+  for (const topic of [HOME, MONEY]) {
+    backendSimulator.overviews.seedTopic(topic);
+  }
+  for (const overview of [layout, sink, quote, spanish]) {
+    backendSimulator.overviews.seed(overview);
+  }
   backendSimulator.projects.seed(kitchen);
   backendSimulator.projects.seedMember(makeProjectMember(kitchen, layout.id));
 };
 
 const pickAll = async (library: { pick: (title: string) => Promise<unknown> }, titles: string[]) => {
-  for (const title of titles) await library.pick(title);
+  for (const title of titles) {
+    await library.pick(title);
+  }
 };
 
 test.beforeEach(async ({ page }) => {

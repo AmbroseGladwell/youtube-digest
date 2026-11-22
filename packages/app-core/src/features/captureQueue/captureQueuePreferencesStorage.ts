@@ -31,9 +31,13 @@ export function readCaptureQueuePreferences(
 ): CaptureQueuePreferences {
   try {
     const raw = storage.getItem(storageKey(accountId));
-    if (!raw) return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    if (!raw) {
+      return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    }
     const parsed = CaptureQueuePreferences.safeParse(JSON.parse(raw));
-    if (!parsed.success) return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    if (!parsed.success) {
+      return DEFAULT_CAPTURE_QUEUE_PREFERENCES;
+    }
     const { hold, chosenToday } = parsed.data;
     return {
       ...parsed.data,

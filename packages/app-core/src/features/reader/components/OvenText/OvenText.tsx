@@ -13,7 +13,9 @@ export interface OvenTextProps {
 // and its oven temperatures in Fahrenheit for US units (150ak), each marked as a changed
 // ingredient amount is.
 export function OvenText({ text, us, amounts = [] }: OvenTextProps) {
-  if (!us && amounts.length === 0) return <>{text}</>;
+  if (!us && amounts.length === 0) {
+    return <>{text}</>;
+  }
   return (
     <>
       {methodPieces(text, amounts).map((piece, index) =>

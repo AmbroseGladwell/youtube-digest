@@ -88,7 +88,9 @@ if (!values["measure-only"]) {
       (record.error ? `\n    ${record.error.slice(0, 300)}` : ""),
     log,
   });
-  if (listing.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget while listing items.`);
+  if (listing.stoppedForBudget) {
+    log(`Stopped at the $${budgetDollars.toFixed(2)} budget while listing items.`);
+  }
   if (values["list-only"]) {
     for (const record of (await lists.all()).filter((list) => toList.includes(list.sourceId))) {
       log(`\n${record.sourceId}:`);
@@ -132,7 +134,9 @@ if (!values["measure-only"]) {
       (record.error ? `\n    ${record.error.slice(0, 300)}` : ""),
     log,
   });
-  if (judging.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget while judging notes.`);
+  if (judging.stoppedForBudget) {
+    log(`Stopped at the $${budgetDollars.toFixed(2)} budget while judging notes.`);
+  }
 }
 
 const markdown = stepsMarkdown(stepsNotes(runs, sources, await lists.all(), await judgments.all()), values.run);

@@ -18,7 +18,9 @@ export interface ProjectSuggestionsInput {
 // The closest few saved overviews that aren't in the project and were never taken out of it.
 // No closeness cut-off beyond the server's floor: there is none that holds (OV-229).
 export function projectSuggestions({ result, overviews, inProject, takenOut }: ProjectSuggestionsInput): OverviewWithState[] {
-  if (result === undefined || !result.available) return [];
+  if (result === undefined || !result.available) {
+    return [];
+  }
   const byId = new Map(overviews.map((entry) => [entry.overview.id as string, entry]));
   return result.matches
     .filter(({ overviewId }) => !inProject.has(overviewId) && !takenOut.has(overviewId))

@@ -113,9 +113,13 @@ export function useNewOverviewRun(): NewOverviewRunController {
   // (docs/features/one-overview-per-video.md).
   const alreadyHeld = useCallback(
     async (url: string, options: StartOverviewRunOptions): Promise<AlreadyHeld | null> => {
-      if (options.overviewId !== undefined) return null;
+      if (options.overviewId !== undefined) {
+        return null;
+      }
       const videoId = extractYouTubeVideoId(url);
-      if (videoId === null) return null;
+      if (videoId === null) {
+        return null;
+      }
       const found = await heldOverviewOf(overviewStore, videoId).catch(() => null);
       return found === null ? null : { url, overviewId: OverviewId.parse(found.id), readable: found.readable };
     },
@@ -373,7 +377,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
       const isCurrent = () => runIdRef.current === runId;
       setHeld(null);
       void alreadyHeld(url, options).then((found) => {
-        if (!isCurrent()) return;
+        if (!isCurrent()) {
+          return;
+        }
         if (found !== null) {
           analytics.capture.newOverview.alreadyHeld({ from: options.from, overviewId: found.overviewId });
           setHeld(found);
@@ -410,7 +416,9 @@ export function useNewOverviewRun(): NewOverviewRunController {
   );
 
   const transcribePodcast = useCallback(() => {
-    if (lastPodcast.current === null) return;
+    if (lastPodcast.current === null) {
+      return;
+    }
     const asked = latestRun.current?.error?.kind === "podcastNeedsTranscribing";
     startPodcast({ ...lastPodcast.current, transcribe: asked ? "asked" : "retried" });
   }, [startPodcast]);

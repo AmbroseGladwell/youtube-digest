@@ -26,8 +26,12 @@ const tileLabel = (timer: CookingTimer, now: number) =>
 
 // Where sound can't be counted on outside the mode (designs 288aa, 288ab).
 const soundLine = (panel: boolean, awake: boolean): string | null => {
-  if (panel) return "Closing the panel stops timers";
-  if (awake) return null;
+  if (panel) {
+    return "Closing the panel stops timers";
+  }
+  if (awake) {
+    return null;
+  }
   return isAppleMobile() ? "Keep this screen open to hear your timer" : "Keep this screen on to hear your timer";
 };
 
@@ -49,12 +53,17 @@ export function CookingTimerDock({ children }: CookingTimerDockProps) {
 
   useLayoutEffect(() => {
     const element = root.current;
-    if (element === null) return;
+    if (element === null) {
+      return;
+    }
     const publish = () => {
       const covered = element.getBoundingClientRect();
       const clearance = covered.height === 0 ? 0 : window.innerHeight - covered.top + CLEARANCE_GAP_PX;
-      if (clearance > 0) document.documentElement.style.setProperty(CLEARANCE_PROPERTY, `${clearance}px`);
-      else document.documentElement.style.removeProperty(CLEARANCE_PROPERTY);
+      if (clearance > 0) {
+        document.documentElement.style.setProperty(CLEARANCE_PROPERTY, `${clearance}px`);
+      } else {
+        document.documentElement.style.removeProperty(CLEARANCE_PROPERTY);
+      }
     };
     publish();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(publish);
@@ -69,7 +78,9 @@ export function CookingTimerDock({ children }: CookingTimerDockProps) {
 
   const open = (id: number) => {
     const timer = running.find((candidate) => candidate.id === id);
-    if (timer !== undefined) timers.eventsFor(timer).timerOpenedOutside();
+    if (timer !== undefined) {
+      timers.eventsFor(timer).timerOpenedOutside();
+    }
     setListing(false);
     setShown(id);
   };

@@ -8,8 +8,12 @@ export interface PickerChange {
 
 export function pickerAction(changes: Iterable<PickerChange>, overviews: number, noun: "project" | "topic"): BulkAction | null {
   const real = [...changes].filter(({ heldBefore, given }) => (given ? heldBefore < overviews : heldBefore > 0));
-  if (real.length === 0) return null;
-  if (real.length > 1) return { kind: "updated", places: real.length, noun };
+  if (real.length === 0) {
+    return null;
+  }
+  if (real.length > 1) {
+    return { kind: "updated", places: real.length, noun };
+  }
   const [only] = real as [PickerChange];
   return { kind: only.given ? "added" : "removed", overviews, place: only.place };
 }

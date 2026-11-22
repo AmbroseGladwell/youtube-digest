@@ -14,7 +14,9 @@ export function followUpHandOff(assistant: FollowUpAssistant, prompt: string): F
   if (prefillParam !== null) {
     const url = new URL(openUrl);
     url.searchParams.set(prefillParam, prompt);
-    if (url.href.length <= MOST_PREFILL_URL_LENGTH) return { kind: "prefill", url: url.href };
+    if (url.href.length <= MOST_PREFILL_URL_LENGTH) {
+      return { kind: "prefill", url: url.href };
+    }
   }
   return { kind: "copyThenOpen", url: openUrl, text: prompt };
 }

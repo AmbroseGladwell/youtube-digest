@@ -31,9 +31,12 @@ export class ChatUsageRepository {
       );
       const month = Number(counts?.month ?? 0);
       const today = Number(counts?.today ?? 0);
-      if (month >= limit) return { reserved: false, quota: "month", used: month, limit };
-      if (today >= CHAT_MESSAGES_PER_ACCOUNT_DAILY)
+      if (month >= limit) {
+        return { reserved: false, quota: "month", used: month, limit };
+      }
+      if (today >= CHAT_MESSAGES_PER_ACCOUNT_DAILY) {
         return { reserved: false, quota: "day", used: today, limit: CHAT_MESSAGES_PER_ACCOUNT_DAILY };
+      }
       const global = await tx.query(
         `insert into our_key_usage (day, chat_messages) values ($1::date, 1)
          on conflict (day) do update set chat_messages = our_key_usage.chat_messages + 1
@@ -41,7 +44,9 @@ export class ChatUsageRepository {
          returning chat_messages`,
         [day, globalDailyLimit],
       );
-      if (globalDailyLimit < 1 || global.length === 0) return { reserved: false, quota: "our-key-daily", used: month, limit };
+      if (globalDailyLimit < 1 || global.length === 0) {
+        return { reserved: false, quota: "our-key-daily", used: month, limit };
+      }
       await tx.query(
         `insert into chat_usage (day, account_id, messages) values ($1::date, $2, 1)
          on conflict (account_id, day) do update set messages = chat_usage.messages + 1`,

@@ -58,7 +58,9 @@ export async function runComparison(options: RunComparisonOptions): Promise<Comp
     options.transcripts
       .filter((fetched) => {
         const done = settled.has(runKey(model.provider, model.model, videoIdOf(fetched)));
-        if (done) skipped += 1;
+        if (done) {
+          skipped += 1;
+        }
         return !done;
       })
       .map((fetched) => () => {

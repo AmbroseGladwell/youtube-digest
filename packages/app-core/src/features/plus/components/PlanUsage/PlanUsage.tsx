@@ -43,7 +43,9 @@ export function PlanUsage(props: PlanUsageProps) {
   const { usage, hasOwnKey, chatUsage = null } = props;
   const questionsLeft = chatUsage === null ? null : Math.max(0, chatUsage.limit - chatUsage.used);
   const countOf = (key: "ours" | "own"): Pick<Cell, "count" | "aside"> => {
-    if (usage.status !== "known") return { count: usage.status === "checking" ? CHECKING : "Couldn't check" };
+    if (usage.status !== "known") {
+      return { count: usage.status === "checking" ? CHECKING : "Couldn't check" };
+    }
     const { used, limit } = usage.data[key];
     if (key === "own" && !hasOwnKey) {
       return {

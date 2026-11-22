@@ -28,8 +28,11 @@ export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneLi
   const toMove = new Set(shortLinks);
   for (const cardNumber of cardNumbers) {
     const found = await fetch(`${TRELLO_API}/boards/${boardId}/cards/${cardNumber}?fields=shortLink`, { headers });
-    if (found.ok) toMove.add((await found.json()).shortLink);
-    else results.push({ card: `OV-${cardNumber}`, moved: false, reason: `no card OV-${cardNumber} on the board (${found.status})` });
+    if (found.ok) {
+      toMove.add((await found.json()).shortLink);
+    } else {
+      results.push({ card: `OV-${cardNumber}`, moved: false, reason: `no card OV-${cardNumber} on the board (${found.status})` });
+    }
   }
   for (const shortLink of toMove) {
     const moved = await fetch(`${TRELLO_API}/cards/${shortLink}?idList=${doneListId}`, { method: "PUT", headers });
@@ -51,7 +54,9 @@ export async function moveCardsToDone({ shortLinks, cardNumbers, boardId, doneLi
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]) {
   const { PR_TITLE, PR_BODY, PR_BRANCH, TRELLO_BOARD_ID, TRELLO_DONE_LIST_ID, TRELLO_API_KEY, TRELLO_TOKEN } = process.env;
   const { shortLinks, cardNumbers, warnings } = cardReferencesIn({ title: PR_TITLE, body: PR_BODY, branch: PR_BRANCH });
-  for (const warning of warnings) console.log(`::warning::${warning}`);
+  for (const warning of warnings) {
+    console.log(`::warning::${warning}`);
+  }
   const referenced = shortLinks.length + cardNumbers.length;
   if (referenced === 0) {
     console.log(

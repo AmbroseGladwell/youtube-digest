@@ -11,8 +11,12 @@ const unknownLast =
   (a, b) => {
     const left = key(a);
     const right = key(b);
-    if (left === null) return right === null ? 0 : 1;
-    if (right === null) return -1;
+    if (left === null) {
+      return right === null ? 0 : 1;
+    }
+    if (right === null) {
+      return -1;
+    }
     return compare(left, right);
   };
 

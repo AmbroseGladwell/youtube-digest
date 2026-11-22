@@ -25,9 +25,13 @@ export class OverviewReservationsRepository {
       "select 1 from overview_reservations where account_id = $1 and overview_id = $2 and held_month is not null",
       [accountId, overviewId],
     );
-    if (held !== undefined) return { reserved: true };
+    if (held !== undefined) {
+      return { reserved: true };
+    }
     const slot = await this.#usage.reserve(now, accountId, "own", limit);
-    if (!slot.reserved) return slot;
+    if (!slot.reserved) {
+      return slot;
+    }
     await this.#sql.query(
       `insert into overview_reservations (account_id, overview_id, source, held_month, reserved_at)
        values ($1, $2, 'own', $3::date, $4::timestamptz)
@@ -53,7 +57,9 @@ export class OverviewReservationsRepository {
        returning to_char(held.held_month, 'YYYY-MM-DD') as held_month, made`,
       [accountId, overviewId],
     );
-    if (row === undefined) return false;
+    if (row === undefined) {
+      return false;
+    }
     if (!row.made) {
       await this.#sql.query("delete from overview_reservations where account_id = $1 and overview_id = $2", [accountId, overviewId]);
     }

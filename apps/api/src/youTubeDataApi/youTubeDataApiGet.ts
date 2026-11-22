@@ -22,7 +22,9 @@ export function youTubeDataApiGet({ apiKey, youTubeFetch }: { apiKey: string; yo
       method: "GET",
       headers: { accept: "application/json", "x-goog-api-key": apiKey },
     });
-    if (response.status === 404) return null;
+    if (response.status === 404) {
+      return null;
+    }
     if (response.status !== 200) {
       throw new YouTubeDataApiError(`The YouTube Data API answered ${response.status} to ${path}`, response.status);
     }

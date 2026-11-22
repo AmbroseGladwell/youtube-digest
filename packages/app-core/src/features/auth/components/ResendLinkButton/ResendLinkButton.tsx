@@ -26,7 +26,9 @@ export function ResendLinkButton({ sentAt, sending, label = "Send another link",
     const timer = setInterval(() => {
       const current = Date.now();
       setNow(current);
-      if (secondsLeft(sentAt, current) === 0) clearInterval(timer);
+      if (secondsLeft(sentAt, current) === 0) {
+        clearInterval(timer);
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [sentAt]);

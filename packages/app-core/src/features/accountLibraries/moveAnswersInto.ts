@@ -30,7 +30,9 @@ export async function moveAnswersInto(from: AnswerStores, into: AnswerStores): P
   ]);
 
   for (const topic of leavingTopics) {
-    if (accountTopics.some((held) => sameTopicName(held.name, topic.name))) continue;
+    if (accountTopics.some((held) => sameTopicName(held.name, topic.name))) {
+      continue;
+    }
     accountTopics.push(
       await into.overviewStore.createTopic(
         topic.description === null ? { name: topic.name } : { name: topic.name, description: topic.description },
@@ -48,7 +50,9 @@ export async function moveAnswersInto(from: AnswerStores, into: AnswerStores): P
       ? { accentColour: leaving.accentColour }
       : {}),
   };
-  if (Object.keys(patch).length > 0) await into.settingsStore.update(patch);
+  if (Object.keys(patch).length > 0) {
+    await into.settingsStore.update(patch);
+  }
   const leavingAnswers =
     !aboutYouIsEmpty(leaving.aboutYou) ||
     leaving.narrationVoice !== DEFAULT_NARRATION_VOICE ||

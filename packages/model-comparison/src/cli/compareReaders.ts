@@ -150,7 +150,9 @@ if (values.judge) {
       `judging ${record.videoId}: ${record.outcome}${record.error ? ` (${record.error.slice(0, 120)})` : ""}, $${(record.costDollars ?? 0).toFixed(4)} (spent $${spent.toFixed(4)} of $${budgetDollars.toFixed(2)})`,
     log,
   });
-  if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget while judging.`);
+  if (outcome.stoppedForBudget) {
+    log(`Stopped at the $${budgetDollars.toFixed(2)} budget while judging.`);
+  }
 }
 
 const judgedRecords = (await judgments.all()).filter((record) => record.outcome === "judged" && byVideo.has(record.videoId));

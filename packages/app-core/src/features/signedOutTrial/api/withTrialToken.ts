@@ -13,7 +13,9 @@ export async function withTrialToken<T>(
 ): Promise<T> {
   const tokenNow = async (): Promise<string> => {
     const held = currentSignedOutTrial().token;
-    if (held !== null) return held;
+    if (held !== null) {
+      return held;
+    }
     const { token } = await createFetchGenerationApi(options).startTrial();
     rememberTrialToken(token);
     return token;
@@ -21,7 +23,9 @@ export async function withTrialToken<T>(
   try {
     return await call(await tokenNow());
   } catch (error) {
-    if (!isUnknownTrial(error)) throw error;
+    if (!isUnknownTrial(error)) {
+      throw error;
+    }
     forgetTrialToken();
     return call(await tokenNow());
   }

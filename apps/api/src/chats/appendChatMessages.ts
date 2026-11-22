@@ -38,7 +38,9 @@ export async function appendChatMessages(
         if (owner.kind !== "library" && (held === null || held === undefined || held.deleted)) {
           throw new ApiError("not_found", owner.kind === "overview" ? "No such overview" : "No such project");
         }
-        if (current?.deleted === true) throw new ApiError("not_found", "That conversation was deleted");
+        if (current?.deleted === true) {
+          throw new ApiError("not_found", "That conversation was deleted");
+        }
         return decideMerge(
           "chat",
           current,

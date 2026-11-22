@@ -34,7 +34,9 @@ const onKey = (key: KeySource, first: boolean): string => (key === "ours" ? "on 
 
 function madePhrase(spent: SpentQuota[], plainOurs: boolean): string {
   const [first, second] = spent;
-  if (second !== undefined) return `${first!.limit} ${onKey(first!.key, true)} and ${second.limit} ${onKey(second.key, false)}`;
+  if (second !== undefined) {
+    return `${first!.limit} ${onKey(first!.key, true)} and ${second.limit} ${onKey(second.key, false)}`;
+  }
   return plainOurs ? `${first!.limit}` : `${first!.limit} ${onKey(first!.key, true)}`;
 }
 
@@ -42,7 +44,9 @@ function madePhrase(spent: SpentQuota[], plainOurs: boolean): string {
 // the key order flipped for everyone but Plus, decided on OV-131; docs/architecture/tiers.md,
 // "At the limit"). Null while there is still a quota to use.
 export function limitMessageOf(next: NextQuota | null, plan: Plan): LimitMessage | null {
-  if (next?.kind !== "spent") return null;
+  if (next?.kind !== "spent") {
+    return null;
+  }
 
   const { spent, resetsOn } = next;
   const keys = new Set(spent.map((quota) => quota.key));

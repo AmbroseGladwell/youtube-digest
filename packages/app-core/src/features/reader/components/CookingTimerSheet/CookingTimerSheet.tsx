@@ -36,9 +36,15 @@ export function CookingTimerSheet({
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
-    if (open && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   const left = timer === null ? 0 : timeLeftMs(timer, now);
@@ -55,10 +61,14 @@ export function CookingTimerSheet({
         onClose();
       }}
       onClick={(event) => {
-        if (event.target === dialog.current) onClose();
+        if (event.target === dialog.current) {
+          onClose();
+        }
       }}
       onKeyDown={(event) => {
-        if (event.key !== "Escape") return;
+        if (event.key !== "Escape") {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         onClose();

@@ -67,13 +67,17 @@ export function rowsForDay({ date, billed, manualEntries, unreadable, kept = [] 
 
 export function sourcesByProvider(rows) {
   const sources = new Map();
-  for (const row of rows) sources.set(row.provider, new Set([...(sources.get(row.provider) ?? []), row.source]));
+  for (const row of rows) {
+    sources.set(row.provider, new Set([...(sources.get(row.provider) ?? []), row.source]));
+  }
   return [...sources].map(([provider, set]) => `${provider}: ${[...set].join("+").replace("not_tracked", "not tracked")}`).join(", ");
 }
 
 export async function recordSpend({ from, to, readers, manualEntries, store, recordedAt }) {
   const dates = datesBetween(from, to);
-  if (dates.length === 0 || dates.length > MAX_DAYS) throw new Error(`Record between 1 and ${MAX_DAYS} days, not ${dates.length}`);
+  if (dates.length === 0 || dates.length > MAX_DAYS) {
+    throw new Error(`Record between 1 and ${MAX_DAYS} days, not ${dates.length}`);
+  }
   const warnings = [];
   const unreadable = new Map();
   const readable = new Map();
@@ -99,7 +103,11 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
   for (const date of dates) {
     const key = spendObjectKey(date);
     const unreadableToday = new Map(unreadable);
-    for (const [provider, { canRead, outOfRange }] of readable) if (!canRead(date)) unreadableToday.set(provider, outOfRange);
+    for (const [provider, { canRead, outOfRange }] of readable) {
+      if (!canRead(date)) {
+        unreadableToday.set(provider, outOfRange);
+      }
+    }
     let kept = [];
     try {
       kept = await storedRowsOf(store, key, unreadableToday);
@@ -109,7 +117,9 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
       );
     }
     const { rows, conflicts } = rowsForDay({ date, billed, manualEntries, unreadable: unreadableToday, kept });
-    for (const conflict of conflicts) warnings.push(`${date}: ${conflict} has a hand-entered figure and a bill; the bill is kept`);
+    for (const conflict of conflicts) {
+      warnings.push(`${date}: ${conflict} has a hand-entered figure and a bill; the bill is kept`);
+    }
     const csv = spendCsv(rows, recordedAt);
     const keptFrom = [...new Set(kept.map((row) => row.provider))];
     try {
@@ -126,9 +136,13 @@ export async function recordSpend({ from, to, readers, manualEntries, store, rec
 const KEPT_SOURCES = new Set(["bill", "usage"]);
 
 async function storedRowsOf(store, key, unreadableToday) {
-  if (unreadableToday.size === 0) return [];
+  if (unreadableToday.size === 0) {
+    return [];
+  }
   const stored = await store.get(key);
-  if (stored === null) return [];
+  if (stored === null) {
+    return [];
+  }
   return parseSpendCsv(stored).filter((row) => unreadableToday.has(row.provider) && KEPT_SOURCES.has(row.source));
 }
 
@@ -194,7 +208,9 @@ if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.
     store,
     recordedAt: new Date().toISOString(),
   });
-  for (const warning of warnings) console.log(`::warning::${warning}`);
+  for (const warning of warnings) {
+    console.log(`::warning::${warning}`);
+  }
   for (const day of days) {
     console.log(
       day.recorded

@@ -53,8 +53,10 @@ function setAnnouncement(from: number, to: number, of: number): string {
 
 function AssistantLine({ assistant, connected, copies }: { assistant: FollowUpAssistant; connected: boolean; copies: boolean }) {
   const name = <b>{FOLLOW_UP_ASSISTANTS[assistant].name}</b>;
-  if (copies) return <>Each copies the question and this note, then opens {name} for you to paste.</>;
-  if (connected)
+  if (copies) {
+    return <>Each copies the question and this note, then opens {name} for you to paste.</>;
+  }
+  if (connected) {
     return (
       <>
         Each opens {name},{" "}
@@ -65,13 +67,16 @@ function AssistantLine({ assistant, connected, copies }: { assistant: FollowUpAs
         , so it can read this note and its transcript.
       </>
     );
+  }
   return <>Each opens {name} in a new tab with this note filled in.</>;
 }
 
 // A ghost of the tapped question shrinks and drops to the toast, so the reader sees something
 // was picked up before they switch tabs (266am). Only when the tap copies.
 function dropGhost(from: HTMLElement | null): Promise<void> {
-  if (from === null || prefersReducedMotion() || typeof from.animate !== "function") return Promise.resolve();
+  if (from === null || prefersReducedMotion() || typeof from.animate !== "function") {
+    return Promise.resolve();
+  }
   const rect = from.getBoundingClientRect();
   const ghost = from.cloneNode(true) as HTMLElement;
   ghost.inert = true;
@@ -140,7 +145,9 @@ export function FollowUpQuestions({
   const copies = assistant !== null && handOffFor(longest, assistant).kind === "copyThenOpen";
 
   useEffect(() => {
-    if (motion !== "arriving") return;
+    if (motion !== "arriving") {
+      return;
+    }
     const element = root.current;
     if (element === null || typeof IntersectionObserver === "undefined") {
       setMotion("idle");
@@ -148,7 +155,9 @@ export function FollowUpQuestions({
     }
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) setMotion("idle");
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setMotion("idle");
+        }
       },
       { threshold: ARRIVAL_THRESHOLD },
     );
@@ -158,19 +167,25 @@ export function FollowUpQuestions({
 
   // The next three start where the old ones went, then settle once the browser has seen them there.
   useLayoutEffect(() => {
-    if (motion !== "entering") return;
+    if (motion !== "entering") {
+      return;
+    }
     void list.current?.offsetHeight;
     setMotion("idle");
   }, [motion]);
 
   useEffect(
     () => () => {
-      if (leaveTimer.current !== null) clearTimeout(leaveTimer.current);
+      if (leaveTimer.current !== null) {
+        clearTimeout(leaveTimer.current);
+      }
     },
     [],
   );
 
-  if (questions.length === 0) return null;
+  if (questions.length === 0) {
+    return null;
+  }
 
   const ask = (index: number, to: FollowUpAssistant) => {
     const { question, forReader } = questions[index]!;
@@ -204,7 +219,9 @@ export function FollowUpQuestions({
   const closeMenu = () => {
     const open = menu;
     setMenu(null);
-    if (open === null) return;
+    if (open === null) {
+      return;
+    }
     (open.firstTap ? questionButtons.current[open.index % FOLLOW_UP_QUESTIONS_SHOWN] : changeButton.current)?.focus();
   };
 
@@ -225,24 +242,38 @@ export function FollowUpQuestions({
   };
 
   const chooseFromMenu = (to: FollowUpAssistant) => {
-    if (menu === null) return;
+    if (menu === null) {
+      return;
+    }
     analytics.assistantChosen({ assistant: to, from: menu.firstTap ? "firstTap" : "change" });
-    if (here) analytics.answerPlaceChosen({ here: false });
+    if (here) {
+      analytics.answerPlaceChosen({ here: false });
+    }
     choose(to, offerHere);
     closeMenu();
-    if (menu.firstTap) ask(menu.index, to);
+    if (menu.firstTap) {
+      ask(menu.index, to);
+    }
   };
 
   const chooseHereFromMenu = () => {
-    if (menu === null || onAskHere === undefined) return;
-    if (!here) analytics.answerPlaceChosen({ here: true });
+    if (menu === null || onAskHere === undefined) {
+      return;
+    }
+    if (!here) {
+      analytics.answerPlaceChosen({ here: true });
+    }
     chooseHere();
     closeMenu();
-    if (menu.firstTap) onAskHere(questions[menu.index]!.question, bubbles.current[menu.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null);
+    if (menu.firstTap) {
+      onAskHere(questions[menu.index]!.question, bubbles.current[menu.index % FOLLOW_UP_QUESTIONS_SHOWN] ?? null);
+    }
   };
 
   const copyQuestion = () => {
-    if (menu === null || !menu.firstTap) return;
+    if (menu === null || !menu.firstTap) {
+      return;
+    }
     analytics.questionCopied();
     const question = questions[menu.index]!.question;
     closeMenu();
@@ -263,7 +294,9 @@ export function FollowUpQuestions({
       setSaid(announcement);
       return;
     }
-    if (leaveTimer.current !== null) clearTimeout(leaveTimer.current);
+    if (leaveTimer.current !== null) {
+      clearTimeout(leaveTimer.current);
+    }
     setMotion("leaving");
     leaveTimer.current = setTimeout(() => {
       leaveTimer.current = null;
@@ -274,8 +307,12 @@ export function FollowUpQuestions({
   };
 
   const nameOf = (question: string): string => {
-    if (here) return `Ask here: ${question}`;
-    if (assistant === null) return `${question}: choose an assistant to ask`;
+    if (here) {
+      return `Ask here: ${question}`;
+    }
+    if (assistant === null) {
+      return `${question}: choose an assistant to ask`;
+    }
     const name = FOLLOW_UP_ASSISTANTS[assistant].name;
     return copies
       ? `Copy and open ${name}: ${question} Copies the question and this note, then opens ${name} in a new tab for you to paste`
@@ -289,7 +326,7 @@ export function FollowUpQuestions({
   ) : assistant === null ? null : (
     <AssistantLine assistant={assistant} connected={connectedTo(assistant)} copies={copies} />
   );
-  if (lead !== null)
+  if (lead !== null) {
     line = (
       <>
         {lead}{" "}
@@ -308,6 +345,7 @@ export function FollowUpQuestions({
         </button>
       </>
     );
+  }
 
   return (
     <div
@@ -356,7 +394,9 @@ export function FollowUpQuestions({
                   aria-expanded={!here && assistant === null ? menu?.firstTap === true && menu.index === index : undefined}
                   onClick={() => tap(index)}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") setPressed(place);
+                    if (event.key === "Enter" || event.key === " ") {
+                      setPressed(place);
+                    }
                   }}
                   onKeyUp={() => setPressed(null)}
                   onBlur={() => setPressed(null)}

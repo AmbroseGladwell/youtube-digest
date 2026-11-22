@@ -32,9 +32,13 @@ export function readLibraryView(accountId: string | null, storage: Storage = glo
   let saved: Record<string, unknown>;
   try {
     const raw = storage.getItem(storageKey(accountId));
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const parsed = SavedLibraryView.safeParse(JSON.parse(raw));
-    if (!parsed.success) return null;
+    if (!parsed.success) {
+      return null;
+    }
     saved = parsed.data;
   } catch {
     return null;
@@ -43,7 +47,9 @@ export function readLibraryView(accountId: string | null, storage: Storage = glo
   const dropped: SavedLibraryViewField[] = [];
   const field = <K extends SavedLibraryViewField>(name: K, fallback: z.infer<(typeof FIELDS)[K]>) => {
     const parsed = FIELDS[name].safeParse(saved[name]);
-    if (parsed.success) return parsed.data as z.infer<(typeof FIELDS)[K]>;
+    if (parsed.success) {
+      return parsed.data as z.infer<(typeof FIELDS)[K]>;
+    }
     dropped.push(name);
     return fallback;
   };

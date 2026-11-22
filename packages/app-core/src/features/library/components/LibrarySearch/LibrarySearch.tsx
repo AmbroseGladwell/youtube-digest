@@ -46,7 +46,9 @@ export function LibrarySearch({ text, onType, onClearPressed, isPhone, placehold
     input.current?.focus();
   };
   const closeSearch = () => {
-    if (query !== "") type("");
+    if (query !== "") {
+      type("");
+    }
     flushSync(() => setFocused(false));
     opener.current?.focus();
   };
@@ -97,8 +99,11 @@ export function LibrarySearch({ text, onType, onClearPressed, isPhone, placehold
             label={isPhone ? "Clear and close search" : "Clear search"}
             onClick={() => {
               onClearPressed();
-              if (isPhone) closeSearch();
-              else type("");
+              if (isPhone) {
+                closeSearch();
+              } else {
+                type("");
+              }
             }}
             testId={librarySearchTestIds.clearButton}
           />

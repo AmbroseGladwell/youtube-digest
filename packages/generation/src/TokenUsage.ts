@@ -20,7 +20,9 @@ export function tokenUsageOf(provider: Provider, body: unknown): TokenUsage | nu
 
   if (provider === "anthropic") {
     const usage = field(root, "usage");
-    if (usage === undefined) return null;
+    if (usage === undefined) {
+      return null;
+    }
     return {
       uncachedInputTokens: count(usage.input_tokens),
       cachedInputTokens: count(usage.cache_read_input_tokens),
@@ -31,7 +33,9 @@ export function tokenUsageOf(provider: Provider, body: unknown): TokenUsage | nu
 
   if (provider === "gemini") {
     const usage = field(root, "usageMetadata");
-    if (usage === undefined) return null;
+    if (usage === undefined) {
+      return null;
+    }
     const cached = count(usage.cachedContentTokenCount);
     return {
       uncachedInputTokens: count(usage.promptTokenCount) - cached,
@@ -42,7 +46,9 @@ export function tokenUsageOf(provider: Provider, body: unknown): TokenUsage | nu
   }
 
   const usage = field(root, "usage");
-  if (usage === undefined) return null;
+  if (usage === undefined) {
+    return null;
+  }
   const details = field(usage, "prompt_tokens_details");
   const cached = count(details?.cached_tokens ?? usage.prompt_cache_hit_tokens);
   const written = count(details?.cache_write_tokens);

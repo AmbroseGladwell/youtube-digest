@@ -54,10 +54,14 @@ function usePageAccess(url: string | null): boolean | null {
   const pages = useArticlePages();
   const [known, setKnown] = useState<{ url: string; granted: boolean } | null>(null);
   useEffect(() => {
-    if (pages === null || url === null) return;
+    if (pages === null || url === null) {
+      return;
+    }
     let current = true;
     void pages.hasAccess(url).then((granted) => {
-      if (current) setKnown({ url, granted });
+      if (current) {
+        setKnown({ url, granted });
+      }
     });
     return () => {
       current = false;
@@ -131,7 +135,9 @@ export function CapturePage() {
   // to another page is the way forward, so that is what clears it.
   const failedOn = run?.article?.failure != null ? run.url : null;
   useEffect(() => {
-    if (failedOn !== null && activePage !== null && activePage.url !== failedOn) dismiss();
+    if (failedOn !== null && activePage !== null && activePage.url !== failedOn) {
+      dismiss();
+    }
   }, [failedOn, activePage, dismiss]);
 
   // Design 106j: an episode with no words stays on its tab's offer, in place of Create, until the
@@ -140,7 +146,9 @@ export function CapturePage() {
     episodeTab !== null && run !== null && run.podcast !== null && run.error?.kind === "podcastNoTranscript" && run.url === episodeTab.url;
   const noWordsOn = run?.podcast != null && run.error?.kind === "podcastNoTranscript" ? run.url : null;
   useEffect(() => {
-    if (noWordsOn !== null && activePage !== null && activePage.url !== noWordsOn) dismiss();
+    if (noWordsOn !== null && activePage !== null && activePage.url !== noWordsOn) {
+      dismiss();
+    }
   }, [noWordsOn, activePage, dismiss]);
 
   const analytics = useAnalytics();
@@ -179,7 +187,9 @@ export function CapturePage() {
   if (run !== null && failure !== null) {
     const copy = articleFailureCopy(failure, run.url);
     const tryAgain = () => {
-      if (activePage === null) return;
+      if (activePage === null) {
+        return;
+      }
       if (copy.way === "reload") {
         void pages?.reload(activePage.tabId).then(() => startArticleRun(activePage, { from: "panel", accessInHand: true }));
         return;

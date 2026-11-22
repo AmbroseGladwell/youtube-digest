@@ -28,6 +28,8 @@ export class IwftPlaybackSource implements PlaybackSource {
 
   moveTo = (position: PlaybackPosition | null): void => {
     this.position = position;
-    for (const listener of this.listeners) listener();
+    for (const listener of this.listeners) {
+      listener();
+    }
   };
 }

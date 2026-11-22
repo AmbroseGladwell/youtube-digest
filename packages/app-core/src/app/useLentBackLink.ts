@@ -23,7 +23,9 @@ export function useLentBackLink({ to, label, follow, lent = true, inPage = true 
 
   useEffect(() => {
     const link = inPage ? element.current : null;
-    if (!lent || (inPage && link === null)) return;
+    if (!lent || (inPage && link === null)) {
+      return;
+    }
     handoff.register({ element: link, to, label, follow: (event) => latestFollow.current(event) });
     return () => handoff.register(null);
   }, [handoff, to, label, lent, inPage]);

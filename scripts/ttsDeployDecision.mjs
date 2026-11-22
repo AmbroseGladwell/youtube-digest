@@ -30,15 +30,25 @@ export function deployedCommitsOf(machines) {
 // (docs/architecture/deploy.md, "The TTS service").
 export function ttsDeployDecision({ deployedCommits, head, git = gitHistory }) {
   const known = [...new Set(deployedCommits)];
-  if (deployedCommits.length === 0) return { deploy: true, reason: "the app has no machines to compare" };
+  if (deployedCommits.length === 0) {
+    return { deploy: true, reason: "the app has no machines to compare" };
+  }
   if (known.length !== 1 || known[0] === null) {
     return { deploy: true, reason: "the machines aren't all on one commit this job deployed" };
   }
   const [live] = known;
-  if (live === head) return { deploy: false, reason: `${short(head)} is already live` };
-  if (!git.exists(live)) return { deploy: true, reason: `the live commit ${short(live)} isn't in this history` };
-  if (git.isAncestor(head, live)) return { deploy: false, reason: `the live ${short(live)} is newer than ${short(head)}` };
-  if (!git.isAncestor(live, head)) return { deploy: true, reason: `the live ${short(live)} isn't an ancestor of ${short(head)}` };
+  if (live === head) {
+    return { deploy: false, reason: `${short(head)} is already live` };
+  }
+  if (!git.exists(live)) {
+    return { deploy: true, reason: `the live commit ${short(live)} isn't in this history` };
+  }
+  if (git.isAncestor(head, live)) {
+    return { deploy: false, reason: `the live ${short(live)} is newer than ${short(head)}` };
+  }
+  if (!git.isAncestor(live, head)) {
+    return { deploy: true, reason: `the live ${short(live)} isn't an ancestor of ${short(head)}` };
+  }
   return git.changed(live, head)
     ? { deploy: true, reason: `${TTS_PATH} changed between the live ${short(live)} and ${short(head)}` }
     : { deploy: false, reason: `${TTS_PATH} is unchanged since the live ${short(live)}` };
@@ -48,7 +58,9 @@ export function ttsDeployDecision({ deployedCommits, head, git = gitHistory }) {
 // its size (docs/architecture/deploy.md, "The TTS service").
 export function poolSizeOf(apiFlyToml) {
   const match = apiFlyToml.match(/^\s*TTS_CONCURRENCY\s*=\s*"(\d+)"/m);
-  if (match === null) throw new Error(`${API_FLY_TOML} sets no TTS_CONCURRENCY to size the pool by`);
+  if (match === null) {
+    throw new Error(`${API_FLY_TOML} sets no TTS_CONCURRENCY to size the pool by`);
+  }
   return Number(match[1]);
 }
 
@@ -83,7 +95,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     } else {
       const { deploy, reason } = ttsDeployDecision({ deployedCommits, head });
       console.log(`tts deploy: ${deploy ? "deploying" : "skipping"}, because ${reason}`);
-      if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `deploy=${deploy}\n`);
+      if (process.env.GITHUB_OUTPUT) {
+        appendFileSync(process.env.GITHUB_OUTPUT, `deploy=${deploy}\n`);
+      }
     }
   } catch (error) {
     console.error(`tts deploy: ${error.message}`);

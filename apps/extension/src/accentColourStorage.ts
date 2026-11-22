@@ -21,6 +21,8 @@ export async function readAccentColour(): Promise<AccentColour> {
 
 export function onAccentColourChanged(listener: () => void): void {
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && ACCENT_COLOUR in changes) listener();
+    if (area === "local" && ACCENT_COLOUR in changes) {
+      listener();
+    }
   });
 }

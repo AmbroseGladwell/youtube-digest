@@ -61,16 +61,32 @@ export function captureQueueStrip(input: CaptureQueueStripInput): CaptureQueueSt
       tomorrow,
     };
   }
-  if (waiting > 0 && needsKey) return { kind: "noKey", waiting };
-  if (waiting > 0 && hold?.reason === "monthSpent") return { kind: "held", hold, waiting, viaExtension, limit };
-  if (waiting > 0 && paused) return { kind: "paused", waiting };
-  if (waiting > 0 && hold !== null) return { kind: "held", hold, waiting, viaExtension, limit: null };
-  if (notice?.kind === "checked") return notice;
+  if (waiting > 0 && needsKey) {
+    return { kind: "noKey", waiting };
+  }
+  if (waiting > 0 && hold?.reason === "monthSpent") {
+    return { kind: "held", hold, waiting, viaExtension, limit };
+  }
+  if (waiting > 0 && paused) {
+    return { kind: "paused", waiting };
+  }
+  if (waiting > 0 && hold !== null) {
+    return { kind: "held", hold, waiting, viaExtension, limit: null };
+  }
+  if (notice?.kind === "checked") {
+    return notice;
+  }
   if (ready === 0 && failed + skipped > 0 && batch !== null && !attentionDismissed) {
     return { kind: "attention", failed, skipped };
   }
-  if (ready === 0 && tomorrow > 0) return { kind: "doneForToday", tomorrow };
-  if (ready === 0 && forYou.waiting > 0) return { kind: "waitingForYou", ...forYou };
-  if (notice?.kind === "done") return notice;
+  if (ready === 0 && tomorrow > 0) {
+    return { kind: "doneForToday", tomorrow };
+  }
+  if (ready === 0 && forYou.waiting > 0) {
+    return { kind: "waitingForYou", ...forYou };
+  }
+  if (notice?.kind === "done") {
+    return notice;
+  }
   return null;
 }

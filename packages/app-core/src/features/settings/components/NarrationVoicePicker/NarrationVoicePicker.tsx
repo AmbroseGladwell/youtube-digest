@@ -61,14 +61,18 @@ export function NarrationVoicePicker({ scrollToChosen = false, labelledBy }: Nar
   const settingsLoaded = settings !== undefined;
 
   useEffect(() => {
-    if (!scrollToChosen || !settingsLoaded || scrolled.current) return;
+    if (!scrollToChosen || !settingsLoaded || scrolled.current) {
+      return;
+    }
     scrolled.current = true;
     chosenRow.current?.scrollIntoView({ block: "center" });
   }, [scrollToChosen, settingsLoaded]);
 
   const analytics = useAnalytics();
 
-  if (api === null) return null;
+  if (api === null) {
+    return null;
+  }
 
   const sampleFor = (voice: NarrationVoice): VoiceSample | null => samples.data?.find((sample) => sample.voice === voice) ?? null;
 

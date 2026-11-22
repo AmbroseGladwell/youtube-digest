@@ -9,7 +9,9 @@ export async function migrationsBefore(version: number): Promise<URL> {
   const source = fileURLToPath(new URL("../../migrations/", import.meta.url));
   const dir = await mkdtemp(join(tmpdir(), "migrations-"));
   for (const file of await readdir(source)) {
-    if (Number(file.slice(1, 5)) < version) await copyFile(join(source, file), join(dir, file));
+    if (Number(file.slice(1, 5)) < version) {
+      await copyFile(join(source, file), join(dir, file));
+    }
   }
   return pathToFileURL(`${dir}/`);
 }

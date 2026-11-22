@@ -11,7 +11,11 @@ import { RequestLinkFlow } from "../components/RequestLinkFlow/RequestLinkFlow.j
 // keeps design 9b's own page (docs/features/onboarding.md, "Every Create account").
 export function CreateAccountPage() {
   const accountNeeded = useAccountNeeded();
-  if (!accountNeeded) return <RequestLinkFlow intent="createAccount" />;
-  if (readOnboardingProgress() !== null) return <Navigate to={Routes.onboarding()} replace />;
+  if (!accountNeeded) {
+    return <RequestLinkFlow intent="createAccount" />;
+  }
+  if (readOnboardingProgress() !== null) {
+    return <Navigate to={Routes.onboarding()} replace />;
+  }
   return <Navigate to={Routes.home()} replace state={startAsked} />;
 }

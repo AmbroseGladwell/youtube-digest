@@ -54,7 +54,9 @@ export const CookingTimersProvider = CookingTimersContext.Provider;
 
 export function useCookingTimers(): CookingTimers {
   const timers = useContext(CookingTimersContext);
-  if (timers === null) throw new Error("useCookingTimers must be used within a CookingTimersProvider");
+  if (timers === null) {
+    throw new Error("useCookingTimers must be used within a CookingTimersProvider");
+  }
   return timers;
 }
 
@@ -73,6 +75,8 @@ export const CookingTimerListProvider = CookingTimerListContext.Provider;
 
 export function useCookingTimerList(): CookingTimerList {
   const list = useContext(CookingTimerListContext);
-  if (list === null) throw new Error("useCookingTimerList must be used within a CookingTimerListProvider");
+  if (list === null) {
+    throw new Error("useCookingTimerList must be used within a CookingTimerListProvider");
+  }
   return list;
 }

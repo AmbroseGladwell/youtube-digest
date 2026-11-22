@@ -38,7 +38,9 @@ export async function checkNoteKind(client: GenerationClient, sample: KindSample
     const { noteKind } = await requestGeneratedOutput<{ noteKind: NoteKind }>(client, composeKindCheckPrompt(sample));
     return noteKind;
   } catch (error) {
-    if (error instanceof SchemaFailureError) return "default";
+    if (error instanceof SchemaFailureError) {
+      return "default";
+    }
     throw error;
   }
 }

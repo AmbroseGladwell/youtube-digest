@@ -36,7 +36,9 @@ export class TranscriptsRepository {
     return this.#sql.transaction(async (tx) => {
       await tx.query("select id from accounts where id = $1 for update", [accountId]);
       const noted = await tx.query(liveNoteOn("$2"), [accountId, transcript.videoId]);
-      if (noted.length === 0) return "not-noted";
+      if (noted.length === 0) {
+        return "not-noted";
+      }
       await tx.query(
         `insert into account_transcripts (account_id, video_id, body, stored_at)
          values ($1, $2, $3::jsonb, $4::timestamptz)

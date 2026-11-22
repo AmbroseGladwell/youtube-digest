@@ -148,7 +148,9 @@ export function CaptureQueueStripView({ strip, compact, folded, onPause, onResum
         );
       case "held": {
         const way = strip.hold.reason === "monthSpent" ? (monthHoldWays(strip.limit)[0] ?? null) : null;
-        if (way === null) return unfold ?? queueLink(compact ? null : "Queue");
+        if (way === null) {
+          return unfold ?? queueLink(compact ? null : "Queue");
+        }
         return (
           <>
             <PageLink

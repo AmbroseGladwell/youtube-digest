@@ -44,7 +44,9 @@ const sources = await Promise.all(CHAT_SOURCES.map(loadChatSource));
 const roughTokens = (text: string) => Math.ceil(text.length / 4);
 function roughConversationDollars(source: LoadedChatSource, arm: ChatArm, model: string): number {
   const price = priceOf({ provider: "openai", model });
-  if (price === undefined) return 0;
+  if (price === undefined) {
+    return 0;
+  }
   const passages = transcriptPassages(source.fetched.transcript, windowS * 1000);
   const system = roughTokens(chatSystemPrompt(arm, source.overview, passages));
   const averagePassage = passages.reduce((sum, passage) => sum + roughTokens(passage.text), 0) / Math.max(passages.length, 1);
@@ -62,12 +64,13 @@ function roughConversationDollars(source: LoadedChatSource, arm: ChatArm, model:
 
 if (values["dry-run"]) {
   let total = 0;
-  for (const model of models)
+  for (const model of models) {
     for (const arm of arms) {
       const dollars = sources.reduce((sum, source) => sum + roughConversationDollars(source, arm, model), 0) * repeats;
       total += dollars;
       console.log(`${model.padEnd(14)} ${arm.padEnd(20)} ~$${dollars.toFixed(3)} uncached, ${repeats} repeat(s)`);
     }
+  }
   console.log(`total ~$${total.toFixed(2)} at most, before caching (characters / 4; a rough ceiling, not a measurement)`);
   process.exit(0);
 }

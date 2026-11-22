@@ -16,8 +16,12 @@ type SourceRef = ChatReply["introSources"][number];
 // rather than mid-word, or "Based on" when it backs the section (OV-362).
 export function relationOf(relation: string): string {
   const said = relation.trim();
-  if (said === "" || /^supports?\b/i.test(said)) return BACKING_RELATION;
-  if (said.length <= MAX_SOURCE_RELATION_LENGTH) return said;
+  if (said === "" || /^supports?\b/i.test(said)) {
+    return BACKING_RELATION;
+  }
+  if (said.length <= MAX_SOURCE_RELATION_LENGTH) {
+    return said;
+  }
   const cut = said.slice(0, MAX_SOURCE_RELATION_LENGTH + 1);
   const atWord = cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:.–—-]+$/, "");
   return atWord === "" ? said.slice(0, MAX_SOURCE_RELATION_LENGTH) : atWord;
@@ -41,7 +45,9 @@ export function structuredAnswer(
     return refs.flatMap((ref) =>
       cite([ref.id]).flatMap((citation) => {
         const key = JSON.stringify(citation);
-        if (seen.has(key)) return [];
+        if (seen.has(key)) {
+          return [];
+        }
         seen.add(key);
         return [{ citation, relation: relationOf(ref.relation) }];
       }),
@@ -50,12 +56,16 @@ export function structuredAnswer(
   const itemsOf = (items: ChatReply["sections"][number]["numbered"]): ChatListItem[] =>
     items.flatMap((item) => {
       const text = clean(item.text);
-      if (text === "") return [];
+      if (text === "") {
+        return [];
+      }
       const seen = new Set<string>();
       const sources = item.sources.flatMap((id) =>
         cite([id]).filter((citation) => {
           const key = JSON.stringify(citation);
-          if (seen.has(key)) return false;
+          if (seen.has(key)) {
+            return false;
+          }
           seen.add(key);
           return true;
         }),

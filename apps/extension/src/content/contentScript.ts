@@ -85,7 +85,9 @@ function reconcile(): void {
   const videoId = currentVideoId();
 
   if (videoId === null) {
-    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) stale.remove();
+    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) {
+      stale.remove();
+    }
     button = null;
     watchedVideoId = null;
     return;
@@ -97,7 +99,9 @@ function reconcile(): void {
   }
 
   if (button === null || !button.element.isConnected) {
-    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) stale.remove();
+    for (const stale of document.querySelectorAll(`#${OVERVIEW_BUTTON_ID}`)) {
+      stale.remove();
+    }
     button = new OverviewButton(press);
     button.setAccentColour(accentColour);
     watchedVideoId = null;

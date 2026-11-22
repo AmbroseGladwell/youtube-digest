@@ -125,8 +125,11 @@ export function ReadAlongNote({
 
   useLayoutEffect(() => {
     root.current?.querySelectorAll<HTMLElement>("[data-read-along-line]").forEach((element) => {
-      if (element.dataset.collapsed === "true") element.setAttribute("hidden", "until-found");
-      else element.removeAttribute("hidden");
+      if (element.dataset.collapsed === "true") {
+        element.setAttribute("hidden", "until-found");
+      } else {
+        element.removeAttribute("hidden");
+      }
     });
   });
   useEffect(() => {
@@ -137,7 +140,9 @@ export function ReadAlongNote({
   }, []);
 
   useEffect(() => {
-    if (citedIndex === null) return;
+    if (citedIndex === null) {
+      return;
+    }
     root.current
       ?.querySelector<HTMLElement>(`[data-line-index="${citedIndex}"]`)
       ?.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });

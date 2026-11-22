@@ -30,9 +30,13 @@ export function transcriptRoutes(
 ): void {
   // The words an account has a note on but no copy of, fetched for it and kept as its own.
   const fetchedFor = async (accountId: AccountId, videoId: VideoId, log: FastifyBaseLogger): Promise<StoredTranscript | null> => {
-    if (!(await transcripts.hasLiveNote(accountId, videoId))) return null;
+    if (!(await transcripts.hasLiveNote(accountId, videoId))) {
+      return null;
+    }
     const fetched = isYouTubeKey(videoId) ? await videoWords(videoId, accountId, log) : await episodeWords(videoId, accountId, log);
-    if (fetched === null || transcriptFault(fetched, videoId) !== null) return null;
+    if (fetched === null || transcriptFault(fetched, videoId) !== null) {
+      return null;
+    }
     await transcripts.putIfNoted(accountId, fetched);
     return fetched;
   };

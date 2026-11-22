@@ -38,7 +38,9 @@ export function planTagEdit(entries: readonly OverviewWithState[], aliases: TagA
     const userTags = retagged(state.userTags, from, edit.to);
     const tagsChanged = !same(tags, overview.tags);
     const userTagsChanged = !same(userTags, state.userTags);
-    if (!tagsChanged && !userTagsChanged) continue;
+    if (!tagsChanged && !userTagsChanged) {
+      continue;
+    }
     apply.push({
       overviewId: overview.id,
       ...(tagsChanged ? { tags } : {}),
@@ -63,7 +65,9 @@ export function planTagEdit(entries: readonly OverviewWithState[], aliases: TagA
 // The plan as the caches should read once it lands, for the optimistic paint.
 export function applyTagEditPlan<T extends OverviewWithState>(entry: T, plan: TagEditPlan): T {
   const write = plan.writes.find(({ overviewId }) => overviewId === entry.overview.id);
-  if (write === undefined) return entry;
+  if (write === undefined) {
+    return entry;
+  }
   return {
     ...entry,
     overview: write.tags === undefined ? entry.overview : { ...entry.overview, tags: write.tags },

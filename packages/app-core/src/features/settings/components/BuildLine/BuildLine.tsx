@@ -5,7 +5,9 @@ import { buildLineTestIds } from "./BuildLineTestIds.js";
 
 export function BuildLine() {
   const build = useAppBuild();
-  if (build === null) return null;
+  if (build === null) {
+    return null;
+  }
 
   return (
     <p className={styles.root} data-testid={buildLineTestIds.root}>

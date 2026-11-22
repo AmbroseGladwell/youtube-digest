@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import { spokenMeasures } from "./spokenMeasures.js";
 
 const says = (cases: Array<[string, string]>) => {
-  for (const [written, spoken] of cases) assert.equal(spokenMeasures(written), spoken, written);
+  for (const [written, spoken] of cases) {
+    assert.equal(spokenMeasures(written), spoken, written);
+  }
 };
 
 test("a unit after an amount is said in full, singular for one and plural for more", () => {

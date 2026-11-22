@@ -12,7 +12,11 @@ export interface KeyOrderContext {
 // overview uses"): Plus pays for ours, so it goes first; everyone else spends their own key
 // first and keeps ours as the safety net. "Only ever use my key" leaves the reader's key alone.
 export function keyOrderFor({ ourKeyUsable, plan, hasOwnKey, onlyMyKey }: KeyOrderContext): KeySource[] {
-  if (!hasOwnKey) return ourKeyUsable ? ["ours"] : [];
-  if (!ourKeyUsable || onlyMyKey) return ["own"];
+  if (!hasOwnKey) {
+    return ourKeyUsable ? ["ours"] : [];
+  }
+  if (!ourKeyUsable || onlyMyKey) {
+    return ["own"];
+  }
   return plan === "plus" ? ["ours", "own"] : ["own", "ours"];
 }

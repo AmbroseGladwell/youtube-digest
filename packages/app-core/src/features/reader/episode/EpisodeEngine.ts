@@ -60,14 +60,19 @@ export class EpisodeEngine {
   };
 
   toggle(): void {
-    if (this.#snapshot.status === "playing") this.pause();
-    else this.play();
+    if (this.#snapshot.status === "playing") {
+      this.pause();
+    } else {
+      this.play();
+    }
   }
 
   play(): void {
     const media = this.#ensureMedia();
     this.#options.onStart();
-    if (this.#snapshot.status === "idle" || this.#snapshot.status === "failed") this.#set({ status: "loading" });
+    if (this.#snapshot.status === "idle" || this.#snapshot.status === "failed") {
+      this.#set({ status: "loading" });
+    }
     media.play().catch(() => this.#set({ status: "failed" }));
   }
 
@@ -99,7 +104,9 @@ export class EpisodeEngine {
   // Leaving the overview stops the episode (owner, 13 Nov 2026, for now).
   dispose(): void {
     const media = this.#media;
-    if (media === null) return;
+    if (media === null) {
+      return;
+    }
     media.pause();
     media.removeAttribute("src");
     media.load();
@@ -107,7 +114,9 @@ export class EpisodeEngine {
   }
 
   #ensureMedia(): EpisodeMedia {
-    if (this.#media !== null) return this.#media;
+    if (this.#media !== null) {
+      return this.#media;
+    }
     const media = this.#options.createMedia();
     media.preload = "metadata";
     media.addEventListener("playing", () => this.#set({ status: "playing" }));
@@ -119,7 +128,9 @@ export class EpisodeEngine {
     );
     media.addEventListener("timeupdate", () => {
       const positionMs = media.currentTime * 1000;
-      if (this.#stopAtMs !== null && positionMs >= this.#stopAtMs) this.pause();
+      if (this.#stopAtMs !== null && positionMs >= this.#stopAtMs) {
+        this.pause();
+      }
       this.#set({ positionMs });
     });
     media.src = this.#options.audioUrl;
@@ -133,6 +144,8 @@ export class EpisodeEngine {
     if (this.#position.positionMs !== this.#snapshot.positionMs || this.#position.playing !== playing) {
       this.#position = { videoId: this.#options.playbackId, positionMs: this.#snapshot.positionMs, playing };
     }
-    for (const listener of this.#listeners) listener();
+    for (const listener of this.#listeners) {
+      listener();
+    }
   }
 }

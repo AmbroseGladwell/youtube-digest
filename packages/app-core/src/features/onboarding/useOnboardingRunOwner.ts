@@ -16,7 +16,9 @@ const openChannel = (): BroadcastChannel | null =>
 
 const messageOf = (event: MessageEvent): OnboardingRunMessage | null => {
   const data: unknown = event.data;
-  if (typeof data !== "object" || data === null || !("type" in data) || !("link" in data)) return null;
+  if (typeof data !== "object" || data === null || !("type" in data) || !("link" in data)) {
+    return null;
+  }
   return data as OnboardingRunMessage;
 };
 
@@ -43,9 +45,13 @@ export function useOnboardingRunOwner({
   latest.current = { phase, claim };
 
   useEffect(() => {
-    if (!mine || !wanted || link === null) return;
+    if (!mine || !wanted || link === null) {
+      return;
+    }
     const channel = openChannel();
-    if (channel === null) return;
+    if (channel === null) {
+      return;
+    }
     channel.onmessage = (event) => {
       const message = messageOf(event);
       if (message?.type === "ask" && message.link === link) {
@@ -57,7 +63,9 @@ export function useOnboardingRunOwner({
 
   useEffect(() => {
     setHeld(null);
-    if (mine || !wanted || link === null) return;
+    if (mine || !wanted || link === null) {
+      return;
+    }
     const channel = openChannel();
     if (channel === null) {
       latest.current.claim();
@@ -76,13 +84,18 @@ export function useOnboardingRunOwner({
       answered = false;
       channel.postMessage({ type: "ask", link } satisfies OnboardingRunMessage);
       timer = setTimeout(() => {
-        if (answered) timer = setTimeout(ask, ASK_EVERY_MS - ANSWER_WITHIN_MS);
-        else latest.current.claim();
+        if (answered) {
+          timer = setTimeout(ask, ASK_EVERY_MS - ANSWER_WITHIN_MS);
+        } else {
+          latest.current.claim();
+        }
       }, ANSWER_WITHIN_MS);
     };
     ask();
     return () => {
-      if (timer !== null) clearTimeout(timer);
+      if (timer !== null) {
+        clearTimeout(timer);
+      }
       channel.close();
     };
   }, [mine, wanted, link]);

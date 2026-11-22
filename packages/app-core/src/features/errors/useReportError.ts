@@ -6,6 +6,8 @@ import { useErrorReporter } from "./ErrorReporterContext.js";
 export function useReportError(error: unknown, source: ClientErrorSource, { handled = true } = {}): void {
   const reporter = useErrorReporter();
   useEffect(() => {
-    if (error !== undefined && error !== null) reporter.report(error, source, { handled });
+    if (error !== undefined && error !== null) {
+      reporter.report(error, source, { handled });
+    }
   }, [reporter, error, source, handled]);
 }

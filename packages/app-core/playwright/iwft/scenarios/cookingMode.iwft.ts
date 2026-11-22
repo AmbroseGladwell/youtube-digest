@@ -124,7 +124,9 @@ test("leaving keeps the place, and the method offers to carry on from it", async
   await library.nthCard(0).openReader();
 
   await page.getByTestId("RecipeMethod.cook").click();
-  for (let press = 0; press < 3; press += 1) await page.getByTestId("CookingMode.forward").click();
+  for (let press = 0; press < 3; press += 1) {
+    await page.getByTestId("CookingMode.forward").click();
+  }
   await expect(page.getByTestId("CookingMode.place")).toHaveText("Step 2");
   await page.getByTestId("CookingMode.done").click();
 
@@ -300,7 +302,9 @@ test("the button above the summary starts cooking, and carries on from the place
   await expect(page.getByTestId("RecipeCookButton.root")).toHaveText("Cook step by step");
   await page.getByTestId("RecipeCookButton.root").click();
   await expect(page.getByTestId("CookingMode.action")).toHaveText("Heat the oil in a large pan.");
-  for (let press = 0; press < 3; press += 1) await page.getByTestId("CookingMode.forward").click();
+  for (let press = 0; press < 3; press += 1) {
+    await page.getByTestId("CookingMode.forward").click();
+  }
   await page.getByTestId("CookingMode.done").click();
 
   await expect(page.getByTestId("RecipeCookButton.root")).toHaveText("Carry on from step 2");

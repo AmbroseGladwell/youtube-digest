@@ -80,7 +80,9 @@ interface Fraction {
 
 const readAmount = (amount: string): Fraction => {
   const mixed = amount.match(new RegExp(`^(\\d+)?[\\s-]?(?:([${FRACTION_CHARS}])|(\\d)\\/(\\d{1,2}))$`, "u"));
-  if (mixed === null) return { whole: null, parts: null, plain: amount };
+  if (mixed === null) {
+    return { whole: null, parts: null, plain: amount };
+  }
   const parts: [number, number] = mixed[2] ? UNICODE_FRACTION[mixed[2]]! : [Number(mixed[3]), Number(mixed[4])];
   const named = parts[0] < parts[1] && (parts[1] === 2 || PART_NAME[parts[1]] !== undefined);
   return named
@@ -131,7 +133,9 @@ const lonePart = (_: string, whole: string | undefined, char: string) => {
 const packShare = (_: string, whole: string | undefined, char: string, size: string) => {
   const parts = UNICODE_FRACTION[char]!;
   const a = /^(?:8|1[18](?!\d))/.test(size) ? "an" : "a";
-  if (whole !== undefined) return `${whole} and ${partWords(parts)} `;
+  if (whole !== undefined) {
+    return `${whole} and ${partWords(parts)} `;
+  }
   return parts[1] === 2 ? `half ${a} ` : `${partWords(parts)} of ${a} `;
 };
 

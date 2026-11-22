@@ -14,7 +14,9 @@ export function useToast() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   useEffect(() => {
-    if (toast === null) return;
+    if (toast === null) {
+      return;
+    }
     const timer = setTimeout(() => setToast(null), toast.undo === null ? TOAST_MS : UNDO_TOAST_MS);
     return () => clearTimeout(timer);
   }, [toast]);

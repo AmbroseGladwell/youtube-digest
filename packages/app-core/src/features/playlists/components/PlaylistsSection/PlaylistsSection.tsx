@@ -32,8 +32,12 @@ const NOT_A_PLAYLIST = "That doesn’t look like a YouTube playlist link.";
 // A playlist link pasted here means the playlist, even when it opens one of its videos.
 function settingsTargetOf(url: string): PlaylistTarget | null {
   const link = youTubeLink(url);
-  if (link === null || link.kind === "video") return null;
-  if (link.kind === "unfollowable") return { kind: "unfollowable", list: link.list, videoUrl: null };
+  if (link === null || link.kind === "video") {
+    return null;
+  }
+  if (link.kind === "unfollowable") {
+    return { kind: "unfollowable", list: link.list, videoUrl: null };
+  }
   return { kind: "playlist", playlistId: link.playlistId };
 }
 
@@ -67,7 +71,9 @@ export function PlaylistsSection() {
   const overviewCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const { overview } of readableEntries(overviews.data ?? [])) {
-      if (overview.fromPlaylist !== null) counts.set(overview.fromPlaylist.id, (counts.get(overview.fromPlaylist.id) ?? 0) + 1);
+      if (overview.fromPlaylist !== null) {
+        counts.set(overview.fromPlaylist.id, (counts.get(overview.fromPlaylist.id) ?? 0) + 1);
+      }
     }
     return counts;
   }, [overviews.data]);

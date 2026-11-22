@@ -46,7 +46,9 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
   const pendingDeletions = useRef<PendingDeletion[]>([]);
 
   useEffect(() => {
-    if (wanted === library.accountId) return;
+    if (wanted === library.accountId) {
+      return;
+    }
     let superseded = false;
     openLibrary(wanted).then(
       (opened) => {
@@ -54,14 +56,20 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
           opened.close();
           return;
         }
-        for (const query of queryClient.getQueryCache().getAll()) query.reset();
+        for (const query of queryClient.getQueryCache().getAll()) {
+          query.reset();
+        }
         setLibrary(opened);
       },
       (error: unknown) => {
-        if (superseded) return;
+        if (superseded) {
+          return;
+        }
         console.error(error);
         const blocked = error instanceof Error && error.name === BLOCKED;
-        if (!blocked) void reportStartupFailure(error, { surface, layout, build, defaultApiUrl });
+        if (!blocked) {
+          void reportStartupFailure(error, { surface, layout, build, defaultApiUrl });
+        }
         setFailure({ blocked });
       },
     );
@@ -71,13 +79,17 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
   }, [wanted, library.accountId, openLibrary, queryClient, surface, layout, build, defaultApiUrl]);
 
   useEffect(() => {
-    if (shown.current === library) return;
+    if (shown.current === library) {
+      return;
+    }
     shown.current.close();
     shown.current = library;
     void queryClient.resetQueries();
     const ready = pendingDeletions.current.filter(({ accountId }) => accountId !== library.accountId);
     pendingDeletions.current = pendingDeletions.current.filter((pending) => !ready.includes(pending));
-    for (const { accountId, resolve, reject } of ready) deleteLibrary(accountId).then(resolve, reject);
+    for (const { accountId, resolve, reject } of ready) {
+      deleteLibrary(accountId).then(resolve, reject);
+    }
   }, [library, queryClient, deleteLibrary]);
 
   // A deleted account's library goes once the app has swapped away from it and closed it,
@@ -94,7 +106,9 @@ export function LibraryRuntime({ library: initial, openLibrary, deleteLibrary, c
     [deleteLibrary],
   );
 
-  if (failure !== null) return <StartupFailure blocked={failure.blocked} />;
+  if (failure !== null) {
+    return <StartupFailure blocked={failure.blocked} />;
+  }
 
   return (
     <OpenLibraryProvider value={openLibrary}>

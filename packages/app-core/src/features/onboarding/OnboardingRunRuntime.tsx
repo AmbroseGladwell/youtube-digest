@@ -28,7 +28,9 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
   // The answers have been given, and the account they were moved into exists (OV-327).
   const maySpend = (progress?.mayWrite ?? false) && accountId !== null && libraryMove.answersIn === accountId;
   const claim = useCallback(() => {
-    if (wanted) update({ runner: onboardingTabId() });
+    if (wanted) {
+      update({ runner: onboardingTabId() });
+    }
   }, [wanted, update]);
 
   const run = useOnboardingRun({
@@ -39,7 +41,9 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
     attempt,
     transcribe: link !== null && transcribing?.link === link ? transcribing.choice : undefined,
     onFound: (found) => {
-      if (progress?.sourceKey === null) update({ sourceKey: sourceKey(found.source) });
+      if (progress?.sourceKey === null) {
+        update({ sourceKey: sourceKey(found.source) });
+      }
     },
     onMade: (overview) => update({ overviewId: overview.id }),
   });
@@ -62,12 +66,18 @@ export function OnboardingRunRuntime({ children }: { children: ReactNode }) {
       mine,
       attempt,
       retry: () => {
-        if (!mine) claim();
+        if (!mine) {
+          claim();
+        }
         setAttempt((current) => current + 1);
       },
       transcribe: () => {
-        if (!mine) claim();
-        if (link !== null) setTranscribing({ link, choice: transcribing?.link === link ? "retried" : "asked" });
+        if (!mine) {
+          claim();
+        }
+        if (link !== null) {
+          setTranscribing({ link, choice: transcribing?.link === link ? "retried" : "asked" });
+        }
         setAttempt((current) => current + 1);
       },
     };

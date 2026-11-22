@@ -107,7 +107,9 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
   const isFresh = (known: KnownWordSource) => known.source.via === "tag" || clock().getTime() - known.foundAt.getTime() < MATCH_KEPT_MS;
 
   const captionsOf = async (key: SourceKey, videoId: string, caller: ServiceCaller, log: FastifyBaseLogger) => {
-    if (youTubeService === null) throw noCaptions("Our server doesn't fetch from YouTube", "podcast-youtube");
+    if (youTubeService === null) {
+      throw noCaptions("Our server doesn't fetch from YouTube", "podcast-youtube");
+    }
     const captions = await youTubeService.resolve(VideoId.parse(videoId), caller, log);
     const transcript: StoredTranscript = {
       videoId: key,
@@ -115,40 +117,54 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
       generated: captions.transcript.generated,
       fetchedAt: clock().toISOString(),
     };
-    if (transcriptFault(transcript, key) !== null) throw noCaptions("The video's captions couldn't be read", "podcast-youtube");
+    if (transcriptFault(transcript, key) !== null) {
+      throw noCaptions("The video's captions couldn't be read", "podcast-youtube");
+    }
     return transcript;
   };
 
   const fromTag = async (key: SourceKey, links: readonly PodcastTranscriptLink[]) => {
     for (const { link, format } of byPreference(links)) {
       const answer = await fetchPublicWeb(link.url, { accept: link.type });
-      if (answer.status === "failed") continue;
+      if (answer.status === "failed") {
+        continue;
+      }
       const text = await readBodyText(answer.response, MOST_TRANSCRIPT_BYTES).catch(() => null);
-      if (text === null) continue;
+      if (text === null) {
+        continue;
+      }
       const transcript: StoredTranscript = {
         videoId: key,
         segments: parsePodcastTranscript(text, format),
         generated: true,
         fetchedAt: clock().toISOString(),
       };
-      if (transcriptFault(transcript, key) === null) return { transcript, format, link };
+      if (transcriptFault(transcript, key) === null) {
+        return { transcript, format, link };
+      }
     }
     return null;
   };
 
   const fromYouTube = async (key: SourceKey, episode: EpisodeToFind, ask: Exclude<YouTubeAsk, null>, request: PodcastTranscriptRequest) => {
-    if (youTubeService === null || youTubeEpisodes === null) throw noCaptions("Our server doesn't fetch from YouTube", "podcast-youtube");
+    if (youTubeService === null || youTubeEpisodes === null) {
+      throw noCaptions("Our server doesn't fetch from YouTube", "podcast-youtube");
+    }
     let found: { videoId: string; matchedBy: "title" | "description"; searchedBy: "extension" | "server" };
     if ("videoId" in ask) {
       const matchedBy = await youTubeEpisodes.confirm(episode, ask.videoId).catch(dataApiUnavailable);
-      if (matchedBy === null) throw new MatchUnconfirmedError();
+      if (matchedBy === null) {
+        throw new MatchUnconfirmedError();
+      }
       found = { videoId: ask.videoId, matchedBy, searchedBy: "extension" };
     } else {
       const search = await youTubeEpisodes.find(episode).catch(dataApiUnavailable);
       request.log.info(
         apiLogLines.podcasts.youTubeSearched({ units: search.units, searches: search.searches, found: search.found !== null }),
       );
-      if (search.found === null) throw noCaptions("The episode isn't on its show's YouTube channel", "podcast-youtube");
+      if (search.found === null) {
+        throw noCaptions("The episode isn't on its show's YouTube channel", "podcast-youtube");
+      }
       found = { videoId: search.found.videoId, matchedBy: search.found.via, searchedBy: "server" };
     }
     return {
@@ -161,9 +177,13 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
   // A match kept past its 30 days, checked again against the episode for one quota unit, and kept
   // another 30 if it still is the episode.
   const refreshed = async (key: SourceKey, episode: EpisodeToFind, videoId: string, request: PodcastTranscriptRequest) => {
-    if (youTubeEpisodes === null || (await youTubeEpisodes.confirm(episode, videoId).catch(() => null)) === null) return null;
+    if (youTubeEpisodes === null || (await youTubeEpisodes.confirm(episode, videoId).catch(() => null)) === null) {
+      return null;
+    }
     const transcript = await captionsOf(key, videoId, request.caller, request.log).catch(() => null);
-    if (transcript !== null) await sources.put(key, { via: "youtube", videoId }, clock());
+    if (transcript !== null) {
+      await sources.put(key, { via: "youtube", videoId }, clock());
+    }
     return transcript;
   };
 
@@ -174,7 +194,9 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
     caller: ServiceCaller,
     log: FastifyBaseLogger,
   ): Promise<StoredTranscript | null> => {
-    if (source.via === "tag") return (await fromTag(key, [{ url: source.url, type: source.type, language: null }]))?.transcript ?? null;
+    if (source.via === "tag") {
+      return (await fromTag(key, [{ url: source.url, type: source.type, language: null }]))?.transcript ?? null;
+    }
     return captionsOf(key, source.videoId, caller, log).catch(() => null);
   };
 
@@ -191,7 +213,9 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
     const known = await sources.get(key);
     if (known !== null && isFresh(known)) {
       const words = await fromSource(key, known.source, request.caller, request.log);
-      if (words !== null) return { transcript: words, answer: { via: "remembered", from: known.source.via } };
+      if (words !== null) {
+        return { transcript: words, answer: { via: "remembered", from: known.source.via } };
+      }
       await sources.forget(key);
     }
     const toRefresh = known !== null && !isFresh(known) && known.source.via === "youtube" ? known.source.videoId : null;
@@ -216,7 +240,9 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
       await sources.put(key, { via: "tag", url: tagged.link.url, type: tagged.link.type }, clock());
       return { transcript: tagged.transcript, answer: { via: "tag", format: tagged.format } };
     }
-    if (item.title === null || show.title === null) throw noCaptions("The episode's feed offers no transcript we can read", "podcast-tag");
+    if (item.title === null || show.title === null) {
+      throw noCaptions("The episode's feed offers no transcript we can read", "podcast-tag");
+    }
     const episode: EpisodeToFind = {
       showName: show.title,
       title: item.title,
@@ -226,10 +252,14 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
     };
     if (toRefresh !== null) {
       const words = await refreshed(key, episode, toRefresh, request);
-      if (words !== null) return { transcript: words, answer: { via: "remembered", from: "youtube" } };
+      if (words !== null) {
+        return { transcript: words, answer: { via: "remembered", from: "youtube" } };
+      }
       await sources.forget(key);
     }
-    if (request.youTube === null) throw noCaptions("The episode's feed offers no transcript we can read", "podcast-tag");
+    if (request.youTube === null) {
+      throw noCaptions("The episode's feed offers no transcript we can read", "podcast-tag");
+    }
     const answered = await fromYouTube(key, episode, request.youTube, request);
     await sources.put(key, { via: "youtube", videoId: answered.videoId }, clock());
     return { transcript: answered.transcript, answer: answered.answer };
@@ -242,17 +272,25 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
   const check = async (request: PodcastTranscriptCheckRequest): Promise<PodcastTranscriptCheck> => {
     const key = await podcastSourceKey(request);
     const known = await sources.get(key);
-    if (known !== null && isFresh(known)) return { words: "found", via: "remembered" };
+    if (known !== null && isFresh(known)) {
+      return { words: "found", via: "remembered" };
+    }
 
     const read = await fetchFeedEpisode(fetchPublicWeb, request.feedUrl, (item) => feedItemGuid(item) === request.guid);
-    if (read.status === "failed" || read.feed.item === null) return { words: "unknown", via: "feed" };
+    if (read.status === "failed" || read.feed.item === null) {
+      return { words: "unknown", via: "feed" };
+    }
     const { item, show, neighbourNotes } = read.feed;
-    if (byPreference(item.transcripts).length > 0) return { words: "found", via: "tag" };
+    if (byPreference(item.transcripts).length > 0) {
+      return { words: "found", via: "tag" };
+    }
     const none = {
       words: "none" as const,
       episode: { sourceKey: key, durationSeconds: item.durationSeconds, audioUrl: item.audioUrl },
     };
-    if (item.title === null || show.title === null || youTubeEpisodes === null || youTubeService === null) return none;
+    if (item.title === null || show.title === null || youTubeEpisodes === null || youTubeService === null) {
+      return none;
+    }
     const episode: EpisodeToFind = {
       showName: show.title,
       title: item.title,
@@ -266,15 +304,21 @@ export function createPodcastTranscripts({ fetchPublicWeb, sources, youTubeServi
         await sources.put(key, { via: "youtube", videoId: stale }, clock());
         return { words: "found", via: "youtube" };
       }
-      if (request.youTube === null) return none;
+      if (request.youTube === null) {
+        return none;
+      }
       // A video the reader's extension found is theirs to fetch captions from even when our server
       // can't confirm it, as Create does (podcastTranscript on the client).
-      if ("videoId" in request.youTube) return { words: "found", via: "youtube" };
+      if ("videoId" in request.youTube) {
+        return { words: "found", via: "youtube" };
+      }
       const search = await youTubeEpisodes.find(episode);
       request.log.info(
         apiLogLines.podcasts.youTubeSearched({ units: search.units, searches: search.searches, found: search.found !== null }),
       );
-      if (search.found === null) return none;
+      if (search.found === null) {
+        return none;
+      }
       await sources.put(key, { via: "youtube", videoId: search.found.videoId }, clock());
       return { words: "found", via: "youtube" };
     } catch {

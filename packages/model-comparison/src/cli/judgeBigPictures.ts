@@ -65,7 +65,9 @@ if (!values["measure-only"]) {
       (record.error ? `\n    ${record.error.slice(0, 300)}` : ""),
     log,
   });
-  if (outcome.stoppedForBudget) log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
+  if (outcome.stoppedForBudget) {
+    log(`Stopped at the $${budgetDollars.toFixed(2)} budget.`);
+  }
 }
 
 const markdown = bigPictureMarkdown(runs, await store.all(), byVideo, values.run);

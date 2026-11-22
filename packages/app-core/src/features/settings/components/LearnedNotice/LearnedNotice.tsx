@@ -31,7 +31,9 @@ export function LearnedNotice() {
     for (const text of texts) {
       const key = learnedItemKey(text);
       const item = learned[key];
-      if (item !== undefined) patch[key] = { ...item, noticedAt: at, ...(field === "removedAt" ? { removedAt: at } : {}) };
+      if (item !== undefined) {
+        patch[key] = { ...item, noticedAt: at, ...(field === "removedAt" ? { removedAt: at } : {}) };
+      }
     }
     updateSettings.mutate({ learned: patch });
   };
@@ -54,7 +56,9 @@ export function LearnedNotice() {
       const timer = window.setTimeout(() => setUndone(false), UNDONE_SHOWN_MS);
       return () => window.clearTimeout(timer);
     }
-    if (shown === 0 || held) return;
+    if (shown === 0 || held) {
+      return;
+    }
     const timer = window.setTimeout(noticeAll, SHOWN_MS);
     return () => window.clearTimeout(timer);
   }, [texts, held, undone]);
@@ -68,7 +72,9 @@ export function LearnedNotice() {
       </div>
     );
   }
-  if (shown === 0) return null;
+  if (shown === 0) {
+    return null;
+  }
 
   const one = items.length === 1;
   const undo = (text: string) => {

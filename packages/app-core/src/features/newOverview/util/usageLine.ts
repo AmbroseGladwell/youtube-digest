@@ -61,7 +61,9 @@ export function usageLineOf(next: NextQuota, { narrow = false, plan = null }: Us
 
 // The Settings row beside Plan: the plan, and what's left of the next quota (design 95d).
 export function planRowCount(next: NextQuota | null): string | null {
-  if (next === null) return null;
+  if (next === null) {
+    return null;
+  }
   switch (next.kind) {
     case "checking":
       return CHECKING;

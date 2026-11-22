@@ -19,9 +19,13 @@ export function useOverviewSelection(placeKey: string) {
   };
 
   useEffect(() => {
-    if (!selecting) return;
+    if (!selecting) {
+      return;
+    }
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && document.querySelector("dialog[open]") === null) stop();
+      if (event.key === "Escape" && document.querySelector("dialog[open]") === null) {
+        stop();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -35,8 +39,11 @@ export function useOverviewSelection(placeKey: string) {
     toggle: (id: string) =>
       setPicked((current) => {
         const next = new Set(current);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
+        if (next.has(id)) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
         return next;
       }),
   };

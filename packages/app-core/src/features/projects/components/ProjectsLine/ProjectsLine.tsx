@@ -29,7 +29,9 @@ const joined = (parts: ReactNode[]): ReactNode[] =>
 // Which projects the overview is in, on the From line's quiet scale: up to three by name,
 // four or more as two and how many more ("OV-168 3 Adding and Making" 168r, 168r-3).
 export function ProjectsLine({ projects, webApp, onOpen, onChange }: ProjectsLineProps) {
-  if (projects.length === 0) return null;
+  if (projects.length === 0) {
+    return null;
+  }
   const shown = projects.length > SHOWN_IN_FULL ? projects.slice(0, 2) : projects;
   const more = projects.length - shown.length;
   const names = shown.map((project) => <ProjectName key={project.id} project={project} webApp={webApp} onOpen={onOpen} />);
@@ -104,7 +106,9 @@ function ProjectName({
         <StrokeIcon name="openOut" size={12} />
       </a>
     );
-  if (!cut) return link;
+  if (!cut) {
+    return link;
+  }
   return (
     <span className={styles.cutWrap}>
       {link}

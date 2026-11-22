@@ -84,7 +84,9 @@ export function AboutYouSheet({ section, entries, topicNames, headingId, heading
               onOpen={() => setOpenGroup(group.name)}
               onClose={() => setOpenGroup(null)}
               onAdd={(entry) => {
-                if (!entries.includes(entry)) onChange([...entries, entry]);
+                if (!entries.includes(entry)) {
+                  onChange([...entries, entry]);
+                }
               }}
             />
           </div>
@@ -127,8 +129,11 @@ function YourOwn({ group, entries, open, onOpen, onClose, onAdd }: YourOwnProps)
   const wasOpen = useRef(false);
 
   useEffect(() => {
-    if (open) field.current?.focus();
-    else if (wasOpen.current) chip.current?.focus();
+    if (open) {
+      field.current?.focus();
+    } else if (wasOpen.current) {
+      chip.current?.focus();
+    }
     wasOpen.current = open;
   }, [open]);
 
@@ -154,7 +159,9 @@ function YourOwn({ group, entries, open, onOpen, onClose, onAdd }: YourOwnProps)
   const full = typed.length >= room;
   const add = () => {
     const entry = typed.trim();
-    if (entry === "") return;
+    if (entry === "") {
+      return;
+    }
     onAdd(entry);
     setTyped("");
     field.current?.focus();

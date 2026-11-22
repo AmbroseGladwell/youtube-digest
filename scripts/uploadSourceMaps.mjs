@@ -48,7 +48,9 @@ export function uploadSourceMaps({ dir, releaseName, env = process.env, run = ru
   } else if (maps.length > 0) {
     log(`source maps: no POSTHOG_CLI_API_KEY and POSTHOG_CLI_PROJECT_ID, so ${maps.length} deleted without uploading`);
   }
-  for (const map of mapsIn(dir)) rmSync(map);
+  for (const map of mapsIn(dir)) {
+    rmSync(map);
+  }
   return { maps: maps.length, uploaded };
 }
 

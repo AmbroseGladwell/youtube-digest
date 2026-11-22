@@ -10,7 +10,9 @@ export function kindSampleOfVideo(input: Pick<GenerationInput, "video" | "transc
   const opening: string[] = [];
   let words = 0;
   for (const { text } of input.transcript) {
-    if (words >= KIND_CHECK_OPENING_WORDS) break;
+    if (words >= KIND_CHECK_OPENING_WORDS) {
+      break;
+    }
     opening.push(text);
     words += wordCount(text);
   }

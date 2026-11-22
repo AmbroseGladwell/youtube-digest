@@ -53,7 +53,9 @@ export class AnalyticsQueue {
 
   record(name: AnalyticsEventName, props: Record<string, string | number | boolean>): void {
     const mode = this.#mode();
-    if (mode === "discard") return;
+    if (mode === "discard") {
+      return;
+    }
     const now = this.#now();
     if (now.getTime() - this.#minuteStartedAt >= MINUTE_MS) {
       this.#minuteStartedAt = now.getTime();
@@ -65,7 +67,9 @@ export class AnalyticsQueue {
     }
     this.#inMinute += 1;
     this.#held.push({ name, props, at: now.toISOString() });
-    if (mode === "send") this.#timer ??= setTimeout(() => void this.flush(), this.#batchWindowMs);
+    if (mode === "send") {
+      this.#timer ??= setTimeout(() => void this.flush(), this.#batchWindowMs);
+    }
   }
 
   async flush({ keepalive }: SendOptions = { keepalive: false }): Promise<void> {
@@ -73,9 +77,13 @@ export class AnalyticsQueue {
       clearTimeout(this.#timer);
       this.#timer = null;
     }
-    if (this.#held.length === 0) return;
+    if (this.#held.length === 0) {
+      return;
+    }
     const mode = this.#mode();
-    if (mode === "hold") return;
+    if (mode === "hold") {
+      return;
+    }
     if (mode === "discard") {
       this.#held = [];
       this.#dropped = 0;
@@ -93,7 +101,9 @@ export class AnalyticsQueue {
   }
 
   dispose(): void {
-    if (this.#timer !== null) clearTimeout(this.#timer);
+    if (this.#timer !== null) {
+      clearTimeout(this.#timer);
+    }
     this.#timer = null;
     this.#held = [];
   }

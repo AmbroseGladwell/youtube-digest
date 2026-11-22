@@ -45,12 +45,18 @@ export async function chatTurn(apiKey: string, model: string, messages: readonly
     }),
     signal: AbortSignal.timeout(180_000),
   });
-  if (!response.ok) throw new Error(`OpenAI answered ${response.status}: ${await response.text()}`);
+  if (!response.ok) {
+    throw new Error(`OpenAI answered ${response.status}: ${await response.text()}`);
+  }
   const body = (await response.json()) as { choices?: { message?: { content?: unknown } }[] };
   const latencyMs = Math.round(performance.now() - started);
   const raw = body.choices?.[0]?.message?.content;
-  if (typeof raw !== "string") throw new Error("the reply had no text content");
+  if (typeof raw !== "string") {
+    throw new Error("the reply had no text content");
+  }
   const usage = tokenUsageOf("openai", body);
-  if (usage === null) throw new Error("the reply had no token usage");
+  if (usage === null) {
+    throw new Error("the reply had no token usage");
+  }
   return { reply: ChatReply.parse(JSON.parse(raw)), raw, usage, latencyMs };
 }

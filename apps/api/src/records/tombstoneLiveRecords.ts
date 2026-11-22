@@ -12,7 +12,9 @@ export async function tombstoneLiveRecords(
   idPattern: string,
 ): Promise<number> {
   const ids = await records.listLiveIds(accountId, kind, idPattern);
-  if (ids.length === 0) return 0;
+  if (ids.length === 0) {
+    return 0;
+  }
   const written = await records.write(
     accountId,
     ids.map((id) => ({

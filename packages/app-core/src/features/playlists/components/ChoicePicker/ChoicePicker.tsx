@@ -57,18 +57,28 @@ export function ChoicePicker<Choice extends string>({
   useDismissOnOutside(open && !asSheet, close, root);
 
   useEffect(() => {
-    if (open && !asSheet) options.current[choices.indexOf(choice)]?.focus();
+    if (open && !asSheet) {
+      options.current[choices.indexOf(choice)]?.focus();
+    }
   }, [open, asSheet, choice, choices]);
 
   useEffect(() => {
     const element = sheet.current;
-    if (element === null) return;
-    if (open && asSheet && !element.open) element.showModal();
-    if (!open && element.open) element.close();
+    if (element === null) {
+      return;
+    }
+    if (open && asSheet && !element.open) {
+      element.showModal();
+    }
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open, asSheet]);
 
   const choose = (next: Choice) => {
-    if (next !== choice) onChange(next);
+    if (next !== choice) {
+      onChange(next);
+    }
   };
 
   const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -146,7 +156,9 @@ export function ChoicePicker<Choice extends string>({
             close();
           }}
           onClick={(event) => {
-            if (event.target === sheet.current) close();
+            if (event.target === sheet.current) {
+              close();
+            }
           }}
           data-testid={choicePickerTestIds.sheet(name)}
         >

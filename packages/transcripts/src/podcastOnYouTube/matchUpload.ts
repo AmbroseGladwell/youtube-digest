@@ -46,7 +46,9 @@ const numbersDisagree = (a: readonly string[], b: readonly string[]): boolean =>
 // title and not the length, so it is never taken for the episode.
 export function titleMatch<Upload extends ListedUpload>(episode: EpisodeToFind, uploads: readonly Upload[]): Upload | null {
   const words = titleWords(episode.title);
-  if (words.length < 2) return null;
+  if (words.length < 2) {
+    return null;
+  }
   return (
     uploads.find((upload) => {
       const uploadWords = titleWords(upload.title);
@@ -69,7 +71,9 @@ export const daysAgo = (iso: string, now: Date): number => (now.getTime() - Date
 // Listed around the episode's date, by YouTube's rounded "3 weeks ago".
 export function listedNearItsDate(episode: EpisodeToFind, upload: ListedUpload, now: Date): boolean {
   const age = upload.age === null ? null : ageInDays(upload.age);
-  if (episode.publishedAt === null || age === null) return false;
+  if (episode.publishedAt === null || age === null) {
+    return false;
+  }
   const episodeDaysAgo = daysAgo(episode.publishedAt, now);
   return episodeDaysAgo >= age.fewest - CANDIDATE_DAYS_SLACK && episodeDaysAgo <= age.most + CANDIDATE_DAYS_SLACK;
 }

@@ -25,10 +25,14 @@ export function ChatChipRow({ chips, hiddenLabels, align = "start", testId }: Ch
 
   // The menu opens toward whichever side has room, so it never runs off a phone's screen (OV-368).
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const hostBox = host.current?.getBoundingClientRect();
     const width = menu.current?.offsetWidth ?? 0;
-    if (hostBox === undefined) return;
+    if (hostBox === undefined) {
+      return;
+    }
     const roomRight = window.innerWidth - hostBox.left;
     const roomLeft = hostBox.right;
     setToEnd(align === "end" ? roomLeft >= width || roomLeft >= roomRight : roomRight < width && roomLeft > roomRight);

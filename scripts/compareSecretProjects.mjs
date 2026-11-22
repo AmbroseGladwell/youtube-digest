@@ -47,5 +47,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   const rows = compareSecretProjects(secretsByProject);
   console.log(formatComparison(Object.keys(secretsByProject), rows));
-  if (rows.some((row) => row.shared)) process.exitCode = 1;
+  if (rows.some((row) => row.shared)) {
+    process.exitCode = 1;
+  }
 }

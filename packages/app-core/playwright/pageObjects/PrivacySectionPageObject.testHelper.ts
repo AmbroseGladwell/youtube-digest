@@ -31,8 +31,11 @@ export class PrivacySectionPageObject extends PageObject {
       ] as const) {
         const link = this.get(testId);
         await expect(link).toHaveAttribute("href", new RegExp(`${origin.source}/${page}$`));
-        if (opensElsewhere) await expect(link).toHaveAttribute("target", "_blank");
-        else await expect(link).not.toHaveAttribute("target");
+        if (opensElsewhere) {
+          await expect(link).toHaveAttribute("target", "_blank");
+        } else {
+          await expect(link).not.toHaveAttribute("target");
+        }
       }
     });
 

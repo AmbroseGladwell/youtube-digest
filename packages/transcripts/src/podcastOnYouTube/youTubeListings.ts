@@ -14,10 +14,14 @@ const isObject = (value: unknown): value is Record<string, unknown> => typeof va
 
 function everyValueAt(value: unknown, key: string, found: unknown[] = []): unknown[] {
   if (Array.isArray(value)) {
-    for (const item of value) everyValueAt(item, key, found);
+    for (const item of value) {
+      everyValueAt(item, key, found);
+    }
   } else if (isObject(value)) {
     for (const [name, inner] of Object.entries(value)) {
-      if (name === key) found.push(inner);
+      if (name === key) {
+        found.push(inner);
+      }
       everyValueAt(inner, key, found);
     }
   }
@@ -25,14 +29,22 @@ function everyValueAt(value: unknown, key: string, found: unknown[] = []): unkno
 }
 
 const text = (value: unknown): string => {
-  if (!isObject(value)) return typeof value === "string" ? value : "";
-  if (typeof value.simpleText === "string") return value.simpleText;
-  if (typeof value.content === "string") return value.content;
+  if (!isObject(value)) {
+    return typeof value === "string" ? value : "";
+  }
+  if (typeof value.simpleText === "string") {
+    return value.simpleText;
+  }
+  if (typeof value.content === "string") {
+    return value.content;
+  }
   return Array.isArray(value.runs) ? value.runs.map((run) => (isObject(run) && typeof run.text === "string" ? run.text : "")).join("") : "";
 };
 
 export function clockSeconds(value: string): number | null {
-  if (!/^\d+(:\d{2}){1,2}$/.test(value.trim())) return null;
+  if (!/^\d+(:\d{2}){1,2}$/.test(value.trim())) {
+    return null;
+  }
   return value
     .trim()
     .split(":")
@@ -49,7 +61,9 @@ export function channelsIn(searchResponse: unknown): ListedChannel[] {
 }
 
 function fromLockup(lockup: unknown): ListedUpload | null {
-  if (!isObject(lockup) || typeof lockup.contentId !== "string") return null;
+  if (!isObject(lockup) || typeof lockup.contentId !== "string") {
+    return null;
+  }
   const [metadata] = everyValueAt(lockup, "lockupMetadataViewModel");
   const badges = everyValueAt(lockup, "thumbnailBadgeViewModel").map((badge) => (isObject(badge) ? text(badge.text) : ""));
   const parts = everyValueAt(lockup, "metadataParts")
@@ -64,7 +78,9 @@ function fromLockup(lockup: unknown): ListedUpload | null {
 }
 
 function fromVideoRenderer(video: unknown): ListedUpload | null {
-  if (!isObject(video) || typeof video.videoId !== "string") return null;
+  if (!isObject(video) || typeof video.videoId !== "string") {
+    return null;
+  }
   const length = text(video.lengthText);
   const age = text(video.publishedTimeText);
   return { videoId: video.videoId, title: text(video.title), lengthSeconds: clockSeconds(length), age: age === "" ? null : age };
@@ -79,7 +95,9 @@ export interface ListedVideo extends ListedUpload {
 export function videosIn(searchResponse: unknown): ListedVideo[] {
   return everyValueAt(searchResponse, "videoRenderer").flatMap((video) => {
     const upload = fromVideoRenderer(video);
-    if (upload === null || upload.title === "" || !isObject(video)) return [];
+    if (upload === null || upload.title === "" || !isObject(video)) {
+      return [];
+    }
     const owner = video.ownerText ?? video.longBylineText;
     const [channelId] = everyValueAt(owner, "browseId");
     return [{ ...upload, channelId: typeof channelId === "string" ? channelId : null, channelTitle: text(owner) }];
@@ -100,10 +118,16 @@ const DAYS: Record<string, number> = { second: 0, minute: 0, hour: 0, day: 1, we
 // "3 weeks ago" as the days it could mean, with the slack the rounding leaves.
 export function ageInDays(age: string): { fewest: number; most: number } | null {
   const match = /(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago/.exec(age);
-  if (match === null) return null;
+  if (match === null) {
+    return null;
+  }
   const count = Number(match[1]);
   const unit = DAYS[match[2]!]!;
-  if (unit === 0) return { fewest: 0, most: 1.1 };
-  if (unit === 1) return { fewest: count - 0.5, most: count + 1.5 };
+  if (unit === 0) {
+    return { fewest: 0, most: 1.1 };
+  }
+  if (unit === 1) {
+    return { fewest: count - 0.5, most: count + 1.5 };
+  }
   return { fewest: count * unit - 1, most: (count + 1) * unit };
 }

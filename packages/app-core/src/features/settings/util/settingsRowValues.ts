@@ -32,7 +32,9 @@ import { OVERVIEW_SECTIONS } from "./overviewSections.js";
 export const NOT_SIGNED_IN_ROW_VALUE = "Not signed in";
 
 export function accountRowValue(sync: { connected: boolean; status: SyncStatus }, connection: SyncConnection, now: Date): string {
-  if (!sync.connected) return NOT_SIGNED_IN_ROW_VALUE;
+  if (!sync.connected) {
+    return NOT_SIGNED_IN_ROW_VALUE;
+  }
   const name = connection.firstName ?? connection.email;
   const line = syncStatusLine(sync.status, now);
   return name === null ? line : `${name} · ${line}`;
@@ -65,7 +67,9 @@ export function keysRowValue(apiKeys: ApiKeys, provider: Provider, models: Model
 // "3 shared" or "None": the row says how many links are live without opening the section
 // (docs/features/sharing.md).
 export function sharedLinksRowValue(count: number): string {
-  if (count === 0) return "None";
+  if (count === 0) {
+    return "None";
+  }
   return count === 1 ? "1 shared" : `${count} shared`;
 }
 
@@ -93,7 +97,9 @@ export function personalisationRowValue(
         : `${on} of ${OVERVIEW_SECTIONS.length} sections`;
   const first = firstAboutYouText(aboutYou);
   const lead = first === null ? "About you not set" : capitalised(first);
-  if (canLearn && !keepLearning) return `${lead} · Learning off`;
+  if (canLearn && !keepLearning) {
+    return `${lead} · Learning off`;
+  }
   return canLearn && learnedCount > 0 ? `${lead} · ${learnedCount} learned · ${sections}` : `${lead} · ${sections}`;
 }
 

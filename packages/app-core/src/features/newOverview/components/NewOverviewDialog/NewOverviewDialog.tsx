@@ -113,8 +113,11 @@ export function NewOverviewDialog({
       onClose();
       return;
     }
-    if (run !== null && run.overview !== null) analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
-    else analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
+    if (run !== null && run.overview !== null) {
+      analytics.capture.newOverviewDialog.runDismissed({ run: "ready" });
+    } else {
+      analytics.capture.newOverviewDialog.closed({ run: run === null ? "none" : "failed" });
+    }
     onDismiss();
   };
 

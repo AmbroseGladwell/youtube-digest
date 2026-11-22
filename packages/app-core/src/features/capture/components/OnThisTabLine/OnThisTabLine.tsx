@@ -27,7 +27,9 @@ export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
   const announced = useRef<string | null>(null);
   const subject = tab.videoUrl ?? tab.page?.url ?? "";
   useEffect(() => {
-    if (announced.current === `${subject}:${offer}`) return;
+    if (announced.current === `${subject}:${offer}`) {
+      return;
+    }
     announced.current = `${subject}:${offer}`;
     analytics.capture.onThisTab.shown({ offer });
   }, [analytics, subject, offer]);
@@ -41,8 +43,11 @@ export function OnThisTabLine({ tab, onStartVideo }: OnThisTabLineProps) {
     // Chrome refuses a grant asked for outside the click, so the article run starts here
     // and home renders the progress the shell is already tracking. An episode needs no grant:
     // home reads it from the tab's address and offers it there.
-    if (tab.kind === "page" && tab.page !== null) startArticleRun(tab.page, { from: "panel", willAsk: true });
-    else if (tab.videoUrl !== null) onStartVideo(tab.videoUrl);
+    if (tab.kind === "page" && tab.page !== null) {
+      startArticleRun(tab.page, { from: "panel", willAsk: true });
+    } else if (tab.videoUrl !== null) {
+      onStartVideo(tab.videoUrl);
+    }
     void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
   };
 

@@ -16,8 +16,11 @@ export class AccountTermsLinePageObject extends PageObject {
         [accountTermsLineTestIds.privacy, "privacy"],
       ] as const) {
         await expect(this.get(testId)).toHaveAttribute("href", new RegExp(`${origin.source}/${page}$`));
-        if (opensElsewhere) await expect(this.get(testId)).toHaveAttribute("target", "_blank");
-        else await expect(this.get(testId)).not.toHaveAttribute("target");
+        if (opensElsewhere) {
+          await expect(this.get(testId)).toHaveAttribute("target", "_blank");
+        } else {
+          await expect(this.get(testId)).not.toHaveAttribute("target");
+        }
       }
       const lineBottom = await line.evaluate((element) => element.getBoundingClientRect().bottom);
       const buttonTop = await this.get(emailLinkFormTestIds.submitButton).evaluate((element) => element.getBoundingClientRect().top);

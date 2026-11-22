@@ -22,10 +22,15 @@ export interface CookingLeaveSheetProps {
 const lower = (timer: CookingTimer) => timerSpokenName(timer).toLowerCase();
 
 const headingFor = (running: readonly CookingTimer[], ringing: readonly CookingTimer[]): string => {
-  if (running.length === 0)
+  if (running.length === 0) {
     return ringing.length === 1 ? `The ${lower(ringing[0]!)} is ringing` : `${countWord(ringing.length)} timers are ringing`;
-  if (running.length === 1) return `Keep the ${lower(running[0]!)} running?`;
-  if (running.length === 2) return "Keep both timers running?";
+  }
+  if (running.length === 1) {
+    return `Keep the ${lower(running[0]!)} running?`;
+  }
+  if (running.length === 2) {
+    return "Keep both timers running?";
+  }
   return `Keep all ${countWord(running.length).toLowerCase()} timers running?`;
 };
 
@@ -35,13 +40,19 @@ const sentenceFor = (running: readonly CookingTimer[], ringing: readonly Cooking
       ? "Dismiss it now, or keep it ringing beside the player until you do."
       : "Dismiss them now, or keep them ringing beside the player until you do.";
   }
-  if (running.length > 1) return "They carry on beside the player while you read, and ring wherever you are in the app.";
+  if (running.length > 1) {
+    return "They carry on beside the player while you read, and ring wherever you are in the app.";
+  }
   return `${timerClock(timeLeftMs(running[0]!, now))} left. It carries on beside the player while you read, and rings wherever you are in the app.`;
 };
 
 const othersLine = (others: readonly CookingTimer[]): string | null => {
-  if (others.length === 0) return null;
-  if (others.length > 1) return "Your other recipes’ timers carry on either way.";
+  if (others.length === 0) {
+    return null;
+  }
+  if (others.length > 1) {
+    return "Your other recipes’ timers carry on either way.";
+  }
   return `Your ${lower(others[0]!)} for ${others[0]!.recipeTitle} carries on either way.`;
 };
 
@@ -58,12 +69,16 @@ export function CookingLeaveSheet({ open, running, ringing, others, now, web, st
 
   useEffect(() => {
     const element = dialog.current;
-    if (element === null) return;
+    if (element === null) {
+      return;
+    }
     if (open && !element.open) {
       element.showModal();
       first.current?.focus();
     }
-    if (!open && element.open) element.close();
+    if (!open && element.open) {
+      element.close();
+    }
   }, [open]);
 
   return (
@@ -77,7 +92,9 @@ export function CookingLeaveSheet({ open, running, ringing, others, now, web, st
         onStay();
       }}
       onKeyDown={(event) => {
-        if (event.key !== "Escape") return;
+        if (event.key !== "Escape") {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         onStay();

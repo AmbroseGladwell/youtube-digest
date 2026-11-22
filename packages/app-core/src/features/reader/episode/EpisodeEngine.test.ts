@@ -12,7 +12,9 @@ class FakeMedia {
     this.#handlers.set(type, [...(this.#handlers.get(type) ?? []), handler]);
   }
   emit(type: string) {
-    for (const handler of this.#handlers.get(type) ?? []) handler();
+    for (const handler of this.#handlers.get(type) ?? []) {
+      handler();
+    }
   }
   play() {
     this.paused = false;
@@ -24,7 +26,9 @@ class FakeMedia {
     this.emit("pause");
   }
   removeAttribute(name: string) {
-    if (name === "src") this.src = "";
+    if (name === "src") {
+      this.src = "";
+    }
   }
   load() {}
   playTo(seconds: number) {

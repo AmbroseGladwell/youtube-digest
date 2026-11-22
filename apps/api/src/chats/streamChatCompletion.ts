@@ -75,7 +75,9 @@ export async function streamChatCompletion(
       body,
       signal: AbortSignal.timeout(120_000),
     });
-    if (response.ok && response.body !== null) return readStream(response.body);
+    if (response.ok && response.body !== null) {
+      return readStream(response.body);
+    }
     const wait = RETRY_WAITS_MS[attempt];
     if (!RETRIED_STATUSES.has(response.status) || wait === undefined) {
       throw new ChatProviderError(response.status, `The provider answered ${response.status}`);
@@ -97,15 +99,25 @@ function readStream(body: ReadableStream<Uint8Array>): ChatCompletionStream {
       const lines = buffered.split("\n");
       buffered = lines.pop() ?? "";
       for (const line of lines) {
-        if (!line.startsWith("data:")) continue;
+        if (!line.startsWith("data:")) {
+          continue;
+        }
         const data = line.slice(5).trim();
-        if (data === "[DONE]") return;
+        if (data === "[DONE]") {
+          return;
+        }
         const chunk = JSON.parse(data) as { choices?: Array<{ delta?: { content?: unknown }; finish_reason?: unknown }>; usage?: unknown };
-        if (chunk.usage !== undefined && chunk.usage !== null) usage = tokenUsageOf("openai", chunk);
+        if (chunk.usage !== undefined && chunk.usage !== null) {
+          usage = tokenUsageOf("openai", chunk);
+        }
         const finished = chunk.choices?.[0]?.finish_reason;
-        if (typeof finished === "string") finishReason = finished;
+        if (typeof finished === "string") {
+          finishReason = finished;
+        }
         const content = chunk.choices?.[0]?.delta?.content;
-        if (typeof content === "string" && content.length > 0) yield content;
+        if (typeof content === "string" && content.length > 0) {
+          yield content;
+        }
       }
     }
   }

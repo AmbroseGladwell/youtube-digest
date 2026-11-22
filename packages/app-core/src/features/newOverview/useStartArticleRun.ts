@@ -25,7 +25,9 @@ export function useStartArticleRun() {
       page: ActivePage,
       { from, overviewId, captureReason, accessInHand = false, oneTimeAccess = false, willAsk = false }: ArticleRunOptions,
     ) => {
-      if (pages === null) return;
+      if (pages === null) {
+        return;
+      }
       startArticle({
         url: page.url,
         title: page.title,

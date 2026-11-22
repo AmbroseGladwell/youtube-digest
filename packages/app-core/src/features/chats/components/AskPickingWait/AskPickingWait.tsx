@@ -54,12 +54,14 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
 
   useEffect(() => {
     setSlow(false);
-    if (phase !== "choosing") return;
+    if (phase !== "choosing") {
+      return;
+    }
     const timer = setTimeout(() => setSlow(true), SLOW_PICKING_MS);
     return () => clearTimeout(timer);
   }, [phase]);
 
-  if (phase === "read")
+  if (phase === "read") {
     return (
       <div className={styles.folded} data-testid={askPickingWaitTestIds.root}>
         <button
@@ -68,7 +70,9 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
           aria-expanded={open}
           aria-controls={chipsId}
           onClick={() => {
-            if (!open) onOpened();
+            if (!open) {
+              onOpened();
+            }
             setOpen(!open);
           }}
           data-testid={askPickingWaitTestIds.read}
@@ -101,6 +105,7 @@ export function AskPickingWait({ phase, picked, imageOf, holds, onOpened, onFoll
         )}
       </div>
     );
+  }
 
   const reading = phase === "reading";
   return (

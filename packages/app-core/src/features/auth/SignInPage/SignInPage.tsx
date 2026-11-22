@@ -26,13 +26,17 @@ export function SignInPage() {
   const started = useRef<string | null>(null);
 
   useEffect(() => {
-    if (token === null || started.current === token) return;
+    if (token === null || started.current === token) {
+      return;
+    }
     started.current = token;
     signIn.mutate(
       { apiUrl, token },
       {
         onSuccess: (signedIn) => {
-          if (signedIn.surface === "web") land(apiUrl, signedIn, signInReturnFromSearch(search));
+          if (signedIn.surface === "web") {
+            land(apiUrl, signedIn, signInReturnFromSearch(search));
+          }
         },
       },
     );

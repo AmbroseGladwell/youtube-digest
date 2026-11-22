@@ -17,7 +17,9 @@ export function judgeFor(baseline: ComparedModel, candidate: ComparedModel): Com
   const judge = JUDGES.map(parseComparedModel).find(
     (model) => model.provider !== baseline.provider && model.provider !== candidate.provider,
   );
-  if (judge === undefined) throw new Error(`no judge outside ${baseline.provider} and ${candidate.provider}`);
+  if (judge === undefined) {
+    throw new Error(`no judge outside ${baseline.provider} and ${candidate.provider}`);
+  }
   return judge;
 }
 

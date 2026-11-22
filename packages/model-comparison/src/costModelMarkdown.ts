@@ -22,7 +22,9 @@ export interface ArmCost {
 const TWENTY_MINUTES_MS = 20 * 60_000;
 
 const median = (values: number[]): number => {
-  if (values.length === 0) return 0;
+  if (values.length === 0) {
+    return 0;
+  }
   const sorted = [...values].sort((left, right) => left - right);
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;

@@ -23,7 +23,9 @@ export function CutText({ text, className, testId }: CutTextProps) {
 
   useLayoutEffect(() => {
     const shown = element.current;
-    if (shown === null) return;
+    if (shown === null) {
+      return;
+    }
     const measure = () => setCut(shown.scrollWidth > shown.clientWidth + 1 || shown.scrollHeight > shown.clientHeight + 1);
     measure();
     const observer = new ResizeObserver(measure);
@@ -34,13 +36,17 @@ export function CutText({ text, className, testId }: CutTextProps) {
   useEffect(() => () => clearPress(), []);
 
   function clearPress() {
-    if (pressTimer.current !== null) clearTimeout(pressTimer.current);
+    if (pressTimer.current !== null) {
+      clearTimeout(pressTimer.current);
+    }
     pressTimer.current = null;
   }
 
   const startPress = () => {
     heldNow.current = false;
-    if (!cut) return;
+    if (!cut) {
+      return;
+    }
     clearPress();
     pressTimer.current = setTimeout(() => {
       heldNow.current = true;
@@ -55,7 +61,9 @@ export function CutText({ text, className, testId }: CutTextProps) {
 
   // The tap that ends a long press would otherwise open what holds the text.
   const swallowHeldClick = (event: MouseEvent) => {
-    if (!heldNow.current) return;
+    if (!heldNow.current) {
+      return;
+    }
     heldNow.current = false;
     event.preventDefault();
     event.stopPropagation();
@@ -70,7 +78,9 @@ export function CutText({ text, className, testId }: CutTextProps) {
       onTouchCancel={endPress}
       onClickCapture={swallowHeldClick}
       onContextMenu={(event) => {
-        if (cut) event.preventDefault();
+        if (cut) {
+          event.preventDefault();
+        }
       }}
     >
       <span ref={element} className={className} data-testid={testId}>

@@ -40,7 +40,9 @@ export function FilterPanel({ filters, topics, counts, onChange, onNewTopic, onM
   const [shownForTag, setShownForTag] = useState(filters.tag);
   if (shownForTag !== filters.tag) {
     setShownForTag(filters.tag);
-    if (filters.tag !== null) setMoreShown(true);
+    if (filters.tag !== null) {
+      setMoreShown(true);
+    }
   }
   const [allTagsShown, setAllTagsShown] = useState(false);
   const analytics = useAnalytics();

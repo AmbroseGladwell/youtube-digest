@@ -39,7 +39,9 @@ const apiAnswering = (answer: (ask: PodcastTranscriptAsk) => StoredTranscript | 
       transcript: async (ask: PodcastTranscriptAsk) => {
         asked.push(ask);
         const result = answer(ask);
-        if (result instanceof Error) throw result;
+        if (result instanceof Error) {
+          throw result;
+        }
         return result;
       },
     },
@@ -70,12 +72,15 @@ const uploadsWith = (title: string, length: string) => ({
 const youTubeFinding =
   (title: string, length = "36:10"): YouTubeFetch =>
   async ({ url }) => {
-    if (url.endsWith("/search"))
+    if (url.endsWith("/search")) {
       return {
         status: 200,
         body: JSON.stringify({ channelRenderer: { channelId: "UCshow", title: { simpleText: "The Rest Is Politics US" } } }),
       };
-    if (url.endsWith("/browse")) return { status: 200, body: JSON.stringify(uploadsWith(title, length)) };
+    }
+    if (url.endsWith("/browse")) {
+      return { status: 200, body: JSON.stringify(uploadsWith(title, length)) };
+    }
     return { status: 404, body: "" };
   };
 

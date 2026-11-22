@@ -55,7 +55,9 @@ export const isPodcastShowLink = (link: string): boolean => {
 // an article; a page that isn't an episode says so and is left to the article
 // (docs/features/podcast-links.md, "A show's own episode page").
 const mayBeEpisodeLink = (link: string): boolean => {
-  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null) return false;
+  if (link === "" || isYouTubeUrl(link) || youTubeLink(link) !== null) {
+    return false;
+  }
   return parsePodcastLink(link) !== null;
 };
 
@@ -87,12 +89,16 @@ export function usePodcastLink(url: string) {
       const read = await createFetchPodcastApi({ baseUrl: apiUrl!, token: connection.token }).read(link);
       if (read.status === "failed") {
         // A page that isn't an episode is most likely an article, which reads it instead.
-        if (read.reason === "not-an-episode" && !platformLink) return { status: "none" };
+        if (read.reason === "not-an-episode" && !platformLink) {
+          return { status: "none" };
+        }
         return { status: "failed", reason: read.reason, showName: read.showName ?? null };
       }
       const key = sourceKey({ kind: "podcast", id: await podcastSourceId(read.episode) })!;
       const held = await heldOverviewOf(overviewStore, key);
-      if (held === null) return { status: "found", episode: read.episode, words: { state: "checking" } };
+      if (held === null) {
+        return { status: "found", episode: read.episode, words: { state: "checking" } };
+      }
       const overviews = await overviewStore.listOverviews();
       return {
         status: "held",
@@ -124,11 +130,19 @@ export function usePodcastLink(url: string) {
   );
 
   const podcastLink: PodcastLink = useMemo(() => {
-    if (!offered) return { status: "none" };
-    if (settled !== link || query.isFetching) return { status: "reading" };
+    if (!offered) {
+      return { status: "none" };
+    }
+    if (settled !== link || query.isFetching) {
+      return { status: "reading" };
+    }
     // A page we couldn't ask about is left to the article; a platform link has nowhere else to go.
-    if (query.isError) return platformLink ? { status: "unreachable" } : { status: "none" };
-    if (query.data?.status === "found") return { ...query.data, words };
+    if (query.isError) {
+      return platformLink ? { status: "unreachable" } : { status: "none" };
+    }
+    if (query.data?.status === "found") {
+      return { ...query.data, words };
+    }
     return query.data ?? { status: "reading" };
   }, [offered, settled, link, query.isFetching, query.isError, query.data, platformLink, words]);
 

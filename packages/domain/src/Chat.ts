@@ -177,8 +177,12 @@ export const chatRecordId = (owner: ChatOwner | string, conversationId: string):
 
 export const chatOwnerOfId = (id: string): ChatOwner | null => {
   const [first, second] = id.split(":");
-  if (first === "library" && second !== undefined) return { kind: "library" };
-  if (first === "project" && second !== undefined && id.split(":").length === 3) return { kind: "project", id: second };
+  if (first === "library" && second !== undefined) {
+    return { kind: "library" };
+  }
+  if (first === "project" && second !== undefined && id.split(":").length === 3) {
+    return { kind: "project", id: second };
+  }
   return first !== undefined && second !== undefined && id.split(":").length === 2 ? { kind: "overview", id: first } : null;
 };
 

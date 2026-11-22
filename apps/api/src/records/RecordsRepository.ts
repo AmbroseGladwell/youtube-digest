@@ -149,7 +149,9 @@ export class RecordsRepository {
 
   // The live overviews of these sources, as each overview's source key is stored beside it.
   async liveOverviewsOfSources(accountId: AccountId, sourceKeys: readonly string[]): Promise<StoredRecord[]> {
-    if (sourceKeys.length === 0) return [];
+    if (sourceKeys.length === 0) {
+      return [];
+    }
     const rows = await this.#sql.query<RecordRow>(
       `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = 'overview' and not deleted and source_key = any($2::text[])`,
       [accountId, [...sourceKeys]],
@@ -158,7 +160,9 @@ export class RecordsRepository {
   }
 
   async readLive(accountId: AccountId, kind: RecordKind, ids: readonly string[]): Promise<StoredRecord[]> {
-    if (ids.length === 0) return [];
+    if (ids.length === 0) {
+      return [];
+    }
     const rows = await this.#sql.query<RecordRow>(
       `select ${RECORD_COLUMNS} from records where account_id = $1 and kind = $2 and not deleted and id = any($3::text[])`,
       [accountId, kind, [...ids]],

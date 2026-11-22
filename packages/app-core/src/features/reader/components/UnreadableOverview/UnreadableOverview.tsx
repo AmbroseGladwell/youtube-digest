@@ -41,7 +41,9 @@ export function UnreadableOverview({ record }: UnreadableOverviewProps) {
   // Designs 77ax, 77ay: a video can be remade from anywhere, an article needs to be open.
   if (isArticle && !heldBack && videoUrl !== null) {
     const makeAgain = () => {
-      if (beside === null || !overviewId.success) return;
+      if (beside === null || !overviewId.success) {
+        return;
+      }
       startArticleRun(beside, { from: "regenerate", overviewId: overviewId.data, willAsk: true });
       void navigate(Routes.home(), { viewTransition: shouldAnimateNavigation() });
     };
