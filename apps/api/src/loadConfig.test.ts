@@ -22,6 +22,7 @@ test("defaults the floor to 1, the port to 3000, the session ttl to 30 days, vou
     ourKey: null,
     youTubeApiKey: null,
     podcastIndex: null,
+    scrapeCreatorsApiKey: null,
     sampleShareTokens: [],
     supportEmail: "hello@theoverviewapp.com",
     analytics: { environment: "development", postHog: null, erasure: null },
@@ -220,4 +221,8 @@ test("erasing a deleted account's records at PostHog is on with the personal key
 
 test("the project id alone is held rather than refused, so it can ship before the secret does", () => {
   assert.equal(loadConfig({ DATABASE_URL, POSTHOG_PROJECT_ID: "289890" }).analytics.erasure, null);
+});
+
+test("the ScrapeCreators key, when set, is what our server reads TikTok links with", () => {
+  assert.equal(loadConfig({ DATABASE_URL, SCRAPECREATORS_API_KEY: "a-key" }).scrapeCreatorsApiKey, "a-key");
 });

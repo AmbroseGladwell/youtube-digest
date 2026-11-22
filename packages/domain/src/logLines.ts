@@ -88,6 +88,11 @@ export const apiLogLines = coded("api", {
     ),
     ourKey: line("info", "our key", "Whether overviews can be made on our key, on which model, and the global daily cap."),
     playlists: line("info", "playlists", "Whether a YouTube key is set, so playlists can be followed."),
+    tiktok: line(
+      "info",
+      "tiktok",
+      "Whether the ScrapeCreators key is set, so our server can read TikTok links; without it /api/tiktok says it is unavailable.",
+    ),
     podcastLookups: line(
       "info",
       "podcast lookups",
@@ -393,6 +398,18 @@ export const apiLogLines = coded("api", {
       "info",
       "podcast episode searched on youtube",
       "Our server looked for an episode on its show's YouTube channel through the Data API; `units` is what it cost in the daily quota, `searches` the calls from search's own smaller allowance, and `found` whether it matched. Never the show or the episode.",
+    ),
+  },
+  tiktok: {
+    read: line(
+      "info",
+      "tiktok video read",
+      "A TikTok link was turned into a video through the vendor; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks it has, `credits` what the vendor charged and `vendorStatus` its answer when it failed. Never the link, the handle or the video.",
+    ),
+    transcript: line(
+      "info",
+      "tiktok transcript resolved",
+      "A TikTok video's words were asked for through the vendor; `source` is the caption track's (ASR, creator), `segments` how many came back, or `failure` why none could, with `credits` and `vendorStatus` as for a read. Never the video, and the words are never kept.",
     ),
   },
   transcription: {

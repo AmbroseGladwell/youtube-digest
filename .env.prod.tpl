@@ -19,6 +19,8 @@ YOUTUBE_API_KEY="${YOUTUBE_API_KEY}"
 # Podcast Index's key and secret, which sign every request (docs/features/podcast-links.md).
 PODCAST_INDEX_API_KEY="${PODCAST_INDEX_API_KEY}"
 PODCAST_INDEX_API_SECRET="${PODCAST_INDEX_API_SECRET}"
+# ScrapeCreators, the vendor our server reads TikTok links through (docs/features/tiktok-links.md).
+SCRAPECREATORS_API_KEY="${SCRAPECREATORS_API_KEY}"
 # Our own OpenAI key, restricted to chat completions, that overviews on our key are made with
 # (docs/architecture/tiers.md, "Generating on our key").
 OPENAI_API_KEY="${OPENAI_API_KEY}"

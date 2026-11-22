@@ -31,6 +31,8 @@ YOUTUBE_API_KEY="${YOUTUBE_API_KEY}"
 # together (docs/features/podcast-links.md, "The directories").
 PODCAST_INDEX_API_KEY="${PODCAST_INDEX_API_KEY}"
 PODCAST_INDEX_API_SECRET="${PODCAST_INDEX_API_SECRET}"
+# ScrapeCreators, the vendor our server reads TikTok links through (docs/features/tiktok-links.md).
+SCRAPECREATORS_API_KEY="${SCRAPECREATORS_API_KEY}"
 # Speech-to-text for episodes with no transcript anywhere: the Modal app `overview-stt` and the token it
 # checks; the two go together, and unset, no episode is offered transcription (docs/features/speech-to-text.md).
 STT_URL=https://theoverviewapp--overview-stt-jobs.us-east.modal.run

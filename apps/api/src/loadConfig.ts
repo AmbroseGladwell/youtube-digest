@@ -55,6 +55,7 @@ const ConfigEnv = z
     YOUTUBE_API_KEY: z.string().min(1).optional(),
     PODCAST_INDEX_API_KEY: z.string().min(1).optional(),
     PODCAST_INDEX_API_SECRET: z.string().min(1).optional(),
+    SCRAPECREATORS_API_KEY: z.string().min(1).optional(),
     SUPPORT_EMAIL: z.email().default("hello@theoverviewapp.com"),
     SAMPLE_SHARE_TOKENS: z
       .string()
@@ -164,6 +165,7 @@ export interface Config {
   ourKey: OurKeyConfig;
   youTubeApiKey: string | null;
   podcastIndex: PodcastIndexKey | null;
+  scrapeCreatorsApiKey: string | null;
   sampleShareTokens: ShareToken[];
   supportEmail: string;
   analytics: AnalyticsConfig;
@@ -244,6 +246,7 @@ export const loadConfig = (env: Record<string, string | undefined> = process.env
       data.PODCAST_INDEX_API_KEY === undefined || data.PODCAST_INDEX_API_SECRET === undefined
         ? null
         : { apiKey: data.PODCAST_INDEX_API_KEY, apiSecret: data.PODCAST_INDEX_API_SECRET },
+    scrapeCreatorsApiKey: data.SCRAPECREATORS_API_KEY ?? null,
     sampleShareTokens: data.SAMPLE_SHARE_TOKENS,
     supportEmail: data.SUPPORT_EMAIL,
     analytics: {
