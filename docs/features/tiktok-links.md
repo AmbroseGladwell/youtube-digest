@@ -73,6 +73,20 @@ With access, a read that comes back with words is used and the vendor is never a
 nothing. Anything else (no captions, a page that won't read, a refusal, a network failure) goes
 to the vendor, whose answer is the one shown (`tiktok-vendor`).
 
+## Onboarding
+
+Step 5 of the card, 22 Nov 2026. `onboardingSources.tiktok` is a full entry: it reads the link
+through `readTikTokLink` (the extension's own read, then the vendor, a trial's read signed out),
+shows the card from the read, and writes the note with the words it came with once there is an
+account (`runTikTokOverviewGeneration`), as a video's does. A link it can't read stops with
+`TikTokReadError`, and a video with no captions with `TikTokNoCaptionsError`, each before
+anything is spent on writing. Their words in `onboardingFailureCopy` follow the other kinds' until
+the Design round's failure frames.
+
+**It isn't offered yet.** `TIKTOK_AT_START` is false, so the entry recognises no link and a pasted
+TikTok still goes to the web entry, as before. It is switched on with the screens, in the PR that
+names ScrapeCreators in `/privacy`, once production has the vendor's key.
+
 ## From a link to a video
 
 | Link | Read as |

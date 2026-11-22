@@ -1,4 +1,4 @@
-import { domainOf, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY } from "@overview/domain";
+import { domainOf, TRIAL_READS, TRIAL_READS_PER_ADDRESS_DAILY, type TikTokReadFailure } from "@overview/domain";
 import type { ReaderPlace } from "../../newOverview/util/pastedLinkFailureCopy.js";
 import type { OnboardingFailure } from "./onboardingFailureOf.js";
 import { podcastLinkFailureCopy } from "../../newOverview/util/podcastLinkFailureCopy.js";
@@ -27,6 +27,17 @@ const isFrontPage = (url: string): boolean => {
   } catch {
     return false;
   }
+};
+
+// Until the Design round's failure frames (OV-130), in the words the other kinds use.
+const tiktokReadCopy = (reason: TikTokReadFailure): OnboardingFailureCopy => {
+  if (reason === "not-a-video") {
+    return failed("That isn’t a TikTok video", "It may be a photo post or a profile. Paste a link to a video.");
+  }
+  if (reason === "unavailable") {
+    return failed("We couldn't find that TikTok", "It may be private or taken down. Try another link.");
+  }
+  return failed("We couldn't reach TikTok just now", "Try again in a moment, or use another link.", { tryAgain: true });
 };
 
 // Why these words aren't the paste field's: docs/features/onboarding.md, "Any kind of link".
@@ -77,6 +88,13 @@ export const onboardingFailureCopy = (failure: OnboardingFailure, link: string, 
             "There isn’t enough transcribing left on this device",
             "A free account transcribes 5 hours a month. Have it on YouTube? Paste that link instead.",
           );
+    case "tiktokRead":
+      return tiktokReadCopy(failure.reason);
+    case "tiktokNoCaptions":
+      return failed(
+        "This TikTok has no captions",
+        "We found it, but TikTok has no words for it, and an overview is written from what’s said. Try another link.",
+      );
     case "read":
       break;
   }

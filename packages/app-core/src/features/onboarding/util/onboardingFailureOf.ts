@@ -1,9 +1,10 @@
 import { isSyncRequestError } from "@overview/sync";
-import type { PodcastReadFailure, TranscriptionFailure, VideoReadFailure } from "@overview/domain";
+import type { PodcastReadFailure, TikTokReadFailure, TranscriptionFailure, VideoReadFailure } from "@overview/domain";
 import { ArticleReadError, type ArticleFailure } from "../../newOverview/api/ArticleReadError.js";
 import { PodcastNoTranscriptError, PodcastReadError } from "../../newOverview/api/PodcastReadError.js";
 import { TranscriptionFailedError } from "../../podcasts/api/TranscriptionFailedError.js";
 import { VideoReadError } from "../../newOverview/api/VideoReadError.js";
+import { TikTokNoCaptionsError, TikTokReadError } from "../../newOverview/api/TikTokReadError.js";
 import { TranscriptionRefusedError } from "../../podcasts/api/TranscriptionRefusedError.js";
 
 export type OnboardingFailure =
@@ -11,6 +12,8 @@ export type OnboardingFailure =
   | { kind: "videoRead"; reason: VideoReadFailure }
   | { kind: "podcastRead"; reason: PodcastReadFailure; showName: string | null }
   | { kind: "podcastNoTranscript" }
+  | { kind: "tiktokRead"; reason: TikTokReadFailure }
+  | { kind: "tiktokNoCaptions" }
   | { kind: "podcastNeedsTranscribing"; episodeSeconds: number | null }
   | { kind: "transcriptionFailed"; reason: TranscriptionFailure | "no-audio" }
   | { kind: "transcriptionRefused"; refusal: "not-enough" | "too-long"; episodeSeconds: number | null }
@@ -24,6 +27,12 @@ export const onboardingFailureOf = (error: unknown): OnboardingFailure => {
   }
   if (error instanceof VideoReadError) {
     return { kind: "videoRead", reason: error.reason };
+  }
+  if (error instanceof TikTokReadError) {
+    return { kind: "tiktokRead", reason: error.reason };
+  }
+  if (error instanceof TikTokNoCaptionsError) {
+    return { kind: "tiktokNoCaptions" };
   }
   if (error instanceof PodcastReadError) {
     return { kind: "podcastRead", reason: error.reason, showName: error.showName };

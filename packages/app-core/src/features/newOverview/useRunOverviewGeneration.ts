@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, type ArticleRead, type Overview } from "@overview/domain";
+import { DEFAULT_PROVIDER, modelFor, PROVIDER_SHORT_LABEL, type ArticleRead, type Overview, type TikTokVideo } from "@overview/domain";
 import type { OverviewInput } from "@overview/generation";
 import { createFetchGenerationApi, createFetchPodcastApi } from "@overview/sync";
 import { podcastTranscript } from "../podcasts/api/podcastTranscript.js";
@@ -21,6 +21,8 @@ import {
   runArticleOverviewGeneration,
   runOverviewGeneration,
   runPodcastOverviewGeneration,
+  runTikTokOverviewGeneration,
+  type TikTokWords,
   type PodcastRunRequest,
   type RunOverviewGenerationOptions,
 } from "./api/generationPipeline.js";
@@ -85,6 +87,31 @@ export const useRunArticleGeneration = (apiKeys: ApiKeys) => {
           makeOverview: makeWith(),
           overviewStore: stores.overviewStore,
           settingsStore: stores.settingsStore,
+          projectStore: stores.projectStore,
+        },
+        options,
+      )
+        .then((overview) => learnFrom(overview, stores))
+        .finally(settled),
+    [makeWith, learnFrom, settled, shown],
+  );
+};
+
+// The words come with the read, so writing asks for nothing more (docs/features/tiktok-links.md).
+export const useRunTikTokGeneration = (apiKeys: ApiKeys) => {
+  const { makeWith, learnFrom, settled } = useOverviewMaker(apiKeys);
+  const shown = useStores();
+
+  return useCallback(
+    async (video: TikTokVideo, words: TikTokWords, options: RunOverviewGenerationOptions, stores: RunStores = shown): Promise<Overview> =>
+      runTikTokOverviewGeneration(
+        video,
+        async () => words,
+        {
+          makeOverview: makeWith(),
+          overviewStore: stores.overviewStore,
+          settingsStore: stores.settingsStore,
+          transcriptStore: stores.transcriptStore,
           projectStore: stores.projectStore,
         },
         options,

@@ -3,8 +3,16 @@ import type { TranscribeChoice, Overview, PodcastEpisode, PodcastRead } from "@o
 import { useAnalytics } from "../analytics/AnalyticsContext.js";
 import { useApiKeys } from "../apiKeys/useApiKeys.js";
 import { GenerationCancelledError } from "../newOverview/api/GenerationCancelledError.js";
-import { useRunArticleGeneration, useRunOverviewGeneration, useRunPodcastGeneration } from "../newOverview/useRunOverviewGeneration.js";
-import { createFetchPodcastApi, createFetchVideoApi } from "@overview/sync";
+import {
+  useRunArticleGeneration,
+  useRunOverviewGeneration,
+  useRunPodcastGeneration,
+  useRunTikTokGeneration,
+} from "../newOverview/useRunOverviewGeneration.js";
+import { createFetchPodcastApi, createFetchTikTokApi, createFetchVideoApi } from "@overview/sync";
+import { createTrialTikTokApi } from "../signedOutTrial/api/createTrialTikTokApi.js";
+import { useTikTokPages } from "../../app/TikTokPagesContext.js";
+import { readTikTokLink } from "../tiktok/api/readTikTokLink.js";
 import { createTrialPodcastApi } from "../signedOutTrial/api/createTrialPodcastApi.js";
 import { useSyncConnection } from "../sync/useSyncConnection.js";
 import { libraryAccountIdOf } from "../sync/types/SyncConnection.js";
@@ -23,6 +31,8 @@ import { pageAccessFor } from "./pageAccess.js";
 import { onboardingFailureOf, type OnboardingFailure } from "./util/onboardingFailureOf.js";
 import { rememberEpisodeRead } from "./util/rememberEpisodeRead.js";
 import { onboardingKindOf } from "./util/onboardingKindOf.js";
+
+const NO_SERVER = "There's no server to read that link through.";
 
 export type OnboardingRunPhase = "fetching" | "waiting" | "writing" | "ready" | "failed";
 
@@ -73,6 +83,8 @@ export const useOnboardingRun = ({
   const runVideo = useRunOverviewGeneration(apiKeys);
   const runArticle = useRunArticleGeneration(apiKeys);
   const runPodcast = useRunPodcastGeneration(apiKeys);
+  const runTikTok = useRunTikTokGeneration(apiKeys);
+  const tiktokPages = useTikTokPages();
   const { connection } = useSyncConnection();
   const knownApiUrl = useKnownApiUrl();
   const pages = useArticlePages();
@@ -90,13 +102,13 @@ export const useOnboardingRun = ({
       return pages.read(tabId);
     }
     if (knownApiUrl === null) {
-      throw new Error("There's no server to read that link through.");
+      throw new Error(NO_SERVER);
     }
     return createTrialArticleApi({ baseUrl: knownApiUrl }).read(url);
   };
   const readVideo = async (videoId: string) => {
     if (knownApiUrl === null) {
-      throw new Error("There's no server to read that link through.");
+      throw new Error(NO_SERVER);
     }
     return signedIn
       ? createFetchVideoApi({ baseUrl: knownApiUrl, token: connection.token }).read(videoId)
@@ -104,11 +116,21 @@ export const useOnboardingRun = ({
   };
   const readPodcast = async (url: string) => {
     if (knownApiUrl === null) {
-      throw new Error("There's no server to read that link through.");
+      throw new Error(NO_SERVER);
     }
     return libraryAccountIdOf(connection) !== null
       ? createFetchPodcastApi({ baseUrl: knownApiUrl, token: connection.token }).read(url)
       : createTrialPodcastApi({ baseUrl: knownApiUrl }).read(url);
+  };
+  const readTikTok = async (url: string) => {
+    if (knownApiUrl === null) {
+      throw new Error(NO_SERVER);
+    }
+    const api =
+      libraryAccountIdOf(connection) !== null
+        ? createFetchTikTokApi({ baseUrl: knownApiUrl, token: connection.token })
+        : createTrialTikTokApi({ baseUrl: knownApiUrl });
+    return readTikTokLink(url, { own: tiktokPages, server: api.read });
   };
   const checkEpisode = async (episode: PodcastEpisode) => {
     if (knownApiUrl === null) {
@@ -125,9 +147,11 @@ export const useOnboardingRun = ({
     runVideo,
     runArticle,
     runPodcast,
+    runTikTok,
     readArticle,
     readVideo,
     readPodcast,
+    readTikTok,
     checkEpisode,
     onFound,
     onMade,
@@ -141,9 +165,11 @@ export const useOnboardingRun = ({
     runVideo,
     runArticle,
     runPodcast,
+    runTikTok,
     readArticle,
     readVideo,
     readPodcast,
+    readTikTok,
     checkEpisode,
     onFound,
     onMade,
@@ -196,6 +222,8 @@ export const useOnboardingRun = ({
       podcast: (request, options) => latest.current.runPodcast(request, options, latest.current.shown),
       readPodcast: (url) => rememberEpisodeRead(episodeReads.current, url, latest.current.readPodcast),
       checkEpisode: (episode) => latest.current.checkEpisode(episode),
+      readTikTok: (url) => latest.current.readTikTok(url),
+      tiktok: (video, words, options) => latest.current.runTikTok(video, words, options, latest.current.shown),
     };
 
     kind
