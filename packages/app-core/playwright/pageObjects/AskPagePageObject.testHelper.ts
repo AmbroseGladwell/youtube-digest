@@ -129,6 +129,13 @@ export class AskPagePageObject extends PageObject {
       await expect(row.getByTestId(chatChipRowTestIds.menu).getByRole("link")).toHaveCount(all);
     });
 
+  verifySectionSourcesMenuInView = (answer: number, section: number) =>
+    this.step(`verifySectionSourcesMenuInView ${answer} ${section}`, () =>
+      expect(
+        this.answers().nth(answer).getByTestId(chatAnswerTestIds.section).nth(section).getByTestId(chatChipRowTestIds.menu).first(),
+      ).toBeInViewport({ ratio: 1 }),
+    );
+
   verifyItemSourcesRead = (answer: number, section: number, item: number, titles: string[]) =>
     this.step(`verifyItemSourcesRead ${answer} ${section} ${item}`, () =>
       expect(

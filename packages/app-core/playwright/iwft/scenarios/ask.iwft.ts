@@ -408,4 +408,70 @@ test.describe("Ask", () => {
     await ask.verifyMarkdownRead(0, { code: ["npm test"], links: ["the guide"], blocks: ["npm test  --watch"] });
     await ask.copyCodeBlock(0, 0, "npm test  --watch");
   });
+
+  test("on a phone a section's +N menu stays on screen, and a chip to a step far down a long overview scrolls to it (OV-368)", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    const long = (what: string, count: number) =>
+      Array.from(
+        { length: count },
+        (_, index) => `${what} ${index + 1}: a long line that says a good deal so the overview runs far down the page.`,
+      );
+    const steps = long("Step", 14);
+    const plants = makeOverview({
+      savedAt: "2026-11-03T09:00:00.000Z",
+      keyPoints: long("Point", 8).map((text) => ({ text, range: null })),
+      sourceSteps: { items: steps.map((text) => ({ text, range: null, dubiousReason: null })) },
+    });
+    plants.source.title = PLANTS;
+    const stew = titled(STEW, "2026-11-04T09:00:00.000Z");
+    const curry = titled(CURRY, "2026-11-05T09:00:00.000Z");
+    for (const overview of [plants, stew, curry]) backendSimulator.overviews.seedSynced(overview);
+    const step: ChatCitation = {
+      overviewId: plants.id,
+      title: PLANTS,
+      item: { part: "step", index: 11, textHash: overviewPartHash(steps[11]!) },
+    };
+    backendSimulator.chats.answerWith({
+      text: "Follow the steps.",
+      citations: [step, cite(stew), cite(curry)],
+      sections: {
+        intro: "Follow the steps.",
+        introSources: [],
+        sections: [
+          {
+            heading: "The steps",
+            paragraphs: [],
+            numbered: [{ text: "Do step 12", sources: [step] }],
+            bullets: [],
+            sources: [
+              { citation: step, relation: "" },
+              { citation: cite(stew), relation: "" },
+              { citation: cite(curry), relation: "" },
+            ],
+          },
+        ],
+        takeaway: "",
+      },
+      stats: { overviews: 3, read: 3 },
+    });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+    await ask.ask("What are the steps?");
+
+    await ask.verifySectionSourcesFold(0, 0, 2, 1, 3);
+    await ask.verifySectionSourcesMenuInView(0, 0);
+
+    await page.keyboard.press("Escape");
+    await ask.followItemSource(0, 0, 0);
+
+    await expect(page).toHaveURL(new RegExp(`/overviews/${plants.id}$`));
+    const cited = page.locator('[data-cited-part="true"]');
+    await expect(cited.first()).toContainText(steps[11]!);
+    await expect(cited.first()).toBeInViewport();
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+  });
 });
