@@ -393,6 +393,18 @@ export const apiLogLines = coded("api", {
       "Our server looked for an episode on its show's YouTube channel through the Data API; `units` is what it cost in the daily quota, `searches` the calls from search's own smaller allowance, and `found` whether it matched. Never the show or the episode.",
     ),
   },
+  tiktok: {
+    read: line(
+      "info",
+      "tiktok video read",
+      "A TikTok link was turned into a video from its page; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks the page offered. Never the link, the handle or the video.",
+    ),
+    transcript: line(
+      "info",
+      "tiktok transcript resolved",
+      "A TikTok video's words were asked for from its caption track; `source` is the track's (ASR, or a translation), `segments` how many came back, or `failure` why none could. Never the video, and the words are never kept.",
+    ),
+  },
   transcription: {
     requested: line(
       "info",
