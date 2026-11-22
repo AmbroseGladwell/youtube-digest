@@ -605,6 +605,28 @@ a password manager from offering to save an API key as the site's password. The
 `fieldAutofill.iwft.ts` checks every screen that has a field, using the page object's
 `verifyFieldsIdentifyThemselves`. A new screen with a field goes into that file as well.
 
+### 4.5 Zoom, text size and phones count like keyboard and screen reader access
+
+Every screen works at 400% browser zoom, at 200% browser text, and on a phone in either
+orientation (WCAG 1.4.4, 1.4.10, 1.3.4). This is compliance, not a design constraint:
+`px` is fine for borders, icons, gaps and touch targets, and fixed and sticky bars are
+fine. What has to hold:
+
+- **Text follows the browser's text size.** Font sizes are in `rem` (px ÷ 16), never
+  `px`. A floor or ceiling may mix them (`max(16px, 1rem)`). `scripts/checkStyleFontSizes.mjs`
+  refuses a `px` font size in lint and in the pre-commit hook.
+- **Nothing runs off the side.** The page never scrolls sideways at 320 CSS px wide.
+- **Overlays stay reachable.** A menu, sheet or dialog either fits or scrolls inside, and
+  its scroll area shows at least a quarter of the screen.
+- **Bars leave room.** Fixed and sticky bars together cover at most half the screen; on a
+  short screen they scroll away or fold.
+
+`reflow.iwft.ts` checks each main screen and overlay under those conditions, plus axe's
+WCAG A and AA rules. A new main screen or overlay goes into that file. A known failure is
+marked with its card through `brokenUntil`, which runs it as `test.fail`, so the fix
+flips it and the marker has to go. iOS Dynamic Type and the on-screen keyboard can't be
+emulated in Chromium: check those on a real phone after a redesign.
+
 ---
 
 ## Part 5 — Review checklist
@@ -632,6 +654,7 @@ a password manager from offering to save an API key as the site's password. The
 - [ ] Two or fewer app-wide contexts; persisted state is schema-validated and user-scoped.
 - [ ] Every field has a `name`, an `id` with a label, and an `autocomplete`, and its screen is in `fieldAutofill.iwft.ts`.
 - [ ] Every tip uses `tip.shows` and `useLongPressTip` (§4.4): never `:focus-within` or a bare `:hover`.
+- [ ] Font sizes in `rem`, and a new main screen or overlay is in `reflow.iwft.ts` (§4.5).
 
 ---
 

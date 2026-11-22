@@ -40,6 +40,8 @@ export class AccountMenuPageObject extends PageObject {
       expect(this.get(accountMenuTestIds.menu).getByRole("menuitem", { name: item })).toBeFocused(),
     );
 
+  verifyItemsCanBeReached = () => this.verifyControlsCanBeReached(this.get(accountMenuTestIds.menu));
+
   pressKey = (key: string) => this.step(`pressKey ${key}`, () => this.page.keyboard.press(key));
 
   verifyIsClosedWithFocusOnTrigger = () =>
