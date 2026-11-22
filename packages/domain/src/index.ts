@@ -7,6 +7,8 @@ export * from "./PodcastRead.js";
 export * from "./VideoRead.js";
 export * from "./PodcastTranscription.js";
 export * from "./parsePodcastLink.js";
+export * from "./TikTokVideo.js";
+export * from "./parseTikTokLink.js";
 export * from "./canonicalArticleUrl.js";
 export * from "./ExtractedArticle.js";
 export * from "./Recipe.js";
