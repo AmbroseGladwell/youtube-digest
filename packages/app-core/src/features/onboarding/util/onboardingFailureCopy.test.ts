@@ -85,4 +85,18 @@ describe("onboardingFailureCopy for an episode", () => {
     expect(onboardingFailureCopy({ kind: "transcriptionFailed", reason: "no-transcriber" }, SPOTIFY, "phone").transcribe).toBe("Try again");
     expect(onboardingFailureCopy({ kind: "transcriptionFailed", reason: "audio-unreachable" }, SPOTIFY, "phone").transcribe).toBeNull();
   });
+
+  it("says why a TikTok couldn't be read, offering Try again only where waiting might help", () => {
+    const tiktok = "https://www.tiktok.com/@kitchenwithada/video/7301234567890123456";
+    expect(onboardingFailureCopy({ kind: "tiktokRead", reason: "not-a-video" }, tiktok, "computer")).toMatchObject({
+      title: "That isn’t a TikTok video",
+      tryAgain: false,
+    });
+    expect(onboardingFailureCopy({ kind: "tiktokRead", reason: "unavailable" }, tiktok, "computer").tryAgain).toBe(false);
+    expect(onboardingFailureCopy({ kind: "tiktokRead", reason: "blocked" }, tiktok, "computer")).toMatchObject({
+      title: "We couldn't reach TikTok just now",
+      tryAgain: true,
+    });
+    expect(onboardingFailureCopy({ kind: "tiktokNoCaptions" }, tiktok, "computer").title).toBe("This TikTok has no captions");
+  });
 });

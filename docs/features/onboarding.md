@@ -119,7 +119,7 @@ recipe is a web page that turned out to hold one, so it's named a recipe once it
 accounts. Signed out, the device's trial token reads it: 5 links a token (`TRIAL_READS`), and
 15 a UTC day per address across every token, whatever the kind, a video's read included. A read is
 counted whether or not the link could be read, since fetching it is the cost (decided 3 Nov 2026).
-Reels join the table when they ship.
+A TikTok has its entry, built but not yet offered at Start (`tiktok-links.md`, "Onboarding").
 
 **A podcast episode** (OV-106) is an Apple Podcasts or Spotify link; a show's own episode page is
 left to the web entry, which reads it as a page. Reading the link spends one of the trial's reads,
