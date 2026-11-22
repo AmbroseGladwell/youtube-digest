@@ -16,7 +16,8 @@ async function migrateOnce(): Promise<Blob> {
 }
 
 // Migrated once per test process and loaded from that copy after, since booting and migrating a
-// fresh database took most of every route test's time (docs/conventions/backend-testing-guide.md).
+// fresh database took most of every route test's time. A loaded database holds a timer until it is
+// closed, which is why npm test passes --test-force-exit (docs/conventions/backend-testing-guide.md).
 export async function createMigratedTestPglite(): Promise<PGlite> {
   migratedDataDir ??= migrateOnce();
   const db = new PGlite({ extensions: { vector }, loadDataDir: await migratedDataDir });
