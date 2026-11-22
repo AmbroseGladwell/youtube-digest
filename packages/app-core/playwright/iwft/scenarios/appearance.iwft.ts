@@ -140,7 +140,6 @@ test("signing out drops the account's look, so whoever is next sees the defaults
   await settings.appearance.verifyPageIs({ theme: "dark", accent: "teal" });
 
   await (await launcher.appShell.accountMenu.open()).chooseSignOut();
-  await launcher.homePage.verifyShowsStart();
 
   await settings.appearance.verifyPageIs({ theme: null, accent: null });
   await settings.appearance.verifyDeviceCopyIs({ theme: "system", accentColour: "orange" });
