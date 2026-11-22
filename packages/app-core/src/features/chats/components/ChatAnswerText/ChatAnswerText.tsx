@@ -1,4 +1,4 @@
-import { answerBlocks } from "../../util/answerBlocks.js";
+import { answerBlocks } from "@overview/domain";
 import { ChatCodeBlock } from "../ChatCodeBlock/ChatCodeBlock.js";
 import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
 

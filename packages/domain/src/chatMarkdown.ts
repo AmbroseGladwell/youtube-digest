@@ -8,6 +8,7 @@ import {
   type OtherOverviewCitation,
   relationLabel,
 } from "./Chat.js";
+import { answerBlocks } from "./answerBlocks.js";
 import { formatTimestamp } from "./formatTimestamp.js";
 import type { Overview } from "./Overview.js";
 import { answeredFromOverviewAlone, chatSourceKind, type ChatSourceKind } from "./chatSourceKind.js";
@@ -117,26 +118,60 @@ const sourcesLine = (sources: ChatAnswerSections["introSources"], describe: (cit
   return [...groups].map(([relation, cited]) => `${relation}: ${cited.join("; ")}`).join(" · ");
 };
 
-const listItemText = (item: ChatListItem, describe: (citation: ChatCitation) => string): string =>
-  item.sources.length === 0 ? item.text : `${item.text} (${item.sources.map(describe).join("; ")})`;
+// Text inside a list item whose content starts `indent` columns in: each paragraph and fenced code
+// block on lines of its own, every line after the first indented so it stays in the item (OV-374).
+const nestedLines = (text: string, indent: number): string[] => {
+  const lines = answerBlocks(text).flatMap((block) =>
+    block.kind === "paragraph" ? [block.text] : ["```" + block.language, ...block.code.split("\n"), "```"],
+  );
+  return lines.map((line, at) => (at === 0 || line === "" ? line : " ".repeat(indent) + line));
+};
+
+const nestedText = (text: string, indent: number): string => nestedLines(text, indent).join("\n");
+
+const endsInCode = (text: string): boolean => answerBlocks(text).at(-1)?.kind === "code";
+
+const listItemText = (item: ChatListItem, describe: (citation: ChatCitation) => string, indent: number): string => {
+  if (item.sources.length === 0) {
+    return nestedText(item.text, indent);
+  }
+  const sources = `(${item.sources.map(describe).join("; ")})`;
+  return endsInCode(item.text)
+    ? `${nestedText(item.text, indent)}\n${" ".repeat(indent)}${sources}`
+    : `${nestedText(item.text, indent)} ${sources}`;
+};
+
+// Where a message's text starts, after its "12. " in the conversation's list.
+const messageIndent = (index: number): number => `${index + 1}. `.length;
 
 // A structured answer as it reads outside the app: the intro, each section's heading, paragraphs
-// and lists with its sources by how they relate, then the takeaway (OV-354).
-const sectionsText = (sections: ChatAnswerSections, describe: (citation: ChatCitation) => string): string => {
+// and lists with its sources by how they relate, then the takeaway (OV-354), all inside the
+// message's item in the conversation's list, starting `indent` columns in.
+const sectionsText = (sections: ChatAnswerSections, describe: (citation: ChatCitation) => string, indent: number): string => {
+  const pad = " ".repeat(indent);
   const introSources = sourcesLine(sections.introSources, describe);
   const body = sections.sections.flatMap((section, index) => {
     const sources = sourcesLine(section.sources, describe);
+    const heading = `${pad}${index + 1}. `;
+    const inSection = " ".repeat(heading.length);
     return [
-      `   ${index + 1}. ${section.heading}`,
-      ...section.paragraphs.map((paragraph) => `      ${paragraph}`),
-      ...section.numbered.map((item, at) => `      ${at + 1}) ${listItemText(item, describe)}`),
-      ...section.bullets.map((item) => `      - ${listItemText(item, describe)}`),
-      ...(sources === null ? [] : [`      (${sources})`]),
+      `${heading}${section.heading}`,
+      ...section.paragraphs.map((paragraph) => `${inSection}${nestedText(paragraph, inSection.length)}`),
+      ...section.numbered.map((item, at) => {
+        const marker = `${inSection}${at + 1}) `;
+        return `${marker}${listItemText(item, describe, marker.length)}`;
+      }),
+      ...section.bullets.map((item) => `${inSection}- ${listItemText(item, describe, inSection.length + 2)}`),
+      ...(sources === null ? [] : [`${inSection}(${sources})`]),
     ];
   });
-  return [sections.intro, ...(introSources === null ? [] : [`   (${introSources})`]), ...body, sections.takeaway]
-    .filter((line) => line.trim() !== "")
-    .join("\n");
+  const opening = [nestedText(sections.intro, indent), ...(introSources === null ? [] : [`${pad}(${introSources})`]), ...body].filter(
+    (line) => line.trim() !== "",
+  );
+  // A blank line ends the last section's list, so the takeaway reads as the answer's own closing line.
+  return sections.takeaway.trim() === ""
+    ? opening.join("\n")
+    : [...opening, "", `${pad}${nestedText(sections.takeaway, indent)}`].join("\n");
 };
 
 const scopedCitation = (citation: ChatCitation): string =>
@@ -145,8 +180,11 @@ const scopedCitation = (citation: ChatCitation): string =>
 const scopedChatMarkdown = (chat: Chat, scope: ChatScopeLabel, from: number, count: number): string => {
   const lines = chat.messages.slice(from, from + count).map((message, offset) => {
     const index = from + offset;
+    const indent = messageIndent(index);
     const said =
-      message.from === "answer" && message.sections !== undefined ? sectionsText(message.sections, scopedCitation) : message.text;
+      message.from === "answer" && message.sections !== undefined
+        ? sectionsText(message.sections, scopedCitation, indent)
+        : nestedText(message.text, indent);
     return `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${said}`;
   });
   const over = scope.kind === "library" ? "the reader's whole library" : `the reader's project "${scope.name}"`;
@@ -171,10 +209,11 @@ export const chatMarkdown = (chat: Chat, about: Overview | ChatScopeLabel, { fro
   const kind = chatSourceKind(overview);
   const lines = chat.messages.slice(from, from + count).map((message, offset) => {
     const index = from + offset;
+    const indent = messageIndent(index);
     const said =
       message.from === "answer" && message.sections !== undefined
-        ? sectionsText(message.sections, (citation) => citationText(overview, citation))
-        : message.text;
+        ? sectionsText(message.sections, (citation) => citationText(overview, citation), indent)
+        : nestedText(message.text, indent);
     const head = `${index + 1}. **${message.from === "reader" ? "The reader asked" : "The answer"}** (${message.at.slice(0, 10)}): ${said}`;
     if (message.from === "reader") {
       return head;
@@ -183,7 +222,7 @@ export const chatMarkdown = (chat: Chat, about: Overview | ChatScopeLabel, { fro
       answerNote(message, kind),
       message.citations.length === 0 ? null : `Cites: ${message.citations.map((citation) => citationText(overview, citation)).join("; ")}.`,
     ].filter((note) => note !== null);
-    return [head, ...notes.map((note) => `   ${note}`)].join("\n");
+    return [head, ...notes.map((note) => `${" ".repeat(indent)}${note}`)].join("\n");
   });
   return [
     `# A conversation about "${overview.source.title}"`,

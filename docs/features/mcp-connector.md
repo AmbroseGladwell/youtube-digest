@@ -349,6 +349,14 @@ instructions say they exist. No tool writes to one: a chat is the reader's conve
 assistant that wants to discuss the overview has its own. A deleted conversation never appears.
 `readChats` reads them apart from `readLibrary`, so only these calls pay for it.
 
+`get_chat`'s Markdown keeps each answer whole as CommonMark. A conversation is a numbered list of
+messages, and an answer's sections and their numbered and bulleted items nest inside it. Any text
+that runs over more than one line, a fenced code block above all, is written a paragraph or a
+block to its own lines, with every line after the first indented to its item's content, so a code
+example stays inside the item that gives it and the list carries on after it (OV-374). The split
+into paragraphs and code blocks is `answerBlocks` in `@overview/domain`, the same one the app draws
+answers with. An item's sources follow its code on a line of their own, so the fence still closes.
+
 ## Search
 
 **Filtering happens in memory, after each record is migrated and parsed.** A filter can

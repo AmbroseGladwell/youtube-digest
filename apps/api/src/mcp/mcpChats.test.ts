@@ -183,7 +183,10 @@ test("a project's chat and a library chat are listed by what they're over, read 
             heading: "Scope",
             paragraphs: [],
             numbered: [],
-            bullets: [{ text: "Begin with one habit.", sources: [] }],
+            bullets: [
+              { text: "Begin with one habit.", sources: [] },
+              { text: "Track it:\n```sh\nhabit log\n```", sources: [] },
+            ],
             sources: [{ citation: cited, relation: "Supports" }],
           },
         ],
@@ -210,7 +213,10 @@ test("a project's chat and a library chat are listed by what they're over, read 
 
   const read = (await client.callTool("get_chat", { id: onProject })).text;
   assert.match(read, /^# A conversation over the reader's project "Training"/);
-  assert.match(read, /1\. Scope\n {6}- Begin with one habit\.\n {6}\(Based on: the reader's overview "/);
+  assert.match(
+    read,
+    /1\. Scope\n {6}- Begin with one habit\.\n {6}- Track it:\n {8}```sh\n {8}habit log\n {8}```\n {6}\(Based on: the reader's overview "/,
+  );
   assert.match((await client.callTool("get_chat", { id: overLibrary })).text, /^# A conversation over the reader's whole library/);
 
   assert.equal((await reader.inject({ method: "DELETE", url: `/api/projects/${project.id}` })).statusCode < 300, true);
