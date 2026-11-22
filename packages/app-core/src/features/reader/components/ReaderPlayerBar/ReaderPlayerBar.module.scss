@@ -1,4 +1,5 @@
 @use "../../../../theme/controls.scss" as controls;
+@use "../../../../theme/shortScreens.scss";
 
 // Design 1a; over the mini-player: docs/features/audio-player.md, "Which note the bar is about".
 .root {
@@ -14,6 +15,11 @@
   box-shadow: var(--shadow-float);
   color: var(--ink);
   padding: 0.75rem 1.125rem 0.875rem;
+
+  @include shortScreens.very-short-screen {
+    position: relative;
+    bottom: auto;
+  }
 }
 
 .transport {

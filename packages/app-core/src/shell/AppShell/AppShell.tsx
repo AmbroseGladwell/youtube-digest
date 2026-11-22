@@ -45,8 +45,8 @@ import { useAnalytics } from "../../features/analytics/AnalyticsContext.js";
 import { PageLink } from "../../components/shared/PageLink/PageLink.js";
 import { OnThisTabLine } from "../../features/capture/components/OnThisTabLine/OnThisTabLine.js";
 import { useOnThisTab } from "../../features/capture/useOnThisTab.js";
+import { stickyChromeSizes } from "../../util/stickyChromeSizes.js";
 
-const MASTHEAD_HEIGHT_PROPERTY = "--masthead-height";
 // Mirrors the breakpoint in ReaderMasthead.module.scss.
 const HEAD_SCROLLS_AWAY_QUERY = "(max-width: 61.9375rem)";
 
@@ -54,7 +54,7 @@ export const AppShell = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isPanel = useIsPanel();
-  const mastheadHeight = useMeasuredHeight(MASTHEAD_HEIGHT_PROPERTY);
+  const mastheadHeight = useMeasuredHeight(stickyChromeSizes.masthead);
   const [band, setBand] = useState<HTMLElement | null>(null);
   const measureBand = useCallback(
     (element: HTMLElement | null) => {

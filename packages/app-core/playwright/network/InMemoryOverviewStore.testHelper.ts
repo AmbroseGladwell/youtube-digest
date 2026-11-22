@@ -107,6 +107,10 @@ export class InMemoryOverviewStore implements OverviewStore {
     return this.#states.get(overviewId) ?? { overviewId, ...DEFAULT_OVERVIEW_STATE };
   }
 
+  async listOverviewStates() {
+    return [...this.#states.values()];
+  }
+
   async setOverviewState(overviewId: OverviewId, patch: Partial<Pick<OverviewState, "read" | "favourite" | "userTags" | "asked">>) {
     if (this.#failingStateWrites.has(overviewId)) {
       throw new Error(`the state write for ${overviewId} was told to fail`);

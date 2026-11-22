@@ -96,7 +96,7 @@ import { OnboardingNextSteps } from "../../onboarding/components/OnboardingNextS
 import { readableEntries } from "../../overviews/types/LibraryEntry.js";
 import { overviewTags } from "../../overviews/util/overviewTags.js";
 import { relatedByTag } from "../util/relatedByTag.js";
-import { ARTICLE_TABS, READER_TABS, UNCHAPTERED_RECIPE_VIDEO_TABS, type ReaderTab } from "../types/ReaderTab.js";
+import { ARTICLE_TABS, timedSourceTabs, type ReaderTab } from "../types/ReaderTab.js";
 import { overviewNeighbours } from "../util/overviewNeighbours.js";
 import { useNotePlayer } from "./useNotePlayer.js";
 import { useSavedOnRead } from "./useSavedOnRead.js";
@@ -123,8 +123,7 @@ import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
-
-const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
+import { stickyChromeSizes } from "../../../util/stickyChromeSizes.js";
 
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
@@ -176,7 +175,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const [recipeUnits, setRecipeUnits] = useState<RecipeUnits>(readRecipeUnits);
   const [printingRecipe, setPrintingRecipe] = useState(false);
   const [recipeCopied, setRecipeCopied] = useState(false);
-  const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
+  const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(stickyChromeSizes.readerTabs);
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
 
@@ -217,7 +216,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
       return ["Overview" as const];
     }
     if (webArticle === null) {
-      return recipeNote !== null && !overview?.chapters?.length ? UNCHAPTERED_RECIPE_VIDEO_TABS : READER_TABS;
+      return timedSourceTabs(overview?.chapters?.length ?? null, recipeNote !== null);
     }
     return webArticle.article.chapters.length > 1 ? ARTICLE_TABS : ["Overview" as const];
   };
@@ -736,7 +735,12 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
         className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}
         style={chatSheet && chat.open ? ({ "--chat-sheet-clearance": `${LOWERED_SHOWS_PX}px` } as CSSProperties) : undefined}
       >
-        <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
+        <article
+          className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
+          ref={tabsHeight.host}
+          data-masthead-lets-go
+          data-testid={readerPageTestIds.root}
+        >
           <ReaderMasthead
             overview={overview}
             metaParts={overviewMetaParts(overview)}
