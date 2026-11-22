@@ -11,6 +11,8 @@ import {
   MAX_CHAT_QUESTIONS,
   Overview,
   OVERVIEW_MIGRATIONS,
+  OVERVIEW_STATE_MIGRATIONS,
+  OverviewState,
   PROJECT_MEMBER_MIGRATIONS,
   PROJECT_MIGRATIONS,
   Project,
@@ -18,6 +20,8 @@ import {
   readStoredRecord,
   sourceKey,
   stampSchemaVersion,
+  Topic,
+  TOPIC_MIGRATIONS,
   type ChatSource,
   type ChatCitation,
   type ChatMessage,
@@ -47,15 +51,18 @@ import { overviewCitationsOf, type CitableOverview } from "./citationsOf.js";
 import { keywordMinutes, transcriptMinutes } from "./keywordMinutes.js";
 import { PINNED_PROJECT_WHOLE } from "./chooseOtherSources.js";
 import {
+  BROAD_SHAPE,
   libraryChatMaterial,
-  PICK_SHAPE,
-  PickReply,
+  marksBlock,
   minutesBlock,
   pickedBlock,
-  pickPrompt,
+  PLAN_SHAPE,
+  planPrompt,
+  scopeBlock,
   SECTIONED_SHAPE,
   type LibraryChatScope,
 } from "./libraryChatPrompt.js";
+import { ChatPlan, planScope, type OverviewMarks } from "./planScope.js";
 import { recordChatCost } from "./recordChatCost.js";
 import { reserveChatMessage } from "./reserveChatMessage.js";
 import { arrivedSections } from "./arrivedSections.js";
@@ -116,12 +123,14 @@ export interface ResolvedScope {
   scope: LibraryChatScope;
   overviews: Overview[];
   stats: ChatScopeStats;
+  marks: Map<string, OverviewMarks>;
+  topics: string[];
 }
 
 // Answers a reader's question over their whole library or one project, on our key, within the
 // same allowance as an overview's chat. Small enough, the overviews go whole and one pass answers;
-// larger, the model picks up to five from the map and code sends those whole for a second pass
-// (OV-307's measured two-pass shape; docs/features/chats.md, "Library and project chat").
+// larger, the model plans from the map: filters code applies, a mode, and up to five picks code sends
+// whole for a second pass (OV-373; docs/features/chats.md, "Library and project chat").
 export class LibraryChatAnswerer {
   #options: LibraryChatAnswererOptions;
 
@@ -136,7 +145,7 @@ export class LibraryChatAnswerer {
     log: FastifyBaseLogger,
   ): Promise<AsyncGenerator<ChatStreamEvent>> {
     const { records, usage, clock, dailyMessages } = this.#options;
-    const { scope, overviews, stats } = await this.#scope(accountId, owner);
+    const { scope, overviews, stats, marks, topics } = await this.#scope(accountId, owner);
     if (overviews.length === 0) {
       throw new ApiError("transcript_unavailable", "There are no overviews here to answer from yet", { chat: "no-source" });
     }
@@ -156,7 +165,8 @@ export class LibraryChatAnswerer {
     const reservation = await reserveChatMessage(usage, { askedAt, accountId, plan, dailyMessages }, log);
     const release = () => usage.release(reservation.day, accountId);
 
-    const material = libraryChatMaterial(scope, overviews, this.#options.wholeCharacters);
+    const material = libraryChatMaterial(scope, overviews, this.#options.wholeCharacters, { marks, topics });
+    const marksMessage = marksBlock(material.labels, marks);
     const history = conversation?.messages ?? [];
     const asked = history.flatMap((message) => (message.from === "reader" ? [message] : []));
     // Pins (OV-354): what the reader added with "@" is read whole with that question, beside the
@@ -283,20 +293,33 @@ export class LibraryChatAnswerer {
       let settled = false;
       try {
         let picked: OverviewId[] = [];
+        let broad = material.mode === "whole";
+        let filtered = false;
+        let kept = [...material.labels.keys()];
+        let looked: number | undefined;
         if (material.mode === "map") {
           yield { type: "picking" };
-          const pick = await ask([...before, pickPrompt(question.text)], PICK_SHAPE);
+          const planned = await ask([...before, marksMessage, planPrompt(question.text)], PLAN_SHAPE);
           let raw = "";
-          for await (const piece of pick.pieces) {
+          for await (const piece of planned.pieces) {
             raw += piece;
           }
-          pickUsage = pick.usage();
-          assertWhole(pick);
-          const labels = PickReply.parse(JSON.parse(raw)).overviews.map((label) => label.split(".")[0] ?? "");
-          picked = [...new Set(labels)]
+          pickUsage = planned.usage();
+          assertWhole(planned);
+          const plan = ChatPlan.parse(JSON.parse(raw));
+          const scoped = planScope(plan.filters, material.labels, marks);
+          broad = plan.mode === "broad";
+          filtered = scoped.filtered;
+          kept = scoped.kept;
+          looked = kept.length;
+          const inScope = new Set(kept);
+          picked = [...new Set(plan.picks.map((label) => label.split(".")[0] ?? ""))]
             .flatMap((label) => {
               const overview = material.labels.get(label);
-              return overview === undefined || readBefore.has(overview.id) || pinnedNew.some((pin) => pin.id === overview.id)
+              return overview === undefined ||
+                !inScope.has(label) ||
+                readBefore.has(overview.id) ||
+                pinnedNew.some((pin) => pin.id === overview.id)
                 ? []
                 : [overview.id as OverviewId];
             })
@@ -304,6 +327,7 @@ export class LibraryChatAnswerer {
           yield {
             type: "picked",
             overviews: picked.map((overviewId) => ({ overviewId, title: material.labels.get(labelOf.get(overviewId)!)!.source.title })),
+            looked,
           };
         }
 
@@ -343,12 +367,14 @@ export class LibraryChatAnswerer {
         stream = await ask(
           [
             ...before,
+            marksMessage,
+            ...(filtered ? [scopeBlock(kept)] : []),
             ...block([...pinnedNew.map((overview) => overview.id), ...picked]),
             ...minutesMessage(minutes),
             ...setAsideLine(setAsideNow),
             { role: "user", content: question.text },
           ],
-          SECTIONED_SHAPE,
+          broad ? BROAD_SHAPE : SECTIONED_SHAPE,
         );
         let raw = "";
         let sent = "";
@@ -395,7 +421,11 @@ export class LibraryChatAnswerer {
             citations,
             inSource: false,
             sections,
-            stats: { ...stats, read: material.mode === "whole" ? overviews.length : picked.length + pinnedNew.length },
+            stats: {
+              ...stats,
+              read: material.mode === "whole" ? overviews.length : picked.length + pinnedNew.length,
+              ...(looked === undefined ? {} : { looked }),
+            },
           },
         ];
         const written = await appendChatMessages(records, accountId, { owner, conversationId: question.conversationId, messages }, clock());
@@ -410,6 +440,16 @@ export class LibraryChatAnswerer {
             pickInputTokens: pickCost.inputTokens,
             pickOutputTokens: pickCost.outputTokens,
             picked: picked.length,
+            answerMode: broad ? "broad" : "deep",
+            filtered,
+            lookedAcross: looked ?? null,
+            scopeCited: new Set(
+              citations.flatMap((citation) =>
+                "overviewId" in citation && kept.some((label) => material.labels.get(label)?.id === citation.overviewId)
+                  ? [citation.overviewId]
+                  : [],
+              ),
+            ).size,
             sections: sections.sections.length,
             sourcesCited: citations.length,
             otherOverviewCitations: citations.length,
@@ -480,10 +520,38 @@ export class LibraryChatAnswerer {
   async #scope(accountId: AccountId, owner: LibraryChatOwner): Promise<ResolvedScope> {
     const { records } = this.#options;
     const oldestFirst = (overviews: Overview[]) => [...overviews].sort((left, right) => left.savedAt.localeCompare(right.savedAt));
+    const allTopics = readAll(await records.listLive(accountId, "topic", "%"), Topic, TOPIC_MIGRATIONS);
+    const states = new Map(
+      readAll(await records.listLive(accountId, "overviewState", "%"), OverviewState, OVERVIEW_STATE_MIGRATIONS).map((state) => [
+        state.overviewId as string,
+        state,
+      ]),
+    );
+    const marksOf = (overviews: readonly Overview[]) =>
+      new Map(
+        overviews.map((overview) => [
+          overview.id as string,
+          {
+            read: states.get(overview.id)?.read ?? false,
+            favourite: states.get(overview.id)?.favourite ?? false,
+            topics: overview.topicIds.flatMap((topicId) => allTopics.find((topic) => topic.id === topicId)?.name ?? []),
+          },
+        ]),
+      );
+    const topicNames = (overviews: readonly Overview[]) =>
+      [...new Set(overviews.flatMap((overview) => marksOf([overview]).get(overview.id)!.topics))].sort((left, right) =>
+        left.localeCompare(right),
+      );
     if (owner.kind === "library") {
       const overviews = readAll(await records.listLive(accountId, "overview", "%"), Overview, OVERVIEW_MIGRATIONS);
       const projects = (await records.listLiveIds(accountId, "project", "%")).length;
-      return { scope: { kind: "library" }, overviews: oldestFirst(overviews), stats: { overviews: overviews.length, projects } };
+      return {
+        scope: { kind: "library" },
+        overviews: oldestFirst(overviews),
+        stats: { overviews: overviews.length, projects },
+        marks: marksOf(overviews),
+        topics: topicNames(overviews),
+      };
     }
     const project = readAll(await records.readLive(accountId, "project", [owner.id]), Project, PROJECT_MIGRATIONS)[0];
     if (project === undefined) {
@@ -493,7 +561,13 @@ export class LibraryChatAnswerer {
       .filter(isInProject)
       .map((member) => member.overviewId);
     const overviews = readAll(await records.readLive(accountId, "overview", members), Overview, OVERVIEW_MIGRATIONS);
-    return { scope: { kind: "project", project }, overviews: oldestFirst(overviews), stats: { overviews: overviews.length } };
+    return {
+      scope: { kind: "project", project },
+      overviews: oldestFirst(overviews),
+      stats: { overviews: overviews.length },
+      marks: marksOf(overviews),
+      topics: topicNames(overviews),
+    };
   }
 }
 

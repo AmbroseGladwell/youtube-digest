@@ -29,6 +29,8 @@ export type AskOverState =
       // small library or project, which is read whole with no choosing.
       picking: "choosing" | "reading" | null;
       picked: PickedOverview[];
+      // How many overviews the plan kept to look across (OV-373); absent before it says.
+      looked?: number;
       text: string;
       sources: { pinned: ChatSource[]; found: ChatSource[] } | null;
       sections: ChatAnswerSection[];
@@ -93,8 +95,17 @@ export const useAskOver = (owner: AskOwner, api?: ChatApi) => {
                 return { ...current, picking: "choosing" };
               }
               if (event.type === "picked") {
-                analytics.ask.chat.picked({ scope, overviews: event.overviews.length });
-                return { ...current, picking: "reading", picked: event.overviews };
+                analytics.ask.chat.picked({
+                  scope,
+                  overviews: event.overviews.length,
+                  ...(event.looked === undefined ? {} : { lookedAcross: event.looked }),
+                });
+                return {
+                  ...current,
+                  picking: "reading",
+                  picked: event.overviews,
+                  ...(event.looked === undefined ? {} : { looked: event.looked }),
+                };
               }
               if (event.type === "sources") {
                 return { ...current, sources: { pinned: event.pinned, found: event.found } };

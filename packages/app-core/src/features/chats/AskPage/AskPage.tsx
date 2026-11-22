@@ -188,7 +188,9 @@ export const AskPage = () => {
       if (state.picking === "choosing" && wasPicking !== "choosing") {
         setAnnouncement("Choosing which overviews to read");
       } else if (state.picking === "reading" && wasPicking !== "reading") {
-        setAnnouncement(`Reading ${overviews(state.picked.length)}`);
+        setAnnouncement(
+          state.looked === undefined ? `Reading ${overviews(state.picked.length)}` : `Looking across ${overviews(state.looked)}`,
+        );
       } else if (was.status !== "answering" && state.picking === null) {
         setAnnouncement("Writing an answer");
       }
@@ -437,6 +439,7 @@ export const AskPage = () => {
                           <AskPickingWait
                             phase={pickingPhaseOf(pending.picking, pending.text, pending.sections.length)}
                             picked={pending.picked}
+                            {...(pending.looked === undefined ? {} : { looked: pending.looked })}
                             imageOf={imageOf}
                             holds={holds}
                             onOpened={() => analytics.ask.chat.readOpened({ scope })}
