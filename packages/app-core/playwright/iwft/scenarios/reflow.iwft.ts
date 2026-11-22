@@ -47,7 +47,6 @@ interface Screen<Shown extends PageObject = PageObject> {
 const screen = <Shown extends PageObject>(described: Screen<Shown>): Screen => described as unknown as Screen;
 
 const ZOOMED = reflowConditions[0]!.name;
-const PLAYER_COVERS_THE_NOTE = "OV-384: the bars and the player cover the overview";
 const SHEET_TOO_SHORT = "OV-385: bottom sheets leave their lists too little room";
 const TIME_SAVED_NAME = "OV-389: the time-saved button's name leaves out its visible text";
 
@@ -90,7 +89,6 @@ const screens: Screen[] = [
       return library.nthCard(0).openReader();
     },
     verify: (reader) => reader.verifyReflows(),
-    brokenUntil: Object.fromEntries(reflowConditions.map((condition) => [condition.name, PLAYER_COVERS_THE_NOTE])),
   }),
   screen({
     name: "the Ask page",

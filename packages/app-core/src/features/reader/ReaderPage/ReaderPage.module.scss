@@ -1,4 +1,5 @@
 @use "../../../theme/controls.scss" as controls;
+@use "../../../theme/shortScreens.scss";
 
 // Design 4a, one column: docs/features/stone-theme.md, "The single overview".
 .root {
@@ -10,6 +11,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+
+  @include shortScreens.sticky-offset(--reader-tabs-height, --reader-tabs-size);
 }
 
 // Chat beside the note: docs/features/chats.md, "Beside the note (design 310a, 310d–310p)".

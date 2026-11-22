@@ -1,4 +1,5 @@
 @use "../../../theme/controls.scss" as controls;
+@use "../../../theme/shortScreens.scss";
 
 .page {
   min-height: 100dvh;
@@ -6,6 +7,9 @@
   flex-direction: column;
   background: var(--ground);
   color: var(--ink);
+
+  @include shortScreens.sticky-offset(--masthead-height, --masthead-size);
+  @include shortScreens.sticky-offset(--reader-tabs-height, --reader-tabs-size);
 }
 
 // Design 30e and 30k: one column when narrow, the grid's flow moving the way in after the note.

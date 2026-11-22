@@ -379,7 +379,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    max-height: calc(100dvh - var(--masthead-height, 3.5rem) - 1rem);
+    max-height: calc(100dvh - var(--masthead-size, 3.5rem) - 1rem);
     background: var(--card);
     box-shadow: var(--shadow-dialog);
     border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;

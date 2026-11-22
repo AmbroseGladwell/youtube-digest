@@ -123,8 +123,7 @@ import { useSettingsQuery } from "../../settings/queries/settingsQuery.js";
 import styles from "./ReaderPage.module.scss";
 import { readerPageTestIds } from "./ReaderPageTestIds.js";
 import { PageLink } from "../../../components/shared/PageLink/PageLink.js";
-
-const READER_TABS_HEIGHT_PROPERTY = "--reader-tabs-height";
+import { stickyChromeSizes } from "../../../util/stickyChromeSizes.js";
 
 const madeOn = (savedAt: string) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(new Date(savedAt));
 
@@ -176,7 +175,7 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
   const [recipeUnits, setRecipeUnits] = useState<RecipeUnits>(readRecipeUnits);
   const [printingRecipe, setPrintingRecipe] = useState(false);
   const [recipeCopied, setRecipeCopied] = useState(false);
-  const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(READER_TABS_HEIGHT_PROPERTY);
+  const tabsHeight = useMeasuredHeight<HTMLElement, HTMLDivElement>(stickyChromeSizes.readerTabs);
   const isPanel = useIsPanel();
   const isPhone = useIsPhone();
 
@@ -736,7 +735,12 @@ const ReaderPageForOverview = ({ overviewId }: { overviewId: OverviewId }) => {
         className={`${styles.layout} ${chatBeside && chat.open ? styles.layoutWithChat : ""}`}
         style={chatSheet && chat.open ? ({ "--chat-sheet-clearance": `${LOWERED_SHOWS_PX}px` } as CSSProperties) : undefined}
       >
-        <article className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`} ref={tabsHeight.host} data-testid={readerPageTestIds.root}>
+        <article
+          className={`${styles.root} ${isPanel ? styles.panelRoot : ""}`}
+          ref={tabsHeight.host}
+          data-masthead-lets-go
+          data-testid={readerPageTestIds.root}
+        >
           <ReaderMasthead
             overview={overview}
             metaParts={overviewMetaParts(overview)}
