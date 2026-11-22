@@ -287,4 +287,32 @@ test.describe("Chat across sources", () => {
     await reader.chat.verifyCodeBlocksInListItems(0, 2);
     await reader.chat.copyCodeBlock(0, 1, rule);
   });
+
+  test("on a narrow phone, sources with long titles fold into +N by the room they have, never wider than the panel", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    const longTitles = [
+      "A very long title about everything you ever wanted to know about fermenting vegetables at home",
+      "Another remarkably long title on slow-cooked beans, lentils and every pulse in between",
+      "A third long title covering weeknight curries from start to finish without any shortcuts",
+    ];
+    for (const [index, title] of longTitles.entries()) {
+      backendSimulator.overviews.seedSynced(titled(title, `2026-11-0${index + 2}T09:00:00.000Z`));
+    }
+    backendSimulator.overviews.seedSynced(titled(STEW, "2026-11-10T09:00:00.000Z"));
+    const library = await launcher.launchExpectingLibrary(SIGNED_IN);
+    const reader = await library.nthCard(0).openReader();
+    await reader.chat.openFromMenu();
+
+    for (let pinned = 0; pinned < 3; pinned += 1) {
+      await reader.chat.type("@");
+      await reader.chat.choosePickerOption(0);
+    }
+
+    await reader.chat.verifyNextSourcesRead([longTitles[2]!, "+2"]);
+    await reader.chat.verifyNextSourcesWithinPanel();
+  });
 });
