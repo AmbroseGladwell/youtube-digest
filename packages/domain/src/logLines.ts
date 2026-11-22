@@ -409,12 +409,7 @@ export const apiLogLines = coded("api", {
     read: line(
       "info",
       "tiktok video read",
-      "A TikTok link was turned into a video through the vendor; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks it has, `credits` what the vendor charged and `vendorStatus` its answer when it failed. Never the link, the handle or the video.",
-    ),
-    transcript: line(
-      "info",
-      "tiktok transcript resolved",
-      "A TikTok video's words were asked for through the vendor; `source` is the caption track's (ASR, creator), `segments` how many came back, or `failure` why none could, with `credits` and `vendorStatus` as for a read. Never the video, and the words are never kept.",
+      "A TikTok link was turned into a video and its words through the vendor; `link` is the link's shape (video, short), `outcome` read or why not, `captions` how many caption tracks it has, `segments` how many lines of words came back (0 with no captions), `credits` what the vendor charged and `vendorStatus` its answer when it failed. Never the link, the handle, the video or the words.",
     ),
   },
   transcription: {

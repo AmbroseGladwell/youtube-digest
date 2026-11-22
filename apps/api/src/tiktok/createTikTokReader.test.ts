@@ -1,6 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { TranscriptFetchError, TranscriptFetchFailure } from "@overview/transcripts";
 import { createTikTokReader, type Spend } from "./createTikTokReader.js";
 import { VIDEO_ID, VIDEO_URL } from "./ScrapeCreatorsAnswerFactory.testHelper.js";
 import { found, scriptedTikTokVendor, TIKTOK_VIDEO } from "./ScriptedTikTokVendor.testHelper.js";
@@ -15,24 +14,14 @@ const recordingSpend = () => {
   return { spend, spent };
 };
 
-const transcriptFailure = async (promise: Promise<unknown>): Promise<string> => {
-  try {
-    await promise;
-    return "no failure";
-  } catch (error) {
-    assert.ok(error instanceof TranscriptFetchError);
-    return error.failure;
-  }
-};
-
 test("a video link goes to the vendor without its sharer's parameters, and what it cost is spent", async () => {
   const { vendor, asked } = scriptedTikTokVendor();
   const { spend, spent } = recordingSpend();
 
   const read = await createTikTokReader({ vendor }).read(`${VIDEO_URL}?is_from_webapp=1&sender_device=pc`, spend);
 
-  assert.deepEqual(read, { status: "read", video: TIKTOK_VIDEO });
-  assert.deepEqual(asked, [{ url: VIDEO_URL, withTranscript: false }]);
+  assert.equal(read.status === "read" && read.video, TIKTOK_VIDEO);
+  assert.deepEqual(asked, [{ url: VIDEO_URL, withTranscript: true }]);
   assert.deepEqual(spent, [[1, null]]);
 });
 
@@ -54,7 +43,7 @@ test("a short link goes to the vendor as it came, for it to follow", async () =>
 
   await createTikTokReader({ vendor }).read("https://vm.tiktok.com/ZMhAbCdEf/", recordingSpend().spend);
 
-  assert.deepEqual(asked, [{ url: "https://vm.tiktok.com/ZMhAbCdEf/", withTranscript: false }]);
+  assert.deepEqual(asked, [{ url: "https://vm.tiktok.com/ZMhAbCdEf/", withTranscript: true }]);
 });
 
 test("a link that isn't a TikTok video is refused without asking the vendor or spending anything", async () => {
@@ -76,51 +65,39 @@ test("the vendor's failure is the read's, and its status goes with what it cost"
   assert.deepEqual(spent, [[0, 404]]);
 });
 
-test("a video's words are its captions, keyed as a TikTok and marked machine-heard", async () => {
+const readOf = async (reader: ReturnType<typeof createTikTokReader>) => {
+  const read = await reader.read(VIDEO_URL, recordingSpend().spend);
+  assert.equal(read.status, "read");
+  return read;
+};
+
+test("the words come in the same call, for the same credit: its captions, keyed as a TikTok and marked machine-heard", async () => {
   const { vendor, asked } = scriptedTikTokVendor();
   const { spend, spent } = recordingSpend();
 
-  const { transcript, source } = await createTikTokReader({ vendor, clock: () => NOW }).transcript(VIDEO_URL, spend);
+  const read = await createTikTokReader({ vendor, clock: () => NOW }).read(VIDEO_URL, spend);
 
+  assert.equal(read.status, "read");
   assert.deepEqual(asked, [{ url: VIDEO_URL, withTranscript: true }]);
   assert.deepEqual(spent, [[1, null]]);
-  assert.equal(source, "ASR");
-  assert.equal(transcript.videoId, `tiktok:${VIDEO_ID}`);
-  assert.equal(transcript.generated, true);
-  assert.equal(transcript.fetchedAt, NOW.toISOString());
-  assert.match(transcript.segments.map(({ text }) => text).join(" "), /^There is now a real chance that the talks end/);
+  const { transcript } = read;
+  assert.equal(transcript?.videoId, `tiktok:${VIDEO_ID}`);
+  assert.equal(transcript?.generated, true);
+  assert.equal(transcript?.fetchedAt, NOW.toISOString());
+  assert.match(transcript?.segments.map(({ text }) => text).join(" ") ?? "", /^There is now a real chance that the talks end/);
 });
 
 test("captions a creator wrote are not marked machine-heard", async () => {
   const { vendor } = scriptedTikTokVendor(found({ ...TIKTOK_VIDEO, captions: [{ language: "en", source: "creator" }] }));
 
-  const { transcript } = await createTikTokReader({ vendor }).transcript(VIDEO_URL, recordingSpend().spend);
+  const read = await readOf(createTikTokReader({ vendor }));
 
-  assert.equal(transcript.generated, false);
+  assert.equal(read.status === "read" && read.transcript?.generated, false);
 });
 
-test("a video without captions, or with empty ones, has no transcript to give", async () => {
-  const bare = scriptedTikTokVendor(found(TIKTOK_VIDEO, null)).vendor;
-  const empty = scriptedTikTokVendor(found(TIKTOK_VIDEO, "WEBVTT\n\n")).vendor;
-
-  assert.equal(
-    await transcriptFailure(createTikTokReader({ vendor: bare }).transcript(VIDEO_URL, recordingSpend().spend)),
-    TranscriptFetchFailure.NO_CAPTIONS,
-  );
-  assert.equal(
-    await transcriptFailure(createTikTokReader({ vendor: empty }).transcript(VIDEO_URL, recordingSpend().spend)),
-    TranscriptFetchFailure.NO_CAPTIONS,
-  );
-});
-
-test("a transcript the vendor can't give says why in transcript terms", async () => {
-  const failing = (reason: "blocked" | "unavailable" | "no-answer") =>
-    createTikTokReader({ vendor: scriptedTikTokVendor({ status: "failed", reason, credits: 0, vendorStatus: 500 }).vendor }).transcript(
-      VIDEO_URL,
-      recordingSpend().spend,
-    );
-
-  assert.equal(await transcriptFailure(failing("blocked")), TranscriptFetchFailure.SOURCE_BLOCKED);
-  assert.equal(await transcriptFailure(failing("unavailable")), TranscriptFetchFailure.VIDEO_UNAVAILABLE);
-  assert.equal(await transcriptFailure(failing("no-answer")), TranscriptFetchFailure.SOURCE_UNAVAILABLE);
+test("a video without captions, or with empty ones, is still read, with no words", async () => {
+  for (const vtt of [null, "WEBVTT\n\n"]) {
+    const read = await readOf(createTikTokReader({ vendor: scriptedTikTokVendor(found(TIKTOK_VIDEO, vtt)).vendor }));
+    assert.deepEqual(read, { status: "read", video: TIKTOK_VIDEO, transcript: null });
+  }
 });

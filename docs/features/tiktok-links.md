@@ -14,7 +14,7 @@ tab) and speech-to-text for videos without captions are the next slices, in the 
 | What a TikTok page says, for the extension to read the reader's own tab | `readTikTokPage`, `spokenCaptionTrack` in `packages/transcripts` |
 | The vendor our server reads TikTok through | `apps/api/src/tiktok/createScrapeCreatorsTikTok.ts` |
 | From a link to the video, and from the video to its words | `createTikTokReader.ts` |
-| The routes | `POST /api/tiktok/read`, `POST /api/tiktok/transcript`, `src/routes/tiktokRoutes.ts` |
+| The route | `POST /api/tiktok/read`, `src/routes/tiktokRoutes.ts` |
 | What an overview of a TikTok is of | `TikTokSource`, `tiktokSource` in `packages/domain/src/Source.ts` |
 | Writing its note as a video's, and giving it back its source | `clipAsVideo`, `isTikTokInput` in `packages/generation/src/tiktok` |
 | From a read and its words to a saved note | `runTikTokOverviewGeneration` in `app-core`'s `generationPipeline.ts` |
@@ -72,15 +72,21 @@ How a read fails, by name:
 
 ## From a video to its words
 
-`POST /api/tiktok/transcript` takes `{ url }`, the video's address from the read. It asks the same
-vendor endpoint with `get_transcript=true`, which returns TikTok's own captions as WebVTT for
-the same one credit. Those are parsed by the podcast transcript parser (`parsePodcastTranscript`)
-into `StoredTranscript` segments, keyed `tiktok:<id>`. `generated` is true unless the caption
-track is one the creator wrote (`is_auto_generated: false`), so the reader is told when the words
-are machine-heard.
+**The words come with the read** (step 3 of the card, 22 Nov 2026). `POST /api/tiktok/read` asks
+the vendor with `get_transcript=true`, which returns TikTok's own captions as WebVTT in the same
+answer for the same one credit, so a read answers `{ status: "read", video, transcript }`. Slice 1
+had a second route, `POST /api/tiktok/transcript`, for the words alone: two credits a note. It was
+removed before any client called it.
 
-No captions, or empty ones, is `transcript_unavailable` with `failure: "no-captions"`. The vendor's
-AI transcript endpoint, and our own speech-to-text, are slice 5's question.
+The captions are parsed by the podcast transcript parser (`parsePodcastTranscript`) into
+`StoredTranscript` segments, keyed `tiktok:<id>`. `generated` is true unless the caption track is one
+the creator wrote (`is_auto_generated: false`), so the reader is told when the words are
+machine-heard. No captions, or empty ones, is a read with `transcript: null`: the video is still
+found, and the client decides what to say. The vendor's AI transcript endpoint, and our own
+speech-to-text, are slice 5's question.
+
+A trial's read signed out gets the words too, as a YouTube read does: onboarding shows the card
+from the read and writes the note once there is an account.
 
 **The words are the account's own copy**, returned to the caller and kept nowhere on the server,
 the rule since OV-295.
@@ -128,8 +134,8 @@ fetching them again means a read, and a read costs a credit. Which route found t
 ## Cost
 
 Every call is one ScrapeCreators credit, priced at `SCRAPECREATORS_PRICE` ($47 for 25,000 on the
-Freelance plan, from its homepage on 22 Nov 2026, since its pricing page was missing). A read and a
-transcript are two credits. Each one is recorded in the cost tally under `transcripts` /
+Freelance plan, from its homepage on 22 Nov 2026, since its pricing page was missing). A read,
+words included, is one credit. Each one is recorded in the cost tally under `transcripts` /
 `tiktok-vendor`, on the account, or on no one yet for a trial's read. Credits only ever come from
 what the vendor's answer says it charged.
 
