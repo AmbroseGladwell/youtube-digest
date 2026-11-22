@@ -30,12 +30,34 @@
     "react/set-state-in-effect": "off",
     "react/purity": "off",
     "react/immutability": "off",
-    "react/preserve-manual-memoization": "off"
+    "react/preserve-manual-memoization": "off",
+    "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }]}]
   },
   "overrides": [
     {
+      "files": ["packages/domain/src/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }, { "group": ["@overview/*"], "message": "@overview/domain is the bottom of the graph and imports no other workspace package." }, { "group": ["node:*"], "message": "This code runs in the browser too, so it can't import Node's built-ins." }]}]
+      }
+    },
+    {
+      "files": ["packages/app-core/src/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }, { "group": ["**/*.testHelper", "**/*.testHelper.js"], "message": "A .testHelper file is for tests only; product code never imports one." }, { "group": ["node:*"], "message": "This code runs in the browser too, so it can't import Node's built-ins." }]}]
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.testHelper.ts", "**/*.testHelper.tsx", "**/playwright/**", "**/scripts/**", "scripts/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette", "!@overview/transcripts/testing"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }]}]
+      }
+    },
+    {
       "files": ["**/playwright/**"],
-      "rules": { "import/no-cycle": "off" }
+      "rules": {
+        "import/no-cycle": "off",
+        "no-restricted-imports": ["error", { "patterns": [{ "group": ["@overview/*/**", "!@overview/domain/accentPalette", "!@overview/transcripts/testing"], "message": "Import a workspace package by its name. Its only public subpaths are @overview/domain/accentPalette and, in tests, @overview/transcripts/testing (docs/conventions/lint-and-format.md)." }, { "group": ["**/apps/**"], "message": "Nothing imports from an app by path: packages are what apps share, and apps don't import each other." }]}]
+      }
     }
   ]
 }

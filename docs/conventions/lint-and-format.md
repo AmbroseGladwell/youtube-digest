@@ -81,6 +81,22 @@ On top of `correctness`, these rules are on, each for a pattern the code had alr
 | `import/no-duplicates`, `import/no-cycle` | One import per module, and no cycles. |
 | `react/jsx-no-useless-fragment`, allowing expressions | No fragment around a single element. `<>{node}</>` stays allowed, since it's how a component returns a `ReactNode` as an element. |
 
+### Import boundaries
+
+`no-restricted-imports` holds the boundaries between workspaces. Each one held already when it went on (OV-369), so these keep the shape rather than change it:
+
+| Where | Refused | Why |
+|---|---|---|
+| Everywhere | `@overview/<package>/<anything>` | A package is imported by its name. Its only public subpaths are listed in its `package.json` `exports`: `@overview/domain/accentPalette`, and `@overview/transcripts/testing` for tests. |
+| Everywhere | a path through `apps/` | Packages are what apps share. A package never reaches into an app, and apps don't import each other. |
+| Product code | a `.testHelper` file | Test helpers ship to no one. |
+| `packages/domain/src` | any other `@overview/*` package | The domain is the bottom of the graph. |
+| `packages/domain/src`, `packages/app-core/src` | `node:*` | Both run in the browser. |
+
+Tests (`*.test.*`, `*.testHelper.*`), `playwright/` and `scripts/` keep only the first two rules: they may use test helpers, `@overview/transcripts/testing` and Node.
+
+A new boundary is a new row here and a pattern in `.oxlintrc.json`. Each pattern's `message` is what the reader sees when they cross it, so it says why.
+
 `tsconfig.base.json` sets `erasableSyntaxOnly`, so `tsc` refuses `enum`, `namespace` and
 constructor parameter properties: TypeScript that would produce code rather than just be
 erased. Mutually exclusive states are a string union or Zod enum, and a set of named values is
