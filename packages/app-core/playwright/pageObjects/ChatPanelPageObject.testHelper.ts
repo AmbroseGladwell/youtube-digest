@@ -56,6 +56,8 @@ export class ChatPanelPageObject extends PageObject {
       await this.page.keyboard.press("Escape");
     });
 
+  verifyChatControlsCanBeReached = () => this.verifyControlsCanBeReached(this.panel());
+
   verifyIsOpen = (open: boolean) =>
     this.step(`verifyIsOpen ${open}`, () => (open ? expect(this.panel()).toBeVisible() : expect(this.panel()).toHaveCount(0)));
 

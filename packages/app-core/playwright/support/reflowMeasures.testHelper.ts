@@ -91,9 +91,12 @@ export const clippedScrollPositions = (control: Element): number[] => {
   const positions: number[] = [];
   for (let parent = control.parentElement; parent; parent = parent.parentElement) {
     const style = getComputedStyle(parent);
-    const clips = [style.overflowX, style.overflowY].some((overflow) => overflow === "hidden" || overflow === "clip");
-    if (clips) {
-      positions.push(parent.scrollTop, parent.scrollLeft);
+    const clips = (overflow: string) => overflow === "hidden" || overflow === "clip";
+    if (clips(style.overflowY)) {
+      positions.push(parent.scrollTop);
+    }
+    if (clips(style.overflowX)) {
+      positions.push(parent.scrollLeft);
     }
   }
   return positions;
