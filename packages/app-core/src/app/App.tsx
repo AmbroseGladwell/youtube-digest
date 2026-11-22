@@ -21,6 +21,7 @@ import { ErrorDestinationMirrorProvider, type ErrorDestinationMirror } from "./E
 import { queryClient } from "./queryClient.js";
 import { ActiveVideoProvider, type ActiveVideoSource } from "./ActiveVideoContext.js";
 import { ArticlePagesProvider, type ArticlePages } from "./ArticlePagesContext.js";
+import { TikTokPagesProvider, type TikTokPages } from "./TikTokPagesContext.js";
 import { LayoutProvider, type AppLayout } from "./LayoutContext.js";
 import { PlaybackProvider, type PlaybackSource } from "./PlaybackContext.js";
 import { RunBridgeProvider, type RunBridge } from "./RunBridgeContext.js";
@@ -39,6 +40,7 @@ export interface AppProps {
   layout?: AppLayout;
   activeVideo?: ActiveVideoSource | null;
   articlePages?: ArticlePages | null;
+  tiktokPages?: TikTokPages | null;
   playback?: PlaybackSource | null;
   runBridge?: RunBridge | null;
   youTubeFetch?: YouTubeFetch | null;
@@ -62,6 +64,7 @@ export const App = ({
   layout = "full",
   activeVideo = null,
   articlePages = null,
+  tiktokPages = null,
   playback = null,
   runBridge = null,
   youTubeFetch = null,
@@ -78,49 +81,51 @@ export const App = ({
       <ProviderPermissionProvider value={providerPermissions}>
         <ActiveVideoProvider value={activeVideo}>
           <ArticlePagesProvider value={articlePages}>
-            <PlaybackProvider value={playback}>
-              <RunBridgeProvider value={runBridge}>
-                <LayoutProvider value={layout}>
-                  <SurfaceProvider value={surface}>
-                    <AppUpdateProvider value={appUpdate}>
-                      <DefaultApiUrlProvider value={defaultApiUrl}>
-                        <ServerSwitchableProvider value={serverSwitchable}>
-                          <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
-                            <AccentMirrorProvider value={accentMirror}>
-                              <AppBuildProvider value={build}>
-                                <QueryClientProvider client={queryClient}>
-                                  <LibraryRuntime library={library} openLibrary={openLibrary} deleteLibrary={deleteLibrary}>
-                                    <SyncRuntime>
-                                      <AppearanceRuntime>
-                                        <ErrorReportingRuntime>
-                                          <AnalyticsRuntime>
-                                            <LibraryMoveRuntime>
-                                              <OnboardingRunRuntime>
-                                                <PlayerRuntime>
-                                                  <CookingTimersRuntime scope="reader">
-                                                    <ShareRuntime>
-                                                      <RouterProvider router={router} />
-                                                    </ShareRuntime>
-                                                  </CookingTimersRuntime>
-                                                </PlayerRuntime>
-                                              </OnboardingRunRuntime>
-                                            </LibraryMoveRuntime>
-                                          </AnalyticsRuntime>
-                                        </ErrorReportingRuntime>
-                                      </AppearanceRuntime>
-                                    </SyncRuntime>
-                                  </LibraryRuntime>
-                                </QueryClientProvider>
-                              </AppBuildProvider>
-                            </AccentMirrorProvider>
-                          </ErrorDestinationMirrorProvider>
-                        </ServerSwitchableProvider>
-                      </DefaultApiUrlProvider>
-                    </AppUpdateProvider>
-                  </SurfaceProvider>
-                </LayoutProvider>
-              </RunBridgeProvider>
-            </PlaybackProvider>
+            <TikTokPagesProvider value={tiktokPages}>
+              <PlaybackProvider value={playback}>
+                <RunBridgeProvider value={runBridge}>
+                  <LayoutProvider value={layout}>
+                    <SurfaceProvider value={surface}>
+                      <AppUpdateProvider value={appUpdate}>
+                        <DefaultApiUrlProvider value={defaultApiUrl}>
+                          <ServerSwitchableProvider value={serverSwitchable}>
+                            <ErrorDestinationMirrorProvider value={errorDestinationMirror}>
+                              <AccentMirrorProvider value={accentMirror}>
+                                <AppBuildProvider value={build}>
+                                  <QueryClientProvider client={queryClient}>
+                                    <LibraryRuntime library={library} openLibrary={openLibrary} deleteLibrary={deleteLibrary}>
+                                      <SyncRuntime>
+                                        <AppearanceRuntime>
+                                          <ErrorReportingRuntime>
+                                            <AnalyticsRuntime>
+                                              <LibraryMoveRuntime>
+                                                <OnboardingRunRuntime>
+                                                  <PlayerRuntime>
+                                                    <CookingTimersRuntime scope="reader">
+                                                      <ShareRuntime>
+                                                        <RouterProvider router={router} />
+                                                      </ShareRuntime>
+                                                    </CookingTimersRuntime>
+                                                  </PlayerRuntime>
+                                                </OnboardingRunRuntime>
+                                              </LibraryMoveRuntime>
+                                            </AnalyticsRuntime>
+                                          </ErrorReportingRuntime>
+                                        </AppearanceRuntime>
+                                      </SyncRuntime>
+                                    </LibraryRuntime>
+                                  </QueryClientProvider>
+                                </AppBuildProvider>
+                              </AccentMirrorProvider>
+                            </ErrorDestinationMirrorProvider>
+                          </ServerSwitchableProvider>
+                        </DefaultApiUrlProvider>
+                      </AppUpdateProvider>
+                    </SurfaceProvider>
+                  </LayoutProvider>
+                </RunBridgeProvider>
+              </PlaybackProvider>
+            </TikTokPagesProvider>
           </ArticlePagesProvider>
         </ActiveVideoProvider>
       </ProviderPermissionProvider>

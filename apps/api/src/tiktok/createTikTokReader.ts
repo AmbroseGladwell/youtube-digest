@@ -1,6 +1,5 @@
 import { parseTikTokLink, sourceKey, type StoredTranscript, type TikTokRead, type TikTokVideo, VideoId } from "@overview/domain";
-import { spokenCaptionTrack } from "@overview/transcripts";
-import { parsePodcastTranscript } from "../podcasts/parsePodcastTranscript.js";
+import { parsePodcastTranscript, spokenCaptionTrack } from "@overview/transcripts";
 import type { TikTokVendor } from "./createScrapeCreatorsTikTok.js";
 
 // What a call spent at the vendor, and what it answered, for the cost tally and the log.
