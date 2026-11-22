@@ -549,4 +549,49 @@ test.describe("Ask", () => {
     await expect(cited.first()).toBeInViewport();
     expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
   });
+
+  test("on a phone, chips with long titles are cut and fold into +N, never pushing an answer sideways", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    const longTitles = [
+      "A very long title about everything you ever wanted to know about fermenting vegetables at home",
+      "Another remarkably long title on slow-cooked beans, lentils and every pulse in between",
+      "A third long title covering weeknight curries from start to finish without any shortcuts",
+    ];
+    const overviews = longTitles.map((title, index) => titled(title, `2026-11-0${index + 3}T09:00:00.000Z`));
+    for (const overview of overviews) {
+      backendSimulator.overviews.seedSynced(overview);
+    }
+    const cited = overviews.map(cite);
+    backendSimulator.chats.answerWith({
+      text: "Here is what they say.",
+      citations: cited,
+      sections: {
+        intro: "Here is what they say.",
+        introSources: [],
+        sections: [
+          {
+            heading: "What they say",
+            paragraphs: [],
+            numbered: [],
+            bullets: [{ text: "Start small and keep going", sources: cited }],
+            sources: cited.map((citation) => ({ citation, relation: "" })),
+          },
+        ],
+        takeaway: "",
+      },
+      stats: { overviews: 3, read: 3 },
+    });
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    const ask = await launcher.appShell.openAsk();
+    await ask.ask("What do they say?");
+
+    await ask.verifyItemSourcesFold(0, 0, 0, 2, 1);
+    await ask.verifyChipRowsWithinAnswer(0);
+    await ask.verifySectionSourcesFold(0, 0, 2, 1, 3);
+    await ask.verifyPageDoesNotScrollSideways();
+  });
 });

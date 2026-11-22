@@ -1,27 +1,107 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { fittingChipCount } from "../../../../util/fittingChipCount.js";
 import { useDismissOnOutside } from "../../../../util/useDismissOnOutside.js";
 import styles from "./ChatChipRow.module.scss";
 import { chatChipRowTestIds } from "./ChatChipRowTestIds.js";
 
-export const VISIBLE_CHIPS = 2;
+const MOST_SHOWN = 2;
+const GAP = 6;
+const LEAST_TITLE_SHOWN = 64;
 
 export interface ChatChipRowProps {
   chips: readonly ReactNode[];
-  // What the hidden chips are, for "+N"'s accessible name: every title, never just a count.
-  hiddenLabels: readonly string[];
+  // Every chip's title, in order: "+N"'s accessible name lists the hidden ones, never just a count.
+  labels: readonly string[];
   align?: "start" | "end";
   testId?: string;
 }
 
-// OV-362: a row of source chips that never runs long. Two show, then "+N", which opens a menu of
-// every one, as the row above the field does (OV-354, page 1). Used for a section's sources by
-// relation, a list item's, Pinned, Found for you and what a library answer read.
-export const ChatChipRow = ({ chips, hiddenLabels, align = "start", testId }: ChatChipRowProps) => {
+interface Measured {
+  key: string;
+  leastChipWidths: number[];
+  moreWidth: number;
+}
+
+const pixels = (value: string) => Number.parseFloat(value) || 0;
+
+const leastWidth = (slot: HTMLElement) => {
+  const cuttable = slot.querySelector<HTMLElement>("[data-cuttable]")?.offsetWidth ?? 0;
+  return slot.offsetWidth - Math.max(0, cuttable - LEAST_TITLE_SHOWN);
+};
+
+interface Room {
+  box: HTMLElement | null;
+  width: () => number;
+}
+
+const roomFor = (row: HTMLElement): Room => {
+  let box = row.parentElement;
+  let inlineMargins = 0;
+  while (box !== null && getComputedStyle(box).display.startsWith("inline")) {
+    const style = getComputedStyle(box);
+    inlineMargins += pixels(style.marginLeft) + pixels(style.marginRight);
+    box = box.parentElement;
+  }
+  const container = box;
+  return {
+    box: container,
+    width: () => {
+      if (container === null) {
+        return Number.POSITIVE_INFINITY;
+      }
+      const style = getComputedStyle(container);
+      return container.clientWidth - pixels(style.paddingLeft) - pixels(style.paddingRight) - inlineMargins;
+    },
+  };
+};
+
+// OV-362: up to two chips that fit the line, titles cut if need be, then "+N" holding every one (OV-354, page 1).
+export const ChatChipRow = ({ chips, labels, align = "start", testId }: ChatChipRowProps) => {
   const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLSpanElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
+  const measured = useRef<Measured | null>(null);
   const [toEnd, setToEnd] = useState(align === "end");
+  const key = labels.join("\n");
+  const [fit, setFit] = useState<{ key: string; shown: number } | null>(null);
+  const measuring = fit?.key !== key;
   useDismissOnOutside(open, () => setOpen(false), host);
+
+  useLayoutEffect(() => {
+    const row = root.current;
+    if (row === null || !measuring) {
+      return;
+    }
+    measured.current = {
+      key,
+      leastChipWidths: [...row.querySelectorAll<HTMLElement>(":scope > [data-chip-slot]")].map(leastWidth),
+      moreWidth: host.current?.offsetWidth ?? 0,
+    };
+  });
+
+  useLayoutEffect(() => {
+    const row = root.current;
+    if (row === null) {
+      return;
+    }
+    const room = roomFor(row);
+    const refit = () => {
+      const sizes = measured.current;
+      if (sizes?.key !== key) {
+        return;
+      }
+      const fitting = fittingChipCount(sizes.leastChipWidths, room.width(), sizes.moreWidth, GAP);
+      setFit({ key, shown: Math.max(1, Math.min(MOST_SHOWN, fitting, sizes.leastChipWidths.length)) });
+    };
+    refit();
+    if (room.box === null) {
+      return;
+    }
+    const observer = new ResizeObserver(refit);
+    observer.observe(room.box);
+    return () => observer.disconnect();
+  }, [key]);
 
   // The menu opens toward whichever side has room, so it never runs off a phone's screen (OV-368).
   useLayoutEffect(() => {
@@ -37,10 +117,20 @@ export const ChatChipRow = ({ chips, hiddenLabels, align = "start", testId }: Ch
     const roomLeft = hostBox.right;
     setToEnd(align === "end" ? roomLeft >= width || roomLeft >= roomRight : roomRight < width && roomLeft > roomRight);
   }, [open, align]);
-  const hidden = chips.length - VISIBLE_CHIPS;
+
+  const shown = measuring ? chips.length : fit.shown;
+  const hidden = measuring ? chips.length : chips.length - shown;
   return (
-    <div className={`${styles.root} ${align === "end" ? styles.end : ""}`} data-testid={testId ?? chatChipRowTestIds.root}>
-      {chips.slice(0, VISIBLE_CHIPS)}
+    <div
+      ref={root}
+      className={`${styles.root} ${align === "end" ? styles.end : ""} ${measuring ? styles.measuring : ""}`}
+      data-testid={testId ?? chatChipRowTestIds.root}
+    >
+      {chips.slice(0, shown).map((chip, index) => (
+        <span key={index} className={styles.slot} data-chip-slot>
+          {chip}
+        </span>
+      ))}
       {hidden > 0 && (
         <span className={styles.moreHost} ref={host}>
           <button
@@ -48,13 +138,13 @@ export const ChatChipRow = ({ chips, hiddenLabels, align = "start", testId }: Ch
             className={styles.more}
             aria-haspopup="true"
             aria-expanded={open}
-            aria-label={`${hidden} more: ${hiddenLabels.join(", ")}`}
+            aria-label={`${hidden} more: ${labels.slice(shown).join(", ")}`}
             onClick={() => setOpen(!open)}
             data-testid={chatChipRowTestIds.more}
           >
             +{hidden}
           </button>
-          {open && (
+          {open && !measuring && (
             <div ref={menu} className={`${styles.menu} ${toEnd ? styles.menuEnd : ""}`} role="group" data-testid={chatChipRowTestIds.menu}>
               {chips}
             </div>

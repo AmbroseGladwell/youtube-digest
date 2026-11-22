@@ -14,7 +14,7 @@ import {
 } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { ChatCitationPill } from "../ChatCitationPill/ChatCitationPill.js";
-import { ChatChipRow, VISIBLE_CHIPS } from "../ChatChipRow/ChatChipRow.js";
+import { ChatChipRow } from "../ChatChipRow/ChatChipRow.js";
 import { ChatAnswerText } from "../ChatAnswerText/ChatAnswerText.js";
 import { ChatMarkedText } from "../ChatMarkedText/ChatMarkedText.js";
 import {
@@ -288,7 +288,7 @@ export interface ChatAnswerSectionsViewProps {
 export const ChatAnswerSectionsView = ({ sections, chipsOf }: ChatAnswerSectionsViewProps) => {
   const row = (cited: readonly ChatCitation[]) => {
     const chips = chipsOf?.(cited) ?? [];
-    return <ChatChipRow chips={chips.map((each) => each.chip)} hiddenLabels={chips.slice(VISIBLE_CHIPS).map((each) => each.label)} />;
+    return <ChatChipRow chips={chips.map((each) => each.chip)} labels={chips.map((each) => each.label)} />;
   };
   const sourceRow = (sources: ChatAnswerSections["introSources"]) =>
     chipsOf === undefined || sources.length === 0 ? null : (

@@ -1,7 +1,7 @@
 import { sourceImage, type ChatSource, type Overview } from "@overview/domain";
 import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.js";
 import { Routes } from "../../../../app/Routes.js";
-import { ChatChipRow, VISIBLE_CHIPS } from "../ChatChipRow/ChatChipRow.js";
+import { ChatChipRow } from "../ChatChipRow/ChatChipRow.js";
 import { ChatSourceChip } from "../ChatSourceChip/ChatSourceChip.js";
 import styles from "./ChatDrewOn.module.scss";
 import { chatDrewOnTestIds } from "./ChatDrewOnTestIds.js";
@@ -32,7 +32,7 @@ export const ChatDrewOn = ({ how, sources, overviewOf, onFollow }: ChatDrewOnPro
       </p>
       <ChatChipRow
         align={how === "pinned" ? "end" : "start"}
-        hiddenLabels={sources.slice(VISIBLE_CHIPS).map((source) => source.title)}
+        labels={sources.map((source) => source.title)}
         chips={sources.map((source) => {
           const overview = overviewOf(source.overviewId);
           return (
