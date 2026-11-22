@@ -20,35 +20,41 @@ const TranscriptBody = z.object({
     .refine((url) => parseTikTokLink(url)?.kind === "video", "A TikTok video's address"),
 });
 
+interface TikTokRoutesOptions {
+  reader: TikTokReader | null;
+  costs: AccountCostsRepository;
+  trials: TrialsRepository;
+  clock: () => Date;
+}
+
+interface SpendTracker {
+  spend: Spend;
+  spent: Spent;
+}
+
 interface Spent {
   credits: number;
   vendorStatus: number | null;
 }
 
-// An account, and never the link, the handle or the video in a log: what someone watches is
-// theirs. Reading a link runs on a trial, like a podcast's; the words wait for an account. Without
-// the vendor's key, both say TikTok isn't read here (docs/features/tiktok-links.md).
-export function tiktokRoutes(
-  app: FastifyInstance,
-  {
-    reader,
-    costs,
-    trials,
-    clock,
-  }: { reader: TikTokReader | null; costs: AccountCostsRepository; trials: TrialsRepository; clock: () => Date },
-): void {
+// Never the link, the handle or the video in a log (docs/features/tiktok-links.md, "Who may ask").
+export const tiktokRoutes = (app: FastifyInstance, { reader, costs, trials, clock }: TikTokRoutesOptions): void => {
   const readerOrRefuse = (): TikTokReader => {
-    if (reader === null) throw new ApiError("unavailable", "This server does not read TikTok links");
+    if (reader === null) {
+      throw new ApiError("unavailable", "This server does not read TikTok links");
+    }
     return reader;
   };
 
-  const spendFor = (request: FastifyRequest, log: FastifyBaseLogger): { spend: Spend; spent: Spent } => {
+  const spendFor = (request: FastifyRequest, log: FastifyBaseLogger): SpendTracker => {
     const spent: Spent = { credits: 0, vendorStatus: null };
     const payer = request.session === null ? ("signed-out" as const) : { accountId: request.session.accountId };
     const spend: Spend = async (credits, vendorStatus) => {
       spent.credits += credits;
       spent.vendorStatus = vendorStatus;
-      if (credits === 0) return;
+      if (credits === 0) {
+        return;
+      }
       await costs.recordOrLog(
         clock(),
         payer,
@@ -92,7 +98,9 @@ export function tiktokRoutes(
     },
     async (request): Promise<StoredTranscript> => {
       const { url } = parseOrThrow(TranscriptBody, request.body, "The TikTok video");
-      if (request.session === null) throw new ApiError("unauthenticated", "Sign in to make an overview");
+      if (request.session === null) {
+        throw new ApiError("unauthenticated", "Sign in to make an overview");
+      }
       const tiktok = readerOrRefuse();
       const startedAt = clock().getTime();
       const { spend, spent } = spendFor(request, request.log);
@@ -103,10 +111,12 @@ export function tiktokRoutes(
         );
         return transcript;
       } catch (error) {
-        if (!(error instanceof TranscriptFetchError)) throw error;
+        if (!(error instanceof TranscriptFetchError)) {
+          throw error;
+        }
         request.log.info(apiLogLines.tiktok.transcript({ failure: error.failure, ...spent, ms: clock().getTime() - startedAt }));
         throw new ApiError("transcript_unavailable", error.message, { failure: error.failure });
       }
     },
   );
-}
+};

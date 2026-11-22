@@ -9,6 +9,12 @@ export interface TikTokVendor {
   video(url: string, options: { withTranscript: boolean }): Promise<VendorVideo>;
 }
 
+export interface ScrapeCreatorsOptions {
+  apiKey: string;
+  fetch?: typeof globalThis.fetch;
+  baseUrl?: string;
+}
+
 export const SCRAPECREATORS_PRICE = {
   dollarsPerCredit: 0.00188,
   checkedOn: "2026-11-22",
@@ -52,16 +58,19 @@ const FAILURE_BY_STATUS: Record<number, TikTokReadFailure> = { 400: "not-a-video
 
 const urlOrNull = (value: string | undefined): string | null => (z.url().safeParse(value).success ? value! : null);
 
-// TikTok's own API counts a video's length in milliseconds, as the vendor's sample does
-// (docs/features/tiktok-links.md, "What is not yet checked").
+// Milliseconds, as TikTok counts it (docs/features/tiktok-links.md, "What is not yet checked").
 const secondsOf = (milliseconds: number | undefined): number | null =>
   milliseconds !== undefined && milliseconds > 0 ? Math.max(1, Math.round(milliseconds / 1000)) : null;
 
-function videoFromAweme(detail: unknown): TikTokVideo | "not-a-video" | null {
+const videoFromAweme = (detail: unknown): TikTokVideo | "not-a-video" | null => {
   const aweme = Aweme.safeParse(detail);
-  if (!aweme.success) return null;
+  if (!aweme.success) {
+    return null;
+  }
   const { aweme_id: id, desc, create_time, image_post_info, author, video } = aweme.data;
-  if (image_post_info !== undefined && image_post_info !== null) return "not-a-video";
+  if (image_post_info !== undefined && image_post_info !== null) {
+    return "not-a-video";
+  }
   const parsed = TikTokVideo.safeParse({
     id,
     url: `https://www.tiktok.com/@${author.unique_id}/video/${id}`,
@@ -77,24 +86,21 @@ function videoFromAweme(detail: unknown): TikTokVideo | "not-a-video" | null {
     }),
   });
   return parsed.success ? parsed.data : null;
-}
+};
 
-// ScrapeCreators' TikTok video endpoint, one credit a call, with TikTok's own captions when asked
-// (docs/features/tiktok-links.md).
-export function createScrapeCreatorsTikTok({
+// docs/features/tiktok-links.md
+export const createScrapeCreatorsTikTok = ({
   apiKey,
   fetch: fetchVendor = globalThis.fetch,
   baseUrl = BASE_URL,
-}: {
-  apiKey: string;
-  fetch?: typeof globalThis.fetch;
-  baseUrl?: string;
-}): TikTokVendor {
+}: ScrapeCreatorsOptions): TikTokVendor => {
   return {
     async video(url, { withTranscript }) {
       const address = new URL("/v2/tiktok/video", baseUrl);
       address.searchParams.set("url", url);
-      if (withTranscript) address.searchParams.set("get_transcript", "true");
+      if (withTranscript) {
+        address.searchParams.set("get_transcript", "true");
+      }
       let response: Response;
       try {
         response = await fetchVendor(address, { headers: { "x-api-key": apiKey }, signal: AbortSignal.timeout(TIMEOUT_MS) });
@@ -103,10 +109,12 @@ export function createScrapeCreatorsTikTok({
       }
       const body = Answer.safeParse(await response.json().catch(() => null));
       const credits = body.success ? (body.data.credits_charged ?? (response.ok ? 1 : 0)) : 0;
-      if (!response.ok)
+      if (!response.ok) {
         return { status: "failed", reason: FAILURE_BY_STATUS[response.status] ?? "no-answer", credits, vendorStatus: response.status };
-      if (!body.success || body.data.success === false)
+      }
+      if (!body.success || body.data.success === false) {
         return { status: "failed", reason: "unreadable", credits, vendorStatus: response.status };
+      }
       const video = videoFromAweme(body.data.aweme_detail);
       if (video === null || video === "not-a-video") {
         return { status: "failed", reason: video ?? "unreadable", credits, vendorStatus: response.status };
@@ -114,4 +122,4 @@ export function createScrapeCreatorsTikTok({
       return { status: "found", video, vtt: body.data.transcript ?? null, credits };
     },
   };
-}
+};

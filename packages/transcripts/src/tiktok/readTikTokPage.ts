@@ -55,11 +55,12 @@ const postedAt = (createTime: string | number | undefined): string | null => {
   return Number.isFinite(seconds) && seconds > 0 ? new Date(seconds * 1000).toISOString() : null;
 };
 
-// What a TikTok video page says about its video, from the data the page carries for its own
-// script. The extension reads the reader's own tab with it (docs/features/tiktok-links.md).
-export function readTikTokPage(html: string): TikTokPage {
+// The extension reads the reader's own tab with this (docs/features/tiktok-links.md).
+export const readTikTokPage = (html: string): TikTokPage => {
   const data = PAGE_DATA.exec(html)?.[1];
-  if (data === undefined) return { status: "unreadable" };
+  if (data === undefined) {
+    return { status: "unreadable" };
+  }
   let scope: unknown;
   try {
     scope = (JSON.parse(data) as { __DEFAULT_SCOPE__?: Record<string, unknown> }).__DEFAULT_SCOPE__;
@@ -67,14 +68,21 @@ export function readTikTokPage(html: string): TikTokPage {
     return { status: "unreadable" };
   }
   const detail = VideoDetail.safeParse((scope as Record<string, unknown> | undefined)?.["webapp.video-detail"]);
-  if (!detail.success) return { status: "unreadable" };
-  if (detail.data.itemInfo === undefined)
+  if (!detail.success) {
+    return { status: "unreadable" };
+  }
+  if (detail.data.itemInfo === undefined) {
     return detail.data.statusCode !== undefined && detail.data.statusCode !== 0 ? { status: "unavailable" } : { status: "unreadable" };
+  }
 
   const item = PageItem.safeParse(detail.data.itemInfo.itemStruct);
-  if (!item.success) return { status: "unreadable" };
+  if (!item.success) {
+    return { status: "unreadable" };
+  }
   const { id, desc, createTime, imagePost, author, video } = item.data;
-  if (imagePost !== undefined && imagePost !== null) return { status: "not-a-video" };
+  if (imagePost !== undefined && imagePost !== null) {
+    return { status: "not-a-video" };
+  }
 
   const captionLinks = (video?.subtitleInfos ?? []).flatMap(({ LanguageCodeName, Source, Format, Url }) =>
     Format?.toLowerCase() === "webvtt" && LanguageCodeName !== undefined && urlOrNull(Url) !== null
@@ -93,4 +101,4 @@ export function readTikTokPage(html: string): TikTokPage {
     captions: captionLinks.map(({ language, source }) => ({ language, source })),
   });
   return parsed.success ? { status: "video", video: parsed.data, captionLinks } : { status: "unreadable" };
-}
+};

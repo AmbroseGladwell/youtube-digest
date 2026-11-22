@@ -71,7 +71,9 @@ test("signed out, only a trial can ask our server to read a TikTok link, within 
     payload: { url: LINK },
   });
   const answered = [];
-  for (let n = 0; n <= TRIAL_READS; n += 1) answered.push(await device.readTikTok(LINK));
+  for (let n = 0; n <= TRIAL_READS; n += 1) {
+    answered.push(await device.readTikTok(LINK));
+  }
 
   assert.equal(unknown.statusCode, 401);
   assert.equal(answered[0]!.json().status, "read");

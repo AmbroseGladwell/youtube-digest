@@ -11,6 +11,11 @@ export interface TikTokTranscriptAnswer {
 // What a call spent at the vendor, and what it answered, for the cost tally and the log.
 export type Spend = (credits: number, vendorStatus: number | null) => Promise<void>;
 
+export interface TikTokReaderOptions {
+  vendor: TikTokVendor;
+  clock?: () => Date;
+}
+
 const MACHINE_SOURCES = new Set(["ASR", "MT"]);
 
 const TRANSCRIPT_FAILURE_OF: Record<TikTokReadFailure, TranscriptFetchFailure> = {
@@ -24,36 +29,44 @@ const TRANSCRIPT_FAILURE_OF: Record<TikTokReadFailure, TranscriptFetchFailure> =
 // A video link without its sharer's parameters; a short link as it came, for the vendor to follow.
 const vendorLinkOf = (link: string): string | null => {
   const parsed = parseTikTokLink(link);
-  if (parsed === null || parsed.kind === "not-a-video") return null;
-  if (parsed.kind === "short") return parsed.url;
+  if (parsed === null || parsed.kind === "not-a-video") {
+    return null;
+  }
+  if (parsed.kind === "short") {
+    return parsed.url;
+  }
   const url = new URL(link.trim());
   return url.hostname.toLowerCase().replace(/^(www\.|m\.)/, "") === "tiktok.com" && url.pathname.startsWith("/@")
     ? `https://www.tiktok.com${url.pathname}`
     : `https://www.tiktok.com/@/video/${parsed.videoId}`;
 };
 
-// Our server reads TikTok through the vendor, never TikTok's pages itself; the extension reads the
-// reader's own tab first (docs/features/tiktok-links.md).
-export function createTikTokReader({ vendor, clock = () => new Date() }: { vendor: TikTokVendor; clock?: () => Date }) {
-  async function read(link: string, spend: Spend): Promise<TikTokRead> {
+// Through the vendor only, never TikTok's pages (docs/features/tiktok-links.md).
+export const createTikTokReader = ({ vendor, clock = () => new Date() }: TikTokReaderOptions) => {
+  const read = async (link: string, spend: Spend): Promise<TikTokRead> => {
     const vendorLink = vendorLinkOf(link);
-    if (vendorLink === null) return { status: "failed", reason: "not-a-video" };
+    if (vendorLink === null) {
+      return { status: "failed", reason: "not-a-video" };
+    }
     const answer = await vendor.video(vendorLink, { withTranscript: false });
     await spend(answer.credits, answer.status === "failed" ? answer.vendorStatus : null);
     return answer.status === "found" ? { status: "read", video: answer.video } : { status: "failed", reason: answer.reason };
-  }
+  };
 
-  async function transcript(videoUrl: string, spend: Spend): Promise<TikTokTranscriptAnswer> {
+  const transcript = async (videoUrl: string, spend: Spend): Promise<TikTokTranscriptAnswer> => {
     const vendorLink = vendorLinkOf(videoUrl);
-    if (vendorLink === null) throw new TranscriptFetchError("Not a TikTok video", { failure: TranscriptFetchFailure.SOURCE_UNSUPPORTED });
+    if (vendorLink === null) {
+      throw new TranscriptFetchError("Not a TikTok video", { failure: TranscriptFetchFailure.SOURCE_UNSUPPORTED });
+    }
     const answer = await vendor.video(vendorLink, { withTranscript: true });
     await spend(answer.credits, answer.status === "failed" ? answer.vendorStatus : null);
     if (answer.status === "failed") {
       throw new TranscriptFetchError(`TikTok video ${answer.reason}`, { failure: TRANSCRIPT_FAILURE_OF[answer.reason] });
     }
     const segments = answer.vtt === null ? [] : parsePodcastTranscript(answer.vtt, "vtt");
-    if (segments.length === 0)
+    if (segments.length === 0) {
       throw new TranscriptFetchError("This TikTok has no captions", { failure: TranscriptFetchFailure.NO_CAPTIONS });
+    }
     const source = spokenCaptionTrack(answer.video.captions)?.source ?? "ASR";
     return {
       transcript: {
@@ -64,9 +77,9 @@ export function createTikTokReader({ vendor, clock = () => new Date() }: { vendo
       },
       source,
     };
-  }
+  };
 
   return { read, transcript };
-}
+};
 
 export type TikTokReader = ReturnType<typeof createTikTokReader>;

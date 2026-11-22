@@ -48,7 +48,9 @@ test("only WebVTT tracks with an address are kept", () => {
 test("missing length, cover or date are unknown rather than a failure", () => {
   const page = readTikTokPage(pageWithItem(makeTikTokItem({ createTime: undefined }, { duration: 0, cover: "" })));
   assert.equal(page.status, "video");
-  if (page.status !== "video") return;
+  if (page.status !== "video") {
+    return;
+  }
   assert.equal(page.video.durationSeconds, null);
   assert.equal(page.video.coverUrl, null);
   assert.equal(page.video.postedAt, null);

@@ -6,8 +6,7 @@ export const TikTokCaptionTrack = z.object({
 });
 export type TikTokCaptionTrack = z.infer<typeof TikTokCaptionTrack>;
 
-// One TikTok video, as its own page describes it. `id` is TikTok's, so the key is `tiktok:<id>`
-// (docs/features/tiktok-links.md).
+// docs/features/tiktok-links.md
 export const TikTokVideo = z.object({
   id: z.string().regex(/^\d{8,25}$/),
   url: z.url(),

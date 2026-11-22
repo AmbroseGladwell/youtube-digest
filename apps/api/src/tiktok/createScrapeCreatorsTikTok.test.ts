@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import { createScrapeCreatorsTikTok } from "./createScrapeCreatorsTikTok.js";
 import { CAPTIONS_VTT, makeAwemeDetail, makeVendorAnswer, VIDEO_ID, VIDEO_URL } from "./ScrapeCreatorsAnswerFactory.testHelper.js";
 
-function vendorAnswering(status: number, body: unknown) {
+const vendorAnswering = (status: number, body: unknown) => {
   const asked: { url: URL; key: string | null }[] = [];
   const fetch = (async (input: URL, init?: RequestInit) => {
     asked.push({ url: input, key: new Headers(init?.headers).get("x-api-key") });
     return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
   }) as typeof globalThis.fetch;
   return { vendor: createScrapeCreatorsTikTok({ apiKey: "test-key", fetch }), asked };
-}
+};
 
 test("a video comes back with its author, length, cover, date and caption tracks, for one credit", async () => {
   const { vendor, asked } = vendorAnswering(200, makeVendorAnswer());

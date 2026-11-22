@@ -22,7 +22,7 @@ export const found = (video: TikTokVideo = TIKTOK_VIDEO, vtt: string | null = CA
 });
 
 // A vendor that answers every call the same way, and remembers what it was asked.
-export function scriptedTikTokVendor(answer: VendorVideo = found()) {
+export const scriptedTikTokVendor = (answer: VendorVideo = found()) => {
   const asked: { url: string; withTranscript: boolean }[] = [];
   const vendor: TikTokVendor = {
     async video(url, { withTranscript }) {
@@ -31,4 +31,4 @@ export function scriptedTikTokVendor(answer: VendorVideo = found()) {
     },
   };
   return { vendor, asked };
-}
+};
