@@ -275,6 +275,16 @@ export class AskPagePageObject extends PageObject {
       }
     });
 
+  // A press held past the long-press time, then let go: the tip shows while held (OV-371).
+  holdDrawerConversation = (index: number) =>
+    this.step(`holdDrawerConversation ${index}`, async () => {
+      const question = this.drawer().getByTestId(askDrawerTestIds.question).nth(index);
+      await question.dispatchEvent("touchstart");
+      await expect(this.drawer().getByTestId(askDrawerTestIds.item).nth(index).getByTestId(cutTextTestIds.tip)).toBeVisible();
+      await question.dispatchEvent("touchend");
+      await question.dispatchEvent("click");
+    });
+
   scrollDrawerToEnd = () =>
     this.step("scrollDrawerToEnd", () => this.drawer().evaluate((drawer) => drawer.scrollTo({ top: drawer.scrollHeight })));
 

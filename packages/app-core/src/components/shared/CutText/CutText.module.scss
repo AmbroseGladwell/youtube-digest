@@ -2,6 +2,7 @@
   position: relative;
   display: block;
   min-width: 0;
+  -webkit-touch-callout: none;
 }
 
 .tip {
@@ -25,8 +26,16 @@
   transition: opacity var(--motion-state) var(--motion-ease);
 }
 
-.wrap:hover .tip,
-:global(:focus-visible) .tip {
+// On touch a tap would leave :hover stuck on, so there the tip waits for a long press (.held).
+@media (hover: hover) {
+  .wrap:hover .tip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+:global(:focus-visible) .tip,
+.held .tip {
   opacity: 1;
   visibility: visible;
 }

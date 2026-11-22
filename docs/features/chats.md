@@ -876,8 +876,8 @@ Library and project chat in the app. `Routes.ask()` is `/ask`, with `?project=` 
   `ChatStore.listEveryChat`, leaving out a deleted project's).
   - It's grouped Today, Yesterday, Previous 7 days and Earlier (`askHistoryGroups`). Each item
     shows its first question and its scope: "Your library", the project's name or the overview's
-    title, on one line. A question cut off shows in full in a tip on hover or keyboard focus
-    (`CutText`, OV-371), as do the overview's Conversations list and the chat panel's title. There's no thumbnail (owner, 22 Nov 2026: no Design round).
+    title, on one line. A question cut off shows in full in a tip on hover or keyboard focus,
+    and on touch only while pressed and held, a press that doesn't then open it (`CutText`, OV-371), as do the overview's Conversations list and the chat panel's title. There's no thumbnail (owner, 22 Nov 2026: no Design round).
   - A library or project conversation opens on the Ask page. An overview's opens on that overview,
     with chat open on that conversation (owner, 22 Nov 2026): the link carries the conversation id
     in its state (`conversationFromLocation`), the overview page opens it once chat is offered and

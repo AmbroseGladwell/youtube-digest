@@ -315,6 +315,26 @@ test.describe("Ask", () => {
     await ask.verifyDrawerTopIsPinned(true);
   });
 
+  test("on a phone a cut-off question's tip shows on a long press, which doesn't open the conversation (OV-371)", async ({
+    launcher,
+    backendSimulator,
+    page,
+  }) => {
+    await page.setViewportSize(PHONE);
+    backendSimulator.overviews.seedSynced(titled(PLANTS, "2026-11-03T09:00:00.000Z"));
+    const long = "Which of the overviews I saved about sleep, caffeine and training agree on when to stop drinking coffee each day?";
+    backendSimulator.chats.seed(conversation("library:0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", long, new Date().toISOString()));
+    await launcher.launchExpectingLibrary(SIGNED_IN);
+    await expect.poll(() => backendSimulator.chats.listLibrary()).toHaveLength(1);
+    const ask = await launcher.appShell.openAsk();
+    await ask.openDrawer();
+
+    await ask.holdDrawerConversation(0);
+
+    await ask.verifyDrawerIsOpen(true);
+    await expect(page).toHaveURL(/\/ask$/);
+  });
+
   test("on a phone Ask is a page, its drawer starts closed and is a bottom sheet, and the last conversation's menu opens where it can be seen", async ({
     launcher,
     backendSimulator,
