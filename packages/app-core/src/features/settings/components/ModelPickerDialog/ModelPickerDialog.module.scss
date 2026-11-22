@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 110e: a 580px dialog on a scrim, and the same contents as a full sheet on a phone
-// or in the panel, where the design draws it as a page. The <dialog> is the positioner and
-// carries no paint, as NewOverviewDialog's does.
+// Design 110e; the <dialog> positions and carries no paint, as NewOverviewDialog's does.
 .dialog {
   border: 0;
   padding: 0;
@@ -134,8 +132,7 @@
   list-style: none;
 }
 
-// No border and no shadow: the row is told apart from the dialog by sitting a step
-// further back, and the chosen one by the stone tint and its ring.
+// No border or shadow: the row sits a step further back; the chosen one takes tint and ring.
 .choice {
   display: flex;
   gap: 0.75rem;
@@ -235,8 +232,7 @@
   align-self: flex-start;
 }
 
-// Phone and panel: design 110e draws the picker as a page there, so the sheet fills the
-// screen and the close button leads back the way the page's own link would.
+// Phone and panel: design 110e draws the picker as a page, so the sheet fills the screen.
 @media (max-width: 47.9375rem) {
   .panel {
     width: 100vw;

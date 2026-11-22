@@ -15,8 +15,7 @@
   flex-direction: column;
 }
 
-// Design 2b: the offer on the left, the example on the right, the two centred in the
-// space under the bar.
+// Design 2b.
 .hero {
   flex: 1;
   display: grid;
@@ -65,8 +64,7 @@
   color: var(--muted);
 }
 
-// The field and its button share one pill, which is what makes the two read as one
-// action rather than a form.
+// One pill for the field and its button, so the two read as one action rather than a form.
 .heroForm {
   display: flex;
   align-items: center;
@@ -133,7 +131,7 @@
   text-decoration: underline;
 }
 
-// Design 2b's keys step: a stone-tint note under the field, gone once the keys are in.
+// Design 2b's keys step.
 .keysNote {
   display: flex;
   align-items: flex-start;
@@ -198,8 +196,7 @@
   margin-top: 0.375rem;
 }
 
-// YouTube's own pill, drawn the way the injected button draws it, so the sentence beside
-// it is about a thing the reader will recognise (docs/features/injected-button.md).
+// Drawn as the injected button draws it, so the reader recognises it (docs/features/injected-button.md).
 .youtubePill {
   display: inline-flex;
   align-items: center;
@@ -225,8 +222,7 @@
   color: var(--muted);
 }
 
-// Design 2b's ghost button, placed but disabled until there is a Web Store listing for it
-// to open (docs/features/stone-theme.md, "Placed but not wired").
+// Design 2b's ghost button.
 .getExtension {
   @include controls.ghost-pill;
   @include controls.pill-sm;
@@ -239,8 +235,7 @@
   color: var(--ink);
 }
 
-// The example: a card on two tilted backers, so it reads as a sheet lifted off a small
-// pile rather than a screenshot.
+// Two tilted backers, so it reads as a sheet lifted off a small pile rather than a screenshot.
 .example {
   position: relative;
   padding: 1.25rem 1.25rem 0 0;
@@ -485,8 +480,7 @@
   }
 }
 
-// Design 205g: in the panel Start is the same screen compressed, one column at 400px, and
-// everything that needs room goes.
+// Design 205g: in the panel, the same screen compressed, and everything that needs room goes.
 .panel {
   padding: 1.25rem 1.125rem 1.5rem;
 
@@ -512,7 +506,7 @@
   }
 }
 
-// The offer in the field's place (205g-2, 205g-3), with the way to a different link under it.
+// Designs 205g-2 and 205g-3.
 .offered {
   display: flex;
   flex-direction: column;
@@ -530,7 +524,7 @@
   @include onboarding.quiet;
 }
 
-// 205g: Sign in is a peer of Make my overview, full width under it, not a line of small type.
+// Design 205g: Sign in is a peer of Make my overview, not a line of small type.
 .signIn {
   @include onboarding.secondary;
 

@@ -4,9 +4,7 @@ $layout-top: 0.5rem;
 $preview-drop: 4.125rem;
 $gap: 2.5rem;
 
-// Phone first (390); from 64rem the flow and the overview taking shape sit as one centred pair
-// with a fixed gap, so they never drift apart on a wide window (175a). Below the brand row one
-// area scrolls, with the step's nav at its top and its foot at its bottom (210a, 210h).
+// From 64rem one centred pair with a fixed gap, so they never drift apart (175a; 210a, 210h).
 .root {
   height: 100vh;
   height: 100dvh;

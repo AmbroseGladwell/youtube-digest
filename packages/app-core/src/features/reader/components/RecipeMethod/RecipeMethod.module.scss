@@ -116,8 +116,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-// A step the voice can move to takes the pointer as the note's lines do (OV-149). The hover
-// is drawn into the active step's room behind it, so nothing moves under the pointer.
+// Takes the pointer as the note's lines do (OV-149); the hover is drawn behind, so nothing moves.
 .stepChoosable {
   position: relative;
   isolation: isolate;
@@ -133,8 +132,7 @@
   }
 }
 
-// The voice's place is a sentence inside the step, marked where it wraps, so the step itself
-// stays plain (design 150ac).
+// The voice's place is a sentence inside the step, so the step stays plain (design 150ac).
 .spoken {
   border-radius: 0.375rem;
   padding: 1px 3px;
@@ -144,8 +142,7 @@
   -webkit-box-decoration-break: clone;
 }
 
-// The step the reader left cooking at, until they go on (design 150w), and the step the video
-// beside the panel is in (122i).
+// The step left cooking at (design 150w), and the step the video beside the panel is in (122i).
 .stepPlaying,
 .stepReached {
   margin: 0 -0.625rem;

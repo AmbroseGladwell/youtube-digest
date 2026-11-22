@@ -1,8 +1,7 @@
 @use "../../../../theme/controls.scss" as controls;
 @use "../../../connections/consent" as consent;
 
-// Design 16c, redrawn by 95d–95h: the plan first, then what every account includes, then
-// every plan as a card. The reader's own card is ringed so it reads before the copy does.
+// Design: docs/features/plus-upsell.md, "16c — in Settings, redrawn by 95d–95h".
 .root {
   @include controls.tile;
   display: flex;

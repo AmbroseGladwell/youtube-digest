@@ -1,7 +1,6 @@
 @use "../../theme/controls.scss" as controls;
 
-// What the playlist flow's parts share: the card on the dialog's own ground, the pills at
-// the three places they stack (design 27c–27h).
+// What the playlist flow's parts share (designs 27c–27h).
 
 @mixin inset-card {
   background: var(--ground);

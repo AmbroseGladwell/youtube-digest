@@ -1,5 +1,4 @@
-// Design 34aj and 34ak. Each tile paints with its milestone's tokens through
-// milestoneColourStyle, so both themes answer with their own colours.
+// Design 34aj and 34ak; each tile's colours come from milestoneColourStyle.
 .root {
   display: flex;
   flex-direction: column;
@@ -144,7 +143,7 @@
   box-shadow: inset 0 0 0 1.5px var(--milestone-ring);
 }
 
-// docs/features/time-saved.md, "Colouring in".
+// docs/features/time-saved.md, "Settings › Milestones" (Colouring in).
 .flood {
   animation: milestoneFlood 700ms var(--motion-ease) var(--flood-delay, 0ms) backwards;
 

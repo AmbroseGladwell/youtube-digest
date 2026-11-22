@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 3a/3b: a centred dialog on a desktop, the same panel as a bottom sheet on a
-// phone. The <dialog> element itself is the positioner, so it carries no paint — and it is
-// what the entrance animates, so that the sheet's travel is a percentage of its own height.
+// Design 3a/3b. The <dialog> carries no paint: the entrance animates it, so travel is a share of its height.
 $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .dialog {
@@ -19,10 +17,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
   background: var(--scrim);
 }
 
-// The scrim fades first and the panel arrives behind it, 80ms in, so the dim reads as the
-// cause and the dialog as the consequence. The opening is the only animated half: closing
-// is immediate, which is the asymmetry frontend-architecture-guide.md 2.4 asks for taken
-// to its end. Reduced motion drops both through theme/global.scss's blanket rule.
+// The scrim fades first, so the dim reads as the cause and the dialog as the consequence.
 .dialog[open] {
   animation: dialogFadeUp 480ms $enter-easing 80ms both;
 }
@@ -224,8 +219,7 @@ $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
     text-align: center;
   }
 
-  // The phone stacks the pair with the action you are most likely to want on top, which
-  // reverses the desktop row's secondary-then-primary reading order.
+  // The likeliest action on top, reversing the desktop row's reading order.
   .footActions {
     flex-direction: column-reverse;
     align-items: stretch;

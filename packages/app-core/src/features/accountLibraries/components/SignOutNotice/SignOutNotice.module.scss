@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Designs 47d-2 and 47d-3: a card floated over the bottom of the page, out of the way of
-// what the reader is about to do next, 440px wide and full width on a phone or the panel.
+// Designs 47d-2 and 47d-3.
 .root {
   position: fixed;
   left: 1.5rem;

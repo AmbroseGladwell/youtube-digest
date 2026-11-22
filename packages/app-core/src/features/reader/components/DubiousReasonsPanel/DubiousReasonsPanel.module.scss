@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design OV-85: a raised card in the masthead, between the byline and the title. Its height
-// opens over 200ms where the browser can animate to auto; elsewhere, and with reduced
-// motion, it simply appears.
+// Design OV-85: a raised card in the masthead, between the byline and the title.
 .root {
   interpolate-size: allow-keywords;
 }

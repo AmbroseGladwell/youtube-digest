@@ -14,8 +14,7 @@
   grid-template-columns: 15rem minmax(0, 1fr);
 }
 
-// The rail carries no divider: on the stone ground the filter pills are the only things
-// that need drawing (docs/features/stone-theme.md).
+// No divider: on the stone ground the pills are all that need drawing (docs/features/stone-theme.md).
 .rail {
   display: flex;
   flex-direction: column;
@@ -26,9 +25,7 @@
   padding: 1.25rem 1rem 1.75rem 1.25rem;
 }
 
-// The rail is chrome, not content: it holds still while the list scrolls past it. Only its
-// body sticks — the column itself keeps stretching, so a phone sheet has a full-height
-// column to become (docs/features/overview-redesign.md, "Chrome that stays put").
+// Why only the body sticks: docs/features/overview-redesign.md, "Chrome that stays put".
 @media (min-width: 62rem) {
   .railBody {
     position: sticky;
@@ -63,8 +60,7 @@
   min-width: 0;
 }
 
-// Narrow, time saved sits on the title's baseline at the right, in a box as wide as the widest
-// figure, so the rolling digits never move anything ("OV-84 2 Library Filter" 84o).
+// Design 84o: a box as wide as the widest figure, so the rolling digits never move anything.
 .titleRow {
   display: flex;
   align-items: baseline;
@@ -112,8 +108,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-// The running total ("OV-34 1 Every Day" 34q): the subtitle's own type, underlined in dots
-// to say it opens something.
+// Underlined in dots to say it opens something (design 34q).
 .timeSaved {
   display: inline-flex;
   align-items: baseline;
@@ -221,8 +216,7 @@
   margin-top: 0.5rem;
 }
 
-// Select turns into × on an ink fill while selecting, and back: the one thing here that
-// turns, as an icon marking itself ("OV-168 5" 168bb).
+// The one thing here that turns, as an icon marking itself (design 168bb).
 .selectButton {
   @include controls.surface-pill;
   @include controls.circle(2.75rem);
@@ -285,8 +279,7 @@
   opacity: 0.5;
 }
 
-// Beside the search on a narrow screen, where the rail is a sheet, with a dot while anything
-// is set (84i). On a wide one the rail is on screen and the button is not drawn.
+// Design 84i.
 .filterButton {
   @include controls.surface-pill;
   @include controls.circle(2.75rem);
@@ -380,8 +373,7 @@
     grid-template-columns: 1fr;
   }
 
-  // A bottom sheet over the scrim (84i), never taller than the space under the bar, so its
-  // head is never under the masthead (docs/features/tag-reuse.md).
+  // Its height: docs/features/stone-theme.md, "The filter sheet".
   .rail {
     position: fixed;
     left: 0;
@@ -400,9 +392,7 @@
     transform: translateY(0);
   }
 
-  // While the list glides a filter change, its rows are drawn as snapshots in the browser's
-  // top layer, above any z-index the page can give the sheet. The open sheet and its scrim
-  // are captured too, and libraryTransitions.scss stacks them back over the rows.
+  // Why it is captured: docs/features/tag-reuse.md, "The glide (84s, "OV-84 4 Chip Motion")".
   :global(:root[data-library-glide]) .railOpen {
     view-transition-name: library-filter-sheet;
   }
@@ -451,7 +441,7 @@
     display: inline-flex;
   }
 
-  // The chips, the dot and the count say what is set; Clear all is in the sheet (84o).
+  // Design 84o: Clear all is in the sheet.
   .viewLine {
     display: none;
   }

@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 3c, transcribed: inset 20px from the window rather than the bar's 28px, so it
-// reads as a card the bar holds rather than a second bar. The 20px beneath it is the
-// design's own spacer before the page.
+// Design 3c: inset less than the bar, so it reads as a card the bar holds rather than a second bar.
 .root {
   position: relative;
   margin: 0 1.25rem 1.25rem;
@@ -16,8 +14,6 @@
   overflow: hidden;
 }
 
-// Finished, one way or the other, the card steps to the stone tint; only a running strip
-// sits on the surface with the bar under it.
 .root[data-state="ready"],
 .root[data-state="failed"] {
   background: var(--stone-tint);
@@ -71,8 +67,7 @@
   gap: 0.25rem;
 }
 
-// The design's ghost hover is the surface, which on a surface card would not show, so
-// these take the next step down.
+// The design's ghost hover is the surface, which would not show on a surface card.
 .detailsAction,
 .cancelAction {
   @include controls.ghost-pill;
@@ -136,7 +131,6 @@
   }
 }
 
-// On a phone the detail takes its own line under the label, and the actions keep the row.
 @media (max-width: 61.9375rem) {
   .root {
     margin: 0 1.25rem 1rem;

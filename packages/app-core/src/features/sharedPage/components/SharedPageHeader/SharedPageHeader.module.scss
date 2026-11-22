@@ -45,8 +45,7 @@
   @include controls.pill-sm;
 }
 
-// On a phone the two actions take the width, and a wrapped wordmark reads as a mistake:
-// the mark alone still says whose page this is (design 30k).
+// On a phone a wrapped wordmark reads as a mistake; the mark alone says whose page it is (30k).
 @media (max-width: 29.9375rem) {
   .root {
     padding: 0.875rem 1.25rem;

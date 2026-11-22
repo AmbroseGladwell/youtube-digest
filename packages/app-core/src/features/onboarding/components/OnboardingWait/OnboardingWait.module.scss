@@ -2,8 +2,7 @@
 
 $done-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-// Phone first: the wait, then the set-ups under it in their panel, then the foot once it's ready.
-// From 64rem the set-ups sit beside the wait (designs 327m, 327m-p).
+// Designs 327m and 327m-p.
 .root {
   flex: 1;
   display: flex;

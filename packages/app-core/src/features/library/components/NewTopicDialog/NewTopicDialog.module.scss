@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 13c on the stone theme: the same dialog NewOverviewDialog draws, a centred card
-// on a desktop and a bottom sheet on a phone, with the <dialog> carrying no paint of its
-// own so the entrance can animate the panel's own height.
+// Design 13c: the dialog NewOverviewDialog draws.
 $enter-easing: cubic-bezier(0.33, 0, 0.15, 1);
 
 .dialog {

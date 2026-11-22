@@ -1,7 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 106b, compact: the episode's square art beside the show, the kind and where the link
-// came from, then the title and its own facts.
+// Design 106b, compact.
 .card {
   display: flex;
   align-items: flex-start;
@@ -80,8 +79,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-// Designs 305c: "Checking for a transcript…" while the check runs, then the accent notice. Empty
-// otherwise, and kept as a live region so the change is announced.
+// Design 305c.
 .checking,
 .needs {
   font-size: 0.8125rem;

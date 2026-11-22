@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 110b: a key this device holds is a full row on a raised ground, and the one in
-// use takes the stone tint and a ring, drawn like a chosen voice. No shadow on either —
-// the ground is what separates them from the section.
+// Design 110b: the key in use takes the stone tint and a ring, drawn like a chosen voice.
 .root {
   display: flex;
   flex-direction: column;
@@ -50,8 +48,7 @@
   color: var(--on-stone-tint);
 }
 
-// The chip inverts rather than tinting: on the stone-tinted row a tinted chip would
-// disappear into it.
+// Inverted, since a tinted chip would disappear into the stone-tinted row.
 .chip {
   padding: 0.125rem 0.625rem;
   border-radius: var(--radius-badge);
@@ -74,8 +71,7 @@
   color: var(--on-stone-tint);
 }
 
-// Transparent until the pointer arrives, which is the ghost, but in the muted ink a
-// secondary action takes.
+// The ghost, in the muted ink of a secondary action.
 .remove {
   @include controls.ghost-pill;
   @include controls.pill-sm;

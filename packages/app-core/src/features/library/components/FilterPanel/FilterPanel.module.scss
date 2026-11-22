@@ -1,8 +1,6 @@
 @use "../../../../theme/controls.scss" as controls;
 
-// Design 2a's rail: three groups of pill rows, a label over each, the count against the
-// far edge. An active row takes the surface; a Show row carries a box that fills in
-// (docs/features/stone-theme.md).
+// Design 2a's rail.
 .root {
   display: flex;
   flex-direction: column;
@@ -103,8 +101,7 @@
   color: var(--muted);
 }
 
-// Verdict folds into one row at the foot of the filters ("OV-34 2 Milestones" 34ab). The
-// panel opens by growing its grid row, so its height never has to be measured.
+// Design 34ab: the panel opens by growing its grid row, so its height never has to be measured.
 .more {
   display: flex;
   flex-direction: column;

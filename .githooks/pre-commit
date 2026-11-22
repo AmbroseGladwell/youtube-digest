@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Refuses a commit that stages a secret value, a lint error or an unformatted file
+# Refuses a commit that stages a secret value, a lint error, a long stylesheet comment or an unformatted file
 # (docs/conventions/secrets.md, docs/conventions/lint-and-format.md).
 set -euo pipefail
 
@@ -12,6 +12,15 @@ gitleaks git --pre-commit --staged --redact --no-banner
 root="$(git rev-parse --show-toplevel)"
 if [ ! -x "$root/node_modules/.bin/oxlint" ] || [ ! -x "$root/node_modules/.bin/oxfmt" ] || [ ! -x "$root/node_modules/.bin/tsgolint" ]; then
   echo "pre-commit: Oxlint, oxlint-tsgolint and Oxfmt aren't all installed; run task install" >&2
+  exit 1
+fi
+
+styles=()
+while IFS= read -r -d '' file; do
+  styles+=("$file")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z -- '*.scss' '*.css')
+if [ "${#styles[@]}" -gt 0 ] && ! (cd "$root" && node scripts/checkStyleComments.mjs "${styles[@]}"); then
+  echo "pre-commit: shorten the stylesheet comments above (docs/conventions/commenting.md)" >&2
   exit 1
 fi
 
