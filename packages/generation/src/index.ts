@@ -22,7 +22,6 @@ export * from "./sections/segmentRangeFields.js";
 export * from "./sections/chaptersSection.js";
 export * from "./generateTags.js";
 export * from "./generateProfileItems.js";
-export * from "./generateForAnyoneSteps.js";
 export * from "./generateTopicMatches.js";
 export * from "./article/ArticleGenerationInput.js";
 export * from "./article/articleParagraphs.js";

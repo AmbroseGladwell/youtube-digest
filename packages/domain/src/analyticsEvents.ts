@@ -738,11 +738,6 @@ export const analyticsEvents = {
         },
       ),
     },
-    writtenForYou: {
-      shown: event("The reveal's Written for you / For anyone flip is ready", { kind: OnboardingKind.optional() }),
-      flipped: event("The reader flips How to apply on the reveal", { kind: OnboardingKind.optional(), to: z.enum(["you", "anyone"]) }),
-      failed: event("How to apply for anyone couldn't be written, so the flip stays hidden", { kind: OnboardingKind.optional() }),
-    },
     aboutYou: {
       continued: event("The reader leaves About you; never what it says, only how it was made", {
         kind: OnboardingKind.optional(),

@@ -1,7 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
 import {
   apiLogLines,
-  type ForAnyoneInput,
   type NoteKind,
   type OurKeyGenerationRequest,
   type OurKeyGenerationResult,
@@ -18,7 +17,6 @@ import {
   costInDollars,
   createGenerationClient,
   fallbackReasonOf,
-  generateForAnyoneSteps,
   generateOverviewOf,
   generateProfileItems,
   generateTopicMatches,
@@ -74,7 +72,7 @@ export class OurKeyDailyCapSpentError extends Error {
 // An account, counted by the month on its plan. Nothing is made on us signed out (OV-327).
 export type OurKeyCaller = { accountId: AccountId; plan: Plan };
 
-export type SmallPass = "profile" | "forAnyone" | "topics" | "topicSuggestions" | "kindCheck";
+export type SmallPass = "profile" | "topics" | "topicSuggestions" | "kindCheck";
 
 // The caller's slot, and how to give it back when the overview fails.
 interface HeldSlot {
@@ -217,10 +215,6 @@ export class OurKeyGenerator {
   // (docs/features/personalisation.md).
   profilePass(payer: CostPayer, input: ProfilePassInput, log: FastifyBaseLogger): Promise<ProfilePassItem[]> {
     return this.#smallPass("profile", payer, (client) => generateProfileItems(client, input), log);
-  }
-
-  forAnyone(payer: CostPayer, input: ForAnyoneInput, log: FastifyBaseLogger): Promise<string[]> {
-    return this.#smallPass("forAnyone", payer, (client) => generateForAnyoneSteps(client, input), log);
   }
 
   topics(payer: CostPayer, input: TopicMatchInput, log: FastifyBaseLogger): Promise<string[]> {

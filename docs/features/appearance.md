@@ -85,12 +85,13 @@ query alone.
 
 ## Signed out
 
-The device keeps the look it last had. Sign-out opens the no-account library, whose settings
-are the defaults, and honouring them would change the sign-in page under the reader.
-`useAppearance` therefore reads the device copy when there's no account and nothing chosen
-(and while the store is still opening). Signed out, a reader can still choose: it saves to
-that library, and `moveAnswersInto` carries it into an account that still has the defaults. The
-account's own choice wins.
+Signed out shows the no-account library's own look, which is the defaults until a reader
+chooses otherwise there (OV-361). Before, the device kept the last account's look, so whoever
+used the device next, signed out or in onboarding, saw someone else's choice. Sign-out now
+changes the page to the defaults. `useAppearance` reads the device copy only while the store is
+still opening. Signed out, a reader can still choose: it saves to that library, and
+`moveAnswersInto` carries it into an account that still has the defaults. The account's own
+choice wins.
 
 ## The logo
 

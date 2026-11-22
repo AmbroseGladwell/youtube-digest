@@ -58,7 +58,7 @@ import { PlansModalPageObject } from "../pageObjects/PlansModalPageObject.testHe
 import { SoftWallPageObject } from "../pageObjects/SoftWallPageObject.testHelper.js";
 import { createAccountThroughSample } from "../pageObjects/createAccountThroughSample.testHelper.js";
 import { signedOutGateTestIds } from "../../src/features/accountLibraries/components/SignedOutGate/SignedOutGateTestIds.js";
-import { HowToApplyFlipPageObject } from "../pageObjects/HowToApplyFlipPageObject.testHelper.js";
+import { HowToApplyLinePageObject } from "../pageObjects/HowToApplyLinePageObject.testHelper.js";
 import { LearnedNoticePageObject } from "../pageObjects/LearnedNoticePageObject.testHelper.js";
 import { OnboardingNextStepsPageObject } from "../pageObjects/OnboardingNextStepsPageObject.testHelper.js";
 import { FirstOverviewMilestonePageObject } from "../pageObjects/FirstOverviewMilestonePageObject.testHelper.js";
@@ -340,8 +340,8 @@ export class Launcher {
     return new SignOutNoticePageObject(this.testContext);
   }
 
-  get howToApplyFlip(): HowToApplyFlipPageObject {
-    return new HowToApplyFlipPageObject(this.testContext);
+  get howToApplyLine(): HowToApplyLinePageObject {
+    return new HowToApplyLinePageObject(this.testContext);
   }
 
   get learnedNotice(): LearnedNoticePageObject {

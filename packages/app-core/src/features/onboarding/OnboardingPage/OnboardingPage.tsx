@@ -230,7 +230,7 @@ function Onboarding({ progress, update, onLeave }: OnboardingProps) {
       from: share === null ? "link" : share.sample ? "sample" : "share",
     });
     libraryMove.dismiss();
-    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], forAnyone: null, sample });
+    writeNextSteps({ overviewId: OverviewId.parse(overviewId), dismissed: [], sample });
     onLeave();
     void navigate(Routes.overview(overviewId), { replace: true });
     writeProgress(null);

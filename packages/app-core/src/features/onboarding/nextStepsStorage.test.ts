@@ -19,7 +19,7 @@ const memoryStorage = (): Storage => {
 describe("nextStepsStorage", () => {
   it("reads back the overview and what was dismissed", () => {
     const storage = memoryStorage();
-    const nextSteps = { overviewId: OverviewId.parse(crypto.randomUUID()), dismissed: ["ai" as const], forAnyone: null, sample: true };
+    const nextSteps = { overviewId: OverviewId.parse(crypto.randomUUID()), dismissed: ["ai" as const], sample: true };
     writeNextSteps(nextSteps, storage);
     expect(readNextSteps(storage)).toEqual(nextSteps);
   });
@@ -27,7 +27,7 @@ describe("nextStepsStorage", () => {
   it("reads next steps kept before samples as not from a sample", () => {
     const storage = memoryStorage();
     const overviewId = OverviewId.parse(crypto.randomUUID());
-    storage.setItem("overview.nextSteps.v1", JSON.stringify({ overviewId, dismissed: [], forAnyone: null }));
+    storage.setItem("overview.nextSteps.v1", JSON.stringify({ overviewId, dismissed: [] }));
     expect(readNextSteps(storage)?.sample).toBe(false);
   });
 

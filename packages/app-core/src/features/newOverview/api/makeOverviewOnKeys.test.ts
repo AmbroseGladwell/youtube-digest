@@ -73,7 +73,6 @@ function fakeServer({ generate, reserve }: { generate?: Error; reserve?: Error }
   const api: GenerationApi = {
     status: async () => ({ available: true }),
     profilePass: async () => ({ items: [] }),
-    forAnyone: async () => ({ items: [] }),
     topics: async () => ({ names: [] }),
     topicSuggestions: async () => ({ starter: [], newTopic: null }),
     usage: async () => {

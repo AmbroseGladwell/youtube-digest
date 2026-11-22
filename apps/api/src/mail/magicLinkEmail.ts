@@ -1,4 +1,3 @@
-import { copyCodeLink } from "@overview/domain";
 import type { MagicLinkMail } from "./Mailer.js";
 import { transactionalEmailHtml } from "./transactionalEmailHtml.js";
 
@@ -17,8 +16,8 @@ export function magicLinkEmail(mail: MagicLinkMail): EmailContent {
 }
 
 // Design 327l-3: the code in the subject, so it can be read from the notification, then first in
-// the mail with a Copy code link to a page of ours (a mail client runs no script), and the link
-// as the backup (docs/features/sign-in.md, "A code in the web mail").
+// the mail, selectable in one tap, and the link as the backup (docs/features/sign-in.md, "A code
+// in the web mail").
 function codeFirstEmail({ link, code, purpose, firstName }: MagicLinkMail & { code: string }): EmailContent {
   const creating = purpose === "createAccount";
   const siteUrl = new URL(link).origin;
@@ -27,7 +26,6 @@ function codeFirstEmail({ link, code, purpose, firstName }: MagicLinkMail & { co
   const greeting = creating && firstName !== null ? `Hi ${firstName},` : null;
   const body = "Enter this code on the page that asked for it:";
   const actionLead = "Or sign in with this link:";
-  const copyLink = copyCodeLink(siteUrl, code);
   const notes = [
     "The code and the link each work once, for the next fifteen minutes. The link signs in the browser you open it in.",
     "If you didn’t ask for this, you can ignore it. Nothing happens unless the code or link is used.",
@@ -61,7 +59,7 @@ function codeFirstEmail({ link, code, purpose, firstName }: MagicLinkMail & { co
       heading,
       body,
       action: { label: "Sign in", link },
-      code: { lead: null, value: code, copyLink },
+      code: { lead: null, value: code },
       codeFirst: { actionLead },
       notes,
       reason,

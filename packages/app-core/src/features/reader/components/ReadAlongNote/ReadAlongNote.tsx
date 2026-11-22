@@ -19,13 +19,11 @@ import { useFollowTheVoice } from "./useFollowTheVoice.js";
 import styles from "./ReadAlongNote.module.scss";
 import { readAlongNoteTestIds } from "./ReadAlongNoteTestIds.js";
 
-// Something a section carries beside its heading and under it. With replacement set, that
-// stands in for the section's lines, which stay in the list so the voice keeps its place.
+// Something a section carries beside its heading and under it.
 export interface NoteSectionSlot {
   section: string;
   beside: ReactNode;
   under: ReactNode;
-  replacement: ReactNode | null;
 }
 
 export interface ReadAlongNoteProps {
@@ -174,7 +172,6 @@ export function ReadAlongNote({
         const caption = lines[index + 1]?.section === line.section ? undefined : captions[line.section];
         const slot = sectionSlot?.section === line.section ? sectionSlot : null;
         const part = SECTION_PART[line.section];
-        if (slot?.replacement && !line.heading) return null;
         return (
           <Fragment key={`${line.section}-${index}`}>
             <div
@@ -247,7 +244,6 @@ export function ReadAlongNote({
               )}
             </div>
             {line.heading && slot?.under}
-            {line.heading && slot?.replacement}
             {index === lastStepIndex && collapsed.size > 0 && (
               <button
                 type="button"

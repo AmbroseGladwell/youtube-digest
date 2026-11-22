@@ -7,10 +7,6 @@ export type NextStep = z.infer<typeof NextStep>;
 export const NextSteps = z.object({
   overviewId: OverviewId,
   dismissed: z.array(NextStep).catch([]),
-  forAnyone: z
-    .union([z.array(z.string()), z.literal("failed")])
-    .nullable()
-    .catch(null),
   // Onboarding ended on a sample: written for anyone, and followed by Now try your own (155j, 155k).
   sample: z.boolean().catch(false),
 });
