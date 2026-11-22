@@ -39,26 +39,18 @@ const serverSentEvents = async function* (events: AsyncIterable<ChatStreamEvent>
   }
 };
 
+export interface ChatRoutesOptions {
+  records: RecordsRepository;
+  answerer: ChatAnswerer | null;
+  libraryAnswerer: LibraryChatAnswerer | null;
+  usage: ChatUsageRepository;
+  sql: SqlClient;
+  clock: () => Date;
+}
+
 // The reader asks, and the answer streams back as server-sent events; the server writes the
 // conversation, and the reader can only delete one (docs/features/chats.md).
-export const chatRoutes = (
-  app: FastifyInstance,
-  {
-    records,
-    answerer,
-    libraryAnswerer,
-    usage,
-    sql,
-    clock,
-  }: {
-    records: RecordsRepository;
-    answerer: ChatAnswerer | null;
-    libraryAnswerer: LibraryChatAnswerer | null;
-    usage: ChatUsageRepository;
-    sql: SqlClient;
-    clock: () => Date;
-  },
-): void => {
+export const chatRoutes = (app: FastifyInstance, { records, answerer, libraryAnswerer, usage, sql, clock }: ChatRoutesOptions): void => {
   const streamed = async (reply: FastifyReply, start: () => Promise<AsyncIterable<ChatStreamEvent>>) => {
     try {
       const events = await start();

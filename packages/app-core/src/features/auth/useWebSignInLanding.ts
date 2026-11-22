@@ -39,7 +39,11 @@ export const useWebSignInLanding = () => {
     setLanding(null);
     const { returnTo } = landing;
     const state: ConsentPageLocationState = { fromSignInLink: true };
-    void (returnTo === null ? navigate(Routes.home(), { replace: true }) : navigate(returnTo, { replace: true, state }));
+    if (returnTo === null) {
+      void navigate(Routes.home(), { replace: true });
+    } else {
+      void navigate(returnTo, { replace: true, state });
+    }
   }, [landing, libraryAccountId, navigate]);
 
   return { land, landing: landing !== null };

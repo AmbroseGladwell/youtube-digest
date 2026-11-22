@@ -91,8 +91,14 @@ const spentDollars = (
   )
 ).reduce((sum, cost) => sum + cost, 0);
 
-const fileOf = (record: { overviewId: string; arm: string; model: string; repeat: number }) =>
-  `${record.overviewId}--${record.arm}--${record.model}--${record.repeat}.json`;
+interface ChatRunRecord {
+  overviewId: string;
+  arm: string;
+  model: string;
+  repeat: number;
+}
+
+const fileOf = (record: ChatRunRecord) => `${record.overviewId}--${record.arm}--${record.model}--${record.repeat}.json`;
 
 const prepared = await Promise.all(
   sources.map(async (source) => {

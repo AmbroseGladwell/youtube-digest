@@ -65,6 +65,11 @@ export interface GenerationPipelineDeps {
   projectStore?: Pick<ProjectStore, "listProjects" | "fileIntoProject"> | undefined;
 }
 
+export interface TaggingCounts {
+  reused: number;
+  added: number;
+}
+
 export interface RunOverviewGenerationOptions {
   // Where the reader asked, for the events a run sends of its own (an episode's transcription).
   from?: CaptureEntry | undefined;
@@ -89,7 +94,7 @@ export interface RunOverviewGenerationOptions {
   fromPlaylist?: PlaylistOrigin | undefined;
   // How many of the note's tags were already in the library, counted against the library
   // as the run saw it (docs/features/tag-reuse.md).
-  onTagged?: ((tagging: { reused: number; added: number }) => void) | undefined;
+  onTagged?: ((tagging: TaggingCounts) => void) | undefined;
   // Whether anything about the reader went into the prompt, as composed for this run
   // (docs/features/personalisation.md, "Analytics").
   onPersonalised?: ((personalised: boolean) => void) | undefined;

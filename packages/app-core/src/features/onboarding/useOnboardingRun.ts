@@ -48,6 +48,18 @@ const FETCHING: OnboardingRun = {
   writingStarted: false,
 };
 
+export interface UseOnboardingRunOptions {
+  source: OnboardingSource | null;
+  target: string | null;
+  tabId: number | null;
+  maySpend: boolean;
+  attempt: number;
+  // An episode with no words is transcribed from its audio, as the reader chose (design 305c-2).
+  transcribe?: TranscribeChoice | undefined;
+  onFound: (found: OnboardingFound) => void;
+  onMade: (overview: Overview) => void;
+}
+
 // Onboarding's one overview, of whatever kind the link is: read straight away, for free and signed
 // out on the device's trial, then held until the reader has an account and their answers are in
 // it, so nothing that costs anything runs before and the overview is written from those answers,
@@ -63,17 +75,7 @@ export const useOnboardingRun = ({
   transcribe,
   onFound,
   onMade,
-}: {
-  source: OnboardingSource | null;
-  target: string | null;
-  tabId: number | null;
-  maySpend: boolean;
-  attempt: number;
-  // An episode with no words is transcribed from its audio, as the reader chose (design 305c-2).
-  transcribe?: TranscribeChoice | undefined;
-  onFound: (found: OnboardingFound) => void;
-  onMade: (overview: Overview) => void;
-}): OnboardingRun => {
+}: UseOnboardingRunOptions): OnboardingRun => {
   const { apiKeys } = useApiKeys();
   const runVideo = useRunOverviewGeneration(apiKeys);
   const runArticle = useRunArticleGeneration(apiKeys);

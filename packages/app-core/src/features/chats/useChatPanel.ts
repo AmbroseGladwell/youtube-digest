@@ -28,6 +28,16 @@ export type PinnedItem =
 
 const newConversationId = (): string => crypto.randomUUID();
 
+export interface AnsweredHere {
+  at: string;
+  onOpen: () => void;
+}
+
+export interface FollowedConversation {
+  title: string;
+  message: number;
+}
+
 // Chat beside an overview's note (designs 310d, 310q–310x): a question or the note's field asks
 // in a new conversation when the panel is closed and in the open one when it is; the menu's
 // Chat reopens the latest. The list of conversations sits behind the header's count, and a
@@ -192,7 +202,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
   };
 
   // The latest conversation a question was asked in, for its receipt under the note (310d).
-  const answeredHere = (question: string): { at: string; onOpen: () => void } | null => {
+  const answeredHere = (question: string): AnsweredHere | null => {
     let found: { at: string; chat: Chat } | null = null;
     for (const chat of chats) {
       for (const message of chat.messages) {
@@ -210,7 +220,7 @@ export const useChatPanel = (overviewId: OverviewId, about: ChatSourceKind) => {
 
   // Following an answer's citation of another conversation: that one opens at the message it
   // cited, with a way back to this one at the citation (design 310x).
-  const followConversation = (chatId: string, message: number, from: { title: string; message: number }) => {
+  const followConversation = (chatId: string, message: number, from: FollowedConversation) => {
     const cited = chats.find((chat) => chat.id === chatId);
     if (cited === undefined) {
       return;

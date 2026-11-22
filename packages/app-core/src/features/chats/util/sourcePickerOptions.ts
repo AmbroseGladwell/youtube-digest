@@ -21,22 +21,18 @@ const matches = (text: string, words: readonly string[]) => {
   return words.every((word) => lower.includes(word));
 };
 
-// OV-354, page 1: with nothing typed, the projects with their counts, then the four overviews saved
-// most recently; typed words filter by title or project name, titles only, the first eight shown.
-// Never the chat's own overview, nor anything already added.
-export const sourcePickerOptions = ({
-  query,
-  projects,
-  members,
-  overviews,
-  exclude,
-}: {
+export interface SourcePickerQuery {
   query: string;
   projects: readonly Project[];
   members: readonly ProjectMember[];
   overviews: readonly Overview[];
   exclude: ReadonlySet<string>;
-}): PickerOptions => {
+}
+
+// OV-354, page 1: with nothing typed, the projects with their counts, then the four overviews saved
+// most recently; typed words filter by title or project name, titles only, the first eight shown.
+// Never the chat's own overview, nor anything already added.
+export const sourcePickerOptions = ({ query, projects, members, overviews, exclude }: SourcePickerQuery): PickerOptions => {
   const words = wordsOf(query);
   const counted = projects
     .filter((project) => project.archivedAt === null && !exclude.has(project.id))
@@ -61,8 +57,13 @@ export const sourcePickerOptions = ({
   return { options: found.slice(0, PICKER_OPTIONS_SHOWN), more: Math.max(0, found.length - PICKER_OPTIONS_SHOWN) };
 };
 
+export interface MarkedText {
+  text: string;
+  marked: boolean;
+}
+
 // The title in pieces, each typed word marked where it appears, for the picker to set in bold.
-export const markedPieces = (text: string, query: string): Array<{ text: string; marked: boolean }> => {
+export const markedPieces = (text: string, query: string): Array<MarkedText> => {
   const words = wordsOf(query);
   if (words.length === 0) {
     return [{ text, marked: false }];
@@ -86,8 +87,13 @@ export const markedPieces = (text: string, query: string): Array<{ text: string;
   return pieces;
 };
 
+export interface AtQuery {
+  start: number;
+  query: string;
+}
+
 // The "@" being typed at the caret, and what follows it, or null when the caret isn't in one.
-export const atQueryOf = (text: string, caret: number): { start: number; query: string } | null => {
+export const atQueryOf = (text: string, caret: number): AtQuery | null => {
   const before = text.slice(0, caret);
   const at = before.lastIndexOf("@");
   if (at === -1 || (at > 0 && !/\s/.test(before[at - 1]!))) {

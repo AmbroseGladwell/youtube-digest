@@ -13,7 +13,12 @@ export const recipeMinutes = (minutes: number): string => {
 // "Serves 6" lead with their own verb, which is taken as the label rather than said twice.
 const YIELD_VERB = /^(makes|serves|yields?|servings?|portions?)\s*:?\s*(?=.*\d)/i;
 
-export const recipeYield = (yieldText: string): { label: string; amount: string } => {
+export interface RecipeYield {
+  label: string;
+  amount: string;
+}
+
+export const recipeYield = (yieldText: string): RecipeYield => {
   const verb = yieldText.match(YIELD_VERB);
   if (verb === null) {
     return { label: "Makes", amount: yieldText };
@@ -70,9 +75,14 @@ export const recipeStepGroups = (steps: readonly RecipeStep[]): RecipeStepGroup[
   return groups;
 };
 
+export interface ChapterSpan {
+  startMs: number;
+  endMs: number;
+}
+
 // The steps a recipe video's chapter covers, by where each starts: "Steps 1–3", "Step 4", or
 // nothing for a chapter that holds none, the intro or the tasting (design 122j).
-export const chapterStepsLabel = (chapter: { startMs: number; endMs: number }, steps: readonly RecipeStep[]): string | null => {
+export const chapterStepsLabel = (chapter: ChapterSpan, steps: readonly RecipeStep[]): string | null => {
   const numbers = steps.flatMap(({ range }, index) =>
     range !== undefined && range.startMs >= chapter.startMs && range.startMs < chapter.endMs ? [index + 1] : [],
   );

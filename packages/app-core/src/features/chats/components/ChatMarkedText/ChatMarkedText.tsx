@@ -26,7 +26,12 @@ const withSettingsLinks = (text: string): ReactNode =>
     </Fragment>
   ));
 
-export const MarkedPieceView = ({ piece, className }: { piece: MarkedPiece; className?: string | undefined }) => {
+export interface MarkedPieceViewProps {
+  piece: MarkedPiece;
+  className?: string | undefined;
+}
+
+export const MarkedPieceView = ({ piece, className }: MarkedPieceViewProps) => {
   let node: ReactNode = piece.code ? <code className={styles.code}>{piece.text}</code> : withSettingsLinks(piece.text);
   if (piece.href !== undefined) {
     node = (

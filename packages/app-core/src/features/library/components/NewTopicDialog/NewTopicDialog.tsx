@@ -4,11 +4,16 @@ import { StrokeIcon } from "../../../../components/shared/StrokeIcon/StrokeIcon.
 import styles from "./NewTopicDialog.module.scss";
 import { newTopicDialogTestIds } from "./NewTopicDialogTestIds.js";
 
+export interface OnCreateOptions {
+  name: string;
+  overviews: Overview[];
+}
+
 export interface NewTopicDialogProps {
   open: boolean;
   unsorted: Overview[];
   busy: boolean;
-  onCreate: (input: { name: string; overviews: Overview[] }) => void;
+  onCreate: (input: OnCreateOptions) => void;
   onPick: (overviewId: OverviewId, picked: boolean) => void;
   onClose: () => void;
 }

@@ -85,11 +85,16 @@ export const podcastTranscript = async (
   }
 };
 
+interface FeedEpisode {
+  feedUrl: string;
+  guid: string;
+}
+
 const fromYouTube = async (
   api: Pick<PodcastApi, "transcript">,
   episode: PodcastEpisode,
   youTubeFetch: YouTubeFetch | null,
-  ask: { feedUrl: string; guid: string },
+  ask: FeedEpisode,
 ): Promise<PodcastTranscript> => {
   let videoId: string | null = null;
   if (youTubeFetch !== null) {

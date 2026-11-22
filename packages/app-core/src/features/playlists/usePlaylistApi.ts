@@ -3,9 +3,14 @@ import { createFetchPlaylistApi, type PlaylistApi } from "@overview/sync";
 import { useClientSurface } from "../../app/SurfaceContext.js";
 import { useKnownApiUrl } from "../sync/useKnownApiUrl.js";
 
+export interface PlaylistApiAccess {
+  api: PlaylistApi;
+  apiUrl: string;
+}
+
 // Null in a shell with no server to ask, where nothing about playlists is offered
 // (docs/features/playlists.md, "Looking a playlist up").
-export const usePlaylistApi = (): { api: PlaylistApi; apiUrl: string } | null => {
+export const usePlaylistApi = (): PlaylistApiAccess | null => {
   const apiUrl = useKnownApiUrl();
   const surface = useClientSurface();
   return useMemo(() => (apiUrl === null ? null : { api: createFetchPlaylistApi({ baseUrl: apiUrl, surface }), apiUrl }), [apiUrl, surface]);

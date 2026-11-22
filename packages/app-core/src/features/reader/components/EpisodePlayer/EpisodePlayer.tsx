@@ -100,8 +100,13 @@ export const EpisodePlayer = ({ engine, source }: EpisodePlayerProps) => {
   );
 };
 
+interface JumpLine {
+  shown: boolean;
+  announced: boolean;
+}
+
 // Shown for six seconds after each jump; another jump starts the six seconds again.
-const useJumpLine = (jumps: number): { shown: boolean; announced: boolean } => {
+const useJumpLine = (jumps: number): JumpLine => {
   const [shown, setShown] = useState(false);
   const [announced, setAnnounced] = useState(false);
   const first = useRef(jumps);

@@ -87,9 +87,15 @@ interface HeldSlot {
 // Our own key refused by the provider: ours to fix, never the reader's key problem.
 export class OurKeyUnavailableError extends Error {}
 
+interface MeteredUsage {
+  inputTokens: number;
+  outputTokens: number;
+  costDollars: number | null;
+}
+
 // What a run of calls on our key used and cost, failed attempts included, since the provider
 // bills every response it answers.
-const meteredUsageOf = (calls: MeteredCall[]): { inputTokens: number; outputTokens: number; costDollars: number | null } => {
+const meteredUsageOf = (calls: MeteredCall[]): MeteredUsage => {
   const price = priceOf(ourKeyModel);
   return calls.reduce(
     (total, { usage }) =>

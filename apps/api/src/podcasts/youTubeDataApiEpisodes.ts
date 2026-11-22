@@ -93,6 +93,12 @@ export const isoDurationSeconds = (duration: string | undefined): number | null 
   return total > 0 ? total : null;
 };
 
+export interface YouTubeDataApiEpisodesOptions {
+  apiKey: string;
+  youTubeFetch: YouTubeFetch;
+  now?: () => Date;
+}
+
 // The same episode on YouTube, found through the YouTube Data API on our key with one search: a
 // video search for its title, the episode among the results by its title, length and date on any
 // channel, then the show's own channel among the results, its uploads, and the episode there by
@@ -103,11 +109,7 @@ export const youTubeDataApiEpisodes = ({
   apiKey,
   youTubeFetch,
   now = () => new Date(),
-}: {
-  apiKey: string;
-  youTubeFetch: YouTubeFetch;
-  now?: () => Date;
-}): YouTubeEpisodes => {
+}: YouTubeDataApiEpisodesOptions): YouTubeEpisodes => {
   const get = youTubeDataApiGet({ apiKey, youTubeFetch });
 
   const videos = async (ids: readonly string[]): Promise<Upload[]> => {

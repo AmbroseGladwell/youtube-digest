@@ -91,17 +91,15 @@ export const PodcastLinkStatus = ({ link, url, onRetry, onClear, onOpened }: Pod
   }
 };
 
-// Designs 305c, 305d, 305h and 305j: under the card, what Create will spend, why it spends nothing,
-// or the stop in its place. Nothing while the check runs, or when it found the words.
-export const EpisodeWordsNote = ({
-  words,
-  episodeSeconds,
-  onFollowed,
-}: {
+export interface EpisodeWordsNoteProps {
   words: EpisodeWords;
   episodeSeconds: number | null;
   onFollowed?: (() => void) | undefined;
-}) => {
+}
+
+// Designs 305c, 305d, 305h and 305j: under the card, what Create will spend, why it spends nothing,
+// or the stop in its place. Nothing while the check runs, or when it found the words.
+export const EpisodeWordsNote = ({ words, episodeSeconds, onFollowed }: EpisodeWordsNoteProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const action = episodeActionOf(words);
   switch (action.kind) {
@@ -135,7 +133,13 @@ const wordsLine = (words: EpisodeWords, episodeSeconds: number | null): string |
   return action.kind === "transcribe" ? transcriptionCopy.needs(episodeSeconds) : null;
 };
 
-const EpisodeCard = ({ episode, from, words }: { episode: PodcastEpisode; from: string; words: EpisodeWords }) => {
+interface EpisodeCardProps {
+  episode: PodcastEpisode;
+  from: string;
+  words: EpisodeWords;
+}
+
+const EpisodeCard = ({ episode, from, words }: EpisodeCardProps) => {
   const line = wordsLine(words, episode.durationSeconds);
   const [failed, setFailed] = useState(false);
   return (

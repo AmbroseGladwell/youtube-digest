@@ -31,6 +31,16 @@ import { overviewCitationViews } from "../../util/overviewCitationView.js";
 import styles from "./ChatAnswer.module.scss";
 import { chatAnswerTestIds } from "./ChatAnswerTestIds.js";
 
+export interface ConversationSummary {
+  date: string;
+  firstQuestion: string;
+}
+
+export interface OverviewImage {
+  url: string | null;
+  wide: boolean;
+}
+
 export interface ChatAnswerProps {
   text: string;
   inSource: boolean;
@@ -46,7 +56,7 @@ export interface ChatAnswerProps {
   onOverviewPartFollowed: ChatOverviewCitationProps["onFollowed"];
   onOpenTranscriptAt: (positionMs: number) => void;
   // Another conversation about the overview an answer drew on, or null once it is deleted.
-  conversationOf: (chatId: string) => { date: string; firstQuestion: string } | null;
+  conversationOf: (chatId: string) => ConversationSummary | null;
   onConversationFollowed: (chatId: string, message: number) => void;
   // Another of the reader's overviews an answer drew on (OV-355): whether it is still in the library.
   holdsOverview: (overviewId: string) => boolean;
@@ -54,7 +64,7 @@ export interface ChatAnswerProps {
   // The answer in sections (OV-354, page 4): every scope's answers share this one shape.
   sections?: ChatAnswerSections | undefined;
   // A mini thumbnail for another overview's chip, when it's still in the library.
-  imageOf?: ((overviewId: string) => { url: string | null; wide: boolean }) | undefined;
+  imageOf?: ((overviewId: string) => OverviewImage) | undefined;
   onSourcesOpened?: ((count: number) => void) | undefined;
   // Copy, under each answer (design 324x), with the Sources menu beside it when there is one.
   actions?: ((sources: ReactNode) => ReactNode) | undefined;
@@ -267,16 +277,15 @@ const ChatItemText = ({ text }: { text: string }) => {
   );
 };
 
-// OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
-// sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
-export const ChatAnswerSectionsView = ({
-  sections,
-  chipsOf,
-}: {
+export interface ChatAnswerSectionsViewProps {
   sections: Pick<ChatAnswerSections, "intro" | "introSources" | "sections"> & { takeaway?: string };
   // The chips for what a section cites; none while it streams in an overview's chat.
   chipsOf?: ((cited: readonly ChatCitation[]) => ChatChip[]) | undefined;
-}) => {
+}
+
+// OV-354, page 4: the intro, then each section as a heading, its paragraphs and lists and its
+// sources grouped by relation, then the takeaway. One that only needs an intro is the intro alone.
+export const ChatAnswerSectionsView = ({ sections, chipsOf }: ChatAnswerSectionsViewProps) => {
   const row = (cited: readonly ChatCitation[]) => {
     const chips = chipsOf?.(cited) ?? [];
     return <ChatChipRow chips={chips.map((each) => each.chip)} hiddenLabels={chips.slice(VISIBLE_CHIPS).map((each) => each.label)} />;
@@ -343,17 +352,15 @@ export const ChatAnswerSectionsView = ({
   );
 };
 
-// OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
-// moments first. N is counted by code.
-export const ChatSourcesMenu = ({
-  count,
-  onOpened,
-  children,
-}: {
+export interface ChatSourcesMenuProps {
   count: number;
   onOpened?: ((count: number) => void) | undefined;
   children: ReactNode;
-}) => {
+}
+
+// OV-354, page 2: "Sources N" beside Copy, a menu of everything the answer cites, its own
+// moments first. N is counted by code.
+export const ChatSourcesMenu = ({ count, onOpened, children }: ChatSourcesMenuProps) => {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   const menu = useRef<HTMLDivElement | null>(null);
@@ -400,9 +407,14 @@ export const ChatSourcesMenu = ({
   );
 };
 
+interface ShowOnPageLinkProps {
+  page: ChatPage;
+  place: ArticlePlace;
+}
+
 // Design 319 for OV-320: a plain link beside an article's key point or chapter. Beside the
 // article it moves the page; anywhere else it opens the page at that place in a new tab.
-const ShowOnPageLink = ({ page, place }: { page: ChatPage; place: ArticlePlace }) => {
+const ShowOnPageLink = ({ page, place }: ShowOnPageLinkProps) => {
   if (page.onPage !== null) {
     const { onPage } = page;
     if (onPage.statusOf(place) === "missing") {

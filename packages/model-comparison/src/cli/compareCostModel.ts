@@ -68,7 +68,12 @@ const spentSoFar = async () =>
     ...(await judgments.all()),
   ]);
 
-const settled = (records: readonly { videoId: string; outcome: string }[]) =>
+interface VideoOutcome {
+  videoId: string;
+  outcome: string;
+}
+
+const settled = (records: readonly VideoOutcome[]) =>
   new Set(records.filter((record) => record.outcome !== "errored").map((record) => record.videoId));
 
 const inLanes = <T>(tasks: T[]): T[][] => Array.from({ length: LANES }, (_, lane) => tasks.filter((_, index) => index % LANES === lane));

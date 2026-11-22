@@ -33,3 +33,7 @@ if ! node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern "${staged[@
   echo "pre-commit: unformatted files above; run task format, then stage the result" >&2
   exit 1
 fi
+if ! node scripts/oxlint/lintChangedLines.mjs; then
+  echo "pre-commit: fix the problems above on the lines you added (docs/conventions/lint-and-format.md)" >&2
+  exit 1
+fi

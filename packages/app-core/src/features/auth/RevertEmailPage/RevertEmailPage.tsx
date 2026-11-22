@@ -14,7 +14,12 @@ import { authFailureMessage } from "../util/authFailureMessage.js";
 import styles from "./RevertEmailPage.module.scss";
 import { revertEmailPageTestIds } from "./RevertEmailPageTestIds.js";
 
-const refusalReason = (details: Record<string, unknown> | undefined): { reason: Refusal; email: string | null } => {
+interface RefusalReason {
+  reason: Refusal;
+  email: string | null;
+}
+
+const refusalReason = (details: Record<string, unknown> | undefined): RefusalReason => {
   const parsed = EmailChangeRevertRefusal.safeParse(details?.reason);
   return {
     reason: parsed.success ? parsed.data : "spent",

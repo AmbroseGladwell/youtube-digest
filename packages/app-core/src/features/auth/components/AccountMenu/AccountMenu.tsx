@@ -238,7 +238,13 @@ export const AccountMenu = () => {
         type="button"
         ref={trigger}
         className={`${styles.trigger} ${current ? styles.triggerCurrent : ""} ${isPanel ? "" : styles.triggerBar}`}
-        onClick={() => (open ? dismiss(false) : openMenu("first"))}
+        onClick={() => {
+          if (open) {
+            dismiss(false);
+          } else {
+            openMenu("first");
+          }
+        }}
         onKeyDown={(event) => {
           if (event.key === "ArrowDown" && !open) {
             event.preventDefault();

@@ -69,6 +69,11 @@ const announcementOf = (phase: WaitPhase, heading: string, stages: readonly Wait
   return [lastDone?.doneLine, running?.name].filter((part) => part != null).join(". ");
 };
 
+export interface WaitSubLine {
+  text: string;
+  key: string;
+}
+
 export const OnboardingWait = ({
   heading,
   cardLabel,
@@ -120,7 +125,7 @@ export const OnboardingWait = ({
     return () => window.removeEventListener("keydown", openOnEnter);
   }, [phase, onOpen]);
 
-  const subLineOf = (stage: WaitStage, index: number): { text: string; key: string } | null => {
+  const subLineOf = (stage: WaitStage, index: number): WaitSubLine | null => {
     if (phase !== "running" || stage.state !== "running") {
       return null;
     }

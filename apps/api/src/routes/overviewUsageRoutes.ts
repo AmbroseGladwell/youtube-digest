@@ -5,21 +5,15 @@ import type { SqlClient } from "../db/SqlClient.js";
 import type { createPodcastTranscriptions } from "../podcasts/createPodcastTranscriptions.js";
 import type { OverviewUsageRepository } from "../usage/OverviewUsageRepository.js";
 
+export interface OverviewUsageRoutesOptions {
+  usage: OverviewUsageRepository;
+  transcriptions: Pick<ReturnType<typeof createPodcastTranscriptions>, "usage"> | null;
+  sql: SqlClient;
+  clock: () => Date;
+}
+
 // The month's overviews, and its transcribing where this server transcribes episodes.
-export const overviewUsageRoutes = (
-  app: FastifyInstance,
-  {
-    usage,
-    transcriptions,
-    sql,
-    clock,
-  }: {
-    usage: OverviewUsageRepository;
-    transcriptions: Pick<ReturnType<typeof createPodcastTranscriptions>, "usage"> | null;
-    sql: SqlClient;
-    clock: () => Date;
-  },
-): void => {
+export const overviewUsageRoutes = (app: FastifyInstance, { usage, transcriptions, sql, clock }: OverviewUsageRoutesOptions): void => {
   app.get("/overview-usage", async (request): Promise<OverviewUsage> => {
     const { accountId } = request.session!;
     const plan = await accountPlan(sql, accountId);

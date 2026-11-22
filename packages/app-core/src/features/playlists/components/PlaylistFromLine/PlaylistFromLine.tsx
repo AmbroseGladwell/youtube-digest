@@ -16,7 +16,12 @@ export const PlaylistFromLine = ({ overview }: { overview: Overview }) => {
   return overview.fromPlaylist === null ? null : <FromLine overview={overview} origin={overview.fromPlaylist} />;
 };
 
-const FromLine = ({ overview, origin }: { overview: Overview; origin: PlaylistOrigin }) => {
+interface FromLineProps {
+  overview: Overview;
+  origin: PlaylistOrigin;
+}
+
+const FromLine = ({ overview, origin }: FromLineProps) => {
   const analytics = useAnalytics();
   const followed = useFollowedPlaylistsQuery();
 

@@ -35,7 +35,12 @@ export const MiniPlayer = () => {
   return <DockedMiniPlayer snapshot={snapshot} onStop={() => engine.stop()} />;
 };
 
-const DockedMiniPlayer = ({ snapshot, onStop }: { snapshot: PlayerSnapshot; onStop: () => void }) => {
+interface DockedMiniPlayerProps {
+  snapshot: PlayerSnapshot;
+  onStop: () => void;
+}
+
+const DockedMiniPlayer = ({ snapshot, onStop }: DockedMiniPlayerProps) => {
   const engine = usePlayer();
   const time = usePlayerTime();
   const analytics = useAnalytics();

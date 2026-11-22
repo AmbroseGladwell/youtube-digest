@@ -6,8 +6,13 @@ export const sharedChecklistHint = "Changes save as you go. A dash means some of
 
 const FOOT_NAMES = 3;
 
+export interface OptionHolding {
+  name: string;
+  held: number;
+}
+
 // "Home on all 3 · Money on 1" (168as).
-export const sharedChecklistFoot = (options: { name: string; held: number }[], of: number, none: string): string => {
+export const sharedChecklistFoot = (options: OptionHolding[], of: number, none: string): string => {
   const held = options.filter((option) => option.held > 0);
   if (held.length === 0) {
     return none;

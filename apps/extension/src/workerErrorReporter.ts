@@ -2,11 +2,16 @@ import { analyticsPlatform, type AnalyticsContext } from "@overview/domain";
 import { createFetchErrorsApi, toClientError, type ErrorsApi } from "@overview/sync";
 import type { ErrorDestination } from "@overview/app-core";
 
+export interface ApiDestinationOptions {
+  apiUrl: string;
+  token: string | null;
+}
+
 export interface WorkerErrorReporterOptions {
   readDestination: () => Promise<ErrorDestination | null>;
   defaultApiUrl: string;
   appVersion: string | null;
-  createApi?: (destination: { apiUrl: string; token: string | null }) => ErrorsApi;
+  createApi?: (destination: ApiDestinationOptions) => ErrorsApi;
   now?: () => Date;
   maxPerMinute?: number;
 }

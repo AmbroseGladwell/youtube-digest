@@ -76,7 +76,13 @@ export const useNotePlayer = (track: PlayerTrack | null): NotePlayer => {
   const lines = track?.lines ?? [];
   const activeIndex = current ? engineLine : restingLine;
   const clampLine = (index: number) => Math.min(Math.max(index, 0), Math.max(lines.length - 1, 0));
-  const selectLine = (index: number) => (current ? engine.seekLine(index) : setRestingLine(clampLine(index)));
+  const selectLine = (index: number) => {
+    if (current) {
+      engine.seekLine(index);
+    } else {
+      setRestingLine(clampLine(index));
+    }
+  };
 
   return {
     current,

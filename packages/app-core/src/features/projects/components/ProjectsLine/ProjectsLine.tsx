@@ -74,15 +74,13 @@ export const ProjectsLine = ({ projects, webApp, onOpen, onChange }: ProjectsLin
   );
 };
 
-const ProjectName = ({
-  project,
-  webApp,
-  onOpen,
-}: {
+interface ProjectNameProps {
   project: Project;
   webApp: ProjectsLineProps["webApp"];
   onOpen: (project: Project) => void;
-}) => {
+}
+
+const ProjectName = ({ project, webApp, onOpen }: ProjectNameProps) => {
   const tipId = useId();
   const cut = project.name.length > CUT_AT;
   const common = {

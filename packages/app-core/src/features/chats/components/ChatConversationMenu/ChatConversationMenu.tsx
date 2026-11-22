@@ -257,7 +257,13 @@ export const ChatConversationMenu = ({
         aria-label="More for this conversation"
         aria-haspopup="menu"
         aria-expanded={open === "menu"}
-        onClick={() => (open === "closed" ? setOpen("menu") : close())}
+        onClick={() => {
+          if (open === "closed") {
+            setOpen("menu");
+          } else {
+            close();
+          }
+        }}
         data-testid={chatConversationMenuTestIds.trigger}
       >
         <StrokeIcon name="more" size={16} />

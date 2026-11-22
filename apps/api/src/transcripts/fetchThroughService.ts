@@ -46,13 +46,19 @@ export const budgetExhausted = () =>
     { failure: TranscriptFetchFailure.BUDGET_EXHAUSTED, sourceId: "service" },
   );
 
+export interface ThroughService<T> {
+  value: T;
+  via: "direct" | "proxy";
+  proxySessions: number;
+}
+
 // From our own address first, which costs nothing, and through the residential proxy only
 // when YouTube turned that away (docs/architecture/server-side-transcripts.md).
 export const throughService = async <T>(
   fetches: ServiceFetches,
   budget: ProxyBudget,
   operation: (youTubeFetch: YouTubeFetch) => Promise<T>,
-): Promise<{ value: T; via: "direct" | "proxy"; proxySessions: number }> => {
+): Promise<ThroughService<T>> => {
   let lastError: unknown;
   try {
     return { value: await operation(fetches.direct), via: "direct", proxySessions: 0 };

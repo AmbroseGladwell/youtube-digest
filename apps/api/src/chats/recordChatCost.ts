@@ -11,10 +11,15 @@ export interface ChatCost {
   costDollars: number | null;
 }
 
+export interface RecordChatCostOptions {
+  costs: AccountCostsRepository;
+  clock: () => Date;
+}
+
 // A call's tokens at list price into the account's cost tally, area chat, and what the log line
 // says of them (docs/architecture/unit-economics.md).
 export const recordChatCost = async (
-  { costs, clock }: { costs: AccountCostsRepository; clock: () => Date },
+  { costs, clock }: RecordChatCostOptions,
   accountId: AccountId,
   usage: TokenUsage | null,
   detail: string,

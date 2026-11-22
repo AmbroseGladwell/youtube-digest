@@ -91,10 +91,12 @@ export const waitStage = (id: WaitStageId, state: WaitStageState, facts: WaitFac
 
 const stepsFor = (focus: string | null): string => `Writing steps for ${focus ?? "you"}`;
 
-export const waitScript = (
-  kind: WaitKind,
-  { focus = null, transcribing = false }: { focus?: string | null; transcribing?: boolean } = {},
-): readonly string[] => {
+export interface WaitScriptOptions {
+  focus?: string | null;
+  transcribing?: boolean;
+}
+
+export const waitScript = (kind: WaitKind, { focus = null, transcribing = false }: WaitScriptOptions = {}): readonly string[] => {
   switch (kind) {
     case "video":
       return ["Reading the transcript", "Finding what's new in it", "Checking the claims", "Writing your verdict", stepsFor(focus)];

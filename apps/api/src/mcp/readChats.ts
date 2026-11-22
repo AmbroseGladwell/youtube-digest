@@ -2,7 +2,12 @@ import { Chat, CHAT_MIGRATIONS, readStoredRecord, stampSchemaVersion } from "@ov
 import type { AccountId } from "../auth/AccountId.js";
 import type { SqlClient } from "../db/SqlClient.js";
 
-const readable = (rows: ReadonlyArray<{ schema_version: number; body: Record<string, unknown> }>): Chat[] =>
+interface StoredChatRow {
+  schema_version: number;
+  body: Record<string, unknown>;
+}
+
+const readable = (rows: ReadonlyArray<StoredChatRow>): Chat[] =>
   rows.flatMap((row) => {
     const read = readStoredRecord(stampSchemaVersion(row.body, row.schema_version), Chat, CHAT_MIGRATIONS);
     return read.status === "read" ? [read.record] : [];

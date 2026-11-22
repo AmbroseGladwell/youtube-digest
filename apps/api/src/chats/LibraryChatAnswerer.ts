@@ -90,6 +90,34 @@ const readAll = <T>(rows: readonly StoredRecord[], schema: z.ZodType<T>, migrati
   });
 };
 
+export interface AskAccount {
+  accountId: AccountId;
+  plan: Plan;
+}
+
+export interface LibraryQuestion {
+  conversationId: string;
+  text: string;
+  pins?: { overviews: readonly string[]; projects: readonly string[] };
+  setAside?: readonly string[];
+}
+
+export interface OverviewPassages {
+  overviewId: string;
+  passages: readonly Passage[];
+}
+
+export interface Pins {
+  overviews: readonly string[];
+  projects: readonly string[];
+}
+
+export interface ResolvedScope {
+  scope: LibraryChatScope;
+  overviews: Overview[];
+  stats: ChatScopeStats;
+}
+
 // Answers a reader's question over their whole library or one project, on our key, within the
 // same allowance as an overview's chat. Small enough, the overviews go whole and one pass answers;
 // larger, the model picks up to five from the map and code sends those whole for a second pass
@@ -102,14 +130,9 @@ export class LibraryChatAnswerer {
   }
 
   async ask(
-    { accountId, plan }: { accountId: AccountId; plan: Plan },
+    { accountId, plan }: AskAccount,
     owner: LibraryChatOwner,
-    question: {
-      conversationId: string;
-      text: string;
-      pins?: { overviews: readonly string[]; projects: readonly string[] };
-      setAside?: readonly string[];
-    },
+    question: LibraryQuestion,
     log: FastifyBaseLogger,
   ): Promise<AsyncGenerator<ChatStreamEvent>> {
     const { records, usage, clock, dailyMessages } = this.#options;
@@ -192,7 +215,7 @@ export class LibraryChatAnswerer {
       return entries.length === 0 ? [] : [pickedBlock(entries)];
     };
     const minuteLabels = new Map<string, OtherOverviewCitation>();
-    const minutesMessage = (minutes: ReadonlyArray<{ overviewId: string; passages: readonly Passage[] }>): PromptMessage[] => {
+    const minutesMessage = (minutes: ReadonlyArray<OverviewPassages>): PromptMessage[] => {
       const entries = minutes.flatMap(({ overviewId, passages }) => {
         const label = labelOf.get(overviewId);
         const overview = label === undefined ? undefined : labels.get(label);
@@ -431,7 +454,7 @@ export class LibraryChatAnswerer {
 
   // What the reader pinned: overviews, and a project's members, the most recently added 8 of a large
   // one, as an overview's chat caps them. Only live ones.
-  async #pinned(accountId: AccountId, pins: { overviews: readonly string[]; projects: readonly string[] }): Promise<Overview[]> {
+  async #pinned(accountId: AccountId, pins: Pins): Promise<Overview[]> {
     const { records } = this.#options;
     const members: string[] = [];
     for (const project of readAll(await records.readLive(accountId, "project", pins.projects), Project, PROJECT_MIGRATIONS)) {
@@ -456,10 +479,7 @@ export class LibraryChatAnswerer {
 
   // The overviews a question is over, oldest saved first so a new save lands at the end of the
   // cached map, and the counts its answer shows, worked out here.
-  async #scope(
-    accountId: AccountId,
-    owner: LibraryChatOwner,
-  ): Promise<{ scope: LibraryChatScope; overviews: Overview[]; stats: ChatScopeStats }> {
+  async #scope(accountId: AccountId, owner: LibraryChatOwner): Promise<ResolvedScope> {
     const { records } = this.#options;
     const oldestFirst = (overviews: Overview[]) => [...overviews].sort((left, right) => left.savedAt.localeCompare(right.savedAt));
     if (owner.kind === "library") {

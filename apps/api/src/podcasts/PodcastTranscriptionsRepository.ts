@@ -70,6 +70,11 @@ export type TranscriptionAsked =
   | { outcome: "existing"; job: PodcastTranscriptionJob }
   | { outcome: "over-allowance"; usedSeconds: number };
 
+export interface TranscriptionUsage {
+  usedSeconds: number;
+  episodes: number;
+}
+
 // A caller's transcriptions and the month's seconds they hold: one job per caller and episode,
 // so asking again for words already made or on their way costs nothing, and a failed one starts
 // again from nothing (docs/features/speech-to-text.md, "The server rung").
@@ -90,7 +95,7 @@ export class PodcastTranscriptionsRepository {
   }
 
   // The month's seconds held or spent, and the episodes they went on.
-  async usage(now: Date, caller: string): Promise<{ usedSeconds: number; episodes: number }> {
+  async usage(now: Date, caller: string): Promise<TranscriptionUsage> {
     const rows = await this.#sql.query<{ seconds: number; episodes: number }>(
       "select seconds, episodes from transcription_usage where month = $1::date and caller = $2",
       [usageMonth(now), caller],

@@ -28,12 +28,16 @@ export interface CodeExchange {
   resource: string | undefined;
 }
 
+export interface ExchangeCodeOptions {
+  client: OAuthClient;
+  exchange: CodeExchange;
+  urls: OAuthUrls;
+  now: Date;
+}
+
 // A code is spent once. A second exchange of the same code means it leaked, so the
 // connection the first one made is revoked (OAuth 2.1 §4.1.3; docs/features/mcp-connector.md).
-export const exchangeCode = async (
-  sql: SqlClient,
-  { client, exchange, urls, now }: { client: OAuthClient; exchange: CodeExchange; urls: OAuthUrls; now: Date },
-): Promise<TokenGrant> => {
+export const exchangeCode = async (sql: SqlClient, { client, exchange, urls, now }: ExchangeCodeOptions): Promise<TokenGrant> => {
   return sql.transaction(async (tx) => {
     const [row] = await tx.query<CodeRow>(
       `select id, client_id, redirect_uri, code_challenge, scope, resource, account_id,

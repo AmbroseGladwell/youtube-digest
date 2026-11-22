@@ -4,9 +4,14 @@ import styles from "./Toast.module.scss";
 import { toastTestIds } from "./ToastTestIds.js";
 import type { ToastMessage } from "./useToast.js";
 
+export interface ToastProps {
+  toast: ToastMessage | null;
+  onDismiss?: () => void;
+}
+
 // Design 266am: a word at the foot of the window that something was done, or couldn't be,
 // with Undo where it can be taken back ("OV-318 3" 318m).
-export const Toast = ({ toast, onDismiss }: { toast: ToastMessage | null; onDismiss?: () => void }) => {
+export const Toast = ({ toast, onDismiss }: ToastProps) => {
   if (toast === null) {
     return null;
   }

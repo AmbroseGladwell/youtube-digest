@@ -504,7 +504,12 @@ const TranscriptSearchBar = ({ search, onQueryChange }: TranscriptSearchBarProps
   );
 };
 
-const TranscriptNote = ({ testId, children }: { testId: string; children: ReactNode }) => {
+interface TranscriptNoteProps {
+  testId: string;
+  children: ReactNode;
+}
+
+const TranscriptNote = ({ testId, children }: TranscriptNoteProps) => {
   return (
     <p className={styles.note} data-testid={testId}>
       {children}

@@ -7,17 +7,14 @@ export const READY_IN_A_MOMENT_SECONDS = 30;
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-export const waitBarFraction = ({
-  phase,
-  elapsedSeconds,
-  expectedSeconds,
-  doneStages,
-}: {
+export interface WaitBarFractionOptions {
   phase: WaitPhase;
   elapsedSeconds: number;
   expectedSeconds: number;
   doneStages: number;
-}): number => {
+}
+
+export const waitBarFraction = ({ phase, elapsedSeconds, expectedSeconds, doneStages }: WaitBarFractionOptions): number => {
   if (phase === "ready") {
     return 1;
   }
@@ -27,15 +24,13 @@ export const waitBarFraction = ({
   return Math.max(byTime, byStages);
 };
 
-export const waitEstimateLine = ({
-  phase,
-  elapsedSeconds,
-  expectedSeconds,
-}: {
+export interface WaitEstimateLineOptions {
   phase: WaitPhase;
   elapsedSeconds: number;
   expectedSeconds: number;
-}): string => {
+}
+
+export const waitEstimateLine = ({ phase, elapsedSeconds, expectedSeconds }: WaitEstimateLineOptions): string => {
   if (phase === "ready") {
     return "Ready";
   }

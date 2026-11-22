@@ -85,21 +85,17 @@ const ArticleFetchFailure = ({ error }: { error: Extract<RunError, { kind: "arti
   );
 };
 
-// After Create: the question 305c-2 asks when the check couldn't tell, a transcription that failed
-// (305k), or one our server wouldn't start after all (305h, 305j). Each counted nothing.
-const TranscriptionStop = ({
-  error,
-  episodeSeconds,
-  onTranscribe,
-  onNotNow,
-  onFollowed,
-}: {
+interface TranscriptionStopProps {
   error: Extract<RunError, { kind: "podcastNeedsTranscribing" | "transcriptionFailed" | "transcriptionRefused" }>;
   episodeSeconds: number | null;
   onTranscribe: (() => void) | undefined;
   onNotNow: (() => void) | undefined;
   onFollowed: (() => void) | undefined;
-}) => {
+}
+
+// After Create: the question 305c-2 asks when the check couldn't tell, a transcription that failed
+// (305k), or one our server wouldn't start after all (305h, 305j). Each counted nothing.
+const TranscriptionStop = ({ error, episodeSeconds, onTranscribe, onNotNow, onFollowed }: TranscriptionStopProps) => {
   const usage = useOverviewUsageQuery().data ?? null;
   const transcribing = usage?.transcription ?? null;
   const notNow = onNotNow === undefined ? null : { label: "Not now", onPress: onNotNow };

@@ -80,7 +80,13 @@ export const RelatedByTag = ({ tags, related, tagsLink, onTagFollowed, onOvervie
   );
 };
 
-const TagList = ({ tags, link, onFollowed }: { tags: string[]; link: boolean; onFollowed?: (() => void) | undefined }) => {
+interface TagListProps {
+  tags: string[];
+  link: boolean;
+  onFollowed?: (() => void) | undefined;
+}
+
+const TagList = ({ tags, link, onFollowed }: TagListProps) => {
   return (
     <ul className={styles.tags} aria-label="Tags">
       {tags.map((tag) => (

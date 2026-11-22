@@ -45,7 +45,13 @@ export const ingredientsSource = (said: readonly number[], total: number): strin
       ? "From the video’s description."
       : `From the video’s description, with ${said.length} said in the video.`;
 
-const Line = ({ line, fromVideo, saidAside }: { line: AdjustedIngredient; fromVideo: boolean; saidAside: boolean }) => {
+interface LineProps {
+  line: AdjustedIngredient;
+  fromVideo: boolean;
+  saidAside: boolean;
+}
+
+const Line = ({ line, fromVideo, saidAside }: LineProps) => {
   if (line.kind !== "adjusted") {
     return (
       <>

@@ -57,7 +57,12 @@ export const PlansModal = ({ open, plan, onClose }: PlansModalProps) => {
   );
 };
 
-const PlanCardItem = ({ card, yours }: { card: PlanCard; yours: boolean }) => {
+interface PlanCardItemProps {
+  card: PlanCard;
+  yours: boolean;
+}
+
+const PlanCardItem = ({ card, yours }: PlanCardItemProps) => {
   const plan = PLAN_OF_CARD[card.name]!;
   const recommended = plan === "plus";
   return (

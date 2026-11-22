@@ -1,6 +1,7 @@
-import { Overview, recipeNote, resolveTags, webSource, type OverviewId, type Recipe, type SourceKey } from "@overview/domain";
+import { Overview, recipeNote, resolveTags, webSource, type Recipe } from "@overview/domain";
 import type { ArticleGenerationInput } from "../article/ArticleGenerationInput.js";
 import { resolvedFollowUpQuestions } from "../sections/followUpQuestionsSection.js";
+import type { AssembledOverviewMeta } from "../OverviewMeta.js";
 
 export interface GeneratedRecipeOutput {
   inOneLine: string;
@@ -18,7 +19,7 @@ export const assembleRecipeOverview = (
   input: ArticleGenerationInput,
   recipe: Recipe,
   output: GeneratedRecipeOutput,
-  meta: { id: OverviewId; savedAt: string; sourceId: SourceKey },
+  meta: AssembledOverviewMeta,
 ): Overview => {
   return Overview.parse({
     id: meta.id,

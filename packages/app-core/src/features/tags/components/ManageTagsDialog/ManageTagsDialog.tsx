@@ -338,17 +338,7 @@ const CloseButton = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-// 84l: the row becomes a field that says what it will save as, refuses a name with nothing
-// in it, and turns into a merge when the name is taken.
-const RenameRow = ({
-  tag,
-  draft,
-  count,
-  exists,
-  onDraft,
-  onCancel,
-  onSave,
-}: {
+interface RenameRowProps {
   tag: string;
   draft: string;
   count: number;
@@ -356,7 +346,11 @@ const RenameRow = ({
   onDraft: (draft: string) => void;
   onCancel: () => void;
   onSave: (target: string) => void;
-}) => {
+}
+
+// 84l: the row becomes a field that says what it will save as, refuses a name with nothing
+// in it, and turns into a merge when the name is taken.
+const RenameRow = ({ tag, draft, count, exists, onDraft, onCancel, onSave }: RenameRowProps) => {
   const statusId = useId();
   const row = useRef<HTMLLIElement | null>(null);
   useEffect(() => {
@@ -410,6 +404,20 @@ const RenameRow = ({
   );
 };
 
+interface MergeStepProps {
+  headingId: string;
+  tags: TagCount[];
+  keep: string;
+  newName: string;
+  existing: TagCount[];
+  countTagged: (tags: string[]) => number;
+  onKeep: (keep: string) => void;
+  onNewName: (name: string) => void;
+  onBack: () => void;
+  onClose: () => void;
+  onMerge: (target: string) => void;
+}
+
 // 84k: which name the merged tags keep, most used first and chosen already, or a new one.
 const MergeStep = ({
   headingId,
@@ -423,19 +431,7 @@ const MergeStep = ({
   onBack,
   onClose,
   onMerge,
-}: {
-  headingId: string;
-  tags: TagCount[];
-  keep: string;
-  newName: string;
-  existing: TagCount[];
-  countTagged: (tags: string[]) => number;
-  onKeep: (keep: string) => void;
-  onNewName: (name: string) => void;
-  onBack: () => void;
-  onClose: () => void;
-  onMerge: (target: string) => void;
-}) => {
+}: MergeStepProps) => {
   const target = keep === NEW_NAME ? normaliseTag(newName) : keep;
   const others = tags.length - 1;
   const tagged = target === null ? 0 : countTagged([...tags.map(({ tag }) => tag), target]);

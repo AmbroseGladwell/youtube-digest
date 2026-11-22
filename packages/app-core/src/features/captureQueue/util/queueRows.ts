@@ -87,14 +87,14 @@ const playlistNames = (captures: readonly QueuedCapture[]) =>
     ...new Set(captures.map((capture) => capture.fromPlaylist.title)),
   ]);
 
-// The library group's foot for what waits on a pace or for the reader: a count and whose,
-// never warning ink, because nothing is wrong (95ab).
-export const pacedSummary = (
-  queue: Pick<CaptureQueueController, "tomorrow" | "forYou">,
-): {
+export interface PacedSummary {
   tomorrow: string | null;
   forYou: string | null;
-} => {
+}
+
+// The library group's foot for what waits on a pace or for the reader: a count and whose,
+// never warning ink, because nothing is wrong (95ab).
+export const pacedSummary = (queue: Pick<CaptureQueueController, "tomorrow" | "forYou">): PacedSummary => {
   const reached = queue.tomorrow.length === 0 ? null : playlistNames(queue.tomorrow);
   return {
     tomorrow:

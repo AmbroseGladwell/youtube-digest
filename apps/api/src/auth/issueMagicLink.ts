@@ -16,29 +16,23 @@ export interface IssuedMagicLink {
   expiresAt: string;
 }
 
+export interface IssueMagicLinkOptions {
+  email: string;
+  surface: AuthSurface;
+  intent: AuthIntent;
+  firstName: string | null;
+  anonymousId: string | null;
+  spent: boolean;
+  now: Date;
+}
+
 // One link per address per minute, so a public endpoint that sends mail cannot be turned
 // on someone's inbox. Inside the cooldown nothing is issued and the caller answers exactly
 // as if it had been. A spent link only holds the cooldown: it is never mailed and can never
 // sign in (docs/features/sign-in.md).
 export const issueMagicLink = async (
   sql: SqlClient,
-  {
-    email: rawEmail,
-    surface,
-    intent,
-    firstName,
-    anonymousId,
-    spent,
-    now,
-  }: {
-    email: string;
-    surface: AuthSurface;
-    intent: AuthIntent;
-    firstName: string | null;
-    anonymousId: string | null;
-    spent: boolean;
-    now: Date;
-  },
+  { email: rawEmail, surface, intent, firstName, anonymousId, spent, now }: IssueMagicLinkOptions,
 ): Promise<IssuedMagicLink | null> => {
   const email = normaliseEmail(rawEmail);
   const recent = await sql.query<{ id: string }>("select id from magic_links where email = $1 and created_at > $2::timestamptz limit 1", [

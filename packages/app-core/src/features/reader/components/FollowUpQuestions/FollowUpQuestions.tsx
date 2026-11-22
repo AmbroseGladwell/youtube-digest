@@ -23,6 +23,11 @@ import { FollowUpAssistantMenu } from "../FollowUpAssistantMenu/FollowUpAssistan
 import styles from "./FollowUpQuestions.module.scss";
 import { followUpQuestionsTestIds } from "./FollowUpQuestionsTestIds.js";
 
+export interface AnsweredHere {
+  at: string;
+  onOpen: () => void;
+}
+
 export interface FollowUpQuestionsProps {
   overview: Overview;
   questions: readonly FollowUpQuestion[];
@@ -36,7 +41,7 @@ export interface FollowUpQuestionsProps {
   // chose their assistant (design 310f). Absent, the block is OV-266's as built.
   onAskHere?: ((question: string, from: HTMLElement | null) => void) | undefined;
   // Where questions are answered here: the last time this one was, and its conversation (310d).
-  answeredHereOf?: ((question: string) => { at: string; onOpen: () => void } | null) | undefined;
+  answeredHereOf?: ((question: string) => AnsweredHere | null) | undefined;
 }
 
 type Motion = "arriving" | "idle" | "leaving" | "entering";
@@ -51,7 +56,13 @@ const setAnnouncement = (from: number, to: number, of: number): string => {
   return from === to ? `Question ${from} of ${of}` : `Questions ${from} to ${to} of ${of}`;
 };
 
-const AssistantLine = ({ assistant, connected, copies }: { assistant: FollowUpAssistant; connected: boolean; copies: boolean }) => {
+interface AssistantLineProps {
+  assistant: FollowUpAssistant;
+  connected: boolean;
+  copies: boolean;
+}
+
+const AssistantLine = ({ assistant, connected, copies }: AssistantLineProps) => {
   const name = <b>{FOLLOW_UP_ASSISTANTS[assistant].name}</b>;
   if (copies) {
     return <>Each copies the question and this note, then opens {name} for you to paste.</>;
@@ -336,9 +347,13 @@ export const FollowUpQuestions = ({
           className={styles.change}
           aria-haspopup="dialog"
           aria-expanded={menu !== null && !menu.firstTap}
-          onClick={() =>
-            menu !== null && !menu.firstTap ? closeMenu() : setMenu({ firstTap: false, top: topBelow(changeButton.current, 4) })
-          }
+          onClick={() => {
+            if (menu !== null && !menu.firstTap) {
+              closeMenu();
+            } else {
+              setMenu({ firstTap: false, top: topBelow(changeButton.current, 4) });
+            }
+          }}
           data-testid={followUpQuestionsTestIds.change}
         >
           Change

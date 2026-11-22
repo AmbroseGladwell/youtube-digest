@@ -60,6 +60,11 @@ export const stepsNotes = (
 
 const share = (part: number, whole: number) => (whole === 0 ? "–" : `${Math.round((part / whole) * 100)}%`);
 
+export interface LineItem {
+  text: string;
+  place: string | null;
+}
+
 export const stepsMarkdown = (notes: readonly StepsNote[], runName: string): string => {
   const writers = [...new Set(notes.map((note) => note.writer))].sort();
   const judgedItems = (note: StepsNote) => (Array.isArray(note.items) ? note.items.filter((item) => item.verdict !== null) : []);
@@ -89,7 +94,7 @@ export const stepsMarkdown = (notes: readonly StepsNote[], runName: string): str
       if (Array.isArray(note.items)) {
         const by = (verdict: CarriedVerdict) =>
           note.items !== "no steps" && note.items !== "not listed" ? note.items.filter((item) => item.verdict === verdict) : [];
-        const line = (item: { text: string; place: string | null }) => `- ${item.text}${item.place ? ` (${item.place})` : ""}`;
+        const line = (item: LineItem) => `- ${item.text}${item.place ? ` (${item.place})` : ""}`;
         lines.push("", `**Missing:** ${by("missing").length === 0 ? "none" : ""}`, ...by("missing").map(line));
         if (by("partly").length > 0) {
           lines.push("", "**Partly:**", ...by("partly").map(line));

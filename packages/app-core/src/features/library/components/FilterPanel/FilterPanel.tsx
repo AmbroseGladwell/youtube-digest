@@ -249,19 +249,15 @@ export const FilterPanel = ({ filters, topics, counts, onChange, onNewTopic, onM
   );
 };
 
-const Toggle = ({
-  active,
-  count,
-  onClick,
-  testId,
-  children,
-}: {
+interface ToggleProps {
   active: boolean;
   count: number;
   onClick: () => void;
   testId: string;
   children: string;
-}) => {
+}
+
+const Toggle = ({ active, count, onClick, testId, children }: ToggleProps) => {
   return (
     <button type="button" className={`${styles.option} ${styles.toggle}`} onClick={onClick} aria-pressed={active} data-testid={testId}>
       <span className={styles.optionLabel}>
@@ -275,21 +271,16 @@ const Toggle = ({
   );
 };
 
-const ListOption = ({
-  active,
-  count,
-  accent,
-  onClick,
-  testId,
-  children,
-}: {
+interface ListOptionProps {
   active: boolean;
   count: number;
   accent?: boolean;
   onClick: () => void;
   testId: string;
   children: string;
-}) => {
+}
+
+const ListOption = ({ active, count, accent, onClick, testId, children }: ListOptionProps) => {
   return (
     <button
       type="button"

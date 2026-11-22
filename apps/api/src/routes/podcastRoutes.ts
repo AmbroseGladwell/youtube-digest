@@ -49,7 +49,23 @@ const TranscriptionParams = z.object({ id: z.uuid() });
 const youTubeAskOf = ({ youTubeVideoId, searchYouTube }: z.infer<typeof TranscriptBody>): YouTubeAsk =>
   youTubeVideoId !== undefined ? { videoId: youTubeVideoId } : searchYouTube === true ? { search: true } : null;
 
-type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transcript: StoredTranscript; answer: PodcastTranscriptAnswer }>;
+interface ResolvedTranscript {
+  transcript: StoredTranscript;
+  answer: PodcastTranscriptAnswer;
+}
+
+type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<ResolvedTranscript>;
+
+export interface PodcastRoutesOptions {
+  readEpisode: (link: string) => Promise<PodcastRead>;
+  resolveTranscript: ResolveTranscript;
+  checkTranscript: (request: PodcastTranscriptCheckRequest) => Promise<PodcastTranscriptCheck>;
+  // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
+  transcriptions: ReturnType<typeof createPodcastTranscriptions> | null;
+  planOf: (accountId: AccountId) => Promise<Plan>;
+  trials: TrialsRepository;
+  clock: () => Date;
+}
 
 // An account, and never the link, the feed or the episode in a log: what someone listens to is
 // theirs. Signed out, onboarding reads the episode on the trial's reads and checks whether it has
@@ -57,24 +73,7 @@ type ResolveTranscript = (request: PodcastTranscriptRequest) => Promise<{ transc
 // docs/features/podcast-links.md, docs/features/podcast-transcripts.md, docs/features/onboarding.md).
 export const podcastRoutes = (
   app: FastifyInstance,
-  {
-    readEpisode,
-    resolveTranscript,
-    checkTranscript,
-    planOf,
-    trials,
-    transcriptions,
-    clock,
-  }: {
-    readEpisode: (link: string) => Promise<PodcastRead>;
-    resolveTranscript: ResolveTranscript;
-    checkTranscript: (request: PodcastTranscriptCheckRequest) => Promise<PodcastTranscriptCheck>;
-    // Speech-to-text on our GPU host; absent, no episode is transcribed and none is offered.
-    transcriptions: ReturnType<typeof createPodcastTranscriptions> | null;
-    planOf: (accountId: AccountId) => Promise<Plan>;
-    trials: TrialsRepository;
-    clock: () => Date;
-  },
+  { readEpisode, resolveTranscript, checkTranscript, planOf, trials, transcriptions, clock }: PodcastRoutesOptions,
 ): void => {
   const accountCallerOf = async (request: FastifyRequest): Promise<ServiceCaller> => {
     if (request.session === null) {

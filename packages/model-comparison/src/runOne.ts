@@ -53,11 +53,16 @@ export const isTheModelsDoing = (error: unknown): boolean =>
   error instanceof SyntaxError ||
   (error instanceof GenerationError && !(error instanceof ProviderRequestError) && !(error instanceof ProviderKeyRefusedError));
 
+export interface OverviewMeta {
+  id: OverviewId;
+  savedAt: string;
+}
+
 export interface RunGenerationOptions {
   model: ComparedModel;
   apiKey: string;
   sourceId: string;
-  generate: (client: GenerationClient, meta: { id: OverviewId; savedAt: string }) => Promise<Overview>;
+  generate: (client: GenerationClient, meta: OverviewMeta) => Promise<Overview>;
   http?: typeof fetch;
   now?: () => number;
 }

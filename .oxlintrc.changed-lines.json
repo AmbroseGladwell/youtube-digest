@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": { "correctness": "off" },
+  "ignorePatterns": ["prototype/**", "samples/**", "**/dist/**"],
+  "jsPlugins": ["./scripts/oxlint/overviewPlugin.mjs"],
+  "rules": {
+    "overview/no-long-comment": "error",
+    "overview/no-repeated-string": ["error", { "acrossFiles": true }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.testHelper.ts", "**/*.testHelper.tsx", "**/playwright/**", "**/scripts/**", "scripts/**"],
+      "rules": { "overview/no-repeated-string": "off" }
+    }
+  ]
+}

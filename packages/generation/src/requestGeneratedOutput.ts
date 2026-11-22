@@ -2,11 +2,13 @@ import type { z } from "zod";
 import type { ComposedPrompt } from "./composePrompt.js";
 import { SchemaFailureError } from "./GenerationError.js";
 
-export type GenerationClient = (request: {
+export interface GenerationClientRequest {
   systemPrompt: string;
   userMessage: string;
   schema: z.ZodObject<z.ZodRawShape>;
-}) => Promise<unknown>;
+}
+
+export type GenerationClient = (request: GenerationClientRequest) => Promise<unknown>;
 
 export const correctionRequest = (previous: unknown, error: z.ZodError): string => {
   const violations = error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("; ");

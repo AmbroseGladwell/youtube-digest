@@ -4,13 +4,18 @@ import { ApiError } from "../http/ApiError.js";
 import { secondsToNextUsageDay } from "../transcripts/ServiceUsageRepository.js";
 import type { TrialsRepository } from "./TrialsRepository.js";
 
+export interface ReserveTrialReadOptions {
+  trials: TrialsRepository;
+  clock: () => Date;
+}
+
 // Signed out, a link is read on the device's trial, which allows a few reads beside its one
 // overview, whether the link is an article or a podcast episode (docs/features/onboarding.md,
 // "Any kind of link"). An account reads without counting.
 export const reserveTrialRead = async (
   request: FastifyRequest,
   reply: FastifyReply,
-  { trials, clock }: { trials: TrialsRepository; clock: () => Date },
+  { trials, clock }: ReserveTrialReadOptions,
 ): Promise<void> => {
   if (request.session !== null) {
     return;

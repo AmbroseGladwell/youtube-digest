@@ -13,9 +13,15 @@ import {
 
 export type RangeKind = "keyPoint" | "standsOut" | "watchAnyway" | "recipeStep" | "sourceStep";
 
+export interface NoteLineRange {
+  kind: RangeKind;
+  about: string;
+  step?: number;
+}
+
 // What a line of the note points at, for the tag at its end. One of the steps a source gives
 // names its number, counted from the note's lines (design 250d).
-export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): { kind: RangeKind; about: string; step?: number } => {
+export const noteLineRange = (line: NoteLine, lines: readonly NoteLine[] = []): NoteLineRange => {
   if (line.section === SOURCE_STEPS_SECTION) {
     const steps = lines.filter((each) => each.section === SOURCE_STEPS_SECTION && !each.heading);
     const at = steps.indexOf(line);

@@ -315,7 +315,12 @@ const partsText = (parts: Part[], pageUnit: Unit | null, pageUnitText: string): 
 
 const SPOON_MEASURE = /^(?:heaped|level|rounded)\s+/i;
 
-const unitNamed = (text: string): { unit: keyof typeof UNITS; length: number } | null => {
+interface NamedUnit {
+  unit: keyof typeof UNITS;
+  length: number;
+}
+
+const unitNamed = (text: string): NamedUnit | null => {
   const measure = text.match(SPOON_MEASURE)?.[0] ?? "";
   for (const [pattern, unit] of UNIT_WORDS) {
     const match = text.slice(measure.length).match(pattern);
@@ -595,7 +600,12 @@ const inBothSystems = (line: string, lead: string, body: string, factor: number,
   return { kind: "adjusted", pieces, packAsSold: false, written: `${first.text}${slash[0]}${second.text}`, plural: null };
 };
 
-const pluralTaken = (before: string, after: string): { from: string; to: string } | null => {
+interface PluralSwap {
+  from: string;
+  to: string;
+}
+
+const pluralTaken = (before: string, after: string): PluralSwap | null => {
   if (before === after) {
     return null;
   }

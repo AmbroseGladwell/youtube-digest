@@ -59,6 +59,16 @@ const TERMINAL = new Set<string>(["done", "queued", "skipped"]);
 export const deletionIsFinished = ({ narration, postHogAccount, postHogAnonymous }: StepStatuses): boolean =>
   [narration, postHogAccount, postHogAnonymous].every((status) => TERMINAL.has(status));
 
+export interface NewDeletion {
+  accountId: string;
+  anonymousId: string | null;
+  narrationKeys: string[];
+  narration: NarrationStepStatus;
+  postHogAccount: ErasureStepStatus;
+  postHogAnonymous: ErasureStepStatus;
+  now: Date;
+}
+
 export class AccountDeletionsRepository {
   #sql: SqlClient;
 
@@ -66,15 +76,7 @@ export class AccountDeletionsRepository {
     this.#sql = sql;
   }
 
-  async insert(deletion: {
-    accountId: string;
-    anonymousId: string | null;
-    narrationKeys: string[];
-    narration: NarrationStepStatus;
-    postHogAccount: ErasureStepStatus;
-    postHogAnonymous: ErasureStepStatus;
-    now: Date;
-  }): Promise<AccountDeletion> {
+  async insert(deletion: NewDeletion): Promise<AccountDeletion> {
     const rows = await this.#sql.query<AccountDeletionRow>(
       `insert into account_deletions
          (account_id, anonymous_id, narration_keys, narration_status, posthog_account_status, posthog_anonymous_status, deleted_at)

@@ -8,11 +8,16 @@ import { askPickingWaitTestIds } from "./AskPickingWaitTestIds.js";
 
 export const SLOW_PICKING_MS = 10_000;
 
+export interface OverviewImage {
+  url: string | null;
+  wide: boolean;
+}
+
 export interface AskPickingWaitProps {
   // Choosing what to read, reading what was chosen, or read, once the answer has begun.
   phase: "choosing" | "reading" | "read";
   picked: readonly PickedOverview[];
-  imageOf: (overviewId: string) => { url: string | null; wide: boolean };
+  imageOf: (overviewId: string) => OverviewImage;
   holds: (overviewId: string) => boolean;
   onOpened: () => void;
   onFollow: () => void;

@@ -79,7 +79,12 @@ export const HomePage = ({ place = WHOLE_LIBRARY }: { place?: LibraryPlace }) =>
   return <LibraryHome accountNeeded={accountNeeded} place={place} />;
 };
 
-const LibraryHome = ({ accountNeeded, place }: { accountNeeded: boolean; place: LibraryPlace }) => {
+interface LibraryHomeProps {
+  accountNeeded: boolean;
+  place: LibraryPlace;
+}
+
+const LibraryHome = ({ accountNeeded, place }: LibraryHomeProps) => {
   if (accountNeeded) {
     return (
       <div className={styles.root} data-testid={homePageTestIds.root}>

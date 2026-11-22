@@ -24,7 +24,12 @@ const Mark = z
   })
   .refine((mark) => mark.read !== undefined || mark.favourite !== undefined, { message: "Give read, favourite or both" });
 
-const marksOf = ({ read, favourite }: { read?: boolean | undefined; favourite?: boolean | undefined }): Marks => ({
+interface MarkChoices {
+  read?: boolean | undefined;
+  favourite?: boolean | undefined;
+}
+
+const marksOf = ({ read, favourite }: MarkChoices): Marks => ({
   ...(read === undefined ? {} : { read }),
   ...(favourite === undefined ? {} : { favourite }),
 });

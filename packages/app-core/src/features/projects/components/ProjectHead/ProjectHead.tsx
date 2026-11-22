@@ -314,7 +314,13 @@ export const ProjectHead = ({
   );
 };
 
-const NameEditor = ({ name, onSave, onCancel }: { name: string; onSave: (name: string) => void; onCancel: () => void }) => {
+interface NameEditorProps {
+  name: string;
+  onSave: (name: string) => void;
+  onCancel: () => void;
+}
+
+const NameEditor = ({ name, onSave, onCancel }: NameEditorProps) => {
   const [value, setValue] = useState(name);
   const field = useRef<HTMLInputElement | null>(null);
   const helpId = useId();
@@ -366,19 +372,15 @@ const NameEditor = ({ name, onSave, onCancel }: { name: string; onSave: (name: s
   );
 };
 
-const PurposeEditor = ({
-  purpose,
-  assistantConnected,
-  assistantWrote,
-  onSave,
-  onCancel,
-}: {
+interface PurposeEditorProps {
   purpose: string;
   assistantConnected: boolean;
   assistantWrote: string | null;
   onSave: (purpose: string | null) => void;
   onCancel: () => void;
-}) => {
+}
+
+const PurposeEditor = ({ purpose, assistantConnected, assistantWrote, onSave, onCancel }: PurposeEditorProps) => {
   const [value, setValue] = useState(purpose);
   const field = useRef<HTMLTextAreaElement | null>(null);
   const helpId = useId();

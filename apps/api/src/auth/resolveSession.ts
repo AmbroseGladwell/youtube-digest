@@ -23,13 +23,18 @@ export interface ResolvedSession {
 
 const iso = (value: string | Date): string => new Date(value).toISOString();
 
+export interface ResolveSessionOptions {
+  now: Date;
+  sessionTtlDays: number;
+}
+
 // A sliding expiry, slid at most once an hour so a busy client is not rewriting the row on
 // every request (docs/architecture/api.md).
 export const resolveSession = async (
   sql: SqlClient,
   token: string,
   transport: SessionTransport,
-  { now, sessionTtlDays }: { now: Date; sessionTtlDays: number },
+  { now, sessionTtlDays }: ResolveSessionOptions,
 ): Promise<ResolvedSession | null> => {
   const tokenHash = hashToken(token);
   const rows = await sql.query<SessionRow>(

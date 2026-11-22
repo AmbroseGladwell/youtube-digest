@@ -24,10 +24,12 @@ export const readSessionCookie = (cookieHeader: string | undefined): string | nu
 const attributes = ({ secure }: SessionCookieOptions): string =>
   ["Path=/", "HttpOnly", "SameSite=Lax", ...(secure ? ["Secure"] : [])].join("; ");
 
-export const sessionCookie = (
-  token: string,
-  { expiresAt, now, ...options }: SessionCookieOptions & { expiresAt: string; now: Date },
-): string => {
+export interface CookieExpiry {
+  expiresAt: string;
+  now: Date;
+}
+
+export const sessionCookie = (token: string, { expiresAt, now, ...options }: SessionCookieOptions & CookieExpiry): string => {
   const maxAge = Math.max(0, Math.floor((new Date(expiresAt).getTime() - now.getTime()) / 1000));
   return `${SESSION_COOKIE}=${encodeURIComponent(token)}; Max-Age=${maxAge}; ${attributes(options)}`;
 };
